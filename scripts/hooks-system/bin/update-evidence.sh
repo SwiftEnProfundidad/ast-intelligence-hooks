@@ -82,6 +82,38 @@ generate_contextual_answers() {
   local branch="$2"
   local commits="$3"
 
+  # Detect work type first
+  local work_type="code"
+  local is_docs_only=false
+  local is_config_only=false
+  local is_tests_only=false
+
+  # Check if only documentation
+  if [[ -n "$all_files" ]]; then
+    local non_doc_files=$(echo "$all_files" | tr ' ' '\n' | grep -v "\.md$" | grep -v "^$" | head -1)
+    if [[ -z "$non_doc_files" ]]; then
+      is_docs_only=true
+      work_type="documentation"
+    fi
+  fi
+
+  # Check if only config files
+  if [[ "$all_files" == *".json"* ]] || [[ "$all_files" == *".yaml"* ]] || [[ "$all_files" == *".yml"* ]]; then
+    if [[ "$all_files" != *".ts"* ]] && [[ "$all_files" != *".js"* ]] && [[ "$all_files" != *".swift"* ]]; then
+      is_config_only=true
+      work_type="configuration"
+    fi
+  fi
+
+  # Check if only tests
+  if [[ "$all_files" == *".spec.ts"* ]] || [[ "$all_files" == *".test.ts"* ]]; then
+    local non_test_files=$(echo "$all_files" | tr ' ' '\n' | grep -v "\.spec\." | grep -v "\.test\." | grep -v "^$" | head -1)
+    if [[ -z "$non_test_files" ]]; then
+      is_tests_only=true
+      work_type="testing"
+    fi
+  fi
+
   # Detect modules being worked on
   local modules=""
   [[ "$all_files" == *"/admin/"* ]] && modules="$modules admin,"
@@ -92,11 +124,18 @@ generate_contextual_answers() {
   [[ "$all_files" == *"/notifications/"* ]] && modules="$modules notifications,"
   [[ "$all_files" == *"/hooks-system/"* ]] && modules="$modules hooks-system,"
   [[ "$all_files" == *"/testing/"* ]] && modules="$modules testing,"
-  modules="${modules%,}"  # Remove trailing comma
+  [[ "$all_files" == *"docs/"* ]] && modules="$modules documentation,"
+  [[ "$all_files" == *".windsurf/"* ]] && modules="$modules ide-config,"
+  [[ "$all_files" == *".cursor/"* ]] && modules="$modules ide-config,"
+  [[ "$all_files" == *".vscode/"* ]] && modules="$modules ide-config,"
+  modules="${modules%,}"
   [[ -z "$modules" ]] && modules="general"
 
-  # Detect file types
+  # Detect file types (all platforms)
   local file_types=""
+  # Documentation
+  [[ "$all_files" == *".md"* ]] && file_types="$file_types markdown,"
+  # Backend/Frontend TypeScript
   [[ "$all_files" == *".spec.ts"* ]] && file_types="$file_types tests,"
   [[ "$all_files" == *".service.ts"* ]] && file_types="$file_types services,"
   [[ "$all_files" == *".repository.ts"* ]] && file_types="$file_types repositories,"
@@ -105,39 +144,94 @@ generate_contextual_answers() {
   [[ "$all_files" == *".interface.ts"* ]] && file_types="$file_types interfaces,"
   [[ "$all_files" == *".mock.ts"* ]] && file_types="$file_types mocks,"
   [[ "$all_files" == *".helper.ts"* ]] && file_types="$file_types helpers,"
+  [[ "$all_files" == *".ts"* ]] && file_types="$file_types typescript,"
+  [[ "$all_files" == *".tsx"* ]] && file_types="$file_types react-components,"
+  [[ "$all_files" == *".jsx"* ]] && file_types="$file_types react-components,"
+  # iOS Swift
+  [[ "$all_files" == *".swift"* ]] && file_types="$file_types swift,"
+  [[ "$all_files" == *"Tests.swift"* ]] && file_types="$file_types swift-tests,"
+  [[ "$all_files" == *"ViewModel.swift"* ]] && file_types="$file_types viewmodels,"
+  [[ "$all_files" == *"View.swift"* ]] && file_types="$file_types swiftui-views,"
+  [[ "$all_files" == *"UseCase.swift"* ]] && file_types="$file_types use-cases,"
+  [[ "$all_files" == *"Repository.swift"* ]] && file_types="$file_types repositories,"
+  # Android Kotlin
+  [[ "$all_files" == *".kt"* ]] && file_types="$file_types kotlin,"
+  [[ "$all_files" == *".kts"* ]] && file_types="$file_types gradle-kotlin,"
+  [[ "$all_files" == *"Test.kt"* ]] && file_types="$file_types kotlin-tests,"
+  [[ "$all_files" == *"ViewModel.kt"* ]] && file_types="$file_types viewmodels,"
+  [[ "$all_files" == *"Activity.kt"* ]] && file_types="$file_types activities,"
+  [[ "$all_files" == *"Fragment.kt"* ]] && file_types="$file_types fragments,"
+  [[ "$all_files" == *"UseCase.kt"* ]] && file_types="$file_types use-cases,"
+  [[ "$all_files" == *"Repository.kt"* ]] && file_types="$file_types repositories,"
+  # Scripts and config
   [[ "$all_files" == *".sh"* ]] && file_types="$file_types shell-scripts,"
   [[ "$all_files" == *".js"* ]] && file_types="$file_types javascript,"
+  [[ "$all_files" == *".json"* ]] && file_types="$file_types json-config,"
+  [[ "$all_files" == *".yaml"* ]] && file_types="$file_types yaml-config,"
+  [[ "$all_files" == *".yml"* ]] && file_types="$file_types yaml-config,"
+  [[ "$all_files" == *".xml"* ]] && file_types="$file_types xml-config,"
+  [[ "$all_files" == *".plist"* ]] && file_types="$file_types plist-config,"
+  [[ "$all_files" == *".gradle"* ]] && file_types="$file_types gradle,"
   file_types="${file_types%,}"
-  [[ -z "$file_types" ]] && file_types="source files"
+  [[ -z "$file_types" ]] && file_types="mixed files"
 
-  # Detect layer (Clean Architecture)
-  local layer=""
-  [[ "$all_files" == *"/domain/"* ]] && layer="Domain"
-  [[ "$all_files" == *"/application/"* ]] && layer="Application"
-  [[ "$all_files" == *"/infrastructure/"* ]] && layer="Infrastructure"
-  [[ "$all_files" == *"/presentation/"* ]] && layer="Presentation"
-  [[ -z "$layer" ]] && layer="multiple layers"
-
-  # Extract feature from branch name
-  local feature_desc="$branch"
-  if [[ "$branch" == feature/* ]]; then
-    feature_desc="${branch#feature/}"
-  elif [[ "$branch" == fix/* ]]; then
-    feature_desc="fixing ${branch#fix/}"
-  elif [[ "$branch" == refactor/* ]]; then
-    feature_desc="refactoring ${branch#refactor/}"
+  # Detect layer (Clean Architecture) - only for code
+  local layer="N/A"
+  if [[ "$is_docs_only" == "false" ]] && [[ "$is_config_only" == "false" ]]; then
+    [[ "$all_files" == *"/domain/"* ]] && layer="Domain"
+    [[ "$all_files" == *"/application/"* ]] && layer="Application"
+    [[ "$all_files" == *"/infrastructure/"* ]] && layer="Infrastructure"
+    [[ "$all_files" == *"/presentation/"* ]] && layer="Presentation"
+    [[ "$layer" == "N/A" ]] && layer="multiple layers"
   fi
 
-  # Generate Q1: What type of file
-  Q1="Working on branch '$branch'. Modifying $file_types in modules: $modules. Target layer: $layer."
+  # Extract feature from branch name
+  local action="working on"
+  if [[ "$branch" == feature/* ]]; then
+    action="implementing feature"
+  elif [[ "$branch" == fix/* ]]; then
+    action="fixing"
+  elif [[ "$branch" == refactor/* ]]; then
+    action="refactoring"
+  elif [[ "$branch" == chore/* ]]; then
+    action="maintenance task"
+  elif [[ "$branch" == docs/* ]]; then
+    action="documenting"
+  fi
 
-  # Generate Q2: Similar code exists
-  Q2="Modules affected: $modules. Recent commits: $commits. Check for existing patterns in these modules before adding new code."
+  # Generate contextual Q1 based on work type
+  if [[ "$is_docs_only" == "true" ]]; then
+    Q1="Documentation task on branch '$branch'. Modifying $file_types in: $modules. No code rules apply - focus on clarity and accuracy."
+  elif [[ "$is_config_only" == "true" ]]; then
+    Q1="Configuration task on branch '$branch'. Modifying $file_types. Ensure config changes are backward compatible."
+  elif [[ "$is_tests_only" == "true" ]]; then
+    Q1="Testing task on branch '$branch'. Modifying $file_types in: $modules. Follow AAA pattern (Arrange-Act-Assert)."
+  else
+    Q1="Code task on branch '$branch'. Modifying $file_types in: $modules. Target layer: $layer."
+  fi
 
-  # Generate Q3: Clean Architecture
-  Q3="Changes in $layer layer affecting $modules. Ensure dependencies point inward and no infrastructure leaks into domain."
+  # Generate contextual Q2 based on work type
+  if [[ "$is_docs_only" == "true" ]]; then
+    Q2="Documentation in: $modules. Recent commits: $commits. Check for duplicate docs before creating new ones."
+  elif [[ "$is_tests_only" == "true" ]]; then
+    Q2="Tests for: $modules. Recent commits: $commits. Check existing test helpers and mocks before creating new ones."
+  else
+    Q2="Modules affected: $modules. Recent commits: $commits. Check for existing patterns before adding new code."
+  fi
 
-  # Export for use
+  # Generate contextual Q3 based on work type
+  if [[ "$is_docs_only" == "true" ]]; then
+    Q3="Documentation changes in $modules. Keep docs in sync with code. Update related READMEs if needed."
+  elif [[ "$is_config_only" == "true" ]]; then
+    Q3="Config changes. Validate JSON/YAML syntax. Check for environment-specific values."
+  elif [[ "$is_tests_only" == "true" ]]; then
+    Q3="Test changes in $modules. Ensure tests are isolated, deterministic, and follow naming conventions."
+  else
+    Q3="Code changes in $layer layer affecting $modules. Ensure dependencies point inward (Domain <- App <- Infra)."
+  fi
+
+  # Export work type for rules selection
+  export WORK_TYPE="$work_type"
   export CONTEXTUAL_Q1="$Q1"
   export CONTEXTUAL_Q2="$Q2"
   export CONTEXTUAL_Q3="$Q3"
@@ -146,16 +240,30 @@ generate_contextual_answers() {
 # Generate contextual answers
 generate_contextual_answers "$ALL_CHANGED_FILES" "$CURRENT_BRANCH" "$LAST_COMMITS"
 
-# Extract key rules from Windsurf rules files
-extract_windsurf_rules() {
+# Extract key rules from IDE rules files (supports multiple IDEs)
+extract_ide_rules() {
   local rules_file="$1"
-  local rules_path="$REPO_ROOT/.windsurf/rules/$rules_file"
+  local rules_path=""
 
-  if [[ -f "$rules_path" ]]; then
-    # Extract section headers (lines starting with ##)
+  # Try multiple IDE config locations (IDE-agnostic)
+  for ide_dir in ".windsurf" ".cursor" ".vscode" ".kilo" ".cline"; do
+    local candidate="$REPO_ROOT/$ide_dir/rules/$rules_file"
+    if [[ -f "$candidate" ]]; then
+      rules_path="$candidate"
+      break
+    fi
+    # Also try without .mdc extension
+    candidate="$REPO_ROOT/$ide_dir/rules/${rules_file%.mdc}.md"
+    if [[ -f "$candidate" ]]; then
+      rules_path="$candidate"
+      break
+    fi
+  done
+
+  if [[ -n "$rules_path" ]] && [[ -f "$rules_path" ]]; then
     grep -E "^##" "$rules_path" 2>/dev/null | head -10 | sed 's/^## //' | tr '\n' '; ' || echo "No sections found"
   else
-    echo "File not found"
+    echo "No IDE rules found"
   fi
 }
 
@@ -186,10 +294,10 @@ get_rules_summary() {
     rulesandroid.mdc|rulesandroid.md) platform="android" ;;
   esac
 
-  local windsurf_sections=$(extract_windsurf_rules "${rules_file%.mdc}.md")
+  local ide_sections=$(extract_ide_rules "${rules_file%.mdc}.md")
   local ast_summary=$(extract_ast_rules "$platform")
 
-  echo "Windsurf: $windsurf_sections | AST: $ast_summary"
+  echo "IDE Rules: $ide_sections | AST: $ast_summary"
 }
 
 if [[ -z "$STAGED_FILES" ]]; then
@@ -333,8 +441,22 @@ echo ""
 # Prepare temp file for atomic write
 TMP_FILE=$(mktemp "${EVIDENCE_FILE}.tmp.XXXXXX")
 
-# Get rules summary now that RULES_FILE is defined
-RULES_SUMMARY=$(get_rules_summary "$RULES_FILE")
+# Get all modified files (staged + unstaged) for files_modified field
+ALL_MODIFIED_FOR_JSON="[]"
+if [[ -n "$ALL_CHANGED_FILES" ]]; then
+  ALL_MODIFIED_FOR_JSON=$(echo "$ALL_CHANGED_FILES" | tr ' ' '\n' | grep -v "^$" | sort -u | head -20 | jq -R . | jq -s .)
+fi
+
+# Get rules summary based on work type
+if [[ "$WORK_TYPE" == "documentation" ]]; then
+  RULES_SUMMARY="N/A - Documentation only (no code rules apply)"
+  RULES_FILE="none"
+elif [[ "$WORK_TYPE" == "configuration" ]]; then
+  RULES_SUMMARY="N/A - Configuration only (validate syntax)"
+  RULES_FILE="none"
+else
+  RULES_SUMMARY=$(get_rules_summary "$RULES_FILE")
+fi
 
 # Generate evidence JSON with multi-platform support
 if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
@@ -344,12 +466,12 @@ if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
   "timestamp": "$TIMESTAMP",
   "session_id": "$FEATURE_NAME",
   "action": "$(echo $FEATURE_NAME | sed 's/-/_/g')",
-  "files_modified": $FILES_ARRAY,
+  "work_type": "$WORK_TYPE",
+  "files_modified": $ALL_MODIFIED_FOR_JSON,
   "rules_read": {
     "file": "$RULES_FILE",
     "verified": true,
-    "summary": "$RULES_SUMMARY",
-    "also_read": [".AI_SESSION_START.md", ".windsurf/rules/$RULES_FILE"]
+    "summary": "$RULES_SUMMARY"
   },
   "protocol_3_questions": {
     "answered": true,
