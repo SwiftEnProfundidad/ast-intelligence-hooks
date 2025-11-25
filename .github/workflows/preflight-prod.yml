@@ -1,0 +1,27 @@
+name: Preflight (Production)
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  preflight-prod:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run remote preflight against production API
+        env:
+          API_BASE: ${{ secrets.PROD_API_BASE }}
+        run: node scripts/preflight-remote.js

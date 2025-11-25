@@ -1,0 +1,125 @@
+# =============================================================================
+# GitHub Actions: Git Health Monitoring
+# =============================================================================
+# Purpose: Regular health checks + automated rollback
+# Author: Pumuki Team®
+# Trigger: Scheduled daily + manual
+# =============================================================================
+
+name: Git Health Monitoring
+
+on:
+  schedule:
+    # Run daily at 2:00 AM UTC
+    - cron: '0 2 * * *'
+
+  workflow_dispatch:
+    inputs:
+      run_rollback_check:
+        description: 'Run rollback detection'
+        required: false
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  health-check:
+    name: Repository Health Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run health monitor
+        id: health
+        run: |
+          echo "🏥 Running health monitor..."
+          bash scripts/monitoring/git-health-monitor.sh | tee health-output.txt || true
+
+          # Extract issues count
+          ISSUES=$(grep -oE '[0-9]+ issue\(s\)' health-output.txt | grep -oE '[0-9]+' || echo "0")
+          echo "issues_found=$ISSUES" >> $GITHUB_OUTPUT
+
+      - name: Check rollback conditions
+        if: github.event.inputs.run_rollback_check == 'true' || github.event_name == 'schedule'
+        id: rollback
+        run: |
+          echo "🔍 Checking rollback conditions..."
+          bash scripts/automation/auto-rollback.sh auto | tee rollback-output.txt || true
+
+          # Check if rollback was triggered
+          if grep -q "ROLLBACK TRIGGERED" rollback-output.txt; then
+            echo "rollback_triggered=true" >> $GITHUB_OUTPUT
+            echo "⚠️  Rollback was triggered"
+          else
+            echo "rollback_triggered=false" >> $GITHUB_OUTPUT
+            echo "✅ No rollback needed"
+          fi
+
+      - name: Create health report issue (if issues found)
+        if: steps.health.outputs.issues_found > 3
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issuesCount = '${{ steps.health.outputs.issues_found }}';
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🏥 Repository Health: ${issuesCount} Issues Detected`,
+              body: |
+                ## 🏥 Automated Health Check Report
+
+                Issues Found: ${{ steps.health.outputs.issues_found }}
+
+                ### Detected Issues:
+                - Orphaned branches
+                - Stale branches (>30 days)
+                - Large files
+                - Sync issues
+
+                ### Recommended Actions:
+                1. Run: npm run gitflow:cleanup
+                2. Run: npm run gitflow:sync
+                3. Run: git gc --aggressive
+
+                ### Health Log:
+                See .git/health-monitor.log for details
+
+                ---
+                🐈💚 **Pumuki Team®** - Automated Health Monitoring,
+              labels: ['health-check', 'automation', 'maintenance']
+            });
+
+      - name: Notify if rollback triggered
+        if: steps.rollback.outputs.rollback_triggered == 'true'
+        run: |
+          echo "🚨 ROLLBACK WAS TRIGGERED - Check issues for details"
+          echo "Critical failure detected and automatic rollback executed"
+
+      - name: Summary
+        run: |
+          echo "## 🏥 Health Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Issues Found:** ${{ steps.health.outputs.issues_found }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Rollback Triggered:** ${{ steps.rollback.outputs.rollback_triggered || 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ steps.health.outputs.issues_found }}" -gt 3 ]; then
+            echo "⚠️  **Action Required:** Review health issues" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "✅ **Status:** Repository is healthy" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "🐈💚 **Pumuki Team®** - Automated Health Monitoring" >> $GITHUB_STEP_SUMMARY

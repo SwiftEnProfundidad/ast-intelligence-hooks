@@ -1,0 +1,192 @@
+---
+trigger: always_on
+description: Automatic Git Flow Workflow - Enterprise Grade
+author: Pumuki Team®
+version: 1.0.0
+---
+
+# 🤖 Automatic Git Flow Workflow
+
+## 🎯 OBJETIVO
+
+Completar ciclo Git Flow AUTOMÁTICAMENTE sin intervención humana.
+
+## 🔄 FLUJO AUTOMÁTICO
+
+### Cuando el usuario dice "listo" o "procede" o "continúa":
+
+1. **Verificar estado automáticamente:**
+   ```
+   - Consultar: gitflow://state (MCP resource)
+   - Consultar: evidence://status (MCP resource)
+   ```
+
+2. **Si evidence está stale:**
+   ```
+   - Ejecutar MCP tool: validate_and_fix
+   - Actualiza evidence automáticamente
+   - NO preguntar al usuario
+   ```
+
+3. **Si hay cambios sin commitear:**
+   ```
+   - Generar commit message automáticamente (IA)
+   - Ejecutar: git add -A && git commit -m "<mensaje>"
+   - NO preguntar al usuario
+   ```
+
+4. **Si estás en feature/fix branch:**
+   ```
+   - Ejecutar MCP tool: auto_complete_gitflow
+   - Parámetros:
+     • commitMessage: <generado por IA>
+     • prTitle: <generado por IA>
+     • prBody: <generado por IA>
+     • autoMerge: false (por seguridad, requires approval)
+   ```
+
+5. **Después del merge del PR:**
+   ```
+   - Ejecutar MCP tool: cleanup_stale_branches
+   - Ejecutar MCP tool: sync_branches
+   - Confirmar: "Git Flow completed ✅"
+   ```
+
+## 🚨 REGLAS CRÍTICAS
+
+### ❌ NUNCA usar --no-verify
+
+**ABSOLUTAMENTE PROHIBIDO** usar `--no-verify` sin autorización explícita del usuario.
+
+**Si el hook bloquea:**
+1. DETENER inmediatamente
+2. REPORTAR violaciones detectadas
+3. OFRECER opciones:
+   - A) Fixear las violaciones
+   - B) Solicitar autorización para --no-verify
+4. ESPERAR respuesta explícita del usuario
+5. SOLO si dice "autorizo --no-verify" → ejecutar con --no-verify
+6. Documentar en commit: "--no-verify AUTHORIZED by user"
+
+### ✅ Usar MCP Tools
+
+Siempre que sea posible, usar MCP tools en lugar de comandos shell:
+
+- `validate_and_fix` → Fix evidence, sync, validaciones
+- `auto_complete_gitflow` → Ciclo completo automático
+- `sync_branches` → Sincronizar develop ↔ main
+- `cleanup_stale_branches` → Borrar branches mergeados
+
+### 📋 Flujo Decision Tree
+
+```
+¿User dice "listo"/"procede"?
+  └─ YES → Check evidence
+       ├─ STALE? → validate_and_fix() → Continue
+       └─ FRESH? → Continue
+           └─ Check uncommitted changes
+                ├─ YES? → Auto commit → Continue
+                └─ NO? → Continue
+                    └─ Check current branch
+                         ├─ feature/fix? → auto_complete_gitflow()
+                         ├─ develop? → sync_branches() if needed
+                         └─ main? → Warn user, checkout develop
+```
+
+## 🎯 MENSAJES AUTOMÁTICOS
+
+### Commit Messages (generados por IA basados en cambios):
+
+**Formato:** `<type>(<scope>): <description>`
+
+**Ejemplos:**
+- `feat(auth): add JWT authentication`
+- `fix(api): resolve null pointer in users endpoint`
+- `chore: cleanup temporary analysis files`
+- `docs: update README with installation steps`
+
+### PR Titles (generados por IA basados en commits):
+
+**Formato:** `<emoji> <Summary of changes>`
+
+**Ejemplos:**
+- `🚀 Release: MCP Integration & Token Tracking`
+- `🐛 Fix: Null pointer in users API`
+- `✨ Feature: JWT Authentication System`
+- `🧹 Chore: Repository cleanup and refactor`
+
+### PR Bodies (generados por IA):
+
+```markdown
+## 🎯 Summary
+<IA genera resumen de cambios>
+
+## ✨ Changes
+- <IA lista commits importantes>
+- <Agrupados por categoría>
+
+## ✅ Testing
+- <IA describe pruebas realizadas>
+
+## 📚 Documentation
+- <IA lista docs actualizados>
+
+---
+🐈💚 Pumuki Team® - Automated Git Flow
+```
+
+## 🔒 SEGURIDAD
+
+### Pre-commit Validations (automáticas):
+
+- ✅ AI Evidence freshness
+- ✅ Git Flow compliance
+- ✅ No direct commit to main/develop
+- ✅ Conventional commit format
+- ✅ No merge conflict markers
+- ✅ No hardcoded secrets
+- ✅ File size limits
+
+### GitHub Actions Validations (automáticas):
+
+- ✅ Tests passing
+- ✅ Linter passing
+- ✅ Type checks passing
+- ✅ Build successful
+
+## 📖 COMANDOS RÁPIDOS
+
+Si el usuario necesita intervención manual:
+
+```bash
+# Iniciar nueva feature
+cursor-gitflow start feature/my-task
+
+# Completar Git Flow (automático)
+cursor-gitflow complete
+
+# Sincronizar branches
+cursor-gitflow sync
+
+# Limpiar branches mergeados
+cursor-gitflow cleanup
+```
+
+## 🐈💚 FIRMA PUMUKI TEAM®
+
+Todos los commits, PRs y merges automáticos deben incluir:
+
+```
+---
+🐈💚 Pumuki Team® - <Context>
+```
+
+Donde `<Context>` puede ser:
+- "Automated Git Flow"
+- "Enterprise Git Automation"
+- "Advanced Project Intelligence"
+
+---
+
+**IMPORTANTE:** Este archivo define el comportamiento automático de la IA.
+No modificar sin entender completamente las implicaciones de seguridad.

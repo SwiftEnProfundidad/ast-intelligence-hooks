@@ -1,0 +1,100 @@
+{
+  "name": "@carlos/ast-intelligence-hooks",
+  "version": "5.2.0",
+  "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
+  "main": "index.js",
+  "bin": {
+    "ast-hooks": "./bin/cli.js",
+    "ast-install": "./bin/install.js",
+    "ast-violations": "./bin/violations-api.js",
+    "hook-run-orchestrator": "./bin/run-orchestrator.js",
+    "hook-watch": "./bin/watch-hooks.js",
+    "hook-status": "./bin/hook-status.js",
+    "hook-predict": "./bin/predictive-hooks.js",
+    "hook-playbook": "./bin/run-playbook.js",
+    "hook-doc-drift": "./bin/check-doc-drift.js",
+    "hook-plan-review": "./bin/plan-review.js"
+  },
+  "scripts": {
+    "install-hooks": "node bin/install.js",
+    "audit": "bash presentation/cli/audit.sh",
+    "ast": "node infrastructure/ast/ast-intelligence.js",
+    "gitflow": "bash bin/gitflow check",
+    "gitflow:status": "bash bin/gitflow status",
+    "gitflow:workflow": "bash bin/gitflow workflow",
+    "gitflow:reset": "bash bin/gitflow reset",
+    "violations": "node bin/violations",
+    "violations:list": "node bin/violations list",
+    "violations:show": "node bin/violations show",
+    "violations:summary": "node bin/violations summary",
+    "violations:top": "node bin/violations top",
+    "violations:demo": "bash bin/demo-violations",
+    "test": "echo 'Tests not implemented yet'",
+    "lint": "npm run lint:hooks",
+    "lint:hooks": "eslint \"application/**/*.js\" \"bin/**/*.js\""
+  },
+  "keywords": [
+    "ast",
+    "code-quality",
+    "static-analysis",
+    "ios",
+    "android",
+    "backend",
+    "frontend",
+    "clean-architecture",
+    "ddd",
+    "feature-first",
+    "git-hooks",
+    "pre-commit",
+    "typescript",
+    "swift",
+    "kotlin",
+    "react",
+    "nextjs",
+    "nestjs"
+  ],
+  "author": "Carlos <carlos@ruralgo.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/carlos/ast-intelligence-hooks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/carlos/ast-intelligence-hooks/issues"
+  },
+  "homepage": "https://github.com/carlos/ast-intelligence-hooks#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "ts-morph": "^21.0.0",
+    "glob": "^10.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^9.12.0"
+  },
+  "peerDependencies": {},
+  "files": [
+    "bin/",
+    "domain/",
+    "application/",
+    "infrastructure/",
+    "presentation/",
+    "docs/",
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./ast": "./infrastructure/ast/ast-intelligence.js",
+    "./domain": "./domain/index.js",
+    "./application": "./application/index.js",
+    "./config": "./config/index.js"
+  }
+}

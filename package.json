@@ -1,0 +1,99 @@
+{
+  "name": "@pumuki/ast-intelligence-hooks",
+  "version": "6.0.0",
+  "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
+  "main": "index.js",
+  "bin": {
+    "ast-hooks": "./bin/cli.js",
+    "ast-install": "./bin/install.js",
+    "ast-violations": "./bin/violations-api.js",
+    "ast-sync": "./bin/sync-library.js"
+  },
+  "scripts": {
+    "install-hooks": "node bin/install.js",
+    "audit": "bash presentation/cli/audit.sh",
+    "ast": "node infrastructure/ast/ast-intelligence.js",
+    "gitflow": "bash bin/gitflow check",
+    "gitflow:status": "bash bin/gitflow status",
+    "gitflow:workflow": "bash bin/gitflow workflow",
+    "gitflow:reset": "bash bin/gitflow reset",
+    "violations": "node bin/violations",
+    "violations:list": "node bin/violations list",
+    "violations:show": "node bin/violations show",
+    "violations:summary": "node bin/violations summary",
+    "violations:top": "node bin/violations top",
+    "violations:demo": "bash bin/demo-violations",
+    "test": "echo 'Tests not implemented yet'",
+    "lint": "echo 'Linting not implemented yet'"
+  },
+  "keywords": [
+    "ast",
+    "code-quality",
+    "static-analysis",
+    "ios",
+    "android",
+    "backend",
+    "frontend",
+    "clean-architecture",
+    "ddd",
+    "feature-first",
+    "git-hooks",
+    "pre-commit",
+    "typescript",
+    "swift",
+    "kotlin",
+    "react",
+    "nextjs",
+    "nestjs"
+  ],
+  "author": "Carlos <carlos@ruralgo.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/carlos/ast-intelligence-hooks.git"
+  },
+  "bugs": {
+    "url": "https://github.com/carlos/ast-intelligence-hooks/issues"
+  },
+  "homepage": "https://github.com/carlos/ast-intelligence-hooks#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "dependencies": {
+    "ts-morph": "^21.0.0",
+    "glob": "^10.0.0"
+  },
+  "devDependencies": {},
+  "peerDependencies": {},
+  "files": [
+    "bin/",
+    "domain/",
+    "application/",
+    "infrastructure/",
+    "presentation/",
+    "config/",
+    "native/",
+    "automation/",
+    "templates/",
+    "docs/",
+    "scripts/hooks-system/",
+    "index.js",
+    "INSTALL.md",
+    "CHANGELOG.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "exports": {
+    ".": "./index.js",
+    "./application": "./application/index.js",
+    "./ast": "./infrastructure/ast/ast-intelligence.js",
+    "./config": "./config/index.js",
+    "./domain": "./domain/index.js",
+    "./hooks": "./scripts/hooks-system/index.js"
+  }
+}

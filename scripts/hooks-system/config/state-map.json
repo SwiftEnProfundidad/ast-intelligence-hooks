@@ -1,0 +1,24 @@
+{
+  "idle": {
+    "on": {
+      "analyze": "analyzing"
+    }
+  },
+  "analyzing": {
+    "on": {
+      "decide": "acting",
+      "error": "error"
+    }
+  },
+  "acting": {
+    "on": {
+      "complete": "idle",
+      "error": "error"
+    }
+  },
+  "error": {
+    "on": {
+      "reset": "idle"
+    }
+  }
+}

@@ -1,0 +1,50 @@
+name: Preflight (Backend+Dashboard)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prepare backend .env
+        working-directory: apps/backend
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          WEBHOOK_URL: ${{ secrets.WEBHOOK_URL }}
+        run: |
+          echo "NODE_ENV=development" > .env
+          echo "PORT=3000" >> .env
+          echo "LOG_VERBOSE=true" >> .env
+          echo "SUPABASE_URL=${SUPABASE_URL}" >> .env
+          echo "SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}" >> .env
+          echo "JWT_SECRET=${JWT_SECRET:-ci-jwt-secret}" >> .env
+          echo "WEBHOOK_URL=${WEBHOOK_URL:-https://webhook.example.com}" >> .env
+          echo "E2E_MODE=false" >> .env
+
+      - name: Prepare frontend .env.local
+        working-directory: apps/admin-dashboard
+        run: |
+          echo "NEXT_PUBLIC_API_URL=http://localhost:3000" > .env.local
+
+      - name: Start servers and run preflight
+        run: npx start-server-and-test "npm run dev" http://localhost:3003 "npm run preflight"

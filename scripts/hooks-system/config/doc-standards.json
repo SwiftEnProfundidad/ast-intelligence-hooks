@@ -1,0 +1,11 @@
+{
+  "requiredDocs": [
+    "docs/technical/PLAN_PROGRESIVO_PLATAFORMAS.md",
+    "docs/technical/hook-system/OWNERSHIP_AND_ROADMAP.md",
+    "docs/technical/hook-system/TELEMETRY.md",
+    "docs/technical/hook-system/PREDICTIVE_AUTOMATION.md",
+    "docs/technical/hook-system/REALTIME_GUARDS.md",
+    "docs/technical/hook-system/PLAYBOOKS.md"
+  ],
+  "maxAgeDays": 30
+}

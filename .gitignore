@@ -1,0 +1,26 @@
+# Temporary files
+*.log
+*.tmp
+
+# Node modules (if any)
+node_modules/
+
+# Build artifacts
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+native/ios/.build/
+node_modules/
+.DS_Store
+
+# Large files and build artifacts
+native/ios/.build/
+native/ios/.swiftpm/
+*.pack
+*.artifactbundle

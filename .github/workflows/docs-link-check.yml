@@ -1,0 +1,32 @@
+name: Docs - Lint & Link Check
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+      - '.markdownlint.json'
+      - '.github/workflows/docs-link-check.yml'
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.md'
+      - '.markdownlint.json'
+
+jobs:
+  lint-and-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+      - name: Install markdownlint-cli
+        run: npm i -g markdownlint-cli@0.39.0
+      - name: Run markdownlint
+        run: markdownlint '**/*.md' '!node_modules/**' --config .markdownlint.json || true
+      - name: Link Checker
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --verbose --no-progress --accept 200,206,429 --retry-wait-time 5 --max-retries 2 --exclude-path node_modules '**/*.md'
+        env:
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -1,0 +1,122 @@
+# =============================================================================
+# GitHub Actions: Automatic Branch Cleanup
+# =============================================================================
+# Purpose: Automatically delete merged branches (local + remote)
+# Author: Pumuki Team®
+# Trigger: After PR merge to develop or main
+# =============================================================================
+
+name: Auto Branch Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  cleanup:
+    name: Cleanup Merged Branches
+    runs-on: ubuntu-latest
+
+    # Only run if PR was merged (not just closed)
+    if: github.event.pull_request.merged == true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Delete source branch
+        run: |
+          echo "🧹 Deleting merged branch: ${{ github.event.pull_request.head.ref }}"
+
+          # Delete remote branch (if exists)
+          git push origin --delete "${{ github.event.pull_request.head.ref }}" 2>/dev/null || echo "   Remote branch already deleted"
+
+          echo "✅ Branch cleanup complete"
+
+      - name: Find and delete other merged branches
+        run: |
+          echo "🔍 Finding other merged branches..."
+
+          # Get base branch (develop or main)
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          echo "Base branch: $BASE_BRANCH"
+
+          # Fetch latest
+          git fetch --all --prune
+
+          # Switch to base branch
+          git checkout "$BASE_BRANCH"
+          git pull origin "$BASE_BRANCH"
+
+          # Find merged branches (excluding protected branches)
+          MERGED_BRANCHES=$(git branch -r --merged "$BASE_BRANCH" | \
+            grep -v 'origin/HEAD' | \
+            grep -v 'origin/main' | \
+            grep -v 'origin/develop' | \
+            sed 's|origin/||' | \
+            tr -d ' ' || echo "")
+
+          if [ -z "$MERGED_BRANCHES" ]; then
+            echo "✅ No other merged branches to clean"
+            exit 0
+          fi
+
+          echo "Found merged branches:"
+          echo "$MERGED_BRANCHES"
+
+          # Delete each merged branch
+          for branch in $MERGED_BRANCHES; do
+            echo "Deleting: $branch"
+            git push origin --delete "$branch" 2>/dev/null || echo "   Already deleted: $branch"
+          done
+
+          echo "✅ Cleaned up merged branches"
+
+      - name: Update Git Flow state
+        run: |
+          echo "📊 Updating Git Flow state..."
+
+          # If gitflow state file exists, reset it
+          if [ -f ".git/gitflow-state.json" ]; then
+            echo '{"step": 0, "branch": "develop", "status": "ready"}' > .git/gitflow-state.json
+            echo "✅ Git Flow state reset"
+          fi
+
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: |
+                ## 🧹 Auto Cleanup Complete
+
+                ✅ Branch `${{ github.event.pull_request.head.ref }}` has been deleted
+                ✅ Other merged branches cleaned up
+                ✅ Repository is now clean
+
+                ---
+                🐈💚 **Pumuki Team®** - Automated Branch Cleanup
+            });
+
+      - name: Summary
+        run: |
+          echo "## 🎉 Cleanup Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Merged branch deleted: \`${{ github.event.pull_request.head.ref }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Other merged branches cleaned" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "🐈💚 **Pumuki Team®** - Automated Git Flow" >> $GITHUB_STEP_SUMMARY

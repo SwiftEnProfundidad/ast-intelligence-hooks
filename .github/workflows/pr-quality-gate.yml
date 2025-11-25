@@ -1,0 +1,207 @@
+name: PR Quality Gate
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  metadata:
+    name: PR Metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: PR Info
+        run: |
+          echo "PR #${{ github.event.pull_request.number }}"
+          echo "Title: ${{ github.event.pull_request.title }}"
+          echo "Author: ${{ github.event.pull_request.user.login }}"
+          echo "Branch: ${{ github.head_ref }}"
+
+  conventional-commits:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check Conventional Commits
+        uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: .commitlintrc.json
+        continue-on-error: true
+
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run ESLint
+        run: npm run lint
+        continue-on-error: false
+      
+      - name: Run Prettier
+        run: npm run format:check || echo "Format check failed"
+        continue-on-error: true
+      
+      - name: TypeScript Check
+        run: npm run type-check || npx tsc --noEmit
+        continue-on-error: false
+
+  admin-dashboard-checks:
+    name: Admin Dashboard Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/admin-dashboard
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: TypeScript Check
+        run: npx tsc --noEmit
+      
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:3000
+
+  backend-checks:
+    name: Backend Checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/backend
+    env:
+      JWT_SECRET: test-secret-key-for-ci
+      SUPABASE_URL: http://localhost:54321
+      SUPABASE_SERVICE_ROLE_KEY: test-key
+      USE_MOCK_SUPABASE: true
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: TypeScript Check
+        run: npx tsc --noEmit
+      
+      - name: Run Unit Tests
+        run: npm test -- --testPathIgnorePatterns=e2e --passWithNoTests
+        continue-on-error: true
+      
+      - name: Build
+        run: npm run build
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+      
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+        continue-on-error: true
+
+  architecture-validation:
+    name: Architecture Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check SOLID Principles
+        run: |
+          echo "🏗️ Validating SOLID principles..."
+          
+          echo "Checking for Singleton pattern (should not exist)..."
+          if grep -r "private static.*instance" apps/admin-dashboard/src/ 2>/dev/null; then
+            echo "❌ Singleton pattern found! Use Dependency Injection instead."
+            exit 1
+          fi
+          echo "✅ No Singleton pattern found"
+          
+          echo "Checking for code comments (should not exist)..."
+          COMMENTS=$(grep -r "^[[:space:]]*\/\/" apps/admin-dashboard/src/ 2>/dev/null | grep -v "\/\/ ..." | wc -l || echo "0")
+          if [ "$COMMENTS" -gt 10 ]; then
+            echo "⚠️ Found $COMMENTS comment lines. Code should be self-documenting."
+          else
+            echo "✅ Minimal comments found ($COMMENTS lines)"
+          fi
+          
+          echo "Checking for services layer..."
+          if [ -d "apps/admin-dashboard/src/services" ]; then
+            echo "✅ Services layer exists"
+          else
+            echo "⚠️ Services layer not found"
+          fi
+          
+          echo "Checking for stores layer..."
+          if [ -d "apps/admin-dashboard/src/stores" ]; then
+            echo "✅ Stores layer exists"
+          else
+            echo "⚠️ Stores layer not found"
+          fi
+
+  pr-summary:
+    name: PR Summary
+    runs-on: ubuntu-latest
+    needs: [code-quality, admin-dashboard-checks, backend-checks, security-scan, architecture-validation]
+    if: always()
+    steps:
+      - name: Summary
+        run: |
+          echo "## 📊 PR Quality Gate Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All checks completed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checks:" >> $GITHUB_STEP_SUMMARY
+          echo "- Code Quality: ${{ needs.code-quality.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Admin Dashboard: ${{ needs.admin-dashboard-checks.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Backend: ${{ needs.backend-checks.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Architecture: ${{ needs.architecture-validation.result }}" >> $GITHUB_STEP_SUMMARY

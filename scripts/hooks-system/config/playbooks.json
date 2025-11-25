@@ -1,0 +1,28 @@
+{
+  "validate-ai-evidence": {
+    "description": "Refresca la evidencia y muestra el estado del hook-system",
+    "steps": [
+      {
+        "type": "command",
+        "cmd": "npm --prefix scripts/hooks-system run lint:hooks"
+      },
+      {
+        "type": "command",
+        "cmd": "scripts/hooks-system/bin/update-evidence.sh --auto --platforms 1,2,3,4"
+      },
+      {
+        "type": "command",
+        "cmd": "scripts/hooks-system/bin/hook-status.js"
+      }
+    ]
+  },
+  "run-token-smoke": {
+    "description": "Ejecuta el smoke-test del monitor de tokens",
+    "steps": [
+      {
+        "type": "command",
+        "cmd": "scripts/automation/verify-token-monitor.sh"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Violations API - CLI Wrapper
+# =============================================================================
+# Usage: violations <command> [args]
+# Examples:
+#   violations list common.quality.comments
+#   violations show common.quality.todo_fixme
+#   violations summary
+# =============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+API="${SCRIPT_DIR}/violations-api.js"
+
+if [[ ! -f "$API" ]]; then
+  echo "❌ Error: violations-api.js not found"
+  exit 1
+fi
+
+node "$API" "$@"
+

@@ -1,0 +1,70 @@
+name: E2E Playwright (admin)
+
+on:
+  pull_request:
+    branches: [ "*" ]
+  workflow_dispatch:
+
+jobs:
+  e2e-admin:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Clean ports
+        run: bash ./scripts/kill-ports.sh
+
+      - name: Create backend .env for CI
+        working-directory: ./backend
+        run: |
+          cat > .env << 'EOF'
+          SUPABASE_URL=https://example.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY=service-role-key
+          WEBHOOK_URL=https://example.com/webhook
+          EOF
+
+      - name: Install backend deps
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Install admin-dashboard deps
+        working-directory: ./admin-dashboard
+        run: |
+          npm ci
+          npx playwright install --with-deps
+
+      - name: Start backend and admin
+        run: |
+          (cd backend && npm run start:dev) &
+          (cd admin-dashboard && npm run start:e2e) &
+          npx wait-on http://localhost:3000 http://localhost:3003
+
+      - name: Run Playwright (admin-dashboard)
+        working-directory: ./admin-dashboard
+        env:
+          CI: true
+        run: npm run test:e2e
+
+      - name: Upload Playwright report on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-admin
+          path: admin-dashboard/playwright-report
+          if-no-files-found: ignore
+
+      - name: Teardown
+        if: always()
+        run: |
+          pkill -f "next start" || true
+          pkill -f "next dev" || true
+          pkill -f "node" || true

@@ -1,0 +1,26 @@
+{
+  "ios": {
+    "architecturePattern": "MVVM-C",
+    "strictMode": true,
+    "allowedPatterns": ["MVVM", "MVVM-C"],
+    "prohibitedPatterns": ["MVC"],
+    "documentation": "docs/ios/ARCHITECTURE.md",
+    "exceptions": {
+      "legacy": ["LegacyModule/"],
+      "allowMixed": false
+    }
+  },
+  "android": {
+    "architecturePattern": "MVVM_CLEAN",
+    "strictMode": true,
+    "allowedPatterns": ["MVVM", "CLEAN_ARCHITECTURE"],
+    "documentation": "docs/android/ARCHITECTURE.md"
+  },
+  "metadata": {
+    "version": "3.0.0",
+    "lastUpdated": "2025-11-01",
+    "author": "Architecture Team",
+    "notes": "Este archivo define el patrón arquitectónico del proyecto para el sistema AST Intelligence. Si se especifica manualmente, tiene prioridad sobre la auto-detección."
+  }
+}
+

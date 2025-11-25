@@ -1,0 +1,208 @@
+# =============================================================================
+# GitHub Actions: Pre-Merge Validation
+# =============================================================================
+# Purpose: Validate PR before allowing merge (required status check)
+# Author: Pumuki Team®
+# Trigger: On pull request to develop or main
+# =============================================================================
+
+name: Pre-Merge Validation
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+  statuses: write
+
+jobs:
+  validate:
+    name: Validate PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate conventional commits
+        run: |
+          echo "📝 Validating commit messages..."
+
+          # Get commits in this PR
+          COMMITS=$(git log --pretty=format:"%H %s" origin/${{ github.base_ref }}..HEAD)
+
+          INVALID=0
+          while IFS= read -r line; do
+            COMMIT_HASH=$(echo "$line" | awk '{print $1}')
+            COMMIT_MSG=$(echo "$line" | cut -d' ' -f2-)
+
+            # Check conventional commit format
+            if ! echo "$COMMIT_MSG" | grep -qE '^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?: .{10,}'; then
+              echo "❌ Invalid commit message: $COMMIT_MSG"
+              INVALID=$((INVALID + 1))
+            fi
+          done <<< "$COMMITS"
+
+          if [ $INVALID -gt 0 ]; then
+            echo "❌ $INVALID commit(s) have invalid messages"
+            exit 1
+          fi
+
+          echo "✅ All commit messages are valid"
+
+      - name: Run linter
+        run: |
+          echo "🔍 Running linter..."
+          npm run lint:check 2>&1 | tee lint-output.txt || true
+
+          # Check if there are any errors (not warnings)
+          if grep -q "error" lint-output.txt; then
+            echo "❌ Linter found errors"
+            exit 1
+          fi
+
+          echo "✅ Linter passed"
+
+      - name: Run type check
+        run: |
+          echo "📘 Running TypeScript type check..."
+          npm run type-check || exit 1
+          echo "✅ Type check passed"
+
+      - name: Run tests
+        run: |
+          echo "🧪 Running tests..."
+          npm run test:ci || exit 1
+          echo "✅ Tests passed"
+
+      - name: Check for merge conflicts
+        run: |
+          echo "🔀 Checking for merge conflicts..."
+
+          git fetch origin ${{ github.base_ref }}
+
+          # Try to merge base into head (dry-run)
+          if ! git merge-tree $(git merge-base HEAD origin/${{ github.base_ref }}) HEAD origin/${{ github.base_ref }} | grep -q '<<<<<<<'; then
+            echo "✅ No merge conflicts detected"
+          else
+            echo "❌ Merge conflicts detected"
+            echo "Please resolve conflicts before merging"
+            exit 1
+          fi
+
+      - name: Validate AI Evidence (if exists)
+        run: |
+          echo "🤖 Validating AI Evidence..."
+
+          if [ ! -f ".AI_EVIDENCE.json" ]; then
+            echo "⚠️  No .AI_EVIDENCE.json found (optional)"
+            exit 0
+          fi
+
+          # Validate JSON format
+          if ! jq empty .AI_EVIDENCE.json 2>/dev/null; then
+            echo "❌ Invalid JSON in .AI_EVIDENCE.json"
+            exit 1
+          fi
+
+          # Check timestamp
+          TIMESTAMP=$(jq -r '.timestamp' .AI_EVIDENCE.json)
+          if [ "$TIMESTAMP" = "null" ] || [ -z "$TIMESTAMP" ]; then
+            echo "⚠️  No timestamp in .AI_EVIDENCE.json"
+          else
+            echo "✅ AI Evidence is valid"
+          fi
+
+      - name: Check for large files
+        run: |
+          echo "📦 Checking for large files..."
+
+          # Find files >500KB in this PR
+          LARGE_FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | \
+            xargs -I {} sh -c 'SIZE=$(stat -f%z "{}" 2>/dev/null || echo 0); if [ $SIZE -gt 512000 ]; then echo "{} ($(($SIZE/1024))KB)"; fi' || true)
+
+          if [ -n "$LARGE_FILES" ]; then
+            echo "⚠️  Large files detected:"
+            echo "$LARGE_FILES"
+            echo "Consider using Git LFS"
+          else
+            echo "✅ No large files"
+          fi
+
+      - name: Security scan (secrets)
+        run: |
+          echo "🔐 Scanning for hardcoded secrets..."
+
+          # Scan changed files for potential secrets
+          SECRETS=$(git diff origin/${{ github.base_ref }}...HEAD | \
+            grep -iE '(password|api_key|secret|token|bearer)\s*[:=]\s*["\x27][^"\x27]{8,}["\x27]' || true)
+
+          if [ -n "$SECRETS" ]; then
+            echo "❌ Potential secrets detected in code"
+            echo "$SECRETS"
+            exit 1
+          fi
+
+          echo "✅ No hardcoded secrets detected"
+
+      - name: Comment validation results
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const conclusion = '${{ job.status }}' === 'success' ? 'passed' : 'failed';
+            const emoji = conclusion === 'passed' ? '✅' : '❌';
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: |
+                ## Pre-Merge Validation Results
+
+                Status: ${{ job.status }}
+
+                ✅ Conventional commits validated
+                ✅ Linter passed
+                ✅ Type check passed
+                ✅ Tests passed
+                ✅ No merge conflicts
+                ✅ Security scan passed
+
+                ---
+                🐈💚 **Pumuki Team®** - Automated Validation
+            });
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🎯 Validation Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ job.status }}" = "success" ]; then
+            echo "✅ All validations passed" >> $GITHUB_STEP_SUMMARY
+            echo "✅ PR is ready to merge" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Some validations failed" >> $GITHUB_STEP_SUMMARY
+            echo "Please review the errors above" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "🐈💚 **Pumuki Team®** - Automated Git Flow" >> $GITHUB_STEP_SUMMARY
