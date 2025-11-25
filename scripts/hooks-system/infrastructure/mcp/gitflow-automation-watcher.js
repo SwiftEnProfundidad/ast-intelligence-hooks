@@ -440,9 +440,16 @@ function aiGateCheck() {
     const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
     const uncommittedChanges = exec('git status --porcelain');
 
-    if (isProtectedBranch && uncommittedChanges && uncommittedChanges.length > 0) {
-        violations.push(`❌ GITFLOW_VIOLATION: Uncommitted changes on '${currentBranch}'. Create feature branch first!`);
-        sendNotification('🚫 Git Flow Violation', `Changes on ${currentBranch} - create feature branch!`, 'Basso');
+    // ALWAYS warn if on protected branch, even without changes
+    if (isProtectedBranch) {
+        console.error(`[MCP] ⚠️ WARNING: Currently on protected branch '${currentBranch}'`);
+        if (uncommittedChanges && uncommittedChanges.length > 0) {
+            violations.push(`❌ GITFLOW_VIOLATION: Uncommitted changes on '${currentBranch}'. Create feature branch first!`);
+            violations.push(`   Run: git checkout -b feature/your-feature-name`);
+            sendNotification('🚫 Git Flow Violation', `Changes on ${currentBranch} - create feature branch!`, 'Basso');
+        } else {
+            warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
+        }
     }
 
     // Check 3: Atomic commits - WARNING only

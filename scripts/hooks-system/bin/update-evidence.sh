@@ -60,8 +60,8 @@ if [[ "$AUTO_MODE" == "false" ]]; then
   echo ""
 fi
 
-# Get current timestamp
-TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+# Get current timestamp in local timezone with offset (ISO 8601)
+TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%S%z" | sed 's/\([0-9][0-9]\)$/:\1/')
 
 # Get current branch for context
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
@@ -145,6 +145,52 @@ generate_contextual_answers() {
 
 # Generate contextual answers
 generate_contextual_answers "$ALL_CHANGED_FILES" "$CURRENT_BRANCH" "$LAST_COMMITS"
+
+# Extract key rules from Windsurf rules files
+extract_windsurf_rules() {
+  local rules_file="$1"
+  local rules_path="$REPO_ROOT/.windsurf/rules/$rules_file"
+
+  if [[ -f "$rules_path" ]]; then
+    # Extract section headers (lines starting with ##)
+    grep -E "^##" "$rules_path" 2>/dev/null | head -10 | sed 's/^## //' | tr '\n' '; ' || echo "No sections found"
+  else
+    echo "File not found"
+  fi
+}
+
+# Extract AST Intelligence rules summary
+extract_ast_rules() {
+  local platform="$1"
+  local ast_path="$REPO_ROOT/scripts/hooks-system/infrastructure/ast/$platform"
+
+  if [[ -d "$ast_path" ]]; then
+    # Count rule files and extract rule IDs
+    local rule_count=$(find "$ast_path" -name "*.js" 2>/dev/null | wc -l | tr -d ' ')
+    local rule_ids=$(grep -rh "ruleId:" "$ast_path" 2>/dev/null | head -10 | sed "s/.*ruleId:[[:space:]]*['\"]\\([^'\"]*\\)['\"].*/\\1/" | tr '\n' ', ' || echo "")
+    echo "Files: $rule_count, Rules: ${rule_ids%,}"
+  else
+    echo "No AST rules for $platform"
+  fi
+}
+
+# Get rules summary based on detected platform
+get_rules_summary() {
+  local rules_file="$1"
+  local platform=""
+
+  case "$rules_file" in
+    rulesbackend.mdc|rulesbackend.md) platform="backend" ;;
+    rulesfront.mdc|rulesfront.md) platform="frontend" ;;
+    rulesios.mdc|rulesios.md) platform="ios" ;;
+    rulesandroid.mdc|rulesandroid.md) platform="android" ;;
+  esac
+
+  local windsurf_sections=$(extract_windsurf_rules "${rules_file%.mdc}.md")
+  local ast_summary=$(extract_ast_rules "$platform")
+
+  echo "Windsurf: $windsurf_sections | AST: $ast_summary"
+}
 
 if [[ -z "$STAGED_FILES" ]]; then
   echo -e "${YELLOW}⚠️  No staged files detected.${NC}"
@@ -287,6 +333,9 @@ echo ""
 # Prepare temp file for atomic write
 TMP_FILE=$(mktemp "${EVIDENCE_FILE}.tmp.XXXXXX")
 
+# Get rules summary now that RULES_FILE is defined
+RULES_SUMMARY=$(get_rules_summary "$RULES_FILE")
+
 # Generate evidence JSON with multi-platform support
 if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
   # Single platform (backward compatible)
@@ -299,8 +348,8 @@ if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
   "rules_read": {
     "file": "$RULES_FILE",
     "verified": true,
-    "lines_read": "119-160 (Clean Architecture structure)",
-    "also_read": [".AI_SESSION_START.md"]
+    "summary": "$RULES_SUMMARY",
+    "also_read": [".AI_SESSION_START.md", ".windsurf/rules/$RULES_FILE"]
   },
   "protocol_3_questions": {
     "answered": true,
@@ -323,11 +372,12 @@ else
     if [[ $i -gt 0 ]]; then
       RULES_JSON+=","
     fi
+    local rule_summary=$(get_rules_summary "${RULES_FILES[$i]}")
     RULES_JSON+="
     {
       \"file\": \"${RULES_FILES[$i]}\",
       \"verified\": true,
-      \"lines_read\": \"119-160 (Clean Architecture structure)\"
+      \"summary\": \"$rule_summary\"
     }"
   done
   RULES_JSON+="
