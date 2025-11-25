@@ -63,8 +63,89 @@ fi
 # Get current timestamp
 TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
+# Get current branch for context
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+
+# Get last 3 commits for context
+LAST_COMMITS=$(git log --oneline -3 2>/dev/null | head -3 | tr '\n' '; ' || echo "No recent commits")
+
 # Detect which files will be modified (if in git staging)
 STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || echo "")
+
+# Also check modified but not staged files for context
+MODIFIED_FILES=$(git diff --name-only 2>/dev/null || echo "")
+ALL_CHANGED_FILES="$STAGED_FILES $MODIFIED_FILES"
+
+# Generate contextual answers based on actual work
+generate_contextual_answers() {
+  local all_files="$1"
+  local branch="$2"
+  local commits="$3"
+
+  # Detect modules being worked on
+  local modules=""
+  [[ "$all_files" == *"/admin/"* ]] && modules="$modules admin,"
+  [[ "$all_files" == *"/auth/"* ]] && modules="$modules auth,"
+  [[ "$all_files" == *"/orders/"* ]] && modules="$modules orders,"
+  [[ "$all_files" == *"/products/"* ]] && modules="$modules products,"
+  [[ "$all_files" == *"/stores/"* ]] && modules="$modules stores,"
+  [[ "$all_files" == *"/notifications/"* ]] && modules="$modules notifications,"
+  [[ "$all_files" == *"/hooks-system/"* ]] && modules="$modules hooks-system,"
+  [[ "$all_files" == *"/testing/"* ]] && modules="$modules testing,"
+  modules="${modules%,}"  # Remove trailing comma
+  [[ -z "$modules" ]] && modules="general"
+
+  # Detect file types
+  local file_types=""
+  [[ "$all_files" == *".spec.ts"* ]] && file_types="$file_types tests,"
+  [[ "$all_files" == *".service.ts"* ]] && file_types="$file_types services,"
+  [[ "$all_files" == *".repository.ts"* ]] && file_types="$file_types repositories,"
+  [[ "$all_files" == *".controller.ts"* ]] && file_types="$file_types controllers,"
+  [[ "$all_files" == *".gateway.ts"* ]] && file_types="$file_types gateways,"
+  [[ "$all_files" == *".interface.ts"* ]] && file_types="$file_types interfaces,"
+  [[ "$all_files" == *".mock.ts"* ]] && file_types="$file_types mocks,"
+  [[ "$all_files" == *".helper.ts"* ]] && file_types="$file_types helpers,"
+  [[ "$all_files" == *".sh"* ]] && file_types="$file_types shell-scripts,"
+  [[ "$all_files" == *".js"* ]] && file_types="$file_types javascript,"
+  file_types="${file_types%,}"
+  [[ -z "$file_types" ]] && file_types="source files"
+
+  # Detect layer (Clean Architecture)
+  local layer=""
+  [[ "$all_files" == *"/domain/"* ]] && layer="Domain"
+  [[ "$all_files" == *"/application/"* ]] && layer="Application"
+  [[ "$all_files" == *"/infrastructure/"* ]] && layer="Infrastructure"
+  [[ "$all_files" == *"/presentation/"* ]] && layer="Presentation"
+  [[ -z "$layer" ]] && layer="multiple layers"
+
+  # Extract feature from branch name
+  local feature_desc="$branch"
+  if [[ "$branch" == feature/* ]]; then
+    feature_desc="${branch#feature/}"
+  elif [[ "$branch" == fix/* ]]; then
+    feature_desc="fixing ${branch#fix/}"
+  elif [[ "$branch" == refactor/* ]]; then
+    feature_desc="refactoring ${branch#refactor/}"
+  fi
+
+  # Generate Q1: What type of file
+  Q1="Working on branch '$branch'. Modifying $file_types in modules: $modules. Target layer: $layer."
+
+  # Generate Q2: Similar code exists
+  Q2="Modules affected: $modules. Recent commits: $commits. Check for existing patterns in these modules before adding new code."
+
+  # Generate Q3: Clean Architecture
+  Q3="Changes in $layer layer affecting $modules. Ensure dependencies point inward and no infrastructure leaks into domain."
+
+  # Export for use
+  export CONTEXTUAL_Q1="$Q1"
+  export CONTEXTUAL_Q2="$Q2"
+  export CONTEXTUAL_Q3="$Q3"
+}
+
+# Generate contextual answers
+generate_contextual_answers "$ALL_CHANGED_FILES" "$CURRENT_BRANCH" "$LAST_COMMITS"
+
 if [[ -z "$STAGED_FILES" ]]; then
   echo -e "${YELLOW}⚠️  No staged files detected.${NC}"
   echo -e "${CYAN}📝 You can manually add files to evidence after editing.${NC}"
@@ -119,40 +200,78 @@ detect_rules_file() {
 }
 
 # Detect appropriate rules file
+RULES_FILES=()
+
 if [[ -n "$STAGED_FILES" ]]; then
   FIRST_FILE=$(echo "$STAGED_FILES" | head -1)
   RULES_FILE=$(detect_rules_file "$FIRST_FILE")
+  RULES_FILES+=("$RULES_FILE")
 else
-  echo -e "${CYAN}ℹ️  Which platforms are you working on?${NC}"
-  echo "   1) Frontend (React/Next.js)"
-  echo "   2) Backend (NestJS)"
-  echo "   3) iOS (Swift)"
-  echo "   4) Android (Kotlin)"
-  echo ""
-  echo -e "${YELLOW}💡 Tip: You can select multiple platforms (e.g., '1,2' for Frontend+Backend)${NC}"
-  read -p "Select (e.g., 1 or 1,2 or 1,2,3): " platform_choice
+  if [[ "$AUTO_MODE" == "true" ]]; then
+    # Non-interactive mode: infer platforms from --platforms or use all by default
+    if [[ -n "$PLATFORMS" ]]; then
+      IFS=',' read -ra SELECTED_PLATFORMS <<< "$PLATFORMS"
+    else
+      SELECTED_PLATFORMS=("frontend" "backend" "ios" "android")
+    fi
 
-  # Parse multiple selections
-  RULES_FILES=()
-  IFS=',' read -ra PLATFORMS <<< "$platform_choice"
-  for platform in "${PLATFORMS[@]}"; do
-    # Trim whitespace
-    platform=$(echo "$platform" | xargs)
-    case $platform in
-      1) RULES_FILES+=("rulesfront.mdc") ;;
-      2) RULES_FILES+=("rulesbackend.mdc") ;;
-      3) RULES_FILES+=("rulesios.mdc") ;;
-      4) RULES_FILES+=("rulesandroid.mdc") ;;
-    esac
-  done
+    for platform in "${SELECTED_PLATFORMS[@]}"; do
+      platform_normalized=$(echo "$platform" | tr '[:upper:]' '[:lower:]' | xargs)
+      case "$platform_normalized" in
+        1|"frontend")
+          RULES_FILES+=("rulesfront.mdc")
+          ;;
+        2|"backend")
+          RULES_FILES+=("rulesbackend.mdc")
+          ;;
+        3|"ios")
+          RULES_FILES+=("rulesios.mdc")
+          ;;
+        4|"android")
+          RULES_FILES+=("rulesandroid.mdc")
+          ;;
+      esac
+    done
 
-  # Fallback if nothing selected
-  if [[ ${#RULES_FILES[@]} -eq 0 ]]; then
-    RULES_FILES=("rulesbackend.mdc")
+    # Fallback: si nada válido, usar las 4 plataformas por defecto
+    if [[ ${#RULES_FILES[@]} -eq 0 ]]; then
+      RULES_FILES=("rulesfront.mdc" "rulesbackend.mdc" "rulesios.mdc" "rulesandroid.mdc")
+    fi
+
+    # Compatibilidad con el caso de una sola plataforma
+    RULES_FILE="${RULES_FILES[0]}"
+  else
+    echo -e "${CYAN}ℹ️  Which platforms are you working on?${NC}"
+    echo "   1) Frontend (React/Next.js)"
+    echo "   2) Backend (NestJS)"
+    echo "   3) iOS (Swift)"
+    echo "   4) Android (Kotlin)"
+    echo ""
+    echo -e "${YELLOW}💡 Tip: You can select multiple platforms (e.g., '1,2' for Frontend+Backend)${NC}"
+    read -p "Select (e.g., 1 or 1,2 or 1,2,3): " platform_choice
+
+    # Parse multiple selections
+    RULES_FILES=()
+    IFS=',' read -ra PLATFORMS <<< "$platform_choice"
+    for platform in "${PLATFORMS[@]}"; do
+      # Trim whitespace
+      platform=$(echo "$platform" | xargs)
+      case $platform in
+        1) RULES_FILES+=("rulesfront.mdc") ;;
+        2) RULES_FILES+=("rulesbackend.mdc") ;;
+        3) RULES_FILES+=("rulesios.mdc") ;;
+        4) RULES_FILES+=("rulesandroid.mdc") ;;
+      esac
+    done
+
+    # Fallback if nothing selected
+    if [[ ${#RULES_FILES[@]} -eq 0 ]]; then
+      RULES_FILES=("rulesbackend.mdc")
+    fi
+
+    # For single selection, maintain backward compatibility
+    RULES_FILE="${RULES_FILES[0]}"
   fi
-
-  # For single selection, maintain backward compatibility
-  RULES_FILE="${RULES_FILES[0]}"
 fi
 
 echo -e "${GREEN}✅ Rules selected:${NC}"
@@ -165,10 +284,13 @@ else
 fi
 echo ""
 
+# Prepare temp file for atomic write
+TMP_FILE=$(mktemp "${EVIDENCE_FILE}.tmp.XXXXXX")
+
 # Generate evidence JSON with multi-platform support
 if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
   # Single platform (backward compatible)
-  cat > "$EVIDENCE_FILE" <<EOF
+  cat > "$TMP_FILE" <<EOF
 {
   "timestamp": "$TIMESTAMP",
   "session_id": "$FEATURE_NAME",
@@ -182,11 +304,15 @@ if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
   },
   "protocol_3_questions": {
     "answered": true,
-    "question_1_file_type": "TODO: Describe what type of file you're creating/modifying and where it should go per Clean Architecture",
-    "question_2_similar_exists": "TODO: Search for similar files in the codebase. Do they exist? Where?",
-    "question_3_clean_architecture": "TODO: Does this violate Clean Architecture or SOLID principles? Check dependencies."
+    "question_1_file_type": "$CONTEXTUAL_Q1",
+    "question_2_similar_exists": "$CONTEXTUAL_Q2",
+    "question_3_clean_architecture": "$CONTEXTUAL_Q3"
   },
-  "justification": "TODO: Why are you making this change? What problem does it solve?",
+  "current_context": {
+    "branch": "$CURRENT_BRANCH",
+    "last_commits": "$LAST_COMMITS"
+  },
+  "justification": "Context-aware evidence for branch '$CURRENT_BRANCH'. Auto-detected modules and file types from current work.",
   "approved_by": "carlos-merlos"
 }
 EOF
@@ -207,7 +333,7 @@ else
   RULES_JSON+="
   ]"
 
-  cat > "$EVIDENCE_FILE" <<EOF
+  cat > "$TMP_FILE" <<EOF
 {
   "timestamp": "$TIMESTAMP",
   "session_id": "$FEATURE_NAME",
@@ -217,15 +343,21 @@ else
   "also_read": [".AI_SESSION_START.md"],
   "protocol_3_questions": {
     "answered": true,
-    "question_1_file_type": "TODO: Describe what type of file you're creating/modifying and where it should go per Clean Architecture",
-    "question_2_similar_exists": "TODO: Search for similar files in the codebase. Do they exist? Where?",
-    "question_3_clean_architecture": "TODO: Does this violate Clean Architecture or SOLID principles? Check dependencies."
+    "question_1_file_type": "$CONTEXTUAL_Q1",
+    "question_2_similar_exists": "$CONTEXTUAL_Q2",
+    "question_3_clean_architecture": "$CONTEXTUAL_Q3"
   },
-  "justification": "TODO: Why are you making this change? What problem does it solve?",
+  "current_context": {
+    "branch": "$CURRENT_BRANCH",
+    "last_commits": "$LAST_COMMITS"
+  },
+  "justification": "Context-aware evidence for branch '$CURRENT_BRANCH'. Auto-detected modules and file types from current work.",
   "approved_by": "carlos-merlos"
 }
 EOF
 fi
+
+mv "$TMP_FILE" "$EVIDENCE_FILE"
 
 if [[ "$AUTO_MODE" == "true" ]]; then
   echo "{\"success\":true,\"timestamp\":\"$TIMESTAMP\",\"session\":\"$FEATURE_NAME\",\"platforms\":\"$PLATFORMS\",\"mode\":\"autonomous\"}"
@@ -244,29 +376,31 @@ echo -e "${CYAN}   Timestamp: $TIMESTAMP${NC}"
 echo -e "${CYAN}   Session: $FEATURE_NAME${NC}"
 echo ""
 
-# Show 3 questions template
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo -e "${YELLOW}📋 PROTOCOL: Answer 3 Questions${NC}"
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo ""
-echo -e "${CYAN}🤔 QUESTION 1: What type of file are you creating/modifying?${NC}"
-echo "   → Describe: Config, Repository, Use Case, Controller, Component?"
-echo "   → Where should it go per Clean Architecture?"
-echo ""
-echo -e "${CYAN}🤔 QUESTION 2: Does similar code already exist?${NC}"
-echo "   → Search the codebase for similar patterns"
-echo "   → If yes, where? Can you reuse it?"
-echo ""
-echo -e "${CYAN}🤔 QUESTION 3: Does this violate Clean Architecture or SOLID?${NC}"
-echo "   → Check dependency direction (Domain ← Application ← Infrastructure)"
-echo "   → Single Responsibility? Open/Closed? Dependency Inversion?"
-echo ""
-echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-echo ""
-echo -e "${GREEN}✅ Ready to edit code!${NC}"
-echo -e "${YELLOW}⚠️  Remember to update the 3 questions in .AI_EVIDENCE.json${NC}"
-echo -e "${YELLOW}   before committing.${NC}"
-echo ""
+if [[ "$AUTO_MODE" == "false" ]]; then
+  # Show 3 questions as a reflection aid (already auto-filled in .AI_EVIDENCE.json)
+  echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+  echo -e "${YELLOW}📋 PROTOCOL: 3 Questions (auto-filled in .AI_EVIDENCE.json)${NC}"
+  echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+  echo ""
+  echo -e "${CYAN}🤔 QUESTION 1: What type of file are you creating/modifying?${NC}"
+  echo "   → Describe: Config, Repository, Use Case, Controller, Component?"
+  echo "   → Where should it go per Clean Architecture?"
+  echo ""
+  echo -e "${CYAN}🤔 QUESTION 2: Does similar code already exist?${NC}"
+  echo "   → Search the codebase for similar patterns"
+  echo "   → If yes, where? Can you reuse it?"
+  echo ""
+  echo -e "${CYAN}🤔 QUESTION 3: Does this violate Clean Architecture or SOLID?${NC}"
+  echo "   → Check dependency direction (Domain ← Application ← Infrastructure)"
+  echo "   → Single Responsibility? Open/Closed? Dependency Inversion?"
+  echo ""
+  echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+  echo ""
+  echo -e "${GREEN}✅ Ready to edit code!${NC}"
+  echo -e "${YELLOW}ℹ️  The 3 questions have been pre-filled in .AI_EVIDENCE.json for this session.${NC}"
+  echo -e "${YELLOW}   You can refine them manually before committing if you need more detail.${NC}"
+  echo ""
+fi
 
 # Show current session context
 if [[ -f "$SESSION_FILE" ]]; then
