@@ -24,3 +24,6 @@ native/ios/.build/
 native/ios/.swiftpm/
 *.pack
 *.artifactbundle
+
+.AI_EVIDENCE.json
+.ast_watch.pid

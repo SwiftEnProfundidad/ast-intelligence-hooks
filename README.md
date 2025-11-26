@@ -152,6 +152,22 @@ hooks-system/
 
 All monitoring events funnel through NotificationCenter; macOS notifications (`osascript` / `terminal-notifier`) are used when available.
 
+### Evidence & health (domain-driven)
+
+- `EvidenceStatus` (Domain layer) models the current state of `.AI_EVIDENCE.json` (timestamp, age, platforms, branch, infra changes, etc.).
+- `GetEvidenceStatusUseCase` + `FileSystemEvidenceRepository` provide a stable API for MCP servers, CLI and shell scripts to read evidence status.
+- The `ast-hooks health` command returns a JSON snapshot including:
+  - `evidence.status` (`fresh`, `stale`, `invalid`) and `evidence.isStale`.
+  - `evidence.ageSeconds` and `evidence.maxAgeSeconds`.
+  - `astWatch.running`, `astWatch.pid` and `astWatch.logPath` when the AST watcher is active.
+
+MCP resources expose the same information to AI assistants:
+
+- `ai://gate` – mandatory AI gate check (evidence freshness + Git Flow).
+- `evidence://status` – current evidence status.
+- `gitflow://state` – Git Flow cycle state and current branch.
+- `context://active` – active context analysis with platform confidence.
+
 ---
 
 ## CLI reference
@@ -164,6 +180,8 @@ All monitoring events funnel through NotificationCenter; macOS notifications (`o
 | `node infrastructure/watchdog/token-monitor.js` | Manual token usage evaluation              |
 | `node infrastructure/cli/install-wizard.js`   | Interactive setup wizard                     |
 | `npx ast-sync push/pull`                      | Sync library with target project             |
+| `ast-hooks health`                           | Health snapshot of evidence + AST watcher (JSON) |
+| `ast-hooks watch`                            | Start continuous AST watcher (pre-commit friendly) |
 
 ---
 

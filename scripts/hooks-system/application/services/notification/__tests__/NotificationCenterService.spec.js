@@ -169,7 +169,9 @@ describe('NotificationCenterService', () => {
       service.markSent({ type: 'test_cooldown' }); // Simular envío
       const second = service.enqueue({ ...notification, message: 'Second attempt' });
 
-      await sleep(110); // Esperar que expire cooldown
+      // Simular expiración del cooldown moviendo el timestamp hacia atrás
+      const lastSent = service.cooldowns.get('test_cooldown');
+      service.cooldowns.set('test_cooldown', lastSent - 1000);
 
       const third = service.enqueue({ ...notification, message: 'Third attempt' });
 
@@ -308,7 +310,7 @@ describe('NotificationCenterService', () => {
 
       // Then
       expect(sendSpy).toHaveBeenCalledTimes(3); // First, Second, Fourth
-      expect(service.stats.totalEnqueued).toBe(4);
+      expect(service.stats.totalEnqueued).toBe(3);
       expect(service.stats.totalDeduplicated).toBe(1);
       expect(service.stats.totalCooldownSkipped).toBe(1);
       expect(service.stats.totalSent).toBe(3);

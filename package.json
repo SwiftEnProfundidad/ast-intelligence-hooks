@@ -23,7 +23,7 @@
     "violations:summary": "node bin/violations summary",
     "violations:top": "node bin/violations top",
     "violations:demo": "bash bin/demo-violations",
-    "test": "echo 'Tests not implemented yet'",
+    "test": "jest",
     "lint": "echo 'Linting not implemented yet'"
   },
   "keywords": [
@@ -64,7 +64,9 @@
     "ts-morph": "^21.0.0",
     "glob": "^10.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
   "peerDependencies": {},
   "files": [
     "bin/",
