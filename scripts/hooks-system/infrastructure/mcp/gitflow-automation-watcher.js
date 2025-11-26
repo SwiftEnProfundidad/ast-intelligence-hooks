@@ -21,6 +21,8 @@ const { execSync } = require('child_process');
 
 const AutonomousOrchestrator = require('../../application/services/AutonomousOrchestrator');
 const ContextDetectionEngine = require('../../application/services/ContextDetectionEngine');
+const GetEvidenceStatusUseCase = require('../../../../application/use-cases/GetEvidenceStatusUseCase');
+const FileSystemEvidenceRepository = require('../../../../infrastructure/repositories/FileSystemEvidenceRepository');
 
 // MCP Protocol version (must match Cursor's expected format: YYYY-MM-DD)
 const MCP_VERSION = '2024-11-05';
@@ -98,56 +100,50 @@ function getGitFlowState() {
 }
 
 /**
- * Check evidence status
+ * Check evidence status (domain-driven via EvidenceStatus)
  */
 function checkEvidence() {
     try {
-        if (!fs.existsSync(EVIDENCE_FILE)) {
-            return {
-                status: 'missing',
-                message: '.AI_EVIDENCE.json not found',
-                action: `Run: ai-start ${getCurrentBranch()}`,
-                age: null,
-                isStale: true
-            };
-        }
+        const repository = new FileSystemEvidenceRepository({
+            repoRoot: REPO_ROOT,
+            maxAgeSeconds: MAX_EVIDENCE_AGE
+        });
+        const useCase = new GetEvidenceStatusUseCase(repository);
+        const status = useCase.execute();
 
-        const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf-8'));
-        const timestamp = evidence.timestamp;
-
-        if (!timestamp) {
-            return {
-                status: 'invalid',
-                message: 'No timestamp in .AI_EVIDENCE.json',
-                action: `Run: ai-start ${getCurrentBranch()}`,
-                age: null,
-                isStale: true
-            };
-        }
-
-        // Calculate age
-        const evidenceTime = new Date(timestamp).getTime();
-        const currentTime = Date.now();
-        const ageSeconds = Math.floor((currentTime - evidenceTime) / 1000);
-        const isStale = ageSeconds > MAX_EVIDENCE_AGE;
+        const ageSeconds = typeof status.ageSeconds === 'number' ? status.ageSeconds : null;
+        const isStale = status.isStale();
+        const effectiveStatus = status.getStatus();
+        const currentBranch = status.branch || getCurrentBranch();
 
         return {
-            status: isStale ? 'stale' : 'fresh',
+            status: effectiveStatus,
             message: isStale
                 ? `Evidence is STALE (${ageSeconds}s old, max ${MAX_EVIDENCE_AGE}s)`
                 : `Evidence is fresh (${ageSeconds}s old)`,
-            action: isStale ? `Run: ai-start ${getCurrentBranch()}` : null,
+            action: isStale ? `Run: ai-start ${currentBranch}` : null,
             age: ageSeconds,
             isStale: isStale,
-            timestamp: timestamp,
-            session: evidence.session || 'unknown',
-            currentBranch: getCurrentBranch()
+            timestamp: status.timestamp.toISOString(),
+            session: status.sessionId || 'unknown',
+            currentBranch
         };
     } catch (err) {
+        const currentBranch = getCurrentBranch();
+        const message = err && typeof err.message === 'string' ? err.message : String(err);
+        if (message.includes('Evidence file not found')) {
+            return {
+                status: 'missing',
+                message: '.AI_EVIDENCE.json not found',
+                action: `Run: ai-start ${currentBranch}`,
+                age: null,
+                isStale: true
+            };
+        }
         return {
             status: 'error',
-            message: `Error checking evidence: ${err.message}`,
-            action: `Run: ai-start ${getCurrentBranch()}`,
+            message: `Error checking evidence: ${message}`,
+            action: `Run: ai-start ${currentBranch}`,
             age: null,
             isStale: true
         };
@@ -1075,12 +1071,17 @@ setInterval(async () => {
         }
 
         // 3. CHECK FOR ATOMIC COMMIT ISSUES (multiple feature groups staged)
-        const stagedFiles = exec('git diff --cached --name-only');
-        if (stagedFiles && typeof stagedFiles === 'string' && stagedFiles.length > 0) {
-            const files = stagedFiles.split('\n').filter(f => f);
-            const featureGroups = new Set();
+        // Only check if there are actually staged files RIGHT NOW (avoid stale notifications)
+        const stagedFilesRaw = exec('git diff --cached --name-only');
+        const stagedFiles = stagedFilesRaw && typeof stagedFilesRaw === 'string'
+            ? stagedFilesRaw.split('\n').filter(f => f && f.trim().length > 0)
+            : [];
 
-            files.forEach(file => {
+        if (stagedFiles.length > 0) {
+            const featureGroups = new Set();
+            let docsCount = 0;
+
+            stagedFiles.forEach(file => {
                 if (file.includes('/admin/')) featureGroups.add('admin');
                 else if (file.includes('/auth/')) featureGroups.add('auth');
                 else if (file.includes('/orders/')) featureGroups.add('orders');
@@ -1088,9 +1089,11 @@ setInterval(async () => {
                 else if (file.includes('/products/')) featureGroups.add('products');
                 else if (file.includes('/stores/')) featureGroups.add('stores');
                 else if (file.includes('hooks-system/')) featureGroups.add('hooks');
+                else if (file.endsWith('.md')) docsCount++;
             });
 
-            if (featureGroups.size > 2) {
+            // Only notify if multiple code feature groups (ignore docs-only commits)
+            if (featureGroups.size > 2 && docsCount < stagedFiles.length) {
                 sendNotification('📦 Atomic Commit Suggestion', `${featureGroups.size} feature groups detected: ${Array.from(featureGroups).join(', ')}. Consider splitting commits.`, 'Glass');
             }
         }

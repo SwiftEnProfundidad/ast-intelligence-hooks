@@ -7,39 +7,162 @@
  */
 
 const { execSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
+const GetEvidenceStatusUseCase = require('../application/use-cases/GetEvidenceStatusUseCase');
+const FileSystemEvidenceRepository = require('../infrastructure/repositories/FileSystemEvidenceRepository');
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
 
 const HOOKS_ROOT = path.join(__dirname, '..');
 
+function resolveRepoRoot() {
+  try {
+    const output = execSync('git rev-parse --show-toplevel', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const trimmed = output.trim();
+    if (trimmed.length > 0) {
+      return trimmed;
+    }
+  } catch (e) {
+  }
+  return process.cwd();
+}
+
+function buildHealthSnapshot() {
+  const repoRoot = resolveRepoRoot();
+  const result = {
+    ok: true,
+    repoRoot,
+    branch: null,
+    evidence: {
+      exists: false
+    },
+    astWatch: {
+      running: false
+    }
+  };
+
+  try {
+    const branchOutput = execSync('git branch --show-current', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const branch = branchOutput.trim();
+    if (branch) {
+      result.branch = branch;
+    }
+  } catch (e) {
+  }
+
+  const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
+  if (fs.existsSync(evidencePath)) {
+    result.evidence.exists = true;
+    try {
+      const repository = new FileSystemEvidenceRepository({
+        repoRoot
+      });
+      const useCase = new GetEvidenceStatusUseCase(repository);
+      const status = useCase.execute();
+
+      result.evidence.timestamp = status.timestamp.toISOString();
+      result.evidence.ageSeconds = status.ageSeconds;
+      result.evidence.maxAgeSeconds = status.maxAgeSeconds;
+      result.evidence.status = status.getStatus();
+      result.evidence.isStale = status.isStale();
+      if (status.sessionId) {
+        result.evidence.sessionId = status.sessionId;
+      }
+      if (status.branch) {
+        result.evidence.branch = status.branch;
+      }
+      if (status.platforms && status.platforms.length > 0) {
+        result.evidence.platforms = status.platforms;
+      }
+
+      const raw = fs.readFileSync(evidencePath, 'utf8');
+      const json = JSON.parse(raw);
+      if (json && typeof json === 'object' && json.action) {
+        result.evidence.action = json.action;
+      }
+    } catch (e) {
+      result.evidence.parseError = e.message;
+      result.ok = false;
+    }
+  } else {
+    result.ok = false;
+  }
+
+  const pidPath = path.join(repoRoot, '.ast_watch.pid');
+  const logPath = path.join(repoRoot, '.ast_watch.log');
+  if (fs.existsSync(pidPath)) {
+    try {
+      const pidRaw = fs.readFileSync(pidPath, 'utf8').trim();
+      const pid = parseInt(pidRaw, 10);
+      if (!Number.isNaN(pid)) {
+        result.astWatch.pid = pid;
+        try {
+          const psOutput = execSync(`ps -p ${pid} -o args=`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+          if (psOutput && psOutput.includes('watch-hooks.js')) {
+            result.astWatch.running = true;
+            result.astWatch.command = psOutput.trim();
+          } else {
+            result.ok = false;
+          }
+        } catch (e) {
+          result.ok = false;
+        }
+      } else {
+        result.astWatch.pid = null;
+        result.ok = false;
+      }
+    } catch (e) {
+      result.astWatch.error = e.message;
+      result.ok = false;
+    }
+  } else {
+    result.ok = false;
+  }
+
+  if (fs.existsSync(logPath)) {
+    result.astWatch.logPath = logPath;
+  }
+
+  return result;
+}
+
 const commands = {
   audit: () => {
     execSync(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
   },
-  
+
   ast: () => {
     execSync(`node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')}`, { stdio: 'inherit' });
   },
-  
+
   install: () => {
     execSync(`node ${path.join(HOOKS_ROOT, 'bin/install.js')}`, { stdio: 'inherit' });
   },
-  
+
   'verify-policy': () => {
     execSync(`bash ${path.join(HOOKS_ROOT, 'bin/verify-no-verify.sh')}`, { stdio: 'inherit' });
   },
-  
+
   'progress': () => {
     execSync(`bash ${path.join(HOOKS_ROOT, 'bin/generate-progress-report.sh')}`, { stdio: 'inherit' });
   },
-  
+
+  health: () => {
+    const snapshot = buildHealthSnapshot();
+    console.log(JSON.stringify(snapshot));
+  },
+
+  watch: () => {
+    execSync(`node ${path.join(HOOKS_ROOT, 'scripts/hooks-system/bin/watch-hooks.js')}`, { stdio: 'inherit' });
+  },
+
   'gitflow': () => {
     const subcommand = args[0] || 'check';
     execSync(`bash ${path.join(HOOKS_ROOT, 'infrastructure/shell/gitflow-enforcer.sh')} ${subcommand}`, { stdio: 'inherit' });
   },
-  
+
   help: () => {
     console.log(`
 AST Intelligence Hooks CLI v3.3.0
@@ -53,6 +176,7 @@ Commands:
   install          Install hooks in new project
   verify-policy    Verify --no-verify policy compliance
   progress         Show violation progress report
+  health           Show hook-system health snapshot (JSON)
   gitflow          Check Git Flow compliance (check|reset)
   help             Show this help message
   version          Show version
@@ -63,6 +187,7 @@ Examples:
   ast-hooks install
   ast-hooks verify-policy
   ast-hooks progress
+  ast-hooks health
 
 Environment Variables:
   GIT_BYPASS_HOOK=1    Bypass hook validation (emergency)
@@ -81,7 +206,7 @@ Documentation:
   See scripts/hooks-system/docs/guides/USAGE.md
 `);
   },
-  
+
   version: () => {
     const pkg = require('../package.json');
     console.log(`v${pkg.version}`);

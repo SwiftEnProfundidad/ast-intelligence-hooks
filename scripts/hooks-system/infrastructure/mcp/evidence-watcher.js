@@ -8,6 +8,8 @@
 
 const fs = require('fs');
 const path = require('path');
+const GetEvidenceStatusUseCase = require('../../../../application/use-cases/GetEvidenceStatusUseCase');
+const FileSystemEvidenceRepository = require('../../../../infrastructure/repositories/FileSystemEvidenceRepository');
 
 // MCP Protocol version (must match Cursor's expected format: YYYY-MM-DD)
 const MCP_VERSION = '2024-11-05';
@@ -34,57 +36,50 @@ function getCurrentBranch() {
 }
 
 /**
- * Check evidence status
+ * Check evidence status (domain-driven via EvidenceStatus)
  */
 function checkEvidence() {
     try {
-        if (!fs.existsSync(EVIDENCE_FILE)) {
-            return {
-                status: 'missing',
-                message: '.AI_EVIDENCE.json not found',
-                action: `Run: ai-start ${getCurrentBranch()}`,
-                age: null,
-                isStale: true
-            };
-        }
+        const repository = new FileSystemEvidenceRepository({
+            repoRoot: REPO_ROOT,
+            maxAgeSeconds: MAX_EVIDENCE_AGE
+        });
+        const useCase = new GetEvidenceStatusUseCase(repository);
+        const status = useCase.execute();
 
-        const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf-8'));
-        const timestamp = evidence.timestamp;
-
-        if (!timestamp) {
-            return {
-                status: 'invalid',
-                message: 'No timestamp in .AI_EVIDENCE.json',
-                action: `Run: ai-start ${getCurrentBranch()}`,
-                age: null,
-                isStale: true
-            };
-        }
-
-        // Calculate age
-        const evidenceTime = new Date(timestamp).getTime();
-        const currentTime = Date.now();
-        const ageSeconds = Math.floor((currentTime - evidenceTime) / 1000);
-
-        const isStale = ageSeconds > MAX_EVIDENCE_AGE;
+        const ageSeconds = typeof status.ageSeconds === 'number' ? status.ageSeconds : null;
+        const isStale = status.isStale();
+        const effectiveStatus = status.getStatus();
+        const currentBranch = status.branch || getCurrentBranch();
 
         return {
-            status: isStale ? 'stale' : 'fresh',
+            status: effectiveStatus,
             message: isStale
                 ? `Evidence is STALE (${ageSeconds}s old, max ${MAX_EVIDENCE_AGE}s)`
                 : `Evidence is fresh (${ageSeconds}s old)`,
-            action: isStale ? `Run: ai-start ${getCurrentBranch()}` : null,
+            action: isStale ? `Run: ai-start ${currentBranch}` : null,
             age: ageSeconds,
             isStale: isStale,
-            timestamp: timestamp,
-            session: evidence.session || 'unknown',
-            currentBranch: getCurrentBranch()
+            timestamp: status.timestamp.toISOString(),
+            session: status.sessionId || 'unknown',
+            currentBranch
         };
     } catch (err) {
+        const currentBranch = getCurrentBranch();
+        const message = err && typeof err.message === 'string' ? err.message : String(err);
+        if (message.includes('Evidence file not found')) {
+            return {
+                status: 'missing',
+                message: '.AI_EVIDENCE.json not found',
+                action: `Run: ai-start ${currentBranch}`,
+                age: null,
+                isStale: true
+            };
+        }
         return {
             status: 'error',
-            message: `Error checking evidence: ${err.message}`,
-            action: `Run: ai-start ${getCurrentBranch()}`,
+            message: `Error checking evidence: ${message}`,
+            action: `Run: ai-start ${currentBranch}`,
             age: null,
             isStale: true
         };

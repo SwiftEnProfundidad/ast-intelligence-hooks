@@ -49,8 +49,8 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-# Set default feature name if not provided
-FEATURE_NAME="${FEATURE_NAME:-manual-update}"
+# FEATURE_NAME may be provided as first argument; if not, it will default
+# to a name derived from the current branch (configured after reading CURRENT_BRANCH).
 
 # Banner (only in interactive mode)
 if [[ "$AUTO_MODE" == "false" ]]; then
@@ -65,6 +65,19 @@ TIMESTAMP=$(date +"%Y-%m-%dT%H:%M:%S%z" | sed 's/\([0-9][0-9]\)$/:\1/')
 
 # Get current branch for context
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "unknown")
+
+if [[ "$CURRENT_BRANCH" == "develop" || "$CURRENT_BRANCH" == "main" || "$CURRENT_BRANCH" == "master" ]]; then
+  echo -e "${RED}❌ AI Gate: Protected branch '$CURRENT_BRANCH'.${NC}"
+  echo -e "${YELLOW}➡️  Create a feature branch (git checkout -b feature/xxx) before editing code.${NC}"
+  exit 1
+fi
+
+# Derive default feature name from current branch if not provided
+DEFAULT_FEATURE_NAME="manual-update"
+if [[ -n "$CURRENT_BRANCH" && "$CURRENT_BRANCH" != "unknown" ]]; then
+  DEFAULT_FEATURE_NAME=$(echo "$CURRENT_BRANCH" | sed 's#[/ ]#-#g')
+fi
+FEATURE_NAME="${FEATURE_NAME:-$DEFAULT_FEATURE_NAME}"
 
 # Get last 3 commits for context
 LAST_COMMITS=$(git log --oneline -3 2>/dev/null | head -3 | tr '\n' '; ' || echo "No recent commits")
@@ -300,6 +313,92 @@ get_rules_summary() {
   echo "IDE Rules: $ide_sections | AST: $ast_summary"
 }
 
+run_ast_early_check() {
+  if [[ "$AUTO_MODE" == "true" ]]; then
+    return 0
+  fi
+
+  if [[ "${AST_EARLY_CHECK:-1}" != "1" ]]; then
+    return 0
+  fi
+
+  if [[ ! -f "$REPO_ROOT/scripts/hooks-system/bin/run-ast-adapter.js" ]]; then
+    return 0
+  fi
+
+  echo -e "${BLUE}🧠 Running AST early check on staged files...${NC}"
+  local ast_output
+  ast_output=$(node "$REPO_ROOT/scripts/hooks-system/bin/run-ast-adapter.js" 2>/dev/null || echo "[]")
+
+  local findings_count
+  findings_count=$(echo "$ast_output" | jq 'length' 2>/dev/null || echo "0")
+
+  if [[ "$findings_count" -gt 0 ]]; then
+    echo -e "${YELLOW}🧠 AST Early Check: $findings_count findings on staged files (see AST reports/pre-commit).${NC}"
+  else
+    echo -e "${GREEN}🧠 AST Early Check: no findings on staged files.${NC}"
+  fi
+
+  if [[ "$(uname 2>/dev/null)" == "Darwin" ]]; then
+    local platforms_label
+    platforms_label=$(echo "$PLATFORMS_JSON" | jq -r 'join(", ")' 2>/dev/null || echo "")
+
+    local msg
+    if [[ "$findings_count" -gt 0 ]]; then
+      msg="AST early check: $findings_count findings"
+    else
+      msg="AST early check: no findings"
+    fi
+
+    if [[ -n "$platforms_label" ]]; then
+      msg+=" on $platforms_label"
+    fi
+
+    osascript -e "display notification \"$msg\" with title \"AST Hooks\" sound name \"default\"" >/dev/null 2>&1 || true
+  fi
+}
+
+start_ast_watch_if_needed() {
+  if [[ "$AUTO_MODE" == "true" ]]; then
+    return 0
+  fi
+
+  if [[ "${AST_WATCH_AUTO:-1}" != "1" ]]; then
+    return 0
+  fi
+
+  local watcher_script="$REPO_ROOT/scripts/hooks-system/bin/watch-hooks.js"
+  if [[ ! -f "$watcher_script" ]]; then
+    return 0
+  fi
+
+  local pid_file="$REPO_ROOT/.ast_watch.pid"
+  if [[ -f "$pid_file" ]]; then
+    local existing_pid
+    existing_pid=$(cat "$pid_file" 2>/dev/null || echo "")
+    if [[ -n "$existing_pid" ]]; then
+      local ps_out
+      ps_out=$(ps -p "$existing_pid" -o args= 2>/dev/null || true)
+      if echo "$ps_out" | grep -q "watch-hooks.js"; then
+        echo -e "${CYAN}ℹ️  AST watch already running (PID $existing_pid).${NC}"
+        if [[ "$(uname 2>/dev/null)" == "Darwin" ]]; then
+          osascript -e "display notification \"AST watch already running (PID $existing_pid)\" with title \"AST Hooks\" sound name \"default\"" >/dev/null 2>&1 || true
+        fi
+        return 0
+      fi
+    fi
+  fi
+
+  local log_file="$REPO_ROOT/.ast_watch.log"
+  node "$watcher_script" >"$log_file" 2>&1 &
+  local new_pid=$!
+  echo "$new_pid" > "$pid_file"
+  echo -e "${GREEN}✅ AST watch started in background (PID $new_pid).${NC}"
+  if [[ "$(uname 2>/dev/null)" == "Darwin" ]]; then
+    osascript -e "display notification \"AST watch started (PID $new_pid)\" with title \"AST Hooks\" sound name \"default\"" >/dev/null 2>&1 || true
+  fi
+}
+
 if [[ -z "$STAGED_FILES" ]]; then
   echo -e "${YELLOW}⚠️  No staged files detected.${NC}"
   echo -e "${CYAN}📝 You can manually add files to evidence after editing.${NC}"
@@ -319,27 +418,46 @@ detect_rules_file() {
   local file="$1"
   local ext="${file##*.}"
 
-  # Backend detection
-  if [[ "$file" == *"/apps/backend/"* ]] || [[ "$file" == *"/backend/"* ]]; then
+  # Scripts/hooks-system - no code rules apply (infrastructure tooling)
+  if [[ "$file" == *"hooks-system/"* ]] || [[ "$file" == *"scripts/"* ]]; then
+    echo "none"
+    return
+  fi
+
+  # Documentation - no code rules
+  if [[ "$ext" == "md" ]]; then
+    echo "none"
+    return
+  fi
+
+  # Backend detection (NestJS apps) - relative or absolute paths like 'apps/backend/...'
+  if [[ "$file" == *"apps/backend/"* ]] || [[ "$file" == *"src/backend/"* ]]; then
     echo "rulesbackend.mdc"
     return
   fi
 
-  # Extension-based detection
+  # Frontend detection
+  if [[ "$file" == *"apps/frontend/"* ]] || [[ "$file" == *"apps/web/"* ]] || [[ "$file" == *"src/frontend/"* ]]; then
+    echo "rulesfront.mdc"
+    return
+  fi
+
+  # iOS detection
+  if [[ "$file" == *"ios/"* ]] || [[ "$file" == *"iOS/"* ]] || [[ "$file" == *"Apps/iOS/"* ]]; then
+    echo "rulesios.mdc"
+    return
+  fi
+
+  # Android detection
+  if [[ "$file" == *"android/"* ]] || [[ "$file" == *"Android/"* ]] || [[ "$file" == *"Apps/Android/"* ]]; then
+    echo "rulesandroid.mdc"
+    return
+  fi
+
+  # Extension-based detection (fallback)
   case "$ext" in
     ts|tsx|jsx)
-      if [[ "$file" == *"/apps/backend/"* ]]; then
-        echo "rulesbackend.mdc"
-      else
-        echo "rulesfront.mdc"
-      fi
-      ;;
-    js)
-      if [[ "$file" == *"/apps/backend/"* ]]; then
-        echo "rulesbackend.mdc"
-      else
-        echo "rulesfront.mdc"
-      fi
+      echo "rulesfront.mdc"
       ;;
     swift)
       echo "rulesios.mdc"
@@ -347,8 +465,11 @@ detect_rules_file() {
     kt|kts)
       echo "rulesandroid.mdc"
       ;;
+    sh|js|json|yaml|yml|xml|plist|gradle)
+      echo "none"
+      ;;
     *)
-      echo "rulesbackend.mdc"
+      echo "none"
       ;;
   esac
 }
@@ -357,9 +478,30 @@ detect_rules_file() {
 RULES_FILES=()
 
 if [[ -n "$STAGED_FILES" ]]; then
-  FIRST_FILE=$(echo "$STAGED_FILES" | head -1)
-  RULES_FILE=$(detect_rules_file "$FIRST_FILE")
-  RULES_FILES+=("$RULES_FILE")
+  # Infer platforms from ALL staged files (skip evidence + hooks-system/scripts infra)
+  while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+
+    if [[ "$file" == ".AI_EVIDENCE.json" ]] || [[ "$file" == ".AI_SESSION_START.md" ]] ||
+       [[ "$file" == scripts/hooks-system/* ]] || [[ "$file" == scripts/hook-system/* ]]; then
+      continue
+    fi
+
+    rules_for_file=$(detect_rules_file "$file")
+    if [[ "$rules_for_file" != "none" ]]; then
+      # Use default expansion to avoid unbound variable errors under set -u
+      if [[ ! " ${RULES_FILES[*]-} " =~ " $rules_for_file " ]]; then
+        RULES_FILES+=("$rules_for_file")
+      fi
+    fi
+  done <<< "$STAGED_FILES"
+
+  # Fallback: if no platform-specific rules detected, use first staged file
+  if [[ ${#RULES_FILES[@]} -eq 0 ]]; then
+    PRIMARY_FILE=$(echo "$STAGED_FILES" | head -1)
+    RULES_FILE=$(detect_rules_file "$PRIMARY_FILE")
+    RULES_FILES+=("$RULES_FILE")
+  fi
 else
   if [[ "$AUTO_MODE" == "true" ]]; then
     # Non-interactive mode: infer platforms from --platforms or use all by default
@@ -418,7 +560,7 @@ else
       esac
     done
 
-    # Fallback if nothing selected
+# Fallback if nothing selected
     if [[ ${#RULES_FILES[@]} -eq 0 ]]; then
       RULES_FILES=("rulesbackend.mdc")
     fi
@@ -428,9 +570,35 @@ else
   fi
 fi
 
+# Default RULES_FILE to first detected rules file (if any)
+RULES_FILE="${RULES_FILES[0]:-none}"
+
+PLATFORMS_JSON="[]"
+if [[ ${#RULES_FILES[@]} -gt 0 ]]; then
+  platforms_tmp=""
+  for rf in "${RULES_FILES[@]}"; do
+    platform=""
+    case "$rf" in
+      rulesbackend.mdc|rulesbackend.md) platform="backend" ;;
+      rulesfront.mdc|rulesfront.md) platform="frontend" ;;
+      rulesios.mdc|rulesios.md) platform="ios" ;;
+      rulesandroid.mdc|rulesandroid.md) platform="android" ;;
+    esac
+    if [[ -n "$platform" ]]; then
+      if [[ -n "$platforms_tmp" ]]; then
+        platforms_tmp+="," 
+      fi
+      platforms_tmp+="\"$platform\""
+    fi
+  done
+  if [[ -n "$platforms_tmp" ]]; then
+    PLATFORMS_JSON="[$platforms_tmp]"
+  fi
+fi
+
 echo -e "${GREEN}✅ Rules selected:${NC}"
-if [[ -n "$STAGED_FILES" ]]; then
-  echo "   • ${RULES_FILE}"
+if [[ ${#RULES_FILES[@]} -le 1 ]]; then
+  echo "   • ${RULES_FILES[0]:-none}"
 else
   for rule in "${RULES_FILES[@]}"; do
     echo "   • $rule"
@@ -441,13 +609,39 @@ echo ""
 # Prepare temp file for atomic write
 TMP_FILE=$(mktemp "${EVIDENCE_FILE}.tmp.XXXXXX")
 
-# Get all modified files (staged + unstaged) for files_modified field
-ALL_MODIFIED_FOR_JSON="[]"
-if [[ -n "$ALL_CHANGED_FILES" ]]; then
-  ALL_MODIFIED_FOR_JSON=$(echo "$ALL_CHANGED_FILES" | tr ' ' '\n' | grep -v "^$" | sort -u | head -20 | jq -R . | jq -s .)
+# Get all modified files (staged + unstaged) and split into code vs infra
+CODE_MODIFIED_FOR_JSON="[]"
+INFRA_MODIFIED_FOR_JSON="[]"
+if [[ -n "$ALL_CHANGED_FILES" ]] && [[ "$ALL_CHANGED_FILES" != " " ]]; then
+  FILTERED_FILES=$(echo "$ALL_CHANGED_FILES" | tr ' ' '\n' | grep -v "^$" | sort -u | head -20 || true)
+  if [[ -n "$FILTERED_FILES" ]]; then
+    CODE_FILES=""
+    INFRA_FILES=""
+
+    while IFS= read -r f; do
+      [[ -z "$f" ]] && continue
+
+      if [[ "$f" == ".AI_EVIDENCE.json" ]] || [[ "$f" == ".AI_SESSION_START.md" ]] ||
+         [[ "$f" == ".AI_TOKEN_STATUS.txt" ]] ||
+         [[ "$f" == scripts/hooks-system/* ]] || [[ "$f" == scripts/hook-system/* ]] ||
+         [[ "$f" == .windsurf/* ]] || [[ "$f" == .cursor/* ]] || [[ "$f" == .vscode/* ]]; then
+        INFRA_FILES+="$f"$'\n'
+      else
+        CODE_FILES+="$f"$'\n'
+      fi
+    done <<< "$FILTERED_FILES"
+
+    if [[ -n "$CODE_FILES" ]]; then
+      CODE_MODIFIED_FOR_JSON=$(echo "$CODE_FILES" | grep -v "^$" | jq -R . | jq -s . 2>/dev/null || echo "[]")
+    fi
+
+    if [[ -n "$INFRA_FILES" ]]; then
+      INFRA_MODIFIED_FOR_JSON=$(echo "$INFRA_FILES" | grep -v "^$" | jq -R . | jq -s . 2>/dev/null || echo "[]")
+    fi
+  fi
 fi
 
-# Get rules summary based on work type
+# Get rules summary based on work type (single-platform case)
 if [[ "$WORK_TYPE" == "documentation" ]]; then
   RULES_SUMMARY="N/A - Documentation only (no code rules apply)"
   RULES_FILE="none"
@@ -459,7 +653,7 @@ else
 fi
 
 # Generate evidence JSON with multi-platform support
-if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
+if [[ ${#RULES_FILES[@]} -le 1 ]]; then
   # Single platform (backward compatible)
   cat > "$TMP_FILE" <<EOF
 {
@@ -467,7 +661,9 @@ if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
   "session_id": "$FEATURE_NAME",
   "action": "$(echo $FEATURE_NAME | sed 's/-/_/g')",
   "work_type": "$WORK_TYPE",
-  "files_modified": $ALL_MODIFIED_FOR_JSON,
+  "platforms": $PLATFORMS_JSON,
+  "files_modified": $CODE_MODIFIED_FOR_JSON,
+  "infra_modified": $INFRA_MODIFIED_FOR_JSON,
   "rules_read": {
     "file": "$RULES_FILE",
     "verified": true,
@@ -484,7 +680,7 @@ if [[ -n "$STAGED_FILES" ]] || [[ ${#RULES_FILES[@]} -eq 1 ]]; then
     "last_commits": "$LAST_COMMITS"
   },
   "justification": "Context-aware evidence for branch '$CURRENT_BRANCH'. Auto-detected modules and file types from current work.",
-  "approved_by": "carlos-merlos"
+  "approved_by": "Pumuki Team®"
 }
 EOF
 else
@@ -494,7 +690,7 @@ else
     if [[ $i -gt 0 ]]; then
       RULES_JSON+=","
     fi
-    local rule_summary=$(get_rules_summary "${RULES_FILES[$i]}")
+    rule_summary=$(get_rules_summary "${RULES_FILES[$i]}")
     RULES_JSON+="
     {
       \"file\": \"${RULES_FILES[$i]}\",
@@ -510,7 +706,10 @@ else
   "timestamp": "$TIMESTAMP",
   "session_id": "$FEATURE_NAME",
   "action": "$(echo $FEATURE_NAME | sed 's/-/_/g')",
-  "files_modified": $FILES_ARRAY,
+  "work_type": "$WORK_TYPE",
+  "platforms": $PLATFORMS_JSON,
+  "files_modified": $CODE_MODIFIED_FOR_JSON,
+  "infra_modified": $INFRA_MODIFIED_FOR_JSON,
   "rules_read": $RULES_JSON,
   "also_read": [".AI_SESSION_START.md"],
   "protocol_3_questions": {
@@ -524,7 +723,7 @@ else
     "last_commits": "$LAST_COMMITS"
   },
   "justification": "Context-aware evidence for branch '$CURRENT_BRANCH'. Auto-detected modules and file types from current work.",
-  "approved_by": "carlos-merlos"
+  "approved_by": "Pumuki Team®"
 }
 EOF
 fi
@@ -535,6 +734,9 @@ if [[ "$AUTO_MODE" == "true" ]]; then
   echo "{\"success\":true,\"timestamp\":\"$TIMESTAMP\",\"session\":\"$FEATURE_NAME\",\"platforms\":\"$PLATFORMS\",\"mode\":\"autonomous\"}"
   exit 0
 fi
+
+run_ast_early_check
+start_ast_watch_if_needed
 
 SYNC_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/sync-autonomous-orchestrator.sh"
 if [[ -x "$SYNC_SCRIPT" ]]; then
@@ -570,14 +772,6 @@ if [[ "$AUTO_MODE" == "false" ]]; then
   echo ""
   echo -e "${GREEN}✅ Ready to edit code!${NC}"
   echo -e "${YELLOW}ℹ️  The 3 questions have been pre-filled in .AI_EVIDENCE.json for this session.${NC}"
-  echo -e "${YELLOW}   You can refine them manually before committing if you need more detail.${NC}"
-  echo ""
-fi
-
-# Show current session context
-if [[ -f "$SESSION_FILE" ]]; then
-  echo -e "${CYAN}📖 Current session context:${NC}"
-  head -10 "$SESSION_FILE" | grep -E "Sesión actual|Branch activo|Fase del plan" || true
   echo ""
 fi
 
