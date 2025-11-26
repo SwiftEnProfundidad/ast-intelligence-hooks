@@ -11,6 +11,7 @@ const AnalyzeStagedFilesUseCase = require('./use-cases/AnalyzeStagedFilesUseCase
 const AutoExecuteAIStartUseCase = require('./use-cases/AutoExecuteAIStartUseCase');
 const BlockCommitUseCase = require('./use-cases/BlockCommitUseCase');
 const GenerateAuditReportUseCase = require('./use-cases/GenerateAuditReportUseCase');
+const GetEvidenceStatusUseCase = require('./use-cases/GetEvidenceStatusUseCase');
 
 // Services
 const AutonomousOrchestrator = require('./services/AutonomousOrchestrator');
@@ -25,6 +26,7 @@ module.exports = {
     AutoExecuteAIStartUseCase,
     BlockCommitUseCase,
     GenerateAuditReportUseCase,
+    GetEvidenceStatusUseCase,
 
     // Services
     AutonomousOrchestrator,
