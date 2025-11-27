@@ -15,6 +15,33 @@
 # ═══════════════════════════════════════════════════════════════
 
 set -euo pipefail
+# Protected branches (local enforcement even without GitHub branch protection)
+PROTECTED_BRANCHES=("main" "develop")
+
+is_protected_branch() {
+  local name="${1#refs/heads/}"
+  for protected in "${PROTECTED_BRANCHES[@]}"; do
+    if [[ "$name" == "$protected" ]]; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+extract_refspec_target() {
+  local refspec="$1"
+
+  if [[ "$refspec" == ":"* ]]; then
+    refspec="${refspec#:}"
+  fi
+
+  if [[ "$refspec" == *:* ]]; then
+    refspec="${refspec##*:}"
+  fi
+
+  refspec="${refspec#refs/heads/}"
+  echo "$refspec"
+}
 
 # Colors
 RED='\033[0;31m'
@@ -35,12 +62,12 @@ REPO_ROOT=$($GIT_BIN rev-parse --show-toplevel 2>/dev/null || echo "")
 #───────────────────────────────────────────────────────────────
 validate_branch_name() {
   local branch="$1"
-  
+
   # Allow main, develop, master
   if [[ "$branch" == "main" ]] || [[ "$branch" == "develop" ]] || [[ "$branch" == "master" ]]; then
     return 0
   fi
-  
+
   # Must follow pattern: type/description
   if [[ ! "$branch" =~ ^(feature|fix|chore|docs|refactor|test|ci)/ ]]; then
     echo -e "${RED}❌ Invalid branch name: $branch${NC}"
@@ -55,7 +82,7 @@ validate_branch_name() {
     echo ""
     return 1
   fi
-  
+
   return 0
 }
 
@@ -64,12 +91,12 @@ validate_branch_name() {
 #───────────────────────────────────────────────────────────────
 validate_commit_branch() {
   local current_branch=$($GIT_BIN branch --show-current 2>/dev/null || echo "")
-  
+
   if [[ -z "$current_branch" ]]; then
     echo -e "${RED}❌ Detached HEAD - cannot commit${NC}"
     return 1
   fi
-  
+
   # Cannot commit directly to main/develop
   if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "develop" ]]; then
     echo -e "${RED}❌ Cannot commit directly to $current_branch${NC}"
@@ -79,12 +106,12 @@ validate_commit_branch() {
     echo ""
     return 1
   fi
-  
+
   # Validate branch name
   if ! validate_branch_name "$current_branch"; then
     return 1
   fi
-  
+
   return 0
 }
 
@@ -93,7 +120,7 @@ validate_commit_branch() {
 #───────────────────────────────────────────────────────────────
 check_evidence() {
   local evidence_file="$REPO_ROOT/.AI_EVIDENCE.json"
-  
+
   if [[ ! -f "$evidence_file" ]]; then
     echo -e "${YELLOW}⚠️  .AI_EVIDENCE.json not found${NC}"
     echo ""
@@ -101,19 +128,19 @@ check_evidence() {
     echo ""
     return 1
   fi
-  
+
   local evidence_ts=$(jq -r '.timestamp' "$evidence_file" 2>/dev/null || echo "")
-  
+
   if [[ -z "$evidence_ts" ]] || [[ "$evidence_ts" == "null" ]]; then
     return 1
   fi
-  
+
   # Convert to epoch (handle ISO 8601 with milliseconds)
   local clean_ts=$(echo "$evidence_ts" | sed 's/\.[0-9]*Z$/Z/')
   local evidence_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$clean_ts" +%s 2>/dev/null || echo "0")
   local now_epoch=$(date +%s)
   local age=$((now_epoch - evidence_epoch))
-  
+
   if [[ $age -gt 180 ]]; then
     echo -e "${YELLOW}⚠️  Evidence is stale (${age}s old, max 3min)${NC}"
     echo ""
@@ -121,7 +148,110 @@ check_evidence() {
     echo ""
     return 1
   fi
-  
+
+  return 0
+}
+
+#───────────────────────────────────────────────────────────────
+# Validate Git Flow Content (Intelligent Semantic Analysis)
+#───────────────────────────────────────────────────────────────
+validate_gitflow_content() {
+  local current_branch=$($GIT_BIN branch --show-current 2>/dev/null || echo "")
+
+  # Skip if on main/develop
+  if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "develop" ]]; then
+    return 0
+  fi
+
+  # Skip if not a feature/fix branch
+  if [[ ! "$current_branch" =~ ^(feature|fix|feat)/ ]]; then
+    return 0
+  fi
+
+  # Count commits in this branch (compare with develop)
+  local commit_count=$($GIT_BIN rev-list --count develop..HEAD 2>/dev/null || echo "0")
+
+  # Skip if first commit
+  if [[ $commit_count -eq 0 ]]; then
+    return 0
+  fi
+
+  # Get commit messages for semantic analysis
+  local commit_messages=$($GIT_BIN log --oneline --format="%s" develop..HEAD 2>/dev/null || echo "")
+
+  # ═══════════════════════════════════════════════════════════════
+  # SEMANTIC ANALYSIS: Detect multiple features by keywords
+  # ═══════════════════════════════════════════════════════════════
+
+  local has_android=$(echo "$commit_messages" | grep -ciE "android|kotlin|detekt|ast.*rule|compose" 2>/dev/null | head -1 || echo "0")
+  local has_mcp=$(echo "$commit_messages" | grep -ciE "mcp|server.*notification|cursor.*integration" 2>/dev/null | head -1 || echo "0")
+  local has_watchdog=$(echo "$commit_messages" | grep -ciE "watchdog|monitor|timestamp.*parsing" 2>/dev/null | head -1 || echo "0")
+  local has_gitflow=$(echo "$commit_messages" | grep -ciE "git.*flow|enforcer|wrapper|branch" 2>/dev/null | head -1 || echo "0")
+  local has_hooks=$(echo "$commit_messages" | grep -ciE "hook|pre-commit|session.*loader|evidence" 2>/dev/null | head -1 || echo "0")
+  local has_frontend=$(echo "$commit_messages" | grep -ciE "frontend|react|next|dashboard" 2>/dev/null | head -1 || echo "0")
+  local has_backend=$(echo "$commit_messages" | grep -ciE "backend|nestjs|api|controller" 2>/dev/null | head -1 || echo "0")
+
+  # Count distinct features (>2 commits per feature to count)
+  local feature_count=0
+  [[ $has_android -ge 2 ]] && ((feature_count++))
+  [[ $has_mcp -ge 2 ]] && ((feature_count++))
+  [[ $has_watchdog -ge 2 ]] && ((feature_count++))
+  [[ $has_gitflow -ge 2 ]] && ((feature_count++))
+  [[ $has_hooks -ge 2 ]] && ((feature_count++))
+  [[ $has_frontend -ge 2 ]] && ((feature_count++))
+  [[ $has_backend -ge 2 ]] && ((feature_count++))
+
+  # ═══════════════════════════════════════════════════════════════
+  # DECISION: Multiple features in one branch?
+  # ═══════════════════════════════════════════════════════════════
+
+  # If 3+ distinct features → WARNING
+  if [[ $feature_count -ge 3 ]]; then
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${YELLOW}⚠️  GIT FLOW WARNING: Multiple Features in One Branch${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+    echo -e "${CYAN}🐈 Pumuki detectó múltiples features no relacionadas:${NC}"
+    echo ""
+    echo -e "${CYAN}📊 Branch: ${current_branch}${NC}"
+    echo -e "${CYAN}📊 Total commits: ${commit_count}${NC}"
+    echo -e "${CYAN}📊 Features detectadas: ${feature_count}${NC}"
+    echo ""
+    echo -e "${YELLOW}🔍 Análisis semántico de commits:${NC}"
+    [[ $has_android -ge 2 ]] && echo "   🤖 Android AST ($has_android commits)"
+    [[ $has_mcp -ge 2 ]] && echo "   📡 MCP Server ($has_mcp commits)"
+    [[ $has_watchdog -ge 2 ]] && echo "   👁️  Watchdog ($has_watchdog commits)"
+    [[ $has_gitflow -ge 2 ]] && echo "   🔄 Git Flow ($has_gitflow commits)"
+    [[ $has_hooks -ge 2 ]] && echo "   🪝 Hooks System ($has_hooks commits)"
+    [[ $has_frontend -ge 2 ]] && echo "   🎨 Frontend ($has_frontend commits)"
+    [[ $has_backend -ge 2 ]] && echo "   🔧 Backend ($has_backend commits)"
+    echo ""
+    echo -e "${YELLOW}💡 BEST PRACTICE:${NC}"
+    echo "   One branch = One cohesive feature/epic"
+    echo "   Multiple features = Separate PRs for better review"
+    echo ""
+    echo -e "${CYAN}🐈 Pumuki sugiere:${NC}"
+    echo "   A) Si es un EPIC (features relacionadas) → Continúa"
+    echo "   B) Si son features INDEPENDIENTES → Considera split"
+    echo ""
+    echo -e "${YELLOW}📝 Commits en esta rama:${NC}"
+    echo "$commit_messages" | head -10 | sed 's/^/   /'
+    if [[ $commit_count -gt 10 ]]; then
+      echo "   ... y $((commit_count - 10)) más"
+    fi
+    echo ""
+    echo -e "${CYAN}Esto es un WARNING (no bloqueante) - Tú decides! 🐈${NC}"
+    echo -e "${YELLOW}═══════════════════════════════════════════════════════════════${NC}"
+    echo ""
+  fi
+
+  # If 15+ commits → Additional info
+  if [[ $commit_count -ge 15 ]]; then
+    echo -e "${CYAN}🐈 Pumuki nota: ${commit_count} commits es mucho para un PR${NC}"
+    echo -e "${CYAN}   Considera squash o split antes de merge${NC}"
+    echo ""
+  fi
+
   return 0
 }
 
@@ -133,39 +263,47 @@ handle_commit() {
   if ! validate_commit_branch; then
     return 1
   fi
-  
+
+  # Validate git flow content (intelligent semantic analysis)
+  validate_gitflow_content
+
+  # Auto-discard token status artefact to keep commits clean
+  if [[ -n "$REPO_ROOT" ]] && [[ -f "$REPO_ROOT/.AI_TOKEN_STATUS.txt" ]]; then
+    $GIT_BIN -C "$REPO_ROOT" checkout -- .AI_TOKEN_STATUS.txt 2>/dev/null || true
+  fi
+
   # ═══════════════════════════════════════════════════════════════
   # ATOMIC COMMIT ENFORCER - Intelligent analysis
   # ═══════════════════════════════════════════════════════════════
   local staged_files=$($GIT_BIN diff --cached --name-only)
   local staged_count=$(echo "$staged_files" | wc -l | xargs)
-  
+
   # ═══════════════════════════════════════════════════════════════
   # INTELLIGENT ANALYSIS: Check if files are related
   # ═══════════════════════════════════════════════════════════════
-  
+
   # Detect projects/modules touched
   local projects=$(echo "$staged_files" | grep -E "^apps/[^/]+" | sed 's|^apps/\([^/]*\).*|\1|' | sort -u)
   local project_count=$(echo "$projects" | grep -v "^$" | wc -l | xargs)
-  
+
   # Detect root-level modules
   local root_modules=$(echo "$staged_files" | grep -E "^(custom-rules|scripts|\.github|\.vscode|\.cursor)" | sed 's|^\([^/]*\).*|\1|' | sort -u)
   local root_module_count=$(echo "$root_modules" | grep -v "^$" | wc -l | xargs)
-  
+
   # Detect file type patterns (backend, frontend, mobile)
   local has_backend=$(echo "$staged_files" | grep -E "(apps/backend|\.ts$|\.js$)" | head -1)
   local has_frontend=$(echo "$staged_files" | grep -E "(apps/admin-dashboard|apps/web|\.tsx$|\.jsx$)" | head -1)
   local has_mobile=$(echo "$staged_files" | grep -E "(apps/mobile|\.swift$|\.kt$)" | head -1)
-  
+
   local concerns_count=0
   [[ -n "$has_backend" ]] && ((concerns_count++))
   [[ -n "$has_frontend" ]] && ((concerns_count++))
   [[ -n "$has_mobile" ]] && ((concerns_count++))
-  
+
   # ═══════════════════════════════════════════════════════════════
   # FEATURE COHESION ANALYSIS: Are files related by feature?
   # ═══════════════════════════════════════════════════════════════
-  
+
   # Extract feature/module names from paths
   # Backend: apps/backend/src/orders/... → "orders"
   # Frontend: apps/admin-dashboard/src/orders/... → "orders"
@@ -173,11 +311,11 @@ handle_commit() {
   local backend_features=$(echo "$staged_files" | grep -E "^apps/backend/src/[^/]+" | sed 's|^apps/backend/src/\([^/]*\).*|\1|' | sort -u | tr '[:upper:]' '[:lower:]')
   local frontend_features=$(echo "$staged_files" | grep -E "^apps/(admin-dashboard|web)/src/[^/]+" | sed 's|^apps/[^/]*/src/\([^/]*\).*|\1|' | sort -u | tr '[:upper:]' '[:lower:]')
   local mobile_features=$(echo "$staged_files" | grep -E "^apps/mobile/[^/]+" | sed 's|^apps/mobile/\([^/]*\).*|\1|' | sort -u | tr '[:upper:]' '[:lower:]')
-  
+
   # Combine all features and check for overlap
   local all_features=$(echo -e "$backend_features\n$frontend_features\n$mobile_features" | grep -v "^$" | sort -u)
   local unique_feature_count=$(echo "$all_features" | wc -l | xargs)
-  
+
   # Check if features are related (same feature name across platforms)
   local features_related=false
   local common_features=""
@@ -192,7 +330,7 @@ handle_commit() {
     if [[ -z "$common_features" ]] && [[ -n "$frontend_features" ]] && [[ -n "$mobile_features" ]]; then
       common_features=$(comm -12 <(echo "$frontend_features" | sort) <(echo "$mobile_features" | sort))
     fi
-    
+
     if [[ -n "$common_features" ]]; then
       features_related=true
     fi
@@ -200,34 +338,34 @@ handle_commit() {
     # Single concern → always related
     features_related=true
   fi
-  
+
   # ═══════════════════════════════════════════════════════════════
   # DECISION LOGIC
   # ═══════════════════════════════════════════════════════════════
-  
+
   local should_block=false
   local should_warn=false
   local reason=""
-  
+
   # Rule 1: Multiple concerns BUT unrelated features → BLOCK
   # Rule 1b: Multiple concerns AND related features → ALLOW (cross-platform feature)
   if [[ $concerns_count -gt 1 ]] && [[ $features_related == false ]]; then
     should_block=true
     reason="Mixes multiple concerns (backend + frontend + mobile) with UNRELATED features"
   fi
-  
+
   # Rule 2: Multiple unrelated projects → BLOCK
   if [[ $project_count -gt 1 ]] && [[ $concerns_count -gt 0 ]]; then
     should_block=true
     reason="Mixes multiple projects: $(echo "$projects" | tr '\n' ' ')"
   fi
-  
+
   # Rule 3: >50 files but same feature → WARNING (allow)
   if [[ $staged_count -gt 50 ]] && [[ $should_block == false ]]; then
     should_warn=true
     reason="Large commit (${staged_count} files) - Ensure it's ONE complete feature"
   fi
-  
+
   # ═══════════════════════════════════════════════════════════════
   # BLOCK: Multiple concerns or unrelated projects
   # ═══════════════════════════════════════════════════════════════
@@ -286,7 +424,7 @@ handle_commit() {
     echo ""
     return 1
   fi
-  
+
   # ═══════════════════════════════════════════════════════════════
   # INFO: Cross-platform feature detected (multiple concerns but related)
   # ═══════════════════════════════════════════════════════════════
@@ -302,7 +440,7 @@ handle_commit() {
     fi
     echo ""
   fi
-  
+
   # ═══════════════════════════════════════════════════════════════
   # WARNING: Large commit but seems related
   # ═══════════════════════════════════════════════════════════════
@@ -330,10 +468,10 @@ handle_commit() {
     echo -e "${YELLOW}Proceeding with commit...${NC}"
     echo ""
   fi
-  
+
   # Check evidence (warning only)
   check_evidence || true
-  
+
   # Execute real git commit
   $GIT_BIN "$@"
 }
@@ -343,22 +481,22 @@ handle_commit() {
 #───────────────────────────────────────────────────────────────
 handle_branch_creation() {
   local branch_name="${2:-}"
-  
+
   if [[ -z "$branch_name" ]]; then
     $GIT_BIN "$@"
     return $?
   fi
-  
+
   # Validate branch name
   if ! validate_branch_name "$branch_name"; then
     return 1
   fi
-  
+
   echo -e "${GREEN}✅ Branch name valid: $branch_name${NC}"
-  
+
   # Execute real git
   $GIT_BIN "$@"
-  
+
   # Update evidence automatically
   if [[ -f "$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh" ]]; then
     echo ""
@@ -371,26 +509,92 @@ handle_branch_creation() {
 # Handle git push
 #───────────────────────────────────────────────────────────────
 handle_push() {
+  shift # drop 'push'
+  local git_args=("$@")
   local current_branch=$($GIT_BIN branch --show-current 2>/dev/null || echo "")
-  
-  # Check for force push to main/develop
-  if [[ "$*" == *"--force"* ]] || [[ "$*" == *"-f"* ]]; then
-    if [[ "$current_branch" == "main" ]] || [[ "$current_branch" == "develop" ]]; then
-      echo -e "${RED}❌ Force push to $current_branch is FORBIDDEN${NC}"
+  local override="${GITFLOW_ALLOW_PROTECTED_PUSH:-false}"
+
+  if [[ "$override" != "true" ]]; then
+    if is_protected_branch "$current_branch"; then
+      echo -e "${RED}❌ Push directo desde rama protegida ($current_branch) bloqueado.${NC}"
+      echo ""
+      echo -e "${CYAN}👉 Usa el flujo Git Flow: crea una rama feature/fix y abre PR hacia develop.${NC}"
+      echo ""
       return 1
     fi
+
+    local args_without_cmd=("${git_args[@]}")
+    local delete_mode=false
+    local remote_seen=false
+
+    for arg in "${args_without_cmd[@]}"; do
+      if [[ "$arg" == "--" ]]; then
+        continue
+      fi
+
+      if [[ "$arg" == -* ]]; then
+        case "$arg" in
+          --force|-f|--force-with-lease)
+            echo -e "${RED}❌ Force push bloqueado por política interna.${NC}"
+            echo "   → Usa PR + merge controlado."
+            return 1
+            ;;
+          --delete|-d)
+            delete_mode=true
+            continue
+            ;;
+          --delete=*)
+            local target="${arg#*=}"
+            target="${target#origin/}"
+            target="${target#refs/heads/}"
+            if is_protected_branch "$target"; then
+              echo -e "${RED}❌ Eliminación de rama protegida ($target) bloqueada.${NC}"
+              return 1
+            fi
+            continue
+            ;;
+          *)
+            continue
+            ;;
+        esac
+      fi
+
+      if [[ "$delete_mode" == true ]]; then
+        local target="${arg#origin/}"
+        target="${target#refs/heads/}"
+        if is_protected_branch "$target"; then
+          echo -e "${RED}❌ Eliminación de rama protegida ($target) bloqueada.${NC}"
+          return 1
+        fi
+        delete_mode=false
+        continue
+      fi
+
+      if [[ "$remote_seen" == false ]]; then
+        remote_seen=true
+        continue
+      fi
+
+      local target
+      target=$(extract_refspec_target "$arg")
+      if [[ -n "$target" ]] && is_protected_branch "$target"; then
+        echo -e "${RED}❌ Push directo a rama protegida ($target) bloqueado.${NC}"
+        echo ""
+        echo -e "${CYAN}👉 Usa Pull Request o el ciclo Git Flow (gitflow-enforcer.sh cycle).${NC}"
+        echo ""
+        return 1
+      fi
+    done
   fi
-  
-  echo -e "${BLUE}🚀 Pushing to $current_branch...${NC}"
-  
-  # Execute real git
-  $GIT_BIN "$@"
-  
-  # Show next step
-  echo ""
-  echo -e "${CYAN}📍 Next step: Create PR to develop${NC}"
-  echo "   gh pr create --base develop --head $current_branch"
-  echo ""
+
+  echo -e "${BLUE}🚀 Pushing with guardrails...${NC}"
+  $GIT_BIN push "${git_args[@]}"
+
+  if [[ "$override" != "true" ]]; then
+    echo ""
+    echo -e "${CYAN}📍 Próximo paso recomendado: gh pr create --base develop --head $current_branch${NC}"
+    echo ""
+  fi
 }
 
 #───────────────────────────────────────────────────────────────
@@ -398,12 +602,12 @@ handle_push() {
 #───────────────────────────────────────────────────────────────
 main() {
   local cmd="${1:-}"
-  
+
   # If not in git repo, just execute
   if [[ -z "$REPO_ROOT" ]]; then
     exec $GIT_BIN "$@"
   fi
-  
+
   case "$cmd" in
     commit)
       handle_commit "$@"
@@ -426,4 +630,3 @@ main() {
 }
 
 main "$@"
-
