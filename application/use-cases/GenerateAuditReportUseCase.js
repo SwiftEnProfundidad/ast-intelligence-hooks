@@ -142,7 +142,7 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    // Firma al final (SIEMPRE)
+    // Footer signature (always included)
     lines.push('');
     lines.push('═'.repeat(60));
     lines.push('');

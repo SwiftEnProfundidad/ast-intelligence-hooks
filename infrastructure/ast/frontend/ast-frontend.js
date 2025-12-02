@@ -3,7 +3,7 @@
 // Clean Architecture: Infrastructure Layer - Frontend AST Analysis
 
 const path = require('path');
-const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf } = require(path.join(__dirname, '../ast-core'));
+const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
 const fs = require('fs');
 
 /**
@@ -45,8 +45,8 @@ function runFrontendIntelligence(project, findings, platform) {
 
         // If we hit a function/arrow function boundary, stop (hook is in its own function, OK)
         if (kind === SyntaxKind.FunctionDeclaration ||
-            kind === SyntaxKind.FunctionExpression ||
-            kind === SyntaxKind.ArrowFunction) {
+          kind === SyntaxKind.FunctionExpression ||
+          kind === SyntaxKind.ArrowFunction) {
           break;
         }
 
@@ -637,23 +637,23 @@ function runFrontendIntelligence(project, findings, platform) {
 
     // React: cálculos costosos sin useMemo (SOLO en componentes React, no en servicios)
     if (isComponent) {
-    sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-      const expr = call.getExpression().getText();
-      // Métodos que podrían ser costosos: filter, map, reduce, sort, etc.
-      if (/\.(filter|map|reduce|sort|find|some|every|includes)\(/.test(expr)) {
-        const parent = call.getParent();
-        if (parent && parent.getKind && parent.getKind() === SyntaxKind.VariableDeclaration) {
-          const varDecl = parent;
-          const isMemoized = sf.getDescendantsOfKind(SyntaxKind.CallExpression).some((memoCall) => {
-            const memoExpr = memoCall.getExpression().getText();
-            return memoExpr === "useMemo" && memoCall.getAncestors().some((anc) => anc === varDecl);
-          });
-          if (!isMemoized) {
-            pushFinding("frontend.react.missing_usememo", "info", sf, call, `Expensive computation should use useMemo`, findings);
+      sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+        const expr = call.getExpression().getText();
+        // Métodos que podrían ser costosos: filter, map, reduce, sort, etc.
+        if (/\.(filter|map|reduce|sort|find|some|every|includes)\(/.test(expr)) {
+          const parent = call.getParent();
+          if (parent && parent.getKind && parent.getKind() === SyntaxKind.VariableDeclaration) {
+            const varDecl = parent;
+            const isMemoized = sf.getDescendantsOfKind(SyntaxKind.CallExpression).some((memoCall) => {
+              const memoExpr = memoCall.getExpression().getText();
+              return memoExpr === "useMemo" && memoCall.getAncestors().some((anc) => anc === varDecl);
+            });
+            if (!isMemoized) {
+              pushFinding("frontend.react.missing_usememo", "info", sf, call, `Expensive computation should use useMemo`, findings);
+            }
           }
         }
-      }
-    });
+      });
     }
 
     // i18n: strings hardcodeados sin useTranslation
@@ -678,23 +678,23 @@ function runFrontendIntelligence(project, findings, platform) {
         const isErrorMatching = text.includes('server is not running') || text.includes('Backend') || text.includes('Network error');
 
         return text.length > 10 &&
-               !isInTypeDefinition &&
-               !isCssClass &&
-               !isTestId &&
-               !isStorageKey &&
-               !isTerminalCommand &&
-               !isErrorMatching &&
-               !text.includes("http") &&
-               !text.includes("/") &&
-               !text.includes("px") &&
-               !text.includes("#") &&
-               !text.includes("use client") &&
-               !text.includes("use server") &&
-               !/^[A-Z_]+$/.test(text) &&
-               !/^[a-z]+\.[a-z.]+$/i.test(text) &&
-               !/^[a-z]{2}-[A-Z]{2}$/.test(text) &&
-               /\b[a-z]/.test(text) &&
-               /\s/.test(text);
+          !isInTypeDefinition &&
+          !isCssClass &&
+          !isTestId &&
+          !isStorageKey &&
+          !isTerminalCommand &&
+          !isErrorMatching &&
+          !text.includes("http") &&
+          !text.includes("/") &&
+          !text.includes("px") &&
+          !text.includes("#") &&
+          !text.includes("use client") &&
+          !text.includes("use server") &&
+          !/^[A-Z_]+$/.test(text) &&
+          !/^[a-z]+\.[a-z.]+$/i.test(text) &&
+          !/^[a-z]{2}-[A-Z]{2}$/.test(text) &&
+          /\b[a-z]/.test(text) &&
+          /\s/.test(text);
       });
       if (stringLiterals.length > 5) {
         pushFinding("frontend.i18n.hardcoded_strings", "warning", sf, sf, `Possible hardcoded strings detected (${stringLiterals.length}) - consider using useTranslation`, findings);
@@ -713,16 +713,17 @@ function runFrontendIntelligence(project, findings, platform) {
     if (!isInfrastructure && sf.getFullText().match(/new\s+Date\(|Date\.now\(/) && !/Intl\.|date\-fns|dayjs/.test(sf.getFullText())) {
       pushFinding("frontend.i18n.missing_formatting", "warning", sf, sf, "Date used in UI without localized formatting", findings);
     }
+    const projectRoot = getRepoRoot();
     const hasConfig =
-      fs.existsSync(path.join(process.cwd(), 'next-i18next.config.js')) ||
-      fs.existsSync(path.join(process.cwd(), 'i18n.ts')) ||
-      fs.existsSync(path.join(process.cwd(), 'apps/admin-dashboard/i18n.ts')) ||
-      fs.existsSync(path.join(process.cwd(), 'apps/admin-dashboard/src/infrastructure/config/i18n.config.ts')) ||
-      fs.existsSync(path.join(process.cwd(), 'src/infrastructure/config/i18n.config.ts'));
-      if (!hasConfig && /\/app\//.test(filePath)) {
-        pushFinding("frontend.i18n.from_day_one", "info", sf, sf, "i18n config not found (heuristic)", findings);
-        pushFinding("frontend.i18n.fallback_locale", "info", sf, sf, "Fallback locale not configured (heuristic)", findings);
-      }
+      fs.existsSync(path.join(projectRoot, 'next-i18next.config.js')) ||
+      fs.existsSync(path.join(projectRoot, 'i18n.ts')) ||
+      fs.existsSync(path.join(projectRoot, 'apps/admin-dashboard/i18n.ts')) ||
+      fs.existsSync(path.join(projectRoot, 'apps/admin-dashboard/src/infrastructure/config/i18n.config.ts')) ||
+      fs.existsSync(path.join(projectRoot, 'src/infrastructure/config/i18n.config.ts'));
+    if (!hasConfig && /\/app\//.test(filePath)) {
+      pushFinding("frontend.i18n.from_day_one", "info", sf, sf, "i18n config not found (heuristic)", findings);
+      pushFinding("frontend.i18n.fallback_locale", "info", sf, sf, "Fallback locale not configured (heuristic)", findings);
+    }
 
     // Estado: estado global sin Zustand
     const hasZustand = sf.getImportDeclarations().some((imp) =>
@@ -1012,7 +1013,7 @@ function runFrontendIntelligence(project, findings, platform) {
 
         // Skip if it's SVG attributes or dynamic chart colors
         if (!isSvgElement && !isDynamicColor) {
-        pushFinding("frontend.styling.inline_style", "warning", sf, attr, "Inline style detected - prefer className with Tailwind/CSS Modules", findings);
+          pushFinding("frontend.styling.inline_style", "warning", sf, attr, "Inline style detected - prefer className with Tailwind/CSS Modules", findings);
         }
       }
     });
@@ -1091,7 +1092,7 @@ function runFrontendIntelligence(project, findings, platform) {
       }
       if (/page\.tsx$/.test(filePath)) {
         const candidate = filePath.replace(/\/app\//, '/e2e/').replace(/\.tsx$/, '.spec.ts');
-        try { if (!fs.existsSync(candidate)) { pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); } } catch {}
+        try { if (!fs.existsSync(candidate)) { pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); } } catch { }
       }
     }
 
@@ -1331,8 +1332,8 @@ function runFrontendIntelligence(project, findings, platform) {
 
     // Repository implementation not in infrastructure
     if ((content.includes('Repository') || content.includes('Api')) &&
-        content.includes('class ') &&
-        !filePath.includes('/infrastructure/')) {
+      content.includes('class ') &&
+      !filePath.includes('/infrastructure/')) {
       pushFinding(
         "frontend.clean_arch.repository_location",
         "high",
@@ -1494,7 +1495,7 @@ function runFrontendIntelligence(project, findings, platform) {
 
     // Technical grouping vs feature-first
     if ((filePath.includes('/models/') || filePath.includes('/views/') || filePath.includes('/controllers/')) &&
-        !filePath.includes('/features/') && !filePath.includes('/domain/')) {
+      !filePath.includes('/features/') && !filePath.includes('/domain/')) {
       pushFinding(
         "frontend.ddd.technical_grouping",
         "low",
@@ -1551,14 +1552,14 @@ function runFrontendIntelligence(project, findings, platform) {
         const effectBody = call.getArguments()[0]?.getText() || '';
 
         const hasSubscription = effectBody.includes('.subscribe') ||
-                               effectBody.includes('addEventListener') ||
-                               effectBody.includes('setInterval') ||
-                               effectBody.includes('setTimeout') ||
-                               effectBody.includes('WebSocket') ||
-                               effectBody.includes('.on(');
+          effectBody.includes('addEventListener') ||
+          effectBody.includes('setInterval') ||
+          effectBody.includes('setTimeout') ||
+          effectBody.includes('WebSocket') ||
+          effectBody.includes('.on(');
 
         const hasCleanup = effectBody.includes('return () =>') ||
-                          effectBody.includes('return function');
+          effectBody.includes('return function');
 
         if (hasSubscription && !hasCleanup) {
           pushFinding(
@@ -1639,7 +1640,7 @@ function runFrontendIntelligence(project, findings, platform) {
       statements.forEach(stmt => {
         const stmtText = stmt.getText();
         const isConditional = stmt.getParent()?.getKind() === SyntaxKind.IfStatement ||
-                             stmt.getParent()?.getKind() === SyntaxKind.ConditionalExpression;
+          stmt.getParent()?.getKind() === SyntaxKind.ConditionalExpression;
 
         const isHook = /^use[A-Z]/.test(stmtText);
 
@@ -1679,7 +1680,7 @@ function runFrontendIntelligence(project, findings, platform) {
     // 7. CSP Headers Enhancement (check in middleware/layout)
     if (filePath.includes('/app/layout') || filePath.includes('/middleware')) {
       const hasCSP = content.includes('Content-Security-Policy') ||
-                    content.includes('contentSecurityPolicy');
+        content.includes('contentSecurityPolicy');
 
       if (!hasCSP && !content.includes('TODO: CSP')) {
         pushFinding(
@@ -1876,7 +1877,7 @@ function runFrontendIntelligence(project, findings, platform) {
 
   // 4. Bundle Size Monitoring Rule
   const hasLargeImports = fullText.includes('import * as') ||
-                         fullText.match(/import\s+\{[^}]{200,}\}/);
+    fullText.match(/import\s+\{[^}]{200,}\}/);
 
   if (hasLargeImports) {
     pushFinding(
@@ -1891,7 +1892,7 @@ function runFrontendIntelligence(project, findings, platform) {
 
   // 5. Error Boundary Rule
   if (content.includes('class') && content.includes('extends Component') &&
-      !content.includes('componentDidCatch') && !content.includes('getDerivedStateFromError')) {
+    !content.includes('componentDidCatch') && !content.includes('getDerivedStateFromError')) {
 
     const hasChildrenRender = content.includes('render()') && content.includes('children');
 

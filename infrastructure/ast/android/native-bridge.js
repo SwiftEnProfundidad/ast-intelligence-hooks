@@ -5,7 +5,9 @@ const { pushFileFinding } = require('../ast-core');
 
 async function runDetektNative(findings) {
   try {
-    const customRulesPath = path.join(process.cwd(), 'custom-rules');
+    const { getRepoRoot } = require('../ast-core');
+    const projectRoot = getRepoRoot();
+    const customRulesPath = path.join(projectRoot, 'custom-rules');
 
     if (!fs.existsSync(customRulesPath)) {
       console.log('[Detekt Native] custom-rules module not found - skipping');
@@ -16,7 +18,7 @@ async function runDetektNative(findings) {
 
     try {
       execSync('./gradlew :custom-rules:build', {
-        cwd: process.cwd(),
+        cwd: projectRoot,
         stdio: 'pipe',
         timeout: 60000
       });
@@ -27,7 +29,7 @@ async function runDetektNative(findings) {
 
     console.log('[Detekt Native] Running Detekt with custom rules...');
 
-    const detektConfig = path.join(process.cwd(), 'detekt.yml');
+    const detektConfig = path.join(projectRoot, 'detekt.yml');
     const hasConfig = fs.existsSync(detektConfig);
 
     const configArg = hasConfig ? `--config ${detektConfig}` : '';
@@ -36,7 +38,7 @@ async function runDetektNative(findings) {
     const cmd = `./gradlew detekt ${configArg} --plugins ${customRulesJar}`;
 
     const result = execSync(cmd, {
-      cwd: process.cwd(),
+      cwd: projectRoot,
       encoding: 'utf8',
       timeout: 120000
     });

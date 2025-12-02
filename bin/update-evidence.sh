@@ -428,9 +428,10 @@ detect_rules_file() {
     return
   fi
 
-  # Hook-system / tooling scripts (Node.js) - treat as backend
+  # Hook-system / tooling scripts (Multi-platform library) - NOT platform-specific
+  # These files support ALL 4 platforms (Backend, Frontend, iOS, Android)
   if [[ "$file" == *"scripts/hooks-system/"* ]] || [[ "$file" == *"scripts/hook-system/"* ]]; then
-    echo "rulesbackend.mdc"
+    echo "infrastructure"  # Multi-platform library, not tied to single platform
     return
   fi
 

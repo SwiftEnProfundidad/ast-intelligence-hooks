@@ -256,8 +256,9 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
           realTokenData = JSON.parse(lastLine);
         }
       }
-    } catch (e) {
-      console.warn('[Token] Using estimated data');
+    } catch (tokenReadError) {
+      const errorMsg = tokenReadError instanceof Error ? tokenReadError.message : 'Unknown error';
+      process.stderr.write(`[Token] Using estimated data (read failed: ${errorMsg})\n`);
     }
 
     const tokenPercent = Math.round(realTokenData.percentUsed || tokenUsage.percentUsed);
@@ -267,8 +268,11 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     if (tokenPercent >= 90) {
       try {
         execSync('osascript -e \'display notification "Token usage at ' + tokenPercent + '%! Update evidence to avoid context loss." with title "⚠️ Token Usage Critical" sound name "Basso"\'', { stdio: 'ignore' });
-      } catch (e) {
-        // Notification failed, continue
+      } catch (notificationError) {
+        // Notification failed (macOS only feature), continue silently
+        if (notificationError instanceof Error && notificationError.message.includes('osascript')) {
+          process.stderr.write('[Token] Notification skipped (not macOS)\n');
+        }
       }
     }
 

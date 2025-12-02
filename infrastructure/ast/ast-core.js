@@ -31,11 +31,17 @@ function getSeverityEvaluator() {
 let INTELLIGENT_SEVERITY_ENABLED = process.env.INTELLIGENT_SEVERITY === 'true';
 
 /**
- * Get repository root directory
+ * Get repository root directory (portable - dynamic detection)
  * @returns {string} Repository root path
  */
 function getRepoRoot() {
-  return process.cwd();
+  try {
+    const { execSync } = require('child_process');
+    return execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
+  } catch {
+    // Fallback to process.cwd() if not in git repo
+    return process.cwd();
+  }
 }
 
 /**

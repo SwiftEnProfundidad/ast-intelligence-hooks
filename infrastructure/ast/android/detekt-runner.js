@@ -5,8 +5,9 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const { getRepoRoot } = require('../ast-core');
 
-const REPO_ROOT = path.resolve(__dirname, '../../../../..');
+const REPO_ROOT = getRepoRoot();
 const CUSTOM_RULES_DIR = path.join(REPO_ROOT, 'custom-rules');
 const DETEKT_REPORT = path.join(CUSTOM_RULES_DIR, 'build/reports/detekt/detekt.json');
 

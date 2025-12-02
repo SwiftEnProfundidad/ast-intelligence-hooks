@@ -27,7 +27,8 @@ const { analyzeImagesBackend } = require(path.join(astModulesPath, "common/image
  */
 async function runASTIntelligence() {
   try {
-    const root = process.cwd();
+    const { getRepoRoot } = require('./ast-core');
+    const root = getRepoRoot();
     const allFiles = listSourceFiles(root);
 
     // Create TypeScript project for JS/TS files

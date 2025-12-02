@@ -20,7 +20,8 @@ function runAndroidIntelligence(project, findings, platform) {
   // STEP 0: Run Kotlin AST Intelligent Analyzer (PRIORITY)
   console.log(`[Android AST Intelligence] Running Kotlin AST analysis...`);
   const astAnalyzer = new AndroidASTIntelligentAnalyzer(findings);
-  const root = process.cwd();
+  const { getRepoRoot } = require(path.join(__dirname, '../ast-core'));
+  const root = getRepoRoot();
   const kotlinFiles = glob.sync('**/*.kt', {
     cwd: root,
     ignore: ['**/node_modules/**', '**/build/**', '**/.gradle/**'],

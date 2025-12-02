@@ -30,7 +30,7 @@ async function runIOSIntelligence(project, findings, platform) {
   // STEP 0: Run SourceKitten-based AST Intelligent Analyzer (PRIORITY)
   console.log(`[iOS AST Intelligence] Running SourceKitten-based analysis...`);
   const astAnalyzer = new iOSASTIntelligentAnalyzer(findings);
-  const root = process.cwd();
+  const root = getRepoRoot();
   const swiftFilesForAST = glob.sync('**/*.swift', {
     cwd: root,
     ignore: ['**/node_modules/**', '**/build/**', '**/Pods/**', '**/.build/**', '**/CustomLintRules/**'],
@@ -83,7 +83,7 @@ async function runIOSIntelligence(project, findings, platform) {
 
   // PART 2: Native Swift files analysis with SourceKitten (170+ rules)
   try {
-    const root = process.cwd();
+    const root = getRepoRoot();
     const swiftFiles = glob.sync('**/*.swift', {
       cwd: root,
       ignore: ['**/node_modules/**', '**/build/**', '**/Pods/**', '**/.build/**'],

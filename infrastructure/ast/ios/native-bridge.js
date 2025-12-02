@@ -5,7 +5,9 @@ const { pushFileFinding } = require('../ast-core');
 
 async function runSwiftLintNative(findings) {
   try {
-    const customRulesPath = path.join(process.cwd(), 'CustomLintRules');
+    const { getRepoRoot } = require('../ast-core');
+    const projectRoot = getRepoRoot();
+    const customRulesPath = path.join(projectRoot, 'CustomLintRules');
 
     if (!fs.existsSync(customRulesPath)) {
       console.log('[SwiftLint Native] CustomLintRules package not found - skipping');
