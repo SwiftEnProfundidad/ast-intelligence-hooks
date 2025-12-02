@@ -14,7 +14,7 @@ const execPromise = util.promisify(exec);
  * SourceKittenParser
  * Enterprise-grade wrapper for SourceKitten CLI
  * Provides native Swift AST analysis using Apple's SourceKit framework
- * 
+ *
  * @class SourceKittenParser
  * @see https://github.com/jpsim/SourceKitten
  */
@@ -48,7 +48,7 @@ class SourceKittenParser {
   async parseFile(filePath) {
     try {
       const absolutePath = path.resolve(filePath);
-      
+
       // Verify file exists
       await fs.access(absolutePath);
 
@@ -64,7 +64,7 @@ class SourceKittenParser {
 
       // Parse JSON output
       const ast = JSON.parse(stdout);
-      
+
       return {
         filePath: absolutePath,
         raw: ast,
@@ -136,7 +136,7 @@ class SourceKittenParser {
   async getSyntaxMap(filePath) {
     try {
       const absolutePath = path.resolve(filePath);
-      
+
       const { stdout } = await execPromise(
         `${this.sourceKittenPath} syntax --file "${absolutePath}"`,
         { timeout: this.timeout }
@@ -181,13 +181,13 @@ class SourceKittenParser {
    */
   extractClasses(ast) {
     const classes = [];
-    
+
     const traverse = (nodes) => {
       if (!Array.isArray(nodes)) return;
-      
+
       nodes.forEach(node => {
         const kind = node['key.kind'];
-        
+
         if (kind === 'source.lang.swift.decl.class') {
           classes.push({
             name: node['key.name'],
@@ -198,14 +198,14 @@ class SourceKittenParser {
             substructure: node['key.substructure'] || [],
           });
         }
-        
+
         // Recursively traverse substructure
         if (node['key.substructure']) {
           traverse(node['key.substructure']);
         }
       });
     };
-    
+
     traverse(ast.substructure);
     return classes;
   }
@@ -217,18 +217,18 @@ class SourceKittenParser {
    */
   extractFunctions(ast) {
     const functions = [];
-    
+
     const traverse = (nodes) => {
       if (!Array.isArray(nodes)) return;
-      
+
       nodes.forEach(node => {
         const kind = node['key.kind'];
-        
+
         if (kind === 'source.lang.swift.decl.function.method.instance' ||
             kind === 'source.lang.swift.decl.function.method.class' ||
             kind === 'source.lang.swift.decl.function.method.static' ||
             kind === 'source.lang.swift.decl.function.free') {
-          
+
           functions.push({
             name: node['key.name'],
             line: node['key.line'],
@@ -240,13 +240,13 @@ class SourceKittenParser {
             bodyLength: node['key.bodylength'],
           });
         }
-        
+
         if (node['key.substructure']) {
           traverse(node['key.substructure']);
         }
       });
     };
-    
+
     traverse(ast.substructure);
     return functions;
   }
@@ -258,17 +258,17 @@ class SourceKittenParser {
    */
   extractProperties(ast) {
     const properties = [];
-    
+
     const traverse = (nodes) => {
       if (!Array.isArray(nodes)) return;
-      
+
       nodes.forEach(node => {
         const kind = node['key.kind'];
-        
+
         if (kind === 'source.lang.swift.decl.var.instance' ||
             kind === 'source.lang.swift.decl.var.class' ||
             kind === 'source.lang.swift.decl.var.static') {
-          
+
           properties.push({
             name: node['key.name'],
             line: node['key.line'],
@@ -278,13 +278,13 @@ class SourceKittenParser {
             accessibility: node['key.accessibility'],
           });
         }
-        
+
         if (node['key.substructure']) {
           traverse(node['key.substructure']);
         }
       });
     };
-    
+
     traverse(ast.substructure);
     return properties;
   }
@@ -296,13 +296,13 @@ class SourceKittenParser {
    */
   extractProtocols(ast) {
     const protocols = [];
-    
+
     const traverse = (nodes) => {
       if (!Array.isArray(nodes)) return;
-      
+
       nodes.forEach(node => {
         const kind = node['key.kind'];
-        
+
         if (kind === 'source.lang.swift.decl.protocol') {
           protocols.push({
             name: node['key.name'],
@@ -313,13 +313,13 @@ class SourceKittenParser {
             substructure: node['key.substructure'] || [],
           });
         }
-        
+
         if (node['key.substructure']) {
           traverse(node['key.substructure']);
         }
       });
     };
-    
+
     traverse(ast.substructure);
     return protocols;
   }
@@ -333,7 +333,7 @@ class SourceKittenParser {
     // Check for SwiftUI imports or View protocol conformance
     const hasViewProtocol = (nodes) => {
       if (!Array.isArray(nodes)) return false;
-      
+
       return nodes.some(node => {
         const inheritedTypes = node['key.inheritedtypes'] || [];
         if (inheritedTypes.some(t => t['key.name'] === 'View')) {
@@ -342,7 +342,7 @@ class SourceKittenParser {
         return hasViewProtocol(node['key.substructure'] || []);
       });
     };
-    
+
     return hasViewProtocol(ast.substructure);
   }
 
@@ -355,11 +355,11 @@ class SourceKittenParser {
     // Check for UIViewController or UIView inheritance
     const hasUIKitBase = (nodes) => {
       if (!Array.isArray(nodes)) return false;
-      
+
       return nodes.some(node => {
         const inheritedTypes = node['key.inheritedtypes'] || [];
-        if (inheritedTypes.some(t => 
-          t['key.name'] === 'UIViewController' || 
+        if (inheritedTypes.some(t =>
+          t['key.name'] === 'UIViewController' ||
           t['key.name'] === 'UIView'
         )) {
           return true;
@@ -367,7 +367,7 @@ class SourceKittenParser {
         return hasUIKitBase(node['key.substructure'] || []);
       });
     };
-    
+
     return hasUIKitBase(ast.substructure);
   }
 
@@ -380,7 +380,7 @@ class SourceKittenParser {
   detectForceUnwraps(syntaxMap, fileContent) {
     const forceUnwraps = [];
     const lines = fileContent.split('\n');
-    
+
     // Regex to find force unwraps (! operator)
     lines.forEach((line, index) => {
       const matches = [...line.matchAll(/(\w+)\s*!/g)];
@@ -393,7 +393,7 @@ class SourceKittenParser {
         });
       });
     });
-    
+
     return forceUnwraps;
   }
 }
@@ -479,4 +479,3 @@ class SourceKittenParser {
  */
 
 module.exports = { SourceKittenParser };
-

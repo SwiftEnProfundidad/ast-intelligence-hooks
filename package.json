@@ -7,7 +7,13 @@
     "ast-hooks": "./bin/cli.js",
     "ast-install": "./bin/install.js",
     "ast-violations": "./bin/violations-api.js",
-    "ast-sync": "./bin/sync-library.js"
+    "hook-run-orchestrator": "./bin/run-orchestrator.js",
+    "hook-watch": "./bin/watch-hooks.js",
+    "hook-status": "./bin/hook-status.js",
+    "hook-predict": "./bin/predictive-hooks.js",
+    "hook-playbook": "./bin/run-playbook.js",
+    "hook-doc-drift": "./bin/check-doc-drift.js",
+    "hook-plan-review": "./bin/plan-review.js"
   },
   "scripts": {
     "install-hooks": "node bin/install.js",
@@ -23,8 +29,9 @@
     "violations:summary": "node bin/violations summary",
     "violations:top": "node bin/violations top",
     "violations:demo": "bash bin/demo-violations",
-    "test": "jest",
-    "lint": "echo 'Linting not implemented yet'"
+    "test": "jest --runInBand",
+    "lint": "npm run lint:hooks",
+    "lint:hooks": "eslint \"application/**/*.js\" \"bin/**/*.js\""
   },
   "keywords": [
     "ast",
@@ -61,28 +68,23 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
-    "ts-morph": "^21.0.0",
-    "glob": "^10.0.0"
+    "glob": "^10.0.0",
+    "ts-morph": "^21.0.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "eslint": "^9.12.0",
+    "jest": "^30.2.0"
   },
-  "peerDependencies": {},
   "files": [
     "bin/",
     "domain/",
     "application/",
     "infrastructure/",
     "presentation/",
-    "config/",
-    "native/",
-    "automation/",
-    "templates/",
+    "skills/",
+    "hooks/",
     "docs/",
-    "scripts/hooks-system/",
     "index.js",
-    "INSTALL.md",
-    "CHANGELOG.md",
     "README.md",
     "LICENSE"
   ],
@@ -92,10 +94,11 @@
   },
   "exports": {
     ".": "./index.js",
-    "./application": "./application/index.js",
     "./ast": "./infrastructure/ast/ast-intelligence.js",
-    "./config": "./config/index.js",
     "./domain": "./domain/index.js",
-    "./hooks": "./scripts/hooks-system/index.js"
+    "./application": "./application/index.js",
+    "./config": "./config/index.js",
+    "./skills": "./skills/skill-rules.json",
+    "./hooks": "./hooks/index.js"
   }
 }

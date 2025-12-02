@@ -135,4 +135,3 @@ Detected platforms with high confidence. Rules loaded automatically.
 }
 
 module.exports = DynamicRulesLoader;
-

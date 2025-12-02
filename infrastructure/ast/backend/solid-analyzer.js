@@ -13,47 +13,47 @@ function analyzeSRP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
   const methods = cls.getMethods();
   const properties = cls.getProperties();
-  
+
   if (methods.length === 0) return;
-  
+
   // METRIC 1: LCOM (Lack of Cohesion in Methods)
   // Measures how methods share properties
   const lcom = calculateLCOM(methods, properties);
-  
+
   // METRIC 2: Semantic clustering of methods
   const clusters = clusterMethodsBySemanticDomain(methods);
-  
+
   // METRIC 3: Constructor dependencies analysis
   const constructor = cls.getConstructors()[0];
   const injectedDependencies = constructor?.getParameters() || [];
   const dependencyConcerns = analyzeDependencyConcerns(injectedDependencies);
-  
+
   // METRIC 4: Import diversity (bounded contexts)
   const imports = sf.getImportDeclarations();
   const importConcerns = analyzeImportConcerns(imports);
-  
+
   // SRP VIOLATION CRITERIA (ALL must be analyzed):
   // 1. High LCOM (>0.8) + Multiple semantic clusters (>2)
   // 2. Dependencies from 3+ different concerns
   // 3. Imports from 3+ different bounded contexts
-  
+
   const violations = [];
-  
+
   // Violation 1: Low cohesion + multiple concerns
   if (lcom > 0.8 && clusters.length >= 3) {
     violations.push(`Low cohesion (LCOM=${lcom.toFixed(2)}) with ${clusters.length} semantic domains: ${clusters.join(', ')}`);
   }
-  
+
   // Violation 2: Too many heterogeneous dependencies
   if (dependencyConcerns.length >= 3) {
     violations.push(`Constructor injects ${dependencyConcerns.length} unrelated concerns: ${dependencyConcerns.join(', ')}`);
   }
-  
+
   // Violation 3: Imports from multiple bounded contexts
   if (importConcerns.length >= 3) {
     violations.push(`Imports from ${importConcerns.length} different contexts: ${importConcerns.join(', ')}`);
   }
-  
+
   if (violations.length >= 2) {
     const message = `SRP VIOLATION in ${className}:\n${violations.map(v => '  - ' + v).join('\n')}\n→ Split into multiple classes with single responsibility`;
     pushFinding('solid.srp.violation', 'critical', sf, cls, message, findings);
@@ -65,32 +65,32 @@ function analyzeSRP(cls, sf, findings, pushFinding) {
 
 function calculateLCOM(methods, properties) {
   if (methods.length === 0 || properties.length === 0) return 0;
-  
+
   const methodPropertyUsage = [];
-  
+
   methods.forEach(method => {
     const usedProps = new Set();
     const methodBody = method.getBody();
     if (!methodBody) return;
-    
+
     properties.forEach(prop => {
       const propName = prop.getName();
       const bodyText = methodBody.getText();
-      
+
       if (bodyText.includes(`this.${propName}`) || bodyText.includes(`.${propName}`)) {
         usedProps.add(propName);
       }
     });
-    
+
     methodPropertyUsage.push(usedProps);
   });
-  
+
   let P = 0, Q = 0;
-  
+
   for (let i = 0; i < methodPropertyUsage.length; i++) {
     for (let j = i + 1; j < methodPropertyUsage.length; j++) {
       const shared = [...methodPropertyUsage[i]].filter(p => methodPropertyUsage[j].has(p));
-      
+
       if (shared.length === 0) {
         P++;
       } else {
@@ -98,7 +98,7 @@ function calculateLCOM(methods, properties) {
       }
     }
   }
-  
+
   const total = P + Q;
   return total > 0 ? P / total : 0;
 }
@@ -116,28 +116,28 @@ function clusterMethodsBySemanticDomain(methods) {
     cache: ['cache', 'redis', 'memcache'],
     validation: ['validate', 'check', 'verify', 'sanitize']
   };
-  
+
   const foundDomains = new Set();
-  
+
   methods.forEach(method => {
     const methodName = method.getName().toLowerCase();
-    
+
     for (const [domain, keywords] of Object.entries(domains)) {
       if (keywords.some(kw => methodName.includes(kw))) {
         foundDomains.add(domain);
       }
     }
   });
-  
+
   return Array.from(foundDomains);
 }
 
 function analyzeDependencyConcerns(parameters) {
   const concerns = new Set();
-  
+
   parameters.forEach(param => {
     const typeName = param.getType().getText().toLowerCase();
-    
+
     if (/user|customer|account/i.test(typeName)) concerns.add('user');
     if (/auth|jwt|token/i.test(typeName)) concerns.add('auth');
     if (/payment|billing/i.test(typeName)) concerns.add('payment');
@@ -148,16 +148,16 @@ function analyzeDependencyConcerns(parameters) {
     if (/logger|logging/i.test(typeName)) concerns.add('logging');
     if (/event|emitter|publisher/i.test(typeName)) concerns.add('events');
   });
-  
+
   return Array.from(concerns);
 }
 
 function analyzeImportConcerns(imports) {
   const concerns = new Set();
-  
+
   imports.forEach(imp => {
     const path = imp.getModuleSpecifierValue();
-    
+
     if (/\/users\/|\/user\//i.test(path)) concerns.add('users-context');
     if (/\/auth\/|\/authentication\//i.test(path)) concerns.add('auth-context');
     if (/\/payment\/|\/billing\//i.test(path)) concerns.add('payment-context');
@@ -166,7 +166,7 @@ function analyzeImportConcerns(imports) {
     if (/\/admin\//i.test(path)) concerns.add('admin-context');
     if (/\/analytics\//i.test(path)) concerns.add('analytics-context');
   });
-  
+
   return Array.from(concerns);
 }
 
@@ -178,31 +178,31 @@ function analyzeImportConcerns(imports) {
 function analyzeOCP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
   const methods = cls.getMethods();
-  
+
   methods.forEach(method => {
     const methodName = method.getName();
     const body = method.getBody();
     if (!body) return;
-    
+
     // DETECTION 1: Type switching (should use polymorphism)
     const switches = body.getDescendantsOfKind(SyntaxKind.SwitchStatement);
     const typeSwitch = switches.filter(sw => {
       const expr = sw.getExpression().getText();
       return /type|kind|status|role|category/i.test(expr);
     });
-    
+
     if (typeSwitch.length > 0) {
       const expr = typeSwitch[0].getExpression().getText();
-      pushFinding('solid.ocp.type_switching', 'critical', sf, typeSwitch[0], 
+      pushFinding('solid.ocp.type_switching', 'critical', sf, typeSwitch[0],
         `OCP violation in ${className}.${methodName}: switch on '${expr}' - use Strategy/Factory pattern instead`, findings);
     }
-    
+
     // DETECTION 2: Multiple if-else chains on type/kind
     const ifStatements = body.getDescendantsOfKind(SyntaxKind.IfStatement);
     const typeIfChains = detectTypeIfChains(ifStatements);
-    
+
     if (typeIfChains.length >= 3) {
-      pushFinding('solid.ocp.if_type_chain', 'critical', sf, method, 
+      pushFinding('solid.ocp.if_type_chain', 'critical', sf, method,
         `OCP violation in ${className}.${methodName}: ${typeIfChains.length} if-else checking types - use polymorphism`, findings);
     }
   });
@@ -223,44 +223,44 @@ function detectTypeIfChains(ifStatements) {
 function analyzeLSP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
   const baseClass = cls.getBaseClass();
-  
+
   if (!baseClass) return;
-  
+
   const methods = cls.getMethods();
-  
+
   methods.forEach(method => {
     const methodName = method.getName();
     const baseMethod = baseClass.getMethod(methodName);
-    
+
     if (!baseMethod) return;
-    
+
     const methodBody = method.getBody();
     const baseBody = baseMethod.getBody();
-    
+
     if (!methodBody || !baseBody) return;
-    
+
     // VIOLATION 1: Throws exceptions that base doesn't throw
     const childThrows = methodBody.getDescendantsOfKind(SyntaxKind.ThrowStatement);
     const baseThrows = baseBody.getDescendantsOfKind(SyntaxKind.ThrowStatement);
-    
+
     if (childThrows.length > baseThrows.length) {
       pushFinding('solid.lsp.additional_exceptions', 'critical', sf, method,
         `LSP violation in ${className}.${methodName}: throws exceptions not thrown by base class`, findings);
     }
-    
+
     // VIOLATION 2: Returns null when base doesn't
     const childReturnsNull = methodBody.getText().includes('return null');
     const baseReturnsNull = baseBody.getText().includes('return null');
-    
+
     if (childReturnsNull && !baseReturnsNull) {
       pushFinding('solid.lsp.null_return', 'critical', sf, method,
         `LSP violation in ${className}.${methodName}: returns null but base doesn't - breaks contract`, findings);
     }
-    
+
     // VIOLATION 3: Stricter preconditions (more validations)
     const childValidations = countValidations(methodBody);
     const baseValidations = countValidations(baseBody);
-    
+
     if (childValidations > baseValidations + 2) {
       pushFinding('solid.lsp.stricter_preconditions', 'critical', sf, method,
         `Potential LSP issue in ${className}.${methodName}: stricter preconditions than base (${childValidations} vs ${baseValidations} validations)`, findings);
@@ -273,12 +273,12 @@ function countValidations(methodBody) {
     SyntaxKind.IfStatement,
     SyntaxKind.ThrowStatement
   ];
-  
+
   let count = 0;
   validationPatterns.forEach(kind => {
     count += methodBody.getDescendantsOfKind(kind).length;
   });
-  
+
   return count;
 }
 
@@ -289,61 +289,61 @@ function countValidations(methodBody) {
 
 function analyzeISP(sf, findings, pushFinding, project) {
   const interfaces = sf.getInterfaces();
-  
+
   interfaces.forEach(iface => {
     const interfaceName = iface.getName();
     const interfaceMethods = iface.getMethods();
-    
+
     if (interfaceMethods.length < 5) return;
-    
+
     // Find all implementations of this interface
     const implementations = findImplementations(iface, project);
-    
+
     if (implementations.length === 0) return;
-    
+
     let emptyMethodCount = 0;
     let totalImplementationMethods = 0;
-    
+
     implementations.forEach(impl => {
       interfaceMethods.forEach(ifaceMethod => {
         const ifaceMethodName = ifaceMethod.getName();
         const implMethod = impl.getMethod(ifaceMethodName);
-        
+
         if (!implMethod) return;
-        
+
         totalImplementationMethods++;
-        
+
         const body = implMethod.getBody();
         if (!body) return;
-        
+
         const bodyText = body.getText().trim();
-        
+
         // VIOLATION 1: Empty method or only throws NotImplemented
-        if (bodyText === '{}' || 
+        if (bodyText === '{}' ||
             bodyText.includes('throw new NotImplementedError') ||
             bodyText.includes('throw new Error')) {
           emptyMethodCount++;
         }
-        
+
         // VIOLATION 2: Only returns null/undefined
         if (/^{\s*return\s+(null|undefined);\s*}$/.test(bodyText)) {
           emptyMethodCount++;
         }
       });
     });
-    
+
     // If >30% of implementations are empty/throwing → Interface too fat
-    const emptyPercentage = totalImplementationMethods > 0 ? 
+    const emptyPercentage = totalImplementationMethods > 0 ?
       emptyMethodCount / totalImplementationMethods : 0;
-    
+
     if (emptyPercentage > 0.3) {
       pushFinding('solid.isp.fat_interface', 'critical', sf, iface,
         `ISP violation: ${interfaceName} has ${interfaceMethods.length} methods, ${Math.round(emptyPercentage * 100)}% are unimplemented/empty - split into smaller interfaces`, findings);
     }
-    
+
     // VIOLATION 3: Interface with methods from multiple concerns
     const methodClusters = clusterMethodsBySemanticDomain(interfaceMethods);
-    
+
     if (methodClusters.length >= 3) {
       pushFinding('solid.isp.multiple_concerns', 'critical', sf, iface,
         `ISP violation: ${interfaceName} mixes ${methodClusters.length} concerns (${methodClusters.join(', ')}) - segregate into focused interfaces`, findings);
@@ -354,7 +354,7 @@ function analyzeISP(sf, findings, pushFinding, project) {
 function findImplementations(iface, project) {
   const implementations = [];
   const interfaceName = iface.getName();
-  
+
   project.getSourceFiles().forEach(sf => {
     sf.getClasses().forEach(cls => {
       const implementsClause = cls.getImplements();
@@ -365,7 +365,7 @@ function findImplementations(iface, project) {
       });
     });
   });
-  
+
   return implementations;
 }
 
@@ -377,45 +377,45 @@ function findImplementations(iface, project) {
 function analyzeDIP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
   const filePath = sf.getFilePath();
-  
+
   // DETECTION 1: Domain layer importing Infrastructure
   const isDomain = /\/domain\//i.test(filePath);
-  
+
   if (isDomain) {
     const imports = sf.getImportDeclarations();
-    
+
     imports.forEach(imp => {
       const importPath = imp.getModuleSpecifierValue();
-      
+
       // DIP VIOLATION: Domain importing from Infrastructure or Framework
-      if (/\/infrastructure\//i.test(importPath) || 
+      if (/\/infrastructure\//i.test(importPath) ||
           /@nestjs|typeorm|mongoose|prisma|express/i.test(importPath)) {
         pushFinding('solid.dip.domain_depends_infrastructure', 'critical', sf, imp,
           `DIP VIOLATION: Domain layer importing from Infrastructure/Framework: ${importPath} - Domain should depend only on abstractions`, findings);
       }
     });
   }
-  
+
   // DETECTION 2: Constructor injecting concrete classes (not interfaces/abstractions)
   const constructor = cls.getConstructors()[0];
   if (!constructor) return;
-  
+
   const parameters = constructor.getParameters();
-  
+
   parameters.forEach(param => {
     const paramType = param.getType();
     const paramTypeName = paramType.getText();
-    
+
     // Skip primitives and common types
     if (/string|number|boolean|Date|Array|Promise/i.test(paramTypeName)) return;
-    
+
     // Check if type is an interface or abstract class
     const typeSymbol = paramType.getSymbol();
     if (!typeSymbol) return;
-    
+
     const declarations = typeSymbol.getDeclarations();
     if (!declarations || declarations.length === 0) return;
-    
+
     const isInterface = declarations.some(d => d.getKind() === SyntaxKind.InterfaceDeclaration);
     const isAbstract = declarations.some(d => {
       try {
@@ -427,12 +427,12 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
       }
       return false;
     });
-    
+
     // DIP VIOLATION: Injecting concrete class (not interface/abstract)
     if (!isInterface && !isAbstract) {
       // Additional check: Is it a framework service? (NestJS services are OK)
       const isFrameworkService = /@Injectable\(\)/.test(declarations[0]?.getText() || '');
-      
+
       if (!isFrameworkService) {
         pushFinding('solid.dip.concrete_dependency', 'critical', sf, param,
           `DIP violation in ${className}: depends on concrete class ${paramTypeName} - inject interface/abstraction instead`, findings);
@@ -454,4 +454,3 @@ module.exports = {
   analyzeISP,
   analyzeDIP
 };
-

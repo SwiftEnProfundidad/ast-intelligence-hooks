@@ -42,4 +42,3 @@ echo "  npm run violations:list <rule>  # Desde hooks-system/"
 echo "  npm run violations:show <rule>  # Desde hooks-system/"
 echo ""
 echo "════════════════════════════════════════════════════════════════"
-

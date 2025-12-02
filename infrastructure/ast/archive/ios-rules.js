@@ -27,7 +27,7 @@ class iOSRules {
    */
   analyzeFile(filePath, isTest = false) {
     if (!this.parser) return [];
-    
+
     const findings = [];
     const ast = this.parser.parseFile(filePath);
     if (!ast) return findings;
@@ -45,7 +45,7 @@ class iOSRules {
     findings.push(...this.checkMissingState(filePath, ast));
     findings.push(...this.checkStructDefault(filePath, ast));
     findings.push(...this.checkImmutability(filePath, ast));
-    
+
     // Solo aplicar reglas de makeSUT en archivos de test
     if (isTest) {
       findings.push(...this.checkMakeSUT(filePath, ast, fileContent));
@@ -61,7 +61,7 @@ class iOSRules {
   checkForceUnwrapping(filePath, fileContent, ast) {
     const findings = [];
     const forceUnwraps = this.parser.detectForceUnwrapping(fileContent);
-    
+
     forceUnwraps.forEach(fu => {
       findings.push({
         ruleId: 'ios.force_unwrapping',
@@ -83,7 +83,7 @@ class iOSRules {
   checkCompletionHandlers(filePath, ast) {
     const findings = [];
     const handlers = this.parser.detectCompletionHandlers(ast);
-    
+
     handlers.forEach(handler => {
       findings.push({
         ruleId: 'ios.completion_handlers',
@@ -104,7 +104,7 @@ class iOSRules {
   checkMassiveViewControllers(filePath, ast) {
     const findings = [];
     const types = this.parser.extractTypes(ast);
-    
+
     types.classes.forEach(cls => {
       const name = cls.name;
       if (name && (name.includes('ViewController') || name.includes('Controller'))) {
@@ -130,11 +130,11 @@ class iOSRules {
    */
   checkSingletons(filePath, ast, fileContent) {
     const findings = [];
-    
-    // Buscar el patrón: static let shared = 
+
+    // Buscar el patrón: static let shared =
     const singletonRegex = /static\s+let\s+(?:shared|instance|default|sharedInstance)\s*=/gi;
     const lines = fileContent.split('\n');
-    
+
     lines.forEach((line, index) => {
       if (singletonRegex.test(line)) {
         findings.push({
@@ -157,14 +157,14 @@ class iOSRules {
   checkWeakSelf(filePath, fileContent) {
     const findings = [];
     const lines = fileContent.split('\n');
-    
+
     lines.forEach((line, index) => {
       // Detectar closures que capturan self sin weak/unowned
       if (line.includes('{') && (line.includes('self.') || line.match(/\bself\b/))) {
         // Verificar si NO tiene [weak self] o [unowned self]
         const contextStart = Math.max(0, index - 2);
         const contextLines = lines.slice(contextStart, index + 1).join(' ');
-        
+
         if (!contextLines.includes('[weak self]') && !contextLines.includes('[unowned self]')) {
           // Evitar falsos positivos en definiciones de funciones normales
           if (!line.includes('func ') && (line.includes(') in') || line.includes('})'))) {
@@ -209,7 +209,7 @@ class iOSRules {
     const findings = [];
     const hasUIKit = fileContent.includes('import UIKit');
     const hasSwiftUI = fileContent.includes('import SwiftUI');
-    
+
     if (hasUIKit && hasSwiftUI) {
       findings.push({
         ruleId: 'ios.uikit_unnecessary',
@@ -230,7 +230,7 @@ class iOSRules {
   checkMissingState(filePath, ast) {
     const findings = [];
     const variables = this.parser.extractVariables(ast);
-    
+
     variables.forEach(v => {
       // Detectar variables en structs/classes que heredan de View sin @State
       if (v.kind === 'source.lang.swift.decl.var.instance' && v.name && !v.name.startsWith('_')) {
@@ -261,7 +261,7 @@ class iOSRules {
   checkStructDefault(filePath, ast) {
     const findings = [];
     const types = this.parser.extractTypes(ast);
-    
+
     types.classes.forEach(cls => {
       // Detectar clases sin herencia que podrían ser structs
       const inheritance = cls.node['key.inheritedtypes'];
@@ -286,7 +286,7 @@ class iOSRules {
   checkImmutability(filePath, ast) {
     const findings = [];
     const variables = this.parser.extractVariables(ast);
-    
+
     variables.forEach(v => {
       // Detectar variables que podrían ser let
       if (v.name && v.node['key.setter_accessibility'] === 'source.lang.swift.accessibility.private') {
@@ -309,14 +309,14 @@ class iOSRules {
    */
   checkMakeSUT(filePath, ast, fileContent) {
     const findings = [];
-    
+
     // Verificar si es un archivo de test
     if (!fileContent.includes('XCTest') && !fileContent.includes('Quick') && !fileContent.includes('import XCTest')) {
       return findings;
     }
 
     const functions = this.parser.extractFunctions(ast);
-    const testFunctions = functions.filter(fn => 
+    const testFunctions = functions.filter(fn =>
       fn.name && (fn.name.startsWith('test') || fn.name.includes('_should_'))
     );
 
@@ -338,4 +338,3 @@ class iOSRules {
 }
 
 module.exports = iOSRules;
-

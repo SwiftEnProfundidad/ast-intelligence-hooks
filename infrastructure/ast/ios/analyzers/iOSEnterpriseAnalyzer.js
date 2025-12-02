@@ -12,7 +12,7 @@ const { pushFinding, mapToLevel } = require(path.join(__dirname, '../../ast-core
  * iOSEnterpriseAnalyzer
  * Enterprise-grade Swift/iOS code analyzer
  * Uses SourceKitten for native AST parsing
- * 
+ *
  * @class iOSEnterpriseAnalyzer
  */
 class iOSEnterpriseAnalyzer {
@@ -33,7 +33,7 @@ class iOSEnterpriseAnalyzer {
     try {
       // Parse file with SourceKitten
       const ast = await this.parser.parseFile(filePath);
-      
+
       if (!ast.parsed) {
         console.warn(`[iOS Enterprise] Could not parse ${filePath}: ${ast.error}`);
         return;
@@ -82,7 +82,7 @@ class iOSEnterpriseAnalyzer {
   async analyzeSwiftModerno(ast, content, filePath) {
     // ios.async_await_missing
     if (content.includes('completion:') && !content.includes('async ')) {
-      this.addFinding('ios.async_await_missing', 'medium', filePath, 1, 
+      this.addFinding('ios.async_await_missing', 'medium', filePath, 1,
         'Using completion handlers instead of async/await (Swift 5.9+ required)');
     }
 
@@ -762,4 +762,3 @@ class iOSEnterpriseAnalyzer {
 }
 
 module.exports = { iOSEnterpriseAnalyzer };
-

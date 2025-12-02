@@ -28,11 +28,11 @@ const { analyzeImagesBackend } = require(path.join(astModulesPath, "common/image
 async function runASTIntelligence() {
   try {
     const root = process.cwd();
-  const allFiles = listSourceFiles(root);
-  
+    const allFiles = listSourceFiles(root);
+
     // Create TypeScript project for JS/TS files
     const project = createProject(allFiles);
-  const findings = [];
+    const findings = [];
 
     // Global analysis context
     const context = {
@@ -76,7 +76,7 @@ async function runASTIntelligence() {
 async function runPlatformAnalysis(project, findings, context) {
   // Get source files
   const sourceFiles = project.getSourceFiles();
-  
+
   // Track which platforms we've already processed
   const platformsProcessed = new Set();
 
@@ -149,7 +149,7 @@ function generateOutput(findings, context, project, root) {
     .slice(0, 20)
     .forEach(([ruleId, count]) => {
       const severity = ruleId.includes("types.any") || ruleId.includes("security.") || ruleId.includes("architecture.") ? "error" :
-                      ruleId.includes("performance.") || ruleId.includes("debug.") ? "warning" : "info";
+        ruleId.includes("performance.") || ruleId.includes("debug.") ? "warning" : "info";
       const emoji = severity === "error" ? "🔴" : severity === "warning" ? "🟡" : "🔵";
       console.log(`${emoji} ${ruleId} - ${count} violations`);
     });
@@ -174,16 +174,16 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
   try {
     fs.mkdirSync(outDir, { recursive: true });
 
-  const platformDetails = {};
-  const ruleDetails = {};
-  const fileDetails = {};
+    const platformDetails = {};
+    const ruleDetails = {};
+    const fileDetails = {};
 
     // Build detailed statistics
     findings.forEach(f => {
       const platform = platformOf(f.filePath) || "other";
       const platformKey = platform === "ios" ? "iOS" : platform.charAt(0).toUpperCase() + platform.slice(1);
       const level = mapToLevel(f.severity);
-    const relPath = path.relative(root, f.filePath).replace(/\\/g, "/");
+      const relPath = path.relative(root, f.filePath).replace(/\\/g, "/");
 
       // Platform details
       if (!platformDetails[platformKey]) {
@@ -194,27 +194,27 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
       platformDetails[platformKey].files.add(relPath);
 
       // Rule details
-    if (!ruleDetails[f.ruleId]) {
-      ruleDetails[f.ruleId] = { count: 0, level, severity: f.severity, platforms: {}, files: new Set() };
-    }
-    ruleDetails[f.ruleId].count += 1;
+      if (!ruleDetails[f.ruleId]) {
+        ruleDetails[f.ruleId] = { count: 0, level, severity: f.severity, platforms: {}, files: new Set() };
+      }
+      ruleDetails[f.ruleId].count += 1;
       ruleDetails[f.ruleId].platforms[platformKey] = (ruleDetails[f.ruleId].platforms[platformKey] || 0) + 1;
-    ruleDetails[f.ruleId].files.add(relPath);
+      ruleDetails[f.ruleId].files.add(relPath);
 
       // File details
-    if (!fileDetails[relPath]) {
+      if (!fileDetails[relPath]) {
         fileDetails[relPath] = { platform: platformKey, rules: {}, levels: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 } };
-    }
-    fileDetails[relPath].rules[f.ruleId] = (fileDetails[relPath].rules[f.ruleId] || 0) + 1;
-    fileDetails[relPath].levels[level] += 1;
+      }
+      fileDetails[relPath].rules[f.ruleId] = (fileDetails[relPath].rules[f.ruleId] || 0) + 1;
+      fileDetails[relPath].levels[level] += 1;
     });
 
     // Convert Sets to Arrays
     Object.keys(platformDetails).forEach(p => {
-    platformDetails[p].files = Array.from(platformDetails[p].files);
+      platformDetails[p].files = Array.from(platformDetails[p].files);
     });
     Object.keys(ruleDetails).forEach(r => {
-    ruleDetails[r].files = Array.from(ruleDetails[r].files);
+      ruleDetails[r].files = Array.from(ruleDetails[r].files);
     });
 
     const out = {
@@ -302,20 +302,7 @@ function shouldIgnore(file) {
   if (p.endsWith(".d.ts")) return true;
   if (p.endsWith(".map")) return true;
   if (/\.min\./.test(p)) return true;
-  
-  // ⚙️ EXCLUDE AST INFRASTRUCTURE & HOOK SYSTEM from audit
-  // These are analysis tools, not production code
-  if (p.includes("/scripts/hooks-system/")) return true;
-  if (p.includes("/CustomLintRules/")) return true; // iOS AST rules
-  if (p.includes("/custom-lint-rules/")) return true; // Android AST rules
-  if (p.includes("ast-intelligence")) return true;
-  if (p.includes("ast-frontend")) return true;
-  if (p.includes("ast-backend")) return true;
-  if (p.includes("ast-ios")) return true;
-  if (p.includes("ast-android")) return true;
-  if (p.includes("ast-common")) return true;
-  if (p.includes("ast-core")) return true;
-  
+
   return false;
 }
 

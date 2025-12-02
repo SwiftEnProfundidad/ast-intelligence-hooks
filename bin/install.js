@@ -36,7 +36,7 @@ ${COLORS.reset}`);
     // STEP 2: Instalar configs de ESLint
     process.stdout.write(`\n${COLORS.cyan}[2/6] Installing ESLint configurations...${COLORS.reset}`);
     this.installESLintConfigs();
-    
+
     // STEP 3: Crear estructura base
     process.stdout.write(`\n${COLORS.cyan}[3/6] Creating hooks-system directory structure...${COLORS.reset}`);
     this.createDirectoryStructure();
@@ -52,13 +52,18 @@ ${COLORS.reset}`);
     this.createProjectConfig();
     process.stdout.write(`${COLORS.green}✓ Configuration created${COLORS.reset}`);
 
-    // STEP 5: Instalar Git hooks
-    process.stdout.write(`\n${COLORS.cyan}[5/6] Installing Git hooks...${COLORS.reset}`);
+    // STEP 5: Instalar Cursor hooks y skills
+    process.stdout.write(`\n${COLORS.cyan}[5/7] Installing Cursor hooks and skills...${COLORS.reset}`);
+    this.installCursorHooks();
+    process.stdout.write(`${COLORS.green}✓ Cursor hooks and skills installed${COLORS.reset}`);
+
+    // STEP 6: Instalar Git hooks
+    process.stdout.write(`\n${COLORS.cyan}[6/7] Installing Git hooks...${COLORS.reset}`);
     this.installGitHooks();
     process.stdout.write(`${COLORS.green}✓ Git hooks installed${COLORS.reset}`);
 
-    // STEP 6: Finalización
-    process.stdout.write(`\n${COLORS.cyan}[6/6] Finalizing installation...${COLORS.reset}`);
+    // STEP 7: Finalización
+    process.stdout.write(`\n${COLORS.cyan}[7/7] Finalizing installation...${COLORS.reset}`);
     this.printSuccessMessage();
   }
 
@@ -211,15 +216,15 @@ ${COLORS.reset}`);
 
   installESLintConfigs() {
     process.stdout.write(`${COLORS.blue}📝 Installing ESLint configurations...${COLORS.reset}`);
-    
-    const templatesDir = path.join(this.hooksSystemPath, 'infrastructure/external-tools/eslint');
-    
+
+    const templatesDir = path.join(this.hookSystemRoot, 'infrastructure/external-tools/eslint');
+
     // Backend ESLint config
     const backendDir = path.join(this.targetRoot, 'apps/backend');
     if (fs.existsSync(backendDir)) {
       const templatePath = path.join(templatesDir, 'backend.config.template.mjs');
       const targetPath = path.join(backendDir, 'eslint.config.mjs');
-      
+
       if (fs.existsSync(templatePath)) {
         fs.copyFileSync(templatePath, targetPath);
         process.stdout.write(`${COLORS.green}  ✅ Created apps/backend/eslint.config.mjs${COLORS.reset}`);
@@ -227,9 +232,137 @@ ${COLORS.reset}`);
     }
   }
 
+  installCursorHooks() {
+    const claudeDir = path.join(this.targetRoot, '.claude');
+    const claudeSkillsDir = path.join(claudeDir, 'skills');
+    const claudeHooksDir = path.join(claudeDir, 'hooks');
+    const cursorSettingsPath = path.join(this.targetRoot, '.cursor', 'settings.json');
+
+    if (!fs.existsSync(claudeDir)) {
+      fs.mkdirSync(claudeDir, { recursive: true });
+    }
+
+    const librarySkillsDir = path.join(this.hookSystemRoot, 'skills');
+    const libraryHooksDir = path.join(this.hookSystemRoot, 'hooks');
+
+    if (fs.existsSync(librarySkillsDir)) {
+      const relevantSkills = this.getRelevantSkills();
+
+      relevantSkills.forEach(skillName => {
+        const sourceSkillDir = path.join(librarySkillsDir, skillName);
+        const targetSkillDir = path.join(claudeSkillsDir, skillName);
+
+        if (fs.existsSync(sourceSkillDir)) {
+          this.copyRecursive(sourceSkillDir, targetSkillDir);
+          process.stdout.write(`${COLORS.green}  ✅ Installed skill: ${skillName}${COLORS.reset}\n`);
+        }
+      });
+
+      const skillRulesPath = path.join(librarySkillsDir, 'skill-rules.json');
+      if (fs.existsSync(skillRulesPath)) {
+        const targetRulesPath = path.join(claudeSkillsDir, 'skill-rules.json');
+        fs.copyFileSync(skillRulesPath, targetRulesPath);
+        process.stdout.write(`${COLORS.green}  ✅ Installed skill-rules.json${COLORS.reset}\n`);
+      }
+    }
+
+    if (fs.existsSync(libraryHooksDir)) {
+      if (!fs.existsSync(claudeHooksDir)) {
+        fs.mkdirSync(claudeHooksDir, { recursive: true });
+      }
+
+      const hooksToCopy = [
+        'skill-activation-prompt.ts',
+        'skill-activation-prompt.sh',
+        'pre-tool-use-guard.ts',
+        'pre-tool-use-evidence-validator.ts',
+        'post-tool-use-tracker.sh',
+        'git-status-monitor.ts',
+        'notify-macos.ts',
+        'getSkillRulesPath.ts'
+      ];
+
+      hooksToCopy.forEach(hookFile => {
+        const sourceHook = path.join(libraryHooksDir, hookFile);
+        const targetHook = path.join(claudeHooksDir, hookFile);
+
+        if (fs.existsSync(sourceHook)) {
+          fs.copyFileSync(sourceHook, targetHook);
+          if (hookFile.endsWith('.sh')) {
+            fs.chmodSync(targetHook, '755');
+          }
+          process.stdout.write(`${COLORS.green}  ✅ Installed hook: ${hookFile}${COLORS.reset}\n`);
+        }
+      });
+
+      const hooksPackageJson = path.join(libraryHooksDir, 'package.json');
+      if (fs.existsSync(hooksPackageJson)) {
+        const targetPackageJson = path.join(claudeHooksDir, 'package.json');
+        fs.copyFileSync(hooksPackageJson, targetPackageJson);
+      }
+    }
+
+    this.configureCursorSettings(cursorSettingsPath, claudeHooksDir);
+  }
+
+  getRelevantSkills() {
+    const allSkills = ['backend-guidelines', 'frontend-guidelines', 'ios-guidelines', 'android-guidelines'];
+    const relevantSkills = [];
+
+    if (this.platforms.includes('backend')) {
+      relevantSkills.push('backend-guidelines');
+    }
+    if (this.platforms.includes('frontend')) {
+      relevantSkills.push('frontend-guidelines');
+    }
+    if (this.platforms.includes('ios')) {
+      relevantSkills.push('ios-guidelines');
+    }
+    if (this.platforms.includes('android')) {
+      relevantSkills.push('android-guidelines');
+    }
+
+    return relevantSkills.length > 0 ? relevantSkills : allSkills;
+  }
+
+  configureCursorSettings(cursorSettingsPath, hooksDir) {
+    const hooksDirRelative = path.relative(this.targetRoot, hooksDir);
+
+    let settings = {};
+    if (fs.existsSync(cursorSettingsPath)) {
+      try {
+        settings = JSON.parse(fs.readFileSync(cursorSettingsPath, 'utf8'));
+      } catch (err) {
+        process.stdout.write(`${COLORS.yellow}  ⚠️  Could not parse existing .cursor/settings.json${COLORS.reset}\n`);
+      }
+    }
+
+    if (!settings.hooks) {
+      settings.hooks = {};
+    }
+
+    settings.hooks.UserPromptSubmit = path.join(hooksDirRelative, 'skill-activation-prompt.sh');
+    settings.hooks.PreToolUse = [
+      path.join(hooksDirRelative, 'pre-tool-use-evidence-validator.ts'),
+      path.join(hooksDirRelative, 'pre-tool-use-guard.ts')
+    ];
+    settings.hooks.PostToolUse = [
+      path.join(hooksDirRelative, 'post-tool-use-tracker.sh'),
+      path.join(hooksDirRelative, 'git-status-monitor.ts')
+    ];
+
+    const cursorDir = path.dirname(cursorSettingsPath);
+    if (!fs.existsSync(cursorDir)) {
+      fs.mkdirSync(cursorDir, { recursive: true });
+    }
+
+    fs.writeFileSync(cursorSettingsPath, JSON.stringify(settings, null, 2));
+    process.stdout.write(`${COLORS.green}  ✅ Configured .cursor/settings.json${COLORS.reset}\n`);
+  }
+
   installGitHooks() {
     const gitHooksDir = path.join(this.targetRoot, '.git/hooks');
-    
+
     if (!fs.existsSync(gitHooksDir)) {
       process.stdout.write(`${COLORS.yellow}⚠ .git directory not found. Initialize git first: git init${COLORS.reset}\n`);
       return;
@@ -238,7 +371,7 @@ ${COLORS.reset}`);
     // Crear pre-commit hook
     const preCommitHook = `#!/bin/bash
 # AST Intelligence Hooks - Pre-commit
-# Auto-generated by @carlos/ast-intelligence-hooks v3.1.0
+# Auto-generated by @pumuki/ast-intelligence-hooks v3.1.0
 
 # Check for bypass
 if [[ -n "\${GIT_BYPASS_HOOK}" ]]; then
@@ -297,16 +430,8 @@ ${COLORS.cyan}💡 Tips:${COLORS.reset}
 • Standalone AST: ${COLORS.yellow}node scripts/hooks-system/infrastructure/ast/ast-intelligence.js${COLORS.reset}
 • View results: ${COLORS.yellow}cat ast-summary.json | jq${COLORS.reset}
 
-${COLORS.green}
- ███████╗ █████╗ ██████╗ ██╗     ██████╗ ███████╗
- ██╔════╝██╔══██╗██╔══██╗██║     ██╔══██╗██╔════╝
- ██║     ███████║██████╔╝██║     ██║  ██║███████╗
- ██║     ██╔══██║██╔══██╗██║     ██║  ██║╚════██║
- ███████╗██║  ██║██║  ██║███████╗██████╔╝███████║
- ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═════╝ ╚══════╝
-${COLORS.reset}
-
-${COLORS.blue}🔍 Ready to enforce code quality across your entire stack!${COLORS.reset}
+${COLORS.green}  🐈💚 PUMUKI TEAM® - Advanced Project Intelligence${COLORS.reset}
+${COLORS.blue}  Ready to enforce code quality across your entire stack!${COLORS.reset}
 `);
   }
 }
@@ -321,4 +446,3 @@ if (require.main === module) {
 }
 
 module.exports = { ASTHooksInstaller };
-

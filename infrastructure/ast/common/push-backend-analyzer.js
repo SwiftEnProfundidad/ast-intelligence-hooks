@@ -2,7 +2,11 @@ function analyzePushBackend(project, findings) {
   project.getSourceFiles().forEach(sf => {
     const content = sf.getFullText();
     const filePath = sf.getFilePath();
-    
+
+    if (filePath.includes('hooks-system/') || filePath.includes('scripts/')) {
+      return;
+    }
+
     if (content.match(/sendNotification|pushNotification|fcm\.send|apns\.send/i)) {
       const hasQueue = /Queue|Bull|BullMQ|queueAdd/i.test(content);
       if (!hasQueue) {
@@ -13,7 +17,7 @@ function analyzePushBackend(project, findings) {
           category: 'Push', suggestion: 'Implement notification queue with retry policy'
         });
       }
-      
+
       const hasBatching = /batch|chunk|bulkSend/i.test(content);
       const hasLoop = /for\s*\(|forEach|map\(/i.test(content);
       if (hasLoop && !hasBatching) {
@@ -29,4 +33,3 @@ function analyzePushBackend(project, findings) {
 }
 
 module.exports = { analyzePushBackend };
-

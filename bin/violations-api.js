@@ -61,11 +61,11 @@ class ViolationsAPI {
 
   getViolationsByFile(filePath) {
     if (!this.indexes) this.load();
-    
-    const absolutePath = path.isAbsolute(filePath) 
-      ? filePath 
+
+    const absolutePath = path.isAbsolute(filePath)
+      ? filePath
       : path.join(process.cwd(), filePath);
-    
+
     return this.indexes.byFile[absolutePath] || [];
   }
 
@@ -86,31 +86,31 @@ class ViolationsAPI {
 
   getStagedViolations() {
     if (!this.indexes) this.load();
-    
+
     const { execSync } = require('child_process');
     const stagedFiles = execSync('git diff --cached --name-only --diff-filter=ACM', { encoding: 'utf8' })
       .trim()
       .split('\n')
       .filter(Boolean)
       .map(f => path.join(process.cwd(), f));
-    
+
     const stagedViolations = [];
     stagedFiles.forEach(file => {
       const violations = this.indexes.byFile[file] || [];
       stagedViolations.push(...violations);
     });
-    
+
     return stagedViolations;
   }
 
   getTopViolations(limit = 10) {
     if (!this.data) this.load();
-    
+
     const ruleStats = {};
     this.data.findings.forEach(f => {
       if (!ruleStats[f.ruleId]) {
-        ruleStats[f.ruleId] = { 
-          count: 0, 
+        ruleStats[f.ruleId] = {
+          count: 0,
           severity: f.severity,
           files: new Set()
         };
@@ -118,7 +118,7 @@ class ViolationsAPI {
       ruleStats[f.ruleId].count++;
       ruleStats[f.ruleId].files.add(f.filePath);
     });
-    
+
     return Object.entries(ruleStats)
       .map(([ruleId, stats]) => ({
         ruleId,
@@ -132,7 +132,7 @@ class ViolationsAPI {
 
   getSummary() {
     if (!this.data) this.load();
-    
+
     const summary = {
       total: this.data.findings.length,
       critical: this.data.findings.filter(f => f.severity === 'critical').length,
@@ -141,7 +141,7 @@ class ViolationsAPI {
       low: this.data.findings.filter(f => f.severity === 'low').length,
       filesAffected: new Set(this.data.findings.map(f => f.filePath)).size
     };
-    
+
     return summary;
   }
 }
@@ -226,12 +226,12 @@ function cli() {
           process.exit(1);
         }
         const violations = api.getViolationsByRule(ruleId);
-        
+
         if (violations.length === 0) {
           process.stdout.write(`✅ No violations found for rule: ${ruleId}\n`);
           process.exit(0);
         }
-        
+
         process.stdout.write(`📋 ${violations.length} violation(s) for ${ruleId}:\n\n`);
         violations.forEach((v, i) => {
           const loc = `${v.filePath}:${v.line}:${v.column || 1}`;
@@ -243,36 +243,36 @@ function cli() {
       case 'show': {
         const ruleId = args[1];
         const contextLines = parseInt(args[2]) || 3;
-        
+
         if (!ruleId) {
           process.stderr.write('Usage: violations-api.js show <ruleId> [contextLines]\n');
           process.stderr.write('Example: violations-api.js show common.quality.todo_fixme 3\n');
           process.exit(1);
         }
-        
+
         const violations = api.getViolationsByRule(ruleId);
-        
+
         if (violations.length === 0) {
           process.stdout.write(`✅ No violations found for rule: ${ruleId}\n`);
           process.exit(0);
         }
-        
+
         process.stdout.write(`\n🔍 ${violations.length} violation(s) for ${ruleId}:\n`);
-        
+
         violations.forEach((v, i) => {
           const loc = `${v.filePath}:${v.line}:${v.column || 1}`;
           process.stdout.write(`\n${'─'.repeat(70)}\n`);
           process.stdout.write(`📄 ${i + 1}. ${loc}\n`);
           process.stdout.write(`   ${v.message}\n`);
           process.stdout.write(`${'─'.repeat(70)}\n`);
-          
+
           try {
             if (fs.existsSync(v.filePath)) {
               const lines = fs.readFileSync(v.filePath, 'utf8').split('\n');
               const targetLine = v.line - 1;
               const start = Math.max(0, targetLine - contextLines);
               const end = Math.min(lines.length, targetLine + contextLines + 1);
-              
+
               for (let j = start; j < end; j++) {
                 const lineNum = (j + 1).toString().padStart(4, ' ');
                 const marker = j === targetLine ? '→' : ' ';
@@ -286,7 +286,7 @@ function cli() {
             process.stdout.write(`   ⚠️  Error reading file: ${err.message}\n`);
           }
         });
-        
+
         process.stdout.write(`\n${'═'.repeat(70)}\n`);
         process.stdout.write(`✅ ${violations.length} violation(s) shown\n`);
         process.stdout.write(`\n💡 Click on any path above to open in editor\n\n`);
@@ -343,4 +343,3 @@ if (require.main === module) {
 }
 
 module.exports = { ViolationsAPI };
-

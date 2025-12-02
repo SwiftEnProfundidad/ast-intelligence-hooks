@@ -3,8 +3,12 @@
 // Clean Architecture: Infrastructure Layer - Android AST Analysis
 
 const path = require('path');
+const glob = require('glob');
 const { pushFinding, mapToLevel, SyntaxKind, platformOf } = require(path.join(__dirname, '../ast-core'));
 const { analyzeAndroidFiles: runDetektAnalysis } = require(path.join(__dirname, './detekt-runner'));
+const { AndroidSOLIDAnalyzer } = require(path.join(__dirname, 'analyzers/AndroidSOLIDAnalyzer'));
+const { AndroidForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analyzers/AndroidForbiddenLiteralsAnalyzer'));
+const { AndroidASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/AndroidASTIntelligentAnalyzer'));
 
 /**
  * Run Android-specific AST intelligence analysis
@@ -13,6 +17,20 @@ const { analyzeAndroidFiles: runDetektAnalysis } = require(path.join(__dirname, 
  * @param {string} platform - Platform identifier
  */
 function runAndroidIntelligence(project, findings, platform) {
+  // STEP 0: Run Kotlin AST Intelligent Analyzer (PRIORITY)
+  console.log(`[Android AST Intelligence] Running Kotlin AST analysis...`);
+  const astAnalyzer = new AndroidASTIntelligentAnalyzer(findings);
+  const root = process.cwd();
+  const kotlinFiles = glob.sync('**/*.kt', {
+    cwd: root,
+    ignore: ['**/node_modules/**', '**/build/**', '**/.gradle/**'],
+    absolute: true,
+  });
+
+  for (const kotlinFile of kotlinFiles) {
+    astAnalyzer.analyzeFile(kotlinFile);
+  }
+  console.log(`[Android AST Intelligence] Analyzed ${kotlinFiles.length} Kotlin files with AST`);
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
@@ -1103,7 +1121,7 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 139. Java detection (NO Java en código nuevo)
+    // 139. Java detection (NO Java in new code)
     const hasJavaFile = filePath.endsWith('.java');
     if (hasJavaFile && !filePath.includes('build/') && !filePath.includes('generated/')) {
       pushFinding(
@@ -1111,7 +1129,7 @@ function runAndroidIntelligence(project, findings, platform) {
         "critical",
         sf,
         sf,
-        'Java file detected - use Kotlin 100% for new code (NO Java en código nuevo)',
+        'Java file detected - use Kotlin 100% for new code (NO Java in new code)',
         findings
       );
     }
@@ -1157,7 +1175,7 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 143. XML layouts (NO XML en código nuevo)
+    // 143. XML layouts (NO XML in new code)
     const hasXMLLayout = filePath.includes('/res/layout/') && filePath.endsWith('.xml');
     if (hasXMLLayout && !filePath.includes('navigation.xml')) {
       pushFinding(
@@ -1796,6 +1814,30 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // SOLID PRINCIPLES ANALYSIS
+  // ═══════════════════════════════════════════════════════════════
+  project.getSourceFiles().forEach((sf) => {
+    const filePath = sf.getFilePath();
+    if (platformOf(filePath) !== "android") return;
+    if (/\/ast-[^/]+\.js$/.test(filePath)) return;
+
+    const solidAnalyzer = new AndroidSOLIDAnalyzer();
+    solidAnalyzer.analyze(sf, findings, pushFinding);
+  });
+
+  // ═══════════════════════════════════════════════════════════════
+  // FORBIDDEN LITERALS ANALYSIS (null/undefined, magic numbers, type casts)
+  // ═══════════════════════════════════════════════════════════════
+  project.getSourceFiles().forEach((sf) => {
+    const filePath = sf.getFilePath();
+    if (platformOf(filePath) !== "android") return;
+    if (/\/ast-[^/]+\.js$/.test(filePath)) return;
+
+    const forbiddenLiteralsAnalyzer = new AndroidForbiddenLiteralsAnalyzer();
+    forbiddenLiteralsAnalyzer.analyze(sf, findings, pushFinding);
   });
 
   // ═══════════════════════════════════════════════════════════════

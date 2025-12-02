@@ -29,4 +29,3 @@ class IFindingsRepository {
 }
 
 module.exports = IFindingsRepository;
-

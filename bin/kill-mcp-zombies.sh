@@ -46,4 +46,3 @@ done
 echo ""
 echo -e "${GREEN}✅ All zombie processes terminated!${NC}"
 echo -e "${YELLOW}ℹ️  Safe to restart Cursor now${NC}"
-

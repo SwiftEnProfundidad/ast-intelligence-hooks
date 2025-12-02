@@ -63,7 +63,7 @@ print_metric() {
   local before=$2
   local after=$3
   local delta=$4
-  
+
   local color=$GREEN
   local symbol="✅"
   if [[ $delta -gt 0 ]]; then
@@ -73,7 +73,7 @@ print_metric() {
     color=$YELLOW
     symbol="➖"
   fi
-  
+
   printf "  %-30s %6s → %6s   %s%6s%s %s\n" \
     "$label" "$before" "$after" "$color" "$delta" "$NC" "$symbol"
 }
@@ -93,14 +93,14 @@ if [[ $baseline_total -gt 0 ]]; then
   baseline_health=$((100 - (baseline_total * 100 / 15000)))
   current_health=$((100 - (current_total * 100 / 15000)))
   delta_health=$((current_health - baseline_health))
-  
+
   [[ $baseline_health -lt 0 ]] && baseline_health=0
   [[ $current_health -lt 0 ]] && current_health=0
-  
+
   health_color=$GREEN
   [[ $delta_health -lt 0 ]] && health_color=$RED
   [[ $delta_health -eq 0 ]] && health_color=$YELLOW
-  
+
   printf "  %s%% → %s%%   %s%+d%%%s\n" \
     "$baseline_health" "$current_health" "$health_color" "$delta_health" "$NC"
 fi
@@ -127,4 +127,3 @@ echo -e "${CYAN}Commands:${NC}"
 echo -e "  Update baseline: ${BOLD}cp $CURRENT_REPORT $BASELINE_REPORT${NC}"
 echo -e "  View details:    ${BOLD}jq . $CURRENT_REPORT | less${NC}"
 echo ""
-

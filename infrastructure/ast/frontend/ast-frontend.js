@@ -18,7 +18,7 @@ function runFrontendIntelligence(project, findings, platform) {
 
     // Skip if not Frontend platform
     if (platformOf(filePath) !== "frontend") return;
-    
+
     // Skip AST infrastructure files (avoid self-analysis - they contain patterns that trigger rules)
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
     if (/\/app\/middleware\.ts$|\/middleware\.ts$|\/app\/headers\.ts$/.test(filePath)) {
@@ -33,29 +33,29 @@ function runFrontendIntelligence(project, findings, platform) {
       const expr = call.getExpression().getText();
       return /^(use[A-Z]|useState|useEffect|useCallback|useMemo|useContext|useReducer|useRef)\b/.test(expr);
     });
-    
+
     hookCalls.forEach((hookCall) => {
       // Check if hook is inside an if statement or ternary expression
       let parent = hookCall.getParent();
       let depth = 0;
       const maxDepth = 10; // Limit traversal to avoid false positives in deeply nested code
-      
+
       while (parent && depth < maxDepth) {
         const kind = parent.getKind();
-        
+
         // If we hit a function/arrow function boundary, stop (hook is in its own function, OK)
-        if (kind === SyntaxKind.FunctionDeclaration || 
-            kind === SyntaxKind.FunctionExpression || 
+        if (kind === SyntaxKind.FunctionDeclaration ||
+            kind === SyntaxKind.FunctionExpression ||
             kind === SyntaxKind.ArrowFunction) {
           break;
         }
-        
+
         // If hook is directly inside if/ternary, it's a violation
         if (kind === SyntaxKind.IfStatement || kind === SyntaxKind.ConditionalExpression) {
           pushFinding("frontend.hooks.conditional", "error", sf, hookCall, "Hook called conditionally", findings);
           break;
         }
-        
+
         parent = parent.getParent();
         depth++;
       }
@@ -115,7 +115,7 @@ function runFrontendIntelligence(project, findings, platform) {
     const isE2ETest = /\/(e2e|playwright|cypress)\//i.test(filePath);
     const isThirdPartyIntegration = /(google|leaflet|mapbox|d3|chart)/i.test(sf.getFullText().substring(0, 500));
     const isLegitimateContext = isDomUtilityFile || isCustomHook || isChartMapComponent || isDomTestFile || isDomConfigFile || isE2ETest || isThirdPartyIntegration;
-    
+
     if (!isLegitimateContext) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const expr = call.getExpression().getText();
@@ -124,7 +124,7 @@ function runFrontendIntelligence(project, findings, platform) {
           const fullCallText = call.getText();
           const functionName = call.getFirstAncestorByKind(SyntaxKind.FunctionDeclaration)?.getName() || '';
           const isUtilityFunction = /^(setup|init|configure|attach|mount|render)/i.test(functionName);
-          
+
           // Legitimate patterns:
           const isReactEntry = /createRoot\s*\(\s*document\.getElementById/.test(fullCallText); // React 18 entry
           const isLangAttribute = /document\.documentElement\.(setAttribute|lang)/.test(fullCallText); // i18n
@@ -135,7 +135,7 @@ function runFrontendIntelligence(project, findings, platform) {
           const isWindowReload = /window\.location\.reload/.test(fullCallText); // Page reload (legitimate retry)
           const isScrollRestoration = /scrollY|scrollTop|scrollPosition|scrollTo/.test(sf.getFullText().substring(call.getStart() - 200, call.getEnd() + 50)) && /sessionStorage|localStorage/.test(sf.getFullText().substring(call.getStart() - 200, call.getEnd() + 50)); // Scroll save/restore
           const isModalPattern = /Modal|Dialog|Drawer/.test(filePath) && (/body\.style\.overflow|addEventListener\(['"]keydown/.test(sf.getFullText().substring(call.getStart() - 100, call.getEnd() + 100))); // Modal escape key + body scroll lock
-          
+
           if (!isUtilityFunction && !isReactEntry && !isLangAttribute && !isHeadManipulation && !isMetaTag && !isFileDownload && !isBlobURL && !isWindowReload && !isScrollRestoration && !isModalPattern) {
             pushFinding("frontend.dom.direct", "error", sf, call, "Direct DOM manipulation detected", findings);
           }
@@ -303,18 +303,18 @@ function runFrontendIntelligence(project, findings, platform) {
     // Intelligent: exclude semantic components by name + chart/map context
     const fileContent = sf.getFullText();
     const isChartFile = /(recharts|chart\.js|d3|victory|nivo|visx)/i.test(fileContent.substring(0, 500));
-    
+
     sf.getDescendantsOfKind(SyntaxKind.JsxOpeningElement).forEach((open) => {
       const tag = open.getTagNameNode()?.getText();
       const attrs = open.getAttributes();
       const hasOnClick = attrs.some((a) => a.getNameNode && a.getNameNode()?.getText() === "onClick");
-      
+
       // Exclude native semantic elements + components with semantic names
       const isSemanticNative = tag === "button" || tag === "a" || tag === "input" || tag === "select" || tag === "textarea";
       const isSemanticComponent = /^(Button|Link|IconButton|MenuItem|Tab|Chip|Card|Badge)$/i.test(tag || '');
       const isThirdPartyLibComponent = /^(Recharts|Chart|Leaflet|Map|Dialog|Popover|Dropdown|Select|Combobox)/i.test(tag || '');
       const isChartComponent = isChartFile && /^(Pie|Bar|Line|Area|Scatter|Radar|Legend|Tooltip|Cell)$/i.test(tag || '');
-      
+
       if (hasOnClick && !isSemanticNative && !isSemanticComponent && !isThirdPartyLibComponent && !isChartComponent) {
         const hasRole = attrs.some((a) => a.getNameNode && a.getNameNode()?.getText() === "role");
         const hasAria = attrs.some((a) => a.getNameNode && /^aria-/.test(a.getNameNode()?.getText() || ""));
@@ -380,7 +380,7 @@ function runFrontendIntelligence(project, findings, platform) {
         const tagName = jsxOpening?.getTagNameNode()?.getText() || '';
         const isStyleTag = tagName === 'style';
         const isCSSGeneration = isStyleTag || /__html.*THEMES|__html.*colorConfig|css`|styled\./i.test(sf.getFullText().substring(attr.getStart() - 100, attr.getEnd() + 200));
-        
+
         const sanitized = imports.some((imp) => /dompurify|sanitize-html/.test(imp.getModuleSpecifierValue())) || sf.getFullText().includes("sanitize(");
         if (!sanitized && !isCSSGeneration) {
           pushFinding("frontend.security.dangerous_html_unsanitized", "critical", sf, attr, "dangerouslySetInnerHTML without sanitizer", findings);
@@ -465,7 +465,7 @@ function runFrontendIntelligence(project, findings, platform) {
     // Intelligent: exclude test files (they run in browser/jsdom)
     const isNextTestFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
     const isServerComponent = !sf.getFullText().includes('"use client"') && !sf.getFullText().includes("'use client'");
-    
+
     if (isServerComponent && (filePath.includes("/app/") || filePath.includes("/app\\")) && !isNextTestFile) {
       const hasDomAccess = sf.getDescendantsOfKind(SyntaxKind.Identifier).some((id) => {
         const t = id.getText();
@@ -580,7 +580,7 @@ function runFrontendIntelligence(project, findings, platform) {
     // Intelligent: exclude test files, helpers, and legitimate plugin loading
     const isInnerHTMLTestFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath) || /\/(tests?|__tests__|helpers)\/.*dom\./i.test(filePath);
     const isPluginLoader = /(leaflet|mapbox|google.*maps|chart.*plugin)/i.test(sf.getFullText().substring(0, 500));
-    
+
     if (!isInnerHTMLTestFile && !isPluginLoader) {
       sf.getDescendantsOfKind(SyntaxKind.BinaryExpression).forEach((bin) => {
         const left = bin.getLeft().getText();
@@ -669,14 +669,14 @@ function runFrontendIntelligence(project, findings, platform) {
           parent.getKind() === SyntaxKind.UnionType ||
           parent.getKind() === SyntaxKind.TypeLiteral
         );
-        
+
         // Exclude technical strings (CSS, test IDs, storage keys, commands)
         const isCssClass = /^(bg-|text-|border-|shadow-|rounded|flex|grid|hover:|focus:|dark:|animate-|transition|space-|gap-|p-|m-|w-|h-|opacity-|cursor-|overflow-|absolute|relative|fixed|sticky|top-|left-|right-|bottom-|z-|from-|to-|via-)/.test(text);
         const isTestId = /^(data-testid|aria-|role)/.test(text) || text.includes('-banner') || text.includes('-button') || text.includes('-modal');
         const isStorageKey = text.endsWith('Position') || text.endsWith('State') || text.endsWith('Cache') || text.endsWith('Token');
         const isTerminalCommand = /^(cd |npm |git |yarn |pnpm |node |npx |bun )/.test(text);
         const isErrorMatching = text.includes('server is not running') || text.includes('Backend') || text.includes('Network error');
-        
+
         return text.length > 10 &&
                !isInTypeDefinition &&
                !isCssClass &&
@@ -702,8 +702,8 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // i18n namespaces (skip if custom implementation doesn't support namespaces)
-    const hasCustomI18n = sf.getImportDeclarations().some((imp) => 
-      imp.getModuleSpecifierValue().includes('@/i18n') || 
+    const hasCustomI18n = sf.getImportDeclarations().some((imp) =>
+      imp.getModuleSpecifierValue().includes('@/i18n') ||
       imp.getModuleSpecifierValue().includes('i18n/index')
     );
     if (!hasCustomI18n && /useTranslation\(/.test(sf.getFullText()) && /useTranslation\(\)/.test(sf.getFullText())) {
@@ -713,8 +713,8 @@ function runFrontendIntelligence(project, findings, platform) {
     if (!isInfrastructure && sf.getFullText().match(/new\s+Date\(|Date\.now\(/) && !/Intl\.|date\-fns|dayjs/.test(sf.getFullText())) {
       pushFinding("frontend.i18n.missing_formatting", "warning", sf, sf, "Date used in UI without localized formatting", findings);
     }
-    const hasConfig = 
-      fs.existsSync(path.join(process.cwd(), 'next-i18next.config.js')) || 
+    const hasConfig =
+      fs.existsSync(path.join(process.cwd(), 'next-i18next.config.js')) ||
       fs.existsSync(path.join(process.cwd(), 'i18n.ts')) ||
       fs.existsSync(path.join(process.cwd(), 'apps/admin-dashboard/i18n.ts')) ||
       fs.existsSync(path.join(process.cwd(), 'apps/admin-dashboard/src/infrastructure/config/i18n.config.ts')) ||
@@ -770,7 +770,7 @@ function runFrontendIntelligence(project, findings, platform) {
       return name === "className";
     });
     const hasTailwind = hasTailwindImport || hasClassNameUsage;
-    
+
     // Solo inline styles reales (style={{...}})
     const hasInlineStyles = sf.getDescendantsOfKind(SyntaxKind.JsxAttribute).some((attr) => {
       const name = attr.getNameNode()?.getText();
@@ -832,7 +832,7 @@ function runFrontendIntelligence(project, findings, platform) {
     if (/\/app\//.test(filePath) && filePath.endsWith('.tsx')) {
       const fileContent = sf.getFullText();
       const isClientComponent = /^['"]use client['"];?\s*$/m.test(fileContent);
-      
+
       if (!isClientComponent && /fetch\(/.test(fileContent) && !/cache\s*:\s*"no\-store"|next\s*:\s*\{\s*revalidate\s*:/.test(fileContent)) {
         pushFinding("frontend.nextjs.data_fetching", "warning", sf, sf, "Server fetch without cache/revalidate options", findings);
       }
@@ -1002,14 +1002,14 @@ function runFrontendIntelligence(project, findings, platform) {
         const elementName = parent?.getFirstChildByKind(SyntaxKind.Identifier)?.getText() || '';
         const isChartComponent = /Chart|Legend/.test(filePath);
         const isSvgElement = ['Label', 'text', 'circle', 'path', 'rect', 'line'].includes(elementName);
-        
+
         // Skip dynamic colors in chart components (backgroundColor, color with variables)
         const styleValue = attr.getInitializer()?.getText() || '';
         // Match: { color }, { backgroundColor: x }, fill={x}
         const hasDynamicColorProp = /\{\s*(backgroundColor|color|fill)[\s:}]/.test(styleValue);
         const isChartFile = /Chart|Legend|chart/.test(filePath);
         const isDynamicColor = hasDynamicColorProp && isChartFile;
-        
+
         // Skip if it's SVG attributes or dynamic chart colors
         if (!isSvgElement && !isDynamicColor) {
         pushFinding("frontend.styling.inline_style", "warning", sf, attr, "Inline style detected - prefer className with Tailwind/CSS Modules", findings);
@@ -1035,7 +1035,7 @@ function runFrontendIntelligence(project, findings, platform) {
         const isEnvVar = /process\.env\.|NEXT_PUBLIC_|API_URL/.test(sf.getFullText());
         const isDevOnly = isConfigFile || /development|test|local/i.test(sf.getFullText());
         const isXMLNamespace = /xmlns=|http:\/\/(www\.)?w3\.org\/(1999|2000)\/(svg|xhtml)/i.test(text);
-        
+
         if (!isLocalhost && !isDevOnly && !isXMLNamespace) {
           pushFinding("frontend.security.https_always", "error", sf, str, "HTTP URL detected - always use HTTPS in production", findings);
         }
@@ -1094,15 +1094,15 @@ function runFrontendIntelligence(project, findings, platform) {
         try { if (!fs.existsSync(candidate)) { pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); } } catch {}
       }
     }
-    
+
     // ==========================================
     // 🎯 SOLID PRINCIPLES (CRITICAL)
     // ==========================================
-    
+
     const content = sf.getFullText();
-    
+
     // 1. SRP (Single Responsibility Principle)
-    
+
     // Multiple components in one file
     const componentPattern = /^(export\s+)?(?:const|function)\s+([A-Z]\w+)\s*[=:].*(?:React\.FC|JSX\.Element|\(\)\s*=>|function)/gm;
     const components = Array.from(content.matchAll(componentPattern));
@@ -1116,7 +1116,7 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // God component (too many hooks/functions)
     if (components.length >= 1) {
       components.forEach((compMatch) => {
@@ -1125,11 +1125,11 @@ function runFrontendIntelligence(project, findings, platform) {
         // Find component body end
         const componentEnd = content.indexOf('\n}\n', componentStart) || content.length;
         const componentBody = content.substring(componentStart, componentEnd);
-        
+
         const hookCount = (componentBody.match(/\buse[A-Z]\w+\(/g) || []).length;
         const functionCount = (componentBody.match(/(?:const|let)\s+\w+\s*=\s*(?:async\s*)?\(/g) || []).length;
         const totalComplexity = hookCount + functionCount;
-        
+
         if (totalComplexity > 20) {
           pushFinding(
             "frontend.solid.srp_god_component",
@@ -1142,9 +1142,9 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       });
     }
-    
+
     // 2. OCP (Open/Closed Principle)
-    
+
     // Large switch/if-else chains that should be lookup tables or strategies
     const switchPattern = /switch\s*\([^)]+\)\s*\{[\s\S]{300,}?\}/g;
     let switchMatch;
@@ -1162,7 +1162,7 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // If-else chains for component rendering
     const ifElseRenderPattern = /if\s*\([^)]+\)\s*\{[\s\S]{50,}?return\s+<[\s\S]{50,}?else\s+if\s*\([^)]+\)\s*\{[\s\S]{50,}?return\s+</g;
     if (ifElseRenderPattern.test(content)) {
@@ -1175,21 +1175,21 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // 3. LSP (Liskov Substitution Principle)
-    
+
     // Component extends base but changes interface dramatically
     const extendsPattern = /(?:interface|type)\s+(\w+Props)\s+extends\s+(\w+Props)/g;
     let extendsMatch;
     while ((extendsMatch = extendsPattern.exec(content)) !== null) {
       const childProps = extendsMatch[1];
       const parentProps = extendsMatch[2];
-      
+
       // Check if child adds required props (narrows contract)
       const propsDefStart = content.indexOf(extendsMatch[0]);
       const propsDefEnd = content.indexOf('}', propsDefStart);
       const propsDef = content.substring(propsDefStart, propsDefEnd);
-      
+
       const requiredPropsCount = (propsDef.match(/\w+\s*:\s*[^?]/g) || []).length;
       if (requiredPropsCount > 3) {
         const lineNumber = content.substring(0, propsDefStart).split('\n').length;
@@ -1203,9 +1203,9 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // 4. ISP (Interface Segregation Principle)
-    
+
     // Fat interface/props (too many properties)
     const propsInterfacePattern = /(?:interface|type)\s+(\w+Props)\s*\{([^}]{200,})\}/g;
     let propsMatch;
@@ -1213,7 +1213,7 @@ function runFrontendIntelligence(project, findings, platform) {
       const propsName = propsMatch[1];
       const propsBody = propsMatch[2];
       const propsCount = (propsBody.match(/\w+\s*[?:]?\s*:/g) || []).length;
-      
+
       if (propsCount > 10) {
         const lineNumber = content.substring(0, propsMatch.index).split('\n').length;
         pushFinding(
@@ -1226,9 +1226,9 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // 5. DIP (Dependency Inversion Principle)
-    
+
     // Component directly depends on concrete API/service implementation
     if (filePath.includes('/components/') || filePath.includes('/presentation/')) {
       const concreteImports = ['axios', 'fetch', 'localStorage', 'sessionStorage', '@supabase/supabase-js'];
@@ -1246,7 +1246,7 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       });
     }
-    
+
     // Hook depends on concrete service (should receive interface)
     if (filePath.includes('/hooks/') || /^use[A-Z]/.test(path.basename(filePath))) {
       if (content.includes('new ') && (content.includes('Service(') || content.includes('Client(') || content.includes('Api('))) {
@@ -1260,13 +1260,13 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // ==========================================
     // 🏛️ CLEAN ARCHITECTURE (CRITICAL)
     // ==========================================
-    
+
     // Layer violations
-    
+
     // Presentation importing from infrastructure details
     if (filePath.includes('/presentation/') || filePath.includes('/components/')) {
       const forbiddenImports = ['axios', 'supabase', 'prisma', 'mongoose', 'fetch'];
@@ -1283,7 +1283,7 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       });
     }
-    
+
     // Business logic in components (should be in use-cases)
     if (filePath.includes('/components/') || filePath.includes('/pages/') || filePath.includes('/app/') && filePath.endsWith('.tsx')) {
       const businessPatterns = [
@@ -1296,7 +1296,7 @@ function runFrontendIntelligence(project, findings, platform) {
         /sessionStorage\.setItem/,
         /new\s+Date\(\).*format/
       ];
-      
+
       businessPatterns.forEach((pattern) => {
         if (pattern.test(content)) {
           const match = content.match(pattern);
@@ -1314,7 +1314,7 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       });
     }
-    
+
     // Wrong directory structure
     if (filePath.includes('/utils/') || filePath.includes('/helpers/') || filePath.includes('/lib/')) {
       if (!filePath.includes('node_modules') && filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
@@ -1328,10 +1328,10 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // Repository implementation not in infrastructure
-    if ((content.includes('Repository') || content.includes('Api')) && 
-        content.includes('class ') && 
+    if ((content.includes('Repository') || content.includes('Api')) &&
+        content.includes('class ') &&
         !filePath.includes('/infrastructure/')) {
       pushFinding(
         "frontend.clean_arch.repository_location",
@@ -1342,27 +1342,27 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // ==========================================
     // 🧪 BDD/TDD PATTERNS
     // ==========================================
-    
+
     if (isTestFile(filePath)) {
       // Missing Given-When-Then structure in test names
       const testPattern = /(?:it|test)\s*\(\s*['"`]([^'"`]+)['"`]/g;
       let testMatch;
       const testNames = [];
-      
+
       while ((testMatch = testPattern.exec(content)) !== null) {
         const testName = testMatch[1];
         testNames.push({ name: testName, index: testMatch.index });
       }
-      
+
       testNames.forEach((test) => {
         // Check BDD naming: should contain "given/when/then" or "should"
         const hasBDDStructure = /given|when|then|should/i.test(test.name);
         const isDescriptive = test.name.length > 20;
-        
+
         if (!hasBDDStructure && isDescriptive) {
           const lineNumber = content.substring(0, test.index).split('\n').length;
           pushFinding(
@@ -1375,7 +1375,7 @@ function runFrontendIntelligence(project, findings, platform) {
           );
         }
       });
-      
+
       // makeSUT pattern missing
       if (!content.includes('makeSUT') && !content.includes('createSUT') && !content.includes('setup')) {
         const hasMultipleTests = testNames.length > 3;
@@ -1390,7 +1390,7 @@ function runFrontendIntelligence(project, findings, platform) {
           );
         }
       }
-      
+
       // Mocks over spies
       if (content.includes('jest.mock') && !content.includes('jest.spyOn')) {
         pushFinding(
@@ -1402,7 +1402,7 @@ function runFrontendIntelligence(project, findings, platform) {
           findings
         );
       }
-      
+
       // Mocks in production code
       if (!isTestFile(filePath) && (content.includes('Mock') || content.includes('Stub') || content.includes('Fake')) && content.includes('export')) {
         pushFinding(
@@ -1415,16 +1415,16 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // ==========================================
     // 📝 CODE QUALITY (Autodescriptive Names, Clean Code)
     // ==========================================
-    
+
     // No comments rule (except JSDoc, TODO, FIXME, eslint)
     const commentPattern = /\/\/(?!\s*TODO:)(?!\s*FIXME:)(?!\s*eslint-)(?!\s*@ts-)(?!\s*prettier-)[\s]*\w{3,}[^\n]{15,}/g;
     let commentMatch;
     let commentCount = 0;
-    
+
     while ((commentMatch = commentPattern.exec(content)) !== null && commentCount < 5) {
       const lineNumber = content.substring(0, commentMatch.index).split('\n').length;
       const commentText = commentMatch[0].substring(0, 50);
@@ -1438,7 +1438,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
       commentCount++;
     }
-    
+
     // Early returns / Guard clauses missing (nested if-else)
     const nestedIfPattern = /if\s*\([^)]+\)\s*\{[^}]*if\s*\([^)]+\)\s*\{[^}]*if\s*\([^)]+\)\s*\{/g;
     if (nestedIfPattern.test(content)) {
@@ -1451,16 +1451,16 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // Magic numbers
     const magicNumberPattern = /[^a-zA-Z0-9_]\d{3,}(?!\s*px|ms|rem|em|%|vh|vw)/g;
     let magicCount = 0;
     let magicMatch;
-    
+
     while ((magicMatch = magicNumberPattern.exec(content)) !== null && magicCount < 5) {
       const number = magicMatch[0].trim();
       const lineNumber = content.substring(0, magicMatch.index).split('\n').length;
-      
+
       // Skip common false positives
       if (!['1000', '2000', '3000', '5000', '10000'].includes(number.trim()) || content.substring(magicMatch.index - 20, magicMatch.index).includes('Date')) {
         pushFinding(
@@ -1474,7 +1474,7 @@ function runFrontendIntelligence(project, findings, platform) {
         magicCount++;
       }
     }
-    
+
     // Callback hell (more than 3 nested callbacks)
     const callbackPattern = /\([^)]*\)\s*=>\s*\{[^}]*\([^)]*\)\s*=>\s*\{[^}]*\([^)]*\)\s*=>\s*\{/g;
     if (callbackPattern.test(content)) {
@@ -1487,13 +1487,13 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // ==========================================
     // 🌐 DDD (Domain-Driven Design)
     // ==========================================
-    
+
     // Technical grouping vs feature-first
-    if ((filePath.includes('/models/') || filePath.includes('/views/') || filePath.includes('/controllers/')) && 
+    if ((filePath.includes('/models/') || filePath.includes('/views/') || filePath.includes('/controllers/')) &&
         !filePath.includes('/features/') && !filePath.includes('/domain/')) {
       pushFinding(
         "frontend.ddd.technical_grouping",
@@ -1504,13 +1504,13 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // Anemic domain models (entities with only getters/setters, no behavior)
     if (filePath.includes('/domain/') || filePath.includes('/entities/')) {
       const hasClass = content.includes('class ');
       const hasInterface = content.includes('interface ') || content.includes('type ');
       const hasMethods = content.includes('() {') || content.includes('function');
-      
+
       if ((hasClass || hasInterface) && !hasMethods) {
         pushFinding(
           "frontend.ddd.anemic_model",
@@ -1522,15 +1522,15 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // ==========================================
     // 🔴 SPRINT 1 CRITICAL SECURITY & QUALITY
     // ==========================================
-    
+
     // 1. XSS Prevention - dangerouslySetInnerHTML without DOMPurify
     if (content.includes('dangerouslySetInnerHTML')) {
       const hasDOMPurify = content.includes('DOMPurify') || content.includes('sanitize');
-      
+
       if (!hasDOMPurify) {
         pushFinding(
           "frontend.security.xss_danger",
@@ -1542,24 +1542,24 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // 2. useEffect Cleanup - missing cleanup for subscriptions
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const callText = call.getText();
-      
+
       if (callText.startsWith('useEffect(')) {
         const effectBody = call.getArguments()[0]?.getText() || '';
-        
+
         const hasSubscription = effectBody.includes('.subscribe') ||
                                effectBody.includes('addEventListener') ||
                                effectBody.includes('setInterval') ||
                                effectBody.includes('setTimeout') ||
                                effectBody.includes('WebSocket') ||
                                effectBody.includes('.on(');
-        
+
         const hasCleanup = effectBody.includes('return () =>') ||
                           effectBody.includes('return function');
-        
+
         if (hasSubscription && !hasCleanup) {
           pushFinding(
             "frontend.hooks.useeffect_cleanup",
@@ -1572,14 +1572,14 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       }
     });
-    
+
     // 3. any Type Forbidden
     sf.getDescendantsOfKind(SyntaxKind.AnyKeyword).forEach((anyNode) => {
       const parent = anyNode.getParent();
       const parentText = parent?.getText() || '';
-      
+
       const isThirdPartyType = parentText.includes('@types/') || parentText.includes('declare module');
-      
+
       if (!isThirdPartyType) {
         pushFinding(
           "frontend.typescript.any_type_forbidden",
@@ -1591,25 +1591,25 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     });
-    
+
     // 4. useCallback Dependencies - incorrect dependency array
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const callText = call.getText();
-      
+
       if (callText.startsWith('useCallback(')) {
         const args = call.getArguments();
         const callback = args[0]?.getText() || '';
         const depsArray = args[1]?.getText() || '';
-        
+
         const usedVariables = callback.match(/\b[a-z]\w+/gi) || [];
         const declaredDeps = depsArray.match(/\b[a-z]\w+/gi) || [];
-        
-        const suspiciousMissing = usedVariables.filter(v => 
+
+        const suspiciousMissing = usedVariables.filter(v =>
           !['console', 'window', 'document', 'Math', 'Date', 'JSON', 'Promise', 'Array', 'Object', 'String', 'Number', 'Boolean'].includes(v) &&
           !declaredDeps.includes(v) &&
           v.length > 2
         );
-        
+
         if (suspiciousMissing.length > 0 && !depsArray.includes('eslint-disable')) {
           pushFinding(
             "frontend.hooks.usecallback_deps",
@@ -1622,7 +1622,7 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       }
     });
-    
+
     // 5. Hook Call Order - hooks after conditional
     const functionComponents = sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration)
       .concat(sf.getDescendantsOfKind(SyntaxKind.ArrowFunction))
@@ -1630,23 +1630,23 @@ function runFrontendIntelligence(project, findings, platform) {
         const name = fn.getName?.() || fn.getParent()?.getText() || '';
         return /^[A-Z]/.test(name) || fn.getText().includes('use');
       });
-    
+
     functionComponents.forEach(comp => {
       const statements = comp.getDescendantsOfKind(SyntaxKind.CallExpression);
       let foundConditional = false;
       let foundHookAfterConditional = false;
-      
+
       statements.forEach(stmt => {
         const stmtText = stmt.getText();
         const isConditional = stmt.getParent()?.getKind() === SyntaxKind.IfStatement ||
                              stmt.getParent()?.getKind() === SyntaxKind.ConditionalExpression;
-        
+
         const isHook = /^use[A-Z]/.test(stmtText);
-        
+
         if (isConditional) foundConditional = true;
         if (foundConditional && isHook) foundHookAfterConditional = true;
       });
-      
+
       if (foundHookAfterConditional) {
         pushFinding(
           "frontend.hooks.hook_call_order",
@@ -1658,14 +1658,14 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     });
-    
+
     // 6. Token Placement - auth tokens in URLs
     const tokenInURLPattern = /(\?|&)(token|auth|key|apikey|api_key|access_token)=[a-zA-Z0-9_\-\.]+/gi;
     let tokenMatch;
-    
+
     while ((tokenMatch = tokenInURLPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, tokenMatch.index).split('\n').length;
-      
+
       pushFinding(
         "frontend.security.token_in_url",
         "critical",
@@ -1675,12 +1675,12 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // 7. CSP Headers Enhancement (check in middleware/layout)
     if (filePath.includes('/app/layout') || filePath.includes('/middleware')) {
       const hasCSP = content.includes('Content-Security-Policy') ||
                     content.includes('contentSecurityPolicy');
-      
+
       if (!hasCSP && !content.includes('TODO: CSP')) {
         pushFinding(
           "frontend.security.missing_csp_headers",
@@ -1692,16 +1692,16 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // ==========================================
     // 🟡 SPRINT 2 HIGH ARCHITECTURE & PERFORMANCE
     // ==========================================
-    
+
     // 1. Server Component Enforcement - use client only when needed
     const hasUseClientDirective = content.includes("'use client'") || content.includes('"use client"');
     const hasHooks = content.includes('useState') || content.includes('useEffect');
     const hasEventHandlers = content.includes('onClick') || content.includes('onChange');
-    
+
     if (hasUseClientDirective && !hasHooks && !hasEventHandlers && !filePath.includes('/components/ui/')) {
       pushFinding(
         "frontend.nextjs.unnecessary_use_client",
@@ -1712,11 +1712,11 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // 2. React.memo Justification - premature optimization
     if (content.includes('React.memo(') || content.includes('memo(')) {
       const hasMemoJustification = content.includes('// memo:') || content.includes('/* memo:');
-      
+
       if (!hasMemoJustification) {
         pushFinding(
           "frontend.performance.memo_without_justification",
@@ -1728,7 +1728,7 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // 3. Next/Image for images
     if ((content.includes('<img ') || content.includes('<img>')) && !content.includes('<Image')) {
       pushFinding(
@@ -1740,7 +1740,7 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // 4. Semantic HTML - div soup
     const divSoupPattern = /<div[^>]*>\\s*<div[^>]*>\\s*<div[^>]*>\\s*<div/g;
     if (divSoupPattern.test(content)) {
@@ -1753,12 +1753,12 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // 5. ARIA labels for inputs
     const inputWithoutLabelPattern = /<input[^>]*(?!aria-label|aria-labelledby)[^>]*>/g;
     let inputMatch;
     let inputCount = 0;
-    
+
     while ((inputMatch = inputWithoutLabelPattern.exec(content)) !== null && inputCount < 3) {
       const lineNumber = content.substring(0, inputMatch.index).split('\\n').length;
       pushFinding(
@@ -1771,7 +1771,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
       inputCount++;
     }
-    
+
     // 6. Keyboard Navigation - missing onKeyDown
     if (content.includes('onClick') && !content.includes('onKeyDown') && !content.includes('onKeyPress')) {
       pushFinding(
@@ -1783,12 +1783,12 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
     // 7. Virtual Scrolling - large lists without virtualization
     const largeListPattern = /\{.*\.map\(.*=>.*\).*\}/s;
     if (largeListPattern.test(content) && content.includes('.map(') && !content.includes('react-window') && !content.includes('react-virtualized')) {
       const mapCount = (content.match(/\.map\(/g) || []).length;
-      
+
       if (mapCount > 2) {
         pushFinding(
           "frontend.performance.missing_virtualization",
@@ -1800,7 +1800,7 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
     }
-    
+
     // 8. Focus Management - modals without focus trap
     if ((content.includes('modal') || content.includes('Modal') || content.includes('dialog')) && !content.includes('focus') && !content.includes('ref')) {
       pushFinding(
@@ -1812,22 +1812,22 @@ function runFrontendIntelligence(project, findings, platform) {
         findings
       );
     }
-    
+
   });
-  
+
   // ===== SPRINT 3 MEDIUM RULES (6) =====
-  
+
   // 1. UseState vs useReducer Rule
   const useStateCallsInComponent = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
     .filter(call => call.getExpression().getText() === 'useState');
-  
+
   sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
     const name = fn.getName();
     if (name && /^[A-Z]/.test(name)) {
-      const useStatesInFn = useStateCallsInComponent.filter(call => 
+      const useStatesInFn = useStateCallsInComponent.filter(call =>
         fn.getDescendants().includes(call)
       );
-      
+
       if (useStatesInFn.length >= 4) {
         pushFinding(
           "frontend.hooks.useState_overuse",
@@ -1840,11 +1840,11 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
   });
-  
+
   // 2. Context Overuse Rule
   const contextCreations = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
     .filter(call => call.getExpression().getText() === 'createContext');
-  
+
   if (contextCreations.length >= 3 && !sf.getFilePath().includes('context')) {
     pushFinding(
       "frontend.state.context_overuse",
@@ -1855,13 +1855,13 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // 3. Custom Hook Naming Rule
   sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
     const name = fn.getName();
     const body = fn.getBody()?.getText() || '';
     const hasHookCall = /use[A-Z]/.test(body);
-    
+
     if (name && hasHookCall && !/^use[A-Z]/.test(name)) {
       pushFinding(
         "frontend.hooks.naming_convention",
@@ -1873,11 +1873,11 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   });
-  
+
   // 4. Bundle Size Monitoring Rule
-  const hasLargeImports = fullText.includes('import * as') || 
+  const hasLargeImports = fullText.includes('import * as') ||
                          fullText.match(/import\s+\{[^}]{200,}\}/);
-  
+
   if (hasLargeImports) {
     pushFinding(
       "frontend.performance.large_imports",
@@ -1888,13 +1888,13 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // 5. Error Boundary Rule
-  if (content.includes('class') && content.includes('extends Component') && 
+  if (content.includes('class') && content.includes('extends Component') &&
       !content.includes('componentDidCatch') && !content.includes('getDerivedStateFromError')) {
-    
+
     const hasChildrenRender = content.includes('render()') && content.includes('children');
-    
+
     if (hasChildrenRender) {
       pushFinding(
         "frontend.error_handling.missing_error_boundary",
@@ -1906,11 +1906,11 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
-  
+
   // 6. Lazy Loading Strategy Rule
   const hasRoutes = content.includes('Route') || content.includes('router');
   const hasLazy = content.includes('React.lazy') || content.includes('dynamic(');
-  
+
   if (hasRoutes && !hasLazy && sf.getFilePath().includes('app')) {
     pushFinding(
       "frontend.performance.missing_lazy_loading",
@@ -1921,13 +1921,13 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // ===== SPRINT 4 LOW RULES (12) =====
-  
+
   // 1. Metadata Completeness Rule
   if (sf.getFilePath().includes('layout.tsx') || sf.getFilePath().includes('page.tsx')) {
     const hasMetadata = content.includes('metadata') || content.includes('generateMetadata');
-    
+
     if (!hasMetadata) {
       pushFinding(
         "frontend.seo.missing_metadata",
@@ -1939,11 +1939,11 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
-  
+
   // 2. Sitemap Generation Rule
   if (sf.getFilePath().includes('sitemap')) {
     const hasDynamicRoutes = content.includes('fetch') || content.includes('database');
-    
+
     if (!hasDynamicRoutes && content.length < 200) {
       pushFinding(
         "frontend.seo.static_sitemap",
@@ -1955,11 +1955,11 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
-  
+
   // 3. Robots Configuration Rule
   if (sf.getFilePath().includes('robots')) {
     const hasDisallow = content.includes('Disallow');
-    
+
     if (!hasDisallow) {
       pushFinding(
         "frontend.seo.robots_config",
@@ -1971,12 +1971,12 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
-  
+
   // 4. PWA Manifest Rule
   if (sf.getFilePath().includes('manifest')) {
     const hasIcons = content.includes('icons');
     const hasThemeColor = content.includes('theme_color');
-    
+
     if (!hasIcons || !hasThemeColor) {
       pushFinding(
         "frontend.pwa.manifest_incomplete",
@@ -1988,7 +1988,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
-  
+
   // 5. Service Worker Rule
   if (content.includes('serviceWorker') && !content.includes('unregister')) {
     pushFinding(
@@ -2000,11 +2000,11 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // 6. Lighthouse Score Rule
   if (sf.getFilePath().includes('lighthouse') || sf.getFilePath().includes('performance')) {
     const hasThresholds = content.includes('performance') && content.includes('accessibility');
-    
+
     if (!hasThresholds) {
       pushFinding(
         "frontend.performance.lighthouse_monitoring",
@@ -2016,11 +2016,11 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
-  
+
   // 7. Web Vitals Monitoring Rule
   const hasWebVitals = content.includes('reportWebVitals') || content.includes('web-vitals');
   const hasAnalytics = content.includes('analytics') || content.includes('gtag');
-  
+
   if (hasWebVitals && !hasAnalytics) {
     pushFinding(
       "frontend.monitoring.web_vitals_no_analytics",
@@ -2031,7 +2031,7 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // 8. Analytics Integration Rule
   if (sf.getFilePath().includes('layout') && !content.includes('analytics') && !content.includes('gtag')) {
     pushFinding(
@@ -2043,7 +2043,7 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // 9. Error Tracking Rule
   if (sf.getFilePath().includes('error.tsx') && !content.includes('Sentry') && !content.includes('captureException')) {
     pushFinding(
@@ -2055,11 +2055,11 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // 10. Feature Flag Rule
   if (content.includes('if (') && /feature|experiment|rollout|beta/i.test(content)) {
     const hasFeatureFlagLib = content.includes('unleash') || content.includes('launchdarkly') || content.includes('flagsmith');
-    
+
     if (!hasFeatureFlagLib) {
       pushFinding(
         "frontend.devops.hardcoded_feature_flag",
@@ -2071,7 +2071,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
-  
+
   // 11. A/B Testing Rule
   if (content.includes('variant') && content.includes('Math.random')) {
     pushFinding(
@@ -2083,11 +2083,11 @@ function runFrontendIntelligence(project, findings, platform) {
       findings
     );
   }
-  
+
   // 12. Cache Strategy Rule
   if (content.includes('fetch') && !content.includes('cache') && !content.includes('revalidate')) {
     const isFetchInServerComponent = content.includes('async function') && !content.includes('\'use client\'');
-    
+
     if (isFetchInServerComponent) {
       pushFinding(
         "frontend.performance.missing_cache_strategy",

@@ -50,7 +50,7 @@ class AuditResult {
 
   getViolationsByPlatform() {
     const platformMap = {};
-    
+
     this.findings.forEach(finding => {
       const platform = finding.platform;
       if (!platformMap[platform]) {
@@ -63,17 +63,17 @@ class AuditResult {
           info: 0,
         };
       }
-      
+
       platformMap[platform].total++;
       platformMap[platform][finding.severity]++;
     });
-    
+
     return platformMap;
   }
 
   getViolationsByRuleId() {
     const ruleMap = {};
-    
+
     this.findings.forEach(finding => {
       const ruleId = finding.ruleId;
       if (!ruleMap[ruleId]) {
@@ -81,7 +81,7 @@ class AuditResult {
       }
       ruleMap[ruleId].push(finding);
     });
-    
+
     return ruleMap;
   }
 
@@ -94,32 +94,32 @@ class AuditResult {
   getMaintainabilityIndex() {
     const baseScore = 100;
     const bySeverity = this.getViolationsBySeverity();
-    
+
     const criticalPenalty = bySeverity.critical * 5;
     const highPenalty = bySeverity.high * 2;
     const mediumPenalty = bySeverity.medium * 1;
     const lowPenalty = bySeverity.low * 0.5;
-    
+
     const score = baseScore - criticalPenalty - highPenalty - mediumPenalty - lowPenalty;
     return Math.max(0, Math.min(100, score));
   }
 
   filterByPlatform(platform) {
-    const platformFindings = this.findings.filter(f => 
+    const platformFindings = this.findings.filter(f =>
       f.belongsToPlatform(platform)
     );
     return new AuditResult(platformFindings);
   }
 
   filterBySeverity(severity) {
-    const severityFindings = this.findings.filter(f => 
+    const severityFindings = this.findings.filter(f =>
       f.severity === severity.toLowerCase()
     );
     return new AuditResult(severityFindings);
   }
 
   filterByFile(filePath) {
-    const fileFindings = this.findings.filter(f => 
+    const fileFindings = this.findings.filter(f =>
       f.filePath === filePath
     );
     return new AuditResult(fileFindings);
@@ -127,7 +127,7 @@ class AuditResult {
 
   getTopViolatedRules(limit = 10) {
     const ruleMap = this.getViolationsByRuleId();
-    
+
     return Object.entries(ruleMap)
       .map(([ruleId, findings]) => ({
         ruleId,
@@ -141,7 +141,7 @@ class AuditResult {
 
   getTopViolatedFiles(limit = 10) {
     const fileMap = {};
-    
+
     this.findings.forEach(finding => {
       if (!fileMap[finding.filePath]) {
         fileMap[finding.filePath] = {
@@ -151,7 +151,7 @@ class AuditResult {
       }
       fileMap[finding.filePath].violations.push(finding);
     });
-    
+
     return Object.values(fileMap)
       .map(file => ({
         filePath: file.filePath,
@@ -193,17 +193,16 @@ class AuditResult {
   static fromJSON(json) {
     const findings = json.findings.map(f => Finding.fromJSON(f));
     const result = new AuditResult(findings);
-    
+
     if (json.timestamp) {
       result.timestamp = new Date(json.timestamp);
     }
     if (json.metadata) {
       result.metadata = json.metadata;
     }
-    
+
     return result;
   }
 }
 
 module.exports = AuditResult;
-

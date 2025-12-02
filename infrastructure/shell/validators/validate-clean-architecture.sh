@@ -22,7 +22,7 @@ VIOLATIONS=0
 check_forbidden_directories() {
   local file="$1"
   local dir=$(dirname "$file")
-  
+
   # Forbidden directories (match at start, middle, or end of path)
   if [[ "$dir" =~ (^|/)lib(/|$) ]]; then
     echo -e "${RED}❌ VIOLATION: lib/ is FORBIDDEN${NC}"
@@ -31,7 +31,7 @@ check_forbidden_directories() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   if [[ "$dir" =~ (^|/)utils(/|$) ]]; then
     echo -e "${RED}❌ VIOLATION: utils/ is FORBIDDEN${NC}"
     echo -e "   File: $file"
@@ -39,7 +39,7 @@ check_forbidden_directories() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   if [[ "$dir" =~ (^|/)helpers(/|$) ]]; then
     echo -e "${RED}❌ VIOLATION: helpers/ is FORBIDDEN${NC}"
     echo -e "   File: $file"
@@ -47,7 +47,7 @@ check_forbidden_directories() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   if [[ "$dir" =~ (^|/)docs(/|$) ]]; then
     echo -e "${RED}❌ VIOLATION: docs/ is FORBIDDEN in Clean Architecture${NC}"
     echo -e "   File: $file"
@@ -58,7 +58,7 @@ check_forbidden_directories() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   return 0
 }
 
@@ -69,7 +69,7 @@ validate_frontend_file() {
   local file="$1"
   local filename=$(basename "$file")
   local dir=$(dirname "$file")
-  
+
   # Hook files (allow both presentation/hooks and app/**/hooks for Next.js App Router)
   if [[ "$filename" =~ ^use[A-Z].*\.(ts|tsx)$ ]]; then
     if [[ ! "$dir" =~ presentation/hooks$ ]] && [[ ! "$dir" =~ app/.*/hooks$ ]]; then
@@ -82,7 +82,7 @@ validate_frontend_file() {
       return 1
     fi
   fi
-  
+
   # Config files
   if [[ "$filename" =~ \.config\.(ts|js)$ ]] || [[ "$filename" =~ ^(api|i18n|env)\.(ts|js)$ ]]; then
     if [[ ! "$dir" =~ infrastructure/config$ ]]; then
@@ -95,7 +95,7 @@ validate_frontend_file() {
       return 1
     fi
   fi
-  
+
   # Store files (Zustand/Redux)
   if [[ "$filename" =~ Store\.(ts|tsx)$ ]] || [[ "$filename" =~ \.store\.(ts|tsx)$ ]]; then
     if [[ ! "$dir" =~ presentation/stores$ ]]; then
@@ -108,7 +108,7 @@ validate_frontend_file() {
       return 1
     fi
   fi
-  
+
   # Use Case files
   if [[ "$filename" =~ UseCase\.(ts|js)$ ]]; then
     if [[ ! "$dir" =~ application/use-cases$ ]]; then
@@ -121,7 +121,7 @@ validate_frontend_file() {
       return 1
     fi
   fi
-  
+
   # Repository implementations
   if [[ "$filename" =~ Repository\.(ts|js)$ ]] && [[ ! "$filename" =~ ^I[A-Z] ]]; then
     if [[ ! "$dir" =~ infrastructure/repositories$ ]]; then
@@ -134,7 +134,7 @@ validate_frontend_file() {
       return 1
     fi
   fi
-  
+
   # Repository interfaces
   if [[ "$filename" =~ ^I[A-Z].*Repository\.(ts|js)$ ]]; then
     if [[ ! "$dir" =~ domain/repositories$ ]]; then
@@ -147,7 +147,7 @@ validate_frontend_file() {
       return 1
     fi
   fi
-  
+
   # FORBIDDEN DIRECTORIES
   if [[ "$dir" =~ /lib/ ]] && [[ ! "$dir" =~ /node_modules/ ]]; then
     echo -e "${RED}❌ VIOLATION: File in forbidden 'lib/' directory${NC}"
@@ -159,7 +159,7 @@ validate_frontend_file() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   if [[ "$dir" =~ /utils/ ]] && [[ ! "$dir" =~ /node_modules/ ]]; then
     echo -e "${RED}❌ VIOLATION: File in forbidden 'utils/' directory${NC}"
     echo -e "   File: $file"
@@ -170,7 +170,7 @@ validate_frontend_file() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   if [[ "$dir" =~ /helpers/ ]] && [[ ! "$dir" =~ /node_modules/ ]]; then
     echo -e "${RED}❌ VIOLATION: File in forbidden 'helpers/' directory${NC}"
     echo -e "   File: $file"
@@ -179,7 +179,7 @@ validate_frontend_file() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   return 0
 }
 
@@ -190,7 +190,7 @@ validate_backend_file() {
   local file="$1"
   local filename=$(basename "$file")
   local dir=$(dirname "$file")
-  
+
   # Controller files
   if [[ "$filename" =~ \.controller\.(ts|js)$ ]]; then
     if [[ ! "$dir" =~ presentation/controllers$ ]] && [[ ! "$dir" =~ src/[^/]+$ ]]; then
@@ -200,7 +200,7 @@ validate_backend_file() {
       echo -e "   Current: $dir"
     fi
   fi
-  
+
   # Guard files
   if [[ "$filename" =~ \.guard\.(ts|js)$ ]]; then
     if [[ ! "$dir" =~ presentation/guards$ ]] && [[ ! "$dir" =~ src/guards$ ]]; then
@@ -209,7 +209,7 @@ validate_backend_file() {
       echo -e "   Recommended: ${GREEN}presentation/guards/${NC}"
     fi
   fi
-  
+
   # Use Case files
   if [[ "$filename" =~ UseCase\.(ts|js)$ ]] || [[ "$filename" =~ \.use-case\.(ts|js)$ ]]; then
     if [[ ! "$dir" =~ application/use-cases$ ]]; then
@@ -221,7 +221,7 @@ validate_backend_file() {
       return 1
     fi
   fi
-  
+
   # DTO files
   if [[ "$filename" =~ \.dto\.(ts|js)$ ]]; then
     if [[ ! "$dir" =~ application/dtos$ ]] && [[ ! "$dir" =~ src/[^/]+/dto$ ]]; then
@@ -230,7 +230,7 @@ validate_backend_file() {
       echo -e "   Recommended: ${GREEN}application/dtos/${NC}"
     fi
   fi
-  
+
   # FORBIDDEN DIRECTORIES (same as frontend)
   if [[ "$dir" =~ /lib/ ]] && [[ ! "$dir" =~ /node_modules/ ]]; then
     echo -e "${RED}❌ VIOLATION: File in forbidden 'lib/' directory${NC}"
@@ -239,7 +239,7 @@ validate_backend_file() {
     ((VIOLATIONS++))
     return 1
   fi
-  
+
   return 0
 }
 
@@ -252,27 +252,27 @@ validate_staged_files() {
   echo -e "${BLUE}🏗️  Clean Architecture Validator${NC}"
   echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
   echo ""
-  
+
   local staged_files=$(git diff --cached --name-only --diff-filter=ACM)
-  
+
   if [[ -z "$staged_files" ]]; then
     echo -e "${GREEN}✅ No files to validate${NC}"
     return 0
   fi
-  
+
   local file_count=$(echo "$staged_files" | wc -l | tr -d ' ')
   echo "📁 Validating $file_count staged file(s)..."
   echo ""
-  
+
   while IFS= read -r file; do
     # Skip non-source files
     [[ "$file" =~ \.(md|json|yml|yaml|txt|lock)$ ]] && continue
     [[ "$file" =~ node_modules/ ]] && continue
     [[ "$file" =~ \.git/ ]] && continue
-    
+
     # First: Check forbidden directories (applies to ALL platforms)
     check_forbidden_directories "$file" || continue
-    
+
     # Then: Detect platform and validate specific rules
     if [[ "$file" =~ \.(ts|tsx|jsx)$ ]] && [[ "$file" =~ apps/(admin-dashboard|web)/ ]]; then
       validate_frontend_file "$file"
@@ -280,7 +280,7 @@ validate_staged_files() {
       validate_backend_file "$file"
     fi
   done <<< "$staged_files"
-  
+
   echo ""
   if [[ $VIOLATIONS -gt 0 ]]; then
     echo -e "${RED}═══════════════════════════════════════════════════════════════${NC}"
@@ -301,4 +301,3 @@ validate_staged_files() {
 
 # Run validation
 validate_staged_files
-

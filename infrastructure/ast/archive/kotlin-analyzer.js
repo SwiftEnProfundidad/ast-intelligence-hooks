@@ -21,7 +21,7 @@ class KotlinAnalyzer {
    */
   analyzeFile(filePath) {
     this.findings = [];
-    
+
     if (!fs.existsSync(filePath)) {
       console.error(`File not found: ${filePath}`);
       return this.findings;
@@ -29,13 +29,13 @@ class KotlinAnalyzer {
 
     try {
       const content = fs.readFileSync(filePath, 'utf8');
-      
+
       // Análisis basado en patrones (más robusto que Detekt para reglas custom)
       this.analyzePatterns(filePath, content);
-      
+
       // TODO: Integrar Detekt para reglas más complejas si es necesario
       // this.analyzeWithDetekt(filePath);
-      
+
     } catch (error) {
       console.error(`Error analyzing Kotlin file ${filePath}:`, error.message);
     }
@@ -48,11 +48,11 @@ class KotlinAnalyzer {
    */
   analyzePatterns(filePath, content) {
     const lines = content.split('\n');
-    
+
     lines.forEach((line, index) => {
       const lineNum = index + 1;
       const trimmed = line.trim();
-      
+
       // Java code detection
       if (trimmed.startsWith('public class') || trimmed.startsWith('public interface')) {
         this.addFinding({
@@ -63,7 +63,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Force unwrapping (!!)
       if (trimmed.includes('!!') && !trimmed.startsWith('//')) {
         this.addFinding({
@@ -74,7 +74,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // XML layouts
       if (trimmed.includes('setContentView(R.layout.')) {
         this.addFinding({
@@ -85,7 +85,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Singleton pattern
       if (trimmed.includes('object ') || (trimmed.includes('companion object') && content.includes('val instance'))) {
         this.addFinding({
@@ -96,7 +96,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Context leaks
       if (trimmed.includes('= context') || trimmed.includes('= this') && content.includes('Activity')) {
         this.addFinding({
@@ -107,7 +107,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Missing @Composable
       if (trimmed.startsWith('fun ') && trimmed.includes('()') && content.includes('Column') && !line.includes('@Composable')) {
         this.addFinding({
@@ -118,7 +118,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Side effects in Composable
       if (content.includes('@Composable') && (trimmed.includes('viewModelScope.launch') || trimmed.includes('CoroutineScope'))) {
         this.addFinding({
@@ -129,7 +129,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Missing null safety
       if (trimmed.includes('var ') && trimmed.includes(': String') && !trimmed.includes('?') && !trimmed.includes('=')) {
         this.addFinding({
@@ -140,7 +140,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Missing @Entity
       if (trimmed.startsWith('data class') && content.includes('@Database') && !line.includes('@Entity')) {
         this.addFinding({
@@ -151,7 +151,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Missing ViewModel
       if (trimmed.includes('class ') && trimmed.includes('Activity') && !content.includes('ViewModel')) {
         this.addFinding({
@@ -162,7 +162,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // JUnit4 instead of JUnit5
       if (trimmed.includes('@Test') && content.includes('import org.junit.Test') && !content.includes('org.junit.jupiter')) {
         this.addFinding({
@@ -173,7 +173,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Hardcoded secrets
       if (trimmed.includes('apiKey') || trimmed.includes('secret') || trimmed.includes('password')) {
         if (trimmed.includes('=') && trimmed.includes('"') && !trimmed.includes('BuildConfig')) {
@@ -186,7 +186,7 @@ class KotlinAnalyzer {
           });
         }
       }
-      
+
       // findViewById
       if (trimmed.includes('findViewById')) {
         this.addFinding({
@@ -197,7 +197,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // AsyncTask
       if (trimmed.includes('AsyncTask')) {
         this.addFinding({
@@ -208,7 +208,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // startActivity without intent extras validation
       if (trimmed.includes('startActivity')) {
         this.addFinding({
@@ -219,7 +219,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // SharedPreferences
       if (trimmed.includes('SharedPreferences') && !trimmed.includes('Encrypted')) {
         this.addFinding({
@@ -230,7 +230,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Handler memory leaks
       if (trimmed.includes('Handler()') && !content.includes('WeakReference')) {
         this.addFinding({
@@ -241,7 +241,7 @@ class KotlinAnalyzer {
           line: lineNum
         });
       }
-      
+
       // Raw threads
       if (trimmed.includes('Thread(') && !trimmed.startsWith('//')) {
         this.addFinding({
@@ -253,7 +253,7 @@ class KotlinAnalyzer {
         });
       }
     });
-    
+
     // Análisis de bloques completos
     this.analyzeBlocks(filePath, content);
   }
@@ -275,7 +275,7 @@ class KotlinAnalyzer {
         line: line
       });
     }
-    
+
     // Flow collect sin lifecycle scope
     const flowCollectPattern = /\.collect\s*\{/g;
     while ((match = flowCollectPattern.exec(content)) !== null) {
@@ -290,7 +290,7 @@ class KotlinAnalyzer {
         });
       }
     }
-    
+
     // Suspend function sin scope
     const suspendFunPattern = /suspend\s+fun\s+\w+/g;
     while ((match = suspendFunPattern.exec(content)) !== null) {
@@ -303,7 +303,7 @@ class KotlinAnalyzer {
         line: line
       });
     }
-    
+
     // Mutable state exposure
     const mutableStatePattern = /val\s+\w+\s*=\s*mutableStateOf/g;
     while ((match = mutableStatePattern.exec(content)) !== null) {
@@ -352,4 +352,3 @@ if (require.main === module) {
   const findings = analyzer.analyzeFile(args[0]);
   console.log(JSON.stringify(findings, null, 2));
 }
-

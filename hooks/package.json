@@ -1,0 +1,16 @@
+{
+  "name": "claude-hooks",
+  "version": "1.0.0",
+  "description": "Minimal dependencies for Claude Code hooks",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"No tests specified\" && exit 0"
+  },
+  "dependencies": {
+    "tsx": "^4.7.0"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

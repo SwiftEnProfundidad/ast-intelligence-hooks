@@ -36,7 +36,7 @@ class CommitBlockingRules {
     }
 
     const blockingFindings = stagedFindings.filter(f => f.isBlockingLevel());
-    
+
     if (strictMode) {
       return {
         shouldBlock: stagedFindings.length > 0,
@@ -67,7 +67,7 @@ class CommitBlockingRules {
 
   blockOnAnyViolation(auditResult) {
     const bySeverity = auditResult.getViolationsBySeverity();
-    
+
     return {
       shouldBlock: true,
       reason: 'Strict mode: Any violation blocks commit',
@@ -101,7 +101,7 @@ class CommitBlockingRules {
   blockOnBlockingLevels(auditResult) {
     if (auditResult.hasBlockingViolations()) {
       const bySeverity = auditResult.getViolationsBySeverity();
-      
+
       return {
         shouldBlock: true,
         reason: `Found blocking violations (CRITICAL: ${bySeverity.critical}, HIGH: ${bySeverity.high})`,
@@ -121,7 +121,7 @@ class CommitBlockingRules {
 
   calculateTechnicalDebtThreshold(auditResult, maxDebtHours = 100) {
     const totalDebtHours = auditResult.getTechnicalDebtHours();
-    
+
     return {
       currentDebt: totalDebtHours,
       maxAllowed: maxDebtHours,
@@ -132,7 +132,7 @@ class CommitBlockingRules {
 
   getMaintainabilityGate(auditResult, minScore = 60) {
     const score = auditResult.getMaintainabilityIndex();
-    
+
     return {
       score,
       minScore,
@@ -143,4 +143,3 @@ class CommitBlockingRules {
 }
 
 module.exports = CommitBlockingRules;
-

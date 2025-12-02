@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "description": "Severity-based quality gate policies with intelligent evaluation",
-  
+
   "quality_gate": {
     "CRITICAL": {
       "threshold": 0,
@@ -38,7 +38,7 @@
       "exitCode": 0
     }
   },
-  
+
   "context_overrides": {
     "payment_flow": {
       "description": "Stricter rules for payment/checkout code",
@@ -56,7 +56,7 @@
         "LOW": { "threshold": 5 }
       }
     },
-    
+
     "authentication_flow": {
       "description": "Stricter rules for auth code",
       "patterns": [
@@ -72,7 +72,7 @@
         "LOW": { "threshold": 10 }
       }
     },
-    
+
     "domain_layer": {
       "description": "Stricter SOLID rules for domain layer",
       "patterns": [
@@ -88,7 +88,7 @@
         "LOW": { "threshold": 15 }
       }
     },
-    
+
     "test_code": {
       "description": "More lenient for test code",
       "patterns": [
@@ -106,7 +106,7 @@
         "LOW": { "threshold": 100 }
       }
     },
-    
+
     "generated_code": {
       "description": "Very lenient for generated code",
       "patterns": [
@@ -123,7 +123,7 @@
       }
     }
   },
-  
+
   "severity_thresholds": {
     "score_ranges": {
       "CRITICAL": { "min": 85, "max": 100 },
@@ -131,17 +131,17 @@
       "MEDIUM": { "min": 40, "max": 64 },
       "LOW": { "min": 0, "max": 39 }
     },
-    
+
     "description": "Score ranges for severity mapping (computed from impact analysis)"
   },
-  
+
   "impact_weights": {
     "security": 0.40,
     "stability": 0.30,
     "performance": 0.20,
     "maintainability": 0.10
   },
-  
+
   "context_multipliers": {
     "critical_path": 1.5,
     "handles_payments": 2.0,
@@ -153,7 +153,7 @@
     "high_call_frequency": 1.2,
     "solid_in_domain": 1.4,
     "clean_arch_domain_violation": 1.6,
-    
+
     "reductions": {
       "test_code": 0.3,
       "has_error_boundary_and_fallback": 0.7,
@@ -161,7 +161,7 @@
       "generated_code": 0.2
     }
   },
-  
+
   "rule_specific_base_scores": {
     "SOLID": {
       "srp_god_class": 70,
@@ -170,7 +170,7 @@
       "isp_fat_protocol": 45,
       "dip_concrete": 65
     },
-    
+
     "Clean_Architecture": {
       "domain_imports_framework": 95,
       "application_depends_infrastructure": 70,
@@ -178,7 +178,7 @@
       "wrong_directory": 45,
       "repository_no_abstraction": 75
     },
-    
+
     "Security": {
       "hardcoded_secret": 90,
       "userdefaults_sensitive": 85,
@@ -187,7 +187,7 @@
       "http_url": 60,
       "missing_ssl_pinning": 55
     },
-    
+
     "Stability": {
       "force_unwrap": 70,
       "empty_catch": 60,
@@ -195,7 +195,7 @@
       "retain_cycle": 55,
       "context_leak": 60
     },
-    
+
     "Testing": {
       "mock_in_production": 95,
       "missing_tests_critical": 60,
@@ -204,4 +204,3 @@
     }
   }
 }
-

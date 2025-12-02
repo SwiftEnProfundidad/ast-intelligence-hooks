@@ -52,7 +52,12 @@ function shouldIgnore(file) {
   if (p.includes("/.vercel/")) return true;
   if (p.includes("/coverage/")) return true;
   if (p.includes("/build/")) return true;
+  if (p.includes("/.build/")) return true;
+  if (p.includes("/checkouts/")) return true;
+  if (p.includes("/Pods/")) return true;
+  if (p.includes("/DerivedData/")) return true;
   if (p.includes("/out/")) return true;
+  if (p.includes("/.audit_tmp/")) return true;
   if (p.endsWith(".d.ts")) return true;
   if (p.endsWith(".map")) return true;
   if (/\.min\./.test(p)) return true;
@@ -114,6 +119,50 @@ function positionOf(node, sf) {
   }
 }
 
+let exclusionsConfig = null;
+
+function loadExclusions() {
+  if (exclusionsConfig) return exclusionsConfig;
+  try {
+    const configPath = path.join(__dirname, '../../config/ast-exclusions.json');
+    if (fs.existsSync(configPath)) {
+      exclusionsConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+    }
+  } catch (e) {
+    exclusionsConfig = { exclusions: { rules: {} }, severityOverrides: {} };
+  }
+  return exclusionsConfig || { exclusions: { rules: {} }, severityOverrides: {} };
+}
+
+function isExcluded(ruleId, filePath) {
+  const config = loadExclusions();
+  const ruleConfig = config.exclusions?.rules?.[ruleId];
+  if (!ruleConfig) return false;
+
+  const p = filePath.replace(/\\/g, '/');
+
+  if (ruleConfig.excludePaths) {
+    for (const exc of ruleConfig.excludePaths) {
+      if (p.includes(exc)) return true;
+    }
+  }
+
+  if (ruleConfig.excludeFiles) {
+    for (const exc of ruleConfig.excludeFiles) {
+      if (p.endsWith(exc) || p.includes(exc)) return true;
+    }
+  }
+
+  if (ruleConfig.excludePatterns) {
+    for (const pattern of ruleConfig.excludePatterns) {
+      const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+      if (regex.test(p)) return true;
+    }
+  }
+
+  return false;
+}
+
 /**
  * Push finding to results array with INTELLIGENT SEVERITY EVALUATION
  * @param {string} ruleId - Rule identifier
@@ -127,7 +176,9 @@ function positionOf(node, sf) {
 function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}) {
   const { line, column } = positionOf(node, sf);
   const filePath = sf.getFilePath();
-  
+
+  if (isExcluded(ruleId, filePath)) return;
+
   // Create base violation object
   const violation = {
     ruleId,
@@ -138,15 +189,15 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
     message,
     metrics
   };
-  
+
   // INTELLIGENT SEVERITY EVALUATION (if enabled)
   if (INTELLIGENT_SEVERITY_ENABLED) {
     const evaluator = getSeverityEvaluator();
-    
+
     if (evaluator) {
       try {
         const evaluation = evaluator.evaluate(violation);
-        
+
         // Enhance violation with intelligent severity
         violation.originalSeverity = violation.severity;
         violation.severity = evaluation.severity;
@@ -163,7 +214,7 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
       }
     }
   }
-  
+
   findings.push(violation);
 }
 
@@ -177,15 +228,15 @@ function pushFileFinding(ruleId, severity, filePath, line, column, message, find
     message,
     metrics
   };
-  
+
   // INTELLIGENT SEVERITY EVALUATION (if enabled)
   if (INTELLIGENT_SEVERITY_ENABLED) {
     const evaluator = getSeverityEvaluator();
-    
+
     if (evaluator) {
       try {
         const evaluation = evaluator.evaluate(violation);
-        
+
         violation.originalSeverity = violation.severity;
         violation.severity = evaluation.severity;
         violation.severityScore = evaluation.score;
@@ -200,7 +251,7 @@ function pushFileFinding(ruleId, severity, filePath, line, column, message, find
       }
     }
   }
-  
+
   findings.push(violation);
 }
 
@@ -236,26 +287,33 @@ function mapToLevel(severity) {
  */
 function platformOf(filePath) {
   const p = filePath.replace(/\\/g, "/");
-  
+
   // 1. Check SPECIFIC paths first (avoid false positives)
-  if (p.includes("/apps/backend") || p.includes("/apps/backend/")) return "backend";
-  if (p.includes("/apps/admin") || p.includes("/admin-dashboard/")) return "frontend";
-  if (p.includes("/apps/mobile-ios") || p.includes("/apps/ios/")) return "ios";
-  if (p.includes("/apps/mobile-android") || p.includes("/apps/android/")) return "android";
-  
+  if (p.includes("/apps/backend/") || p.includes("apps/backend/")) return "backend";
+  if (p.includes("/apps/admin/") || p.includes("/admin-dashboard/")) return "frontend";
+  if (p.includes("/apps/mobile-ios/") || p.includes("/apps/ios/")) return "ios";
+  if (p.includes("/apps/mobile-android/") || p.includes("/apps/android/")) return "android";
+
+  // 1b. Project-specific paths
+  if (p.includes("/landing-page/") || p.includes("landing-page/")) return "frontend";
+  if (p.includes("/scripts/hooks-system/") || p.includes("scripts/hooks-system/")) return "backend";
+  if (p.includes("/packages/ast-hooks/") || p.includes("packages/ast-hooks/")) return "backend";
+
   // 2. Check file extensions (unambiguous)
   if (p.endsWith(".swift")) return "ios";
   if (p.endsWith(".kt") || p.endsWith(".kts")) return "android";
-  
+
   // 3. Check GENERIC paths (only if not matched above)
-  // ⚠️ REMOVED /api/ and /services/ - too generic, cause false positives
   if (p.includes("/backend/") || p.includes("/server/") || p.includes("/functions/")) return "backend";
   if (p.includes("/frontend/") || p.includes("/client/") || p.includes("/web/") || p.includes("/web-app/")) return "frontend";
   if (p.includes("/android/")) return "android";
   if (p.includes("/ios/")) return "ios";
   if (p.includes("/mobile/")) return p.includes("/android/") ? "android" : "ios";
-  
-  // 4. Fallback: null (will be ignored)
+
+  // 4. Root src/ folder - typically frontend (landing page)
+  if (p.match(/^src\//) || p.includes("/src/components/") || p.includes("/src/pages/")) return "frontend";
+
+  // 5. Fallback: null (will be classified as "Other")
   return null;
 }
 
@@ -311,6 +369,154 @@ function formatFinding(finding) {
   return `${finding.severity.toUpperCase()}: ${finding.ruleId} at ${finding.filePath}:${finding.line}:${finding.column} - ${finding.message}`;
 }
 
+// ===== AST INTELLIGENT HELPERS =====
+
+/**
+ * Check if source file has import for a specific module (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @param {string|RegExp} modulePattern - Module name or pattern
+ * @returns {boolean}
+ */
+function hasImport(sf, modulePattern) {
+  const imports = sf.getImportDeclarations();
+  return imports.some(imp => {
+    const moduleSpecifier = imp.getModuleSpecifierValue();
+    if (typeof modulePattern === 'string') {
+      return moduleSpecifier.includes(modulePattern);
+    }
+    return modulePattern.test(moduleSpecifier);
+  });
+}
+
+/**
+ * Check if source file has decorator (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @param {string|RegExp} decoratorPattern - Decorator name or pattern
+ * @returns {boolean}
+ */
+function hasDecorator(sf, decoratorPattern) {
+  const decorators = sf.getDescendantsOfKind(SyntaxKind.Decorator);
+  return decorators.some(dec => {
+    const name = dec.getName ? dec.getName() : dec.getText();
+    if (typeof decoratorPattern === 'string') {
+      return name.includes(decoratorPattern);
+    }
+    return decoratorPattern.test(name);
+  });
+}
+
+/**
+ * Find all string literals matching a pattern (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @param {RegExp} pattern - Pattern to match
+ * @returns {Array} Array of {node, value, line}
+ */
+function findStringLiterals(sf, pattern) {
+  const results = [];
+  sf.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach(node => {
+    const value = node.getLiteralValue();
+    if (pattern.test(value)) {
+      results.push({
+        node,
+        value,
+        line: node.getStartLineNumber(),
+      });
+    }
+  });
+  return results;
+}
+
+/**
+ * Find all identifiers matching a pattern (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @param {RegExp} pattern - Pattern to match
+ * @returns {Array} Array of {node, name, line}
+ */
+function findIdentifiers(sf, pattern) {
+  const results = [];
+  sf.getDescendantsOfKind(SyntaxKind.Identifier).forEach(node => {
+    const name = node.getText();
+    if (pattern.test(name)) {
+      results.push({
+        node,
+        name,
+        line: node.getStartLineNumber(),
+      });
+    }
+  });
+  return results;
+}
+
+/**
+ * Find all call expressions matching a pattern (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @param {RegExp} pattern - Pattern to match on expression text
+ * @returns {Array} Array of {node, expression, args, line}
+ */
+function findCallExpressions(sf, pattern) {
+  const results = [];
+  sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach(node => {
+    const expr = node.getExpression();
+    const exprText = expr ? expr.getText() : '';
+    if (pattern.test(exprText)) {
+      results.push({
+        node,
+        expression: exprText,
+        args: node.getArguments(),
+        line: node.getStartLineNumber(),
+      });
+    }
+  });
+  return results;
+}
+
+/**
+ * Check if class has method matching pattern (AST-based)
+ * @param {ClassDeclaration} cls - Class declaration
+ * @param {RegExp} pattern - Pattern to match method name
+ * @returns {boolean}
+ */
+function classHasMethod(cls, pattern) {
+  return cls.getMethods().some(m => pattern.test(m.getName()));
+}
+
+/**
+ * Check if class has property matching pattern (AST-based)
+ * @param {ClassDeclaration} cls - Class declaration
+ * @param {RegExp} pattern - Pattern to match property name
+ * @returns {boolean}
+ */
+function classHasProperty(cls, pattern) {
+  return cls.getProperties().some(p => pattern.test(p.getName()));
+}
+
+/**
+ * Get all classes in source file (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @returns {Array} Array of ClassDeclaration nodes
+ */
+function getClasses(sf) {
+  return sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration);
+}
+
+/**
+ * Get all functions in source file (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @returns {Array} Array of FunctionDeclaration nodes
+ */
+function getFunctions(sf) {
+  return sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration);
+}
+
+/**
+ * Get all arrow functions in source file (AST-based)
+ * @param {SourceFile} sf - Source file
+ * @returns {Array} Array of ArrowFunction nodes
+ */
+function getArrowFunctions(sf) {
+  return sf.getDescendantsOfKind(SyntaxKind.ArrowFunction);
+}
+
 module.exports = {
   getRepoRoot,
   shouldIgnore,
@@ -324,6 +530,17 @@ module.exports = {
   createProject,
   isSupportedFile,
   formatFinding,
+  // AST Intelligent Helpers
+  hasImport,
+  hasDecorator,
+  findStringLiterals,
+  findIdentifiers,
+  findCallExpressions,
+  classHasMethod,
+  classHasProperty,
+  getClasses,
+  getFunctions,
+  getArrowFunctions,
   // Re-export ts-morph classes for convenience
   Project,
   Node,

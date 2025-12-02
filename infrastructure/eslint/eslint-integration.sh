@@ -33,7 +33,7 @@ aggregate_eslint() {
 run_eslint_suite_impl() {
   local root_dir="$1"
   local tmp_dir="$2"
-  
+
   printf "%b%s%b\n" "$YELLOW" "$MSG_ESLINT" "$NC"
   local admin_report="$tmp_dir/eslint-admin.json"
   local web_report="$tmp_dir/eslint-web.json"
@@ -73,4 +73,3 @@ run_eslint_suite_impl() {
   printf "ESLint Web:   %s errors=%s %s warnings=%s\n" "$emj_err" "$a2_err" "$emj_warn" "$a2_warn"
   printf "%bESLint Total:%b %s errors=%s %s warnings=%s\n" "$GREEN" "$NC" "$emj_err" "$total_err" "$emj_warn" "$total_warn" | tee "$tmp_dir/eslint-summary.txt"
 }
-

@@ -35,9 +35,15 @@ class iOSASTIntelligentAnalyzer {
   }
 
   checkSwiftSyntax() {
+    // Dynamic project root detection (portable)
+    const projectRoot = require('child_process')
+      .execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' })
+      .trim();
+
     const possiblePaths = [
       path.join(__dirname, '../../../../../../CustomLintRules/.build/debug/swift-ast-analyzer'),
-      '/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/CustomLintRules/.build/debug/swift-ast-analyzer'
+      path.join(projectRoot, 'CustomLintRules/.build/debug/swift-ast-analyzer'),
+      path.join(projectRoot, '.build/debug/swift-ast-analyzer')
     ];
     for (const p of possiblePaths) {
       if (fs.existsSync(p)) {

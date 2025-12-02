@@ -28,10 +28,10 @@ class FileFindingsRepository extends IFindingsRepository {
 
   async save(findings) {
     await this.ensureDirectory();
-    
+
     const data = findings.map(f => f.toJSON());
     const json = JSON.stringify(data, null, 2);
-    
+
     await fs.writeFile(this.findingsFile, json, 'utf-8');
   }
 
@@ -69,7 +69,7 @@ class FileFindingsRepository extends IFindingsRepository {
 
   async saveAuditResult(auditResult) {
     await this.ensureDirectory();
-    
+
     const json = JSON.stringify(auditResult.toJSON(), null, 2);
     await fs.writeFile(this.auditResultFile, json, 'utf-8');
   }
@@ -89,4 +89,3 @@ class FileFindingsRepository extends IFindingsRepository {
 }
 
 module.exports = FileFindingsRepository;
-

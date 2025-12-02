@@ -183,15 +183,25 @@ validate_gitflow_content() {
   # SEMANTIC ANALYSIS: Detect multiple features by keywords
   # ═══════════════════════════════════════════════════════════════
 
-  local has_android=$(echo "$commit_messages" | grep -ciE "android|kotlin|detekt|ast.*rule|compose" 2>/dev/null | head -1 || echo "0")
-  local has_mcp=$(echo "$commit_messages" | grep -ciE "mcp|server.*notification|cursor.*integration" 2>/dev/null | head -1 || echo "0")
-  local has_watchdog=$(echo "$commit_messages" | grep -ciE "watchdog|monitor|timestamp.*parsing" 2>/dev/null | head -1 || echo "0")
-  local has_gitflow=$(echo "$commit_messages" | grep -ciE "git.*flow|enforcer|wrapper|branch" 2>/dev/null | head -1 || echo "0")
-  local has_hooks=$(echo "$commit_messages" | grep -ciE "hook|pre-commit|session.*loader|evidence" 2>/dev/null | head -1 || echo "0")
-  local has_frontend=$(echo "$commit_messages" | grep -ciE "frontend|react|next|dashboard" 2>/dev/null | head -1 || echo "0")
-  local has_backend=$(echo "$commit_messages" | grep -ciE "backend|nestjs|api|controller" 2>/dev/null | head -1 || echo "0")
+  # Use grep -c and ensure single integer output
+  local has_android=$(echo "$commit_messages" | grep -cE "android|kotlin|detekt|ast.*rule|compose" 2>/dev/null | head -1 | tr -d '\n' || echo "0")
+  local has_mcp=$(echo "$commit_messages" | grep -cE "mcp|server.*notification|cursor.*integration" 2>/dev/null | head -1 | tr -d '\n' || echo "0")
+  local has_watchdog=$(echo "$commit_messages" | grep -cE "watchdog|monitor|timestamp.*parsing" 2>/dev/null | head -1 | tr -d '\n' || echo "0")
+  local has_gitflow=$(echo "$commit_messages" | grep -cE "git.*flow|enforcer|wrapper|branch" 2>/dev/null | head -1 | tr -d '\n' || echo "0")
+  local has_hooks=$(echo "$commit_messages" | grep -cE "hook|pre-commit|session.*loader|evidence" 2>/dev/null | head -1 | tr -d '\n' || echo "0")
+  local has_frontend=$(echo "$commit_messages" | grep -cE "frontend|react|next|dashboard" 2>/dev/null | head -1 | tr -d '\n' || echo "0")
+  local has_backend=$(echo "$commit_messages" | grep -cE "backend|nestjs|api|controller" 2>/dev/null | head -1 | tr -d '\n' || echo "0")
 
   # Count distinct features (>2 commits per feature to count)
+  # Convert to integer safely
+  has_android=$((has_android + 0))
+  has_mcp=$((has_mcp + 0))
+  has_watchdog=$((has_watchdog + 0))
+  has_gitflow=$((has_gitflow + 0))
+  has_hooks=$((has_hooks + 0))
+  has_frontend=$((has_frontend + 0))
+  has_backend=$((has_backend + 0))
+
   local feature_count=0
   [[ $has_android -ge 2 ]] && ((feature_count++))
   [[ $has_mcp -ge 2 ]] && ((feature_count++))
@@ -291,9 +301,9 @@ handle_commit() {
   local root_module_count=$(echo "$root_modules" | grep -v "^$" | wc -l | xargs)
 
   # Detect file type patterns (backend, frontend, mobile)
-  local has_backend=$(echo "$staged_files" | grep -E "(apps/backend|\.ts$|\.js$)" | head -1)
-  local has_frontend=$(echo "$staged_files" | grep -E "(apps/admin-dashboard|apps/web|\.tsx$|\.jsx$)" | head -1)
-  local has_mobile=$(echo "$staged_files" | grep -E "(apps/mobile|\.swift$|\.kt$)" | head -1)
+  local has_backend=$(echo "$staged_files" | grep -E "^apps/backend/" | head -1)
+  local has_frontend=$(echo "$staged_files" | grep -E "^apps/(admin-dashboard|web)/" | head -1)
+  local has_mobile=$(echo "$staged_files" | grep -E "^apps/mobile/" | head -1)
 
   local concerns_count=0
   [[ -n "$has_backend" ]] && ((concerns_count++))

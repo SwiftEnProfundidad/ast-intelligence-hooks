@@ -4,7 +4,7 @@
 
 /**
  * Analyze DDD patterns in Android (Kotlin)
- * 
+ *
  * Rules from rulesandroid.mdc:
  * ✅ Repository pattern (interface in domain, impl in data)
  * ✅ Use Cases in domain/usecase
@@ -14,10 +14,10 @@
 function analyzeDDD(filePath, fileContent, findings, pushFileFinding) {
   // PATTERN 1: Repository Pattern
   analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFinding);
-  
+
   // PATTERN 2: Use Cases
   analyzeUseCases(filePath, fileContent, findings, pushFileFinding);
-  
+
   // PATTERN 3: Mappers
   analyzeMappers(filePath, fileContent, findings, pushFileFinding);
 }
@@ -25,7 +25,7 @@ function analyzeDDD(filePath, fileContent, findings, pushFileFinding) {
 function analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFinding) {
   const isInterface = fileContent.includes('interface ') && /Repository/i.test(fileContent);
   const isClass = fileContent.includes('class ') && /Repository/i.test(fileContent);
-  
+
   // Repository interface should be in domain/
   if (isInterface && !filePath.includes('/domain/')) {
     pushFileFinding(
@@ -38,9 +38,9 @@ function analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFindi
       findings
     );
   }
-  
+
   // Repository implementation should be in data/
-  if (isClass && /Repository.*Impl|.*RepositoryImpl/.test(fileContent) && 
+  if (isClass && /Repository.*Impl|.*RepositoryImpl/.test(fileContent) &&
       !filePath.includes('/data/')) {
     pushFileFinding(
       'android.ddd.repository_impl_wrong_layer',
@@ -87,4 +87,3 @@ function analyzeMappers(filePath, fileContent, findings, pushFileFinding) {
 module.exports = {
   analyzeDDD
 };
-

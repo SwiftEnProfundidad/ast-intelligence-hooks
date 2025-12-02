@@ -19,10 +19,10 @@ cat << 'EOF'
 function check_gitflow_silent() {
   local project_root
   project_root=$(git rev-parse --show-toplevel 2>/dev/null)
-  
+
   if [[ -n "$project_root" ]] && [[ -f "$project_root/scripts/hooks-system/bin/cli.js" ]]; then
-    # Only run in R_GO project
-    if [[ "$project_root" == *"R_GO_local"* ]]; then
+    # Run if hook-system exists in project
+    if [[ -f "$project_root/scripts/hooks-system/bin/cli.js" ]]; then
       node "$project_root/scripts/hooks-system/bin/cli.js" gitflow check 2>/dev/null
     fi
   fi
@@ -46,11 +46,11 @@ check_gitflow_silent
 # function gitflow_prompt() {
 #   local project_root
 #   project_root=$(git rev-parse --show-toplevel 2>/dev/null)
-#   
+#
 #   if [[ -n "$project_root" ]] && [[ -f "$project_root/scripts/hooks-system/bin/cli.js" ]]; then
 #     local current_branch
 #     current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "")
-#     
+#
 #     if [[ "$current_branch" =~ ^(fix|feature)/ ]]; then
 #       echo " %F{yellow}[GF: incomplete]%f"
 #     elif [[ "$current_branch" == "develop" ]]; then
@@ -62,4 +62,3 @@ check_gitflow_silent
 # PROMPT='%F{cyan}%~%f$(git_prompt_info)$(gitflow_prompt) %# '
 
 EOF
-

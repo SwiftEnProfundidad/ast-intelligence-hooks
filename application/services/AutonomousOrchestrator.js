@@ -8,8 +8,7 @@ class AutonomousOrchestrator {
         this.platformDetector = platformDetector || new PlatformDetectionService();
         this.rulesLoader = rulesLoader;
         this.confidenceThresholds = {
-            autoExecute: 90,
-            ask: 70,
+            autoExecute: 30,
             ignore: 0
         };
         this.lastAnalysis = null;
@@ -348,16 +347,7 @@ class AutonomousOrchestrator {
                 action: 'auto-execute',
                 confidence: topScore.confidence,
                 platforms: scores.filter(s => s.confidence >= this.confidenceThresholds.autoExecute),
-                reason: `High confidence (${topScore.confidence}%) - auto-executing`
-            };
-        }
-
-        if (topScore.confidence >= this.confidenceThresholds.ask) {
-            return {
-                action: 'ask',
-                confidence: topScore.confidence,
-                platforms: scores.filter(s => s.confidence >= this.confidenceThresholds.ask),
-                reason: `Medium confidence (${topScore.confidence}%) - asking AI`
+                reason: `Platform detected (${topScore.confidence}%) - auto-executing with notification`
             };
         }
 
@@ -365,7 +355,7 @@ class AutonomousOrchestrator {
             action: 'ignore',
             confidence: topScore.confidence,
             platforms: [],
-            reason: `Low confidence (${topScore.confidence}%) - ignoring`
+            reason: `No code files detected (${topScore.confidence}%) - ignoring`
         };
     }
 

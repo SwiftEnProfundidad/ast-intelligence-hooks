@@ -72,4 +72,3 @@ class LegacyAnalyzerAdapter {
 }
 
 module.exports = LegacyAnalyzerAdapter;
-

@@ -48,7 +48,23 @@ echo ""
 # Show session context
 if [[ -f "$SESSION_FILE" ]]; then
   echo -e "${CYAN}📖 Session Context:${NC}"
-  head -20 "$SESSION_FILE" | grep -E "Sesión actual|Branch activo|Fase del plan|Progreso total|Violations.*restantes" | sed 's/^/   /' || true
+
+  # Prefer current session from .AI_EVIDENCE.json (auto-updated by ai-start)
+  LOCAL_EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
+  if [[ -f "$LOCAL_EVIDENCE_FILE" ]]; then
+    CURRENT_SESSION_ID=$(jq -r '.session_id // empty' "$LOCAL_EVIDENCE_FILE" 2>/dev/null || echo "")
+    CURRENT_ACTION=$(jq -r '.action // empty' "$LOCAL_EVIDENCE_FILE" 2>/dev/null || echo "")
+    if [[ -n "$CURRENT_SESSION_ID" ]]; then
+      if [[ -n "$CURRENT_ACTION" && "$CURRENT_ACTION" != "null" ]]; then
+        echo "   **Sesión actual (evidence):** $CURRENT_SESSION_ID - $CURRENT_ACTION"
+      else
+        echo "   **Sesión actual (evidence):** $CURRENT_SESSION_ID"
+      fi
+    fi
+  fi
+
+  # Also show static plan context from .AI_SESSION_START.md (without duplicating Sesión actual)
+  head -20 "$SESSION_FILE" | grep -E "Branch activo|Fase del plan|Progreso total|Violations.*restantes" | sed 's/^/   /' || true
   echo ""
 fi
 
@@ -76,10 +92,11 @@ if [[ -f "$EVIDENCE_FILE" ]]; then
     EVIDENCE_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CLEAN_TS" +%s 2>/dev/null || echo "0")
     NOW_EPOCH=$(date +%s)
     AGE=$((NOW_EPOCH - EVIDENCE_EPOCH))
-    
+
     if [[ $AGE -gt 180 ]]; then
       echo -e "${YELLOW}⚠️  Evidence is stale (${AGE}s old, max 3min)${NC}"
-      echo -e "${YELLOW}   Run: ai-start $CURRENT_BRANCH${NC}"
+      echo -e "${YELLOW}   Run: ./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms>${NC}"
+      echo -e "${YELLOW}   (alias corto: ai-start $CURRENT_BRANCH)${NC}"
       echo ""
     else
       echo -e "${GREEN}✅ Evidence fresh (${AGE}s old)${NC}"
@@ -88,11 +105,20 @@ if [[ -f "$EVIDENCE_FILE" ]]; then
   fi
 fi
 
+# Start realtime guards (watch-hooks + token monitor)
+GUARDS_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/start-guards.sh"
+if [[ -x "$GUARDS_SCRIPT" ]]; then
+  echo -e "${CYAN}🛡️  Background guards:${NC}"
+  "$GUARDS_SCRIPT" start || true
+  echo ""
+fi
+
 # Show quick commands
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║  🚀 QUICK COMMANDS                                       ║${NC}"
 echo -e "${BLUE}╠══════════════════════════════════════════════════════════╣${NC}"
 echo -e "${BLUE}║  ${NC}ai-start <feature>     ${CYAN}Update evidence & start work${NC}     ${BLUE}║${NC}"
+echo -e "${BLUE}║  ${NC}./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms>${CYAN}Autonomous refresh${NC} ${BLUE}║${NC}"
 echo -e "${BLUE}║  ${NC}git status             ${CYAN}Check current changes${NC}           ${BLUE}║${NC}"
 echo -e "${BLUE}║  ${NC}git log -3             ${CYAN}View recent commits${NC}             ${BLUE}║${NC}"
 echo -e "${BLUE}║  ${NC}bash audit.sh          ${CYAN}Run full audit${NC}                  ${BLUE}║${NC}"
@@ -100,13 +126,13 @@ echo -e "${BLUE}║  ${NC}cat .violations-*      ${CYAN}View violations report${
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
-# Auto-start watchdog (if not running)
-WATCHDOG_PID_FILE="$REPO_ROOT/.ai-watchdog.pid"
-if [[ ! -f "$WATCHDOG_PID_FILE" ]]; then
-  echo -e "${CYAN}🐕 Starting AI Watchdog...${NC}"
-  bash "$REPO_ROOT/scripts/hooks-system/infrastructure/watchdog/ai-watchdog.sh" start 2>/dev/null || echo "   (fswatch not available)"
-  echo ""
-fi
+# Auto-start watchdog (DISABLED - notifications were looping)
+# WATCHDOG_PID_FILE="$REPO_ROOT/.ai-watchdog.pid"
+# if [[ ! -f "$WATCHDOG_PID_FILE" ]]; then
+#   echo -e "${CYAN}🐕 Starting AI Watchdog...${NC}"
+#   bash "$REPO_ROOT/scripts/hooks-system/infrastructure/watchdog/ai-watchdog.sh" start 2>/dev/null || echo "   (fswatch not available)"
+#   echo ""
+# fi
 
 # Show readiness
 echo -e "${GREEN}✅ Session loaded - Ready to work!${NC}"
@@ -114,14 +140,14 @@ echo ""
 
 # Reminder with exact command
 if [[ $AGE -gt 180 ]]; then
-  echo -e "${YELLOW}📌 Run this command to start working:${NC}"
-  echo -e "   ${GREEN}👉 ai-start $CURRENT_BRANCH${NC}"
+  echo -e "${YELLOW}Run this command to refresh evidence:${NC}"
+  echo -e "   ${GREEN}./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms>${NC}"
+  echo -e "   ${YELLOW}(alias: ai-start $CURRENT_BRANCH)${NC}"
 else
-  echo -e "${GREEN}📌 Evidence is fresh - You can start working!${NC}"
-  echo -e "   ${YELLOW}ℹ️  Run ${MAGENTA}ai-start $CURRENT_BRANCH${YELLOW} again if evidence expires${NC}"
+  echo -e "${GREEN}Evidence is fresh - You can start working!${NC}"
+  echo -e "   ${YELLOW}ℹ️  Usa ./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms> cuando necesites renovarla (alias: ai-start $CURRENT_BRANCH).${NC}"
 fi
 echo ""
 
 # Return control to user's default shell (zsh)
 exec "$SHELL"
-

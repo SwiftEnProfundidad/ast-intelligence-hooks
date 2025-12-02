@@ -10,17 +10,18 @@ const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf } = require(
 const { analyzeCleanArchitecture } = require(path.join(__dirname, 'clean-architecture-analyzer'));
 const { analyzeDDD } = require(path.join(__dirname, 'ddd-analyzer'));
 const { analyzeFeatureFirst } = require(path.join(__dirname, 'feature-first-analyzer'));
+const { FrontendForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analyzers/FrontendForbiddenLiteralsAnalyzer'));
 
 /**
  * Run Frontend-specific AST intelligence analysis
- * 
+ *
  * DELEGATED TO ESLINT:
  * - React rules (hooks, memo, composition)
  * - Complexity
  * - TypeScript any types
  * - Styling rules
  * - i18n (can be done with eslint plugins)
- * 
+ *
  * OUR RESPONSIBILITY:
  * - Clean Architecture layer dependencies
  * - DDD patterns adapted for Frontend
@@ -33,18 +34,23 @@ function runFrontendIntelligence(project, findings, platform) {
 
     // Skip if not Frontend platform
     if (platformOf(filePath) !== "frontend") return;
-    
+
     // Skip AST infrastructure files
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
-    
+
     // =========================================================================
     // ARCHITECTURE ANALYSIS (from rulesfront.mdc) - NIVEL 10/10
     // =========================================================================
     analyzeCleanArchitecture(sf, findings, pushFinding);
     analyzeDDD(sf, findings, pushFinding, project);
     analyzeFeatureFirst(sf, findings, pushFinding);
+
+    // =========================================================================
+    // FORBIDDEN LITERALS ANALYSIS (null/undefined, magic numbers, type casts)
+    // =========================================================================
+    const forbiddenLiteralsAnalyzer = new FrontendForbiddenLiteralsAnalyzer();
+    forbiddenLiteralsAnalyzer.analyze(sf, findings, pushFinding);
   });
 }
 
 module.exports = { runFrontendIntelligence };
-

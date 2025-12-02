@@ -6,14 +6,14 @@ const { pushFileFinding } = require('../ast-core');
 async function runSwiftLintNative(findings) {
   try {
     const customRulesPath = path.join(process.cwd(), 'CustomLintRules');
-    
+
     if (!fs.existsSync(customRulesPath)) {
       console.log('[SwiftLint Native] CustomLintRules package not found - skipping');
       return;
     }
-    
+
     console.log('[SwiftLint Native] Building CustomLintRules...');
-    
+
     try {
       execSync('swift build', {
         cwd: customRulesPath,
@@ -24,19 +24,19 @@ async function runSwiftLintNative(findings) {
       console.log('[SwiftLint Native] Build skipped (not critical)');
       return;
     }
-    
+
     console.log('[SwiftLint Native] Running custom rules...');
-    
+
     const result = execSync('swift run CustomLintAnalyzer', {
       cwd: customRulesPath,
       encoding: 'utf8',
       timeout: 60000
     });
-    
+
     parseSwiftLintOutput(result, findings);
-    
+
     console.log('[SwiftLint Native] ✅ Custom rules executed');
-    
+
   } catch (error) {
     console.log('[SwiftLint Native] Error:', error.message);
   }
@@ -44,16 +44,16 @@ async function runSwiftLintNative(findings) {
 
 function parseSwiftLintOutput(output, findings) {
   const lines = output.split('\n');
-  
+
   for (const line of lines) {
     if (line.includes('warning:') || line.includes('error:')) {
       const match = line.match(/(.+\.swift):(\d+):(\d+):\s*(warning|error):\s*(.+)/);
       if (match) {
         const [, filePath, lineNum, col, severity, message] = match;
-        
+
         const level = severity === 'error' ? 'high' : 'medium';
         const ruleId = extractRuleId(message);
-        
+
         pushFileFinding(
           ruleId,
           level,
@@ -83,9 +83,8 @@ function extractRuleId(message) {
   if (message.includes('weak self')) return 'ios.native.weak_self';
   if (message.includes('God Class')) return 'ios.native.god_class';
   if (message.includes('Magic')) return 'ios.native.magic_number';
-  
+
   return 'ios.native.custom_rule';
 }
 
 module.exports = { runSwiftLintNative };
-

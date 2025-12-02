@@ -24,4 +24,3 @@ export MSG_PATTERNS="Running pattern checks..."
 export MSG_ESLINT="Running ESLint audits..."
 export MSG_SUMMARY="Summary"
 export MSG_BYE="Bye"
-

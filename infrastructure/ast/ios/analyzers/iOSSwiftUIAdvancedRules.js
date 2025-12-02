@@ -1,6 +1,6 @@
 /**
  * iOS SwiftUI Advanced Rules
- * 
+ *
  * Reglas avanzadas de SwiftUI:
  * - PreferenceKey usage
  * - Custom ViewModifiers
@@ -66,11 +66,11 @@ struct MyPreferenceKey: PreferenceKey {
   checkCustomViewModifiers(filePath, content) {
     // Detectar extension View con funciones que deberían ser ViewModifiers
     const extensionView = content.match(/extension\s+View\s*{([\s\S]*?)(?=\nextension|\n})/);
-    
+
     if (extensionView) {
       const extensionBody = extensionView[1];
       const funcs = (extensionBody.match(/func\s+\w+/g) || []).length;
-      
+
       if (funcs > 5) {
         pushFinding(this.findings, {
           ruleId: 'ios.swiftui.extension_view_bloated',
@@ -108,7 +108,7 @@ extension View {
       viewModifierMatches.forEach(match => {
         const modifierName = match.match(/struct\s+(\w+)/)?.[1];
         const hasBody = content.includes(`func body(content: Content)`);
-        
+
         if (!hasBody) {
           pushFinding(this.findings, {
             ruleId: 'ios.swiftui.viewmodifier_missing_body',
@@ -197,7 +197,7 @@ struct MyCustomLayout: Layout {
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         // Custom logic
     }
-    
+
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         // Custom placement
     }
@@ -211,12 +211,12 @@ struct MyCustomLayout: Layout {
    */
   checkViewBuilderAdvanced(filePath, content) {
     const viewBuilderMatches = content.match(/@ViewBuilder/g);
-    
+
     if (viewBuilderMatches && viewBuilderMatches.length > 0) {
       // Detectar @ViewBuilder sin buildEither (condicionales)
       const hasBuildEither = content.includes('buildEither');
       const hasConditionals = content.includes('if ') || content.includes('switch ');
-      
+
       if (hasConditionals && !hasBuildEither && viewBuilderMatches.length > 3) {
         pushFinding(this.findings, {
           ruleId: 'ios.swiftui.viewbuilder_complex_conditionals',
@@ -235,11 +235,11 @@ struct MyCustomLayout: Layout {
    */
   checkPreferenceKeyPerformance(filePath, content) {
     const preferenceKeys = content.match(/struct\s+(\w+):\s*PreferenceKey[\s\S]*?static\s+func\s+reduce\(([\s\S]*?)\)/g);
-    
+
     if (preferenceKeys) {
       preferenceKeys.forEach(key => {
         const reduceBody = key.match(/reduce\(([\s\S]*?)\)/)?.[1];
-        
+
         // Detectar operaciones O(n) en reduce (performance issue)
         if (reduceBody && (reduceBody.includes('.map') || reduceBody.includes('.filter'))) {
           pushFinding(this.findings, {
@@ -276,8 +276,8 @@ struct MyCustomLayout: Layout {
    */
   checkAnchorPreferences(filePath, content) {
     const hasAnchor = content.includes('.anchorPreference');
-    const hasGeometryForPosition = 
-      content.includes('GeometryReader') && 
+    const hasGeometryForPosition =
+      content.includes('GeometryReader') &&
       (content.includes('.frame') || content.includes('.position'));
 
     if (hasGeometryForPosition && !hasAnchor) {
@@ -325,7 +325,7 @@ struct MyCustomLayout: Layout {
 
   findLineNumber(content, pattern) {
     const lines = content.split('\n');
-    const index = lines.findIndex(line => 
+    const index = lines.findIndex(line =>
       typeof pattern === 'string' ? line.includes(pattern) : pattern.test(line)
     );
     return index !== -1 ? index + 1 : 1;
@@ -341,4 +341,3 @@ struct MyCustomLayout: Layout {
 }
 
 module.exports = { iOSSwiftUIAdvancedRules };
-

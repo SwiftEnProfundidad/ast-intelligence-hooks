@@ -1,6 +1,6 @@
 /**
  * iOS Architecture Pattern Detector
- * 
+ *
  * Detecta automáticamente el patrón arquitectónico usado en un proyecto iOS:
  * - MVVM (Model-View-ViewModel)
  * - MVVM-C (MVVM + Coordinator)
@@ -74,7 +74,7 @@ class iOSArchitectureDetector {
     // Analizar archivos para detectar patrones
     // PRIORIDAD 1: Feature-First + DDD + Clean Architecture (PATRÓN PRINCIPAL)
     this.detectFeatureFirstClean(swiftFiles);
-    
+
     // PRIORIDAD 2: Otros patrones
     this.detectTCA(swiftFiles);
     this.detectVIPER(swiftFiles);
@@ -98,7 +98,7 @@ class iOSArchitectureDetector {
    */
   detectFeatureFirstClean(files) {
     // Detectar estructura de carpetas Feature-First
-    const hasFeaturesFolders = files.some(f => 
+    const hasFeaturesFolders = files.some(f =>
       /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
     );
 
@@ -109,9 +109,9 @@ class iOSArchitectureDetector {
     });
 
     // Detectar conceptos DDD
-    const dddConcepts = files.filter(f => 
-      f.includes('/entities/') || 
-      f.includes('/value-objects/') || 
+    const dddConcepts = files.filter(f =>
+      f.includes('/entities/') ||
+      f.includes('/value-objects/') ||
       f.includes('/use-cases/') ||
       f.includes('Entity.swift') ||
       f.includes('VO.swift') ||
@@ -147,7 +147,7 @@ class iOSArchitectureDetector {
     // Analizar contenido de archivos para validar DDD
     files.forEach(file => {
       const content = this.readFile(file);
-      
+
       // Detectar Value Objects
       if (content.includes('struct ') && content.includes('VO')) {
         this.patterns.featureFirstClean += 2;
@@ -192,10 +192,10 @@ class iOSArchitectureDetector {
 
     files.forEach(file => {
       const content = this.readFile(file);
-      const matches = tcaIndicators.filter(indicator => 
+      const matches = tcaIndicators.filter(indicator =>
         new RegExp(indicator).test(content)
       ).length;
-      
+
       if (matches >= 3) {
         this.patterns.tca += matches;
       }
@@ -210,7 +210,7 @@ class iOSArchitectureDetector {
    * - Estructura de carpetas: View/, Interactor/, Presenter/, Entity/, Router/
    */
   detectVIPER(files) {
-    const viperFiles = files.filter(f => 
+    const viperFiles = files.filter(f =>
       /Presenter\.swift$|Interactor\.swift$|Router\.swift$|Entity\.swift$/.test(f)
     );
 
@@ -228,7 +228,7 @@ class iOSArchitectureDetector {
         'RouterProtocol'
       ];
 
-      const matches = viperProtocols.filter(proto => 
+      const matches = viperProtocols.filter(proto =>
         content.includes(proto)
       ).length;
 
@@ -258,7 +258,7 @@ class iOSArchitectureDetector {
    * - Protocols: *DisplayLogic, *BusinessLogic, *PresentationLogic
    */
   detectCleanSwift(files) {
-    const cleanSwiftFiles = files.filter(f => 
+    const cleanSwiftFiles = files.filter(f =>
       /Models\.swift$/.test(f)
     );
 
@@ -273,7 +273,7 @@ class iOSArchitectureDetector {
         'ViewModel\\s*{'
       ];
 
-      const matches = cleanSwiftIndicators.filter(indicator => 
+      const matches = cleanSwiftIndicators.filter(indicator =>
         new RegExp(indicator).test(content)
       ).length;
 
@@ -304,10 +304,10 @@ class iOSArchitectureDetector {
     // Buscar protocols MVP
     files.forEach(file => {
       const content = this.readFile(file);
-      
+
       // MVP usa ViewProtocol y PresenterProtocol pero no InteractorProtocol
-      const hasMVPProtocols = 
-        content.includes('ViewProtocol') && 
+      const hasMVPProtocols =
+        content.includes('ViewProtocol') &&
         content.includes('PresenterProtocol') &&
         !content.includes('InteractorProtocol');
 
@@ -333,8 +333,8 @@ class iOSArchitectureDetector {
 
     files.forEach(file => {
       const content = this.readFile(file);
-      
-      if (content.includes('protocol Coordinator') || 
+
+      if (content.includes('protocol Coordinator') ||
           content.includes(': Coordinator') ||
           /func\s+start\(\)/.test(content) && /func\s+navigate/.test(content)) {
         this.patterns.mvvmc += 2;
@@ -359,7 +359,7 @@ class iOSArchitectureDetector {
 
     files.forEach(file => {
       const content = this.readFile(file);
-      
+
       const mvvmIndicators = [
         '@Published',
         ': ObservableObject',
@@ -367,7 +367,7 @@ class iOSArchitectureDetector {
         'class.*ViewModel'
       ];
 
-      const matches = mvvmIndicators.filter(indicator => 
+      const matches = mvvmIndicators.filter(indicator =>
         new RegExp(indicator).test(content)
       ).length;
 
@@ -391,16 +391,16 @@ class iOSArchitectureDetector {
     const interactorFiles = files.filter(f => /Interactor\.swift$/.test(f));
 
     // Si hay ViewControllers pero NO hay ViewModels, Presenters ni Interactors
-    if (viewControllerFiles.length >= 2 && 
-        viewModelFiles.length === 0 && 
-        presenterFiles.length === 0 && 
+    if (viewControllerFiles.length >= 2 &&
+        viewModelFiles.length === 0 &&
+        presenterFiles.length === 0 &&
         interactorFiles.length === 0) {
-      
+
       // Analizar tamaño de ViewControllers (Massive View Controllers = MVC anti-pattern)
       viewControllerFiles.forEach(file => {
         const content = this.readFile(file);
         const lines = content.split('\n').length;
-        
+
         if (lines > 300) {
           this.patterns.mvc += 3; // Massive View Controller
         } else if (lines > 150) {
@@ -467,7 +467,7 @@ class iOSArchitectureDetector {
    */
   getDetectionSummary() {
     const dominant = this.getDominantPattern();
-    
+
     return {
       detected: dominant,
       scores: this.patterns,
@@ -482,7 +482,7 @@ class iOSArchitectureDetector {
 
     const sorted = Object.values(this.patterns).sort((a, b) => b - a);
     const dominantScore = sorted[0];
-    
+
     return Math.round((dominantScore / total) * 100);
   }
 
@@ -495,7 +495,7 @@ class iOSArchitectureDetector {
         severity: 'CRITICAL',
         message: 'Múltiples patrones arquitectónicos detectados en el proyecto. Esto indica inconsistencia arquitectónica GRAVE que debe corregirse inmediatamente.',
         recommendation: `Refactorizar urgentemente para usar un único patrón arquitectónico consistente.
-        
+
 ACCIONES REQUERIDAS:
 1. Auditar todos los módulos y determinar patrón dominante
 2. Crear plan de migración para unificar arquitectura
@@ -556,4 +556,3 @@ PLAN DE MIGRACIÓN SUGERIDO:
 }
 
 module.exports = { iOSArchitectureDetector };
-

@@ -6,7 +6,7 @@ const path = require('path');
 
 /**
  * Analyze Feature-First compliance for Frontend
- * 
+ *
  * Feature-First for React/Next.js:
  * ✅ Each feature is self-contained
  * ✅ Features in: app/dashboard/, app/orders/, components/orders/, etc.
@@ -16,21 +16,21 @@ const path = require('path');
  */
 function analyzeFeatureFirst(sf, findings, pushFinding) {
   const filePath = sf.getFilePath();
-  
+
   const feature = detectFeature(filePath);
   if (!feature) return;
-  
+
   const imports = sf.getImportDeclarations();
-  
+
   imports.forEach(imp => {
     const importPath = imp.getModuleSpecifierValue();
     const targetFeature = detectFeature(importPath);
-    
+
     // RULE 1: No cross-feature imports
     if (targetFeature && targetFeature !== feature) {
       // Exceptions: ui/, shared/, lib/ are allowed
       const isSharedModule = /\/(ui|shared|lib|common)\//i.test(importPath);
-      
+
       if (!isSharedModule) {
         pushFinding('frontend.feature.cross_feature_import', 'high', sf, imp,
           `Feature '${feature}' importing from '${targetFeature}' - features must be independent. Move shared code to components/ui/ or lib/.`,
@@ -45,7 +45,7 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
  */
 function detectFeature(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
-  
+
   // Next.js App Router: app/{feature}/
   const appMatch = normalized.match(/\/app\/([^\/]+)\//);
   if (appMatch) {
@@ -55,7 +55,7 @@ function detectFeature(filePath) {
       return feature;
     }
   }
-  
+
   // Components by feature: components/{feature}/
   const compMatch = normalized.match(/\/components\/([^\/]+)\//);
   if (compMatch) {
@@ -65,11 +65,10 @@ function detectFeature(filePath) {
       return feature;
     }
   }
-  
+
   return null;
 }
 
 module.exports = {
   analyzeFeatureFirst
 };
-

@@ -14,4 +14,3 @@ source "$INFRASTRUCTURE_DIR/shell/orchestrators/audit-orchestrator.sh"
 
 # Execute the main menu
 interactive_menu
-

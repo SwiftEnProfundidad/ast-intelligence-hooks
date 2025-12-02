@@ -36,7 +36,7 @@ class KotlinParser {
       }
 
       const tmpXml = path.join('/tmp', `detekt-${Date.now()}.xml`);
-      
+
       try {
         // Ejecutar detekt con todas las reglas y output XML
         execSync(
@@ -77,20 +77,20 @@ class KotlinParser {
         console.error('Error parsing Detekt XML:', err.message);
         return;
       }
-      
+
       if (!result || !result.checkstyle || !result.checkstyle.file) {
         return;
       }
 
-      const files = Array.isArray(result.checkstyle.file) 
-        ? result.checkstyle.file 
+      const files = Array.isArray(result.checkstyle.file)
+        ? result.checkstyle.file
         : [result.checkstyle.file];
 
       files.forEach(file => {
         if (!file.error) return;
 
         const errors = Array.isArray(file.error) ? file.error : [file.error];
-        
+
         errors.forEach(error => {
           const attrs = error.$;
           issues.push({
@@ -272,21 +272,21 @@ class KotlinParser {
 
     for (let index = 0; index < lines.length; index++) {
       const line = lines[index];
-      
+
       // Detectar inicio de función
       if (line.trim().startsWith('fun ') && line.includes('(')) {
         // Verificar si la línea anterior tiene @Composable
         const prevLine = index > 0 ? lines[index - 1].trim() : '';
         const hasComposable = prevLine.includes('@Composable');
-        
+
         // Buscar composables en el cuerpo de la función (próximas líneas)
         let foundComposableUsage = false;
         const functionName = line.match(/fun\s+(\w+)/)?.[1];
-        
+
         // Buscar hasta encontrar el cierre de la función o un límite razonable
         for (let j = index + 1; j < Math.min(index + 20, lines.length); j++) {
           const bodyLine = lines[j];
-          if (bodyLine.includes('Column') || bodyLine.includes('Row') || 
+          if (bodyLine.includes('Column') || bodyLine.includes('Row') ||
               bodyLine.includes('Text(') || bodyLine.includes('Button(')) {
             foundComposableUsage = true;
             break;
@@ -296,7 +296,7 @@ class KotlinParser {
             break;
           }
         }
-        
+
         // Si usa composables pero no tiene la anotación
         if (foundComposableUsage && !hasComposable) {
           findings.push({
@@ -313,4 +313,3 @@ class KotlinParser {
 }
 
 module.exports = KotlinParser;
-

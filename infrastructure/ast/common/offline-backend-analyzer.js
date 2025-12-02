@@ -2,9 +2,12 @@ function analyzeOfflineBackend(project, findings) {
   project.getSourceFiles().forEach(sf => {
     const content = sf.getFullText();
     const filePath = sf.getFilePath();
-    
+
     if (!filePath.includes('backend') && !filePath.includes('api')) return;
-    
+
+    const isDomainEntity = /\/domain\/|\/entities\/|ValueObject|\.dto\.ts$|\.entity\.ts$/i.test(filePath);
+    if (isDomainEntity) return;
+
     if (content.match(/@Post|@Put|@Patch/gi)) {
       const hasVersioning = /version|etag|lastModified|timestamp/i.test(content);
       if (!hasVersioning) {
@@ -16,7 +19,7 @@ function analyzeOfflineBackend(project, findings) {
         });
       }
     }
-    
+
     if (content.match(/async\s+\w+\([^)]*\).*{[\s\S]*?insert|update|delete/i)) {
       const hasIdempotency = /idempotencyKey|requestId|deduplication/i.test(content);
       if (!hasIdempotency) {
@@ -28,7 +31,7 @@ function analyzeOfflineBackend(project, findings) {
         });
       }
     }
-    
+
     if (content.includes('/sync') || content.includes('SyncController')) {
       const hasOptimization = /lastSyncedAt|delta|incremental/i.test(content);
       if (!hasOptimization) {
@@ -44,4 +47,3 @@ function analyzeOfflineBackend(project, findings) {
 }
 
 module.exports = { analyzeOfflineBackend };
-

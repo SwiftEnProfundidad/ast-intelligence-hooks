@@ -29,4 +29,3 @@ count_files() {
     echo 0
   fi
 }
-

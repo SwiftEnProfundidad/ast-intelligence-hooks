@@ -14,16 +14,3 @@ build/
 .idea/
 *.swp
 *.swo
-
-native/ios/.build/
-node_modules/
-.DS_Store
-
-# Large files and build artifacts
-native/ios/.build/
-native/ios/.swiftpm/
-*.pack
-*.artifactbundle
-
-.AI_EVIDENCE.json
-.ast_watch.pid

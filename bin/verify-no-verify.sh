@@ -32,7 +32,7 @@ while read -r commit_hash; do
   # Obtener mensaje completo (subject + body)
   commit_full_message=$(git log -1 --pretty=format:"%B" "$commit_hash")
   commit_subject=$(git log -1 --pretty=format:"%s" "$commit_hash")
-  
+
   # Buscar patrones sospechosos en el mensaje de commit
   if echo "$commit_full_message" | grep -iE "(bypass.?hook|skip.?hook|--no-verify|no.?verify)" > /dev/null 2>&1; then
     # Verificar si tiene autorización explícita en el mensaje completo
@@ -66,4 +66,3 @@ else
   echo ""
   exit 1
 fi
-

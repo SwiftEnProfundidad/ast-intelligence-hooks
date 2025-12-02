@@ -39,7 +39,7 @@ class iOSCICDRules {
 
   checkFastfileExists() {
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (!fs.existsSync(fastfilePath)) {
       pushFinding(this.findings, {
         ruleId: 'ios.cicd.missing_fastfile',
@@ -63,12 +63,12 @@ Esto crea:
 
   checkFastfileLanes(fastfilePath) {
     const content = fs.readFileSync(fastfilePath, 'utf-8');
-    
+
     const requiredLanes = ['test', 'beta', 'release'];
     const existingLanes = content.match(/lane\s+:(\w+)/g)?.map(l => l.match(/:(\w+)/)?.[1]) || [];
-    
+
     const missingLanes = requiredLanes.filter(lane => !existingLanes.includes(lane));
-    
+
     if (missingLanes.length > 0) {
       pushFinding(this.findings, {
         ruleId: 'ios.cicd.fastfile_missing_lanes',
@@ -107,7 +107,7 @@ end`
 
   checkGitHubActionsWorkflow() {
     const workflowPath = path.join(this.projectRoot, '.github/workflows');
-    
+
     if (!fs.existsSync(workflowPath)) {
       pushFinding(this.findings, {
         ruleId: 'ios.cicd.missing_github_actions',
@@ -137,7 +137,7 @@ end`
     } else {
       iosWorkflows.forEach(workflow => {
         const content = fs.readFileSync(workflow, 'utf-8');
-        
+
         if (!content.includes('xcodebuild test')) {
           pushFinding(this.findings, {
             ruleId: 'ios.cicd.workflow_missing_tests',
@@ -163,10 +163,10 @@ end`
 
   checkTestFlightConfiguration() {
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (fs.existsSync(fastfilePath)) {
       const content = fs.readFileSync(fastfilePath, 'utf-8');
-      
+
       if (content.includes('beta') && !content.includes('upload_to_testflight')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.beta_without_testflight',
@@ -199,7 +199,7 @@ end`
 
     projectFiles.forEach(projectFile => {
       const content = fs.readFileSync(projectFile, 'utf-8');
-      
+
       const configurations = content.match(/buildConfiguration\s*=\s*(\w+)/g) || [];
       const hasDebug = configurations.some(c => c.includes('Debug'));
       const hasRelease = configurations.some(c => c.includes('Release'));
@@ -219,7 +219,7 @@ end`
 
   checkCertificateManagement() {
     const matchfilePath = path.join(this.projectRoot, 'fastlane/Matchfile');
-    
+
     if (!fs.existsSync(matchfilePath)) {
       const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
       if (fs.existsSync(fastfilePath)) {
@@ -243,7 +243,7 @@ end`
 
     projectFiles.forEach(projectFile => {
       const content = fs.readFileSync(projectFile, 'utf-8');
-      
+
       if (content.includes('CODE_SIGN_STYLE = Manual')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.manual_code_signing',
@@ -258,10 +258,10 @@ end`
 
   checkAutomatedTesting() {
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (fs.existsSync(fastfilePath)) {
       const content = fs.readFileSync(fastfilePath, 'utf-8');
-      
+
       if (!content.includes('scan') && !content.includes('run_tests')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.no_automated_tests',
@@ -279,10 +279,10 @@ end`
 
   checkVersionBumping() {
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (fs.existsSync(fastfilePath)) {
       const content = fs.readFileSync(fastfilePath, 'utf-8');
-      
+
       if (content.includes('upload_to') && !content.includes('increment_build_number')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.missing_build_increment',
@@ -298,7 +298,7 @@ end`
   checkReleaseNotes() {
     const changelogPath = path.join(this.projectRoot, 'CHANGELOG.md');
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (!fs.existsSync(changelogPath) && fs.existsSync(fastfilePath)) {
       pushFinding(this.findings, {
         ruleId: 'ios.cicd.missing_changelog',
@@ -312,10 +312,10 @@ end`
 
   checkSlackNotifications() {
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (fs.existsSync(fastfilePath)) {
       const content = fs.readFileSync(fastfilePath, 'utf-8');
-      
+
       if (content.includes('upload_to') && !content.includes('slack')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.missing_notifications',
@@ -330,10 +330,10 @@ end`
 
   checkMatchConfiguration() {
     const matchfilePath = path.join(this.projectRoot, 'fastlane/Matchfile');
-    
+
     if (fs.existsSync(matchfilePath)) {
       const content = fs.readFileSync(matchfilePath, 'utf-8');
-      
+
       if (!content.includes('git_url')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.match_missing_git_url',
@@ -349,10 +349,10 @@ end`
   checkGymConfiguration() {
     const gymfilePath = path.join(this.projectRoot, 'fastlane/Gymfile');
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (fs.existsSync(fastfilePath) && !fs.existsSync(gymfilePath)) {
       const content = fs.readFileSync(fastfilePath, 'utf-8');
-      
+
       if (content.includes('build_app') || content.includes('gym')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.missing_gymfile',
@@ -367,10 +367,10 @@ end`
 
   checkScanConfiguration() {
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (fs.existsSync(fastfilePath)) {
       const content = fs.readFileSync(fastfilePath, 'utf-8');
-      
+
       if (content.includes('scan') && !content.includes('code_coverage')) {
         pushFinding(this.findings, {
           ruleId: 'ios.cicd.scan_without_coverage',
@@ -386,10 +386,10 @@ end`
 
   checkPilotConfiguration() {
     const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-    
+
     if (fs.existsSync(fastfilePath)) {
       const content = fs.readFileSync(fastfilePath, 'utf-8');
-      
+
       if (content.includes('pilot') || content.includes('upload_to_testflight')) {
         if (!content.includes('changelog') && !content.includes('whats_new')) {
           pushFinding(this.findings, {
@@ -406,13 +406,13 @@ end`
 
   checkAppStoreMetadata() {
     const metadataPath = path.join(this.projectRoot, 'fastlane/metadata');
-    
+
     if (!fs.existsSync(metadataPath)) {
       const fastfilePath = path.join(this.projectRoot, 'fastlane/Fastfile');
-      
+
       if (fs.existsSync(fastfilePath)) {
         const content = fs.readFileSync(fastfilePath, 'utf-8');
-        
+
         if (content.includes('upload_to_app_store') || content.includes('deliver')) {
           pushFinding(this.findings, {
             ruleId: 'ios.cicd.missing_metadata',
@@ -429,4 +429,3 @@ end`
 }
 
 module.exports = { iOSCICDRules };
-

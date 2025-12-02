@@ -28,12 +28,13 @@ mkdir -p "$REPORTS_DIR"
 print_signature() {
   printf "${BLUE}"
   cat <<'SIG'
-   _____       _ _ _ _     _                 _                 _            
-  |  __ \     | | (_) |   | |               | |               | |           
-  | |__) |   _| | |_| |__ | |__   __ _  __ _| |_ ___  ___  ___| | _____ _ __
-  |  _  / | | | | | | '_ \| '_ \ / _` |/ _` | __/ _ \/ __|/ _ \ |/ / _ \ '__|
-  | | \ \ |_| | | | | |_) | | | | (_| | (_| | ||  __/\__ \  __/   <  __/ |   
-  |_|  \_\__,_|_|_|_|_.__/|_| |_|\__,_|\__,_|\__\___||___/\___|_|\_\___|_|   
+  ██████╗ ██╗   ██╗███╗   ███╗██╗   ██╗██╗  ██╗██╗
+  ██╔══██╗██║   ██║████╗ ████║██║   ██║██║ ██╔╝██║
+  ██████╔╝██║   ██║██╔████╔██║██║   ██║█████╔╝ ██║
+  ██╔═══╝ ██║   ██║██║╚██╔╝██║██║   ██║██╔═██╗ ██║
+  ██║     ╚██████╔╝██║ ╚═╝ ██║╚██████╔╝██║  ██╗██║
+  ╚═╝      ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝
+                        🐈 En memoria de Pumuki 💚
 SIG
   printf "${NC}\n"
 }
@@ -41,15 +42,16 @@ SIG
 print_final_signature() {
   printf "${BLUE}"
   cat <<'FSIG'
- ███████╗ █████╗ ██████╗ ██╗     ██████╗ ███████╗
- ██╔════╝██╔══██╗██╔══██╗██║     ██╔══██╗██╔════╝
- ██      ███████║██████╔╝██║     ██║  ██║███████╗
- ██╔══╝  ██╔══██║██╔══██╗██║     ██║  ██║╚════██║
- ███████╗██║  ██║██║  ██║███████╗██████╔╝███████║
- ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝══════╝╚═════╝ ╚══════╝
+ ██████╗ ██╗   ██╗███╗   ███╗██╗   ██╗██╗  ██╗██╗
+ ██╔══██╗██║   ██║████╗ ████║██║   ██║██║ ██╔╝██║
+ ██████╔╝██║   ██║██╔████╔██║██║   ██║█████╔╝ ██║
+ ██╔═══╝ ██║   ██║██║╚██╔╝██║██║   ██║██╔═██╗ ██║
+ ██║     ╚██████╔╝██║ ╚═╝ ██║╚██████╔╝██║  ██╗██║
+ ╚═╝      ╚═════╝ ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝
+                       🐈 En memoria de Pumuki 💚
 FSIG
   printf "${NC}\n"
-  printf "%b🔍 Senior Software Architect%b\n" "$BLUE" "$NC"
+  printf "%b🐈 Arquitecto Senior de Soluciones%b\n" "$BLUE" "$NC"
   printf "%bGenerated on: %s%b\n" "$BLUE" "$(date '+%Y-%m-%d %H:%M:%S')" "$NC"
   local project_name=$(basename "$ROOT_DIR")
   printf "%bProject: %s%b\n" "$BLUE" "$project_name" "$NC"
@@ -134,35 +136,35 @@ full_audit_strict_staging_only() {
   export AUDIT_STRICT=1
   export BLOCK_ALL_SEVERITIES=1
   export STAGING_ONLY_MODE=1
-  
+
   printf "%b%s%b\n" "$YELLOW" "🎯 STRICT STAGING-ONLY MODE" "$NC"
   printf "Analyzing only staged files with strict quality gates...\n\n"
-  
+
   if ! command -v git >/dev/null 2>&1; then
     printf "%b[ERROR] Git not available%b\n" "$RED" "$NC"
     exit 1
   fi
-  
+
   local staged_count=$(git diff --cached --name-only --diff-filter=ACM | wc -l | tr -d ' ')
   if [[ "$staged_count" == "0" ]]; then
     printf "%b[INFO] No staged files%b\n" "$YELLOW" "$NC"
     exit 0
   fi
-  
+
   printf "Staged files: %s\n\n" "$staged_count"
-  
+
   run_ast_intelligence
   compute_staged_summary
-  
+
   local gate_crit=${STAGED_CRIT:-0}
   local gate_high=${STAGED_HIGH:-0}
   local gate_med=${STAGED_MED:-0}
   local gate_low=${STAGED_LOW:-0}
-  
+
   printf "\n%b═══════════════════════════════════════════════════════════════%b\n" "$BLUE" "$NC"
   printf "%bSTAGING AREA VERDICT%b\n" "$BLUE" "$NC"
   printf "%b═══════════════════════════════════════════════════════════════%b\n" "$BLUE" "$NC"
-  
+
   if (( gate_crit > 0 || gate_high > 0 || gate_med > 0 || gate_low > 0 )); then
     printf "\n%b❌ COMMIT BLOCKED - STRICT MODE%b\n" "$RED" "$NC"
     printf "  🔴 CRITICAL: %s\n" "$gate_crit"
@@ -190,35 +192,35 @@ full_audit_standard() {
   export AUDIT_STRICT=1
   export BLOCK_ALL_SEVERITIES=0
   export STAGING_ONLY_MODE=1
-  
+
   printf "%b%s%b\n" "$YELLOW" "🎯 STANDARD MODE (CRITICAL/HIGH in staging)" "$NC"
   printf "Analyzing only staged files - blocks on CRITICAL/HIGH only...\n\n"
-  
+
   if ! command -v git >/dev/null 2>&1; then
     printf "%b[ERROR] Git not available%b\n" "$RED" "$NC"
     exit 1
   fi
-  
+
   local staged_count=$(git diff --cached --name-only --diff-filter=ACM | wc -l | tr -d ' ')
   if [[ "$staged_count" == "0" ]]; then
     printf "%b[INFO] No staged files%b\n" "$YELLOW" "$NC"
     exit 0
   fi
-  
+
   printf "Staged files: %s\n\n" "$staged_count"
-  
+
   run_ast_intelligence
   compute_staged_summary
-  
+
   local gate_crit=${STAGED_CRIT:-0}
   local gate_high=${STAGED_HIGH:-0}
   local gate_med=${STAGED_MED:-0}
   local gate_low=${STAGED_LOW:-0}
-  
+
   printf "\n%b═══════════════════════════════════════════════════════════════%b\n" "$BLUE" "$NC"
   printf "%bSTAGING AREA VERDICT%b\n" "$BLUE" "$NC"
   printf "%b═══════════════════════════════════════════════════════════════%b\n" "$BLUE" "$NC"
-  
+
   if (( gate_crit > 0 || gate_high > 0 )); then
     printf "\n%b❌ COMMIT BLOCKED - CRITICAL/HIGH%b\n" "$RED" "$NC"
     printf "  🔴 CRITICAL: %s\n" "$gate_crit"
@@ -351,7 +353,7 @@ summarize_all() {
   es_err=$(grep -o 'errors=[0-9]\+' "$TMP_DIR/eslint-summary.txt" 2>/dev/null | head -n1 | sed 's/[^0-9]//g')
   es_warn=$(grep -o 'warnings=[0-9]\+' "$TMP_DIR/eslint-summary.txt" 2>/dev/null | head -n1 | sed 's/[^0-9]//g')
   es_err=${es_err:-0}; es_warn=${es_warn:-0}
-  
+
   if [[ -f "$TMP_DIR/ast-summary.json" ]]; then
     if command -v jq >/dev/null 2>&1; then
       crit=$(jq -r '.levels.CRITICAL // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
@@ -368,21 +370,21 @@ summarize_all() {
   else
     crit=0; high=0; med=0; low=0
   fi
-  
+
   total_violations=$((crit + high + med + low))
   files_scanned=$(if [[ -f "$TMP_DIR/files.txt" ]]; then wc -l < "$TMP_DIR/files.txt" | tr -d ' '; else echo "0"; fi)
-  
+
   # Quick summary header
   printf "%b╔═══════════════════════════════════════════════════════════════╗%b\n" "$BLUE" "$NC"
   printf "%b║ %-61s ║%b\n" "$BLUE" "QUICK SUMMARY" "$NC"
   printf "%b╚═══════════════════════════════════════════════════════════════╝%b\n\n" "$BLUE" "$NC"
-  
+
   printf "  %bFiles Scanned:%b      %s\n" "$BLUE" "$NC" "$files_scanned"
   printf "  %bTotal Violations:%b   %s\n" "$YELLOW" "$NC" "$total_violations"
   printf "  %bESLint Errors:%b      %s\n" "$RED" "$NC" "$es_err"
   printf "  %bCritical Issues:%b   %s\n" "$RED" "$NC" "$crit"
   printf "  %bHigh Priority:%b     %s\n\n" "$YELLOW" "$NC" "$high"
-  
+
   if (( crit > 0 || high > 0 || es_err > 0 )); then
     printf "  %b⚠️  STATUS: ACTION REQUIRED%b\n" "$RED" "$NC"
     printf "  %b   Critical or high-severity issues detected%b\n\n" "$YELLOW" "$NC"
@@ -494,7 +496,7 @@ summarize_all() {
       local jq_cmd violations_output
       jq_cmd=".rules | to_entries | sort_by(-.value) | .[0:10] | .[] | (.key + \":\" + (.value | tostring))"
       violations_output=$(jq -r "$jq_cmd" "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "")
-      
+
       if [[ -n "$violations_output" ]]; then
         local rule_count=0
         while IFS=: read -r rule count; do
@@ -504,7 +506,7 @@ summarize_all() {
             get_recommendation "$rule" "$count" | sed 's/^/    /'
           fi
         done <<< "$violations_output"
-        
+
         if [[ $rule_count -eq 0 ]]; then
           printf "  %b✅ No violations detected%b\n" "$GREEN" "$NC"
         fi
@@ -519,7 +521,7 @@ summarize_all() {
     printf "─────────────────────────────────────────────────────────────\n"
     # Use variables already defined at the top of the function
     local total_violations=$((crit + high + med + low))
-    
+
     printf "\n"
     printf "  %b— METRICS —%b\n" "$BLUE" "$NC"
     printf "  Total violations detected: %s\n" "$total_violations"
@@ -528,7 +530,7 @@ summarize_all() {
     printf "  Critical issues:          %s\n" "$crit"
     printf "  High priority issues:     %s\n" "$high"
     printf "  Files scanned:            %s\n\n" "$files_scanned"
-    
+
     # Calculate code health score (0-100)
     local health_score=100
     if [[ $files_scanned -gt 0 ]]; then
@@ -538,7 +540,7 @@ summarize_all() {
         violations_per_file=100
       fi
       health_score=$(( 100 - violations_per_file ))
-      
+
       # Additional penalties
       if [[ $crit -gt 0 ]]; then
         health_score=$(( health_score - 10 ))
@@ -549,7 +551,7 @@ summarize_all() {
       if [[ $es_err -gt 0 ]]; then
         health_score=$(( health_score - 5 ))
       fi
-      
+
       # Ensure score is within bounds
       if [[ $health_score -lt 0 ]]; then
         health_score=0
@@ -558,7 +560,7 @@ summarize_all() {
         health_score=100
       fi
     fi
-    
+
     printf "  %bCode Health Score:%b " "$BLUE" "$NC"
     if [[ $health_score -ge 80 ]]; then
       printf "%b%d%% (Excellent)%b\n" "$GREEN" "$health_score" "$NC"
@@ -569,7 +571,7 @@ summarize_all() {
     else
       printf "%b%d%% (Critical)%b\n" "$RED" "$health_score" "$NC"
     fi
-    
+
     printf "\n"
     local gcrit=$crit; local ghigh=$high
     if [[ -n "${STAGED_CRIT-}" ]]; then gcrit=${STAGED_CRIT-0}; fi
@@ -579,7 +581,7 @@ summarize_all() {
       printf "  %b║ %-61s ║%b\n" "$RED" "ACTION REQUIRED: Critical or high-severity issues" "$NC"
       printf "  %b║ %-61s ║%b\n" "$RED" "detected. Please review and fix before proceeding." "$NC"
       printf "  %b╚═══════════════════════════════════════════════════════════════╝%b\n" "$RED" "$NC"
-      
+
       printf "\n  %b📋 Quick Actions:%b\n" "$YELLOW" "$NC"
       if [[ $gcrit -gt 0 ]]; then
         printf "    1. Fix %s CRITICAL issues (security, architecture violations)\n" "$gcrit"
@@ -631,7 +633,7 @@ summarize_all() {
   printf "\n%b═══════════════════════════════════════════════════════════════%b\n" "$BLUE" "$NC"
   printf "%bFINAL SUMMARY - VIOLATIONS BY SEVERITY%b\n" "$BLUE" "$NC"
   printf "%b═══════════════════════════════════════════════════════════════%b\n\n" "$BLUE" "$NC"
-  
+
   local final_total=$((final_crit + final_high + final_med + final_low))
   printf "  %b🔴 CRITICAL:%b %s\n" "$RED" "$NC" "$final_crit"
   printf "  %b🟠 HIGH:%b     %s\n" "$YELLOW" "$NC" "$final_high"
@@ -652,7 +654,7 @@ summarize_all() {
       exit 0
     fi
     local gate_crit gate_high gate_med gate_low gate_es
-    
+
     # Decide gate values based on mode
     if [[ "${BLOCK_ON_REPO_VIOLATIONS:-0}" == "1" ]]; then
       # OPTION 2: Block if REPO has violations (ultra-strict for CI/CD)
@@ -669,7 +671,7 @@ summarize_all() {
       gate_low=${STAGED_LOW:-0}
       gate_es=0
     fi
-    
+
     # Check if we should block on ALL severity levels or just CRITICAL/HIGH
     if [[ "${BLOCK_ALL_SEVERITIES:-0}" == "1" ]]; then
       # Block on ANY violation (CRITICAL + HIGH + MEDIUM + LOW)
@@ -712,41 +714,41 @@ summarize_all() {
 
   printf "\n"
   print_final_signature
-  
+
   save_audit_reports
 }
 
 save_audit_reports() {
   local timestamp=$(date +%Y%m%d_%H%M%S)
   local report_prefix="${REPORTS_DIR}/audit_${timestamp}"
-  
+
   if [[ -f "$TMP_DIR/ast-summary.json" ]]; then
     cp "$TMP_DIR/ast-summary.json" "${report_prefix}_ast_summary.json"
   fi
-  
+
   if [[ -f "$TMP_DIR/ast-findings.json" ]]; then
     cp "$TMP_DIR/ast-findings.json" "${report_prefix}_ast_findings.json"
   fi
-  
+
   if [[ -f "$TMP_DIR/pattern-summary.txt" ]]; then
     cp "$TMP_DIR/pattern-summary.txt" "${report_prefix}_patterns.txt"
   fi
-  
+
   if [[ -f "$TMP_DIR/eslint-summary.txt" ]]; then
     cp "$TMP_DIR/eslint-summary.txt" "${report_prefix}_eslint.txt"
   fi
-  
+
   local latest_summary="${REPORTS_DIR}/latest_ast_summary.json"
   local latest_findings="${REPORTS_DIR}/latest_ast_findings.json"
   local latest_critical="${REPORTS_DIR}/latest_critical.json"
   local latest_high="${REPORTS_DIR}/latest_high.json"
   local latest_medium="${REPORTS_DIR}/latest_medium.json"
   local latest_low="${REPORTS_DIR}/latest_low.json"
-  
+
   if [[ -f "$TMP_DIR/ast-summary.json" ]]; then
     cp "$TMP_DIR/ast-summary.json" "$latest_summary"
     cp "$TMP_DIR/ast-summary.json" "${REPORTS_DIR}/baseline_ast_summary.json"
-    
+
     if command -v jq >/dev/null 2>&1; then
       jq '{
         severity: "CRITICAL",
@@ -759,7 +761,7 @@ save_audit_reports() {
           message
         }]
       }' "$TMP_DIR/ast-summary.json" > "$latest_critical" 2>/dev/null || true
-      
+
       jq '{
         severity: "HIGH",
         count: ([.findings[] | select(.severity == "high" or .severity == "warning")] | length),
@@ -771,7 +773,7 @@ save_audit_reports() {
           message
         }]
       }' "$TMP_DIR/ast-summary.json" > "$latest_high" 2>/dev/null || true
-      
+
       jq '{
         severity: "MEDIUM",
         count: ([.findings[] | select(.severity == "medium" or .severity == "info")] | length),
@@ -783,7 +785,7 @@ save_audit_reports() {
           message
         }]
       }' "$TMP_DIR/ast-summary.json" > "$latest_medium" 2>/dev/null || true
-      
+
       jq '{
         severity: "LOW",
         count: ([.findings[] | select(.severity == "low" or .severity == "note")] | length),
@@ -820,20 +822,20 @@ export_markdown() {
 run_ast_intelligence() {
   printf "%b⚙️ AST Intelligence%b\n" "$YELLOW" "$NC"
   printf "%bRunning AST analysis...%b " "$YELLOW" "$NC" >&2
-  
+
   # Capture AST output and format it better
   local ast_output
   local ast_exit_code=0
-  
+
   # Execute AST with proper error handling
   ast_output=$(AUDIT_TMP="$TMP_DIR" node "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
-  
+
   # Check if AST script failed
   if [[ $ast_exit_code -ne 0 ]]; then
     printf "%b⚠️  AST Intelligence encountered errors (exit code: $ast_exit_code)%b\n" "$YELLOW" "$NC"
     printf "%bOutput:%b\n%s\n" "$YELLOW" "$NC" "$ast_output"
   fi
-  
+
   # Verify JSON file was created
   if [[ ! -f "$TMP_DIR/ast-summary.json" ]]; then
     printf "%b⚠️  AST summary JSON not found - AST may have failed%b\n" "$RED" "$NC"
@@ -843,10 +845,10 @@ run_ast_intelligence() {
     printf "  AST output preview:\n%s\n" "$(echo "$ast_output" | head -20)"
     return 1
   fi
-  
+
   # Processing AST findings
   printf "%bProcessing AST findings...%b\n" "$YELLOW" "$NC"
-  
+
   # Show raw output for debugging (first 20 lines)
   if [[ "${DEBUG_AST:-0}" == "1" ]]; then
     printf "%bDebug - AST output:%b\n%s\n" "$BLUE" "$NC" "$(echo "$ast_output" | head -20)"
@@ -855,7 +857,7 @@ run_ast_intelligence() {
       printf "%bDebug - JSON preview:%b\n%s\n" "$BLUE" "$NC" "$(head -30 "$TMP_DIR/ast-summary.json")"
     fi
   fi
-  
+
   local violation_count=0
   while IFS= read -r line; do
     if [[ "$line" =~ ^AST\ Intelligence ]]; then
@@ -872,11 +874,11 @@ run_ast_intelligence() {
       continue
     fi
   done < <(echo "$ast_output" | grep -E "^(🔴|🟡|🔵|🟠|AST Intelligence|AST Totals|AST SUMMARY)" || true)
-  
+
   if [[ $violation_count -gt 10 ]]; then
     printf "  ... and %d more violations (see ast-summary.json for details)\n" $((violation_count - 10))
   fi
-  
+
   printf "%b✅ AST Intelligence completed%b\n\n" "$GREEN" "$NC"
 }
 
@@ -894,10 +896,37 @@ interactive_menu() {
       7) print_header; run_ast_intelligence; break ;;
       8) export_markdown; break ;;
       9) printf "%s\n" "$MSG_BYE"; exit 0 ;;
-      *) printf "Invalid option\n" ;;
+      *)
+        if [[ -t 0 ]]; then
+          printf "Invalid option\n"
+        else
+          print_header
+          full_audit_strict_repo_and_staging
+          exit $?
+        fi
+        ;;
     esac
   done
 }
 
-# Always interactive menu as requested
+# Non-interactive mode: if AUDIT_OPTION is set, execute directly
+if [[ -n "${AUDIT_OPTION:-}" ]]; then
+  case "$AUDIT_OPTION" in
+    1) print_header; full_audit; exit $? ;;
+    2) print_header; full_audit_strict_repo_and_staging; exit $? ;;
+    3) print_header; full_audit_strict_staging_only; exit $? ;;
+    4) print_header; full_audit_standard; exit $? ;;
+    5) print_header; run_basic_checks; summarize_all; exit $? ;;
+    6) print_header; run_eslint_suite; summarize_all; exit $? ;;
+    7) print_header; run_ast_intelligence; exit $? ;;
+    8) export_markdown; exit $? ;;
+    9) exit 0 ;;
+    *)
+      printf "%bInvalid AUDIT_OPTION: %s%b\n" "$RED" "$AUDIT_OPTION" "$NC"
+      exit 1
+      ;;
+  esac
+fi
+
+# Fallback: interactive menu para uso humano
 interactive_menu

@@ -1,11 +1,11 @@
 /**
  * BDD → TDD → Implementation Workflow Rules
- * 
+ *
  * Valida que el proyecto sigue el workflow:
  * 1. BDD: Feature files (.feature) con Gherkin specs
  * 2. TDD: Tests escritos ANTES de implementación
  * 3. Implementation: Código siguiendo Feature-First + DDD + Clean Architecture
- * 
+ *
  * Este es el workflow ESTÁNDAR para todos los proyectos.
  */
 
@@ -72,7 +72,7 @@ class BDDTDDWorkflowRules {
     // Validar estructura de feature files
     featureFiles.forEach(featureFile => {
       const content = fs.readFileSync(featureFile, 'utf-8');
-      
+
       // Feature debe tener al menos: Feature, Scenario, Given, When, Then
       const hasFeature = content.includes('Feature:');
       const hasScenario = content.includes('Scenario:');
@@ -112,7 +112,7 @@ class BDDTDDWorkflowRules {
   checkTDDTestCoverage() {
     // Encontrar features sin tests correspondientes
     const features = this.findFeatures();
-    
+
     features.forEach(feature => {
       const hasTests = this.hasTestsForFeature(feature);
       const hasImplementation = this.hasImplementationForFeature(feature);
@@ -176,7 +176,7 @@ class BDDTDDWorkflowRules {
 
       // Validar que NO hay lógica de negocio en presentation/controllers
       if (file.includes('/presentation/') || file.includes('/controllers/')) {
-        const hasComplexLogic = 
+        const hasComplexLogic =
           (content.match(/func\s+\w+[\s\S]{200,}?}/g) || []).length > 0 ||
           content.includes('for ') || content.includes('while ') ||
           (content.match(/if\s*\(/g) || []).length > 5;
@@ -219,7 +219,7 @@ class BDDTDDWorkflowRules {
       // Validar que hay interfaces/protocols en domain para repositories
       if (file.includes('Repository') && content.includes('class ') && !file.includes('/domain/')) {
         const hasInterface = content.includes('protocol ') || content.includes('interface ');
-        
+
         if (!hasInterface) {
           pushFileFinding(
             'workflow.implementation.repository_without_interface',
@@ -241,10 +241,10 @@ class BDDTDDWorkflowRules {
   checkWorkflowSequence() {
     const features = glob.sync('**/*.feature', { cwd: this.projectRoot, absolute: true });
     const tests = glob.sync('**/*.{test,spec}.{ts,tsx,swift,kt}', { cwd: this.projectRoot, absolute: true });
-    const impl = glob.sync('**/src/**/*.{ts,tsx,swift,kt}', { 
-      cwd: this.projectRoot, 
+    const impl = glob.sync('**/src/**/*.{ts,tsx,swift,kt}', {
+      cwd: this.projectRoot,
       ignore: ['**/*test*', '**/*spec*'],
-      absolute: true 
+      absolute: true
     });
 
     const ratio = {
@@ -385,4 +385,3 @@ class BDDTDDWorkflowRules {
 }
 
 module.exports = { BDDTDDWorkflowRules };
-

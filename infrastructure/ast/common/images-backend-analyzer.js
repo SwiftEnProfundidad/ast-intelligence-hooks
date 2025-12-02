@@ -2,7 +2,7 @@ function analyzeImagesBackend(project, findings) {
   project.getSourceFiles().forEach(sf => {
     const content = sf.getFullText();
     const filePath = sf.getFilePath();
-    
+
     if (content.match(/@Post.*upload|multer|multipart/i)) {
       const hasValidation = /maxFileSize|fileSize|limits/i.test(content);
       if (!hasValidation) {
@@ -13,7 +13,7 @@ function analyzeImagesBackend(project, findings) {
           category: 'Images', suggestion: 'Add multer limits: { fileSize: 10 * 1024 * 1024 }'
         });
       }
-      
+
       const hasCompression = /sharp|jimp|imagemin/i.test(content);
       if (!hasCompression) {
         findings.push({
@@ -28,4 +28,3 @@ function analyzeImagesBackend(project, findings) {
 }
 
 module.exports = { analyzeImagesBackend };
-

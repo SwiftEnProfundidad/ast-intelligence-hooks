@@ -4,31 +4,31 @@
 
 /**
  * Analyze Clean Architecture for Android (Kotlin)
- * 
+ *
  * Android Clean Architecture layers:
  * ✅ Domain (models, repositories interfaces, use cases)
  * ✅ Data (repositories impl, data sources, DTOs)
  * ✅ Presentation (UI, ViewModels, Composables)
- * 
+ *
  * NOTE: Android uses Kotlin (.kt files), not TypeScript
  * This analyzer uses text/regex analysis, not ts-morph AST
  */
 function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFinding) {
   const layer = detectLayer(filePath);
   if (!layer) return;
-  
+
   // Parse imports (Kotlin syntax: import com.example....)
   const importRegex = /^import\s+([^\s;]+)/gm;
   const imports = [];
   let match;
-  
+
   while ((match = importRegex.exec(fileContent)) !== null) {
     imports.push(match[1]);
   }
-  
+
   imports.forEach((importPath, index) => {
     const targetLayer = detectLayerFromImport(importPath);
-    
+
     // RULE 1: Domain cannot import Android Framework or other layers
     if (layer === 'domain') {
       const forbiddenImports = [
@@ -38,11 +38,11 @@ function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFindi
         '.data.',
         '.presentation.'
       ];
-      
-      const violation = forbiddenImports.find(forbidden => 
+
+      const violation = forbiddenImports.find(forbidden =>
         importPath.includes(forbidden)
       );
-      
+
       if (violation) {
         pushFileFinding(
           'android.clean.domain_dependency_violation',
@@ -55,7 +55,7 @@ function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFindi
         );
       }
     }
-    
+
     // RULE 2: Data cannot import from Presentation
     if (layer === 'data' && targetLayer === 'presentation') {
       pushFileFinding(
@@ -69,14 +69,14 @@ function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFindi
       );
     }
   });
-  
+
   // RULE 3: Domain structure
   if (layer === 'domain') {
     const hasCorrectStructure =
       filePath.includes('/model/') ||
       filePath.includes('/repository/') ||
       filePath.includes('/usecase/');
-    
+
     if (!hasCorrectStructure) {
       pushFileFinding(
         'android.clean.domain_structure',
@@ -93,16 +93,16 @@ function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFindi
 
 function detectLayer(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
-  
+
   if (normalized.includes('/domain/')) return 'domain';
   if (normalized.includes('/data/')) return 'data';
   if (normalized.includes('/presentation/')) return 'presentation';
-  
+
   // Android conventions
   if (normalized.match(/\/(model|repository|usecase)\//)) return 'domain';
   if (normalized.match(/\/(remote|local|mapper)\//)) return 'data';
   if (normalized.match(/\/(ui|viewmodel|screen|theme)\//)) return 'presentation';
-  
+
   return null;
 }
 
@@ -116,4 +116,3 @@ function detectLayerFromImport(importPath) {
 module.exports = {
   analyzeCleanArchitecture
 };
-

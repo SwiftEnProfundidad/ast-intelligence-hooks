@@ -2,11 +2,11 @@ const path = require('path');
 
 function analyzeNetworkResilience(project, findings) {
   const sourceFiles = project.getSourceFiles();
-  
+
   sourceFiles.forEach(sf => {
     const filePath = sf.getFilePath();
     const content = sf.getFullText();
-    
+
     checkRetryPolicy(sf, content, findings);
     checkTimeoutConfiguration(sf, content, findings);
     checkCircuitBreaker(sf, content, findings);
@@ -19,7 +19,7 @@ function analyzeNetworkResilience(project, findings) {
 function checkRetryPolicy(sf, content, findings) {
   const hasRetry = /retry|retryWhen|retryPolicy/i.test(content);
   const hasNetworkCall = /fetch\(|axios\.|http\.get|http\.post/i.test(content);
-  
+
   if (hasNetworkCall && !hasRetry && !content.includes('test') && !content.includes('mock')) {
     findings.push({
       filePath: sf.getFilePath(),
@@ -41,7 +41,7 @@ function checkRetryPolicy(sf, content, findings) {
 function checkTimeoutConfiguration(sf, content, findings) {
   const hasNetworkCall = /fetch\(|axios\.|http\./i.test(content);
   const hasTimeout = /timeout:|signal:|AbortController/i.test(content);
-  
+
   if (hasNetworkCall && !hasTimeout && !content.includes('test')) {
     findings.push({
       filePath: sf.getFilePath(),
@@ -63,7 +63,7 @@ function checkTimeoutConfiguration(sf, content, findings) {
 function checkCircuitBreaker(sf, content, findings) {
   const hasMultipleRetries = content.match(/retry/gi)?.length > 2;
   const hasCircuitBreaker = /circuitBreaker|circuit-breaker|opossum/i.test(content);
-  
+
   if (hasMultipleRetries && !hasCircuitBreaker) {
     findings.push({
       filePath: sf.getFilePath(),
@@ -84,10 +84,10 @@ function checkCircuitBreaker(sf, content, findings) {
 function checkRequestQueue(sf, content, findings) {
   const hasNetworkCall = /fetch\(|axios\./i.test(content);
   const isOfflineContext = /offline|queue|pending/i.test(content);
-  
+
   if (hasNetworkCall && isOfflineContext) {
     const hasQueue = /Queue|PendingRequests|OfflineQueue/i.test(content);
-    
+
     if (!hasQueue) {
       findings.push({
         filePath: sf.getFilePath(),
@@ -109,7 +109,7 @@ function checkRequestQueue(sf, content, findings) {
 function checkNetworkErrorHandling(sf, content, findings) {
   const hasTryCatch = /try\s*{[\s\S]*?catch/i.test(content);
   const hasNetworkCall = /fetch\(|axios\./i.test(content);
-  
+
   if (hasNetworkCall && !hasTryCatch && !content.includes('.catch(')) {
     findings.push({
       filePath: sf.getFilePath(),
@@ -130,7 +130,7 @@ function checkNetworkErrorHandling(sf, content, findings) {
 function checkConnectionPooling(sf, content, findings) {
   const hasHttpAgent = /HttpAgent|keepAlive|maxSockets/i.test(content);
   const isHttpClient = /class.*Client|createClient|httpClient/i.test(content);
-  
+
   if (isHttpClient && !hasHttpAgent) {
     findings.push({
       filePath: sf.getFilePath(),
@@ -151,4 +151,3 @@ function checkConnectionPooling(sf, content, findings) {
 module.exports = {
   analyzeNetworkResilience
 };
-

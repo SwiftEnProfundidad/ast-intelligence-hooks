@@ -5,7 +5,7 @@
 class Finding {
   constructor(ruleId, severity, message, filePath, line, platform) {
     this.validateInputs(ruleId, severity, message, filePath, line, platform);
-    
+
     this.ruleId = ruleId;
     this.severity = this.normalizeSeverity(severity);
     this.message = message;
@@ -20,12 +20,12 @@ class Finding {
     if (!ruleId || typeof ruleId !== 'string') {
       throw new Error('Finding requires valid ruleId (string)');
     }
-    
+
     const normalizedSeverity = this.normalizeSeverity(severity);
     if (!normalizedSeverity) {
       throw new Error(`Invalid severity: ${severity}. Must be critical, high, medium, low, info, warning, or error`);
     }
-    
+
     if (!message || typeof message !== 'string') {
       throw new Error('Finding requires valid message (string)');
     }
@@ -36,9 +36,9 @@ class Finding {
 
   normalizeSeverity(severity) {
     if (!severity) return null;
-    
+
     const sev = severity.toLowerCase();
-    
+
     // Map legacy severities to new ones
     const severityMap = {
       'error': 'high',
@@ -49,7 +49,7 @@ class Finding {
       'low': 'low',
       'info': 'info',
     };
-    
+
     return severityMap[sev] || null;
   }
 
@@ -146,4 +146,3 @@ class Finding {
 }
 
 module.exports = Finding;
-

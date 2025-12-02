@@ -27,12 +27,12 @@ echo ""
 if [ -f /tmp/r_go_local/pattern-staged.txt ]; then
   echo -e "${CYAN}Violations detected in STAGING AREA:${NC}"
   echo ""
-  
+
   CRIT=$(grep "^CRITICAL:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
   HIGH=$(grep "^HIGH:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
   MED=$(grep "^MEDIUM:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
   LOW=$(grep "^LOW:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
-  
+
   echo -e "  ${RED}🔴 CRITICAL:${NC} ${CRIT:-0}"
   echo -e "  ${YELLOW}🟠 HIGH:${NC}     ${HIGH:-0}"
   echo -e "  ${YELLOW}🟡 MEDIUM:${NC}   ${MED:-0}"
@@ -114,4 +114,3 @@ case "${choice,,}" in
     exit 1
     ;;
 esac
-

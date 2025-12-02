@@ -11,7 +11,7 @@ progress_bar() {
   local filled=$(( current * width / total ))
   local empty=$(( width - filled ))
   local fill_str="" empty_str=""
-  
+
   if (( filled > 0 )); then
     printf -v fill_str '%*s' "$filled" ''
     fill_str=${fill_str// /█}
@@ -20,7 +20,7 @@ progress_bar() {
     printf -v empty_str '%*s' "$empty" ''
     empty_str=${empty_str// /░}
   fi
-  
+
   printf "%b[%s%s] %3d%% (%d/%d)%b\n" "$GREEN" "$fill_str" "$empty_str" "$percentage" "$current" "$total" "$NC"
 }
 
@@ -31,7 +31,7 @@ progress_bar_simple() {
   local filled=$(( current * width / total ))
   local empty=$(( width - filled ))
   local fill_str="" empty_str=""
-  
+
   if (( filled > 0 )); then
     printf -v fill_str '%*s' "$filled" ''
     fill_str=${fill_str// /█}
@@ -40,7 +40,6 @@ progress_bar_simple() {
     printf -v empty_str '%*s' "$empty" ''
     empty_str=${empty_str// /░}
   fi
-  
+
   printf "%b%s%b [%s%s] %3d%%%b\n" "$YELLOW" "$label" "$NC" "$fill_str" "$empty_str" "$percentage" "$NC"
 }
-

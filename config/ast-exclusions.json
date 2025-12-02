@@ -1,0 +1,31 @@
+{
+    "version": "1.0.0",
+    "description": "AST rule exclusions ONLY for third-party code and build artifacts",
+    "exclusions": {
+        "paths": {
+            "node_modules": true,
+            "dist": true,
+            ".next": true,
+            "coverage": true,
+            ".audit_tmp": true,
+            "build": true,
+            ".build": true,
+            "checkouts": true,
+            "Pods": true,
+            "DerivedData": true,
+            "scripts/hooks-system/infrastructure": true
+        },
+        "rules": {
+            "ios.force_unwrapping": {
+                "excludePatterns": [
+                    "*Tests.swift",
+                    "*Spec.swift"
+                ],
+                "reason": "Tests can use force unwrap for test assertions"
+            }
+        }
+    },
+    "severityOverrides": {
+        "common.docs.missing_readme": "LOW"
+    }
+}

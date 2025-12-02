@@ -64,7 +64,7 @@ class BlockCommitUseCase {
       lines.push('❌ COMMIT BLOCKED');
       lines.push('═'.repeat(60));
       lines.push(`Reason: ${decision.reason}`);
-      
+
       if (decision.violations) {
         lines.push('');
         lines.push('Violations:');
@@ -85,14 +85,14 @@ class BlockCommitUseCase {
       lines.push('✅ COMMIT ALLOWED');
       lines.push('═'.repeat(60));
       lines.push(`Reason: ${decision.reason}`);
-      
+
       if (decision.technicalDebt && decision.technicalDebt > 0) {
         lines.push('');
         lines.push('⚠️  Technical Debt Tracking:');
         lines.push(`  ${decision.debtMessage}`);
         lines.push(`  Maintainability: ${decision.maintainability.score.toFixed(1)}/100`);
       }
-      
+
       lines.push('');
     }
 
@@ -101,4 +101,3 @@ class BlockCommitUseCase {
 }
 
 module.exports = BlockCommitUseCase;
-

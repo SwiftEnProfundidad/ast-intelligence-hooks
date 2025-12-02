@@ -6,14 +6,14 @@ const { pushFileFinding } = require('../ast-core');
 async function runDetektNative(findings) {
   try {
     const customRulesPath = path.join(process.cwd(), 'custom-rules');
-    
+
     if (!fs.existsSync(customRulesPath)) {
       console.log('[Detekt Native] custom-rules module not found - skipping');
       return;
     }
-    
+
     console.log('[Detekt Native] Building custom-rules...');
-    
+
     try {
       execSync('./gradlew :custom-rules:build', {
         cwd: process.cwd(),
@@ -24,27 +24,27 @@ async function runDetektNative(findings) {
       console.log('[Detekt Native] Build skipped (not critical)');
       return;
     }
-    
+
     console.log('[Detekt Native] Running Detekt with custom rules...');
-    
+
     const detektConfig = path.join(process.cwd(), 'detekt.yml');
     const hasConfig = fs.existsSync(detektConfig);
-    
+
     const configArg = hasConfig ? `--config ${detektConfig}` : '';
     const customRulesJar = path.join(customRulesPath, 'build/libs/custom-rules.jar');
-    
+
     const cmd = `./gradlew detekt ${configArg} --plugins ${customRulesJar}`;
-    
+
     const result = execSync(cmd, {
       cwd: process.cwd(),
       encoding: 'utf8',
       timeout: 120000
     });
-    
+
     parseDetektOutput(result, findings);
-    
+
     console.log('[Detekt Native] ✅ Custom rules executed');
-    
+
   } catch (error) {
     if (error.stdout) {
       parseDetektOutput(error.stdout, findings);
@@ -55,15 +55,15 @@ async function runDetektNative(findings) {
 
 function parseDetektOutput(output, findings) {
   const lines = output.split('\n');
-  
+
   for (const line of lines) {
     const match = line.match(/(.+\.kt):(\d+):(\d+):\s*(.+?)\s*\[(.+?)\]/);
     if (match) {
       const [, filePath, lineNum, col, message, ruleId] = match;
-      
+
       const level = determineSeverity(ruleId);
       const mappedRuleId = mapDetektRuleId(ruleId);
-      
+
       pushFileFinding(
         mappedRuleId,
         level,
@@ -89,7 +89,7 @@ function determineSeverity(ruleId) {
 
 function mapDetektRuleId(ruleId) {
   const prefix = 'android.native.';
-  
+
   if (ruleId.includes('SRP')) return prefix + 'srp_cohesion';
   if (ruleId.includes('OCP')) return prefix + 'ocp_when';
   if (ruleId.includes('LSP')) return prefix + 'lsp_contract';
@@ -101,9 +101,8 @@ function mapDetektRuleId(ruleId) {
   if (ruleId.includes('Command') || ruleId.includes('Query')) return prefix + 'cqrs';
   if (ruleId.includes('Singleton')) return prefix + 'singleton';
   if (ruleId.includes('ForceUnwrap')) return prefix + 'force_unwrap';
-  
+
   return prefix + ruleId.toLowerCase().replace(/[^a-z0-9]/g, '_');
 }
 
 module.exports = { runDetektNative };
-

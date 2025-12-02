@@ -19,10 +19,10 @@ class iOSTestingAdvancedRules {
 
   analyze() {
     const testFiles = this.findTestFiles();
-    
+
     testFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
-      
+
       this.checkSnapshotTesting(file, content);
       this.checkPerformanceTesting(file, content);
       this.checkMemoryLeakDetection(file, content);
@@ -36,7 +36,7 @@ class iOSTestingAdvancedRules {
 
   checkSnapshotTesting(file, content) {
     const hasSnapshots = content.includes('SnapshotTesting') || content.includes('assertSnapshot');
-    
+
     if (!hasSnapshots && file.includes('UITests')) {
       pushFinding(this.findings, {
         ruleId: 'ios.testing.missing_snapshot_tests',
@@ -56,7 +56,7 @@ func testViewSnapshot() {
   checkPerformanceTesting(file, content) {
     const hasPerformanceTests = content.includes('measure {') || content.includes('XCTMetric');
     const hasManyTests = (content.match(/func\s+test/g) || []).length;
-    
+
     if (hasManyTests > 10 && !hasPerformanceTests) {
       pushFinding(this.findings, {
         ruleId: 'ios.testing.missing_performance_tests',
@@ -76,7 +76,7 @@ func testViewSnapshot() {
   checkMemoryLeakDetection(file, content) {
     const hasWeakCapture = content.includes('[weak self]') || content.includes('[weak ');
     const hasClosures = (content.match(/{[\s\S]*?}/g) || []).filter(c => c.length > 50).length;
-    
+
     if (hasClosures > 3 && !hasWeakCapture && !file.includes('MemoryLeakTests')) {
       pushFinding(this.findings, {
         ruleId: 'ios.testing.missing_memory_leak_tests',
@@ -100,7 +100,7 @@ func testExample() {
 
     const hasPageObject = content.includes('class ') && content.includes('Page');
     const hasMultipleTests = (content.match(/func\s+test/g) || []).length > 5;
-    
+
     if (hasMultipleTests && !hasPageObject) {
       pushFinding(this.findings, {
         ruleId: 'ios.testing.missing_page_object_pattern',
@@ -110,11 +110,11 @@ func testExample() {
         line: 1,
         suggestion: `class LoginPage {
     let app: XCUIApplication
-    
+
     var emailField: XCUIElement {
         app.textFields["email"]
     }
-    
+
     func login(email: String, password: String) {
         emailField.tap()
         emailField.typeText(email)
@@ -128,7 +128,7 @@ func testExample() {
   checkAsyncTestingPatterns(file, content) {
     const hasAsyncTests = content.includes('async ') && content.includes('func test');
     const hasExpectation = content.includes('XCTestExpectation') || content.includes('expectation(');
-    
+
     if (hasAsyncTests && hasExpectation) {
       pushFinding(this.findings, {
         ruleId: 'ios.testing.mixing_async_expectation',
@@ -148,10 +148,10 @@ func testAsync() async {
   checkMockingPatterns(file, content) {
     const hasMocks = content.includes('Mock') || content.includes('Stub') || content.includes('Spy');
     const hasProtocols = content.includes('protocol ');
-    
+
     if (!hasMocks && !hasProtocols && file.includes('Tests.swift')) {
       const hasNetworking = content.includes('URLSession') || content.includes('API');
-      
+
       if (hasNetworking) {
         pushFinding(this.findings, {
           ruleId: 'ios.testing.missing_mocks',
@@ -174,7 +174,7 @@ class NetworkServiceMock: NetworkServiceProtocol {
 
   checkTestCoverage(file, content) {
     const testCount = (content.match(/func\s+test\w+/g) || []).length;
-    
+
     if (testCount < 3 && file.includes('Tests.swift')) {
       pushFinding(this.findings, {
         ruleId: 'ios.testing.low_test_count',
@@ -188,10 +188,10 @@ class NetworkServiceMock: NetworkServiceProtocol {
 
   checkTestNaming(file, content) {
     const testMatches = content.matchAll(/func\s+(test\w+)\(/g);
-    
+
     for (const match of testMatches) {
       const testName = match[1];
-      
+
       if (testName.length < 15) {
         pushFinding(this.findings, {
           ruleId: 'ios.testing.test_name_not_descriptive',
@@ -215,7 +215,7 @@ class NetworkServiceMock: NetworkServiceProtocol {
 
   findLineNumber(content, pattern) {
     const lines = content.split('\n');
-    const index = lines.findIndex(line => 
+    const index = lines.findIndex(line =>
       typeof pattern === 'string' ? line.includes(pattern) : pattern.test(line)
     );
     return index !== -1 ? index + 1 : 1;
@@ -223,4 +223,3 @@ class NetworkServiceMock: NetworkServiceProtocol {
 }
 
 module.exports = { iOSTestingAdvancedRules };
-

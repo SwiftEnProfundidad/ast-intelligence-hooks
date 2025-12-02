@@ -1,0 +1,9 @@
+{
+  "requiredDocs": [
+    "README.md",
+    "docs/planning/LIBRARY_FIVE_STARS_ROADMAP.md",
+    "docs/technical/hook-system/guides/VIOLATIONS_RESOLUTION_PLAN_V2.md"
+  ],
+  "maxAgeDays": 30,
+  "description": "Documents that should not be accidentally deleted. Will trigger notification if missing."
+}

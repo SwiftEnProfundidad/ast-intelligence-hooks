@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * MCP Server: AI Evidence Watcher
- * 
+ *
  * Exposes evidence status to AI in Cursor via Model Context Protocol
  * The AI can automatically check if evidence is stale and update it
  */
@@ -30,56 +30,6 @@ function getCurrentBranch() {
         return branch || 'unknown';
     } catch (err) {
         return 'unknown';
-    }
-}
-
-/**
- * Auto-refresh evidence if stale
- * Returns the result of the refresh operation
- */
-function autoRefreshEvidence() {
-    const status = checkEvidence();
-    
-    if (!status.isStale) {
-        return {
-            refreshed: false,
-            reason: 'Evidence is fresh, no refresh needed',
-            status: status
-        };
-    }
-    
-    try {
-        const { execSync } = require('child_process');
-        const scriptPath = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
-        
-        if (!fs.existsSync(scriptPath)) {
-            return {
-                refreshed: false,
-                reason: 'update-evidence.sh script not found',
-                status: status
-            };
-        }
-        
-        execSync(`bash "${scriptPath}" --auto --platforms backend`, {
-            cwd: REPO_ROOT,
-            encoding: 'utf-8',
-            stdio: ['pipe', 'pipe', 'pipe']
-        });
-        
-        const newStatus = checkEvidence();
-        
-        return {
-            refreshed: true,
-            reason: 'Evidence auto-refreshed successfully',
-            previousAge: status.age,
-            status: newStatus
-        };
-    } catch (err) {
-        return {
-            refreshed: false,
-            reason: `Auto-refresh failed: ${err.message}`,
-            status: status
-        };
     }
 }
 
@@ -240,15 +190,6 @@ class MCPServer {
                                     properties: {},
                                     required: []
                                 }
-                            },
-                            {
-                                name: 'auto_refresh_evidence',
-                                description: 'Automatically refresh .AI_EVIDENCE.json if stale. Call this at the START of every task to ensure evidence is fresh. Returns refresh result.',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {},
-                                    required: []
-                                }
                             }
                         ]
                     }
@@ -268,21 +209,6 @@ class MCPServer {
                                 {
                                     type: 'text',
                                     text: JSON.stringify(status, null, 2)
-                                }
-                            ]
-                        }
-                    };
-                }
-                if (toolName === 'auto_refresh_evidence') {
-                    const result = autoRefreshEvidence();
-                    return {
-                        jsonrpc: '2.0',
-                        id: request.id,
-                        result: {
-                            content: [
-                                {
-                                    type: 'text',
-                                    text: JSON.stringify(result, null, 2)
                                 }
                             ]
                         }
@@ -370,4 +296,3 @@ class MCPServer {
 // Start server
 const server = new MCPServer();
 server.start();
-

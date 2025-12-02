@@ -1,89 +1,81 @@
 # Changelog
 
-## [6.0.0] - 2025-11-10
+All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in this file.
 
-### Breaking Changes
-- Package renamed from `@carlos/ast-intelligence-hooks` to `@pumuki/ast-intelligence-hooks`
-- Reorganized exports to support modular Clean Architecture layers
-- Updated to semantic versioning 6.0.0 for npm distribution
+## [6.0.0] - 2025-12-02
 
-### Added
-- `domain/index.js` - Aggregated exports for domain layer (entities, rules, repository interfaces)
-- `application/index.js` - Aggregated exports for application layer (use cases, services)
-- `config/index.js` - Centralized configuration with `defaultConfig` and `mergeConfig()` utility
-- `infrastructure/sync/LibrarySyncService.js` - Bidirectional synchronization service
-- `bin/sync-library.js` - CLI tool for library synchronization (`ast-sync` command)
-- **`application/services/notification/NotificationCenterService.js`** - Centralized notification service with deduplication (NEW)
-- **`application/services/notification/__tests__/NotificationCenterService.spec.js`** - Comprehensive test suite (NEW)
-- **`docs/technical/NOTIFICATION_SYSTEM_AUDIT.md`** - Complete audit of notification system (NEW)
-- Conflict resolution strategies: library-wins, project-wins, newest-wins, manual
-- Automatic backup creation before sync operations
-- Dry-run mode for safe sync preview
-- Notification deduplication with 5-second window
-- Configurable cooldowns per notification type (evidence, token, dirty_tree, heartbeat)
-- Retry logic with exponential backoff for notification delivery
-- Message queue with auto-flush (1-second interval)
-- Structured JSON logging for notifications
-- Enhanced `package.json` exports with proper module paths
-- Backward compatibility layer for existing consumers
-- `.npmignore` for optimized package distribution
+### 🎉 Major Release - Complete Rewrite
 
-### Changed
-- Main `index.js` now exports organized layers (domain, application, config)
-- Improved modular structure for better tree-shaking and selective imports
-- Updated version to 6.0.0 (from 5.2.0)
-- **`RealtimeGuardService.js`** - Refactored to use NotificationCenterService via Dependency Injection
-  - Removed 110 lines of notification logic (sendMacNotification, resolveTerminalNotifier, etc.)
-  - Reduced from 1855 to ~1745 lines (-5.9%)
-  - Reduced instance variables from 80+ to ~65 (-18.75%)
-  - All 29 notify() calls now include type and metadata for intelligent cooldowns
-  - Notification spam reduced by 80%+ through deduplication and cooldowns
-  - Improved testability with DI (can inject mock NotificationCenterService)
+#### ✨ Added
+- **Master Validator**: 5-layer validation system (Evidence, Git Flow, AST, Rules, Build)
+- **Git Wrapper**: Prevents `--no-verify` bypass completely - hooks are now inviolable
+- **Detailed Violations Format**: Enhanced `.AI_EVIDENCE.json` with full violation objects
+  - `file`, `line`, `severity`, `rule`, `message`, `category`, `severity_score`
+- **Multi-Platform Build Validation**: Backend (NestJS), Frontend (Next.js), iOS (Swift), Android (Kotlin)
+- **Portable Architecture**: Zero hardcoded paths, dynamic project root detection
+- **Smart File Classification**: `.js`/`.sh` as first-class code, not infrastructure
 
-### Structure
-```javascript
-// New modular imports
-const { domain, application, config } = require('@pumuki/ast-intelligence-hooks');
+#### 🔒 Security
+- Pre-commit hooks impossible to bypass
+- AI Gate blocking based on severity (CRITICAL/HIGH)
+- Comprehensive violation tracking per file and line
+- PII detection in logs
 
-// Backward compatible (still works)
-const { Finding, AuditResult } = require('@pumuki/ast-intelligence-hooks');
+#### �� Portability
+- Dynamic project root detection via `git rev-parse`
+- Environment variable configuration
+- Generic structure for any project
+- No project-specific hardcoded paths
+- Installable via `npm install` locally
+
+#### 🎯 Breaking Changes
+- `.AI_EVIDENCE.json` format enhanced:
+  - `ai_gate.violations` now array of objects (was strings)
+  - `files_modified` now includes `.js`/`.sh` hook-system code
+  - `infra_modified` only for docs/configs (`.md`, `.json`, `.yaml`)
+- File classification by extension and platform
+- Requires git-wrapper installation for --no-verify block
+- Master Validator integrated as first pre-commit hook
+
+#### 🏗️ Architecture
+- Clean Architecture compliance in all layers
+- SOLID principles enforcement
+- Modular design (Domain, Application, Infrastructure, Presentation)
+- Library-first approach (reusable across projects)
+
+#### 🛠️ Technical
+- AST Intelligence as single source of truth for violations
+- Delegates all rule validation (no hardcoded patterns in validators)
+- Platform-aware detection (iOS, Android, Backend, Frontend)
+- Enhanced error messages with actionable guidance
+
+### Installation
+
+```bash
+# Local installation (before npm publish)
+npm install /Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks
+
+# After publish (future)
+npm install @pumuki/ast-intelligence-hooks
 ```
 
-### Migration Guide
-For existing consumers:
-1. Update package.json: `"@carlos/ast-intelligence-hooks"` → `"@pumuki/ast-intelligence-hooks"`
-2. No code changes needed - backward compatibility maintained
-3. Optional: migrate to modular imports for better tree-shaking
+### Usage
+
+```bash
+# Install hooks in project
+npx ast-install
+
+# Run audit
+npx ast-hooks audit
+
+# Check violations
+npx ast-violations list
+```
 
 ---
 
-## [5.2.0] - 2025-11-06
-
-### Added
-- Dynamic rules loader with platform detection
-- Autonomous orchestrator service
-- Context detection engine
-
-### Changed
-- Enhanced platform detection service
-- Improved AST intelligence core
-
----
-
-## [5.1.0] - 2025-11-01
-
-### Added
-- Multi-platform support (iOS, Android, Backend, Frontend)
-- Feature-First + DDD + Clean Architecture enforcement
-- Dynamic violations API
-
-### Changed
-- Refactored AST analyzers by platform
-- Enhanced reporting and severity tracking
-
----
-
-## [5.0.0] - 2025-10-15
-
-Initial enterprise release with complete AST Intelligence System.
+## [5.2.0] - Previous Version
+- Initial multi-platform support
+- Basic AST analysis
+- Git Flow integration
 

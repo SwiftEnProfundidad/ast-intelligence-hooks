@@ -15,4 +15,3 @@ if [[ ! -f "$ENFORCER" ]]; then
 fi
 
 bash "$ENFORCER" "${1:-check}"
-

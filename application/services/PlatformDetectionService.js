@@ -176,4 +176,3 @@ class PlatformDetectionService {
 }
 
 module.exports = PlatformDetectionService;
-

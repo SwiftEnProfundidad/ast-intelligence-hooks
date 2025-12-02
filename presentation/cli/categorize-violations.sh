@@ -38,8 +38,8 @@ TOTAL=$((CRITICAL + HIGH + MEDIUM + LOW))
 cat > "$OUTPUT_FILE" <<EOF
 # 🎯 Violations by Priority
 
-**Generated:** $(date +"%Y-%m-%d %H:%M:%S")  
-**Commit:** $(git rev-parse --short HEAD 2>/dev/null || echo "N/A")  
+**Generated:** $(date +"%Y-%m-%d %H:%M:%S")
+**Commit:** $(git rev-parse --short HEAD 2>/dev/null || echo "N/A")
 **Branch:** $(git branch --show-current 2>/dev/null || echo "N/A")
 
 ---
@@ -149,7 +149,7 @@ cat >> "$OUTPUT_FILE" <<EOF
 3. Run audit again: \`bash scripts/hooks-system/presentation/cli/audit.sh\`
 4. Commit fixes atomically with proper evidence
 
-**Report:** \`.violations-by-priority.md\`  
+**Report:** \`.violations-by-priority.md\`
 **Detailed JSON:** \`.audit-reports/latest_ast_summary.json\`
 EOF
 
@@ -177,4 +177,3 @@ fi
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-

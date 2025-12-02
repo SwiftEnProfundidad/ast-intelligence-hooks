@@ -59,7 +59,7 @@ check_any_type_ts_only() {
       echo "$file" >> "$ts_files"
     fi
   done < "$files_list"
-  
+
   local result=$(check_grep "ANY_TYPE" ": any(\b|[^a-zA-Z_])" "$ts_files")
   rm -f "$ts_files"
   echo "$result"
@@ -77,8 +77,7 @@ run_pattern_checks() {
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[3]}..." >&2; local r4=$(check_grep "SQL_RAW" "SELECT |INSERT |UPDATE |DELETE |DROP |ALTER |TRUNCATE " "$files_list")
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[4]}..." >&2; local r5=$(check_grep "HARDCODED_SECRET" "(API_KEY|SECRET|TOKEN|PASSWORD)\s*[:=]\s*['\"]" "$files_list")
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[5]}..." >&2; local r6=$(check_grep "DISABLED_LINT" "eslint-disable|ts-ignore" "$files_list")
-  
+
   printf "%b✅ Pattern checks completed%b\n" "$GREEN" "$NC" >&2
   printf "%s\n%s\n%s\n%s\n%s\n%s\n" "$r1" "$r2" "$r3" "$r4" "$r5" "$r6"
 }
-

@@ -18,4 +18,3 @@ if [[ ! -f "$API" ]]; then
 fi
 
 node "$API" "$@"
-

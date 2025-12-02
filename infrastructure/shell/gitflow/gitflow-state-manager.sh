@@ -35,18 +35,28 @@ set_state() {
     local feature_branch=$3
     local pr=$4
     local action=$5
-    
-    cat > "$STATE_FILE" << EOF
-{
-  "current_step": $step,
-  "current_branch": "$branch",
-  "feature_branch": "$feature_branch",
-  "pr_number": "$pr",
-  "sprint_features": $(jq -r '.sprint_features' "$STATE_FILE" 2>/dev/null || echo "[]"),
-  "last_action": "$action",
-  "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
-}
-EOF
+
+    # Get existing sprint_features or default to empty array
+    local sprint_features=$(jq -r '.sprint_features' "$STATE_FILE" 2>/dev/null || echo "[]")
+
+    # Use jq to generate valid JSON (handles null/string escaping correctly)
+    jq -n \
+      --arg step "$step" \
+      --arg branch "$branch" \
+      --arg feature_branch "$feature_branch" \
+      --arg pr "$pr" \
+      --argjson sprint_features "$sprint_features" \
+      --arg action "$action" \
+      --arg timestamp "$(date -u +"%Y-%m-%dT%H:%M:%SZ")" \
+      '{
+        "current_step": ($step | tonumber),
+        "current_branch": $branch,
+        "feature_branch": (if $feature_branch == "null" then null else $feature_branch end),
+        "pr_number": (if $pr == "null" then null else $pr end),
+        "sprint_features": $sprint_features,
+        "last_action": $action,
+        "timestamp": $timestamp
+      }' > "$STATE_FILE"
 }
 
 # Validate action is allowed
@@ -54,7 +64,7 @@ validate_action() {
     local action=$1
     local current_step=$(jq -r '.current_step' "$STATE_FILE")
     local current_branch=$(git branch --show-current)
-    
+
     case "$action" in
         "checkout_develop")
             if [ "$current_step" -ne 1 ] && [ "$current_step" -ne 9 ] && [ "$current_step" -ne 16 ]; then
@@ -142,7 +152,7 @@ validate_action() {
             fi
             ;;
     esac
-    
+
     return 0
 }
 
@@ -151,20 +161,20 @@ advance_step() {
     local action=$1
     local current_step=$(jq -r '.current_step' "$STATE_FILE")
     local next_step=$((current_step + 1))
-    
+
     # Special cases for loop
     if [ "$current_step" -eq 10 ]; then
         next_step=2  # Repeat 2-10 for each task
     elif [ "$current_step" -eq 16 ]; then
         next_step=2  # Start new sprint
     fi
-    
+
     local current_branch=$(git branch --show-current)
     local feature_branch=$(jq -r '.feature_branch' "$STATE_FILE")
     local pr=$(jq -r '.pr_number' "$STATE_FILE")
-    
+
     set_state "$next_step" "$current_branch" "$feature_branch" "$pr" "$action"
-    
+
     echo "✅ Advanced to step $next_step"
 }
 
@@ -175,7 +185,7 @@ show_status() {
     local current_branch=$(jq -r '.current_branch' "$STATE_FILE")
     local feature_branch=$(jq -r '.feature_branch' "$STATE_FILE")
     local last_action=$(jq -r '.last_action' "$STATE_FILE")
-    
+
     echo "📊 Git Flow State:"
     echo "   Current Step: $current_step/16"
     echo "   Branch: $current_branch"
@@ -223,4 +233,3 @@ case "${1:-}" in
         exit 1
         ;;
 esac
-

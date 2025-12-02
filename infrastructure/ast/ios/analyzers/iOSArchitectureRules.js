@@ -1,6 +1,6 @@
 /**
  * iOS Architecture Pattern Rules
- * 
+ *
  * Reglas específicas para cada patrón arquitectónico detectado.
  * Solo se ejecutan las reglas del patrón detectado en el proyecto.
  */
@@ -18,7 +18,7 @@ class iOSArchitectureRules {
    */
   runRules(files) {
     console.log(`[iOS Architecture] Detected pattern: ${this.pattern}`);
-    
+
     switch (this.pattern) {
       case 'FEATURE_FIRST_CLEAN_DDD':
         this.checkFeatureFirstCleanDDDRules(files);
@@ -82,7 +82,7 @@ class iOSArchitectureRules {
         });
 
         // Domain debe contener entities/, value-objects/, interfaces/
-        if (file.includes('/domain/') && !file.includes('/entities/') && 
+        if (file.includes('/domain/') && !file.includes('/entities/') &&
             !file.includes('/value-objects/') && !file.includes('/interfaces/')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.domain_structure',
@@ -210,10 +210,10 @@ class iOSArchitectureRules {
       if (featureMatch) {
         const currentFeature = featureMatch[1];
         const importMatches = content.matchAll(/import\s+(\w+)/g);
-        
+
         for (const match of importMatches) {
           const importedModule = match[1];
-          
+
           // Si importa otro feature, es violación
           if (files.some(f => f.includes(`/Features/${importedModule}/`)) && importedModule !== currentFeature) {
             pushFinding(this.findings, {
@@ -271,7 +271,7 @@ class iOSArchitectureRules {
   checkMVVMRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
-      
+
       // 1. ViewModel debe ser ObservableObject
       if (file.includes('ViewModel.swift')) {
         if (!content.includes('ObservableObject') && !content.includes('@Observable')) {
@@ -310,7 +310,7 @@ class iOSArchitectureRules {
 
       // 4. View NO debe contener lógica de negocio
       if (file.includes('View.swift') || content.includes('struct ') && content.includes(': View')) {
-        const hasBusinessLogic = 
+        const hasBusinessLogic =
           /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{100,}/.test(content) || // Funciones largas
           content.includes('URLSession') ||
           content.includes('CoreData') ||
@@ -363,7 +363,7 @@ class iOSArchitectureRules {
         }
 
         // 3. Coordinator NO debe contener lógica de negocio
-        const hasBusinessLogic = 
+        const hasBusinessLogic =
           content.includes('URLSession') ||
           content.includes('CoreData') ||
           /\.save\(|\.fetch\(|\.delete\(/.test(content);
@@ -427,7 +427,7 @@ class iOSArchitectureRules {
         }
 
         // 3. Presenter debe contener toda la lógica de presentación
-        const hasLogic = content.split('\n').filter(line => 
+        const hasLogic = content.split('\n').filter(line =>
           line.includes('func ') && !line.includes('viewDidLoad')
         ).length;
 
@@ -444,7 +444,7 @@ class iOSArchitectureRules {
 
       // 4. ViewController NO debe contener lógica de negocio
       if (file.includes('ViewController.swift')) {
-        const hasBusinessLogic = 
+        const hasBusinessLogic =
           content.includes('URLSession') ||
           content.includes('CoreData') ||
           /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{50,}/.test(content);
@@ -535,7 +535,7 @@ class iOSArchitectureRules {
 
       // 4. Router debe manejar SOLO navegación
       if (file.includes('Router.swift') || file.includes('Wireframe.swift')) {
-        const hasBusinessLogic = 
+        const hasBusinessLogic =
           content.includes('URLSession') ||
           content.includes('CoreData') ||
           content.includes('UserDefaults');
@@ -602,7 +602,7 @@ class iOSArchitectureRules {
 
       // 3. Side effects deben usar Effect
       if (content.includes(': Reducer')) {
-        if ((content.includes('URLSession') || content.includes('async ')) && 
+        if ((content.includes('URLSession') || content.includes('async ')) &&
             !content.includes('Effect')) {
           pushFinding(this.findings, {
             ruleId: 'ios.tca.missing_effect',
@@ -696,7 +696,7 @@ class iOSArchitectureRules {
       // 1. Massive View Controller detection
       if (file.includes('ViewController.swift')) {
         const lines = content.split('\n').length;
-        
+
         if (lines > 500) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvc.massive_view_controller_critical',
@@ -716,7 +716,7 @@ class iOSArchitectureRules {
         }
 
         // 2. Lógica de negocio en ViewController
-        const hasBusinessLogic = 
+        const hasBusinessLogic =
           content.includes('URLSession') ||
           content.includes('CoreData') ||
           content.includes('UserDefaults') ||
@@ -756,7 +756,7 @@ class iOSArchitectureRules {
     };
 
     const activePatternsCount = Object.values(patterns).filter(count => count > 0).length;
-    
+
     if (activePatternsCount >= 2) {
       pushFinding(this.findings, {
         ruleId: 'ios.architecture.inconsistent_structure',
@@ -780,4 +780,3 @@ class iOSArchitectureRules {
 }
 
 module.exports = { iOSArchitectureRules };
-

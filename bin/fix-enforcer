@@ -25,4 +25,3 @@ echo "💡 Si el enforcer SIGUE apareciendo:"
 echo "   - Está en PROMPT o precmd_functions"
 echo "   - Mejor abrir terminal NUEVA (fix en .zshrc ya aplicado)"
 echo "════════════════════════════════════════════════════════════════"
-

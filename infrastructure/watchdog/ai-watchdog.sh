@@ -55,22 +55,22 @@ check_evidence() {
     echo ""
     return 1
   fi
-  
+
   # Get evidence timestamp
   local evidence_ts=$(jq -r '.timestamp' "$EVIDENCE_FILE" 2>/dev/null || echo "")
-  
+
   if [[ -z "$evidence_ts" ]] || [[ "$evidence_ts" == "null" ]]; then
     echo -e "${RED}❌ Evidence missing timestamp${NC}"
     return 1
   fi
-  
+
   # Convert to epoch (handle ISO 8601 with milliseconds)
   # Remove milliseconds if present: 2025-11-06T06:16:40.179Z → 2025-11-06T06:16:40Z
   local clean_ts=$(echo "$evidence_ts" | sed 's/\.[0-9]*Z$/Z/')
   local evidence_epoch=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$clean_ts" +%s 2>/dev/null || echo "0")
   local now_epoch=$(date +%s)
   local age=$((now_epoch - evidence_epoch))
-  
+
   if [[ $age -gt $MAX_EVIDENCE_AGE ]]; then
     echo -e "${RED}❌ Evidence is STALE (${age}s old, max ${MAX_EVIDENCE_AGE}s)${NC}"
     echo ""
@@ -78,7 +78,7 @@ check_evidence() {
     echo ""
     return 1
   fi
-  
+
   echo -e "${GREEN}✅ Evidence fresh (${age}s old)${NC}"
   return 0
 }
@@ -89,22 +89,22 @@ check_evidence() {
 periodic_check() {
   local last_notification=0
   local notification_cooldown=300  # Don't spam notifications (5 min cooldown)
-  
+
   while true; do
     sleep 30
-    
+
     if ! check_evidence >> "$WATCHDOG_LOG" 2>&1; then
       local now=$(date +%s)
       local time_since_last=$((now - last_notification))
-      
+
       # Only send notification if cooldown expired
       if [[ $time_since_last -gt $notification_cooldown ]]; then
         # Get current branch for notification
         local current_branch=$(git branch --show-current 2>/dev/null || echo "unknown")
-        
+
         # Send notification (macOS)
         osascript -e "display notification \"Evidence is stale! Run: ai-start $current_branch\" with title \"🐕 AI Watchdog\" sound name \"Basso\"" 2>/dev/null || true
-        
+
         echo "$(date): ALERT - Evidence stale (periodic check)" >> "$WATCHDOG_LOG"
         last_notification=$now
       fi
@@ -136,15 +136,15 @@ file_monitor() {
   while read -d "" event; do
     # Log event
     echo "$(date): File changed: $event" >> "$WATCHDOG_LOG"
-    
+
     # Check evidence freshness
     if ! check_evidence >> "$WATCHDOG_LOG" 2>&1; then
       # Get current branch for notification
       local current_branch=$(git branch --show-current 2>/dev/null || echo "unknown")
-      
+
       # Send notification (macOS)
       osascript -e "display notification \"Evidence is stale! Run: ai-start $current_branch\" with title \"🐕 AI Watchdog\" sound name \"Basso\"" 2>/dev/null || true
-      
+
       echo "$(date): ALERT - Evidence stale (file change)" >> "$WATCHDOG_LOG"
     fi
   done
@@ -155,18 +155,18 @@ file_monitor() {
 #───────────────────────────────────────────────────────────────
 monitor() {
   mkdir -p "$(dirname "$WATCHDOG_LOG")"
-  
+
   echo "$(date): Watchdog started (PID $$)" >> "$WATCHDOG_LOG"
   echo "$(date): Starting periodic check (every 30s)..." >> "$WATCHDOG_LOG"
   echo "$(date): Starting file monitor..." >> "$WATCHDOG_LOG"
-  
+
   # Start periodic check in background
   periodic_check &
   local periodic_pid=$!
-  
+
   # Start file monitor (blocks here)
   file_monitor
-  
+
   # If we reach here, file monitor died - kill periodic check
   kill $periodic_pid 2>/dev/null || true
 }
@@ -182,19 +182,19 @@ start_watchdog() {
       return 0
     fi
   fi
-  
+
   echo -e "${BLUE}🚀 Starting AI Watchdog...${NC}"
-  
+
   if ! check_fswatch; then
     return 1
   fi
-  
+
   # Start in background
   nohup bash "$0" _monitor > /dev/null 2>&1 &
   local pid=$!
-  
+
   echo "$pid" > "$WATCHDOG_PID_FILE"
-  
+
   echo -e "${GREEN}✅ Watchdog started (PID $pid)${NC}"
   echo ""
   echo "  Monitoring: apps/, CustomLintRules/, custom-lint-rules/"
@@ -211,9 +211,9 @@ stop_watchdog() {
     echo -e "${YELLOW}⚠️  Watchdog not running${NC}"
     return 0
   fi
-  
+
   local pid=$(cat "$WATCHDOG_PID_FILE")
-  
+
   if ps -p "$pid" > /dev/null 2>&1; then
     echo -e "${BLUE}🛑 Stopping watchdog (PID $pid)...${NC}"
     kill "$pid" 2>/dev/null || true
@@ -233,7 +233,7 @@ show_status() {
   echo -e "${BLUE}🐕 AI WATCHDOG STATUS${NC}"
   echo -e "${BLUE}════════════════════════════════════════════════${NC}"
   echo ""
-  
+
   if [[ -f "$WATCHDOG_PID_FILE" ]]; then
     local pid=$(cat "$WATCHDOG_PID_FILE")
     if ps -p "$pid" > /dev/null 2>&1; then
@@ -249,7 +249,7 @@ show_status() {
   else
     echo -e "  Status: ${RED}STOPPED${NC}"
   fi
-  
+
   echo ""
   echo -e "${BLUE}════════════════════════════════════════════════${NC}"
 }
@@ -276,4 +276,3 @@ case "${1:-status}" in
     exit 1
     ;;
 esac
-

@@ -10,7 +10,7 @@ class GitOperations {
   async getStagedFiles() {
     try {
       const { stdout } = await execPromise('git diff --cached --name-only --diff-filter=ACM');
-      
+
       if (!stdout.trim()) {
         return [];
       }
@@ -55,4 +55,3 @@ class GitOperations {
 }
 
 module.exports = GitOperations;
-

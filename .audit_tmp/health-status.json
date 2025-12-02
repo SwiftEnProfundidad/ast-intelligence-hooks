@@ -1,0 +1,39 @@
+{
+  "timestamp": "2025-11-27T09:21:39.736Z",
+  "reason": "cli",
+  "status": "error",
+  "results": [
+    {
+      "name": "evidence",
+      "status": "error",
+      "details": {
+        "message": "missing .AI_EVIDENCE.json"
+      }
+    },
+    {
+      "name": "gitTree",
+      "status": "ok",
+      "details": {
+        "stagedFiles": [],
+        "workingFiles": [],
+        "stagedCount": 0,
+        "workingCount": 0,
+        "uniqueCount": 0
+      }
+    },
+    {
+      "name": "heartbeat",
+      "status": "error",
+      "details": {
+        "message": "missing heartbeat file"
+      }
+    },
+    {
+      "name": "tokens",
+      "status": "warn",
+      "details": {
+        "message": "no usage log found"
+      }
+    }
+  ]
+}

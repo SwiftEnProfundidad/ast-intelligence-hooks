@@ -21,7 +21,7 @@ class SwiftAnalyzer {
    */
   analyzeFile(filePath) {
     this.findings = [];
-    
+
     if (!fs.existsSync(filePath)) {
       console.error(`File not found: ${filePath}`);
       return this.findings;
@@ -36,10 +36,10 @@ class SwiftAnalyzer {
 
       const ast = JSON.parse(output);
       const content = fs.readFileSync(filePath, 'utf8');
-      
+
       // Analizar el AST
       this.analyzeAST(ast, filePath, content);
-      
+
     } catch (error) {
       console.error(`Error analyzing Swift file ${filePath}:`, error.message);
     }
@@ -56,28 +56,28 @@ class SwiftAnalyzer {
   analyzeAST(ast, filePath, content) {
     // Verificar force unwrapping (!)
     this.checkForceUnwrapping(ast, filePath, content);
-    
+
     // Verificar ViewControllers masivos
     this.checkMassiveViewControllers(ast, filePath, content);
-    
+
     // Verificar uso de completion handlers vs async/await
     this.checkCompletionHandlers(ast, filePath, content);
-    
+
     // Verificar singletons
     this.checkSingletons(ast, filePath, content);
-    
+
     // Verificar weak self en closures
     this.checkWeakSelf(ast, filePath, content);
-    
+
     // Verificar uso de struct vs class
     this.checkStructVsClass(ast, filePath, content);
-    
+
     // Verificar var vs let
     this.checkVarVsLet(ast, filePath, content);
-    
+
     // Verificar missing Equatable/Hashable
     this.checkEquatableHashable(ast, filePath, content);
-    
+
     // Analizar substructures recursivamente
     if (ast.substructure) {
       ast.substructure.forEach(node => this.analyzeNode(node, filePath, content));
@@ -92,7 +92,7 @@ class SwiftAnalyzer {
 
     // Verificar reglas específicas por tipo de nodo
     const kind = node['key.kind'];
-    
+
     if (kind === 'source.lang.swift.decl.class') {
       this.analyzeClass(node, filePath, content);
     } else if (kind === 'source.lang.swift.decl.struct') {
@@ -117,7 +117,7 @@ class SwiftAnalyzer {
     const bodyLength = node['key.bodylength'] || 0;
     const offset = node['key.offset'];
     const line = this.getLineNumber(content, offset);
-    
+
     // Verificar ViewControllers masivos (ya implementado pero refinamos)
     if (name && name.includes('ViewController')) {
       const lines = Math.ceil(bodyLength / 50); // Estimación de líneas
@@ -130,12 +130,12 @@ class SwiftAnalyzer {
           line: line
         });
       }
-      
+
       // UIKit: ViewModels delgados
-      const methods = (node['key.substructure'] || []).filter(n => 
+      const methods = (node['key.substructure'] || []).filter(n =>
         n['key.kind'] === 'source.lang.swift.decl.function.method.instance'
       );
-      
+
       if (methods.length > 15) {
         this.addFinding({
           rule: 'ios.uikit.viewmodel_delegation',
@@ -155,12 +155,12 @@ class SwiftAnalyzer {
     const name = node['key.name'];
     const offset = node['key.offset'];
     const line = this.getLineNumber(content, offset);
-    
+
     // Verificar si implementa Equatable/Hashable
     const inheritedTypes = node['key.inheritedtypes'] || [];
     const hasEquatable = inheritedTypes.some(t => t['key.name'] === 'Equatable');
     const hasHashable = inheritedTypes.some(t => t['key.name'] === 'Hashable');
-    
+
     if (!hasEquatable || !hasHashable) {
       this.addFinding({
         rule: 'ios.values.missing_equatable',
@@ -179,7 +179,7 @@ class SwiftAnalyzer {
     const name = node['key.name'];
     const offset = node['key.offset'];
     const line = this.getLineNumber(content, offset);
-    
+
     // Verificar completion handlers
     if (name && name.includes('completion')) {
       this.addFinding({
@@ -200,10 +200,10 @@ class SwiftAnalyzer {
     const offset = node['key.offset'];
     const line = this.getLineNumber(content, offset);
     const length = node['key.length'] || 0;
-    
+
     // Extraer la declaración completa
     const declaration = content.substring(offset, offset + length);
-    
+
     // Verificar var vs let
     if (declaration.startsWith('var ')) {
       // Heurística: si la variable nunca se reasigna, debería ser let
@@ -216,7 +216,7 @@ class SwiftAnalyzer {
         line: line
       });
     }
-    
+
     // Verificar force unwrapping en tipo
     const typename = node['key.typename'];
     if (typename && typename.includes('!')) {
@@ -350,7 +350,7 @@ class SwiftAnalyzer {
         if (node['key.kind'] === 'source.lang.swift.decl.class') {
           const name = node['key.name'];
           const inheritedTypes = node['key.inheritedtypes'] || [];
-          
+
           // Si no hereda de nada y no es un ViewController, podría ser struct
           if (inheritedTypes.length === 0 && !name.includes('ViewController') && !name.includes('View')) {
             const offset = node['key.offset'];
@@ -414,4 +414,3 @@ if (require.main === module) {
   const findings = analyzer.analyzeFile(args[0]);
   console.log(JSON.stringify(findings, null, 2));
 }
-

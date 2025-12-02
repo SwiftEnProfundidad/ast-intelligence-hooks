@@ -93,7 +93,7 @@ class GenerateAuditReportUseCase {
     lines.push('📊 AUDIT SUMMARY');
     lines.push('═'.repeat(60));
     lines.push(`Total Violations: ${auditResult.getTotalViolations()}`);
-    
+
     const bySeverity = auditResult.getViolationsBySeverity();
     lines.push(`  🔴 CRITICAL: ${bySeverity.critical}`);
     lines.push(`  🟠 HIGH:     ${bySeverity.high}`);
@@ -146,28 +146,30 @@ class GenerateAuditReportUseCase {
     lines.push('');
     lines.push('═'.repeat(60));
     lines.push('');
-    lines.push(' ███████╗ █████╗ ██████╗ ██╗     ██████╗ ███████╗');
-    lines.push(' ██╔════╝██╔══██╗██╔══██╗██║     ██╔══██╗██╔════╝');
-    lines.push(' ██      ███████║██████╔╝██║     ██║  ██║███████╗');
-    lines.push(' ██╔══╝  ██╔══██║██╔══██╗██║     ██║  ██║╚════██║');
-    lines.push(' ███████╗██║  ██║██║  ██║███████╗██████╔╝███████║');
-    lines.push(' ╚══════╝╚═╝  ╚═╝╚═╝  ╚═╝ ══════╝╚═════╝ ╚══════╝');
-    lines.push('');
-    lines.push('🔍 Senior Software Architect - CARLOS');
-    lines.push(`Generated on: ${new Date().toISOString()}`);
+    lines.push('  🐈💚 PUMUKI TEAM® - Advanced Project Intelligence');
+    lines.push(`  Generated: ${new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })}`);
+    lines.push(`  Project: ${this.getProjectName()}`);
     lines.push('');
 
     return lines.join('\n');
   }
 
+  getProjectName() {
+    try {
+      const packageJson = require('../../../../package.json');
+      return packageJson.name || 'unknown-project';
+    } catch {
+      return 'unknown-project';
+    }
+  }
+
   generateDefaultSignature() {
     return `
 ╔═══════════════════════════════════════════════════════════╗
-║   PROFESSIONAL ARCHITECTURE COMPLIANCE AUDIT              ║
-║   Generated on: ${new Date().toISOString()}              ║
+║   🐈💚 PUMUKI TEAM® - ARCHITECTURE COMPLIANCE AUDIT       ║
+║   Generated: ${new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })}    ║
 ╚═══════════════════════════════════════════════════════════╝`;
   }
 }
 
 module.exports = GenerateAuditReportUseCase;
-

@@ -144,4 +144,3 @@ class EventListeners {
 }
 
 module.exports = EventListeners;
-

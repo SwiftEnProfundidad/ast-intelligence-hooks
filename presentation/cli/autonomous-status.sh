@@ -42,7 +42,7 @@ echo ""
 
 if [[ -f "$TELEMETRY_FILE" ]]; then
   echo -e "${CYAN}📈 Autonomous Decisions (Last 7 days):${NC}"
-  
+
   CUTOFF=$((CURRENT_TIME - 604800))
   TOTAL=$(awk -v cutoff="$CUTOFF" '
     {
@@ -52,22 +52,22 @@ if [[ -f "$TELEMETRY_FILE" ]]; then
     }
     END { print count+0 }
   ' "$TELEMETRY_FILE")
-  
+
   AUTO_EXEC=$(grep -c '"decision":"auto-executed"' "$TELEMETRY_FILE" 2>/dev/null || echo "0")
   ASKED=$(grep -c '"decision":"ask-user"' "$TELEMETRY_FILE" 2>/dev/null || echo "0")
   IGNORED=$(grep -c '"decision":"ignored"' "$TELEMETRY_FILE" 2>/dev/null || echo "0")
-  
+
   echo -e "   Total Decisions: ${TOTAL}"
   echo -e "   Auto-executed: ${GREEN}${AUTO_EXEC}${NC}"
   echo -e "   Asked User: ${YELLOW}${ASKED}${NC}"
   echo -e "   Ignored: ${IGNORED}"
   echo ""
-  
+
   WITH_FEEDBACK=$(grep -c '"userCorrection":[^n]' "$TELEMETRY_FILE" 2>/dev/null || echo "0")
   if [[ $WITH_FEEDBACK -gt 0 ]]; then
     CORRECT=$(grep '"userCorrection":true' "$TELEMETRY_FILE" | wc -l | tr -d ' ')
     ACCURACY=$(awk "BEGIN {printf \"%.0f\", ($CORRECT / $WITH_FEEDBACK) * 100}")
-    
+
     echo -e "${CYAN}🎯 Accuracy:${NC}"
     echo -e "   Decisions with Feedback: ${WITH_FEEDBACK}"
     echo -e "   Correct: ${GREEN}${CORRECT}${NC}"
@@ -90,4 +90,3 @@ echo ""
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
 echo -e "${GREEN}🐈💚 Pumuki Team® - Autonomous Project Intelligence${NC}"
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-

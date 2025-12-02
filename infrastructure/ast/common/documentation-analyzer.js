@@ -4,7 +4,7 @@ const glob = require('glob');
 
 function analyzeDocumentation(rootPath, findings) {
   const docsDir = path.join(rootPath, 'docs/technical');
-  
+
   if (!fs.existsSync(docsDir)) {
     return;
   }
@@ -55,16 +55,16 @@ function analyzeDocumentation(rootPath, findings) {
     });
   });
 
-  const allDirs = glob.sync(`${rootPath}/**/`, { 
+  const allDirs = glob.sync(`${rootPath}/**/`, {
     ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**', '**/.next/**', '**/build/**']
   });
 
   allDirs.forEach(dir => {
     const dirName = path.basename(dir);
-    
+
     if (['domain', 'application', 'infrastructure', 'presentation', 'use-cases', 'repositories', 'entities', 'services'].includes(dirName)) {
       const readmePath = path.join(dir, 'README.md');
-      
+
       if (!fs.existsSync(readmePath)) {
         findings.push({
           filePath: dir,
@@ -87,7 +87,7 @@ function analyzeDocumentation(rootPath, findings) {
   mdFiles.forEach(file => {
     const content = fs.readFileSync(file, 'utf-8');
     const brokenLinks = findBrokenLinks(content, file, rootPath);
-    
+
     brokenLinks.forEach(link => {
       findings.push({
         filePath: file,
@@ -110,7 +110,7 @@ function analyzeDocumentation(rootPath, findings) {
   const sprintFiles = mdFiles.filter(f => /SPRINT_\d+/.test(path.basename(f)));
   if (sprintFiles.length > 3) {
     const consolidatedExists = mdFiles.some(f => /FINAL.*SPRINT|SPRINT.*COMPLETION/.test(path.basename(f)));
-    
+
     if (!consolidatedExists) {
       findings.push({
         filePath: docsDir,
@@ -132,18 +132,18 @@ function analyzeDocumentation(rootPath, findings) {
 
 function findDuplicateContent(files) {
   const duplicates = [];
-  
+
   for (let i = 0; i < files.length; i++) {
     for (let j = i + 1; j < files.length; j++) {
       const content1 = fs.readFileSync(files[i], 'utf-8');
       const content2 = fs.readFileSync(files[j], 'utf-8');
-      
+
       const lines1 = content1.split('\n').filter(l => l.trim().length > 20);
       const lines2 = content2.split('\n').filter(l => l.trim().length > 20);
-      
+
       const commonLines = lines1.filter(line => lines2.includes(line));
       const similarity = (commonLines.length / Math.min(lines1.length, lines2.length)) * 100;
-      
+
       if (similarity > 40 && commonLines.length > 10) {
         duplicates.push({
           file1: files[i],
@@ -154,7 +154,7 @@ function findDuplicateContent(files) {
       }
     }
   }
-  
+
   return duplicates;
 }
 
@@ -163,24 +163,24 @@ function findBrokenLinks(content, filePath, rootPath) {
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
   let match;
   let lineNum = 1;
-  
+
   content.split('\n').forEach((line, idx) => {
     lineNum = idx + 1;
-    
+
     while ((match = linkRegex.exec(line)) !== null) {
       const linkText = match[1];
       const linkUrl = match[2];
-      
+
       if (linkUrl.startsWith('http://') || linkUrl.startsWith('https://')) {
         continue;
       }
-      
+
       if (linkUrl.startsWith('#')) {
         continue;
       }
-      
+
       const resolvedPath = path.resolve(path.dirname(filePath), linkUrl);
-      
+
       if (!fs.existsSync(resolvedPath)) {
         brokenLinks.push({
           line: lineNum,
@@ -191,7 +191,7 @@ function findBrokenLinks(content, filePath, rootPath) {
       }
     }
   });
-  
+
   return brokenLinks;
 }
 
@@ -206,7 +206,7 @@ function getArchitectureLayer(dirName) {
     'use-cases': 'Application Layer (Use Cases)',
     'services': 'Application Layer (Services)'
   };
-  
+
   return layers[dirName] || 'Unknown Layer';
 }
 
@@ -215,4 +215,3 @@ module.exports = {
   findDuplicateContent,
   findBrokenLinks
 };
-

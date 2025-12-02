@@ -1,6 +1,6 @@
 /**
  * iOS Swift Package Manager (SPM) Rules
- * 
+ *
  * Reglas de organización de código con SPM:
  * - Feature modules separation
  * - Core modules detection
@@ -40,10 +40,10 @@ class iOSSPMRules {
    */
   checkPackageSwiftExists() {
     const packagePath = path.join(this.projectRoot, 'Package.swift');
-    
+
     if (!fs.existsSync(packagePath)) {
       const swiftFiles = this.findSwiftFiles();
-      
+
       if (swiftFiles.length > 50) {
         pushFinding(this.findings, {
           ruleId: 'ios.spm.missing_package_swift',
@@ -67,7 +67,7 @@ swift package init --type executable`
    */
   checkFeatureModulesStructure() {
     const sources = path.join(this.projectRoot, 'Sources');
-    
+
     if (!fs.existsSync(sources)) return;
 
     const modules = fs.readdirSync(sources).filter(dir => {
@@ -86,7 +86,7 @@ swift package init --type executable`
         filePath: 'Sources/',
         line: 1,
         suggestion: `Naming convention recomendado:
-        
+
 Sources/
 ├── FeatureOrders/
 ├── FeatureUsers/
@@ -114,7 +114,7 @@ Sources/
   checkCoreModulesStructure() {
     const recommendedCoreModules = ['CoreNetworking', 'CoreDatabase', 'CoreUI', 'CoreModels'];
     const sources = path.join(this.projectRoot, 'Sources');
-    
+
     if (!fs.existsSync(sources)) return;
 
     const existingModules = fs.readdirSync(sources);
@@ -137,17 +137,17 @@ Sources/
    */
   checkPublicAPIExposure() {
     const swiftFiles = this.findSwiftFiles();
-    
+
     swiftFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
-      
+
       // Detectar public excesivo (todo public es code smell)
       const publicCount = (content.match(/\bpublic\s+(class|struct|enum|func|var|let)/g) || []).length;
       const totalDeclarations = (content.match(/\b(class|struct|enum|func)\s+\w+/g) || []).length;
-      
+
       if (totalDeclarations > 0) {
         const publicPercentage = (publicCount / totalDeclarations) * 100;
-        
+
         if (publicPercentage > 70) {
           pushFinding(this.findings, {
             ruleId: 'ios.spm.excessive_public_api',
@@ -188,17 +188,17 @@ public func process() { ... } // Solo lo necesario`
     if (!this.packageSwiftPath) return;
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
-    
+
     // Detectar dependencias circulares en Package.swift
     const targets = content.match(/\.target\([\s\S]*?name:\s*"([^"]+)"[\s\S]*?dependencies:\s*\[([\s\S]*?)\]/g);
-    
+
     if (targets) {
       const dependencies = new Map();
-      
+
       targets.forEach(target => {
         const name = target.match(/name:\s*"([^"]+)"/)?.[1];
         const deps = target.match(/dependencies:\s*\[([\s\S]*?)\]/)?.[1];
-        
+
         if (name && deps) {
           const depList = deps.match(/"([^"]+)"/g)?.map(d => d.replace(/"/g, '')) || [];
           dependencies.set(name, depList);
@@ -226,7 +226,7 @@ public func process() { ... } // Solo lo necesario`
       dependencies.forEach((deps, moduleName) => {
         if (moduleName.startsWith('Feature')) {
           const featureDeps = deps.filter(d => d.startsWith('Feature'));
-          
+
           if (featureDeps.length > 0) {
             pushFinding(this.findings, {
               ruleId: 'ios.spm.feature_to_feature_dependency',
@@ -247,13 +247,13 @@ public func process() { ... } // Solo lo necesario`
    */
   checkCrossModuleViolations() {
     const swiftFiles = this.findSwiftFiles();
-    
+
     swiftFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
-      
+
       // Detectar imports internos de otros módulos (violation de encapsulation)
       const internalImports = content.match(/@_implementationOnly\s+import\s+(\w+)/g);
-      
+
       if (internalImports) {
         pushFinding(this.findings, {
           ruleId: 'ios.spm.implementation_only_import',
@@ -319,10 +319,10 @@ public func process() { ... } // Solo lo necesario`
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
     const targets = content.match(/\.target\([\s\S]*?name:\s*"([^"]+)"/g);
-    
+
     if (targets) {
       const targetNames = targets.map(t => t.match(/name:\s*"([^"]+)"/)?.[1]).filter(Boolean);
-      
+
       // Verificar consistencia de naming
       const hasInconsistentNaming = targetNames.some(name => {
         return name.includes('_') || name.includes('-') || /[a-z][A-Z]/.test(name);
@@ -348,7 +348,7 @@ public func process() { ... } // Solo lo necesario`
     if (!this.packageSwiftPath) return;
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
-    
+
     // Verificar que hay products definidos
     if (!content.includes('.library(')) {
       pushFinding(this.findings, {
@@ -369,7 +369,7 @@ public func process() { ... } // Solo lo necesario`
     if (!this.packageSwiftPath) return;
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
-    
+
     // Detectar .branch("main") o .branch("master") en dependencies (anti-pattern)
     if (content.includes('.branch(')) {
       pushFinding(this.findings, {
@@ -397,15 +397,15 @@ public func process() { ... } // Solo lo necesario`
     if (!this.packageSwiftPath) return;
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
-    
+
     const targets = content.match(/\.target\([\s\S]*?name:\s*"([^"]+)"/g) || [];
     const testTargets = content.match(/\.testTarget\([\s\S]*?name:\s*"([^"]+)"/g) || [];
-    
+
     const targetNames = targets.map(t => t.match(/name:\s*"([^"]+)"/)?.[1]).filter(Boolean);
     const testTargetNames = testTargets.map(t => t.match(/name:\s*"([^"]+)"/)?.[1]).filter(Boolean);
-    
-    const targetsWithoutTests = targetNames.filter(name => 
-      !testTargetNames.includes(`${name}Tests`) && 
+
+    const targetsWithoutTests = targetNames.filter(name =>
+      !testTargetNames.includes(`${name}Tests`) &&
       !name.includes('Tests')
     );
 
@@ -441,10 +441,10 @@ public func process() { ... } // Solo lo necesario`
     modules.forEach(moduleName => {
       const modulePath = path.join(sources, moduleName);
       const swiftFiles = this.findSwiftFilesInDirectory(modulePath);
-      
+
       swiftFiles.forEach(file => {
         const content = fs.readFileSync(file, 'utf-8');
-        
+
         // Detectar imports de módulos hermanos (Feature → Feature)
         if (moduleName.startsWith('Feature')) {
           modules.forEach(otherModule => {
@@ -501,7 +501,7 @@ public func process() { ... } // Solo lo necesario`
 
   findLineNumber(content, pattern) {
     const lines = content.split('\n');
-    const index = lines.findIndex(line => 
+    const index = lines.findIndex(line =>
       typeof pattern === 'string' ? line.includes(pattern) : pattern.test(line)
     );
     return index !== -1 ? index + 1 : 1;
@@ -509,4 +509,3 @@ public func process() { ... } // Solo lo necesario`
 }
 
 module.exports = { iOSSPMRules };
-

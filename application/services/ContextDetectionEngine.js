@@ -189,4 +189,3 @@ class ContextDetectionEngine {
 }
 
 module.exports = ContextDetectionEngine;
-

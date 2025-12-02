@@ -25,7 +25,7 @@ class iOSNetworkingAdvancedRules {
 
     swiftFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
-      
+
       this.checkGraphQLImplementation(file, content);
       this.checkWebSocketHandling(file, content);
       this.checkOfflineQueueManagement(file, content);
@@ -38,7 +38,7 @@ class iOSNetworkingAdvancedRules {
 
   checkGraphQLImplementation(file, content) {
     const hasGraphQL = content.includes('GraphQL') || content.includes('Apollo');
-    
+
     if (hasGraphQL) {
       if (!content.includes('query') && !content.includes('mutation')) {
         pushFinding(this.findings, {
@@ -64,7 +64,7 @@ class iOSNetworkingAdvancedRules {
 
   checkWebSocketHandling(file, content) {
     const hasWebSocket = content.includes('WebSocket') || content.includes('URLSessionWebSocketTask');
-    
+
     if (hasWebSocket) {
       if (!content.includes('reconnect')) {
         pushFinding(this.findings, {
@@ -92,7 +92,7 @@ class iOSNetworkingAdvancedRules {
   checkOfflineQueueManagement(file, content) {
     const hasNetworking = content.includes('URLSession') || content.includes('Alamofire');
     const hasOfflineQueue = content.includes('OfflineQueue') || content.includes('PendingRequests');
-    
+
     if (hasNetworking && content.includes('POST') && !hasOfflineQueue) {
       pushFinding(this.findings, {
         ruleId: 'ios.networking.missing_offline_queue',
@@ -107,7 +107,7 @@ class iOSNetworkingAdvancedRules {
 
   checkNetworkLayerArchitecture(file, content) {
     const hasURLSession = content.includes('URLSession');
-    
+
     if (hasURLSession && !file.includes('Network') && !file.includes('API') && !file.includes('Service')) {
       pushFinding(this.findings, {
         ruleId: 'ios.networking.network_logic_scattered',
@@ -123,7 +123,7 @@ class iOSNetworkingAdvancedRules {
   checkRetryMechanism(file, content) {
     const hasNetworking = content.includes('URLSession');
     const hasRetry = content.includes('retry') || content.includes('maxRetries');
-    
+
     if (hasNetworking && !hasRetry) {
       pushFinding(this.findings, {
         ruleId: 'ios.networking.missing_retry_mechanism',
@@ -138,7 +138,7 @@ class iOSNetworkingAdvancedRules {
   checkCaching(file, content) {
     const hasNetworking = content.includes('URLSession');
     const hasCache = content.includes('URLCache') || content.includes('NSCache');
-    
+
     if (hasNetworking && !hasCache && file.includes('Service')) {
       pushFinding(this.findings, {
         ruleId: 'ios.networking.missing_response_cache',
@@ -153,7 +153,7 @@ class iOSNetworkingAdvancedRules {
   checkErrorRecovery(file, content) {
     const hasNetworking = content.includes('URLSession');
     const hasErrorHandling = content.includes('catch') || content.includes('Result<');
-    
+
     if (hasNetworking && !hasErrorHandling) {
       pushFinding(this.findings, {
         ruleId: 'ios.networking.missing_error_recovery',
@@ -175,4 +175,3 @@ class iOSNetworkingAdvancedRules {
 }
 
 module.exports = { iOSNetworkingAdvancedRules };
-

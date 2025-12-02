@@ -2,15 +2,13 @@
 
 /**
  * AST Intelligence Hooks - Main CLI
- * 
- * CLI unificado para ejecutar auditorías desde cualquier proyecto
+ *
+ * Unified CLI to run audits from any project
  */
 
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const GetEvidenceStatusUseCase = require('../application/use-cases/GetEvidenceStatusUseCase');
-const FileSystemEvidenceRepository = require('../infrastructure/repositories/FileSystemEvidenceRepository');
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -56,31 +54,18 @@ function buildHealthSnapshot() {
   if (fs.existsSync(evidencePath)) {
     result.evidence.exists = true;
     try {
-      const repository = new FileSystemEvidenceRepository({
-        repoRoot
-      });
-      const useCase = new GetEvidenceStatusUseCase(repository);
-      const status = useCase.execute();
-
-      result.evidence.timestamp = status.timestamp.toISOString();
-      result.evidence.ageSeconds = status.ageSeconds;
-      result.evidence.maxAgeSeconds = status.maxAgeSeconds;
-      result.evidence.status = status.getStatus();
-      result.evidence.isStale = status.isStale();
-      if (status.sessionId) {
-        result.evidence.sessionId = status.sessionId;
-      }
-      if (status.branch) {
-        result.evidence.branch = status.branch;
-      }
-      if (status.platforms && status.platforms.length > 0) {
-        result.evidence.platforms = status.platforms;
-      }
-
       const raw = fs.readFileSync(evidencePath, 'utf8');
       const json = JSON.parse(raw);
-      if (json && typeof json === 'object' && json.action) {
-        result.evidence.action = json.action;
+      if (json && typeof json === 'object') {
+        if (json.timestamp) {
+          result.evidence.timestamp = json.timestamp;
+        }
+        if (json.session_id) {
+          result.evidence.sessionId = json.session_id;
+        }
+        if (json.action) {
+          result.evidence.action = json.action;
+        }
       }
     } catch (e) {
       result.evidence.parseError = e.message;
@@ -155,7 +140,7 @@ const commands = {
   },
 
   watch: () => {
-    execSync(`node ${path.join(HOOKS_ROOT, 'scripts/hooks-system/bin/watch-hooks.js')}`, { stdio: 'inherit' });
+    execSync(`node ${path.join(HOOKS_ROOT, 'bin/watch-hooks.js')}`, { stdio: 'inherit' });
   },
 
   'gitflow': () => {
@@ -219,4 +204,3 @@ if (!command || !commands[command]) {
 }
 
 commands[command]();
-

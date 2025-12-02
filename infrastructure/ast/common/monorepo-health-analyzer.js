@@ -4,7 +4,7 @@ const glob = require('glob');
 
 function analyzeMonorepoHealth(rootPath, findings) {
   const appsDir = path.join(rootPath, 'apps');
-  
+
   if (!fs.existsSync(appsDir)) {
     return;
   }
@@ -57,7 +57,7 @@ function analyzeMonorepoHealth(rootPath, findings) {
 
   const dependencyGraph = buildDependencyGraph(apps);
   const circularDeps = detectCircularDependencies(dependencyGraph);
-  
+
   if (circularDeps.length > 0) {
     circularDeps.forEach(cycle => {
       findings.push({
@@ -79,7 +79,7 @@ function analyzeMonorepoHealth(rootPath, findings) {
 
   const crossAppImports = detectCrossAppImports(apps, rootPath);
   const excessiveCoupling = crossAppImports.filter(imp => imp.count > 10);
-  
+
   if (excessiveCoupling.length > 0) {
     excessiveCoupling.forEach(coupling => {
       findings.push({
@@ -103,18 +103,18 @@ function analyzeMonorepoHealth(rootPath, findings) {
 
   apps.forEach(app => {
     const packageJson = app.packageJsonPath;
-    
+
     if (!fs.existsSync(packageJson)) {
       return;
     }
-    
+
     const pkg = JSON.parse(fs.readFileSync(packageJson, 'utf-8'));
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    
-    const appDepsOnOtherApps = Object.keys(deps).filter(dep => 
+
+    const appDepsOnOtherApps = Object.keys(deps).filter(dep =>
       apps.some(otherApp => dep.includes(otherApp.name) || dep.startsWith('@ruralgo/'))
     );
-    
+
     if (appDepsOnOtherApps.length > 2) {
       findings.push({
         filePath: packageJson,
@@ -135,7 +135,7 @@ function analyzeMonorepoHealth(rootPath, findings) {
   });
 
   const sharedCodeDuplication = analyzeSharedCodeDuplication(apps, rootPath);
-  
+
   if (sharedCodeDuplication.length > 0) {
     sharedCodeDuplication.forEach(dup => {
       findings.push({
@@ -159,7 +159,7 @@ function analyzeMonorepoHealth(rootPath, findings) {
   }
 
   const buildComplexity = calculateBuildComplexity(apps, rootPath);
-  
+
   if (buildComplexity.score > 80) {
     findings.push({
       filePath: rootPath,
@@ -218,24 +218,24 @@ function analyzeMonorepoHealth(rootPath, findings) {
 
 function buildDependencyGraph(apps) {
   const graph = {};
-  
+
   apps.forEach(app => {
     if (!fs.existsSync(app.packageJsonPath)) {
       graph[app.name] = [];
       return;
     }
-    
+
     const pkg = JSON.parse(fs.readFileSync(app.packageJsonPath, 'utf-8'));
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
-    
+
     graph[app.name] = apps
       .filter(otherApp => otherApp.name !== app.name)
-      .filter(otherApp => 
+      .filter(otherApp =>
         Object.keys(deps).some(dep => dep.includes(otherApp.name) || dep.startsWith('@ruralgo/'))
       )
       .map(otherApp => otherApp.name);
   });
-  
+
   return graph;
 }
 
@@ -243,7 +243,7 @@ function detectCircularDependencies(graph) {
   const cycles = [];
   const visited = new Set();
   const stack = new Set();
-  
+
   function dfs(node, path = []) {
     if (stack.has(node)) {
       const cycleStart = path.indexOf(node);
@@ -257,56 +257,56 @@ function detectCircularDependencies(graph) {
       }
       return;
     }
-    
+
     if (visited.has(node)) {
       return;
     }
-    
+
     visited.add(node);
     stack.add(node);
     path.push(node);
-    
+
     const neighbors = graph[node] || [];
     neighbors.forEach(neighbor => dfs(neighbor, [...path]));
-    
+
     stack.delete(node);
   }
-  
+
   Object.keys(graph).forEach(node => {
     if (!visited.has(node)) {
       dfs(node);
     }
   });
-  
+
   return cycles;
 }
 
 function detectCrossAppImports(apps, rootPath) {
   const imports = [];
-  
+
   apps.forEach(fromApp => {
     const sourceFiles = glob.sync(`${fromApp.path}/src/**/*.{ts,tsx,js,jsx}`, { nodir: true });
-    
+
     sourceFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
       const importRegex = /from\s+['"]([^'"]+)['"]/g;
       let match;
       let lineNum = 0;
-      
+
       content.split('\n').forEach((line, idx) => {
         lineNum = idx + 1;
-        
+
         while ((match = importRegex.exec(line)) !== null) {
           const importPath = match[1];
-          
+
           apps.forEach(toApp => {
             if (toApp.name !== fromApp.name && importPath.includes(`apps/${toApp.name}`)) {
-              const existing = imports.find(i => 
-                i.fromApp === fromApp.name && 
-                i.toApp === toApp.name && 
+              const existing = imports.find(i =>
+                i.fromApp === fromApp.name &&
+                i.toApp === toApp.name &&
                 i.fromFile === file
               );
-              
+
               if (existing) {
                 existing.count++;
               } else {
@@ -324,13 +324,13 @@ function detectCrossAppImports(apps, rootPath) {
       });
     });
   });
-  
+
   return imports;
 }
 
 function analyzeSharedCodeDuplication(apps, rootPath) {
   const duplications = [];
-  
+
   const utilsFiles = [];
   apps.forEach(app => {
     const utils = glob.sync(`${app.path}/src/**/utils/**/*.{ts,tsx,js,jsx}`, { nodir: true });
@@ -342,13 +342,13 @@ function analyzeSharedCodeDuplication(apps, rootPath) {
       });
     });
   });
-  
+
   for (let i = 0; i < utilsFiles.length; i++) {
     for (let j = i + 1; j < utilsFiles.length; j++) {
       if (utilsFiles[i].app === utilsFiles[j].app) continue;
-      
+
       const similarity = calculateSimilarity(utilsFiles[i].content, utilsFiles[j].content);
-      
+
       if (similarity > 60) {
         duplications.push({
           app1: utilsFiles[i].app,
@@ -360,16 +360,16 @@ function analyzeSharedCodeDuplication(apps, rootPath) {
       }
     }
   }
-  
+
   return duplications;
 }
 
 function calculateSimilarity(content1, content2) {
   const lines1 = content1.split('\n').filter(l => l.trim().length > 10);
   const lines2 = content2.split('\n').filter(l => l.trim().length > 10);
-  
+
   if (lines1.length === 0 || lines2.length === 0) return 0;
-  
+
   const commonLines = lines1.filter(line => lines2.includes(line));
   return (commonLines.length / Math.min(lines1.length, lines2.length)) * 100;
 }
@@ -378,45 +378,45 @@ function calculateBuildComplexity(apps, rootPath) {
   let totalFiles = 0;
   let totalDeps = 0;
   let heaviestApp = { name: '', files: 0 };
-  
+
   apps.forEach(app => {
     const sourceFiles = glob.sync(`${app.path}/src/**/*.{ts,tsx,js,jsx}`, { nodir: true });
     const fileCount = sourceFiles.length;
-    
+
     totalFiles += fileCount;
-    
+
     if (fileCount > heaviestApp.files) {
       heaviestApp = { name: app.name, files: fileCount };
     }
-    
+
     if (fs.existsSync(app.packageJsonPath)) {
       const pkg = JSON.parse(fs.readFileSync(app.packageJsonPath, 'utf-8'));
       const deps = Object.keys({ ...pkg.dependencies, ...pkg.devDependencies });
       totalDeps += deps.length;
     }
   });
-  
+
   const appsCount = apps.length;
   const avgFilesPerApp = totalFiles / appsCount;
   const avgDepsPerApp = totalDeps / appsCount;
-  
+
   let score = 0;
-  
+
   if (appsCount > 5) score += 30;
   else if (appsCount > 4) score += 20;
   else if (appsCount > 3) score += 10;
-  
+
   if (avgFilesPerApp > 300) score += 30;
   else if (avgFilesPerApp > 200) score += 20;
   else if (avgFilesPerApp > 100) score += 10;
-  
+
   if (avgDepsPerApp > 100) score += 25;
   else if (avgDepsPerApp > 50) score += 15;
   else if (avgDepsPerApp > 30) score += 5;
-  
+
   if (heaviestApp.files > 500) score += 15;
   else if (heaviestApp.files > 300) score += 10;
-  
+
   return {
     score: Math.min(score, 100),
     totalFiles,
@@ -429,17 +429,17 @@ function calculateBuildComplexity(apps, rootPath) {
 
 function calculateHealthScore(totalApps, circularDeps, couplingIssues, buildComplexity) {
   let health = 100;
-  
+
   if (totalApps > 5) health -= 30;
   else if (totalApps > 4) health -= 20;
   else if (totalApps > 3) health -= 10;
-  
+
   health -= circularDeps * 15;
-  
+
   health -= couplingIssues * 5;
-  
+
   health -= (buildComplexity / 100) * 20;
-  
+
   return Math.max(health, 0);
 }
 
@@ -450,4 +450,3 @@ module.exports = {
   calculateBuildComplexity,
   calculateHealthScore
 };
-

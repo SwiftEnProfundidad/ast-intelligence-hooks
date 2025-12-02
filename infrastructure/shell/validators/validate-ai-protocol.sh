@@ -87,7 +87,7 @@ validate_json_format() {
 validate_timestamp() {
   local timestamp
   timestamp=$(jq -r '.timestamp' "$EVIDENCE_FILE" 2>/dev/null || echo "")
-  
+
   if [[ -z "$timestamp" ]] || [[ "$timestamp" == "null" ]] || [[ "$timestamp" == "" ]]; then
     echo -e "${RED}❌ CRITICAL: .AI_EVIDENCE.json has NO timestamp${NC}"
     echo ""
@@ -96,21 +96,21 @@ validate_timestamp() {
     echo -e "${RED}→ Commit BLOCKED${NC}"
     return 1
   fi
-  
+
   # Check if timestamp is recent (within last 5 seconds - MAXIMUM STRICT)
   local evidence_epoch
   local current_epoch
   local diff_seconds
-  
+
   evidence_epoch=$(utc_to_epoch "$timestamp")
   current_epoch=$(current_epoch_utc)
   diff_seconds=$((current_epoch - evidence_epoch))
-  
+
   if [[ "$evidence_epoch" == "0" ]]; then
     echo -e "${YELLOW}⚠️  Could not parse timestamp (skipping age check)${NC}"
     return 0
   fi
-  
+
   # Atomic commit workflow: Evidence must be fresh (180 seconds = 3 minutes)
   if [[ $diff_seconds -gt 180 ]]; then
     echo -e "${RED}❌ CRITICAL: .AI_EVIDENCE.json is TOO OLD (${diff_seconds}s ago, >180sec)${NC}"
@@ -130,8 +130,53 @@ validate_timestamp() {
     echo -e "${RED}→ Commit BLOCKED - Update .AI_EVIDENCE.json NOW${NC}"
     return 1
   fi
-  
+
   echo -e "${GREEN}✅ Timestamp valid (${diff_seconds}s ago)${NC}"
+  return 0
+}
+
+validate_timestamp_drift() {
+  local timestamp
+  timestamp=$(jq -r '.timestamp' "$EVIDENCE_FILE" 2>/dev/null || echo "1970-01-01T00:00:00Z")
+  if [[ "$timestamp" == "null" ]] || [[ -z "$timestamp" ]]; then
+    echo -e "${RED}❌ CRITICAL: .AI_EVIDENCE.json has NO timestamp${NC}"
+    echo ""
+    echo -e "${YELLOW}Update .AI_EVIDENCE.json with the current timestamp before editing files.${NC}"
+    echo ""
+    echo -e "${RED}→ Commit BLOCKED${NC}"
+    return 1
+  fi
+
+  local evidence_epoch current_epoch diff_seconds
+  evidence_epoch=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$timestamp" "+%s" 2>/dev/null || date -u -d "$timestamp" "+%s" 2>/dev/null || echo "0")
+  current_epoch=$(date -u "+%s")
+  diff_seconds=$(( current_epoch - evidence_epoch ))
+
+  if [[ $diff_seconds -lt 0 ]]; then
+    diff_seconds=$(( -diff_seconds ))
+  fi
+
+  if [[ $diff_seconds -gt 600 ]]; then
+    echo -e "${RED}❌ CRITICAL: .AI_EVIDENCE.json timestamp is older than 10 minutes (${diff_seconds}s)${NC}"
+    echo ""
+    echo -e "${YELLOW}The AI must update .AI_EVIDENCE.json BEFORE editing files.${NC}"
+    echo -e "  → diff: ${diff_seconds}s, threshold: 600s"
+    echo -e "${RED}→ Commit BLOCKED${NC}"
+    return 1
+  fi
+
+  if [[ $diff_seconds -gt 180 ]]; then
+    if [[ -n "$STAGED_FILES_AFTER_EVIDENCE_REFRESH" ]]; then
+      echo -e "${RED}❌ CRITICAL: Files were modified after evidence expired (${diff_seconds}s) without refreshing${NC}"
+      echo ""
+      echo -e "${YELLOW}Update .AI_EVIDENCE.json timestamp/3 questions before editing additional files.${NC}"
+      echo ""
+      echo -e "${RED}→ Commit BLOCKED${NC}"
+      return 1
+    fi
+  fi
+
+  echo -e "${GREEN}✅ Evidence timestamp within limits${NC}"
   return 0
 }
 
@@ -139,14 +184,21 @@ detect_platform_for_file() {
   local file="$1"
   local ext="${file##*.}"
   local filename=$(basename "$file")
-  
+
+  # Exclude hooks-system tooling files from platform validation
+  if [[ "$file" =~ scripts/hooks-system/ ]] || [[ "$file" =~ \.claude/hooks/ ]]; then
+    # Hooks system scripts and .claude/hooks are tooling, not application code
+    echo ""
+    return
+  fi
+
   # Check directory first for accurate platform detection
   if [[ "$file" =~ apps/backend/ ]] || [[ "$file" =~ src/.*/backend/ ]]; then
     # Backend files (NestJS)
     echo "rulesbackend.mdc"
     return
   fi
-  
+
   case "$ext" in
     ts|tsx|jsx)
       # Frontend files (React/Next.js)
@@ -163,8 +215,9 @@ detect_platform_for_file() {
       echo "rulesandroid.mdc"
       ;;
     sh|bash)
-      # Shell scripts - use backend rules (infrastructure layer)
-      echo "rulesbackend.mdc"
+      # Shell scripts - exclude from platform validation (DevOps/Infrastructure)
+      # These are tooling, not application code
+      echo ""
       ;;
     *)
       # Unknown - return empty (will be ignored)
@@ -176,11 +229,11 @@ detect_platform_for_file() {
 validate_rules_read() {
   local rules_files=""
   local rules_verified
-  
+
   # Support BOTH formats: string (legacy) or array (multi-platform)
   # Try array first
   local is_array=$(jq -r 'if (.rules_read | type) == "array" then "true" else "false" end' "$EVIDENCE_FILE" 2>/dev/null || echo "false")
-  
+
   if [[ "$is_array" == "true" ]]; then
     # New format: array of {file, verified, lines_read}
     rules_files=$(jq -r '.rules_read[].file' "$EVIDENCE_FILE" 2>/dev/null | tr '\n' ' ')
@@ -190,7 +243,7 @@ validate_rules_read() {
     rules_files=$(jq -r '.rules_read.file' "$EVIDENCE_FILE" 2>/dev/null || echo "")
     rules_verified=$(jq -r '.rules_read.verified' "$EVIDENCE_FILE" 2>/dev/null || echo "false")
   fi
-  
+
   if [[ -z "$rules_files" ]] || [[ "$rules_files" == "null" ]] || [[ "$rules_files" == " " ]]; then
     echo -e "${RED}❌ CRITICAL: AI did NOT read any .mdc rules${NC}"
     echo ""
@@ -199,7 +252,7 @@ validate_rules_read() {
     echo -e "${RED}→ Commit BLOCKED${NC}"
     return 1
   fi
-  
+
   if [[ "$rules_verified" != "true" ]]; then
     echo -e "${RED}❌ CRITICAL: Rules read but NOT verified${NC}"
     echo ""
@@ -208,52 +261,90 @@ validate_rules_read() {
     echo -e "${RED}→ Commit BLOCKED${NC}"
     return 1
   fi
-  
+
   # Validate that correct .mdc was read based on staged files
   local staged_files
   staged_files=$(git diff --cached --name-only --diff-filter=ACM)
-  
+  local unstaged_files
+  unstaged_files=$(git diff --name-only --diff-filter=ACM)
+
+  local newest_change_epoch
+  newest_change_epoch=0
+
+  while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    if [[ -f "$file" ]]; then
+      local file_epoch
+      file_epoch=$(stat -f "%m" "$file" 2>/dev/null || stat -c "%Y" "$file" 2>/dev/null || echo "0")
+      if [[ "$file_epoch" -gt "$newest_change_epoch" ]]; then
+        newest_change_epoch="$file_epoch"
+      fi
+    fi
+  done <<< "$staged_files"
+
+  while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    if [[ -f "$file" ]]; then
+      local file_epoch
+      file_epoch=$(stat -f "%m" "$file" 2>/dev/null || stat -c "%Y" "$file" 2>/dev/null || echo "0")
+      if [[ "$file_epoch" -gt "$newest_change_epoch" ]]; then
+        newest_change_epoch="$file_epoch"
+      fi
+    fi
+  done <<< "$unstaged_files"
+
+  local timestamp
+  timestamp=$(jq -r '.timestamp' "$EVIDENCE_FILE" 2>/dev/null || echo "1970-01-01T00:00:00Z")
+  local evidence_epoch
+  evidence_epoch=$(date -u -j -f "%Y-%m-%dT%H:%M:%SZ" "$timestamp" "+%s" 2>/dev/null || date -u -d "$timestamp" "+%s" 2>/dev/null || echo "0")
+
+  if [[ "$newest_change_epoch" -gt "$evidence_epoch" ]]; then
+    export STAGED_FILES_AFTER_EVIDENCE_REFRESH="true"
+  else
+    unset STAGED_FILES_AFTER_EVIDENCE_REFRESH
+  fi
+
   local expected_platforms=""
   local violations=0
-  
+
   while IFS= read -r file; do
     [[ -z "$file" ]] && continue
     local platform
     platform=$(detect_platform_for_file "$file")
     [[ -z "$platform" ]] && continue
-    
+
     # Check if this platform's rules were read
     if [[ ! "$rules_files" =~ $platform ]]; then
       echo -e "${RED}❌ WRONG RULES: File '$file' requires $platform${NC}"
       echo -e "${YELLOW}   But AI read: $rules_files${NC}"
       ((violations++))
     fi
-    
+
     # Track unique platforms
     if [[ ! "$expected_platforms" =~ $platform ]]; then
       expected_platforms="$expected_platforms $platform"
     fi
   done <<< "$staged_files"
-  
+
   if [[ $violations -gt 0 ]]; then
     echo ""
     echo -e "${RED}→ Commit BLOCKED: Wrong .mdc rules read${NC}"
     return 1
   fi
-  
+
   if [[ -n "$expected_platforms" ]]; then
     echo -e "${GREEN}✅ Rules read: $rules_files(correct for staged files)${NC}"
   else
     echo -e "${GREEN}✅ Rules read: $rules_files${NC}"
   fi
-  
+
   return 0
 }
 
 validate_3_questions() {
   local answered
   answered=$(jq -r '.protocol_3_questions.answered' "$EVIDENCE_FILE" 2>/dev/null || echo "false")
-  
+
   if [[ "$answered" != "true" ]]; then
     echo -e "${RED}❌ CRITICAL: 3 Questions Protocol NOT answered${NC}"
     echo ""
@@ -265,13 +356,13 @@ validate_3_questions() {
     echo -e "${RED}→ Commit BLOCKED${NC}"
     return 1
   fi
-  
+
   # Validate that questions have content
   local q1 q2 q3
   q1=$(jq -r '.protocol_3_questions.question_1_file_type' "$EVIDENCE_FILE" 2>/dev/null || echo "")
   q2=$(jq -r '.protocol_3_questions.question_2_similar_exists' "$EVIDENCE_FILE" 2>/dev/null || echo "")
   q3=$(jq -r '.protocol_3_questions.question_3_clean_architecture' "$EVIDENCE_FILE" 2>/dev/null || echo "")
-  
+
   if [[ -z "$q1" ]] || [[ "$q1" == "null" ]] || [[ -z "$q2" ]] || [[ "$q2" == "null" ]] || [[ -z "$q3" ]] || [[ "$q3" == "null" ]]; then
     echo -e "${RED}❌ CRITICAL: 3 Questions answered=true but questions are EMPTY${NC}"
     echo ""
@@ -280,7 +371,7 @@ validate_3_questions() {
     echo -e "${RED}→ Commit BLOCKED${NC}"
     return 1
   fi
-  
+
   echo -e "${GREEN}✅ 3 Questions Protocol: Answered${NC}"
   return 0
 }
@@ -288,15 +379,15 @@ validate_3_questions() {
 validate_files_match() {
   local evidence_files
   evidence_files=$(jq -r '.files_to_modify[]' "$EVIDENCE_FILE" 2>/dev/null | sed 's/ (NEW)$//' || echo "")
-  
+
   if [[ -z "$evidence_files" ]]; then
     echo -e "${YELLOW}⚠️  No files declared in evidence (might be OK if no files created)${NC}"
     return 0
   fi
-  
+
   local staged_files
   staged_files=$(git diff --cached --name-only --diff-filter=ACM)
-  
+
   # Check for staged files NOT in evidence (STRICT)
   local undeclared=0
   while IFS= read -r sfile; do
@@ -305,7 +396,7 @@ validate_files_match() {
     [[ "$sfile" =~ \.(json|md|txt|yml|yaml)$ ]] && continue
     # Skip .AI_EVIDENCE.json itself
     [[ "$sfile" == ".AI_EVIDENCE.json" ]] && continue
-    
+
     local found=false
     while IFS= read -r efile; do
       [[ -z "$efile" ]] && continue
@@ -314,13 +405,13 @@ validate_files_match() {
         break
       fi
     done <<< "$evidence_files"
-    
+
     if [[ "$found" == "false" ]]; then
       echo -e "${RED}❌ UNDECLARED FILE: $sfile (not in .AI_EVIDENCE.json)${NC}"
       ((undeclared++))
     fi
   done <<< "$staged_files"
-  
+
   if [[ $undeclared -gt 0 ]]; then
     echo ""
     echo -e "${RED}🚨 STRICT MODE: All source files MUST be declared in .AI_EVIDENCE.json${NC}"
@@ -331,7 +422,7 @@ validate_files_match() {
     echo -e "${RED}→ Commit BLOCKED${NC}"
     return 1
   fi
-  
+
   echo -e "${GREEN}✅ All staged files declared in evidence${NC}"
   return 0
 }
@@ -352,6 +443,7 @@ validate_json_format || ((VIOLATIONS++))
 [[ $VIOLATIONS -gt 0 ]] && exit 1
 
 validate_timestamp || ((VIOLATIONS++))
+validate_timestamp_drift || ((VIOLATIONS++))
 validate_rules_read || ((VIOLATIONS++))
 validate_3_questions || ((VIOLATIONS++))
 validate_files_match || ((VIOLATIONS++))
@@ -380,4 +472,3 @@ else
   echo ""
   exit 0
 fi
-

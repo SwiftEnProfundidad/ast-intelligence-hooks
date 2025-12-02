@@ -78,4 +78,3 @@ function mapDetektSeverity(detektSeverity) {
 }
 
 module.exports = { analyzeAndroidFiles };
-

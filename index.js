@@ -1,21 +1,25 @@
 /**
  * @pumuki/ast-intelligence-hooks
- * 
+ *
  * Enterprise-grade AST Intelligence System
  * Multi-platform support: iOS, Android, Backend, Frontend
  * Architecture enforcement: Feature-First + DDD + Clean Architecture
- * 
- * @version 6.0.0
+ *
+ * @version 3.1.0
  * @license MIT
  */
 
 // Main exports for programmatic usage
 const { runASTIntelligence } = require('./infrastructure/ast/ast-intelligence');
+const { Finding } = require('./domain/entities/Finding');
+const { AuditResult } = require('./domain/entities/AuditResult');
+const { CommitBlockingRules } = require('./domain/rules/CommitBlockingRules');
 
-// Layer exports
-const domain = require('./domain');
-const application = require('./application');
-const config = require('./config');
+// Use Cases
+const { AnalyzeCodebaseUseCase } = require('./application/use-cases/AnalyzeCodebaseUseCase');
+const { AnalyzeStagedFilesUseCase } = require('./application/use-cases/AnalyzeStagedFilesUseCase');
+const { GenerateAuditReportUseCase } = require('./application/use-cases/GenerateAuditReportUseCase');
+const { BlockCommitUseCase } = require('./application/use-cases/BlockCommitUseCase');
 
 // Platform-specific analyzers
 const { runBackendIntelligence } = require('./infrastructure/ast/backend/ast-backend');
@@ -28,21 +32,16 @@ module.exports = {
   // Main API
   runASTIntelligence,
 
-  // Layer exports (for modular usage)
-  domain,
-  application,
-  config,
+  // Domain
+  Finding,
+  AuditResult,
+  CommitBlockingRules,
 
-  // Quick access to common entities (backward compatibility)
-  Finding: domain.Finding,
-  AuditResult: domain.AuditResult,
-  CommitBlockingRules: domain.CommitBlockingRules,
-
-  // Quick access to use cases (backward compatibility)
-  AnalyzeCodebaseUseCase: application.AnalyzeCodebaseUseCase,
-  AnalyzeStagedFilesUseCase: application.AnalyzeStagedFilesUseCase,
-  GenerateAuditReportUseCase: application.GenerateAuditReportUseCase,
-  BlockCommitUseCase: application.BlockCommitUseCase,
+  // Use Cases
+  AnalyzeCodebaseUseCase,
+  AnalyzeStagedFilesUseCase,
+  GenerateAuditReportUseCase,
+  BlockCommitUseCase,
 
   // Platform Analyzers
   runBackendIntelligence,
@@ -52,8 +51,7 @@ module.exports = {
   runCommonIntelligence,
 
   // Metadata
-  version: '6.0.0',
+  version: '3.1.0',
   platforms: ['ios', 'android', 'backend', 'frontend'],
   totalRules: 798
 };
-

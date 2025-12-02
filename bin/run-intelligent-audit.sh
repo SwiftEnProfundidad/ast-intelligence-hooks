@@ -56,7 +56,7 @@ fi
 if [[ -f ".audit_tmp/token-usage.jsonl" ]]; then
     LAST_USAGE=$(tail -1 .audit_tmp/token-usage.jsonl)
     PERCENT=$(echo "$LAST_USAGE" | jq -r '.percentUsed' 2>/dev/null || echo "0")
-    
+
     if (( $(echo "$PERCENT > 85" | bc -l 2>/dev/null || echo 0) )); then
         echo ""
         echo -e "${YELLOW}⚠️  Token usage: ${PERCENT}% - Consider wrapping up session${NC}"
@@ -65,4 +65,3 @@ fi
 
 # Exit with audit result
 exit $AUDIT_EXIT
-

@@ -5,13 +5,13 @@ const { BDDTDDWorkflowRules } = require(path.join(__dirname, 'BDDTDDWorkflowRule
 function getTypeContext(node) {
   const parent = node.getParent();
   if (!parent) return 'unknown';
-  
+
   const parentKind = parent.getKind();
   const grandParent = parent.getParent();
-  
+
   if (parentKind === SyntaxKind.Parameter) {
-    const func = parent.getFirstAncestorByKind(SyntaxKind.MethodDeclaration) || 
-                 parent.getFirstAncestorByKind(SyntaxKind.FunctionDeclaration);
+    const func = parent.getFirstAncestorByKind(SyntaxKind.MethodDeclaration) ||
+      parent.getFirstAncestorByKind(SyntaxKind.FunctionDeclaration);
     if (func) {
       const funcText = func.getText();
       if (/interface\s+\w+/.test(funcText) || func.getParent()?.getKind() === SyntaxKind.InterfaceDeclaration) {
@@ -21,7 +21,7 @@ function getTypeContext(node) {
     }
     return 'parameter';
   }
-  
+
   if (parentKind === SyntaxKind.PropertySignature || parentKind === SyntaxKind.PropertyDeclaration) {
     const iface = parent.getFirstAncestorByKind(SyntaxKind.InterfaceDeclaration);
     if (iface && iface.isExported()) {
@@ -29,7 +29,7 @@ function getTypeContext(node) {
     }
     return 'property';
   }
-  
+
   if (parentKind === SyntaxKind.TypeReference && grandParent) {
     const gpKind = grandParent.getKind();
     if (gpKind === SyntaxKind.TypeReference) {
@@ -39,11 +39,11 @@ function getTypeContext(node) {
       }
     }
   }
-  
+
   if (parentKind === SyntaxKind.VariableDeclaration) {
     return 'variable';
   }
-  
+
   return 'other';
 }
 
@@ -53,15 +53,15 @@ function determineAnySeverity(context) {
     case 'public_interface_property':
     case 'return_type':
       return 'critical';
-    
+
     case 'function_param':
     case 'parameter':
       return 'high';
-    
+
     case 'property':
     case 'variable':
       return 'high';
-    
+
     default:
       return 'high';
   }
@@ -78,14 +78,14 @@ function getAnyTypeMessage(context) {
     'variable': 'any type in variable - infer type or define explicitly',
     'other': 'any type detected - replace with specific type'
   };
-  
+
   return contextMessages[context] || contextMessages['other'];
 }
 
 function checkForTypeGuard(node) {
   const parent = node.getParent();
   if (!parent) return false;
-  
+
   const nextSiblings = parent.getNextSiblings();
   for (const sibling of nextSiblings.slice(0, 3)) {
     const text = sibling.getText();
@@ -93,7 +93,7 @@ function checkForTypeGuard(node) {
       return true;
     }
   }
-  
+
   return false;
 }
 
@@ -109,15 +109,15 @@ function runCommonIntelligence(project, findings) {
     }
   }
 
-  // STEP 2: Reglas comunes de código
+  // STEP 2: Common code rules
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
     const plat = platformOf(filePath) || 'other';
-    
+
     // Skip AST infrastructure files (avoid self-analysis)
     if (/\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
-    
+
     // NOTE: Scripts exclusion moved inside specific rules, not global
     // Some rules (like any type) should skip scripts, others shouldn't
 
@@ -127,10 +127,10 @@ function runCommonIntelligence(project, findings) {
         // Exclusion 0: Utility scripts (seed, migrations) - pragmatic decision
         const isUtilityScript = /\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath);
         if (isUtilityScript) return;
-        
+
         // Exclusion 1: Third-party type definitions
         if (/node_modules|\.d\.ts$|@types/.test(filePath)) return;
-        
+
         // Exclusion 2: Event handler parameters - common in DOM/React event listeners
         const parent = tref.getParent();
         if (parent?.getKind() === SyntaxKind.Parameter) {
@@ -140,7 +140,7 @@ function runCommonIntelligence(project, findings) {
             return;
           }
         }
-        
+
         // Exclusion 3: Catch block error parameters - legitimate if validated after
         const ancestors = tref.getAncestors();
         const inCatchClause = ancestors.some(a => a.getKind() === SyntaxKind.CatchClause);
@@ -148,24 +148,24 @@ function runCommonIntelligence(project, findings) {
           // Catch blocks with unknown error types are acceptable - errors are untyped by nature
           return;
         }
-        
+
         const context = getTypeContext(tref);
         const severity = determineAnySeverity(context);
         const message = getAnyTypeMessage(context);
         pushFinding('common.types.any', severity, sf, tref, message, findings);
       }
     });
-    
+
     sf.getDescendantsOfKind(SyntaxKind.AnyKeyword).forEach((node) => {
       // Apply same intelligent exclusions as TypeReference
-      
+
       // Exclusion 0: Utility scripts
       const isUtilityScript = /\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath);
       if (isUtilityScript) return;
-      
+
       // Exclusion 1: Third-party type definitions
       if (/node_modules|\.d\.ts$|@types/.test(filePath)) return;
-      
+
       // Exclusion 2: Event handlers
       const parent = node.getParent();
       if (parent?.getKind() === SyntaxKind.Parameter) {
@@ -173,36 +173,36 @@ function runCommonIntelligence(project, findings) {
         const paramName = paramText.split(':')[0].trim();
         if (/^(e|event|evt|args?|payload)$/i.test(paramName)) return;
       }
-      
+
       // Exclusion 3: Catch blocks
       const ancestors = node.getAncestors();
       const inCatchClause = ancestors.some(a => a.getKind() === SyntaxKind.CatchClause);
       if (inCatchClause) return;
-      
+
       const context = getTypeContext(node);
       const severity = determineAnySeverity(context);
       const message = getAnyTypeMessage(context);
       pushFinding('common.types.any', severity, sf, node, message, findings);
     });
-    
+
     sf.getDescendantsOfKind(SyntaxKind.AsExpression).forEach((node) => {
       const nodeText = node.getText();
       if (nodeText.includes(' as any')) {
         // Exclusion 0: Utility scripts
         const isUtilityScript = /\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath);
         if (isUtilityScript) return;
-        
+
         // Exclusion 1: Third-party
         if (/node_modules|\.d\.ts$|@types/.test(filePath)) return;
-        
+
         // Exclusion 2: Event handlers being cast
         if (/event|evt|handler/.test(nodeText.toLowerCase())) return;
-        
+
         // Exclusion 3: Catch blocks
         const ancestors = node.getAncestors();
         const inCatchClause = ancestors.some(a => a.getKind() === SyntaxKind.CatchClause);
         if (inCatchClause) return;
-        
+
         const context = 'type_assertion';
         pushFinding('common.types.any', 'high', sf, node, 'Type assertion to any - replace with specific type or use type guards', findings);
       } else if (nodeText.includes(' as unknown')) {
@@ -215,24 +215,52 @@ function runCommonIntelligence(project, findings) {
         }
       }
     });
-    
+
     sf.getDescendantsOfKind(SyntaxKind.TypeReference).forEach((tref) => {
       const text = tref.getText();
       const hasRecordUnknown = /Record<string,\s*unknown>/.test(text);
-      
+
       if (hasRecordUnknown) {
         const parent = tref.getParent();
         if (!parent) return;
-        
+
         const interfaceDecl = parent.getFirstAncestorByKind(SyntaxKind.InterfaceDeclaration);
         const typeAliasDecl = parent.getFirstAncestorByKind(SyntaxKind.TypeAliasDeclaration);
-        
+
         const isPartOfUnionType = typeAliasDecl && /\|/.test(typeAliasDecl.getType().getText());
-        
+
         const isDefinedType = typeAliasDecl !== undefined;
-        
+
         if (!isDefinedType || !isPartOfUnionType) {
           pushFinding('common.types.record_unknown_requires_type', 'high', sf, tref, 'Record<string, unknown> detected - define value type union (string | number | boolean | null | Date)', findings);
+        }
+      }
+
+      const hasUndefinedInBaseType = /:\s*(?:string|number|boolean|object)\s*\|\s*undefined|:\s*undefined\s*\|/i.test(text);
+      const hasUndefinedInIndexSignature = /\[key:\s*string\]:\s*[^}]*\|\s*undefined|\[key:\s*string\]:\s*undefined/i.test(text);
+      const hasUndefinedInRecord = /Record<[^>]*\|\s*undefined|Record<[^>]*undefined\s*\|/i.test(text);
+      const hasUndefinedInArray = /Array<[^>]*\|\s*undefined|Array<[^>]*undefined\s*\|/i.test(text);
+
+      const fullText = sf.getFullText();
+      const nodeStart = tref.getStart();
+      const lineStart = fullText.lastIndexOf('\n', nodeStart) + 1;
+      const lineEnd = fullText.indexOf('\n', nodeStart);
+      const fullLine = lineEnd === -1 ? fullText.substring(lineStart) : fullText.substring(lineStart, lineEnd);
+      const hasUndefinedInLine = /\|\s*undefined|undefined\s*\|/.test(fullLine) && !/typeof\s+\w+\s*===\s*['"]undefined['"]/.test(fullLine);
+
+      if (hasUndefinedInBaseType || hasUndefinedInIndexSignature || hasUndefinedInRecord || hasUndefinedInArray || hasUndefinedInLine) {
+        const parent = tref.getParent();
+        if (!parent) return;
+
+        const isOptionalProperty = parent.getKind() === SyntaxKind.PropertySignature && parent.getQuestionTokenNode() !== undefined;
+        if (isOptionalProperty) return;
+
+        const interfaceDecl = parent.getFirstAncestorByKind(SyntaxKind.InterfaceDeclaration);
+        const typeAliasDecl = parent.getFirstAncestorByKind(SyntaxKind.TypeAliasDeclaration);
+        const isInInterfaceOrType = interfaceDecl !== undefined || typeAliasDecl !== undefined;
+
+        if (isInInterfaceOrType) {
+          pushFinding('common.types.undefined_in_base_type', 'critical', sf, tref, 'undefined in base type - normalize at boundary with mapper/type guard, base type must be non-nullable', findings);
         }
       }
     });
@@ -250,24 +278,24 @@ function runCommonIntelligence(project, findings) {
     const isSpecFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
     const secretPattern = /(PASSWORD|TOKEN|SECRET|API_KEY)\s*[:=]\s*['"]([^'"]{8,})['"]/gi;
     const matches = Array.from(full.matchAll(secretPattern));
-    
+
     for (const match of matches) {
       const fullMatch = match[0];
-      const secretValue = match[2];
-      
+      const credentialValue = match[2];
+
       // Get full line context for intelligent detection
       const matchIndex = match.index || 0;
       const lineStart = full.lastIndexOf('\n', matchIndex) + 1;
       const lineEnd = full.indexOf('\n', matchIndex);
       const fullLine = full.substring(lineStart, lineEnd === -1 ? undefined : lineEnd);
-      
+
       const isEnvVar = /process\.env\.|env\.|config\.|from.*env/i.test(fullMatch);
-      
-      const isPlaceholderPattern = /^(placeholder|example|test-|mock-|fake-|dummy-|your-|xxx|abc|000|123|bearer\s)/i.test(secretValue);
-      const hasObviousTestWords = /(valid|invalid|wrong|expired|reset|sample|demo|user-\d|customer-\d|store-\d)/i.test(secretValue);
-      const isShortRepeating = secretValue.length <= 20 && /^(.)\1+$/.test(secretValue);
+
+      const isPlaceholderPattern = /^(placeholder|example|test-|mock-|fake-|dummy-|your-|xxx|abc|000|123|bearer\s)/i.test(credentialValue);
+      const hasObviousTestWords = /(valid|invalid|wrong|expired|reset|sample|demo|user-\d|customer-\d|store-\d)/i.test(credentialValue);
+      const isShortRepeating = credentialValue.length <= 20 && /^(.)\1+$/.test(credentialValue);
       const isPlaceholder = isPlaceholderPattern || hasObviousTestWords || isShortRepeating;
-      
+
       const isTestContext = isSpecFile && /mock|jest\.fn|describe|it\(|beforeEach|afterEach/.test(full);
       const isTestFile = isSpecFile || /\/(tests?|__tests__|e2e|spec|playwright)\//i.test(filePath);
       // Intelligent storage key detection: analyze context, not hardcoded words
@@ -275,24 +303,25 @@ function runCommonIntelligence(project, findings) {
         /localStorage|sessionStorage|AsyncStorage|getItem|setItem|removeItem/i.test(fullLine) ||
         /const\s+\w*(KEY|STORAGE|CACHE|Token|Key|Storage)\s*=/i.test(fullLine)
       );
-      const hasKeyNamingPattern = /_(?:key|token|storage|cache|slots)$/i.test(secretValue);
-      const hasDescriptivePrefix = /^(?:admin|user|auth|session|cache|storage|local|temp)_/i.test(secretValue);
-      const isStorageKey = (hasStorageContext || hasKeyNamingPattern || hasDescriptivePrefix) && 
-        !/^eyJ/.test(secretValue) && secretValue.length < 50;
-      
+      const hasKeyNamingPattern = /_(?:key|token|storage|cache|slots)$/i.test(credentialValue);
+      const hasDescriptivePrefix = /^(?:admin|user|auth|session|cache|storage|local|temp)_/i.test(credentialValue);
+      const isStorageKey = (hasStorageContext || hasKeyNamingPattern || hasDescriptivePrefix) &&
+        !/^eyJ/.test(credentialValue) && credentialValue.length < 50;
+
       // Intelligent cache key detection: colon separator or known entity prefixes
-      const isCacheKey = secretValue.includes(':') || /^(?:products|orders|users|stores|cache|metrics|session):/i.test(secretValue);
-      
-      // Intelligent constant detection: variable declaration context + short length + not real secret format
-      const isConstantKey = /(?:const|let|var)\s+\w*(?:KEY|TOKEN|STORAGE)\s*=/i.test(fullLine) && 
-        secretValue.length < 30 && 
-        !/^(?:eyJ|sk_|pk_|live_|prod_|[a-f0-9]{32,})/.test(secretValue);
+      const isCacheKey = credentialValue.includes(':') || /^(?:products|orders|users|stores|cache|metrics|session):/i.test(credentialValue);
+
+      // Intelligent constant detection: variable declaration context + short length + not real credential format
+      const isConstantKey = /(?:const|let|var)\s+\w*(?:KEY|TOKEN|STORAGE)\s*=/i.test(fullLine) &&
+        credentialValue.length < 30 &&
+        !/^(?:eyJ|sk_|pk_|live_|prod_|[a-f0-9]{32,})/.test(credentialValue);
       const isRolesDecorator = /ROLES_KEY\s*=\s*['"`]roles['"`]/.test(fullLine);
-      
-      const isRealSecret = /^(eyJ|sk_|pk_|live_|prod_|[a-f0-9]{32,}|\$2[aby]\$)/.test(secretValue);
-      const isTestData = isTestFile && secretValue.length < 50 && !isRealSecret;
-      
-      if (!isEnvVar && !isPlaceholder && !isTestContext && !isStorageKey && !isCacheKey && !isConstantKey && !isRolesDecorator && !isTestData && secretValue.length >= 8) {
+
+      const prodFormatRegex = /^(eyJ|sk_|pk_|live_|prod_|[a-f0-9]{32,}|\$2[aby]\$)/;
+      const looksLikeProdValue = prodFormatRegex.test(credentialValue);
+      const isTestData = isTestFile && credentialValue.length < 50 && !looksLikeProdValue;
+
+      if (!isEnvVar && !isPlaceholder && !isTestContext && !isStorageKey && !isCacheKey && !isConstantKey && !isRolesDecorator && !isTestData && credentialValue.length >= 8) {
         pushFinding('common.security.secret', 'critical', sf, sf, 'Hardcoded secret detected - replace with environment variable', findings);
       }
     }
@@ -310,27 +339,25 @@ function runCommonIntelligence(project, findings) {
       if (/^#![^\n]*$/m.test(full)) return;
       const withoutShebang = full.replace(/^#![^\n]*$/gm, '');
       if (!/\/\/|\/\*/.test(withoutShebang)) return;
-      
+
       // Exclusion 1: URLs (https://, http://, etc.) - NOT comments
       const withoutUrls = withoutShebang.replace(/https?:\/\//g, '');
       if (!/\/\/|\/\*/.test(withoutUrls)) return;
-      
+
       // Exclusion 2: JSDoc comments (/** ... */) are legitimate documentation
       const hasOnlyJSDoc = !/\/\/|\/\*[^*]/.test(withoutUrls.replace(/\/\*\*[\s\S]*?\*\//g, ''));
       if (hasOnlyJSDoc) return;
-      
+
       // Exclusion 3: License headers at top of file
       const lines = full.split('\n');
       const firstNonEmptyLine = lines.findIndex(l => l.trim().length > 0);
       if (firstNonEmptyLine >= 0 && firstNonEmptyLine < 5 && /copyright|license|author/i.test(lines[firstNonEmptyLine])) {
         return;
       }
-      
+
       pushFinding('common.quality.comments', 'high', sf, sf, 'Comments present in code - prefer self-documenting code with clear naming', findings);
     }
   });
 }
 
 module.exports = { runCommonIntelligence };
-
-
