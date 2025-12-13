@@ -66,7 +66,7 @@ class ASTHooksInstaller {
 ${COLORS.reset}`);
 
     // STEP 0: Check Git repository
-    process.stdout.write(`\n${COLORS.cyan}[0/7] Checking Git repository...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[0/8] Checking Git repository...${COLORS.reset}`);
     if (!this.checkGitRepository()) {
       process.stdout.write(`${COLORS.red}✗ Git repository check failed${COLORS.reset}\n`);
       process.stdout.write(`\n${COLORS.yellow}Installation aborted. Please initialize Git first.${COLORS.reset}\n`);
@@ -75,38 +75,43 @@ ${COLORS.reset}`);
     process.stdout.write(`${COLORS.green}✓ Git repository detected${COLORS.reset}`);
 
     // STEP 1: Detect project platforms
-    process.stdout.write(`\n${COLORS.cyan}[1/7] Detecting project platforms...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[1/8] Detecting project platforms...${COLORS.reset}`);
     this.detectPlatforms();
     process.stdout.write(`${COLORS.green}✓ Detected: ${this.platforms.join(', ')}${COLORS.reset}`);
 
     // STEP 2: Install ESLint configs
-    process.stdout.write(`\n${COLORS.cyan}[2/7] Installing ESLint configurations...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[2/8] Installing ESLint configurations...${COLORS.reset}`);
     this.installESLintConfigs();
 
     // STEP 3: Create base structure
-    process.stdout.write(`\n${COLORS.cyan}[3/7] Creating hooks-system directory structure...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[3/8] Creating hooks-system directory structure...${COLORS.reset}`);
     this.createDirectoryStructure();
     process.stdout.write(`${COLORS.green}✓ Directory structure created${COLORS.reset}`);
 
     // STEP 4: Copy system files
-    process.stdout.write(`\n${COLORS.cyan}[4/7] Copying AST Intelligence system files...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[4/8] Copying AST Intelligence system files...${COLORS.reset}`);
     this.copySystemFiles();
     process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
 
     // STEP 5: Create project configuration
-    process.stdout.write(`\n${COLORS.cyan}[5/7] Creating project configuration...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[5/8] Creating project configuration...${COLORS.reset}`);
     this.createProjectConfig();
     process.stdout.write(`${COLORS.green}✓ Configuration created${COLORS.reset}`);
 
     // STEP 6: Install MCP servers for agentic IDEs
-    process.stdout.write(`\n${COLORS.cyan}[6/7] Installing MCP servers for agentic IDEs...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[6/8] Installing MCP servers for agentic IDEs...${COLORS.reset}`);
     this.installCursorHooks();
     process.stdout.write(`${COLORS.green}✓ MCP servers installed${COLORS.reset}`);
 
     // STEP 7: Install Git hooks
-    process.stdout.write(`\n${COLORS.cyan}[7/7] Installing Git hooks...${COLORS.reset}`);
+    process.stdout.write(`\n${COLORS.cyan}[7/8] Installing Git hooks...${COLORS.reset}`);
     this.installGitHooks();
     process.stdout.write(`${COLORS.green}✓ Git hooks installed${COLORS.reset}`);
+
+    // STEP 8: Add npm scripts to project package.json
+    process.stdout.write(`\n${COLORS.cyan}[8/8] Adding npm scripts to package.json...${COLORS.reset}`);
+    this.addNpmScripts();
+    process.stdout.write(`${COLORS.green}✓ npm scripts added${COLORS.reset}`);
 
     // Finalize
     process.stdout.write(`\n${COLORS.cyan}Finalizing installation...${COLORS.reset}`);
@@ -607,6 +612,39 @@ exit 0
     const preCommitPath = path.join(gitHooksDir, 'pre-commit');
     fs.writeFileSync(preCommitPath, preCommitHook);
     fs.chmodSync(preCommitPath, '755');
+  }
+
+  addNpmScripts() {
+    const projectPackageJsonPath = path.join(this.targetRoot, 'package.json');
+    
+    if (!fs.existsSync(projectPackageJsonPath)) {
+      process.stdout.write(`${COLORS.yellow}  ⚠️  package.json not found, skipping npm scripts${COLORS.reset}\n`);
+      return;
+    }
+
+    try {
+      const packageJson = JSON.parse(fs.readFileSync(projectPackageJsonPath, 'utf8'));
+      
+      // Initialize scripts if it doesn't exist
+      if (!packageJson.scripts) {
+        packageJson.scripts = {};
+      }
+
+      // Add install-hooks script if it doesn't exist or is different
+      const installHooksScript = 'npx ast-install';
+      if (!packageJson.scripts['install-hooks'] || packageJson.scripts['install-hooks'] !== installHooksScript) {
+        packageJson.scripts['install-hooks'] = installHooksScript;
+        process.stdout.write(`${COLORS.green}  ✅ Added script: install-hooks${COLORS.reset}\n`);
+      } else {
+        process.stdout.write(`${COLORS.blue}  ℹ️  install-hooks script already exists${COLORS.reset}\n`);
+      }
+
+      // Write back to package.json
+      fs.writeFileSync(projectPackageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
+      
+    } catch (error) {
+      process.stdout.write(`${COLORS.yellow}  ⚠️  Could not modify package.json: ${error.message}${COLORS.reset}\n`);
+    }
   }
 
   printSuccessMessage() {
