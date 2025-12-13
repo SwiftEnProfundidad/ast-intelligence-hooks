@@ -269,7 +269,25 @@ AUTO_PUSH_ENABLED=true
 AUTO_PR_ENABLED=false
 ```
 
-### 5. Configure Exclusions
+### 5. iOS Architecture Configuration (Optional)
+
+**For iOS projects only:** The library automatically detects your architecture pattern (MVVM-C, TCA, VIPER, etc.) without any configuration. You don't need to create `.ast-architecture.json` unless you want to manually override the automatic detection.
+
+If you want to force a specific architecture pattern, create `.ast-architecture.json` in your project root:
+
+```json
+{
+  "ios": {
+    "architecturePattern": "MVVM-C",
+    "allowedPatterns": ["MVVM-C", "MVVM"],
+    "prohibitedPatterns": ["MVC"]
+  }
+}
+```
+
+**Note:** This is rarely needed since automatic detection works for all common patterns.
+
+### 6. Configure Exclusions
 
 Create or edit `config/ast-exclusions.json`:
 
