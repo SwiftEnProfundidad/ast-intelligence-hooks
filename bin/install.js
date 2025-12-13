@@ -16,54 +16,100 @@ const COLORS = {
 class ASTHooksInstaller {
   constructor() {
     this.targetRoot = process.cwd();
-    this.hookSystemRoot = path.join(__dirname, '..');
+    // Detect if we are in an installed npm package or in development
+    const packageJsonPath = path.join(__dirname, '..', 'package.json');
+    if (fs.existsSync(packageJsonPath)) {
+      // We are in the installed npm package
+      this.hookSystemRoot = path.join(__dirname, '..');
+    } else {
+      // Fallback for development
+      this.hookSystemRoot = path.join(__dirname, '..');
+    }
     this.platforms = [];
+  }
+
+  checkGitRepository() {
+    const gitDir = path.join(this.targetRoot, '.git');
+    if (!fs.existsSync(gitDir)) {
+      process.stdout.write(`\n${COLORS.red}❌ CRITICAL: Git repository not found!${COLORS.reset}\n`);
+      process.stdout.write(`${COLORS.yellow}   This library REQUIRES a Git repository to function properly.${COLORS.reset}\n`);
+      process.stdout.write(`${COLORS.cyan}   Please run: git init${COLORS.reset}\n\n`);
+      process.stdout.write(`${COLORS.yellow}⚠️  Without Git:${COLORS.reset}\n`);
+      process.stdout.write(`   • Pre-commit hooks cannot be installed\n`);
+      process.stdout.write(`   • Git Flow automation will not work\n`);
+      process.stdout.write(`   • Code analysis on commits is disabled\n\n`);
+      process.stdout.write(`${COLORS.cyan}   Continue anyway? (Not recommended)${COLORS.reset}\n`);
+      return false;
+    }
+
+    // Verify git is working
+    try {
+      execSync('git rev-parse --show-toplevel', { 
+        cwd: this.targetRoot, 
+        stdio: 'ignore' 
+      });
+      return true;
+    } catch (err) {
+      process.stdout.write(`\n${COLORS.red}❌ Git repository is not properly initialized!${COLORS.reset}\n`);
+      process.stdout.write(`${COLORS.yellow}   Found .git directory but git commands fail.${COLORS.reset}\n`);
+      process.stdout.write(`${COLORS.cyan}   Please ensure Git is installed and working.${COLORS.reset}\n\n`);
+      return false;
+    }
   }
 
   async install() {
     process.stdout.write(`${COLORS.blue}
 ╔════════════════════════════════════════════════════════════════╗
 ║          AST Intelligence Hooks - Installation Wizard          ║
-║                         v3.1.0                                 ║
+║                         v5.3.1                                 ║
 ╚════════════════════════════════════════════════════════════════╝
 ${COLORS.reset}`);
 
-    // STEP 1: Detectar plataformas del proyecto
-    process.stdout.write(`\n${COLORS.cyan}[1/6] Detecting project platforms...${COLORS.reset}`);
+    // STEP 0: Check Git repository
+    process.stdout.write(`\n${COLORS.cyan}[0/7] Checking Git repository...${COLORS.reset}`);
+    if (!this.checkGitRepository()) {
+      process.stdout.write(`${COLORS.red}✗ Git repository check failed${COLORS.reset}\n`);
+      process.stdout.write(`\n${COLORS.yellow}Installation aborted. Please initialize Git first.${COLORS.reset}\n`);
+      process.exit(1);
+    }
+    process.stdout.write(`${COLORS.green}✓ Git repository detected${COLORS.reset}`);
+
+    // STEP 1: Detect project platforms
+    process.stdout.write(`\n${COLORS.cyan}[1/7] Detecting project platforms...${COLORS.reset}`);
     this.detectPlatforms();
     process.stdout.write(`${COLORS.green}✓ Detected: ${this.platforms.join(', ')}${COLORS.reset}`);
 
-    // STEP 2: Instalar configs de ESLint
-    process.stdout.write(`\n${COLORS.cyan}[2/6] Installing ESLint configurations...${COLORS.reset}`);
+    // STEP 2: Install ESLint configs
+    process.stdout.write(`\n${COLORS.cyan}[2/7] Installing ESLint configurations...${COLORS.reset}`);
     this.installESLintConfigs();
 
-    // STEP 3: Crear estructura base
-    process.stdout.write(`\n${COLORS.cyan}[3/6] Creating hooks-system directory structure...${COLORS.reset}`);
+    // STEP 3: Create base structure
+    process.stdout.write(`\n${COLORS.cyan}[3/7] Creating hooks-system directory structure...${COLORS.reset}`);
     this.createDirectoryStructure();
     process.stdout.write(`${COLORS.green}✓ Directory structure created${COLORS.reset}`);
 
-    // STEP 4: Copiar archivos del sistema
+    // STEP 4: Copy system files
     process.stdout.write(`\n${COLORS.cyan}[4/7] Copying AST Intelligence system files...${COLORS.reset}`);
     this.copySystemFiles();
     process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
 
-    // STEP 4: Crear configuración del proyecto
-    process.stdout.write(`\n${COLORS.cyan}[4/6] Creating project configuration...${COLORS.reset}`);
+    // STEP 5: Create project configuration
+    process.stdout.write(`\n${COLORS.cyan}[5/7] Creating project configuration...${COLORS.reset}`);
     this.createProjectConfig();
     process.stdout.write(`${COLORS.green}✓ Configuration created${COLORS.reset}`);
 
-    // STEP 5: Instalar Cursor hooks y skills
-    process.stdout.write(`\n${COLORS.cyan}[5/7] Installing Cursor hooks and skills...${COLORS.reset}`);
+    // STEP 6: Install Cursor hooks and MCP servers
+    process.stdout.write(`\n${COLORS.cyan}[6/7] Installing Cursor hooks and MCP servers...${COLORS.reset}`);
     this.installCursorHooks();
-    process.stdout.write(`${COLORS.green}✓ Cursor hooks and skills installed${COLORS.reset}`);
+    process.stdout.write(`${COLORS.green}✓ Cursor hooks and MCP servers installed${COLORS.reset}`);
 
-    // STEP 6: Instalar Git hooks
-    process.stdout.write(`\n${COLORS.cyan}[6/7] Installing Git hooks...${COLORS.reset}`);
+    // STEP 7: Install Git hooks
+    process.stdout.write(`\n${COLORS.cyan}[7/7] Installing Git hooks...${COLORS.reset}`);
     this.installGitHooks();
     process.stdout.write(`${COLORS.green}✓ Git hooks installed${COLORS.reset}`);
 
-    // STEP 7: Finalización
-    process.stdout.write(`\n${COLORS.cyan}[7/7] Finalizing installation...${COLORS.reset}`);
+    // Finalize
+    process.stdout.write(`\n${COLORS.cyan}Finalizing installation...${COLORS.reset}`);
     this.printSuccessMessage();
   }
 
@@ -169,7 +215,7 @@ ${COLORS.reset}`);
       }
     };
 
-    // Platform-specific config
+    // Platform-specific configuration
     this.platforms.forEach(platform => {
       config.rules.platforms[platform] = {
         enabled: true,
@@ -197,7 +243,7 @@ ${COLORS.reset}`);
     const configPath = path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-    // También crear .ast-architecture.json en raíz
+    // Also create .ast-architecture.json in root
     const archConfig = {
       ios: config.architecture.ios,
       android: config.architecture.android,
@@ -219,7 +265,7 @@ ${COLORS.reset}`);
 
     const templatesDir = path.join(this.hookSystemRoot, 'infrastructure/external-tools/eslint');
 
-    // Backend ESLint config
+    // Backend ESLint configuration
     const backendDir = path.join(this.targetRoot, 'apps/backend');
     if (fs.existsSync(backendDir)) {
       const templatePath = path.join(templatesDir, 'backend.config.template.mjs');
@@ -303,6 +349,55 @@ ${COLORS.reset}`);
     }
 
     this.configureCursorSettings(cursorSettingsPath, claudeHooksDir);
+    this.configureMCPServers();
+  }
+
+  configureMCPServers() {
+    const cursorDir = path.join(this.targetRoot, '.cursor');
+    if (!fs.existsSync(cursorDir)) {
+      fs.mkdirSync(cursorDir, { recursive: true });
+    }
+
+    // Detect Node.js executable path
+    // Try process.execPath first (most reliable when running from Node)
+    let nodePath = process.execPath;
+    
+    // Fallback: try common paths or use 'node' and let user configure
+    if (!nodePath || !fs.existsSync(nodePath)) {
+      try {
+        const { execSync } = require('child_process');
+        nodePath = execSync('which node', { encoding: 'utf-8' }).trim();
+      } catch (err) {
+        // If all else fails, use 'node' and document that user may need to set PATH
+        nodePath = 'node';
+      }
+    }
+
+    const mcpConfigPath = path.join(cursorDir, 'mcp.json');
+    const mcpConfig = {
+      mcpServers: {
+        'ast-intelligence-automation': {
+          command: nodePath,
+          args: [
+            '${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js'
+          ],
+          env: {
+            REPO_ROOT: '${workspaceFolder}',
+            AUTO_COMMIT_ENABLED: 'true',
+            AUTO_PUSH_ENABLED: 'true',
+            AUTO_PR_ENABLED: 'false'
+          }
+        }
+      }
+    };
+
+    // Only create if it doesn't exist (don't overwrite user config)
+    if (!fs.existsSync(mcpConfigPath)) {
+      fs.writeFileSync(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
+      process.stdout.write(`${COLORS.green}  ✅ Configured .cursor/mcp.json${COLORS.reset}\n`);
+    } else {
+      process.stdout.write(`${COLORS.yellow}  ⚠️  .cursor/mcp.json already exists, skipping${COLORS.reset}\n`);
+    }
   }
 
   getRelevantSkills() {
@@ -360,18 +455,31 @@ ${COLORS.reset}`);
     process.stdout.write(`${COLORS.green}  ✅ Configured .cursor/settings.json${COLORS.reset}\n`);
   }
 
+  detectPackagePath() {
+    // Try to detect the npm package path
+    try {
+      const packageJsonPath = require.resolve('@pumuki/ast-intelligence-hooks/package.json');
+      return path.dirname(path.dirname(packageJsonPath));
+    } catch (e) {
+      // If not installed as npm package, use relative path
+      return this.targetRoot;
+    }
+  }
+
   installGitHooks() {
     const gitHooksDir = path.join(this.targetRoot, '.git/hooks');
 
     if (!fs.existsSync(gitHooksDir)) {
-      process.stdout.write(`${COLORS.yellow}⚠ .git directory not found. Initialize git first: git init${COLORS.reset}\n`);
+      // This should not happen if checkGitRepository() passed, but handle gracefully
+      process.stdout.write(`${COLORS.red}✗ .git/hooks directory not found${COLORS.reset}\n`);
+      process.stdout.write(`${COLORS.yellow}  Git hooks cannot be installed without a valid Git repository.${COLORS.reset}\n`);
       return;
     }
 
-    // Crear pre-commit hook
+    // Create pre-commit hook using npm binaries directly (more portable)
     const preCommitHook = `#!/bin/bash
 # AST Intelligence Hooks - Pre-commit
-# Auto-generated by @pumuki/ast-intelligence-hooks v3.1.0
+# Auto-generated by @pumuki/ast-intelligence-hooks v5.3.0
 
 # Check for bypass
 if [[ -n "\${GIT_BYPASS_HOOK}" ]]; then
@@ -379,10 +487,52 @@ if [[ -n "\${GIT_BYPASS_HOOK}" ]]; then
   exit 0
 fi
 
-# Run AST Intelligence in strict mode
-bash scripts/hooks-system/presentation/cli/audit.sh <<< "2"
+# Change to project root (where package.json is)
+cd "$(git rev-parse --show-toplevel)" || exit 1
 
-exit $?
+# Check if there are staged files
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\\.(ts|tsx|js|jsx|swift|kt)$' || true)
+if [ -z "$STAGED_FILES" ]; then
+  # No staged files to analyze, allow commit
+  exit 0
+fi
+
+# Try node_modules/.bin first (works with npm install)
+if [ -f "node_modules/.bin/ast-hooks" ]; then
+  OUTPUT=$(node_modules/.bin/ast-hooks ast 2>&1)
+  EXIT_CODE=$?
+  echo "$OUTPUT"
+  if [ $EXIT_CODE -ne 0 ]; then
+    exit $EXIT_CODE
+  fi
+  # Check for critical/high violations
+  if echo "$OUTPUT" | grep -qE "CRITICAL|HIGH"; then
+    echo ""
+    echo "❌ Commit blocked: Critical or High violations detected"
+    exit 1
+  fi
+  exit 0
+fi
+
+# Fallback: direct execution
+HOOKS_PATH="node_modules/@pumuki/ast-intelligence-hooks"
+if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence.js" ]; then
+  OUTPUT=$(node "$HOOKS_PATH/infrastructure/ast/ast-intelligence.js" 2>&1)
+  EXIT_CODE=$?
+  echo "$OUTPUT"
+  if [ $EXIT_CODE -ne 0 ]; then
+    exit $EXIT_CODE
+  fi
+  if echo "$OUTPUT" | grep -qE "CRITICAL|HIGH"; then
+    echo ""
+    echo "❌ Commit blocked: Critical or High violations detected"
+    exit 1
+  fi
+  exit 0
+fi
+
+echo "⚠️  ast-intelligence-hooks not found"
+exit 0
 `;
 
     const preCommitPath = path.join(gitHooksDir, 'pre-commit');
