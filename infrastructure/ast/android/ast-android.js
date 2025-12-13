@@ -9,6 +9,7 @@ const { analyzeAndroidFiles: runDetektAnalysis } = require(path.join(__dirname, 
 const { AndroidSOLIDAnalyzer } = require(path.join(__dirname, 'analyzers/AndroidSOLIDAnalyzer'));
 const { AndroidForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analyzers/AndroidForbiddenLiteralsAnalyzer'));
 const { AndroidASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/AndroidASTIntelligentAnalyzer'));
+const { AndroidArchitectureDetector } = require(path.join(__dirname, 'analyzers/AndroidArchitectureDetector'));
 
 /**
  * Run Android-specific AST intelligence analysis
@@ -32,6 +33,27 @@ function runAndroidIntelligence(project, findings, platform) {
     astAnalyzer.analyzeFile(kotlinFile);
   }
   console.log(`[Android AST Intelligence] Analyzed ${kotlinFiles.length} Kotlin files with AST`);
+
+  // STEP 1: Detect Architecture Pattern
+  if (kotlinFiles.length > 0) {
+    try {
+      const architectureDetector = new AndroidArchitectureDetector(root);
+      const detectedPattern = architectureDetector.detect();
+      const detectionSummary = architectureDetector.getDetectionSummary();
+
+      console.log(`[Android Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
+
+      // Log warnings if any
+      if (detectionSummary.warnings.length > 0) {
+        detectionSummary.warnings.forEach(warning => {
+          pushFinding('android.architecture.detection_warning', warning.severity.toLowerCase(), null, null, warning.message + '\n\n' + warning.recommendation, findings);
+        });
+      }
+    } catch (error) {
+      console.error('[Android Architecture] Error during architecture detection:', error.message);
+    }
+  }
+
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
