@@ -356,6 +356,39 @@ Check your `package.json` for these scripts:
 - **SOLID violations**: Singleton, God classes, tight coupling
 - **Platform-specific**: iOS patterns, Android patterns, NestJS patterns, React patterns
 
+#### iOS Architecture Detection (Optional Configuration)
+
+**Important:** The library automatically detects iOS architecture patterns without any configuration needed.
+
+For iOS projects, the system can detect:
+- Feature-First + Clean + DDD
+- MVVM-C (MVVM + Coordinator)
+- MVVM
+- MVP
+- VIPER
+- TCA (The Composable Architecture)
+- Clean Swift
+
+**Automatic Detection:**
+- The library analyzes your project structure, imports, and code patterns
+- No configuration file needed - detection happens automatically
+- Works with any architecture pattern you use
+
+**Optional Manual Override:**
+If you want to force a specific architecture pattern (rarely needed), you can create `.ast-architecture.json` in your project root:
+
+```json
+{
+  "ios": {
+    "architecturePattern": "MVVM-C",
+    "allowedPatterns": ["MVVM-C", "MVVM"],
+    "prohibitedPatterns": ["MVC"]
+  }
+}
+```
+
+**Note:** This file is completely optional. The library works perfectly without it, using automatic detection.
+
 ---
 
 ## Execution Flow
