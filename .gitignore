@@ -5,6 +5,11 @@
 # Node modules (if any)
 node_modules/
 
+# iOS build artifacts (Swift Package Manager)
+native/ios/.build/
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+
 # Build artifacts
 dist/
 build/

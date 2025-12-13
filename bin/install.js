@@ -243,21 +243,9 @@ ${COLORS.reset}`);
     const configPath = path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-    // Also create .ast-architecture.json in root
-    const archConfig = {
-      ios: config.architecture.ios,
-      android: config.architecture.android,
-      metadata: {
-        version: '3.1.0',
-        installedOn: new Date().toISOString(),
-        platforms: this.platforms
-      }
-    };
-
-    const archConfigPath = path.join(this.targetRoot, '.ast-architecture.json');
-    if (!fs.existsSync(archConfigPath)) {
-      fs.writeFileSync(archConfigPath, JSON.stringify(archConfig, null, 2));
-    }
+    // Note: .ast-architecture.json is OPTIONAL and only used by iOS analyzer if needed
+    // Users can create it manually if they want to specify architecture patterns
+    // We don't create it automatically to avoid forcing specific architectures
   }
 
   installESLintConfigs() {
@@ -556,22 +544,19 @@ ${COLORS.cyan}📦 Installation Summary:${COLORS.reset}
 ✓ Platforms detected: ${COLORS.green}${this.platforms.join(', ')}${COLORS.reset}
 ✓ Total rules available: ${COLORS.green}798+${COLORS.reset}
 ✓ Git hooks: ${COLORS.green}pre-commit (strict mode)${COLORS.reset}
-✓ Configuration: ${COLORS.green}.ast-architecture.json${COLORS.reset}
+✓ Configuration files created
 
 ${COLORS.cyan}🚀 Next Steps:${COLORS.reset}
 ─────────────────────────────────────────────────────────────
 
-1. Review configuration:
-   ${COLORS.yellow}cat .ast-architecture.json${COLORS.reset}
+1. Run first audit:
+   ${COLORS.yellow}npm run audit${COLORS.reset}
 
-2. Run first audit:
-   ${COLORS.yellow}bash scripts/hooks-system/presentation/cli/audit.sh${COLORS.reset}
+2. Read documentation:
+   ${COLORS.yellow}cat docs/USAGE.md${COLORS.reset}
 
-3. Read documentation:
-   ${COLORS.yellow}cat scripts/hooks-system/docs/guides/USAGE.md${COLORS.reset}
-
-4. Configure for your workflow:
-   ${COLORS.yellow}vim .ast-architecture.json${COLORS.reset}
+3. (Optional) Configure architecture for iOS projects:
+   ${COLORS.yellow}Create .ast-architecture.json if you need to specify iOS architecture patterns${COLORS.reset}
 
 ${COLORS.cyan}💡 Tips:${COLORS.reset}
 ─────────────────────────────────────────────────────────────
