@@ -705,5 +705,5 @@ Now that you understand how it works:
 
 **Last updated**: 2025-01-13  
 **Version**: 5.3.1  
-**Author**: Juan Carlos Merlos Albarracín <freelancemerlos@gmail.com>
+**Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development) <freelancemerlos@gmail.com>
 
