@@ -1,0 +1,36 @@
+# Pre-commit hook configuration for ast-intelligence-hooks
+# Copy this file to .pre-commit-config.yaml in your project root
+#
+# Installation:
+#   1. Install pre-commit: pip install pre-commit
+#   2. Install hooks: pre-commit install
+#   3. Run manually: pre-commit run --all-files
+
+repos:
+  - repo: local
+    hooks:
+      - id: ast-intelligence-hooks
+        name: AST Intelligence Hooks
+        entry: bash -c 'npm run audit || exit 1'
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [commit]
+
+      - id: ast-intelligence-staged-only
+        name: AST Intelligence (Staged Files Only)
+        entry: bash -c 'AUDIT_STAGED_ONLY=1 npm run audit || exit 1'
+        language: system
+        pass_filenames: false
+        stages: [commit]
+        # Uncomment to use this instead of the full audit:
+        # always_run: true
+
+# Alternative: Use npm script directly
+# You can also add to package.json:
+# {
+#   "scripts": {
+#     "pre-commit": "npm run audit"
+#   }
+# }
+# And use husky or similar to run it
