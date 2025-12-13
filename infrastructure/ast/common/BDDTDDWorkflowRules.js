@@ -44,15 +44,31 @@ class BDDTDDWorkflowRules {
       absolute: true
     });
 
-    // Si hay muchos archivos de implementación pero pocos features
+    // CRITICAL: Si hay muchos archivos de implementación pero pocos features
+    // BDD es OBLIGATORIO - debe ser el primer paso del workflow
     if (implementationFiles.length > 50 && featureFiles.length === 0) {
       pushFileFinding(
         'workflow.bdd.missing_feature_files',
-        'high',
+        'critical',
         'PROJECT_ROOT',
         1,
         1,
-        `Proyecto con ${implementationFiles.length} archivos de implementación sin feature files (.feature). Workflow debe empezar con BDD.`,
+        `🚨 CRITICAL: Proyecto con ${implementationFiles.length} archivos de implementación sin feature files (.feature). 
+        
+WORKFLOW BDD→TDD→IMPLEMENTATION VIOLADO:
+1. BDD (OBLIGATORIO): Crear feature files (.feature) con especificaciones Gherkin ANTES de cualquier código
+2. TDD: Escribir tests basados en las features
+3. Implementation: Implementar código que pase los tests
+
+ACCIÓN REQUERIDA:
+- Crear feature files en features/ o specs/ con estructura:
+  Feature: Nombre de la funcionalidad
+    Scenario: Descripción del escenario
+      Given condición inicial
+      When acción
+      Then resultado esperado
+
+Sin feature files, el proyecto NO sigue el workflow estándar BDD→TDD.`,
         this.findings
       );
     }
@@ -60,11 +76,13 @@ class BDDTDDWorkflowRules {
     if (implementationFiles.length > 20 && featureFiles.length < 3) {
       pushFileFinding(
         'workflow.bdd.insufficient_features',
-        'medium',
+        'high',
         'PROJECT_ROOT',
         1,
         1,
-        `Solo ${featureFiles.length} feature files para ${implementationFiles.length} archivos de implementación. Aumentar cobertura BDD.`,
+        `⚠️ HIGH: Solo ${featureFiles.length} feature files para ${implementationFiles.length} archivos de implementación. 
+        
+BDD requiere feature files para cada funcionalidad. Aumentar cobertura BDD antes de continuar.`,
         this.findings
       );
     }
@@ -120,11 +138,24 @@ class BDDTDDWorkflowRules {
       if (hasImplementation && !hasTests) {
         pushFileFinding(
           'workflow.tdd.implementation_before_tests',
-          'high',
+          'critical',
           feature.path,
           1,
           1,
-          `Feature '${feature.name}' tiene implementación sin tests. TDD requiere tests ANTES de implementación.`,
+          `🚨 CRITICAL: Feature '${feature.name}' tiene implementación sin tests. 
+          
+WORKFLOW BDD→TDD→IMPLEMENTATION VIOLADO:
+- BDD: ✅ Feature file existe
+- TDD: ❌ Tests NO existen (REQUERIDO antes de implementación)
+- Implementation: ✅ Existe (pero NO debería existir sin tests)
+
+ACCIÓN REQUERIDA:
+1. Crear tests (.spec.ts, .test.ts, .spec.swift, etc.) basados en la feature
+2. Los tests deben fallar inicialmente (red phase)
+3. Luego implementar código para que pasen (green phase)
+4. Refactorizar si es necesario
+
+TDD requiere: Tests ANTES de implementación. Sin tests, no hay TDD.`,
           this.findings
         );
       }
@@ -148,14 +179,37 @@ class BDDTDDWorkflowRules {
       return !testFiles.some(testFile => testFile.includes(baseName));
     });
 
+    // CRITICAL si hay muchos archivos sin tests
     if (srcWithoutTests.length > 10) {
+      pushFileFinding(
+        'workflow.tdd.low_test_coverage',
+        'critical',
+        'PROJECT_ROOT',
+        1,
+        1,
+        `🚨 CRITICAL: ${srcWithoutTests.length} archivos de implementación sin tests. 
+        
+TDD VIOLADO: TDD requiere tests para cada implementación.
+
+WORKFLOW CORRECTO:
+1. BDD: Feature file (.feature) ✅
+2. TDD: Tests escritos ANTES de implementación ❌ (FALTAN)
+3. Implementation: Código que pasa los tests ✅
+
+ACCIÓN REQUERIDA:
+- Crear tests para cada archivo de implementación
+- Tests deben existir ANTES o al mismo tiempo que la implementación
+- Sin tests, no hay TDD`,
+        this.findings
+      );
+    } else if (srcWithoutTests.length > 0) {
       pushFileFinding(
         'workflow.tdd.low_test_coverage',
         'high',
         'PROJECT_ROOT',
         1,
         1,
-        `${srcWithoutTests.length} archivos de implementación sin tests. TDD requiere tests para cada implementación.`,
+        `⚠️ HIGH: ${srcWithoutTests.length} archivos de implementación sin tests. TDD requiere tests para cada implementación.`,
         this.findings
       );
     }
@@ -254,14 +308,37 @@ class BDDTDDWorkflowRules {
     };
 
     // Ideal: Features <= Tests <= Implementation
-    if (ratio.implementation > ratio.tests * 2) {
+    // CRITICAL si hay mucha implementación sin tests
+    if (ratio.implementation > ratio.tests * 2 && ratio.implementation > 20) {
+      pushFileFinding(
+        'workflow.sequence.tests_lagging',
+        'critical',
+        'PROJECT_ROOT',
+        1,
+        1,
+        `🚨 CRITICAL: Ratio Implementation:Tests desequilibrado (${ratio.implementation} implementaciones : ${ratio.tests} tests). 
+        
+WORKFLOW BDD→TDD→IMPLEMENTATION VIOLADO:
+- BDD: ${ratio.features} features
+- TDD: ${ratio.tests} tests (INSUFICIENTES)
+- Implementation: ${ratio.implementation} archivos (DEMASIADOS sin tests)
+
+TDD requiere: Tests primero, luego implementación. Ratio ideal: Tests >= Implementation.
+
+ACCIÓN REQUERIDA:
+- Escribir tests para cada implementación
+- No crear nueva implementación sin tests correspondientes
+- Seguir flujo: Feature → Tests → Implementation`,
+        this.findings
+      );
+    } else if (ratio.implementation > ratio.tests * 2) {
       pushFileFinding(
         'workflow.sequence.tests_lagging',
         'high',
         'PROJECT_ROOT',
         1,
         1,
-        `Ratio Implementation:Tests desequilibrado (${ratio.implementation}:${ratio.tests}). TDD requiere tests primero.`,
+        `⚠️ HIGH: Ratio Implementation:Tests desequilibrado (${ratio.implementation}:${ratio.tests}). TDD requiere tests primero.`,
         this.findings
       );
     }

@@ -19,3 +19,11 @@ build/
 .idea/
 *.swp
 *.swo
+
+# Home directory (should never be tracked)
+~/
+
+# Temporary/cache files
+*.log
+*.tmp
+.cache/
