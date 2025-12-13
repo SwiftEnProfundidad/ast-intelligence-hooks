@@ -259,11 +259,13 @@ generate_contextual_answers() {
 generate_contextual_answers "$ALL_CHANGED_FILES" "$CURRENT_BRANCH" "$LAST_COMMITS"
 
 # Extract key rules from IDE rules files (supports multiple IDEs)
+# Searches: project-level first, then global Cursor config
 extract_ide_rules() {
   local rules_file="$1"
   local rules_path=""
+  local home_dir="${HOME}"
 
-  # Try multiple IDE config locations (IDE-agnostic)
+  # 1. Try project-level rules first (project-specific overrides)
   for ide_dir in ".windsurf" ".cursor" ".vscode" ".kilo" ".cline"; do
     local candidate="$REPO_ROOT/$ide_dir/rules/$rules_file"
     if [[ -f "$candidate" ]]; then
@@ -277,6 +279,85 @@ extract_ide_rules() {
       break
     fi
   done
+
+  # 2. If not found in project, try Cursor project-specific cache location
+  # Cursor stores rules per project in: ~/.cursor/projects/[sanitized-path]/rules/
+  if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+    # Try to find in Cursor's project cache (where Cursor actually stores project rules)
+    local sanitized_repo=$(echo "$REPO_ROOT" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
+    local cursor_project_cache="$home_dir/.cursor/projects/$sanitized_repo/rules/$rules_file"
+    if [[ -f "$cursor_project_cache" ]]; then
+      rules_path="$cursor_project_cache"
+    fi
+  fi
+
+  # 3. If still not found, try global Cursor locations and other projects as fallback
+  if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+    # Try Cursor global config locations
+    local global_paths=(
+      "$home_dir/.cursor/rules/$rules_file"
+      "$home_dir/.cursor/rules/${rules_file%.mdc}.md"
+      "$home_dir/Library/Application Support/Cursor/User/rules/$rules_file"
+      "$home_dir/Library/Application Support/Cursor/User/rules/${rules_file%.mdc}.md"
+      "$home_dir/.config/cursor/rules/$rules_file"
+      "$home_dir/.config/cursor/rules/${rules_file%.mdc}.md"
+    )
+
+    for candidate in "${global_paths[@]}"; do
+      if [[ -f "$candidate" ]]; then
+        rules_path="$candidate"
+        break
+      fi
+    done
+  fi
+
+  # 4. Also check other Cursor project caches (look for rules in R_GO_local or other template projects)
+  if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+    # Search in all Cursor project caches for this rules file
+    if [[ -d "$home_dir/.cursor/projects" ]]; then
+      local found_rule=$(find "$home_dir/.cursor/projects" -type f \( -name "$rules_file" -o -name "${rules_file%.mdc}.md" \) 2>/dev/null | head -1)
+      if [[ -n "$found_rule" ]] && [[ -f "$found_rule" ]]; then
+        rules_path="$found_rule"
+      fi
+    fi
+  fi
+
+  # 5. Also check for @rulesgold or goldrules (common naming)
+  if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+    local gold_names=(
+      "rulesgold.mdc"
+      "goldrules.mdc"
+      "@rulesgold.mdc"
+      "rules-gold.mdc"
+    )
+    
+    # Try project-level gold rules
+    for ide_dir in ".cursor" ".vscode"; do
+      for gold_name in "${gold_names[@]}"; do
+        local candidate="$REPO_ROOT/$ide_dir/rules/$gold_name"
+        if [[ -f "$candidate" ]]; then
+          rules_path="$candidate"
+          break 2
+        fi
+      done
+    done
+
+    # Try global gold rules
+    if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+      for gold_name in "${gold_names[@]}"; do
+        local global_gold=(
+          "$home_dir/.cursor/rules/$gold_name"
+          "$home_dir/Library/Application Support/Cursor/User/rules/$gold_name"
+        )
+        for candidate in "${global_gold[@]}"; do
+          if [[ -f "$candidate" ]]; then
+            rules_path="$candidate"
+            break 2
+          fi
+        done
+      done
+    fi
+  fi
 
   if [[ -n "$rules_path" ]] && [[ -f "$rules_path" ]]; then
     grep -E "^##" "$rules_path" 2>/dev/null | head -10 | sed 's/^## //' | tr '\n' '; ' || echo "No sections found"

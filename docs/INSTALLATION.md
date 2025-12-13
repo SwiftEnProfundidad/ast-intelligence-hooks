@@ -269,7 +269,35 @@ AUTO_PUSH_ENABLED=true
 AUTO_PR_ENABLED=false
 ```
 
-### 5. Architecture Configuration (Optional)
+### 5. IDE Rules Configuration (Optional)
+
+**Adding Your Own Rules:**
+
+The library automatically searches for agentic IDE rules (`.mdc` files) compatible with Cursor, Claude Desktop, Windsurf, and other agentic IDEs in multiple locations:
+- Project-level: `.cursor/rules/`, `.windsurf/rules/`, `.vscode/rules/` (highest priority)
+- Global: `~/.cursor/rules/`, `~/Library/Application Support/Cursor/User/rules/`
+
+**Supported rule files:**
+- `rulesbackend.mdc` - Backend/Node.js/TypeScript rules
+- `rulesfront.mdc` - Frontend/React/Next.js rules
+- `rulesios.mdc` - iOS/Swift/SwiftUI rules
+- `rulesandroid.mdc` - Android/Kotlin/Jetpack Compose rules
+- `rulesgold.mdc` - Universal rules (applies to all platforms)
+
+**Example:**
+```bash
+# Create project-specific rules
+mkdir -p .cursor/rules
+# Add your .mdc files here
+
+# Or use global rules (shared across all projects)
+mkdir -p ~/.cursor/rules
+# Add your .mdc files here
+```
+
+**Note:** The library does NOT include default `.mdc` rules to avoid conflicts with your team's standards. Rules work with any agentic IDE. See [Usage Guide - Rule Configuration](../docs/USAGE.md#adding-your-own-ide-rules-mdc-files) for detailed information.
+
+### 6. Architecture Configuration (Optional)
 
 **For all platforms:** The library automatically detects your architecture pattern without any configuration. You don't need to create `.ast-architecture.json` unless you want to manually override the automatic detection.
 

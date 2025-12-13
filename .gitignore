@@ -26,6 +26,9 @@ build/
 # Personal/private files
 ANNOUNCEMENTS.md
 
+# User-specific Cursor rules (not part of library, each user/team has their own)
+.cursor/rules/
+
 # Temporary/cache files
 *.log
 *.tmp

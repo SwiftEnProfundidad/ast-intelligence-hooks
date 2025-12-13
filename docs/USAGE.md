@@ -595,6 +595,74 @@ workflows:
 
 ## Rule Configuration
 
+### Adding Your Own IDE Rules (.mdc files)
+
+This library works seamlessly with **agentic IDE rules** (`.mdc` files) compatible with Cursor, Claude Desktop, Windsurf, and other agentic IDEs. The system automatically searches for rules in multiple locations:
+
+**Search Order:**
+1. **Project-level**: `.cursor/rules/`, `.windsurf/rules/`, `.vscode/rules/`, `.kilo/rules/`, `.cline/rules/` (highest priority)
+2. **IDE project cache**: `~/.cursor/projects/[project-name]/rules/` (for Cursor)
+3. **Global IDE locations**: 
+   - `~/.cursor/rules/` (Cursor)
+   - `~/Library/Application Support/Cursor/User/rules/` (Cursor - macOS)
+   - `~/.config/cursor/rules/` (Cursor - Linux)
+
+**Supported Rule Files:**
+- `rulesbackend.mdc` - Backend/Node.js/TypeScript rules
+- `rulesfront.mdc` - Frontend/React/Next.js rules
+- `rulesios.mdc` - iOS/Swift/SwiftUI rules
+- `rulesandroid.mdc` - Android/Kotlin/Jetpack Compose rules
+- `rulesgold.mdc` - Universal rules (applies to all platforms)
+
+**How to Add Rules:**
+
+**Option 1: Project-specific rules** (Recommended for team projects)
+```bash
+# Create rules directory in your project
+mkdir -p .cursor/rules
+
+# Add your platform-specific rules
+# Example: .cursor/rules/rulesbackend.mdc
+```
+
+**Option 2: Global rules** (Recommended for personal rules across all projects)
+```bash
+# Create global rules directory
+mkdir -p ~/.cursor/rules
+
+# Add your rules there - they'll be automatically used by all projects
+# Example: ~/.cursor/rules/rulesbackend.mdc
+```
+
+**Option 3: Copy from another project**
+```bash
+# Copy rules from a template project
+cp /path/to/template-project/.cursor/rules/*.mdc .cursor/rules/
+```
+
+**Important Notes:**
+- ✅ Rules are **automatically detected** - no configuration needed
+- ✅ Works with any agentic IDE (Cursor, Claude Desktop, Windsurf, etc.)
+- ✅ Project-level rules take precedence over global rules
+- ✅ The library **does not include** default `.mdc` rules (to avoid conflicts with your team's standards)
+- ✅ Rules are used by `ai-start` and evidence generation to provide context to AI assistants
+
+**Example Rule File Structure:**
+```markdown
+---
+alwaysApply: true
+---
+
+### Your Team Standards
+
+✅ Always follow Clean Architecture
+✅ Use dependency injection
+✅ Write tests before implementation
+# ... your rules here
+```
+
+---
+
 ### Exclude Files from Analysis
 
 Create or edit `config/ast-exclusions.json`:

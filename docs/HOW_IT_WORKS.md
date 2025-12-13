@@ -146,12 +146,19 @@ module.exports = {
 
 ---
 
-### Step 6: Cursor Hooks and MCP Servers
+### Step 6: IDE Configuration and MCP Servers
 
 **What happens:**
-- Creates `.cursor/` directory
+- Creates `.cursor/` directory (or `.windsurf/`, `.vscode/`, etc. for other agentic IDEs)
 - Creates `.cursor/mcp.json` with MCP server configuration
-- Creates `.cursor/settings.json` with Cursor-specific settings
+- Creates `.cursor/settings.json` with IDE-specific settings
+
+**Note on Rules:** The library automatically searches for agentic IDE rules (`.mdc` files) in:
+- Project-level: `.cursor/rules/`, `.windsurf/rules/`, `.vscode/rules/` (highest priority)
+- Global locations: `~/.cursor/rules/`, `~/Library/Application Support/Cursor/User/rules/`
+- Other IDE project caches
+
+Rules are used by `ai-start` when generating `.AI_EVIDENCE.json` to provide context to AI assistants. See [Usage Guide - Adding Your Own IDE Rules](../docs/USAGE.md#adding-your-own-ide-rules-mdc-files) for details.
 
 **MCP Configuration (`.cursor/mcp.json`):**
 ```json
