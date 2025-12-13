@@ -356,11 +356,13 @@ Check your `package.json` for these scripts:
 - **SOLID violations**: Singleton, God classes, tight coupling
 - **Platform-specific**: iOS patterns, Android patterns, NestJS patterns, React patterns
 
-#### iOS Architecture Detection (Optional Configuration)
+#### Architecture Detection by Platform
 
-**Important:** The library automatically detects iOS architecture patterns without any configuration needed.
+**All Platforms - Automatic Pattern Detection:**
 
-For iOS projects, the system can detect:
+The library automatically detects architecture patterns for **all platforms** (iOS, Android, Backend, Frontend) without any configuration needed.
+
+**iOS - Detected Patterns:**
 - Feature-First + Clean + DDD
 - MVVM-C (MVVM + Coordinator)
 - MVVM
@@ -369,12 +371,34 @@ For iOS projects, the system can detect:
 - TCA (The Composable Architecture)
 - Clean Swift
 
+**Android - Detected Patterns:**
+- Feature-First + Clean + DDD
+- MVVM (Model-View-ViewModel)
+- MVI (Model-View-Intent)
+- MVP (Model-View-Presenter)
+- Clean Architecture (Domain-Data-Presentation)
+
+**Backend - Detected Patterns:**
+- Feature-First + Clean + DDD
+- Clean Architecture (Hexagonal/Ports & Adapters)
+- Onion Architecture
+- Layered Architecture (3-tier)
+- CQRS (Command Query Responsibility Segregation)
+
+**Frontend - Detected Patterns:**
+- Feature-First + Clean + DDD
+- Component-Based Architecture
+- Atomic Design Pattern
+- State Management patterns (Zustand, Redux, Context)
+
 **Automatic Detection:**
 - The library analyzes your project structure, imports, and code patterns
 - No configuration file needed - detection happens automatically
 - Works with any architecture pattern you use
+- All platforms support automatic detection
 
-**Optional Manual Override:**
+**Optional Manual Override (All Platforms):**
+
 If you want to force a specific architecture pattern (rarely needed), you can create `.ast-architecture.json` in your project root:
 
 ```json
@@ -383,11 +407,26 @@ If you want to force a specific architecture pattern (rarely needed), you can cr
     "architecturePattern": "MVVM-C",
     "allowedPatterns": ["MVVM-C", "MVVM"],
     "prohibitedPatterns": ["MVC"]
+  },
+  "android": {
+    "architecturePattern": "FEATURE_FIRST_CLEAN_DDD",
+    "allowedPatterns": ["FEATURE_FIRST_CLEAN_DDD", "MVVM"],
+    "prohibitedPatterns": ["MVC"]
+  },
+  "backend": {
+    "architecturePattern": "FEATURE_FIRST_CLEAN_DDD",
+    "allowedPatterns": ["FEATURE_FIRST_CLEAN_DDD", "CLEAN_ARCHITECTURE"],
+    "prohibitedPatterns": ["MVC"]
+  },
+  "frontend": {
+    "architecturePattern": "FEATURE_FIRST_CLEAN_DDD",
+    "allowedPatterns": ["FEATURE_FIRST_CLEAN_DDD", "COMPONENT_BASED"],
+    "prohibitedPatterns": ["MVC"]
   }
 }
 ```
 
-**Note:** This file is completely optional. The library works perfectly without it, using automatic detection.
+**Note:** This file is completely optional for all platforms. The library works perfectly without it, using automatic detection. Manual override is rarely needed since automatic detection works for all common patterns.
 
 ---
 

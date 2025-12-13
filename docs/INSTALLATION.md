@@ -269,9 +269,15 @@ AUTO_PUSH_ENABLED=true
 AUTO_PR_ENABLED=false
 ```
 
-### 5. iOS Architecture Configuration (Optional)
+### 5. Architecture Configuration (Optional)
 
-**For iOS projects only:** The library automatically detects your architecture pattern (MVVM-C, TCA, VIPER, etc.) without any configuration. You don't need to create `.ast-architecture.json` unless you want to manually override the automatic detection.
+**For all platforms:** The library automatically detects your architecture pattern without any configuration. You don't need to create `.ast-architecture.json` unless you want to manually override the automatic detection.
+
+**Detected patterns by platform:**
+- **iOS**: MVVM-C, MVVM, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD
+- **Android**: MVVM, MVI, MVP, Clean Architecture, Feature-First + Clean + DDD
+- **Backend**: Clean Architecture, Onion, Layered, CQRS, Feature-First + Clean + DDD
+- **Frontend**: Component-Based, Atomic Design, State Management, Feature-First + Clean + DDD
 
 If you want to force a specific architecture pattern, create `.ast-architecture.json` in your project root:
 
@@ -281,11 +287,26 @@ If you want to force a specific architecture pattern, create `.ast-architecture.
     "architecturePattern": "MVVM-C",
     "allowedPatterns": ["MVVM-C", "MVVM"],
     "prohibitedPatterns": ["MVC"]
+  },
+  "android": {
+    "architecturePattern": "FEATURE_FIRST_CLEAN_DDD",
+    "allowedPatterns": ["FEATURE_FIRST_CLEAN_DDD", "MVVM"],
+    "prohibitedPatterns": ["MVC"]
+  },
+  "backend": {
+    "architecturePattern": "FEATURE_FIRST_CLEAN_DDD",
+    "allowedPatterns": ["FEATURE_FIRST_CLEAN_DDD", "CLEAN_ARCHITECTURE"],
+    "prohibitedPatterns": ["MVC"]
+  },
+  "frontend": {
+    "architecturePattern": "FEATURE_FIRST_CLEAN_DDD",
+    "allowedPatterns": ["FEATURE_FIRST_CLEAN_DDD", "COMPONENT_BASED"],
+    "prohibitedPatterns": ["MVC"]
   }
 }
 ```
 
-**Note:** This is rarely needed since automatic detection works for all common patterns.
+**Note:** This is rarely needed since automatic detection works for all common patterns across all platforms.
 
 ### 6. Configure Exclusions
 

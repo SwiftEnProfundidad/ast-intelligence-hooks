@@ -19,7 +19,9 @@ const {
   getClasses,
   getFunctions,
   getArrowFunctions,
+  getRepoRoot,
 } = require(path.join(__dirname, '../ast-core'));
+const { BackendArchitectureDetector } = require(path.join(__dirname, 'analyzers/BackendArchitectureDetector'));
 
 /**
  * Run Backend-specific AST intelligence analysis
@@ -28,6 +30,25 @@ const {
  * @param {string} platform - Platform identifier
  */
 function runBackendIntelligence(project, findings, platform) {
+  // STEP 0: Detect Architecture Pattern
+  try {
+    const root = getRepoRoot();
+    const architectureDetector = new BackendArchitectureDetector(root);
+    const detectedPattern = architectureDetector.detect();
+    const detectionSummary = architectureDetector.getDetectionSummary();
+
+    console.log(`[Backend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
+
+    // Log warnings if any
+    if (detectionSummary.warnings.length > 0) {
+      detectionSummary.warnings.forEach(warning => {
+        pushFinding('backend.architecture.detection_warning', warning.severity.toLowerCase(), null, null, warning.message + '\n\n' + warning.recommendation, findings);
+      });
+    }
+  } catch (error) {
+    console.error('[Backend Architecture] Error during architecture detection:', error.message);
+  }
+
   const hasGlobalCors = project.getSourceFiles().some((sourceFile) => {
     const text = sourceFile.getFullText();
     return text.includes("app.enableCors(") ||

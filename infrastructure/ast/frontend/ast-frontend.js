@@ -5,6 +5,7 @@
 const path = require('path');
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
 const fs = require('fs');
+const { FrontendArchitectureDetector } = require(path.join(__dirname, 'analyzers/FrontendArchitectureDetector'));
 
 /**
  * Run Frontend-specific AST intelligence analysis
@@ -13,6 +14,25 @@ const fs = require('fs');
  * @param {string} platform - Platform identifier
  */
 function runFrontendIntelligence(project, findings, platform) {
+  // STEP 0: Detect Architecture Pattern
+  try {
+    const root = getRepoRoot();
+    const architectureDetector = new FrontendArchitectureDetector(root);
+    const detectedPattern = architectureDetector.detect();
+    const detectionSummary = architectureDetector.getDetectionSummary();
+
+    console.log(`[Frontend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
+
+    // Log warnings if any
+    if (detectionSummary.warnings.length > 0) {
+      detectionSummary.warnings.forEach(warning => {
+        pushFinding('frontend.architecture.detection_warning', warning.severity.toLowerCase(), null, null, warning.message + '\n\n' + warning.recommendation, findings);
+      });
+    }
+  } catch (error) {
+    console.error('[Frontend Architecture] Error during architecture detection:', error.message);
+  }
+
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 

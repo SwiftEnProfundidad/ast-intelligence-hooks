@@ -84,32 +84,44 @@
 
 #### Backend (TypeScript/NestJS)
 - 150+ Clean Architecture rules
+- **Automatic architecture detection**: Clean Architecture, Onion, Layered, Feature-First + Clean + DDD, CQRS
 - DDD pattern validation
 - Circular dependency detection
 - Decorator and module analysis
 
 #### Frontend (React/Next.js)
 - 200+ architecture rules
+- **Automatic architecture detection**: Component-Based, Atomic Design, Feature-First + Clean + DDD, State Management patterns
 - Server/Client Components validation
 - Hooks and state management analysis
 - Prop drilling detection
 
 #### iOS (Swift/SwiftUI)
 - 150+ iOS-specific rules
-- MVVM pattern validation
+- **Automatic architecture detection**: MVVM-C, MVVM, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD
 - SwiftUI best practices analysis
 - Potential memory leak detection
 
 #### Android (Kotlin/Jetpack Compose)
 - 200+ Android-specific rules
-- Clean Architecture validation
+- **Automatic architecture detection**: MVVM, MVI, MVP, Clean Architecture, Feature-First + Clean + DDD
 - Compose pattern analysis
 - Common anti-pattern detection
+
+### 🏗️ Automatic Architecture Detection
+
+All platforms now support **automatic architecture pattern detection**:
+- **No configuration needed** - works out of the box
+- Detects patterns by analyzing project structure, imports, and code
+- Supports manual override via `.ast-architecture.json` (optional)
+- Works for iOS, Android, Backend, and Frontend
+
+See [HOW_IT_WORKS.md](./docs/HOW_IT_WORKS.md#architecture-detection-by-platform) for details on detected patterns per platform.
 
 ### 🤖 MCP Integration
 
 - **evidence-watcher**: Automatic monitoring of `.AI_EVIDENCE.json`
-- **gitflow-automation-watcher**: Complete Git Flow automation
+- **ast-intelligence-automation**: Complete Git Flow automation and context detection
 - Native integration with Cursor AI
 
 ### 🔒 Quality Gates
@@ -315,7 +327,7 @@ This section provides a recommended reading order to fully understand the librar
 
 6. **[MCP_SERVERS.md](./docs/MCP_SERVERS.md)** - MCP integration with Cursor AI
    - evidence-watcher setup
-   - gitflow-automation-watcher setup
+   - ast-intelligence-automation setup
    - Usage examples
    - Troubleshooting
 
@@ -413,9 +425,9 @@ Monitors the status of `.AI_EVIDENCE.json` and allows AI to verify if it's up to
 **Tools:**
 - `check_evidence_status`: Checks if the evidence is stale
 
-### gitflow-automation-watcher
+### ast-intelligence-automation
 
-Automates the complete Git Flow cycle: commit → push → PR → merge.
+Automates the complete Git Flow cycle: commit → push → PR → merge, plus context detection and AI gate checks.
 
 **Resources:**
 - `evidence://status`: Evidence status
@@ -717,7 +729,7 @@ Developed by **Pumuki Team®**
 
 - **Author**: Juan Carlos Merlos Albarracín (Software Architect)
 - **Contact**: freelancemerlos@gmail.com
-- **Version**: 5.3.0
+- **Version**: 5.3.1
 - **Repository**: [GitHub](https://github.com/carlos/ast-intelligence-hooks)
 
 ---
