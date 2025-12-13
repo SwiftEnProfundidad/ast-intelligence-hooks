@@ -1,6 +1,6 @@
 # @pumuki/ast-intelligence-hooks
 
-[![npm version](https://img.shields.io/npm/v/@pumuki/ast-intelligence-hooks.svg)](https://www.npmjs.com/package/@pumuki/ast-intelligence-hooks)
+[![npm version](https://img.shields.io/npm/v/@pumuki/ast-intelligence-hooks.svg?label=npm)](https://www.npmjs.com/package/@pumuki/ast-intelligence-hooks)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
 [![npm](https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg)](https://www.npmjs.com/)
