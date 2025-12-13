@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "ai-evidence-watcher": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/evidence-watcher.js"
+      ],
+      "env": {
+        "REPO_ROOT": "${workspaceFolder}"
+      }
+    },
+    "gitflow-automation-watcher": {
+      "command": "node",
+      "args": [
+        "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/gitflow-automation-watcher.js"
+      ],
+      "env": {
+        "REPO_ROOT": "${workspaceFolder}",
+        "AUTO_COMMIT_ENABLED": "true",
+        "AUTO_PUSH_ENABLED": "true",
+        "AUTO_PR_ENABLED": "false",
+        "HOOK_GUARD_EVIDENCE_STALE_THRESHOLD": "180"
+      }
+    }
+  }
+}
