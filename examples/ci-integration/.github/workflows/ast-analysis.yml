@@ -1,0 +1,86 @@
+name: AST Analysis
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+
+jobs:
+  ast-analysis:
+    name: AST Intelligence Analysis
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Install AST Intelligence Hooks
+        run: npm install --save-dev @pumuki/ast-intelligence-hooks
+      
+      - name: Run AST Analysis
+        id: ast-analysis
+        run: npm run audit || true
+        continue-on-error: true
+        env:
+          REPO_ROOT: ${{ github.workspace }}
+      
+      - name: Generate violations summary
+        if: always()
+        run: |
+          npm run violations:summary > violations-summary.txt || echo "No violations found"
+        continue-on-error: true
+      
+      - name: Upload violations report
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ast-violations-report-node-${{ matrix.node-version }}
+          path: |
+            .audit-reports/
+            violations-summary.txt
+          retention-days: 7
+      
+      - name: Comment PR with violations
+        if: github.event_name == 'pull_request' && always()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const summaryPath = 'violations-summary.txt';
+            
+            if (fs.existsSync(summaryPath)) {
+              const summary = fs.readFileSync(summaryPath, 'utf8');
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🔍 AST Analysis Results\n\n\`\`\`\n${summary}\n\`\`\`\n\n📊 [View full report](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})`
+              });
+            }
+      
+      - name: Fail if critical violations
+        if: always()
+        run: |
+          if [ -f violations-summary.txt ]; then
+            CRITICAL=$(grep -i "CRITICAL" violations-summary.txt | grep -oE "[0-9]+" | head -1 || echo "0")
+            if [ "$CRITICAL" -gt "0" ]; then
+              echo "❌ Critical violations found: $CRITICAL"
+              exit 1
+            fi
+          fi
