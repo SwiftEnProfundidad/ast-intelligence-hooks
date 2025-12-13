@@ -215,10 +215,10 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
       status: gateResult.passed ? 'ALLOWED' : 'BLOCKED',
       last_check: new Date().toISOString(),
       violations: blockingViolations.map(v => ({
-        file: v.file || 'unknown',
+        file: v.filePath || v.file || 'unknown',
         line: v.line || null,
         severity: v.severity,
-        rule: v.rule,
+        rule: v.ruleId || v.rule || 'unknown',
         message: v.message || v.description || '',
         category: v.category || 'unknown',
         intelligent_evaluation: v.intelligentEvaluation || false,
