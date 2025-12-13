@@ -732,7 +732,7 @@ This project is licensed under the **MIT License** - see [LICENSE](./LICENSE) fo
 
 Developed by **Pumuki Team®**
 
-- **Author**: Juan Carlos Merlos Albarracín (Software Architect)
+- **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development)
 - **Contact**: freelancemerlos@gmail.com
 - **Version**: 5.3.1
 - **Repository**: [GitHub](https://github.com/carlos/ast-intelligence-hooks)
