@@ -397,7 +397,22 @@ ${COLORS.reset}`);
         process.stdout.write(`${COLORS.green}  ✅ Configured ${ide.configPath}${COLORS.reset}\n`);
         configuredCount++;
       } else {
-        process.stdout.write(`${COLORS.yellow}  ⚠️  ${ide.configPath} already exists, skipping${COLORS.reset}\n`);
+        // File exists - try to merge instead of skipping
+        try {
+          const existing = JSON.parse(fs.readFileSync(mcpConfigPath, 'utf8'));
+          if (!existing.mcpServers) {
+            existing.mcpServers = {};
+          }
+          
+          // Merge our MCP server into existing config
+          existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
+          
+          fs.writeFileSync(mcpConfigPath, JSON.stringify(existing, null, 2));
+          process.stdout.write(`${COLORS.green}  ✅ Updated ${ide.configPath} (merged configuration)${COLORS.reset}\n`);
+          configuredCount++;
+        } catch (mergeError) {
+          process.stdout.write(`${COLORS.yellow}  ⚠️  ${ide.configPath} already exists and couldn't be merged, skipping${COLORS.reset}\n`);
+        }
       }
     });
 
@@ -412,6 +427,21 @@ ${COLORS.reset}`);
         fs.writeFileSync(fallbackPath, JSON.stringify(mcpConfig, null, 2));
         process.stdout.write(`${COLORS.green}  ✅ Configured .cursor/mcp.json (generic fallback)${COLORS.reset}\n`);
         process.stdout.write(`${COLORS.cyan}  ℹ️  Note: MCP servers work with any MCP-compatible IDE${COLORS.reset}\n`);
+        configuredCount++;
+      } else {
+        // Try to merge into existing file
+        try {
+          const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+          if (!existing.mcpServers) {
+            existing.mcpServers = {};
+          }
+          existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
+          fs.writeFileSync(fallbackPath, JSON.stringify(existing, null, 2));
+          process.stdout.write(`${COLORS.green}  ✅ Updated .cursor/mcp.json (merged configuration)${COLORS.reset}\n`);
+          configuredCount++;
+        } catch (mergeError) {
+          process.stdout.write(`${COLORS.yellow}  ⚠️  .cursor/mcp.json exists and couldn't be merged, skipping${COLORS.reset}\n`);
+        }
       }
     }
   }
@@ -630,8 +660,27 @@ exit 0
         packageJson.scripts = {};
       }
 
-      // Add install-hooks script if it doesn't exist or is different
-      const installHooksScript = 'npx ast-install';
+      // Determine which install command to use
+      // Try to use npx first (works when package is properly installed and bin is available)
+      // Fallback to direct node path if npx won't work
+      let installHooksScript;
+      
+      const npxBinPath = path.join(this.targetRoot, 'node_modules', '.bin', 'ast-install');
+      const directBinPath = path.join(this.targetRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'install.js');
+      
+      // Check if npx binary exists (symlink or file)
+      if (fs.existsSync(npxBinPath)) {
+        // npx should work
+        installHooksScript = 'npx ast-install';
+      } else if (fs.existsSync(directBinPath)) {
+        // Use direct path as fallback
+        installHooksScript = 'node node_modules/@pumuki/ast-intelligence-hooks/bin/install.js';
+      } else {
+        // Neither exists, use npx anyway (will fail gracefully with clear error)
+        installHooksScript = 'npx ast-install';
+        process.stdout.write(`${COLORS.yellow}  ⚠️  Installer binary not found, script may not work${COLORS.reset}\n`);
+      }
+
       if (!packageJson.scripts['install-hooks'] || packageJson.scripts['install-hooks'] !== installHooksScript) {
         packageJson.scripts['install-hooks'] = installHooksScript;
         process.stdout.write(`${COLORS.green}  ✅ Added script: install-hooks${COLORS.reset}\n`);
@@ -663,7 +712,10 @@ ${COLORS.cyan}📦 Installation Summary:${COLORS.reset}
 ✓ Platforms detected: ${COLORS.green}${this.platforms.join(', ')}${COLORS.reset}
 ✓ Total rules available: ${COLORS.green}798+${COLORS.reset}
 ✓ Git hooks: ${COLORS.green}pre-commit (strict mode)${COLORS.reset}
-✓ Configuration files created
+✓ MCP servers: ${COLORS.green}ast-intelligence-automation configured${COLORS.reset}
+
+${COLORS.yellow}⚠️  IMPORTANT: Restart your IDE (Cursor/Claude Desktop/etc.) to activate MCP servers${COLORS.reset}
+${COLORS.cyan}   The MCP configuration has been created, but requires an IDE restart to be loaded${COLORS.reset}
 
 ${COLORS.cyan}🚀 Next Steps:${COLORS.reset}
 ─────────────────────────────────────────────────────────────
