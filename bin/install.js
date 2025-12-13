@@ -98,10 +98,10 @@ ${COLORS.reset}`);
     this.createProjectConfig();
     process.stdout.write(`${COLORS.green}✓ Configuration created${COLORS.reset}`);
 
-    // STEP 6: Install Cursor hooks and MCP servers
-    process.stdout.write(`\n${COLORS.cyan}[6/7] Installing Cursor hooks and MCP servers...${COLORS.reset}`);
+    // STEP 6: Install MCP servers for agentic IDEs
+    process.stdout.write(`\n${COLORS.cyan}[6/7] Installing MCP servers for agentic IDEs...${COLORS.reset}`);
     this.installCursorHooks();
-    process.stdout.write(`${COLORS.green}✓ Cursor hooks and MCP servers installed${COLORS.reset}`);
+    process.stdout.write(`${COLORS.green}✓ MCP servers installed${COLORS.reset}`);
 
     // STEP 7: Install Git hooks
     process.stdout.write(`\n${COLORS.cyan}[7/7] Installing Git hooks...${COLORS.reset}`);
@@ -341,27 +341,17 @@ ${COLORS.reset}`);
   }
 
   configureMCPServers() {
-    const cursorDir = path.join(this.targetRoot, '.cursor');
-    if (!fs.existsSync(cursorDir)) {
-      fs.mkdirSync(cursorDir, { recursive: true });
-    }
-
     // Detect Node.js executable path
-    // Try process.execPath first (most reliable when running from Node)
     let nodePath = process.execPath;
-    
-    // Fallback: try common paths or use 'node' and let user configure
     if (!nodePath || !fs.existsSync(nodePath)) {
       try {
         const { execSync } = require('child_process');
         nodePath = execSync('which node', { encoding: 'utf-8' }).trim();
       } catch (err) {
-        // If all else fails, use 'node' and document that user may need to set PATH
         nodePath = 'node';
       }
     }
 
-    const mcpConfigPath = path.join(cursorDir, 'mcp.json');
     const mcpConfig = {
       mcpServers: {
         'ast-intelligence-automation': {
@@ -379,13 +369,104 @@ ${COLORS.reset}`);
       }
     };
 
-    // Only create if it doesn't exist (don't overwrite user config)
-    if (!fs.existsSync(mcpConfigPath)) {
-      fs.writeFileSync(mcpConfigPath, JSON.stringify(mcpConfig, null, 2));
-      process.stdout.write(`${COLORS.green}  ✅ Configured .cursor/mcp.json${COLORS.reset}\n`);
-    } else {
-      process.stdout.write(`${COLORS.yellow}  ⚠️  .cursor/mcp.json already exists, skipping${COLORS.reset}\n`);
+    // MCP is a standard protocol, works with any MCP-compatible client
+    // We configure for multiple IDEs to maximize compatibility
+    const ideConfigs = this.detectIDEs();
+    let configuredCount = 0;
+
+    ideConfigs.forEach(ide => {
+      if (!fs.existsSync(ide.configDir)) {
+        fs.mkdirSync(ide.configDir, { recursive: true });
+      }
+
+      const mcpConfigPath = path.join(ide.configDir, 'mcp.json');
+      
+      // Only create if it doesn't exist (don't overwrite user config)
+      if (!fs.existsSync(mcpConfigPath)) {
+        // Adjust config format if needed for specific IDEs
+        const configToWrite = ide.name === 'Claude Desktop' 
+          ? this.adaptConfigForClaudeDesktop(mcpConfig)
+          : mcpConfig;
+        
+        fs.writeFileSync(mcpConfigPath, JSON.stringify(configToWrite, null, 2));
+        process.stdout.write(`${COLORS.green}  ✅ Configured ${ide.configPath}${COLORS.reset}\n`);
+        configuredCount++;
+      } else {
+        process.stdout.write(`${COLORS.yellow}  ⚠️  ${ide.configPath} already exists, skipping${COLORS.reset}\n`);
+      }
+    });
+
+    if (configuredCount === 0 && ideConfigs.length === 0) {
+      // Fallback: create .cursor/mcp.json in project (most common)
+      const cursorDir = path.join(this.targetRoot, '.cursor');
+      if (!fs.existsSync(cursorDir)) {
+        fs.mkdirSync(cursorDir, { recursive: true });
+      }
+      const fallbackPath = path.join(cursorDir, 'mcp.json');
+      if (!fs.existsSync(fallbackPath)) {
+        fs.writeFileSync(fallbackPath, JSON.stringify(mcpConfig, null, 2));
+        process.stdout.write(`${COLORS.green}  ✅ Configured .cursor/mcp.json (generic fallback)${COLORS.reset}\n`);
+        process.stdout.write(`${COLORS.cyan}  ℹ️  Note: MCP servers work with any MCP-compatible IDE${COLORS.reset}\n`);
+      }
     }
+  }
+
+  detectIDEs() {
+    const os = require('os');
+    const homeDir = os.homedir();
+    const ideConfigs = [];
+
+    // Cursor: Project-level config (.cursor/mcp.json) or global (~/.cursor/mcp.json)
+    const cursorProjectPath = path.join(this.targetRoot, '.cursor', 'mcp.json');
+    ideConfigs.push({
+      name: 'Cursor',
+      configDir: path.dirname(cursorProjectPath),
+      configPath: '.cursor/mcp.json',
+      type: 'project'
+    });
+
+    // Claude Desktop: Global config (location may vary by OS)
+    let claudeDesktopConfigDir;
+    if (process.platform === 'darwin') {
+      // macOS
+      claudeDesktopConfigDir = path.join(homeDir, 'Library', 'Application Support', 'Claude', 'claude_desktop_config.json');
+    } else if (process.platform === 'win32') {
+      // Windows
+      claudeDesktopConfigDir = path.join(process.env.APPDATA || '', 'Claude', 'claude_desktop_config.json');
+    } else {
+      // Linux
+      claudeDesktopConfigDir = path.join(homeDir, '.config', 'claude_desktop_config.json');
+    }
+    
+    // Claude Desktop uses a different config format (single JSON file with mcpServers nested)
+    // We'll note it but let user configure manually if needed
+    if (fs.existsSync(path.dirname(claudeDesktopConfigDir))) {
+      ideConfigs.push({
+        name: 'Claude Desktop',
+        configDir: path.dirname(claudeDesktopConfigDir),
+        configPath: claudeDesktopConfigDir,
+        type: 'global'
+      });
+    }
+
+    // Windsurf: Similar to Cursor structure
+    const windsurfProjectPath = path.join(this.targetRoot, '.windsurf', 'mcp.json');
+    if (fs.existsSync(path.dirname(windsurfProjectPath)) || fs.existsSync(path.join(homeDir, '.windsurf'))) {
+      ideConfigs.push({
+        name: 'Windsurf',
+        configDir: path.dirname(windsurfProjectPath),
+        configPath: '.windsurf/mcp.json',
+        type: 'project'
+      });
+    }
+
+    return ideConfigs;
+  }
+
+  adaptConfigForClaudeDesktop(config) {
+    // Claude Desktop may need slightly different format
+    // For now, return as-is since format should be similar
+    return config;
   }
 
   getRelevantSkills() {

@@ -6,7 +6,7 @@
 [![npm](https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg)](https://www.npmjs.com/)
 [![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue.svg)]()
 
-> **Enterprise-grade AST Intelligence System** with multi-platform support (iOS, Android, Backend, Frontend) and strict enforcement of Feature-First + DDD + Clean Architecture.
+> **Enterprise-grade AST Intelligence System** with multi-platform support (iOS, Android, Backend, Frontend). Enforces **Clean Architecture**, **DDD**, **Feature-First Architecture**, and **BDD→TDD workflow** through **798+ validation rules**. Features automatic architecture detection, Git Flow automation, pre-commit hooks, MCP integration for agentic IDEs, quality gates, and CI/CD ready.
 
 ---
 
@@ -36,12 +36,17 @@
 
 ### Key Features
 
-- ✅ **798+ rules** for architectural and code validation
-- ✅ **Multi-platform**: iOS (Swift), Android (Kotlin), Backend (TypeScript/NestJS), Frontend (React/Next.js)
-- ✅ **Integrated Git Hooks**: Automatic validation on every commit
-- ✅ **AST Analysis**: Deep code analysis using Abstract Syntax Trees
-- ✅ **MCP Servers**: Integration with Cursor AI for automation
-- ✅ **Clean Architecture**: Strict implementation of SOLID principles
+- ✅ **798+ validation rules** across all platforms with severity-based quality gates
+- ✅ **Multi-platform support**: iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose), Backend (TypeScript/NestJS), Frontend (React/Next.js)
+- ✅ **Automatic architecture detection**: Detects MVVM-C, VIPER, TCA, Clean Architecture, DDD, CQRS, and more patterns
+- ✅ **BDD→TDD workflow enforcement**: CRITICAL priority - ensures feature files exist before implementation and tests before code
+- ✅ **Pre-commit Git hooks**: Automatic validation blocks commits with CRITICAL/HIGH violations
+- ✅ **Git Flow automation**: Complete workflow automation via MCP (commit → push → PR → merge)
+- ✅ **MCP integration**: Standard Model Context Protocol (MCP) support for any agentic IDE or AI client (Cursor, Claude Desktop, etc.)
+- ✅ **AST analysis engine**: Deep static code analysis using Abstract Syntax Trees
+- ✅ **Clean Architecture enforcement**: Strict SOLID principles validation and dependency rules
+- ✅ **Version checking**: Automatic detection of library updates
+- ✅ **CI/CD ready**: Seamless integration with GitHub Actions and other CI systems
 
 ---
 
@@ -122,7 +127,7 @@ See [HOW_IT_WORKS.md](./docs/HOW_IT_WORKS.md#architecture-detection-by-platform)
 
 - **evidence-watcher**: Automatic monitoring of `.AI_EVIDENCE.json`
 - **ast-intelligence-automation**: Complete Git Flow automation and context detection
-- Native integration with Cursor AI
+- **Standard MCP protocol**: Works with any MCP-compatible agentic IDE (Cursor, Claude Desktop, and others)
 
 ### 🔒 Quality Gates
 
@@ -325,7 +330,7 @@ This section provides a recommended reading order to fully understand the librar
 
 ### For Integration and Advanced Usage
 
-6. **[MCP_SERVERS.md](./docs/MCP_SERVERS.md)** - MCP integration with Cursor AI
+6. **[MCP_SERVERS.md](./docs/MCP_SERVERS.md)** - MCP integration for agentic IDEs
    - evidence-watcher setup
    - ast-intelligence-automation setup
    - Usage examples
@@ -413,7 +418,7 @@ For more details, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md) and [ARCHITECTUR
 
 ## MCP Servers
 
-The project includes two MCP Servers for integration with Cursor AI:
+The project includes MCP (Model Context Protocol) servers for integration with any agentic IDE or AI client:
 
 ### evidence-watcher
 
@@ -558,7 +563,7 @@ export AUDIT_CRITICAL_HIGH_ONLY=false
 - `config/ast-exclusions.json`: Exclude files from analysis
 - `config/language-guard.json`: Language-specific guard configuration
 - `config/doc-standards.json`: Documentation standards
-- `.cursor/mcp.json`: MCP Servers configuration (see [MCP_SERVERS.md](./docs/MCP_SERVERS.md))
+- `.cursor/mcp.json` or client-specific config: MCP Servers configuration (see [MCP_SERVERS.md](./docs/MCP_SERVERS.md))
 
 ### Customize Rules
 
@@ -610,9 +615,9 @@ npm run violations:summary
 }
 ```
 
-### 5. Use MCP Servers with Cursor AI
+### 5. Use MCP Servers with Agentic IDEs
 
-Configure MCP Servers in `.cursor/mcp.json` for complete automation.
+Configure MCP Servers in your IDE's MCP configuration file (e.g., `.cursor/mcp.json` for Cursor, or client-specific location) for complete automation.
 
 ---
 

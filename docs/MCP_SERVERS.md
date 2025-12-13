@@ -13,19 +13,29 @@
 
 ## Introduction
 
-MCP Servers (Model Context Protocol) allow AI in Cursor to interact directly with the project, automating common tasks and providing real-time context.
+MCP Servers (Model Context Protocol) allow AI in agentic IDEs to interact directly with the project, automating common tasks and providing real-time context.
 
 ### What is MCP?
 
-MCP (Model Context Protocol) is a standard protocol that allows AI clients (like Cursor) to communicate with external servers that provide:
+MCP (Model Context Protocol) is a **standard open protocol** (JSON-RPC 2.0) that allows AI clients (agentic IDEs) to communicate with external servers that provide:
 
 - **Resources**: Data that AI can read (like project state)
 - **Tools**: Functions that AI can execute (like creating PRs, checking status)
 - **Events**: Notifications about system changes
 
+### Compatibility
+
+MCP is **IDE-agnostic** and works with any client that implements the protocol, including:
+- **Cursor** - `.cursor/mcp.json` (project or global)
+- **Claude Desktop** - Global configuration file
+- **Windsurf** - `.windsurf/mcp.json` (project or global)
+- **Any other MCP-compatible client**
+
+The servers provided by this library are **standard MCP servers** and work with all MCP-compatible clients. The installer automatically detects and configures for multiple IDEs when possible.
+
 ### Protocol
 
-MCP Servers use **JSON-RPC 2.0** over stdin/stdout to communicate with Cursor.
+MCP Servers use **JSON-RPC 2.0** over stdin/stdout to communicate with agentic IDEs.
 
 ```json
 {
@@ -156,7 +166,7 @@ echo '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"check_evid
 
 ### Description
 
-Comprehensive development automation MCP server that provides: evidence management, Git Flow automation, context detection, validation & fixes, and AI gate checks. Automates the complete development workflow from Cursor AI.
+Comprehensive development automation MCP server that provides: evidence management, Git Flow automation, context detection, validation & fixes, and AI gate checks. Automates the complete development workflow from any MCP-compatible agentic IDE.
 
 ### Purpose
 
@@ -510,7 +520,9 @@ echo '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"ai_gate_ch
 
 ## Configuration
 
-### Complete Configuration in `.cursor/mcp.json`
+### Complete Configuration Example
+
+Example configuration for `.cursor/mcp.json` (Cursor) or similar file for other IDEs:
 
 ```json
 {
@@ -540,17 +552,29 @@ echo '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"ai_gate_ch
 }
 ```
 
-### File Location
+### File Locations by IDE
 
-- **macOS/Linux**: `~/.cursor/mcp.json` (global) or `.cursor/mcp.json` (per project)
-- **Windows**: `%APPDATA%\Cursor\mcp.json` (global) or `.cursor/mcp.json` (per project)
+#### Cursor
+- **Project-level**: `.cursor/mcp.json` (recommended, created automatically by installer)
+- **Global**: `~/.cursor/mcp.json` (macOS/Linux) or `%APPDATA%\Cursor\mcp.json` (Windows)
+
+#### Claude Desktop
+- **Global**: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
+- **Global**: `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
+- **Global**: `~/.config/claude_desktop_config.json` (Linux)
+
+#### Windsurf
+- **Project-level**: `.windsurf/mcp.json`
+- **Global**: `~/.windsurf/mcp.json`
 
 ### Available Variables
 
-Cursor provides these variables in `mcp.json`:
+Most IDEs provide these variables in `mcp.json`:
 
 - `${workspaceFolder}`: Full path of current workspace
 - `${workspaceFolderBasename}`: Workspace name (last part of path)
+
+**Note**: Variable names may vary slightly between IDEs. Consult your IDE's MCP documentation for specifics.
 
 ---
 
@@ -688,7 +712,7 @@ if (aiStart.success && aiStart.evidenceUpdated) {
 **Symptom:** MCP server doesn't respond to requests.
 
 **Solution:**
-1. Restart Cursor
+1. Restart your IDE/agentic client
 2. Verify there are no zombie processes: `ps aux | grep mcp`
 3. Kill zombie processes: `pkill -f "mcp.*watcher"`
 4. Check server stderr logs
@@ -697,8 +721,8 @@ if (aiStart.success && aiStart.evidenceUpdated) {
 
 ## References
 
-- [Model Context Protocol Specification](https://modelcontextprotocol.io)
-- [Cursor MCP Documentation](https://cursor.sh/docs/mcp)
+- [Model Context Protocol Specification](https://modelcontextprotocol.io) - Official MCP standard
+- [Cursor MCP Documentation](https://cursor.sh/docs/mcp) - Cursor-specific implementation
 - [ARCHITECTURE_DETAILED.md](./ARCHITECTURE_DETAILED.md) - System architecture
 - [API_REFERENCE.md](./API_REFERENCE.md) - API reference
 
