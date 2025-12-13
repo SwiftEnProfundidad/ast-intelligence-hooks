@@ -23,6 +23,9 @@ build/
 # Home directory (should never be tracked)
 ~/
 
+# Personal/private files
+ANNOUNCEMENTS.md
+
 # Temporary/cache files
 *.log
 *.tmp
