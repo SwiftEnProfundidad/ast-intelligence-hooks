@@ -1603,7 +1603,8 @@ function runBackendIntelligence(project, findings, platform) {
       );
     }
   }
-});
+  });
+}
 
 module.exports = {
   runBackendIntelligence,
