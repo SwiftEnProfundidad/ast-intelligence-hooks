@@ -10,15 +10,15 @@
 
 ### Visual Overview
 
-![AST Intelligence System Overview](./docs/images/ast_intelligence_01.png)
+<img src="./docs/images/ast_intelligence_01.png" alt="AST Intelligence System Overview" width="100%" />
 
-![AST Intelligence Workflow](./docs/images/ast_intelligence_02.png)
+<img src="./docs/images/ast_intelligence_02.png" alt="AST Intelligence Workflow" width="100%" />
 
-![AST Intelligence Audit - Part 1](./docs/images/ast_intelligence_03.png)
+<img src="./docs/images/ast_intelligence_03.png" alt="AST Intelligence Audit - Part 1" width="100%" />
 
-![AST Intelligence Audit - Part 2](./docs/images/ast_intelligence_04.png)
+<img src="./docs/images/ast_intelligence_04.png" alt="AST Intelligence Audit - Part 2" width="100%" />
 
-![AST Intelligence Audit - Part 3](./docs/images/ast_intelligence_05.png)
+<img src="./docs/images/ast_intelligence_05.png" alt="AST Intelligence Audit - Part 3" width="100%" />
 
 ---
 
