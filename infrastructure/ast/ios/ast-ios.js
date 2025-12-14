@@ -57,9 +57,9 @@ async function runIOSIntelligence(project, findings, platform) {
       pushFinding("ios.force_unwrapping", "high", sf, expr, "Force unwrapping (!) detected - use if let or guard let instead", findings);
     });
 
-    const filePath = sf.getFilePath();
-    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
-    const isTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(filePath);
+    const completionHandlerFilePath = sf.getFilePath();
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(completionHandlerFilePath);
+    const isTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(completionHandlerFilePath);
     if (!isAnalyzer && !isTestFile) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const args = call.getArguments();
