@@ -72,18 +72,33 @@ const getGitTreeState = ({ repoRoot = process.cwd() } = {}) => {
     }
 };
 
-const isTreeBeyondLimit = (state, limit) => {
-    if (!state || !Number.isFinite(limit) || limit <= 0) {
+const isTreeBeyondLimit = (state, limits) => {
+    if (!state) {
         return false;
     }
-    return (
-        state.stagedCount > limit ||
-        state.workingCount > limit ||
-        state.uniqueCount > limit
-    );
+    
+    if (typeof limits === 'number') {
+        const limit = limits;
+        if (!Number.isFinite(limit) || limit <= 0) {
+            return false;
+        }
+        return (
+            state.stagedCount > limit ||
+            state.workingCount > limit ||
+            state.uniqueCount > limit
+        );
+    }
+    
+    const { stagedLimit = 10, unstagedLimit = 15, totalLimit = 20 } = limits || {};
+    
+    const stagedExceeded = Number.isFinite(stagedLimit) && stagedLimit > 0 && state.stagedCount > stagedLimit;
+    const unstagedExceeded = Number.isFinite(unstagedLimit) && unstagedLimit > 0 && state.workingCount > unstagedLimit;
+    const totalExceeded = Number.isFinite(totalLimit) && totalLimit > 0 && state.uniqueCount > totalLimit;
+    
+    return stagedExceeded || unstagedExceeded || totalExceeded;
 };
 
-const summarizeTreeState = (state, limit) => {
+const summarizeTreeState = (state, limits) => {
     if (!state) {
         return 'no data';
     }
@@ -92,8 +107,27 @@ const summarizeTreeState = (state, limit) => {
         `working ${state.workingCount}`,
         `unique ${state.uniqueCount}`
     ];
-    if (Number.isFinite(limit) && limit > 0) {
-        parts.push(`limit ${limit}`);
+    
+    if (typeof limits === 'number') {
+        const limit = limits;
+        if (Number.isFinite(limit) && limit > 0) {
+            parts.push(`limit ${limit}`);
+        }
+    } else if (limits && typeof limits === 'object') {
+        const { stagedLimit = 10, unstagedLimit = 15, totalLimit = 20 } = limits;
+        const limitParts = [];
+        if (Number.isFinite(stagedLimit) && stagedLimit > 0) {
+            limitParts.push(`staged limit ${stagedLimit}`);
+        }
+        if (Number.isFinite(unstagedLimit) && unstagedLimit > 0) {
+            limitParts.push(`unstaged limit ${unstagedLimit}`);
+        }
+        if (Number.isFinite(totalLimit) && totalLimit > 0) {
+            limitParts.push(`total limit ${totalLimit}`);
+        }
+        if (limitParts.length > 0) {
+            parts.push(`(${limitParts.join(', ')})`);
+        }
     }
     return parts.join(', ');
 };

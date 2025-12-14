@@ -8,6 +8,12 @@
 
 > **Enterprise-grade AST Intelligence System** with multi-platform support (iOS, Android, Backend, Frontend). Enforces **Clean Architecture**, **DDD**, **Feature-First Architecture**, and **BDD→TDD workflow** through **798+ validation rules**. Features automatic architecture detection, Git Flow automation, pre-commit hooks, MCP integration for agentic IDEs, quality gates, and CI/CD ready.
 
+### Visual Overview
+
+![AST Intelligence System Overview](./docs/images/ast_intelligence_01.png)
+
+![AST Intelligence Workflow](./docs/images/ast_intelligence_02.png)
+
 ---
 
 ## 🧠 The Vision: Solving AI Context Loss in Software Development
@@ -62,8 +68,9 @@ This library was conceived to solve this fundamental problem by creating a **per
      - Example: `"Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."`
 
 3. **Rules are automatically loaded**:
-   - `DynamicRulesLoader` scans `.cursor/rules/` for platform-specific rules
-   - Loads `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`, `rulesgold.mdc`
+   - `DynamicRulesLoader` scans agentic IDE rules directories (`.cursor/rules/`, `.claude/skills/`, `.windsurf/rules/`, `.vscode/rules/`, `.kilo/rules/`, `.cline/rules/`) for platform-specific rules
+   - **Always loads `rulesgold.mdc` first** (generic rules that apply to all projects)
+   - Then loads platform-specific rules: `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`
    - Aggregates all 798+ validation rules into a single context
    - Creates `auto-context.mdc` with all active rules
 
@@ -74,19 +81,61 @@ This library was conceived to solve this fundamental problem by creating a **per
      "session_id": "feature/user-authentication",
      "protocol_3_questions": {
        "answered": true,
-       "question_1_file_type": "...",
-       "question_2_similar_exists": "...",
-       "question_3_clean_architecture": "..."
+       "question_1_file_type": "Code task on branch 'feature/auth'. Modifying typescript, kotlin in: auth, users. Target layer: Domain.",
+       "question_2_similar_exists": "Modules affected: auth, users. Recent commits: abc123 feat: Add JWT validation. Check for existing patterns before adding new code.",
+       "question_3_clean_architecture": "Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."
      },
      "rules_read": [
-       { "file": "rulesbackend.mdc", "verified": true, "summary": "..." },
-       { "file": "rulesgold.mdc", "verified": true, "summary": "..." }
+       { "file": "rulesgold.mdc", "verified": true, "summary": "IDE Rules: ### ANTES de implementar CUALQUIER cosa (aplicables en todas las tecnologías):;### Reglas de Arquitectura:;### Seguridad y Validación:;### Performance y Escalabilidad:;### Testing y Calidad:;### Observabilidad y Debugging:;### Arquitectura y Diseño:;### Control de Versiones y Colaboración:;### i18n y Accesibilidad:;### Error Handling:; | AST: Files: 96, Rules: types.any,debug.console,security.secret,security.sql.raw,performance.pagination,performance.nplus1,architecture.layering,ios.force_unwrapping" },
+       { "file": "rulesbackend.mdc", "verified": true, "summary": "IDE Rules: ### NestJS Architecture:;### Repository Pattern:;### Use Cases Pattern:;### DTOs y Validación:;### Database y ORM:;### Autenticación y Autorización:;### Event-Driven Architecture:;### Caché (Redis):;### Logging y Observabilidad:;### Testing Backend:;### Error Handling:;### Seguridad:;### Performance:;### API Design:;### Configuración:;### Documentación:; | AST: Files: 16, Rules: backend.error_handling.untyped_catch,backend.security.pii_in_logs,backend.performance.nplus1" },
+       { "file": "rulesios.mdc", "verified": true, "summary": "IDE Rules: ### Swift Moderno:;### SwiftUI (Preferido):;### UIKit (Legacy/Necesario):;### Protocol-Oriented Programming:;### Value Types:;### Memory Management:;### Optionals:;### Clean Architecture en iOS:;### Dependency Injection:;### Networking:;### Persistence:;### Combine (Reactive):;### Concurrency:;### Testing:;### Security:;### Accessibility:;### Localization:; | AST: Files: 24, Rules: ios.force_unwrapping,ios.singleton,ios.massive_view_controller" }
      ],
      "current_context": {
        "branch": "feature/user-authentication",
        "last_commits": "abc123 feat: Add JWT validation"
      },
-     "platforms": ["backend", "ios"]
+     "platforms": ["backend", "ios"],
+     "ai_gate": {
+       "status": "BLOCKED",
+       "last_check": "2025-12-13T23:16:39.736Z",
+       "violations": [
+         {
+           "file": "/path/to/project/src/auth/user.service.ts",
+           "line": 45,
+           "severity": "HIGH",
+           "rule": "backend.error_handling.untyped_catch",
+           "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
+           "category": "Error Handling",
+           "intelligent_evaluation": false,
+           "severity_score": 50
+         },
+         {
+           "file": "/path/to/project/src/auth/auth.controller.ts",
+           "line": 12,
+           "severity": "CRITICAL",
+           "rule": "backend.security.pii_in_logs",
+           "message": "🚨 CRITICAL: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don't include sensitive fields. GDPR violation risk.",
+           "category": "Security",
+           "intelligent_evaluation": true,
+           "severity_score": 100
+         }
+       ],
+       "instruction": "🚨 AI MUST call mcp6_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
+       "mandatory": true
+     },
+     "severity_metrics": {
+       "last_updated": "2025-12-13T23:16:39.726Z",
+       "total_violations": 2,
+       "by_severity": {
+         "CRITICAL": 1,
+         "HIGH": 1,
+         "MEDIUM": 0,
+         "LOW": 0
+       },
+       "average_severity_score": 75,
+       "gate_status": "FAILED",
+       "blocked_by": "CRITICAL"
+     }
    }
    ```
 
@@ -111,11 +160,14 @@ This library was conceived to solve this fundamental problem by creating a **per
    - Polls `.AI_EVIDENCE.json` every 30 seconds
    - Detects staleness (>60 seconds)
    - **Auto-refreshes** evidence if stale (when `HOOK_GUARD_AUTO_REFRESH=true`)
-   - Monitors Git tree state (prevents >100 uncommitted files)
+   - Monitors Git tree state with differentiated thresholds:
+     - **Staged files**: Warning at >10 files (configurable via `HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT`)
+     - **Unstaged files**: Warning at >15 files (configurable via `HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT`)
+     - **Total files**: Warning at >20 files (configurable via `HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT`)
    - Sends macOS notifications for critical events
 
 3. **Automatic Rule Updates**:
-   - When new rules are added to `.cursor/rules/`, they're automatically detected
+   - When new rules are added to any agentic IDE rules directory, they're automatically detected
    - `DynamicRulesLoader` reloads rules on next `ai-start`
    - `auto-context.mdc` is regenerated with latest rules
 
@@ -191,12 +243,12 @@ This library was conceived to solve this fundamental problem by creating a **per
    - Custom analyzers for each platform:
      - `BackendArchitectureDetector`: Detects NestJS patterns, Clean Architecture
      - `FrontendArchitectureDetector`: Detects React/Next.js patterns, Feature-First
-     - `iOSArchitectureDetector`: Detects Swift/SwiftUI patterns, MVVM-C
+     - `iOSArchitectureDetector`: Detects multiple iOS architecture patterns (MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD, MVC Legacy)
      - `AndroidClassAnalyzer`: Detects Kotlin/Jetpack Compose patterns
    - `MaintainabilityAnalyzer`, `PerformanceAnalyzer`, `SecurityAnalyzer`, `StabilityAnalyzer`
 
 4. **Context Management**:
-   - `DynamicRulesLoader`: Loads and aggregates rules from `.cursor/rules/`
+   - `DynamicRulesLoader`: Loads and aggregates rules from any agentic IDE rules directory (Cursor, Claude, Windsurf, VS Code, Kilo, Cline, etc.)
    - `ContextDetectionEngine`: Detects project structure and patterns
    - `PlatformDetectionService`: Identifies platforms (iOS, Android, Backend, Frontend)
    - `AutonomousOrchestrator`: Coordinates context detection and rule loading
@@ -221,7 +273,7 @@ This library was conceived to solve this fundamental problem by creating a **per
 
 1. **Permanent AI Context**: `.AI_EVIDENCE.json` that never gets lost
 2. **798+ Validation Rules**: Platform-specific code quality rules
-3. **Automatic Architecture Detection**: Identifies patterns (Clean, DDD, Feature-First, MVVM-C, etc.)
+3. **Automatic Architecture Detection**: Identifies multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
 4. **Quality Gates**: Blocks commits with CRITICAL/HIGH violations
 5. **Git Flow Automation**: Complete workflow automation (commit → push → PR → merge)
 6. **MCP Integration**: Standard protocol for any agentic IDE
@@ -315,7 +367,7 @@ With this library, your AI assistant **always knows**:
 #### 🔍 Code Validation
 - ✅ **798+ validation rules** across all platforms with severity-based quality gates
 - ✅ **Multi-platform support**: iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose), Backend (TypeScript/NestJS), Frontend (React/Next.js)
-- ✅ **Automatic architecture detection**: Detects MVVM-C, VIPER, TCA, Clean Architecture, DDD, CQRS, and more patterns
+- ✅ **Automatic architecture detection**: Detects multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
 - ✅ **BDD→TDD workflow enforcement**: CRITICAL priority - ensures feature files exist before implementation and tests before code
 - ✅ **Pre-commit Git hooks**: Automatic validation blocks commits with CRITICAL/HIGH violations
 - ✅ **AST analysis engine**: Deep static code analysis using Abstract Syntax Trees

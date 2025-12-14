@@ -35,7 +35,9 @@ class RealtimeGuardService {
     this.staleThresholdMs = Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 60000);
     this.pollIntervalMs = Number(process.env.HOOK_GUARD_EVIDENCE_POLL_INTERVAL || 30000);
     this.reminderIntervalMs = Number(process.env.HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL || 60000);
-    this.gitTreeThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_LIMIT || 100);
+    this.gitTreeStagedThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT || 10);
+    this.gitTreeUnstagedThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT || 15);
+    this.gitTreeTotalThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT || 20);
     this.gitTreeCheckIntervalMs = Number(process.env.HOOK_GUARD_DIRTY_TREE_INTERVAL || 60000);
     this.gitTreeReminderMs = Number(process.env.HOOK_GUARD_DIRTY_TREE_REMINDER || 300000);
     this.dirtyTreeMarkerPath = path.join(this.tempDir, 'dirty-tree-state.json');
@@ -162,7 +164,9 @@ class RealtimeGuardService {
   }
 
   startGitTreeMonitoring() {
-    if (!Number.isFinite(this.gitTreeThreshold) || this.gitTreeThreshold <= 0) {
+    if (!Number.isFinite(this.gitTreeStagedThreshold) || this.gitTreeStagedThreshold <= 0 ||
+        !Number.isFinite(this.gitTreeUnstagedThreshold) || this.gitTreeUnstagedThreshold <= 0 ||
+        !Number.isFinite(this.gitTreeTotalThreshold) || this.gitTreeTotalThreshold <= 0) {
       return;
     }
     const runCheck = async () => {
@@ -183,9 +187,13 @@ class RealtimeGuardService {
 
   async evaluateGitTree() {
     const state = getGitTreeState({ repoRoot: this.repoRoot });
-    const limit = this.gitTreeThreshold;
+    const limits = {
+      stagedLimit: this.gitTreeStagedThreshold,
+      unstagedLimit: this.gitTreeUnstagedThreshold,
+      totalLimit: this.gitTreeTotalThreshold
+    };
     this.appendDebugLog(
-      `DIRTY_TREE_STATE|${state?.stagedCount ?? 0}|${state?.workingCount ?? 0}|${state?.uniqueCount ?? 0}|${limit}`
+      `DIRTY_TREE_STATE|${state?.stagedCount ?? 0}|${state?.workingCount ?? 0}|${state?.uniqueCount ?? 0}|staged:${limits.stagedLimit}|unstaged:${limits.unstagedLimit}|total:${limits.totalLimit}`
     );
 
     if (state.uniqueCount > 20) {
@@ -212,36 +220,57 @@ class RealtimeGuardService {
       }
     }
 
-    if (isTreeBeyondLimit(state, limit)) {
-      this.handleDirtyTree(state, limit);
+    if (isTreeBeyondLimit(state, limits)) {
+      this.handleDirtyTree(state, limits);
       return;
     }
-    this.resolveDirtyTree(state, limit);
+    this.resolveDirtyTree(state, limits);
   }
 
-  handleDirtyTree(state, limit) {
+  handleDirtyTree(state, limits) {
     const now = Date.now();
-    const summary = summarizeTreeState(state, limit);
+    const summary = summarizeTreeState(state, limits);
     this.dirtyTreeActive = true;
     this.lastDirtyTreeState = state;
+
+    const { stagedLimit, unstagedLimit, totalLimit } = typeof limits === 'number' 
+      ? { stagedLimit: limits, unstagedLimit: limits, totalLimit: limits }
+      : limits;
+
+    const stagedExceeded = state.stagedCount > stagedLimit;
+    const unstagedExceeded = state.workingCount > unstagedLimit;
+    const totalExceeded = state.uniqueCount > totalLimit;
+
+    let message = 'Git tree has too many files: ';
+    const issues = [];
+    if (stagedExceeded) {
+      issues.push(`${state.stagedCount} staged (limit: ${stagedLimit})`);
+    }
+    if (unstagedExceeded) {
+      issues.push(`${state.workingCount} unstaged (limit: ${unstagedLimit})`);
+    }
+    if (totalExceeded) {
+      issues.push(`${state.uniqueCount} total (limit: ${totalLimit})`);
+    }
+    message += issues.join(', ') + '. Clean staging and working before continuing.';
 
     const lastNotified = this.lastDirtyTreeNotification || 0;
     const withinReminder = lastNotified > 0 && now - lastNotified < this.gitTreeReminderMs;
 
     if (withinReminder) {
       const remaining = Math.max(this.gitTreeReminderMs - (now - lastNotified), 0);
-      this.persistDirtyTreeState(state, limit, lastNotified, true);
-      this.appendDebugLog(`DIRTY_TREE_SUPPRESSED|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}|${limit}|${remaining}`);
+      this.persistDirtyTreeState(state, limits, lastNotified, true);
+      this.appendDebugLog(`DIRTY_TREE_SUPPRESSED|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}|${remaining}`);
       return;
     }
 
     this.lastDirtyTreeNotification = now;
-    this.persistDirtyTreeState(state, limit, now, true);
-    this.appendDebugLog(`DIRTY_TREE_ALERT|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}|${limit}`);
-    this.notify(`Git tree is saturated (${summary}). Clean staging and working before continuing.`, 'error', { forceDialog: true });
+    this.persistDirtyTreeState(state, limits, now, true);
+    this.appendDebugLog(`DIRTY_TREE_ALERT|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}|staged:${stagedLimit}|unstaged:${unstagedLimit}|total:${totalLimit}`);
+    this.notify(message, 'error', { forceDialog: true });
   }
 
-  resolveDirtyTree(state, limit) {
+  resolveDirtyTree(state, limits) {
     if (!this.dirtyTreeActive) {
       this.removeDirtyTreeMarker();
       return;
@@ -250,18 +279,21 @@ class RealtimeGuardService {
     this.lastDirtyTreeState = null;
     this.lastDirtyTreeNotification = 0;
     this.removeDirtyTreeMarker();
-    this.appendDebugLog(`DIRTY_TREE_CLEAR|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}|${limit}`);
+    this.appendDebugLog(`DIRTY_TREE_CLEAR|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}`);
     this.notify('Git tree is clean. You can continue.', 'info');
   }
 
-  persistDirtyTreeState(state, limit, notifiedAt, active = true) {
+  persistDirtyTreeState(state, limits, notifiedAt, active = true) {
     try {
+      const limitObj = typeof limits === 'number' 
+        ? { stagedLimit: limits, unstagedLimit: limits, totalLimit: limits }
+        : limits || {};
       const payload = {
         active,
         stagedCount: state?.stagedCount ?? 0,
         workingCount: state?.workingCount ?? 0,
         uniqueCount: state?.uniqueCount ?? 0,
-        limit,
+        limits: limitObj,
         notifiedAt: notifiedAt ? new Date(notifiedAt).toISOString() : null,
         timestamp: this.timestamp()
       };
