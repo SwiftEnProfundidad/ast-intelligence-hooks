@@ -239,8 +239,8 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
 
     fs.writeFileSync(path.join(outDir, "ast-summary.json"), JSON.stringify(out, null, 2), "utf-8");
 
-  } catch (e) {
-    console.error(`Error writing AST summary: ${e.message}`);
+  } catch (error) {
+    console.error(`Error writing AST summary: ${error.message}`);
   }
 }
 

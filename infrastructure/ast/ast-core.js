@@ -120,7 +120,7 @@ function positionOf(node, sf) {
   try {
     const pos = sf.getLineAndColumnAtPos(node.getStart());
     return { line: pos.line, column: pos.column };
-  } catch (e) {
+  } catch (error) {
     return { line: 1, column: 1 };
   }
 }
@@ -134,7 +134,7 @@ function loadExclusions() {
     if (fs.existsSync(configPath)) {
       exclusionsConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     }
-  } catch (e) {
+  } catch (error) {
     exclusionsConfig = { exclusions: { rules: {} }, severityOverrides: {} };
   }
   return exclusionsConfig || { exclusions: { rules: {} }, severityOverrides: {} };

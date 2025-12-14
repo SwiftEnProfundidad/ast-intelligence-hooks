@@ -354,7 +354,10 @@ class BackendArchitectureDetector {
     try {
       const fullPath = path.join(this.projectRoot, relativePath);
       return fs.readFileSync(fullPath, 'utf-8');
-    } catch (err) {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[BackendArchitectureDetector] Failed to read file ${relativePath}: ${error.message}`);
+      }
       return '';
     }
   }
