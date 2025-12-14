@@ -1,6 +1,4 @@
 // ===== CLEAN ARCHITECTURE ANALYZER - FRONTEND =====
-// Based on rulesfront.mdc specifications
-// Enforces: Domain → Application → Infrastructure → Presentation
 
 const { SyntaxKind } = require('ts-morph');
 
@@ -25,7 +23,6 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
     const importPath = imp.getModuleSpecifierValue();
     const targetLayer = detectLayer(importPath);
 
-    // RULE 1: Domain cannot import React/Next.js or other layers
     if (layer === 'domain') {
       const forbiddenImports = [
         'react',

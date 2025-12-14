@@ -1,6 +1,4 @@
 // ===== DDD ANALYZER - FRONTEND =====
-// Based on rulesfront.mdc specifications
-// DDD patterns adapted for Frontend (React/Next.js)
 
 const { SyntaxKind } = require('ts-morph');
 

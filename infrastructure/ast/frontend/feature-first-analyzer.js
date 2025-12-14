@@ -1,6 +1,4 @@
 // ===== FEATURE-FIRST ANALYZER - FRONTEND =====
-// Based on rulesfront.mdc specifications
-// Feature-First with proper boundaries and independence
 
 const path = require('path');
 
@@ -26,7 +24,6 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
     const importPath = imp.getModuleSpecifierValue();
     const targetFeature = detectFeature(importPath);
 
-    // RULE 1: No cross-feature imports
     if (targetFeature && targetFeature !== feature) {
       // Exceptions: ui/, shared/, lib/ are allowed
       const isSharedModule = /\/(ui|shared|lib|common)\//i.test(importPath);
