@@ -1,6 +1,3 @@
-// ===== COMMIT BLOCKING RULES =====
-// Domain Layer - Business Rules
-// Defines when a commit should be blocked based on audit results
 
 class CommitBlockingRules {
   constructor() {

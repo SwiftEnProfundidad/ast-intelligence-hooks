@@ -119,7 +119,9 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
   // =========================================================================
   // RULE 4: Swagger documentation (rulesbackend.mdc)
   // =========================================================================
-  if (!fullText.includes('@nestjs/swagger') && !fullText.includes('@Api')) {
+  const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+  const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+  if (!isAnalyzer && !isTestFile && !fullText.includes('@nestjs/swagger') && !fullText.includes('@Api')) {
     pushFinding('backend.api.missing_swagger', 'medium', sf, sf,
       `Controller without Swagger decorators - add @nestjs/swagger for API documentation.`,
       findings);

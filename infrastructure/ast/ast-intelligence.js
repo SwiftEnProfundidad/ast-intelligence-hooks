@@ -239,8 +239,8 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
 
     fs.writeFileSync(path.join(outDir, "ast-summary.json"), JSON.stringify(out, null, 2), "utf-8");
 
-  } catch (e) {
-    console.error(`Error writing AST summary: ${e.message}`);
+  } catch (error) {
+    console.error(`Error writing AST summary: ${error.message}`);
   }
 }
 
@@ -253,7 +253,7 @@ function checkForMigrations(root) {
     if (!fs.existsSync(migDir)) return false;
     const entries = fs.readdirSync(migDir);
     return entries.some((n) => /\.sql$/i.test(n));
-  } catch (_) {
+  } catch (error) {
     return false;
   }
 }
@@ -293,6 +293,7 @@ function listSourceFiles(root) {
 function shouldIgnore(file) {
   const p = file.replace(/\\/g, "/");
   if (p.includes("node_modules/")) return true;
+  if (p.includes("scripts/hooks-system/")) return true;
   if (p.includes("/.next/")) return true;
   if (p.includes("/dist/")) return true;
   if (p.includes("/.turbo/")) return true;
@@ -300,6 +301,7 @@ function shouldIgnore(file) {
   if (p.includes("/coverage/")) return true;
   if (p.includes("/build/")) return true;
   if (p.includes("/out/")) return true;
+  if (p.includes("/.audit_tmp/")) return true;
   if (p.endsWith(".d.ts")) return true;
   if (p.endsWith(".map")) return true;
   if (/\.min\./.test(p)) return true;

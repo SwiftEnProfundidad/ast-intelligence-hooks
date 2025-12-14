@@ -1,6 +1,3 @@
-// ===== AUDIT RESULT ENTITY =====
-// Domain Layer - Aggregate Root
-// Represents the complete result of a code audit with all findings
 
 const Finding = require('./Finding');
 

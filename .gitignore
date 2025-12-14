@@ -33,3 +33,10 @@ ANNOUNCEMENTS.md
 *.log
 *.tmp
 .cache/
+.audit_tmp/
+
+# Claude Desktop configuration (user-specific, similar to .cursor/rules/)
+.claude/
+
+# IDE-specific configurations (user-specific)
+.windsurf/

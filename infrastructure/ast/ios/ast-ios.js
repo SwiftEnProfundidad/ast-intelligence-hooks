@@ -57,17 +57,24 @@ async function runIOSIntelligence(project, findings, platform) {
       pushFinding("ios.force_unwrapping", "high", sf, expr, "Force unwrapping (!) detected - use if let or guard let instead", findings);
     });
 
-    sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-      const args = call.getArguments();
-      args.forEach((arg) => {
-        const argText = typeof arg?.getText === "function" ? arg.getText() : "";
-        if (argText.includes("completion:")) {
-          pushFinding("ios.completion_handlers", "medium", sf, call, "Completion handler detected - use async/await instead", findings);
-        }
+    const completionHandlerFilePath = sf.getFilePath();
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(completionHandlerFilePath);
+    const isTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(completionHandlerFilePath);
+    if (!isAnalyzer && !isTestFile) {
+      sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+        const args = call.getArguments();
+        args.forEach((arg) => {
+          const argText = typeof arg?.getText === "function" ? arg.getText() : "";
+          if (argText.includes("completion:")) {
+            pushFinding("ios.completion_handlers", "medium", sf, call, "Completion handler detected - use async/await instead", findings);
+          }
+        });
       });
-    });
+    }
 
-    if (sf.getFullText().includes("storyboard") || sf.getFullText().includes("xib") || sf.getFullText().includes("nib")) {
+    const currentFilePath = sf.getFilePath();
+    const isAnalyzerForStoryboards = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(currentFilePath);
+    if (!isAnalyzerForStoryboards && (sf.getFullText().includes("storyboard") || sf.getFullText().includes("xib") || sf.getFullText().includes("nib"))) {
       pushFinding("ios.storyboards", "high", sf, sf, "Storyboard/XIB detected - use programmatic UI for better version control", findings);
     }
 

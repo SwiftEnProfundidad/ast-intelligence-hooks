@@ -28,6 +28,24 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
 SESSION_FILE="$REPO_ROOT/.AI_SESSION_START.md"
 
+# Detect if running from node_modules (installed package) or from scripts/hooks-system (local dev)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ "$SCRIPT_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
+  # Running from installed package in node_modules
+  HOOKS_SYSTEM_DIR="$SCRIPT_DIR/../.."
+  # In node_modules, the actual hooks-system is in the package root, but scripts are in bin/
+  # So we need to find the real hooks-system directory in the project
+  if [[ -d "$REPO_ROOT/scripts/hooks-system" ]]; then
+    HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
+  else
+    # Fallback: use node_modules path structure
+    HOOKS_SYSTEM_DIR="$SCRIPT_DIR/.."
+  fi
+else
+  # Running from local scripts/hooks-system (development mode)
+  HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
+fi
+
 # Parse arguments for autonomous mode
 AUTO_MODE=false
 PLATFORMS=""
@@ -342,6 +360,17 @@ extract_ide_rules() {
       done
     done
 
+    # Try library-installed gold rules (from node_modules)
+    if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+      for gold_name in "${gold_names[@]}"; do
+        local library_gold="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.cursor/rules/$gold_name"
+        if [[ -f "$library_gold" ]]; then
+          rules_path="$library_gold"
+          break
+        fi
+      done
+    fi
+
     # Try global gold rules
     if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
       for gold_name in "${gold_names[@]}"; do
@@ -369,7 +398,15 @@ extract_ide_rules() {
 # Extract AST Intelligence rules summary
 extract_ast_rules() {
   local platform="$1"
-  local ast_path="$REPO_ROOT/scripts/hooks-system/infrastructure/ast/$platform"
+  local ast_path="$HOOKS_SYSTEM_DIR/infrastructure/ast/$platform"
+  
+  # If hooks-system doesn't exist in project, try node_modules
+  if [[ ! -d "$ast_path" ]] && [[ "$HOOKS_SYSTEM_DIR" != *"node_modules"* ]]; then
+    local nm_path="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/ast/$platform"
+    if [[ -d "$nm_path" ]]; then
+      ast_path="$nm_path"
+    fi
+  fi
 
   if [[ -d "$ast_path" ]]; then
     # Count rule files and extract rule IDs
@@ -408,13 +445,18 @@ run_ast_early_check() {
     return 0
   fi
 
-  if [[ ! -f "$REPO_ROOT/scripts/hooks-system/bin/run-ast-adapter.js" ]]; then
-    return 0
+  local ast_adapter="$HOOKS_SYSTEM_DIR/bin/run-ast-adapter.js"
+  if [[ ! -f "$ast_adapter" ]]; then
+    # Try node_modules path
+    ast_adapter="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/ast/run-ast-adapter.js"
+    if [[ ! -f "$ast_adapter" ]]; then
+      return 0
+    fi
   fi
 
   echo -e "${BLUE}🧠 Running AST early check on staged files...${NC}"
   local ast_output
-  ast_output=$(node "$REPO_ROOT/scripts/hooks-system/bin/run-ast-adapter.js" 2>/dev/null || echo "[]")
+  ast_output=$(node "$ast_adapter" 2>/dev/null || echo "[]")
 
   local findings_count
   findings_count=$(echo "$ast_output" | jq 'length' 2>/dev/null || echo "0")
@@ -453,9 +495,13 @@ start_ast_watch_if_needed() {
     return 0
   fi
 
-  local watcher_script="$REPO_ROOT/scripts/hooks-system/bin/watch-hooks.js"
+  local watcher_script="$HOOKS_SYSTEM_DIR/bin/watch-hooks.js"
   if [[ ! -f "$watcher_script" ]]; then
-    return 0
+    # Try node_modules path
+    watcher_script="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/watch-hooks.js"
+    if [[ ! -f "$watcher_script" ]]; then
+      return 0
+    fi
   fi
 
   local pid_file="$REPO_ROOT/.ast_watch.pid"
@@ -569,6 +615,30 @@ detect_rules_file() {
 # Detect appropriate rules file
 RULES_FILES=()
 
+# Always include rulesgold.mdc if available (generic rules that apply to all projects)
+GOLD_RULES_PATH=""
+for gold_name in "rulesgold.mdc" "goldrules.mdc" "@rulesgold.mdc" "rules-gold.mdc"; do
+  # Check library-installed rules first (highest priority for generic rules)
+  if [[ -f "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.cursor/rules/$gold_name" ]]; then
+    GOLD_RULES_PATH="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.cursor/rules/$gold_name"
+    break
+  fi
+  # Check project-level
+  if [[ -f "$REPO_ROOT/.cursor/rules/$gold_name" ]]; then
+    GOLD_RULES_PATH="$REPO_ROOT/.cursor/rules/$gold_name"
+    break
+  fi
+  # Check global
+  if [[ -f "${HOME}/.cursor/rules/$gold_name" ]]; then
+    GOLD_RULES_PATH="${HOME}/.cursor/rules/$gold_name"
+    break
+  fi
+done
+
+if [[ -n "$GOLD_RULES_PATH" ]] && [[ -f "$GOLD_RULES_PATH" ]]; then
+  RULES_FILES+=("rulesgold.mdc")
+fi
+
 if [[ -n "$STAGED_FILES" ]]; then
   # Infer platforms from ALL staged files (skip only evidence metadata files)
   while IFS= read -r file; do
@@ -586,6 +656,13 @@ if [[ -n "$STAGED_FILES" ]]; then
       fi
     fi
   done <<< "$STAGED_FILES"
+
+  # Always prepend rulesgold.mdc if available (generic rules apply to all)
+  if [[ -n "$GOLD_RULES_PATH" ]] && [[ -f "$GOLD_RULES_PATH" ]]; then
+    if [[ ! " ${RULES_FILES[*]-} " =~ " rulesgold.mdc " ]]; then
+      RULES_FILES=("rulesgold.mdc" "${RULES_FILES[@]}")
+    fi
+  fi
 
   # Fallback: if no platform-specific rules detected, use first staged file
   if [[ ${#RULES_FILES[@]} -eq 0 ]]; then
@@ -654,6 +731,13 @@ else
     # Fallback if nothing selected
     if [[ ${#RULES_FILES[@]} -eq 0 ]]; then
       RULES_FILES=("rulesbackend.mdc")
+    fi
+
+    # Always prepend rulesgold.mdc if available (generic rules apply to all)
+    if [[ -n "$GOLD_RULES_PATH" ]] && [[ -f "$GOLD_RULES_PATH" ]]; then
+      if [[ ! " ${RULES_FILES[*]-} " =~ " rulesgold.mdc " ]]; then
+        RULES_FILES=("rulesgold.mdc" "${RULES_FILES[@]}")
+      fi
     fi
 
     # For single selection, maintain backward compatibility
@@ -851,7 +935,11 @@ fi
 mv "$TMP_FILE" "$EVIDENCE_FILE"
 
 # Call intelligent-audit to add ai_gate, watchers, git_flow sections
-INTELLIGENT_AUDIT="$REPO_ROOT/scripts/hooks-system/infrastructure/orchestration/intelligent-audit.js"
+INTELLIGENT_AUDIT="$HOOKS_SYSTEM_DIR/infrastructure/orchestration/intelligent-audit.js"
+if [[ ! -f "$INTELLIGENT_AUDIT" ]]; then
+  # Try node_modules path
+  INTELLIGENT_AUDIT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/orchestration/intelligent-audit.js"
+fi
 if [[ -f "$INTELLIGENT_AUDIT" ]]; then
   node "$INTELLIGENT_AUDIT" >/dev/null 2>&1 || true
 fi
@@ -864,7 +952,11 @@ fi
 run_ast_early_check
 start_ast_watch_if_needed
 
-SYNC_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/sync-autonomous-orchestrator.sh"
+SYNC_SCRIPT="$HOOKS_SYSTEM_DIR/bin/sync-autonomous-orchestrator.sh"
+if [[ ! -x "$SYNC_SCRIPT" ]]; then
+  # Try node_modules path
+  SYNC_SCRIPT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/sync-autonomous-orchestrator.sh"
+fi
 if [[ -x "$SYNC_SCRIPT" ]]; then
   if ! "$SYNC_SCRIPT" >/dev/null 2>&1; then
     echo -e "${YELLOW}⚠️  sync-autonomous-orchestrator.sh fallo, revisa la ruta de la librería.${NC}"

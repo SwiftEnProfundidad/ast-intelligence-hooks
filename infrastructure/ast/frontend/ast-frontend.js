@@ -878,22 +878,25 @@ function runFrontendIntelligence(project, findings, platform) {
     });
 
     // CRITICAL: Catch blocks sin tipo explícito (implicit any en error)
-    sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
-      const varDecl = catchClause.getVariableDeclaration();
-      if (varDecl) {
-        const typeNode = varDecl.getTypeNode();
-        if (!typeNode) {
-          pushFinding(
-            "frontend.error_handling.untyped_catch",
-            "high",
-            sf,
-            catchClause,
-            "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof ApiError)",
-            findings
-          );
+    // Only applies to TypeScript files (.ts), not JavaScript (.js)
+    if (filePath.endsWith('.ts') && !filePath.endsWith('.d.ts')) {
+      sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
+        const varDecl = catchClause.getVariableDeclaration();
+        if (varDecl) {
+          const typeNode = varDecl.getTypeNode();
+          if (!typeNode) {
+            pushFinding(
+              "frontend.error_handling.untyped_catch",
+              "high",
+              sf,
+              catchClause,
+              "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof ApiError)",
+              findings
+            );
+          }
         }
-      }
-    });
+      });
+    }
 
     // CRITICAL: void err / void error anti-pattern
     sf.getDescendantsOfKind(SyntaxKind.ExpressionStatement).forEach((stmt) => {
@@ -1112,7 +1115,15 @@ function runFrontendIntelligence(project, findings, platform) {
       }
       if (/page\.tsx$/.test(filePath)) {
         const candidate = filePath.replace(/\/app\//, '/e2e/').replace(/\.tsx$/, '.spec.ts');
-        try { if (!fs.existsSync(candidate)) { pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); } } catch { }
+        try { 
+          if (!fs.existsSync(candidate)) { 
+            pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); 
+          } 
+        } catch (error) {
+          if (process.env.DEBUG) {
+            console.debug(`[frontend-ast] Failed to check E2E spec file: ${error.message}`);
+          }
+        }
       }
     }
 

@@ -1,6 +1,3 @@
-// ===== FINDING ENTITY =====
-// Domain Layer - Core Business Entity
-// Represents a single code quality violation found during analysis
 
 class Finding {
   constructor(ruleId, severity, message, filePath, line, platform) {
@@ -39,7 +36,6 @@ class Finding {
 
     const sev = severity.toLowerCase();
 
-    // Map legacy severities to new ones
     const severityMap = {
       'error': 'high',
       'warning': 'medium',

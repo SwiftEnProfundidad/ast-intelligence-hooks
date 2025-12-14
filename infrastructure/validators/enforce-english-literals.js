@@ -21,7 +21,10 @@ function decodeUnicode(value) {
     }
     try {
         return JSON.parse(`"${value}"`);
-    } catch (_) {
+    } catch (error) {
+        if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+            console.debug(`[enforce-english-literals] Failed to decode Unicode value "${value}": ${error.message}`);
+        }
         return value;
     }
 }
@@ -122,6 +125,9 @@ function collectStagedFiles() {
         });
         return raw.split('\n').map(entry => entry.trim()).filter(Boolean);
     } catch (error) {
+        if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+            console.debug(`[enforce-english-literals] Failed to collect staged files: ${error.message}`);
+        }
         return [];
     }
 }

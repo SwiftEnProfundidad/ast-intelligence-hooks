@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-// ===== ESLint Setup Script =====
-// Installs ESLint configs in project apps during hook installation
 
 const fs = require('fs');
 const path = require('path');

@@ -13,7 +13,7 @@ class TokenMonitorService {
         notificationCenter = null,
         logger = console,
         thresholds = {},
-        staleThresholdMs = 15 * 60 * 1000, // 15 minutos
+        staleThresholdMs = 15 * 60 * 1000,
         fallbackEstimator = null,
         cursorTokenService = null
     } = {}) {

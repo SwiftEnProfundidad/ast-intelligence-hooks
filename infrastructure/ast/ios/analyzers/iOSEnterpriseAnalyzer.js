@@ -197,9 +197,12 @@ class iOSEnterpriseAnalyzer {
     });
 
     // ios.storyboards
-    if (content.includes('storyboard') || content.includes('.xib') || content.includes('.nib')) {
-      this.addFinding('ios.storyboards', 'high', filePath, 1,
-        'Storyboard/XIB detected - use programmatic UI for better version control');
+    // Only check actual Swift files, not analyzer files themselves
+    if (filePath.endsWith('.swift') && !filePath.includes('analyzer') && !filePath.includes('detector')) {
+      if (content.includes('storyboard') || content.includes('.xib') || content.includes('.nib')) {
+        this.addFinding('ios.storyboards', 'high', filePath, 1,
+          'Storyboard/XIB detected - use programmatic UI for better version control');
+      }
     }
   }
 
@@ -508,7 +511,6 @@ class iOSEnterpriseAnalyzer {
         'Test without trackForMemoryLeaks helper');
     }
 
-    // ios.testing.concrete_dependencies
     if (filePath.includes('Test') && content.includes('init(') && !content.includes('Protocol')) {
       this.addFinding('ios.testing.concrete_dependencies', 'medium', filePath, 1,
         'Test using concrete dependencies - inject protocols for testability');
@@ -520,25 +522,21 @@ class iOSEnterpriseAnalyzer {
    * Rules: XCUITest, accessibility identifiers, page object, wait for existence
    */
   async analyzeUITesting(content, filePath) {
-    // ios.uitesting.missing_xcuitest
     if (filePath.includes('UITest') && !content.includes('XCUIApplication')) {
       this.addFinding('ios.uitesting.missing_xcuitest', 'high', filePath, 1,
         'UI test file without XCUIApplication');
     }
 
-    // ios.uitesting.missing_accessibility
     if (filePath.includes('UITest') && !content.includes('accessibilityIdentifier')) {
       this.addFinding('ios.uitesting.missing_accessibility', 'medium', filePath, 1,
         'UI test without accessibility identifiers for element location');
     }
 
-    // ios.uitesting.missing_page_object
     if (filePath.includes('UITest') && content.includes('XCUIElement') && !content.includes('Page')) {
       this.addFinding('ios.uitesting.missing_page_object', 'low', filePath, 1,
         'UI test without Page Object pattern for encapsulation');
     }
 
-    // ios.uitesting.missing_wait
     if (filePath.includes('UITest') && content.includes('.tap()') && !content.includes('waitForExistence')) {
       this.addFinding('ios.uitesting.missing_wait', 'high', filePath, 1,
         'UI test tapping without waitForExistence - flaky test');
@@ -550,31 +548,26 @@ class iOSEnterpriseAnalyzer {
    * Rules: Keychain, SSL pinning, jailbreak detection, ATS, biometric, secure enclave
    */
   async analyzeSecurity(content, filePath) {
-    // ios.security.missing_ats
     if (content.includes('http://') && !content.includes('NSAppTransportSecurity')) {
       this.addFinding('ios.security.missing_ats', 'critical', filePath, 1,
         'HTTP URLs without App Transport Security exception');
     }
 
-    // ios.security.missing_biometric
     if ((content.includes('password') || content.includes('auth')) && !content.includes('LAContext') && !content.includes('biometric')) {
       this.addFinding('ios.security.missing_biometric', 'medium', filePath, 1,
         'Authentication without biometric option (Face ID/Touch ID)');
     }
 
-    // ios.security.missing_jailbreak
     if (content.includes('Security') && !content.includes('jailbreak') && !content.includes('Cydia')) {
       this.addFinding('ios.security.missing_jailbreak', 'low', filePath, 1,
         'Consider jailbreak detection for security-critical apps');
     }
 
-    // ios.security.missing_secure_enclave
     if (content.includes('SecKey') && !content.includes('kSecAttrTokenIDSecureEnclave')) {
       this.addFinding('ios.security.missing_secure_enclave', 'medium', filePath, 1,
         'Cryptographic keys without Secure Enclave storage');
     }
 
-    // ios.security.hardcoded_secrets
     const secretPatterns = /(api[_-]?key|secret|password|token)\s*=\s*["'][^"']{8,}["']/gi;
     if (secretPatterns.test(content)) {
       this.addFinding('ios.security.hardcoded_secrets', 'critical', filePath, 1,
@@ -587,31 +580,26 @@ class iOSEnterpriseAnalyzer {
    * Rules: VoiceOver, Dynamic Type, accessibility labels, traits, reduce motion
    */
   async analyzeAccessibility(content, filePath) {
-    // ios.accessibility.missing_labels
     if (content.includes('UIButton') && !content.includes('accessibilityLabel')) {
       this.addFinding('ios.accessibility.missing_labels', 'high', filePath, 1,
         'UIButton without accessibilityLabel for VoiceOver');
     }
 
-    // ios.accessibility.missing_dynamic_type
     if (content.includes('UIFont') && !content.includes('preferredFont')) {
       this.addFinding('ios.accessibility.missing_dynamic_type', 'medium', filePath, 1,
         'UIFont without Dynamic Type support - use preferredFont');
     }
 
-    // ios.accessibility.missing_traits
     if (content.includes('accessibilityLabel') && !content.includes('accessibilityTraits')) {
       this.addFinding('ios.accessibility.missing_traits', 'medium', filePath, 1,
         'Accessibility label without traits (.isButton, .isHeader)');
     }
 
-    // ios.accessibility.missing_reduce_motion
     if (content.includes('UIView.animate') && !content.includes('isReduceMotionEnabled')) {
       this.addFinding('ios.accessibility.missing_reduce_motion', 'low', filePath, 1,
         'Animations without respecting Reduce Motion setting');
     }
 
-    // ios.accessibility.color_contrast
     if (content.includes('UIColor') && content.includes('.gray') && content.includes('Text')) {
       this.addFinding('ios.accessibility.color_contrast', 'medium', filePath, 1,
         'Gray text color - verify WCAG AA contrast ratio (4.5:1 minimum)');
@@ -630,27 +618,22 @@ class iOSEnterpriseAnalyzer {
         `Hardcoded UI strings (${textMatches.length}x) - use NSLocalizedString`);
     }
 
-    // ios.i18n.missing_localizable
     if (content.includes('NSLocalizedString') && !filePath.includes('Localizable.strings')) {
       this.addFinding('ios.i18n.missing_localizable', 'low', filePath, 1,
         'NSLocalizedString used - ensure Localizable.strings exists');
     }
 
-    // ios.i18n.missing_number_formatter
     if (content.includes('String(') && content.match(/\d+\.\d+/)) {
       this.addFinding('ios.i18n.missing_number_formatter', 'medium', filePath, 1,
         'Manual number formatting - use NumberFormatter for locale support');
     }
 
-    // ios.i18n.missing_date_formatter
     if (content.includes('Date') && content.includes('String') && !content.includes('DateFormatter')) {
       this.addFinding('ios.i18n.missing_date_formatter', 'medium', filePath, 1,
         'Manual date formatting - use DateFormatter for locale support');
     }
 
-    // ios.i18n.missing_rtl
     if (content.includes('leading') || content.includes('trailing')) {
-      // Good - using semantic edges
     } else if (content.includes('.left') || content.includes('.right')) {
       this.addFinding('ios.i18n.missing_rtl', 'medium', filePath, 1,
         'Using left/right instead of leading/trailing - breaks RTL languages');
@@ -664,7 +647,6 @@ class iOSEnterpriseAnalyzer {
   async analyzeArchitecturePatterns(classes, functions, filePath) {
     const content = await fs.readFile(filePath, 'utf-8');
 
-    // ios.architecture.mvc_pattern
     const viewControllerClasses = classes.filter(c => c.name.includes('ViewController'));
     viewControllerClasses.forEach(vc => {
       const methodsInVC = functions.filter(f => content.substring(vc.line, vc.line + 1000).includes(f.name));
@@ -674,13 +656,11 @@ class iOSEnterpriseAnalyzer {
       }
     });
 
-    // ios.architecture.missing_mvvm
     if (classes.some(c => c.name.includes('ViewController')) && !classes.some(c => c.name.includes('ViewModel'))) {
       this.addFinding('ios.architecture.missing_mvvm', 'medium', filePath, 1,
         'ViewController without ViewModel - consider MVVM pattern');
     }
 
-    // ios.architecture.missing_coordinator
     if (content.includes('navigationController') && !content.includes('Coordinator')) {
       this.addFinding('ios.architecture.missing_coordinator', 'low', filePath, 1,
         'Manual navigation - consider Coordinator pattern (MVVM-C)');
@@ -698,19 +678,16 @@ class iOSEnterpriseAnalyzer {
         'Network call potentially on main thread - use async or background queue');
     }
 
-    // ios.performance.missing_lazy_loading
     if (content.includes('UITableView') && !content.includes('cellForRowAt') && !content.includes('dequeueReusableCell')) {
       this.addFinding('ios.performance.missing_lazy_loading', 'high', filePath, 1,
         'UITableView without cell reuse - memory issue with large datasets');
     }
 
-    // ios.performance.image_not_optimized
     if (content.includes('UIImage(named:') && !content.includes('UIImage.SymbolConfiguration')) {
       this.addFinding('ios.performance.image_not_optimized', 'low', filePath, 1,
         'Consider SF Symbols or optimized image assets');
     }
 
-    // ios.performance.heavy_computation_main
     functions.forEach(fn => {
       if (fn.bodyLength > 100 && content.includes('@MainActor')) {
         this.addFinding('ios.performance.heavy_computation_main', 'high', filePath, fn.line,
@@ -718,7 +695,6 @@ class iOSEnterpriseAnalyzer {
       }
     });
 
-    // ios.performance.missing_memoization
     if (content.includes('expensive') || content.includes('calculate')) {
       if (!content.includes('cache') && !content.includes('memoized')) {
         this.addFinding('ios.performance.missing_memoization', 'low', filePath, 1,
@@ -738,22 +714,20 @@ class iOSEnterpriseAnalyzer {
         'Large file without MARK comments for organization');
     }
 
-    // ios.organization.file_too_large
     const lineCount = content.split('\n').length;
     if (lineCount > 400) {
       this.addFinding('ios.organization.file_too_large', 'medium', filePath, 1,
         `File too large (${lineCount} lines) - break into smaller files`);
     }
 
-    // ios.organization.missing_extensions
     if (content.includes('extension ') && filePath.includes('+')) {
-      // Good - using extension files
+      this.addFinding('ios.organization.missing_extensions', 'low', filePath, 1,
+        'Extension file without + extension - split into separate files (Type+Extension.swift)');
     } else if (content.split('extension ').length > 3) {
       this.addFinding('ios.organization.missing_extensions', 'low', filePath, 1,
         'Multiple extensions in single file - split into separate files (Type+Extension.swift)');
     }
 
-    // ios.organization.missing_spm
     if (filePath.includes('/Sources/') && !content.includes('import PackageDescription')) {
       this.addFinding('ios.organization.missing_spm', 'info', filePath, 1,
         'Consider Swift Package Manager for modularization');

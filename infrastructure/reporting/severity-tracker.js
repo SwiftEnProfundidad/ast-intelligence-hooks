@@ -1,5 +1,3 @@
-// ===== SEVERITY TRACKER =====
-// Tracks severity history across sessions for trend analysis
 
 const fs = require('fs');
 const path = require('path');
@@ -40,7 +38,6 @@ class SeverityTracker {
       blockedBy: gateResult.blockedBy
     };
 
-    // Append to JSONL (JSON Lines format)
     fs.appendFileSync(this.historyPath, JSON.stringify(entry) + '\n');
 
     return entry;

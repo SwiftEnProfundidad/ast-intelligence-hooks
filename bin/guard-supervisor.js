@@ -202,7 +202,8 @@ function acquireLock() {
 function releaseLock() {
   try {
     fs.rmdirSync(lockDir);
-  } catch (_) {
+  } catch (error) {
+    log(`Error releasing lock: ${error.message}`);
   }
 }
 
@@ -393,7 +394,8 @@ function shutdown() {
   watchers.forEach(w => {
     try {
       w.close();
-    } catch (_) {
+    } catch (error) {
+      log(`Error closing watcher: ${error.message}`);
     }
   });
   gitTreeMonitor.stop();

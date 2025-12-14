@@ -1,6 +1,3 @@
-// ===== GENERATE AUDIT REPORT USE CASE =====
-// Application Layer - Use Case
-// Generates formatted audit report from AuditResult
 
 class GenerateAuditReportUseCase {
   constructor(outputFormatter) {
@@ -8,12 +5,10 @@ class GenerateAuditReportUseCase {
   }
 
   async execute(auditResult, options = {}) {
-    const reportType = options.reportType || 'console'; // console | json | html
+    const reportType = options.reportType || 'console';
     const includeSignature = options.includeSignature !== false;
 
     try {
-      console.log(`[GenerateAuditReportUseCase] Generating ${reportType} report...`);
-
       let report;
 
       switch (reportType) {
@@ -29,11 +24,9 @@ class GenerateAuditReportUseCase {
           break;
       }
 
-      console.log(`[GenerateAuditReportUseCase] Report generated`);
       return report;
 
     } catch (error) {
-      console.error(`[GenerateAuditReportUseCase] Error:`, error.message);
       throw error;
     }
   }
@@ -89,7 +82,6 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    // Summary
     lines.push('📊 AUDIT SUMMARY');
     lines.push('═'.repeat(60));
     lines.push(`Total Violations: ${auditResult.getTotalViolations()}`);
@@ -101,12 +93,10 @@ class GenerateAuditReportUseCase {
     lines.push(`  🟢 LOW:      ${bySeverity.low}`);
     lines.push('');
 
-    // Metrics
     lines.push(`⏱️  Technical Debt: ${auditResult.getTechnicalDebtHours().toFixed(1)} hours`);
     lines.push(`📈 Maintainability Index: ${auditResult.getMaintainabilityIndex().toFixed(1)}/100`);
     lines.push('');
 
-    // By Platform
     const byPlatform = auditResult.getViolationsByPlatform();
     if (Object.keys(byPlatform).length > 0) {
       lines.push('🔧 BY PLATFORM');
@@ -118,7 +108,6 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    // Top Violated Rules
     const topRules = auditResult.getTopViolatedRules(5);
     if (topRules.length > 0) {
       lines.push('🔝 TOP VIOLATED RULES');
@@ -129,7 +118,6 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    // Top Violated Files
     const topFiles = auditResult.getTopViolatedFiles(5);
     if (topFiles.length > 0) {
       lines.push('📁 TOP VIOLATED FILES');
@@ -142,7 +130,6 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    // Footer signature (always included)
     lines.push('');
     lines.push('═'.repeat(60));
     lines.push('');

@@ -39,7 +39,6 @@ describe('AutoRecoveryManager', () => {
         expect(result.status).toBe('scheduled');
         expect(manager.__test.timers.setTimeout).toHaveBeenCalled();
 
-        // Ejecutar acción programada
         await manager.__test.timers.fn();
 
         expect(strategy.action).toHaveBeenCalled();

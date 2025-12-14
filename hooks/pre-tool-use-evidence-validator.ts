@@ -11,6 +11,27 @@ interface ToolInput {
     };
 }
 
+interface Evidence {
+    timestamp?: string;
+    rules_read?: string[];
+    protocol_3_questions?: {
+        answered?: boolean;
+    };
+    ai_gate?: {
+        status?: string;
+        violations?: Violation[];
+        last_check?: string;
+    };
+}
+
+interface Violation {
+    severity?: string;
+    file?: string;
+    line?: number | string;
+    message?: string;
+    rule?: string;
+}
+
 const MAX_AGE_SECONDS = 180;
 
 function utcToEpoch(timestamp: string): number {
@@ -41,10 +62,10 @@ This is enforced by pre-commit hooks and PreToolUse validation`
         };
     }
 
-    let evidence: any;
+    let evidence: Evidence;
     try {
         const content = readFileSync(evidencePath, 'utf8');
-        evidence = JSON.parse(content);
+        evidence = JSON.parse(content) as Evidence;
     } catch {
         return {
             valid: false,
@@ -143,6 +164,41 @@ Evidence must be fresh to ensure rules were read and questions answered`
 📋 REQUIRED ACTION:
 1. Write a prompt (evidence auto-updates)
 2. Or update evidence: scripts/hooks-system/bin/update-evidence.sh`
+        };
+    }
+
+    const aiGate = evidence.ai_gate;
+    if (aiGate && aiGate.status === 'BLOCKED') {
+        const violations: Violation[] = aiGate.violations || [];
+        const criticalCount = violations.filter((v: Violation) => v.severity === 'CRITICAL').length;
+        const highCount = violations.filter((v: Violation) => v.severity === 'HIGH').length;
+        const totalBlocking = criticalCount + highCount;
+
+        const violationsList = violations
+            .slice(0, 5)
+            .map((v: Violation) => `  - ${v.file}:${v.line || '?'} [${v.severity}] ${v.message || v.rule || ''}`)
+            .join('\n');
+
+        return {
+            valid: false,
+            error: `🚫 BLOCKED - AI Gate Status: BLOCKED
+
+📋 VIOLATION:
+  - Status: ${aiGate.status}
+  - Blocking violations: ${totalBlocking} (${criticalCount} CRITICAL, ${highCount} HIGH)
+  - Last check: ${aiGate.last_check || 'unknown'}
+
+📋 VIOLATIONS:
+${violationsList}${violations.length > 5 ? `\n  ... and ${violations.length - 5} more` : ''}
+
+📋 REQUIRED ACTION:
+1. Fix all CRITICAL and HIGH violations first
+2. Run: npm run audit (or node scripts/hooks-system/infrastructure/ast/ast-intelligence.js)
+3. Verify violations are resolved
+4. Then retry this edit
+
+Reason: Code quality gate blocks edits when violations are present
+This ensures code quality standards are maintained`
         };
     }
 

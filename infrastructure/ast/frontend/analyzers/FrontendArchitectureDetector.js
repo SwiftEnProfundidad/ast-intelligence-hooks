@@ -48,14 +48,12 @@ class FrontendArchitectureDetector {
    * @returns {string} Pattern name
    */
   detect() {
-    // If manual config exists, use it (has priority)
     if (this.manualConfig && this.manualConfig.architecturePattern) {
       const manualPattern = this.manualConfig.architecturePattern;
       console.log(`[Frontend Architecture] Using manual configuration: ${manualPattern}`);
       return manualPattern;
     }
 
-    // If no manual config, detect automatically
     const tsxFiles = glob.sync('**/*.{tsx,jsx}', {
       cwd: this.projectRoot,
       ignore: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/build/**', '**/*.test.{tsx,jsx}', '**/*.spec.{tsx,jsx}']
@@ -307,7 +305,10 @@ class FrontendArchitectureDetector {
     try {
       const fullPath = path.join(this.projectRoot, relativePath);
       return fs.readFileSync(fullPath, 'utf-8');
-    } catch (err) {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[FrontendArchitectureDetector] Failed to read file ${relativePath}: ${error.message}`);
+      }
       return '';
     }
   }

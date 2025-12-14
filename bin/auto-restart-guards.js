@@ -78,8 +78,8 @@ function shutdown() {
   watchers.forEach(w => {
     try {
       w.close();
-    } catch (_) {
-      /* ignore */
+    } catch (error) {
+      log(`Error closing watcher: ${error.message}`); 
     }
   });
 }
@@ -90,5 +90,4 @@ process.on('SIGTERM', shutdown);
 log('Auto-restart guard running');
 targets.forEach(watchFile);
 
-// Keep process alive
 setInterval(() => {}, 1 << 30);

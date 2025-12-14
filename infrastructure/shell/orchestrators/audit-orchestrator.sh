@@ -6,8 +6,45 @@ set -euo pipefail
 
 # Get hooks-system directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOOKS_SYSTEM_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-INFRASTRUCTURE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# Detect if running from node_modules or scripts/hooks-system
+if [[ "$SCRIPT_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
+  # Running from installed npm package
+  # SCRIPT_DIR is: node_modules/@pumuki/ast-intelligence-hooks/infrastructure/shell/orchestrators
+  # Need to go up 3 levels: ../../.. = node_modules/@pumuki/ast-intelligence-hooks
+  HOOKS_SYSTEM_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+elif [[ "$SCRIPT_DIR" == *"scripts/hooks-system"* ]]; then
+  # Running from local scripts/hooks-system
+  # SCRIPT_DIR is: scripts/hooks-system/infrastructure/shell/orchestrators
+  # Find the hooks-system directory by searching up the path
+  CURRENT_DIR="$SCRIPT_DIR"
+  while [[ "$CURRENT_DIR" != "/" ]] && [[ "$CURRENT_DIR" != "." ]]; do
+    if [[ "$(basename "$CURRENT_DIR")" == "hooks-system" ]]; then
+      HOOKS_SYSTEM_DIR="$CURRENT_DIR"
+      break
+    fi
+    CURRENT_DIR="$(dirname "$CURRENT_DIR")"
+  done
+  if [[ -z "${HOOKS_SYSTEM_DIR:-}" ]] || [[ ! -d "$HOOKS_SYSTEM_DIR" ]]; then
+    echo "Error: Could not find hooks-system directory from $SCRIPT_DIR" >&2
+    exit 1
+  fi
+else
+  # Fallback: try to find it relative to current directory
+  REPO_ROOT="$(pwd)"
+  if [[ -d "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks" ]]; then
+    HOOKS_SYSTEM_DIR="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks"
+  elif [[ -d "$REPO_ROOT/scripts/hooks-system" ]]; then
+    HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
+  else
+    echo "Error: Could not determine HOOKS_SYSTEM_DIR" >&2
+    echo "  SCRIPT_DIR: $SCRIPT_DIR" >&2
+    echo "  REPO_ROOT: $REPO_ROOT" >&2
+    exit 1
+  fi
+fi
+
+INFRASTRUCTURE_DIR="$HOOKS_SYSTEM_DIR/infrastructure"
 AST_DIR="$INFRASTRUCTURE_DIR/ast"
 
 # Source infrastructure modules
@@ -827,8 +864,56 @@ run_ast_intelligence() {
   local ast_output
   local ast_exit_code=0
 
-  # Execute AST with proper error handling
-  ast_output=$(AUDIT_TMP="$TMP_DIR" node "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+  # Ensure TMP_DIR exists
+  mkdir -p "$TMP_DIR"
+
+  # Determine NODE_PATH to include library's node_modules
+  # Try multiple locations: HOOKS_SYSTEM_DIR/node_modules, or project root node_modules
+  local node_path_parts=()
+  
+  # If HOOKS_SYSTEM_DIR has its own node_modules
+  if [[ -d "$HOOKS_SYSTEM_DIR/node_modules" ]]; then
+    node_path_parts+=("$HOOKS_SYSTEM_DIR/node_modules")
+  fi
+  
+  # Also check if we're in a project with node_modules/@pumuki/ast-intelligence-hooks
+  local repo_root=""
+  if [[ "$HOOKS_SYSTEM_DIR" == *"scripts/hooks-system"* ]]; then
+    # Running from scripts/hooks-system, go to repo root
+    repo_root="$(cd "$HOOKS_SYSTEM_DIR/../.." && pwd)"
+  elif [[ "$HOOKS_SYSTEM_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
+    # Running from node_modules, go to repo root
+    repo_root="$(cd "$HOOKS_SYSTEM_DIR/../../.." && pwd)"
+  else
+    # Try current directory
+    repo_root="$(pwd)"
+  fi
+  
+  if [[ -n "$repo_root" ]] && [[ -d "$repo_root/node_modules/@pumuki/ast-intelligence-hooks/node_modules" ]]; then
+    node_path_parts+=("$repo_root/node_modules/@pumuki/ast-intelligence-hooks/node_modules")
+  fi
+  
+  if [[ -n "$repo_root" ]] && [[ -d "$repo_root/node_modules" ]]; then
+    node_path_parts+=("$repo_root/node_modules")
+  fi
+
+  # Build NODE_PATH
+  local node_path_value="${NODE_PATH:-}"
+  for path_part in "${node_path_parts[@]}"; do
+    if [[ -n "$node_path_value" ]]; then
+      node_path_value="$path_part:$node_path_value"
+    else
+      node_path_value="$path_part"
+    fi
+  done
+
+  # Execute AST with proper error handling and NODE_PATH
+  # Change to HOOKS_SYSTEM_DIR so Node.js resolves modules correctly
+  if [[ -n "$node_path_value" ]]; then
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export NODE_PATH="$node_path_value" && export AUDIT_TMP="$TMP_DIR" && node "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+  else
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export AUDIT_TMP="$TMP_DIR" && node "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+  fi
 
   # Check if AST script failed
   if [[ $ast_exit_code -ne 0 ]]; then

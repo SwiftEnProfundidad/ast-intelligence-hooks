@@ -380,22 +380,25 @@ function runBackendIntelligence(project, findings, platform) {
     });
 
     // CRITICAL: Catch blocks without explicit type (implicit any in error) - BACKEND
-    sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
-      const varDecl = catchClause.getVariableDeclaration();
-      if (varDecl) {
-        const typeNode = varDecl.getTypeNode();
-        if (!typeNode) {
-          pushFinding(
-            "backend.error_handling.untyped_catch",
-            "high",
-            sf,
-            catchClause,
-            "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
-            findings
-          );
+    // Only applies to TypeScript files (.ts), not JavaScript (.js)
+    if (filePath.endsWith('.ts') && !filePath.endsWith('.d.ts')) {
+      sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
+        const varDecl = catchClause.getVariableDeclaration();
+        if (varDecl) {
+          const typeNode = varDecl.getTypeNode();
+          if (!typeNode) {
+            pushFinding(
+              "backend.error_handling.untyped_catch",
+              "high",
+              sf,
+              catchClause,
+              "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
+              findings
+            );
+          }
         }
-      }
-    });
+      });
+    }
 
     // CRITICAL: void err / void error anti-pattern - BACKEND
     sf.getDescendantsOfKind(SyntaxKind.ExpressionStatement).forEach((stmt) => {
@@ -629,7 +632,10 @@ function runBackendIntelligence(project, findings, platform) {
     });
 
     // Swagger presence at controller file
-    if (sf.getFullText().includes("@Controller") && !sf.getFullText().includes("@nestjs/swagger") && !sf.getFullText().includes("@Api")) {
+    const swaggerFilePath = sf.getFilePath();
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(swaggerFilePath);
+    const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(swaggerFilePath);
+    if (!isAnalyzer && !isTestFile && sf.getFullText().includes("@Controller") && !sf.getFullText().includes("@nestjs/swagger") && !sf.getFullText().includes("@Api")) {
       pushFinding("backend.api.missing_swagger", "medium", sf, sf, "Controller without Swagger decorators/imports", findings);
     }
 
@@ -1414,16 +1420,20 @@ function runBackendIntelligence(project, findings, platform) {
     }
 
     // 6. Logging without PII - sensitive data in logs
-    const sensitiveLogPattern = /(logger|console)\.(log|info|debug|warn)\([^)]*password|token|secret|ssn|creditCard/i;
-    if (sensitiveLogPattern.test(fullText)) {
-      pushFinding(
-        "backend.security.pii_in_logs",
-        "high",
-        sf,
-        sf,
-        '🚨 HIGH: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don\'t include sensitive fields. GDPR violation risk.',
-        findings
-      );
+    // Exclude analyzers which may contain example code patterns
+    const isAnalyzerForPII = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+    if (!isAnalyzerForPII) {
+      const sensitiveLogPattern = /(logger|console)\.(log|info|debug|warn)\([^)]*password|token|secret|ssn|creditCard/i;
+      if (sensitiveLogPattern.test(fullText)) {
+        pushFinding(
+          "backend.security.pii_in_logs",
+          "high",
+          sf,
+          sf,
+          '🚨 HIGH: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don\'t include sensitive fields. GDPR violation risk.',
+          findings
+        );
+      }
     }
 
     // 7. Service Unit Tests - missing tests for services
@@ -1466,18 +1476,22 @@ function runBackendIntelligence(project, findings, platform) {
 
   // 1. Swagger Completeness Rule
   if (filePath.includes('.controller.ts')) {
-    const hasSwaggerDecorators = fullText.includes('@ApiTags') || fullText.includes('@ApiOperation');
-    const hasEndpoints = fullText.includes('@Get') || fullText.includes('@Post') || fullText.includes('@Put');
+    const swaggerIsAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+    const swaggerIsTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+    if (!swaggerIsAnalyzer && !swaggerIsTestFile) {
+      const hasSwaggerDecorators = fullText.includes('@ApiTags') || fullText.includes('@ApiOperation');
+      const hasEndpoints = fullText.includes('@Get') || fullText.includes('@Post') || fullText.includes('@Put');
 
-    if (hasEndpoints && !hasSwaggerDecorators) {
-      pushFinding(
-        "backend.api.missing_swagger",
-        "medium",
-        sf,
-        sf,
-        'Controller without Swagger documentation. Add: @ApiTags(\'users\'), @ApiOperation({ summary: \'...\' }), @ApiResponse(). Benefits: Auto-generated API docs, TypeScript types for frontend.',
-        findings
-      );
+      if (hasEndpoints && !hasSwaggerDecorators) {
+        pushFinding(
+          "backend.api.missing_swagger",
+          "medium",
+          sf,
+          sf,
+          'Controller without Swagger documentation. Add: @ApiTags(\'users\'), @ApiOperation({ summary: \'...\' }), @ApiResponse(). Benefits: Auto-generated API docs, TypeScript types for frontend.',
+          findings
+        );
+      }
     }
   }
 

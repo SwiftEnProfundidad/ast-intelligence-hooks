@@ -1,6 +1,3 @@
-// ===== HOOK-SYSTEM INTEGRATION TESTS =====
-// Basic integration tests for hook pipeline
-// Run with: npm test -- scripts/hooks-system/tests/integration.test.js
 
 const { GitOperations } = require('../infrastructure/core/GitOperations');
 const { SeverityConfig } = require('../domain/entities/SeverityConfig');
@@ -11,7 +8,6 @@ describe('Hook System Integration Tests', () => {
         test('should get staged files', () => {
             const stagedFiles = GitOperations.getStagedFiles();
             expect(Array.isArray(stagedFiles)).toBe(true);
-            // In test environment, this might be empty
         });
 
         test('should detect if in git repository', () => {

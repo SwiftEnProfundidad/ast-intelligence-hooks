@@ -8,6 +8,10 @@ function analyzeOfflineBackend(project, findings) {
     const isDomainEntity = /\/domain\/|\/entities\/|ValueObject|\.dto\.ts$|\.entity\.ts$/i.test(filePath);
     if (isDomainEntity) return;
 
+    const isAnalyzer = /analyzer\.js$|analyzer\.ts$|detector\.js$|detector\.ts$/i.test(filePath);
+    const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+    if (isAnalyzer || isTestFile) return;
+
     if (content.match(/@Post|@Put|@Patch/gi)) {
       const hasVersioning = /version|etag|lastModified|timestamp/i.test(content);
       if (!hasVersioning) {

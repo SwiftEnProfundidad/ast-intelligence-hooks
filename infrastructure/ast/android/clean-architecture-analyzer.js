@@ -13,24 +13,9 @@
  * NOTE: Android uses Kotlin (.kt files), not TypeScript
  * This analyzer uses text/regex analysis, not ts-morph AST
  */
-function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFinding) {
-  const layer = detectLayer(filePath);
-  if (!layer) return;
-
-  // Parse imports (Kotlin syntax: import com.example....)
-  const importRegex = /^import\s+([^\s;]+)/gm;
-  const imports = [];
-  let match;
-
-  while ((match = importRegex.exec(fileContent)) !== null) {
-    imports.push(match[1]);
-  }
-
-  imports.forEach((importPath, index) => {
-    const targetLayer = detectLayerFromImport(importPath);
-
-    // RULE 1: Domain cannot import Android Framework or other layers
-    if (layer === 'domain') {
+const LAYER_ANALYZERS = {
+  domain: {
+    validateImports: (importPath, filePath, index, findings, pushFileFinding) => {
       const forbiddenImports = [
         'android.',
         'androidx.',
@@ -54,41 +39,69 @@ function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFindi
           findings
         );
       }
-    }
+    },
+    validateStructure: (filePath, findings, pushFileFinding) => {
+      const hasCorrectStructure =
+        filePath.includes('/model/') ||
+        filePath.includes('/repository/') ||
+        filePath.includes('/usecase/');
 
-    // RULE 2: Data cannot import from Presentation
-    if (layer === 'data' && targetLayer === 'presentation') {
-      pushFileFinding(
-        'android.clean.data_presentation_violation',
-        'critical',
-        filePath,
-        index + 1,
-        1,
-        `Data layer importing from Presentation - violates dependency direction.`,
-        findings
-      );
+      if (!hasCorrectStructure) {
+        pushFileFinding(
+          'android.clean.domain_structure',
+          'medium',
+          filePath,
+          1,
+          1,
+          `File in domain/ without correct structure. Use: model/, repository/, usecase/`,
+          findings
+        );
+      }
     }
+  },
+  data: {
+    validateImports: (importPath, filePath, index, findings, pushFileFinding, targetLayer) => {
+      if (targetLayer === 'presentation') {
+        pushFileFinding(
+          'android.clean.data_presentation_violation',
+          'critical',
+          filePath,
+          index + 1,
+          1,
+          `Data layer importing from Presentation - violates dependency direction.`,
+          findings
+        );
+      }
+    },
+    validateStructure: () => {}
+  },
+  presentation: {
+    validateImports: () => {},
+    validateStructure: () => {}
+  }
+};
+
+function analyzeCleanArchitecture(filePath, fileContent, findings, pushFileFinding) {
+  const layer = detectLayer(filePath);
+  if (!layer) return;
+
+  const layerAnalyzer = LAYER_ANALYZERS[layer];
+  if (!layerAnalyzer) return;
+
+  const importRegex = /^import\s+([^\s;]+)/gm;
+  const imports = [];
+  let match;
+
+  while ((match = importRegex.exec(fileContent)) !== null) {
+    imports.push(match[1]);
+  }
+
+  imports.forEach((importPath, index) => {
+    const targetLayer = detectLayerFromImport(importPath);
+    layerAnalyzer.validateImports(importPath, filePath, index, findings, pushFileFinding, targetLayer);
   });
 
-  // RULE 3: Domain structure
-  if (layer === 'domain') {
-    const hasCorrectStructure =
-      filePath.includes('/model/') ||
-      filePath.includes('/repository/') ||
-      filePath.includes('/usecase/');
-
-    if (!hasCorrectStructure) {
-      pushFileFinding(
-        'android.clean.domain_structure',
-        'medium',
-        filePath,
-        1,
-        1,
-        `File in domain/ without correct structure. Use: model/, repository/, usecase/`,
-        findings
-      );
-    }
-  }
+  layerAnalyzer.validateStructure(filePath, findings, pushFileFinding);
 }
 
 function detectLayer(filePath) {

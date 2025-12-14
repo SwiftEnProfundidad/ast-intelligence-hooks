@@ -21,8 +21,8 @@ class AutoRecoveryManager {
         this.strategies = Array.isArray(strategies) && strategies.length
             ? strategies
             : [AutoRecoveryManager.createSupervisorRestartStrategy()];
-        this.attempts = new Map(); // key -> { count, lastAttempt }
-        this.timeouts = new Map(); // key -> timeoutRef
+        this.attempts = new Map();
+        this.timeouts = new Map();
     }
 
     static createSupervisorRestartStrategy() {

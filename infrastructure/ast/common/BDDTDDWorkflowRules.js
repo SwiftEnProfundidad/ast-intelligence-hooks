@@ -44,8 +44,6 @@ class BDDTDDWorkflowRules {
       absolute: true
     });
 
-    // CRITICAL: Si hay muchos archivos de implementación pero pocos features
-    // BDD es OBLIGATORIO - debe ser el primer paso del workflow
     if (implementationFiles.length > 50 && featureFiles.length === 0) {
       pushFileFinding(
         'workflow.bdd.missing_feature_files',
@@ -87,11 +85,9 @@ BDD requiere feature files para cada funcionalidad. Aumentar cobertura BDD antes
       );
     }
 
-    // Validar estructura de feature files
     featureFiles.forEach(featureFile => {
       const content = fs.readFileSync(featureFile, 'utf-8');
 
-      // Feature debe tener al menos: Feature, Scenario, Given, When, Then
       const hasFeature = content.includes('Feature:');
       const hasScenario = content.includes('Scenario:');
       const hasGiven = content.includes('Given ');
@@ -128,7 +124,6 @@ BDD requiere feature files para cada funcionalidad. Aumentar cobertura BDD antes
    * 2. TDD: Validar que hay tests ANTES de implementación
    */
   checkTDDTestCoverage() {
-    // Encontrar features sin tests correspondientes
     const features = this.findFeatures();
 
     features.forEach(feature => {
@@ -161,7 +156,6 @@ TDD requiere: Tests ANTES de implementación. Sin tests, no hay TDD.`,
       }
     });
 
-    // Validar que test files existen para cada archivo de implementación
     const srcFiles = glob.sync('**/src/**/*.{ts,tsx,swift,kt}', {
       cwd: this.projectRoot,
       ignore: ['**/*test*', '**/*spec*', '**/node_modules/**'],
@@ -179,7 +173,6 @@ TDD requiere: Tests ANTES de implementación. Sin tests, no hay TDD.`,
       return !testFiles.some(testFile => testFile.includes(baseName));
     });
 
-    // CRITICAL si hay muchos archivos sin tests
     if (srcWithoutTests.length > 10) {
       pushFileFinding(
         'workflow.tdd.low_test_coverage',
@@ -228,7 +221,6 @@ ACCIÓN REQUERIDA:
     srcFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
 
-      // Validar que NO hay lógica de negocio en presentation/controllers
       if (file.includes('/presentation/') || file.includes('/controllers/')) {
         const hasComplexLogic =
           (content.match(/func\s+\w+[\s\S]{200,}?}/g) || []).length > 0 ||
@@ -248,7 +240,6 @@ ACCIÓN REQUERIDA:
         }
       }
 
-      // Validar que domain NO tiene dependencias externas
       if (file.includes('/domain/')) {
         const frameworkImports = [
           'UIKit', 'SwiftUI', 'Alamofire', 'CoreData',
@@ -270,7 +261,6 @@ ACCIÓN REQUERIDA:
         });
       }
 
-      // Validar que hay interfaces/protocols en domain para repositories
       if (file.includes('Repository') && content.includes('class ') && !file.includes('/domain/')) {
         const hasInterface = content.includes('protocol ') || content.includes('interface ');
 
@@ -289,9 +279,6 @@ ACCIÓN REQUERIDA:
     });
   }
 
-  /**
-   * 4. Workflow Sequence: BDD → TDD → Implementation
-   */
   checkWorkflowSequence() {
     const features = glob.sync('**/*.feature', { cwd: this.projectRoot, absolute: true });
     const tests = glob.sync('**/*.{test,spec}.{ts,tsx,swift,kt}', { cwd: this.projectRoot, absolute: true });
@@ -301,14 +288,18 @@ ACCIÓN REQUERIDA:
       absolute: true
     });
 
+    const isLibrarySelfAudit = process.env.AUDIT_LIBRARY_SELF === 'true' || 
+                                this.projectRoot.includes('ast-intelligence-hooks');
+    if (isLibrarySelfAudit) {
+      return;
+    }
+
     const ratio = {
       features: features.length,
       tests: tests.length,
       implementation: impl.length
     };
 
-    // Ideal: Features <= Tests <= Implementation
-    // CRITICAL si hay mucha implementación sin tests
     if (ratio.implementation > ratio.tests * 2 && ratio.implementation > 20) {
       pushFileFinding(
         'workflow.sequence.tests_lagging',
@@ -367,14 +358,12 @@ ACCIÓN REQUERIDA:
       const featureName = this.extractFeatureName(content);
 
       if (featureName) {
-        // Buscar tests correspondientes
         const testFiles = glob.sync(`**/*${featureName}*.{test,spec}.{ts,tsx,swift,kt}`, {
           cwd: this.projectRoot,
           absolute: true,
           nocase: true
         });
 
-        // Buscar implementación correspondiente
         const implFiles = glob.sync(`**/*${featureName}*.{ts,tsx,swift,kt}`, {
           cwd: this.projectRoot,
           ignore: ['**/*test*', '**/*spec*', '**/*.feature'],

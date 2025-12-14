@@ -49,7 +49,11 @@ function runTextScanner(root, findings) {
     const ext = path.extname(file).toLowerCase();
     if (!['.kt', '.kts', '.swift', '.java', '.xml', '.plist', '.stringsdict', '.yml', '.yaml'].includes(ext)) continue;
     let content = '';
-    try { content = fs.readFileSync(file, 'utf-8'); } catch (_) { continue; }
+    try { 
+      content = fs.readFileSync(file, 'utf-8'); 
+    } catch (error) {
+      continue;
+    }
     const plat = platformOf(file) || (ext === '.swift' ? 'ios' : (ext === '.kt' || ext === '.kts' || ext === '.java' || ext === '.xml') ? 'android' : (ext === '.plist' && path.basename(file).toLowerCase().includes('info')) ? 'ios' : (ext === '.stringsdict' ? 'ios' : (ext === '.yml' || ext === '.yaml') ? 'ios' : 'other'));
 
     if (plat === 'android') {
@@ -165,9 +169,7 @@ function runTextScanner(root, findings) {
       if (/class\s+\w+Activity\b/.test(content) && content.split(/class\s+\w+Activity\b/).length > 3) {
         pushFileFinding('android.architecture.multiple_activities', 'medium', file, 1, 1, 'Multiple Activities detected - prefer Single Activity + Composables', findings);
       }
-      if (/interface\s+\w+Repository\b/.test(content)) {
-        // Good - has repository interface
-      } else if (/class\s+\w+Repository\b/.test(content) && !/:\s*\w+Repository/.test(content)) {
+      if (/class\s+\w+Repository\b/.test(content) && !/interface\s+\w+Repository\b/.test(content) && !/:\s*\w+Repository/.test(content)) {
         pushFileFinding('android.architecture.missing_repository', 'medium', file, 1, 1, 'Repository class without interface - implement repository pattern', findings);
       }
       if (/class\s+\w+ViewModel\b/.test(content) && !/(class\s+\w+UseCase\b|fun\s+\w+UseCase\()/m.test(content)) {
@@ -211,14 +213,10 @@ function runTextScanner(root, findings) {
       }
 
       // Flow
-      if (/flow\s*\{/.test(content)) {
-        // Good - using flow builders
-      } else if (/Flow<[^>]+>/.test(content) && !/flowOf\(|asFlow\(\)/.test(content)) {
+      if (/Flow<[^>]+>/.test(content) && !/flow\s*\{/.test(content) && !/flowOf\(|asFlow\(\)/.test(content)) {
         pushFileFinding('android.flow.missing_flow_builders', 'low', file, 1, 1, 'Flow type without flow builders (flow{}, flowOf(), asFlow())', findings);
       }
-      if (/\.collect\s*\{/.test(content)) {
-        // Good - consuming flow
-      } else if (/Flow<[^>]+>/.test(content) && !/\.collect/.test(content)) {
+      if (/Flow<[^>]+>/.test(content) && !/\.collect\s*\{/.test(content) && !/\.collect/.test(content)) {
         pushFileFinding('android.flow.missing_collect', 'medium', file, 1, 1, 'Flow declared but never collected', findings);
       }
       if (/Flow<[^>]+>/.test(content) && !/\.catch\s*\{/.test(content)) {
@@ -229,9 +227,7 @@ function runTextScanner(root, findings) {
       }
 
       // Networking
-      if (/(Retrofit\.Builder\(|interface\s+\w+Api\b)/.test(content)) {
-        // Good - using Retrofit
-      } else if (/https?:\/\//.test(content) && !/Retrofit|OkHttp/.test(content)) {
+      if (/https?:\/\//.test(content) && !/(Retrofit\.Builder\(|interface\s+\w+Api\b)/.test(content) && !/Retrofit|OkHttp/.test(content)) {
         pushFileFinding('android.networking.missing_retrofit', 'high', file, 1, 1, 'HTTP URLs without Retrofit/OkHttp', findings);
       }
       if (/Retrofit\.Builder\(\)/.test(content) && !/OkHttpClient\(/.test(content)) {
@@ -244,15 +240,12 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.networking.missing_retry_logic', 'low', file, 1, 1, 'Retrofit without retry logic', findings);
       }
       if (/BiometricPrompt\b/.test(content)) {
-        // Good
       } else if (/(password|auth|login)/.test(content.toLowerCase()) && !/BiometricPrompt/.test(content)) {
         pushFileFinding('android.networking.missing_biometric_auth', 'low', file, 1, 1, 'Auth without BiometricPrompt API consideration', findings);
       }
 
       // Room
-      if (/@Entity\b/.test(content)) {
-        // Good
-      } else if (/class\s+\w+(Entity|Model)\b/.test(content) && file.includes('/data/')) {
+      if (/class\s+\w+(Entity|Model)\b/.test(content) && file.includes('/data/') && !/@Entity\b/.test(content)) {
         pushFileFinding('android.room.missing_room', 'medium', file, 1, 1, 'Data entity without @Entity annotation', findings);
       }
       if (/@Entity\b/.test(content) && !/@Index\(/.test(content) && /@ColumnInfo\b/.test(content)) {
@@ -284,9 +277,7 @@ function runTextScanner(root, findings) {
       if (/@Composable\b/.test(content) && /var\s+/.test(content) && !/remember\s*\{/.test(content)) {
         pushFileFinding('android.state.missing_state_hoisting', 'medium', file, 1, 1, 'State not hoisted in Composable', findings);
       }
-      if (/class\s+\w+ViewModel\b[\s\S]{0,500}SavedStateHandle\b/.test(content)) {
-        // Good - using SavedStateHandle
-      } else if (/class\s+\w+ViewModel\b/.test(content) && !/SavedStateHandle/.test(content)) {
+      if (/class\s+\w+ViewModel\b/.test(content) && !/SavedStateHandle/.test(content)) {
         pushFileFinding('android.state.missing_savedstate', 'low', file, 1, 1, 'ViewModel without SavedStateHandle for process death', findings);
       }
       if (/(var\s+\w+\s*=.*StateFlow|val\s+\w+\s*=.*MutableStateFlow)/.test(content) && content.split(/StateFlow/).length > 3) {
@@ -294,9 +285,7 @@ function runTextScanner(root, findings) {
       }
 
       // Navigation
-      if (/@Composable\b/.test(content) && /NavHost\b/.test(content)) {
-        // Good
-      } else if (/@Composable\b/.test(content) && /Screen\b/.test(content) && !/NavHost|NavController/.test(content)) {
+      if (/@Composable\b/.test(content) && /Screen\b/.test(content) && !/NavHost\b/.test(content) && !/NavController/.test(content)) {
         pushFileFinding('android.navigation.missing_compose_navigation', 'medium', file, 1, 1, 'Composable screens without Navigation Compose', findings);
       }
       if (/NavController\b/.test(content) && !/NavHost\b/.test(content)) {
@@ -397,9 +386,7 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.security.missing_proguard_r8', 'medium', file, 1, 1, 'Release build without ProGuard/R8 obfuscation', findings);
       }
       if (/BiometricPrompt\b/.test(content)) {
-        // Good
       } else if (/BiometricManager\b/.test(content)) {
-        // Alternative OK
       } else if (/(password|auth|login)/.test(content.toLowerCase()) && file.includes('Activity')) {
         pushFileFinding('android.security.missing_biometric_auth', 'medium', file, 1, 1, 'Auth screen without BiometricPrompt consideration', findings);
       }
@@ -411,9 +398,7 @@ function runTextScanner(root, findings) {
       if (/@Dao\b/.test(content) && /@Query\b/.test(content) && !/PagingSource|@androidx\.paging/.test(content) && /LIMIT\s+\d{3,}/.test(content)) {
         pushFileFinding('android.performance.missing_paging', 'medium', file, 1, 1, 'Large dataset query without Paging 3', findings);
       }
-      if (/(OneTimeWorkRequest|PeriodicWorkRequest)\b/.test(content)) {
-        // Good
-      } else if (/(doInBackground|AsyncTask|Thread\(|Runnable)/.test(content)) {
+      if (/(doInBackground|AsyncTask|Thread\(|Runnable)/.test(content) && !/(OneTimeWorkRequest|PeriodicWorkRequest)\b/.test(content)) {
         pushFileFinding('android.performance.missing_workmanager', 'medium', file, 1, 1, 'Background work without WorkManager', findings);
       }
       if (path.basename(file) === 'build.gradle.kts' && !/baselineProfile/.test(content)) {
@@ -495,9 +480,7 @@ function runTextScanner(root, findings) {
       }
 
       // Configuration
-      if (path.basename(file) === 'build.gradle.kts' && /buildConfigField/.test(content)) {
-        // Good - using BuildConfig
-      } else if (/const\s+val\s+API_KEY\s*=\s*["']/.test(content)) {
+      if (/const\s+val\s+API_KEY\s*=\s*["']/.test(content) && !(path.basename(file) === 'build.gradle.kts' && /buildConfigField/.test(content))) {
         pushFileFinding('android.config.hardcoded_config', 'high', file, 1, 1, 'API keys hardcoded - use BuildConfig or gradle.properties', findings);
       }
 
@@ -545,7 +528,9 @@ function runTextScanner(root, findings) {
       if (/storyboard|\.xib\b|\.nib\b/i.test(content)) {
         pushFileFinding('ios.storyboards', 'high', file, 1, 1, 'Storyboard/XIB usage detected', findings);
       }
-      if (/completion:\s*\(/.test(content)) {
+      const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(file);
+      const isTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(file);
+      if (!isAnalyzer && !isTestFile && /completion:\s*\(/.test(content)) {
         pushFileFinding('ios.completion_handlers', 'medium', file, 1, 1, 'Completion handler usage detected', findings);
       }
       if (/import UIKit\b/.test(content) && /import SwiftUI\b/.test(content)) {
@@ -835,7 +820,11 @@ function runTextScanner(root, findings) {
     // Concatenate all Kotlin content for global checks
     const kotlinFiles = files.filter(f => f.endsWith('.kt'));
     const allContent = kotlinFiles.map(f => {
-      try { return fs.readFileSync(f, 'utf8'); } catch { return ''; }
+      try { 
+        return fs.readFileSync(f, 'utf8'); 
+      } catch (error) {
+        return '';
+      }
     }).join('\n');
 
     // 1. @Stable/@Immutable annotations
@@ -1057,7 +1046,10 @@ function runTextScanner(root, findings) {
     const gradleFiles = buildGradleFiles.map(f => {
       try {
         return { path: f, content: fs.readFileSync(f, 'utf-8') };
-      } catch (e) {
+      } catch (error) {
+        if (process.env.DEBUG) {
+          console.debug(`[text-scanner] Failed to read Gradle file: ${error.message}`);
+        }
         return null;
       }
     }).filter(Boolean);

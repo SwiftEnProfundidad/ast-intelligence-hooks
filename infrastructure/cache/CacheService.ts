@@ -34,7 +34,7 @@ export class CacheService implements ICacheService {
     private maxSize: number;
 
     constructor(options: CacheOptions = {}) {
-        this.defaultTtl = options.ttl ?? 300000; // 5 minutes default
+        this.defaultTtl = options.ttl ?? 300000;
         this.maxSize = options.maxSize ?? 1000;
     }
 

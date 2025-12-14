@@ -6,7 +6,6 @@ const PlatformDetectionService = require('./PlatformDetectionService');
 const AutonomousOrchestrator = require('./AutonomousOrchestrator');
 const AutoExecuteAIStartUseCase = require('../use-cases/AutoExecuteAIStartUseCase');
 const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('./GitTreeState');
-// IntelligentGitTreeMonitor loaded on-demand to avoid startup errors
 
 const EVIDENCE_PATH = path.join(process.cwd(), '.AI_EVIDENCE.json');
 const CRITICAL_DOC = path.join(process.cwd(), 'docs', 'planning', 'LIBRARY_FIVE_STARS_ROADMAP.md');
@@ -189,17 +188,13 @@ class RealtimeGuardService {
       `DIRTY_TREE_STATE|${state?.stagedCount ?? 0}|${state?.workingCount ?? 0}|${state?.uniqueCount ?? 0}|${limit}`
     );
 
-    // Use intelligent grouping when we have many files (but no hard limit)
-    // Only groups related files - no build/test verification
     if (state.uniqueCount > 20) {
       try {
         const IntelligentGitTreeMonitor = require('./IntelligentGitTreeMonitor');
         const intelligentMonitor = new IntelligentGitTreeMonitor({
           repoRoot: this.repoRoot,
           notifier: (notification) => {
-            // Use the notification's message directly (it's already formatted)
             if (notification.action === 'suggest_commit' && notification.data && notification.data.length > 0) {
-              // Send notification with custom title from IntelligentGitTreeMonitor
               this.sendNotification({
                 title: notification.title || '📦 Atomic Commit Suggestions',
                 subtitle: notification.subtitle || '',
@@ -211,15 +206,12 @@ class RealtimeGuardService {
           logger: this.logger
         });
         await intelligentMonitor.notify();
-        // Don't block on old limit - intelligent system handles it
         return;
       } catch (error) {
         this.appendDebugLog(`INTELLIGENT_ANALYSIS_ERROR|${error.message}`);
-        // Fallback to old behavior only if intelligent analysis completely fails
       }
     }
 
-    // Old behavior only as fallback
     if (isTreeBeyondLimit(state, limit)) {
       this.handleDirtyTree(state, limit);
       return;
@@ -449,7 +441,6 @@ class RealtimeGuardService {
     };
 
     const notifyWithOsascriptDialog = () => {
-      // DISABLED BY USER REQUEST: No blocking modals
       return false;
       /*
       if (!this.osascriptPath) {
@@ -483,14 +474,11 @@ class RealtimeGuardService {
       delivered = true;
     }
 
-    // DISABLED BY USER REQUEST: No blocking modals
-    const shouldForceDialog = false; // forceDialog || level === 'error' || level === 'warn';
+    const shouldForceDialog = false;
     if (shouldForceDialog) {
       const dialogDelivered = notifyWithOsascriptDialog();
       delivered = dialogDelivered || delivered;
     } else if (!delivered) {
-      // Fallback to dialog disabled
-      // delivered = notifyWithOsascriptDialog() || delivered;
     }
 
     if (!delivered) {
@@ -838,7 +826,7 @@ class RealtimeGuardService {
           branch !== this.gitflowDevelopBranch &&
           branch !== this.gitflowMainBranch &&
           branch !== currentBranch &&
-          /^(feature|fix|chore|docs|refactor|test|ci)\//.test(branch)
+          /^(feature|fix|chore|docs|refactor|test|ci)\
       );
 
     if (!branches.length) {

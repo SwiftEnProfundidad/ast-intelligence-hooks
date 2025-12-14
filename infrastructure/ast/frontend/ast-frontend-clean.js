@@ -1,9 +1,3 @@
-// ===== AST FRONTEND MODULE - CLEAN VERSION =====
-// Frontend-specific AST intelligence rules
-// Clean Architecture: Infrastructure Layer - Frontend AST Analysis
-//
-// PHILOSOPHY: ESLint handles complexity/smells/React rules
-//             We handle: Clean Architecture, DDD, Feature-First
 
 const path = require('path');
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf } = require(path.join(__dirname, '../ast-core'));

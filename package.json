@@ -22,6 +22,7 @@
     "check-version": "node bin/check-version.js",
     "audit": "node infrastructure/ast/ast-intelligence.js",
     "ast": "node infrastructure/ast/ast-intelligence.js",
+    "audit-library": "node bin/audit-library.js",
     "gitflow": "bash bin/gitflow check",
     "gitflow:status": "bash bin/gitflow status",
     "gitflow:workflow": "bash bin/gitflow workflow",

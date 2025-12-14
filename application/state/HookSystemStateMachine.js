@@ -20,7 +20,6 @@ class HookSystemStateMachine {
         }
       }
     } catch (error) {
-      // ignore and fall back to default
     }
     this.persistState(this.defaultState);
     return this.defaultState;

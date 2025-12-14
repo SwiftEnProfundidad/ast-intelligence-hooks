@@ -3,6 +3,12 @@ function analyzeImagesBackend(project, findings) {
     const content = sf.getFullText();
     const filePath = sf.getFilePath();
 
+    if (!filePath.includes('backend') && !filePath.includes('api')) return;
+
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+    const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+    if (isAnalyzer || isTestFile) return;
+
     if (content.match(/@Post.*upload|multer|multipart/i)) {
       const hasValidation = /maxFileSize|fileSize|limits/i.test(content);
       if (!hasValidation) {

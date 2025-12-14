@@ -1,6 +1,3 @@
-// ===== BLOCK COMMIT USE CASE =====
-// Application Layer - Use Case
-// Decides whether to block a Git commit based on audit results
 
 const CommitBlockingRules = require('../../domain/rules/CommitBlockingRules');
 
@@ -15,19 +12,14 @@ class BlockCommitUseCase {
     const useStagedOnly = options.useStagedOnly || false;
 
     try {
-      console.log(`[BlockCommitUseCase] Evaluating commit blocking...`);
-      console.log(`[BlockCommitUseCase] Mode: ${strictMode ? 'STRICT' : blockOnlyCriticalHigh ? 'CRITICAL/HIGH' : 'NORMAL'}`);
-
       let decision;
 
       if (useStagedOnly && auditResult.findings) {
-        // Block based on staged files only
         decision = this.commitBlockingRules.shouldBlockByStagedFiles(
           auditResult.findings,
           strictMode
         );
       } else {
-        // Block based on full audit result
         decision = this.commitBlockingRules.shouldBlockCommit(
           auditResult,
           strictMode,
@@ -35,7 +27,6 @@ class BlockCommitUseCase {
         );
       }
 
-      // Add technical debt info if not blocking
       if (!decision.shouldBlock) {
         const debtCheck = this.commitBlockingRules.calculateTechnicalDebtThreshold(auditResult);
         decision.technicalDebt = debtCheck.currentDebt;
@@ -45,13 +36,9 @@ class BlockCommitUseCase {
         decision.maintainability = maintainabilityGate;
       }
 
-      console.log(`[BlockCommitUseCase] Decision: ${decision.shouldBlock ? 'BLOCK' : 'ALLOW'}`);
-      console.log(`[BlockCommitUseCase] Reason: ${decision.reason}`);
-
       return decision;
 
     } catch (error) {
-      console.error(`[BlockCommitUseCase] Error:`, error.message);
       throw error;
     }
   }

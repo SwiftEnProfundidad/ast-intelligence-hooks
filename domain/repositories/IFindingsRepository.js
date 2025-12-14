@@ -1,6 +1,3 @@
-// ===== FINDINGS REPOSITORY INTERFACE =====
-// Domain Layer - Repository Interface
-// Defines contract for persisting and retrieving audit findings
 
 class IFindingsRepository {
   async save(findings) {

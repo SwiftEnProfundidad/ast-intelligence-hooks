@@ -25,15 +25,12 @@ class IntelligentGitTreeMonitor {
             return { action: 'clean', message: 'Git tree is clean' };
         }
 
-        // Get all changed files
         const allFiles = [...state.stagedFiles, ...state.workingFiles];
 
-        // Analyze and group by feature
         const suggestions = await this.analyzer.analyzeAndSuggestCommits(allFiles);
         const readyCommits = this.analyzer.getReadyCommits(suggestions);
         const needsAttention = this.analyzer.getNeedsAttention(suggestions);
 
-        // If we have ready commits, suggest auto-commit
         if (readyCommits.length > 0) {
             return {
                 action: 'suggest_commit',
@@ -50,9 +47,6 @@ class IntelligentGitTreeMonitor {
             };
         }
 
-        // Skip needs_attention - we don't verify build/tests
-
-        // If we have many unrelated files
         if (suggestions.length > 10) {
             return {
                 action: 'too_many_features',
@@ -66,7 +60,6 @@ class IntelligentGitTreeMonitor {
             };
         }
 
-        // Default: just show analysis
         return {
             action: 'info',
             suggestions,
@@ -83,7 +76,6 @@ class IntelligentGitTreeMonitor {
 
         switch (analysis.action) {
             case 'clean':
-                // Tree is clean, no notification needed
                 break;
 
             case 'suggest_commit':

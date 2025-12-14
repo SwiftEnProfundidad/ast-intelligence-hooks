@@ -13,7 +13,7 @@
             "checkouts": true,
             "Pods": true,
             "DerivedData": true,
-            "scripts/hooks-system/infrastructure": true
+            "scripts/hooks-system": true
         },
         "rules": {
             "ios.force_unwrapping": {

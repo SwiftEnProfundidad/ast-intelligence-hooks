@@ -16,13 +16,10 @@ const COLORS = {
 class ASTHooksInstaller {
   constructor() {
     this.targetRoot = process.cwd();
-    // Detect if we are in an installed npm package or in development
     const packageJsonPath = path.join(__dirname, '..', 'package.json');
     if (fs.existsSync(packageJsonPath)) {
-      // We are in the installed npm package
       this.hookSystemRoot = path.join(__dirname, '..');
     } else {
-      // Fallback for development
       this.hookSystemRoot = path.join(__dirname, '..');
     }
     this.platforms = [];
@@ -65,7 +62,6 @@ class ASTHooksInstaller {
 ╚════════════════════════════════════════════════════════════════╝
 ${COLORS.reset}`);
 
-    // STEP 0: Check Git repository
     process.stdout.write(`\n${COLORS.cyan}[0/8] Checking Git repository...${COLORS.reset}`);
     if (!this.checkGitRepository()) {
       process.stdout.write(`${COLORS.red}✗ Git repository check failed${COLORS.reset}\n`);
@@ -74,7 +70,6 @@ ${COLORS.reset}`);
     }
     process.stdout.write(`${COLORS.green}✓ Git repository detected${COLORS.reset}`);
 
-    // STEP 1: Detect project platforms
     process.stdout.write(`\n${COLORS.cyan}[1/8] Detecting project platforms...${COLORS.reset}`);
     this.detectPlatforms();
     process.stdout.write(`${COLORS.green}✓ Detected: ${this.platforms.join(', ')}${COLORS.reset}`);
@@ -93,32 +88,26 @@ ${COLORS.reset}`);
     this.copySystemFiles();
     process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
 
-    // STEP 5: Create project configuration
     process.stdout.write(`\n${COLORS.cyan}[5/8] Creating project configuration...${COLORS.reset}`);
     this.createProjectConfig();
     process.stdout.write(`${COLORS.green}✓ Configuration created${COLORS.reset}`);
 
-    // STEP 6: Install MCP servers for agentic IDEs
     process.stdout.write(`\n${COLORS.cyan}[6/8] Installing MCP servers for agentic IDEs...${COLORS.reset}`);
     this.installCursorHooks();
     process.stdout.write(`${COLORS.green}✓ MCP servers installed${COLORS.reset}`);
 
-    // STEP 7: Install Git hooks
     process.stdout.write(`\n${COLORS.cyan}[7/8] Installing Git hooks...${COLORS.reset}`);
     this.installGitHooks();
     process.stdout.write(`${COLORS.green}✓ Git hooks installed${COLORS.reset}`);
 
-    // STEP 7.5: Configure VS Code tasks for auto-start
     process.stdout.write(`\n${COLORS.cyan}[7.5/8] Configuring VS Code/Cursor tasks for auto-start...${COLORS.reset}`);
     this.configureVSCodeTasks();
     process.stdout.write(`${COLORS.green}✓ VS Code tasks configured${COLORS.reset}`);
 
-    // STEP 8: Add npm scripts to project package.json
     process.stdout.write(`\n${COLORS.cyan}[8/8] Adding npm scripts to package.json...${COLORS.reset}`);
     this.addNpmScripts();
     process.stdout.write(`${COLORS.green}✓ npm scripts added${COLORS.reset}`);
 
-    // Finalize
     process.stdout.write(`\n${COLORS.cyan}Finalizing installation...${COLORS.reset}`);
     this.printSuccessMessage();
   }
@@ -179,7 +168,11 @@ ${COLORS.reset}`);
       const dest = path.join(this.targetRoot, 'scripts/hooks-system', item);
 
       if (fs.existsSync(source)) {
-        this.copyRecursive(source, dest);
+        if (item === 'infrastructure/') {
+          this.copyRecursiveExcluding(source, dest, ['scripts']);
+        } else {
+          this.copyRecursive(source, dest);
+        }
       }
     });
   }
@@ -191,6 +184,26 @@ ${COLORS.reset}`);
       }
       fs.readdirSync(source).forEach(file => {
         this.copyRecursive(path.join(source, file), path.join(dest, file));
+      });
+    } else {
+      fs.copyFileSync(source, dest);
+    }
+  }
+
+  copyRecursiveExcluding(source, dest, excludeDirs) {
+    if (fs.statSync(source).isDirectory()) {
+      if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+      }
+      fs.readdirSync(source).forEach(file => {
+        if (excludeDirs.includes(file)) {
+          return;
+        }
+        this.copyRecursiveExcluding(
+          path.join(source, file),
+          path.join(dest, file),
+          excludeDirs
+        );
       });
     } else {
       fs.copyFileSync(source, dest);
@@ -253,9 +266,6 @@ ${COLORS.reset}`);
     const configPath = path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-    // Note: .ast-architecture.json is OPTIONAL and only used by iOS analyzer if needed
-    // Users can create it manually if they want to specify architecture patterns
-    // We don't create it automatically to avoid forcing specific architectures
   }
 
   installESLintConfigs() {
@@ -625,7 +635,10 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
     # Send macOS notification
-    osascript -e "display notification \"${TOTAL_VIOLATIONS} critical/high violations block commit\" with title \"🚫 Commit Blocked\" sound name \"Basso\"" 2>/dev/null || true
+    if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
+      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
+    fi
     
     exit 1
   fi
@@ -651,7 +664,10 @@ if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
     # Send macOS notification
-    osascript -e "display notification \"${TOTAL_VIOLATIONS} critical/high violations block commit\" with title \"🚫 Commit Blocked\" sound name \"Basso\"" 2>/dev/null || true
+    if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
+      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
+    fi
     
     exit 1
   fi
