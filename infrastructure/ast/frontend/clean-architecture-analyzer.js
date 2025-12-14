@@ -1,6 +1,8 @@
 
 const { SyntaxKind } = require('ts-morph');
 
+/**
+ * Analyze Clean Architecture compliance for Frontend (React/Next.js)
  *
  * Rules from rulesfront.mdc:
  * ✅ Domain → Application → Infrastructure → Presentation

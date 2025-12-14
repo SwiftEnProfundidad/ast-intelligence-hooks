@@ -1,6 +1,8 @@
 
 const { SyntaxKind } = require('ts-morph');
 
+/**
+ * Analyze Clean Architecture compliance for Backend (NestJS)
  *
  * Rules from rulesbackend.mdc:
  * ✅ Domain → Application → Infrastructure → Presentation
