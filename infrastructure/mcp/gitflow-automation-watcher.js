@@ -54,7 +54,6 @@ function sendNotification(title, message, sound = 'Hero') {
     notificationAdapter.send({ title, message, sound, level: 'info' })
         .then(success => {
             if (success) {
-                console.error(`[MCP] Notification sent: ${title}`);
             }
         })
         .catch(err => {

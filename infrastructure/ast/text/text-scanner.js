@@ -1003,7 +1003,6 @@ function runTextScanner(root, findings) {
         return { path: f, content: fs.readFileSync(f, 'utf-8') };
       } catch (error) {
         if (process.env.DEBUG) {
-          console.debug(`[text-scanner] Failed to read Gradle file: ${error.message}`);
         }
         return null;
       }
