@@ -34,38 +34,48 @@ class CursorTokenService {
         return null;
     }
 
-    async fetchFromApi() {
+    async fetchFromApi(maxRetries = 3, initialDelayMs = 1000) {
         if (!this.apiUrl || !this.fetch) {
             return null;
         }
 
-        try {
-            const response = await this.fetch(this.apiUrl, {
-                headers: this.apiToken ? { Authorization: `Bearer ${this.apiToken}` } : {}
-            });
-            if (!response.ok) {
-                throw new Error(`status ${response.status}`);
-            }
-            const payload = await response.json();
-            if (!payload) {
-                return null;
-            }
-            const tokensUsed = this.coerceNumber(payload.tokensUsed) ?? 0;
-            const maxTokens = this.coerceNumber(payload.maxTokens) ?? DEFAULT_MAX_TOKENS;
-            const percentUsed = this.coerceNumber(payload.percentUsed) ?? (tokensUsed / maxTokens) * 100;
-            const timestamp = payload.timestamp || new Date().toISOString();
+        let lastError = null;
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                const response = await this.fetch(this.apiUrl, {
+                    headers: this.apiToken ? { Authorization: `Bearer ${this.apiToken}` } : {}
+                });
+                if (!response.ok) {
+                    throw new Error(`status ${response.status}`);
+                }
+                const payload = await response.json();
+                if (!payload) {
+                    return null;
+                }
+                const tokensUsed = this.coerceNumber(payload.tokensUsed) ?? 0;
+                const maxTokens = this.coerceNumber(payload.maxTokens) ?? DEFAULT_MAX_TOKENS;
+                const percentUsed = this.coerceNumber(payload.percentUsed) ?? (tokensUsed / maxTokens) * 100;
+                const timestamp = payload.timestamp || new Date().toISOString();
 
-            return {
-                tokensUsed,
-                maxTokens,
-                percentUsed,
-                timestamp,
-                source: 'api'
-            };
-        } catch (error) {
-            this.logger.warn?.('CURSOR_TOKEN_SERVICE_API_FAILED', { error: error.message });
-            return null;
+                return {
+                    tokensUsed,
+                    maxTokens,
+                    percentUsed,
+                    timestamp,
+                    source: 'api'
+                };
+            } catch (error) {
+                lastError = error;
+                const isLastAttempt = attempt === maxRetries;
+                if (isLastAttempt) {
+                    this.logger.warn?.('CURSOR_TOKEN_SERVICE_API_FAILED', { error: error.message, attempts: attempt + 1 });
+                    return null;
+                }
+                const delayMs = initialDelayMs * Math.pow(2, attempt);
+                await new Promise(resolve => setTimeout(resolve, delayMs));
+            }
         }
+        return null;
     }
 
     async fetchFromFile() {

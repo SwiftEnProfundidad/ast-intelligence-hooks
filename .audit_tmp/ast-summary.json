@@ -1,13 +1,13 @@
 {
   "totals": {
     "errors": 105,
-    "warnings": 12,
+    "warnings": 13,
     "infos": 115
   },
   "levels": {
     "CRITICAL": 7,
     "HIGH": 98,
-    "MEDIUM": 12,
+    "MEDIUM": 13,
     "LOW": 115
   },
   "platforms": {
@@ -15,7 +15,7 @@
     "Frontend": 7,
     "iOS": 18,
     "Android": 42,
-    "Other": 68
+    "Other": 69
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
@@ -23,7 +23,7 @@
     "common.quality.comments": 74,
     "common.types.any": 1,
     "common.quality.disabled_lint": 3,
-    "common.debug.console": 3,
+    "common.debug.console": 4,
     "common.quality.todo_fixme": 1,
     "common.network.missing_circuit_breaker": 9,
     "common.network.missing_timeout": 2,
@@ -75,7 +75,7 @@
     "Other": {
       "CRITICAL": 2,
       "HIGH": 56,
-      "MEDIUM": 7,
+      "MEDIUM": 8,
       "LOW": 3,
       "rules": {
         "workflow.sequence.tests_lagging": 1,
@@ -83,7 +83,7 @@
         "common.quality.comments": 44,
         "common.types.any": 1,
         "common.quality.disabled_lint": 3,
-        "common.debug.console": 3,
+        "common.debug.console": 4,
         "common.quality.todo_fixme": 1,
         "common.network.missing_circuit_breaker": 5,
         "common.network.missing_timeout": 2,
@@ -415,16 +415,17 @@
       ]
     },
     "common.debug.console": {
-      "count": 3,
+      "count": 4,
       "level": "MEDIUM",
       "severity": "MEDIUM",
       "platforms": {
-        "Other": 3
+        "Other": 4
       },
       "files": [
         ".coverage/lcov-report/prettify.js",
         "infrastructure/adapters/LegacyAnalyzerAdapter.js",
-        "infrastructure/mcp/gitflow-automation-watcher.js"
+        "infrastructure/mcp/gitflow-automation-watcher.js",
+        "infrastructure/ast/text/text-scanner.js"
       ]
     },
     "common.quality.todo_fixme": {
@@ -1663,6 +1664,7 @@
     "infrastructure/ast/text/text-scanner.js": {
       "platform": "Other",
       "rules": {
+        "common.debug.console": 1,
         "common.quality.comments": 1,
         "common.network.missing_circuit_breaker": 1,
         "common.network.missing_connection_pooling": 1
@@ -1670,7 +1672,7 @@
       "levels": {
         "CRITICAL": 0,
         "HIGH": 2,
-        "MEDIUM": 1,
+        "MEDIUM": 2,
         "LOW": 0
       }
     },
@@ -2748,6 +2750,15 @@
       "line": 5,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.debug.console",
+      "severity": "MEDIUM",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/text/text-scanner.js",
+      "line": 1044,
+      "column": 25,
+      "message": "Console usage detected - use Logger instead",
       "metrics": {}
     },
     {
@@ -4306,7 +4317,7 @@
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
       "line": 16,
       "column": 1,
-      "message": "God class detected: 11 methods, 0 properties, 413 lines - VIOLATES SRP",
+      "message": "God class detected: 11 methods, 0 properties, 416 lines - VIOLATES SRP",
       "metrics": {}
     },
     {
@@ -4393,7 +4404,7 @@
   ],
   "metadata": {
     "totalFiles": 287,
-    "timestamp": "2025-12-14T00:47:30.808Z",
+    "timestamp": "2025-12-14T01:09:06.353Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }
