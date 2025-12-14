@@ -170,6 +170,7 @@ function isExcluded(ruleId, filePath) {
  * @param {Object} metrics - Optional metrics for severity computation
  */
 function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}) {
+  if (!sf || typeof sf.getFilePath !== 'function') return;
   const { line, column } = positionOf(node, sf);
   const filePath = sf.getFilePath();
 
