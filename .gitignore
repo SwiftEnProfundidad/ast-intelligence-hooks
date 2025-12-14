@@ -41,3 +41,13 @@ ANNOUNCEMENTS.md
 
 # IDE-specific configurations (user-specific)
 .windsurf/
+
+# Analysis and temporary documentation files
+**/RULES_COVERAGE_ANALYSIS.md
+**/rules-coverage.md
+**/*AUDITORIA*.md
+**/*VERIFICACION*.md
+**/*ANALISIS*.md
+**/*PLAN*.md
+**/*RESUMEN*.md
+**/*CORRECCIONES*.md
