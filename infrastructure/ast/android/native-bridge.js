@@ -89,20 +89,29 @@ function determineSeverity(ruleId) {
   return 'medium';
 }
 
+const DETEKT_RULE_MAPPING = {
+  'SRP': 'srp_cohesion',
+  'OCP': 'ocp_when',
+  'LSP': 'lsp_contract',
+  'ISP': 'isp_interface',
+  'DIP': 'dip_hilt',
+  'Layer': 'layer_validator',
+  'Feature': 'feature_first',
+  'Anemic': 'ddd_anemic',
+  'Command': 'cqrs',
+  'Query': 'cqrs',
+  'Singleton': 'singleton',
+  'ForceUnwrap': 'force_unwrap'
+};
+
 function mapDetektRuleId(ruleId) {
   const prefix = 'android.native.';
-
-  if (ruleId.includes('SRP')) return prefix + 'srp_cohesion';
-  if (ruleId.includes('OCP')) return prefix + 'ocp_when';
-  if (ruleId.includes('LSP')) return prefix + 'lsp_contract';
-  if (ruleId.includes('ISP')) return prefix + 'isp_interface';
-  if (ruleId.includes('DIP')) return prefix + 'dip_hilt';
-  if (ruleId.includes('Layer')) return prefix + 'layer_validator';
-  if (ruleId.includes('Feature')) return prefix + 'feature_first';
-  if (ruleId.includes('Anemic')) return prefix + 'ddd_anemic';
-  if (ruleId.includes('Command') || ruleId.includes('Query')) return prefix + 'cqrs';
-  if (ruleId.includes('Singleton')) return prefix + 'singleton';
-  if (ruleId.includes('ForceUnwrap')) return prefix + 'force_unwrap';
+  
+  for (const [key, value] of Object.entries(DETEKT_RULE_MAPPING)) {
+    if (ruleId.includes(key)) {
+      return prefix + value;
+    }
+  }
 
   return prefix + ruleId.toLowerCase().replace(/[^a-z0-9]/g, '_');
 }
