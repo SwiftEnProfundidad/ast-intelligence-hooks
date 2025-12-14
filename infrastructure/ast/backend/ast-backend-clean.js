@@ -1,9 +1,3 @@
-// ===== AST BACKEND MODULE - CLEAN VERSION =====
-// Backend-specific AST intelligence rules
-// Clean Architecture: Infrastructure Layer - Backend AST Analysis
-//
-// PHILOSOPHY: ESLint handles complexity/smells/security
-//             We handle: SOLID, Clean Architecture, DDD, Feature-First
 
 const path = require('path');
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf } = require(path.join(__dirname, '../ast-core'));

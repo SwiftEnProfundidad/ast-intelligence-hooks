@@ -70,11 +70,7 @@ class FrontendArchitectureDetector {
       return 'UNKNOWN';
     }
 
-    // Analyze files to detect patterns
-    // PRIORITY 1: Feature-First + DDD + Clean Architecture
     this.detectFeatureFirstClean(allFiles);
-
-    // PRIORITY 2: Other patterns
     this.detectComponentBased(allFiles);
     this.detectAtomicDesign(allFiles);
     this.detectStateManagement(allFiles);
