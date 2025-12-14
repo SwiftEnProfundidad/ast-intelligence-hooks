@@ -39,7 +39,6 @@ class ASTHooksInstaller {
       return false;
     }
 
-    // Verify git is working
     try {
       execSync('git rev-parse --show-toplevel', { 
         cwd: this.targetRoot, 
@@ -74,16 +73,13 @@ ${COLORS.reset}`);
     this.detectPlatforms();
     process.stdout.write(`${COLORS.green}✓ Detected: ${this.platforms.join(', ')}${COLORS.reset}`);
 
-    // STEP 2: Install ESLint configs
     process.stdout.write(`\n${COLORS.cyan}[2/8] Installing ESLint configurations...${COLORS.reset}`);
     this.installESLintConfigs();
 
-    // STEP 3: Create base structure
     process.stdout.write(`\n${COLORS.cyan}[3/8] Creating hooks-system directory structure...${COLORS.reset}`);
     this.createDirectoryStructure();
     process.stdout.write(`${COLORS.green}✓ Directory structure created${COLORS.reset}`);
 
-    // STEP 4: Copy system files
     process.stdout.write(`\n${COLORS.cyan}[4/8] Copying AST Intelligence system files...${COLORS.reset}`);
     this.copySystemFiles();
     process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
@@ -238,7 +234,6 @@ ${COLORS.reset}`);
       }
     };
 
-    // Platform-specific configuration
     this.platforms.forEach(platform => {
       config.rules.platforms[platform] = {
         enabled: true,
@@ -273,7 +268,6 @@ ${COLORS.reset}`);
 
     const templatesDir = path.join(this.hookSystemRoot, 'infrastructure/external-tools/eslint');
 
-    // Backend ESLint configuration
     const backendDir = path.join(this.targetRoot, 'apps/backend');
     if (fs.existsSync(backendDir)) {
       const templatePath = path.join(templatesDir, 'backend.config.template.mjs');
@@ -361,7 +355,6 @@ ${COLORS.reset}`);
   }
 
   configureMCPServers() {
-    // Detect Node.js executable path
     let nodePath = process.execPath;
     if (!nodePath || !fs.existsSync(nodePath)) {
       try {
@@ -389,8 +382,6 @@ ${COLORS.reset}`);
       }
     };
 
-    // MCP is a standard protocol, works with any MCP-compatible client
-    // We configure for multiple IDEs to maximize compatibility
     const ideConfigs = this.detectIDEs();
     let configuredCount = 0;
 
@@ -401,9 +392,7 @@ ${COLORS.reset}`);
 
       const mcpConfigPath = path.join(ide.configDir, 'mcp.json');
       
-      // Only create if it doesn't exist (don't overwrite user config)
       if (!fs.existsSync(mcpConfigPath)) {
-        // Adjust config format if needed for specific IDEs
         const configToWrite = ide.name === 'Claude Desktop' 
           ? this.adaptConfigForClaudeDesktop(mcpConfig)
           : mcpConfig;
@@ -412,14 +401,12 @@ ${COLORS.reset}`);
         process.stdout.write(`${COLORS.green}  ✅ Configured ${ide.configPath}${COLORS.reset}\n`);
         configuredCount++;
       } else {
-        // File exists - try to merge instead of skipping
         try {
           const existing = JSON.parse(fs.readFileSync(mcpConfigPath, 'utf8'));
           if (!existing.mcpServers) {
             existing.mcpServers = {};
           }
           
-          // Merge our MCP server into existing config
           existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
           
           fs.writeFileSync(mcpConfigPath, JSON.stringify(existing, null, 2));
@@ -432,7 +419,6 @@ ${COLORS.reset}`);
     });
 
     if (configuredCount === 0 && ideConfigs.length === 0) {
-      // Fallback: create .cursor/mcp.json in project (most common)
       const cursorDir = path.join(this.targetRoot, '.cursor');
       if (!fs.existsSync(cursorDir)) {
         fs.mkdirSync(cursorDir, { recursive: true });
@@ -444,7 +430,6 @@ ${COLORS.reset}`);
         process.stdout.write(`${COLORS.cyan}  ℹ️  Note: MCP servers work with any MCP-compatible IDE${COLORS.reset}\n`);
         configuredCount++;
       } else {
-        // Try to merge into existing file
         try {
           const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
           if (!existing.mcpServers) {
@@ -466,7 +451,6 @@ ${COLORS.reset}`);
     const homeDir = os.homedir();
     const ideConfigs = [];
 
-    // Cursor: Project-level config (.cursor/mcp.json) or global (~/.cursor/mcp.json)
     const cursorProjectPath = path.join(this.targetRoot, '.cursor', 'mcp.json');
     ideConfigs.push({
       name: 'Cursor',
@@ -475,7 +459,6 @@ ${COLORS.reset}`);
       type: 'project'
     });
 
-    // Claude Desktop: Global config (location may vary by OS)
     let claudeDesktopConfigDir;
     if (process.platform === 'darwin') {
       // macOS
@@ -488,8 +471,6 @@ ${COLORS.reset}`);
       claudeDesktopConfigDir = path.join(homeDir, '.config', 'claude_desktop_config.json');
     }
     
-    // Claude Desktop uses a different config format (single JSON file with mcpServers nested)
-    // We'll note it but let user configure manually if needed
     if (fs.existsSync(path.dirname(claudeDesktopConfigDir))) {
       ideConfigs.push({
         name: 'Claude Desktop',
@@ -499,7 +480,6 @@ ${COLORS.reset}`);
       });
     }
 
-    // Windsurf: Similar to Cursor structure
     const windsurfProjectPath = path.join(this.targetRoot, '.windsurf', 'mcp.json');
     if (fs.existsSync(path.dirname(windsurfProjectPath)) || fs.existsSync(path.join(homeDir, '.windsurf'))) {
       ideConfigs.push({
@@ -514,8 +494,6 @@ ${COLORS.reset}`);
   }
 
   adaptConfigForClaudeDesktop(config) {
-    // Claude Desktop may need slightly different format
-    // For now, return as-is since format should be similar
     return config;
   }
 
@@ -575,12 +553,10 @@ ${COLORS.reset}`);
   }
 
   detectPackagePath() {
-    // Try to detect the npm package path
     try {
       const packageJsonPath = require.resolve('@pumuki/ast-intelligence-hooks/package.json');
       return path.dirname(path.dirname(packageJsonPath));
     } catch (e) {
-      // If not installed as npm package, use relative path
       return this.targetRoot;
     }
   }
@@ -589,13 +565,11 @@ ${COLORS.reset}`);
     const gitHooksDir = path.join(this.targetRoot, '.git/hooks');
 
     if (!fs.existsSync(gitHooksDir)) {
-      // This should not happen if checkGitRepository() passed, but handle gracefully
       process.stdout.write(`${COLORS.red}✗ .git/hooks directory not found${COLORS.reset}\n`);
       process.stdout.write(`${COLORS.yellow}  Git hooks cannot be installed without a valid Git repository.${COLORS.reset}\n`);
       return;
     }
 
-    // Create pre-commit hook using npm binaries directly (more portable)
     const preCommitHook = `#!/bin/bash
 # AST Intelligence Hooks - Pre-commit
 # Auto-generated by @pumuki/ast-intelligence-hooks v5.3.1
@@ -688,7 +662,6 @@ exit 0
     const tasksJsonPath = path.join(vscodeDir, 'tasks.json');
 
     try {
-      // Create .vscode directory if it doesn't exist
       if (!fs.existsSync(vscodeDir)) {
         fs.mkdirSync(vscodeDir, { recursive: true });
       }
@@ -698,16 +671,13 @@ exit 0
         tasks: []
       };
 
-      // Read existing tasks.json if it exists
       if (fs.existsSync(tasksJsonPath)) {
         try {
           tasksJson = JSON.parse(fs.readFileSync(tasksJsonPath, 'utf8'));
-          // Ensure tasks array exists
           if (!tasksJson.tasks) {
             tasksJson.tasks = [];
           }
         } catch (e) {
-          // If invalid JSON, start fresh
           tasksJson = {
             version: '2.0.0',
             tasks: []
@@ -715,16 +685,13 @@ exit 0
         }
       }
 
-      // Check if AST session loader task already exists
       const existingTaskIndex = tasksJson.tasks.findIndex(
         task => task.label === 'AST Session Loader' || task.identifier === 'ast-session-loader'
       );
 
-      // Determine path to session-loader.sh (could be in installed package or scripts/hooks-system)
       let sessionLoaderPath = path.join(this.targetRoot, 'scripts', 'hooks-system', 'bin', 'session-loader.sh');
       const npmPackagePath = path.join(this.targetRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'session-loader.sh');
       
-      // Prefer npm package path if it exists, otherwise use scripts/hooks-system (for development)
       if (fs.existsSync(npmPackagePath)) {
         sessionLoaderPath = npmPackagePath;
       }
@@ -746,14 +713,11 @@ exit 0
       };
 
       if (existingTaskIndex >= 0) {
-        // Update existing task
         tasksJson.tasks[existingTaskIndex] = sessionLoaderTask;
       } else {
-        // Add new task at the beginning
         tasksJson.tasks.unshift(sessionLoaderTask);
       }
 
-      // Write tasks.json
       fs.writeFileSync(tasksJsonPath, JSON.stringify(tasksJson, null, 2) + '\n');
       
     } catch (error) {
@@ -772,28 +736,21 @@ exit 0
     try {
       const packageJson = JSON.parse(fs.readFileSync(projectPackageJsonPath, 'utf8'));
       
-      // Initialize scripts if it doesn't exist
       if (!packageJson.scripts) {
         packageJson.scripts = {};
       }
 
-      // Determine which install command to use
-      // Try to use npx first (works when package is properly installed and bin is available)
-      // Fallback to direct node path if npx won't work
       let installHooksScript;
       
       const npxBinPath = path.join(this.targetRoot, 'node_modules', '.bin', 'ast-install');
       const directBinPath = path.join(this.targetRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'install.js');
       
-      // Check if npx binary exists (symlink or file)
       if (fs.existsSync(npxBinPath)) {
         // npx should work
         installHooksScript = 'npx ast-install';
       } else if (fs.existsSync(directBinPath)) {
-        // Use direct path as fallback
         installHooksScript = 'node node_modules/@pumuki/ast-intelligence-hooks/bin/install.js';
       } else {
-        // Neither exists, use npx anyway (will fail gracefully with clear error)
         installHooksScript = 'npx ast-install';
         process.stdout.write(`${COLORS.yellow}  ⚠️  Installer binary not found, script may not work${COLORS.reset}\n`);
       }
@@ -805,7 +762,6 @@ exit 0
         process.stdout.write(`${COLORS.blue}  ℹ️  install-hooks script already exists${COLORS.reset}\n`);
       }
 
-      // Write back to package.json
       fs.writeFileSync(projectPackageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
       
     } catch (error) {

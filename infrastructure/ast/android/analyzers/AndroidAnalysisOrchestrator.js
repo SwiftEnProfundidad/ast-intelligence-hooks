@@ -44,7 +44,7 @@ class AndroidAnalysisOrchestrator {
             this.functions = parser.functions;
             this.annotations = parser.annotations;
 
-            const classAnalyzer = new AndroidClassAnalyzer(parser, this.findings);
+            const classAnalyzer = new AndroidClassAnalyzer(parser, this.findings, filePath);
             classAnalyzer.analyze();
 
             this.analyzeCompose();

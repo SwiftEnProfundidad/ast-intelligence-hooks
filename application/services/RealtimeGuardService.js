@@ -442,29 +442,6 @@ class RealtimeGuardService {
 
     const notifyWithOsascriptDialog = () => {
       return false;
-      /*
-      if (!this.osascriptPath) {
-        return false;
-      }
-      try {
-        const child = spawn(this.osascriptPath, [
-          '-e',
-          `display dialog "${escapedMessage}" with title "${escapedTitle}" buttons {"OK"} default button "OK" giving up after 45`
-        ], {
-          stdio: 'ignore',
-          detached: true
-        });
-        if (typeof child.unref === 'function') {
-          child.unref();
-        }
-        this.notificationFailures = 0;
-        logSuccess('osascript-dialog');
-        return true;
-      } catch (error) {
-        logFailure('osascript-dialog', error);
-        return false;
-      }
-      */
     };
 
     let delivered = false;

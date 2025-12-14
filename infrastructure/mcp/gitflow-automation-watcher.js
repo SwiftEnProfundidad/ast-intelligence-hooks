@@ -23,7 +23,6 @@ const AutonomousOrchestrator = require('../../application/services/AutonomousOrc
 const ContextDetectionEngine = require('../../application/services/ContextDetectionEngine');
 const MacOSNotificationAdapter = require('../adapters/MacOSNotificationAdapter');
 
-// MCP Protocol version (must match Cursor's expected format: YYYY-MM-DD)
 const MCP_VERSION = '2024-11-05';
 
 // Configuration
@@ -32,7 +31,6 @@ const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
 const GITFLOW_STATE_FILE = path.join(REPO_ROOT, '.git', 'gitflow-state.json');
 const MAX_EVIDENCE_AGE = 180; // 3 minutes in seconds
 
-// Initialize Autonomous System
 const contextEngine = new ContextDetectionEngine(REPO_ROOT);
 const orchestrator = new AutonomousOrchestrator(contextEngine, null, null);
 const notificationAdapter = new MacOSNotificationAdapter();
@@ -40,7 +38,6 @@ const notificationAdapter = new MacOSNotificationAdapter();
 // Polling state
 let lastContext = null;
 
-// Track last notification times to avoid spam
 let lastEvidenceNotification = 0;
 let lastGitFlowNotification = 0;
 let lastAutoCommitTime = 0;
@@ -55,13 +52,10 @@ const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true'; // Disabled by d
  */
 function sendNotification(title, message, sound = 'Hero') {
     notificationAdapter.send({ title, message, sound, level: 'info' })
-        .then(success => {
-            if (success) {
-                console.error(`[MCP] Notification sent: ${title}`);
-            }
-        })
         .catch(err => {
-            console.error('[MCP] Failed to send notification:', err.message);
+            if (process.env.DEBUG) {
+                console.error('[MCP] Failed to send notification:', err.message);
+            }
         });
 }
 
@@ -169,7 +163,6 @@ function autoCompleteGitFlow(params) {
     const gitFlowState = getGitFlowState();
 
     try {
-        // Step 1: Check if on feature/fix branch
         if (!currentBranch.match(/^(feature|fix|hotfix)\//)) {
             return {
                 success: false,
@@ -180,15 +173,12 @@ function autoCompleteGitFlow(params) {
 
         results.push(`Current branch: ${currentBranch}`);
 
-        // Step 2: Check for unstaged/uncommitted changes
         const status = exec('git status --porcelain');
         if (status && status.length > 0) {
             results.push('⚠️  Uncommitted changes detected, committing...');
 
-            // Stage all changes
             exec('git add -A');
 
-            // Generate commit message (AI can customize this)
             const message = params.commitMessage || `chore: auto-commit changes on ${currentBranch}`;
             exec(`git commit -m "${message}"`);
             results.push(`✅ Changes committed: ${message}`);
@@ -196,7 +186,6 @@ function autoCompleteGitFlow(params) {
             results.push('✅ No uncommitted changes');
         }
 
-        // Step 3: Push to origin
         results.push('Pushing to origin...');
         const pushResult = exec(`git push -u origin ${currentBranch}`);
         if (typeof pushResult === 'object' && pushResult.error) {
@@ -204,7 +193,6 @@ function autoCompleteGitFlow(params) {
         }
         results.push('✅ Pushed to origin');
 
-        // Step 4: Create PR (if gh CLI is available)
         if (exec('which gh') && typeof exec('which gh') === 'string') {
             results.push('Creating pull request...');
             const prTitle = params.prTitle || `Merge ${currentBranch} into develop`;
@@ -214,14 +202,12 @@ function autoCompleteGitFlow(params) {
             if (typeof prResult === 'string' && prResult.includes('http')) {
                 results.push(`✅ PR created: ${prResult}`);
 
-                // Step 5: Auto-merge if requested
                 if (params.autoMerge) {
                     results.push('Auto-merging PR...');
                     const prNumber = prResult.match(/#(\d+)/)?.[1] || prResult.split('/').pop();
                     const mergeResult = exec(`gh pr merge ${prNumber} --merge --delete-branch`);
                     results.push(`✅ PR merged and branch deleted`);
 
-                    // Step 6: Switch back to develop and pull
                     exec('git checkout develop');
                     exec('git pull origin develop');
                     results.push('✅ Switched to develop and pulled latest');
@@ -256,7 +242,6 @@ function syncBranches(params) {
     const results = [];
 
     try {
-        // Fetch latest from remote
         results.push('Fetching from remote...');
         exec('git fetch --all --prune');
         results.push('✅ Fetched from remote');
@@ -273,7 +258,6 @@ function syncBranches(params) {
         exec('git pull origin main');
         results.push('✅ Main updated');
 
-        // Back to original branch
         const targetBranch = params.returnToBranch || 'develop';
         exec(`git checkout ${targetBranch}`);
         results.push(`✅ Returned to ${targetBranch}`);
@@ -299,7 +283,6 @@ function cleanupStaleBranches(params) {
     const results = [];
 
     try {
-        // Get merged branches
         const mergedBranches = exec('git branch --merged develop').split('\n')
             .map(b => b.trim())
             .filter(b => b && !b.includes('*') && b !== 'develop' && b !== 'main');
@@ -314,14 +297,12 @@ function cleanupStaleBranches(params) {
 
         results.push(`Found ${mergedBranches.length} merged branches`);
 
-        // Delete local branches
         for (const branch of mergedBranches) {
             results.push(`Deleting local: ${branch}`);
             exec(`git branch -D ${branch}`);
         }
         results.push(`✅ Deleted ${mergedBranches.length} local branches`);
 
-        // Delete remote branches (if gh CLI available)
         if (exec('which gh') && typeof exec('which gh') === 'string') {
             for (const branch of mergedBranches) {
                 const remoteExists = exec(`git ls-remote --heads origin ${branch}`);
@@ -503,7 +484,6 @@ function aiGateCheck() {
     const autoFixes = [];
     const warnings = [];
 
-    // Check 1: Git Flow compliance - BLOCKING (MUST be first, before any file modifications)
     const currentBranch = getCurrentBranch();
     const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
     const uncommittedChangesRaw = exec('git status --porcelain');
@@ -514,7 +494,6 @@ function aiGateCheck() {
         }).join('\n')
         : '';
 
-    // Check 2: Evidence freshness - AUTO-FIX (after uncommitted check)
     const evidenceStatus = checkEvidence();
     if (evidenceStatus.isStale) {
         try {
@@ -534,19 +513,12 @@ function aiGateCheck() {
         }
     }
 
-    // ALWAYS warn if on protected branch, even without changes
     if (isProtectedBranch) {
-        console.error(`[MCP] ⚠️ WARNING: Currently on protected branch '${currentBranch}'`);
-        if (uncommittedChanges && uncommittedChanges.length > 0) {
-            violations.push(`❌ GITFLOW_VIOLATION: Uncommitted changes on '${currentBranch}'. Create feature branch first!`);
-            violations.push(`   Run: git checkout -b feature/your-feature-name`);
-            sendNotification('🚫 Git Flow Violation', `Changes on ${currentBranch} - create feature branch!`, 'Basso');
         } else {
             warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
         }
     }
 
-    // Check 3: Atomic commits - WARNING only
     const stagedFiles = exec('git diff --cached --name-only');
     if (stagedFiles && typeof stagedFiles === 'string' && stagedFiles.length > 0) {
         const files = stagedFiles.split('\n').filter(f => f);
@@ -567,7 +539,6 @@ function aiGateCheck() {
         }
     }
 
-    // Check 4: Branch-Changes Coherence - BLOCKING
     if (!isProtectedBranch && currentBranch.startsWith('feature/')) {
         const branchCoherence = checkBranchChangesCoherence(currentBranch, uncommittedChanges);
         if (!branchCoherence.isCoherent) {
@@ -602,7 +573,6 @@ function validateAndFix(params) {
     const issues = [];
 
     try {
-        // Check 1: Evidence freshness
         const evidenceStatus = checkEvidence();
         if (evidenceStatus.isStale) {
             issues.push('Evidence is stale');
@@ -613,7 +583,6 @@ function validateAndFix(params) {
             results.push('✅ Evidence is fresh');
         }
 
-        // Check 2: Untracked/uncommitted files
         const status = exec('git status --porcelain');
         if (status && status.length > 0) {
             issues.push('Uncommitted changes');
@@ -622,7 +591,6 @@ function validateAndFix(params) {
             results.push('✅ No uncommitted changes');
         }
 
-        // Check 3: Branch sync status
         const currentBranch = getCurrentBranch();
         const upstream = exec(`git rev-list --count ${currentBranch}..origin/${currentBranch} 2>/dev/null || echo "0"`);
         const downstream = exec(`git rev-list --count origin/${currentBranch}..${currentBranch} 2>/dev/null || echo "0"`);
@@ -665,13 +633,10 @@ class MCPServer {
         try {
             const request = JSON.parse(message);
 
-            // Handle notifications (no response needed per JSON-RPC 2.0 spec)
             if ((typeof request.id === 'undefined' || request.id === null) && request.method?.startsWith('notifications/')) {
-                console.error(`[MCP] Notification received: ${request.method} (no response sent)`);
                 return null;
             }
 
-            // Handle initialize
             if (request.method === 'initialize') {
                 return {
                     jsonrpc: '2.0',
@@ -696,7 +661,6 @@ class MCPServer {
                 };
             }
 
-            // Handle resources/list
             if (request.method === 'resources/list') {
                 return {
                     jsonrpc: '2.0',
@@ -732,19 +696,15 @@ class MCPServer {
                 };
             }
 
-            // Handle resources/read
             if (request.method === 'resources/read') {
                 const uri = request.params?.uri;
 
-                // AI GATE - Mandatory check that blocks AI if violations exist
                 if (uri === 'ai://gate') {
                     const violations = [];
                     const autoFixes = [];
 
-                    // Check 1: Evidence freshness
                     const evidenceStatus = checkEvidence();
                     if (evidenceStatus.isStale) {
-                        // Auto-fix evidence
                         try {
                             const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
                             if (fs.existsSync(updateScript)) {
@@ -760,7 +720,6 @@ class MCPServer {
                         }
                     }
 
-                    // Check 2: Git Flow compliance
                     const currentBranch = getCurrentBranch();
                     const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
                     const uncommittedChanges = exec('git status --porcelain');
@@ -769,7 +728,6 @@ class MCPServer {
                         violations.push(`GITFLOW_VIOLATION: Uncommitted changes on protected branch '${currentBranch}'. Create a feature branch first!`);
                     }
 
-                    // Check 3: Atomic commits
                     const stagedFiles = exec('git diff --cached --name-only');
                     if (stagedFiles && typeof stagedFiles === 'string' && stagedFiles.length > 0) {
                         const files = stagedFiles.split('\n').filter(f => f);
@@ -904,7 +862,6 @@ class MCPServer {
                 }
             }
 
-            // Handle tools/list
             if (request.method === 'tools/list') {
                 return {
                     jsonrpc: '2.0',
@@ -1006,7 +963,6 @@ class MCPServer {
                 };
             }
 
-            // Handle tools/call
             if (request.method === 'tools/call') {
                 const toolName = request.params?.name;
                 const toolParams = request.params?.arguments || {};
@@ -1087,32 +1043,23 @@ class MCPServer {
     }
 
     start() {
-        // Send ready notification to stderr (logs don't contaminate stdout JSON-RPC)
-        console.error('[MCP] Git Flow Automation Watcher started');
-        console.error(`[MCP] Monitoring: ${EVIDENCE_FILE}`);
-        console.error(`[MCP] Git Flow State: ${GITFLOW_STATE_FILE}`);
-        console.error(`[MCP] Repository: ${REPO_ROOT}`);
 
-        // Set stdin to UTF-8 encoding
         process.stdin.setEncoding('utf8');
 
         // Read from stdin
         process.stdin.on('data', async (chunk) => {
             this.buffer += chunk.toString();
 
-            // Process complete messages (separated by newlines)
             const lines = this.buffer.split('\n');
             this.buffer = lines.pop() || '';
 
             for (const line of lines) {
                 if (line.trim()) {
-                    console.error(`[MCP] Received: ${line.substring(0, 100)}...`);
 
                     const response = await this.handleMessage(line);
 
                     if (response !== null) {
                         const responseStr = JSON.stringify(response);
-                        console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
 
                         process.stdout.write(responseStr + '\n');
 
@@ -1125,12 +1072,10 @@ class MCPServer {
         });
 
         process.stdin.on('end', () => {
-            console.error('[MCP] stdin closed, exiting');
             process.exit(0);
         });
 
         process.stdin.on('error', (err) => {
-            console.error(`[MCP] stdin error: ${err.message}`);
             process.exit(1);
         });
     }
@@ -1140,13 +1085,10 @@ class MCPServer {
 const server = new MCPServer();
 server.start();
 
-// Start polling for proactive monitoring (every 30s)
-// ORDER IS CRITICAL: Check uncommitted changes FIRST, then auto-fix evidence
 setInterval(async () => {
     try {
         const now = Date.now();
 
-        // 1. CHECK GIT FLOW COMPLIANCE FIRST (before any file modifications)
         const currentBranch = getCurrentBranch();
         const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
         const hasUncommittedChangesRaw = exec('git status --porcelain');
@@ -1164,10 +1106,8 @@ setInterval(async () => {
             }
         }
 
-        // 2. CHECK EVIDENCE STATUS - Auto-fix AFTER uncommitted check
         const evidenceStatus = checkEvidence();
         if (evidenceStatus.isStale && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
-            console.error('[MCP] Evidence is stale, auto-fixing...');
 
             try {
                 const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
@@ -1178,7 +1118,6 @@ setInterval(async () => {
                         stdio: ['pipe', 'pipe', 'pipe']
                     });
                     sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence was stale and has been refreshed automatically', 'Purr');
-                    console.error('[MCP] Evidence auto-updated ✅');
                 }
             } catch (err) {
                 sendNotification('⚠️ Evidence Stale', `Evidence is ${evidenceStatus.age}s old. Auto-fix failed: ${err.message}`, 'Basso');
@@ -1186,8 +1125,6 @@ setInterval(async () => {
             lastEvidenceNotification = now;
         }
 
-        // 3. CHECK FOR ATOMIC COMMIT ISSUES (multiple feature groups staged)
-        // Only check if there are actually staged files RIGHT NOW (avoid stale notifications)
         const stagedFilesRaw = exec('git diff --cached --name-only');
         const stagedFiles = stagedFilesRaw && typeof stagedFilesRaw === 'string'
             ? stagedFilesRaw.split('\n').filter(f => f && f.trim().length > 0)
@@ -1208,18 +1145,15 @@ setInterval(async () => {
                 else if (file.endsWith('.md')) docsCount++;
             });
 
-            // Only notify if multiple code feature groups (ignore docs-only commits)
             if (featureGroups.size > 2 && docsCount < stagedFiles.length) {
                 sendNotification('📦 Atomic Commit Suggestion', `${featureGroups.size} feature groups detected: ${Array.from(featureGroups).join(', ')}. Consider splitting commits.`, 'Glass');
             }
         }
 
-        // 4. CONTEXT CHANGE DETECTION - Auto-execute when code detected
         if (orchestrator.shouldReanalyze()) {
             const currentContext = await contextEngine.detectContext();
 
             if (contextEngine.hasContextChanged(lastContext)) {
-                console.error('[MCP] Context changed, analyzing...');
                 const decision = await orchestrator.analyzeContext();
 
                 if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
@@ -1239,14 +1173,12 @@ setInterval(async () => {
                             `Plataforma: ${platforms.toUpperCase()}`,
                             'Glass'
                         );
-                        console.error(`[MCP] Auto-executed ai-start for: ${platforms}`);
                     } catch (e) {
                         sendNotification(
                             '❌ AI Start Error',
                             `Fallo al ejecutar: ${e.message}`,
                             'Basso'
                         );
-                        console.error('[MCP] Auto-execute failed:', e.message);
                     }
                 }
 
@@ -1255,11 +1187,9 @@ setInterval(async () => {
         }
 
     } catch (error) {
-        console.error(`[MCP] Error in polling:`, error.message);
     }
 }, 30000);
 
-// Auto-commit polling (every 5 minutes if enabled)
 setInterval(async () => {
     if (!AUTO_COMMIT_ENABLED) return;
 
@@ -1271,7 +1201,6 @@ setInterval(async () => {
         const isFeatureBranch = currentBranch.match(/^(feature|fix|hotfix)\//);
 
         if (!isFeatureBranch) {
-            console.error('[MCP] Auto-commit skipped: not on feature branch');
             return;
         }
 
@@ -1281,12 +1210,9 @@ setInterval(async () => {
         }
 
         const changedFiles = uncommittedChanges.split('\n').filter(l => l.trim()).length;
-        console.error(`[MCP] Auto-commit: ${changedFiles} files changed on ${currentBranch}`);
 
-        // Stage all changes
         exec('git add -A');
 
-        // Generate commit message based on branch name
         const branchType = currentBranch.split('/')[0];
         const branchName = currentBranch.split('/').slice(1).join('/');
         const commitMessage = `${branchType}(auto): ${branchName} - ${changedFiles} files`;
@@ -1298,30 +1224,22 @@ setInterval(async () => {
             return;
         }
 
-        console.error(`[MCP] Auto-committed: ${commitMessage}`);
         sendNotification('✅ Auto-Commit', `${changedFiles} archivos en ${currentBranch}`, 'Purr');
         lastAutoCommitTime = now;
 
-        // Auto-push if enabled
         if (AUTO_PUSH_ENABLED) {
-            console.error('[MCP] Auto-pushing...');
             const pushResult = exec(`git push -u origin ${currentBranch}`);
             if (typeof pushResult === 'object' && pushResult.error) {
-                console.error('[MCP] Auto-push failed:', pushResult.error);
                 sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
             } else {
-                console.error('[MCP] Auto-pushed successfully');
                 sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
 
-                // Auto-PR if enabled and enough commits
                 if (AUTO_PR_ENABLED) {
                     const commitCount = exec(`git rev-list --count origin/develop..${currentBranch}`);
                     if (parseInt(commitCount) >= 3) {
-                        console.error('[MCP] Creating auto-PR...');
                         const prTitle = `Auto-PR: ${branchName}`;
                         const prResult = exec(`gh pr create --base develop --head ${currentBranch} --title "${prTitle}" --body "Automated PR by Pumuki Git Flow"`);
                         if (typeof prResult === 'string' && prResult.includes('http')) {
-                            console.error(`[MCP] Auto-PR created: ${prResult}`);
                             sendNotification('✅ Auto-PR Created', prTitle, 'Hero');
                         }
                     }
@@ -1330,6 +1248,5 @@ setInterval(async () => {
         }
 
     } catch (error) {
-        console.error('[MCP] Auto-commit error:', error.message);
     }
 }, 60000); // Check every minute, but only act every 5 minutes

@@ -30,11 +30,8 @@ class KotlinAnalyzer {
     try {
       const content = fs.readFileSync(filePath, 'utf8');
 
-      // Análisis basado en patrones (más robusto que Detekt para reglas custom)
       this.analyzePatterns(filePath, content);
 
-      // TODO: Integrar Detekt para reglas más complejas si es necesario
-      // this.analyzeWithDetekt(filePath);
 
     } catch (error) {
       console.error(`Error analyzing Kotlin file ${filePath}:`, error.message);
@@ -53,7 +50,6 @@ class KotlinAnalyzer {
       const lineNum = index + 1;
       const trimmed = line.trim();
 
-      // Java code detection
       if (trimmed.startsWith('public class') || trimmed.startsWith('public interface')) {
         this.addFinding({
           rule: 'android.java_code',
@@ -64,7 +60,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Force unwrapping (!!)
       if (trimmed.includes('!!') && !trimmed.startsWith('//')) {
         this.addFinding({
           rule: 'android.force_unwrapping',
@@ -86,7 +81,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Singleton pattern
       if (trimmed.includes('object ') || (trimmed.includes('companion object') && content.includes('val instance'))) {
         this.addFinding({
           rule: 'android.singletons',
@@ -108,7 +102,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Missing @Composable
       if (trimmed.startsWith('fun ') && trimmed.includes('()') && content.includes('Column') && !line.includes('@Composable')) {
         this.addFinding({
           rule: 'android.missing_composable',
@@ -119,7 +112,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Side effects in Composable
       if (content.includes('@Composable') && (trimmed.includes('viewModelScope.launch') || trimmed.includes('CoroutineScope'))) {
         this.addFinding({
           rule: 'android.side_effects_composable',
@@ -130,7 +122,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Missing null safety
       if (trimmed.includes('var ') && trimmed.includes(': String') && !trimmed.includes('?') && !trimmed.includes('=')) {
         this.addFinding({
           rule: 'android.missing_null_safety',
@@ -152,7 +143,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Missing ViewModel
       if (trimmed.includes('class ') && trimmed.includes('Activity') && !content.includes('ViewModel')) {
         this.addFinding({
           rule: 'android.missing_viewmodel',
@@ -163,7 +153,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // JUnit4 instead of JUnit5
       if (trimmed.includes('@Test') && content.includes('import org.junit.Test') && !content.includes('org.junit.jupiter')) {
         this.addFinding({
           rule: 'android.missing_junit5',
@@ -174,7 +163,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Hardcoded secrets
       if (trimmed.includes('apiKey') || trimmed.includes('secret') || trimmed.includes('password')) {
         if (trimmed.includes('=') && trimmed.includes('"') && !trimmed.includes('BuildConfig')) {
           this.addFinding({
@@ -209,7 +197,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // startActivity without intent extras validation
       if (trimmed.includes('startActivity')) {
         this.addFinding({
           rule: 'android.startactivity',
@@ -220,7 +207,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // SharedPreferences
       if (trimmed.includes('SharedPreferences') && !trimmed.includes('Encrypted')) {
         this.addFinding({
           rule: 'android.sharedpreferences',
@@ -231,7 +217,6 @@ class KotlinAnalyzer {
         });
       }
 
-      // Handler memory leaks
       if (trimmed.includes('Handler()') && !content.includes('WeakReference')) {
         this.addFinding({
           rule: 'android.handler_leak',
@@ -254,7 +239,6 @@ class KotlinAnalyzer {
       }
     });
 
-    // Análisis de bloques completos
     this.analyzeBlocks(filePath, content);
   }
 
@@ -262,7 +246,6 @@ class KotlinAnalyzer {
    * Analiza bloques de código completos
    */
   analyzeBlocks(filePath, content) {
-    // LiveData observe sin lifecycle owner
     const liveDataObservePattern = /\.observe\s*\([^,]+\)/g;
     let match;
     while ((match = liveDataObservePattern.exec(content)) !== null) {
@@ -276,7 +259,6 @@ class KotlinAnalyzer {
       });
     }
 
-    // Flow collect sin lifecycle scope
     const flowCollectPattern = /\.collect\s*\{/g;
     while ((match = flowCollectPattern.exec(content)) !== null) {
       const line = this.getLineNumber(content, match.index);
@@ -291,7 +273,6 @@ class KotlinAnalyzer {
       }
     }
 
-    // Suspend function sin scope
     const suspendFunPattern = /suspend\s+fun\s+\w+/g;
     while ((match = suspendFunPattern.exec(content)) !== null) {
       const line = this.getLineNumber(content, match.index);
@@ -304,7 +285,6 @@ class KotlinAnalyzer {
       });
     }
 
-    // Mutable state exposure
     const mutableStatePattern = /val\s+\w+\s*=\s*mutableStateOf/g;
     while ((match = mutableStatePattern.exec(content)) !== null) {
       const line = this.getLineNumber(content, match.index);
@@ -335,12 +315,10 @@ class KotlinAnalyzer {
   }
 }
 
-// Exportar para uso en otros módulos
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = KotlinAnalyzer;
 }
 
-// Permitir ejecución directa
 if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.length === 0) {

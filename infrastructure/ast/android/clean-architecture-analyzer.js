@@ -1,18 +1,3 @@
-// ===== CLEAN ARCHITECTURE ANALYZER - ANDROID =====
-// Based on rulesandroid.mdc specifications
-// Enforces: Domain → Data → Presentation (Android naming convention)
-
-/**
- * Analyze Clean Architecture for Android (Kotlin)
- *
- * Android Clean Architecture layers:
- * ✅ Domain (models, repositories interfaces, use cases)
- * ✅ Data (repositories impl, data sources, DTOs)
- * ✅ Presentation (UI, ViewModels, Composables)
- *
- * NOTE: Android uses Kotlin (.kt files), not TypeScript
- * This analyzer uses text/regex analysis, not ts-morph AST
- */
 const LAYER_ANALYZERS = {
   domain: {
     validateImports: (importPath, filePath, index, findings, pushFileFinding) => {
@@ -111,7 +96,6 @@ function detectLayer(filePath) {
   if (normalized.includes('/data/')) return 'data';
   if (normalized.includes('/presentation/')) return 'presentation';
 
-  // Android conventions
   if (normalized.match(/\/(model|repository|usecase)\//)) return 'domain';
   if (normalized.match(/\/(remote|local|mapper)\//)) return 'data';
   if (normalized.match(/\/(ui|viewmodel|screen|theme)\//)) return 'presentation';

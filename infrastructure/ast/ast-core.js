@@ -1,16 +1,11 @@
-// ===== AST CORE MODULE =====
-// Shared functions and utilities for all AST modules
-// Clean Architecture: Infrastructure Layer - AST Parsing and Analysis
 
 const { Project, Node, SyntaxKind, ScriptTarget, ModuleKind } = require("ts-morph");
 const path = require("path");
 const fs = require("fs");
 
-// ===== SEVERITY INTELLIGENCE INTEGRATION =====
 let SeverityEvaluator = null;
 let severityEvaluatorInstance = null;
 
-// Lazy load to avoid circular dependencies
 function getSeverityEvaluator() {
   if (!severityEvaluatorInstance) {
     try {
@@ -18,16 +13,12 @@ function getSeverityEvaluator() {
       SeverityEvaluator = Evaluator;
       severityEvaluatorInstance = new Evaluator();
     } catch (error) {
-      // Severity evaluator not available (backward compatibility)
       severityEvaluatorInstance = null;
     }
   }
   return severityEvaluatorInstance;
 }
 
-// Global flag to enable/disable intelligent severity
-// DISABLED by default in pushFinding (too expensive for 7000+ violations)
-// Enable via intelligent-audit.js orchestrator instead (processes only staged)
 let INTELLIGENT_SEVERITY_ENABLED = process.env.INTELLIGENT_SEVERITY === 'true';
 
 /**
@@ -39,7 +30,6 @@ function getRepoRoot() {
     const { execSync } = require('child_process');
     return execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
   } catch {
-    // Fallback to process.cwd() if not in git repo
     return process.cwd();
   }
 }
@@ -185,7 +175,6 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
 
   if (isExcluded(ruleId, filePath)) return;
 
-  // Create base violation object
   const violation = {
     ruleId,
     severity: mapToLevel(severity),  // Normalize base severity
@@ -196,7 +185,6 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
     metrics
   };
 
-  // INTELLIGENT SEVERITY EVALUATION (if enabled)
   if (INTELLIGENT_SEVERITY_ENABLED) {
     const evaluator = getSeverityEvaluator();
 
@@ -204,7 +192,6 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
       try {
         const evaluation = evaluator.evaluate(violation);
 
-        // Enhance violation with intelligent severity
         violation.originalSeverity = violation.severity;
         violation.severity = evaluation.severity;
         violation.severityScore = evaluation.score;
@@ -214,7 +201,6 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
         violation.recommendation = evaluation.recommendation;
         violation.intelligentEvaluation = true;
       } catch (error) {
-        // Fallback to base severity if evaluation fails
         violation.evaluationError = error.message;
         violation.intelligentEvaluation = false;
       }
@@ -235,7 +221,6 @@ function pushFileFinding(ruleId, severity, filePath, line, column, message, find
     metrics
   };
 
-  // INTELLIGENT SEVERITY EVALUATION (if enabled)
   if (INTELLIGENT_SEVERITY_ENABLED) {
     const evaluator = getSeverityEvaluator();
 
@@ -294,32 +279,26 @@ function mapToLevel(severity) {
 function platformOf(filePath) {
   const p = filePath.replace(/\\/g, "/");
 
-  // 1. Check SPECIFIC paths first (avoid false positives)
   if (p.includes("/apps/backend/") || p.includes("apps/backend/")) return "backend";
   if (p.includes("/apps/admin/") || p.includes("/admin-dashboard/")) return "frontend";
   if (p.includes("/apps/mobile-ios/") || p.includes("/apps/ios/")) return "ios";
   if (p.includes("/apps/mobile-android/") || p.includes("/apps/android/")) return "android";
 
-  // 1b. Project-specific paths
   if (p.includes("/landing-page/") || p.includes("landing-page/")) return "frontend";
   if (p.includes("/scripts/hooks-system/") || p.includes("scripts/hooks-system/")) return "backend";
   if (p.includes("/packages/ast-hooks/") || p.includes("packages/ast-hooks/")) return "backend";
 
-  // 2. Check file extensions (unambiguous)
   if (p.endsWith(".swift")) return "ios";
   if (p.endsWith(".kt") || p.endsWith(".kts")) return "android";
 
-  // 3. Check GENERIC paths (only if not matched above)
   if (p.includes("/backend/") || p.includes("/server/") || p.includes("/functions/")) return "backend";
   if (p.includes("/frontend/") || p.includes("/client/") || p.includes("/web/") || p.includes("/web-app/")) return "frontend";
   if (p.includes("/android/")) return "android";
   if (p.includes("/ios/")) return "ios";
   if (p.includes("/mobile/")) return p.includes("/android/") ? "android" : "ios";
 
-  // 4. Root src/ folder - typically frontend (landing page)
   if (p.match(/^src\//) || p.includes("/src/components/") || p.includes("/src/pages/")) return "frontend";
 
-  // 5. Fallback: null (will be classified as "Other")
   return null;
 }
 
@@ -377,7 +356,6 @@ function formatFinding(finding) {
   return `${finding.severity.toUpperCase()}: ${finding.ruleId} at ${finding.filePath}:${finding.line}:${finding.column} - ${finding.message}`;
 }
 
-// ===== AST INTELLIGENT HELPERS =====
 
 /**
  * Check if source file has import for a specific module (AST-based)
@@ -538,7 +516,6 @@ module.exports = {
   createProject,
   isSupportedFile,
   formatFinding,
-  // AST Intelligent Helpers
   hasImport,
   hasDecorator,
   findStringLiterals,
@@ -549,7 +526,6 @@ module.exports = {
   getClasses,
   getFunctions,
   getArrowFunctions,
-  // Re-export ts-morph classes for convenience
   Project,
   Node,
   SyntaxKind,

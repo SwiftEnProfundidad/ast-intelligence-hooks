@@ -1,10 +1,3 @@
-/**
- * iOS Architecture Pattern Rules
- *
- * Reglas específicas para cada patrón arquitectónico detectado.
- * Solo se ejecutan las reglas del patrón detectado en el proyecto.
- */
-
 const { pushFinding } = require('../../ast-core');
 
 class iOSArchitectureRules {
@@ -13,9 +6,6 @@ class iOSArchitectureRules {
     this.pattern = detectedPattern;
   }
 
-  /**
-   * Ejecuta las reglas correspondientes al patrón detectado
-   */
   runRules(files) {
     console.log(`[iOS Architecture] Detected pattern: ${this.pattern}`);
 
@@ -52,14 +42,10 @@ class iOSArchitectureRules {
     }
   }
 
-  // ============================================
-  // Feature-First + DDD + Clean Architecture Rules (PATRÓN PRINCIPAL)
-  // ============================================
   checkFeatureFirstCleanDDDRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. Domain NO debe depender de otras capas
       if (file.includes('/domain/')) {
         const forbiddenImports = [
           'import UIKit',
@@ -81,7 +67,6 @@ class iOSArchitectureRules {
           }
         });
 
-        // Domain debe contener entities/, value-objects/, interfaces/
         if (file.includes('/domain/') && !file.includes('/entities/') &&
             !file.includes('/value-objects/') && !file.includes('/interfaces/')) {
           pushFinding(this.findings, {
@@ -94,7 +79,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 2. Entities deben tener comportamiento (NO anémicas)
       if (file.includes('Entity.swift')) {
         const hasMethods = (content.match(/func\s+\w+/g) || []).length;
         const hasProperties = (content.match(/(let|var)\s+\w+:/g) || []).length;
@@ -111,7 +95,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 3. Value Objects deben ser inmutables
       if (file.includes('VO.swift') || file.includes('ValueObject.swift')) {
         if (content.includes('var ') && !content.includes('private(set)')) {
           pushFinding(this.findings, {
@@ -124,7 +107,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // Value Objects deben validar en init
         if (!content.includes('init(') || !content.includes('throw')) {
           pushFinding(this.findings, {
             ruleId: 'ios.ddd.value_object_no_validation',
@@ -142,7 +124,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 4. Use Cases deben tener execute()
       if (file.includes('UseCase.swift')) {
         if (!content.includes('func execute(')) {
           pushFinding(this.findings, {
@@ -154,7 +135,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // Use Cases NO deben contener lógica de UI
         if (content.includes('UIKit') || content.includes('SwiftUI')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.usecase_ui_dependency',
@@ -166,7 +146,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 5. Repository implementations deben estar en infrastructure
       if (content.includes('Repository') && content.includes('class ') && !content.includes('protocol ')) {
         if (!file.includes('/infrastructure/')) {
           pushFinding(this.findings, {
@@ -179,7 +158,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 6. Repository interfaces deben estar en domain
       if (content.includes('protocol ') && content.includes('Repository')) {
         if (!file.includes('/domain/')) {
           pushFinding(this.findings, {
@@ -192,7 +170,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 7. DTOs deben estar en application
       if (file.includes('DTO.swift') || file.includes('Dto.swift')) {
         if (!file.includes('/application/')) {
           pushFinding(this.findings, {
@@ -205,8 +182,7 @@ class iOSArchitectureRules {
         }
       }
 
-      // 8. Features NO deben importarse entre sí (Bounded Contexts)
-      const featureMatch = file.match(/\/Features?\/(\w+)\//);
+      const featureMatch = file.match(/\/Features?\/(\w+)\
       if (featureMatch) {
         const currentFeature = featureMatch[1];
         const importMatches = content.matchAll(/import\s+(\w+)/g);
@@ -214,7 +190,6 @@ class iOSArchitectureRules {
         for (const match of importMatches) {
           const importedModule = match[1];
 
-          // Si importa otro feature, es violación
           if (files.some(f => f.includes(`/Features/${importedModule}/`)) && importedModule !== currentFeature) {
             pushFinding(this.findings, {
               ruleId: 'ios.ddd.feature_coupling',
@@ -228,9 +203,7 @@ class iOSArchitectureRules {
         }
       }
 
-      // 9. Infrastructure NO debe contener lógica de negocio
       if (file.includes('/infrastructure/')) {
-        // Detectar lógica de negocio compleja (métodos largos, validaciones)
         const methods = content.match(/func\s+\w+[\s\S]*?\{([\s\S]*?)(?=\n\s*func|\n})/g) || [];
         const complexMethods = methods.filter(m => {
           const lines = m.split('\n').length;
@@ -249,7 +222,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 10. Presentation debe usar solo DTOs (no entities de domain)
       if (file.includes('/presentation/')) {
         if (content.includes('Entity') && !content.includes('DTO') && !content.includes('Dto')) {
           pushFinding(this.findings, {
@@ -265,14 +237,10 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // MVVM Rules
-  // ============================================
   checkMVVMRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. ViewModel debe ser ObservableObject
       if (file.includes('ViewModel.swift')) {
         if (!content.includes('ObservableObject') && !content.includes('@Observable')) {
           pushFinding(this.findings, {
@@ -284,7 +252,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // 2. ViewModel NO debe tener referencias a UIKit
         if (content.match(/import\s+UIKit/) && !content.includes('#if canImport(UIKit)')) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvvm.viewmodel_uikit_dependency',
@@ -295,7 +262,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // 3. ViewModel debe usar @Published para properties observables
         const classMatch = content.match(/class\s+\w+ViewModel/);
         if (classMatch && content.includes('var ') && !content.includes('@Published')) {
           pushFinding(this.findings, {
@@ -308,10 +274,9 @@ class iOSArchitectureRules {
         }
       }
 
-      // 4. View NO debe contener lógica de negocio
       if (file.includes('View.swift') || content.includes('struct ') && content.includes(': View')) {
         const hasBusinessLogic =
-          /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{100,}/.test(content) || // Funciones largas
+          /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{100,}/.test(content) || 
           content.includes('URLSession') ||
           content.includes('CoreData') ||
           /\.save\(|\.fetch\(|\.delete\(/.test(content);
@@ -329,17 +294,12 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // MVVM-C Rules
-  // ============================================
   checkMVVMCRules(files) {
-    // Primero ejecutar reglas MVVM base
     this.checkMVVMRules(files);
 
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. Coordinator debe conformar Coordinator protocol
       if (file.includes('Coordinator.swift')) {
         if (!content.includes('protocol Coordinator') && !content.includes(': Coordinator')) {
           pushFinding(this.findings, {
@@ -351,7 +311,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // 2. Coordinator debe tener método start()
         if (!/func\s+start\(\)/.test(content)) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvvmc.coordinator_missing_start',
@@ -362,7 +321,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // 3. Coordinator NO debe contener lógica de negocio
         const hasBusinessLogic =
           content.includes('URLSession') ||
           content.includes('CoreData') ||
@@ -379,7 +337,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 4. ViewModel NO debe manejar navegación directamente
       if (file.includes('ViewModel.swift')) {
         if (content.includes('navigationController') || content.includes('.present(')) {
           pushFinding(this.findings, {
@@ -394,14 +351,10 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // MVP Rules
-  // ============================================
   checkMVPRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. View debe ser protocol (View es pasivo en MVP)
       if (file.includes('View.swift') && !file.includes('ViewController')) {
         if (!content.includes('protocol ') && content.includes('View')) {
           pushFinding(this.findings, {
@@ -414,7 +367,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 2. Presenter debe tener referencia weak a View
       if (file.includes('Presenter.swift')) {
         if (content.includes('var view:') && !content.includes('weak var view')) {
           pushFinding(this.findings, {
@@ -426,7 +378,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // 3. Presenter debe contener toda la lógica de presentación
         const hasLogic = content.split('\n').filter(line =>
           line.includes('func ') && !line.includes('viewDidLoad')
         ).length;
@@ -442,7 +393,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 4. ViewController NO debe contener lógica de negocio
       if (file.includes('ViewController.swift')) {
         const hasBusinessLogic =
           content.includes('URLSession') ||
@@ -462,14 +412,10 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // VIPER Rules
-  // ============================================
   checkVIPERRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. View debe ser protocol
       if (file.includes('View.swift') || (file.includes('ViewController.swift') && content.includes('ViewProtocol'))) {
         if (!content.includes('protocol ') || !content.includes('ViewProtocol')) {
           pushFinding(this.findings, {
@@ -482,7 +428,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 2. Interactor debe contener SOLO lógica de negocio
       if (file.includes('Interactor.swift')) {
         if (content.includes('UIKit') || content.includes('import SwiftUI')) {
           pushFinding(this.findings, {
@@ -494,7 +439,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // Interactor debe tener output (Presenter)
         if (!content.includes('var presenter:') && !content.includes('var output:')) {
           pushFinding(this.findings, {
             ruleId: 'ios.viper.interactor_no_output',
@@ -506,7 +450,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 3. Presenter debe ser intermediario entre View e Interactor
       if (file.includes('Presenter.swift')) {
         const hasViewReference = content.includes('var view') || content.includes('weak var view');
         const hasInteractorReference = content.includes('var interactor');
@@ -521,7 +464,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // Presenter NO debe contener lógica de negocio
         if (content.includes('URLSession') || content.includes('CoreData')) {
           pushFinding(this.findings, {
             ruleId: 'ios.viper.presenter_business_logic',
@@ -533,7 +475,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 4. Router debe manejar SOLO navegación
       if (file.includes('Router.swift') || file.includes('Wireframe.swift')) {
         const hasBusinessLogic =
           content.includes('URLSession') ||
@@ -551,10 +492,9 @@ class iOSArchitectureRules {
         }
       }
 
-      // 5. Entity debe ser simple (solo datos)
       if (file.includes('Entity.swift')) {
         const hasMethods = (content.match(/func\s+/g) || []).length;
-        if (hasMethods > 2) { // Permitir computed properties
+        if (hasMethods > 2) { 
           pushFinding(this.findings, {
             ruleId: 'ios.viper.entity_with_logic',
             severity: 'medium',
@@ -567,14 +507,10 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // TCA Rules (The Composable Architecture)
-  // ============================================
   checkTCARules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. State debe ser struct inmutable
       if (content.includes('struct ') && content.includes('State')) {
         if (content.includes('var ') && !content.includes('mutating func')) {
           pushFinding(this.findings, {
@@ -587,7 +523,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 2. Action debe ser enum
       if (content.includes('Action')) {
         if (!content.includes('enum ') && content.includes('Action')) {
           pushFinding(this.findings, {
@@ -600,7 +535,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 3. Side effects deben usar Effect
       if (content.includes(': Reducer')) {
         if ((content.includes('URLSession') || content.includes('async ')) &&
             !content.includes('Effect')) {
@@ -614,7 +548,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 4. Store debe ser único por feature
       if (content.includes('Store<')) {
         const storeCount = (content.match(/Store</g) || []).length;
         if (storeCount > 2) {
@@ -630,14 +563,10 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // Clean Swift Rules (VIP)
-  // ============================================
   checkCleanSwiftRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. Debe seguir ciclo Request-Response-ViewModel
       if (file.includes('Models.swift')) {
         const hasRequest = content.includes('Request');
         const hasResponse = content.includes('Response');
@@ -654,7 +583,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 2. Protocols deben seguir convención *Logic
       if (file.includes('ViewController.swift') || file.includes('Interactor.swift') || file.includes('Presenter.swift')) {
         const hasDisplayLogic = content.includes('DisplayLogic');
         const hasBusinessLogic = content.includes('BusinessLogic');
@@ -671,7 +599,6 @@ class iOSArchitectureRules {
         }
       }
 
-      // 3. Flujo unidireccional estricto
       if (file.includes('Presenter.swift')) {
         if (content.includes('interactor?.')) {
           pushFinding(this.findings, {
@@ -686,14 +613,10 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // MVC Legacy Rules (Anti-patterns)
-  // ============================================
   checkMVCLegacyRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // 1. Massive View Controller detection
       if (file.includes('ViewController.swift')) {
         const lines = content.split('\n').length;
 
@@ -715,7 +638,6 @@ class iOSArchitectureRules {
           });
         }
 
-        // 2. Lógica de negocio en ViewController
         const hasBusinessLogic =
           content.includes('URLSession') ||
           content.includes('CoreData') ||
@@ -735,9 +657,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // Mixed Architecture Rules (Anti-pattern)
-  // ============================================
   checkMixedArchitectureRules(files) {
     pushFinding(this.findings, {
       ruleId: 'ios.architecture.mixed_patterns',
@@ -748,7 +667,6 @@ class iOSArchitectureRules {
       suggestion: 'Refactorizar para usar un único patrón arquitectónico consistente en todo el proyecto.'
     });
 
-    // Detectar archivos que violan el patrón mixto
     const patterns = {
       mvvm: files.filter(f => f.includes('ViewModel.swift')).length,
       mvp: files.filter(f => f.includes('Presenter.swift')).length,

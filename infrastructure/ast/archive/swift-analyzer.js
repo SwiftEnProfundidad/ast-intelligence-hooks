@@ -28,7 +28,6 @@ class SwiftAnalyzer {
     }
 
     try {
-      // Ejecutar SourceKitten para obtener el AST
       const output = execSync(`sourcekitten structure --file "${filePath}"`, {
         encoding: 'utf8',
         maxBuffer: 10 * 1024 * 1024 // 10MB buffer
@@ -54,31 +53,22 @@ class SwiftAnalyzer {
    * @param {string} content - Contenido del archivo
    */
   analyzeAST(ast, filePath, content) {
-    // Verificar force unwrapping (!)
     this.checkForceUnwrapping(ast, filePath, content);
 
-    // Verificar ViewControllers masivos
     this.checkMassiveViewControllers(ast, filePath, content);
 
-    // Verificar uso de completion handlers vs async/await
     this.checkCompletionHandlers(ast, filePath, content);
 
-    // Verificar singletons
     this.checkSingletons(ast, filePath, content);
 
-    // Verificar weak self en closures
     this.checkWeakSelf(ast, filePath, content);
 
-    // Verificar uso de struct vs class
     this.checkStructVsClass(ast, filePath, content);
 
-    // Verificar var vs let
     this.checkVarVsLet(ast, filePath, content);
 
-    // Verificar missing Equatable/Hashable
     this.checkEquatableHashable(ast, filePath, content);
 
-    // Analizar substructures recursivamente
     if (ast.substructure) {
       ast.substructure.forEach(node => this.analyzeNode(node, filePath, content));
     }
@@ -90,7 +80,6 @@ class SwiftAnalyzer {
   analyzeNode(node, filePath, content) {
     if (!node) return;
 
-    // Verificar reglas específicas por tipo de nodo
     const kind = node['key.kind'];
 
     if (kind === 'source.lang.swift.decl.class') {
@@ -103,7 +92,6 @@ class SwiftAnalyzer {
       this.analyzeVariable(node, filePath, content);
     }
 
-    // Recursión en subestructuras
     if (node['key.substructure']) {
       node['key.substructure'].forEach(child => this.analyzeNode(child, filePath, content));
     }
@@ -118,7 +106,6 @@ class SwiftAnalyzer {
     const offset = node['key.offset'];
     const line = this.getLineNumber(content, offset);
 
-    // Verificar ViewControllers masivos (ya implementado pero refinamos)
     if (name && name.includes('ViewController')) {
       const lines = Math.ceil(bodyLength / 50); // Estimación de líneas
       if (lines > 300) {
@@ -131,7 +118,6 @@ class SwiftAnalyzer {
         });
       }
 
-      // UIKit: ViewModels delgados
       const methods = (node['key.substructure'] || []).filter(n =>
         n['key.kind'] === 'source.lang.swift.decl.function.method.instance'
       );
@@ -156,7 +142,6 @@ class SwiftAnalyzer {
     const offset = node['key.offset'];
     const line = this.getLineNumber(content, offset);
 
-    // Verificar si implementa Equatable/Hashable
     const inheritedTypes = node['key.inheritedtypes'] || [];
     const hasEquatable = inheritedTypes.some(t => t['key.name'] === 'Equatable');
     const hasHashable = inheritedTypes.some(t => t['key.name'] === 'Hashable');
@@ -180,7 +165,6 @@ class SwiftAnalyzer {
     const offset = node['key.offset'];
     const line = this.getLineNumber(content, offset);
 
-    // Verificar completion handlers
     if (name && name.includes('completion')) {
       this.addFinding({
         rule: 'ios.completion_handlers',
@@ -201,12 +185,9 @@ class SwiftAnalyzer {
     const line = this.getLineNumber(content, offset);
     const length = node['key.length'] || 0;
 
-    // Extraer la declaración completa
     const declaration = content.substring(offset, offset + length);
 
-    // Verificar var vs let
     if (declaration.startsWith('var ')) {
-      // Heurística: si la variable nunca se reasigna, debería ser let
       // (esto requeriría análisis de flujo de datos completo, aquí hacemos una aproximación)
       this.addFinding({
         rule: 'ios.values.mutability',
@@ -217,7 +198,6 @@ class SwiftAnalyzer {
       });
     }
 
-    // Verificar force unwrapping en tipo
     const typename = node['key.typename'];
     if (typename && typename.includes('!')) {
       this.addFinding({
@@ -236,7 +216,6 @@ class SwiftAnalyzer {
   checkForceUnwrapping(ast, filePath, content) {
     const lines = content.split('\n');
     lines.forEach((line, index) => {
-      // Buscar patrones de force unwrapping (excluyendo IBOutlets)
       if (line.includes('!') && !line.includes('@IBOutlet') && !line.includes('//')) {
         const forceUnwrapPattern = /\w+!\s*[^=]/;
         if (forceUnwrapPattern.test(line)) {
@@ -351,7 +330,6 @@ class SwiftAnalyzer {
           const name = node['key.name'];
           const inheritedTypes = node['key.inheritedtypes'] || [];
 
-          // Si no hereda de nada y no es un ViewController, podría ser struct
           if (inheritedTypes.length === 0 && !name.includes('ViewController') && !name.includes('View')) {
             const offset = node['key.offset'];
             const line = this.getLineNumber(content, offset);
@@ -372,14 +350,12 @@ class SwiftAnalyzer {
    * Verifica var vs let
    */
   checkVarVsLet(ast, filePath, content) {
-    // Ya implementado en analyzeVariable
   }
 
   /**
    * Verifica Equatable/Hashable
    */
   checkEquatableHashable(ast, filePath, content) {
-    // Ya implementado en analyzeStruct
   }
 
   /**
@@ -397,12 +373,10 @@ class SwiftAnalyzer {
   }
 }
 
-// Exportar para uso en otros módulos
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = SwiftAnalyzer;
 }
 
-// Permitir ejecución directa
 if (require.main === module) {
   const args = process.argv.slice(2);
   if (args.length === 0) {

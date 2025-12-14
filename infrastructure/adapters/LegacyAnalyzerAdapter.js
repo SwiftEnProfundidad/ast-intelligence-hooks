@@ -22,7 +22,6 @@ class LegacyAnalyzerAdapter {
       return findings;
 
     } catch (error) {
-      console.error(`[LegacyAnalyzerAdapter] Error for ${this.platform}:`, error.message);
       return [];
     }
   }
@@ -37,7 +36,6 @@ class LegacyAnalyzerAdapter {
       return this.convertToFindings(legacyFindings);
 
     } catch (error) {
-      console.error(`[LegacyAnalyzerAdapter] Error analyzing files for ${this.platform}:`, error.message);
       return [];
     }
   }
@@ -54,7 +52,6 @@ class LegacyAnalyzerAdapter {
           legacy.platform || this.platform
         );
       } catch (error) {
-        console.error('[LegacyAnalyzerAdapter] Error converting finding:', error.message);
         return null;
       }
     }).filter(f => f !== null);

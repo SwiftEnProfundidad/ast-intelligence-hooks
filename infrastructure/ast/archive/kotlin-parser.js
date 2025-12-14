@@ -38,14 +38,11 @@ class KotlinParser {
       const tmpXml = path.join('/tmp', `detekt-${Date.now()}.xml`);
 
       try {
-        // Ejecutar detekt con todas las reglas y output XML
         execSync(
           `${this.detektPath} --input "${filePath}" --report xml:"${tmpXml}" --all-rules --build-upon-default-config`,
           { encoding: 'utf-8', stdio: 'pipe' }
         );
       } catch (error) {
-        // Detekt retorna exit code !== 0 si encuentra issues, pero eso es esperado
-        // Solo nos importa si genera el XML
       }
 
       if (!fs.existsSync(tmpXml)) {
@@ -154,7 +151,6 @@ class KotlinParser {
       if (stats.isFile() && currentPath.endsWith('.kt')) {
         kotlinFiles.push(currentPath);
       } else if (stats.isDirectory()) {
-        // Ignorar directorios comunes que no contienen código fuente
         const basename = path.basename(currentPath);
         if (['node_modules', '.git', '.gradle', 'build', '.idea'].includes(basename)) {
           return;
@@ -177,7 +173,6 @@ class KotlinParser {
    * @returns {boolean} True si hay código Java
    */
   detectJavaCode(fileContent) {
-    // Detectar patrones típicos de Java que no son Kotlin
     const javaPatterns = [
       /public\s+class\s+\w+\s*{/,  // Java class declaration
       /System\.out\.println/,       // Java print
@@ -197,11 +192,9 @@ class KotlinParser {
     const lines = fileContent.split('\n');
 
     lines.forEach((line, index) => {
-      // Detectar !! (force unwrapping en Kotlin)
       const forceUnwrapRegex = /[a-zA-Z0-9_)]+!!/g;
       let match;
 
-      // Ignorar comentarios
       const commentIndex = line.indexOf('//');
       const effectiveLine = commentIndex !== -1 ? line.substring(0, commentIndex) : line;
 
@@ -273,17 +266,13 @@ class KotlinParser {
     for (let index = 0; index < lines.length; index++) {
       const line = lines[index];
 
-      // Detectar inicio de función
       if (line.trim().startsWith('fun ') && line.includes('(')) {
-        // Verificar si la línea anterior tiene @Composable
         const prevLine = index > 0 ? lines[index - 1].trim() : '';
         const hasComposable = prevLine.includes('@Composable');
 
-        // Buscar composables en el cuerpo de la función (próximas líneas)
         let foundComposableUsage = false;
         const functionName = line.match(/fun\s+(\w+)/)?.[1];
 
-        // Buscar hasta encontrar el cierre de la función o un límite razonable
         for (let j = index + 1; j < Math.min(index + 20, lines.length); j++) {
           const bodyLine = lines[j];
           if (bodyLine.includes('Column') || bodyLine.includes('Row') ||
@@ -291,13 +280,11 @@ class KotlinParser {
             foundComposableUsage = true;
             break;
           }
-          // Si encontramos otra función, paramos
           if (bodyLine.trim().startsWith('fun ')) {
             break;
           }
         }
 
-        // Si usa composables pero no tiene la anotación
         if (foundComposableUsage && !hasComposable) {
           findings.push({
             line: index + 1,
