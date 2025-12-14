@@ -1705,10 +1705,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-  });
-
-
-  const useStateCallsInComponent = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
+    const useStateCallsInComponent = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
     .filter(call => call.getExpression().getText() === 'useState');
 
   sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
@@ -1971,6 +1968,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
+  });
 }
 
 module.exports = {

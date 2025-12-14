@@ -1317,10 +1317,7 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-  });
-
-
-  if (filePath.includes('.controller.ts')) {
+    if (filePath.includes('.controller.ts')) {
     const swaggerIsAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
     const swaggerIsTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
     if (!swaggerIsAnalyzer && !swaggerIsTestFile) {
@@ -1606,7 +1603,7 @@ function runBackendIntelligence(project, findings, platform) {
       );
     }
   }
-}
+});
 
 module.exports = {
   runBackendIntelligence,
