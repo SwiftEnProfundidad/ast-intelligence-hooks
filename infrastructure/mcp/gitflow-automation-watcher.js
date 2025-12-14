@@ -514,11 +514,6 @@ function aiGateCheck() {
     }
 
     if (isProtectedBranch) {
-        console.error(`[MCP] ⚠️ WARNING: Currently on protected branch '${currentBranch}'`);
-        if (uncommittedChanges && uncommittedChanges.length > 0) {
-            violations.push(`❌ GITFLOW_VIOLATION: Uncommitted changes on '${currentBranch}'. Create feature branch first!`);
-            violations.push(`   Run: git checkout -b feature/your-feature-name`);
-            sendNotification('🚫 Git Flow Violation', `Changes on ${currentBranch} - create feature branch!`, 'Basso');
         } else {
             warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
         }
@@ -639,7 +634,6 @@ class MCPServer {
             const request = JSON.parse(message);
 
             if ((typeof request.id === 'undefined' || request.id === null) && request.method?.startsWith('notifications/')) {
-                console.error(`[MCP] Notification received: ${request.method} (no response sent)`);
                 return null;
             }
 
@@ -1049,10 +1043,6 @@ class MCPServer {
     }
 
     start() {
-        console.error('[MCP] Git Flow Automation Watcher started');
-        console.error(`[MCP] Monitoring: ${EVIDENCE_FILE}`);
-        console.error(`[MCP] Git Flow State: ${GITFLOW_STATE_FILE}`);
-        console.error(`[MCP] Repository: ${REPO_ROOT}`);
 
         process.stdin.setEncoding('utf8');
 
@@ -1065,13 +1055,11 @@ class MCPServer {
 
             for (const line of lines) {
                 if (line.trim()) {
-                    console.error(`[MCP] Received: ${line.substring(0, 100)}...`);
 
                     const response = await this.handleMessage(line);
 
                     if (response !== null) {
                         const responseStr = JSON.stringify(response);
-                        console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
 
                         process.stdout.write(responseStr + '\n');
 
@@ -1084,12 +1072,10 @@ class MCPServer {
         });
 
         process.stdin.on('end', () => {
-            console.error('[MCP] stdin closed, exiting');
             process.exit(0);
         });
 
         process.stdin.on('error', (err) => {
-            console.error(`[MCP] stdin error: ${err.message}`);
             process.exit(1);
         });
     }
@@ -1122,7 +1108,6 @@ setInterval(async () => {
 
         const evidenceStatus = checkEvidence();
         if (evidenceStatus.isStale && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
-            console.error('[MCP] Evidence is stale, auto-fixing...');
 
             try {
                 const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
@@ -1133,7 +1118,6 @@ setInterval(async () => {
                         stdio: ['pipe', 'pipe', 'pipe']
                     });
                     sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence was stale and has been refreshed automatically', 'Purr');
-                    console.error('[MCP] Evidence auto-updated ✅');
                 }
             } catch (err) {
                 sendNotification('⚠️ Evidence Stale', `Evidence is ${evidenceStatus.age}s old. Auto-fix failed: ${err.message}`, 'Basso');
@@ -1170,7 +1154,6 @@ setInterval(async () => {
             const currentContext = await contextEngine.detectContext();
 
             if (contextEngine.hasContextChanged(lastContext)) {
-                console.error('[MCP] Context changed, analyzing...');
                 const decision = await orchestrator.analyzeContext();
 
                 if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
@@ -1190,14 +1173,12 @@ setInterval(async () => {
                             `Plataforma: ${platforms.toUpperCase()}`,
                             'Glass'
                         );
-                        console.error(`[MCP] Auto-executed ai-start for: ${platforms}`);
                     } catch (e) {
                         sendNotification(
                             '❌ AI Start Error',
                             `Fallo al ejecutar: ${e.message}`,
                             'Basso'
                         );
-                        console.error('[MCP] Auto-execute failed:', e.message);
                     }
                 }
 
@@ -1206,7 +1187,6 @@ setInterval(async () => {
         }
 
     } catch (error) {
-        console.error(`[MCP] Error in polling:`, error.message);
     }
 }, 30000);
 
@@ -1221,7 +1201,6 @@ setInterval(async () => {
         const isFeatureBranch = currentBranch.match(/^(feature|fix|hotfix)\//);
 
         if (!isFeatureBranch) {
-            console.error('[MCP] Auto-commit skipped: not on feature branch');
             return;
         }
 
@@ -1231,7 +1210,6 @@ setInterval(async () => {
         }
 
         const changedFiles = uncommittedChanges.split('\n').filter(l => l.trim()).length;
-        console.error(`[MCP] Auto-commit: ${changedFiles} files changed on ${currentBranch}`);
 
         exec('git add -A');
 
@@ -1246,28 +1224,22 @@ setInterval(async () => {
             return;
         }
 
-        console.error(`[MCP] Auto-committed: ${commitMessage}`);
         sendNotification('✅ Auto-Commit', `${changedFiles} archivos en ${currentBranch}`, 'Purr');
         lastAutoCommitTime = now;
 
         if (AUTO_PUSH_ENABLED) {
-            console.error('[MCP] Auto-pushing...');
             const pushResult = exec(`git push -u origin ${currentBranch}`);
             if (typeof pushResult === 'object' && pushResult.error) {
-                console.error('[MCP] Auto-push failed:', pushResult.error);
                 sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
             } else {
-                console.error('[MCP] Auto-pushed successfully');
                 sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
 
                 if (AUTO_PR_ENABLED) {
                     const commitCount = exec(`git rev-list --count origin/develop..${currentBranch}`);
                     if (parseInt(commitCount) >= 3) {
-                        console.error('[MCP] Creating auto-PR...');
                         const prTitle = `Auto-PR: ${branchName}`;
                         const prResult = exec(`gh pr create --base develop --head ${currentBranch} --title "${prTitle}" --body "Automated PR by Pumuki Git Flow"`);
                         if (typeof prResult === 'string' && prResult.includes('http')) {
-                            console.error(`[MCP] Auto-PR created: ${prResult}`);
                             sendNotification('✅ Auto-PR Created', prTitle, 'Hero');
                         }
                     }
@@ -1276,6 +1248,5 @@ setInterval(async () => {
         }
 
     } catch (error) {
-        console.error('[MCP] Auto-commit error:', error.message);
     }
 }, 60000); // Check every minute, but only act every 5 minutes
