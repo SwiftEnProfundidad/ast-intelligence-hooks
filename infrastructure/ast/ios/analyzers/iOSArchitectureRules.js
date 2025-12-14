@@ -1,8 +1,3 @@
-/**
- * iOS Architecture Pattern Rules
- *
- * Reglas específicas para cada patrón arquitectónico detectado.
- * Solo se ejecutan las reglas del patrón detectado en el proyecto.
  */
 
 const { pushFinding } = require('../../ast-core');

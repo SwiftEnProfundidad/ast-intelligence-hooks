@@ -1,8 +1,6 @@
 
 const path = require('path');
 
-/**
- * Analyze Feature-First compliance
  *
  * Feature-First principles:
  * ✅ Each feature is self-contained module

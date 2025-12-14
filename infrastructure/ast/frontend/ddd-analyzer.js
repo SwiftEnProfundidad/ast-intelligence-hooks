@@ -1,8 +1,6 @@
 
 const { SyntaxKind } = require('ts-morph');
 
-/**
- * Analyze DDD patterns in Frontend
  *
  * Adapted DDD for Frontend:
  * ✅ Entities in domain/ (business models)

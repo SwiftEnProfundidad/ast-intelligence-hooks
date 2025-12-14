@@ -1,8 +1,4 @@
 
-/**
- * Analyze Feature-First compliance for Android
- *
- * Android Multi-module architecture:
  * ✅ Feature modules: :feature:orders, :feature:users
  * ✅ Core modules: :core:network, :core:database, :core:ui
  * ✅ App module: Composition

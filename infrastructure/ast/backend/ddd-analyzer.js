@@ -1,8 +1,6 @@
 
 const { SyntaxKind } = require('ts-morph');
 
-/**
- * Analyze DDD pattern compliance
  *
  * Rules from rulesbackend.mdc:
  * ✅ Repository pattern: Interface en domain, Implementation en infrastructure

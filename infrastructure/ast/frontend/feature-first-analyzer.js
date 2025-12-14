@@ -1,8 +1,6 @@
 
 const path = require('path');
 
-/**
- * Analyze Feature-First compliance for Frontend
  *
  * Feature-First for React/Next.js:
  * ✅ Each feature is self-contained

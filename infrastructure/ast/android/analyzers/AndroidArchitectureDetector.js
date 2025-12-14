@@ -1,8 +1,3 @@
-/**
- * Android Architecture Pattern Detector
- *
- * Automatically detects the architectural pattern used in an Android project:
- * - MVVM (Model-View-ViewModel)
  * - MVI (Model-View-Intent)
  * - MVP (Model-View-Presenter)
  * - Clean Architecture (Domain-Data-Presentation)
