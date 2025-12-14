@@ -11,6 +11,27 @@ interface ToolInput {
     };
 }
 
+interface Evidence {
+    timestamp?: string;
+    rules_read?: string[];
+    protocol_3_questions?: {
+        answered?: boolean;
+    };
+    ai_gate?: {
+        status?: string;
+        violations?: Violation[];
+        last_check?: string;
+    };
+}
+
+interface Violation {
+    severity?: string;
+    file?: string;
+    line?: number | string;
+    message?: string;
+    rule?: string;
+}
+
 const MAX_AGE_SECONDS = 180;
 
 function utcToEpoch(timestamp: string): number {
@@ -41,10 +62,10 @@ This is enforced by pre-commit hooks and PreToolUse validation`
         };
     }
 
-    let evidence: any;
+    let evidence: Evidence;
     try {
         const content = readFileSync(evidencePath, 'utf8');
-        evidence = JSON.parse(content);
+        evidence = JSON.parse(content) as Evidence;
     } catch {
         return {
             valid: false,
@@ -148,14 +169,14 @@ Evidence must be fresh to ensure rules were read and questions answered`
 
     const aiGate = evidence.ai_gate;
     if (aiGate && aiGate.status === 'BLOCKED') {
-        const violations = aiGate.violations || [];
-        const criticalCount = violations.filter((v: any) => v.severity === 'CRITICAL').length;
-        const highCount = violations.filter((v: any) => v.severity === 'HIGH').length;
+        const violations: Violation[] = aiGate.violations || [];
+        const criticalCount = violations.filter((v: Violation) => v.severity === 'CRITICAL').length;
+        const highCount = violations.filter((v: Violation) => v.severity === 'HIGH').length;
         const totalBlocking = criticalCount + highCount;
 
         const violationsList = violations
             .slice(0, 5)
-            .map((v: any) => `  - ${v.file}:${v.line || '?'} [${v.severity}] ${v.message || v.rule || ''}`)
+            .map((v: Violation) => `  - ${v.file}:${v.line || '?'} [${v.severity}] ${v.message || v.rule || ''}`)
             .join('\n');
 
         return {
