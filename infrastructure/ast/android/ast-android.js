@@ -54,6 +54,7 @@ function runAndroidIntelligence(project, findings, platform) {
     if (platformOf(filePath) !== "android") return;
 
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
+    if (/infrastructure\/ast\/|analyzers\/|detectors\//.test(filePath)) return;
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const text = call.getExpression().getText();
