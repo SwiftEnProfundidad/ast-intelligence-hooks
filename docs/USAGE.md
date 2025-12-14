@@ -44,10 +44,52 @@ Done! You now have AST Intelligence working in your project.
 
 ### Code Analysis
 
-#### Full Analysis
+#### Interactive Menu (Recommended)
+
+The library includes an **interactive menu** for selecting audit options:
+
+![Interactive Audit Menu](images/interactive-audit-menu.png)
+
+*Interactive menu showing the PUMUKI Advanced Project Audit interface with 9 options for selecting different audit modes (Full audit, Strict modes, Pattern checks, ESLint, AST Intelligence, etc.)*
 
 ```bash
-# Using npm script
+# Run interactive menu (recommended for manual audits)
+# From node_modules (when installed via npm):
+bash node_modules/@pumuki/ast-intelligence-hooks/presentation/cli/audit.sh
+
+# Or from scripts/hooks-system (local development):
+bash scripts/hooks-system/presentation/cli/audit.sh
+
+# Or using the npm binary (if configured):
+npx audit
+```
+
+**Menu Options:**
+1. **Full audit (repo analysis)** - Complete repository analysis
+2. **Strict REPO+STAGING (CI/CD)** - Strict mode for CI/CD pipelines
+3. **Strict STAGING only (dev)** - Analyze only staged files (pre-commit mode)
+4. **Standard CRITICAL/HIGH** - Standard analysis focusing on blocking violations
+5. **Pattern checks** - Check for TODO, FIXME, console.log patterns
+6. **ESLint Admin+Web** - Run ESLint analysis
+7. **AST Intelligence** - Run AST-based code analysis
+8. **Export Markdown** - Export results to Markdown format
+9. **Exit** - Exit the menu
+
+**Non-interactive mode:**
+```bash
+# Execute specific option directly (from node_modules):
+AUDIT_OPTION=7 bash node_modules/@pumuki/ast-intelligence-hooks/presentation/cli/audit.sh  # AST Intelligence
+AUDIT_OPTION=3 bash node_modules/@pumuki/ast-intelligence-hooks/presentation/cli/audit.sh  # Staged files only
+
+# Or from scripts/hooks-system:
+AUDIT_OPTION=7 bash scripts/hooks-system/presentation/cli/audit.sh  # AST Intelligence
+AUDIT_OPTION=3 bash scripts/hooks-system/presentation/cli/audit.sh  # Staged files only
+```
+
+#### Direct Analysis (No Menu)
+
+```bash
+# Using npm script (runs AST analysis directly)
 npm run audit
 
 # Or using CLI

@@ -625,7 +625,10 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
     # Send macOS notification
-    osascript -e "display notification \"${TOTAL_VIOLATIONS} critical/high violations block commit\" with title \"🚫 Commit Blocked\" sound name \"Basso\"" 2>/dev/null || true
+    if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
+      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
+    fi
     
     exit 1
   fi
@@ -651,7 +654,10 @@ if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
     # Send macOS notification
-    osascript -e "display notification \"${TOTAL_VIOLATIONS} critical/high violations block commit\" with title \"🚫 Commit Blocked\" sound name \"Basso\"" 2>/dev/null || true
+    if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
+      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
+    fi
     
     exit 1
   fi

@@ -146,6 +146,41 @@ Evidence must be fresh to ensure rules were read and questions answered`
         };
     }
 
+    const aiGate = evidence.ai_gate;
+    if (aiGate && aiGate.status === 'BLOCKED') {
+        const violations = aiGate.violations || [];
+        const criticalCount = violations.filter((v: any) => v.severity === 'CRITICAL').length;
+        const highCount = violations.filter((v: any) => v.severity === 'HIGH').length;
+        const totalBlocking = criticalCount + highCount;
+
+        const violationsList = violations
+            .slice(0, 5)
+            .map((v: any) => `  - ${v.file}:${v.line || '?'} [${v.severity}] ${v.message || v.rule || ''}`)
+            .join('\n');
+
+        return {
+            valid: false,
+            error: `🚫 BLOCKED - AI Gate Status: BLOCKED
+
+📋 VIOLATION:
+  - Status: ${aiGate.status}
+  - Blocking violations: ${totalBlocking} (${criticalCount} CRITICAL, ${highCount} HIGH)
+  - Last check: ${aiGate.last_check || 'unknown'}
+
+📋 VIOLATIONS:
+${violationsList}${violations.length > 5 ? `\n  ... and ${violations.length - 5} more` : ''}
+
+📋 REQUIRED ACTION:
+1. Fix all CRITICAL and HIGH violations first
+2. Run: npm run audit (or node scripts/hooks-system/infrastructure/ast/ast-intelligence.js)
+3. Verify violations are resolved
+4. Then retry this edit
+
+Reason: Code quality gate blocks edits when violations are present
+This ensures code quality standards are maintained`
+        };
+    }
+
     return { valid: true };
 }
 

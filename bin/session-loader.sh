@@ -84,6 +84,7 @@ fi
 
 # Check .AI_EVIDENCE.json freshness
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
+EVIDENCE_AGE=0
 if [[ -f "$EVIDENCE_FILE" ]]; then
   EVIDENCE_TS=$(jq -r '.timestamp' "$EVIDENCE_FILE" 2>/dev/null || echo "")
   if [[ -n "$EVIDENCE_TS" ]] && [[ "$EVIDENCE_TS" != "null" ]]; then
@@ -91,15 +92,47 @@ if [[ -f "$EVIDENCE_FILE" ]]; then
     CLEAN_TS=$(echo "$EVIDENCE_TS" | sed 's/\.[0-9]*Z$/Z/')
     EVIDENCE_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CLEAN_TS" +%s 2>/dev/null || echo "0")
     NOW_EPOCH=$(date +%s)
-    AGE=$((NOW_EPOCH - EVIDENCE_EPOCH))
+    EVIDENCE_AGE=$((NOW_EPOCH - EVIDENCE_EPOCH))
 
-    if [[ $AGE -gt 180 ]]; then
-      echo -e "${YELLOW}⚠️  Evidence is stale (${AGE}s old, max 3min)${NC}"
-      echo -e "${YELLOW}   Run: ./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms>${NC}"
-      echo -e "${YELLOW}   (alias corto: ai-start $CURRENT_BRANCH)${NC}"
+    if [[ $EVIDENCE_AGE -gt 180 ]]; then
+      echo -e "${YELLOW}⚠️  Evidence is stale (${EVIDENCE_AGE}s old, max 3min)${NC}"
+      echo -e "${CYAN}🔄 Auto-updating evidence...${NC}"
+      
+      # Auto-update evidence if stale
+      UPDATE_EVIDENCE_SCRIPT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh"
+      if [[ ! -f "$UPDATE_EVIDENCE_SCRIPT" ]]; then
+        # Try scripts/hooks-system path as fallback
+        UPDATE_EVIDENCE_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh"
+      fi
+      
+      if [[ -x "$UPDATE_EVIDENCE_SCRIPT" ]]; then
+        # Detect platforms from project structure
+        PLATFORMS=""
+        [[ -d "$REPO_ROOT/apps/backend" ]] && PLATFORMS="${PLATFORMS}backend,"
+        [[ -d "$REPO_ROOT/apps/frontend" ]] && PLATFORMS="${PLATFORMS}frontend,"
+        [[ -d "$REPO_ROOT/apps/mobile/ios" ]] && PLATFORMS="${PLATFORMS}ios,"
+        [[ -d "$REPO_ROOT/apps/mobile/android" ]] && PLATFORMS="${PLATFORMS}android,"
+        PLATFORMS="${PLATFORMS%,}" # Remove trailing comma
+        
+        if [[ -n "$PLATFORMS" ]]; then
+          if "$UPDATE_EVIDENCE_SCRIPT" --auto --platforms "$PLATFORMS" >/dev/null 2>&1; then
+            echo -e "${GREEN}✅ Evidence updated${NC}"
+            # Send macOS notification
+            osascript -e "display notification \"Evidence auto-updated (was ${EVIDENCE_AGE}s old)\" with title \"🔄 Evidence Refreshed\" sound name \"Glass\"" 2>/dev/null || true
+          else
+            echo -e "${YELLOW}⚠️  Evidence update failed${NC}"
+          fi
+        else
+          echo -e "${YELLOW}⚠️  Could not auto-detect platforms, run manually:${NC}"
+          echo -e "${YELLOW}   $UPDATE_EVIDENCE_SCRIPT --auto --platforms <platforms>${NC}"
+        fi
+      else
+        echo -e "${YELLOW}⚠️  Update script not found, run manually:${NC}"
+        echo -e "${YELLOW}   ./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms>${NC}"
+      fi
       echo ""
     else
-      echo -e "${GREEN}✅ Evidence fresh (${AGE}s old)${NC}"
+      echo -e "${GREEN}✅ Evidence fresh (${EVIDENCE_AGE}s old)${NC}"
       echo ""
     fi
   fi
@@ -138,14 +171,13 @@ echo ""
 echo -e "${GREEN}✅ Session loaded - Ready to work!${NC}"
 echo ""
 
-# Reminder with exact command
-if [[ $AGE -gt 180 ]]; then
-  echo -e "${YELLOW}Run this command to refresh evidence:${NC}"
-  echo -e "   ${GREEN}./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms>${NC}"
-  echo -e "   ${YELLOW}(alias: ai-start $CURRENT_BRANCH)${NC}"
-else
-  echo -e "${GREEN}Evidence is fresh - You can start working!${NC}"
-  echo -e "   ${YELLOW}ℹ️  Usa ./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms> cuando necesites renovarla (alias: ai-start $CURRENT_BRANCH).${NC}"
+# Reminder with exact command (only if evidence was stale)
+if [[ $EVIDENCE_AGE -gt 180 ]]; then
+  echo -e "${YELLOW}ℹ️  Evidence refreshed. You can start working!${NC}"
+  echo -e "   ${CYAN}To manually refresh: ./scripts/hooks-system/bin/update-evidence.sh --auto --platforms <platforms>${NC}"
+  echo -e "   ${CYAN}(alias: ai-start $CURRENT_BRANCH)${NC}"
+elif [[ $EVIDENCE_AGE -gt 0 ]]; then
+  echo -e "${GREEN}✅ Evidence is fresh - You can start working!${NC}"
 fi
 echo ""
 
