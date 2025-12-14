@@ -1759,6 +1759,7 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   });
 
+  const fullText = sf.getFullText();
   const hasLargeImports = fullText.includes('import * as') ||
     fullText.match(/import\s+\{[^}]{200,}\}/);
 
