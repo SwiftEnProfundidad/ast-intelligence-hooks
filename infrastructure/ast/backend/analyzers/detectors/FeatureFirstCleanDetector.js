@@ -38,7 +38,7 @@ class FeatureFirstCleanDetector extends BackendPatternDetector {
 
     const featureNames = new Set();
     files.forEach(f => {
-      const match = f.match(/\/features?\/(\w+)\//);
+      const match = f.match(/\/features?\/(\w+)\
       if (match) {
         featureNames.add(match[1]);
       }
