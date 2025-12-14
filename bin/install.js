@@ -264,6 +264,34 @@ ${COLORS.reset}`);
 
   }
 
+  copyIDERules() {
+    const sourceRulesDir = path.join(this.hookSystemRoot, '.cursor', 'rules');
+    
+    if (!fs.existsSync(sourceRulesDir)) {
+      return;
+    }
+
+    const ideTargets = [
+      { name: 'Cursor', dir: path.join(this.targetRoot, '.cursor', 'rules') },
+      { name: 'Windsurf', dir: path.join(this.targetRoot, '.windsurf', 'rules') }
+    ];
+
+    ideTargets.forEach(ide => {
+      if (!fs.existsSync(ide.dir)) {
+        fs.mkdirSync(ide.dir, { recursive: true });
+      }
+
+      const ruleFiles = fs.readdirSync(sourceRulesDir).filter(f => f.endsWith('.mdc'));
+      ruleFiles.forEach(ruleFile => {
+        const sourcePath = path.join(sourceRulesDir, ruleFile);
+        const targetPath = path.join(ide.dir, ruleFile);
+        fs.copyFileSync(sourcePath, targetPath);
+      });
+
+      process.stdout.write(`${COLORS.green}  ✅ Copied ${ruleFiles.length} rules to ${ide.name}${COLORS.reset}\n`);
+    });
+  }
+
   installESLintConfigs() {
     process.stdout.write(`${COLORS.blue}📝 Installing ESLint configurations...${COLORS.reset}`);
 
@@ -290,6 +318,8 @@ ${COLORS.reset}`);
     if (!fs.existsSync(claudeDir)) {
       fs.mkdirSync(claudeDir, { recursive: true });
     }
+
+    this.copyIDERules();
 
     const librarySkillsDir = path.join(this.hookSystemRoot, 'skills');
     const libraryHooksDir = path.join(this.hookSystemRoot, 'hooks');
@@ -632,6 +662,10 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
     
     exit 1
   fi
+  # Copy ast-summary.json to root if it exists
+  if [ -f ".audit_tmp/ast-summary.json" ]; then
+    cp .audit_tmp/ast-summary.json ast-summary.json 2>/dev/null || true
+  fi
   exit 0
 fi
 
@@ -676,6 +710,10 @@ if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence
     fi
     
     exit 1
+  fi
+  # Copy ast-summary.json to root if it exists
+  if [ -f ".audit_tmp/ast-summary.json" ]; then
+    cp .audit_tmp/ast-summary.json ast-summary.json 2>/dev/null || true
   fi
   exit 0
 fi

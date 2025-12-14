@@ -23,6 +23,9 @@ const MAGIC_NUMBERS = [0, 1];
 
 class iOSForbiddenLiteralsAnalyzer {
     analyze(sf, findings, pushFinding) {
+        if (!sf || typeof sf.getFilePath !== 'function') {
+            return;
+        }
         const stringLiterals = sf.getDescendantsOfKind(SyntaxKind.StringLiteral);
         const numericLiterals = sf.getDescendantsOfKind(SyntaxKind.NumericLiteral);
         const asExpressions = sf.getDescendantsOfKind(SyntaxKind.AsExpression);

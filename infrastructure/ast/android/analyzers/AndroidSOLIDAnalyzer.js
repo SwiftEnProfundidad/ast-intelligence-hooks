@@ -21,6 +21,9 @@ class AndroidSOLIDAnalyzer {
      * @param {Function} pushFinding - Push finding function
      */
     analyze(sf, findings, pushFinding) {
+        if (!sf || typeof sf.getFilePath !== 'function') {
+            return;
+        }
         this.findings = findings;
         this.pushFinding = pushFinding;
 

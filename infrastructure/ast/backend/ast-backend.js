@@ -81,7 +81,7 @@ function runBackendIntelligence(project, findings, platform) {
 
       const isComment = fullLine.includes('//') || fullLine.includes('/*');
       const isTestContext = isSpecFile && /mock|jest\.fn|describe|it\(|beforeEach|afterEach/.test(fullText);
-      const isTestFile = isSpecFile || /\/(tests?|__tests__|e2e|spec|playwright)\//i.test(filePath);
+      const isTestFilePath = isSpecFile || /\/(tests?|__tests__|e2e|spec|playwright)\//i.test(filePath);
       const hasStorageContext = (
         /localStorage|sessionStorage|AsyncStorage|getItem|setItem|removeItem/i.test(fullLine) ||
         /const\s+\w*(KEY|STORAGE|CACHE|Token|Key|Storage)\s*=/i.test(fullLine)
@@ -106,7 +106,7 @@ function runBackendIntelligence(project, findings, platform) {
         !matchesSecretEntropyPattern;
       const isRolesDecorator = /ROLES_KEY\s*=\s*['"`]roles['"`]/.test(fullLine);
 
-      const isTestData = isTestFile && secretValue.length < 50 && !matchesSecretEntropyPattern;
+      const isTestData = isTestFilePath && secretValue.length < 50 && !matchesSecretEntropyPattern;
 
       if (!isEnvVar && !isPlaceholder && !isComment && !isTestContext && !isStorageKey && !isCacheKey && !isConstantKey && !isRolesDecorator && !isTestData && secretValue.length >= 8) {
         pushFinding("backend.config.secrets_in_code", "critical", sf, sf, "Hardcoded secret detected - replace with environment variable (process.env)", findings);
@@ -117,7 +117,7 @@ function runBackendIntelligence(project, findings, platform) {
       sf.getFullText().includes("app.get('env')") ||
       sf.getFullText().includes("ConfigService");
     const hasConfigUsage = sf.getFullText().includes("config") || sf.getFullText().includes("env");
-    if (!hasEnvSpecific && hasConfigUsage && !isTestFile) {
+    if (!hasEnvSpecific && hasConfigUsage && !isTestFile(filePath)) {
       pushFinding("backend.config.missing_env_separation", "warning", sf, sf, "Missing environment-specific configuration - consider NODE_ENV or ConfigService", findings);
     }
 
@@ -575,8 +575,8 @@ function runBackendIntelligence(project, findings, platform) {
 
     const swaggerFilePath = sf.getFilePath();
     const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(swaggerFilePath);
-    const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(swaggerFilePath);
-    if (!isAnalyzer && !isTestFile && sf.getFullText().includes("@Controller") && !sf.getFullText().includes("@nestjs/swagger") && !sf.getFullText().includes("@Api")) {
+    const isSwaggerTestFile = /\.(spec|test)\.(js|ts)$/i.test(swaggerFilePath);
+    if (!isAnalyzer && !isSwaggerTestFile && sf.getFullText().includes("@Controller") && !sf.getFullText().includes("@nestjs/swagger") && !sf.getFullText().includes("@Api")) {
       pushFinding("backend.api.missing_swagger", "medium", sf, sf, "Controller without Swagger decorators/imports", findings);
     }
 
