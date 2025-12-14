@@ -142,7 +142,7 @@ class FrontendSOLIDAnalyzer {
     const filePath = sf.getFilePath();
     const fileName = filePath.split('/').pop() || 'unknown';
 
-    const isPresentation = /\/presentation\
+    const isPresentation = /\/presentation\//.test(filePath);
 
     if (isPresentation) {
       const imports = sf.getImportDeclarations();
@@ -150,8 +150,8 @@ class FrontendSOLIDAnalyzer {
       imports.forEach(imp => {
         const importPath = imp.getModuleSpecifierValue();
 
-        if (/\/infrastructure\
-          !/\/infrastructure\/repositories\/|\/infrastructure\/config\
+        if (/\/infrastructure\//.test(importPath) &&
+          !/\/infrastructure\/repositories\/|\/infrastructure\/config\//.test(importPath)) {
           const message = `DIP VIOLATION in ${fileName}: Presentation layer importing from Infrastructure: ${importPath} - use repository interfaces or abstractions`;
           this.pushFinding('solid.dip.presentation_infrastructure', 'critical', sf, imp, message, this.findings);
         }
