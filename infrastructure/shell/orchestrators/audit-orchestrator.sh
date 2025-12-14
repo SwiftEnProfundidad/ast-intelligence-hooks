@@ -88,7 +88,7 @@ print_final_signature() {
                        🐈 En memoria de Pumuki 💚
 FSIG
   printf "${NC}\n"
-  printf "%b🐈 Arquitecto Senior de Soluciones%b\n" "$BLUE" "$NC"
+  printf "%b🐈 Senior Software Architect - AI-Driven Development%b\n" "$BLUE" "$NC"
   printf "%bGenerated on: %s%b\n" "$BLUE" "$(date '+%Y-%m-%d %H:%M:%S')" "$NC"
   local project_name=$(basename "$ROOT_DIR")
   printf "%bProject: %s%b\n" "$BLUE" "$project_name" "$NC"
