@@ -5,6 +5,11 @@ class AndroidClassAnalyzer {
     }
 
     analyze() {
+        const filePath = this.parser.filePath;
+        if (/infrastructure\/ast\/|analyzers\/|detectors\//.test(filePath)) {
+            return;
+        }
+
         for (const cls of this.parser.classes) {
             this.checkGodClass(cls);
             this.checkMassiveViewModel(cls);

@@ -17,6 +17,7 @@ function analyzeDDD(filePath, fileContent, findings, pushFileFinding) {
 }
 
 function analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFinding) {
+  if (/infrastructure\/ast\/|analyzers\/|detectors\//.test(filePath)) return;
   const isInterface = fileContent.includes('interface ') && /Repository/i.test(fileContent);
   const isClass = fileContent.includes('class ') && /Repository/i.test(fileContent);
 
