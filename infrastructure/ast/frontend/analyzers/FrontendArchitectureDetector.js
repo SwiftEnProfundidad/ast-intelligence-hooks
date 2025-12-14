@@ -1,13 +1,3 @@
-/**
- * Frontend Architecture Pattern Detector
- *
- * Automatically detects the architectural pattern used in a Frontend (React/Next.js) project:
- * - Feature-First + Clean + DDD
- * - Component-Based Architecture
- * - Atomic Design Pattern
- * - State Management patterns (Zustand, Redux, Context)
- */
-
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
@@ -25,10 +15,6 @@ class FrontendArchitectureDetector {
     this.manualConfig = this.loadManualConfig();
   }
 
-  /**
-   * Loads manual configuration from .ast-architecture.json if exists
-   * @returns {Object|null} Configuration or null
-   */
   loadManualConfig() {
     try {
       const configPath = path.join(this.projectRoot, '.ast-architecture.json');
@@ -43,10 +29,6 @@ class FrontendArchitectureDetector {
     return null;
   }
 
-  /**
-   * Detects the dominant architectural pattern in the project
-   * @returns {string} Pattern name
-   */
   detect() {
     if (this.manualConfig && this.manualConfig.architecturePattern) {
       const manualPattern = this.manualConfig.architecturePattern;
@@ -79,14 +61,6 @@ class FrontendArchitectureDetector {
     return this.getDominantPattern();
   }
 
-  /**
-   * Feature-First + DDD + Clean Architecture (PRIMARY PATTERN)
-   * Signals:
-   * - Structure: features/ with subfolders domain/, application/, infrastructure/, presentation/
-   * - Domain contains: entities/, value-objects/, repositories/ (interfaces)
-   * - Application contains: use-cases/, hooks/, stores/
-   * - Presentation contains: components/, pages/
-   */
   detectFeatureFirstClean(files) {
     const hasFeaturesFolders = files.some(f =>
       /\/features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
@@ -152,13 +126,6 @@ class FrontendArchitectureDetector {
     console.log(`[Architecture Detection] Feature-First + Clean + DDD score: ${this.patterns.featureFirstClean}`);
   }
 
-  /**
-   * Component-Based Architecture
-   * Signals:
-   * - Components/ folder structure
-   * - Reusable components
-   * - Component composition
-   */
   detectComponentBased(files) {
     const hasComponentsFolder = files.some(f => f.includes('/components/'));
     
@@ -186,12 +153,6 @@ class FrontendArchitectureDetector {
     });
   }
 
-  /**
-   * Atomic Design Pattern
-   * Signals:
-   * - atoms/, molecules/, organisms/, templates/, pages/ folders
-   * - Atomic design structure
-   */
   detectAtomicDesign(files) {
     const atomicFolders = ['atoms', 'molecules', 'organisms', 'templates', 'pages'];
     
@@ -210,14 +171,6 @@ class FrontendArchitectureDetector {
     }
   }
 
-  /**
-   * State Management Pattern
-   * Signals:
-   * - Zustand stores
-   * - Redux store/slices
-   * - Context providers
-   * - State management libraries
-   */
   detectStateManagement(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -241,13 +194,6 @@ class FrontendArchitectureDetector {
     });
   }
 
-  /**
-   * MVC (Model-View-Controller) - Anti-pattern for frontend
-   * Signals:
-   * - Components with business logic
-   * - Direct API calls from components
-   * - No separation of concerns
-   */
   detectMVC(files) {
     files.forEach(file => {
       if (!file.includes('component') && !file.endsWith('.tsx') && !file.endsWith('.jsx')) return;
@@ -273,9 +219,6 @@ class FrontendArchitectureDetector {
     });
   }
 
-  /**
-   * Reads file content
-   */
   readFile(relativePath) {
     try {
       const fullPath = path.join(this.projectRoot, relativePath);
@@ -288,9 +231,6 @@ class FrontendArchitectureDetector {
     }
   }
 
-  /**
-   * Determines the dominant pattern based on scores
-   */
   getDominantPattern() {
     const scores = Object.entries(this.patterns);
     scores.sort((a, b) => b[1] - a[1]);
@@ -312,9 +252,6 @@ class FrontendArchitectureDetector {
     return patternMap[dominantName] || 'UNKNOWN';
   }
 
-  /**
-   * Returns detection summary with confidence and warnings
-   */
   getDetectionSummary() {
     const totalScore = Object.values(this.patterns).reduce((a, b) => a + b, 0);
     const dominantPattern = this.getDominantPattern();

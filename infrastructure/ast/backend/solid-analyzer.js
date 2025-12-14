@@ -1,6 +1,4 @@
-
 const { SyntaxKind } = require('ts-morph');
-
 
 function analyzeSRP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -19,7 +17,6 @@ function analyzeSRP(cls, sf, findings, pushFinding) {
 
   const imports = sf.getImportDeclarations();
   const importConcerns = analyzeImportConcerns(imports);
-
 
   const violations = [];
 
@@ -151,7 +148,6 @@ function analyzeImportConcerns(imports) {
   return Array.from(concerns);
 }
 
-
 function analyzeOCP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
   const methods = cls.getMethods();
@@ -189,7 +185,6 @@ function detectTypeIfChains(ifStatements) {
     return /===\s*['"]|instanceof\s+\w+|typeof\s+.*===/.test(condition);
   });
 }
-
 
 function analyzeLSP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -249,7 +244,6 @@ function countValidations(methodBody) {
 
   return count;
 }
-
 
 function analyzeISP(sf, findings, pushFinding, project) {
   const interfaces = sf.getInterfaces();
@@ -328,7 +322,6 @@ function findImplementations(iface, project) {
   return implementations;
 }
 
-
 function analyzeDIP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
   const filePath = sf.getFilePath();
@@ -388,8 +381,6 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
     }
   });
 }
-
-
 
 module.exports = {
   analyzeSRP,

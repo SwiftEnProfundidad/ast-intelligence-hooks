@@ -1,9 +1,3 @@
-/**
- * MacOSNotificationAdapter
- *
- * Infrastructure adapter implementing INotificationPort for macOS.
- * Uses osascript or terminal-notifier to send native notifications.
- */
 const { execSync } = require('child_process');
 const fs = require('fs');
 

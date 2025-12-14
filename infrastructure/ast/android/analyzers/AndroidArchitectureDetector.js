@@ -1,14 +1,3 @@
-/**
- * Android Architecture Pattern Detector
- *
- * Automatically detects the architectural pattern used in an Android project:
- * - MVVM (Model-View-ViewModel)
- * - MVI (Model-View-Intent)
- * - MVP (Model-View-Presenter)
- * - Clean Architecture (Domain-Data-Presentation)
- * - Feature-First + Clean + DDD
- */
-
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
@@ -27,10 +16,6 @@ class AndroidArchitectureDetector {
     this.manualConfig = this.loadManualConfig();
   }
 
-  /**
-   * Loads manual configuration from .ast-architecture.json if exists
-   * @returns {Object|null} Configuration or null
-   */
   loadManualConfig() {
     try {
       const configPath = path.join(this.projectRoot, '.ast-architecture.json');
@@ -45,10 +30,6 @@ class AndroidArchitectureDetector {
     return null;
   }
 
-  /**
-   * Detects the dominant architectural pattern in the project
-   * @returns {string} Pattern name
-   */
   detect() {
     if (this.manualConfig && this.manualConfig.architecturePattern) {
       const manualPattern = this.manualConfig.architecturePattern;
@@ -76,14 +57,6 @@ class AndroidArchitectureDetector {
     return this.getDominantPattern();
   }
 
-  /**
-   * Feature-First + DDD + Clean Architecture (PRIMARY PATTERN)
-   * Signals:
-   * - Structure: features/ with subfolders domain/, data/, presentation/
-   * - Domain contains: entities/, usecases/, repositories/ (interfaces)
-   * - Data contains: repositories/ (impl), datasources/, dtos/
-   * - Presentation contains: ui/, viewmodels/, composables/
-   */
   detectFeatureFirstClean(files) {
     const hasFeaturesFolders = files.some(f =>
       /\/features?\/\w+\/(domain|data|presentation)\//.test(f)
@@ -150,13 +123,6 @@ class AndroidArchitectureDetector {
     console.log(`[Architecture Detection] Feature-First + Clean + DDD score: ${this.patterns.featureFirstClean}`);
   }
 
-  /**
-   * MVVM (Model-View-ViewModel)
-   * Signals:
-   * - ViewModel classes
-   * - LiveData or StateFlow/SharedFlow
-   * - Data binding or Compose
-   */
   detectMVVM(files) {
     const mvvmIndicators = [
       'class.*ViewModel',
@@ -188,13 +154,6 @@ class AndroidArchitectureDetector {
     }
   }
 
-  /**
-   * MVI (Model-View-Intent)
-   * Signals:
-   * - State/Intent/Effect sealed classes
-   * - Unidirectional data flow
-   * - Intent handling
-   */
   detectMVI(files) {
     const mviIndicators = [
       'sealed class.*State',
@@ -226,13 +185,6 @@ class AndroidArchitectureDetector {
     }
   }
 
-  /**
-   * MVP (Model-View-Presenter)
-   * Signals:
-   * - Presenter classes
-   * - View interfaces/contracts
-   * - Contract/View/Presenter pattern
-   */
   detectMVP(files) {
     const mvpIndicators = [
       'class.*Presenter',
@@ -269,13 +221,6 @@ class AndroidArchitectureDetector {
     }
   }
 
-  /**
-   * Clean Architecture (Domain-Data-Presentation)
-   * Signals:
-   * - Domain, Data, Presentation layers
-   * - Repository pattern (interface in domain, impl in data)
-   * - Use cases in domain
-   */
   detectCleanArchitecture(files) {
     const hasDomain = files.some(f => f.includes('/domain/'));
     const hasData = files.some(f => f.includes('/data/'));
@@ -305,13 +250,6 @@ class AndroidArchitectureDetector {
     }
   }
 
-  /**
-   * MVC (Model-View-Controller) - Legacy/Anti-pattern
-   * Signals:
-   * - Activities/Fragments with business logic
-   * - Direct database access from UI
-   * - No ViewModels or Presenters
-   */
   detectMVC(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -328,9 +266,6 @@ class AndroidArchitectureDetector {
     });
   }
 
-  /**
-   * Reads file content
-   */
   readFile(relativePath) {
     try {
       const fullPath = path.join(this.projectRoot, relativePath);
@@ -340,9 +275,6 @@ class AndroidArchitectureDetector {
     }
   }
 
-  /**
-   * Determines the dominant pattern based on scores
-   */
   getDominantPattern() {
     const scores = Object.entries(this.patterns);
     scores.sort((a, b) => b[1] - a[1]);
@@ -365,9 +297,6 @@ class AndroidArchitectureDetector {
     return patternMap[dominantName] || 'UNKNOWN';
   }
 
-  /**
-   * Returns detection summary with confidence and warnings
-   */
   getDetectionSummary() {
     const totalScore = Object.values(this.patterns).reduce((a, b) => a + b, 0);
     const dominantPattern = this.getDominantPattern();

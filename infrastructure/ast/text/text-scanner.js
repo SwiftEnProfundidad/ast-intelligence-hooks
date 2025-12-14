@@ -163,8 +163,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.networking.missing_network_security_config', 'high', file, 1, 1, 'AndroidManifest without networkSecurityConfig', findings);
       }
 
-
-      // Architecture
       if (/class\s+\w+Activity\b/.test(content) && content.split(/class\s+\w+Activity\b/).length > 3) {
         pushFileFinding('android.architecture.multiple_activities', 'medium', file, 1, 1, 'Multiple Activities detected - prefer Single Activity + Composables', findings);
       }
@@ -191,12 +189,10 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.clean.dependency_direction', 'medium', file, 1, 1, 'Presentation importing domain repository directly - use repository interface', findings);
       }
 
-      // DI
       if (!/@HiltAndroidApp\b/.test(content) && /class\s+\w+Application\b/.test(content)) {
         pushFileFinding('android.di.missing_hilt', 'high', file, 1, 1, 'Application class without @HiltAndroidApp', findings);
       }
 
-      // Coroutines
       if (/suspend\s+fun\s+\w+\s*\([^)]*\)\s*\{[\s\S]{0,500}\}/.test(content) && !/Dispatchers\.(IO|Default|Main)/.test(content)) {
         pushFileFinding('android.coroutines.missing_dispatchers', 'medium', file, 1, 1, 'Suspend function without explicit Dispatcher', findings);
       }
@@ -210,7 +206,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.coroutines.callbacks_instead_coroutines', 'medium', file, 1, 1, 'Using callbacks with suspend functions - prefer coroutines', findings);
       }
 
-      // Flow
       if (/Flow<[^>]+>/.test(content) && !/flow\s*\{/.test(content) && !/flowOf\(|asFlow\(\)/.test(content)) {
         pushFileFinding('android.flow.missing_flow_builders', 'low', file, 1, 1, 'Flow type without flow builders (flow{}, flowOf(), asFlow())', findings);
       }
@@ -224,7 +219,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.flow.rxjava_instead_flow', 'medium', file, 1, 1, 'RxJava detected - migrate to Kotlin Flow', findings);
       }
 
-      // Networking
       if (/https?:\/\//.test(content) && !/(Retrofit\.Builder\(|interface\s+\w+Api\b)/.test(content) && !/Retrofit|OkHttp/.test(content)) {
         pushFileFinding('android.networking.missing_retrofit', 'high', file, 1, 1, 'HTTP URLs without Retrofit/OkHttp', findings);
       }
@@ -242,7 +236,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.networking.missing_biometric_auth', 'low', file, 1, 1, 'Auth without BiometricPrompt API consideration', findings);
       }
 
-      // Room
       if (/class\s+\w+(Entity|Model)\b/.test(content) && file.includes('/data/') && !/@Entity\b/.test(content)) {
         pushFileFinding('android.room.missing_room', 'medium', file, 1, 1, 'Data entity without @Entity annotation', findings);
       }
@@ -281,7 +274,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.state.multiple_sources', 'low', file, 1, 1, 'Multiple StateFlows - consider single source of truth', findings);
       }
 
-      // Navigation
       if (/@Composable\b/.test(content) && /Screen\b/.test(content) && !/NavHost\b/.test(content) && !/NavController/.test(content)) {
         pushFileFinding('android.navigation.missing_compose_navigation', 'medium', file, 1, 1, 'Composable screens without Navigation Compose', findings);
       }
@@ -301,7 +293,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.navigation.missing_deep_links', 'low', file, 1, 1, 'Navigation without deep links support', findings);
       }
       if (/@Composable\b/.test(content) && /BottomNavigation\b|NavigationBar\b/.test(content)) {
-        // Good
       } else if (/@Composable\b/.test(content) && /Scaffold\b/.test(content) && !/BottomNavigation|NavigationBar/.test(content)) {
         pushFileFinding('android.navigation.missing_bottom_navigation', 'info', file, 1, 1, 'Scaffold without bottom navigation consideration', findings);
       }
@@ -309,7 +300,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.navigation.complex_navigation', 'low', file, 1, 1, 'Complex navigation logic - consider navigation component architecture', findings);
       }
 
-      // Image Loading
       if (/Image\s*\(/.test(content) && !/Coil|AsyncImage|rememberImagePainter/.test(content)) {
         pushFileFinding('android.images.missing_coil', 'medium', file, 1, 1, 'Image loading without Coil async loader', findings);
       }
@@ -333,7 +323,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.images.raw_image_views', 'low', file, 1, 1, 'Raw ImageView.setImageResource - consider Coil for consistency', findings);
       }
 
-      // Testing
       if (file.includes('Test.kt') && !/@Test\b/.test(content)) {
         pushFileFinding('android.testing.missing_junit5', 'medium', file, 1, 1, 'Test file without @Test annotations', findings);
       }
@@ -365,7 +354,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.testing.missing_given_when_then', 'info', file, 1, 1, 'Test without Given-When-Then BDD style', findings);
       }
 
-      // Security
       if (/SharedPreferences\b/.test(content) && !/EncryptedSharedPreferences/.test(content) && /(password|token|key|secret)/.test(content.toLowerCase())) {
         pushFileFinding('android.security.missing_encrypted_prefs', 'critical', file, 1, 1, 'Sensitive data in SharedPreferences - use EncryptedSharedPreferences', findings);
       }
@@ -387,7 +375,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.security.missing_biometric_auth', 'medium', file, 1, 1, 'Auth screen without BiometricPrompt consideration', findings);
       }
 
-      // Performance
       if (/@Composable\b/.test(content) && /List\(|ArrayList\(/.test(content) && !/LazyColumn|LazyRow/.test(content) && content.length > 500) {
         pushFileFinding('android.performance.missing_lazycolumn', 'high', file, 1, 1, 'Large list without LazyColumn/LazyRow virtualization', findings);
       }
@@ -416,7 +403,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.performance.launched_effect_keys', 'low', file, 1, 1, 'LaunchedEffect without keys - may re-launch unnecessarily', findings);
       }
 
-      // Accessibility
       if (ext === '.xml' && /<ImageView|<ImageButton/.test(content) && !/android:contentDescription=/.test(content)) {
         pushFileFinding('android.accessibility.missing_contentdescription', 'high', file, 1, 1, 'ImageView/ImageButton without contentDescription for TalkBack', findings);
       }
@@ -433,7 +419,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.accessibility.missing_text_scaling', 'medium', file, 1, 1, 'Fixed text size without density/scaling support', findings);
       }
 
-      // Localization
       if (ext === '.kt' && /Text\s*\(["'][^"']+["']\)/.test(content) && !/@Composable\b/.test(content)) {
         pushFileFinding('android.i18n.hardcoded_strings', 'medium', file, 1, 1, 'Hardcoded strings - use stringResource()', findings);
       }
@@ -453,7 +438,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.i18n.missing_numberformat', 'medium', file, 1, 1, 'Number formatting without Locale - use NumberFormat', findings);
       }
 
-      // Gradle
       if (path.basename(file) === 'build.gradle' && ext === '') {
         pushFileFinding('android.gradle.missing_kotlin_dsl', 'low', file, 1, 1, 'Using Groovy build.gradle - prefer Kotlin DSL (build.gradle.kts)', findings);
       }
@@ -464,7 +448,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.gradle.missing_build_types', 'info', file, 1, 1, 'Only one build type - consider debug/release/staging', findings);
       }
 
-      // Logging
       if (/Log\.(d|i|w|e)\(/.test(content) && !/Timber/.test(content)) {
         pushFileFinding('android.logging.missing_timber', 'low', file, 1, 1, 'Using Log directly - prefer Timber for logging', findings);
       }
@@ -475,12 +458,10 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.logging.sensitive_data', 'critical', file, 1, 1, 'Logging sensitive data (password/token)', findings);
       }
 
-      // Configuration
       if (/const\s+val\s+API_KEY\s*=\s*["']/.test(content) && !(path.basename(file) === 'build.gradle.kts' && /buildConfigField/.test(content))) {
         pushFileFinding('android.config.hardcoded_config', 'high', file, 1, 1, 'API keys hardcoded - use BuildConfig or gradle.properties', findings);
       }
 
-      // Anti-patterns
       if (/object\s+\w+(Repository|Manager|Helper)\b/.test(content)) {
         pushFileFinding('android.antipattern.singleton', 'high', file, 1, 1, 'Singleton object detected - use Hilt DI instead', findings);
       }
@@ -715,7 +696,6 @@ function runTextScanner(root, findings) {
       if (/Data\(count\s*:\s*(\d{7,})\)/.test(content) || /Array\(repeating\s*:\s*[^,]+,\s*count\s*:\s*(\d{6,})\)/.test(content)) {
         pushFileFinding('ios.memory.allocations', 'low', file, 1, 1, 'Large in-memory allocation detected', findings);
       }
-      // i18n: locale aware formatting
       if (/(DateFormatter|NumberFormatter)\(\)/.test(content) && !/\.locale\s*=\s*Locale\b/.test(content)) {
         pushFileFinding('ios.i18n.locale_aware', 'low', file, 1, 1, 'Formatter without explicit Locale configured', findings);
       }
@@ -781,8 +761,6 @@ function runTextScanner(root, findings) {
     }
   }
 
-  // ============================================
-  // ============================================
   const hasKotlinFiles = files.some(f => f.endsWith('.kt'));
   if (hasKotlinFiles) {
     const androidAnchorFile = files.find(f => f.endsWith('.kt')) || files[0];
@@ -805,7 +783,6 @@ function runTextScanner(root, findings) {
         'Data classes complejas sin @Stable/@Immutable causan re-compositions innecesarias', findings);
     }
 
-    // 2. remember optimization
     const hasComposable = /@Composable/.test(allContent);
     const hasRemember = /remember\s*\{/.test(allContent);
     const hasComplexCalculations = /\.map\s*\{|\.filter\s*\{|\.reduce\s*\{/.test(allContent);
@@ -815,7 +792,6 @@ function runTextScanner(root, findings) {
         'Cálculos complejos en Composable sin remember{} causan recálculos en cada recomposition', findings);
     }
 
-    // 3. derivedStateOf usage
     const hasDerivedStateOf = /derivedStateOf\s*\{/.test(allContent);
     const hasExpensiveComputations = allContent.split('\n').some(line =>
       (line.includes('.sortedBy') || line.includes('.groupBy')) &&
@@ -838,7 +814,6 @@ function runTextScanner(root, findings) {
         `${launchedEffectWithoutKey.length} LaunchedEffect sin keys apropiadas. Usar keys para controlar cuándo se relanza`, findings);
     }
 
-    // 5. kotlinx.collections.immutable
     const hasImmutableCollections = /import\s+kotlinx\.collections\.immutable/.test(allContent);
     const hasListStateFlow = /StateFlow<List<|MutableStateFlow<List</.test(allContent);
 
@@ -873,8 +848,6 @@ function runTextScanner(root, findings) {
         `${functionsWithClosureParams.length} Composables con closures como parámetros (inestables). Considerar remember o stable wrappers`, findings);
     }
 
-    // ============================================
-    // ============================================
     const hasSettingsGradle = files.some(f => f.endsWith('settings.gradle.kts') || f.endsWith('settings.gradle'));
     const settingsContent = hasSettingsGradle ?
       fs.readFileSync(files.find(f => f.endsWith('settings.gradle.kts') || f.endsWith('settings.gradle')), 'utf-8') : '';
@@ -883,19 +856,16 @@ function runTextScanner(root, findings) {
     const coreModules = (settingsContent.match(/include\(":core:\w+"\)/g) || []).length;
     const hasAppModule = /include\(":app"\)/.test(settingsContent);
 
-    // 1. Feature modules
     if (hasSettingsGradle && featureModules === 0 && files.filter(f => f.endsWith('.kt')).length > 100) {
       pushFileFinding('android.multimodule.missing_feature_modules', 'medium', androidAnchorFile, 1, 1,
         'Proyecto grande sin feature modules. Modularizar en :feature:orders, :feature:users, etc.', findings);
     }
 
-    // 2. Core modules
     if (hasSettingsGradle && coreModules === 0 && featureModules > 0) {
       pushFileFinding('android.multimodule.missing_core_modules', 'medium', androidAnchorFile, 1, 1,
         'Feature modules sin core modules. Crear :core:network, :core:database, :core:ui', findings);
     }
 
-    // 3. App module
     if (hasSettingsGradle && !hasAppModule && featureModules > 0) {
       pushFileFinding('android.multimodule.missing_app_module', 'high', androidAnchorFile, 1, 1,
         ':app module faltante. Debe orquestar todos los feature modules', findings);
@@ -922,27 +892,22 @@ function runTextScanner(root, findings) {
         'Código en /shared o /common sin modularización. Migrar a :core modules', findings);
     }
 
-    // 7. API modules
     const hasApiFolder = files.some(f => f.includes('/api/'));
     if (hasApiFolder && !settingsContent.includes(':api')) {
       pushFileFinding('android.multimodule.missing_api_modules', 'low', androidAnchorFile, 1, 1,
         'Código API sin módulo separado. Crear :api module para exposed APIs', findings);
     }
 
-    // ============================================
-    // ============================================
     const hasGitHubActions = files.some(f => f.includes('.github/workflows'));
     const hasGradleTasks = /task\s+\w+|tasks\.register/.test(allContent);
     const hasLintConfig = files.some(f => f.endsWith('lint.xml'));
     const hasDetekt = /detekt\s*\{|id\("io\.gitlab\.arturbosch\.detekt"\)/.test(allContent);
 
-    // 1. GitHub Actions
     if (!hasGitHubActions) {
       pushFileFinding('android.cicd.missing_github_actions', 'medium', androidAnchorFile, 1, 1,
         'Proyecto sin GitHub Actions. Automatizar CI/CD con workflows', findings);
     }
 
-    // 2. Gradle tasks
     if (!hasGradleTasks && buildGradleFiles.length > 0) {
       pushFileFinding('android.cicd.missing_gradle_tasks', 'low', androidAnchorFile, 1, 1,
         'Sin custom Gradle tasks. Crear tasks para assembleDebug, test, etc.', findings);
@@ -953,7 +918,6 @@ function runTextScanner(root, findings) {
         'Sin lint.xml configuration. Lint warnings deben tratarse como errores', findings);
     }
 
-    // 4. Detekt
     if (!hasDetekt && files.filter(f => f.endsWith('.kt')).length > 20) {
       pushFileFinding('android.cicd.missing_detekt', 'medium', androidAnchorFile, 1, 1,
         'Sin Detekt para static analysis de Kotlin. Añadir para detectar code smells', findings);
@@ -969,7 +933,6 @@ function runTextScanner(root, findings) {
       }
     }
 
-    // 6. Play Console
     if (hasFastlane) {
       const fastlaneContent = fs.readFileSync(files.find(f => f.includes('fastlane/Fastfile')), 'utf-8');
 
@@ -996,8 +959,6 @@ function runTextScanner(root, findings) {
       }
     }
 
-    // ============================================
-    // ============================================
     const gradleFiles = buildGradleFiles.map(f => {
       try {
         return { path: f, content: fs.readFileSync(f, 'utf-8') };
@@ -1043,12 +1004,9 @@ function runTextScanner(root, findings) {
         'Compose sin compiler reports. Añadir para métricas de estabilidad', findings);
     }
 
-    // ============================================
-    // ============================================
     const hasOrdersModule = files.some(f => f.includes('/orders/') || f.includes('OrdersRepository'));
     const hasUsersModule = files.some(f => f.includes('/users/') || f.includes('UsersRepository'));
 
-    // 1. DTO codegen
     const hasDTOs = files.some(f => f.includes('/dto/') || f.includes('Dto.kt'));
     const hasCodegen = files.some(f => f.includes('openapi') || f.includes('swagger-codegen'));
 
@@ -1067,7 +1025,6 @@ function runTextScanner(root, findings) {
       }
     }
 
-    // 3. Use Cases
     const hasUseCases = files.some(f => f.includes('UseCase.kt') || /class\s+\w+UseCase/.test(allContent));
 
     if ((hasOrdersModule || hasUsersModule) && !hasUseCases) {
@@ -1092,7 +1049,6 @@ function runTextScanner(root, findings) {
         'Hilt DI no implementado en toda la app. Usar Hilt para dependency injection completo', findings);
     }
 
-    // 6. 100% Jetpack Compose
     const hasXMLLayouts = files.some(f => f.endsWith('.xml') && f.includes('/layout/'));
 
     if (hasXMLLayouts && hasComposable) {
