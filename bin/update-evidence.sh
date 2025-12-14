@@ -934,6 +934,34 @@ fi
 
 mv "$TMP_FILE" "$EVIDENCE_FILE"
 
+# Execute audit first to get violations, then call intelligent-audit to add ai_gate
+# Always run audit if ai_gate is missing or if not in refresh-only mode
+NEEDS_AUDIT=false
+if [[ "$REFRESH_ONLY" == "false" ]]; then
+  NEEDS_AUDIT=true
+elif [[ -f "$EVIDENCE_FILE" ]]; then
+  # Check if ai_gate section exists in evidence
+  if ! grep -q '"ai_gate"' "$EVIDENCE_FILE" 2>/dev/null; then
+    NEEDS_AUDIT=true
+  fi
+fi
+
+if [[ "$NEEDS_AUDIT" == "true" ]]; then
+  # Run AST audit to detect violations (only staged files for evidence)
+  # Clean previous ast-summary.json to avoid reading violations from full repo audits
+  rm -f "$REPO_ROOT/.audit_tmp/ast-summary.json" 2>/dev/null || true
+  
+  export STAGING_ONLY_MODE=1
+  AST_SCRIPT="$HOOKS_SYSTEM_DIR/infrastructure/ast/ast-intelligence.js"
+  if [[ ! -f "$AST_SCRIPT" ]]; then
+    AST_SCRIPT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/ast/ast-intelligence.js"
+  fi
+  if [[ -f "$AST_SCRIPT" ]]; then
+    node "$AST_SCRIPT" >/dev/null 2>&1 || true
+  fi
+  unset STAGING_ONLY_MODE
+fi
+
 # Call intelligent-audit to add ai_gate, watchers, git_flow sections
 INTELLIGENT_AUDIT="$HOOKS_SYSTEM_DIR/infrastructure/orchestration/intelligent-audit.js"
 if [[ ! -f "$INTELLIGENT_AUDIT" ]]; then

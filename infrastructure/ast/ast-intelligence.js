@@ -244,6 +244,28 @@ function checkForMigrations(root) {
  * List source files recursively
  */
 function listSourceFiles(root) {
+  if (process.env.STAGING_ONLY_MODE === "1") {
+    const { execSync } = require("child_process");
+    try {
+      const stagedFiles = execSync("git diff --cached --name-only --diff-filter=ACM", {
+        encoding: "utf8",
+        cwd: root
+      })
+        .trim()
+        .split("\n")
+        .filter(f => f.trim())
+        .map(f => path.resolve(root, f.trim()))
+        .filter(f => {
+          const ext = path.extname(f);
+          return [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".swift", ".kt", ".kts"].includes(ext);
+        })
+        .filter(f => fs.existsSync(f) && !shouldIgnore(f.replace(/\\/g, "/")));
+      return stagedFiles;
+    } catch (error) {
+      return [];
+    }
+  }
+
   const exts = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".swift", ".kt", ".kts"]);
   const result = [];
   const stack = [root];

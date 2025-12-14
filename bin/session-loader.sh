@@ -88,14 +88,49 @@ EVIDENCE_AGE=0
 if [[ -f "$EVIDENCE_FILE" ]]; then
   EVIDENCE_TS=$(jq -r '.timestamp' "$EVIDENCE_FILE" 2>/dev/null || echo "")
   if [[ -n "$EVIDENCE_TS" ]] && [[ "$EVIDENCE_TS" != "null" ]]; then
-    # FIX: Remove milliseconds from ISO 8601 timestamp (2025-01-06T07:55:48.179Z -> 2025-01-06T07:55:48Z)
-    CLEAN_TS=$(echo "$EVIDENCE_TS" | sed 's/\.[0-9]*Z$/Z/')
-    EVIDENCE_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%SZ" "$CLEAN_TS" +%s 2>/dev/null || echo "0")
+    # Parse ISO 8601 timestamp with timezone offset (e.g., 2025-12-14T08:04:44+01:00)
+    # macOS date command doesn't handle +01:00 format well, so we convert to UTC first
+    if [[ "$EVIDENCE_TS" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})([+-][0-9]{2}):([0-9]{2})$ ]]; then
+      # Format with timezone offset: convert to epoch using Python or node
+      EVIDENCE_EPOCH=$(python3 -c "from datetime import datetime; print(int(datetime.fromisoformat('$EVIDENCE_TS').timestamp()))" 2>/dev/null || \
+        node -e "console.log(Math.floor(new Date('$EVIDENCE_TS').getTime() / 1000))" 2>/dev/null || \
+        echo "0")
+    elif [[ "$EVIDENCE_TS" =~ ^([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2})Z?$ ]]; then
+      # Format without timezone (assume local time)
+      CLEAN_TS=$(echo "$EVIDENCE_TS" | sed 's/Z$//' | sed 's/\.[0-9]*$//')
+      EVIDENCE_EPOCH=$(date -j -f "%Y-%m-%dT%H:%M:%S" "$CLEAN_TS" +%s 2>/dev/null || echo "0")
+    else
+      EVIDENCE_EPOCH=0
+    fi
+    
     NOW_EPOCH=$(date +%s)
     EVIDENCE_AGE=$((NOW_EPOCH - EVIDENCE_EPOCH))
+    
+    # Sanity check: if age is negative or unreasonably large (> 1 year), assume parsing failed
+    if [[ $EVIDENCE_AGE -lt 0 ]] || [[ $EVIDENCE_AGE -gt 31536000 ]]; then
+      EVIDENCE_AGE=0
+      AGE_FORMATTED="unknown"
+    fi
+
+    # Format age in human-readable format
+    if [[ $EVIDENCE_AGE -lt 60 ]]; then
+      AGE_FORMATTED="${EVIDENCE_AGE}s"
+    elif [[ $EVIDENCE_AGE -lt 3600 ]]; then
+      AGE_MIN=$((EVIDENCE_AGE / 60))
+      AGE_SEC=$((EVIDENCE_AGE % 60))
+      AGE_FORMATTED="${AGE_MIN}m ${AGE_SEC}s"
+    elif [[ $EVIDENCE_AGE -lt 86400 ]]; then
+      AGE_HOUR=$((EVIDENCE_AGE / 3600))
+      AGE_MIN=$(( (EVIDENCE_AGE % 3600) / 60 ))
+      AGE_FORMATTED="${AGE_HOUR}h ${AGE_MIN}m"
+    else
+      AGE_DAYS=$((EVIDENCE_AGE / 86400))
+      AGE_HOUR=$(( (EVIDENCE_AGE % 86400) / 3600 ))
+      AGE_FORMATTED="${AGE_DAYS}d ${AGE_HOUR}h"
+    fi
 
     if [[ $EVIDENCE_AGE -gt 180 ]]; then
-      echo -e "${YELLOW}⚠️  Evidence is stale (${EVIDENCE_AGE}s old, max 3min)${NC}"
+      echo -e "${YELLOW}⚠️  Evidence is stale (${AGE_FORMATTED} old, max 3min)${NC}"
       echo -e "${CYAN}🔄 Auto-updating evidence...${NC}"
       
       # Auto-update evidence if stale
@@ -103,6 +138,11 @@ if [[ -f "$EVIDENCE_FILE" ]]; then
       if [[ ! -f "$UPDATE_EVIDENCE_SCRIPT" ]]; then
         # Try scripts/hooks-system path as fallback
         UPDATE_EVIDENCE_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh"
+      fi
+      
+      # Try node_modules path if script not found in scripts/
+      if [[ ! -x "$UPDATE_EVIDENCE_SCRIPT" ]]; then
+        UPDATE_EVIDENCE_SCRIPT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh"
       fi
       
       if [[ -x "$UPDATE_EVIDENCE_SCRIPT" ]]; then
@@ -118,7 +158,7 @@ if [[ -f "$EVIDENCE_FILE" ]]; then
           if "$UPDATE_EVIDENCE_SCRIPT" --auto --platforms "$PLATFORMS" >/dev/null 2>&1; then
             echo -e "${GREEN}✅ Evidence updated${NC}"
             # Send macOS notification
-            osascript -e "display notification \"Evidence auto-updated (was ${EVIDENCE_AGE}s old)\" with title \"🔄 Evidence Refreshed\" sound name \"Glass\"" 2>/dev/null || true
+            osascript -e "display notification \"Evidence auto-updated (was ${AGE_FORMATTED} old)\" with title \"🔄 Evidence Refreshed\" sound name \"Glass\"" 2>/dev/null || true
           else
             echo -e "${YELLOW}⚠️  Evidence update failed${NC}"
           fi
@@ -132,11 +172,47 @@ if [[ -f "$EVIDENCE_FILE" ]]; then
       fi
       echo ""
     else
-      echo -e "${GREEN}✅ Evidence fresh (${EVIDENCE_AGE}s old)${NC}"
+      echo -e "${GREEN}✅ Evidence fresh (${AGE_FORMATTED} old)${NC}"
       echo ""
     fi
   fi
 fi
+
+# Execute AI Gate Check automatically
+echo -e "${CYAN}🚦 Running AI Gate Check...${NC}"
+UPDATE_EVIDENCE_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh"
+if [[ ! -x "$UPDATE_EVIDENCE_SCRIPT" ]]; then
+  # Try node_modules path
+  UPDATE_EVIDENCE_SCRIPT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh"
+fi
+if [[ -x "$UPDATE_EVIDENCE_SCRIPT" ]]; then
+  # Update evidence and run audit to get ai_gate (don't use --refresh-only, we need audit)
+  if "$UPDATE_EVIDENCE_SCRIPT" --auto >/dev/null 2>&1; then
+    # Read gate status from evidence
+    if [[ -f "$EVIDENCE_FILE" ]]; then
+      GATE_STATUS=$(jq -r '.ai_gate.status // "UNKNOWN"' "$EVIDENCE_FILE" 2>/dev/null || echo "UNKNOWN")
+      CRITICAL_COUNT=$(jq -r '[.ai_gate.violations[]? | select(.severity == "CRITICAL")] | length' "$EVIDENCE_FILE" 2>/dev/null || echo "0")
+      HIGH_COUNT=$(jq -r '[.ai_gate.violations[]? | select(.severity == "HIGH")] | length' "$EVIDENCE_FILE" 2>/dev/null || echo "0")
+      
+      if [[ "$GATE_STATUS" == "BLOCKED" ]]; then
+        TOTAL_BLOCKING=$((CRITICAL_COUNT + HIGH_COUNT))
+        if [[ $TOTAL_BLOCKING -gt 0 ]]; then
+          echo -e "${RED}   🚫 BLOCKED: ${TOTAL_BLOCKING} blocking violations (${CRITICAL_COUNT} CRITICAL, ${HIGH_COUNT} HIGH)${NC}"
+          osascript -e "display notification \"${TOTAL_BLOCKING} blocking violations detected\" with title \"🚫 AI Gate Blocked\" sound name \"Basso\"" 2>/dev/null || true
+        else
+          echo -e "${GREEN}   ✅ Gate passed${NC}"
+        fi
+      else
+        echo -e "${GREEN}   ✅ Gate passed${NC}"
+      fi
+    fi
+  else
+    echo -e "${YELLOW}   ⚠️  Gate check failed${NC}"
+  fi
+else
+  echo -e "${YELLOW}   ⚠️  Update script not found${NC}"
+fi
+echo ""
 
 # Start realtime guards (watch-hooks + token monitor)
 GUARDS_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/start-guards.sh"

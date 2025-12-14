@@ -31,6 +31,36 @@ const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
 const GITFLOW_STATE_FILE = path.join(REPO_ROOT, '.git', 'gitflow-state.json');
 const MAX_EVIDENCE_AGE = 180; // 3 minutes in seconds
 
+// Detect library installation path dynamically
+function getLibraryInstallPath() {
+    const scriptPath = __filename; // Current file path
+    const repoRoot = REPO_ROOT;
+    
+    // Try to find library path relative to repo root
+    if (scriptPath.includes('node_modules/@pumuki/ast-intelligence-hooks')) {
+        return 'node_modules/@pumuki/ast-intelligence-hooks';
+    }
+    if (scriptPath.includes('scripts/hooks-system')) {
+        return 'scripts/hooks-system';
+    }
+    // If script is in repo root, try to detect from package.json
+    try {
+        const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
+        const libPath = packageJson.devDependencies?.['@pumuki/ast-intelligence-hooks'] || 
+                       packageJson.dependencies?.['@pumuki/ast-intelligence-hooks'];
+        if (libPath && libPath.startsWith('file:')) {
+            // Local file path, extract relative path
+            const relativePath = libPath.replace('file:', '').replace(/^\.\.\//, '');
+            if (fs.existsSync(path.join(repoRoot, relativePath))) {
+                return relativePath;
+            }
+        }
+    } catch (e) {
+        // Ignore errors
+    }
+    return null; // Not found, will use generic exclusions
+}
+
 const contextEngine = new ContextDetectionEngine(REPO_ROOT);
 const orchestrator = new AutonomousOrchestrator(contextEngine, null, null);
 const notificationAdapter = new MacOSNotificationAdapter();
@@ -41,11 +71,11 @@ let lastContext = null;
 let lastEvidenceNotification = 0;
 let lastGitFlowNotification = 0;
 let lastAutoCommitTime = 0;
-const NOTIFICATION_COOLDOWN = 120000; // 2 minutes between same type notifications
-const AUTO_COMMIT_INTERVAL = 300000; // 5 minutes between auto-commits
-const AUTO_COMMIT_ENABLED = process.env.AUTO_COMMIT_ENABLED !== 'false'; // Enable by default
-const AUTO_PUSH_ENABLED = process.env.AUTO_PUSH_ENABLED !== 'false'; // Enable by default
-const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true'; // Disabled by default
+const NOTIFICATION_COOLDOWN = 120000;
+const AUTO_COMMIT_INTERVAL = 300000; 
+const AUTO_COMMIT_ENABLED = process.env.AUTO_COMMIT_ENABLED === 'true'; 
+const AUTO_PUSH_ENABLED = process.env.AUTO_PUSH_ENABLED !== 'false'; 
+const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true'; 
 
 /**
  * Helper: Send macOS notification via centralized adapter
@@ -514,9 +544,7 @@ function aiGateCheck() {
     }
 
     if (isProtectedBranch) {
-        } else {
             warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
-        }
     }
 
     const stagedFiles = exec('git diff --cached --name-only');
@@ -1190,8 +1218,11 @@ setInterval(async () => {
     }
 }, 30000);
 
+// AUTO-COMMIT: Solo para cambios de código del proyecto (no node_modules, no librería)
 setInterval(async () => {
-    if (!AUTO_COMMIT_ENABLED) return;
+    if (!AUTO_COMMIT_ENABLED) {
+        return;
+    }
 
     const now = Date.now();
     if (now - lastAutoCommitTime < AUTO_COMMIT_INTERVAL) return;
@@ -1204,14 +1235,57 @@ setInterval(async () => {
             return;
         }
 
+        // Obtener solo cambios de código del proyecto (excluir node_modules, librería, etc.)
         const uncommittedChanges = exec('git status --porcelain');
         if (!uncommittedChanges || uncommittedChanges.length === 0) {
             return; // Nothing to commit
         }
 
-        const changedFiles = uncommittedChanges.split('\n').filter(l => l.trim()).length;
+        // Detectar ruta de instalación de la librería dinámicamente
+        const libraryPath = getLibraryInstallPath();
+        
+        // Filtrar cambios: solo código del proyecto, excluir node_modules, package-lock, librería, etc.
+        const projectChanges = uncommittedChanges
+            .split('\n')
+            .filter(line => {
+                const file = line.trim().substring(3); // Remover status (ej: " M ")
+                if (!file) return false;
+                
+                // Excluir siempre: node_modules, package-lock, .git, configs IDE
+                if (file.startsWith('node_modules/') ||
+                    file.includes('package-lock.json') ||
+                    file.startsWith('.git/') ||
+                    file.startsWith('.cursor/') ||
+                    file.startsWith('.claude/') ||
+                    file.startsWith('.vscode/') ||
+                    file.startsWith('.idea/')) {
+                    return false;
+                }
+                
+                // Excluir ruta de instalación de la librería (si se detectó)
+                if (libraryPath && file.startsWith(libraryPath + '/')) {
+                    return false;
+                }
+                
+                // Solo incluir archivos de código/documentación
+                return file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || 
+                       file.endsWith('.jsx') || file.endsWith('.swift') || file.endsWith('.kt') ||
+                       file.endsWith('.py') || file.endsWith('.java') || file.endsWith('.go') ||
+                       file.endsWith('.rs') || file.endsWith('.md') || file.endsWith('.json') ||
+                       file.endsWith('.yaml') || file.endsWith('.yml');
+            });
 
-        exec('git add -A');
+        if (projectChanges.length === 0) {
+            return; // No hay cambios de código del proyecto
+        }
+
+        const changedFiles = projectChanges.length;
+
+        // Solo añadir los archivos de código del proyecto
+        projectChanges.forEach(line => {
+            const file = line.trim().substring(3);
+            exec(`git add "${file}"`);
+        });
 
         const branchType = currentBranch.split('/')[0];
         const branchName = currentBranch.split('/').slice(1).join('/');
@@ -1228,9 +1302,19 @@ setInterval(async () => {
         lastAutoCommitTime = now;
 
         if (AUTO_PUSH_ENABLED) {
-            const pushResult = exec(`git push -u origin ${currentBranch}`);
+            // Check if remote is configured before attempting push
+            const remoteCheck = exec('git remote get-url origin 2>/dev/null');
+            if (typeof remoteCheck === 'object' && remoteCheck.error) {
+                // No remote configured, skip auto-push silently
+                return;
+            }
+            const pushResult = exec(`git push -u origin ${currentBranch} 2>&1`);
             if (typeof pushResult === 'object' && pushResult.error) {
-                sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
+                // Only notify if it's a real error (not just no remote)
+                const errorMsg = pushResult.error.toString();
+                if (!errorMsg.includes('No remote') && !errorMsg.includes('remote not found')) {
+                    sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
+                }
             } else {
                 sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
 
@@ -1248,5 +1332,6 @@ setInterval(async () => {
         }
 
     } catch (error) {
+        console.error('[MCP] Auto-commit error:', error);
     }
-}, 60000); // Check every minute, but only act every 5 minutes
+}, AUTO_COMMIT_INTERVAL);

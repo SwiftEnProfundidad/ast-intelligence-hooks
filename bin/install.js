@@ -598,19 +598,28 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
   if [ $EXIT_CODE -ne 0 ]; then
     exit $EXIT_CODE
   fi
-  # Check for critical/high violations
   if echo "$OUTPUT" | grep -qE "CRITICAL|HIGH"; then
     echo ""
-    echo "❌ Commit blocked: Critical or High violations detected"
+    echo "❌ Commit blocked: Critical or High violations detected in staged files"
     
-    # Count violations for notification
-    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL" | wc -l | tr -d ' ')
-    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH" | wc -l | tr -d ' ')
+    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\\[CRITICAL\\]" | wc -l | tr -d ' ')
+    if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+    fi
+    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\\[HIGH\\]" | wc -l | tr -d ' ')
+    if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+      HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+    fi
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
-    # Send macOS notification
     if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
-      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      if [[ $CRITICAL_COUNT -gt 0 ]] && [[ $HIGH_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$TOTAL_VIOLATIONS violations ($CRITICAL_COUNT CRITICAL, $HIGH_COUNT HIGH) block commit"
+      elif [[ $CRITICAL_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$CRITICAL_COUNT CRITICAL violations block commit"
+      else
+        NOTIF_MSG="$HIGH_COUNT HIGH violations block commit"
+      fi
       osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
     fi
     
@@ -630,16 +639,26 @@ if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence
   fi
   if echo "$OUTPUT" | grep -qE "CRITICAL|HIGH"; then
     echo ""
-    echo "❌ Commit blocked: Critical or High violations detected"
+    echo "❌ Commit blocked: Critical or High violations detected in staged files"
     
-    # Count violations for notification
-    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL" | wc -l | tr -d ' ')
-    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH" | wc -l | tr -d ' ')
+    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\\[CRITICAL\\]" | wc -l | tr -d ' ')
+    if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+    fi
+    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\\[HIGH\\]" | wc -l | tr -d ' ')
+    if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+      HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+    fi
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
-    # Send macOS notification
     if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
-      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      if [[ $CRITICAL_COUNT -gt 0 ]] && [[ $HIGH_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$TOTAL_VIOLATIONS violations ($CRITICAL_COUNT CRITICAL, $HIGH_COUNT HIGH) block commit"
+      elif [[ $CRITICAL_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$CRITICAL_COUNT CRITICAL violations block commit"
+      else
+        NOTIF_MSG="$HIGH_COUNT HIGH violations block commit"
+      fi
       osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
     fi
     
