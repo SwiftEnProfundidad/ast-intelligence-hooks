@@ -63,7 +63,8 @@ This library was conceived to solve this fundamental problem by creating a **per
 
 3. **Rules are automatically loaded**:
    - `DynamicRulesLoader` scans `.cursor/rules/` for platform-specific rules
-   - Loads `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`, `rulesgold.mdc`
+   - **Always loads `rulesgold.mdc` first** (generic rules that apply to all projects)
+   - Then loads platform-specific rules: `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`
    - Aggregates all 798+ validation rules into a single context
    - Creates `auto-context.mdc` with all active rules
 
@@ -74,19 +75,61 @@ This library was conceived to solve this fundamental problem by creating a **per
      "session_id": "feature/user-authentication",
      "protocol_3_questions": {
        "answered": true,
-       "question_1_file_type": "...",
-       "question_2_similar_exists": "...",
-       "question_3_clean_architecture": "..."
+       "question_1_file_type": "Code task on branch 'feature/auth'. Modifying typescript, kotlin in: auth, users. Target layer: Domain.",
+       "question_2_similar_exists": "Modules affected: auth, users. Recent commits: abc123 feat: Add JWT validation. Check for existing patterns before adding new code.",
+       "question_3_clean_architecture": "Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."
      },
      "rules_read": [
-       { "file": "rulesbackend.mdc", "verified": true, "summary": "..." },
-       { "file": "rulesgold.mdc", "verified": true, "summary": "..." }
+       { "file": "rulesgold.mdc", "verified": true, "summary": "IDE Rules: ### ANTES de implementar CUALQUIER cosa (aplicables en todas las tecnologías):;### Reglas de Arquitectura:;### Seguridad y Validación:;### Performance y Escalabilidad:;### Testing y Calidad:;### Observabilidad y Debugging:;### Arquitectura y Diseño:;### Control de Versiones y Colaboración:;### i18n y Accesibilidad:;### Error Handling:; | AST: Files: 96, Rules: types.any,debug.console,security.secret,security.sql.raw,performance.pagination,performance.nplus1,architecture.layering,ios.force_unwrapping" },
+       { "file": "rulesbackend.mdc", "verified": true, "summary": "IDE Rules: ### NestJS Architecture:;### Repository Pattern:;### Use Cases Pattern:;### DTOs y Validación:;### Database y ORM:;### Autenticación y Autorización:;### Event-Driven Architecture:;### Caché (Redis):;### Logging y Observabilidad:;### Testing Backend:;### Error Handling:;### Seguridad:;### Performance:;### API Design:;### Configuración:;### Documentación:; | AST: Files: 16, Rules: backend.error_handling.untyped_catch,backend.security.pii_in_logs,backend.performance.nplus1" },
+       { "file": "rulesios.mdc", "verified": true, "summary": "IDE Rules: ### Swift Moderno:;### SwiftUI (Preferido):;### UIKit (Legacy/Necesario):;### Protocol-Oriented Programming:;### Value Types:;### Memory Management:;### Optionals:;### Clean Architecture en iOS:;### Dependency Injection:;### Networking:;### Persistence:;### Combine (Reactive):;### Concurrency:;### Testing:;### Security:;### Accessibility:;### Localization:; | AST: Files: 24, Rules: ios.force_unwrapping,ios.singleton,ios.massive_view_controller" }
      ],
      "current_context": {
        "branch": "feature/user-authentication",
        "last_commits": "abc123 feat: Add JWT validation"
      },
-     "platforms": ["backend", "ios"]
+     "platforms": ["backend", "ios"],
+     "ai_gate": {
+       "status": "BLOCKED",
+       "last_check": "2025-12-13T23:16:39.736Z",
+       "violations": [
+         {
+           "file": "/path/to/project/src/auth/user.service.ts",
+           "line": 45,
+           "severity": "HIGH",
+           "rule": "backend.error_handling.untyped_catch",
+           "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
+           "category": "Error Handling",
+           "intelligent_evaluation": false,
+           "severity_score": 50
+         },
+         {
+           "file": "/path/to/project/src/auth/auth.controller.ts",
+           "line": 12,
+           "severity": "CRITICAL",
+           "rule": "backend.security.pii_in_logs",
+           "message": "🚨 CRITICAL: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don't include sensitive fields. GDPR violation risk.",
+           "category": "Security",
+           "intelligent_evaluation": true,
+           "severity_score": 100
+         }
+       ],
+       "instruction": "🚨 AI MUST call mcp6_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
+       "mandatory": true
+     },
+     "severity_metrics": {
+       "last_updated": "2025-12-13T23:16:39.726Z",
+       "total_violations": 2,
+       "by_severity": {
+         "CRITICAL": 1,
+         "HIGH": 1,
+         "MEDIUM": 0,
+         "LOW": 0
+       },
+       "average_severity_score": 75,
+       "gate_status": "FAILED",
+       "blocked_by": "CRITICAL"
+     }
    }
    ```
 
@@ -111,7 +154,10 @@ This library was conceived to solve this fundamental problem by creating a **per
    - Polls `.AI_EVIDENCE.json` every 30 seconds
    - Detects staleness (>60 seconds)
    - **Auto-refreshes** evidence if stale (when `HOOK_GUARD_AUTO_REFRESH=true`)
-   - Monitors Git tree state (prevents >100 uncommitted files)
+   - Monitors Git tree state with differentiated thresholds:
+     - **Staged files**: Warning at >10 files (configurable via `HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT`)
+     - **Unstaged files**: Warning at >15 files (configurable via `HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT`)
+     - **Total files**: Warning at >20 files (configurable via `HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT`)
    - Sends macOS notifications for critical events
 
 3. **Automatic Rule Updates**:
