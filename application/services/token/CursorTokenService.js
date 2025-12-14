@@ -71,7 +71,7 @@ class CursorTokenService {
     async fetchFromFile() {
         try {
             await fs.promises.access(this.usageFile, fs.constants.F_OK);
-        } catch (_) {
+        } catch (error) {
             return null;
         }
 

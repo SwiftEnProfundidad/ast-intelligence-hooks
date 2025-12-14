@@ -1,12 +1,12 @@
 {
   "totals": {
-    "errors": 109,
+    "errors": 107,
     "warnings": 13,
     "infos": 115
   },
   "levels": {
     "CRITICAL": 7,
-    "HIGH": 102,
+    "HIGH": 100,
     "MEDIUM": 13,
     "LOW": 115
   },
@@ -15,12 +15,12 @@
     "Frontend": 7,
     "iOS": 18,
     "Android": 42,
-    "Other": 73
+    "Other": 71
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
     "workflow.sequence.missing_bdd_specs": 1,
-    "common.quality.comments": 78,
+    "common.quality.comments": 76,
     "common.types.any": 1,
     "common.quality.disabled_lint": 3,
     "common.debug.console": 3,
@@ -74,13 +74,13 @@
   "platformDetails": {
     "Other": {
       "CRITICAL": 2,
-      "HIGH": 60,
+      "HIGH": 58,
       "MEDIUM": 8,
       "LOW": 3,
       "rules": {
         "workflow.sequence.tests_lagging": 1,
         "workflow.sequence.missing_bdd_specs": 1,
-        "common.quality.comments": 48,
+        "common.quality.comments": 46,
         "common.types.any": 1,
         "common.quality.disabled_lint": 3,
         "common.debug.console": 3,
@@ -123,11 +123,9 @@
         "infrastructure/external-tools/GitOperations.js",
         "infrastructure/mcp/gitflow-automation-watcher.js",
         "infrastructure/reporting/report-generator.js",
-        "infrastructure/reporting/severity-tracker.js",
         "infrastructure/repositories/FileFindingsRepository.js",
         "infrastructure/severity/severity-evaluator.js",
         "infrastructure/utils/token-manager.js",
-        "application/services/guard/GuardAutoManagerService.js",
         "application/services/notification/NotificationCenterService.js",
         "application/services/recovery/AutoRecoveryManager.js",
         "application/services/token/CursorTokenService.js",
@@ -306,11 +304,11 @@
       ]
     },
     "common.quality.comments": {
-      "count": 78,
+      "count": 76,
       "level": "HIGH",
       "severity": "HIGH",
       "platforms": {
-        "Other": 48,
+        "Other": 46,
         "Android": 7,
         "Backend": 7,
         "Frontend": 6,
@@ -343,11 +341,9 @@
         "infrastructure/cache/CacheService.ts",
         "infrastructure/external-tools/GitOperations.js",
         "infrastructure/reporting/report-generator.js",
-        "infrastructure/reporting/severity-tracker.js",
         "infrastructure/repositories/FileFindingsRepository.js",
         "infrastructure/severity/severity-evaluator.js",
         "infrastructure/utils/token-manager.js",
-        "application/services/guard/GuardAutoManagerService.js",
         "application/services/notification/NotificationCenterService.js",
         "application/services/recovery/AutoRecoveryManager.js",
         "application/services/token/CursorTokenService.js",
@@ -1357,18 +1353,6 @@
         "LOW": 0
       }
     },
-    "infrastructure/reporting/severity-tracker.js": {
-      "platform": "Other",
-      "rules": {
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "infrastructure/repositories/FileFindingsRepository.js": {
       "platform": "Other",
       "rules": {
@@ -1394,18 +1378,6 @@
       }
     },
     "infrastructure/utils/token-manager.js": {
-      "platform": "Other",
-      "rules": {
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "application/services/guard/GuardAutoManagerService.js": {
       "platform": "Other",
       "rules": {
         "common.quality.comments": 1
@@ -2449,7 +2421,7 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/PlatformDetectionService.js",
-      "line": 5,
+      "line": 4,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -2494,7 +2466,7 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/use-cases/GenerateAuditReportUseCase.js",
-      "line": 5,
+      "line": 2,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -2601,15 +2573,6 @@
     {
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/reporting/severity-tracker.js",
-      "line": 4,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/repositories/FileFindingsRepository.js",
       "line": 5,
       "column": 1,
@@ -2630,15 +2593,6 @@
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/utils/token-manager.js",
       "line": 4,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/guard/GuardAutoManagerService.js",
-      "line": 1,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -2863,7 +2817,7 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/analyzers/maintainability-analyzer.js",
-      "line": 4,
+      "line": 2,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -2881,7 +2835,7 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/analyzers/security-analyzer.js",
-      "line": 4,
+      "line": 2,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -4484,7 +4438,7 @@
   ],
   "metadata": {
     "totalFiles": 287,
-    "timestamp": "2025-12-14T00:27:31.083Z",
+    "timestamp": "2025-12-14T00:37:18.376Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }

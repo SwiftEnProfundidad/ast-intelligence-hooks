@@ -67,7 +67,7 @@ class iOSASTIntelligentAnalyzer {
           line: v.line, column: v.column, message: v.message
         });
       }
-    } catch { }
+    } catch (error) { }
   }
 
   parseFile(filePath) {

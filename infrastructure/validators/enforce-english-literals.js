@@ -21,7 +21,7 @@ function decodeUnicode(value) {
     }
     try {
         return JSON.parse(`"${value}"`);
-    } catch (_) {
+    } catch (error) {
         return value;
     }
 }

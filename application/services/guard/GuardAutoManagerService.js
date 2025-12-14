@@ -185,8 +185,8 @@ class GuardAutoManagerService {
     releaseLock() {
         try {
             this.fs.rmdirSync(this.lockDir);
-        } catch (_) {
-            /* ignore */
+        } catch (error) {
+            this.logger.warn(`Error releasing lock: ${error.message}`);
         }
     }
 
@@ -197,8 +197,8 @@ class GuardAutoManagerService {
     removePidFile() {
         try {
             this.fs.unlinkSync(this.pidFile);
-        } catch (_) {
-            /* ignore */
+        } catch (error) {
+            this.logger.warn(`Error removing PID file: ${error.message}`);
         }
     }
 

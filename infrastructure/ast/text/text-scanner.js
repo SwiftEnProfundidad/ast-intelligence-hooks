@@ -49,7 +49,7 @@ function runTextScanner(root, findings) {
     const ext = path.extname(file).toLowerCase();
     if (!['.kt', '.kts', '.swift', '.java', '.xml', '.plist', '.stringsdict', '.yml', '.yaml'].includes(ext)) continue;
     let content = '';
-    try { content = fs.readFileSync(file, 'utf-8'); } catch (_) { continue; }
+    try { content = fs.readFileSync(file, 'utf-8'); } catch (error) { continue; }
     const plat = platformOf(file) || (ext === '.swift' ? 'ios' : (ext === '.kt' || ext === '.kts' || ext === '.java' || ext === '.xml') ? 'android' : (ext === '.plist' && path.basename(file).toLowerCase().includes('info')) ? 'ios' : (ext === '.stringsdict' ? 'ios' : (ext === '.yml' || ext === '.yaml') ? 'ios' : 'other'));
 
     if (plat === 'android') {
@@ -835,7 +835,7 @@ function runTextScanner(root, findings) {
     // Concatenate all Kotlin content for global checks
     const kotlinFiles = files.filter(f => f.endsWith('.kt'));
     const allContent = kotlinFiles.map(f => {
-      try { return fs.readFileSync(f, 'utf8'); } catch { return ''; }
+      try { return fs.readFileSync(f, 'utf8'); } catch (error) { return ''; }
     }).join('\n');
 
     // 1. @Stable/@Immutable annotations

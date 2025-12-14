@@ -253,7 +253,7 @@ function checkForMigrations(root) {
     if (!fs.existsSync(migDir)) return false;
     const entries = fs.readdirSync(migDir);
     return entries.some((n) => /\.sql$/i.test(n));
-  } catch (_) {
+  } catch (error) {
     return false;
   }
 }

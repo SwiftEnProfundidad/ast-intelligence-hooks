@@ -78,8 +78,8 @@ function shutdown() {
   watchers.forEach(w => {
     try {
       w.close();
-    } catch (_) {
-      /* ignore */
+    } catch (error) {
+      log(`Error closing watcher: ${error.message}`);
     }
   });
 }
