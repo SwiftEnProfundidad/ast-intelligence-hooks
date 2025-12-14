@@ -178,7 +178,11 @@ describe('RealtimeGuardService - Critical Methods', () => {
       const service = makeSUT();
       const resolveSpy = jest.spyOn(service, 'resolveDirtyTree');
       await service.evaluateGitTree();
-      expect(resolveSpy).toHaveBeenCalledWith(cleanState, service.gitTreeThreshold);
+      expect(resolveSpy).toHaveBeenCalledWith(cleanState, {
+        stagedLimit: service.gitTreeStagedThreshold,
+        unstagedLimit: service.gitTreeUnstagedThreshold,
+        totalLimit: service.gitTreeTotalThreshold
+      });
     });
 
     it('should handle dirty git tree beyond limit', async () => {
@@ -192,7 +196,11 @@ describe('RealtimeGuardService - Critical Methods', () => {
       const service = makeSUT();
       const handleSpy = jest.spyOn(service, 'handleDirtyTree');
       await service.evaluateGitTree();
-      expect(handleSpy).toHaveBeenCalledWith(dirtyState, service.gitTreeThreshold);
+      expect(handleSpy).toHaveBeenCalledWith(dirtyState, {
+        stagedLimit: service.gitTreeStagedThreshold,
+        unstagedLimit: service.gitTreeUnstagedThreshold,
+        totalLimit: service.gitTreeTotalThreshold
+      });
     });
 
     it.skip('should use intelligent monitor for large trees', async () => {
@@ -332,7 +340,9 @@ describe('RealtimeGuardService - Critical Methods', () => {
   describe('startGitTreeMonitoring', () => {
     it('should start monitoring when threshold is valid', () => {
       const service = makeSUT();
-      service.gitTreeThreshold = 100;
+      service.gitTreeStagedThreshold = 10;
+      service.gitTreeUnstagedThreshold = 15;
+      service.gitTreeTotalThreshold = 20;
       service.gitTreeCheckIntervalMs = 60000;
       const evaluateSpy = jest.spyOn(service, 'evaluateGitTree').mockResolvedValue();
       service.startGitTreeMonitoring();
@@ -342,14 +352,18 @@ describe('RealtimeGuardService - Critical Methods', () => {
 
     it('should not start when threshold is invalid', () => {
       const service = makeSUT();
-      service.gitTreeThreshold = 0;
+      service.gitTreeStagedThreshold = 0;
+      service.gitTreeUnstagedThreshold = 0;
+      service.gitTreeTotalThreshold = 0;
       service.startGitTreeMonitoring();
       expect(service.gitTreeTimer).toBeNull();
     });
 
     it('should not start when interval is zero', () => {
       const service = makeSUT();
-      service.gitTreeThreshold = 100;
+      service.gitTreeStagedThreshold = 10;
+      service.gitTreeUnstagedThreshold = 15;
+      service.gitTreeTotalThreshold = 20;
       service.gitTreeCheckIntervalMs = 0;
       service.startGitTreeMonitoring();
       expect(service.gitTreeTimer).toBeNull();
