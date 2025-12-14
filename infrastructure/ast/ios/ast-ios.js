@@ -41,6 +41,7 @@ async function runIOSIntelligence(project, findings, platform) {
   await runSwiftLintNative(findings);
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
 
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;

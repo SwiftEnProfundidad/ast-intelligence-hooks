@@ -52,6 +52,7 @@ function runBackendIntelligence(project, findings, platform) {
   });
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
 
     if (platformOf(filePath) !== "backend") return;
