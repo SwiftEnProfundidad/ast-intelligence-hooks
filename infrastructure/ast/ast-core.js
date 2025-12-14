@@ -348,6 +348,7 @@ function createProject(files) {
       } catch (error) {
         if (process.env.DEBUG) {
           console.debug(`[createProject] Failed to add file ${file}: ${error.message}`);
+        }
       }
     }
   }
