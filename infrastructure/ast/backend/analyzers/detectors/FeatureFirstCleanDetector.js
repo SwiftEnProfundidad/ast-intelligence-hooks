@@ -5,7 +5,7 @@ class FeatureFirstCleanDetector extends BackendPatternDetector {
     let score = 0;
 
     const hasFeaturesFolders = files.some(f =>
-      /\/features?\/\w+\/(domain|application|infrastructure|presentation)\
+      /\/features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
     );
 
     const cleanArchFolders = ['domain', 'application', 'infrastructure', 'presentation'];
