@@ -29,34 +29,30 @@ class NotificationCenterService {
     this.processing = false;
     this.maxQueueSize = config.maxQueueSize || 100;
 
-    // Deduplicación
     this.deduplicationMap = new Map();
-    this.deduplicationWindowMs = config.deduplicationWindowMs || 5000; // 5 segundos
+    this.deduplicationWindowMs = config.deduplicationWindowMs || 5000;
 
-    // Cooldowns por tipo de notificación
-    this.cooldowns = new Map(); // tipo -> lastSent timestamp
-    this.defaultCooldownMs = config.defaultCooldownMs || 60000; // 1 minuto
+    this.cooldowns = new Map();
+    this.defaultCooldownMs = config.defaultCooldownMs || 60000;
     this.cooldownsByType = {
-      evidence_stale: config.evidenceCooldownMs || 120000,      // 2 minutos
-      evidence_ok: config.evidenceOkCooldownMs || 300000,       // 5 minutos
-      token_warning: config.tokenWarningCooldownMs || 180000,   // 3 minutos
-      token_critical: config.tokenCriticalCooldownMs || 120000, // 2 minutos
-      token_ok: config.tokenOkCooldownMs || 300000,             // 5 minutos
-      dirty_tree_warning: config.dirtyTreeWarningMs || 600000,  // 10 minutos
-      dirty_tree_critical: config.dirtyTreeCriticalMs || 300000,// 5 minutos
-      heartbeat_degraded: config.heartbeatDegradedMs || 180000, // 3 minutos
-      heartbeat_ok: config.heartbeatOkMs || 600000,             // 10 minutos
-      guard_supervisor: config.guardSupervisorMs || 900000      // 15 minutos
+      evidence_stale: config.evidenceCooldownMs || 120000,
+      evidence_ok: config.evidenceOkCooldownMs || 300000,
+      token_warning: config.tokenWarningCooldownMs || 180000,
+      token_critical: config.tokenCriticalCooldownMs || 120000,
+      token_ok: config.tokenOkCooldownMs || 300000,
+      dirty_tree_warning: config.dirtyTreeWarningMs || 600000,
+      dirty_tree_critical: config.dirtyTreeCriticalMs || 300000,
+      heartbeat_degraded: config.heartbeatDegradedMs || 180000,
+      heartbeat_ok: config.heartbeatOkMs || 600000,
+      guard_supervisor: config.guardSupervisorMs || 900000
     };
 
-    // Configuración de envío
     this.terminalNotifierPath = this.resolveTerminalNotifier();
     this.osascriptPath = this.resolveOsascript();
     this.notificationTimeout = config.notificationTimeout || 8;
     this.maxRetries = config.maxRetries || 2;
     this.retryDelayMs = config.retryDelayMs || 1000;
 
-    // Estadísticas
     this.stats = {
       totalEnqueued: 0,
       totalSent: 0,
@@ -66,7 +62,6 @@ class NotificationCenterService {
       totalRetries: 0
     };
 
-    // Auto-flush
     this.flushIntervalMs = config.flushIntervalMs || 1000;
     this.flushTimer = null;
 
@@ -122,7 +117,6 @@ class NotificationCenterService {
       retries: 0
     };
 
-    // Deduplicación
     if (this.isDuplicate(enriched)) {
       this.stats.totalDeduplicated++;
       this.log('debug', 'Notification deduplicated', {
@@ -132,7 +126,6 @@ class NotificationCenterService {
       return false;
     }
 
-    // Cooldown
     if (this.isInCooldown(enriched)) {
       this.stats.totalCooldownSkipped++;
       this.log('debug', 'Notification skipped (cooldown)', {
@@ -151,7 +144,6 @@ class NotificationCenterService {
       queueSize: this.queue.length
     });
 
-    // Auto-flush
     if (!this.processing && !this.flushTimer) {
       this.flushTimer = setTimeout(() => this.flush(), this.flushIntervalMs);
     }
@@ -175,14 +167,12 @@ class NotificationCenterService {
         return true;
       }
 
-      // Ventana expirada, renovar
       this.deduplicationMap.set(hash, { count: 1, firstSeen: now, lastSeen: now });
       return false;
     }
 
     this.deduplicationMap.set(hash, { count: 1, firstSeen: now, lastSeen: now });
 
-    // Limpieza periódica de hashes viejos
     this.cleanupDeduplicationMap(now);
 
     return false;
@@ -201,7 +191,7 @@ class NotificationCenterService {
    */
   cleanupDeduplicationMap(now) {
     if (this.deduplicationMap.size < 100) {
-      return; // No hace falta limpiar aún
+      return;
     }
 
     for (const [hash, data] of this.deduplicationMap.entries()) {
@@ -300,21 +290,18 @@ class NotificationCenterService {
   sendMacNotification(notification) {
     const { message, level } = notification;
 
-    // Intento 1: terminal-notifier (preferido)
     if (this.terminalNotifierPath) {
       if (this.sendWithTerminalNotifier(message, level)) {
         return true;
       }
     }
 
-    // Intento 2: osascript
     if (this.osascriptPath) {
       if (this.sendWithOsascript(message, level)) {
         return true;
       }
     }
 
-    // Sin herramientas disponibles
     this.log('warn', 'No notification tools available', { message });
     return false;
   }
@@ -471,7 +458,6 @@ class NotificationCenterService {
       this.flushTimer = null;
     }
 
-    // Flush final
     if (this.queue.length > 0) {
       this.flush();
     }

@@ -1,5 +1,3 @@
-// ===== CONTEXT BUILDER =====
-// Builds execution context for violations using AST, Git, and dependency analysis
 
 const { execSync } = require('child_process');
 const path = require('path');
@@ -15,45 +13,37 @@ class ContextBuilder {
     const filePath = violation.filePath || '';
 
     return {
-      // Execution context
       isMainThread: this.detectMainThread(violation, filePath),
       isProductionCode: this.isProductionCode(filePath),
       isTestCode: this.isTestCode(filePath),
       layer: this.detectLayer(filePath),
 
-      // Usage patterns
       callFrequency: this.estimateCallFrequency(violation, filePath),
       userFacing: this.isUserFacing(filePath),
       criticalPath: this.isCriticalPath(violation, filePath),
       inHotPath: this.isHotPath(filePath),
 
-      // Error handling
       hasErrorBoundary: this.hasErrorBoundary(violation, filePath),
       hasFallback: this.hasFallback(violation, filePath),
       hasRetryLogic: this.hasRetryLogic(filePath),
 
-      // Dependencies
       dependencyCount: this.countDependents(filePath),
       isPublicAPI: this.isPublicAPI(filePath),
       isSharedKernel: this.isSharedKernel(filePath),
 
-      // Data sensitivity
       handlesCredentials: this.handlesCredentials(filePath),
       handlesPII: this.handlesPII(filePath),
       handlesPayments: this.handlesPayments(filePath),
       userGeneratedContent: this.handlesUserContent(filePath),
 
-      // State management
       isSharedState: this.isSharedState(violation, filePath),
       isMultiStepOperation: this.isMultiStepOperation(violation),
       valueCanBeNil: this.canBeNil(violation),
 
-      // Code characteristics
       hasBusinessLogic: this.hasBusinessLogic(filePath),
       dataSize: this.estimateDataSize(violation),
       listSize: this.estimateListSize(violation),
 
-      // Git metrics
       modificationFrequency: this.getModificationFrequency(filePath),
       lastModified: this.getLastModified(filePath)
     };
@@ -96,18 +86,16 @@ class ContextBuilder {
   }
 
   estimateCallFrequency(violation, filePath) {
-    // Heuristic based on file location and type
-    if (filePath.includes('/dashboard/') || filePath.includes('/home/')) return 5000;  // High traffic
+    if (filePath.includes('/dashboard/') || filePath.includes('/home/')) return 5000;
     if (filePath.includes('/payment/') || filePath.includes('/checkout/')) return 1000;
     if (filePath.includes('/admin/')) return 100;
     if (filePath.includes('/settings/')) return 50;
 
-    // Check if in hot path via git logs (frequently committed = actively used)
-    const commits = this.getCommitCount(filePath, 30);  // Last 30 days
+    const commits = this.getCommitCount(filePath, 30);
     if (commits > 10) return 2000;
     if (commits > 5) return 500;
 
-    return 100;  // Default
+    return 100;
   }
 
   isUserFacing(filePath) {
@@ -132,14 +120,12 @@ class ContextBuilder {
   }
 
   isHotPath(filePath) {
-    // Code executed in tight loops or very frequently
     return filePath.includes('/render/') ||
            filePath.includes('/animation/') ||
            filePath.includes('/scroll/');
   }
 
   hasErrorBoundary(violation, filePath) {
-    // Check if file/component has try-catch or error boundary
     if (!fs.existsSync(filePath)) return false;
 
     try {
@@ -160,8 +146,8 @@ class ContextBuilder {
       const content = fs.readFileSync(filePath, 'utf8');
       return content.includes('fallback') ||
              content.includes('default value') ||
-             content.includes('?? ') ||  // Nil coalescing
-             content.includes('|| ');   // Logical OR default
+             content.includes('?? ') ||
+             content.includes('|| ');
     } catch {
       return false;
     }
@@ -181,7 +167,6 @@ class ContextBuilder {
   }
 
   countDependents(filePath) {
-    // Use git grep to find imports of this file
     try {
       const fileName = path.basename(filePath, path.extname(filePath));
       const result = execSync(
@@ -195,7 +180,6 @@ class ContextBuilder {
   }
 
   isPublicAPI(filePath) {
-    // Check if file exports public interface
     if (!fs.existsSync(filePath)) return false;
 
     try {
@@ -301,7 +285,6 @@ class ContextBuilder {
   }
 
   getModificationFrequency(filePath) {
-    // Count commits touching this file in last 30 days
     return this.getCommitCount(filePath, 30);
   }
 

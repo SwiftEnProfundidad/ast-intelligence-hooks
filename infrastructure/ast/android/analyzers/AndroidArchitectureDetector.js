@@ -17,7 +17,7 @@ class AndroidArchitectureDetector {
   constructor(projectRoot) {
     this.projectRoot = projectRoot;
     this.patterns = {
-      featureFirstClean: 0,  // Feature-First + DDD + Clean Architecture
+      featureFirstClean: 0,
       mvvm: 0,
       mvi: 0,
       mvp: 0,
@@ -50,35 +50,27 @@ class AndroidArchitectureDetector {
    * @returns {string} Pattern name
    */
   detect() {
-    // If manual config exists, use it (has priority)
     if (this.manualConfig && this.manualConfig.architecturePattern) {
       const manualPattern = this.manualConfig.architecturePattern;
       console.log(`[Android Architecture] Using manual configuration: ${manualPattern}`);
       return manualPattern;
     }
 
-    // If no manual config, detect automatically
-    const kotlinFiles = glob.sync('**/*.kt', {
       cwd: this.projectRoot,
-      ignore: ['**/build/**', '**/.gradle/**', '**/node_modules/**']
     });
 
     if (kotlinFiles.length === 0) {
       return 'UNKNOWN';
     }
 
-    // Analyze files to detect patterns
-    // PRIORITY 1: Feature-First + DDD + Clean Architecture
     this.detectFeatureFirstClean(kotlinFiles);
 
-    // PRIORITY 2: Other patterns
     this.detectMVVM(kotlinFiles);
     this.detectMVI(kotlinFiles);
     this.detectMVP(kotlinFiles);
     this.detectCleanArchitecture(kotlinFiles);
     this.detectMVC(kotlinFiles);
 
-    // Determine dominant pattern
     return this.getDominantPattern();
   }
 
@@ -91,18 +83,15 @@ class AndroidArchitectureDetector {
    * - Presentation contains: ui/, viewmodels/, composables/
    */
   detectFeatureFirstClean(files) {
-    // Detect Feature-First folder structure
     const hasFeaturesFolders = files.some(f =>
-      /\/features?\/\w+\/(domain|data|presentation)\//.test(f)
+      /\/features?\/\w+\/(domain|data|presentation)\
     );
 
-    // Detect Clean Architecture layers within features
     const cleanArchFolders = ['domain', 'data', 'presentation'];
     const foundCleanFolders = cleanArchFolders.filter(folder => {
       return files.some(f => f.includes(`/${folder}/`));
     });
 
-    // Detect DDD concepts
     const dddConcepts = files.filter(f =>
       f.includes('/entities/') ||
       f.includes('/usecases/') ||
@@ -112,7 +101,6 @@ class AndroidArchitectureDetector {
       f.includes('Repository.kt')
     );
 
-    // Scoring for Feature-First + Clean + DDD
     if (hasFeaturesFolders) {
       this.patterns.featureFirstClean += 10;
     }
@@ -125,10 +113,9 @@ class AndroidArchitectureDetector {
       this.patterns.featureFirstClean += dddConcepts.length * 2;
     }
 
-    // Detect feature names (bounded contexts)
     const featureNames = new Set();
     files.forEach(f => {
-      const match = f.match(/\/features?\/(\w+)\//);
+      const match = f.match(/\/features?\/(\w+)\
       if (match) {
         featureNames.add(match[1]);
       }
@@ -138,26 +125,21 @@ class AndroidArchitectureDetector {
       this.patterns.featureFirstClean += featureNames.size * 4;
     }
 
-    // Analyze file content for DDD validation
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // Detect Value Objects
       if (content.includes('data class ') && (content.includes('VO') || content.includes('ValueObject'))) {
         this.patterns.featureFirstClean += 2;
       }
 
-      // Detect Entities with behavior (not anemic)
       if (file.includes('Entity.kt') && content.includes('fun ')) {
         this.patterns.featureFirstClean += 2;
       }
 
-      // Detect Repository interfaces in domain
       if (file.includes('/domain/') && content.includes('interface ') && content.includes('Repository')) {
         this.patterns.featureFirstClean += 3;
       }
 
-      // Detect Use Cases in domain
       if (file.includes('/usecases/') || (file.includes('/domain/') && content.includes('UseCase'))) {
         this.patterns.featureFirstClean += 2;
       }
@@ -195,7 +177,6 @@ class AndroidArchitectureDetector {
       }
     });
 
-    // Detect ViewModel files
     const viewModelFiles = files.filter(f =>
       /ViewModel\.kt$/i.test(f)
     );
@@ -234,7 +215,6 @@ class AndroidArchitectureDetector {
       }
     });
 
-    // Detect MVI structure files
     const mviFiles = files.filter(f =>
       /(State|Intent|Effect)\.kt$/i.test(f) && f.includes('/ui/')
     );
@@ -270,7 +250,6 @@ class AndroidArchitectureDetector {
       }
     });
 
-    // Detect Presenter files
     const presenterFiles = files.filter(f =>
       /Presenter\.kt$/i.test(f)
     );
@@ -279,7 +258,6 @@ class AndroidArchitectureDetector {
       this.patterns.mvp += presenterFiles.length * 3;
     }
 
-    // Detect Contract files (MVP pattern)
     const contractFiles = files.filter(f =>
       /Contract\.kt$/i.test(f)
     );
@@ -297,7 +275,6 @@ class AndroidArchitectureDetector {
    * - Use cases in domain
    */
   detectCleanArchitecture(files) {
-    // Detect layer structure
     const hasDomain = files.some(f => f.includes('/domain/'));
     const hasData = files.some(f => f.includes('/data/'));
     const hasPresentation = files.some(f => f.includes('/presentation/') || f.includes('/ui/'));
@@ -306,7 +283,6 @@ class AndroidArchitectureDetector {
       this.patterns.cleanArchitecture += 10;
     }
 
-    // Detect Repository pattern (interface in domain, impl in data)
     const domainRepos = files.filter(f => 
       f.includes('/domain/') && f.includes('Repository') && fs.readFileSync(path.join(this.projectRoot, f), 'utf-8').includes('interface ')
     );
@@ -318,7 +294,6 @@ class AndroidArchitectureDetector {
       this.patterns.cleanArchitecture += (domainRepos.length + dataRepos.length) * 2;
     }
 
-    // Detect Use Cases
     const useCases = files.filter(f =>
       f.includes('/usecases/') || f.includes('UseCase.kt')
     );
@@ -339,13 +314,11 @@ class AndroidArchitectureDetector {
     files.forEach(file => {
       const content = this.readFile(file);
       
-      // Anti-pattern: Activity/Fragment with database access
       if ((file.includes('Activity.kt') || file.includes('Fragment.kt')) &&
           (content.includes('RoomDatabase') || content.includes('SQLiteDatabase'))) {
         this.patterns.mvc += 3;
       }
 
-      // Anti-pattern: Activity/Fragment with business logic
       if ((file.includes('Activity.kt') || file.includes('Fragment.kt')) &&
           content.match(/fun\s+(calculate|process|validate|transform)/)) {
         this.patterns.mvc += 2;

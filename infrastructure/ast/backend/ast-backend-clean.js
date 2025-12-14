@@ -1,9 +1,4 @@
-// ===== AST BACKEND MODULE - CLEAN VERSION =====
-// Backend-specific AST intelligence rules
-// Clean Architecture: Infrastructure Layer - Backend AST Analysis
 //
-// PHILOSOPHY: ESLint handles complexity/smells/security
-//             We handle: SOLID, Clean Architecture, DDD, Feature-First
 
 const path = require('path');
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf } = require(path.join(__dirname, '../ast-core'));
@@ -33,53 +28,32 @@ function runBackendIntelligence(project, findings, platform) {
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
-    // Skip if not Backend platform
     if (platformOf(filePath) !== "backend") return;
 
-    // Skip AST infrastructure files (avoid self-analysis)
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
-    if (/\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
+    if (/\/hooks-system\/infrastructure\/ast\
 
-    // =========================================================================
-    // SOLID PRINCIPLES - SUPER-INTELLIGENT ANALYSIS
-    // =========================================================================
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const className = cls.getName();
       if (!className) return;
 
-      // Skip test files and data structures
       if (/\.spec\.|\.test\./i.test(filePath)) return;
       if (/entity|model|schema|dto/i.test(className.toLowerCase())) return;
 
-      // Analyze all SOLID principles
       analyzeSRP(cls, sf, findings, pushFinding);
       analyzeOCP(cls, sf, findings, pushFinding);
       analyzeLSP(cls, sf, findings, pushFinding);
       analyzeDIP(cls, sf, findings, pushFinding);
     });
 
-    // ISP analysis at file level (interfaces)
     analyzeISP(sf, findings, pushFinding, project);
 
-    // =========================================================================
-    // CLEAN ARCHITECTURE ANALYSIS (from rulesbackend.mdc)
-    // =========================================================================
     analyzeCleanArchitecture(sf, findings, pushFinding);
 
-    // =========================================================================
-    // DDD PATTERNS ANALYSIS (from rulesbackend.mdc)
-    // =========================================================================
     analyzeDDD(sf, findings, pushFinding, project);
 
-    // =========================================================================
-    // FEATURE-FIRST ANALYSIS (from rulesbackend.mdc)
-    // =========================================================================
     analyzeFeatureFirst(sf, findings, pushFinding);
 
-    // =========================================================================
-    // FORBIDDEN LITERALS ANALYSIS (from rulesbackend.mdc)
-    // Detects: 'unknown', 'null', 'active', 'inactive', etc.
-    // =========================================================================
     analyzeForbiddenLiterals(sf, findings, pushFinding);
   });
 }

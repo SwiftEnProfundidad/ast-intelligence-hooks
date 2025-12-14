@@ -19,7 +19,7 @@ class iOSArchitectureDetector {
   constructor(projectRoot) {
     this.projectRoot = projectRoot;
     this.patterns = {
-      featureFirstClean: 0,  // ← PATRÓN PRINCIPAL (Feature-First + DDD + Clean Architecture)
+      featureFirstClean: 0,
       mvvm: 0,
       mvvmc: 0,
       mvp: 0,
@@ -54,28 +54,21 @@ class iOSArchitectureDetector {
    * @returns {string} Nombre del patrón detectado
    */
   detect() {
-    // Si hay configuración manual, usarla (tiene prioridad)
     if (this.manualConfig && this.manualConfig.architecturePattern) {
       const manualPattern = this.manualConfig.architecturePattern;
       console.log(`[iOS Architecture] Using manual configuration: ${manualPattern}`);
       return manualPattern;
     }
 
-    // Si no hay config manual, detectar automáticamente
-    const swiftFiles = glob.sync('**/*.swift', {
       cwd: this.projectRoot,
-      ignore: ['**/Pods/**', '**/Carthage/**', '**/Build/**', '**/.build/**', '**/DerivedData/**']
     });
 
     if (swiftFiles.length === 0) {
       return 'UNKNOWN';
     }
 
-    // Analizar archivos para detectar patrones
-    // PRIORIDAD 1: Feature-First + DDD + Clean Architecture (PATRÓN PRINCIPAL)
     this.detectFeatureFirstClean(swiftFiles);
 
-    // PRIORIDAD 2: Otros patrones
     this.detectTCA(swiftFiles);
     this.detectVIPER(swiftFiles);
     this.detectCleanSwift(swiftFiles);
@@ -84,7 +77,6 @@ class iOSArchitectureDetector {
     this.detectMVVM(swiftFiles);
     this.detectMVC(swiftFiles);
 
-    // Determinar patrón dominante
     return this.getDominantPattern();
   }
 
@@ -97,18 +89,15 @@ class iOSArchitectureDetector {
    * - Bounded Contexts por feature
    */
   detectFeatureFirstClean(files) {
-    // Detectar estructura de carpetas Feature-First
     const hasFeaturesFolders = files.some(f =>
-      /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
+      /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\
     );
 
-    // Detectar carpetas de Clean Architecture dentro de features
     const cleanArchFolders = ['domain', 'application', 'infrastructure', 'presentation'];
     const foundCleanFolders = cleanArchFolders.filter(folder => {
       return files.some(f => f.includes(`/${folder}/`));
     });
 
-    // Detectar conceptos DDD
     const dddConcepts = files.filter(f =>
       f.includes('/entities/') ||
       f.includes('/value-objects/') ||
@@ -118,9 +107,8 @@ class iOSArchitectureDetector {
       f.includes('UseCase.swift')
     );
 
-    // Scoring para Feature-First + Clean + DDD
     if (hasFeaturesFolders) {
-      this.patterns.featureFirstClean += 10; // Muy fuerte señal
+      this.patterns.featureFirstClean += 10;
     }
 
     if (foundCleanFolders.length >= 3) {
@@ -131,10 +119,9 @@ class iOSArchitectureDetector {
       this.patterns.featureFirstClean += dddConcepts.length * 2;
     }
 
-    // Detectar Bounded Contexts (features separadas)
     const featureNames = new Set();
     files.forEach(f => {
-      const match = f.match(/\/Features?\/(\w+)\//);
+      const match = f.match(/\/Features?\/(\w+)\
       if (match) {
         featureNames.add(match[1]);
       }
@@ -144,26 +131,21 @@ class iOSArchitectureDetector {
       this.patterns.featureFirstClean += featureNames.size * 4;
     }
 
-    // Analizar contenido de archivos para validar DDD
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // Detectar Value Objects
       if (content.includes('struct ') && content.includes('VO')) {
         this.patterns.featureFirstClean += 2;
       }
 
-      // Detectar Entities con comportamiento (no anémicas)
       if (file.includes('Entity.swift') && content.includes('func ')) {
         this.patterns.featureFirstClean += 2;
       }
 
-      // Detectar Repository interfaces en domain
       if (file.includes('/domain/') && content.includes('protocol ') && content.includes('Repository')) {
         this.patterns.featureFirstClean += 3;
       }
 
-      // Detectar Use Cases en application
       if (file.includes('/application/') && content.includes('UseCase')) {
         this.patterns.featureFirstClean += 2;
       }
@@ -218,7 +200,6 @@ class iOSArchitectureDetector {
       this.patterns.viper += viperFiles.length;
     }
 
-    // Buscar protocols VIPER
     files.forEach(file => {
       const content = this.readFile(file);
       const viperProtocols = [
@@ -237,7 +218,6 @@ class iOSArchitectureDetector {
       }
     });
 
-    // Buscar estructura de carpetas VIPER
     const viperFolders = ['View', 'Interactor', 'Presenter', 'Entity', 'Router'];
     const hasViperStructure = viperFolders.filter(folder => {
       const folderPath = path.join(this.projectRoot, folder);
@@ -296,16 +276,13 @@ class iOSArchitectureDetector {
     const interactorFiles = files.filter(f => /Interactor\.swift$/.test(f));
     const routerFiles = files.filter(f => /Router\.swift$/.test(f));
 
-    // Si hay Presenters pero NO hay Interactors ni Routers, es MVP
     if (presenterFiles.length >= 2 && interactorFiles.length === 0 && routerFiles.length === 0) {
       this.patterns.mvp += presenterFiles.length * 3;
     }
 
-    // Buscar protocols MVP
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // MVP usa ViewProtocol y PresenterProtocol pero no InteractorProtocol
       const hasMVPProtocols =
         content.includes('ViewProtocol') &&
         content.includes('PresenterProtocol') &&
@@ -390,19 +367,17 @@ class iOSArchitectureDetector {
     const presenterFiles = files.filter(f => /Presenter\.swift$/.test(f));
     const interactorFiles = files.filter(f => /Interactor\.swift$/.test(f));
 
-    // Si hay ViewControllers pero NO hay ViewModels, Presenters ni Interactors
     if (viewControllerFiles.length >= 2 &&
         viewModelFiles.length === 0 &&
         presenterFiles.length === 0 &&
         interactorFiles.length === 0) {
 
-      // Analizar tamaño de ViewControllers (Massive View Controllers = MVC anti-pattern)
       viewControllerFiles.forEach(file => {
         const content = this.readFile(file);
         const lines = content.split('\n').length;
 
         if (lines > 300) {
-          this.patterns.mvc += 3; // Massive View Controller
+          this.patterns.mvc += 3;
         } else if (lines > 150) {
           this.patterns.mvc += 2;
         } else {
@@ -426,14 +401,12 @@ class iOSArchitectureDetector {
 
     const [dominant, dominantScore] = sorted[0];
 
-    // Si MVC es dominante, alertar como LEGACY
     if (dominant === 'mvc') {
       return 'MVC_LEGACY';
     }
 
-    // Si hay múltiples patrones con score similar, es un MIXED (anti-pattern)
     if (sorted.length > 1 && sorted[1][1] >= dominantScore * 0.7) {
-      return 'MIXED'; // Anti-pattern: múltiples arquitecturas mezcladas
+      return 'MIXED';
     }
 
     return this.normalizePatternName(dominant);
@@ -441,7 +414,7 @@ class iOSArchitectureDetector {
 
   normalizePatternName(pattern) {
     const mapping = {
-      'featureFirstClean': 'FEATURE_FIRST_CLEAN_DDD', // ← PATRÓN PRINCIPAL
+      'featureFirstClean': 'FEATURE_FIRST_CLEAN_DDD',
       'mvvm': 'MVVM',
       'mvvmc': 'MVVM-C',
       'mvp': 'MVP',

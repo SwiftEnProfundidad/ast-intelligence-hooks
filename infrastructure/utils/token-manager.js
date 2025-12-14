@@ -1,12 +1,10 @@
-// ===== TOKEN MANAGEMENT SYSTEM =====
-// Monitors and warns about token consumption
 
 const fs = require('fs');
 const path = require('path');
 
 class TokenManager {
   constructor() {
-    this.limit = 1000000;  // 1M tokens
+    this.limit = 1000000;
     this.warningThresholds = [
       { percent: 75, level: 'INFO' },
       { percent: 85, level: 'WARNING' },
@@ -31,10 +29,9 @@ class TokenManager {
    * @returns {Object} Token usage estimate
    */
   estimate(violations, report) {
-    // Rough estimation (actual usage tracked by AI)
-    const baseTokens = 50000;  // Base session
-    const violationTokens = violations.length * 100;  // ~100 tokens per violation
-    const reportTokens = JSON.stringify(report).length / 4;  // ~4 chars per token
+    const baseTokens = 50000;
+    const violationTokens = violations.length * 100;
+    const reportTokens = JSON.stringify(report).length / 4;
 
     const estimated = baseTokens + violationTokens + reportTokens;
 

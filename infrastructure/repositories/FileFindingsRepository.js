@@ -1,6 +1,3 @@
-// ===== FILE FINDINGS REPOSITORY =====
-// Infrastructure Layer - Repository Implementation
-// Persists findings to JSON files
 
 const fs = require('fs').promises;
 const path = require('path');

@@ -59,7 +59,7 @@ class SeverityConfig {
         return violations.sort((a, b) => {
             const aLevel = SEVERITY_LEVELS[this.getSeverityValue(a.severity)] || 0;
             const bLevel = SEVERITY_LEVELS[this.getSeverityValue(b.severity)] || 0;
-            return bLevel - aLevel; // Higher severity first
+            return bLevel - aLevel;
         });
     }
 }

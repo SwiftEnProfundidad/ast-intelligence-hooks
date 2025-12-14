@@ -1,6 +1,3 @@
-// ===== GIT OPERATIONS =====
-// Infrastructure Layer - External Tool Integration
-// Wrapper for Git commands
 
 const { exec } = require('child_process');
 const util = require('util');

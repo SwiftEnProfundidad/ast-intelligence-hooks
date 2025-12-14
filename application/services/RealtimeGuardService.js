@@ -6,7 +6,6 @@ const PlatformDetectionService = require('./PlatformDetectionService');
 const AutonomousOrchestrator = require('./AutonomousOrchestrator');
 const AutoExecuteAIStartUseCase = require('../use-cases/AutoExecuteAIStartUseCase');
 const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('./GitTreeState');
-// IntelligentGitTreeMonitor loaded on-demand to avoid startup errors
 
 const EVIDENCE_PATH = path.join(process.cwd(), '.AI_EVIDENCE.json');
 const CRITICAL_DOC = path.join(process.cwd(), 'docs', 'planning', 'LIBRARY_FIVE_STARS_ROADMAP.md');
@@ -195,7 +194,6 @@ class RealtimeGuardService {
         const intelligentMonitor = new IntelligentGitTreeMonitor({
           repoRoot: this.repoRoot,
           notifier: (notification) => {
-            // Use the notification's message directly (it's already formatted)
             if (notification.action === 'suggest_commit' && notification.data && notification.data.length > 0) {
               this.sendNotification({
                 title: notification.title || '📦 Atomic Commit Suggestions',
@@ -443,7 +441,6 @@ class RealtimeGuardService {
     };
 
     const notifyWithOsascriptDialog = () => {
-      // DISABLED BY USER REQUEST: No blocking modals
       return false;
       /*
       if (!this.osascriptPath) {
@@ -477,13 +474,11 @@ class RealtimeGuardService {
       delivered = true;
     }
 
-    // DISABLED BY USER REQUEST: No blocking modals
-    const shouldForceDialog = false; // forceDialog || level === 'error' || level === 'warn';
+    const shouldForceDialog = false;
     if (shouldForceDialog) {
       const dialogDelivered = notifyWithOsascriptDialog();
       delivered = dialogDelivered || delivered;
     } else if (!delivered) {
-      // delivered = notifyWithOsascriptDialog() || delivered;
     }
 
     if (!delivered) {
@@ -831,7 +826,7 @@ class RealtimeGuardService {
           branch !== this.gitflowDevelopBranch &&
           branch !== this.gitflowMainBranch &&
           branch !== currentBranch &&
-          /^(feature|fix|chore|docs|refactor|test|ci)\//.test(branch)
+          /^(feature|fix|chore|docs|refactor|test|ci)\
       );
 
     if (!branches.length) {

@@ -26,7 +26,7 @@ class SecurityAnalyzer {
 
     if (ruleId.includes('hardcoded_secret') || ruleId.includes('hardcoded_api_key')) {
       if (context.isProductionCode) return 40;
-      return 25;  // Less critical in test code
+      return 25;
     }
 
     if (ruleId.includes('userdefaults_sensitive') || ruleId.includes('shared_prefs_sensitive')) {
@@ -35,7 +35,7 @@ class SecurityAnalyzer {
 
     if (ruleId.includes('console_log') || ruleId.includes('production_logs')) {
       if (context.handlesPII || context.handlesCredentials) return 30;
-      return 5;  // General logging less critical
+      return 5;
     }
 
     if (ruleId.includes('dangerouslySetInnerHTML') || ruleId.includes('xss')) {

@@ -1,6 +1,3 @@
-// ===== INTELLIGENT REPORT GENERATOR =====
-// Generates detailed reports with severity metrics
-// Clean Architecture: Infrastructure Layer - Reporting
 
 const fs = require('fs');
 const path = require('path');
@@ -184,7 +181,6 @@ class ReportGenerator {
   generateRecommendations(violations) {
     const recommendations = [];
 
-    // Top 5 most critical violations
     const sortedBySeverity = [...violations]
       .filter(v => v.severityScore)
       .sort((a, b) => (b.severityScore || 0) - (a.severityScore || 0))

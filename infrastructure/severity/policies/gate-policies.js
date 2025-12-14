@@ -1,5 +1,3 @@
-// ===== QUALITY GATE POLICIES =====
-// Applies severity-based quality gates
 
 const fs = require('fs');
 const path = require('path');
@@ -16,14 +14,11 @@ class GatePolicies {
    * @returns {Object} Gate result
    */
   apply(violations) {
-    // Group by severity
     const grouped = this.groupBySeverity(violations);
 
-    // Detect context overrides
     const override = this.detectContextOverride(violations);
     const effectivePolicies = override ? this.policies.context_overrides[override].policies : this.policies.quality_gate;
 
-    // Check each severity level
     const results = {
       CRITICAL: this.checkLevel('CRITICAL', grouped.CRITICAL || [], effectivePolicies.CRITICAL || effectivePolicies['CRITICAL']),
       HIGH: this.checkLevel('HIGH', grouped.HIGH || [], effectivePolicies.HIGH || effectivePolicies['HIGH']),
@@ -31,7 +26,6 @@ class GatePolicies {
       LOW: this.checkLevel('LOW', grouped.LOW || [], effectivePolicies.LOW || effectivePolicies['LOW'])
     };
 
-    // Determine overall result
     const passed = !results.CRITICAL.failed && !results.HIGH.failed;
     const blockedBy = results.CRITICAL.failed ? 'CRITICAL' : (results.HIGH.failed ? 'HIGH' : null);
 
@@ -57,7 +51,6 @@ class GatePolicies {
   }
 
   detectContextOverride(violations) {
-    // Check if all violations are in a specific context
     const allPaths = violations.map(v => v.filePath || '');
 
     for (const [contextName, config] of Object.entries(this.policies.context_overrides)) {
@@ -66,7 +59,6 @@ class GatePolicies {
         patterns.some(pattern => p.includes(pattern))
       ).length;
 
-      // If >80% of violations in this context, apply override
       if (matchCount > allPaths.length * 0.8) {
         return contextName;
       }

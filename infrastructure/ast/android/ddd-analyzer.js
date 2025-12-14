@@ -1,6 +1,3 @@
- // ===== DDD ANALYZER - ANDROID =====
-// Based on rulesandroid.mdc specifications
-// DDD patterns for Android/Kotlin
 
 /**
  * Analyze DDD patterns in Android (Kotlin)
@@ -12,13 +9,10 @@
  * ✅ Data classes for DTOs and models
  */
 function analyzeDDD(filePath, fileContent, findings, pushFileFinding) {
-  // PATTERN 1: Repository Pattern
   analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFinding);
 
-  // PATTERN 2: Use Cases
   analyzeUseCases(filePath, fileContent, findings, pushFileFinding);
 
-  // PATTERN 3: Mappers
   analyzeMappers(filePath, fileContent, findings, pushFileFinding);
 }
 
@@ -26,7 +20,6 @@ function analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFindi
   const isInterface = fileContent.includes('interface ') && /Repository/i.test(fileContent);
   const isClass = fileContent.includes('class ') && /Repository/i.test(fileContent);
 
-  // Repository interface should be in domain/
   if (isInterface && !filePath.includes('/domain/')) {
     pushFileFinding(
       'android.ddd.repository_interface_wrong_layer',
@@ -39,7 +32,6 @@ function analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFindi
     );
   }
 
-  // Repository implementation should be in data/
   if (isClass && /Repository.*Impl|.*RepositoryImpl/.test(fileContent) &&
       !filePath.includes('/data/')) {
     pushFileFinding(
@@ -55,7 +47,6 @@ function analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFindi
 }
 
 function analyzeUseCases(filePath, fileContent, findings, pushFileFinding) {
-  // Use Case should be in domain/usecase/
   if (/UseCase/.test(filePath) && !filePath.includes('/usecase/')) {
     pushFileFinding(
       'android.ddd.usecase_wrong_location',
@@ -70,7 +61,6 @@ function analyzeUseCases(filePath, fileContent, findings, pushFileFinding) {
 }
 
 function analyzeMappers(filePath, fileContent, findings, pushFileFinding) {
-  // Mappers should be in data/mapper/
   if (/Mapper/.test(filePath) && !filePath.includes('/mapper/')) {
     pushFileFinding(
       'android.ddd.mapper_wrong_location',

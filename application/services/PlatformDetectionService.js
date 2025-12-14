@@ -1,5 +1,3 @@
-// ===== PLATFORM DETECTION SERVICE =====
-// Detects which platforms are present in the codebase
 
 const fs = require('fs').promises;
 const path = require('path');
@@ -26,7 +24,7 @@ class PlatformDetectionService {
         '/apps/web-app/',
         '/apps/admin-dashboard/',
         '/apps/admin/',
-        'package.json', // Generic indicator
+        'package.json',
       ],
       ios: [
         '.xcodeproj',
@@ -51,17 +49,15 @@ class PlatformDetectionService {
     const platforms = new Set();
 
     try {
-      // Check for platform indicators
       for (const [platform, indicators] of Object.entries(this.platformIndicators)) {
         for (const indicator of indicators) {
           if (await this.checkIndicator(targetPath, indicator)) {
             platforms.add(platform);
-            break; // Found platform, move to next
+            break;
           }
         }
       }
 
-      // Convert Set to Array
       return Array.from(platforms);
 
     } catch (error) {
@@ -72,16 +68,13 @@ class PlatformDetectionService {
   async checkIndicator(targetPath, indicator) {
     try {
       if (indicator.startsWith('/')) {
-        // Directory indicator
         const dirPath = path.join(targetPath, indicator);
         const stat = await fs.stat(dirPath);
         return stat.isDirectory();
       } else if (indicator.includes('*')) {
-        // File pattern indicator (simplified check)
         const ext = indicator.replace('*', '');
         return await this.hasFilesWithExtension(targetPath, ext);
       } else {
-        // File indicator
         const filePath = path.join(targetPath, indicator);
         await fs.access(filePath);
         return true;
@@ -121,7 +114,6 @@ class PlatformDetectionService {
   _detectPlatformUncached(filePath) {
     const lowerPath = filePath.toLowerCase();
 
-    // Fix: Support both /apps/backend/ and apps/backend/ (Git staging has no leading /)
     if (lowerPath.includes('apps/backend/') || lowerPath.includes('scripts/hooks-system/') || lowerPath.includes('/services/') || lowerPath.includes('services/') || lowerPath.includes('/functions/') || lowerPath.includes('functions/')) {
       return 'backend';
     }

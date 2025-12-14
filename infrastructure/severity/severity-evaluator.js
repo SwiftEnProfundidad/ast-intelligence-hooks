@@ -1,6 +1,3 @@
-// ===== SEVERITY INTELLIGENCE EVALUATOR =====
-// Automatically determines violation severity based on actual impact
-// Clean Architecture: Infrastructure Layer - Severity Analysis
 
 const path = require('path');
 const { SecurityAnalyzer } = require('./analyzers/security-analyzer');
@@ -21,12 +18,11 @@ class SeverityEvaluator {
     this.maintainabilityAnalyzer = new MaintainabilityAnalyzer();
     this.contextBuilder = new ContextBuilder();
 
-    // Weights for impact dimensions
     this.weights = {
-      security: 0.40,       // Security most critical
-      stability: 0.30,      // Crashes/bugs second
-      performance: 0.20,    // Performance third
-      maintainability: 0.10 // Code quality last
+      security: 0.40,
+      stability: 0.30,
+      performance: 0.20,
+      maintainability: 0.10
     };
   }
 
@@ -37,16 +33,13 @@ class SeverityEvaluator {
    */
   evaluate(violation) {
     try {
-      // Build context (execution environment, dependencies, git history)
       const context = this.contextBuilder.build(violation);
 
-      // Calculate impact scores (0-100 each)
       const securityScore = this.securityAnalyzer.analyze(violation, context);
       const performanceScore = this.performanceAnalyzer.analyze(violation, context);
       const stabilityScore = this.stabilityAnalyzer.analyze(violation, context);
       const maintainabilityScore = this.maintainabilityAnalyzer.analyze(violation, context);
 
-      // Weighted total
       const baseScore = (
         securityScore * this.weights.security +
         stabilityScore * this.weights.stability +
@@ -54,10 +47,8 @@ class SeverityEvaluator {
         maintainabilityScore * this.weights.maintainability
       );
 
-      // Apply context multipliers
       const finalScore = this.applyContextMultipliers(baseScore, context, violation);
 
-      // Map to severity level
       const severity = this.mapToSeverity(finalScore);
 
       return {
@@ -80,7 +71,6 @@ class SeverityEvaluator {
         recommendation: this.generateRecommendation(violation, severity, context)
       };
     } catch (error) {
-      // Fallback to original severity if evaluation fails
       return {
         severity: violation.severity || 'MEDIUM',
         score: 50,
@@ -99,7 +89,6 @@ class SeverityEvaluator {
   applyContextMultipliers(baseScore, context, violation) {
     let multiplier = 1.0;
 
-    // Production code multipliers
     if (context.isProductionCode) {
       if (context.criticalPath) multiplier *= 1.5;
       if (context.handlesPayments) multiplier *= 2.0;
@@ -108,37 +97,30 @@ class SeverityEvaluator {
       if (context.isPublicAPI) multiplier *= 1.2;
     }
 
-    // Main thread operations (UI responsiveness)
     if (context.isMainThread && baseScore > 30) {
-      multiplier *= 2.0;  // UI thread violations critical
+      multiplier *= 2.0;
     }
 
-    // High dependency count (ripple effect)
     if (context.dependencyCount > 10) {
       multiplier *= (1 + context.dependencyCount / 50);
     }
 
-    // High call frequency (frequently executed code)
     if (context.callFrequency > 1000) {
       multiplier *= 1.2;
     }
 
-    // SOLID violations in Domain layer (affects all layers)
     if (violation.ruleId.includes('solid.') && context.layer === 'DOMAIN') {
       multiplier *= 1.4;
     }
 
-    // Clean Architecture violations (structural issues)
     if (violation.ruleId.includes('clean_arch.') && violation.ruleId.includes('domain')) {
-      multiplier *= 1.6;  // Domain layer violations most serious
+      multiplier *= 1.6;
     }
 
-    // Test code reductions (less critical)
     if (context.isTestCode) {
       multiplier *= 0.3;
     }
 
-    // Has error mitigation (reduces impact)
     if (context.hasErrorBoundary && context.hasFallback) {
       multiplier *= 0.7;
     }
@@ -221,7 +203,6 @@ ${fix}`;
   }
 
   suggestFix(violation, context) {
-    // Generate specific fix based on rule type
     const fixes = {
       'solid.srp': this.generateSRPFix(violation, context),
       'solid.ocp': this.generateOCPFix(violation, context),
@@ -232,7 +213,6 @@ ${fix}`;
       'cqrs': this.generateCQRSFix(violation, context)
     };
 
-    // Find matching fix generator
     for (const [prefix, generator] of Object.entries(fixes)) {
       if (violation.ruleId.includes(prefix)) {
         return generator;
@@ -250,11 +230,9 @@ ${responsibilities.map((r, i) => `${i + 1}. ${r}Class - handles ${r.toLowerCase(
 
 Example:
 ❌ class ${violation.className} {
-    // ${responsibilities.join(', ')}
 }
 
-✅ // Split:
-${responsibilities.map(r => `class ${violation.className}${r} { /* ${r} only */ }`).join('\n')}`;
+✅
     }
     return 'Extract responsibilities into separate classes (SRP)';
   }
@@ -268,16 +246,14 @@ ${responsibilities.map(r => `class ${violation.className}${r} { /* ${r} only */ 
 
 1. Define protocol:
    protocol ${protocol} {
-       // Interface methods
    }
 
 2. Make concrete conform:
    class ${concrete}: ${protocol} {
-       // Implementation
    }
 
 3. Inject protocol:
-   init(repository: ${protocol}) {  // ← Protocol, not concrete
+   init(repository: ${protocol}) {
        self.repository = repository
    }`;
     }
@@ -289,17 +265,15 @@ ${responsibilities.map(r => `class ${violation.className}${r} { /* ${r} only */ 
 
 ❌ Current:
 func updateAndReturn(_ item: Item) -> Item {
-    self.items.append(item)  // Command
-    return item              // Query
+    self.items.append(item)
+    return item
 }
 
 ✅ Refactor:
-// Command (mutates, returns void)
 func updateItem(_ item: Item) {
     self.items.append(item)
 }
 
-// Query (read-only, returns data)
 func getItem(id: UUID) -> Item? {
     return items.first { $0.id == id }
 }`;
@@ -318,7 +292,7 @@ function evaluateViolations(violations) {
     return {
       ...violation,
       originalSeverity: violation.severity,
-      severity: evaluation.severity,  // Override with computed
+      severity: evaluation.severity,
       severityScore: evaluation.score,
       baseScore: evaluation.baseScore,
       impactBreakdown: evaluation.breakdown,

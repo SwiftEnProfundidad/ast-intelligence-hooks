@@ -1,6 +1,3 @@
-// ===== DDD ANALYZER - FRONTEND =====
-// Based on rulesfront.mdc specifications
-// DDD patterns adapted for Frontend (React/Next.js)
 
 const { SyntaxKind } = require('ts-morph');
 
@@ -16,13 +13,10 @@ const { SyntaxKind } = require('ts-morph');
 function analyzeDDD(sf, findings, pushFinding, project) {
   const filePath = sf.getFilePath();
 
-  // PATTERN 1: Repository Pattern (API abstraction)
   analyzeRepositoryPattern(sf, filePath, findings, pushFinding);
 
-  // PATTERN 2: Business logic in Use Cases, not components
   analyzeBusinessLogicLocation(sf, filePath, findings, pushFinding);
 
-  // PATTERN 3: Custom hooks as Application layer
   analyzeCustomHooks(sf, filePath, findings, pushFinding);
 }
 
@@ -30,19 +24,16 @@ function analyzeRepositoryPattern(sf, filePath, findings, pushFinding) {
   const classes = sf.getClasses();
   const interfaces = sf.getInterfaces();
 
-  // Repository implementation should use interface
   classes.forEach(cls => {
     const className = cls.getName() || '';
 
     if (/Repository$/i.test(className)) {
-      // Should be in infrastructure/
       if (!filePath.includes('/infrastructure/')) {
         pushFinding('frontend.ddd.repository_wrong_layer', 'high', sf, cls,
           `Repository implementation ${className} should be in infrastructure/, not domain/ or components/.`,
           findings);
       }
 
-      // Should implement interface
       const implementsClause = cls.getImplements();
       if (implementsClause.length === 0) {
         pushFinding('frontend.ddd.repository_missing_interface', 'medium', sf, cls,
@@ -52,7 +43,6 @@ function analyzeRepositoryPattern(sf, filePath, findings, pushFinding) {
     }
   });
 
-  // Repository interface in domain
   interfaces.forEach(iface => {
     const interfaceName = iface.getName() || '';
 
@@ -65,13 +55,11 @@ function analyzeRepositoryPattern(sf, filePath, findings, pushFinding) {
 }
 
 function analyzeBusinessLogicLocation(sf, filePath, findings, pushFinding) {
-  // Business logic should NOT be in components
-  const isComponent = /\/(components|app|pages)\//i.test(filePath) &&
+  const isComponent = /\/(components|app|pages)\
                      /\.(tsx|jsx)$/i.test(filePath);
 
   if (!isComponent) return;
 
-  // Look for complex business logic in component
   const functions = sf.getFunctions();
   const arrowFunctions = sf.getDescendantsOfKind(SyntaxKind.ArrowFunction);
 
@@ -82,7 +70,6 @@ function analyzeBusinessLogicLocation(sf, filePath, findings, pushFinding) {
     const bodyText = body.getText();
     const lines = bodyText.split('\n').length;
 
-    // Complex logic indicators
     const hasComplexLogic =
       lines > 30 ||
       (bodyText.match(/if\s*\(/g) || []).length > 5 ||
@@ -98,7 +85,6 @@ function analyzeBusinessLogicLocation(sf, filePath, findings, pushFinding) {
 }
 
 function analyzeCustomHooks(sf, filePath, findings, pushFinding) {
-  // Custom hooks should be in application/ or presentation/hooks/
   const isHookFile = /use[A-Z]\w+\.(ts|tsx)$/i.test(filePath);
 
   if (!isHookFile) return;

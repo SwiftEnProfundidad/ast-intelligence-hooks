@@ -15,13 +15,11 @@ class BlockCommitUseCase {
       let decision;
 
       if (useStagedOnly && auditResult.findings) {
-        // Block based on staged files only
         decision = this.commitBlockingRules.shouldBlockByStagedFiles(
           auditResult.findings,
           strictMode
         );
       } else {
-        // Block based on full audit result
         decision = this.commitBlockingRules.shouldBlockCommit(
           auditResult,
           strictMode,
@@ -29,7 +27,6 @@ class BlockCommitUseCase {
         );
       }
 
-      // Add technical debt info if not blocking
       if (!decision.shouldBlock) {
         const debtCheck = this.commitBlockingRules.calculateTechnicalDebtThreshold(auditResult);
         decision.technicalDebt = debtCheck.currentDebt;

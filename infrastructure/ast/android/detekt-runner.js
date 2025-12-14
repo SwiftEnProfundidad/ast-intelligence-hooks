@@ -1,6 +1,3 @@
-// ===== DETEKT RUNNER =====
-// Executes Detekt analysis and parses JSON results
-// Clean Architecture: Infrastructure Layer - External Tool Integration
 
 const { execSync } = require('child_process');
 const fs = require('fs');

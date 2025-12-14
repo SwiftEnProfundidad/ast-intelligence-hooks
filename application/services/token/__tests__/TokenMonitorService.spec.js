@@ -128,7 +128,7 @@ describe('TokenMonitorService', () => {
             repoRoot: tmpDir,
             notificationCenter,
             logger,
-            staleThresholdMs: 60 * 60 * 1000, // 1 hora
+            staleThresholdMs: 60 * 60 * 1000,
             fallbackEstimator: () => 50000,
             cursorTokenService
         });

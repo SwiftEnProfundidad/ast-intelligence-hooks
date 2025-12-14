@@ -18,7 +18,7 @@ class MaintainabilityAnalyzer {
     const ruleId = violation.ruleId || '';
 
     if (ruleId.includes('dip')) {
-      if (context.dependencyCount > 10) return 30;  // Many modules affected
+      if (context.dependencyCount > 10) return 30;
       return 20;
     }
 
@@ -50,12 +50,10 @@ class MaintainabilityAnalyzer {
       return 15;
     }
 
-    // Nested conditionals (pyramid of doom)
     if (ruleId.includes('nested') || ruleId.includes('pyramid')) {
       return 25;
     }
 
-    // Callback hell
     if (ruleId.includes('callback_hell')) {
       return 20;
     }
@@ -66,15 +64,12 @@ class MaintainabilityAnalyzer {
   analyzeDuplication(violation, context) {
     const ruleId = violation.ruleId || '';
 
-    // Code duplication detected
     if (ruleId.includes('duplication') || ruleId.includes('duplicate')) {
       const duplicateCount = violation.metrics?.duplicateCount || 1;
       return Math.min(20, duplicateCount * 5);
     }
 
-    // OCP violation (modification instead of extension)
     if (ruleId.includes('ocp')) {
-      // Will need to modify in multiple places
       return 15;
     }
 
@@ -84,21 +79,18 @@ class MaintainabilityAnalyzer {
   analyzeTestability(violation, context) {
     const ruleId = violation.ruleId || '';
 
-    // Missing tests for critical code
     if (ruleId.includes('missing_tests') || ruleId.includes('coverage')) {
       if (context.criticalPath) return 20;
       if (context.hasBusinessLogic) return 15;
       return 5;
     }
 
-    // Hard to test (DIP, tight coupling)
     if (ruleId.includes('dip') || ruleId.includes('concrete_dependency')) {
-      return 15;  // Can't mock dependencies
+      return 15;
     }
 
-    // Mocks in production
     if (ruleId.includes('mock_in_production')) {
-      return 18;  // Tests will fail
+      return 18;
     }
 
     return 0;
