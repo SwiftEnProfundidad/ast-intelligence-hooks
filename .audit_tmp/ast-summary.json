@@ -1,21 +1,21 @@
 {
   "totals": {
-    "errors": 103,
+    "errors": 100,
     "warnings": 13,
-    "infos": 132
+    "infos": 122
   },
   "levels": {
-    "CRITICAL": 4,
+    "CRITICAL": 1,
     "HIGH": 99,
     "MEDIUM": 13,
-    "LOW": 132
+    "LOW": 122
   },
   "platforms": {
-    "Backend": 108,
+    "Backend": 107,
     "Frontend": 7,
     "iOS": 18,
-    "Android": 46,
-    "Other": 69
+    "Android": 35,
+    "Other": 68
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
@@ -25,28 +25,20 @@
     "common.quality.disabled_lint": 3,
     "common.debug.console": 4,
     "common.quality.todo_fixme": 1,
-    "common.network.missing_circuit_breaker": 9,
+    "common.network.missing_circuit_breaker": 10,
     "common.network.missing_timeout": 2,
-    "common.network.missing_retry_policy": 1,
     "common.network.missing_connection_pooling": 3,
     "common.network.missing_error_handling": 1,
-    "backend.offline.missing_idempotency_key": 1,
-    "backend.offline.missing_optimistic_locking": 2,
+    "backend.offline.missing_optimistic_locking": 1,
     "backend.push.missing_notification_queue": 2,
     "backend.push.missing_notification_batching": 1,
     "backend.images.missing_server_compression": 1,
-    "android.repository_pattern": 9,
+    "android.repository_pattern": 8,
     "android.use_case": 4,
     "android.detekt": 10,
-    "android.flow_collect": 3,
-    "android.room_usage": 2,
+    "android.flow_collect": 1,
+    "android.room_usage": 1,
     "android.viewmodel_pattern": 3,
-    "android.layout_composables": 2,
-    "android.state_flow": 1,
-    "android.room_annotations": 1,
-    "android.dto_sharing": 1,
-    "android.lazy_lists": 1,
-    "solid.srp.god_class": 1,
     "backend.auth.missing_cors": 9,
     "backend.metrics.missing_prometheus": 12,
     "backend.clean.infrastructure": 20,
@@ -70,7 +62,7 @@
   },
   "platformDetails": {
     "Other": {
-      "CRITICAL": 2,
+      "CRITICAL": 1,
       "HIGH": 56,
       "MEDIUM": 8,
       "LOW": 3,
@@ -82,11 +74,10 @@
         "common.quality.disabled_lint": 3,
         "common.debug.console": 4,
         "common.quality.todo_fixme": 1,
-        "common.network.missing_circuit_breaker": 5,
+        "common.network.missing_circuit_breaker": 6,
         "common.network.missing_timeout": 2,
-        "common.network.missing_retry_policy": 1,
         "common.network.missing_connection_pooling": 1,
-        "backend.offline.missing_optimistic_locking": 2,
+        "backend.offline.missing_optimistic_locking": 1,
         "backend.push.missing_notification_queue": 2,
         "backend.push.missing_notification_batching": 1
       },
@@ -142,30 +133,23 @@
         "hooks/pre-tool-use-evidence-validator.ts",
         "infrastructure/telemetry/metrics-server.js",
         "application/services/token/CursorTokenService.js",
-        "infrastructure/ast/common/images-backend-analyzer.js",
         "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js"
       ]
     },
     "Android": {
-      "CRITICAL": 1,
+      "CRITICAL": 0,
       "HIGH": 7,
       "MEDIUM": 1,
-      "LOW": 37,
+      "LOW": 27,
       "rules": {
         "common.quality.comments": 7,
         "common.network.missing_connection_pooling": 1,
-        "android.repository_pattern": 9,
+        "android.repository_pattern": 8,
         "android.use_case": 4,
         "android.detekt": 10,
-        "android.flow_collect": 3,
-        "android.room_usage": 2,
-        "android.viewmodel_pattern": 3,
-        "android.layout_composables": 2,
-        "android.state_flow": 1,
-        "android.room_annotations": 1,
-        "android.dto_sharing": 1,
-        "android.lazy_lists": 1,
-        "solid.srp.god_class": 1
+        "android.flow_collect": 1,
+        "android.room_usage": 1,
+        "android.viewmodel_pattern": 3
       },
       "files": [
         "infrastructure/ast/android/clean-architecture-analyzer.js",
@@ -183,13 +167,12 @@
       ]
     },
     "Backend": {
-      "CRITICAL": 1,
+      "CRITICAL": 0,
       "HIGH": 13,
       "MEDIUM": 2,
       "LOW": 92,
       "rules": {
         "common.quality.comments": 8,
-        "backend.offline.missing_idempotency_key": 1,
         "backend.images.missing_server_compression": 1,
         "backend.auth.missing_cors": 9,
         "backend.metrics.missing_prometheus": 12,
@@ -444,11 +427,11 @@
       ]
     },
     "common.network.missing_circuit_breaker": {
-      "count": 9,
+      "count": 10,
       "level": "HIGH",
       "severity": "HIGH",
       "platforms": {
-        "Other": 5,
+        "Other": 6,
         "Frontend": 1,
         "iOS": 3
       },
@@ -456,6 +439,7 @@
         "hooks/pre-tool-use-evidence-validator.ts",
         ".claude/hooks/pre-tool-use-evidence-validator.ts",
         "application/services/notification/NotificationCenterService.js",
+        "application/services/token/CursorTokenService.js",
         "infrastructure/ast/frontend/ast-frontend.js",
         "infrastructure/ast/ios/ast-ios.js",
         "infrastructure/ast/text/text-scanner.js",
@@ -473,17 +457,6 @@
       },
       "files": [
         "infrastructure/telemetry/metrics-server.js",
-        "application/services/token/CursorTokenService.js"
-      ]
-    },
-    "common.network.missing_retry_policy": {
-      "count": 1,
-      "level": "CRITICAL",
-      "severity": "CRITICAL",
-      "platforms": {
-        "Other": 1
-      },
-      "files": [
         "application/services/token/CursorTokenService.js"
       ]
     },
@@ -513,26 +486,14 @@
         "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js"
       ]
     },
-    "backend.offline.missing_idempotency_key": {
-      "count": 1,
-      "level": "CRITICAL",
-      "severity": "CRITICAL",
-      "platforms": {
-        "Backend": 1
-      },
-      "files": [
-        "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
-      ]
-    },
     "backend.offline.missing_optimistic_locking": {
-      "count": 2,
+      "count": 1,
       "level": "HIGH",
       "severity": "HIGH",
       "platforms": {
-        "Other": 2
+        "Other": 1
       },
       "files": [
-        "infrastructure/ast/common/images-backend-analyzer.js",
         "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js"
       ]
     },
@@ -571,15 +532,14 @@
       ]
     },
     "android.repository_pattern": {
-      "count": 9,
+      "count": 8,
       "level": "LOW",
       "severity": "LOW",
       "platforms": {
-        "Android": 9
+        "Android": 8
       },
       "files": [
         "infrastructure/ast/android/ddd-analyzer.js",
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
         "infrastructure/ast/android/analyzers/AndroidClassAnalyzer.js",
         "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js"
       ]
@@ -611,27 +571,25 @@
       ]
     },
     "android.flow_collect": {
-      "count": 3,
+      "count": 1,
       "level": "LOW",
       "severity": "LOW",
       "platforms": {
-        "Android": 3
+        "Android": 1
       },
       "files": [
-        "infrastructure/ast/android/analyzers/AndroidAnalysisOrchestrator.js",
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+        "infrastructure/ast/android/analyzers/AndroidAnalysisOrchestrator.js"
       ]
     },
     "android.room_usage": {
-      "count": 2,
+      "count": 1,
       "level": "LOW",
       "severity": "LOW",
       "platforms": {
-        "Android": 2
+        "Android": 1
       },
       "files": [
-        "infrastructure/ast/android/analyzers/AndroidAnalysisOrchestrator.js",
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+        "infrastructure/ast/android/analyzers/AndroidAnalysisOrchestrator.js"
       ]
     },
     "android.viewmodel_pattern": {
@@ -645,72 +603,6 @@
         "infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js",
         "infrastructure/ast/android/analyzers/AndroidClassAnalyzer.js",
         "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js"
-      ]
-    },
-    "android.layout_composables": {
-      "count": 2,
-      "level": "LOW",
-      "severity": "LOW",
-      "platforms": {
-        "Android": 2
-      },
-      "files": [
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
-      ]
-    },
-    "android.state_flow": {
-      "count": 1,
-      "level": "LOW",
-      "severity": "LOW",
-      "platforms": {
-        "Android": 1
-      },
-      "files": [
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
-      ]
-    },
-    "android.room_annotations": {
-      "count": 1,
-      "level": "LOW",
-      "severity": "LOW",
-      "platforms": {
-        "Android": 1
-      },
-      "files": [
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
-      ]
-    },
-    "android.dto_sharing": {
-      "count": 1,
-      "level": "LOW",
-      "severity": "LOW",
-      "platforms": {
-        "Android": 1
-      },
-      "files": [
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
-      ]
-    },
-    "android.lazy_lists": {
-      "count": 1,
-      "level": "LOW",
-      "severity": "LOW",
-      "platforms": {
-        "Android": 1
-      },
-      "files": [
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
-      ]
-    },
-    "solid.srp.god_class": {
-      "count": 1,
-      "level": "CRITICAL",
-      "severity": "CRITICAL",
-      "platforms": {
-        "Android": 1
-      },
-      "files": [
-        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
       ]
     },
     "backend.auth.missing_cors": {
@@ -1535,7 +1427,6 @@
       "platform": "Backend",
       "rules": {
         "common.quality.comments": 1,
-        "backend.offline.missing_idempotency_key": 1,
         "backend.auth.missing_cors": 1,
         "backend.metrics.missing_prometheus": 1,
         "backend.event.handler": 17,
@@ -1548,7 +1439,7 @@
         "backend.api.gateway": 1
       },
       "levels": {
-        "CRITICAL": 1,
+        "CRITICAL": 0,
         "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 42
@@ -1788,22 +1679,13 @@
     "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js": {
       "platform": "Android",
       "rules": {
-        "common.quality.comments": 1,
-        "android.flow_collect": 2,
-        "android.room_usage": 1,
-        "android.repository_pattern": 1,
-        "android.layout_composables": 2,
-        "android.state_flow": 1,
-        "android.room_annotations": 1,
-        "android.dto_sharing": 1,
-        "android.lazy_lists": 1,
-        "solid.srp.god_class": 1
+        "common.quality.comments": 1
       },
       "levels": {
-        "CRITICAL": 1,
+        "CRITICAL": 0,
         "HIGH": 1,
         "MEDIUM": 0,
-        "LOW": 10
+        "LOW": 0
       }
     },
     "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js": {
@@ -2027,12 +1909,12 @@
     "application/services/token/CursorTokenService.js": {
       "platform": "Other",
       "rules": {
-        "common.network.missing_retry_policy": 1,
-        "common.network.missing_timeout": 1
+        "common.network.missing_timeout": 1,
+        "common.network.missing_circuit_breaker": 1
       },
       "levels": {
-        "CRITICAL": 1,
-        "HIGH": 1,
+        "CRITICAL": 0,
+        "HIGH": 2,
         "MEDIUM": 0,
         "LOW": 0
       }
@@ -2071,18 +1953,6 @@
         "CRITICAL": 0,
         "HIGH": 1,
         "MEDIUM": 1,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/common/images-backend-analyzer.js": {
-      "platform": "Other",
-      "rules": {
-        "backend.offline.missing_optimistic_locking": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
         "LOW": 0
       }
     },
@@ -3163,20 +3033,6 @@
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
       "line": 1,
       "column": 0,
-      "severity": "CRITICAL",
-      "ruleId": "common.network.missing_retry_policy",
-      "message": "Network calls without retry policy - implement exponential backoff for rural connectivity resilience",
-      "category": "Network",
-      "suggestion": "Add retry with exponential backoff: retry({ maxAttempts: 3, backoff: exponential })",
-      "context": {
-        "impact": "CRITICAL for RuralGO - rural areas have intermittent connectivity",
-        "recommendation": "axios-retry or custom retry wrapper"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
-      "line": 1,
-      "column": 0,
       "severity": "HIGH",
       "ruleId": "common.network.missing_timeout",
       "message": "Network calls without timeout - rural connections can hang indefinitely",
@@ -3185,6 +3041,19 @@
       "context": {
         "impact": "HIGH - hanging requests degrade UX",
         "recommendation": "30s timeout for API calls, 60s for uploads"
+      }
+    },
+    {
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
+      "line": 1,
+      "column": 0,
+      "severity": "HIGH",
+      "ruleId": "common.network.missing_circuit_breaker",
+      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
+      "category": "Network",
+      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
+      "context": {
+        "impact": "HIGH - prevents system overload when backend down"
       }
     },
     {
@@ -3316,26 +3185,6 @@
       "context": {
         "impact": "HIGH - unhandled network errors cause crashes"
       }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
-      "line": 1,
-      "column": 0,
-      "severity": "CRITICAL",
-      "ruleId": "backend.offline.missing_idempotency_key",
-      "message": "Mutation without idempotency key - retried requests will duplicate data",
-      "category": "Offline",
-      "suggestion": "Add idempotencyKey to request headers, check before processing"
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/images-backend-analyzer.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "backend.offline.missing_optimistic_locking",
-      "message": "Mutation endpoint without versioning - implement optimistic locking (version/etag) for conflict resolution",
-      "category": "Offline",
-      "suggestion": "Add version field to DTOs, check on update, return 409 Conflict if mismatch"
     },
     {
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js",
@@ -3535,8 +3384,8 @@
       "ruleId": "android.flow_collect",
       "severity": "LOW",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidAnalysisOrchestrator.js",
-      "line": 31,
-      "column": 9,
+      "line": 52,
+      "column": 13,
       "message": "Flow not collected - Flows need to be collected to emit values",
       "metrics": {}
     },
@@ -3544,8 +3393,8 @@
       "ruleId": "android.room_usage",
       "severity": "LOW",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidAnalysisOrchestrator.js",
-      "line": 33,
-      "column": 9,
+      "line": 54,
+      "column": 13,
       "message": "Room usage - good type-safe SQLite wrapper",
       "metrics": {}
     },
@@ -3556,96 +3405,6 @@
       "line": 200,
       "column": 7,
       "message": "ViewModel pattern - good for UI state management",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.flow_collect",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 37,
-      "column": 13,
-      "message": "Flow not collected - Flows need to be collected to emit values",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.room_usage",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 39,
-      "column": 13,
-      "message": "Room usage - good type-safe SQLite wrapper",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.repository_pattern",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 198,
-      "column": 33,
-      "message": "Repository pattern - good for data abstraction",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.layout_composables",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 266,
-      "column": 13,
-      "message": "Layout composables - good for structuring UI",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.flow_collect",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 370,
-      "column": 13,
-      "message": "Flow not collected - Flows need to be collected to emit values",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.state_flow",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 370,
-      "column": 13,
-      "message": "State/SharedFlow usage - good for reactive state management",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.room_annotations",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 436,
-      "column": 17,
-      "message": "Room annotations - good for defining database operations",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.dto_sharing",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 630,
-      "column": 17,
-      "message": "DTO classes - consider sharing with backend via code generation",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.layout_composables",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 681,
-      "column": 13,
-      "message": "Layout composables - good for structuring UI",
-      "metrics": {}
-    },
-    {
-      "ruleId": "android.lazy_lists",
-      "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 681,
-      "column": 13,
-      "message": "Lazy lists - good for performance with large datasets",
       "metrics": {}
     },
     {
@@ -3718,15 +3477,6 @@
       "line": 226,
       "column": 26,
       "message": "Repository pattern - good for data abstraction",
-      "metrics": {}
-    },
-    {
-      "ruleId": "solid.srp.god_class",
-      "severity": "CRITICAL",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
-      "line": 8,
-      "column": 1,
-      "message": "SRP VIOLATION in AndroidASTIntelligentAnalyzer.js::AndroidASTIntelligentAnalyzer: God class with 23 methods - split into focused classes",
       "metrics": {}
     },
     {
@@ -4641,7 +4391,7 @@
   ],
   "metadata": {
     "totalFiles": 297,
-    "timestamp": "2025-12-14T01:31:24.888Z",
+    "timestamp": "2025-12-14T01:38:19.918Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }
