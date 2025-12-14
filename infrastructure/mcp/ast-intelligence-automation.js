@@ -313,7 +313,15 @@ function cleanupStaleBranches(params) {
     const results = [];
 
     try {
-        const mergedBranches = exec('git branch --merged develop').split('\n')
+        const mergedOutput = exec('git branch --merged develop');
+        if (!mergedOutput || typeof mergedOutput !== 'string') {
+            return {
+                success: true,
+                message: 'No stale branches to clean',
+                results: ['✅ Repository is clean']
+            };
+        }
+        const mergedBranches = mergedOutput.split('\n')
             .map(b => b.trim())
             .filter(b => b && !b.includes('*') && b !== 'develop' && b !== 'main');
 
