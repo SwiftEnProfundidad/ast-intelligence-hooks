@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+/**
+ * Kotlin AST Analyzer using Detekt + Pattern Matching
+ * Analiza código Kotlin para detectar violaciones de reglas Android
+ */
 
 const { execSync } = require('child_process');
 const fs = require('fs');

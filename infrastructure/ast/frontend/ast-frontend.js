@@ -4,6 +4,12 @@ const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf, getRepoRoot
 const fs = require('fs');
 const { FrontendArchitectureDetector } = require(path.join(__dirname, 'analyzers/FrontendArchitectureDetector'));
 
+/**
+ * Run Frontend-specific AST intelligence analysis
+ * @param {Project} project - TypeScript morph project
+ * @param {Array} findings - Findings array to populate
+ * @param {string} platform - Platform identifier
+ */
 function runFrontendIntelligence(project, findings, platform) {
   try {
     const root = getRepoRoot();

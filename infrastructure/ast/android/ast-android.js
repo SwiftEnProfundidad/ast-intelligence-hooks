@@ -8,6 +8,12 @@ const { AndroidForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analy
 const { AndroidASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/AndroidASTIntelligentAnalyzer'));
 const { AndroidArchitectureDetector } = require(path.join(__dirname, 'analyzers/AndroidArchitectureDetector'));
 
+/**
+ * Run Android-specific AST intelligence analysis
+ * @param {Project} project - TypeScript morph project
+ * @param {Array} findings - Findings array to populate
+ * @param {string} platform - Platform identifier
+ */
 function runAndroidIntelligence(project, findings, platform) {
   console.log(`[Android AST Intelligence] Running Kotlin AST analysis...`);
   const astAnalyzer = new AndroidASTIntelligentAnalyzer(findings);

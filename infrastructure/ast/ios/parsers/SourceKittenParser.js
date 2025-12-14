@@ -7,6 +7,14 @@ const path = require('path');
 
 const execPromise = util.promisify(exec);
 
+/**
+ * SourceKittenParser
+ * Enterprise-grade wrapper for SourceKitten CLI
+ * Provides native Swift AST analysis using Apple's SourceKit framework
+ *
+ * @class SourceKittenParser
+ * @see https://github.com/jpsim/SourceKitten
+ */
 class SourceKittenParser {
   constructor() {
     this.sourceKittenPath = '/opt/homebrew/bin/sourcekitten';

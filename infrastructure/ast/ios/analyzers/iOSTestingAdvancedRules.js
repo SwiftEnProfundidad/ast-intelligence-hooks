@@ -1,3 +1,10 @@
+/**
+ * iOS Testing Advanced Rules
+ * - Snapshot testing
+ * - Performance testing
+ * - Memory leak detection avanzado
+ * - UI testing patterns avanzados
+ */
 
 const { pushFinding } = require('../../ast-core');
 const fs = require('fs');

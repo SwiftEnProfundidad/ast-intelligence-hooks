@@ -17,6 +17,7 @@ const { analyzeOfflineBackend } = require(path.join(astModulesPath, "common/offl
 const { analyzePushBackend } = require(path.join(astModulesPath, "common/push-backend-analyzer"));
 const { analyzeImagesBackend } = require(path.join(astModulesPath, "common/images-backend-analyzer"));
 
+/**
  * Main AST intelligence function
  * Orchestrates analysis across all platform modules
  */

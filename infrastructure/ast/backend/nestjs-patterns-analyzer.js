@@ -1,6 +1,16 @@
 
 const { SyntaxKind } = require('ts-morph');
 
+/**
+ * Analyze NestJS-specific patterns from rulesbackend.mdc
+ *
+ * Rules that ESLint CAN'T detect:
+ * ✅ Guards en todas las rutas protegidas
+ * ✅ Role-based access control (@Roles)
+ * ✅ API validation (ValidationPipe + DTOs)
+ * ✅ Swagger documentation (@ApiProperty)
+ * ✅ Audit logging en operaciones sensibles
+ */
 function analyzeNestJSPatterns(sf, findings, pushFinding) {
   const filePath = sf.getFilePath();
   const isController = /controller\.ts$/i.test(filePath) &&

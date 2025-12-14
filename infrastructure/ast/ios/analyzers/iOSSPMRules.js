@@ -1,3 +1,14 @@
+/**
+ * iOS Swift Package Manager (SPM) Rules
+ *
+ * Reglas de organización de código con SPM:
+ * - Feature modules separation
+ * - Core modules detection
+ * - Package.swift analysis
+ * - Public API exposure control
+ * - Module dependencies validation
+ * - Cross-module violations
+ */
 
 const { pushFinding } = require('../../ast-core');
 const fs = require('fs');

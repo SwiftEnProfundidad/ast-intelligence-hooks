@@ -1,3 +1,10 @@
+/**
+ * iOS Networking Advanced Rules
+ * - GraphQL specific rules
+ * - WebSocket handling
+ * - Offline queue management
+ * - Network layer architecture
+ */
 
 const { pushFinding } = require('../../ast-core');
 const fs = require('fs');

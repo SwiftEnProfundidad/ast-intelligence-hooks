@@ -1,3 +1,14 @@
+/**
+ * iOS SwiftUI Advanced Rules
+ *
+ * Reglas avanzadas de SwiftUI:
+ * - PreferenceKey usage
+ * - Custom ViewModifiers
+ * - EnvironmentKey custom
+ * - Transaction y Animation avanzadas
+ * - Custom Layout protocol
+ * - ViewBuilder avanzados
+ */
 
 const { pushFinding } = require('../../ast-core');
 const fs = require('fs');

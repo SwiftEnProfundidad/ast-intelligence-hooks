@@ -2,6 +2,13 @@
 const path = require('path');
 const { pushFinding, SyntaxKind } = require(path.join(__dirname, '../../ast-core'));
 
+/**
+ * AndroidSOLIDAnalyzer
+ * Enterprise-grade SOLID principles analyzer for Android/Kotlin
+ * Uses TypeScript AST (ts-morph) for dynamic node-based analysis
+ *
+ * @class AndroidSOLIDAnalyzer
+ */
 class AndroidSOLIDAnalyzer {
     constructor() {
         this.findings = [];

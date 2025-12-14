@@ -1,4 +1,13 @@
 
+/**
+ * Analyze DDD patterns in Android (Kotlin)
+ *
+ * Rules from rulesandroid.mdc:
+ * ✅ Repository pattern (interface in domain, impl in data)
+ * ✅ Use Cases in domain/usecase
+ * ✅ Mapper between DTO ↔ Domain
+ * ✅ Data classes for DTOs and models
+ */
 function analyzeDDD(filePath, fileContent, findings, pushFileFinding) {
   analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFinding);
 

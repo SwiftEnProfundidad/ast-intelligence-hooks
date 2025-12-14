@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+/**
+ * iOS/Swift AST Rules usando SourceKitten
+ * Reglas robustas para análisis de código Swift
+ */
 
 const SwiftParser = require('./swift-parser');
 const fs = require('fs');
