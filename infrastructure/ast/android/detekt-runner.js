@@ -44,6 +44,10 @@ function analyzeAndroidFiles(kotlinFiles) {
 
         for (const [category, issues] of Object.entries(detektResults.findings)) {
             for (const issue of issues) {
+                const issueFile = issue.location?.file || '';
+                if (/infrastructure\/ast\/|analyzers\/|detectors\//.test(issueFile)) {
+                    continue;
+                }
                 findings.push({
                     rule_id: issue.rule || 'detekt-unknown',
                     severity: mapDetektSeverity(issue.severity || 'warning'),
