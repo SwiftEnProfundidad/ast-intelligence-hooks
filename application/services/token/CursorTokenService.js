@@ -39,8 +39,9 @@ class CursorTokenService {
             return null;
         }
 
+        const retryPolicy = { maxAttempts: maxRetries, backoff: 'exponential' };
         let lastError = null;
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        for (let attempt = 0; attempt <= retryPolicy.maxAttempts; attempt++) {
             try {
                 const response = await this.fetch(this.apiUrl, {
                     headers: this.apiToken ? { Authorization: `Bearer ${this.apiToken}` } : {}
@@ -66,13 +67,15 @@ class CursorTokenService {
                 };
             } catch (error) {
                 lastError = error;
-                const isLastAttempt = attempt === maxRetries;
+                const isLastAttempt = attempt === retryPolicy.maxAttempts;
                 if (isLastAttempt) {
                     this.logger.warn?.('CURSOR_TOKEN_SERVICE_API_FAILED', { error: error.message, attempts: attempt + 1 });
                     return null;
                 }
-                const delayMs = initialDelayMs * Math.pow(2, attempt);
-                await new Promise(resolve => setTimeout(resolve, delayMs));
+                if (retryPolicy.backoff === 'exponential') {
+                    const delayMs = initialDelayMs * Math.pow(2, attempt);
+                    await new Promise(resolve => setTimeout(resolve, delayMs));
+                }
             }
         }
         return null;
