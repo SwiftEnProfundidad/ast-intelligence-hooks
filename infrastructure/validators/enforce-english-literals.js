@@ -22,6 +22,9 @@ function decodeUnicode(value) {
     try {
         return JSON.parse(`"${value}"`);
     } catch (error) {
+        if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+            console.debug(`[enforce-english-literals] Failed to decode Unicode value "${value}": ${error.message}`);
+        }
         return value;
     }
 }

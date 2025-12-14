@@ -1,12 +1,12 @@
 {
   "totals": {
-    "errors": 106,
+    "errors": 105,
     "warnings": 12,
     "infos": 115
   },
   "levels": {
     "CRITICAL": 7,
-    "HIGH": 99,
+    "HIGH": 98,
     "MEDIUM": 12,
     "LOW": 115
   },
@@ -15,12 +15,12 @@
     "Frontend": 7,
     "iOS": 18,
     "Android": 42,
-    "Other": 69
+    "Other": 68
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
     "workflow.sequence.missing_bdd_specs": 1,
-    "common.quality.comments": 75,
+    "common.quality.comments": 74,
     "common.types.any": 1,
     "common.quality.disabled_lint": 3,
     "common.debug.console": 3,
@@ -74,13 +74,13 @@
   "platformDetails": {
     "Other": {
       "CRITICAL": 2,
-      "HIGH": 57,
+      "HIGH": 56,
       "MEDIUM": 7,
       "LOW": 3,
       "rules": {
         "workflow.sequence.tests_lagging": 1,
         "workflow.sequence.missing_bdd_specs": 1,
-        "common.quality.comments": 45,
+        "common.quality.comments": 44,
         "common.types.any": 1,
         "common.quality.disabled_lint": 3,
         "common.debug.console": 3,
@@ -127,7 +127,6 @@
         "infrastructure/utils/token-manager.js",
         "application/services/notification/NotificationCenterService.js",
         "application/services/recovery/AutoRecoveryManager.js",
-        "application/services/token/CursorTokenService.js",
         "application/services/token/TokenMonitorService.js",
         "infrastructure/ast/archive/ast-intelligence.ts",
         "infrastructure/ast/archive/kotlin-analyzer.js",
@@ -145,6 +144,7 @@
         "application/services/token/__tests__/TokenMonitorService.spec.js",
         "hooks/pre-tool-use-evidence-validator.ts",
         "infrastructure/telemetry/metrics-server.js",
+        "application/services/token/CursorTokenService.js",
         "infrastructure/ast/common/images-backend-analyzer.js",
         "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js"
       ]
@@ -303,11 +303,11 @@
       ]
     },
     "common.quality.comments": {
-      "count": 75,
+      "count": 74,
       "level": "HIGH",
       "severity": "HIGH",
       "platforms": {
-        "Other": 45,
+        "Other": 44,
         "Android": 7,
         "Backend": 7,
         "Frontend": 6,
@@ -344,7 +344,6 @@
         "infrastructure/utils/token-manager.js",
         "application/services/notification/NotificationCenterService.js",
         "application/services/recovery/AutoRecoveryManager.js",
-        "application/services/token/CursorTokenService.js",
         "application/services/token/TokenMonitorService.js",
         "infrastructure/ast/android/clean-architecture-analyzer.js",
         "infrastructure/ast/android/ddd-analyzer.js",
@@ -1398,20 +1397,6 @@
         "LOW": 0
       }
     },
-    "application/services/token/CursorTokenService.js": {
-      "platform": "Other",
-      "rules": {
-        "common.quality.comments": 1,
-        "common.network.missing_retry_policy": 1,
-        "common.network.missing_timeout": 1
-      },
-      "levels": {
-        "CRITICAL": 1,
-        "HIGH": 2,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "application/services/token/TokenMonitorService.js": {
       "platform": "Other",
       "rules": {
@@ -2039,6 +2024,19 @@
         "LOW": 0
       }
     },
+    "application/services/token/CursorTokenService.js": {
+      "platform": "Other",
+      "rules": {
+        "common.network.missing_retry_policy": 1,
+        "common.network.missing_timeout": 1
+      },
+      "levels": {
+        "CRITICAL": 1,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
     "infrastructure/ast/android/ast-android.js": {
       "platform": "Android",
       "rules": {
@@ -2576,15 +2574,6 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/recovery/AutoRecoveryManager.js",
-      "line": 1,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
       "line": 1,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
@@ -4404,7 +4393,7 @@
   ],
   "metadata": {
     "totalFiles": 287,
-    "timestamp": "2025-12-14T00:43:37.001Z",
+    "timestamp": "2025-12-14T00:47:30.808Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }
