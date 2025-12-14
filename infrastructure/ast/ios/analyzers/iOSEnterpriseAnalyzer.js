@@ -650,7 +650,6 @@ class iOSEnterpriseAnalyzer {
 
     // ios.i18n.missing_rtl
     if (content.includes('leading') || content.includes('trailing')) {
-      // Good - using semantic edges
     } else if (content.includes('.left') || content.includes('.right')) {
       this.addFinding('ios.i18n.missing_rtl', 'medium', filePath, 1,
         'Using left/right instead of leading/trailing - breaks RTL languages');
@@ -747,7 +746,6 @@ class iOSEnterpriseAnalyzer {
 
     // ios.organization.missing_extensions
     if (content.includes('extension ') && filePath.includes('+')) {
-      // Good - using extension files
     } else if (content.split('extension ').length > 3) {
       this.addFinding('ios.organization.missing_extensions', 'low', filePath, 1,
         'Multiple extensions in single file - split into separate files (Type+Extension.swift)');

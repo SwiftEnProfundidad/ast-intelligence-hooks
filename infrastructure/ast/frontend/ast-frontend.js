@@ -1117,6 +1117,9 @@ function runFrontendIntelligence(project, findings, platform) {
             pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); 
           } 
         } catch (error) {
+          if (process.env.DEBUG) {
+            console.debug(`[frontend-ast] Failed to check E2E spec file: ${error.message}`);
+          }
         }
       }
     }

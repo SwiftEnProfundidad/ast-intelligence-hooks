@@ -345,8 +345,9 @@ function createProject(files) {
     if (fs.existsSync(file)) {
       try {
         project.addSourceFileAtPath(file);
-      } catch (e) {
-        // Skip files that can't be parsed
+      } catch (error) {
+        if (process.env.DEBUG) {
+          console.debug(`[createProject] Failed to add file ${file}: ${error.message}`);
       }
     }
   }
