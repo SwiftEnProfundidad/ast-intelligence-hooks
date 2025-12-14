@@ -324,8 +324,12 @@ function runCommonIntelligence(project, findings) {
       const withoutUrls = withoutStrings.replace(/https?:\/\//g, '');
       if (!/\/\/|\/\*/.test(withoutUrls)) return;
 
-      const hasOnlyJSDoc = !/\/\/|\/\*[^*]/.test(withoutUrls.replace(/\/\*\*[\s\S]*?\*\//g, ''));
+      const withoutJSDoc = withoutUrls.replace(/\/\*\*[\s\S]*?\*\//g, '');
+      const hasOnlyJSDoc = !/\/\/|\/\*/.test(withoutJSDoc);
       if (hasOnlyJSDoc) return;
+      
+      const withoutAllComments = withoutJSDoc.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+      if (!/\/\/|\/\*/.test(withoutAllComments)) return;
 
       const lines = full.split('\n');
       const firstNonEmptyLine = lines.findIndex(l => l.trim().length > 0);
