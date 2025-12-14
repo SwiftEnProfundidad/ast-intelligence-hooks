@@ -73,6 +73,7 @@ async function runPlatformAnalysis(project, findings, context) {
   const platformsProcessed = new Set();
 
   sourceFiles.forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     const platform = platformOf(filePath);
     if (platform) {
