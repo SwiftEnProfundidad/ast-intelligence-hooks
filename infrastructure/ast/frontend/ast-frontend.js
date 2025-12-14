@@ -1112,7 +1112,12 @@ function runFrontendIntelligence(project, findings, platform) {
       }
       if (/page\.tsx$/.test(filePath)) {
         const candidate = filePath.replace(/\/app\//, '/e2e/').replace(/\.tsx$/, '.spec.ts');
-        try { if (!fs.existsSync(candidate)) { pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); } } catch (error) { }
+        try { 
+          if (!fs.existsSync(candidate)) { 
+            pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); 
+          } 
+        } catch (error) {
+        }
       }
     }
 

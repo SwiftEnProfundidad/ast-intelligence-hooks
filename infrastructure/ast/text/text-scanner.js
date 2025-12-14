@@ -839,7 +839,11 @@ function runTextScanner(root, findings) {
     // Concatenate all Kotlin content for global checks
     const kotlinFiles = files.filter(f => f.endsWith('.kt'));
     const allContent = kotlinFiles.map(f => {
-      try { return fs.readFileSync(f, 'utf8'); } catch (error) { return ''; }
+      try { 
+        return fs.readFileSync(f, 'utf8'); 
+      } catch (error) {
+        return '';
+      }
     }).join('\n');
 
     // 1. @Stable/@Immutable annotations

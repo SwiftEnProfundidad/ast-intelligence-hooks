@@ -67,7 +67,9 @@ class iOSASTIntelligentAnalyzer {
           line: v.line, column: v.column, message: v.message
         });
       }
-    } catch (error) { }
+    } catch (error) {
+      console.error('[iOSASTIntelligentAnalyzer] Error parsing file:', error.message);
+    }
   }
 
   parseFile(filePath) {
