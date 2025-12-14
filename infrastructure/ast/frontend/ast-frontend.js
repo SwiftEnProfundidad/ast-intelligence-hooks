@@ -1,6 +1,4 @@
 // ===== AST FRONTEND MODULE =====
-// Frontend-specific AST intelligence rules
-// Clean Architecture: Infrastructure Layer - Frontend AST Analysis
 
 const path = require('path');
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
