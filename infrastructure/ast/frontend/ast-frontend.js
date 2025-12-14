@@ -29,6 +29,7 @@ function runFrontendIntelligence(project, findings, platform) {
   }
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     const isInfrastructure = /\/infrastructure\/|\/lib\/api\/|\/services\//.test(filePath);
     const isComponent = /\/(components|app|presentation)\//.test(filePath) && !isInfrastructure;
