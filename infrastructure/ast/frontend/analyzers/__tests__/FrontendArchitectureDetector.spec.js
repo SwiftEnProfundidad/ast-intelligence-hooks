@@ -83,7 +83,7 @@ describe('FrontendArchitectureDetector', () => {
         'src/features/orders/infrastructure/OrderRepository.ts',
         'src/features/orders/presentation/OrderScreen.tsx'
       ];
-      glob.sync.mockReturnValue(files);
+      glob.sync.mockReturnValueOnce(files).mockReturnValueOnce([]);
       const detector = makeSUT();
       const result = detector.detect();
       expect(result).toBe('FEATURE_FIRST_CLEAN');
@@ -96,7 +96,7 @@ describe('FrontendArchitectureDetector', () => {
         'src/components/Modal.tsx',
         'src/pages/Home.tsx'
       ];
-      glob.sync.mockReturnValue(files);
+      glob.sync.mockReturnValueOnce(files).mockReturnValueOnce([]);
       const detector = makeSUT();
       const result = detector.detect();
       expect(result).toBe('COMPONENT_BASED');
@@ -109,7 +109,7 @@ describe('FrontendArchitectureDetector', () => {
         'src/components/organisms/Header.tsx',
         'src/components/templates/PageLayout.tsx'
       ];
-      glob.sync.mockReturnValue(files);
+      glob.sync.mockReturnValueOnce(files).mockReturnValueOnce([]);
       const detector = makeSUT();
       const result = detector.detect();
       expect(result).toBe('ATOMIC_DESIGN');
