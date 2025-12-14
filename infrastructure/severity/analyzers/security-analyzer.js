@@ -1,5 +1,3 @@
-// ===== SECURITY IMPACT ANALYZER =====
-// Evaluates security impact of violations (0-100)
 
 class SecurityAnalyzer {
   /**

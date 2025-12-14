@@ -1,5 +1,3 @@
-// ===== SEVERITY TRACKER =====
-// Tracks severity history across sessions for trend analysis
 
 const fs = require('fs');
 const path = require('path');

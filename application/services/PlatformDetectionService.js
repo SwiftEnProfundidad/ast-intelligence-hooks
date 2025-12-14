@@ -1,5 +1,4 @@
 // ===== PLATFORM DETECTION SERVICE =====
-// Application Layer - Service
 // Detects which platforms are present in the codebase
 
 const fs = require('fs').promises;

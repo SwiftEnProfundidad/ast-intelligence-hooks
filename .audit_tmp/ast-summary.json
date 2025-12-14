@@ -2476,7 +2476,7 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/use-cases/AnalyzeStagedFilesUseCase.js",
-      "line": 5,
+      "line": 2,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -2485,7 +2485,7 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/use-cases/BlockCommitUseCase.js",
-      "line": 5,
+      "line": 2,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -4484,7 +4484,7 @@
   ],
   "metadata": {
     "totalFiles": 287,
-    "timestamp": "2025-12-14T00:21:58.081Z",
+    "timestamp": "2025-12-14T00:27:31.083Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }

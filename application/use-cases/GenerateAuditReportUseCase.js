@@ -1,6 +1,3 @@
-// ===== GENERATE AUDIT REPORT USE CASE =====
-// Application Layer - Use Case
-// Generates formatted audit report from AuditResult
 
 class GenerateAuditReportUseCase {
   constructor(outputFormatter) {

@@ -65,7 +65,6 @@ class IntelligentGitTreeMonitor {
             };
         }
 
-        // Default: just show analysis
         return {
             action: 'info',
             suggestions,
@@ -82,7 +81,6 @@ class IntelligentGitTreeMonitor {
 
         switch (analysis.action) {
             case 'clean':
-                // Tree is clean, no notification needed
                 break;
 
             case 'suggest_commit':

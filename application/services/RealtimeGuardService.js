@@ -197,7 +197,6 @@ class RealtimeGuardService {
           notifier: (notification) => {
             // Use the notification's message directly (it's already formatted)
             if (notification.action === 'suggest_commit' && notification.data && notification.data.length > 0) {
-              // Send notification with custom title from IntelligentGitTreeMonitor
               this.sendNotification({
                 title: notification.title || '📦 Atomic Commit Suggestions',
                 subtitle: notification.subtitle || '',
@@ -209,15 +208,12 @@ class RealtimeGuardService {
           logger: this.logger
         });
         await intelligentMonitor.notify();
-        // Don't block on old limit - intelligent system handles it
         return;
       } catch (error) {
         this.appendDebugLog(`INTELLIGENT_ANALYSIS_ERROR|${error.message}`);
-        // Fallback to old behavior only if intelligent analysis completely fails
       }
     }
 
-    // Old behavior only as fallback
     if (isTreeBeyondLimit(state, limit)) {
       this.handleDirtyTree(state, limit);
       return;
@@ -487,7 +483,6 @@ class RealtimeGuardService {
       const dialogDelivered = notifyWithOsascriptDialog();
       delivered = dialogDelivered || delivered;
     } else if (!delivered) {
-      // Fallback to dialog disabled
       // delivered = notifyWithOsascriptDialog() || delivered;
     }
 

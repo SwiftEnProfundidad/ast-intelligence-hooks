@@ -1,5 +1,3 @@
-// ===== MAINTAINABILITY IMPACT ANALYZER =====
-// Evaluates code quality impact of violations (0-100)
 
 class MaintainabilityAnalyzer {
   analyze(violation, context) {

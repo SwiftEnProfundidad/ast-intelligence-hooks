@@ -180,7 +180,6 @@ class AutonomousOrchestrator {
             evidenceContent: 15             // NEW: Evidence file content
         };
 
-        // Original file-based scoring
         const neutralFilenames = new Set(['.AI_EVIDENCE.json', 'README.md']);
         const relevantStagedFiles = (context.stagedFiles || []).filter(file => !neutralFilenames.has(file));
 
@@ -202,12 +201,10 @@ class AutonomousOrchestrator {
             score += weights.extensionSpecific;
         }
 
-        // Branch name exact match (reduced weight)
         if (context.branchName && context.branchName.includes(platform)) {
             score += weights.branchNameMatch;
         }
 
-        // Recent history consistency
         if (context.recentCommits) {
             const platformFrequency = this.getPlatformFrequencyInHistory(platform, context.recentCommits);
             if (platformFrequency > 0.7) {
@@ -215,13 +212,11 @@ class AutonomousOrchestrator {
             }
         }
 
-        // NEW: AST system files detection
         const astPlatforms = this.detectFromASTSystemFiles(context.stagedFiles);
         if (astPlatforms.includes(platform)) {
             score += weights.astSystemFiles;
         }
 
-        // NEW: Branch keywords detection
         const branchPlatforms = this.detectFromBranchKeywords(context.branchName);
         if (branchPlatforms.includes(platform)) {
             score += weights.branchKeywords;

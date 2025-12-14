@@ -109,43 +109,33 @@ function runCommonIntelligence(project, findings) {
     }
   }
 
-  // STEP 2: Common code rules
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
     const plat = platformOf(filePath) || 'other';
 
-    // Skip AST infrastructure files (avoid self-analysis)
     if (/\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
 
-    // NOTE: Scripts exclusion moved inside specific rules, not global
-    // Some rules (like any type) should skip scripts, others shouldn't
 
     sf.getDescendantsOfKind(SyntaxKind.TypeReference).forEach((tref) => {
       const txt = tref.getText();
       if (txt === 'any' || /<\s*any\s*>/.test(txt)) {
-        // Exclusion 0: Utility scripts (seed, migrations) - pragmatic decision
         const isUtilityScript = /\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath);
         if (isUtilityScript) return;
 
-        // Exclusion 1: Third-party type definitions
         if (/node_modules|\.d\.ts$|@types/.test(filePath)) return;
 
-        // Exclusion 2: Event handler parameters - common in DOM/React event listeners
         const parent = tref.getParent();
         if (parent?.getKind() === SyntaxKind.Parameter) {
           const paramName = parent.getText().split(':')[0].trim();
           if (/^(e|event|evt|args?|payload)$/i.test(paramName)) {
-            // Event handler parameter - common pattern, often unavoidable
             return;
           }
         }
 
-        // Exclusion 3: Catch block error parameters - legitimate if validated after
         const ancestors = tref.getAncestors();
         const inCatchClause = ancestors.some(a => a.getKind() === SyntaxKind.CatchClause);
         if (inCatchClause) {
-          // Catch blocks with unknown error types are acceptable - errors are untyped by nature
           return;
         }
 
@@ -311,7 +301,6 @@ function runCommonIntelligence(project, findings) {
       // Intelligent cache key detection: colon separator or known entity prefixes
       const isCacheKey = credentialValue.includes(':') || /^(?:products|orders|users|stores|cache|metrics|session):/i.test(credentialValue);
 
-      // Intelligent constant detection: variable declaration context + short length + not real credential format
       const isConstantKey = /(?:const|let|var)\s+\w*(?:KEY|TOKEN|STORAGE)\s*=/i.test(fullLine) &&
         credentialValue.length < 30 &&
         !/^(?:eyJ|sk_|pk_|live_|prod_|[a-f0-9]{32,})/.test(credentialValue);

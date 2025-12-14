@@ -62,7 +62,6 @@ class ASTHooksInstaller {
 ╚════════════════════════════════════════════════════════════════╝
 ${COLORS.reset}`);
 
-    // STEP 0: Check Git repository
     process.stdout.write(`\n${COLORS.cyan}[0/8] Checking Git repository...${COLORS.reset}`);
     if (!this.checkGitRepository()) {
       process.stdout.write(`${COLORS.red}✗ Git repository check failed${COLORS.reset}\n`);
@@ -71,7 +70,6 @@ ${COLORS.reset}`);
     }
     process.stdout.write(`${COLORS.green}✓ Git repository detected${COLORS.reset}`);
 
-    // STEP 1: Detect project platforms
     process.stdout.write(`\n${COLORS.cyan}[1/8] Detecting project platforms...${COLORS.reset}`);
     this.detectPlatforms();
     process.stdout.write(`${COLORS.green}✓ Detected: ${this.platforms.join(', ')}${COLORS.reset}`);
@@ -90,32 +88,26 @@ ${COLORS.reset}`);
     this.copySystemFiles();
     process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
 
-    // STEP 5: Create project configuration
     process.stdout.write(`\n${COLORS.cyan}[5/8] Creating project configuration...${COLORS.reset}`);
     this.createProjectConfig();
     process.stdout.write(`${COLORS.green}✓ Configuration created${COLORS.reset}`);
 
-    // STEP 6: Install MCP servers for agentic IDEs
     process.stdout.write(`\n${COLORS.cyan}[6/8] Installing MCP servers for agentic IDEs...${COLORS.reset}`);
     this.installCursorHooks();
     process.stdout.write(`${COLORS.green}✓ MCP servers installed${COLORS.reset}`);
 
-    // STEP 7: Install Git hooks
     process.stdout.write(`\n${COLORS.cyan}[7/8] Installing Git hooks...${COLORS.reset}`);
     this.installGitHooks();
     process.stdout.write(`${COLORS.green}✓ Git hooks installed${COLORS.reset}`);
 
-    // STEP 7.5: Configure VS Code tasks for auto-start
     process.stdout.write(`\n${COLORS.cyan}[7.5/8] Configuring VS Code/Cursor tasks for auto-start...${COLORS.reset}`);
     this.configureVSCodeTasks();
     process.stdout.write(`${COLORS.green}✓ VS Code tasks configured${COLORS.reset}`);
 
-    // STEP 8: Add npm scripts to project package.json
     process.stdout.write(`\n${COLORS.cyan}[8/8] Adding npm scripts to package.json...${COLORS.reset}`);
     this.addNpmScripts();
     process.stdout.write(`${COLORS.green}✓ npm scripts added${COLORS.reset}`);
 
-    // Finalize
     process.stdout.write(`\n${COLORS.cyan}Finalizing installation...${COLORS.reset}`);
     this.printSuccessMessage();
   }
@@ -274,9 +266,6 @@ ${COLORS.reset}`);
     const configPath = path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
-    // Note: .ast-architecture.json is OPTIONAL and only used by iOS analyzer if needed
-    // Users can create it manually if they want to specify architecture patterns
-    // We don't create it automatically to avoid forcing specific architectures
   }
 
   installESLintConfigs() {
