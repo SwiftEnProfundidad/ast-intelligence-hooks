@@ -179,7 +179,11 @@ ${COLORS.reset}`);
       const dest = path.join(this.targetRoot, 'scripts/hooks-system', item);
 
       if (fs.existsSync(source)) {
-        this.copyRecursive(source, dest);
+        if (item === 'infrastructure/') {
+          this.copyRecursiveExcluding(source, dest, ['scripts']);
+        } else {
+          this.copyRecursive(source, dest);
+        }
       }
     });
   }
@@ -191,6 +195,26 @@ ${COLORS.reset}`);
       }
       fs.readdirSync(source).forEach(file => {
         this.copyRecursive(path.join(source, file), path.join(dest, file));
+      });
+    } else {
+      fs.copyFileSync(source, dest);
+    }
+  }
+
+  copyRecursiveExcluding(source, dest, excludeDirs) {
+    if (fs.statSync(source).isDirectory()) {
+      if (!fs.existsSync(dest)) {
+        fs.mkdirSync(dest, { recursive: true });
+      }
+      fs.readdirSync(source).forEach(file => {
+        if (excludeDirs.includes(file)) {
+          return;
+        }
+        this.copyRecursiveExcluding(
+          path.join(source, file),
+          path.join(dest, file),
+          excludeDirs
+        );
       });
     } else {
       fs.copyFileSync(source, dest);
