@@ -1,6 +1,7 @@
 const { SyntaxKind } = require('ts-morph');
 
 function analyzeDDD(sf, findings, pushFinding, project) {
+  if (!sf || typeof sf.getFilePath !== 'function') return;
   const filePath = sf.getFilePath();
 
   analyzeRepositoryPattern(sf, filePath, findings, pushFinding, project);

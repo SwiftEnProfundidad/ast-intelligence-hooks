@@ -1,6 +1,7 @@
 const { SyntaxKind } = require('ts-morph');
 
 function analyzeCleanArchitecture(sf, findings, pushFinding) {
+  if (!sf || typeof sf.getFilePath !== 'function') return;
   const filePath = sf.getFilePath();
 
   const layer = detectLayer(filePath);

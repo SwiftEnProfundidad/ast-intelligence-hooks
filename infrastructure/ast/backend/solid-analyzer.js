@@ -323,6 +323,7 @@ function findImplementations(iface, project) {
 }
 
 function analyzeDIP(cls, sf, findings, pushFinding) {
+  if (!sf || typeof sf.getFilePath !== 'function') return;
   const className = cls.getName() || 'AnonymousClass';
   const filePath = sf.getFilePath();
 
