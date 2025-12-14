@@ -30,14 +30,10 @@ function runFrontendIntelligence(project, findings, platform) {
 
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
 
-    // =========================================================================
-    // =========================================================================
     analyzeCleanArchitecture(sf, findings, pushFinding);
     analyzeDDD(sf, findings, pushFinding, project);
     analyzeFeatureFirst(sf, findings, pushFinding);
 
-    // =========================================================================
-    // =========================================================================
     const forbiddenLiteralsAnalyzer = new FrontendForbiddenLiteralsAnalyzer();
     forbiddenLiteralsAnalyzer.analyze(sf, findings, pushFinding);
   });

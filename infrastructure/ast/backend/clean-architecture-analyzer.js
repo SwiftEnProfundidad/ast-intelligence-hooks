@@ -16,7 +16,6 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
   const layer = detectLayer(filePath);
   if (!layer) return;
 
-  // Get all imports
   const imports = sf.getImportDeclarations();
 
   imports.forEach(imp => {

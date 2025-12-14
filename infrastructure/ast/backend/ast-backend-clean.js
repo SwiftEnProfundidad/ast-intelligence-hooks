@@ -32,8 +32,6 @@ function runBackendIntelligence(project, findings, platform) {
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
     if (/\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
 
-    // =========================================================================
-    // =========================================================================
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const className = cls.getName();
       if (!className) return;
@@ -49,20 +47,12 @@ function runBackendIntelligence(project, findings, platform) {
 
     analyzeISP(sf, findings, pushFinding, project);
 
-    // =========================================================================
-    // =========================================================================
     analyzeCleanArchitecture(sf, findings, pushFinding);
 
-    // =========================================================================
-    // =========================================================================
     analyzeDDD(sf, findings, pushFinding, project);
 
-    // =========================================================================
-    // =========================================================================
     analyzeFeatureFirst(sf, findings, pushFinding);
 
-    // =========================================================================
-    // =========================================================================
     analyzeForbiddenLiterals(sf, findings, pushFinding);
   });
 }

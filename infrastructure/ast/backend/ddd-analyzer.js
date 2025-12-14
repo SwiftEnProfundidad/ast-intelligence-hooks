@@ -28,8 +28,6 @@ function analyzeDDD(sf, findings, pushFinding, project) {
   analyzeDomainEvents(sf, filePath, findings, pushFinding);
 }
 
-// =============================================================================
-// =============================================================================
 function analyzeRepositoryPattern(sf, filePath, findings, pushFinding, project) {
   const classes = sf.getClasses();
   const interfaces = sf.getInterfaces();
@@ -88,8 +86,6 @@ function analyzeRepositoryPattern(sf, filePath, findings, pushFinding, project) 
   });
 }
 
-// =============================================================================
-// =============================================================================
 function analyzeUseCasesPattern(sf, filePath, findings, pushFinding) {
   if (/UseCase\.ts$/i.test(filePath)) {
     const classes = sf.getClasses();
@@ -144,8 +140,6 @@ function analyzeUseCasesPattern(sf, filePath, findings, pushFinding) {
   }
 }
 
-// =============================================================================
-// =============================================================================
 function analyzeDTOsPattern(sf, filePath, findings, pushFinding) {
   if (/\.dto\.ts$/i.test(filePath) || filePath.includes('/dtos/')) {
     const classes = sf.getClasses();
@@ -177,8 +171,6 @@ function analyzeDTOsPattern(sf, filePath, findings, pushFinding) {
   }
 }
 
-// =============================================================================
-// =============================================================================
 function analyzeAnemicDomain(sf, filePath, findings, pushFinding) {
   if (!filePath.includes('/domain/') && !filePath.includes('/entities/')) return;
 
@@ -207,8 +199,6 @@ function analyzeAnemicDomain(sf, filePath, findings, pushFinding) {
   });
 }
 
-// =============================================================================
-// =============================================================================
 function analyzeValueObjects(sf, filePath, findings, pushFinding) {
   if (!/VO\.ts$|ValueObject\.ts$/i.test(filePath) && !filePath.includes('/value-objects/')) return;
 
@@ -229,8 +219,6 @@ function analyzeValueObjects(sf, filePath, findings, pushFinding) {
   });
 }
 
-// =============================================================================
-// =============================================================================
 function analyzeDomainEvents(sf, filePath, findings, pushFinding) {
   const classes = sf.getClasses();
 

@@ -1,8 +1,6 @@
 
 const { SyntaxKind } = require('ts-morph');
 
-// =============================================================================
-// =============================================================================
 
 function analyzeSRP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -153,8 +151,6 @@ function analyzeImportConcerns(imports) {
   return Array.from(concerns);
 }
 
-// =============================================================================
-// =============================================================================
 
 function analyzeOCP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -194,8 +190,6 @@ function detectTypeIfChains(ifStatements) {
   });
 }
 
-// =============================================================================
-// =============================================================================
 
 function analyzeLSP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -256,8 +250,6 @@ function countValidations(methodBody) {
   return count;
 }
 
-// =============================================================================
-// =============================================================================
 
 function analyzeISP(sf, findings, pushFinding, project) {
   const interfaces = sf.getInterfaces();
@@ -336,8 +328,6 @@ function findImplementations(iface, project) {
   return implementations;
 }
 
-// =============================================================================
-// =============================================================================
 
 function analyzeDIP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -399,8 +389,6 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
   });
 }
 
-// =============================================================================
-// =============================================================================
 
 
 module.exports = {

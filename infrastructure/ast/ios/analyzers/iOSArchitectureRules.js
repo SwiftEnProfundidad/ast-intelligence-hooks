@@ -52,8 +52,6 @@ class iOSArchitectureRules {
     }
   }
 
-  // ============================================
-  // ============================================
   checkFeatureFirstCleanDDDRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -249,9 +247,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // MVVM Rules
-  // ============================================
   checkMVVMRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -309,9 +304,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // MVVM-C Rules
-  // ============================================
   checkMVVMCRules(files) {
     this.checkMVVMRules(files);
 
@@ -369,9 +361,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // MVP Rules
-  // ============================================
   checkMVPRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -433,9 +422,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // VIPER Rules
-  // ============================================
   checkVIPERRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -531,8 +517,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // ============================================
   checkTCARules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -589,8 +573,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // ============================================
   checkCleanSwiftRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -641,8 +623,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // ============================================
   checkMVCLegacyRules(files) {
     files.forEach(file => {
       const content = this.readFile(file);
@@ -687,8 +667,6 @@ class iOSArchitectureRules {
     });
   }
 
-  // ============================================
-  // ============================================
   checkMixedArchitectureRules(files) {
     pushFinding(this.findings, {
       ruleId: 'ios.architecture.mixed_patterns',

@@ -30,8 +30,6 @@ class AndroidSOLIDAnalyzer {
         this.analyzeISP(sf);
     }
 
-    // =============================================================================
-    // =============================================================================
 
     analyzeOCP(sf) {
         const filePath = sf.getFilePath();
@@ -145,8 +143,6 @@ class AndroidSOLIDAnalyzer {
         return chains;
     }
 
-    // =============================================================================
-    // =============================================================================
 
     analyzeDIP(sf) {
         const filePath = sf.getFilePath();
@@ -204,8 +200,6 @@ class AndroidSOLIDAnalyzer {
         });
     }
 
-    // =============================================================================
-    // =============================================================================
 
     analyzeSRP(sf) {
         const filePath = sf.getFilePath();
@@ -236,7 +230,6 @@ class AndroidSOLIDAnalyzer {
             }
         });
 
-        // Analyze classes
         const classes = sf.getClasses();
         classes.forEach(cls => {
             const className = cls.getName() || 'AnonymousClass';
@@ -249,8 +242,6 @@ class AndroidSOLIDAnalyzer {
         });
     }
 
-    // =============================================================================
-    // =============================================================================
 
     analyzeISP(sf) {
         const interfaces = sf.getInterfaces();

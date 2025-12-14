@@ -12,7 +12,6 @@ function analyzeFeatureFirst(filePath, fileContent, findings, pushFileFinding) {
   const feature = detectFeature(filePath);
   if (!feature) return;
 
-  // Parse imports
   const importRegex = /^import\s+([^\s;]+)/gm;
   const imports = [];
   let match;

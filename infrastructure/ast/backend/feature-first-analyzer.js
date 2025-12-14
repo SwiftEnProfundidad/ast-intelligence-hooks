@@ -17,7 +17,6 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
   const feature = detectFeature(filePath);
   if (!feature) return;
 
-  // Get all imports
   const imports = sf.getImportDeclarations();
 
   imports.forEach(imp => {

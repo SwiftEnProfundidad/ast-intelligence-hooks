@@ -222,12 +222,10 @@ class FrontendArchitectureDetector {
     files.forEach(file => {
       const content = this.readFile(file);
 
-      // Detect Zustand
       if (content.includes('zustand') || content.includes('create(') && file.includes('store')) {
         this.patterns.stateManagement += 5;
       }
 
-      // Detect Redux
       if (content.includes('redux') || content.includes('@reduxjs/toolkit') || 
           file.includes('slice') || file.includes('reducer')) {
         this.patterns.stateManagement += 5;
