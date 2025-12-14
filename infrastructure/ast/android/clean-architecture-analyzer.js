@@ -96,9 +96,9 @@ function detectLayer(filePath) {
   if (normalized.includes('/data/')) return 'data';
   if (normalized.includes('/presentation/')) return 'presentation';
 
-  if (normalized.match(/\/(model|repository|usecase)\
-  if (normalized.match(/\/(remote|local|mapper)\
-  if (normalized.match(/\/(ui|viewmodel|screen|theme)\
+  if (normalized.match(/\/(model|repository|usecase)\//)) return 'domain';
+  if (normalized.match(/\/(remote|local|mapper)\//)) return 'data';
+  if (normalized.match(/\/(ui|viewmodel|screen|theme)\//)) return 'presentation';
 
   return null;
 }
