@@ -12,7 +12,7 @@
     "ast-intelligence-automation": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/gitflow-automation-watcher.js"
+        "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",

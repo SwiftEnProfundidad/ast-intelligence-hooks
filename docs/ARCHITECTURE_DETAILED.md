@@ -247,7 +247,7 @@ class CustomUseCase {
 
 **Location**: `infrastructure/mcp/`
 
-Follow the pattern of `gitflow-automation-watcher.js`:
+Follow the pattern of `ast-intelligence-automation.js`:
 
 ```javascript
 class CustomMCPServer {
@@ -319,7 +319,7 @@ ast-intelligence-hooks/
 │   │   ├── GitOperations.js
 │   │   └── MacOSNotificationAdapter.js
 │   ├── mcp/                  # MCP Servers
-│   │   ├── gitflow-automation-watcher.js
+│   │   ├── ast-intelligence-automation.js
 │   │   └── evidence-watcher.js
 │   ├── reporting/            # Report generation
 │   │   ├── ReportGenerator.js

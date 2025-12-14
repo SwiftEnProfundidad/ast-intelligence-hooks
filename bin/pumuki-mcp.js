@@ -8,7 +8,7 @@ const MCP_CONFIG = {
         'ast-intelligence-automation': {
             command: 'node',
             type: 'stdio',
-            args: ['./scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js'],
+            args: ['./scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js'],
             env: {
                 REPO_ROOT: process.cwd()
             }
@@ -49,7 +49,7 @@ function configureMCP() {
 
     const config = JSON.parse(JSON.stringify(MCP_CONFIG));
     config.mcpServers['ast-intelligence-automation'].args[0] =
-        path.join(cwd, 'scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js');
+        path.join(cwd, 'scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js');
     config.mcpServers['ast-intelligence-automation'].env.REPO_ROOT = cwd;
 
     if (fs.existsSync(mcpFile)) {

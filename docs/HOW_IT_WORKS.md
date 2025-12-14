@@ -123,7 +123,7 @@ scripts/hooks-system/
 
 **Files copied:**
 - `infrastructure/ast/ast-intelligence.js` - Main analysis engine
-- `infrastructure/mcp/gitflow-automation-watcher.js` - MCP server
+- `infrastructure/mcp/ast-intelligence-automation.js` - MCP server
 - Platform-specific analyzers (iOS, Android, Backend, Frontend)
 
 ---
@@ -167,7 +167,7 @@ Rules are used by `ai-start` when generating `.AI_EVIDENCE.json` to provide cont
     "ast-intelligence-automation": {
       "command": "/opt/homebrew/opt/node@20/bin/node",
       "args": [
-        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js"
+        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",

@@ -370,7 +370,7 @@ ${COLORS.reset}`);
         'ast-intelligence-automation': {
           command: nodePath,
           args: [
-            '${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js'
+            '${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js'
           ],
           env: {
             REPO_ROOT: '${workspaceFolder}',
