@@ -1,0 +1,61 @@
+# Hook System Path Configuration Template
+# Copy this file to your project's config/ directory and customize as needed
+# Defines paths and directories used by the hook system
+
+# Repository root (relative to this file)
+# Adjust the path depth based on where config/ is located in your project
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+# Hook system directories
+# If installed via npm, hook system is in node_modules/@pumuki/ast-intelligence-hooks
+# If installed in scripts/hooks-system, adjust path accordingly
+if [ -d "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks" ]; then
+  HOOKS_SYSTEM_DIR="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks"
+elif [ -d "$REPO_ROOT/scripts/hooks-system" ]; then
+  HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
+else
+  HOOKS_SYSTEM_DIR="$REPO_ROOT"
+fi
+
+HOOKS_BIN_DIR="$HOOKS_SYSTEM_DIR/bin"
+HOOKS_CONFIG_DIR="${HOOKS_CONFIG_DIR:-$HOOKS_SYSTEM_DIR/config}"
+HOOKS_INFRA_DIR="$HOOKS_SYSTEM_DIR/infrastructure"
+HOOKS_TESTS_DIR="$HOOKS_SYSTEM_DIR/__tests__"
+HOOKS_DOCS_DIR="$HOOKS_SYSTEM_DIR/docs"
+
+# Temporary directories
+TEMP_DIR="${TEMP_DIR:-$REPO_ROOT/.audit_tmp}"
+REPORTS_DIR="${REPORTS_DIR:-$REPO_ROOT/.audit-reports}"
+
+# Output files
+AST_SUMMARY_FILE="$TEMP_DIR/ast-summary.json"
+AST_FINDINGS_FILE="$TEMP_DIR/ast-findings.json"
+PATTERN_SUMMARY_FILE="$TEMP_DIR/pattern-summary.txt"
+ESLINT_SUMMARY_FILE="$TEMP_DIR/eslint-summary.txt"
+
+# Evidence and state files
+AI_EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
+GIT_EVIDENCE_FILE="$TEMP_DIR/git-evidence.json"
+
+# Platform-specific paths (customize based on your project structure)
+BACKEND_SRC_DIR="${BACKEND_SRC_DIR:-$REPO_ROOT/apps/backend/src}"
+FRONTEND_SRC_DIR="${FRONTEND_SRC_DIR:-$REPO_ROOT/apps/frontend/src}"
+INFRASTRUCTURE_DIR="${INFRASTRUCTURE_DIR:-$REPO_ROOT/scripts}"
+
+# Test directories (customize based on your project structure)
+BACKEND_TESTS_DIR="${BACKEND_TESTS_DIR:-$BACKEND_SRC_DIR/**/__tests__}"
+FRONTEND_TESTS_DIR="${FRONTEND_TESTS_DIR:-$FRONTEND_SRC_DIR/**/__tests__}"
+
+# Configuration files (customize based on your project structure)
+ESLINT_CONFIG="${ESLINT_CONFIG:-$REPO_ROOT/.eslintrc.js}"
+TSCONFIG="${TSCONFIG:-$REPO_ROOT/tsconfig.json}"
+PRETTIER_CONFIG="${PRETTIER_CONFIG:-$REPO_ROOT/.prettierrc}"
+
+# Node.js paths
+NODE_MODULES_DIR="$REPO_ROOT/node_modules"
+PACKAGE_JSON="$REPO_ROOT/package.json"
+
+# Git-related paths
+GIT_DIR="$REPO_ROOT/.git"
+GIT_HOOKS_DIR="$GIT_DIR/hooks"
+

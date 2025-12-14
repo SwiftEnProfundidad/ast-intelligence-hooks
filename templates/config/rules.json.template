@@ -1,0 +1,128 @@
+{
+    "_comment": "Rules severity configuration template",
+    "_instructions": "Copy this file to your project's config/ directory and customize as needed. Override default severities based on your project requirements.",
+    
+    "rules": {
+        "security": {
+            "hardcoded-secret": {
+                "severity": "CRITICAL",
+                "description": "Hardcoded secrets detected",
+                "category": "security"
+            },
+            "sql-injection": {
+                "severity": "CRITICAL",
+                "description": "Potential SQL injection vulnerability",
+                "category": "security"
+            }
+        },
+        "architecture": {
+            "layer-violation": {
+                "severity": "HIGH",
+                "description": "Clean Architecture layer violation",
+                "category": "architecture"
+            },
+            "circular-dependency": {
+                "severity": "HIGH",
+                "description": "Circular dependency detected",
+                "category": "architecture"
+            }
+        },
+        "typescript": {
+            "any-type": {
+                "severity": "HIGH",
+                "description": "Usage of 'any' type",
+                "category": "types"
+            },
+            "implicit-any": {
+                "severity": "MEDIUM",
+                "description": "Implicit 'any' type usage",
+                "category": "types"
+            }
+        },
+        "code-quality": {
+            "todo-fixme": {
+                "severity": "LOW",
+                "description": "TODO/FIXME comment found",
+                "category": "quality"
+            },
+            "console-log": {
+                "severity": "LOW",
+                "description": "Console.log statement in production code",
+                "category": "quality"
+            }
+        },
+        "performance": {
+            "n-plus-one": {
+                "severity": "MEDIUM",
+                "description": "Potential N+1 query pattern",
+                "category": "performance"
+            },
+            "pagination-missing": {
+                "severity": "MEDIUM",
+                "description": "Missing pagination in data queries",
+                "category": "performance"
+            }
+        },
+        "testing": {
+            "missing-test": {
+                "severity": "LOW",
+                "description": "Test file missing for implementation",
+                "category": "testing"
+            },
+            "mock-in-production": {
+                "severity": "HIGH",
+                "description": "Mock objects used in production code",
+                "category": "testing"
+            }
+        }
+    },
+    "categories": {
+        "security": {
+            "description": "Security-related violations",
+            "blocking": true
+        },
+        "architecture": {
+            "description": "Architecture and design violations",
+            "blocking": true
+        },
+        "types": {
+            "description": "Type safety violations",
+            "blocking": true
+        },
+        "quality": {
+            "description": "Code quality issues",
+            "blocking": false
+        },
+        "performance": {
+            "description": "Performance-related issues",
+            "blocking": false
+        },
+        "testing": {
+            "description": "Testing-related violations",
+            "blocking": false
+        }
+    },
+    "severity-levels": {
+        "CRITICAL": {
+            "blocking": true,
+            "color": "red",
+            "priority": 1
+        },
+        "HIGH": {
+            "blocking": true,
+            "color": "orange",
+            "priority": 2
+        },
+        "MEDIUM": {
+            "blocking": false,
+            "color": "yellow",
+            "priority": 3
+        },
+        "LOW": {
+            "blocking": false,
+            "color": "blue",
+            "priority": 4
+        }
+    }
+}
+
