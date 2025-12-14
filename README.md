@@ -8,6 +8,12 @@
 
 > **Enterprise-grade AST Intelligence System** with multi-platform support (iOS, Android, Backend, Frontend). Enforces **Clean Architecture**, **DDD**, **Feature-First Architecture**, and **BDD→TDD workflow** through **798+ validation rules**. Features automatic architecture detection, Git Flow automation, pre-commit hooks, MCP integration for agentic IDEs, quality gates, and CI/CD ready.
 
+### Visual Overview
+
+![AST Intelligence System Overview](./docs/images/ast_intelligence_01.png)
+
+![AST Intelligence Workflow](./docs/images/ast_intelligence_02.png)
+
 ---
 
 ## 🧠 The Vision: Solving AI Context Loss in Software Development
