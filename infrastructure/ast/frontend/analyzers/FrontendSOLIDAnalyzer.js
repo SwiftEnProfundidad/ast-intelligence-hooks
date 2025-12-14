@@ -1,9 +1,4 @@
 // ===== Frontend SOLID PRINCIPLES ANALYZER =====
-// Frontend-specific SOLID violations detection
-// Uses deep AST analysis by nodes, not static heuristics
-// Detects violations in: functions, components, hooks, helpers, utils
-// Clean Architecture: Infrastructure Layer - Frontend SOLID Analysis
-// STANDARD: 10 SOLID rules (OCP: 3, DIP: 3, SRP: 2, ISP: 2)
 
 const path = require('path');
 const { pushFinding, SyntaxKind } = require(path.join(__dirname, '../../ast-core'));
