@@ -632,9 +632,9 @@ function runBackendIntelligence(project, findings, platform) {
     });
 
     // Swagger presence at controller file
-    const filePath = sf.getFilePath();
-    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
-    const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+    const swaggerFilePath = sf.getFilePath();
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(swaggerFilePath);
+    const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(swaggerFilePath);
     if (!isAnalyzer && !isTestFile && sf.getFullText().includes("@Controller") && !sf.getFullText().includes("@nestjs/swagger") && !sf.getFullText().includes("@Api")) {
       pushFinding("backend.api.missing_swagger", "medium", sf, sf, "Controller without Swagger decorators/imports", findings);
     }
