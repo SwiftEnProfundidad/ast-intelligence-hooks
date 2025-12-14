@@ -25,13 +25,12 @@ class NotificationCenterService {
     this.repoRoot = config.repoRoot || process.cwd();
     this.enabled = config.enabled !== false;
 
-    // Cola de notificaciones
     this.queue = [];
     this.processing = false;
     this.maxQueueSize = config.maxQueueSize || 100;
 
     // Deduplicación
-    this.deduplicationMap = new Map(); // hash -> { count, firstSeen, lastSeen }
+    this.deduplicationMap = new Map();
     this.deduplicationWindowMs = config.deduplicationWindowMs || 5000; // 5 segundos
 
     // Cooldowns por tipo de notificación

@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "ast-intelligence-automation": {
+      "command": "/opt/homebrew/Cellar/node@20/20.19.4/bin/node",
+      "args": [
+        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js"
+      ],
+      "env": {
+        "REPO_ROOT": "${workspaceFolder}",
+        "AUTO_COMMIT_ENABLED": "true",
+        "AUTO_PUSH_ENABLED": "true",
+        "AUTO_PR_ENABLED": "false"
+      }
+    }
+  }
+}

@@ -189,8 +189,6 @@ class RealtimeGuardService {
       `DIRTY_TREE_STATE|${state?.stagedCount ?? 0}|${state?.workingCount ?? 0}|${state?.uniqueCount ?? 0}|${limit}`
     );
 
-    // Use intelligent grouping when we have many files (but no hard limit)
-    // Only groups related files - no build/test verification
     if (state.uniqueCount > 20) {
       try {
         const IntelligentGitTreeMonitor = require('./IntelligentGitTreeMonitor');

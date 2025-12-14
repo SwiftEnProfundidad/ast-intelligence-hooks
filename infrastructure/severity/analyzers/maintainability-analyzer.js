@@ -5,16 +5,12 @@ class MaintainabilityAnalyzer {
   analyze(violation, context) {
     let score = 0;
 
-    // 1. COUPLING (0-30 points)
     score += this.analyzeCoupling(violation, context);
 
-    // 2. COMPLEXITY (0-30 points)
     score += this.analyzeComplexity(violation, context);
 
-    // 3. CODE DUPLICATION (0-20 points)
     score += this.analyzeDuplication(violation, context);
 
-    // 4. TEST COVERAGE (0-20 points)
     score += this.analyzeTestability(violation, context);
 
     return Math.min(100, score);
@@ -23,18 +19,15 @@ class MaintainabilityAnalyzer {
   analyzeCoupling(violation, context) {
     const ruleId = violation.ruleId || '';
 
-    // DIP violations (high coupling to concrete)
     if (ruleId.includes('dip')) {
       if (context.dependencyCount > 10) return 30;  // Many modules affected
       return 20;
     }
 
-    // ISP violations (forced to depend on unused methods)
     if (ruleId.includes('isp')) {
       return 15;
     }
 
-    // Prop drilling (tight coupling)
     if (ruleId.includes('prop_drilling')) {
       const depth = violation.metrics?.propDrillingDepth || 0;
       if (depth > 5) return 25;
@@ -47,13 +40,11 @@ class MaintainabilityAnalyzer {
   analyzeComplexity(violation, context) {
     const ruleId = violation.ruleId || '';
 
-    // Cyclomatic complexity
     const complexity = violation.metrics?.cyclomaticComplexity || 0;
     if (complexity > 20) return 30;
     if (complexity > 15) return 20;
     if (complexity > 10) return 10;
 
-    // God classes/components
     if (ruleId.includes('god') || ruleId.includes('massive')) {
       const size = violation.metrics?.methodCount || 0;
       if (size > 30) return 30;

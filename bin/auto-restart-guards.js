@@ -90,5 +90,4 @@ process.on('SIGTERM', shutdown);
 log('Auto-restart guard running');
 targets.forEach(watchFile);
 
-// Keep process alive
 setInterval(() => {}, 1 << 30);

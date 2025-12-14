@@ -333,22 +333,17 @@ function runCommonIntelligence(project, findings) {
     if (taskMarkerPattern.test(full)) {
       pushFinding('common.quality.todo_fixme', 'medium', sf, sf, 'Task marker present in code', findings);
     }
-    // Comments detection - INTELLIGENT: Exclude legitimate documentation
     if (/\/\/|\/\*/.test(full)) {
-      // Exclusion 0: Shebang (#!/usr/bin/env node, #!/bin/bash) - NOT comments
       if (/^#![^\n]*$/m.test(full)) return;
       const withoutShebang = full.replace(/^#![^\n]*$/gm, '');
       if (!/\/\/|\/\*/.test(withoutShebang)) return;
 
-      // Exclusion 1: URLs (https://, http://, etc.) - NOT comments
       const withoutUrls = withoutShebang.replace(/https?:\/\//g, '');
       if (!/\/\/|\/\*/.test(withoutUrls)) return;
 
-      // Exclusion 2: JSDoc comments (/** ... */) are legitimate documentation
       const hasOnlyJSDoc = !/\/\/|\/\*[^*]/.test(withoutUrls.replace(/\/\*\*[\s\S]*?\*\//g, ''));
       if (hasOnlyJSDoc) return;
 
-      // Exclusion 3: License headers at top of file
       const lines = full.split('\n');
       const firstNonEmptyLine = lines.findIndex(l => l.trim().length > 0);
       if (firstNonEmptyLine >= 0 && firstNonEmptyLine < 5 && /copyright|license|author/i.test(lines[firstNonEmptyLine])) {

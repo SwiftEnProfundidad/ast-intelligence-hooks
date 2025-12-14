@@ -1,6 +1,3 @@
-// ===== BLOCK COMMIT USE CASE =====
-// Application Layer - Use Case
-// Decides whether to block a Git commit based on audit results
 
 const CommitBlockingRules = require('../../domain/rules/CommitBlockingRules');
 

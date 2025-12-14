@@ -1,6 +1,3 @@
-// ===== ANALYZE STAGED FILES USE CASE =====
-// Application Layer - Use Case
-// Analyzes only Git staged files (for pre-commit hooks)
 
 const AuditResult = require('../../domain/entities/AuditResult');
 

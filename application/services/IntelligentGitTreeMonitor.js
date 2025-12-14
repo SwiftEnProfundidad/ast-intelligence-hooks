@@ -52,7 +52,6 @@ class IntelligentGitTreeMonitor {
 
         // Skip needs_attention - we don't verify build/tests
 
-        // If we have many unrelated files
         if (suggestions.length > 10) {
             return {
                 action: 'too_many_features',

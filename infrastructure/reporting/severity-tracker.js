@@ -40,7 +40,6 @@ class SeverityTracker {
       blockedBy: gateResult.blockedBy
     };
 
-    // Append to JSONL (JSON Lines format)
     fs.appendFileSync(this.historyPath, JSON.stringify(entry) + '\n');
 
     return entry;

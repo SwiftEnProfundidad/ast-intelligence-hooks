@@ -1,156 +1,292 @@
 {
   "totals": {
-    "errors": 19,
-    "warnings": 10,
-    "infos": 23
+    "errors": 109,
+    "warnings": 13,
+    "infos": 115
   },
   "levels": {
-    "CRITICAL": 4,
-    "HIGH": 15,
-    "MEDIUM": 10,
-    "LOW": 23
+    "CRITICAL": 7,
+    "HIGH": 102,
+    "MEDIUM": 13,
+    "LOW": 115
   },
   "platforms": {
-    "Backend": 2,
-    "Frontend": 1,
-    "iOS": 7,
-    "Android": 23,
-    "Other": 19
+    "Backend": 97,
+    "Frontend": 7,
+    "iOS": 18,
+    "Android": 42,
+    "Other": 73
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
     "workflow.sequence.missing_bdd_specs": 1,
+    "common.quality.comments": 78,
+    "common.types.any": 1,
     "common.quality.disabled_lint": 3,
     "common.debug.console": 3,
-    "common.quality.todo_fixme": 1,
-    "common.network.missing_circuit_breaker": 8,
+    "common.quality.todo_fixme": 2,
+    "common.network.missing_circuit_breaker": 9,
     "common.network.missing_timeout": 2,
     "common.network.missing_retry_policy": 1,
     "common.network.missing_connection_pooling": 3,
     "common.network.missing_error_handling": 1,
     "backend.offline.missing_idempotency_key": 1,
     "backend.offline.missing_optimistic_locking": 2,
+    "backend.push.missing_notification_queue": 2,
+    "backend.push.missing_notification_batching": 1,
     "backend.images.missing_server_compression": 1,
-    "android.repository_pattern": 6,
+    "android.repository_pattern": 7,
     "android.use_case": 3,
     "android.detekt": 10,
-    "android.viewmodel_pattern": 1,
+    "android.viewmodel_pattern": 2,
+    "android.flow_collect": 2,
+    "android.room_usage": 1,
+    "android.layout_composables": 2,
+    "android.state_flow": 1,
+    "android.room_annotations": 1,
+    "android.dto_sharing": 1,
+    "android.lazy_lists": 1,
     "solid.ocp.if_type_chain": 1,
     "solid.srp.high_complexity": 1,
-    "ios.completion_handlers": 1,
-    "ios.storyboards": 1
+    "solid.srp.god_class": 1,
+    "backend.auth.missing_cors": 7,
+    "backend.metrics.missing_prometheus": 10,
+    "backend.clean.infrastructure": 13,
+    "backend.security.pii_in_logs": 2,
+    "backend.event.handler": 20,
+    "backend.health.checks": 1,
+    "backend.logging.structured": 1,
+    "backend.observer.pattern": 21,
+    "backend.api.documentation": 1,
+    "backend.audit.logging": 1,
+    "backend.api.gateway": 1,
+    "backend.error_handling.untyped_catch": 3,
+    "backend.event.emitter": 1,
+    "backend.caching.redis": 1,
+    "backend.analytics.tracking": 1,
+    "backend.monitoring.alerts": 1,
+    "backend.api.missing_swagger": 1,
+    "backend.antipattern.god_classes": 1,
+    "backend.cqrs.pattern": 1,
+    "ios.storyboards": 2,
+    "ios.completion_handlers": 1
   },
   "platformDetails": {
     "Other": {
-      "CRITICAL": 1,
-      "HIGH": 9,
-      "MEDIUM": 6,
+      "CRITICAL": 2,
+      "HIGH": 60,
+      "MEDIUM": 8,
       "LOW": 3,
       "rules": {
         "workflow.sequence.tests_lagging": 1,
         "workflow.sequence.missing_bdd_specs": 1,
+        "common.quality.comments": 48,
+        "common.types.any": 1,
         "common.quality.disabled_lint": 3,
         "common.debug.console": 3,
-        "common.quality.todo_fixme": 1,
-        "common.network.missing_circuit_breaker": 4,
+        "common.quality.todo_fixme": 2,
+        "common.network.missing_circuit_breaker": 5,
         "common.network.missing_timeout": 2,
         "common.network.missing_retry_policy": 1,
         "common.network.missing_connection_pooling": 1,
-        "backend.offline.missing_optimistic_locking": 2
+        "backend.offline.missing_optimistic_locking": 2,
+        "backend.push.missing_notification_queue": 2,
+        "backend.push.missing_notification_batching": 1
       },
       "files": [
         "PROJECT_ROOT",
+        "eslint.config.js",
+        "index.js",
+        "__tests__/integration.test.js",
+        "tests/guard-system.integration.spec.js",
+        ".claude/hooks/pre-tool-use-evidence-validator.ts",
         ".coverage/lcov-report/block-navigation.js",
         ".coverage/lcov-report/prettify.js",
         ".coverage/lcov-report/sorter.js",
+        "application/services/AutonomousOrchestrator.js",
         "application/services/HookSystemScheduler.js",
+        "application/services/IntelligentCommitAnalyzer.js",
+        "application/services/IntelligentGitTreeMonitor.js",
+        "application/services/PlatformDetectionService.js",
+        "application/services/RealtimeGuardService.js",
+        "application/state/HookSystemStateMachine.js",
+        "application/use-cases/AnalyzeStagedFilesUseCase.js",
+        "application/use-cases/BlockCommitUseCase.js",
+        "application/use-cases/GenerateAuditReportUseCase.js",
+        "domain/entities/AuditResult.js",
+        "domain/entities/Finding.js",
+        "domain/entities/SeverityConfig.js",
+        "domain/repositories/IFindingsRepository.js",
+        "domain/rules/CommitBlockingRules.js",
         "infrastructure/adapters/LegacyAnalyzerAdapter.js",
+        "infrastructure/cache/CacheService.ts",
+        "infrastructure/external-tools/GitOperations.js",
         "infrastructure/mcp/gitflow-automation-watcher.js",
+        "infrastructure/reporting/report-generator.js",
+        "infrastructure/reporting/severity-tracker.js",
+        "infrastructure/repositories/FileFindingsRepository.js",
+        "infrastructure/severity/severity-evaluator.js",
+        "infrastructure/utils/token-manager.js",
+        "application/services/guard/GuardAutoManagerService.js",
+        "application/services/notification/NotificationCenterService.js",
+        "application/services/recovery/AutoRecoveryManager.js",
+        "application/services/token/CursorTokenService.js",
+        "application/services/token/TokenMonitorService.js",
+        "infrastructure/ast/archive/ast-intelligence.ts",
+        "infrastructure/ast/archive/kotlin-analyzer.js",
+        "infrastructure/ast/common/BDDTDDWorkflowRules.js",
+        "infrastructure/ast/common/documentation-analyzer.js",
+        "infrastructure/ast/text/text-scanner.js",
+        "infrastructure/external-tools/eslint/backend.config.template.mjs",
+        "infrastructure/severity/analyzers/maintainability-analyzer.js",
+        "infrastructure/severity/analyzers/performance-analyzer.js",
+        "infrastructure/severity/analyzers/security-analyzer.js",
+        "infrastructure/severity/analyzers/stability-analyzer.js",
+        "infrastructure/severity/context/context-builder.js",
+        "infrastructure/severity/policies/gate-policies.js",
+        "application/services/recovery/__tests__/AutoRecoveryManager.spec.js",
+        "application/services/token/__tests__/TokenMonitorService.spec.js",
         "hooks/pre-tool-use-evidence-validator.ts",
         "infrastructure/telemetry/metrics-server.js",
-        "application/services/notification/NotificationCenterService.js",
-        "application/services/token/CursorTokenService.js",
-        "infrastructure/ast/text/text-scanner.js",
-        "infrastructure/severity/context/context-builder.js",
         "infrastructure/ast/common/images-backend-analyzer.js",
         "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js"
       ]
     },
     "Android": {
-      "CRITICAL": 2,
-      "HIGH": 0,
+      "CRITICAL": 3,
+      "HIGH": 7,
       "MEDIUM": 1,
-      "LOW": 20,
+      "LOW": 31,
       "rules": {
+        "common.quality.comments": 7,
         "common.network.missing_connection_pooling": 1,
-        "android.repository_pattern": 6,
+        "android.repository_pattern": 7,
         "android.use_case": 3,
         "android.detekt": 10,
-        "android.viewmodel_pattern": 1,
+        "android.viewmodel_pattern": 2,
+        "android.flow_collect": 2,
+        "android.room_usage": 1,
+        "android.layout_composables": 2,
+        "android.state_flow": 1,
+        "android.room_annotations": 1,
+        "android.dto_sharing": 1,
+        "android.lazy_lists": 1,
         "solid.ocp.if_type_chain": 1,
-        "solid.srp.high_complexity": 1
+        "solid.srp.high_complexity": 1,
+        "solid.srp.god_class": 1
       },
       "files": [
-        "infrastructure/ast/android/ast-android.js",
+        "infrastructure/ast/android/clean-architecture-analyzer.js",
         "infrastructure/ast/android/ddd-analyzer.js",
         "infrastructure/ast/android/detekt-runner.js",
-        "infrastructure/ast/android/native-bridge.js",
-        "infrastructure/ast/android/__tests__/native-bridge.spec.js",
+        "infrastructure/ast/android/feature-first-analyzer.js",
+        "infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js",
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
         "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
-        "infrastructure/ast/android/clean-architecture-analyzer.js"
+        "infrastructure/ast/android/ast-android.js",
+        "infrastructure/ast/android/native-bridge.js",
+        "infrastructure/ast/android/__tests__/native-bridge.spec.js"
+      ]
+    },
+    "Backend": {
+      "CRITICAL": 2,
+      "HIGH": 12,
+      "MEDIUM": 2,
+      "LOW": 81,
+      "rules": {
+        "common.quality.comments": 7,
+        "backend.offline.missing_idempotency_key": 1,
+        "backend.images.missing_server_compression": 1,
+        "backend.auth.missing_cors": 7,
+        "backend.metrics.missing_prometheus": 10,
+        "backend.clean.infrastructure": 13,
+        "backend.security.pii_in_logs": 2,
+        "backend.event.handler": 20,
+        "backend.health.checks": 1,
+        "backend.logging.structured": 1,
+        "backend.observer.pattern": 21,
+        "backend.api.documentation": 1,
+        "backend.audit.logging": 1,
+        "backend.api.gateway": 1,
+        "backend.error_handling.untyped_catch": 3,
+        "backend.event.emitter": 1,
+        "backend.caching.redis": 1,
+        "backend.analytics.tracking": 1,
+        "backend.monitoring.alerts": 1,
+        "backend.api.missing_swagger": 1,
+        "backend.antipattern.god_classes": 1,
+        "backend.cqrs.pattern": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/ast-backend-clean.js",
+        "infrastructure/ast/backend/clean-architecture-analyzer.js",
+        "infrastructure/ast/backend/ddd-analyzer.js",
+        "infrastructure/ast/backend/feature-first-analyzer.js",
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+        "infrastructure/ast/backend/solid-analyzer.js",
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+        "infrastructure/ast/backend/ast-backend.js",
+        "infrastructure/ast/backend/forbidden-literals-analyzer.js",
+        "infrastructure/ast/backend/__tests__/clean-architecture-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/ddd-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/forbidden-literals-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/solid-analyzer.spec.js"
       ]
     },
     "Frontend": {
       "CRITICAL": 0,
-      "HIGH": 1,
+      "HIGH": 7,
       "MEDIUM": 0,
       "LOW": 0,
       "rules": {
+        "common.quality.comments": 6,
         "common.network.missing_circuit_breaker": 1
       },
       "files": [
+        "infrastructure/ast/frontend/ast-frontend-clean.js",
+        "infrastructure/ast/frontend/clean-architecture-analyzer.js",
+        "infrastructure/ast/frontend/ddd-analyzer.js",
+        "infrastructure/ast/frontend/feature-first-analyzer.js",
+        "infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js",
+        "infrastructure/ast/frontend/analyzers/FrontendSOLIDAnalyzer.js",
         "infrastructure/ast/frontend/ast-frontend.js"
       ]
     },
     "iOS": {
       "CRITICAL": 0,
-      "HIGH": 5,
+      "HIGH": 16,
       "MEDIUM": 2,
       "LOW": 0,
       "rules": {
+        "common.quality.comments": 10,
         "common.network.missing_circuit_breaker": 3,
         "common.network.missing_connection_pooling": 1,
         "common.network.missing_error_handling": 1,
-        "ios.completion_handlers": 1,
-        "ios.storyboards": 1
+        "ios.storyboards": 2,
+        "ios.completion_handlers": 1
       },
       "files": [
-        "infrastructure/ast/ios/ast-ios.js",
+        "infrastructure/ast/ios/analyzers/iOSArchitectureDetector.js",
+        "infrastructure/ast/ios/analyzers/iOSArchitectureRules.js",
+        "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
+        "infrastructure/ast/ios/analyzers/iOSCICDRules.js",
         "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
         "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
-        "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js"
-      ]
-    },
-    "Backend": {
-      "CRITICAL": 1,
-      "HIGH": 0,
-      "MEDIUM": 1,
-      "LOW": 0,
-      "rules": {
-        "backend.offline.missing_idempotency_key": 1,
-        "backend.images.missing_server_compression": 1
-      },
-      "files": [
-        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
-        "infrastructure/ast/backend/ast-backend.js"
+        "infrastructure/ast/ios/analyzers/iOSSPMRules.js",
+        "infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js",
+        "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
+        "infrastructure/ast/ios/parsers/SourceKittenParser.js",
+        "infrastructure/ast/ios/ast-ios.js"
       ]
     }
   },
   "ruleDetails": {
     "workflow.sequence.tests_lagging": {
       "count": 1,
-      "level": "HIGH",
-      "severity": "HIGH",
+      "level": "CRITICAL",
+      "severity": "CRITICAL",
       "platforms": {
         "Other": 1
       },
@@ -167,6 +303,109 @@
       },
       "files": [
         "PROJECT_ROOT"
+      ]
+    },
+    "common.quality.comments": {
+      "count": 78,
+      "level": "HIGH",
+      "severity": "HIGH",
+      "platforms": {
+        "Other": 48,
+        "Android": 7,
+        "Backend": 7,
+        "Frontend": 6,
+        "iOS": 10
+      },
+      "files": [
+        "eslint.config.js",
+        "index.js",
+        "__tests__/integration.test.js",
+        "tests/guard-system.integration.spec.js",
+        ".coverage/lcov-report/block-navigation.js",
+        ".coverage/lcov-report/prettify.js",
+        ".coverage/lcov-report/sorter.js",
+        "application/services/AutonomousOrchestrator.js",
+        "application/services/HookSystemScheduler.js",
+        "application/services/IntelligentCommitAnalyzer.js",
+        "application/services/IntelligentGitTreeMonitor.js",
+        "application/services/PlatformDetectionService.js",
+        "application/services/RealtimeGuardService.js",
+        "application/state/HookSystemStateMachine.js",
+        "application/use-cases/AnalyzeStagedFilesUseCase.js",
+        "application/use-cases/BlockCommitUseCase.js",
+        "application/use-cases/GenerateAuditReportUseCase.js",
+        "domain/entities/AuditResult.js",
+        "domain/entities/Finding.js",
+        "domain/entities/SeverityConfig.js",
+        "domain/repositories/IFindingsRepository.js",
+        "domain/rules/CommitBlockingRules.js",
+        "infrastructure/adapters/LegacyAnalyzerAdapter.js",
+        "infrastructure/cache/CacheService.ts",
+        "infrastructure/external-tools/GitOperations.js",
+        "infrastructure/reporting/report-generator.js",
+        "infrastructure/reporting/severity-tracker.js",
+        "infrastructure/repositories/FileFindingsRepository.js",
+        "infrastructure/severity/severity-evaluator.js",
+        "infrastructure/utils/token-manager.js",
+        "application/services/guard/GuardAutoManagerService.js",
+        "application/services/notification/NotificationCenterService.js",
+        "application/services/recovery/AutoRecoveryManager.js",
+        "application/services/token/CursorTokenService.js",
+        "application/services/token/TokenMonitorService.js",
+        "infrastructure/ast/android/clean-architecture-analyzer.js",
+        "infrastructure/ast/android/ddd-analyzer.js",
+        "infrastructure/ast/android/detekt-runner.js",
+        "infrastructure/ast/android/feature-first-analyzer.js",
+        "infrastructure/ast/archive/ast-intelligence.ts",
+        "infrastructure/ast/backend/ast-backend-clean.js",
+        "infrastructure/ast/backend/clean-architecture-analyzer.js",
+        "infrastructure/ast/backend/ddd-analyzer.js",
+        "infrastructure/ast/backend/feature-first-analyzer.js",
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+        "infrastructure/ast/backend/solid-analyzer.js",
+        "infrastructure/ast/common/BDDTDDWorkflowRules.js",
+        "infrastructure/ast/common/documentation-analyzer.js",
+        "infrastructure/ast/frontend/ast-frontend-clean.js",
+        "infrastructure/ast/frontend/clean-architecture-analyzer.js",
+        "infrastructure/ast/frontend/ddd-analyzer.js",
+        "infrastructure/ast/frontend/feature-first-analyzer.js",
+        "infrastructure/ast/text/text-scanner.js",
+        "infrastructure/external-tools/eslint/backend.config.template.mjs",
+        "infrastructure/severity/analyzers/maintainability-analyzer.js",
+        "infrastructure/severity/analyzers/performance-analyzer.js",
+        "infrastructure/severity/analyzers/security-analyzer.js",
+        "infrastructure/severity/analyzers/stability-analyzer.js",
+        "infrastructure/severity/context/context-builder.js",
+        "infrastructure/severity/policies/gate-policies.js",
+        "application/services/recovery/__tests__/AutoRecoveryManager.spec.js",
+        "application/services/token/__tests__/TokenMonitorService.spec.js",
+        "infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js",
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+        "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+        "infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js",
+        "infrastructure/ast/frontend/analyzers/FrontendSOLIDAnalyzer.js",
+        "infrastructure/ast/ios/analyzers/iOSArchitectureDetector.js",
+        "infrastructure/ast/ios/analyzers/iOSArchitectureRules.js",
+        "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
+        "infrastructure/ast/ios/analyzers/iOSCICDRules.js",
+        "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
+        "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
+        "infrastructure/ast/ios/analyzers/iOSSPMRules.js",
+        "infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js",
+        "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
+        "infrastructure/ast/ios/parsers/SourceKittenParser.js"
+      ]
+    },
+    "common.types.any": {
+      "count": 1,
+      "level": "HIGH",
+      "severity": "HIGH",
+      "platforms": {
+        "Other": 1
+      },
+      "files": [
+        ".claude/hooks/pre-tool-use-evidence-validator.ts"
       ]
     },
     "common.quality.disabled_lint": {
@@ -196,27 +435,29 @@
       ]
     },
     "common.quality.todo_fixme": {
-      "count": 1,
+      "count": 2,
       "level": "MEDIUM",
       "severity": "MEDIUM",
       "platforms": {
-        "Other": 1
+        "Other": 2
       },
       "files": [
-        "application/services/HookSystemScheduler.js"
+        "application/services/HookSystemScheduler.js",
+        "infrastructure/ast/archive/kotlin-analyzer.js"
       ]
     },
     "common.network.missing_circuit_breaker": {
-      "count": 8,
+      "count": 9,
       "level": "HIGH",
       "severity": "HIGH",
       "platforms": {
-        "Other": 4,
+        "Other": 5,
         "Frontend": 1,
         "iOS": 3
       },
       "files": [
         "hooks/pre-tool-use-evidence-validator.ts",
+        ".claude/hooks/pre-tool-use-evidence-validator.ts",
         "application/services/notification/NotificationCenterService.js",
         "infrastructure/ast/frontend/ast-frontend.js",
         "infrastructure/ast/ios/ast-ios.js",
@@ -298,6 +539,29 @@
         "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js"
       ]
     },
+    "backend.push.missing_notification_queue": {
+      "count": 2,
+      "level": "HIGH",
+      "severity": "HIGH",
+      "platforms": {
+        "Other": 2
+      },
+      "files": [
+        "application/services/RealtimeGuardService.js",
+        "infrastructure/mcp/gitflow-automation-watcher.js"
+      ]
+    },
+    "backend.push.missing_notification_batching": {
+      "count": 1,
+      "level": "MEDIUM",
+      "severity": "MEDIUM",
+      "platforms": {
+        "Other": 1
+      },
+      "files": [
+        "application/services/RealtimeGuardService.js"
+      ]
+    },
     "backend.images.missing_server_compression": {
       "count": 1,
       "level": "MEDIUM",
@@ -310,14 +574,15 @@
       ]
     },
     "android.repository_pattern": {
-      "count": 6,
+      "count": 7,
       "level": "LOW",
       "severity": "LOW",
       "platforms": {
-        "Android": 6
+        "Android": 7
       },
       "files": [
         "infrastructure/ast/android/ddd-analyzer.js",
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
         "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js"
       ]
     },
@@ -347,6 +612,29 @@
       ]
     },
     "android.viewmodel_pattern": {
+      "count": 2,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Android": 2
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js",
+        "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js"
+      ]
+    },
+    "android.flow_collect": {
+      "count": 2,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Android": 2
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+      ]
+    },
+    "android.room_usage": {
       "count": 1,
       "level": "LOW",
       "severity": "LOW",
@@ -354,7 +642,62 @@
         "Android": 1
       },
       "files": [
-        "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js"
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+      ]
+    },
+    "android.layout_composables": {
+      "count": 2,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Android": 2
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+      ]
+    },
+    "android.state_flow": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Android": 1
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+      ]
+    },
+    "android.room_annotations": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Android": 1
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+      ]
+    },
+    "android.dto_sharing": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Android": 1
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+      ]
+    },
+    "android.lazy_lists": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Android": 1
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
       ]
     },
     "solid.ocp.if_type_chain": {
@@ -379,21 +722,273 @@
         "infrastructure/ast/android/native-bridge.js"
       ]
     },
-    "ios.completion_handlers": {
+    "solid.srp.god_class": {
+      "count": 1,
+      "level": "CRITICAL",
+      "severity": "CRITICAL",
+      "platforms": {
+        "Android": 1
+      },
+      "files": [
+        "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js"
+      ]
+    },
+    "backend.auth.missing_cors": {
+      "count": 7,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 7
+      },
+      "files": [
+        "infrastructure/ast/backend/clean-architecture-analyzer.js",
+        "infrastructure/ast/backend/ddd-analyzer.js",
+        "infrastructure/ast/backend/feature-first-analyzer.js",
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+        "infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js"
+      ]
+    },
+    "backend.metrics.missing_prometheus": {
+      "count": 10,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 10
+      },
+      "files": [
+        "infrastructure/ast/backend/clean-architecture-analyzer.js",
+        "infrastructure/ast/backend/ddd-analyzer.js",
+        "infrastructure/ast/backend/feature-first-analyzer.js",
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+        "infrastructure/ast/backend/solid-analyzer.js",
+        "infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/forbidden-literals-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/solid-analyzer.spec.js",
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js"
+      ]
+    },
+    "backend.clean.infrastructure": {
+      "count": 13,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 13
+      },
+      "files": [
+        "infrastructure/ast/backend/clean-architecture-analyzer.js",
+        "infrastructure/ast/backend/ddd-analyzer.js",
+        "infrastructure/ast/backend/feature-first-analyzer.js",
+        "infrastructure/ast/backend/forbidden-literals-analyzer.js",
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+        "infrastructure/ast/backend/solid-analyzer.js",
+        "infrastructure/ast/backend/__tests__/clean-architecture-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/ddd-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/forbidden-literals-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+        "infrastructure/ast/backend/__tests__/solid-analyzer.spec.js",
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js"
+      ]
+    },
+    "backend.security.pii_in_logs": {
+      "count": 2,
+      "level": "HIGH",
+      "severity": "HIGH",
+      "platforms": {
+        "Backend": 2
+      },
+      "files": [
+        "infrastructure/ast/backend/ddd-analyzer.js",
+        "infrastructure/ast/backend/solid-analyzer.js"
+      ]
+    },
+    "backend.event.handler": {
+      "count": 20,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 20
+      },
+      "files": [
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+        "infrastructure/ast/backend/solid-analyzer.js"
+      ]
+    },
+    "backend.health.checks": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
+      ]
+    },
+    "backend.logging.structured": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
+      ]
+    },
+    "backend.observer.pattern": {
+      "count": 21,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 21
+      },
+      "files": [
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+        "infrastructure/ast/backend/solid-analyzer.js"
+      ]
+    },
+    "backend.api.documentation": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
+      ]
+    },
+    "backend.audit.logging": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
+      ]
+    },
+    "backend.api.gateway": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
+      ]
+    },
+    "backend.error_handling.untyped_catch": {
+      "count": 3,
+      "level": "HIGH",
+      "severity": "HIGH",
+      "platforms": {
+        "Backend": 3
+      },
+      "files": [
+        "infrastructure/ast/backend/solid-analyzer.js",
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js"
+      ]
+    },
+    "backend.event.emitter": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/solid-analyzer.js"
+      ]
+    },
+    "backend.caching.redis": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/solid-analyzer.js"
+      ]
+    },
+    "backend.analytics.tracking": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/solid-analyzer.js"
+      ]
+    },
+    "backend.monitoring.alerts": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/solid-analyzer.js"
+      ]
+    },
+    "backend.api.missing_swagger": {
       "count": 1,
       "level": "MEDIUM",
       "severity": "MEDIUM",
       "platforms": {
-        "iOS": 1
+        "Backend": 1
       },
       "files": [
-        "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js"
+        "infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js"
+      ]
+    },
+    "backend.antipattern.god_classes": {
+      "count": 1,
+      "level": "CRITICAL",
+      "severity": "CRITICAL",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js"
+      ]
+    },
+    "backend.cqrs.pattern": {
+      "count": 1,
+      "level": "LOW",
+      "severity": "LOW",
+      "platforms": {
+        "Backend": 1
+      },
+      "files": [
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js"
       ]
     },
     "ios.storyboards": {
-      "count": 1,
+      "count": 2,
       "level": "HIGH",
       "severity": "HIGH",
+      "platforms": {
+        "iOS": 2
+      },
+      "files": [
+        "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
+        "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js"
+      ]
+    },
+    "ios.completion_handlers": {
+      "count": 1,
+      "level": "MEDIUM",
+      "severity": "MEDIUM",
       "platforms": {
         "iOS": 1
       },
@@ -410,20 +1005,82 @@
         "workflow.sequence.missing_bdd_specs": 1
       },
       "levels": {
+        "CRITICAL": 1,
+        "HIGH": 0,
+        "MEDIUM": 1,
+        "LOW": 0
+      }
+    },
+    "eslint.config.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
         "CRITICAL": 0,
         "HIGH": 1,
-        "MEDIUM": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "index.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "__tests__/integration.test.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "tests/guard-system.integration.spec.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    ".claude/hooks/pre-tool-use-evidence-validator.ts": {
+      "platform": "Other",
+      "rules": {
+        "common.types.any": 1,
+        "common.network.missing_circuit_breaker": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
         "LOW": 0
       }
     },
     ".coverage/lcov-report/block-navigation.js": {
       "platform": "Other",
       "rules": {
-        "common.quality.disabled_lint": 1
+        "common.quality.disabled_lint": 1,
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 0,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 1
       }
@@ -432,11 +1089,12 @@
       "platform": "Other",
       "rules": {
         "common.debug.console": 1,
-        "common.quality.disabled_lint": 1
+        "common.quality.disabled_lint": 1,
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 0,
+        "HIGH": 1,
         "MEDIUM": 1,
         "LOW": 1
       }
@@ -444,16 +1102,437 @@
     ".coverage/lcov-report/sorter.js": {
       "platform": "Other",
       "rules": {
-        "common.quality.disabled_lint": 1
+        "common.quality.disabled_lint": 1,
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 0,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 1
       }
     },
+    "application/services/AutonomousOrchestrator.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
     "application/services/HookSystemScheduler.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.todo_fixme": 1,
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 1,
+        "LOW": 0
+      }
+    },
+    "application/services/IntelligentCommitAnalyzer.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/IntelligentGitTreeMonitor.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/PlatformDetectionService.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/RealtimeGuardService.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1,
+        "backend.push.missing_notification_queue": 1,
+        "backend.push.missing_notification_batching": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 1,
+        "LOW": 0
+      }
+    },
+    "application/state/HookSystemStateMachine.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/use-cases/AnalyzeStagedFilesUseCase.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/use-cases/BlockCommitUseCase.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/use-cases/GenerateAuditReportUseCase.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "domain/entities/AuditResult.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "domain/entities/Finding.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "domain/entities/SeverityConfig.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "domain/repositories/IFindingsRepository.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "domain/rules/CommitBlockingRules.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/adapters/LegacyAnalyzerAdapter.js": {
+      "platform": "Other",
+      "rules": {
+        "common.debug.console": 1,
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 1,
+        "LOW": 0
+      }
+    },
+    "infrastructure/cache/CacheService.ts": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/external-tools/GitOperations.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/mcp/gitflow-automation-watcher.js": {
+      "platform": "Other",
+      "rules": {
+        "common.debug.console": 1,
+        "backend.push.missing_notification_queue": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 1,
+        "LOW": 0
+      }
+    },
+    "infrastructure/reporting/report-generator.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/reporting/severity-tracker.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/repositories/FileFindingsRepository.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/severity/severity-evaluator.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/utils/token-manager.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/guard/GuardAutoManagerService.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/notification/NotificationCenterService.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1,
+        "common.network.missing_circuit_breaker": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/recovery/AutoRecoveryManager.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/token/CursorTokenService.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1,
+        "common.network.missing_retry_policy": 1,
+        "common.network.missing_timeout": 1
+      },
+      "levels": {
+        "CRITICAL": 1,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/token/TokenMonitorService.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/android/clean-architecture-analyzer.js": {
+      "platform": "Android",
+      "rules": {
+        "common.quality.comments": 1,
+        "solid.ocp.if_type_chain": 1
+      },
+      "levels": {
+        "CRITICAL": 1,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/android/ddd-analyzer.js": {
+      "platform": "Android",
+      "rules": {
+        "common.quality.comments": 1,
+        "android.repository_pattern": 4,
+        "android.use_case": 2
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 6
+      }
+    },
+    "infrastructure/ast/android/detekt-runner.js": {
+      "platform": "Android",
+      "rules": {
+        "common.quality.comments": 1,
+        "android.detekt": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 1
+      }
+    },
+    "infrastructure/ast/android/feature-first-analyzer.js": {
+      "platform": "Android",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/archive/ast-intelligence.ts": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/archive/kotlin-analyzer.js": {
       "platform": "Other",
       "rules": {
         "common.quality.todo_fixme": 1
@@ -465,27 +1544,518 @@
         "LOW": 0
       }
     },
-    "infrastructure/adapters/LegacyAnalyzerAdapter.js": {
-      "platform": "Other",
+    "infrastructure/ast/backend/ast-backend-clean.js": {
+      "platform": "Backend",
       "rules": {
-        "common.debug.console": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/backend/clean-architecture-analyzer.js": {
+      "platform": "Backend",
+      "rules": {
+        "common.quality.comments": 1,
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 3
+      }
+    },
+    "infrastructure/ast/backend/ddd-analyzer.js": {
+      "platform": "Backend",
+      "rules": {
+        "common.quality.comments": 1,
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.clean.infrastructure": 1,
+        "backend.security.pii_in_logs": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 3
+      }
+    },
+    "infrastructure/ast/backend/feature-first-analyzer.js": {
+      "platform": "Backend",
+      "rules": {
+        "common.quality.comments": 1,
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 3
+      }
+    },
+    "infrastructure/ast/backend/nestjs-patterns-analyzer.js": {
+      "platform": "Backend",
+      "rules": {
+        "common.quality.comments": 1,
+        "backend.offline.missing_idempotency_key": 1,
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.event.handler": 17,
+        "backend.health.checks": 1,
+        "backend.logging.structured": 1,
+        "backend.clean.infrastructure": 1,
+        "backend.observer.pattern": 17,
+        "backend.api.documentation": 1,
+        "backend.audit.logging": 1,
+        "backend.api.gateway": 1
+      },
+      "levels": {
+        "CRITICAL": 1,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 42
+      }
+    },
+    "infrastructure/ast/backend/solid-analyzer.js": {
+      "platform": "Backend",
+      "rules": {
+        "common.quality.comments": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.error_handling.untyped_catch": 1,
+        "backend.event.emitter": 1,
+        "backend.event.handler": 3,
+        "backend.caching.redis": 1,
+        "backend.clean.infrastructure": 1,
+        "backend.observer.pattern": 4,
+        "backend.analytics.tracking": 1,
+        "backend.monitoring.alerts": 1,
+        "backend.security.pii_in_logs": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 3,
+        "MEDIUM": 0,
+        "LOW": 13
+      }
+    },
+    "infrastructure/ast/common/BDDTDDWorkflowRules.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/common/documentation-analyzer.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/frontend/ast-frontend-clean.js": {
+      "platform": "Frontend",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/frontend/clean-architecture-analyzer.js": {
+      "platform": "Frontend",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/frontend/ddd-analyzer.js": {
+      "platform": "Frontend",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/frontend/feature-first-analyzer.js": {
+      "platform": "Frontend",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/text/text-scanner.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1,
+        "common.network.missing_circuit_breaker": 1,
+        "common.network.missing_connection_pooling": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
         "MEDIUM": 1,
         "LOW": 0
       }
     },
-    "infrastructure/mcp/gitflow-automation-watcher.js": {
+    "infrastructure/external-tools/eslint/backend.config.template.mjs": {
       "platform": "Other",
       "rules": {
-        "common.debug.console": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/severity/analyzers/maintainability-analyzer.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/severity/analyzers/performance-analyzer.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/severity/analyzers/security-analyzer.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/severity/analyzers/stability-analyzer.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/severity/context/context-builder.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1,
+        "common.network.missing_circuit_breaker": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/severity/policies/gate-policies.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/recovery/__tests__/AutoRecoveryManager.spec.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "application/services/token/__tests__/TokenMonitorService.spec.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js": {
+      "platform": "Android",
+      "rules": {
+        "common.quality.comments": 1,
+        "android.viewmodel_pattern": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 1
+      }
+    },
+    "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js": {
+      "platform": "Android",
+      "rules": {
+        "common.quality.comments": 1,
+        "android.flow_collect": 2,
+        "android.room_usage": 1,
+        "android.repository_pattern": 1,
+        "android.layout_composables": 2,
+        "android.state_flow": 1,
+        "android.room_annotations": 1,
+        "android.dto_sharing": 1,
+        "android.lazy_lists": 1,
+        "solid.srp.god_class": 1
+      },
+      "levels": {
+        "CRITICAL": 1,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 10
+      }
+    },
+    "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js": {
+      "platform": "Android",
+      "rules": {
+        "common.quality.comments": 1,
+        "android.use_case": 1,
+        "android.viewmodel_pattern": 1,
+        "android.repository_pattern": 2
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 4
+      }
+    },
+    "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js": {
+      "platform": "Backend",
+      "rules": {
+        "common.quality.comments": 1,
+        "backend.antipattern.god_classes": 1,
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.error_handling.untyped_catch": 2,
+        "backend.clean.infrastructure": 1,
+        "backend.cqrs.pattern": 1
+      },
+      "levels": {
+        "CRITICAL": 1,
+        "HIGH": 3,
+        "MEDIUM": 0,
+        "LOW": 4
+      }
+    },
+    "infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js": {
+      "platform": "Frontend",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/frontend/analyzers/FrontendSOLIDAnalyzer.js": {
+      "platform": "Frontend",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSArchitectureDetector.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSArchitectureRules.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1,
+        "ios.storyboards": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSCICDRules.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1,
+        "common.network.missing_circuit_breaker": 1,
+        "ios.completion_handlers": 1,
+        "ios.storyboards": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 3,
         "MEDIUM": 1,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1,
+        "common.network.missing_circuit_breaker": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSSPMRules.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1,
+        "common.network.missing_error_handling": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 2,
+        "MEDIUM": 0,
+        "LOW": 0
+      }
+    },
+    "infrastructure/ast/ios/parsers/SourceKittenParser.js": {
+      "platform": "iOS",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
         "LOW": 0
       }
     },
@@ -508,31 +2078,6 @@
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "application/services/notification/NotificationCenterService.js": {
-      "platform": "Other",
-      "rules": {
-        "common.network.missing_circuit_breaker": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "application/services/token/CursorTokenService.js": {
-      "platform": "Other",
-      "rules": {
-        "common.network.missing_retry_policy": 1,
-        "common.network.missing_timeout": 1
-      },
-      "levels": {
-        "CRITICAL": 1,
         "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 0
@@ -575,81 +2120,6 @@
         "LOW": 0
       }
     },
-    "infrastructure/ast/text/text-scanner.js": {
-      "platform": "Other",
-      "rules": {
-        "common.network.missing_circuit_breaker": 1,
-        "common.network.missing_connection_pooling": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 1,
-        "LOW": 0
-      }
-    },
-    "infrastructure/severity/context/context-builder.js": {
-      "platform": "Other",
-      "rules": {
-        "common.network.missing_circuit_breaker": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js": {
-      "platform": "iOS",
-      "rules": {
-        "common.network.missing_circuit_breaker": 1,
-        "ios.completion_handlers": 1,
-        "ios.storyboards": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 2,
-        "MEDIUM": 1,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js": {
-      "platform": "iOS",
-      "rules": {
-        "common.network.missing_circuit_breaker": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js": {
-      "platform": "iOS",
-      "rules": {
-        "common.network.missing_error_handling": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/backend/nestjs-patterns-analyzer.js": {
-      "platform": "Backend",
-      "rules": {
-        "backend.offline.missing_idempotency_key": 1
-      },
-      "levels": {
-        "CRITICAL": 1,
-        "HIGH": 0,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "infrastructure/ast/common/images-backend-analyzer.js": {
       "platform": "Other",
       "rules": {
@@ -686,31 +2156,6 @@
         "LOW": 0
       }
     },
-    "infrastructure/ast/android/ddd-analyzer.js": {
-      "platform": "Android",
-      "rules": {
-        "android.repository_pattern": 4,
-        "android.use_case": 2
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 0,
-        "MEDIUM": 0,
-        "LOW": 6
-      }
-    },
-    "infrastructure/ast/android/detekt-runner.js": {
-      "platform": "Android",
-      "rules": {
-        "android.detekt": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 0,
-        "MEDIUM": 0,
-        "LOW": 1
-      }
-    },
     "infrastructure/ast/android/native-bridge.js": {
       "platform": "Android",
       "rules": {
@@ -736,41 +2181,106 @@
         "LOW": 6
       }
     },
-    "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js": {
-      "platform": "Android",
+    "infrastructure/ast/backend/forbidden-literals-analyzer.js": {
+      "platform": "Backend",
       "rules": {
-        "android.use_case": 1,
-        "android.viewmodel_pattern": 1,
-        "android.repository_pattern": 2
+        "backend.clean.infrastructure": 1
       },
       "levels": {
         "CRITICAL": 0,
         "HIGH": 0,
         "MEDIUM": 0,
-        "LOW": 4
+        "LOW": 1
       }
     },
-    "infrastructure/ast/android/clean-architecture-analyzer.js": {
-      "platform": "Android",
+    "infrastructure/ast/backend/__tests__/clean-architecture-analyzer.spec.js": {
+      "platform": "Backend",
       "rules": {
-        "solid.ocp.if_type_chain": 1
+        "backend.clean.infrastructure": 1
       },
       "levels": {
-        "CRITICAL": 1,
+        "CRITICAL": 0,
         "HIGH": 0,
         "MEDIUM": 0,
-        "LOW": 0
+        "LOW": 1
+      }
+    },
+    "infrastructure/ast/backend/__tests__/ddd-analyzer.spec.js": {
+      "platform": "Backend",
+      "rules": {
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 0,
+        "LOW": 1
+      }
+    },
+    "infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js": {
+      "platform": "Backend",
+      "rules": {
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 0,
+        "LOW": 3
+      }
+    },
+    "infrastructure/ast/backend/__tests__/forbidden-literals-analyzer.spec.js": {
+      "platform": "Backend",
+      "rules": {
+        "backend.metrics.missing_prometheus": 1,
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 0,
+        "LOW": 2
+      }
+    },
+    "infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js": {
+      "platform": "Backend",
+      "rules": {
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.api.missing_swagger": 1,
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 1,
+        "LOW": 3
+      }
+    },
+    "infrastructure/ast/backend/__tests__/solid-analyzer.spec.js": {
+      "platform": "Backend",
+      "rules": {
+        "backend.metrics.missing_prometheus": 1,
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 0,
+        "LOW": 2
       }
     }
   },
   "findings": [
     {
       "ruleId": "workflow.sequence.tests_lagging",
-      "severity": "HIGH",
+      "severity": "CRITICAL",
       "filePath": "PROJECT_ROOT",
       "line": 1,
       "column": 1,
-      "message": "Ratio Implementation:Tests desequilibrado (50:3). TDD requiere tests primero.",
+      "message": "🚨 CRITICAL: Ratio Implementation:Tests desequilibrado (46 implementaciones : 1 tests). \n        \nWORKFLOW BDD→TDD→IMPLEMENTATION VIOLADO:\n- BDD: 0 features\n- TDD: 1 tests (INSUFICIENTES)\n- Implementation: 46 archivos (DEMASIADOS sin tests)\n\nTDD requiere: Tests primero, luego implementación. Ratio ideal: Tests >= Implementation.\n\nACCIÓN REQUERIDA:\n- Escribir tests para cada implementación\n- No crear nueva implementación sin tests correspondientes\n- Seguir flujo: Feature → Tests → Implementation",
       "metrics": {}
     },
     {
@@ -783,18 +2293,72 @@
       "metrics": {}
     },
     {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/eslint.config.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/index.js",
+      "line": 13,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/__tests__/integration.test.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/tests/guard-system.integration.spec.js",
+      "line": 2,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.types.any",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.claude/hooks/pre-tool-use-evidence-validator.ts",
+      "line": 44,
+      "column": 19,
+      "message": "any type in variable - infer type or define explicitly",
+      "metrics": {}
+    },
+    {
       "ruleId": "common.quality.disabled_lint",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/.coverage/lcov-report/block-navigation.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.coverage/lcov-report/block-navigation.js",
       "line": 2,
       "column": 1,
       "message": "Disabled lint directive present",
       "metrics": {}
     },
     {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.coverage/lcov-report/block-navigation.js",
+      "line": 2,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
       "ruleId": "common.debug.console",
       "severity": "MEDIUM",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/.coverage/lcov-report/prettify.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.coverage/lcov-report/prettify.js",
       "line": 2,
       "column": 40,
       "message": "Console usage detected - use Logger instead",
@@ -803,50 +2367,716 @@
     {
       "ruleId": "common.quality.disabled_lint",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/.coverage/lcov-report/prettify.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.coverage/lcov-report/prettify.js",
       "line": 2,
       "column": 1,
       "message": "Disabled lint directive present",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.coverage/lcov-report/prettify.js",
+      "line": 2,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
     },
     {
       "ruleId": "common.quality.disabled_lint",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/.coverage/lcov-report/sorter.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.coverage/lcov-report/sorter.js",
       "line": 2,
       "column": 1,
       "message": "Disabled lint directive present",
       "metrics": {}
     },
     {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.coverage/lcov-report/sorter.js",
+      "line": 2,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/AutonomousOrchestrator.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
       "ruleId": "common.quality.todo_fixme",
       "severity": "MEDIUM",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/application/services/HookSystemScheduler.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/HookSystemScheduler.js",
       "line": 1,
       "column": 1,
       "message": "Task marker present in code",
       "metrics": {}
     },
     {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/HookSystemScheduler.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/IntelligentCommitAnalyzer.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/IntelligentGitTreeMonitor.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/PlatformDetectionService.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/RealtimeGuardService.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/state/HookSystemStateMachine.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/use-cases/AnalyzeStagedFilesUseCase.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/use-cases/BlockCommitUseCase.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/use-cases/GenerateAuditReportUseCase.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/domain/entities/AuditResult.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/domain/entities/Finding.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/domain/entities/SeverityConfig.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/domain/repositories/IFindingsRepository.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/domain/rules/CommitBlockingRules.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
       "ruleId": "common.debug.console",
       "severity": "MEDIUM",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/adapters/LegacyAnalyzerAdapter.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/adapters/LegacyAnalyzerAdapter.js",
       "line": 55,
       "column": 12,
       "message": "Console usage detected - use Logger instead",
       "metrics": {}
     },
     {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/adapters/LegacyAnalyzerAdapter.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/cache/CacheService.ts",
+      "line": 6,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/external-tools/GitOperations.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
       "ruleId": "common.debug.console",
       "severity": "MEDIUM",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js",
-      "line": 52,
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/mcp/gitflow-automation-watcher.js",
+      "line": 57,
       "column": 5,
       "message": "Console usage detected - use Logger instead",
       "metrics": {}
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/hooks/pre-tool-use-evidence-validator.ts",
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/reporting/report-generator.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/reporting/severity-tracker.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/repositories/FileFindingsRepository.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/severity-evaluator.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/utils/token-manager.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/guard/GuardAutoManagerService.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/notification/NotificationCenterService.js",
+      "line": 16,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/recovery/AutoRecoveryManager.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/TokenMonitorService.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/clean-architecture-analyzer.js",
+      "line": 16,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ddd-analyzer.js",
+      "line": 14,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/detekt-runner.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/feature-first-analyzer.js",
+      "line": 14,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/archive/ast-intelligence.ts",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.todo_fixme",
+      "severity": "MEDIUM",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/archive/kotlin-analyzer.js",
+      "line": 8,
+      "column": 1,
+      "message": "Task marker present in code",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ast-backend-clean.js",
+      "line": 8,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/clean-architecture-analyzer.js",
+      "line": 6,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ddd-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/feature-first-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/BDDTDDWorkflowRules.js",
+      "line": 12,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/documentation-analyzer.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/ast-frontend-clean.js",
+      "line": 8,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/clean-architecture-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/ddd-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/feature-first-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/text/text-scanner.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/external-tools/eslint/backend.config.template.mjs",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/analyzers/maintainability-analyzer.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/analyzers/performance-analyzer.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/analyzers/security-analyzer.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/analyzers/stability-analyzer.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/context/context-builder.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/policies/gate-policies.js",
+      "line": 4,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/recovery/__tests__/AutoRecoveryManager.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/__tests__/TokenMonitorService.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js",
+      "line": 12,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
+      "line": 8,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 12,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js",
+      "line": 11,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/analyzers/FrontendSOLIDAnalyzer.js",
+      "line": 8,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSArchitectureDetector.js",
+      "line": 14,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSArchitectureRules.js",
+      "line": 8,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
+      "line": 6,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSCICDRules.js",
+      "line": 11,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
+      "line": 6,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
+      "line": 9,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSSPMRules.js",
+      "line": 13,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js",
+      "line": 13,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
+      "line": 9,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/parsers/SourceKittenParser.js",
+      "line": 6,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/hooks/pre-tool-use-evidence-validator.ts",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -859,7 +3089,20 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/telemetry/metrics-server.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.claude/hooks/pre-tool-use-evidence-validator.ts",
+      "line": 1,
+      "column": 0,
+      "severity": "HIGH",
+      "ruleId": "common.network.missing_circuit_breaker",
+      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
+      "category": "Network",
+      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
+      "context": {
+        "impact": "HIGH - prevents system overload when backend down"
+      }
+    },
+    {
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/telemetry/metrics-server.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -873,7 +3116,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/application/services/notification/NotificationCenterService.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/notification/NotificationCenterService.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -886,7 +3129,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/application/services/token/CursorTokenService.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
       "line": 1,
       "column": 0,
       "severity": "CRITICAL",
@@ -900,7 +3143,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/application/services/token/CursorTokenService.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -914,7 +3157,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/ast-android.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ast-android.js",
       "line": 1,
       "column": 0,
       "severity": "MEDIUM",
@@ -927,7 +3170,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/frontend/ast-frontend.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/ast-frontend.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -940,7 +3183,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/ios/ast-ios.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/ast-ios.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -953,7 +3196,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/ios/ast-ios.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/ast-ios.js",
       "line": 1,
       "column": 0,
       "severity": "MEDIUM",
@@ -966,7 +3209,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/text/text-scanner.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/text/text-scanner.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -979,7 +3222,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/text/text-scanner.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/text/text-scanner.js",
       "line": 1,
       "column": 0,
       "severity": "MEDIUM",
@@ -992,7 +3235,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/severity/context/context-builder.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/context/context-builder.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -1005,7 +3248,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -1018,7 +3261,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -1031,7 +3274,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -1044,7 +3287,7 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
       "line": 1,
       "column": 0,
       "severity": "CRITICAL",
@@ -1054,7 +3297,7 @@
       "suggestion": "Add idempotencyKey to request headers, check before processing"
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/common/images-backend-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/images-backend-analyzer.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -1064,7 +3307,7 @@
       "suggestion": "Add version field to DTOs, check on update, return 409 Conflict if mismatch"
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js",
       "line": 1,
       "column": 0,
       "severity": "HIGH",
@@ -1074,7 +3317,37 @@
       "suggestion": "Add version field to DTOs, check on update, return 409 Conflict if mismatch"
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/backend/ast-backend.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/RealtimeGuardService.js",
+      "line": 1,
+      "column": 0,
+      "severity": "HIGH",
+      "ruleId": "backend.push.missing_notification_queue",
+      "message": "Push notification without queue - direct sends fail silently, use queue (Bull/BullMQ) for retry",
+      "category": "Push",
+      "suggestion": "Implement notification queue with retry policy"
+    },
+    {
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/RealtimeGuardService.js",
+      "line": 1,
+      "column": 0,
+      "severity": "MEDIUM",
+      "ruleId": "backend.push.missing_notification_batching",
+      "message": "Notifications sent in loop - batch multiple sends (500 tokens/batch) for FCM efficiency",
+      "category": "Push",
+      "suggestion": "Use FCM multicast or batch send API"
+    },
+    {
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/mcp/gitflow-automation-watcher.js",
+      "line": 1,
+      "column": 0,
+      "severity": "HIGH",
+      "ruleId": "backend.push.missing_notification_queue",
+      "message": "Push notification without queue - direct sends fail silently, use queue (Bull/BullMQ) for retry",
+      "category": "Push",
+      "suggestion": "Implement notification queue with retry policy"
+    },
+    {
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ast-backend.js",
       "line": 1,
       "column": 0,
       "severity": "MEDIUM",
@@ -1086,7 +3359,7 @@
     {
       "ruleId": "android.repository_pattern",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/ddd-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ddd-analyzer.js",
       "line": 16,
       "column": 3,
       "message": "Repository pattern - good for data abstraction",
@@ -1095,7 +3368,7 @@
     {
       "ruleId": "android.use_case",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/ddd-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ddd-analyzer.js",
       "line": 19,
       "column": 3,
       "message": "Use case pattern - good for business logic encapsulation",
@@ -1104,7 +3377,7 @@
     {
       "ruleId": "android.repository_pattern",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/ddd-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ddd-analyzer.js",
       "line": 26,
       "column": 61,
       "message": "Repository pattern - good for data abstraction",
@@ -1113,7 +3386,7 @@
     {
       "ruleId": "android.repository_pattern",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/ddd-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ddd-analyzer.js",
       "line": 27,
       "column": 53,
       "message": "Repository pattern - good for data abstraction",
@@ -1122,7 +3395,7 @@
     {
       "ruleId": "android.repository_pattern",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/ddd-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ddd-analyzer.js",
       "line": 43,
       "column": 18,
       "message": "Repository pattern - good for data abstraction",
@@ -1131,7 +3404,7 @@
     {
       "ruleId": "android.use_case",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/ddd-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ddd-analyzer.js",
       "line": 59,
       "column": 7,
       "message": "Use case pattern - good for business logic encapsulation",
@@ -1140,8 +3413,8 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/detekt-runner.js",
-      "line": 51,
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/detekt-runner.js",
+      "line": 52,
       "column": 31,
       "message": "Detekt - good static analysis for Kotlin",
       "metrics": {}
@@ -1149,8 +3422,8 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/native-bridge.js",
-      "line": 44,
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/native-bridge.js",
+      "line": 46,
       "column": 5,
       "message": "Detekt - good static analysis for Kotlin",
       "metrics": {}
@@ -1158,8 +3431,8 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/native-bridge.js",
-      "line": 50,
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/native-bridge.js",
+      "line": 52,
       "column": 7,
       "message": "Detekt - good static analysis for Kotlin",
       "metrics": {}
@@ -1167,8 +3440,8 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/native-bridge.js",
-      "line": 65,
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/native-bridge.js",
+      "line": 67,
       "column": 28,
       "message": "Detekt - good static analysis for Kotlin",
       "metrics": {}
@@ -1176,7 +3449,7 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/__tests__/native-bridge.spec.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/__tests__/native-bridge.spec.js",
       "line": 6,
       "column": 7,
       "message": "Detekt - good static analysis for Kotlin",
@@ -1185,7 +3458,7 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/__tests__/native-bridge.spec.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/__tests__/native-bridge.spec.js",
       "line": 10,
       "column": 22,
       "message": "Detekt - good static analysis for Kotlin",
@@ -1194,7 +3467,7 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/__tests__/native-bridge.spec.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/__tests__/native-bridge.spec.js",
       "line": 15,
       "column": 13,
       "message": "Detekt - good static analysis for Kotlin",
@@ -1203,7 +3476,7 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/__tests__/native-bridge.spec.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/__tests__/native-bridge.spec.js",
       "line": 15,
       "column": 20,
       "message": "Detekt - good static analysis for Kotlin",
@@ -1212,7 +3485,7 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/__tests__/native-bridge.spec.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/__tests__/native-bridge.spec.js",
       "line": 20,
       "column": 13,
       "message": "Detekt - good static analysis for Kotlin",
@@ -1221,16 +3494,115 @@
     {
       "ruleId": "android.detekt",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/__tests__/native-bridge.spec.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/__tests__/native-bridge.spec.js",
       "line": 28,
       "column": 7,
       "message": "Detekt - good static analysis for Kotlin",
       "metrics": {}
     },
     {
+      "ruleId": "android.viewmodel_pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js",
+      "line": 200,
+      "column": 7,
+      "message": "ViewModel pattern - good for UI state management",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.flow_collect",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 37,
+      "column": 13,
+      "message": "Flow not collected - Flows need to be collected to emit values",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.room_usage",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 39,
+      "column": 13,
+      "message": "Room usage - good type-safe SQLite wrapper",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.repository_pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 198,
+      "column": 33,
+      "message": "Repository pattern - good for data abstraction",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.layout_composables",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 266,
+      "column": 13,
+      "message": "Layout composables - good for structuring UI",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.flow_collect",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 370,
+      "column": 13,
+      "message": "Flow not collected - Flows need to be collected to emit values",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.state_flow",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 370,
+      "column": 13,
+      "message": "State/SharedFlow usage - good for reactive state management",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.room_annotations",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 436,
+      "column": 17,
+      "message": "Room annotations - good for defining database operations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.dto_sharing",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 630,
+      "column": 17,
+      "message": "DTO classes - consider sharing with backend via code generation",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.layout_composables",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 681,
+      "column": 13,
+      "message": "Layout composables - good for structuring UI",
+      "metrics": {}
+    },
+    {
+      "ruleId": "android.lazy_lists",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 681,
+      "column": 13,
+      "message": "Lazy lists - good for performance with large datasets",
+      "metrics": {}
+    },
+    {
       "ruleId": "android.use_case",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
       "line": 218,
       "column": 17,
       "message": "Use case pattern - good for business logic encapsulation",
@@ -1239,7 +3611,7 @@
     {
       "ruleId": "android.viewmodel_pattern",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
       "line": 218,
       "column": 17,
       "message": "ViewModel pattern - good for UI state management",
@@ -1248,7 +3620,7 @@
     {
       "ruleId": "android.repository_pattern",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
       "line": 225,
       "column": 25,
       "message": "Repository pattern - good for data abstraction",
@@ -1257,7 +3629,7 @@
     {
       "ruleId": "android.repository_pattern",
       "severity": "LOW",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
       "line": 226,
       "column": 26,
       "message": "Repository pattern - good for data abstraction",
@@ -1266,7 +3638,7 @@
     {
       "ruleId": "solid.ocp.if_type_chain",
       "severity": "CRITICAL",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/clean-architecture-analyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/clean-architecture-analyzer.js",
       "line": 33,
       "column": 5,
       "message": "OCP VIOLATION in clean-architecture-analyzer.js::analyzeCleanArchitecture: 3 if-else checking 'layer' - use Strategy pattern or polymorphism",
@@ -1275,16 +3647,826 @@
     {
       "ruleId": "solid.srp.high_complexity",
       "severity": "CRITICAL",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/android/native-bridge.js",
-      "line": 90,
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/native-bridge.js",
+      "line": 92,
       "column": 1,
       "message": "SRP VIOLATION in native-bridge.js::mapDetektRuleId: high complexity (13 statements, 11 ifs, 0 switches) - extract responsibilities",
       "metrics": {}
     },
     {
+      "ruleId": "solid.srp.god_class",
+      "severity": "CRITICAL",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
+      "line": 8,
+      "column": 1,
+      "message": "SRP VIOLATION in AndroidASTIntelligentAnalyzer.js::AndroidASTIntelligentAnalyzer: God class with 23 methods - split into focused classes",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.auth.missing_cors",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/clean-architecture-analyzer.js",
+      "line": 6,
+      "column": 1,
+      "message": "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/clean-architecture-analyzer.js",
+      "line": 6,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/clean-architecture-analyzer.js",
+      "line": 6,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.auth.missing_cors",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ddd-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ddd-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ddd-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.security.pii_in_logs",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ddd-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "🚨 HIGH: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don't include sensitive fields. GDPR violation risk.",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.auth.missing_cors",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/feature-first-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/feature-first-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/feature-first-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/forbidden-literals-analyzer.js",
+      "line": 1,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.auth.missing_cors",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 31,
+      "column": 5,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 31,
+      "column": 5,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 38,
+      "column": 58,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 44,
+      "column": 9,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 44,
+      "column": 9,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 62,
+      "column": 5,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 62,
+      "column": 5,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 69,
+      "column": 9,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 69,
+      "column": 9,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 91,
+      "column": 7,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 91,
+      "column": 7,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 96,
+      "column": 46,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 96,
+      "column": 46,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 98,
+      "column": 35,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 98,
+      "column": 35,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 106,
+      "column": 54,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 106,
+      "column": 54,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.health.checks",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Health checks detected - ensure proper liveness/readiness probes",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.logging.structured",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Structured logging detected - ensure correlation IDs and proper log levels",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 31,
+      "column": 5,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 31,
+      "column": 5,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 38,
+      "column": 58,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 44,
+      "column": 9,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 44,
+      "column": 9,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 62,
+      "column": 5,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 62,
+      "column": 5,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 69,
+      "column": 9,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 69,
+      "column": 9,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 91,
+      "column": 7,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 91,
+      "column": 7,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 96,
+      "column": 46,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 96,
+      "column": 46,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 98,
+      "column": 35,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 98,
+      "column": 35,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 106,
+      "column": 54,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 106,
+      "column": 54,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.api.documentation",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "API documentation detected - ensure complete and accurate OpenAPI specs",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.audit.logging",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Audit logging detected - ensure tamper-proof and comprehensive logging",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.api.gateway",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/nestjs-patterns-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "API gateway detected - ensure proper routing and security policies",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.error_handling.untyped_catch",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 425,
+      "column": 9,
+      "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.emitter",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 149,
+      "column": 9,
+      "message": "Event emission detected - good practice for decoupled communication",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 190,
+      "column": 20,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 195,
+      "column": 20,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.event.handler",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 213,
+      "column": 23,
+      "message": "Event handler detected - ensure idempotent processing",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.caching.redis",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Redis caching detected - ensure proper cache invalidation strategy",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 149,
+      "column": 9,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 190,
+      "column": 20,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 195,
+      "column": 20,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.observer.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 213,
+      "column": 23,
+      "message": "Observer pattern usage detected - good for event-driven architecture",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.analytics.tracking",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Analytics tracking detected - ensure GDPR compliance and proper data handling",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.monitoring.alerts",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "Monitoring alerts detected - ensure actionable and non-spammy alerts",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.security.pii_in_logs",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
+      "line": 5,
+      "column": 1,
+      "message": "🚨 HIGH: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don't include sensitive fields. GDPR violation risk.",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/clean-architecture-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/ddd-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.auth.missing_cors",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/feature-first-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/forbidden-literals-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/forbidden-literals-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.auth.missing_cors",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.api.missing_swagger",
+      "severity": "MEDIUM",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Controller without Swagger decorators/imports",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/solid-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/__tests__/solid-analyzer.spec.js",
+      "line": 1,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.antipattern.god_classes",
+      "severity": "CRITICAL",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 16,
+      "column": 1,
+      "message": "God class detected: 11 methods, 0 properties, 413 lines - VIOLATES SRP",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.auth.missing_cors",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 12,
+      "column": 1,
+      "message": "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.metrics.missing_prometheus",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 12,
+      "column": 1,
+      "message": "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.error_handling.untyped_catch",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 42,
+      "column": 7,
+      "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.error_handling.untyped_catch",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 357,
+      "column": 7,
+      "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.clean.infrastructure",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 12,
+      "column": 1,
+      "message": "Infrastructure layer file - ensure contains external concerns and implementations",
+      "metrics": {}
+    },
+    {
+      "ruleId": "backend.cqrs.pattern",
+      "severity": "LOW",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
+      "line": 12,
+      "column": 1,
+      "message": "CQRS pattern detected - ensure proper separation of read/write models",
+      "metrics": {}
+    },
+    {
+      "ruleId": "ios.storyboards",
+      "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
+      "line": 6,
+      "column": 1,
+      "message": "Storyboard/XIB detected - use programmatic UI for better version control",
+      "metrics": {}
+    },
+    {
       "ruleId": "ios.completion_handlers",
       "severity": "MEDIUM",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
       "line": 84,
       "column": 9,
       "message": "Completion handler detected - use async/await instead",
@@ -1293,7 +4475,7 @@
     {
       "ruleId": "ios.storyboards",
       "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
       "line": 6,
       "column": 1,
       "message": "Storyboard/XIB detected - use programmatic UI for better version control",
@@ -1301,8 +4483,8 @@
     }
   ],
   "metadata": {
-    "totalFiles": 268,
-    "timestamp": "2025-11-27T15:22:56.252Z",
-    "root": "/Users/juancarlosmerlosalbarracin/CascadeProjects/R_GO_local/scripts/hooks-system"
+    "totalFiles": 287,
+    "timestamp": "2025-12-14T00:21:58.081Z",
+    "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }

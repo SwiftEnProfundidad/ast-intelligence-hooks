@@ -16,13 +16,10 @@ const COLORS = {
 class ASTHooksInstaller {
   constructor() {
     this.targetRoot = process.cwd();
-    // Detect if we are in an installed npm package or in development
     const packageJsonPath = path.join(__dirname, '..', 'package.json');
     if (fs.existsSync(packageJsonPath)) {
-      // We are in the installed npm package
       this.hookSystemRoot = path.join(__dirname, '..');
     } else {
-      // Fallback for development
       this.hookSystemRoot = path.join(__dirname, '..');
     }
     this.platforms = [];

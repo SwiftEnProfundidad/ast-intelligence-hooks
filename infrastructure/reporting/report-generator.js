@@ -201,7 +201,6 @@ class ReportGenerator {
       });
     });
 
-    // Category-specific recommendations
     const byCategory = this.groupByCategory(violations);
     Object.entries(byCategory).forEach(([category, violations]) => {
       if (violations.length > 5) {
@@ -396,16 +395,13 @@ ${gateResult.blockedBy ? `Blocked by: ${gateResult.blockedBy} violations` : ''}
   save(violations, gateResult, outputPath = '.audit_tmp/intelligent-report.json') {
     const report = this.generate(violations, gateResult);
 
-    // Ensure directory exists
     const dir = path.dirname(outputPath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Write JSON report
     fs.writeFileSync(outputPath, JSON.stringify(report, null, 2));
 
-    // Write text report
     const textPath = outputPath.replace('.json', '.txt');
     fs.writeFileSync(textPath, this.generateTextReport(violations, gateResult));
 
