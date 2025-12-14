@@ -1,13 +1,3 @@
-
-/**
- * Analyze Feature-First compliance for Android
- *
- * Android Multi-module architecture:
- * ✅ Feature modules: :feature:orders, :feature:users
- * ✅ Core modules: :core:network, :core:database, :core:ui
- * ✅ App module: Composition
- * ✅ Clear dependencies: Feature → Core, NO Feature → Feature
- */
 function analyzeFeatureFirst(filePath, fileContent, findings, pushFileFinding) {
   const feature = detectFeature(filePath);
   if (!feature) return;

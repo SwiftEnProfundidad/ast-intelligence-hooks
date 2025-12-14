@@ -1,15 +1,5 @@
-
 const { SyntaxKind } = require('ts-morph');
 
-/**
- * Analyze Clean Architecture compliance for Backend (NestJS)
- *
- * Rules from rulesbackend.mdc:
- * ✅ Domain → Application → Infrastructure → Presentation
- * ✅ Domain must be independent of frameworks
- * ✅ Dependency direction: inside-out only
- * ✅ No circular dependencies between layers
- */
 function analyzeCleanArchitecture(sf, findings, pushFinding) {
   const filePath = sf.getFilePath();
 
@@ -126,11 +116,6 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
   }
 }
 
-/**
- * Detect which Clean Architecture layer a file belongs to
- * @param {string} path - File or import path
- * @returns {string|null} - Layer name or null
- */
 function detectLayer(path) {
   const normalized = path.toLowerCase().replace(/\\/g, '/');
 

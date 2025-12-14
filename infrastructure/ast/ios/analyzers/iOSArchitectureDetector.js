@@ -1,16 +1,3 @@
-/**
- * iOS Architecture Pattern Detector
- *
- * Detecta automáticamente el patrón arquitectónico usado en un proyecto iOS:
- * - MVVM (Model-View-ViewModel)
- * - MVVM-C (MVVM + Coordinator)
- * - MVP (Model-View-Presenter)
- * - VIPER (View-Interactor-Presenter-Entity-Router)
- * - TCA (The Composable Architecture)
- * - Clean Swift (VIP - View-Interactor-Presenter)
- * - MVC (Model-View-Controller) - Legacy/Anti-pattern
- */
-
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
@@ -31,10 +18,6 @@ class iOSArchitectureDetector {
     this.manualConfig = this.loadManualConfig();
   }
 
-  /**
-   * Carga configuración manual de .ast-architecture.json si existe
-   * @returns {Object|null} Configuración o null
-   */
   loadManualConfig() {
     try {
       const configPath = path.join(this.projectRoot, '.ast-architecture.json');
@@ -49,10 +32,6 @@ class iOSArchitectureDetector {
     return null;
   }
 
-  /**
-   * Detecta el patrón arquitectónico dominante en el proyecto
-   * @returns {string} Nombre del patrón detectado
-   */
   detect() {
     if (this.manualConfig && this.manualConfig.architecturePattern) {
       const manualPattern = this.manualConfig.architecturePattern;
@@ -82,14 +61,6 @@ class iOSArchitectureDetector {
     return this.getDominantPattern();
   }
 
-  /**
-   * Feature-First + DDD + Clean Architecture (PATRÓN PRINCIPAL)
-   * Señales:
-   * - Estructura: Features/ con subcarpetas domain/, application/, infrastructure/, presentation/
-   * - Domain contiene: entities/, value-objects/, interfaces/
-   * - Application contiene: use-cases/, dto/
-   * - Bounded Contexts por feature
-   */
   detectFeatureFirstClean(files) {
     const hasFeaturesFolders = files.some(f =>
       /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
@@ -156,14 +127,6 @@ class iOSArchitectureDetector {
     console.log(`[Architecture Detection] Feature-First + Clean + DDD score: ${this.patterns.featureFirstClean}`);
   }
 
-  /**
-   * TCA (The Composable Architecture)
-   * Señales:
-   * - import ComposableArchitecture
-   * - Store<State, Action>
-   * - Reducer protocol
-   * - Effect
-   */
   detectTCA(files) {
     const tcaIndicators = [
       'import ComposableArchitecture',
@@ -186,13 +149,6 @@ class iOSArchitectureDetector {
     });
   }
 
-  /**
-   * VIPER (View-Interactor-Presenter-Entity-Router)
-   * Señales:
-   * - Archivos *Presenter.swift, *Interactor.swift, *Router.swift
-   * - Protocols: *ViewProtocol, *PresenterProtocol, *InteractorProtocol
-   * - Estructura de carpetas: View/, Interactor/, Presenter/, Entity/, Router/
-   */
   detectVIPER(files) {
     const viperFiles = files.filter(f =>
       /Presenter\.swift$|Interactor\.swift$|Router\.swift$|Entity\.swift$/.test(f)
@@ -231,14 +187,6 @@ class iOSArchitectureDetector {
     }
   }
 
-  /**
-   * Clean Swift (VIP - View-Interactor-Presenter)
-   * Similar a VIPER pero sin Router explícito
-   * Señales:
-   * - *ViewController.swift, *Interactor.swift, *Presenter.swift
-   * - *Models.swift con Request/Response/ViewModel cycles
-   * - Protocols: *DisplayLogic, *BusinessLogic, *PresentationLogic
-   */
   detectCleanSwift(files) {
     const cleanSwiftFiles = files.filter(f =>
       /Models\.swift$/.test(f)
@@ -265,14 +213,6 @@ class iOSArchitectureDetector {
     });
   }
 
-  /**
-   * MVP (Model-View-Presenter)
-   * Señales:
-   * - Archivos *Presenter.swift
-   * - Protocols: *ViewProtocol, *PresenterProtocol
-   * - NO tiene Interactor (diferencia con VIPER)
-   * - View es pasivo, Presenter contiene lógica
-   */
   detectMVP(files) {
     const presenterFiles = files.filter(f => /Presenter\.swift$/.test(f));
     const interactorFiles = files.filter(f => /Interactor\.swift$/.test(f));
@@ -296,13 +236,6 @@ class iOSArchitectureDetector {
     });
   }
 
-  /**
-   * MVVM-C (MVVM + Coordinator)
-   * Señales:
-   * - Archivos *Coordinator.swift
-   * - Protocol Coordinator con start(), navigate(to:)
-   * - ViewModels + Coordinators pattern
-   */
   detectMVVMC(files) {
     const coordinatorFiles = files.filter(f => /Coordinator\.swift$/.test(f));
 
@@ -321,14 +254,6 @@ class iOSArchitectureDetector {
     });
   }
 
-  /**
-   * MVVM (Model-View-ViewModel)
-   * Señales:
-   * - Archivos *ViewModel.swift
-   * - @Published properties
-   * - ObservableObject
-   * - Combine framework
-   */
   detectMVVM(files) {
     const viewModelFiles = files.filter(f => /ViewModel\.swift$/.test(f));
 
@@ -356,13 +281,6 @@ class iOSArchitectureDetector {
     });
   }
 
-  /**
-   * MVC (Model-View-Controller) - Legacy/Anti-pattern
-   * Señales:
-   * - ViewControllers masivos (>300 líneas)
-   * - Lógica de negocio en ViewControllers
-   * - NO tiene ViewModel, Presenter, ni Interactor
-   */
   detectMVC(files) {
     const viewControllerFiles = files.filter(f => /ViewController\.swift$/.test(f));
     const viewModelFiles = files.filter(f => /ViewModel\.swift$/.test(f));
@@ -389,9 +307,6 @@ class iOSArchitectureDetector {
     }
   }
 
-  /**
-   * Determina el patrón dominante
-   */
   getDominantPattern() {
     const sorted = Object.entries(this.patterns)
       .sort((a, b) => b[1] - a[1])
@@ -437,9 +352,6 @@ class iOSArchitectureDetector {
     }
   }
 
-  /**
-   * Obtiene un resumen detallado de la detección
-   */
   getDetectionSummary() {
     const dominant = this.getDominantPattern();
 

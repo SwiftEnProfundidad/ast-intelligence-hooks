@@ -1,10 +1,3 @@
-/**
- * iOS Architecture Pattern Rules
- *
- * Reglas específicas para cada patrón arquitectónico detectado.
- * Solo se ejecutan las reglas del patrón detectado en el proyecto.
- */
-
 const { pushFinding } = require('../../ast-core');
 
 class iOSArchitectureRules {
@@ -13,9 +6,6 @@ class iOSArchitectureRules {
     this.pattern = detectedPattern;
   }
 
-  /**
-   * Ejecuta las reglas correspondientes al patrón detectado
-   */
   runRules(files) {
     console.log(`[iOS Architecture] Detected pattern: ${this.pattern}`);
 

@@ -1,15 +1,5 @@
-
 const { SyntaxKind } = require('ts-morph');
 
-/**
- * Analyze Clean Architecture compliance for Frontend (React/Next.js)
- *
- * Rules from rulesfront.mdc:
- * ✅ Domain → Application → Infrastructure → Presentation
- * ✅ Domain must be independent of React/Next.js
- * ✅ Presentation (components) should not import Infrastructure directly
- * ✅ Dependency direction: inside-out only
- */
 function analyzeCleanArchitecture(sf, findings, pushFinding) {
   const filePath = sf.getFilePath();
 

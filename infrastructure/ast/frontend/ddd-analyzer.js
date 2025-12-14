@@ -1,15 +1,5 @@
-
 const { SyntaxKind } = require('ts-morph');
 
-/**
- * Analyze DDD patterns in Frontend
- *
- * Adapted DDD for Frontend:
- * ✅ Entities in domain/ (business models)
- * ✅ Repositories as interfaces (API abstraction)
- * ✅ Use Cases for business logic (not in components)
- * ✅ Custom hooks as application layer
- */
 function analyzeDDD(sf, findings, pushFinding, project) {
   const filePath = sf.getFilePath();
 

@@ -1,17 +1,5 @@
-
 const { SyntaxKind } = require('ts-morph');
 
-/**
- * Analyze DDD pattern compliance
- *
- * Rules from rulesbackend.mdc:
- * ✅ Repository pattern: Interface en domain, Implementation en infrastructure
- * ✅ Use Cases explícitos: Un archivo por use case
- * ✅ DTOs en boundaries: Validación con class-validator
- * ✅ Anemic domain models: Entities con comportamiento, no solo getters/setters
- * ✅ Value Objects: Immutability
- * ✅ Domain Events: OrderCreatedEvent, etc.
- */
 function analyzeDDD(sf, findings, pushFinding, project) {
   const filePath = sf.getFilePath();
 
@@ -246,9 +234,6 @@ function analyzeDomainEvents(sf, filePath, findings, pushFinding) {
   });
 }
 
-/**
- * Helper: Detect layer from file path
- */
 function detectLayer(path) {
   const normalized = path.toLowerCase().replace(/\\/g, '/');
 

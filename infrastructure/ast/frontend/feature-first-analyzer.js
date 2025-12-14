@@ -1,16 +1,5 @@
-
 const path = require('path');
 
-/**
- * Analyze Feature-First compliance for Frontend
- *
- * Feature-First for React/Next.js:
- * ✅ Each feature is self-contained
- * ✅ Features in: app/dashboard/, app/orders/, components/orders/, etc.
- * ✅ No cross-feature imports
- * ✅ Shared UI in components/ui/
- * ✅ Feature structure: domain/, application/, presentation/
- */
 function analyzeFeatureFirst(sf, findings, pushFinding) {
   const filePath = sf.getFilePath();
 
@@ -35,9 +24,6 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
   });
 }
 
-/**
- * Detect feature from file path
- */
 function detectFeature(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
 

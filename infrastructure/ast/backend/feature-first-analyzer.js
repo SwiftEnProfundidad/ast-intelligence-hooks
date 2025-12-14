@@ -1,16 +1,5 @@
-
 const path = require('path');
 
-/**
- * Analyze Feature-First compliance
- *
- * Feature-First principles:
- * ✅ Each feature is self-contained module
- * ✅ Features have: module, controller, service, repository, dtos, tests
- * ✅ No cross-feature imports (features are independent)
- * ✅ Shared code in core/ or common/
- * ✅ Feature structure: feature-name/domain/, feature-name/application/, etc.
- */
 function analyzeFeatureFirst(sf, findings, pushFinding) {
   const filePath = sf.getFilePath();
 
@@ -37,10 +26,6 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
   checkFeatureStructure(filePath, feature, findings, pushFinding);
 }
 
-/**
- * Detect feature name from file path
- * Returns null if not in a feature
- */
 function detectFeature(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
 
@@ -65,9 +50,6 @@ function detectFeature(filePath) {
   return featureName;
 }
 
-/**
- * Check if feature has proper structure
- */
 function checkFeatureStructure(filePath, feature, findings, pushFinding) {
 
   const fileName = path.basename(filePath);
