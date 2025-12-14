@@ -1,9 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Swift AST Analyzer using SourceKitten
- * Analiza código Swift para detectar violaciones de reglas iOS
- */
 
 const { execSync } = require('child_process');
 const fs = require('fs');

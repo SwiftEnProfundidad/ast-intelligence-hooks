@@ -4,13 +4,6 @@ const fs = require('fs').promises;
 const { SourceKittenParser } = require('../parsers/SourceKittenParser');
 const { pushFinding, mapToLevel } = require(path.join(__dirname, '../../ast-core'));
 
-/**
- * iOSEnterpriseAnalyzer
- * Enterprise-grade Swift/iOS code analyzer
- * Uses SourceKitten for native AST parsing
- *
- * @class iOSEnterpriseAnalyzer
- */
 class iOSEnterpriseAnalyzer {
   constructor() {
     this.parser = new SourceKittenParser();

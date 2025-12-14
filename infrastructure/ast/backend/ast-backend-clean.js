@@ -7,17 +7,6 @@ const { analyzeDDD } = require(path.join(__dirname, 'ddd-analyzer'));
 const { analyzeFeatureFirst } = require(path.join(__dirname, 'feature-first-analyzer'));
 const { analyzeForbiddenLiterals } = require(path.join(__dirname, 'forbidden-literals-analyzer'));
 
-/**
- * Run Backend-specific AST intelligence analysis
- *
- * DELEGATED TO ESLINT:
- * - Complexity (max-lines, cognitive-complexity)
- * - Code smells (duplicate-string, identical-functions)
- * - Security (hardcoded-secrets, unsafe-regex)
- * - Async/await violations (no-floating-promises, return-await)
- * - Naming conventions
- *
- * OUR RESPONSIBILITY (what ESLint CAN'T do):
  * - SOLID principles (5)
  * - Clean Architecture layer dependencies
  * - DDD patterns (Repository, Use Cases, Value Objects, Aggregates)

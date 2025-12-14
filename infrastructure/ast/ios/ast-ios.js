@@ -15,9 +15,6 @@ const { iOSCICDRules } = require(path.join(__dirname, 'analyzers/iOSCICDRules'))
 const { iOSForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analyzers/iOSForbiddenLiteralsAnalyzer'));
 const { iOSASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/iOSASTIntelligentAnalyzer'));
 
-/**
- * Run iOS-specific AST intelligence analysis
- * Uses both TypeScript AST (for .ts/.tsx) and SourceKitten (for .swift)
  * @param {Project} project - TypeScript morph project
  * @param {Array} findings - Findings array to populate
  * @param {string} platform - Platform identifier

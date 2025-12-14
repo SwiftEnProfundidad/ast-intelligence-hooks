@@ -1,12 +1,3 @@
-/**
- * iOS CI/CD Rules
- * - Fastfile configuration
- * - Lane definitions
- * - GitHub Actions workflows
- * - TestFlight automation
- * - Build configuration validation
- * - Certificate management
- */
 
 const { pushFinding } = require('../../ast-core');
 const fs = require('fs');

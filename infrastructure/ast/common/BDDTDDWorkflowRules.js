@@ -1,13 +1,3 @@
-/**
- * BDD → TDD → Implementation Workflow Rules
- *
- * Valida que el proyecto sigue el workflow:
- * 1. BDD: Feature files (.feature) con Gherkin specs
- * 2. TDD: Tests escritos ANTES de implementación
- * 3. Implementation: Código siguiendo Feature-First + DDD + Clean Architecture
- *
- * Este es el workflow ESTÁNDAR para todos los proyectos.
- */
 
 const { pushFinding, pushFileFinding } = require('../ast-core');
 const fs = require('fs');

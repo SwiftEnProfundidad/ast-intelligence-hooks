@@ -1,12 +1,3 @@
-/**
- * Frontend Architecture Pattern Detector
- *
- * Automatically detects the architectural pattern used in a Frontend (React/Next.js) project:
- * - Feature-First + Clean + DDD
- * - Component-Based Architecture
- * - Atomic Design Pattern
- * - State Management patterns (Zustand, Redux, Context)
- */
 
 const fs = require('fs');
 const path = require('path');

@@ -1,9 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Kotlin/Android AST Parser usando Detekt
- * Wrapper para integrar Detekt en el sistema de hooks
- */
 
 const { execSync } = require('child_process');
 const fs = require('fs');
