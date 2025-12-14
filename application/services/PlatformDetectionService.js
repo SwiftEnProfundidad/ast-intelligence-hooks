@@ -65,7 +65,6 @@ class PlatformDetectionService {
       return Array.from(platforms);
 
     } catch (error) {
-      console.error(`[PlatformDetectionService] Error detecting platforms:`, error.message);
       return [];
     }
   }

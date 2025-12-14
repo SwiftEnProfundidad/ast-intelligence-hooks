@@ -12,9 +12,6 @@ class BlockCommitUseCase {
     const useStagedOnly = options.useStagedOnly || false;
 
     try {
-      console.log(`[BlockCommitUseCase] Evaluating commit blocking...`);
-      console.log(`[BlockCommitUseCase] Mode: ${strictMode ? 'STRICT' : blockOnlyCriticalHigh ? 'CRITICAL/HIGH' : 'NORMAL'}`);
-
       let decision;
 
       if (useStagedOnly && auditResult.findings) {
@@ -42,13 +39,9 @@ class BlockCommitUseCase {
         decision.maintainability = maintainabilityGate;
       }
 
-      console.log(`[BlockCommitUseCase] Decision: ${decision.shouldBlock ? 'BLOCK' : 'ALLOW'}`);
-      console.log(`[BlockCommitUseCase] Reason: ${decision.reason}`);
-
       return decision;
 
     } catch (error) {
-      console.error(`[BlockCommitUseCase] Error:`, error.message);
       throw error;
     }
   }

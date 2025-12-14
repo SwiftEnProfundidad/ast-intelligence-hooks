@@ -9,8 +9,6 @@ class GenerateAuditReportUseCase {
     const includeSignature = options.includeSignature !== false;
 
     try {
-      console.log(`[GenerateAuditReportUseCase] Generating ${reportType} report...`);
-
       let report;
 
       switch (reportType) {
@@ -26,11 +24,9 @@ class GenerateAuditReportUseCase {
           break;
       }
 
-      console.log(`[GenerateAuditReportUseCase] Report generated`);
       return report;
 
     } catch (error) {
-      console.error(`[GenerateAuditReportUseCase] Error:`, error.message);
       throw error;
     }
   }

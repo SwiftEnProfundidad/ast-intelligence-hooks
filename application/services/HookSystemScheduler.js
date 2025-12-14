@@ -64,9 +64,7 @@ class HookSystemScheduler {
     }
 
     if (action.action === 'auto-execute') {
-      // TODO: integrate with execution engine (Phase 2+)
     } else if (action.action === 'ask') {
-      // TODO: trigger prompt to AI decision maker
     }
   }
 }
