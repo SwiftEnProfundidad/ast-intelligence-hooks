@@ -123,12 +123,12 @@ describe('FrontendArchitectureDetector', () => {
       expect(result).toBe('UNKNOWN');
     });
 
-    it('should return FEATURE_FIRST_CLEAN when featureFirstClean has highest score', () => {
+    it('should return FEATURE_FIRST_CLEAN_DDD when featureFirstClean has highest score', () => {
       const detector = makeSUT();
       detector.patterns.featureFirstClean = 10;
       detector.patterns.componentBased = 5;
       const result = detector.getDominantPattern();
-      expect(result).toBe('FEATURE_FIRST_CLEAN');
+      expect(result).toBe('FEATURE_FIRST_CLEAN_DDD');
     });
 
     it('should return COMPONENT_BASED when componentBased has highest score', () => {
