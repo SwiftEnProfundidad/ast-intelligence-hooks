@@ -528,7 +528,9 @@ function runTextScanner(root, findings) {
       if (/storyboard|\.xib\b|\.nib\b/i.test(content)) {
         pushFileFinding('ios.storyboards', 'high', file, 1, 1, 'Storyboard/XIB usage detected', findings);
       }
-      if (/completion:\s*\(/.test(content)) {
+      const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(file);
+      const isTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(file);
+      if (!isAnalyzer && !isTestFile && /completion:\s*\(/.test(content)) {
         pushFileFinding('ios.completion_handlers', 'medium', file, 1, 1, 'Completion handler usage detected', findings);
       }
       if (/import UIKit\b/.test(content) && /import SwiftUI\b/.test(content)) {

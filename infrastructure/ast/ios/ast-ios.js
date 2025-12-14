@@ -57,15 +57,20 @@ async function runIOSIntelligence(project, findings, platform) {
       pushFinding("ios.force_unwrapping", "high", sf, expr, "Force unwrapping (!) detected - use if let or guard let instead", findings);
     });
 
-    sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-      const args = call.getArguments();
-      args.forEach((arg) => {
-        const argText = typeof arg?.getText === "function" ? arg.getText() : "";
-        if (argText.includes("completion:")) {
-          pushFinding("ios.completion_handlers", "medium", sf, call, "Completion handler detected - use async/await instead", findings);
-        }
+    const filePath = sf.getFilePath();
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+    const isTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(filePath);
+    if (!isAnalyzer && !isTestFile) {
+      sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+        const args = call.getArguments();
+        args.forEach((arg) => {
+          const argText = typeof arg?.getText === "function" ? arg.getText() : "";
+          if (argText.includes("completion:")) {
+            pushFinding("ios.completion_handlers", "medium", sf, call, "Completion handler detected - use async/await instead", findings);
+          }
+        });
       });
-    });
+    }
 
     const currentFilePath = sf.getFilePath();
     const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(currentFilePath);

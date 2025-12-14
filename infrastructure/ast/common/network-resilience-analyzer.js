@@ -146,6 +146,13 @@ function checkNetworkErrorHandling(sf, content, findings) {
 }
 
 function checkConnectionPooling(sf, content, findings) {
+  const filePath = sf.getFilePath();
+  const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+  const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+  if (isAnalyzer || isTestFile) {
+    return;
+  }
+
   const hasHttpAgent = /HttpAgent|keepAlive|maxSockets/i.test(content);
   const isHttpClient = /class.*Client|createClient|httpClient/i.test(content);
 
