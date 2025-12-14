@@ -1421,8 +1421,8 @@ function runBackendIntelligence(project, findings, platform) {
 
     // 6. Logging without PII - sensitive data in logs
     // Exclude analyzers which may contain example code patterns
-    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
-    if (!isAnalyzer) {
+    const isAnalyzerForPII = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+    if (!isAnalyzerForPII) {
       const sensitiveLogPattern = /(logger|console)\.(log|info|debug|warn)\([^)]*password|token|secret|ssn|creditCard/i;
       if (sensitiveLogPattern.test(fullText)) {
         pushFinding(
