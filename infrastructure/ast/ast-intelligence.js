@@ -280,10 +280,11 @@ function shouldIgnore(file) {
   if (p.includes("/dist/")) return true;
   if (p.includes("/.turbo/")) return true;
   if (p.includes("/.vercel/")) return true;
-  if (p.includes("/coverage/")) return true;
+  if (p.includes("/coverage/") || p.includes("/.coverage/")) return true;
   if (p.includes("/build/")) return true;
   if (p.includes("/out/")) return true;
   if (p.includes("/.audit_tmp/")) return true;
+  if (p.includes("/archive/")) return true;
   if (p.endsWith(".d.ts")) return true;
   if (p.endsWith(".map")) return true;
   if (/\.min\./.test(p)) return true;
