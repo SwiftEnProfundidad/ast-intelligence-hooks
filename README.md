@@ -14,6 +14,12 @@
 
 ![AST Intelligence Workflow](./docs/images/ast_intelligence_02.png)
 
+![AST Intelligence Audit - Part 1](./docs/images/ast_intelligence_03.png)
+
+![AST Intelligence Audit - Part 2](./docs/images/ast_intelligence_04.png)
+
+![AST Intelligence Audit - Part 3](./docs/images/ast_intelligence_05.png)
+
 ---
 
 ## 🧠 The Vision: Solving AI Context Loss in Software Development
