@@ -10,8 +10,276 @@
 
 ---
 
+## 🧠 The Vision: Solving AI Context Loss in Software Development
+
+### The Fundamental Problem
+
+In modern AI-assisted development, a critical limitation emerges: **AI assistants lose context**. Whether due to token limits, session resets, or conversation boundaries, AI agents repeatedly forget:
+
+- **Project architecture**: "What's the structure here? Clean Architecture? DDD? Feature-First?"
+- **Active rules**: "Which validation rules apply? What are the coding standards?"
+- **Current work**: "What branch am I on? What files were recently changed? What patterns exist?"
+- **Quality gates**: "Are there blocking violations? What needs to be fixed?"
+
+This forces developers into a **repetitive, inefficient cycle** of re-explaining context, re-loading rules, and re-establishing project understanding—defeating the purpose of AI assistance.
+
+### The Solution: Permanent Context Persistence
+
+This library was conceived to solve this fundamental problem by creating a **permanent, always-on context system** for AI assistants. It transforms AI from a "stateless helper" into a **context-aware collaborator** that maintains deep, persistent understanding of your project.
+
+---
+
+## 🔄 How It Works: The Complete Flow
+
+### Phase 1: Context Initialization (`ai_start` Protocol)
+
+**When**: Before any code editing begins, or when context becomes stale (>3 minutes)
+
+**What Happens**:
+
+1. **Developer runs `ai-start`** (or it auto-executes via MCP):
+   ```bash
+   ai-start feature/user-authentication
+   # or automatically via MCP: auto_execute_ai_start
+   ```
+
+2. **The system answers three critical questions**:
+   - **Q1: What file types am I working with?**
+     - Analyzes staged/modified files
+     - Detects platforms (iOS, Android, Backend, Frontend)
+     - Identifies target Clean Architecture layers (Domain, Application, Infrastructure, Presentation)
+     - Example: `"Code task on branch 'feature/auth'. Modifying typescript, kotlin in: auth, users. Target layer: Domain."`
+   
+   - **Q2: Does similar code already exist?**
+     - Analyzes recent Git commits
+     - Identifies affected modules
+     - Suggests existing patterns to follow
+     - Example: `"Modules affected: auth, users. Recent commits: abc123 feat: Add JWT validation. Check for existing patterns before adding new code."`
+   
+   - **Q3: How does this fit in Clean Architecture?**
+     - Validates layer dependencies
+     - Ensures dependencies point inward (Domain ← Application ← Infrastructure)
+     - Example: `"Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."`
+
+3. **Rules are automatically loaded**:
+   - `DynamicRulesLoader` scans `.cursor/rules/` for platform-specific rules
+   - Loads `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`, `rulesgold.mdc`
+   - Aggregates all 798+ validation rules into a single context
+   - Creates `auto-context.mdc` with all active rules
+
+4. **`.AI_EVIDENCE.json` is created/updated**:
+   ```json
+   {
+     "timestamp": "2025-12-13T23:07:19.632Z",
+     "session_id": "feature/user-authentication",
+     "protocol_3_questions": {
+       "answered": true,
+       "question_1_file_type": "...",
+       "question_2_similar_exists": "...",
+       "question_3_clean_architecture": "..."
+     },
+     "rules_read": [
+       { "file": "rulesbackend.mdc", "verified": true, "summary": "..." },
+       { "file": "rulesgold.mdc", "verified": true, "summary": "..." }
+     ],
+     "current_context": {
+       "branch": "feature/user-authentication",
+       "last_commits": "abc123 feat: Add JWT validation"
+     },
+     "platforms": ["backend", "ios"]
+   }
+   ```
+
+### Phase 2: Continuous Context Maintenance
+
+**When**: Throughout the development session
+
+**What Happens**:
+
+1. **Pre-Tool-Use Validation** (`pre-tool-use-evidence-validator.ts`):
+   - **Before every AI edit operation**, validates `.AI_EVIDENCE.json`:
+     - ✅ File exists
+     - ✅ Valid JSON structure
+     - ✅ Timestamp is fresh (<180 seconds old)
+     - ✅ Rules were read
+     - ✅ Protocol 3 questions answered
+     - ✅ AI gate is not BLOCKED
+   - **If stale or missing**: Blocks the edit and prompts to run `ai-start`
+   - **If BLOCKED**: Shows violations and requires fixing before proceeding
+
+2. **Real-Time Monitoring** (`RealtimeGuardService`):
+   - Polls `.AI_EVIDENCE.json` every 30 seconds
+   - Detects staleness (>60 seconds)
+   - **Auto-refreshes** evidence if stale (when `HOOK_GUARD_AUTO_REFRESH=true`)
+   - Monitors Git tree state (prevents >100 uncommitted files)
+   - Sends macOS notifications for critical events
+
+3. **Automatic Rule Updates**:
+   - When new rules are added to `.cursor/rules/`, they're automatically detected
+   - `DynamicRulesLoader` reloads rules on next `ai-start`
+   - `auto-context.mdc` is regenerated with latest rules
+
+### Phase 3: Code Quality Enforcement
+
+**When**: Before commits, during development, via MCP tools
+
+**What Happens**:
+
+1. **Pre-Commit Analysis** (Git Hook):
+   - Analyzes staged files using AST (Abstract Syntax Tree)
+   - Applies 798+ validation rules
+   - Checks Clean Architecture violations
+   - Validates SOLID principles
+   - Detects security issues, performance problems, maintainability issues
+   - **Blocks commit** if CRITICAL/HIGH violations found
+
+2. **AI Gate Check** (`ai_gate_check` MCP tool):
+   - **Called at the start of every AI response** (enforced by Cursor rules)
+   - Reads `.AI_EVIDENCE.json` → `ai_gate.status`
+   - Returns `BLOCKED` or `ALLOWED`
+   - If `BLOCKED`: Shows violations, requires fixing before proceeding
+   - If `ALLOWED`: AI can proceed with user's task
+
+3. **Violation Detection**:
+   - AST analyzers scan code for:
+     - Architecture violations (wrong layer dependencies)
+     - SOLID violations (God classes, tight coupling)
+     - Security issues (PII in logs, SQL injection risks)
+     - Performance issues (N+1 queries, missing pagination)
+     - Code quality (comments, magic numbers, force unwrapping)
+   - Findings are aggregated into `AuditResult`
+   - Severity-based blocking (CRITICAL/HIGH block, MEDIUM/LOW warn)
+
+### Phase 4: Evidence Update Before Commits
+
+**When**: Before every Git commit
+
+**What Happens**:
+
+1. **`ai-commit.sh` is executed** (via Git alias or directly):
+   ```bash
+   git commit -m "feat: Add user authentication"
+   # Internally calls: ai-commit.sh
+   ```
+
+2. **Evidence is refreshed**:
+   - Updates `.AI_EVIDENCE.json` timestamp
+   - Re-analyzes current context (branch, files, commits)
+   - Updates violation status
+   - Ensures evidence is fresh for next AI interaction
+
+3. **Commit proceeds** with fresh evidence
+
+---
+
+## 🛠️ Tools & Technologies
+
+### Core Components
+
+1. **Git Hooks**:
+   - `pre-commit`: AST analysis before commits
+   - `pre-push`: Additional validation before pushing
+   - `post-commit`: Evidence update after commits
+
+2. **MCP (Model Context Protocol) Server**:
+   - `gitflow-automation-watcher`: Provides AI tools via MCP
+   - Tools: `ai_gate_check`, `auto_execute_ai_start`, `auto_complete_gitflow`, `sync_branches`, `cleanup_stale_branches`, `validate_and_fix`
+   - Enables Cursor, Claude Desktop, and other MCP-compatible IDEs to interact with the system
+
+3. **AST Analysis Engine**:
+   - `ts-morph`: TypeScript AST parsing
+   - Custom analyzers for each platform:
+     - `BackendArchitectureDetector`: Detects NestJS patterns, Clean Architecture
+     - `FrontendArchitectureDetector`: Detects React/Next.js patterns, Feature-First
+     - `iOSArchitectureDetector`: Detects Swift/SwiftUI patterns, MVVM-C
+     - `AndroidClassAnalyzer`: Detects Kotlin/Jetpack Compose patterns
+   - `MaintainabilityAnalyzer`, `PerformanceAnalyzer`, `SecurityAnalyzer`, `StabilityAnalyzer`
+
+4. **Context Management**:
+   - `DynamicRulesLoader`: Loads and aggregates rules from `.cursor/rules/`
+   - `ContextDetectionEngine`: Detects project structure and patterns
+   - `PlatformDetectionService`: Identifies platforms (iOS, Android, Backend, Frontend)
+   - `AutonomousOrchestrator`: Coordinates context detection and rule loading
+
+5. **Real-Time Services**:
+   - `RealtimeGuardService`: Monitors evidence freshness, Git tree state
+   - `IntelligentGitTreeMonitor`: Tracks Git changes and suggests actions
+   - `EvidenceMonitorService`: Watches for evidence staleness
+
+6. **Use Cases** (Clean Architecture):
+   - `AnalyzeCodebaseUseCase`: Full codebase analysis
+   - `AnalyzeStagedFilesUseCase`: Staged files only
+   - `BlockCommitUseCase`: Determines if commit should be blocked
+   - `AutoExecuteAIStartUseCase`: Auto-executes `ai-start` based on confidence
+   - `GenerateAuditReportUseCase`: Creates audit reports (console, JSON, HTML)
+
+---
+
+## 📊 What, How, and When: The Developer's Perspective
+
+### **What** Does This Library Provide?
+
+1. **Permanent AI Context**: `.AI_EVIDENCE.json` that never gets lost
+2. **798+ Validation Rules**: Platform-specific code quality rules
+3. **Automatic Architecture Detection**: Identifies patterns (Clean, DDD, Feature-First, MVVM-C, etc.)
+4. **Quality Gates**: Blocks commits with CRITICAL/HIGH violations
+5. **Git Flow Automation**: Complete workflow automation (commit → push → PR → merge)
+6. **MCP Integration**: Standard protocol for any agentic IDE
+
+### **How** Does It Work?
+
+1. **Installation**: `npm install --save-dev @pumuki/ast-intelligence-hooks && npm run install-hooks`
+2. **Initialization**: Run `ai-start` before coding (or it auto-executes)
+3. **Development**: System monitors and validates automatically
+4. **Commits**: Pre-commit hooks analyze and block if needed
+5. **AI Interaction**: AI always has fresh context via `.AI_EVIDENCE.json`
+
+### **When** Does It Activate?
+
+- **On Installation**: Sets up Git hooks, MCP server, rules
+- **Before Coding**: `ai-start` initializes context (manual or auto)
+- **During Editing**: Pre-tool-use hooks validate evidence freshness
+- **Before Commits**: Pre-commit hooks analyze staged files
+- **On AI Requests**: `ai_gate_check` validates before AI actions
+- **Continuously**: `RealtimeGuardService` monitors and auto-refreshes
+
+### **Why** Does It Matter?
+
+- **Efficiency**: AI never asks "What's the architecture?" again
+- **Quality**: Catches violations before they reach production
+- **Consistency**: Enforces standards across entire team
+- **Automation**: Reduces manual Git Flow tasks
+- **Context Persistence**: Survives token limits, session resets, conversation boundaries
+
+---
+
+## 🎯 The Result: Never Lose Context Again
+
+With this library, your AI assistant **always knows**:
+
+- ✅ **What you're working on**: Current branch, recent commits, active modules
+- ✅ **What rules apply**: All 798+ platform-specific rules loaded automatically
+- ✅ **What patterns exist**: Architecture patterns detected and documented
+- ✅ **What violations need fixing**: Real-time violation tracking with severity
+- ✅ **How the architecture should be structured**: Clean Architecture, DDD, Feature-First validation
+
+**This is not just a validation tool**—it's a **context persistence system** that transforms AI assistants from forgetful helpers into **permanent, context-aware collaborators**.
+
+---
+
 ## 📖 Table of Contents
 
+- [The Vision: Solving AI Context Loss](#-the-vision-solving-ai-context-loss-in-software-development)
+  - [The Fundamental Problem](#the-fundamental-problem)
+  - [The Solution: Permanent Context Persistence](#the-solution-permanent-context-persistence)
+- [How It Works: The Complete Flow](#-how-it-works-the-complete-flow)
+  - [Phase 1: Context Initialization (`ai_start` Protocol)](#phase-1-context-initialization-ai_start-protocol)
+  - [Phase 2: Continuous Context Maintenance](#phase-2-continuous-context-maintenance)
+  - [Phase 3: Code Quality Enforcement](#phase-3-code-quality-enforcement)
+  - [Phase 4: Evidence Update Before Commits](#phase-4-evidence-update-before-commits)
+- [Tools & Technologies](#️-tools--technologies)
+- [What, How, and When: The Developer's Perspective](#-what-how-and-when-the-developers-perspective)
+- [The Result: Never Lose Context Again](#-the-result-never-lose-context-again)
 - [What is it?](#what-is-it)
 - [What problems does it solve?](#what-problems-does-it-solve)
 - [Features](#features)
@@ -34,17 +302,28 @@
 
 `ast-intelligence-hooks` is an intelligent static analysis system that automatically validates that your code complies with **Clean Architecture**, **Domain-Driven Design (DDD)**, and **Feature-First Architecture** principles.
 
+**But more importantly**, it's a **context persistence system** that ensures AI assistants maintain permanent understanding of your project through the `ai_start` protocol, automatic rule loading, and continuously updated `.AI_EVIDENCE.json`.
+
 ### Key Features
 
+#### 🧠 Context Persistence (Core Purpose)
+- ✅ **`ai_start` Protocol**: Automatically answers the three critical questions for AI context
+- ✅ **`.AI_EVIDENCE.json`**: Permanent context file that never goes stale
+- ✅ **Automatic rule loading**: All 798+ rules loaded automatically for AI awareness
+- ✅ **Context detection**: Real-time understanding of what you're working on
+
+#### 🔍 Code Validation
 - ✅ **798+ validation rules** across all platforms with severity-based quality gates
 - ✅ **Multi-platform support**: iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose), Backend (TypeScript/NestJS), Frontend (React/Next.js)
 - ✅ **Automatic architecture detection**: Detects MVVM-C, VIPER, TCA, Clean Architecture, DDD, CQRS, and more patterns
 - ✅ **BDD→TDD workflow enforcement**: CRITICAL priority - ensures feature files exist before implementation and tests before code
 - ✅ **Pre-commit Git hooks**: Automatic validation blocks commits with CRITICAL/HIGH violations
-- ✅ **Git Flow automation**: Complete workflow automation via MCP (commit → push → PR → merge)
-- ✅ **MCP integration**: Standard Model Context Protocol (MCP) support for any agentic IDE or AI client (Cursor, Claude Desktop, etc.)
 - ✅ **AST analysis engine**: Deep static code analysis using Abstract Syntax Trees
 - ✅ **Clean Architecture enforcement**: Strict SOLID principles validation and dependency rules
+
+#### 🤖 Automation & Integration
+- ✅ **Git Flow automation**: Complete workflow automation via MCP (commit → push → PR → merge)
+- ✅ **MCP integration**: Standard Model Context Protocol (MCP) support for any agentic IDE or AI client (Cursor, Claude Desktop, etc.)
 - ✅ **Version checking**: Automatic detection of library updates
 - ✅ **CI/CD ready**: Seamless integration with GitHub Actions and other CI systems
 
