@@ -63,7 +63,7 @@ class iOSArchitectureDetector {
 
   detectFeatureFirstClean(files) {
     const hasFeaturesFolders = files.some(f =>
-      /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\
+      /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
     );
 
     const cleanArchFolders = ['domain', 'application', 'infrastructure', 'presentation'];
@@ -94,7 +94,7 @@ class iOSArchitectureDetector {
 
     const featureNames = new Set();
     files.forEach(f => {
-      const match = f.match(/\/Features?\/(\w+)\
+      const match = f.match(/\/Features?\/(\w+)\//);
       if (match) {
         featureNames.add(match[1]);
       }

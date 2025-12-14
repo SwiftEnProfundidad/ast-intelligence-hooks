@@ -75,7 +75,7 @@ function ruleAnyType(): Rule {
     check: (sf) => {
       const findings: Finding[] = [];
       sf.forEachDescendant((n) => {
-        if (Node.isKeywordTypeNode(n) && n.getKind() === SyntaxKind.AnyKeyword) {
+        if (n.getKind() === SyntaxKind.AnyKeyword) {
           const { line, column } = positionOf(n, sf);
           findings.push({ ruleId: "types.any", severity: "error", filePath: sf.getFilePath(), line, column, message: "Explicit any" });
         }

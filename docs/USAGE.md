@@ -23,12 +23,29 @@ npm run install-hooks
 
 ### Step 2: Make a commit
 
+**For AI/Agentic IDE users (Recommended):**
+
+Use `ai-commit` to automatically update `.AI_EVIDENCE.json` before committing:
+
 ```bash
 # Create a test file
 echo "export const test = () => {};" > test.ts
 git add test.ts
 
-# Commit (hooks will run automatically)
+# Use ai-commit (recommended for AI-driven commits)
+npx ai-commit -m "test: verify hooks"
+# Or if installed globally:
+ai-commit -m "test: verify hooks"
+```
+
+**For manual commits:**
+
+```bash
+# Create a test file
+echo "export const test = () => {};" > test.ts
+git add test.ts
+
+# Standard git commit (hooks will run automatically)
 git commit -m "test: verify hooks"
 ```
 
@@ -218,6 +235,65 @@ GIT_BYPASS_HOOK=1 git commit -m "emergency fix"
 ```
 
 **⚠️ Warning:** Don't abuse the bypass. Use it only in real emergency cases.
+
+### AI Commit Command
+
+The library provides an `ai-commit` command that **must be used** by agentic IDEs (Cursor, Claude Desktop, Windsurf) when making commits. This ensures `.AI_EVIDENCE.json` is properly updated before the commit.
+
+**Why use `ai-commit`?**
+
+- ✅ Automatically updates `.AI_EVIDENCE.json` timestamp if stale (>2 minutes)
+- ✅ Ensures evidence freshness (required by pre-commit hook validation)
+- ✅ Creates minimal evidence file if missing
+- ✅ Prevents commit failures due to stale evidence
+
+**Usage:**
+
+```bash
+# Basic usage (same as git commit)
+npx ai-commit -m "feat: add user authentication"
+
+# With multiple flags
+npx ai-commit -m "fix: resolve null pointer" --no-verify
+
+# All git commit options are supported
+npx ai-commit -m "docs: update README" --author="John Doe <john@example.com>"
+```
+
+**How it works:**
+
+1. **Checks evidence freshness**: If `.AI_EVIDENCE.json` timestamp is older than 2 minutes, updates it
+2. **Updates timestamp**: Sets timestamp to current UTC time
+3. **Stages evidence file**: Automatically adds `.AI_EVIDENCE.json` to staging
+4. **Executes commit**: Runs `git commit` with all provided arguments
+
+**When to use:**
+
+- ✅ **Always** when committing from an agentic IDE (Cursor, Claude Desktop, Windsurf)
+- ✅ When making commits after editing code for >2 minutes
+- ✅ When you see "Evidence is stale" warnings
+
+**When NOT to use:**
+
+- ❌ Manual commits (use `git commit` directly)
+- ❌ Commits not involving AI-assisted code changes
+
+**Example workflow:**
+
+```bash
+# 1. Make code changes (via AI)
+# 2. Stage files
+git add src/users/user.service.ts
+
+# 3. Commit using ai-commit (AI-driven commit)
+npx ai-commit -m "feat: add user validation logic"
+
+# Output:
+# 🤖 AI-COMMIT: Preparando commit...
+# ✅ AI_EVIDENCE updated: 2025-12-14T12:34:56.000Z
+# 🚀 Executing commit...
+# ✅ AI-COMMIT completed
+```
 
 ### Configure Hook Manually
 

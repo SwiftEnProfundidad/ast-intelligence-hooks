@@ -336,7 +336,31 @@ If you want to force a specific architecture pattern, create `.ast-architecture.
 
 **Note:** This is rarely needed since automatic detection works for all common patterns across all platforms.
 
-### 6. Configure Exclusions
+### 6. Configure Project-Specific Settings (Optional)
+
+The library provides templates for project-specific configurations in `templates/config/`:
+
+#### Available Templates
+
+- **`paths.conf.template`**: Path configuration for hook system directories
+- **`rules.json.template`**: Custom severity rules override
+
+**To use templates:**
+
+```bash
+# Copy templates to your project's config directory
+cp node_modules/@pumuki/ast-intelligence-hooks/templates/config/paths.conf.template \
+   scripts/hooks-system/config/paths.conf
+
+cp node_modules/@pumuki/ast-intelligence-hooks/templates/config/rules.json.template \
+   scripts/hooks-system/config/rules.json
+
+# Then customize as needed
+```
+
+**Note:** Templates are optional. The library works without them using default configurations. Only copy and customize if you need project-specific overrides.
+
+### 7. Configure Exclusions
 
 Create or edit `config/ast-exclusions.json`:
 

@@ -182,7 +182,7 @@ class iOSArchitectureRules {
         }
       }
 
-      const featureMatch = file.match(/\/Features?\/(\w+)\
+      const featureMatch = file.match(/\/Features?\/(\w+)\//);
       if (featureMatch) {
         const currentFeature = featureMatch[1];
         const importMatches = content.matchAll(/import\s+(\w+)/g);
