@@ -67,7 +67,9 @@ async function runIOSIntelligence(project, findings, platform) {
       });
     });
 
-    if (sf.getFullText().includes("storyboard") || sf.getFullText().includes("xib") || sf.getFullText().includes("nib")) {
+    const currentFilePath = sf.getFilePath();
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(currentFilePath);
+    if (!isAnalyzer && (sf.getFullText().includes("storyboard") || sf.getFullText().includes("xib") || sf.getFullText().includes("nib"))) {
       pushFinding("ios.storyboards", "high", sf, sf, "Storyboard/XIB detected - use programmatic UI for better version control", findings);
     }
 

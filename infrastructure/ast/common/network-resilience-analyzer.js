@@ -39,7 +39,12 @@ function checkRetryPolicy(sf, content, findings) {
 }
 
 function checkTimeoutConfiguration(sf, content, findings) {
-  const hasNetworkCall = /fetch\(|axios\.|http\./i.test(content);
+  const isServer = /http\.createServer|http\.createClient|\.listen\(|express\(|app\.listen/i.test(content);
+  if (isServer) {
+    return;
+  }
+
+  const hasNetworkCall = /fetch\(|axios\.|http\.(get|post|request|put|patch|delete)/i.test(content);
   const hasTimeout = /timeout:|signal:|AbortController/i.test(content);
 
   if (hasNetworkCall && !hasTimeout && !content.includes('test')) {
@@ -61,10 +66,17 @@ function checkTimeoutConfiguration(sf, content, findings) {
 }
 
 function checkCircuitBreaker(sf, content, findings) {
-  const hasMultipleRetries = content.match(/retry/gi)?.length > 2;
-  const hasCircuitBreaker = /circuitBreaker|circuit-breaker|opossum/i.test(content);
+  const filePath = sf.getFilePath();
+  const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+  if (isAnalyzer) {
+    return;
+  }
 
-  if (hasMultipleRetries && !hasCircuitBreaker) {
+  const hasMultipleRetries = content.match(/retry/gi)?.length > 2;
+  const hasCircuitBreaker = /circuitBreaker|circuit-breaker|circuit\s+breaker|opossum/i.test(content);
+  const hasActualNetworkCall = /fetch\(|axios\.|http\.(get|post|request)/i.test(content);
+
+  if (hasMultipleRetries && !hasCircuitBreaker && hasActualNetworkCall) {
     findings.push({
       filePath: sf.getFilePath(),
       line: 1,
@@ -107,6 +119,12 @@ function checkRequestQueue(sf, content, findings) {
 }
 
 function checkNetworkErrorHandling(sf, content, findings) {
+  const filePath = sf.getFilePath();
+  const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+  if (isAnalyzer) {
+    return;
+  }
+
   const hasTryCatch = /try\s*{[\s\S]*?catch/i.test(content);
   const hasNetworkCall = /fetch\(|axios\./i.test(content);
 

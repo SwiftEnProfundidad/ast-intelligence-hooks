@@ -7,7 +7,14 @@ function analyzePushBackend(project, findings) {
       return;
     }
 
-    if (content.match(/sendNotification|pushNotification|fcm\.send|apns\.send/i)) {
+    const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+    const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+    if (isAnalyzer || isTestFile) {
+      return;
+    }
+
+    const isSystemNotification = /sendNotification.*title|osascript|terminal-notifier/i.test(content);
+    if (content.match(/sendNotification|pushNotification|fcm\.send|apns\.send/i) && !isSystemNotification) {
       const hasQueue = /Queue|Bull|BullMQ|queueAdd/i.test(content);
       if (!hasQueue) {
         findings.push({

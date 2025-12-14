@@ -878,22 +878,25 @@ function runFrontendIntelligence(project, findings, platform) {
     });
 
     // CRITICAL: Catch blocks sin tipo explícito (implicit any en error)
-    sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
-      const varDecl = catchClause.getVariableDeclaration();
-      if (varDecl) {
-        const typeNode = varDecl.getTypeNode();
-        if (!typeNode) {
-          pushFinding(
-            "frontend.error_handling.untyped_catch",
-            "high",
-            sf,
-            catchClause,
-            "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof ApiError)",
-            findings
-          );
+    // Only applies to TypeScript files (.ts), not JavaScript (.js)
+    if (filePath.endsWith('.ts') && !filePath.endsWith('.d.ts')) {
+      sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
+        const varDecl = catchClause.getVariableDeclaration();
+        if (varDecl) {
+          const typeNode = varDecl.getTypeNode();
+          if (!typeNode) {
+            pushFinding(
+              "frontend.error_handling.untyped_catch",
+              "high",
+              sf,
+              catchClause,
+              "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof ApiError)",
+              findings
+            );
+          }
         }
-      }
-    });
+      });
+    }
 
     // CRITICAL: void err / void error anti-pattern
     sf.getDescendantsOfKind(SyntaxKind.ExpressionStatement).forEach((stmt) => {

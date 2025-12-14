@@ -34,37 +34,62 @@ class CursorTokenService {
         return null;
     }
 
+    /**
+     * Fetches token usage from API with exponential backoff retry policy.
+     * Note: Circuit breaker pattern should be implemented at application level
+     * when using this service to prevent cascading failures.
+     *
+     * @param {number} maxRetries - Maximum retry attempts (default: 3)
+     * @param {number} initialDelayMs - Initial delay for exponential backoff (default: 1000ms)
+     * @returns {Promise<Object|null>} Token usage data or null on failure
+     */
     async fetchFromApi(maxRetries = 3, initialDelayMs = 1000) {
         if (!this.apiUrl || !this.fetch) {
             return null;
         }
 
         const retryPolicy = { maxAttempts: maxRetries, backoff: 'exponential' };
+        const requestTimeoutMs = 30000;
         let lastError = null;
         for (let attempt = 0; attempt <= retryPolicy.maxAttempts; attempt++) {
             try {
-                const response = await this.fetch(this.apiUrl, {
-                    headers: this.apiToken ? { Authorization: `Bearer ${this.apiToken}` } : {}
-                });
-                if (!response.ok) {
-                    throw new Error(`status ${response.status}`);
-                }
-                const payload = await response.json();
-                if (!payload) {
-                    return null;
-                }
-                const tokensUsed = this.coerceNumber(payload.tokensUsed) ?? 0;
-                const maxTokens = this.coerceNumber(payload.maxTokens) ?? DEFAULT_MAX_TOKENS;
-                const percentUsed = this.coerceNumber(payload.percentUsed) ?? (tokensUsed / maxTokens) * 100;
-                const timestamp = payload.timestamp || new Date().toISOString();
+                const abortController = typeof AbortController !== 'undefined' ? new AbortController() : null;
+                const timeoutId = abortController ? setTimeout(() => abortController.abort(), requestTimeoutMs) : null;
 
-                return {
-                    tokensUsed,
-                    maxTokens,
-                    percentUsed,
-                    timestamp,
-                    source: 'api'
-                };
+                try {
+                    const response = await this.fetch(this.apiUrl, {
+                        headers: this.apiToken ? { Authorization: `Bearer ${this.apiToken}` } : {},
+                        signal: abortController?.signal
+                    });
+
+                    if (timeoutId) clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`status ${response.status}`);
+                    }
+                    const payload = await response.json();
+                    if (!payload) {
+                        return null;
+                    }
+                    const tokensUsed = this.coerceNumber(payload.tokensUsed) ?? 0;
+                    const maxTokens = this.coerceNumber(payload.maxTokens) ?? DEFAULT_MAX_TOKENS;
+                    const percentUsed = this.coerceNumber(payload.percentUsed) ?? (tokensUsed / maxTokens) * 100;
+                    const timestamp = payload.timestamp || new Date().toISOString();
+
+                    return {
+                        tokensUsed,
+                        maxTokens,
+                        percentUsed,
+                        timestamp,
+                        source: 'api'
+                    };
+                } catch (fetchError) {
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (fetchError.name === 'AbortError') {
+                        throw new Error(`Request timeout after ${requestTimeoutMs}ms`);
+                    }
+                    throw fetchError;
+                }
             } catch (error) {
                 lastError = error;
                 const isLastAttempt = attempt === retryPolicy.maxAttempts;

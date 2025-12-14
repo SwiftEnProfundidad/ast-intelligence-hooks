@@ -197,9 +197,12 @@ class iOSEnterpriseAnalyzer {
     });
 
     // ios.storyboards
-    if (content.includes('storyboard') || content.includes('.xib') || content.includes('.nib')) {
-      this.addFinding('ios.storyboards', 'high', filePath, 1,
-        'Storyboard/XIB detected - use programmatic UI for better version control');
+    // Only check actual Swift files, not analyzer files themselves
+    if (filePath.endsWith('.swift') && !filePath.includes('analyzer') && !filePath.includes('detector')) {
+      if (content.includes('storyboard') || content.includes('.xib') || content.includes('.nib')) {
+        this.addFinding('ios.storyboards', 'high', filePath, 1,
+          'Storyboard/XIB detected - use programmatic UI for better version control');
+      }
     }
   }
 

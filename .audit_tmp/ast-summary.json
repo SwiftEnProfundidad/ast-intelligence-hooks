@@ -1,37 +1,30 @@
 {
   "totals": {
-    "errors": 100,
-    "warnings": 13,
+    "errors": 76,
+    "warnings": 12,
     "infos": 122
   },
   "levels": {
     "CRITICAL": 1,
-    "HIGH": 99,
-    "MEDIUM": 13,
+    "HIGH": 75,
+    "MEDIUM": 12,
     "LOW": 122
   },
   "platforms": {
-    "Backend": 107,
-    "Frontend": 7,
-    "iOS": 18,
+    "Backend": 102,
+    "Frontend": 6,
+    "iOS": 12,
     "Android": 35,
-    "Other": 68
+    "Other": 55
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
     "workflow.sequence.missing_bdd_specs": 1,
     "common.quality.comments": 75,
-    "common.types.any": 1,
     "common.quality.disabled_lint": 3,
     "common.debug.console": 4,
     "common.quality.todo_fixme": 1,
-    "common.network.missing_circuit_breaker": 10,
-    "common.network.missing_timeout": 2,
     "common.network.missing_connection_pooling": 3,
-    "common.network.missing_error_handling": 1,
-    "backend.offline.missing_optimistic_locking": 1,
-    "backend.push.missing_notification_queue": 2,
-    "backend.push.missing_notification_batching": 1,
     "backend.images.missing_server_compression": 1,
     "android.repository_pattern": 8,
     "android.use_case": 4,
@@ -42,7 +35,6 @@
     "backend.auth.missing_cors": 9,
     "backend.metrics.missing_prometheus": 12,
     "backend.clean.infrastructure": 20,
-    "backend.security.pii_in_logs": 2,
     "backend.event.handler": 20,
     "backend.health.checks": 1,
     "backend.logging.structured": 1,
@@ -50,36 +42,28 @@
     "backend.api.documentation": 1,
     "backend.audit.logging": 1,
     "backend.api.gateway": 1,
-    "backend.error_handling.untyped_catch": 3,
     "backend.event.emitter": 1,
     "backend.caching.redis": 1,
     "backend.analytics.tracking": 1,
     "backend.monitoring.alerts": 1,
     "backend.api.missing_swagger": 1,
     "backend.cqrs.pattern": 1,
-    "ios.storyboards": 2,
     "ios.completion_handlers": 1
   },
   "platformDetails": {
     "Other": {
       "CRITICAL": 1,
-      "HIGH": 56,
-      "MEDIUM": 8,
+      "HIGH": 44,
+      "MEDIUM": 7,
       "LOW": 3,
       "rules": {
         "workflow.sequence.tests_lagging": 1,
         "workflow.sequence.missing_bdd_specs": 1,
         "common.quality.comments": 44,
-        "common.types.any": 1,
         "common.quality.disabled_lint": 3,
         "common.debug.console": 4,
         "common.quality.todo_fixme": 1,
-        "common.network.missing_circuit_breaker": 6,
-        "common.network.missing_timeout": 2,
-        "common.network.missing_connection_pooling": 1,
-        "backend.offline.missing_optimistic_locking": 1,
-        "backend.push.missing_notification_queue": 2,
-        "backend.push.missing_notification_batching": 1
+        "common.network.missing_connection_pooling": 1
       },
       "files": [
         "PROJECT_ROOT",
@@ -87,7 +71,6 @@
         "index.js",
         "__tests__/integration.test.js",
         "tests/guard-system.integration.spec.js",
-        ".claude/hooks/pre-tool-use-evidence-validator.ts",
         ".coverage/lcov-report/block-navigation.js",
         ".coverage/lcov-report/prettify.js",
         ".coverage/lcov-report/sorter.js",
@@ -129,11 +112,7 @@
         "infrastructure/severity/context/context-builder.js",
         "infrastructure/severity/policies/gate-policies.js",
         "application/services/recovery/__tests__/AutoRecoveryManager.spec.js",
-        "application/services/token/__tests__/TokenMonitorService.spec.js",
-        "hooks/pre-tool-use-evidence-validator.ts",
-        "infrastructure/telemetry/metrics-server.js",
-        "application/services/token/CursorTokenService.js",
-        "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js"
+        "application/services/token/__tests__/TokenMonitorService.spec.js"
       ]
     },
     "Android": {
@@ -168,7 +147,7 @@
     },
     "Backend": {
       "CRITICAL": 0,
-      "HIGH": 13,
+      "HIGH": 8,
       "MEDIUM": 2,
       "LOW": 92,
       "rules": {
@@ -177,7 +156,6 @@
         "backend.auth.missing_cors": 9,
         "backend.metrics.missing_prometheus": 12,
         "backend.clean.infrastructure": 20,
-        "backend.security.pii_in_logs": 2,
         "backend.event.handler": 20,
         "backend.health.checks": 1,
         "backend.logging.structured": 1,
@@ -185,7 +163,6 @@
         "backend.api.documentation": 1,
         "backend.audit.logging": 1,
         "backend.api.gateway": 1,
-        "backend.error_handling.untyped_catch": 3,
         "backend.event.emitter": 1,
         "backend.caching.redis": 1,
         "backend.analytics.tracking": 1,
@@ -220,12 +197,11 @@
     },
     "Frontend": {
       "CRITICAL": 0,
-      "HIGH": 7,
+      "HIGH": 6,
       "MEDIUM": 0,
       "LOW": 0,
       "rules": {
-        "common.quality.comments": 6,
-        "common.network.missing_circuit_breaker": 1
+        "common.quality.comments": 6
       },
       "files": [
         "infrastructure/ast/frontend/ast-frontend-clean.js",
@@ -233,21 +209,17 @@
         "infrastructure/ast/frontend/ddd-analyzer.js",
         "infrastructure/ast/frontend/feature-first-analyzer.js",
         "infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js",
-        "infrastructure/ast/frontend/analyzers/FrontendSOLIDAnalyzer.js",
-        "infrastructure/ast/frontend/ast-frontend.js"
+        "infrastructure/ast/frontend/analyzers/FrontendSOLIDAnalyzer.js"
       ]
     },
     "iOS": {
       "CRITICAL": 0,
-      "HIGH": 16,
+      "HIGH": 10,
       "MEDIUM": 2,
       "LOW": 0,
       "rules": {
         "common.quality.comments": 10,
-        "common.network.missing_circuit_breaker": 3,
         "common.network.missing_connection_pooling": 1,
-        "common.network.missing_error_handling": 1,
-        "ios.storyboards": 2,
         "ios.completion_handlers": 1
       },
       "files": [
@@ -377,17 +349,6 @@
         "infrastructure/ast/backend/analyzers/detectors/FeatureFirstCleanDetector.js"
       ]
     },
-    "common.types.any": {
-      "count": 1,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "Other": 1
-      },
-      "files": [
-        ".claude/hooks/pre-tool-use-evidence-validator.ts"
-      ]
-    },
     "common.quality.disabled_lint": {
       "count": 3,
       "level": "LOW",
@@ -426,40 +387,6 @@
         "infrastructure/ast/archive/kotlin-analyzer.js"
       ]
     },
-    "common.network.missing_circuit_breaker": {
-      "count": 10,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "Other": 6,
-        "Frontend": 1,
-        "iOS": 3
-      },
-      "files": [
-        "hooks/pre-tool-use-evidence-validator.ts",
-        ".claude/hooks/pre-tool-use-evidence-validator.ts",
-        "application/services/notification/NotificationCenterService.js",
-        "application/services/token/CursorTokenService.js",
-        "infrastructure/ast/frontend/ast-frontend.js",
-        "infrastructure/ast/ios/ast-ios.js",
-        "infrastructure/ast/text/text-scanner.js",
-        "infrastructure/severity/context/context-builder.js",
-        "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
-        "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js"
-      ]
-    },
-    "common.network.missing_timeout": {
-      "count": 2,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "Other": 2
-      },
-      "files": [
-        "infrastructure/telemetry/metrics-server.js",
-        "application/services/token/CursorTokenService.js"
-      ]
-    },
     "common.network.missing_connection_pooling": {
       "count": 3,
       "level": "MEDIUM",
@@ -473,51 +400,6 @@
         "infrastructure/ast/android/ast-android.js",
         "infrastructure/ast/ios/ast-ios.js",
         "infrastructure/ast/text/text-scanner.js"
-      ]
-    },
-    "common.network.missing_error_handling": {
-      "count": 1,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "iOS": 1
-      },
-      "files": [
-        "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js"
-      ]
-    },
-    "backend.offline.missing_optimistic_locking": {
-      "count": 1,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "Other": 1
-      },
-      "files": [
-        "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js"
-      ]
-    },
-    "backend.push.missing_notification_queue": {
-      "count": 2,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "Other": 2
-      },
-      "files": [
-        "application/services/RealtimeGuardService.js",
-        "infrastructure/mcp/gitflow-automation-watcher.js"
-      ]
-    },
-    "backend.push.missing_notification_batching": {
-      "count": 1,
-      "level": "MEDIUM",
-      "severity": "MEDIUM",
-      "platforms": {
-        "Other": 1
-      },
-      "files": [
-        "application/services/RealtimeGuardService.js"
       ]
     },
     "backend.images.missing_server_compression": {
@@ -676,18 +558,6 @@
         "infrastructure/ast/backend/analyzers/detectors/OnionArchitectureDetector.js"
       ]
     },
-    "backend.security.pii_in_logs": {
-      "count": 2,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "Backend": 2
-      },
-      "files": [
-        "infrastructure/ast/backend/ddd-analyzer.js",
-        "infrastructure/ast/backend/solid-analyzer.js"
-      ]
-    },
     "backend.event.handler": {
       "count": 20,
       "level": "LOW",
@@ -767,19 +637,6 @@
         "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
       ]
     },
-    "backend.error_handling.untyped_catch": {
-      "count": 3,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "Backend": 3
-      },
-      "files": [
-        "infrastructure/ast/backend/solid-analyzer.js",
-        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
-        "infrastructure/ast/backend/analyzers/BackendPatternDetector.js"
-      ]
-    },
     "backend.event.emitter": {
       "count": 1,
       "level": "LOW",
@@ -844,18 +701,6 @@
       },
       "files": [
         "infrastructure/ast/backend/analyzers/detectors/CQRSDetector.js"
-      ]
-    },
-    "ios.storyboards": {
-      "count": 2,
-      "level": "HIGH",
-      "severity": "HIGH",
-      "platforms": {
-        "iOS": 2
-      },
-      "files": [
-        "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
-        "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js"
       ]
     },
     "ios.completion_handlers": {
@@ -928,19 +773,6 @@
       "levels": {
         "CRITICAL": 0,
         "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    ".claude/hooks/pre-tool-use-evidence-validator.ts": {
-      "platform": "Other",
-      "rules": {
-        "common.types.any": 1,
-        "common.network.missing_circuit_breaker": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 2,
         "MEDIUM": 0,
         "LOW": 0
       }
@@ -1036,14 +868,12 @@
     "application/services/RealtimeGuardService.js": {
       "platform": "Other",
       "rules": {
-        "common.quality.comments": 1,
-        "backend.push.missing_notification_queue": 1,
-        "backend.push.missing_notification_batching": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
-        "MEDIUM": 1,
+        "HIGH": 1,
+        "MEDIUM": 0,
         "LOW": 0
       }
     },
@@ -1195,12 +1025,11 @@
     "infrastructure/mcp/gitflow-automation-watcher.js": {
       "platform": "Other",
       "rules": {
-        "common.debug.console": 1,
-        "backend.push.missing_notification_queue": 1
+        "common.debug.console": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 1,
+        "HIGH": 0,
         "MEDIUM": 1,
         "LOW": 0
       }
@@ -1256,12 +1085,11 @@
     "application/services/notification/NotificationCenterService.js": {
       "platform": "Other",
       "rules": {
-        "common.quality.comments": 1,
-        "common.network.missing_circuit_breaker": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 0
       }
@@ -1398,12 +1226,11 @@
         "common.quality.comments": 1,
         "backend.auth.missing_cors": 1,
         "backend.metrics.missing_prometheus": 1,
-        "backend.clean.infrastructure": 1,
-        "backend.security.pii_in_logs": 1
+        "backend.clean.infrastructure": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 3
       }
@@ -1450,19 +1277,17 @@
       "rules": {
         "common.quality.comments": 1,
         "backend.metrics.missing_prometheus": 1,
-        "backend.error_handling.untyped_catch": 1,
         "backend.event.emitter": 1,
         "backend.event.handler": 3,
         "backend.caching.redis": 1,
         "backend.clean.infrastructure": 1,
         "backend.observer.pattern": 4,
         "backend.analytics.tracking": 1,
-        "backend.monitoring.alerts": 1,
-        "backend.security.pii_in_logs": 1
+        "backend.monitoring.alerts": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 3,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 13
       }
@@ -1544,12 +1369,11 @@
       "rules": {
         "common.debug.console": 1,
         "common.quality.comments": 1,
-        "common.network.missing_circuit_breaker": 1,
         "common.network.missing_connection_pooling": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 2,
         "LOW": 0
       }
@@ -1617,12 +1441,11 @@
     "infrastructure/severity/context/context-builder.js": {
       "platform": "Other",
       "rules": {
-        "common.quality.comments": 1,
-        "common.network.missing_circuit_breaker": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 0
       }
@@ -1709,12 +1532,11 @@
         "common.quality.comments": 1,
         "backend.auth.missing_cors": 1,
         "backend.metrics.missing_prometheus": 1,
-        "backend.error_handling.untyped_catch": 1,
         "backend.clean.infrastructure": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 3
       }
@@ -1770,12 +1592,11 @@
     "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js": {
       "platform": "iOS",
       "rules": {
-        "common.quality.comments": 1,
-        "ios.storyboards": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 0
       }
@@ -1796,13 +1617,11 @@
       "platform": "iOS",
       "rules": {
         "common.quality.comments": 1,
-        "common.network.missing_circuit_breaker": 1,
-        "ios.completion_handlers": 1,
-        "ios.storyboards": 1
+        "ios.completion_handlers": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 3,
+        "HIGH": 1,
         "MEDIUM": 1,
         "LOW": 0
       }
@@ -1810,12 +1629,11 @@
     "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js": {
       "platform": "iOS",
       "rules": {
-        "common.quality.comments": 1,
-        "common.network.missing_circuit_breaker": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 0
       }
@@ -1847,12 +1665,11 @@
     "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js": {
       "platform": "iOS",
       "rules": {
-        "common.quality.comments": 1,
-        "common.network.missing_error_handling": 1
+        "common.quality.comments": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 2,
+        "HIGH": 1,
         "MEDIUM": 0,
         "LOW": 0
       }
@@ -1882,43 +1699,6 @@
         "LOW": 1
       }
     },
-    "hooks/pre-tool-use-evidence-validator.ts": {
-      "platform": "Other",
-      "rules": {
-        "common.network.missing_circuit_breaker": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "infrastructure/telemetry/metrics-server.js": {
-      "platform": "Other",
-      "rules": {
-        "common.network.missing_timeout": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "application/services/token/CursorTokenService.js": {
-      "platform": "Other",
-      "rules": {
-        "common.network.missing_timeout": 1,
-        "common.network.missing_circuit_breaker": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 2,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "infrastructure/ast/android/ast-android.js": {
       "platform": "Android",
       "rules": {
@@ -1931,40 +1711,15 @@
         "LOW": 0
       }
     },
-    "infrastructure/ast/frontend/ast-frontend.js": {
-      "platform": "Frontend",
-      "rules": {
-        "common.network.missing_circuit_breaker": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "infrastructure/ast/ios/ast-ios.js": {
       "platform": "iOS",
       "rules": {
-        "common.network.missing_circuit_breaker": 1,
         "common.network.missing_connection_pooling": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 1,
+        "HIGH": 0,
         "MEDIUM": 1,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js": {
-      "platform": "Other",
-      "rules": {
-        "backend.offline.missing_optimistic_locking": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
         "LOW": 0
       }
     },
@@ -2125,12 +1880,11 @@
     "infrastructure/ast/backend/analyzers/BackendPatternDetector.js": {
       "platform": "Backend",
       "rules": {
-        "backend.error_handling.untyped_catch": 1,
         "backend.clean.infrastructure": 1
       },
       "levels": {
         "CRITICAL": 0,
-        "HIGH": 1,
+        "HIGH": 0,
         "MEDIUM": 0,
         "LOW": 1
       }
@@ -2254,15 +2008,6 @@
       "line": 2,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.types.any",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.claude/hooks/pre-tool-use-evidence-validator.ts",
-      "line": 44,
-      "column": 19,
-      "message": "any type in variable - infer type or define explicitly",
       "metrics": {}
     },
     {
@@ -2977,86 +2722,6 @@
       "metrics": {}
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/hooks/pre-tool-use-evidence-validator.ts",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/.claude/hooks/pre-tool-use-evidence-validator.ts",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/telemetry/metrics-server.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_timeout",
-      "message": "Network calls without timeout - rural connections can hang indefinitely",
-      "category": "Network",
-      "suggestion": "Add timeout: { timeout: 30000 } or AbortController with 30s timeout",
-      "context": {
-        "impact": "HIGH - hanging requests degrade UX",
-        "recommendation": "30s timeout for API calls, 60s for uploads"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/notification/NotificationCenterService.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_timeout",
-      "message": "Network calls without timeout - rural connections can hang indefinitely",
-      "category": "Network",
-      "suggestion": "Add timeout: { timeout: 30000 } or AbortController with 30s timeout",
-      "context": {
-        "impact": "HIGH - hanging requests degrade UX",
-        "recommendation": "30s timeout for API calls, 60s for uploads"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/token/CursorTokenService.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/android/ast-android.js",
       "line": 1,
       "column": 0,
@@ -3070,32 +2735,6 @@
       }
     },
     {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/ast-frontend.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/ast-ios.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/ast-ios.js",
       "line": 1,
       "column": 0,
@@ -3112,19 +2751,6 @@
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/text/text-scanner.js",
       "line": 1,
       "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/text/text-scanner.js",
-      "line": 1,
-      "column": 0,
       "severity": "MEDIUM",
       "ruleId": "common.network.missing_connection_pooling",
       "message": "HTTP client without connection pooling - reuse connections for performance",
@@ -3133,98 +2759,6 @@
       "context": {
         "impact": "MEDIUM - connection reuse improves performance"
       }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/severity/context/context-builder.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_circuit_breaker",
-      "message": "Multiple retry logic without circuit breaker - prevents cascading failures",
-      "category": "Network",
-      "suggestion": "Implement circuit breaker pattern: opossum library or custom implementation",
-      "context": {
-        "impact": "HIGH - prevents system overload when backend down"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "common.network.missing_error_handling",
-      "message": "Network calls without error handling - unhandled rejections crash app",
-      "category": "Network",
-      "suggestion": "Wrap in try-catch or add .catch() with specific error types (NetworkError, TimeoutError)",
-      "context": {
-        "impact": "HIGH - unhandled network errors cause crashes"
-      }
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/__tests__/images-backend-analyzer.spec.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "backend.offline.missing_optimistic_locking",
-      "message": "Mutation endpoint without versioning - implement optimistic locking (version/etag) for conflict resolution",
-      "category": "Offline",
-      "suggestion": "Add version field to DTOs, check on update, return 409 Conflict if mismatch"
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/RealtimeGuardService.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "backend.push.missing_notification_queue",
-      "message": "Push notification without queue - direct sends fail silently, use queue (Bull/BullMQ) for retry",
-      "category": "Push",
-      "suggestion": "Implement notification queue with retry policy"
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/RealtimeGuardService.js",
-      "line": 1,
-      "column": 0,
-      "severity": "MEDIUM",
-      "ruleId": "backend.push.missing_notification_batching",
-      "message": "Notifications sent in loop - batch multiple sends (500 tokens/batch) for FCM efficiency",
-      "category": "Push",
-      "suggestion": "Use FCM multicast or batch send API"
-    },
-    {
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/mcp/gitflow-automation-watcher.js",
-      "line": 1,
-      "column": 0,
-      "severity": "HIGH",
-      "ruleId": "backend.push.missing_notification_queue",
-      "message": "Push notification without queue - direct sends fail silently, use queue (Bull/BullMQ) for retry",
-      "category": "Push",
-      "suggestion": "Implement notification queue with retry policy"
     },
     {
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ast-backend.js",
@@ -3531,15 +3065,6 @@
       "line": 5,
       "column": 1,
       "message": "Infrastructure layer file - ensure contains external concerns and implementations",
-      "metrics": {}
-    },
-    {
-      "ruleId": "backend.security.pii_in_logs",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/ddd-analyzer.js",
-      "line": 5,
-      "column": 1,
-      "message": "🚨 HIGH: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don't include sensitive fields. GDPR violation risk.",
       "metrics": {}
     },
     {
@@ -3966,15 +3491,6 @@
       "metrics": {}
     },
     {
-      "ruleId": "backend.error_handling.untyped_catch",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
-      "line": 425,
-      "column": 9,
-      "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
-      "metrics": {}
-    },
-    {
       "ruleId": "backend.event.emitter",
       "severity": "LOW",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
@@ -4080,15 +3596,6 @@
       "line": 5,
       "column": 1,
       "message": "Monitoring alerts detected - ensure actionable and non-spammy alerts",
-      "metrics": {}
-    },
-    {
-      "ruleId": "backend.security.pii_in_logs",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/solid-analyzer.js",
-      "line": 5,
-      "column": 1,
-      "message": "🚨 HIGH: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don't include sensitive fields. GDPR violation risk.",
       "metrics": {}
     },
     {
@@ -4227,30 +3734,12 @@
       "metrics": {}
     },
     {
-      "ruleId": "backend.error_handling.untyped_catch",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
-      "line": 34,
-      "column": 7,
-      "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
-      "metrics": {}
-    },
-    {
       "ruleId": "backend.clean.infrastructure",
       "severity": "LOW",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
       "line": 1,
       "column": 1,
       "message": "Infrastructure layer file - ensure contains external concerns and implementations",
-      "metrics": {}
-    },
-    {
-      "ruleId": "backend.error_handling.untyped_catch",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendPatternDetector.js",
-      "line": 13,
-      "column": 7,
-      "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
       "metrics": {}
     },
     {
@@ -4362,15 +3851,6 @@
       "metrics": {}
     },
     {
-      "ruleId": "ios.storyboards",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
-      "line": 6,
-      "column": 1,
-      "message": "Storyboard/XIB detected - use programmatic UI for better version control",
-      "metrics": {}
-    },
-    {
       "ruleId": "ios.completion_handlers",
       "severity": "MEDIUM",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
@@ -4378,20 +3858,11 @@
       "column": 9,
       "message": "Completion handler detected - use async/await instead",
       "metrics": {}
-    },
-    {
-      "ruleId": "ios.storyboards",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
-      "line": 6,
-      "column": 1,
-      "message": "Storyboard/XIB detected - use programmatic UI for better version control",
-      "metrics": {}
     }
   ],
   "metadata": {
     "totalFiles": 297,
-    "timestamp": "2025-12-14T01:38:19.918Z",
+    "timestamp": "2025-12-14T02:06:08.358Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }
