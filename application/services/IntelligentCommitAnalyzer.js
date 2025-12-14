@@ -95,7 +95,7 @@ class IntelligentCommitAnalyzer {
             return 'docs';
         }
 
-        if (filePath.match(/^(\.github|\.vscode|\.cursor|\.claude)\
+        if (filePath.match(/^(\.github|\.vscode|\.cursor|\.claude)/)) {
             return null;
         }
 
