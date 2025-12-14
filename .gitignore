@@ -34,6 +34,7 @@ ANNOUNCEMENTS.md
 *.tmp
 .cache/
 .audit_tmp/
+.coverage/
 
 # Claude Desktop configuration (user-specific, similar to .cursor/rules/)
 .claude/
