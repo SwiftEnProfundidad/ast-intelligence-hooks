@@ -13,7 +13,7 @@ function runBackendIntelligence(project, findings, platform) {
     if (platformOf(filePath) !== "backend") return;
 
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
-    if (/\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
+    if (/\/hooks-system\/infrastructure\/ast\
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const className = cls.getName();

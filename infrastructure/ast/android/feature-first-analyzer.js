@@ -32,10 +32,10 @@ function analyzeFeatureFirst(filePath, fileContent, findings, pushFileFinding) {
 }
 
 function detectFeature(filePath) {
-  const match = filePath.match(/\/feature\/([^\/]+)\//);
+  const match = filePath.match(/\/feature\/([^\/]+)\
   if (match) return match[1];
 
-  const match2 = filePath.match(/\/feature-([^\/]+)\//);
+  const match2 = filePath.match(/\/feature-([^\/]+)\
   if (match2) return match2[1];
 
   return null;

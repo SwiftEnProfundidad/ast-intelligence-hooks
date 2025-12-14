@@ -182,7 +182,7 @@ class iOSArchitectureRules {
         }
       }
 
-      const featureMatch = file.match(/\/Features?\/(\w+)\//);
+      const featureMatch = file.match(/\/Features?\/(\w+)\
       if (featureMatch) {
         const currentFeature = featureMatch[1];
         const importMatches = content.matchAll(/import\s+(\w+)/g);
@@ -276,7 +276,7 @@ class iOSArchitectureRules {
 
       if (file.includes('View.swift') || content.includes('struct ') && content.includes(': View')) {
         const hasBusinessLogic =
-          /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{100,}/.test(content) || // Funciones largas
+          /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{100,}/.test(content) || 
           content.includes('URLSession') ||
           content.includes('CoreData') ||
           /\.save\(|\.fetch\(|\.delete\(/.test(content);
@@ -494,7 +494,7 @@ class iOSArchitectureRules {
 
       if (file.includes('Entity.swift')) {
         const hasMethods = (content.match(/func\s+/g) || []).length;
-        if (hasMethods > 2) { // Permitir computed properties
+        if (hasMethods > 2) { 
           pushFinding(this.findings, {
             ruleId: 'ios.viper.entity_with_logic',
             severity: 'medium',

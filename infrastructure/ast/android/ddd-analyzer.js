@@ -1,4 +1,3 @@
-
 function analyzeDDD(filePath, fileContent, findings, pushFileFinding) {
   analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFinding);
 
@@ -8,7 +7,7 @@ function analyzeDDD(filePath, fileContent, findings, pushFileFinding) {
 }
 
 function analyzeRepositoryPattern(filePath, fileContent, findings, pushFileFinding) {
-  if (/infrastructure\/ast\/|analyzers\/|detectors\//.test(filePath)) return;
+  if (/infrastructure\/ast\/|analyzers\/|detectors\
   const isInterface = fileContent.includes('interface ') && /Repository/i.test(fileContent);
   const isClass = fileContent.includes('class ') && /Repository/i.test(fileContent);
 

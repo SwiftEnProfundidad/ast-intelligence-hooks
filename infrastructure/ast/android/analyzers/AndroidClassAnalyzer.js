@@ -6,7 +6,7 @@ class AndroidClassAnalyzer {
 
     analyze() {
         const filePath = this.parser.filePath;
-        if (/infrastructure\/ast\/|analyzers\/|detectors\//.test(filePath)) {
+        if (/infrastructure\/ast\/|analyzers\/|detectors\
             return;
         }
 

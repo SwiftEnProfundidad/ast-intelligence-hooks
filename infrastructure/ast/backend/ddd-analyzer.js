@@ -242,10 +242,10 @@ function detectLayer(path) {
   if (normalized.includes('/infrastructure/')) return 'infrastructure';
   if (normalized.includes('/presentation/')) return 'presentation';
 
-  if (normalized.match(/\/(controllers|middleware|guards|interceptors)\//)) return 'presentation';
-  if (normalized.match(/\/(entities|repositories|value-objects)\//)) return 'domain';
-  if (normalized.match(/\/(use-cases|dtos|events)\//)) return 'application';
-  if (normalized.match(/\/(database|config|external-services)\//)) return 'infrastructure';
+  if (normalized.match(/\/(controllers|middleware|guards|interceptors)\
+  if (normalized.match(/\/(entities|repositories|value-objects)\
+  if (normalized.match(/\/(use-cases|dtos|events)\
+  if (normalized.match(/\/(database|config|external-services)\
 
   return null;
 }

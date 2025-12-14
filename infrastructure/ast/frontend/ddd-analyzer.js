@@ -45,7 +45,7 @@ function analyzeRepositoryPattern(sf, filePath, findings, pushFinding) {
 }
 
 function analyzeBusinessLogicLocation(sf, filePath, findings, pushFinding) {
-  const isComponent = /\/(components|app|pages)\//i.test(filePath) &&
+  const isComponent = /\/(components|app|pages)\
                      /\.(tsx|jsx)$/i.test(filePath);
 
   if (!isComponent) return;

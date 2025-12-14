@@ -13,7 +13,7 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
     const targetFeature = detectFeature(importPath);
 
     if (targetFeature && targetFeature !== feature) {
-      const isSharedModule = /\/(core|common|shared)\//i.test(importPath);
+      const isSharedModule = /\/(core|common|shared)\
 
       if (!isSharedModule) {
         pushFinding('backend.feature.cross_feature_import', 'high', sf, imp,
@@ -29,12 +29,12 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
 function detectFeature(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
 
-  // - src/orders/...
-  // - src/users/...
-  // - src/auth/...
-  // - modules/orders/...
+  
+  
+  
+  
 
-  const match = normalized.match(/\/(?:src|modules|features?)\/([^\/]+)\//);
+  const match = normalized.match(/\/(?:src|modules|features?)\/([^\/]+)\
   if (!match) return null;
 
   const featureName = match[1];

@@ -6,7 +6,7 @@ class iOSArchitectureDetector {
   constructor(projectRoot) {
     this.projectRoot = projectRoot;
     this.patterns = {
-      featureFirstClean: 0,  // ← PATRÓN PRINCIPAL (Feature-First + DDD + Clean Architecture)
+      featureFirstClean: 0,  
       mvvm: 0,
       mvvmc: 0,
       mvp: 0,
@@ -41,7 +41,7 @@ class iOSArchitectureDetector {
 
     const swiftFiles = glob.sync('**/*.swift', {
       cwd: this.projectRoot,
-      ignore: ['**/Pods/**', '**/Carthage/**', '**/Build/**', '**/.build/**', '**/DerivedData/**']
+      ignore: ['**/PodsCarthageBuild.buildDerivedData/**']
     });
 
     if (swiftFiles.length === 0) {
@@ -63,7 +63,7 @@ class iOSArchitectureDetector {
 
   detectFeatureFirstClean(files) {
     const hasFeaturesFolders = files.some(f =>
-      /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
+      /\/Features?\/\w+\/(domain|application|infrastructure|presentation)\
     );
 
     const cleanArchFolders = ['domain', 'application', 'infrastructure', 'presentation'];
@@ -81,7 +81,7 @@ class iOSArchitectureDetector {
     );
 
     if (hasFeaturesFolders) {
-      this.patterns.featureFirstClean += 10; // Muy fuerte señal
+      this.patterns.featureFirstClean += 10; 
     }
 
     if (foundCleanFolders.length >= 3) {
@@ -94,7 +94,7 @@ class iOSArchitectureDetector {
 
     const featureNames = new Set();
     files.forEach(f => {
-      const match = f.match(/\/Features?\/(\w+)\//);
+      const match = f.match(/\/Features?\/(\w+)\
       if (match) {
         featureNames.add(match[1]);
       }
@@ -297,7 +297,7 @@ class iOSArchitectureDetector {
         const lines = content.split('\n').length;
 
         if (lines > 300) {
-          this.patterns.mvc += 3; // Massive View Controller
+          this.patterns.mvc += 3; 
         } else if (lines > 150) {
           this.patterns.mvc += 2;
         } else {
@@ -323,7 +323,7 @@ class iOSArchitectureDetector {
     }
 
     if (sorted.length > 1 && sorted[1][1] >= dominantScore * 0.7) {
-      return 'MIXED'; // Anti-pattern: múltiples arquitecturas mezcladas
+      return 'MIXED'; 
     }
 
     return this.normalizePatternName(dominant);
@@ -331,7 +331,7 @@ class iOSArchitectureDetector {
 
   normalizePatternName(pattern) {
     const mapping = {
-      'featureFirstClean': 'FEATURE_FIRST_CLEAN_DDD', // ← PATRÓN PRINCIPAL
+      'featureFirstClean': 'FEATURE_FIRST_CLEAN_DDD', 
       'mvvm': 'MVVM',
       'mvvmc': 'MVVM-C',
       'mvp': 'MVP',
