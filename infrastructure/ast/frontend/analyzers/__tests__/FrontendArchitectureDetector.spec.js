@@ -84,9 +84,10 @@ describe('FrontendArchitectureDetector', () => {
         'src/features/orders/presentation/OrderScreen.tsx'
       ];
       glob.sync.mockReturnValueOnce(files).mockReturnValueOnce([]);
+      fs.readFileSync.mockReturnValue('export interface OrderRepository {}');
       const detector = makeSUT();
       const result = detector.detect();
-      expect(result).toBe('FEATURE_FIRST_CLEAN');
+      expect(result).toBe('FEATURE_FIRST_CLEAN_DDD');
     });
 
     it('should detect component based pattern', () => {
