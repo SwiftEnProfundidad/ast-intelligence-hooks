@@ -141,7 +141,6 @@ Sources/
     swiftFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
 
-      // Detectar public excesivo (todo public es code smell)
       const publicCount = (content.match(/\bpublic\s+(class|struct|enum|func|var|let)/g) || []).length;
       const totalDeclarations = (content.match(/\b(class|struct|enum|func)\s+\w+/g) || []).length;
 
@@ -161,14 +160,12 @@ Sources/
 public class Helper { ... }
 public func process() { ... }
 
-// ✅ Minimizar public
 internal class Helper { ... }
 public func process() { ... } // Solo lo necesario`
           });
         }
       }
 
-      // Detectar internal en archivos que deberían ser public (API modules)
       if (file.includes('/API/') && !content.includes('public ')) {
         pushFinding(this.findings, {
           ruleId: 'ios.spm.api_module_not_public',
@@ -189,7 +186,6 @@ public func process() { ... } // Solo lo necesario`
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
 
-    // Detectar dependencias circulares en Package.swift
     const targets = content.match(/\.target\([\s\S]*?name:\s*"([^"]+)"[\s\S]*?dependencies:\s*\[([\s\S]*?)\]/g);
 
     if (targets) {
@@ -205,7 +201,6 @@ public func process() { ... } // Solo lo necesario`
         }
       });
 
-      // Detectar circular dependencies
       dependencies.forEach((deps, moduleName) => {
         deps.forEach(dep => {
           const depDeps = dependencies.get(dep) || [];
@@ -222,7 +217,6 @@ public func process() { ... } // Solo lo necesario`
         });
       });
 
-      // Detectar Feature → Feature dependencies (anti-pattern)
       dependencies.forEach((deps, moduleName) => {
         if (moduleName.startsWith('Feature')) {
           const featureDeps = deps.filter(d => d.startsWith('Feature'));
@@ -251,7 +245,6 @@ public func process() { ... } // Solo lo necesario`
     swiftFiles.forEach(file => {
       const content = fs.readFileSync(file, 'utf-8');
 
-      // Detectar imports internos de otros módulos (violation de encapsulation)
       const internalImports = content.match(/@_implementationOnly\s+import\s+(\w+)/g);
 
       if (internalImports) {
@@ -265,7 +258,6 @@ public func process() { ... } // Solo lo necesario`
         });
       }
 
-      // Detectar @testable import fuera de tests
       if (content.includes('@testable import') && !file.includes('Tests/') && !file.includes('Test.swift')) {
         pushFinding(this.findings, {
           ruleId: 'ios.spm.testable_import_in_production',
@@ -286,7 +278,6 @@ public func process() { ... } // Solo lo necesario`
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
 
-    // Swift tools version debe ser reciente
     const toolsVersion = content.match(/\/\/\s*swift-tools-version:\s*(\d+\.\d+)/)?.[1];
     if (toolsVersion && parseFloat(toolsVersion) < 5.9) {
       pushFinding(this.findings, {
@@ -298,7 +289,6 @@ public func process() { ... } // Solo lo necesario`
       });
     }
 
-    // Platforms debe especificar versión mínima
     if (!content.includes('platforms:')) {
       pushFinding(this.findings, {
         ruleId: 'ios.spm.missing_platforms',
@@ -323,7 +313,6 @@ public func process() { ... } // Solo lo necesario`
     if (targets) {
       const targetNames = targets.map(t => t.match(/name:\s*"([^"]+)"/)?.[1]).filter(Boolean);
 
-      // Verificar consistencia de naming
       const hasInconsistentNaming = targetNames.some(name => {
         return name.includes('_') || name.includes('-') || /[a-z][A-Z]/.test(name);
       });
@@ -349,7 +338,6 @@ public func process() { ... } // Solo lo necesario`
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
 
-    // Verificar que hay products definidos
     if (!content.includes('.library(')) {
       pushFinding(this.findings, {
         ruleId: 'ios.spm.missing_products',
@@ -370,7 +358,6 @@ public func process() { ... } // Solo lo necesario`
 
     const content = fs.readFileSync(this.packageSwiftPath, 'utf-8');
 
-    // Detectar .branch("main") o .branch("master") en dependencies (anti-pattern)
     if (content.includes('.branch(')) {
       pushFinding(this.findings, {
         ruleId: 'ios.spm.dependency_branch_instead_version',
@@ -445,7 +432,6 @@ public func process() { ... } // Solo lo necesario`
       swiftFiles.forEach(file => {
         const content = fs.readFileSync(file, 'utf-8');
 
-        // Detectar imports de módulos hermanos (Feature → Feature)
         if (moduleName.startsWith('Feature')) {
           modules.forEach(otherModule => {
             if (otherModule.startsWith('Feature') && otherModule !== moduleName) {
@@ -463,7 +449,6 @@ public func process() { ... } // Solo lo necesario`
           });
         }
 
-        // Core NO debe importar Features
         if (moduleName.startsWith('Core')) {
           modules.forEach(featureModule => {
             if (featureModule.startsWith('Feature') && content.includes(`import ${featureModule}`)) {

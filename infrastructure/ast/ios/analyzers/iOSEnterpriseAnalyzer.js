@@ -1,7 +1,3 @@
-// ===== iOS ENTERPRISE ANALYZER =====
-// Complete iOS analysis using native Swift AST (SourceKitten)
-// Implements 170+ iOS rules from AST_IOS.md
-// Clean Architecture: Infrastructure Layer - iOS Deep Analysis
 
 const path = require('path');
 const fs = require('fs').promises;
@@ -31,7 +27,6 @@ class iOSEnterpriseAnalyzer {
     this.findings = findings;
 
     try {
-      // Parse file with SourceKitten
       const ast = await this.parser.parseFile(filePath);
 
       if (!ast.parsed) {
@@ -39,16 +34,13 @@ class iOSEnterpriseAnalyzer {
         return;
       }
 
-      // Read file content for text-based checks
       const content = await fs.readFile(filePath, 'utf-8');
 
-      // Extract AST nodes
       const classes = this.parser.extractClasses(ast);
       const functions = this.parser.extractFunctions(ast);
       const properties = this.parser.extractProperties(ast);
       const protocols = this.parser.extractProtocols(ast);
 
-      // Run analysis rules
       await this.analyzeSwiftModerno(ast, content, filePath);
       await this.analyzeSwiftUI(ast, classes, filePath);
       await this.analyzeUIKit(ast, classes, filePath);
@@ -197,7 +189,6 @@ class iOSEnterpriseAnalyzer {
     });
 
     // ios.storyboards
-    // Only check actual Swift files, not analyzer files themselves
     if (filePath.endsWith('.swift') && !filePath.includes('analyzer') && !filePath.includes('detector')) {
       if (content.includes('storyboard') || content.includes('.xib') || content.includes('.nib')) {
         this.addFinding('ios.storyboards', 'high', filePath, 1,

@@ -1,6 +1,3 @@
-// ===== AST iOS MODULE =====
-// iOS-specific AST intelligence rules
-// Clean Architecture: Infrastructure Layer - iOS AST Analysis
 
 const path = require('path');
 const glob = require('glob');
@@ -27,7 +24,6 @@ const { iOSASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/iO
  */
 async function runIOSIntelligence(project, findings, platform) {
 
-  // STEP 0: Run SourceKitten-based AST Intelligent Analyzer (PRIORITY)
   console.log(`[iOS AST Intelligence] Running SourceKitten-based analysis...`);
   const astAnalyzer = new iOSASTIntelligentAnalyzer(findings);
   const root = getRepoRoot();
@@ -47,10 +43,8 @@ async function runIOSIntelligence(project, findings, platform) {
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
-    // Skip AST infrastructure files (avoid self-analysis - they contain patterns that trigger rules)
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
 
-    // Skip if not iOS platform
     if (platformOf(filePath) !== "ios") return;
 
     sf.getDescendantsOfKind(SyntaxKind.NonNullExpression).forEach((expr) => {
@@ -88,7 +82,6 @@ async function runIOSIntelligence(project, findings, platform) {
     });
   });
 
-  // PART 2: Native Swift files analysis with SourceKitten (170+ rules)
   try {
     const root = getRepoRoot();
     const swiftFiles = glob.sync('**/*.swift', {
@@ -100,7 +93,6 @@ async function runIOSIntelligence(project, findings, platform) {
     if (swiftFiles.length > 0) {
       console.log(`[iOS Enterprise] Analyzing ${swiftFiles.length} Swift files with SourceKitten...`);
 
-      // STEP 1: Detect Architecture Pattern
       const repoRoot = getRepoRoot();
       const architectureDetector = new iOSArchitectureDetector(repoRoot);
       const detectedPattern = architectureDetector.detect();
@@ -108,7 +100,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
       console.log(`[iOS Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
-      // Log warnings if any
       if (detectionSummary.warnings.length > 0) {
         detectionSummary.warnings.forEach(warning => {
           pushFinding(findings, {
@@ -122,45 +113,37 @@ async function runIOSIntelligence(project, findings, platform) {
         });
       }
 
-      // STEP 2: Run Architecture-Specific Rules
       const architectureRules = new iOSArchitectureRules(findings, detectedPattern);
       architectureRules.runRules(swiftFiles);
 
-      // STEP 3: Run Performance Rules (SwiftUI optimization)
       console.log(`[iOS Performance] Analyzing SwiftUI performance...`);
       const performanceRules = new iOSPerformanceRules(findings);
       swiftFiles.forEach(swiftFile => {
         performanceRules.analyzeFile(swiftFile, null);
       });
 
-      // STEP 4: Run SwiftUI Advanced Rules
       console.log(`[iOS SwiftUI Advanced] Analyzing advanced patterns...`);
       const swiftUIAdvanced = new iOSSwiftUIAdvancedRules(findings);
       swiftFiles.forEach(swiftFile => {
         swiftUIAdvanced.analyzeFile(swiftFile, null);
       });
 
-      // STEP 5: Run SPM Organization Rules
       console.log(`[iOS SPM] Analyzing code organization...`);
       const spmRules = new iOSSPMRules(findings, repoRoot);
       spmRules.analyze();
 
-      // STEP 6: Run Testing Advanced Rules
       console.log(`[iOS Testing] Analyzing testing patterns...`);
       const testingRules = new iOSTestingAdvancedRules(findings, repoRoot);
       testingRules.analyze();
 
-      // STEP 7: Run Networking Advanced Rules
       console.log(`[iOS Networking] Analyzing networking layer...`);
       const networkingRules = new iOSNetworkingAdvancedRules(findings, repoRoot);
       networkingRules.analyze();
 
-      // STEP 8: Run CI/CD Rules
       console.log(`[iOS CI/CD] Analyzing CI/CD configuration...`);
       const cicdRules = new iOSCICDRules(findings, repoRoot);
       cicdRules.analyze();
 
-      // STEP 9: Run Enterprise Analyzer (SourceKitten)
       const analyzer = new iOSEnterpriseAnalyzer();
 
       for (const swiftFile of swiftFiles) {
@@ -174,7 +157,6 @@ async function runIOSIntelligence(project, findings, platform) {
   }
 
   // ═══════════════════════════════════════════════════════════════
-  // FORBIDDEN LITERALS ANALYSIS (null/undefined, magic numbers, type casts)
   // ═══════════════════════════════════════════════════════════════
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
@@ -185,14 +167,12 @@ async function runIOSIntelligence(project, findings, platform) {
     forbiddenLiteralsAnalyzer.analyze(sf, findings, pushFinding);
   });
 
-  // CRITICAL: iOS Swift Error Handling Rules (text-based analysis)
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
     if (platformOf(filePath) !== "ios" || !filePath.endsWith('.swift')) return;
 
     const content = sf.getFullText();
 
-    // Swift: Empty catch blocks
     const emptyCatchPattern = /catch\s*\{\s*\}/g;
     let match;
     while ((match = emptyCatchPattern.exec(content)) !== null) {
@@ -207,7 +187,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Swift: _ = error (silencing errors)
     if (content.includes('_ = error') || content.includes('_ = err')) {
       const errorIndex = content.indexOf('_ = error') !== -1 ? content.indexOf('_ = error') : content.indexOf('_ = err');
       const lineNumber = content.substring(0, errorIndex).split('\n').length;
@@ -221,7 +200,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Swift: try! (force try - equivalent to unhandled errors)
     const forceTryPattern = /try!\s+/g;
     while ((match = forceTryPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -235,7 +213,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Swift: Any type used without type checking (equivalent to unknown sin guards)
     const anyTypePattern = /:\s*Any\b/g;
     while ((match = anyTypePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -258,12 +235,9 @@ async function runIOSIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // COMPREHENSIVE RULES FROM rulesios.mdc
     // ==========================================
 
-    // 1. MEMORY MANAGEMENT
 
-    // Detect retain cycles: delegate without weak
     const delegatePattern = /var\s+(\w*[Dd]elegate\w*)\s*:\s*\w+(?!\?)(?!\s*\?)/g;
     while ((match = delegatePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -280,7 +254,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Closure without [weak self] or [unowned self]
     const closurePattern = /\{\s*(?!\[weak|!\[unowned)[^}]{30,}\bself\b/g;
     while ((match = closurePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -299,7 +272,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 2. CONCURRENCY
 
-    // DispatchQueue in new code (should use async/await)
     if (content.includes('DispatchQueue')) {
       const lines = content.split('\n');
       lines.forEach((line, idx) => {
@@ -316,7 +288,6 @@ async function runIOSIntelligence(project, findings, platform) {
       });
     }
 
-    // Missing @MainActor for UI updates
     const uiUpdatePattern = /func\s+\w+.*\{[^}]*\b(self\.|view\.|layer\.|bounds|frame|backgroundColor)/g;
     while ((match = uiUpdatePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -333,9 +304,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 3. OPTIONALS & TYPE SAFETY
 
-    // Implicitly unwrapped optional overuse (除了IBOutlet)
     const implicitUnwrapPattern = /var\s+\w+\s*:\s*\w+!/g;
     while ((match = implicitUnwrapPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -354,7 +323,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 4. ARCHITECTURE
 
-    // Singleton pattern detection
     const singletonPattern = /static\s+(let|var)\s+(shared|instance)\s*=/g;
     while ((match = singletonPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -370,7 +338,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Massive ViewControllers/Views (>300 lines)
     const viewControllerPattern = /class\s+(\w*ViewController|\w*View)\s*:/g;
     while ((match = viewControllerPattern.exec(content)) !== null) {
       const className = match[1];
@@ -391,7 +358,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Business logic in Views (should be in ViewModel)
     if (content.includes(': View') || content.includes('SwiftUI.View')) {
       const businessLogicPatterns = ['URLSession', 'Alamofire', 'fetch', 'api.', 'UserDefaults', 'CoreData'];
       businessLogicPatterns.forEach(pattern => {
@@ -411,7 +377,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 5. SECURITY
 
-    // Hardcoded API keys/secrets
     const secretPatterns = [
       /api[_-]?key\s*=\s*["'][^"']+["']/gi,
       /secret\s*=\s*["'][^"']+["']/gi,
@@ -433,7 +398,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     });
 
-    // UserDefaults for sensitive data (should be Keychain)
     if (content.includes('UserDefaults') && (content.includes('password') || content.includes('token') || content.includes('secret'))) {
       const lineNumber = content.indexOf('UserDefaults') ? content.substring(0, content.indexOf('UserDefaults')).split('\n').length : 1;
       pushFinding(
@@ -446,7 +410,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // HTTP URLs (should be HTTPS)
     const httpPattern = /http:\/\/(?!localhost|127\.0\.0\.1)/g;
     while ((match = httpPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -462,7 +425,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 6. LOCALIZATION
 
-    // Hardcoded strings (not using NSLocalizedString)
     const hardcodedStringPattern = /Text\s*\(\s*"[^"]+"\s*\)|\.title\s*=\s*"[^"]+"|\.text\s*=\s*"[^"]+"/g;
     let hardcodedCount = 0;
     while ((match = hardcodedStringPattern.exec(content)) !== null && hardcodedCount < 5) {
@@ -483,7 +445,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 7. PERFORMANCE
 
-    // UI work on background thread
     if (content.includes('DispatchQueue.global') || content.includes('.background')) {
       const uiPatterns = ['view.', 'layer.', 'backgroundColor', 'addSubview', 'removeFromSuperview'];
       uiPatterns.forEach(pattern => {
@@ -505,9 +466,7 @@ async function runIOSIntelligence(project, findings, platform) {
       });
     }
 
-    // 8. SWIFTUI SPECIFIC
 
-    // GeometryReader overuse
     let geometryReaderCount = (content.match(/GeometryReader/g) || []).length;
     if (geometryReaderCount > 3) {
       pushFinding(
@@ -520,7 +479,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Missing @Published in ObservableObject
     if (content.includes('ObservableObject')) {
       const varPattern = /var\s+\w+\s*:/g;
       const publishedPattern = /@Published/g;
@@ -538,7 +496,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // @StateObject vs @ObservedObject misuse
     const stateObjectPattern = /@StateObject.*=.*\(/g;
     while ((match = stateObjectPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -557,7 +514,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 9. TESTING
 
-    // Missing tests for ViewModels
     if (content.includes('ViewModel') && !filePath.includes('Test') && !filePath.includes('Mock')) {
       const className = content.match(/class\s+(\w+ViewModel)/)?.[1];
       if (className) {
@@ -573,7 +529,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // XCTAssert in production code
     if (!filePath.includes('Test') && content.includes('XCTAssert')) {
       const lineNumber = content.indexOf('XCTAssert') ? content.substring(0, content.indexOf('XCTAssert')).split('\n').length : 1;
       pushFinding(
@@ -586,9 +541,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 10. PROTOCOL-ORIENTED PROGRAMMING
 
-    // Class inheritance over protocols
     const classInheritancePattern = /class\s+\w+\s*:\s*\w+[^,{]*\{/g;
     while ((match = classInheritancePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -630,9 +583,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 12. SWIFTUI STATE MANAGEMENT
 
-    // @State in non-private vars
     const statePattern = /@State\s+var\s+(\w+)/g;
     while ((match = statePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -651,7 +602,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 13. NETWORKING
 
-    // Missing error handling in network calls
     if (content.includes('URLSession') || content.includes('Alamofire')) {
       const noErrorHandling = /\.dataTask|\.request.*\{(?!.*catch|.*error)[\s\S]{50,200}\}/g;
       while ((match = noErrorHandling.exec(content)) !== null) {
@@ -667,9 +617,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 14. CODE ORGANIZATION
 
-    // Files >500 lines
     const lineCount = content.split('\n').length;
     if (lineCount > 500 && !filePath.includes('Generated')) {
       pushFinding(
@@ -682,7 +630,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Missing MARK: - for organization
     if (lineCount > 150 && !content.includes('MARK:')) {
       pushFinding(
         "ios.organization.missing_marks",
@@ -716,7 +663,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 16. ACCESSIBILITY
 
-    // Missing accessibility labels in SwiftUI
     if (content.includes('Image(') || content.includes('Button(')) {
       const noAccessibilityPattern = /(Image|Button)\([^)]+\)(?![^.]*\.accessibilityLabel)/g;
       let accessibilityCount = 0;
@@ -736,7 +682,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 17. COMBINE
 
-    // Combine overuse (should use async/await for simple cases)
     const combinePattern = /\.sink\s*\{|\.assign\s*\(/g;
     let combineCount = (content.match(combinePattern) || []).length;
     if (combineCount > 5 && !content.includes('// Combine required')) {
@@ -750,7 +695,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Missing Set<AnyCancellable> storage
     if (content.includes('.sink') && !content.includes('Set<AnyCancellable>') && !content.includes('AnyCancellable')) {
       const lineNumber = content.indexOf('.sink') ? content.substring(0, content.indexOf('.sink')).split('\n').length : 1;
       pushFinding(
@@ -763,9 +707,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 18. DEPENDENCY INJECTION
 
-    // Manual instantiation of dependencies (should be injected)
     const manualInstantiationPattern = /=\s*\w+(Service|Repository|Manager|Client|API)\s*\(\)/g;
     while ((match = manualInstantiationPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -782,7 +724,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Factory pattern missing for complex objects
     if (content.includes('class') && content.match(/init\([^)]{50,}\)/)) {
       const complexInitPattern = /init\([^)]{50,}\)/g;
       while ((match = complexInitPattern.exec(content)) !== null) {
@@ -800,7 +741,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 19. PERSISTENCE
 
-    // Core Data raw fetch without type safety
     if (content.includes('NSFetchRequest') && content.includes('NSManagedObject')) {
       const rawFetchPattern = /NSFetchRequest<NSManagedObject>/g;
       while ((match = rawFetchPattern.exec(content)) !== null) {
@@ -816,9 +756,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // SwiftData in iOS <17
     if (content.includes('@Model') || content.includes('SwiftData')) {
-      // Check if there's a deployment target check
       if (!content.includes('@available(iOS 17') && !content.includes('if #available(iOS 17')) {
         const lineNumber = content.indexOf('@Model') || content.indexOf('SwiftData');
         if (lineNumber > -1) {
@@ -834,9 +772,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 20. UIKIT LEGACY PATTERNS
 
-    // Storyboards/XIBs (more robust detection)
     const storyboardPatterns = [
       /UIStoryboard\s*\(/g,
       /instantiateViewController/g,
@@ -859,7 +795,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     });
 
-    // Auto Layout missing (frames in UIKit)
     if (content.includes('UIView') && content.includes('.frame =')) {
       const framePattern = /\.frame\s*=\s*CGRect/g;
       let frameCount = 0;
@@ -877,9 +812,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 21. TESTING PATTERNS
 
-    // Missing makeSUT pattern in test files
     if (filePath.includes('Test') && content.includes('XCTest')) {
       if (!content.includes('makeSUT') && !content.includes('func make')) {
         pushFinding(
@@ -892,7 +825,6 @@ async function runIOSIntelligence(project, findings, platform) {
         );
       }
 
-      // Missing memory leak tracking
       if (!content.includes('trackForMemoryLeaks') && !content.includes('addTeardownBlock')) {
         pushFinding(
           "ios.testing.missing_leak_tracking",
@@ -905,7 +837,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Mocks/Spies in production code
     if (!filePath.includes('Test') && (content.includes('Mock') || content.includes('Spy') || content.includes('Stub'))) {
       const mockPattern = /\b(Mock|Spy|Stub)\w+/g;
       while ((match = mockPattern.exec(content)) !== null) {
@@ -921,11 +852,8 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 22. ARCHITECTURE PATTERNS
 
-    // Coordinator pattern validation
     if (content.includes('Coordinator')) {
-      // Coordinator should have weak references to child coordinators
       const childCoordinatorPattern = /var\s+\w*[Cc]oordinators?\w*\s*:\s*\[/g;
       while ((match = childCoordinatorPattern.exec(content)) !== null) {
         const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -943,7 +871,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // VIPER overuse for simple features
     if (content.includes('Presenter') && content.includes('Interactor') && content.includes('Router')) {
       const lineCount = content.split('\n').length;
       if (lineCount < 100) {
@@ -958,9 +885,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 23. ACCESSIBILITY ADVANCED
 
-    // Dynamic Type support missing
     if (content.includes('UILabel') || content.includes('UITextView') || content.includes('UITextField')) {
       if (!content.includes('adjustsFontForContentSizeCategory') && !content.includes('.font = .preferredFont')) {
         pushFinding(
@@ -974,7 +899,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // VoiceOver traits missing
     if (content.includes('isAccessibilityElement = true') && !content.includes('accessibilityTraits')) {
       const lineNumber = content.indexOf('isAccessibilityElement = true');
       if (lineNumber > -1) {
@@ -989,7 +913,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Reduce motion not respected
     if (content.includes('animate') || content.includes('UIView.transition')) {
       if (!content.includes('UIAccessibility.isReduceMotionEnabled') && !content.includes('@Environment(\\.accessibilityReduceMotion)')) {
         pushFinding(
@@ -1003,9 +926,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 24. NETWORKING ADVANCED
 
-    // Missing retry logic in network layer
     if ((content.includes('URLSession') || content.includes('Alamofire')) && content.includes('func')) {
       if (!content.includes('retry') && !content.includes('maxRetries') && !filePath.includes('Mock')) {
         pushFinding(
@@ -1019,7 +940,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // SSL pinning missing for sensitive APIs
     if (content.includes('URLSession') && (content.includes('api') || content.includes('backend'))) {
       if (!content.includes('pinning') && !content.includes('URLSessionDelegate')) {
         pushFinding(
@@ -1033,7 +953,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Network reachability not checked
     if ((content.includes('URLSession') || content.includes('Alamofire')) && !content.includes('Reachability') && !content.includes('NWPathMonitor')) {
       pushFinding(
         "ios.networking.missing_reachability",
@@ -1045,9 +964,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 25. SPM ORGANIZATION
 
-    // Public API over-exposure in SPM packages
     if (content.includes('public') && filePath.includes('Sources/')) {
       const publicPattern = /public\s+(class|struct|enum|func|var|let)/g;
       const publicCount = (content.match(publicPattern) || []).length;
@@ -1063,10 +980,8 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Missing Package.swift for modular project
     const isModularProject = content.includes('import ') && (content.match(/import \w+/g) || []).length > 10;
     if (isModularProject && !filePath.includes('Package.swift')) {
-      // Check if Package.swift exists in repo root
       const fs = require('fs');
       const packagePath = path.join(getRepoRoot(), 'Package.swift');
       if (!fs.existsSync(packagePath)) {
@@ -1081,9 +996,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 26. WARNINGS & BUILD SETTINGS
 
-    // Force cast (as!)
     const forceCastPattern = /as!\s+/g;
     while ((match = forceCastPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -1097,7 +1010,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // TODO/FIXME in production code
     if (!filePath.includes('Test')) {
       const todoPattern = /\/\/\s*(TODO|FIXME):/g;
       let todoCount = 0;
@@ -1115,7 +1027,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Ignoring build warnings (suppress warnings pragmas - resolve all warnings)
     if (content.includes('#warning') || content.includes('@available(*, deprecated')) {
       pushFinding(
         "ios.code_quality.warnings_present",
@@ -1128,12 +1039,9 @@ async function runIOSIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🎯 SOLID PRINCIPLES (CRITICAL)
     // ==========================================
 
-    // 27. SRP (Single Responsibility Principle)
 
-    // File with multiple responsibilities (multiple classes/structs)
     const typePattern = /\b(class|struct|enum|protocol)\s+\w+/g;
     const classCount = (content.match(typePattern) || []).length;
     if (classCount > 3 && !filePath.includes('Generated')) {
@@ -1147,7 +1055,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // God class (many methods >20)
     if (content.includes('class') || content.includes('struct')) {
       const funcPattern = /func\s+\w+/g;
       const funcCount = (content.match(funcPattern) || []).length;
@@ -1163,7 +1070,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 28. OCP (Open/Closed Principle)
 
     // switch/if-else chains that should be polymorphism
     const switchPattern = /switch\s+\w+\s*\{[^}]{200,}\}/g;
@@ -1184,7 +1090,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Modifying existing classes instead of extending
     if (content.includes('extension') && content.includes('override')) {
       pushFinding(
         "ios.solid.ocp_modification",
@@ -1196,9 +1101,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 29. LSP (Liskov Substitution Principle)
 
-    // Subclass throwing errors not thrown by parent
     const overridePattern = /override\s+func\s+(\w+)[^{]*\{[^}]*throw/g;
     while ((match = overridePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -1212,7 +1115,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Precondition strengthening in overrides
     if (content.includes('override') && content.includes('precondition(') || content.includes('assert(')) {
       const overrideBlocks = content.match(/override[^}]+\{[^}]+\}/g) || [];
       overrideBlocks.forEach(block => {
@@ -1230,9 +1132,7 @@ async function runIOSIntelligence(project, findings, platform) {
       });
     }
 
-    // 30. ISP (Interface Segregation Principle)
 
-    // Protocol with too many requirements (fat interface)
     const protocolPattern = /protocol\s+(\w+)[^{]*\{([^}]+)\}/g;
     while ((match = protocolPattern.exec(content)) !== null) {
       const protocolName = match[1];
@@ -1251,9 +1151,7 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 31. DIP (Dependency Inversion Principle)
 
-    // High-level module depending on low-level implementation (not protocol)
     if ((content.includes('ViewModel') || content.includes('UseCase')) &&
       (content.includes('URLSession') || content.includes('UserDefaults') || content.includes('CoreData'))) {
       const lineNumber = content.indexOf('URLSession') || content.indexOf('UserDefaults') || content.indexOf('CoreData');
@@ -1270,7 +1168,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // No protocol abstraction for repository/service
     if ((content.includes('class') || content.includes('struct')) &&
       (content.match(/Repository|Service|Manager|Client/) && !content.match(/Protocol/))) {
       const className = content.match(/(class|struct)\s+(\w+(?:Repository|Service|Manager|Client))/)?.[2];
@@ -1287,12 +1184,9 @@ async function runIOSIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🏛️ CLEAN ARCHITECTURE (CRITICAL)
     // ==========================================
 
-    // 32. Layer Violations
 
-    // Domain depending on Infrastructure/Presentation
     if (filePath.includes('/Domain/')) {
       const forbiddenImports = ['UIKit', 'SwiftUI', 'Alamofire', 'CoreData', 'UserDefaults'];
       forbiddenImports.forEach(forbidden => {
@@ -1309,7 +1203,6 @@ async function runIOSIntelligence(project, findings, platform) {
       });
     }
 
-    // Application depending on Infrastructure details
     if (filePath.includes('/Application/') && filePath.includes('ViewModel')) {
       if (content.includes('URLSession') || content.includes('Alamofire') || content.includes('CoreData')) {
         pushFinding(
@@ -1323,7 +1216,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // Presentation with business logic
     if (filePath.includes('/Presentation/') || content.includes(': View') || content.includes(': UIViewController')) {
       const businessPatterns = ['URLSession', 'fetch(', 'save(', 'delete(', 'update('];
       businessPatterns.forEach(pattern => {
@@ -1341,9 +1233,7 @@ async function runIOSIntelligence(project, findings, platform) {
       });
     }
 
-    // 33. Wrong Directory Structure
 
-    // Utilities/Helpers forbidden
     if (filePath.includes('/Utilities/') || filePath.includes('/Helpers/')) {
       pushFinding(
         "ios.clean_arch.forbidden_directory",
@@ -1355,7 +1245,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Code in project root
     if (filePath.endsWith('.swift') && !filePath.includes('/Domain/') && !filePath.includes('/Application/') &&
       !filePath.includes('/Infrastructure/') && !filePath.includes('/Presentation/') &&
       !filePath.includes('/Tests/') && !filePath.includes('AppDelegate')) {
@@ -1369,9 +1258,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 34. Repository Pattern Violations
 
-    // Repository implementation not in Infrastructure
     if (content.includes('Repository') && !content.includes('Protocol') && !filePath.includes('/Infrastructure/')) {
       pushFinding(
         "ios.clean_arch.repository_location",
@@ -1383,7 +1270,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // Repository protocol not in Domain
     if (content.includes('protocol') && content.includes('Repository') && !filePath.includes('/Domain/')) {
       pushFinding(
         "ios.clean_arch.repository_protocol_location",
@@ -1396,13 +1282,10 @@ async function runIOSIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🧪 BDD/TDD PATTERNS
     // ==========================================
 
-    // 35. Test Naming and Organization
 
     if (filePath.includes('Test') && content.includes('XCTest')) {
-      // Missing Given-When-Then structure
       const testFunctions = content.match(/func\s+test\w+\(\)/g) || [];
       testFunctions.forEach(testFunc => {
         const funcName = testFunc.match(/func\s+(test\w+)/)?.[1];
@@ -1419,7 +1302,6 @@ async function runIOSIntelligence(project, findings, platform) {
         }
       });
 
-      // Spies vs Mocks preference
       if (content.includes('Mock') && !content.includes('Spy')) {
         pushFinding(
           "ios.bdd.prefer_spies",
@@ -1433,10 +1315,8 @@ async function runIOSIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 📝 CODE QUALITY (Autodescriptive Names)
     // ==========================================
 
-    // 36. Comments (should be self-descriptive code)
 
     const commentPattern = /\/\/(?!\s*MARK:)(?!\s*TODO:)(?!\s*FIXME:)(?!\s*swiftlint)[^\n]{20,}/g;
     let commentCount = 0;
@@ -1454,7 +1334,6 @@ async function runIOSIntelligence(project, findings, platform) {
       commentCount++;
     }
 
-    // 37. Var overuse (prefer let immutability)
 
     const varPattern = /\bvar\s+\w+/g;
     const letPattern = /\blet\s+\w+/g;
@@ -1471,7 +1350,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 38. Missing Equatable/Hashable for value types
 
     if (content.includes('struct') && !content.includes('Equatable') && !content.includes('Hashable')) {
       const structPattern = /struct\s+(\w+)/g;
@@ -1493,7 +1371,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 39. Pyramid of Doom (missing guard clauses)
 
     const pyramidPattern = /if\s+[^{]+\{[^}]*if\s+[^{]+\{[^}]*if\s+[^{]+\{/g;
     while ((match = pyramidPattern.exec(content)) !== null) {
@@ -1508,9 +1385,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 40. Feature-First Organization (Domain-Driven Design hint)
 
-    // Files should be organized by feature, not by technical layer
     if ((filePath.includes('/Models/') || filePath.includes('/Views/') || filePath.includes('/Controllers/')) &&
       !filePath.includes('/Features/') && !filePath.includes('/Domain/')) {
       pushFinding(
@@ -1541,7 +1416,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 42. Missing @Published in ObservableObject
     if (content.includes('ObservableObject') && content.includes('var ') && !content.includes('@Published')) {
       pushFinding(
         "ios.swiftui.missing_published",
@@ -1553,7 +1427,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 43. Missing @MainActor for UI updates
     if ((content.includes('UIView') || content.includes('View:')) && content.includes('DispatchQueue.main') && !content.includes('@MainActor')) {
       pushFinding(
         "ios.concurrency.missing_main_actor",
@@ -1581,7 +1454,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 45. Sendable conformance for async types
     if (content.includes('async') && content.includes('struct') && !content.includes('Sendable') && !content.includes('@unchecked')) {
       const asyncPattern = /func\s+\w+\([^)]*\)\s+async/g;
       if ((content.match(asyncPattern) || []).length > 2) {
@@ -1596,7 +1468,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 46. URLSession over Alamofire preference
     if (content.includes('import Alamofire') && !content.includes('// justified')) {
       pushFinding(
         "ios.networking.prefer_urlsession",
@@ -1608,7 +1479,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 47. Missing Codable for network models
     if ((content.includes('Response') || content.includes('Request')) && content.includes('struct') && !content.includes('Codable') && !content.includes('Decodable')) {
       const modelPattern = /struct\s+(\w+(Response|Request|DTO))\s/g;
       while ((match = modelPattern.exec(content)) !== null) {
@@ -1624,7 +1494,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 48. UserDefaults for sensitive data (security)
     if (content.includes('UserDefaults') && (content.includes('password') || content.includes('token') || content.includes('secret'))) {
       pushFinding(
         "ios.security.sensitive_data_userdefaults",
@@ -1636,7 +1505,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 49. Missing SSL pinning for production
     if (content.includes('URLSession') && content.includes('https') && !content.includes('ServerTrustPolicy') && !content.includes('pinning')) {
       if (content.includes('production') || content.includes('release')) {
         pushFinding(
@@ -1650,7 +1518,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 50. Missing error logging
     if (content.includes('catch') && !content.includes('log') && !content.includes('print') && !content.includes('Logger')) {
       const catchPattern = /catch\s*\{[^}]{0,50}\}/g;
       const matches = content.match(catchPattern) || [];
@@ -1666,7 +1533,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 51. Missing accessibility labels
     if ((content.includes('Button') || content.includes('Image') || content.includes('Text')) &&
       content.includes('View') && !content.includes('accessibility') && !filePath.includes('Preview')) {
       pushFinding(
@@ -1679,7 +1545,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 52. Hardcoded strings (localization)
     const swiftUIStringPattern = /Text\("(?!.*NSLocalizedString)[^"]{10,}"\)/g;
     let stringMatches = content.match(swiftUIStringPattern) || [];
     if (stringMatches.length > 5 && !filePath.includes('Test') && !filePath.includes('Preview')) {
@@ -1693,7 +1558,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 53. Missing Coordinator pattern for navigation
     if (content.includes('NavigationLink') && content.includes('destination:') && !content.includes('Coordinator') && !content.includes('Router')) {
       const navLinkCount = (content.match(/NavigationLink/g) || []).length;
       if (navLinkCount > 3) {
@@ -1708,7 +1572,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 54. ViewModels with UI dependencies
     if (filePath.includes('ViewModel') && (content.includes('import SwiftUI') || content.includes('import UIKit'))) {
       if (content.includes('Color') || content.includes('Font') || content.includes('Image')) {
         pushFinding(
@@ -1722,7 +1585,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 55. Missing Repository protocol
     if (filePath.includes('Repository') && content.includes('class') && !content.includes('protocol')) {
       pushFinding(
         "ios.architecture.missing_repository_protocol",
@@ -1734,7 +1596,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 56. Missing Use Case pattern
     if (filePath.includes('ViewModel') && (content.match(/func\s+\w+.*async.*throws/g) || []).length > 3) {
       if (!content.includes('UseCase') && !content.includes('Interactor')) {
         pushFinding(
@@ -1748,7 +1609,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 57. Task {} instead of structured concurrency
     if (content.includes('Task {') && !content.includes('async let') && !content.includes('withTaskGroup')) {
       const taskCount = (content.match(/Task\s*\{/g) || []).length;
       if (taskCount > 3) {
@@ -1763,7 +1623,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 58. Missing Combine cancellables storage
     if (content.includes('.sink') && !content.includes('AnyCancellable') && !content.includes('store(in:)')) {
       pushFinding(
         "ios.combine.missing_cancellable_storage",
@@ -1775,7 +1634,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 59. Lazy loading optimization
     if (content.includes('List') && content.includes('ForEach') && !content.includes('Lazy')) {
       const listCount = (content.match(/List\s*\{/g) || []).length;
       if (listCount > 0 && content.includes('.id(')) {
@@ -1790,7 +1648,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 60. Missing @testable import
     if (filePath.includes('Tests') && content.includes('import ') && !content.includes('@testable')) {
       if (content.includes('XCTest')) {
         pushFinding(
@@ -1804,7 +1661,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 61. Protocol extensions for default implementations
     if (content.includes('protocol') && !content.includes('extension') && (content.match(/func\s+\w+/g) || []).length > 3) {
       pushFinding(
         "ios.pop.missing_protocol_extension",
@@ -1816,7 +1672,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 62. Inheritance over composition
     if (content.includes('class') && content.includes(':') && !content.includes('protocol')) {
       const inheritancePattern = /class\s+\w+\s*:\s*(\w+)(?:\s|,|<)/g;
       const matches = [];
@@ -1838,7 +1693,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 63. Missing associated types in generic protocols
     if (content.includes('protocol') && content.includes('<') && !content.includes('associatedtype')) {
       pushFinding(
         "ios.pop.use_associated_types",
@@ -1850,7 +1704,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 64. Missing protocol composition
     if ((content.match(/protocol\s+\w+/g) || []).length > 2 && !content.includes('&') && !content.includes(',')) {
       pushFinding(
         "ios.pop.missing_protocol_composition",
@@ -1862,7 +1715,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 65. Weak delegate pattern
     if (content.includes('protocol') && content.includes('Delegate') && !content.includes('AnyObject')) {
       const delegatePattern = /protocol\s+\w+Delegate/g;
       if ((content.match(delegatePattern) || []).length > 0 && !content.includes(': AnyObject')) {
@@ -1877,7 +1729,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 66. Missing deinit for cleanup
     if (content.includes('class') && (content.includes('Timer') || content.includes('NotificationCenter') || content.includes('observer')) && !content.includes('deinit')) {
       pushFinding(
         "ios.memory.missing_deinit",
@@ -1889,7 +1740,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 67. Copy-on-write for large structs
     if (content.includes('struct') && (content.match(/var\s+\w+:\s*\[/g) || []).length > 2) {
       const structPattern = /struct\s+(\w+)/g;
       while ((match = structPattern.exec(content)) !== null) {
@@ -1908,7 +1758,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 68. Missing error enum conformance
     if (content.includes('enum') && content.includes('Error') && !content.includes(': Error') && !content.includes(': LocalizedError')) {
       const errorEnumPattern = /enum\s+(\w+Error)/g;
       while ((match = errorEnumPattern.exec(content)) !== null) {
@@ -1924,7 +1773,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 69. Combine avoid over-use (prefer async/await)
     if (content.includes('import Combine') && content.includes('Publisher') && !content.includes('async')) {
       const publisherCount = (content.match(/Publisher/g) || []).length;
       if (publisherCount > 5) {
@@ -1939,7 +1787,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 70. Missing retry logic for network requests
     if (content.includes('URLSession') && content.includes('dataTask') && !content.includes('retry') && !content.includes('attempt')) {
       pushFinding(
         "ios.networking.missing_retry",
@@ -1951,7 +1798,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 71. Keychain usage validation
     if (content.includes('Keychain') && !content.includes('SecItemAdd') && !content.includes('KeychainSwift')) {
       pushFinding(
         "ios.security.keychain_usage",
@@ -1963,7 +1809,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 72. Core Data without NSPersistentContainer
     if (content.includes('import CoreData') && content.includes('NSManagedObject') && !content.includes('NSPersistentContainer')) {
       pushFinding(
         "ios.persistence.outdated_coredata",
@@ -1975,7 +1820,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 73. SwiftData for iOS 17+
     if (content.includes('import CoreData') && !content.includes('SwiftData') && content.includes('@available(iOS 17')) {
       pushFinding(
         "ios.persistence.use_swiftdata",
@@ -1987,7 +1831,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 74. Missing @StateObject ownership
     if (content.includes('ObservedObject') && !content.includes('StateObject') && content.includes('ViewModel')) {
       pushFinding(
         "ios.swiftui.wrong_property_wrapper",
@@ -1999,7 +1842,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 75. GeometryReader overuse
     if ((content.match(/GeometryReader/g) || []).length > 2) {
       pushFinding(
         "ios.swiftui.geometryreader_overuse",
@@ -2011,7 +1853,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 76. Missing view modifiers extraction
     if ((content.match(/\.padding\(\)\.background\(\)\.cornerRadius\(\)/g) || []).length > 2) {
       pushFinding(
         "ios.swiftui.extract_view_modifier",
@@ -2023,7 +1864,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 77. UIViewController size (Massive View Controller)
     if (content.includes('UIViewController') && lineCount > 300) {
       pushFinding(
         "ios.uikit.massive_viewcontroller",
@@ -2035,7 +1875,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 78. Programmatic UI validation
     if (filePath.includes('ViewController.swift') && !content.includes('loadView') && content.includes('viewDidLoad')) {
       if (content.includes('storyboard') || content.includes('nib')) {
         pushFinding(
@@ -2049,7 +1888,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 79. SPM modularization
     if (filePath.includes('.swift') && !filePath.includes('Package.swift') && !filePath.includes('Tests')) {
       const hasFeature = filePath.includes('/Features/') || filePath.includes('/Modules/');
       const totalSourceFiles = project?.getSourceFiles()?.length || 0;
@@ -2066,7 +1904,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 80. Missing MARK: - organization
     if (lineCount > 100 && !content.includes('// MARK:') && !content.includes('MARK: -')) {
       pushFinding(
         "ios.code_organization.missing_mark",
@@ -2078,7 +1915,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 81. File naming convention (PascalCase for types)
     const fileName = filePath.split('/').pop();
     if (fileName && /^[a-z]/.test(fileName) && fileName.endsWith('.swift')) {
       pushFinding(
@@ -2091,7 +1927,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 82. XCTest naming (Given-When-Then)
     if (filePath.includes('Tests') && content.includes('func test')) {
       const testPattern = /func\s+(test\w+)/g;
       const tests = [];
@@ -2119,7 +1954,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 83. makeSUT pattern in tests
     if (filePath.includes('Tests') && content.includes('XCTest') && !content.includes('makeSUT') && !content.includes('func sut')) {
       const testCount = (content.match(/func\s+test/g) || []).length;
       if (testCount > 2) {
@@ -2134,7 +1968,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 84. trackForMemoryLeaks helper
     if (filePath.includes('Tests') && content.includes('deinit') && !content.includes('trackForMemoryLeaks') && !content.includes('addTeardownBlock')) {
       pushFinding(
         "ios.testing.missing_memory_leak_tracking",
@@ -2146,7 +1979,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 85. Spies over Mocks preference
     if (filePath.includes('Tests') && (content.includes('class Mock') || content.includes('class Stub'))) {
       if (!content.includes('class Spy')) {
         pushFinding(
@@ -2160,7 +1992,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 86. Fast tests validation (<10ms)
     if (filePath.includes('Tests') && content.includes('sleep') || content.includes('wait')) {
       pushFinding(
         "ios.testing.slow_tests",
@@ -2172,7 +2003,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 87. XCUITest accessibility identifiers
     if (filePath.includes('UITests') && content.includes('XCUIApplication') && !content.includes('identifier')) {
       pushFinding(
         "ios.ui_testing.missing_identifiers",
@@ -2184,7 +2014,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 88. Page Object Pattern for UI tests
     if (filePath.includes('UITests') && (content.match(/XCUIElement/g) || []).length > 5 && !content.includes('Page')) {
       pushFinding(
         "ios.ui_testing.missing_page_object",
@@ -2196,7 +2025,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 89. Biometric auth validation
     if (content.includes('LocalAuthentication') && !content.includes('LAContext') && !content.includes('biometryType')) {
       pushFinding(
         "ios.security.incomplete_biometric",
@@ -2208,7 +2036,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 90. App Transport Security
     if (content.includes('http://') && !content.includes('localhost') && !filePath.includes('Test')) {
       pushFinding(
         "ios.security.http_not_https",
@@ -2220,7 +2047,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 91. VoiceOver testing hint
     if ((content.includes('View:') || content.includes('UIView')) && !content.includes('accessibility') && lineCount > 50) {
       pushFinding(
         "ios.accessibility.voiceover_support",
@@ -2232,7 +2058,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 92. Dynamic Type support
     if (content.includes('UIFont') && content.includes('systemFont') && !content.includes('preferredFont')) {
       pushFinding(
         "ios.accessibility.missing_dynamic_type",
@@ -2244,7 +2069,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 93. NSLocalizedString usage
     if ((content.match(/"[^"]{20,}"/g) || []).length > 3 && !content.includes('NSLocalizedString') && !filePath.includes('Test')) {
       pushFinding(
         "ios.localization.missing_nslocalizedstring",
@@ -2256,7 +2080,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 94. DateFormatter / NumberFormatter
     if (content.includes('Date()') && content.includes('description') && !content.includes('DateFormatter')) {
       pushFinding(
         "ios.localization.missing_dateformatter",
@@ -2268,7 +2091,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 95. MVVM-C pattern validation
     if (filePath.includes('ViewModel') && content.includes('navigation') && !content.includes('Coordinator')) {
       pushFinding(
         "ios.architecture.viewmodel_navigation",
@@ -2280,7 +2102,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 96. Equatable Views for performance
     if (content.includes('struct') && content.includes(': View') && !content.includes(': Equatable') && lineCount > 50) {
       pushFinding(
         "ios.swiftui.missing_equatable",
@@ -2292,7 +2113,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 97. LazyVStack for large lists
     if (content.includes('VStack') && content.includes('ForEach') && !content.includes('Lazy')) {
       const forEachPattern = /ForEach\([^)]*\)/g;
       const iterations = content.match(forEachPattern) || [];
@@ -2308,7 +2128,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 98. Image optimization
     if (content.includes('Image(') && !content.includes('resizable') && !content.includes('frame')) {
       const imageCount = (content.match(/Image\(/g) || []).length;
       if (imageCount > 3) {
@@ -2323,7 +2142,6 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    // 99. Background thread validation
     if (content.includes('URLSession') && content.includes('dataTask') && content.includes('DispatchQueue.main')) {
       pushFinding(
         "ios.performance.unnecessary_main_dispatch",
@@ -2335,7 +2153,6 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    // 100. Fastlane automation hint
     const fastlaneFileName = filePath.split('/').pop();
     if (fastlaneFileName === 'Fastfile' || content.includes('fastlane')) {
       pushFinding(
