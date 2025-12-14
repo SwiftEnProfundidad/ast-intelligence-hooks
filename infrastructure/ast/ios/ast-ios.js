@@ -160,6 +160,7 @@ async function runIOSIntelligence(project, findings, platform) {
   // ═══════════════════════════════════════════════════════════════
   // ═══════════════════════════════════════════════════════════════
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     if (platformOf(filePath) !== "ios") return;
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
@@ -169,6 +170,7 @@ async function runIOSIntelligence(project, findings, platform) {
   });
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     if (platformOf(filePath) !== "ios" || !filePath.endsWith('.swift')) return;
 
