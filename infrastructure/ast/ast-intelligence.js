@@ -1,11 +1,7 @@
-// ===== AST INTELLIGENCE COORDINATOR =====
-// Main orchestrator for AST intelligence analysis
-// Clean Architecture: Infrastructure Layer - AST Coordination
 
 const path = require("path");
 const fs = require("fs");
 
-// Import AST modules from correct location
 const astModulesPath = __dirname;
 const { createProject, platformOf, mapToLevel } = require(path.join(astModulesPath, "ast-core"));
 const { runBackendIntelligence } = require(path.join(astModulesPath, "backend/ast-backend"));
@@ -31,11 +27,9 @@ async function runASTIntelligence() {
     const root = getRepoRoot();
     const allFiles = listSourceFiles(root);
 
-    // Create TypeScript project for JS/TS files
     const project = createProject(allFiles);
     const findings = [];
 
-    // Global analysis context
     const context = {
       repoHasMigrations: checkForMigrations(root),
       globalSupabaseQueryCount: 0,
@@ -46,7 +40,6 @@ async function runASTIntelligence() {
       repoMentionsRefresh: false
     };
 
-    // Run common analysis across all files
     runCommonIntelligence(project, findings);
     runTextScanner(root, findings);
     analyzeDocumentation(root, findings);
@@ -56,7 +49,6 @@ async function runASTIntelligence() {
     analyzePushBackend(project, findings);
     analyzeImagesBackend(project, findings);
 
-    // Run analysis for each platform
     await runPlatformAnalysis(project, findings, context);
 
     // Generate output
@@ -75,13 +67,10 @@ async function runASTIntelligence() {
  * Run platform-specific AST analysis
  */
 async function runPlatformAnalysis(project, findings, context) {
-  // Get source files
   const sourceFiles = project.getSourceFiles();
 
-  // Track which platforms we've already processed
   const platformsProcessed = new Set();
 
-  // First pass: identify all platforms
   sourceFiles.forEach((sf) => {
     const filePath = sf.getFilePath();
     const platform = platformOf(filePath);
@@ -90,7 +79,6 @@ async function runPlatformAnalysis(project, findings, context) {
     }
   });
 
-  // Run analysis for each platform once
   for (const platform of platformsProcessed) {
     try {
       switch (platform.toLowerCase()) {
@@ -120,7 +108,6 @@ async function runPlatformAnalysis(project, findings, context) {
  * Generate analysis output and reports
  */
 function generateOutput(findings, context, project, root) {
-  // Calculate statistics
   const levelTotals = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
   const platformTotals = { Backend: 0, Frontend: 0, iOS: 0, Android: 0, Other: 0 };
 
@@ -159,11 +146,9 @@ function generateOutput(findings, context, project, root) {
   const totals = { errors: levelTotals.CRITICAL + levelTotals.HIGH, warnings: levelTotals.MEDIUM, infos: levelTotals.LOW };
   console.log(`${green}AST Totals: errors=${totals.errors} warnings=${totals.warnings} infos=${totals.infos}${nc}`);
 
-  // Detailed summary
   console.log(`AST SUMMARY LEVELS: CRITICAL=${levelTotals.CRITICAL} HIGH=${levelTotals.HIGH} MEDIUM=${levelTotals.MEDIUM} LOW=${levelTotals.LOW}`);
   console.log(`AST SUMMARY PLATFORM: Backend=${platformTotals.Backend} Frontend=${platformTotals.Frontend} iOS=${platformTotals.iOS} Android=${platformTotals.Android} Other=${platformTotals.Other}`);
 
-  // Save detailed report
   saveDetailedReport(findings, levelTotals, platformTotals, project, root);
 }
 
@@ -179,14 +164,12 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
     const ruleDetails = {};
     const fileDetails = {};
 
-    // Build detailed statistics
     findings.forEach(f => {
       const platform = platformOf(f.filePath) || "other";
       const platformKey = platform === "ios" ? "iOS" : platform.charAt(0).toUpperCase() + platform.slice(1);
       const level = mapToLevel(f.severity);
       const relPath = path.relative(root, f.filePath).replace(/\\/g, "/");
 
-      // Platform details
       if (!platformDetails[platformKey]) {
         platformDetails[platformKey] = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, rules: {}, files: new Set() };
       }
@@ -210,7 +193,6 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
       fileDetails[relPath].levels[level] += 1;
     });
 
-    // Convert Sets to Arrays
     Object.keys(platformDetails).forEach(p => {
       platformDetails[p].files = Array.from(platformDetails[p].files);
     });
@@ -309,12 +291,10 @@ function shouldIgnore(file) {
   return false;
 }
 
-// Export main function
 module.exports = {
   runASTIntelligence,
 };
 
-// Backward compatibility - run main function
 if (require.main === module) {
   runASTIntelligence().catch(err => {
     console.error('Fatal AST Intelligence Error:', err);

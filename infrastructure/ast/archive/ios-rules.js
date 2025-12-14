@@ -34,7 +34,6 @@ class iOSRules {
 
     const fileContent = fs.readFileSync(filePath, 'utf-8');
 
-    // Aplicar todas las reglas
     findings.push(...this.checkForceUnwrapping(filePath, fileContent, ast));
     findings.push(...this.checkCompletionHandlers(filePath, ast));
     findings.push(...this.checkMassiveViewControllers(filePath, ast));
@@ -46,7 +45,6 @@ class iOSRules {
     findings.push(...this.checkStructDefault(filePath, ast));
     findings.push(...this.checkImmutability(filePath, ast));
 
-    // Solo aplicar reglas de makeSUT en archivos de test
     if (isTest) {
       findings.push(...this.checkMakeSUT(filePath, ast, fileContent));
     }
@@ -131,7 +129,6 @@ class iOSRules {
   checkSingletons(filePath, ast, fileContent) {
     const findings = [];
 
-    // Buscar el patrón: static let shared =
     const singletonRegex = /static\s+let\s+(?:shared|instance|default|sharedInstance)\s*=/gi;
     const lines = fileContent.split('\n');
 
@@ -159,14 +156,11 @@ class iOSRules {
     const lines = fileContent.split('\n');
 
     lines.forEach((line, index) => {
-      // Detectar closures que capturan self sin weak/unowned
       if (line.includes('{') && (line.includes('self.') || line.match(/\bself\b/))) {
-        // Verificar si NO tiene [weak self] o [unowned self]
         const contextStart = Math.max(0, index - 2);
         const contextLines = lines.slice(contextStart, index + 1).join(' ');
 
         if (!contextLines.includes('[weak self]') && !contextLines.includes('[unowned self]')) {
-          // Evitar falsos positivos en definiciones de funciones normales
           if (!line.includes('func ') && (line.includes(') in') || line.includes('})'))) {
             findings.push({
               ruleId: 'ios.weak_self',
@@ -232,11 +226,9 @@ class iOSRules {
     const variables = this.parser.extractVariables(ast);
 
     variables.forEach(v => {
-      // Detectar variables en structs/classes que heredan de View sin @State
       if (v.kind === 'source.lang.swift.decl.var.instance' && v.name && !v.name.startsWith('_')) {
         const attrs = v.node['key.attributes'];
         if (!attrs || !attrs.some(attr => attr['key.attribute']?.includes('State'))) {
-          // Verificar si está en un View
           const typename = v.node['key.typename'];
           if (typename && !typename.includes('?') && !typename.includes('@')) {
             findings.push({
@@ -263,7 +255,6 @@ class iOSRules {
     const types = this.parser.extractTypes(ast);
 
     types.classes.forEach(cls => {
-      // Detectar clases sin herencia que podrían ser structs
       const inheritance = cls.node['key.inheritedtypes'];
       if (!inheritance || inheritance.length === 0) {
         findings.push({
@@ -288,7 +279,6 @@ class iOSRules {
     const variables = this.parser.extractVariables(ast);
 
     variables.forEach(v => {
-      // Detectar variables que podrían ser let
       if (v.name && v.node['key.setter_accessibility'] === 'source.lang.swift.accessibility.private') {
         findings.push({
           ruleId: 'ios.inmutabilidad_missing',
@@ -310,7 +300,6 @@ class iOSRules {
   checkMakeSUT(filePath, ast, fileContent) {
     const findings = [];
 
-    // Verificar si es un archivo de test
     if (!fileContent.includes('XCTest') && !fileContent.includes('Quick') && !fileContent.includes('import XCTest')) {
       return findings;
     }

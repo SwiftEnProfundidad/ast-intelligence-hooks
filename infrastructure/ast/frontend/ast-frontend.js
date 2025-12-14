@@ -1,4 +1,3 @@
-// ===== AST FRONTEND MODULE =====
 
 const path = require('path');
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
@@ -12,7 +11,6 @@ const { FrontendArchitectureDetector } = require(path.join(__dirname, 'analyzers
  * @param {string} platform - Platform identifier
  */
 function runFrontendIntelligence(project, findings, platform) {
-  // STEP 0: Detect Architecture Pattern
   try {
     const root = getRepoRoot();
     const architectureDetector = new FrontendArchitectureDetector(root);
@@ -21,7 +19,6 @@ function runFrontendIntelligence(project, findings, platform) {
 
     console.log(`[Frontend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
-    // Log warnings if any
     if (detectionSummary.warnings.length > 0) {
       detectionSummary.warnings.forEach(warning => {
         pushFinding('frontend.architecture.detection_warning', warning.severity.toLowerCase(), null, null, warning.message + '\n\n' + warning.recommendation, findings);
@@ -34,10 +31,8 @@ function runFrontendIntelligence(project, findings, platform) {
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
-    // Skip if not Frontend platform
     if (platformOf(filePath) !== "frontend") return;
 
-    // Skip AST infrastructure files (avoid self-analysis - they contain patterns that trigger rules)
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
     if (/\/app\/middleware\.ts$|\/middleware\.ts$|\/app\/headers\.ts$/.test(filePath)) {
       if (!/Content\-Security\-Policy/i.test(sf.getFullText())) {
@@ -45,15 +40,12 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // React hooks misuse: hooks called conditionally
-    // Intelligent detection: check if hook is DIRECTLY inside conditional block
     const hookCalls = sf.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
       const expr = call.getExpression().getText();
       return /^(use[A-Z]|useState|useEffect|useCallback|useMemo|useContext|useReducer|useRef)\b/.test(expr);
     });
 
     hookCalls.forEach((hookCall) => {
-      // Check if hook is inside an if statement or ternary expression
       let parent = hookCall.getParent();
       let depth = 0;
       const maxDepth = 10; // Limit traversal to avoid false positives in deeply nested code
@@ -61,14 +53,12 @@ function runFrontendIntelligence(project, findings, platform) {
       while (parent && depth < maxDepth) {
         const kind = parent.getKind();
 
-        // If we hit a function/arrow function boundary, stop (hook is in its own function, OK)
         if (kind === SyntaxKind.FunctionDeclaration ||
           kind === SyntaxKind.FunctionExpression ||
           kind === SyntaxKind.ArrowFunction) {
           break;
         }
 
-        // If hook is directly inside if/ternary, it's a violation
         if (kind === SyntaxKind.IfStatement || kind === SyntaxKind.ConditionalExpression) {
           pushFinding("frontend.hooks.conditional", "error", sf, hookCall, "Hook called conditionally", findings);
           break;
@@ -79,7 +69,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Component props: missing prop types/interface
     sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach((fn) => {
       const name = fn.getName();
       if (name && /^[A-Z]/.test(name)) {
@@ -90,7 +79,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React Query: missing error handling
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (/useQuery|useMutation/.test(expr)) {
@@ -104,7 +92,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Large components: too many props (>7)
     sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach((fn) => {
       const name = fn.getName();
       if (name && /^[A-Z]/.test(name)) {
@@ -123,8 +110,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Direct DOM manipulation (React anti-pattern)
-    // Intelligent detection: exclude legitimate contexts where DOM access is needed
     const isDomUtilityFile = /\/(scripts|utils|helpers|lib|core)\//i.test(filePath);
     const isCustomHook = /\/hooks\//i.test(filePath) || /^use[A-Z]/.test(filePath.split('/').pop() || '');
     const isChartMapComponent = /\/(charts|maps|visualization)\//i.test(filePath) || /(Map|Chart|Graph|Plot)\.tsx?$/.test(filePath);
@@ -138,12 +123,10 @@ function runFrontendIntelligence(project, findings, platform) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const expr = call.getExpression().getText();
         if (/^(document\.|window\.(scroll|location|URL)|getElementById|getElementsBy|querySelector)/.test(expr)) {
-          // Additional intelligent checks for legitimate use cases
           const fullCallText = call.getText();
           const functionName = call.getFirstAncestorByKind(SyntaxKind.FunctionDeclaration)?.getName() || '';
           const isUtilityFunction = /^(setup|init|configure|attach|mount|render)/i.test(functionName);
 
-          // Legitimate patterns:
           const isReactEntry = /createRoot\s*\(\s*document\.getElementById/.test(fullCallText); // React 18 entry
           const isLangAttribute = /document\.documentElement\.(setAttribute|lang)/.test(fullCallText); // i18n
           const isHeadManipulation = /document\.(head|body)\.append/.test(fullCallText); // Script injection (Maps, etc)
@@ -161,7 +144,6 @@ function runFrontendIntelligence(project, findings, platform) {
       });
     }
 
-    // Missing key prop in lists
     sf.getDescendantsOfKind(SyntaxKind.JsxElement).forEach((jsx) => {
       const tag = jsx.getOpeningElement()?.getTagNameNode()?.getText();
       if (tag && /^[A-Z]/.test(tag)) {
@@ -179,7 +161,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Prop drilling (heurístico): props reenviadas sin cambios a múltiples hijos
     sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach((fn) => {
       const name = fn.getName();
       if (!name || !/^[A-Z]/.test(name)) return;
@@ -198,7 +179,6 @@ function runFrontendIntelligence(project, findings, platform) {
           if (k) propNames.add(k);
         });
       }
-      // Cuenta reenvíos: <Child prop={prop} />
       let forwards = 0;
       body.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
         const n = attr.getNameNode();
@@ -209,7 +189,6 @@ function runFrontendIntelligence(project, findings, platform) {
         if (propNames.has(attrName) && initText === attrName) {
           forwards += 1;
         }
-        // Reenvío de objeto props completo
         if (attr.getKind && attr.getKind() === SyntaxKind.JsxSpreadAttribute) {
           const t = attr.getText();
           if (t.includes(paramName)) forwards += 1;
@@ -220,7 +199,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Complejidad ciclomática alta en componentes
     sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach((fn) => {
       const name = fn.getName();
       if (!name || !/^[A-Z]/.test(name)) return;
@@ -234,11 +212,9 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React: detecta class components (no permitidos)
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /^[A-Z]/.test(name)) {
-        // Verifica si es un componente React (hereda de Component o tiene render)
         const heritage = cls.getHeritageClauses();
         const isReactComponent = heritage.some((h) =>
           h.getText().includes("extends") &&
@@ -254,7 +230,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React: uso de índice como key en listas
     sf.getDescendantsOfKind(SyntaxKind.JsxElement).forEach((jsx) => {
       const tag = jsx.getOpeningElement()?.getTagNameNode()?.getText();
       if (tag && /^[A-Z]/.test(tag)) {
@@ -273,7 +248,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React: componentes grandes que deberían componerse (>50 líneas)
     sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach((fn) => {
       const name = fn.getName();
       if (!name || !/^[A-Z]/.test(name)) return;
@@ -290,7 +264,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Accesibilidad: <img> sin alt
     sf.getDescendantsOfKind(SyntaxKind.JsxSelfClosingElement).forEach((el) => {
       const tag = el.getTagNameNode()?.getText();
       if (tag === "img") {
@@ -317,8 +290,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Accesibilidad: elementos interactivos sin aria/role
-    // Intelligent: exclude semantic components by name + chart/map context
     const fileContent = sf.getFullText();
     const isChartFile = /(recharts|chart\.js|d3|victory|nivo|visx)/i.test(fileContent.substring(0, 500));
 
@@ -327,7 +298,6 @@ function runFrontendIntelligence(project, findings, platform) {
       const attrs = open.getAttributes();
       const hasOnClick = attrs.some((a) => a.getNameNode && a.getNameNode()?.getText() === "onClick");
 
-      // Exclude native semantic elements + components with semantic names
       const isSemanticNative = tag === "button" || tag === "a" || tag === "input" || tag === "select" || tag === "textarea";
       const isSemanticComponent = /^(Button|Link|IconButton|MenuItem|Tab|Chip|Card|Badge)$/i.test(tag || '');
       const isThirdPartyLibComponent = /^(Recharts|Chart|Leaflet|Map|Dialog|Popover|Dropdown|Select|Combobox)/i.test(tag || '');
@@ -441,12 +411,10 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Next.js: uso de pages/ en lugar de app/ (legacy)
     if (filePath.includes("/pages/")) {
       pushFinding("frontend.nextjs.pages_directory", "warning", sf, sf, "Using legacy pages/ directory (use app/ directory for Next.js 13+)", findings);
     }
 
-    // Next.js: "use client" innecesario (componentes que podrían ser Server Components)
     const hasUseClient = sf.getFullText().includes('"use client"') || sf.getFullText().includes("'use client'");
     if (hasUseClient) {
       const hasInteractiveCode = sf.getDescendantsOfKind(SyntaxKind.CallExpression).some((call) => {
@@ -479,8 +447,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Next.js App Router: Server Component accediendo a window/document
-    // Intelligent: exclude test files (they run in browser/jsdom)
     const isNextTestFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
     const isServerComponent = !sf.getFullText().includes('"use client"') && !sf.getFullText().includes("'use client'");
 
@@ -494,13 +460,11 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Next.js App Router: uso de next/head en app/** (preferir Metadata API)
     const usesNextHead = sf.getImportDeclarations().some((imp) => imp.getModuleSpecifierValue() === "next/head");
     if (usesNextHead && (filePath.includes("/app/") || filePath.includes("/app\\"))) {
       pushFinding("frontend.next.head_legacy", "warning", sf, sf, "next/head used in App Router - prefer Metadata API", findings);
     }
 
-    // Next.js App Router: page.tsx sin export const metadata
     if (/page\.(t|j)sx?$/.test(filePath) && (filePath.includes("/app/") || filePath.includes("/app\\"))) {
       const hasMetadata = /export\s+const\s+metadata\s*=/.test(sf.getFullText());
       if (!hasMetadata) {
@@ -508,7 +472,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Performance: imports pesados sin carga dinámica
     const heavyLibs = ["lodash", "moment", "chart.js", "highcharts", "firebase", "@mui/material"];
     const heavyImported = sf.getImportDeclarations().filter((imp) => heavyLibs.some((l) => imp.getModuleSpecifierValue() === l));
     if (heavyImported.length > 0) {
@@ -518,7 +481,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Accesibilidad/semántica: div/span con onClick sin role="button" y tabIndex
     sf.getDescendantsOfKind(SyntaxKind.JsxOpeningElement).forEach((open) => {
       const tag = open.getTagNameNode()?.getText();
       if (tag !== "div" && tag !== "span") return;
@@ -532,7 +494,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React: useEffect sin array de dependencias
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr === "useEffect") {
@@ -543,7 +504,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // JSX: inline function handlers en atributos on*
     sf.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
       const name = attr.getNameNode()?.getText();
       if (!name || !/^on[A-Z]/.test(name)) return;
@@ -554,7 +514,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // i18n: hardcoded JSX text sin i18n
     const usesI18n = sf.getImportDeclarations().some((imp) => /i18n|react-i18next|next-i18next/.test(imp.getModuleSpecifierValue())) || sf.getFullText().includes("useTranslation");
     if (!usesI18n) {
       const jsxTexts = sf.getDescendantsOfKind(SyntaxKind.JsxText).filter((t) => {
@@ -566,13 +525,11 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Next.js: next/router (legacy) en lugar de next/navigation
     const usesLegacyRouter = sf.getImportDeclarations().some((imp) => imp.getModuleSpecifierValue() === "next/router");
     if (usesLegacyRouter) {
       pushFinding("frontend.next.router_legacy", "warning", sf, sf, "Using next/router legacy API - prefer next/navigation", findings);
     }
 
-    // Seguridad: target="_blank" sin rel="noopener noreferrer"
     sf.getDescendantsOfKind(SyntaxKind.JsxOpeningElement).forEach((open) => {
       const tag = open.getTagNameNode()?.getText();
       if (tag !== "a") return;
@@ -585,7 +542,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React.lazy sin Suspense
     const usesLazy = sf.getDescendantsOfKind(SyntaxKind.CallExpression).some((call) => call.getExpression().getText() === "lazy" || call.getExpression().getText() === "React.lazy");
     if (usesLazy) {
       const hasSuspense = sf.getFullText().includes("<Suspense") || sf.getFullText().includes("React.Suspense");
@@ -594,8 +550,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Asignación a innerHTML en TS/TSX
-    // Intelligent: exclude test files, helpers, and legitimate plugin loading
     const isInnerHTMLTestFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath) || /\/(tests?|__tests__|helpers)\/.*dom\./i.test(filePath);
     const isPluginLoader = /(leaflet|mapbox|google.*maps|chart.*plugin)/i.test(sf.getFullText().substring(0, 500));
 
@@ -607,7 +561,6 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       });
     }
-    // React: componentes que deberían usar React.memo
     sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach((fn) => {
       const name = fn.getName();
       if (!name || !/^[A-Z]/.test(name)) return;
@@ -616,7 +569,6 @@ function runFrontendIntelligence(project, findings, platform) {
       const hasProps = props[0].getTypeNode();
       if (!hasProps) return;
 
-      // Componente con props pero sin memoización
       const isMemoized = sf.getImportDeclarations().some((imp) =>
         imp.getModuleSpecifierValue() === "react" &&
         imp.getNamedImports().some((n) => n.getName() === "memo")
@@ -631,7 +583,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React: callbacks sin useCallback
     const useCallbackCalls = sf.getDescendantsOfKind(SyntaxKind.CallExpression).filter((call) => {
       const expr = call.getExpression().getText();
       return expr === "useCallback";
@@ -653,11 +604,9 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // React: cálculos costosos sin useMemo (SOLO en componentes React, no en servicios)
     if (isComponent) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const expr = call.getExpression().getText();
-        // Métodos que podrían ser costosos: filter, map, reduce, sort, etc.
         if (/\.(filter|map|reduce|sort|find|some|every|includes)\(/.test(expr)) {
           const parent = call.getParent();
           if (parent && parent.getKind && parent.getKind() === SyntaxKind.VariableDeclaration) {
@@ -688,7 +637,6 @@ function runFrontendIntelligence(project, findings, platform) {
           parent.getKind() === SyntaxKind.TypeLiteral
         );
 
-        // Exclude technical strings (CSS, test IDs, storage keys, commands)
         const isCssClass = /^(bg-|text-|border-|shadow-|rounded|flex|grid|hover:|focus:|dark:|animate-|transition|space-|gap-|p-|m-|w-|h-|opacity-|cursor-|overflow-|absolute|relative|fixed|sticky|top-|left-|right-|bottom-|z-|from-|to-|via-)/.test(text);
         const isTestId = /^(data-testid|aria-|role)/.test(text) || text.includes('-banner') || text.includes('-button') || text.includes('-modal');
         const isStorageKey = text.endsWith('Position') || text.endsWith('State') || text.endsWith('Cache') || text.endsWith('Token');
@@ -743,7 +691,6 @@ function runFrontendIntelligence(project, findings, platform) {
       pushFinding("frontend.i18n.fallback_locale", "info", sf, sf, "Fallback locale not configured (heuristic)", findings);
     }
 
-    // Estado: estado global sin Zustand
     const hasZustand = sf.getImportDeclarations().some((imp) =>
       imp.getModuleSpecifierValue().includes("zustand") ||
       imp.getModuleSpecifierValue().includes("zustand/")
@@ -757,12 +704,10 @@ function runFrontendIntelligence(project, findings, platform) {
       call.getExpression().getText() === "React.createContext"
     );
 
-    // Si hay estado global pero no usa Zustand
     if ((hasRedux || hasContext) && !hasZustand) {
       pushFinding("frontend.state.missing_zustand", "info", sf, sf, "Consider using Zustand for global state management (simpler than Redux/Context)", findings);
     }
 
-    // Estado: server state sin React Query
     const hasReactQuery = sf.getImportDeclarations().some((imp) =>
       imp.getModuleSpecifierValue().includes("@tanstack/react-query") ||
       imp.getModuleSpecifierValue().includes("react-query")
@@ -777,8 +722,6 @@ function runFrontendIntelligence(project, findings, platform) {
       pushFinding("frontend.state.missing_react_query", "warning", sf, sf, "Server state management without React Query - consider using for caching and synchronization", findings);
     }
 
-    // Styling: estilos sin Tailwind
-    // Detectar uso real de Tailwind (className con clases de utilidad O imports de clsx/cn)
     const hasTailwindImport = sf.getImportDeclarations().some((imp) =>
       imp.getModuleSpecifierValue().includes("tailwind") ||
       imp.getModuleSpecifierValue().includes("clsx") ||
@@ -790,7 +733,6 @@ function runFrontendIntelligence(project, findings, platform) {
     });
     const hasTailwind = hasTailwindImport || hasClassNameUsage;
 
-    // Solo inline styles reales (style={{...}})
     const hasInlineStyles = sf.getDescendantsOfKind(SyntaxKind.JsxAttribute).some((attr) => {
       const name = attr.getNameNode()?.getText();
       return name === "style";
@@ -804,7 +746,6 @@ function runFrontendIntelligence(project, findings, platform) {
       pushFinding("frontend.styling.missing_tailwind", "info", sf, sf, "Consider using Tailwind CSS for consistent utility-first styling", findings);
     }
 
-    // Integración Backend: loading states
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr === "fetch" || expr.includes("axios") || expr.includes("useQuery")) {
@@ -815,7 +756,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Integración Backend: retry logic
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr === "fetch" || expr.includes("axios")) {
@@ -825,7 +765,6 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       }
     });
-    // API routes: missing Cache-Control header
     if (/\/app\/api\//.test(filePath) || /\/pages\/api\//.test(filePath)) {
       const txt = sf.getFullText();
       const usesResponse = /NextResponse|Response/.test(txt);
@@ -835,13 +774,11 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Next.js: app router migration checks
     const hasAppRouter = sf.getFullText().includes("app/") || sf.getFullText().includes("layout.tsx") || sf.getFullText().includes("page.tsx");
     if (hasAppRouter) {
       pushFinding("frontend.nextjs.app_router", "info", sf, sf, "Using Next.js App Router - good for modern React Server Components", findings);
     }
 
-    // Route handlers and server data fetching
     if (/\/app\/api\//.test(filePath) && filePath.endsWith('.ts')) {
       const hasHandler = /export\s+const\s+(GET|POST|PUT|DELETE|PATCH)\s*=/.test(sf.getFullText());
       if (!hasHandler) {
@@ -857,26 +794,21 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // TypeScript: strict mode checks
     const hasStrict = sf.getFullText().includes('"strict": true') || sf.getFullText().includes("'strict': true");
     if (!hasStrict && sf.getFullText().includes("tsconfig.json")) {
       pushFinding("frontend.typescript.strict_mode", "warning", sf, sf, "TypeScript strict mode not enabled - consider enabling for better type safety", findings);
     }
 
-    // TypeScript any type usage detection
     sf.getDescendantsOfKind(SyntaxKind.AnyKeyword).forEach((anyKeyword) => {
       pushFinding("frontend.typescript.any_usage", "warning", sf, anyKeyword, "Usage of 'any' type - prefer specific types for better type safety", findings);
     });
 
-    // TypeScript: implicit any parameters
     sf.getDescendantsOfKind(SyntaxKind.Parameter).forEach((param) => {
       if (!param.getTypeNode()) {
         pushFinding("frontend.typescript.implicit_any", "warning", sf, param, "Parameter without explicit type - add type annotation", findings);
       }
     });
 
-    // CRITICAL: Catch blocks sin tipo explícito (implicit any en error)
-    // Only applies to TypeScript files (.ts), not JavaScript (.js)
     if (filePath.endsWith('.ts') && !filePath.endsWith('.d.ts')) {
       sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
         const varDecl = catchClause.getVariableDeclaration();
@@ -896,7 +828,6 @@ function runFrontendIntelligence(project, findings, platform) {
       });
     }
 
-    // CRITICAL: void err / void error anti-pattern
     sf.getDescendantsOfKind(SyntaxKind.ExpressionStatement).forEach((stmt) => {
       const text = stmt.getText().trim();
       if (/^void\s+(err|error)\s*;?\s*$/.test(text)) {
@@ -911,7 +842,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // HIGH: unknown usado sin type guards
     sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration).forEach((varDecl) => {
       const typeNode = varDecl.getTypeNode();
       if (typeNode && typeNode.getText() === 'unknown') {
@@ -935,7 +865,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // MEDIUM: console.error en catch blocks (debería usar error state)
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression();
       if (expr.getKind() === SyntaxKind.PropertyAccessExpression) {
@@ -956,7 +885,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Forms: React Hook Form validation
     const hasReactHookForm = sf.getImportDeclarations().some((imp) =>
       imp.getModuleSpecifierValue().includes("react-hook-form")
     );
@@ -969,7 +897,6 @@ function runFrontendIntelligence(project, findings, platform) {
       pushFinding("frontend.forms.missing_react_hook_form", "info", sf, sf, "Forms without React Hook Form - consider using for better form management and validation", findings);
     }
 
-    // Forms: Zod validation schema
     const hasZod = sf.getImportDeclarations().some((imp) =>
       imp.getModuleSpecifierValue().includes("zod")
     );
@@ -977,7 +904,6 @@ function runFrontendIntelligence(project, findings, platform) {
       pushFinding("frontend.forms.missing_zod", "info", sf, sf, "React Hook Form without Zod - consider using Zod for type-safe form validation", findings);
     }
 
-    // Performance: code splitting
     const hasDynamicImport = sf.getDescendantsOfKind(SyntaxKind.CallExpression).some((call) => {
       const expr = call.getExpression().getText();
       return expr === "import" || expr.includes("next/dynamic");
@@ -988,7 +914,6 @@ function runFrontendIntelligence(project, findings, platform) {
       pushFinding("frontend.performance.missing_code_splitting", "info", sf, sf, "Large component without code splitting - consider lazy loading with React.lazy or next/dynamic", findings);
     }
 
-    // Performance: virtualization for large lists
     sf.getDescendantsOfKind(SyntaxKind.JsxElement).forEach((jsx) => {
       const tag = jsx.getOpeningElement()?.getTagNameNode()?.getText();
       if (tag && (tag.includes("List") || tag.includes("Grid") || tag === "ul" || tag === "ol")) {
@@ -1003,20 +928,17 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Tamaño de archivo (heurístico)
     const totalLines = sf.getText().split(/\r?\n/).length;
     if (totalLines > 500) {
       pushFinding("frontend.file.too_large", "info", sf, sf, `Large TSX file (${totalLines} lines)`, findings);
     }
 
-    // Security: dangerouslySetInnerHTML
     sf.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
       const name = attr.getNameNode()?.getText();
       if (name === "dangerouslySetInnerHTML") {
         pushFinding("frontend.security.dangerous_html", "warning", sf, attr, "dangerouslySetInnerHTML usage - ensure HTML is sanitized to prevent XSS attacks", findings);
       }
     });
-    // Styling: inline style usage
     sf.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
       const n = attr.getNameNode()?.getText();
       if (n === "style") {
@@ -1025,21 +947,17 @@ function runFrontendIntelligence(project, findings, platform) {
         const isChartComponent = /Chart|Legend/.test(filePath);
         const isSvgElement = ['Label', 'text', 'circle', 'path', 'rect', 'line'].includes(elementName);
 
-        // Skip dynamic colors in chart components (backgroundColor, color with variables)
         const styleValue = attr.getInitializer()?.getText() || '';
-        // Match: { color }, { backgroundColor: x }, fill={x}
         const hasDynamicColorProp = /\{\s*(backgroundColor|color|fill)[\s:}]/.test(styleValue);
         const isChartFile = /Chart|Legend|chart/.test(filePath);
         const isDynamicColor = hasDynamicColorProp && isChartFile;
 
-        // Skip if it's SVG attributes or dynamic chart colors
         if (!isSvgElement && !isDynamicColor) {
           pushFinding("frontend.styling.inline_style", "warning", sf, attr, "Inline style detected - prefer className with Tailwind/CSS Modules", findings);
         }
       }
     });
 
-    // Security: inline event handlers
     sf.getDescendantsOfKind(SyntaxKind.JsxAttribute).forEach((attr) => {
       const name = attr.getNameNode()?.getText();
       const value = attr.getInitializer()?.getText();
@@ -1048,7 +966,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Security: HTTPS always (intelligent detection)
     const isConfigFile = /\.(config|spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
     sf.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach((str) => {
       const text = str.getLiteralValue();
@@ -1064,19 +981,16 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // Testing: missing test files
     const isTest = isTestFile(filePath);
     if (!isTest && sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).some((fn) =>
       fn.getName() && /^[A-Z]/.test(fn.getName())
     )) {
-      // Check if corresponding test file exists
       const testFilePath = filePath.replace(/\.tsx?$/, `.test.$&`);
       if (!fs.existsSync(testFilePath)) {
         pushFinding("frontend.testing.missing_tests", "info", sf, sf, `Missing test file: ${testFilePath}`, findings);
       }
     }
 
-    // Testing: React Testing Library over Enzyme
     if (isTest) {
       const hasRTL = sf.getImportDeclarations().some((imp) =>
         imp.getModuleSpecifierValue().includes("@testing-library/react")
@@ -1090,7 +1004,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Testing: MSW for API mocking
     if (isTest) {
       const hasMSW = sf.getImportDeclarations().some((imp) =>
         imp.getModuleSpecifierValue().includes("msw")
@@ -1126,14 +1039,11 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🎯 SOLID PRINCIPLES (CRITICAL)
     // ==========================================
 
     const content = sf.getFullText();
 
-    // 1. SRP (Single Responsibility Principle)
 
-    // Multiple components in one file
     const componentPattern = /^(export\s+)?(?:const|function)\s+([A-Z]\w+)\s*[=:].*(?:React\.FC|JSX\.Element|\(\)\s*=>|function)/gm;
     const components = Array.from(content.matchAll(componentPattern));
     if (components.length > 3 && !filePath.includes('.stories.') && !filePath.includes('index.tsx')) {
@@ -1147,12 +1057,10 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // God component (too many hooks/functions)
     if (components.length >= 1) {
       components.forEach((compMatch) => {
         const componentName = compMatch[2];
         const componentStart = compMatch.index || 0;
-        // Find component body end
         const componentEnd = content.indexOf('\n}\n', componentStart) || content.length;
         const componentBody = content.substring(componentStart, componentEnd);
 
@@ -1173,9 +1081,7 @@ function runFrontendIntelligence(project, findings, platform) {
       });
     }
 
-    // 2. OCP (Open/Closed Principle)
 
-    // Large switch/if-else chains that should be lookup tables or strategies
     const switchPattern = /switch\s*\([^)]+\)\s*\{[\s\S]{300,}?\}/g;
     let switchMatch;
     while ((switchMatch = switchPattern.exec(content)) !== null) {
@@ -1193,7 +1099,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // If-else chains for component rendering
     const ifElseRenderPattern = /if\s*\([^)]+\)\s*\{[\s\S]{50,}?return\s+<[\s\S]{50,}?else\s+if\s*\([^)]+\)\s*\{[\s\S]{50,}?return\s+</g;
     if (ifElseRenderPattern.test(content)) {
       pushFinding(
@@ -1206,16 +1111,13 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // 3. LSP (Liskov Substitution Principle)
 
-    // Component extends base but changes interface dramatically
     const extendsPattern = /(?:interface|type)\s+(\w+Props)\s+extends\s+(\w+Props)/g;
     let extendsMatch;
     while ((extendsMatch = extendsPattern.exec(content)) !== null) {
       const childProps = extendsMatch[1];
       const parentProps = extendsMatch[2];
 
-      // Check if child adds required props (narrows contract)
       const propsDefStart = content.indexOf(extendsMatch[0]);
       const propsDefEnd = content.indexOf('}', propsDefStart);
       const propsDef = content.substring(propsDefStart, propsDefEnd);
@@ -1234,9 +1136,7 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // 4. ISP (Interface Segregation Principle)
 
-    // Fat interface/props (too many properties)
     const propsInterfacePattern = /(?:interface|type)\s+(\w+Props)\s*\{([^}]{200,})\}/g;
     let propsMatch;
     while ((propsMatch = propsInterfacePattern.exec(content)) !== null) {
@@ -1257,9 +1157,7 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // 5. DIP (Dependency Inversion Principle)
 
-    // Component directly depends on concrete API/service implementation
     if (filePath.includes('/components/') || filePath.includes('/presentation/')) {
       const concreteImports = ['axios', 'fetch', 'localStorage', 'sessionStorage', '@supabase/supabase-js'];
       concreteImports.forEach((concrete) => {
@@ -1277,7 +1175,6 @@ function runFrontendIntelligence(project, findings, platform) {
       });
     }
 
-    // Hook depends on concrete service (should receive interface)
     if (filePath.includes('/hooks/') || /^use[A-Z]/.test(path.basename(filePath))) {
       if (content.includes('new ') && (content.includes('Service(') || content.includes('Client(') || content.includes('Api('))) {
         pushFinding(
@@ -1292,12 +1189,9 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🏛️ CLEAN ARCHITECTURE (CRITICAL)
     // ==========================================
 
-    // Layer violations
 
-    // Presentation importing from infrastructure details
     if (filePath.includes('/presentation/') || filePath.includes('/components/')) {
       const forbiddenImports = ['axios', 'supabase', 'prisma', 'mongoose', 'fetch'];
       forbiddenImports.forEach((forbidden) => {
@@ -1314,7 +1208,6 @@ function runFrontendIntelligence(project, findings, platform) {
       });
     }
 
-    // Business logic in components (should be in use-cases)
     if (filePath.includes('/components/') || filePath.includes('/pages/') || filePath.includes('/app/') && filePath.endsWith('.tsx')) {
       const businessPatterns = [
         /fetch\s*\(/,
@@ -1345,7 +1238,6 @@ function runFrontendIntelligence(project, findings, platform) {
       });
     }
 
-    // Wrong directory structure
     if (filePath.includes('/utils/') || filePath.includes('/helpers/') || filePath.includes('/lib/')) {
       if (!filePath.includes('node_modules') && filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
         pushFinding(
@@ -1359,7 +1251,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Repository implementation not in infrastructure
     if ((content.includes('Repository') || content.includes('Api')) &&
       content.includes('class ') &&
       !filePath.includes('/infrastructure/')) {
@@ -1374,11 +1265,9 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🧪 BDD/TDD PATTERNS
     // ==========================================
 
     if (isTestFile(filePath)) {
-      // Missing Given-When-Then structure in test names
       const testPattern = /(?:it|test)\s*\(\s*['"`]([^'"`]+)['"`]/g;
       let testMatch;
       const testNames = [];
@@ -1389,7 +1278,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
 
       testNames.forEach((test) => {
-        // Check BDD naming: should contain "given/when/then" or "should"
         const hasBDDStructure = /given|when|then|should/i.test(test.name);
         const isDescriptive = test.name.length > 20;
 
@@ -1406,7 +1294,6 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       });
 
-      // makeSUT pattern missing
       if (!content.includes('makeSUT') && !content.includes('createSUT') && !content.includes('setup')) {
         const hasMultipleTests = testNames.length > 3;
         if (hasMultipleTests) {
@@ -1421,7 +1308,6 @@ function runFrontendIntelligence(project, findings, platform) {
         }
       }
 
-      // Mocks over spies
       if (content.includes('jest.mock') && !content.includes('jest.spyOn')) {
         pushFinding(
           "frontend.bdd.prefer_spies",
@@ -1433,7 +1319,6 @@ function runFrontendIntelligence(project, findings, platform) {
         );
       }
 
-      // Mocks in production code
       if (!isTestFile(filePath) && (content.includes('Mock') || content.includes('Stub') || content.includes('Fake')) && content.includes('export')) {
         pushFinding(
           "frontend.testing.mock_in_production",
@@ -1447,10 +1332,8 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 📝 CODE QUALITY (Autodescriptive Names, Clean Code)
     // ==========================================
 
-    // No comments rule (except JSDoc, TODO, FIXME, eslint)
     const commentPattern = /\/\/(?!\s*TODO:)(?!\s*FIXME:)(?!\s*eslint-)(?!\s*@ts-)(?!\s*prettier-)[\s]*\w{3,}[^\n]{15,}/g;
     let commentMatch;
     let commentCount = 0;
@@ -1469,7 +1352,6 @@ function runFrontendIntelligence(project, findings, platform) {
       commentCount++;
     }
 
-    // Early returns / Guard clauses missing (nested if-else)
     const nestedIfPattern = /if\s*\([^)]+\)\s*\{[^}]*if\s*\([^)]+\)\s*\{[^}]*if\s*\([^)]+\)\s*\{/g;
     if (nestedIfPattern.test(content)) {
       pushFinding(
@@ -1491,7 +1373,6 @@ function runFrontendIntelligence(project, findings, platform) {
       const number = magicMatch[0].trim();
       const lineNumber = content.substring(0, magicMatch.index).split('\n').length;
 
-      // Skip common false positives
       if (!['1000', '2000', '3000', '5000', '10000'].includes(number.trim()) || content.substring(magicMatch.index - 20, magicMatch.index).includes('Date')) {
         pushFinding(
           "frontend.code_quality.magic_number",
@@ -1505,7 +1386,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // Callback hell (more than 3 nested callbacks)
     const callbackPattern = /\([^)]*\)\s*=>\s*\{[^}]*\([^)]*\)\s*=>\s*\{[^}]*\([^)]*\)\s*=>\s*\{/g;
     if (callbackPattern.test(content)) {
       pushFinding(
@@ -1519,10 +1399,8 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🌐 DDD (Domain-Driven Design)
     // ==========================================
 
-    // Technical grouping vs feature-first
     if ((filePath.includes('/models/') || filePath.includes('/views/') || filePath.includes('/controllers/')) &&
       !filePath.includes('/features/') && !filePath.includes('/domain/')) {
       pushFinding(
@@ -1535,7 +1413,6 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // Anemic domain models (entities with only getters/setters, no behavior)
     if (filePath.includes('/domain/') || filePath.includes('/entities/')) {
       const hasClass = content.includes('class ');
       const hasInterface = content.includes('interface ') || content.includes('type ');
@@ -1554,10 +1431,8 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🔴 SPRINT 1 CRITICAL SECURITY & QUALITY
     // ==========================================
 
-    // 1. XSS Prevention - dangerouslySetInnerHTML without DOMPurify
     if (content.includes('dangerouslySetInnerHTML')) {
       const hasDOMPurify = content.includes('DOMPurify') || content.includes('sanitize');
 
@@ -1573,7 +1448,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // 2. useEffect Cleanup - missing cleanup for subscriptions
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const callText = call.getText();
 
@@ -1622,7 +1496,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // 4. useCallback Dependencies - incorrect dependency array
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const callText = call.getText();
 
@@ -1653,7 +1526,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // 5. Hook Call Order - hooks after conditional
     const functionComponents = sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration)
       .concat(sf.getDescendantsOfKind(SyntaxKind.ArrowFunction))
       .filter(fn => {
@@ -1689,7 +1561,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     });
 
-    // 6. Token Placement - auth tokens in URLs
     const tokenInURLPattern = /(\?|&)(token|auth|key|apikey|api_key|access_token)=[a-zA-Z0-9_\-\.]+/gi;
     let tokenMatch;
 
@@ -1706,7 +1577,6 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // 7. CSP Headers Enhancement (check in middleware/layout)
     if (filePath.includes('/app/layout') || filePath.includes('/middleware')) {
       const hasCSP = content.includes('Content-Security-Policy') ||
         content.includes('contentSecurityPolicy');
@@ -1724,10 +1594,8 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🟡 SPRINT 2 HIGH ARCHITECTURE & PERFORMANCE
     // ==========================================
 
-    // 1. Server Component Enforcement - use client only when needed
     const hasUseClientDirective = content.includes("'use client'") || content.includes('"use client"');
     const hasHooks = content.includes('useState') || content.includes('useEffect');
     const hasEventHandlers = content.includes('onClick') || content.includes('onChange');
@@ -1743,7 +1611,6 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // 2. React.memo Justification - premature optimization
     if (content.includes('React.memo(') || content.includes('memo(')) {
       const hasMemoJustification = content.includes('// memo:') || content.includes('/* memo:');
 
@@ -1759,7 +1626,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // 3. Next/Image for images
     if ((content.includes('<img ') || content.includes('<img>')) && !content.includes('<Image')) {
       pushFinding(
         "frontend.nextjs.missing_next_image",
@@ -1771,7 +1637,6 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // 4. Semantic HTML - div soup
     const divSoupPattern = /<div[^>]*>\\s*<div[^>]*>\\s*<div[^>]*>\\s*<div/g;
     if (divSoupPattern.test(content)) {
       pushFinding(
@@ -1784,7 +1649,6 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // 5. ARIA labels for inputs
     const inputWithoutLabelPattern = /<input[^>]*(?!aria-label|aria-labelledby)[^>]*>/g;
     let inputMatch;
     let inputCount = 0;
@@ -1802,7 +1666,6 @@ function runFrontendIntelligence(project, findings, platform) {
       inputCount++;
     }
 
-    // 6. Keyboard Navigation - missing onKeyDown
     if (content.includes('onClick') && !content.includes('onKeyDown') && !content.includes('onKeyPress')) {
       pushFinding(
         "frontend.accessibility.keyboard_navigation",
@@ -1814,7 +1677,6 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-    // 7. Virtual Scrolling - large lists without virtualization
     const largeListPattern = /\{.*\.map\(.*=>.*\).*\}/s;
     if (largeListPattern.test(content) && content.includes('.map(') && !content.includes('react-window') && !content.includes('react-virtualized')) {
       const mapCount = (content.match(/\.map\(/g) || []).length;
@@ -1831,7 +1693,6 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    // 8. Focus Management - modals without focus trap
     if ((content.includes('modal') || content.includes('Modal') || content.includes('dialog')) && !content.includes('focus') && !content.includes('ref')) {
       pushFinding(
         "frontend.accessibility.focus_trap",
@@ -1845,9 +1706,7 @@ function runFrontendIntelligence(project, findings, platform) {
 
   });
 
-  // ===== SPRINT 3 MEDIUM RULES (6) =====
 
-  // 1. UseState vs useReducer Rule
   const useStateCallsInComponent = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
     .filter(call => call.getExpression().getText() === 'useState');
 
@@ -1871,7 +1730,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   });
 
-  // 2. Context Overuse Rule
   const contextCreations = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
     .filter(call => call.getExpression().getText() === 'createContext');
 
@@ -1886,7 +1744,6 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // 3. Custom Hook Naming Rule
   sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
     const name = fn.getName();
     const body = fn.getBody()?.getText() || '';
@@ -1904,7 +1761,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   });
 
-  // 4. Bundle Size Monitoring Rule
   const hasLargeImports = fullText.includes('import * as') ||
     fullText.match(/import\s+\{[^}]{200,}\}/);
 
@@ -1919,7 +1775,6 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // 5. Error Boundary Rule
   if (content.includes('class') && content.includes('extends Component') &&
     !content.includes('componentDidCatch') && !content.includes('getDerivedStateFromError')) {
 
@@ -1937,7 +1792,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   }
 
-  // 6. Lazy Loading Strategy Rule
   const hasRoutes = content.includes('Route') || content.includes('router');
   const hasLazy = content.includes('React.lazy') || content.includes('dynamic(');
 
@@ -1952,9 +1806,7 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // ===== SPRINT 4 LOW RULES (12) =====
 
-  // 1. Metadata Completeness Rule
   if (sf.getFilePath().includes('layout.tsx') || sf.getFilePath().includes('page.tsx')) {
     const hasMetadata = content.includes('metadata') || content.includes('generateMetadata');
 
@@ -1970,7 +1822,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   }
 
-  // 2. Sitemap Generation Rule
   if (sf.getFilePath().includes('sitemap')) {
     const hasDynamicRoutes = content.includes('fetch') || content.includes('database');
 
@@ -1986,7 +1837,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   }
 
-  // 3. Robots Configuration Rule
   if (sf.getFilePath().includes('robots')) {
     const hasDisallow = content.includes('Disallow');
 
@@ -2002,7 +1852,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   }
 
-  // 4. PWA Manifest Rule
   if (sf.getFilePath().includes('manifest')) {
     const hasIcons = content.includes('icons');
     const hasThemeColor = content.includes('theme_color');
@@ -2019,7 +1868,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   }
 
-  // 5. Service Worker Rule
   if (content.includes('serviceWorker') && !content.includes('unregister')) {
     pushFinding(
       "frontend.pwa.missing_sw_unregister",
@@ -2031,7 +1879,6 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // 6. Lighthouse Score Rule
   if (sf.getFilePath().includes('lighthouse') || sf.getFilePath().includes('performance')) {
     const hasThresholds = content.includes('performance') && content.includes('accessibility');
 
@@ -2047,7 +1894,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   }
 
-  // 7. Web Vitals Monitoring Rule
   const hasWebVitals = content.includes('reportWebVitals') || content.includes('web-vitals');
   const hasAnalytics = content.includes('analytics') || content.includes('gtag');
 
@@ -2062,7 +1908,6 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // 8. Analytics Integration Rule
   if (sf.getFilePath().includes('layout') && !content.includes('analytics') && !content.includes('gtag')) {
     pushFinding(
       "frontend.monitoring.missing_analytics",
@@ -2074,7 +1919,6 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // 9. Error Tracking Rule
   if (sf.getFilePath().includes('error.tsx') && !content.includes('Sentry') && !content.includes('captureException')) {
     pushFinding(
       "frontend.monitoring.missing_error_tracking",
@@ -2086,7 +1930,6 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // 10. Feature Flag Rule
   if (content.includes('if (') && /feature|experiment|rollout|beta/i.test(content)) {
     const hasFeatureFlagLib = content.includes('unleash') || content.includes('launchdarkly') || content.includes('flagsmith');
 
@@ -2102,7 +1945,6 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   }
 
-  // 11. A/B Testing Rule
   if (content.includes('variant') && content.includes('Math.random')) {
     pushFinding(
       "frontend.devops.manual_ab_testing",
@@ -2114,7 +1956,6 @@ function runFrontendIntelligence(project, findings, platform) {
     );
   }
 
-  // 12. Cache Strategy Rule
   if (content.includes('fetch') && !content.includes('cache') && !content.includes('revalidate')) {
     const isFetchInServerComponent = content.includes('async function') && !content.includes('\'use client\'');
 

@@ -1,6 +1,3 @@
-// ===== Android AST INTELLIGENT ANALYZER =====
-// Comprehensive Kotlin AST analysis for Android
-// Covers: SOLID, Clean Architecture, Compose, Coroutines, Flow, Hilt, Room, Security
 
 const { AndroidAnalysisOrchestrator } = require('./AndroidAnalysisOrchestrator');
 

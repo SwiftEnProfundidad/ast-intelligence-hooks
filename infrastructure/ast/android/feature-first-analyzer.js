@@ -1,6 +1,3 @@
-// ===== FEATURE-FIRST ANALYZER - ANDROID =====
-// Based on rulesandroid.mdc specifications
-// Feature modules architecture for Android
 
 /**
  * Analyze Feature-First compliance for Android
@@ -27,9 +24,7 @@ function analyzeFeatureFirst(filePath, fileContent, findings, pushFileFinding) {
   imports.forEach((importPath, index) => {
     const targetFeature = detectFeatureFromImport(importPath);
 
-    // RULE 1: No cross-feature imports
     if (targetFeature && targetFeature !== feature) {
-      // Exception: core modules
       const isCoreModule = importPath.includes('.core.');
 
       if (!isCoreModule) {
@@ -48,11 +43,9 @@ function analyzeFeatureFirst(filePath, fileContent, findings, pushFileFinding) {
 }
 
 function detectFeature(filePath) {
-  // Android multi-module: feature/orders/, feature/users/
   const match = filePath.match(/\/feature\/([^\/]+)\//);
   if (match) return match[1];
 
-  // Alternative: feature-orders/, feature-users/
   const match2 = filePath.match(/\/feature-([^\/]+)\//);
   if (match2) return match2[1];
 
@@ -60,7 +53,6 @@ function detectFeature(filePath) {
 }
 
 function detectFeatureFromImport(importPath) {
-  // Import: com.ruralgo.feature.orders.domain...
   const match = importPath.match(/\.feature\.([^.]+)\./);
   if (match) return match[1];
 

@@ -98,7 +98,6 @@ function checkForTypeGuard(node) {
 }
 
 function runCommonIntelligence(project, findings) {
-  // STEP 1: Ejecutar reglas de workflow BDD → TDD
   try {
     const repoRoot = getRepoRoot();
     const workflowRules = new BDDTDDWorkflowRules(findings, repoRoot);
@@ -147,16 +146,12 @@ function runCommonIntelligence(project, findings) {
     });
 
     sf.getDescendantsOfKind(SyntaxKind.AnyKeyword).forEach((node) => {
-      // Apply same intelligent exclusions as TypeReference
 
-      // Exclusion 0: Utility scripts
       const isUtilityScript = /\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath);
       if (isUtilityScript) return;
 
-      // Exclusion 1: Third-party type definitions
       if (/node_modules|\.d\.ts$|@types/.test(filePath)) return;
 
-      // Exclusion 2: Event handlers
       const parent = node.getParent();
       if (parent?.getKind() === SyntaxKind.Parameter) {
         const paramText = parent.getText();
@@ -164,7 +159,6 @@ function runCommonIntelligence(project, findings) {
         if (/^(e|event|evt|args?|payload)$/i.test(paramName)) return;
       }
 
-      // Exclusion 3: Catch blocks
       const ancestors = node.getAncestors();
       const inCatchClause = ancestors.some(a => a.getKind() === SyntaxKind.CatchClause);
       if (inCatchClause) return;
@@ -178,17 +172,13 @@ function runCommonIntelligence(project, findings) {
     sf.getDescendantsOfKind(SyntaxKind.AsExpression).forEach((node) => {
       const nodeText = node.getText();
       if (nodeText.includes(' as any')) {
-        // Exclusion 0: Utility scripts
         const isUtilityScript = /\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath);
         if (isUtilityScript) return;
 
-        // Exclusion 1: Third-party
         if (/node_modules|\.d\.ts$|@types/.test(filePath)) return;
 
-        // Exclusion 2: Event handlers being cast
         if (/event|evt|handler/.test(nodeText.toLowerCase())) return;
 
-        // Exclusion 3: Catch blocks
         const ancestors = node.getAncestors();
         const inCatchClause = ancestors.some(a => a.getKind() === SyntaxKind.CatchClause);
         if (inCatchClause) return;
@@ -273,7 +263,6 @@ function runCommonIntelligence(project, findings) {
       const fullMatch = match[0];
       const credentialValue = match[2];
 
-      // Get full line context for intelligent detection
       const matchIndex = match.index || 0;
       const lineStart = full.lastIndexOf('\n', matchIndex) + 1;
       const lineEnd = full.indexOf('\n', matchIndex);
@@ -288,7 +277,6 @@ function runCommonIntelligence(project, findings) {
 
       const isTestContext = isSpecFile && /mock|jest\.fn|describe|it\(|beforeEach|afterEach/.test(full);
       const isTestFile = isSpecFile || /\/(tests?|__tests__|e2e|spec|playwright)\//i.test(filePath);
-      // Intelligent storage key detection: analyze context, not hardcoded words
       const hasStorageContext = (
         /localStorage|sessionStorage|AsyncStorage|getItem|setItem|removeItem/i.test(fullLine) ||
         /const\s+\w*(KEY|STORAGE|CACHE|Token|Key|Storage)\s*=/i.test(fullLine)
@@ -298,7 +286,6 @@ function runCommonIntelligence(project, findings) {
       const isStorageKey = (hasStorageContext || hasKeyNamingPattern || hasDescriptivePrefix) &&
         !/^eyJ/.test(credentialValue) && credentialValue.length < 50;
 
-      // Intelligent cache key detection: colon separator or known entity prefixes
       const isCacheKey = credentialValue.includes(':') || /^(?:products|orders|users|stores|cache|metrics|session):/i.test(credentialValue);
 
       const isConstantKey = /(?:const|let|var)\s+\w*(?:KEY|TOKEN|STORAGE)\s*=/i.test(fullLine) &&

@@ -26,21 +26,17 @@ function runFrontendIntelligence(project, findings, platform) {
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
-    // Skip if not Frontend platform
     if (platformOf(filePath) !== "frontend") return;
 
-    // Skip AST infrastructure files
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
 
     // =========================================================================
-    // ARCHITECTURE ANALYSIS (from rulesfront.mdc) - NIVEL 10/10
     // =========================================================================
     analyzeCleanArchitecture(sf, findings, pushFinding);
     analyzeDDD(sf, findings, pushFinding, project);
     analyzeFeatureFirst(sf, findings, pushFinding);
 
     // =========================================================================
-    // FORBIDDEN LITERALS ANALYSIS (null/undefined, magic numbers, type casts)
     // =========================================================================
     const forbiddenLiteralsAnalyzer = new FrontendForbiddenLiteralsAnalyzer();
     forbiddenLiteralsAnalyzer.analyze(sf, findings, pushFinding);

@@ -1,6 +1,3 @@
-// ===== AST ANDROID MODULE =====
-// Android-specific AST intelligence rules
-// Clean Architecture: Infrastructure Layer - Android AST Analysis
 
 const path = require('path');
 const glob = require('glob');
@@ -18,7 +15,6 @@ const { AndroidArchitectureDetector } = require(path.join(__dirname, 'analyzers/
  * @param {string} platform - Platform identifier
  */
 function runAndroidIntelligence(project, findings, platform) {
-  // STEP 0: Run Kotlin AST Intelligent Analyzer (PRIORITY)
   console.log(`[Android AST Intelligence] Running Kotlin AST analysis...`);
   const astAnalyzer = new AndroidASTIntelligentAnalyzer(findings);
   const { getRepoRoot } = require(path.join(__dirname, '../ast-core'));
@@ -34,7 +30,6 @@ function runAndroidIntelligence(project, findings, platform) {
   }
   console.log(`[Android AST Intelligence] Analyzed ${kotlinFiles.length} Kotlin files with AST`);
 
-  // STEP 1: Detect Architecture Pattern
   if (kotlinFiles.length > 0) {
     try {
       const architectureDetector = new AndroidArchitectureDetector(root);
@@ -43,7 +38,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
       console.log(`[Android Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
-      // Log warnings if any
       if (detectionSummary.warnings.length > 0) {
         detectionSummary.warnings.forEach(warning => {
           pushFinding('android.architecture.detection_warning', warning.severity.toLowerCase(), null, null, warning.message + '\n\n' + warning.recommendation, findings);
@@ -57,55 +51,45 @@ function runAndroidIntelligence(project, findings, platform) {
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
-    // Skip if not Android platform
     if (platformOf(filePath) !== "android") return;
 
-    // Skip AST infrastructure files (avoid self-analysis - they contain patterns that trigger rules)
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const text = call.getExpression().getText();
 
-      // Android: Security - hardcoded secrets
       if (text.includes("password") || text.includes("token") || text.includes("secret") || text.includes("key") || text.includes("api_key")) {
         if (!sf.getFullText().includes("BuildConfig") && !sf.getFullText().includes("EncryptedSharedPreferences") && !sf.getFullText().includes("Keystore")) {
           pushFinding("android.hardcoded_secrets", "critical", sf, call, "Hardcoded sensitive data - use EncryptedSharedPreferences, Keystore, or BuildConfig", findings);
         }
       }
 
-      // Android: Force unwrapping
       if (text.includes("!!")) {
         pushFinding("android.force_unwrapping", "critical", sf, call, "Force unwrapping (!) detected - use safe calls or null checks", findings);
       }
 
-      // Android: Java code in new files
       if (filePath.endsWith(".java") && !filePath.includes("legacy") && !filePath.includes("old")) {
         pushFinding("android.java_code", "critical", sf, sf, "Java file detected - use Kotlin for new development", findings);
       }
 
-      // Android: XML layouts
       if (filePath.includes("layout") && filePath.endsWith(".xml")) {
         pushFinding("android.xml_layouts", "critical", sf, sf, "XML layout detected - use Jetpack Compose for new UIs", findings);
       }
 
-      // Android: Singletons
       if (text.includes("Singleton") || text.includes("INSTANCE") || text.includes("getInstance()")) {
         pushFinding("android.singletons", "critical", sf, call, "Singleton pattern detected - use dependency injection instead", findings);
       }
 
-      // Android: Context leaks
       if (text.includes("this@") || text.includes("context") && (text.includes("static") || text.includes("companion"))) {
         pushFinding("android.context_leaks", "critical", sf, call, "Potential context leak - avoid storing context in static fields", findings);
       }
 
-      // Kotlin specific checks
       if (filePath.endsWith(".kt")) {
         // Null safety
         if (text.includes("Any?") || text.includes("Any!") || text.includes("as?")) {
           pushFinding("android.missing_null_safety", "high", sf, call, "Unsafe null handling - leverage Kotlin's null safety", findings);
         }
 
-        // Missing composable
         if (text.includes("@Composable") && !sf.getFullText().includes("@Preview")) {
           const hasPreview = sf.getDescendantsOfKind(SyntaxKind.Decorator).some(d =>
             d.expression?.expression?.escapedText === "Preview"
@@ -115,7 +99,6 @@ function runAndroidIntelligence(project, findings, platform) {
           }
         }
 
-        // Side effects in composable
         if (text.includes("@Composable") && (text.includes("LaunchedEffect") || text.includes("DisposableEffect"))) {
           if (!text.includes("key") || text.includes("Unit")) {
             pushFinding("android.side_effects_composable", "medium", sf, call, "Composable with side effects - specify proper keys for LaunchedEffect/DisposableEffect", findings);
@@ -127,7 +110,6 @@ function runAndroidIntelligence(project, findings, platform) {
           pushFinding("android.missing_entity", "medium", sf, call, "Entity not using data class - Room entities should be data classes", findings);
         }
 
-        // Missing ViewModel
         if (text.includes("ViewModel") && !sf.getFullText().includes("androidx.lifecycle.ViewModel")) {
           pushFinding("android.missing_viewmodel", "high", sf, call, "Custom ViewModel without extending androidx.lifecycle.ViewModel", findings);
         }
@@ -138,7 +120,6 @@ function runAndroidIntelligence(project, findings, platform) {
         }
       }
 
-      // Android specific patterns
       if (text.includes("findViewById")) {
         pushFinding("android.findviewbyid", "high", sf, call, "findViewById usage - use View Binding or Compose instead", findings);
       }
@@ -497,14 +478,12 @@ function runAndroidIntelligence(project, findings, platform) {
     });
   });
 
-  // CRITICAL: Android Kotlin Error Handling Rules (text-based analysis)
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
     if (platformOf(filePath) !== "android" || !filePath.endsWith('.kt')) return;
 
     const content = sf.getFullText();
 
-    // Kotlin: Empty catch blocks
     const emptyCatchPattern = /catch\s*\([^)]*\)\s*\{\s*\}/g;
     let match;
     while ((match = emptyCatchPattern.exec(content)) !== null) {
@@ -519,7 +498,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Kotlin: catch (e: Exception) - too generic
     const genericExceptionPattern = /catch\s*\(\s*\w+\s*:\s*Exception\s*\)/g;
     while ((match = genericExceptionPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -537,7 +515,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Kotlin: Force unwrapping (!!)
     const forceUnwrapPattern = /!!/g;
     while ((match = forceUnwrapPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -551,7 +528,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Kotlin: Any type used without type checking (equivalent to unknown sin guards)
     const anyTypePattern = /:\s*Any\b/g;
     while ((match = anyTypePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -574,12 +550,10 @@ function runAndroidIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // COMPREHENSIVE RULES FROM rulesandroid.mdc
     // ==========================================
 
     // 1. JETPACK COMPOSE
 
-    // findViewById usage (should use Compose)
     if (content.includes('findViewById')) {
       const lineNumber = content.indexOf('findViewById') ? content.substring(0, content.indexOf('findViewById')).split('\n').length : 1;
       pushFinding(
@@ -592,7 +566,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Missing @Composable annotation
     const composableFunctionPattern = /fun\s+([A-Z]\w+)\s*\([^)]*\)\s*\{[^}]*\b(Text|Button|Column|Row|Box|Card|LazyColumn)\b/g;
     while ((match = composableFunctionPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -609,7 +582,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Side effects without LaunchedEffect
     const sideEffectPattern = /@Composable[^{]*\{[^}]*\b(viewModel\.|repository\.|api\.)/g;
     while ((match = sideEffectPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -626,9 +598,7 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 2. DEPENDENCY INJECTION (HILT)
 
-    // Manual factories (should use @Inject)
     const factoryPattern = /object\s+\w+Factory|class\s+\w+Factory/g;
     while ((match = factoryPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -642,7 +612,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Missing @Inject constructor
     const viewModelPattern = /class\s+(\w+ViewModel)\s*\([^)]*\)/g;
     while ((match = viewModelPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -661,7 +630,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 3. COROUTINES
 
-    // GlobalScope usage (should use viewModelScope/lifecycleScope)
     if (content.includes('GlobalScope')) {
       const lineNumber = content.indexOf('GlobalScope') ? content.substring(0, content.indexOf('GlobalScope')).split('\n').length : 1;
       pushFinding(
@@ -674,7 +642,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Blocking calls in Main dispatcher
     const blockingCallsPattern = /Dispatchers\.Main[^}]*\b(Thread\.sleep|\.get\(\)|\.await\(\))/g;
     while ((match = blockingCallsPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -688,7 +655,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Missing withContext for dispatcher switch
     const suspendFunctionPattern = /suspend\s+fun\s+\w+[^{]*\{[^}]*\b(database|api|file|network)\b/g;
     while ((match = suspendFunctionPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -707,7 +673,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 4. FLOW
 
-    // LiveData in new code (should use Flow/StateFlow)
     if (content.includes('LiveData') && !filePath.includes('legacy') && !filePath.includes('migration')) {
       const lineNumber = content.indexOf('LiveData') ? content.substring(0, content.indexOf('LiveData')).split('\n').length : 1;
       pushFinding(
@@ -720,7 +685,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Flow without proper collection
     const flowPattern = /:\s*Flow</g;
     while ((match = flowPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -742,7 +706,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 5. ROOM DATABASE
 
-    // Raw SQL queries (should use @Query)
     const rawSqlPattern = /database\.execSQL|rawQuery\(/g;
     while ((match = rawSqlPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -756,7 +719,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // DAO without suspend functions
     if (content.includes('@Dao')) {
       const daoBlock = content.substring(content.indexOf('@Dao'));
       const hasSuspend = daoBlock.includes('suspend fun');
@@ -773,9 +735,7 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 6. STATE MANAGEMENT
 
-    // Mutable state without StateFlow
     const mutableStatePattern = /var\s+\w+\s*=\s*mutableListOf|var\s+\w+\s*=\s*mutableMapOf/g;
     while ((match = mutableStatePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -792,7 +752,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Direct state mutation (not using copy())
     const directMutationPattern = /\w+\.\w+\s*=\s*/g;
     let mutationCount = 0;
     while ((match = directMutationPattern.exec(content)) !== null && mutationCount < 3) {
@@ -811,9 +770,7 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 7. NETWORKING (RETROFIT)
 
-    // Synchronous network calls
     const retrofitCallPattern = /@GET|@POST|@PUT|@DELETE|@PATCH/g;
     while ((match = retrofitCallPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -830,7 +787,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Missing interceptors for auth
     if (content.includes('Retrofit.Builder()') && !content.includes('addInterceptor')) {
       const lineNumber = content.indexOf('Retrofit.Builder') ? content.substring(0, content.indexOf('Retrofit.Builder')).split('\n').length : 1;
       pushFinding(
@@ -845,7 +801,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 8. SECURITY
 
-    // SharedPreferences for sensitive data
     if (content.includes('SharedPreferences') && (content.includes('password') || content.includes('token') || content.includes('secret'))) {
       const lineNumber = content.indexOf('SharedPreferences') ? content.substring(0, content.indexOf('SharedPreferences')).split('\n').length : 1;
       if (!content.includes('EncryptedSharedPreferences')) {
@@ -860,7 +815,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Hardcoded API keys
     const apiKeyPattern = /api[_-]?key\s*=\s*"[^"]+"|BuildConfig\.\w*API\w*KEY\w*\s*=\s*"[^"]+"/gi;
     while ((match = apiKeyPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -876,9 +830,7 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 9. COMPOSE PERFORMANCE
 
-    // RecyclerView (should use LazyColumn)
     if (content.includes('RecyclerView') && !filePath.includes('legacy')) {
       const lineNumber = content.indexOf('RecyclerView') ? content.substring(0, content.indexOf('RecyclerView')).split('\n').length : 1;
       pushFinding(
@@ -891,7 +843,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // Missing remember for expensive calculations
     const composablePattern = /@Composable[^{]*\{[^}]*\b(filter|map|sortedBy|groupBy)\b/g;
     while ((match = composablePattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -910,7 +861,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 10. ARCHITECTURE
 
-    // God Activities (>500 lines)
     const activityPattern = /class\s+(\w+Activity)\s*:/g;
     while ((match = activityPattern.exec(content)) !== null) {
       const className = match[1];
@@ -931,7 +881,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Business logic in Activity/Composable
     if (content.includes('Activity') || content.includes('@Composable')) {
       const businessLogicPatterns = ['repository.', 'database.', 'api.', 'Retrofit'];
       businessLogicPatterns.forEach(pattern => {
@@ -954,7 +903,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 11. TESTING
 
-    // Missing tests for ViewModels
     if (content.includes('ViewModel') && !filePath.includes('Test') && !filePath.includes('Fake')) {
       const className = content.match(/class\s+(\w+ViewModel)/)?.[1];
       if (className) {
@@ -971,7 +919,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 12. LOCALIZATION
 
-    // Hardcoded strings (should use strings.xml)
     const hardcodedStringPattern = /Text\s*\(\s*text\s*=\s*"[^"]{5,}"\s*\)|text\s*=\s*"[^"]+"/g;
     let hardcodedCount = 0;
     while ((match = hardcodedStringPattern.exec(content)) !== null && hardcodedCount < 5) {
@@ -1006,7 +953,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 13. ACCESSIBILITY
 
-    // Missing contentDescription
     if (content.includes('Image(') && !content.includes('contentDescription')) {
       const imagePattern = /Image\s*\(/g;
       let imageCount = 0;
@@ -1027,7 +973,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Touch targets <48dp
     const modifierPattern = /Modifier\.size\s*\(\s*(\d+)\.dp\s*\)/g;
     while ((match = modifierPattern.exec(content)) !== null) {
       const size = parseInt(match[1]);
@@ -1044,9 +989,7 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 14. CODE ORGANIZATION
 
-    // Files >500 lines
     const lineCount = content.split('\n').length;
     if (lineCount > 500 && !filePath.includes('Generated')) {
       pushFinding(
@@ -1061,7 +1004,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 15. ANTI-PATTERNS
 
-    // AsyncTask (deprecated)
     if (content.includes('AsyncTask')) {
       const lineNumber = content.indexOf('AsyncTask') ? content.substring(0, content.indexOf('AsyncTask')).split('\n').length : 1;
       pushFinding(
@@ -1074,7 +1016,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // RxJava in new code
     if (content.includes('Observable<') || content.includes('Single<') || content.includes('Flowable<')) {
       if (!filePath.includes('legacy') && !filePath.includes('migration')) {
         const lineNumber = content.indexOf('Observable') || content.indexOf('Single') || content.indexOf('Flowable') ?
@@ -1090,7 +1031,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // Context leaks (Activity reference in long-lived object)
     const contextLeakPattern = /class\s+\w+\s*\([^)]*context:\s*Context\s*\)/g;
     while ((match = contextLeakPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -1109,7 +1049,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 16. LOGGING
 
-    // Log.d/Log.e without BuildConfig check
     const logPattern = /Log\.[dewi]\s*\(/g;
     while ((match = logPattern.exec(content)) !== null) {
       const lineNumber = content.substring(0, match.index).split('\n').length;
@@ -1128,7 +1067,6 @@ function runAndroidIntelligence(project, findings, platform) {
 
     // 17. SEALED CLASSES
 
-    // Missing sealed class for states
     if (content.includes('State') && content.includes('data class') && !content.includes('sealed')) {
       const stateClassPattern = /data\s+class\s+(\w*State)\s*\(/g;
       while ((match = stateClassPattern.exec(content)) !== null) {
@@ -1144,7 +1082,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 139. Java detection (NO Java in new code)
     const hasJavaFile = filePath.endsWith('.java');
     if (hasJavaFile && !filePath.includes('build/') && !filePath.includes('generated/')) {
       pushFinding(
@@ -1157,7 +1094,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 140. Extension functions usage
     if (!content.includes('fun ') || (!content.includes('fun String.') && !content.includes('fun Int.') && !content.includes('fun List.'))) {
       if ((content.match(/fun\s+\w+/g) || []).length > 10 && !filePath.includes('ViewModel')) {
         pushFinding(
@@ -1171,7 +1107,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 141. Scope functions (let, run, apply, also, with)
     const hasScopeFunctions = content.includes('.let {') || content.includes('.run {') || content.includes('.apply {');
     const hasNullChecks = (content.match(/if\s*\(\s*\w+\s*!=\s*null\s*\)/g) || []).length;
     if (hasNullChecks > 3 && !hasScopeFunctions) {
@@ -1185,7 +1120,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 142. Data classes for DTOs
     if ((content.includes('Response') || content.includes('Request') || content.includes('DTO')) &&
       content.includes('class') && !content.includes('data class')) {
       pushFinding(
@@ -1198,7 +1132,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 143. XML layouts (NO XML in new code)
     const hasXMLLayout = filePath.includes('/res/layout/') && filePath.endsWith('.xml');
     if (hasXMLLayout && !filePath.includes('navigation.xml')) {
       pushFinding(
@@ -1211,7 +1144,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 144. @Composable functions
     if (content.includes('@Composable') && !content.includes('fun ')) {
       pushFinding(
         "android.compose.composable_not_function",
@@ -1223,7 +1155,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 145. State hoisting in Compose
     if (content.includes('@Composable') && content.includes('var ') && content.includes('mutableStateOf')) {
       if (!content.includes('remember') && !content.includes('rememberSaveable')) {
         pushFinding(
@@ -1237,7 +1168,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 146. rememberSaveable for process death
     if (content.includes('remember {') && content.includes('mutableStateOf') && !content.includes('rememberSaveable')) {
       if (filePath.includes('Screen') || filePath.includes('Activity')) {
         pushFinding(
@@ -1251,7 +1181,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 147. LaunchedEffect for side effects
     if (content.includes('@Composable') && (content.includes('viewModel') || content.includes('repository'))) {
       if (content.includes('.collect') && !content.includes('LaunchedEffect')) {
         pushFinding(
@@ -1265,7 +1194,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 148. DisposableEffect for cleanup
     if (content.includes('@Composable') && (content.includes('Observer') || content.includes('Listener') || content.includes('register'))) {
       if (!content.includes('DisposableEffect')) {
         pushFinding(
@@ -1279,7 +1207,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 149. Modifier order (padding before background)
     if (content.includes('Modifier') && content.includes('.background(') && content.includes('.padding(')) {
       const modifierChainPattern = /\.background\([^)]+\)\.padding\(/g;
       if (modifierChainPattern.test(content)) {
@@ -1294,7 +1221,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 150. @Preview for development
     if (content.includes('@Composable') && !content.includes('@Preview') && !filePath.includes('ViewModel')) {
       const composableCount = (content.match(/@Composable/g) || []).length;
       if (composableCount > 0 && composableCount < 5) {
@@ -1309,7 +1235,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 151. Material 3 components
     if (content.includes('import androidx.compose.material.') && !content.includes('material3')) {
       pushFinding(
         "android.material.use_material3",
@@ -1321,7 +1246,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 152. Dark theme support
     if (content.includes('@Composable') && content.includes('Color(') && !content.includes('isSystemInDarkTheme')) {
       if ((content.match(/Color\(0x/g) || []).length > 3) {
         pushFinding(
@@ -1335,7 +1259,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 153. Adaptive layouts (WindowSizeClass)
     if (content.includes('@Composable') && (content.includes('Column') || content.includes('Row')) &&
       !content.includes('WindowSizeClass') && lineCount > 100) {
       pushFinding(
@@ -1348,7 +1271,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 154. Single Activity pattern
     if (content.includes('class') && content.includes('Activity') && !content.includes('MainActivity')) {
       const activityPattern = /class\s+(\w+Activity)\s*:/g;
       const activities = [];
@@ -1369,7 +1291,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 155. Navigation Compose
     if (content.includes('NavHost') && !content.includes('androidx.navigation.compose')) {
       pushFinding(
         "android.navigation.use_compose_navigation",
@@ -1381,7 +1302,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 156. StateFlow over LiveData
     if (content.includes('ViewModel') && content.includes('LiveData') && !content.includes('StateFlow')) {
       pushFinding(
         "android.architecture.use_stateflow",
@@ -1393,7 +1313,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 157. Hilt annotations
     if (filePath.includes('ViewModel') && !content.includes('@HiltViewModel') && content.includes('ViewModel()')) {
       pushFinding(
         "android.di.missing_hilt_viewmodel",
@@ -1405,7 +1324,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 158. @Inject constructor
     if (content.includes('class') && (content.includes('Repository') || content.includes('Service')) &&
       !content.includes('@Inject') && content.includes('constructor')) {
       pushFinding(
@@ -1418,7 +1336,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 159. @Module + @InstallIn
     if (content.includes('@Module') && !content.includes('@InstallIn')) {
       pushFinding(
         "android.di.missing_installin",
@@ -1430,7 +1347,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 160. viewModelScope usage
     if (content.includes('ViewModel') && content.includes('launch {') && !content.includes('viewModelScope')) {
       pushFinding(
         "android.coroutines.use_viewmodelscope",
@@ -1442,7 +1358,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 161. Dispatchers.IO for network/disk
     if (content.includes('suspend fun') && (content.includes('Room') || content.includes('Retrofit') || content.includes('File'))) {
       if (!content.includes('Dispatchers.IO') && !content.includes('withContext')) {
         pushFinding(
@@ -1456,7 +1371,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 162. supervisorScope for error isolation
     if (content.includes('async {') && !content.includes('supervisorScope') && (content.match(/async\s*\{/g) || []).length > 2) {
       pushFinding(
         "android.coroutines.use_supervisor_scope",
@@ -1468,7 +1382,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 163. Retrofit suspend functions
     if (content.includes('interface') && content.includes('@GET') && !content.includes('suspend fun')) {
       pushFinding(
         "android.networking.retrofit_not_suspend",
@@ -1480,7 +1393,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 164. OkHttp interceptors
     if (content.includes('Retrofit') && content.includes('Builder') && !content.includes('Interceptor')) {
       pushFinding(
         "android.networking.missing_interceptors",
@@ -1504,7 +1416,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 166. Certificate pinning
     if (content.includes('OkHttpClient') && content.includes('https') && !content.includes('CertificatePinner')) {
       if (content.includes('production') || content.includes('release')) {
         pushFinding(
@@ -1518,7 +1429,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 167. Room suspend functions in DAO
     if (content.includes('@Dao') && content.includes('fun ') && !content.includes('suspend fun')) {
       pushFinding(
         "android.persistence.dao_not_suspend",
@@ -1530,7 +1440,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 168. Flow<T> for observables
     if (content.includes('@Dao') && content.includes('@Query') && !content.includes('Flow<')) {
       const queryCount = (content.match(/@Query/g) || []).length;
       if (queryCount > 0) {
@@ -1545,7 +1454,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 169. @TypeConverter for custom types
     if (content.includes('@Entity') && (content.includes('Date') || content.includes('List<') || content.includes('Map<'))) {
       if (!content.includes('@TypeConverter')) {
         pushFinding(
@@ -1559,7 +1467,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 170. @Transaction for multi-query operations
     if (content.includes('@Dao') && (content.match(/@Query|@Insert|@Update|@Delete/g) || []).length > 2) {
       if (!content.includes('@Transaction')) {
         pushFinding(
@@ -1573,7 +1480,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 171. Immutable state (data class + copy())
     if (filePath.includes('ViewModel') && content.includes('data class') && content.includes('State')) {
       if (content.includes('var ') && !content.includes('private set')) {
         pushFinding(
@@ -1587,7 +1493,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 172. Single source of truth
     if (content.includes('ViewModel') && (content.match(/StateFlow|LiveData/g) || []).length > 5) {
       pushFinding(
         "android.architecture.too_many_state_sources",
@@ -1599,7 +1504,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 173. Coil for image loading
     if (content.includes('Glide') && content.includes('@Composable')) {
       pushFinding(
         "android.images.use_coil",
@@ -1611,7 +1515,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 174. JUnit5 over JUnit4
     if (filePath.includes('Test.kt') && content.includes('import org.junit.Test') && !content.includes('jupiter')) {
       pushFinding(
         "android.testing.use_junit5",
@@ -1623,7 +1526,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 175. MockK for Kotlin
     if (filePath.includes('Test.kt') && content.includes('mock') && !content.includes('MockK') && !content.includes('mockk')) {
       pushFinding(
         "android.testing.use_mockk",
@@ -1635,7 +1537,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 176. Turbine for Flow testing
     if (filePath.includes('Test.kt') && content.includes('Flow<') && !content.includes('turbine')) {
       pushFinding(
         "android.testing.use_turbine",
@@ -1647,7 +1548,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 177. Truth for assertions
     if (filePath.includes('Test.kt') && content.includes('assert') && !content.includes('assertThat')) {
       pushFinding(
         "android.testing.use_truth",
@@ -1659,7 +1559,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 178. runTest for coroutines
     if (filePath.includes('Test.kt') && content.includes('suspend fun') && !content.includes('runTest')) {
       pushFinding(
         "android.testing.use_runtest",
@@ -1671,7 +1570,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 179. EncryptedSharedPreferences
     if (content.includes('SharedPreferences') && !content.includes('Encrypted') &&
       (content.includes('token') || content.includes('password') || content.includes('secret'))) {
       pushFinding(
@@ -1684,7 +1582,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 180. ProGuard/R8 configuration
     if (filePath.includes('build.gradle') && content.includes('release') && !content.includes('minifyEnabled true')) {
       pushFinding(
         "android.security.missing_proguard",
@@ -1696,7 +1593,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 181. LazyColumn for lists
     if (content.includes('Column') && content.includes('items(') && !content.includes('LazyColumn')) {
       pushFinding(
         "android.performance.use_lazy_column",
@@ -1708,7 +1604,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 182. Paging 3 for large datasets
     if (content.includes('LazyColumn') && content.includes('items(') && !content.includes('Paging')) {
       if ((content.match(/items\(/g) || []).length > 0 && content.includes('repository')) {
         pushFinding(
@@ -1722,7 +1617,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 183. Baseline Profiles
     if (filePath.includes('build.gradle') && content.includes('compose') && !content.includes('baselineProfile')) {
       pushFinding(
         "android.performance.missing_baseline_profile",
@@ -1734,7 +1628,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 184. @Stable/@Immutable annotations
     if (content.includes('data class') && content.includes('@Composable') && !content.includes('@Stable') && !content.includes('@Immutable')) {
       if ((content.match(/data\s+class/g) || []).length > 2) {
         pushFinding(
@@ -1748,7 +1641,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 185. Immutable collections
     if (content.includes('StateFlow<List<') || content.includes('State<List<')) {
       if (!content.includes('kotlinx.collections.immutable')) {
         pushFinding(
@@ -1762,7 +1654,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 186. TalkBack support
     if (content.includes('@Composable') && (content.includes('Image') || content.includes('Icon')) &&
       !content.includes('contentDescription')) {
       const imageCount = (content.match(/Image\(|Icon\(/g) || []).length;
@@ -1778,7 +1669,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 187. Touch targets (48dp minimum)
     if (content.includes('Modifier') && content.includes('.size(') && !content.includes('.minimumInteractiveComponentSize()')) {
       const sizePattern = /\.size\((\d+)\.dp\)/g;
       while ((match = sizePattern.exec(content)) !== null) {
@@ -1810,7 +1700,6 @@ function runAndroidIntelligence(project, findings, platform) {
       }
     }
 
-    // 189. Kotlin DSL for Gradle
     if (filePath.endsWith('build.gradle') && !filePath.endsWith('.kts')) {
       pushFinding(
         "android.gradle.use_kotlin_dsl",
@@ -1822,7 +1711,6 @@ function runAndroidIntelligence(project, findings, platform) {
       );
     }
 
-    // 190. Version catalogs
     if (filePath.includes('build.gradle') && content.includes('implementation') && !content.includes('libs.')) {
       const depCount = (content.match(/implementation\s*\(/g) || []).length;
       if (depCount > 5) {
@@ -1840,7 +1728,6 @@ function runAndroidIntelligence(project, findings, platform) {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // SOLID PRINCIPLES ANALYSIS
   // ═══════════════════════════════════════════════════════════════
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
@@ -1852,7 +1739,6 @@ function runAndroidIntelligence(project, findings, platform) {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // FORBIDDEN LITERALS ANALYSIS (null/undefined, magic numbers, type casts)
   // ═══════════════════════════════════════════════════════════════
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
@@ -1864,7 +1750,6 @@ function runAndroidIntelligence(project, findings, platform) {
   });
 
   // ═══════════════════════════════════════════════════════════════
-  // RUN CUSTOM DETEKT RULES (188 Android-specific rules)
   // ═══════════════════════════════════════════════════════════════
   try {
     const kotlinFiles = project.getSourceFiles()
@@ -1874,7 +1759,6 @@ function runAndroidIntelligence(project, findings, platform) {
     if (kotlinFiles.length > 0) {
       const detektFindings = runDetektAnalysis(kotlinFiles);
 
-      // Add detekt findings to our findings array
       for (const finding of detektFindings) {
         findings.push({
           rule_id: finding.rule_id,

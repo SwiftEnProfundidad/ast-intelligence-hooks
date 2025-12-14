@@ -163,7 +163,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.networking.missing_network_security_config', 'high', file, 1, 1, 'AndroidManifest without networkSecurityConfig', findings);
       }
 
-      // NUEVAS REGLAS ANDROID (implementando las 60 pendientes)
 
       // Architecture
       if (/class\s+\w+Activity\b/.test(content) && content.split(/class\s+\w+Activity\b/).length > 3) {
@@ -179,7 +178,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.architecture.missing_clean_layers', 'info', file, 1, 1, 'File not in Clean Architecture layers (domain/data/presentation)', findings);
       }
 
-      // Clean Architecture layers
       if (file.includes('/domain/') && /(import\s+androidx\.|import\s+android\.)/.test(content)) {
         pushFileFinding('android.clean.domain_layer', 'high', file, 1, 1, 'Domain layer with Android framework dependencies - must be pure Kotlin', findings);
       }
@@ -258,7 +256,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.room.performance_issues', 'medium', file, 1, 1, 'Complex Room query - optimize with indices', findings);
       }
 
-      // State Management
       if (/@Composable\b/.test(content) && !/ViewModel\b/.test(content) && /var\s+\w+\s*=/.test(content)) {
         pushFileFinding('android.state.missing_viewmodel', 'medium', file, 1, 1, 'Composable with var state without ViewModel', findings);
       }
@@ -317,7 +314,6 @@ function runTextScanner(root, findings) {
         pushFileFinding('android.images.missing_coil', 'medium', file, 1, 1, 'Image loading without Coil async loader', findings);
       }
       if (/Glide\.with\(/.test(content)) {
-        // Alternative is OK
       } else if (/ImageView\b/.test(content) && !/Coil|Glide/.test(content)) {
         pushFileFinding('android.images.missing_glide', 'low', file, 1, 1, 'ImageView without Coil/Glide - consider async loading', findings);
       }
@@ -515,7 +511,6 @@ function runTextScanner(root, findings) {
       if (/\bextension\s+[A-Za-z_][A-Za-z0-9_]*\s*\{/.test(content)) iosHasAnyExtension = true;
       if (/\bpublic\s+(class|struct|enum|protocol|func|var)\b/.test(content)) iosPublicApiFound = true;
       if (/^\s*\/\/\/[^\n]*\n\s*public\s+(class|struct|enum|protocol|func|var)\b/m.test(content)) iosPublicApiDocsFound = true;
-      // Swift Package Manager heuristics from Package.swift
       if (path.basename(file) === 'Package.swift') {
         const targetCount = (content.match(/target\s*\(/g) || []).length + (content.match(/\.target\(/g) || []).length;
         if (targetCount < 2) {
@@ -539,7 +534,6 @@ function runTextScanner(root, findings) {
       if (/\bDispatchQueue\./.test(content)) {
         pushFileFinding('ios.dispatchqueue_old', 'low', file, 1, 1, 'DispatchQueue usage detected (prefer async/await)', findings);
       }
-      // UIKit ViewModel delegation heuristic
       if (/class\s+[A-Za-z0-9_]+ViewController\b/.test(content) && /(URLSession|Alamofire|NSPersistentContainer|NSManagedObjectContext)/.test(content)) {
         pushFileFinding('ios.uikit.viewmodel_delegation', 'medium', file, 1, 1, 'ViewController contains data/network logic (delegate to ViewModel)', findings);
       }
@@ -581,15 +575,12 @@ function runTextScanner(root, findings) {
       if (/(sleep\(|usleep\(|Thread\.sleep|CFRunLoopRunInMode)/.test(content)) {
         pushFileFinding('ios.performance.blocking_main_thread', 'high', file, 1, 1, 'Potential main-thread blocking call detected', findings);
       }
-      // Memory: delegate strong reference can cause leaks
       if (/\b(var|let)\s+\w*delegate\w*\s*:\s*[A-Za-z_][A-Za-z0-9_]*Delegate\??/.test(content) && !/\bweak\s+var\s+\w*delegate/.test(content)) {
         pushFileFinding('ios.memory.leaks', 'medium', file, 1, 1, 'Delegate property not weak (potential retain cycle)', findings);
       }
-      // Optionals: missing optional chaining
       if (/if\s+([A-Za-z_]\w*)\s*!=\s*nil\s*\{[\s\S]{0,120}?\1!\./.test(content)) {
         pushFileFinding('ios.optionals.missing_optional_chaining', 'medium', file, 1, 1, 'Use optional chaining instead of if != nil and force unwrap', findings);
       }
-      // Optionals: missing nil coalescing
       if (/([A-Za-z_]\w*)\s*!=\s*nil\s*\?\s*\1!\s*:\s*[^\n;]+/.test(content)) {
         pushFileFinding('ios.optionals.missing_nil_coalescing', 'medium', file, 1, 1, 'Prefer ?? over ternary with force unwrap', findings);
       }
@@ -605,39 +596,31 @@ function runTextScanner(root, findings) {
       if (/(Data\([^)]*contentsOf|write\(to\:)/.test(content) && !/FileManager\.default/.test(content)) {
         pushFileFinding('ios.persistence.missing_filemanager', 'medium', file, 1, 1, 'File operations without FileManager usage', findings);
       }
-      // Core Data migrations
       if (/(NSPersistentContainer|NSPersistentStoreCoordinator)/.test(content) && !/NSMigratePersistentStoresAutomaticallyOption|NSInferMappingModelAutomaticallyOption/.test(content)) {
         pushFileFinding('ios.persistence.migration', 'medium', file, 1, 1, 'Core Data without automatic migration options', findings);
       }
-      // Core Data performance
       if (/NSFetchRequest\s*<[^>]+>/.test(content) && !/fetchBatchSize|predicate\s*=/.test(content)) {
         pushFileFinding('ios.persistence.performance', 'low', file, 1, 1, 'NSFetchRequest without predicate/batch size hints', findings);
       }
-      // Security: ATS in Info.plist
       if (path.extname(file).toLowerCase() === '.plist' && /NSAppTransportSecurity/.test(content)) {
         if (/NSAllowsArbitraryLoads\s*<true\/>/.test(content)) {
           pushFileFinding('ios.security.missing_ats', 'high', file, 1, 'ATS allows arbitrary loads - enable HTTPS by default', findings);
         }
       }
-      // Security: SSL pinning heuristic
       if (/URLSession\b|Alamofire\b/.test(content)) iosHasNetworkingUsage = true;
       if (/URLSession\b/.test(content) && !/SecTrust|evaluateServerTrust|pinned|certificate/i.test(content)) {
         pushFileFinding('ios.security.missing_ssl_pinning', 'high', file, 1, 1, 'Networking without SSL pinning indicators', findings);
       }
       if (/ServerTrustManager|pinnedCertificates|SecTrustEvaluate|SecPolicyCreateSSL|evaluators\s*:\s*\[|AFServerTrustPolicy/.test(content)) iosHasPinningIndicator = true;
-      // Security: Keychain for sensitive values
       if (/UserDefaults\.standard\.(set|setValue)\([^,]+,\s*forKey\s*:\s*\"(password|token|secret|apiKey)/i.test(content)) {
         pushFileFinding('ios.security.missing_keychain', 'high', file, 1, 1, 'Sensitive data in UserDefaults - use Keychain', findings);
       }
-      // Security: Secure Enclave token for keys
       if (/(SecItemAdd|SecItemUpdate|SecKeyCreateRandomKey)\(/.test(content) && !/kSecAttrTokenIDSecureEnclave/.test(content)) {
         pushFileFinding('ios.security.missing_secure_enclave', 'high', file, 1, 1, 'Keychain/SecKey usage without Secure Enclave token', findings);
       }
-      // Security: Biometric capability presence (LAContext)
       if (/\bLAContext\b|evaluatePolicy\(/.test(content)) {
         iosHasBiometric = true;
       }
-      // Security: Jailbreak detection heuristics presence
       if (/(Cydia|Substrate|DYLD_INSERT_LIBRARIES|jailbreak|apt\.saurik|MobileSubstrate|libsubstitute|cydia:\/\/)/i.test(content)) {
         iosHasJailbreakCheck = true;
       }
@@ -649,7 +632,6 @@ function runTextScanner(root, findings) {
       if (/\.preferredColorScheme\(\.light\)/.test(content)) iosPreviewHasLight = true;
       if (/import\s+QuartzCore\b|CABasicAnimation|CASpringAnimation|CAKeyframeAnimation|UIViewPropertyAnimator/.test(content)) iosHasCoreAnimationRef = true;
       if (/withAnimation\(|\.animation\(/.test(content)) iosHasAnimationUsage = true;
-      // UI Testing: XCUITest usage and accessibility ids
       if (/class\s+\w+UITests\b/.test(content) && !/XCUIApplication\(\)/.test(content)) {
         pushFileFinding('ios.uitesting.missing_xcuitest', 'medium', file, 1, 1, 'UI tests missing XCUIApplication usage', findings);
       }
@@ -665,7 +647,6 @@ function runTextScanner(root, findings) {
           pushFileFinding('ios.ui_testing.test_recording', 'low', file, 1, 1, 'UITest looks like recording artifact (excessive .tap())', findings);
         }
       }
-      // Accessibility: labels, dynamic type, reduce motion
       if ((/Image\(/.test(content) || /Button\(/.test(content) || /TextField\(/.test(content)) && !/\.accessibilityLabel\(/.test(content)) {
         pushFileFinding('ios.accessibility.missing_labels', 'medium', file, 1, 1, 'UI elements without accessibilityLabel', findings);
       }
@@ -681,24 +662,19 @@ function runTextScanner(root, findings) {
       if (/GeometryReader\s*\{/.test(content)) {
         pushFileFinding('ios.swiftui.geometryreader_moderation', 'low', file, 1, 1, 'GeometryReader usage detected (use with moderation)', findings);
       }
-      // Memory pressure handling
       if (/NotificationCenter\.default\.addObserver\([\s\S]*didReceiveMemoryWarning/.test(content) || /UIApplication\.didReceiveMemoryWarningNotification/.test(content)) {
         iosHasMemoryWarningObserver = true;
       }
-      // Performance: cell reuse patterns
       if (/(UITableView|UICollectionView)/.test(content) && !/dequeueReusable(Cell|SupplementaryView)/.test(content)) {
         pushFileFinding('ios.performance.cell_reuse', 'medium', file, 1, 1, 'Collection/Table view usage without dequeueReusable*', findings);
       }
-      // Performance: memoization heuristics (heavy ops inside SwiftUI body)
       if (/var\s+body\s*:\s*some\s+View[\s\S]*\{[\s\S]*\}/m.test(content) && /(Data\([^)]*contentsOf|JSONSerialization|Date\(\)|UUID\(\)|FileManager\.default)/.test(content)) {
         pushFileFinding('ios.performance.missing_memoization', 'low', file, 1, 1, 'Potential heavy operation inside SwiftUI body without memoization', findings);
       }
-      // Performance: deep view hierarchy heuristic
       const vStackCount = (content.match(/\bVStack\s*\(/g) || []).length + (content.match(/\bHStack\s*\(/g) || []).length + (content.match(/\bZStack\s*\(/g) || []).length;
       if (vStackCount > 20) {
         pushFileFinding('ios.performance.view_hierarchy', 'low', file, 1, 1, 'Large number of nested stacks detected (consider simplifying hierarchy)', findings);
       }
-      // Performance: energy impact heuristics
       if (/CADisplayLink\s*\(/.test(content) || /CADisplayLink\.(add|init)/.test(content)) {
         pushFileFinding('ios.performance.energy_impact', 'low', file, 1, 1, 'CADisplayLink usage may impact energy', findings);
       }
@@ -711,7 +687,6 @@ function runTextScanner(root, findings) {
       if (/while\s*\(\s*true\s*\)/.test(content)) {
         pushFileFinding('ios.performance.energy_impact', 'medium', file, 1, 1, 'Potential infinite loop detected', findings);
       }
-      // Accessibility: keyboard navigation and focus management
       if (!/\.focusable\(|UIKeyCommand\b/.test(content)) {
         if (/(Button\(|TextField\(|List\(|ScrollView\()/.test(content)) {
           pushFileFinding('ios.accessibility.keyboard_navigation', 'low', file, 1, 1, 'Interactive elements without keyboard navigation hints', findings);
@@ -720,12 +695,10 @@ function runTextScanner(root, findings) {
       if (!/\.focused\(|becomeFirstResponder\(\)/.test(content) && /(TextField\(|UITextField\b)/.test(content)) {
         pushFileFinding('ios.accessibility.focus_management', 'low', file, 1, 1, 'Input elements without explicit focus management', findings);
       }
-      // Value Types: class where struct likely fits
       if (/\bclass\s+([A-Z][A-Za-z0-9_]*)\s*\{/.test(content) && !/:\s*[A-Za-z0-9_]+/.test(content) && !/(UIView|UIViewController|CALayer|NSObject)/.test(content)) {
         pushFileFinding('ios.values.reference_types_when_value', 'low', file, 1, 1, 'Class without inheritance – consider struct for value semantics', findings);
         pushFileFinding('ios.values.classes_instead_structs', 'low', file, 1, 1, 'Class without inheritance – prefer struct', findings);
       }
-      // Value Types: struct mutability heuristic
       if (/\bstruct\s+[A-Z][A-Za-z0-9_]*\b/.test(content)) {
         const varCount = (content.match(/\bvar\b/g) || []).length;
         const letCount = (content.match(/\blet\b/g) || []).length;
@@ -733,14 +706,12 @@ function runTextScanner(root, findings) {
           pushFileFinding('ios.values.mutability', 'low', file, 1, 1, 'Struct with excessive mutable properties (prefer let)', findings);
         }
       }
-      // Memory: zombies heuristics (observers not removed)
       if (/NotificationCenter\.default\.addObserver\(/.test(content) && !/NotificationCenter\.default\.removeObserver\(/.test(content)) {
         pushFileFinding('ios.memory.zombies', 'medium', file, 1, 1, 'Observer added without corresponding removeObserver', findings);
       }
       if (/addObserver\([^)]*forKeyPath\s*:\s*"[^"]+"/.test(content) && !/removeObserver\(/.test(content)) {
         pushFileFinding('ios.memory.zombies', 'medium', file, 1, 1, 'KVO addObserver without removeObserver', findings);
       }
-      // Memory: large allocations heuristics
       if (/Data\(count\s*:\s*(\d{7,})\)/.test(content) || /Array\(repeating\s*:\s*[^,]+,\s*count\s*:\s*(\d{6,})\)/.test(content)) {
         pushFileFinding('ios.memory.allocations', 'low', file, 1, 1, 'Large in-memory allocation detected', findings);
       }
@@ -811,13 +782,11 @@ function runTextScanner(root, findings) {
   }
 
   // ============================================
-  // ANDROID - COMPOSE PERFORMANCE (8 reglas)
   // ============================================
   const hasKotlinFiles = files.some(f => f.endsWith('.kt'));
   if (hasKotlinFiles) {
     const androidAnchorFile = files.find(f => f.endsWith('.kt')) || files[0];
 
-    // Concatenate all Kotlin content for global checks
     const kotlinFiles = files.filter(f => f.endsWith('.kt'));
     const allContent = kotlinFiles.map(f => {
       try { 
@@ -827,7 +796,6 @@ function runTextScanner(root, findings) {
       }
     }).join('\n');
 
-    // 1. @Stable/@Immutable annotations
     const hasStableAnnotation = /import\s+androidx\.compose\.runtime\.Stable|@Stable/.test(allContent);
     const hasImmutableAnnotation = /import\s+androidx\.compose\.runtime\.Immutable|@Immutable/.test(allContent);
     const hasComplexDataClasses = /data\s+class\s+\w+.*\{[\s\S]{100,}?\}/.test(allContent);
@@ -860,7 +828,6 @@ function runTextScanner(root, findings) {
         'Cálculos costosos (sortedBy, groupBy) sin derivedStateOf. Solo recalcular cuando cambien inputs', findings);
     }
 
-    // 4. LaunchedEffect keys
     const launchedEffectMatches = allContent.match(/LaunchedEffect\([^)]*\)/g) || [];
     const launchedEffectWithoutKey = launchedEffectMatches.filter(le =>
       le === 'LaunchedEffect(true)' || le === 'LaunchedEffect(Unit)'
@@ -880,7 +847,6 @@ function runTextScanner(root, findings) {
         'StateFlow<List<T>> sin kotlinx.collections.immutable puede causar re-renders innecesarios', findings);
     }
 
-    // 6. Skip recomposition - parámetros inmutables
     const composableFunctions = allContent.match(/@Composable[\s\S]*?fun\s+\w+\([^)]*\)/g) || [];
     const mutableParams = composableFunctions.filter(func =>
       func.includes('var ') || (func.includes(': MutableList') || func.includes(': ArrayList'))
@@ -891,7 +857,6 @@ function runTextScanner(root, findings) {
         `${mutableParams.length} Composables con parámetros mutables causan re-renders. Usar parámetros inmutables`, findings);
     }
 
-    // 7. @Stable/@Immutable en data classes
     const dataClassesUsedInComposables = allContent.match(/data\s+class\s+(\w+)/g) || [];
 
     if (dataClassesUsedInComposables.length > 5 && !hasStableAnnotation) {
@@ -899,7 +864,6 @@ function runTextScanner(root, findings) {
         `${dataClassesUsedInComposables.length} data classes sin @Stable annotation. Marcar para estabilidad`, findings);
     }
 
-    // 8. Unstable parameters detection
     const functionsWithClosureParams = composableFunctions.filter(func =>
       func.includes('() ->') || func.includes('(') && func.includes(') ->')
     );
@@ -910,7 +874,6 @@ function runTextScanner(root, findings) {
     }
 
     // ============================================
-    // ANDROID - MULTI-MODULE (7 reglas)
     // ============================================
     const hasSettingsGradle = files.some(f => f.endsWith('settings.gradle.kts') || f.endsWith('settings.gradle'));
     const settingsContent = hasSettingsGradle ?
@@ -938,7 +901,6 @@ function runTextScanner(root, findings) {
         ':app module faltante. Debe orquestar todos los feature modules', findings);
     }
 
-    // 4. Wrong dependencies (Feature → Feature)
     const buildGradleFiles = files.filter(f => f.endsWith('build.gradle.kts') || f.endsWith('build.gradle'));
     buildGradleFiles.forEach(buildFile => {
       const buildContent = fs.readFileSync(buildFile, 'utf-8');
@@ -949,13 +911,11 @@ function runTextScanner(root, findings) {
       }
     });
 
-    // 5. Dynamic features
     if (hasSettingsGradle && !settingsContent.includes('dynamicFeatures')) {
       pushFileFinding('android.multimodule.missing_dynamic_features', 'low', androidAnchorFile, 1, 1,
         'Sin dynamic features. Considerar para app bundles grandes (>150MB)', findings);
     }
 
-    // 6. Shared code violations
     const sharedFolders = files.filter(f => f.includes('/shared/') || f.includes('/common/'));
     if (sharedFolders.length > 10 && coreModules === 0) {
       pushFileFinding('android.multimodule.shared_code', 'medium', androidAnchorFile, 1, 1,
@@ -970,7 +930,6 @@ function runTextScanner(root, findings) {
     }
 
     // ============================================
-    // ANDROID - CI/CD (7 reglas)
     // ============================================
     const hasGitHubActions = files.some(f => f.includes('.github/workflows'));
     const hasGradleTasks = /task\s+\w+|tasks\.register/.test(allContent);
@@ -989,7 +948,6 @@ function runTextScanner(root, findings) {
         'Sin custom Gradle tasks. Crear tasks para assembleDebug, test, etc.', findings);
     }
 
-    // 3. Lint configuration
     if (!hasLintConfig) {
       pushFileFinding('android.cicd.missing_lint', 'medium', androidAnchorFile, 1, 1,
         'Sin lint.xml configuration. Lint warnings deben tratarse como errores', findings);
@@ -1001,7 +959,6 @@ function runTextScanner(root, findings) {
         'Sin Detekt para static analysis de Kotlin. Añadir para detectar code smells', findings);
     }
 
-    // 5. Firebase App Distribution
     const hasFastlane = files.some(f => f.includes('fastlane/Fastfile'));
     if (hasFastlane) {
       const fastlaneContent = fs.readFileSync(files.find(f => f.includes('fastlane/Fastfile')), 'utf-8');
@@ -1022,7 +979,6 @@ function runTextScanner(root, findings) {
       }
     }
 
-    // 7. Automated testing
     if (hasGitHubActions) {
       const workflowFiles = files.filter(f => f.includes('.github/workflows') && f.endsWith('.yml'));
       let hasTestsInWorkflow = false;
@@ -1041,7 +997,6 @@ function runTextScanner(root, findings) {
     }
 
     // ============================================
-    // ANDROID - JETPACK LIBRARIES (10 reglas)
     // ============================================
     const gradleFiles = buildGradleFiles.map(f => {
       try {
@@ -1056,7 +1011,6 @@ function runTextScanner(root, findings) {
 
     const allGradleContent = gradleFiles.map(g => g.content).join('\n');
 
-    // 1-8. Dependencias Jetpack
     const jetpackDeps = {
       'lifecycle-viewmodel-ktx': 'android.jetpack.missing_viewmodel',
       'navigation-compose': 'android.jetpack.missing_navigation',
@@ -1076,7 +1030,6 @@ function runTextScanner(root, findings) {
       }
     });
 
-    // 9. Outdated versions
     const versionMatches = allGradleContent.match(/androidx\.\w+:\w+:(\d+\.\d+\.\d+)/g) || [];
     const oldVersions = versionMatches.filter(v => {
       const version = v.match(/(\d+\.\d+\.\d+)/)?.[1];
@@ -1088,14 +1041,12 @@ function runTextScanner(root, findings) {
         `${oldVersions.length} dependencias Jetpack desactualizadas. Actualizar a versiones recientes`, findings);
     }
 
-    // 10. Compose compiler
     if (hasComposable && !allGradleContent.includes('androidx.compose.compiler:compiler')) {
       pushFileFinding('android.jetpack.missing_compose_compiler', 'low', androidAnchorFile, 1, 1,
         'Compose sin compiler reports. Añadir para métricas de estabilidad', findings);
     }
 
     // ============================================
-    // ANDROID - RURALGO ESPECÍFICO (8 reglas)
     // ============================================
     const hasOrdersModule = files.some(f => f.includes('/orders/') || f.includes('OrdersRepository'));
     const hasUsersModule = files.some(f => f.includes('/users/') || f.includes('UsersRepository'));
@@ -1109,7 +1060,6 @@ function runTextScanner(root, findings) {
         'DTOs manuales sin codegen. Considerar generar desde TypeScript backend con quicktype/OpenAPI', findings);
     }
 
-    // 2. Repository pattern
     if (hasOrdersModule || hasUsersModule) {
       const hasRepositoryInterface = /interface\s+\w+Repository/.test(allContent);
       const hasRepositoryImpl = /class\s+\w+Repository.*:\s*\w+Repository/.test(allContent);
@@ -1128,7 +1078,6 @@ function runTextScanner(root, findings) {
         'Falta Use Cases (CreateOrderUseCase, UpdateOrderStatusUseCase). Encapsular lógica de negocio', findings);
     }
 
-    // 4. ViewModels específicos
     const hasViewModels = /class\s+\w+ViewModel.*:\s*ViewModel/.test(allContent);
     const hasSpecificViewModels =
       /OrdersListViewModel|OrderDetailViewModel|UsersViewModel/.test(allContent);
@@ -1138,7 +1087,6 @@ function runTextScanner(root, findings) {
         'Falta ViewModels específicos (OrdersListViewModel, OrderDetailViewModel)', findings);
     }
 
-    // 5. Hilt DI en toda la app
     const hasHiltApp = /@HiltAndroidApp/.test(allContent);
     const hasHiltModules = /@Module/.test(allContent) && /@InstallIn/.test(allContent);
 
@@ -1155,7 +1103,6 @@ function runTextScanner(root, findings) {
         'Mix de XML layouts y Compose. Migrar 100% a Jetpack Compose', findings);
     }
 
-    // 7. Offline-first con Room
     const hasRoom = /@Entity|@Dao|@Database/.test(allContent);
     const hasNetworkCalls = /Retrofit|OkHttp|URLConnection/.test(allContent);
 
@@ -1164,7 +1111,6 @@ function runTextScanner(root, findings) {
         'Network calls sin Room. Implementar offline-first con cache local', findings);
     }
 
-    // 8. Material 3 theme
     const hasMaterial3 = /import\s+androidx\.compose\.material3/.test(allContent);
     const hasTheme = /\w+Theme\s*\{/.test(allContent);
     const hasDarkTheme = /isSystemInDarkTheme|darkColorScheme/.test(allContent);

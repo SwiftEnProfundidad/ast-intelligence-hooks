@@ -1,4 +1,3 @@
-// ===== CLEAN ARCHITECTURE ANALYZER - FRONTEND =====
 
 const { SyntaxKind } = require('ts-morph');
 
@@ -46,16 +45,13 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
       }
     }
 
-    // RULE 2: Application cannot import from Presentation
     if (layer === 'application' && targetLayer === 'presentation') {
       pushFinding('frontend.clean.application_presentation_violation', 'critical', sf, imp,
         `Application importing from Presentation - violates dependency direction.`,
         findings);
     }
 
-    // RULE 3: Presentation should use hooks/stores, not direct Infrastructure
     if (layer === 'presentation' && targetLayer === 'infrastructure') {
-      // Exception: Configuration, constants are OK
       const isConfigImport = /config|constants|types/.test(importPath);
 
       if (!isConfigImport) {
@@ -66,7 +62,6 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
     }
   });
 
-  // RULE 4: Domain structure validation
   if (layer === 'domain') {
     const hasCorrectStructure =
       filePath.includes('/entities/') ||
@@ -89,7 +84,6 @@ function detectLayer(path) {
   if (normalized.includes('/infrastructure/')) return 'infrastructure';
   if (normalized.includes('/presentation/')) return 'presentation';
 
-  // Next.js/React conventions
   if (normalized.match(/\/(components|pages|app)\//)) return 'presentation';
   if (normalized.match(/\/(hooks|stores)\//)) return 'presentation';
   if (normalized.match(/\/(entities|repositories|value-objects)\//)) return 'domain';

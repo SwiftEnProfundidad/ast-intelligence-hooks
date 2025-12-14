@@ -1,6 +1,3 @@
-// ===== AST BACKEND MODULE =====
-// Backend-specific AST intelligence rules
-// Clean Architecture: Infrastructure Layer - Backend AST Analysis
 
 const path = require('path');
 const {
@@ -30,7 +27,6 @@ const { BackendArchitectureDetector } = require(path.join(__dirname, 'analyzers/
  * @param {string} platform - Platform identifier
  */
 function runBackendIntelligence(project, findings, platform) {
-  // STEP 0: Detect Architecture Pattern
   try {
     const root = getRepoRoot();
     const architectureDetector = new BackendArchitectureDetector(root);
@@ -39,7 +35,6 @@ function runBackendIntelligence(project, findings, platform) {
 
     console.log(`[Backend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
-    // Log warnings if any
     if (detectionSummary.warnings.length > 0) {
       detectionSummary.warnings.forEach(warning => {
         pushFinding('backend.architecture.detection_warning', warning.severity.toLowerCase(), null, null, warning.message + '\n\n' + warning.recommendation, findings);
@@ -59,13 +54,10 @@ function runBackendIntelligence(project, findings, platform) {
   project.getSourceFiles().forEach((sf) => {
     const filePath = sf.getFilePath();
 
-    // Skip if not Backend platform
     if (platformOf(filePath) !== "backend") return;
 
-    // Skip AST infrastructure files (avoid self-analysis - they contain patterns that trigger rules)
     if (/\/ast-[^/]+\.js$/.test(filePath) || /scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
 
-    // Backend: configuration - secrets in code (intelligent detection)
     const fullText = sf.getFullText();
     const isSpecFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
     const secretPattern = /(password|secret|key|token)\s*[:=]\s*['"`]([^'"]{8,})['"`]/gi;
@@ -75,7 +67,6 @@ function runBackendIntelligence(project, findings, platform) {
       const fullMatch = match[0];
       const secretValue = match[2];
 
-      // Get full line context for intelligent detection
       const matchIndex = match.index || 0;
       const lineStart = fullText.lastIndexOf('\n', matchIndex) + 1;
       const lineEnd = fullText.indexOf('\n', matchIndex);
@@ -91,7 +82,6 @@ function runBackendIntelligence(project, findings, platform) {
       const isComment = fullLine.includes('//') || fullLine.includes('/*');
       const isTestContext = isSpecFile && /mock|jest\.fn|describe|it\(|beforeEach|afterEach/.test(fullText);
       const isTestFile = isSpecFile || /\/(tests?|__tests__|e2e|spec|playwright)\//i.test(filePath);
-      // Intelligent storage key detection: analyze context, not hardcoded words
       const hasStorageContext = (
         /localStorage|sessionStorage|AsyncStorage|getItem|setItem|removeItem/i.test(fullLine) ||
         /const\s+\w*(KEY|STORAGE|CACHE|Token|Key|Storage)\s*=/i.test(fullLine)
@@ -101,10 +91,8 @@ function runBackendIntelligence(project, findings, platform) {
       const isStorageKey = (hasStorageContext || hasKeyNamingPattern || hasDescriptivePrefix) &&
         !/^eyJ/.test(secretValue) && secretValue.length < 50;
 
-      // Intelligent cache key detection: colon separator or known entity prefixes
       const isCacheKey = secretValue.includes(':') || /^(?:products|orders|users|stores|cache|metrics|session):/i.test(secretValue);
 
-      // Intelligent constant detection: variable declaration context + short length + not real secret format
       const secretEntropyPattern = new RegExp(
         '^(eyJ|sk_|pk_|live_|prod_|' +
         '[a-f0-9]{' + '32,}' +
@@ -125,7 +113,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // Backend: configuration - environment separation
     const hasEnvSpecific = sf.getFullText().includes("process.env.NODE_ENV") ||
       sf.getFullText().includes("app.get('env')") ||
       sf.getFullText().includes("ConfigService");
@@ -134,7 +121,6 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.config.missing_env_separation", "warning", sf, sf, "Missing environment-specific configuration - consider NODE_ENV or ConfigService", findings);
     }
 
-    // Backend: configuration - config validation
     const hasConfigValidation = sf.getFullText().includes("joi") ||
       sf.getFullText().includes("class-validator") ||
       sf.getFullText().includes("@nestjs/config");
@@ -142,7 +128,6 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.config.missing_validation", "warning", sf, sf, "Environment variables without validation - consider Joi or class-validator", findings);
     }
 
-    // Backend: anti-patterns - god classes
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const className = cls.getName() || '';
       const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
@@ -160,7 +145,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: anti-patterns - anemic domain
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Entity|Model|Domain/.test(name)) {
@@ -175,14 +159,12 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: auth - missing CORS
     const hasCors = sf.getFullText().includes("cors") || sf.getFullText().includes("CORS") || sf.getFullText().includes("@CrossOrigin");
     const missingCorsSeverity = hasGlobalCors ? "low" : "high";
     if (!hasCors && (sf.getFullText().includes("controller") || sf.getFullText().includes("Controller"))) {
       pushFinding("backend.auth.missing_cors", missingCorsSeverity, sf, sf, "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config", findings);
     }
 
-    // Backend: logging - sensitive data (improved detection)
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression();
       if (!expr) return;
@@ -218,14 +200,12 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: metrics - missing Prometheus
     const hasMetrics = sf.getFullText().includes("micrometer") || sf.getFullText().includes("prometheus") ||
       sf.getFullText().includes("actuator") || sf.getFullText().includes("metrics");
     if (!hasMetrics && sf.getFullText().includes("controller") || sf.getFullText().includes("service")) {
       pushFinding("backend.metrics.missing_prometheus", "low", sf, sf, "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring", findings);
     }
 
-    // Backend: testing - slow tests
     if (isTestFile(filePath)) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const expr = call.getExpression();
@@ -237,7 +217,6 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // Backend: repository - missing interface
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Repository/.test(name) && !name.includes("Impl")) {
@@ -250,7 +229,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: repository - business logic
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Repository/.test(name)) {
@@ -264,7 +242,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: repository - transaction missing
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Repository/.test(name)) {
@@ -286,7 +263,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: use cases - missing explicit
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /UseCase|UseCaseImpl/.test(name)) {
@@ -294,7 +270,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: use cases - returns DTOs
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (!name || !/UseCase/.test(name)) return;
@@ -310,7 +285,6 @@ function runBackendIntelligence(project, findings, platform) {
       });
     });
 
-    // Backend: DTOs - validation
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Dto|DTO|Request|Response/.test(name)) {
@@ -325,7 +299,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: DTOs - transformation
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Dto|DTO/.test(name)) {
@@ -340,7 +313,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: error handling - custom exceptions
     sf.getDescendantsOfKind(SyntaxKind.ThrowStatement).forEach((throwStmt) => {
       const expr = throwStmt.getExpression();
       if (!expr) return;
@@ -357,7 +329,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: error handling - exposes stack traces
     sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
       const block = catchClause.getBlock();
       if (block && block.getText().includes("error") || block.getText().includes("err")) {
@@ -368,7 +339,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: error handling - empty catch blocks
     sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
       const block = catchClause.getBlock();
       if (!block) return;
@@ -379,8 +349,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // CRITICAL: Catch blocks without explicit type (implicit any in error) - BACKEND
-    // Only applies to TypeScript files (.ts), not JavaScript (.js)
     if (filePath.endsWith('.ts') && !filePath.endsWith('.d.ts')) {
       sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
         const varDecl = catchClause.getVariableDeclaration();
@@ -400,7 +368,6 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // CRITICAL: void err / void error anti-pattern - BACKEND
     sf.getDescendantsOfKind(SyntaxKind.ExpressionStatement).forEach((stmt) => {
       const text = stmt.getText().trim();
       if (/^void\s+(err|error|e)\s*;?\s*$/.test(text)) {
@@ -415,7 +382,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // HIGH: unknown usado sin type guards - BACKEND
     sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration).forEach((varDecl) => {
       const typeNode = varDecl.getTypeNode();
       if (typeNode && typeNode.getText() === 'unknown') {
@@ -439,7 +405,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: async - missing await
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (/Promise\.|\.then\(|\.catch\(/.test(expr)) {
@@ -453,20 +418,15 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: async - missing error handling
-    // INTELLIGENT: Check ancestors for try/catch, exclude error handlers and legitimate patterns
-    // NOTE: Tests are NOT excluded - they should also follow error handling best practices
     sf.getDescendantsOfKind(SyntaxKind.AwaitExpression).forEach((awaitExpr) => {
       const filePath = sf.getFilePath();
       const ancestors = awaitExpr.getAncestors();
 
-      // Exclusion 1: Check if await is inside a try/catch block (traverse ancestors)
       const insideTryCatch = ancestors.some(ancestor =>
         ancestor.getKind() === SyntaxKind.TryStatement
       );
       if (insideTryCatch) return;
 
-      // Exclusion 2: Function is an error handler (has catch/error/reject in name)
       const containingFunction = ancestors.find(ancestor =>
         ancestor.getKind() === SyntaxKind.FunctionDeclaration ||
         ancestor.getKind() === SyntaxKind.ArrowFunction ||
@@ -477,20 +437,15 @@ function runBackendIntelligence(project, findings, platform) {
         const funcName = funcText.match(/(?:function\s+|const\s+|let\s+|var\s+)(\w+)/)?.[1] || '';
         if (/catch|error|reject|handle|rescue/i.test(funcName)) return;
 
-        // Exclusion 3: ONLY pure arrow wrappers (direct return, NO intermediate logic)
-        // Valid: const wrapper = async () => await call();
-        // Invalid: const fn = async () => { const x = await call(); return x; }
         const isDirectReturn = awaitExpr.getParent()?.getKind() === SyntaxKind.ReturnStatement;
         if (isDirectReturn && containingFunction.getKind() === SyntaxKind.ArrowFunction) {
           const funcBody = funcText.trim();
-          // Pure wrapper: () => await something() OR () => { return await something(); }
           const isPureWrapper = /^[^{]*=>\s*await\s+/.test(funcBody) ||
             /^[^{]*=>\s*\{\s*return\s+await\s+[^;]+;\s*\}$/.test(funcBody);
           if (isPureWrapper) return;
         }
       }
 
-      // Exclusion 4: Top-level await in entry points (main.ts, index.ts, server.ts)
       if (/\/(main|index|server|app)\.ts$/.test(filePath)) {
         const isTopLevel = !ancestors.some(ancestor =>
           ancestor.getKind() === SyntaxKind.FunctionDeclaration ||
@@ -500,30 +455,23 @@ function runBackendIntelligence(project, findings, platform) {
         if (isTopLevel) return;
       }
 
-      // Exclusion 5: Promise chain with .catch() after the await
       const statement = awaitExpr.getParent();
       if (statement) {
         const statementText = statement.getText();
         if (/\.catch\s*\(/.test(statementText)) return; // Has .catch() handler
       }
 
-      // Exclusion 6: Inside error handling middleware or guards
       if (/middleware|guard|interceptor|filter/i.test(filePath)) {
-        // These are often centralized error handlers
         return;
       }
 
-      // Exclusion 7: Utility scripts (seed, migration, one-off scripts)
       if (/\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath)) {
-        // Scripts are run manually, errors are handled at execution level
         return;
       }
 
-      // If none of the exclusions apply, it's a real violation
       pushFinding("backend.async.error_handling", "medium", sf, awaitExpr, "Await expression without try/catch - handle async errors properly", findings);
     });
 
-    // Backend: event-driven - event emitters
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("emit") || expr.includes("publish")) {
@@ -531,7 +479,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: event-driven - event handlers
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("on(") || expr.includes("subscribe(")) {
@@ -539,7 +486,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: performance - N+1 queries
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes(".find(") || expr.includes(".query(") || expr.includes("supabase.from(")) {
@@ -555,7 +501,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: performance - missing pagination
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes(".find(") || expr.includes("supabase.from(")) {
@@ -569,7 +514,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: database - raw SQL
     sf.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach((str) => {
       const text = str.getLiteralValue();
       const sqlKeywords = ['SEL' + 'ECT ', 'INS' + 'ERT ', 'UPD' + 'ATE ', 'DEL' + 'ETE ', 'DR' + 'OP ', 'AL' + 'TER ', 'TRUN' + 'CATE '];
@@ -582,7 +526,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: database - missing transactions (only for ORM repositories)
     const isOrmRepositoryFile = /\/(repositories?)\//i.test(filePath) && (
       fullText.includes("TypeOrmModule") ||
       fullText.includes("Repository<") ||
@@ -611,7 +554,6 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // Backend: API - RESTful design + versioning + swagger + idempotency + bad methods
     sf.getDescendantsOfKind(SyntaxKind.Decorator).forEach((decorator) => {
       const expr = decorator.getExpression();
       if (expr && expr.getText().includes("@Get") || expr.getText().includes("@Post") ||
@@ -631,7 +573,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Swagger presence at controller file
     const swaggerFilePath = sf.getFilePath();
     const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(swaggerFilePath);
     const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(swaggerFilePath);
@@ -639,7 +580,6 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.api.missing_swagger", "medium", sf, sf, "Controller without Swagger decorators/imports", findings);
     }
 
-    // Backend: API - proper status codes
     sf.getDescendantsOfKind(SyntaxKind.ReturnStatement).forEach((ret) => {
       const expr = ret.getExpression();
       if (!expr) return;
@@ -651,7 +591,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: API - missing validation (only for controllers)
     const isControllerFile = /\/(controllers?)\//i.test(filePath) || sf.getFullText().includes("@Controller");
     if (isControllerFile) {
       sf.getDescendantsOfKind(SyntaxKind.MethodDeclaration).forEach((method) => {
@@ -666,12 +605,10 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // Backend: auth - JWT strategy
     if (sf.getFullText().includes("@nestjs/jwt") || sf.getFullText().includes("passport-jwt")) {
       pushFinding("backend.auth.jwt", "low", sf, sf, "JWT authentication detected - ensure proper token validation and refresh strategy", findings);
     }
 
-    // Backend: auth - missing guards (only for controllers)
     if (isControllerFile) {
       sf.getDescendantsOfKind(SyntaxKind.MethodDeclaration).forEach((method) => {
         const decorators = method.getDecorators();
@@ -687,7 +624,6 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // Backend: auth - role-based access
     sf.getDescendantsOfKind(SyntaxKind.Decorator).forEach((decorator) => {
       if (decorator.getExpression().getText().includes("@Roles")) {
         pushFinding("backend.auth.rbac", "low", sf, decorator, "Role-based access control detected - ensure proper role validation", findings);
@@ -696,24 +632,20 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: security - rate limiting
     if (sf.getFullText().includes("@nestjs/throttler") || sf.getFullText().includes("rate-limit")) {
       pushFinding("backend.security.rate_limiting", "low", sf, sf, "Rate limiting detected - good practice for API protection", findings);
     }
 
-    // Backend: security - helmet
     if (sf.getFullText().includes("express()") && !sf.getFullText().includes("helmet")) {
       pushFinding("backend.security.missing_helmet", "high", sf, sf, "Missing Helmet security headers middleware", findings);
     }
 
-    // Backend: security - audit logging (only for business logic files)
     const isBusinessLogic = /\/(controllers?|services?|use-?cases?|handlers?)\//i.test(filePath) ||
       /(controller|service|usecase|handler)\.ts$/i.test(filePath);
     if (isBusinessLogic && !sf.getFullText().includes("winston") && !sf.getFullText().includes("audit") && !sf.getFullText().includes("Logger")) {
       pushFinding("backend.security.missing_audit_logging", "medium", sf, sf, "Audit logging not detected - add structured audit logs", findings);
     }
 
-    // Backend: security - input sanitization
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("req.body") || expr.includes("req.query") || expr.includes("req.params")) {
@@ -726,12 +658,10 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: caching - Redis usage
     if (sf.getFullText().includes("redis") || sf.getFullText().includes("ioredis")) {
       pushFinding("backend.caching.redis", "low", sf, sf, "Redis caching detected - ensure proper cache invalidation strategy", findings);
     }
 
-    // Backend: caching - cache-aside pattern
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("cache.get") || expr.includes("redis.get")) {
@@ -739,17 +669,14 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: health checks
     if (sf.getFullText().includes("health") || sf.getFullText().includes("readiness") || sf.getFullText().includes("liveness")) {
       pushFinding("backend.health.checks", "low", sf, sf, "Health checks detected - ensure proper liveness/readiness probes", findings);
     }
 
-    // Backend: logging - structured logs
     if (sf.getFullText().includes("winston") || sf.getFullText().includes("pino")) {
       pushFinding("backend.logging.structured", "low", sf, sf, "Structured logging detected - ensure correlation IDs and proper log levels", findings);
     }
 
-    // Backend: auth - weak password hashing
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const txt = call.getText();
       if (/bcrypt\.hash\(/.test(txt)) {
@@ -764,7 +691,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: testing - unit tests
     if (isTestFile(filePath)) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const expr = call.getExpression().getText();
@@ -774,17 +700,14 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // Backend: testing - integration tests
     if (isTestFile(filePath) && sf.getFullText().includes("supertest") || sf.getFullText().includes("TestContainer")) {
       pushFinding("backend.testing.integration", "low", sf, sf, "Integration testing detected - ensure proper test isolation and cleanup", findings);
     }
 
-    // Backend: architecture - module structure
     if (sf.getFullText().includes("@Module") && sf.getFullText().includes("@nestjs/common")) {
       pushFinding("backend.architecture.module", "info", sf, sf, "NestJS module detected - ensure proper separation of concerns", findings);
     }
 
-    // Backend: architecture - dependency injection analysis
     const isServiceOrRepo = /Service|Repository|Controller|Provider/.test(sf.getBaseName());
     if (isServiceOrRepo) {
       sf.getDescendantsOfKind(SyntaxKind.Constructor).forEach((ctor) => {
@@ -810,7 +733,6 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // Backend: clean architecture - layers
     const filePathNormalized = filePath.replace(/\\/g, "/");
     if (filePathNormalized.includes("/domain/")) {
       pushFinding("backend.clean.domain", "low", sf, sf, "Domain layer file - ensure contains only business logic and entities", findings);
@@ -825,7 +747,6 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.clean.presentation", "low", sf, sf, "Presentation layer file - ensure contains controllers and DTOs", findings);
     }
 
-    // Backend: repository pattern
     sf.getDescendantsOfKind(SyntaxKind.InterfaceDeclaration).forEach((iface) => {
       const name = iface.getName();
       if (name && name.includes("Repository")) {
@@ -833,7 +754,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: service layer
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Service") && !name.includes("Repository")) {
@@ -841,7 +761,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: controller layer
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Controller")) {
@@ -849,7 +768,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: DTO pattern
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && (name.includes("Dto") || name.includes("DTO") || name.includes("Request") || name.includes("Response"))) {
@@ -857,7 +775,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: mapper pattern
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Mapper")) {
@@ -865,7 +782,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: factory pattern
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Factory")) {
@@ -873,7 +789,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: singleton pattern (avoid)
     sf.getDescendantsOfKind(SyntaxKind.VariableDeclaration).forEach((varDecl) => {
       const text = varDecl.getText();
       if (text.includes("static") && text.includes("INSTANCE")) {
@@ -881,7 +796,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: observer pattern
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("subscribe") || expr.includes("on(") || expr.includes("emit")) {
@@ -889,7 +803,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: strategy pattern
     sf.getDescendantsOfKind(SyntaxKind.InterfaceDeclaration).forEach((iface) => {
       const methods = iface.getMethods();
       if (methods.length === 1) {
@@ -897,7 +810,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: template method pattern
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const methods = cls.getMethods();
       const hasAbstract = methods.some((m) => m.getText().includes("abstract"));
@@ -907,7 +819,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: decorator pattern
     sf.getDescendantsOfKind(SyntaxKind.Decorator).forEach((decorator) => {
       const expr = decorator.getExpression().getText();
       if (expr.includes("@") && !expr.includes("@nestjs")) {
@@ -915,7 +826,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: middleware pattern
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("use(") && (expr.includes("middleware") || expr.includes("Middleware"))) {
@@ -923,7 +833,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: pipeline pattern
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("pipe(") || expr.includes("pipeline")) {
@@ -931,37 +840,30 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: circuit breaker pattern
     if (sf.getFullText().includes("circuit") || sf.getFullText().includes("breaker")) {
       pushFinding("backend.circuit_breaker", "low", sf, sf, "Circuit breaker pattern detected - good for fault tolerance", findings);
     }
 
-    // Backend: bulkhead pattern
     if (sf.getFullText().includes("bulkhead") || sf.getFullText().includes("isolation")) {
       pushFinding("backend.bulkhead.pattern", "low", sf, sf, "Bulkhead pattern detected - good for resource isolation", findings);
     }
 
-    // Backend: saga pattern
     if (sf.getFullText().includes("saga") || sf.getFullText().includes("compensation")) {
       pushFinding("backend.saga.pattern", "low", sf, sf, "Saga pattern detected - good for distributed transactions", findings);
     }
 
-    // Backend: CQRS pattern
     if (sf.getFullText().includes("Command") && sf.getFullText().includes("Query")) {
       pushFinding("backend.cqrs.pattern", "low", sf, sf, "CQRS pattern detected - ensure proper separation of read/write models", findings);
     }
 
-    // Backend: event sourcing
     if (sf.getFullText().includes("EventStore") || sf.getFullText().includes("event sourcing")) {
       pushFinding("backend.event_sourcing", "low", sf, sf, "Event sourcing detected - ensure proper event versioning and replay", findings);
     }
 
-    // Backend: microservices communication
     if (sf.getFullText().includes("axios") || sf.getFullText().includes("HttpService")) {
       pushFinding("backend.microservices.comm", "low", sf, sf, "Inter-service communication detected - ensure proper error handling and timeouts", findings);
     }
 
-    // Backend: API versioning
     sf.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach((str) => {
       const text = str.getLiteralValue();
       if (/\/api\/v\d+\//.test(text)) {
@@ -969,22 +871,18 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: OpenAPI/Swagger
     if (sf.getFullText().includes("@nestjs/swagger") || sf.getFullText().includes("swagger")) {
       pushFinding("backend.api.documentation", "low", sf, sf, "API documentation detected - ensure complete and accurate OpenAPI specs", findings);
     }
 
-    // Backend: GraphQL
     if (sf.getFullText().includes("@nestjs/graphql") || sf.getFullText().includes("graphql")) {
       pushFinding("backend.graphql.usage", "low", sf, sf, "GraphQL usage detected - ensure proper schema design and resolvers", findings);
     }
 
-    // Backend: WebSocket
     if (sf.getFullText().includes("@nestjs/websockets") || sf.getFullText().includes("socket.io")) {
       pushFinding("backend.websocket.usage", "low", sf, sf, "WebSocket usage detected - ensure proper connection management", findings);
     }
 
-    // Backend: file upload
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("multer") || expr.includes("upload")) {
@@ -992,77 +890,62 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: scheduled tasks
     if (sf.getFullText().includes("@nestjs/schedule") || sf.getFullText().includes("cron")) {
       pushFinding("backend.scheduled.tasks", "low", sf, sf, "Scheduled tasks detected - ensure proper error handling and logging", findings);
     }
 
-    // Backend: internationalization
     if (sf.getFullText().includes("i18n") || sf.getFullText().includes("i18next")) {
       pushFinding("backend.i18n.support", "low", sf, sf, "Internationalization detected - ensure proper message translation and locale handling", findings);
     }
 
-    // Backend: feature flags
     if (sf.getFullText().includes("feature.flag") || sf.getFullText().includes("toggle")) {
       pushFinding("backend.feature.flags", "low", sf, sf, "Feature flags detected - ensure proper flag management and cleanup", findings);
     }
 
-    // Backend: A/B testing
     if (sf.getFullText().includes("experiment") || sf.getFullText().includes("ab.test")) {
       pushFinding("backend.ab.testing", "low", sf, sf, "A/B testing detected - ensure proper experiment tracking and analysis", findings);
     }
 
-    // Backend: analytics
     if (sf.getFullText().includes("analytics") || sf.getFullText().includes("tracking")) {
       pushFinding("backend.analytics.tracking", "low", sf, sf, "Analytics tracking detected - ensure GDPR compliance and proper data handling", findings);
     }
 
-    // Backend: GDPR compliance
     if (sf.getFullText().includes("gdpr") || sf.getFullText().includes("consent")) {
       pushFinding("backend.gdpr.compliance", "low", sf, sf, "GDPR compliance detected - ensure proper data protection measures", findings);
     }
 
-    // Backend: audit logging
     if (sf.getFullText().includes("audit") || sf.getFullText().includes("audit_log")) {
       pushFinding("backend.audit.logging", "low", sf, sf, "Audit logging detected - ensure tamper-proof and comprehensive logging", findings);
     }
 
-    // Backend: data encryption
     if (sf.getFullText().includes("encrypt") || sf.getFullText().includes("crypto")) {
       pushFinding("backend.data.encryption", "low", sf, sf, "Data encryption detected - ensure proper key management and algorithm selection", findings);
     }
 
-    // Backend: backup strategy
     if (sf.getFullText().includes("backup") || sf.getFullText().includes("snapshot")) {
       pushFinding("backend.backup.strategy", "low", sf, sf, "Backup strategy detected - ensure regular and tested backups", findings);
     }
 
-    // Backend: monitoring alerts
     if (sf.getFullText().includes("alert") || sf.getFullText().includes("notification")) {
       pushFinding("backend.monitoring.alerts", "low", sf, sf, "Monitoring alerts detected - ensure actionable and non-spammy alerts", findings);
     }
 
-    // Backend: performance profiling
     if (sf.getFullText().includes("profiler") || sf.getFullText().includes("benchmark")) {
       pushFinding("backend.performance.profiling", "low", sf, sf, "Performance profiling detected - ensure regular performance monitoring", findings);
     }
 
-    // Backend: memory management
     if (sf.getFullText().includes("heap") || sf.getFullText().includes("garbage")) {
       pushFinding("backend.memory.management", "low", sf, sf, "Memory management detected - ensure proper resource cleanup", findings);
     }
 
-    // Backend: thread safety
     if (sf.getFullText().includes("synchronized") || sf.getFullText().includes("mutex")) {
       pushFinding("backend.thread.safety", "low", sf, sf, "Thread safety measures detected - ensure proper synchronization", findings);
     }
 
-    // Backend: connection pooling
     if (sf.getFullText().includes("pool") || sf.getFullText().includes("connection.pool")) {
       pushFinding("backend.connection.pooling", "low", sf, sf, "Connection pooling detected - ensure proper pool sizing and monitoring", findings);
     }
 
-    // Backend: timeout management
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("timeout") || expr.includes("setTimeout")) {
@@ -1070,91 +953,73 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // Backend: retry mechanism
     if (sf.getFullText().includes("retry") || sf.getFullText().includes("backoff")) {
       pushFinding("backend.retry.mechanism", "low", sf, sf, "Retry mechanism detected - ensure exponential backoff and circuit breaker", findings);
     }
 
-    // Backend: graceful shutdown
     if (sf.getFullText().includes("shutdown") || sf.getFullText().includes("SIGTERM")) {
       pushFinding("backend.graceful.shutdown", "low", sf, sf, "Graceful shutdown detected - ensure proper cleanup and request draining", findings);
     }
 
 
-    // Backend: secrets management
     if (sf.getFullText().includes("vault") || sf.getFullText().includes("secrets")) {
       pushFinding("backend.secrets.management", "low", sf, sf, "Secrets management detected - ensure secure key rotation and access control", findings);
     }
 
-    // Backend: containerization
     if (sf.getFullText().includes("docker") || sf.getFullText().includes("Dockerfile")) {
       pushFinding("backend.containerization", "low", sf, sf, "Containerization detected - ensure proper image optimization and security", findings);
     }
 
-    // Backend: orchestration
     if (sf.getFullText().includes("kubernetes") || sf.getFullText().includes("k8s")) {
       pushFinding("backend.orchestration", "low", sf, sf, "Container orchestration detected - ensure proper resource limits and health checks", findings);
     }
 
-    // Backend: CI/CD pipelines
     if (sf.getFullText().includes("pipeline") || sf.getFullText().includes("workflow")) {
       pushFinding("backend.cicd.pipelines", "low", sf, sf, "CI/CD pipelines detected - ensure automated testing and deployment", findings);
     }
 
-    // Backend: blue-green deployment
     if (sf.getFullText().includes("blue.green") || sf.getFullText().includes("canary")) {
       pushFinding("backend.deployment.strategy", "low", sf, sf, "Advanced deployment strategy detected - ensure proper rollback procedures", findings);
     }
 
-    // Backend: chaos engineering
     if (sf.getFullText().includes("chaos") || sf.getFullText().includes("fault.injection")) {
       pushFinding("backend.chaos.engineering", "low", sf, sf, "Chaos engineering detected - ensure systematic testing of failure scenarios", findings);
     }
 
-    // Backend: service mesh
     if (sf.getFullText().includes("istio") || sf.getFullText().includes("linkerd")) {
       pushFinding("backend.service.mesh", "low", sf, sf, "Service mesh detected - ensure proper traffic management and observability", findings);
     }
 
-    // Backend: API gateway
     if (sf.getFullText().includes("gateway") || sf.getFullText().includes("kong")) {
       pushFinding("backend.api.gateway", "low", sf, sf, "API gateway detected - ensure proper routing and security policies", findings);
     }
 
-    // Backend: message queues
     if (sf.getFullText().includes("rabbitmq") || sf.getFullText().includes("kafka")) {
       pushFinding("backend.message.queues", "low", sf, sf, "Message queue detected - ensure proper message handling and dead letter queues", findings);
     }
 
-    // Backend: stream processing
     if (sf.getFullText().includes("stream") || sf.getFullText().includes("reactive")) {
       pushFinding("backend.stream.processing", "low", sf, sf, "Stream processing detected - ensure proper backpressure handling", findings);
     }
 
-    // Backend: data warehousing
     if (sf.getFullText().includes("warehouse") || sf.getFullText().includes("redshift")) {
       pushFinding("backend.data.warehousing", "low", sf, sf, "Data warehousing detected - ensure proper ETL processes and data quality", findings);
     }
 
-    // Backend: machine learning
     if (sf.getFullText().includes("tensorflow") || sf.getFullText().includes("pytorch")) {
       pushFinding("backend.ml.integration", "low", sf, sf, "Machine learning integration detected - ensure proper model versioning and monitoring", findings);
     }
 
-    // Backend: blockchain
     if (sf.getFullText().includes("web3") || sf.getFullText().includes("blockchain")) {
       pushFinding("backend.blockchain.integration", "low", sf, sf, "Blockchain integration detected - ensure proper smart contract interactions", findings);
     }
 
-    // Backend: IoT integration
     if (sf.getFullText().includes("mqtt") || sf.getFullText().includes("iot")) {
       pushFinding("backend.iot.integration", "low", sf, sf, "IoT integration detected - ensure proper device management and security", findings);
     }
     // ==========================================
-    // 🔴 SPRINT 1 CRITICAL SECURITY & ARCHITECTURE
     // ==========================================
 
-    // 1. SQL Injection - Raw SQL queries
     const rawSQLPattern = /query\s*\(\s*`[^`]*\$\{[^}]+\}|execut(e|eRaw)\s*\(\s*`[^`]*\$\{/gi;
     let sqlMatch;
 
@@ -1170,7 +1035,6 @@ function runBackendIntelligence(project, findings, platform) {
       );
     }
 
-    // 2. N+1 Query Detection - queries in loops
     const loopQueryPattern = /for\s*\([^)]+\)[^{]*\{[^}]*\.(findOne|findById|query|execute)\(/g;
     if (loopQueryPattern.test(fullText)) {
       pushFinding(
@@ -1183,7 +1047,6 @@ function runBackendIntelligence(project, findings, platform) {
       );
     }
 
-    // 3. Password Hashing - plain password storage
     const plainPasswordPattern = /password\s*[:=]\s*[^b][^c][^r][^y][^p][^t]/i;
     if (plainPasswordPattern.test(fullText) && !fullText.includes('bcrypt') && !fullText.includes('argon2') && !fullText.includes('hash')) {
       pushFinding(
@@ -1196,7 +1059,6 @@ function runBackendIntelligence(project, findings, platform) {
       );
     }
 
-    // 4. JWT Strategy - missing JWT validation
     if (filePath.includes('/auth/') || filePath.includes('/guards/')) {
       const hasJWT = fullText.includes('@nestjs/jwt') || fullText.includes('JwtService') || fullText.includes('JwtStrategy');
       const hasAuth = fullText.includes('@UseGuards') || fullText.includes('AuthGuard');
@@ -1213,7 +1075,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 5. Helmet Headers - missing security headers
     if (filePath.includes('main.ts')) {
       const hasHelmet = fullText.includes('helmet') || fullText.includes('helmet()');
 
@@ -1229,7 +1090,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 6. CORS Config - missing or wildcard CORS
     if (filePath.includes('main.ts')) {
       const hasCORS = fullText.includes('enableCors') || fullText.includes('cors()');
       const hasWildcard = fullText.includes("origin: '*'") || fullText.includes('origin: true');
@@ -1255,7 +1115,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 7. Input Sanitization - DTOs without validation
     if (filePath.includes('.dto.ts') || filePath.endsWith('Dto.ts')) {
       const hasValidation = fullText.includes('@IsString') ||
         fullText.includes('@IsEmail') ||
@@ -1276,7 +1135,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 8. Domain Purity - Backend domain with framework deps
     const isDomain = filePath.includes('/domain/') && !filePath.includes('Impl');
     if (isDomain) {
       const forbiddenImports = ['@nestjs/', 'express', 'fastify', 'typeorm', 'mongoose', 'prisma'];
@@ -1295,7 +1153,6 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    // 9. Circular Dependency - imports creating cycles
     const importPaths = [];
     sf.getImportDeclarations().forEach(imp => {
       const moduleSpec = imp.getModuleSpecifierValue();
@@ -1318,7 +1175,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    // 10. Stack Trace in Production - error responses expose internals
     if (filePath.includes('/filters/') || filePath.includes('/exception')) {
       const hasStackTrace = fullText.includes('stack:') || fullText.includes('error.stack');
       const hasEnvCheck = fullText.includes('NODE_ENV') || fullText.includes('process.env');
@@ -1336,10 +1192,8 @@ function runBackendIntelligence(project, findings, platform) {
     }
 
     // ==========================================
-    // 🟡 SPRINT 2 HIGH ARCHITECTURE & PERFORMANCE
     // ==========================================
 
-    // 1. Thin Controllers - business logic in controllers
     if (filePath.includes('.controller.ts')) {
       const lines = fullText.split('\\n');
       const methodLines = lines.filter(l => l.trim().startsWith('async ') || l.trim().startsWith('public ') || l.trim().startsWith('private '));
@@ -1356,7 +1210,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 2. Transaction Usage - multi-table operations without transaction
     if (fullText.includes('.save(') && fullText.includes('.update(') && !fullText.includes('@Transaction()')) {
       const isSameFunction = fullText.match(/async\s+\w+\([^)]*\)[^{]*\{[^}]*\.save\([^}]*\.update\(/);
 
@@ -1372,7 +1225,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 3. Exception Filters - custom exceptions without filter
     if (fullText.includes('extends HttpException') || fullText.includes('extends Error')) {
       const hasFilter = fullText.includes('@Catch(');
 
@@ -1388,7 +1240,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 4. Repository Abstraction - no interface
     if (filePath.includes('Repository.ts') && !filePath.includes('IRepository') && !filePath.includes('Protocol')) {
       const hasInterface = fullText.includes('export interface') || fullText.includes('export abstract class');
 
@@ -1404,7 +1255,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 5. Event Sourcing - missing event emission (only for service/use-case layer)
     const isDomainServiceFile = /\/(services?|use-?cases?|application)\//i.test(filePath) || /Service/.test(filePath) && !/Repository/.test(filePath);
     if (isDomainServiceFile &&
       (fullText.includes('.create(') || fullText.includes('.update(') || fullText.includes('.delete(')) &&
@@ -1419,8 +1269,6 @@ function runBackendIntelligence(project, findings, platform) {
       );
     }
 
-    // 6. Logging without PII - sensitive data in logs
-    // Exclude analyzers which may contain example code patterns
     const isAnalyzerForPII = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
     if (!isAnalyzerForPII) {
       const sensitiveLogPattern = /(logger|console)\.(log|info|debug|warn)\([^)]*password|token|secret|ssn|creditCard/i;
@@ -1436,7 +1284,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 7. Service Unit Tests - missing tests for services
     if (filePath.includes('.service.ts') && !filePath.includes('.spec.ts')) {
       const testFilePath = filePath.replace('.service.ts', '.service.spec.ts');
       const fs = require('fs');
@@ -1453,7 +1300,6 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    // 8. Pagination - missing pagination for list endpoints
     if (filePath.includes('.controller.ts')) {
       const hasListEndpoint = fullText.includes('findAll') || fullText.includes('getAll') || fullText.includes('list');
       const hasPagination = fullText.includes('page') || fullText.includes('limit') || fullText.includes('offset') || fullText.includes('@Query');
@@ -1472,9 +1318,7 @@ function runBackendIntelligence(project, findings, platform) {
 
   });
 
-  // ===== SPRINT 3 MEDIUM RULES (6) =====
 
-  // 1. Swagger Completeness Rule
   if (filePath.includes('.controller.ts')) {
     const swaggerIsAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
     const swaggerIsTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
@@ -1495,7 +1339,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 2. API Versioning Rule
   if (filePath.includes('.controller.ts')) {
     const hasVersioning = fullText.includes('@Version(') || fullText.includes('/v1/') || fullText.includes('/v2/');
     const isMainController = fullText.includes('@Controller(') && !filePath.includes('.spec.ts');
@@ -1512,7 +1355,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 3. Health Check Completeness Rule
   if (filePath.includes('health') || fullText.includes('HealthCheck')) {
     const hasDatabase = fullText.includes('database') || fullText.includes('TypeOrmHealthIndicator');
     const hasMemory = fullText.includes('memory') || fullText.includes('MemoryHealthIndicator');
@@ -1530,7 +1372,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 4. Request ID Tracing Rule
   if (filePath.includes('middleware') || filePath.includes('interceptor')) {
     const hasRequestId = fullText.includes('requestId') || fullText.includes('x-request-id') || fullText.includes('correlationId');
 
@@ -1546,7 +1387,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 5. GZIP Compression Rule
   if (filePath.includes('main.ts')) {
     const hasCompression = fullText.includes('compression(') || fullText.includes('@nestjs/platform-fastify');
 
@@ -1562,7 +1402,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 6. Environment Validation Rule
   if (filePath.includes('config') || filePath.includes('env')) {
     const hasValidation = fullText.includes('Joi') || fullText.includes('class-validator') || fullText.includes('validate');
     const hasEnvVars = fullText.includes('process.env');
@@ -1579,9 +1418,7 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // ===== SPRINT 4 LOW RULES (13) =====
 
-  // 1. Prometheus Metrics Rule
   if (fullText.includes('metrics') && !fullText.includes('prom-client') && !fullText.includes('@Prometheus')) {
     pushFinding(
       "backend.observability.missing_prometheus",
@@ -1593,7 +1430,6 @@ function runBackendIntelligence(project, findings, platform) {
     );
   }
 
-  // 2. Grafana Dashboard Rule
   if (filePath.includes('prometheus') || filePath.includes('metrics')) {
     const hasDashboardComment = fullText.includes('Grafana') || fullText.includes('dashboard');
 
@@ -1609,7 +1445,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 3. Alerting Configuration Rule
   if (filePath.includes('monitoring') || filePath.includes('alert')) {
     const hasAlertManager = fullText.includes('AlertManager') || fullText.includes('webhook') || fullText.includes('notification');
 
@@ -1625,7 +1460,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 4. Log Aggregation Rule
   if (filePath.includes('logger') && !fullText.includes('elasticsearch') && !fullText.includes('logstash')) {
     const hasStructuredLogging = fullText.includes('JSON.stringify') || fullText.includes('winston');
 
@@ -1641,7 +1475,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 5. APM Integration Rule
   if (filePath.includes('main.ts') && !fullText.includes('newrelic') && !fullText.includes('datadog') && !fullText.includes('@sentry/node')) {
     pushFinding(
       "backend.observability.missing_apm",
@@ -1653,7 +1486,6 @@ function runBackendIntelligence(project, findings, platform) {
     );
   }
 
-  // 6. Load Testing Rule
   if (filePath.includes('e2e') || filePath.includes('test')) {
     const hasLoadTest = fullText.includes('artillery') || fullText.includes('k6') || fullText.includes('jmeter');
 
@@ -1669,7 +1501,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 7. Backup Strategy Rule
   if (filePath.includes('database') || filePath.includes('typeorm')) {
     const hasBackup = fullText.includes('backup') || fullText.includes('pg_dump') || fullText.includes('snapshot');
 
@@ -1685,7 +1516,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 8. Disaster Recovery Rule
   if (filePath.includes('config') && fullText.includes('database')) {
     const hasReplication = fullText.includes('replication') || fullText.includes('replica') || fullText.includes('standby');
 
@@ -1701,7 +1531,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 9. Rate Limiting Strategy Rule
   if (filePath.includes('main.ts') || filePath.includes('app.module')) {
     const hasThrottler = fullText.includes('@nestjs/throttler') || fullText.includes('ThrottlerModule');
 
@@ -1717,7 +1546,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 10. Circuit Breaker Rule
   if (fullText.includes('axios') || fullText.includes('fetch') || fullText.includes('HttpService')) {
     const hasCircuitBreaker = fullText.includes('opossum') || fullText.includes('CircuitBreaker');
 
@@ -1733,7 +1561,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 11. Bulkhead Pattern Rule
   if (fullText.includes('async') && fullText.includes('await') && fullText.includes('for')) {
     const hasBulkhead = fullText.includes('Promise.all') || fullText.includes('p-limit');
 
@@ -1749,7 +1576,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 12. Retry Policy Rule
   if ((fullText.includes('axios') || fullText.includes('fetch')) && !fullText.includes('retry')) {
     const isExternalCall = fullText.includes('http://') || fullText.includes('https://');
 
@@ -1765,7 +1591,6 @@ function runBackendIntelligence(project, findings, platform) {
     }
   }
 
-  // 13. Deployment Strategy Rule
   if (filePath.includes('Dockerfile') || filePath.includes('.yml') || filePath.includes('deploy')) {
     const hasStrategy = fullText.includes('blue-green') || fullText.includes('canary') || fullText.includes('rolling');
 

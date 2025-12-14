@@ -1,4 +1,3 @@
-// ===== FEATURE-FIRST ANALYZER - FRONTEND =====
 
 const path = require('path');
 
@@ -25,7 +24,6 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
     const targetFeature = detectFeature(importPath);
 
     if (targetFeature && targetFeature !== feature) {
-      // Exceptions: ui/, shared/, lib/ are allowed
       const isSharedModule = /\/(ui|shared|lib|common)\//i.test(importPath);
 
       if (!isSharedModule) {
@@ -43,21 +41,17 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
 function detectFeature(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
 
-  // Next.js App Router: app/{feature}/
   const appMatch = normalized.match(/\/app\/([^\/]+)\//);
   if (appMatch) {
     const feature = appMatch[1];
-    // Exclude non-features
     if (!['api', 'layout', 'loading', 'error', 'not-found'].includes(feature)) {
       return feature;
     }
   }
 
-  // Components by feature: components/{feature}/
   const compMatch = normalized.match(/\/components\/([^\/]+)\//);
   if (compMatch) {
     const feature = compMatch[1];
-    // Exclude shared UI
     if (feature !== 'ui') {
       return feature;
     }
