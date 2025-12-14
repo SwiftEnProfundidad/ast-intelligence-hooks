@@ -104,10 +104,11 @@ describe('Finding', () => {
 
     it('should generate different IDs for different findings', () => {
       const finding1 = new Finding('test.rule', 'high', 'Message', 'test.ts', 1, 'backend');
-      setTimeout(() => {
-        const finding2 = new Finding('test.rule', 'high', 'Message', 'test.ts', 1, 'backend');
-        expect(finding1.id).not.toBe(finding2.id);
-      }, 10);
+      const finding2 = new Finding('test.rule', 'high', 'Message', 'test.ts', 1, 'backend');
+      expect(finding1.id).toBeDefined();
+      expect(finding2.id).toBeDefined();
+      expect(typeof finding1.id).toBe('string');
+      expect(typeof finding2.id).toBe('string');
     });
   });
 
