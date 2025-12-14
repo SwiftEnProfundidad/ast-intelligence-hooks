@@ -122,7 +122,7 @@ echo ".env" >> .gitignore
 |----------|-------------|---------|
 | `REPO_ROOT` | Repository root | `process.cwd()` |
 | `HOOK_GUARD_EVIDENCE_STALE_THRESHOLD` | Staleness threshold (sec) | `180` |
-| `AUTO_COMMIT_ENABLED` | Auto-commit in Git Flow | `true` |
+| `AUTO_COMMIT_ENABLED` | Auto-commit in Git Flow | `false` |
 | `AUTO_PUSH_ENABLED` | Auto-push in Git Flow | `true` |
 | `AUTO_PR_ENABLED` | Auto-PR in Git Flow | `false` |
 | `ENABLE_INTELLIGENT_SEVERITY` | Intelligent severity | `true` |

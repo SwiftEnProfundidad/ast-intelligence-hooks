@@ -16,8 +16,8 @@
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",
-        "AUTO_COMMIT_ENABLED": "true",
-        "AUTO_PUSH_ENABLED": "true",
+        "AUTO_COMMIT_ENABLED": "false",
+        "AUTO_PUSH_ENABLED": "false",
         "AUTO_PR_ENABLED": "false",
         "HOOK_GUARD_EVIDENCE_STALE_THRESHOLD": "180"
       }

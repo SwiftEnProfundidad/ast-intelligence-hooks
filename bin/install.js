@@ -156,6 +156,7 @@ ${COLORS.reset}`);
       'presentation/',
       'docs/examples/',
       'docs/guides/',
+      'bin/',
       'index.js'
     ];
 
@@ -374,8 +375,8 @@ ${COLORS.reset}`);
           ],
           env: {
             REPO_ROOT: '${workspaceFolder}',
-            AUTO_COMMIT_ENABLED: 'true',
-            AUTO_PUSH_ENABLED: 'true',
+            AUTO_COMMIT_ENABLED: 'false',
+            AUTO_PUSH_ENABLED: 'false',
             AUTO_PR_ENABLED: 'false'
           }
         }
