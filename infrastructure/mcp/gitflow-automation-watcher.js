@@ -52,12 +52,10 @@ const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true'; // Disabled by d
  */
 function sendNotification(title, message, sound = 'Hero') {
     notificationAdapter.send({ title, message, sound, level: 'info' })
-        .then(success => {
-            if (success) {
-            }
-        })
         .catch(err => {
-            console.error('[MCP] Failed to send notification:', err.message);
+            if (process.env.DEBUG) {
+                console.error('[MCP] Failed to send notification:', err.message);
+            }
         });
 }
 
