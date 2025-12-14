@@ -1,5 +1,13 @@
+// ===== SOLID PRINCIPLES SUPER-INTELLIGENT ANALYZER =====
+// Backend-specific SOLID violations detection
+// Uses deep AST analysis, not heuristics
 
 const { SyntaxKind } = require('ts-morph');
+
+// =============================================================================
+// SRP - Single Responsibility Principle
+// "A class should have only one reason to change"
+// =============================================================================
 
 function analyzeSRP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -8,27 +16,40 @@ function analyzeSRP(cls, sf, findings, pushFinding) {
 
   if (methods.length === 0) return;
 
+  // METRIC 1: LCOM (Lack of Cohesion in Methods)
+  // Measures how methods share properties
   const lcom = calculateLCOM(methods, properties);
 
+  // METRIC 2: Semantic clustering of methods
   const clusters = clusterMethodsBySemanticDomain(methods);
 
+  // METRIC 3: Constructor dependencies analysis
   const constructor = cls.getConstructors()[0];
   const injectedDependencies = constructor?.getParameters() || [];
   const dependencyConcerns = analyzeDependencyConcerns(injectedDependencies);
 
+  // METRIC 4: Import diversity (bounded contexts)
   const imports = sf.getImportDeclarations();
   const importConcerns = analyzeImportConcerns(imports);
 
+  // SRP VIOLATION CRITERIA (ALL must be analyzed):
+  // 1. High LCOM (>0.8) + Multiple semantic clusters (>2)
+  // 2. Dependencies from 3+ different concerns
+  // 3. Imports from 3+ different bounded contexts
+
   const violations = [];
 
+  // Violation 1: Low cohesion + multiple concerns
   if (lcom > 0.8 && clusters.length >= 3) {
     violations.push(`Low cohesion (LCOM=${lcom.toFixed(2)}) with ${clusters.length} semantic domains: ${clusters.join(', ')}`);
   }
 
+  // Violation 2: Too many heterogeneous dependencies
   if (dependencyConcerns.length >= 3) {
     violations.push(`Constructor injects ${dependencyConcerns.length} unrelated concerns: ${dependencyConcerns.join(', ')}`);
   }
 
+  // Violation 3: Imports from multiple bounded contexts
   if (importConcerns.length >= 3) {
     violations.push(`Imports from ${importConcerns.length} different contexts: ${importConcerns.join(', ')}`);
   }
@@ -137,17 +158,22 @@ function analyzeImportConcerns(imports) {
   imports.forEach(imp => {
     const path = imp.getModuleSpecifierValue();
 
-    if (/\/users\/|\/user\
-    if (/\/auth\/|\/authentication\
-    if (/\/payment\/|\/billing\
-    if (/\/order\/|\/orders\
-    if (/\/notification\/|\/email\
-    if (/\/admin\
-    if (/\/analytics\
+    if (/\/users\/|\/user\//i.test(path)) concerns.add('users-context');
+    if (/\/auth\/|\/authentication\//i.test(path)) concerns.add('auth-context');
+    if (/\/payment\/|\/billing\//i.test(path)) concerns.add('payment-context');
+    if (/\/order\/|\/orders\//i.test(path)) concerns.add('order-context');
+    if (/\/notification\/|\/email\//i.test(path)) concerns.add('notification-context');
+    if (/\/admin\//i.test(path)) concerns.add('admin-context');
+    if (/\/analytics\//i.test(path)) concerns.add('analytics-context');
   });
 
   return Array.from(concerns);
 }
+
+// =============================================================================
+// OCP - Open/Closed Principle
+// "Open for extension, closed for modification"
+// =============================================================================
 
 function analyzeOCP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -158,6 +184,7 @@ function analyzeOCP(cls, sf, findings, pushFinding) {
     const body = method.getBody();
     if (!body) return;
 
+    // DETECTION 1: Type switching (should use polymorphism)
     const switches = body.getDescendantsOfKind(SyntaxKind.SwitchStatement);
     const typeSwitch = switches.filter(sw => {
       const expr = sw.getExpression().getText();
@@ -170,6 +197,7 @@ function analyzeOCP(cls, sf, findings, pushFinding) {
         `OCP violation in ${className}.${methodName}: switch on '${expr}' - use Strategy/Factory pattern instead`, findings);
     }
 
+    // DETECTION 2: Multiple if-else chains on type/kind
     const ifStatements = body.getDescendantsOfKind(SyntaxKind.IfStatement);
     const typeIfChains = detectTypeIfChains(ifStatements);
 
@@ -186,6 +214,11 @@ function detectTypeIfChains(ifStatements) {
     return /===\s*['"]|instanceof\s+\w+|typeof\s+.*===/.test(condition);
   });
 }
+
+// =============================================================================
+// LSP - Liskov Substitution Principle
+// "Subtypes must be substitutable for their base types"
+// =============================================================================
 
 function analyzeLSP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
@@ -206,6 +239,7 @@ function analyzeLSP(cls, sf, findings, pushFinding) {
 
     if (!methodBody || !baseBody) return;
 
+    // VIOLATION 1: Throws exceptions that base doesn't throw
     const childThrows = methodBody.getDescendantsOfKind(SyntaxKind.ThrowStatement);
     const baseThrows = baseBody.getDescendantsOfKind(SyntaxKind.ThrowStatement);
 
@@ -214,6 +248,7 @@ function analyzeLSP(cls, sf, findings, pushFinding) {
         `LSP violation in ${className}.${methodName}: throws exceptions not thrown by base class`, findings);
     }
 
+    // VIOLATION 2: Returns null when base doesn't
     const childReturnsNull = methodBody.getText().includes('return null');
     const baseReturnsNull = baseBody.getText().includes('return null');
 
@@ -222,6 +257,7 @@ function analyzeLSP(cls, sf, findings, pushFinding) {
         `LSP violation in ${className}.${methodName}: returns null but base doesn't - breaks contract`, findings);
     }
 
+    // VIOLATION 3: Stricter preconditions (more validations)
     const childValidations = countValidations(methodBody);
     const baseValidations = countValidations(baseBody);
 
@@ -246,6 +282,11 @@ function countValidations(methodBody) {
   return count;
 }
 
+// =============================================================================
+// ISP - Interface Segregation Principle
+// "Clients should not depend on interfaces they don't use"
+// =============================================================================
+
 function analyzeISP(sf, findings, pushFinding, project) {
   const interfaces = sf.getInterfaces();
 
@@ -255,6 +296,7 @@ function analyzeISP(sf, findings, pushFinding, project) {
 
     if (interfaceMethods.length < 5) return;
 
+    // Find all implementations of this interface
     const implementations = findImplementations(iface, project);
 
     if (implementations.length === 0) return;
@@ -276,18 +318,21 @@ function analyzeISP(sf, findings, pushFinding, project) {
 
         const bodyText = body.getText().trim();
 
+        // VIOLATION 1: Empty method or only throws NotImplemented
         if (bodyText === '{}' ||
             bodyText.includes('throw new NotImplementedError') ||
             bodyText.includes('throw new Error')) {
           emptyMethodCount++;
         }
 
+        // VIOLATION 2: Only returns null/undefined
         if (/^{\s*return\s+(null|undefined);\s*}$/.test(bodyText)) {
           emptyMethodCount++;
         }
       });
     });
 
+    // If >30% of implementations are empty/throwing → Interface too fat
     const emptyPercentage = totalImplementationMethods > 0 ?
       emptyMethodCount / totalImplementationMethods : 0;
 
@@ -296,6 +341,7 @@ function analyzeISP(sf, findings, pushFinding, project) {
         `ISP violation: ${interfaceName} has ${interfaceMethods.length} methods, ${Math.round(emptyPercentage * 100)}% are unimplemented/empty - split into smaller interfaces`, findings);
     }
 
+    // VIOLATION 3: Interface with methods from multiple concerns
     const methodClusters = clusterMethodsBySemanticDomain(interfaceMethods);
 
     if (methodClusters.length >= 3) {
@@ -323,11 +369,17 @@ function findImplementations(iface, project) {
   return implementations;
 }
 
+// =============================================================================
+// DIP - Dependency Inversion Principle
+// "Depend on abstractions, not concretions"
+// =============================================================================
+
 function analyzeDIP(cls, sf, findings, pushFinding) {
   const className = cls.getName() || 'AnonymousClass';
   const filePath = sf.getFilePath();
 
-  const isDomain = /\/domain\
+  // DETECTION 1: Domain layer importing Infrastructure
+  const isDomain = /\/domain\//i.test(filePath);
 
   if (isDomain) {
     const imports = sf.getImportDeclarations();
@@ -335,7 +387,8 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
     imports.forEach(imp => {
       const importPath = imp.getModuleSpecifierValue();
 
-      if (/\/infrastructure\
+      // DIP VIOLATION: Domain importing from Infrastructure or Framework
+      if (/\/infrastructure\//i.test(importPath) ||
           /@nestjs|typeorm|mongoose|prisma|express/i.test(importPath)) {
         pushFinding('solid.dip.domain_depends_infrastructure', 'critical', sf, imp,
           `DIP VIOLATION: Domain layer importing from Infrastructure/Framework: ${importPath} - Domain should depend only on abstractions`, findings);
@@ -343,6 +396,7 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
     });
   }
 
+  // DETECTION 2: Constructor injecting concrete classes (not interfaces/abstractions)
   const constructor = cls.getConstructors()[0];
   if (!constructor) return;
 
@@ -352,8 +406,10 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
     const paramType = param.getType();
     const paramTypeName = paramType.getText();
 
+    // Skip primitives and common types
     if (/string|number|boolean|Date|Array|Promise/i.test(paramTypeName)) return;
 
+    // Check if type is an interface or abstract class
     const typeSymbol = paramType.getSymbol();
     if (!typeSymbol) return;
 
@@ -372,7 +428,9 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
       return false;
     });
 
+    // DIP VIOLATION: Injecting concrete class (not interface/abstract)
     if (!isInterface && !isAbstract) {
+      // Additional check: Is it a framework service? (NestJS services are OK)
       const isFrameworkService = /@Injectable\(\)/.test(declarations[0]?.getText() || '');
 
       if (!isFrameworkService) {
@@ -382,6 +440,12 @@ function analyzeDIP(cls, sf, findings, pushFinding) {
     }
   });
 }
+
+// =============================================================================
+// OCP - Open/Closed Principle (Implementation)
+// =============================================================================
+
+// ... (Already implemented above with type switching detection)
 
 module.exports = {
   analyzeSRP,

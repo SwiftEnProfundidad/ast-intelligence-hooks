@@ -1,3 +1,6 @@
+// ===== CLEAN ARCHITECTURE ANALYZER - FRONTEND =====
+// Based on rulesfront.mdc specifications
+// Enforces: Domain → Application → Infrastructure → Presentation
 
 const { SyntaxKind } = require('ts-morph');
 
@@ -22,6 +25,7 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
     const importPath = imp.getModuleSpecifierValue();
     const targetLayer = detectLayer(importPath);
 
+    // RULE 1: Domain cannot import React/Next.js or other layers
     if (layer === 'domain') {
       const forbiddenImports = [
         'react',
@@ -45,13 +49,16 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
       }
     }
 
+    // RULE 2: Application cannot import from Presentation
     if (layer === 'application' && targetLayer === 'presentation') {
       pushFinding('frontend.clean.application_presentation_violation', 'critical', sf, imp,
         `Application importing from Presentation - violates dependency direction.`,
         findings);
     }
 
+    // RULE 3: Presentation should use hooks/stores, not direct Infrastructure
     if (layer === 'presentation' && targetLayer === 'infrastructure') {
+      // Exception: Configuration, constants are OK
       const isConfigImport = /config|constants|types/.test(importPath);
 
       if (!isConfigImport) {
@@ -62,6 +69,7 @@ function analyzeCleanArchitecture(sf, findings, pushFinding) {
     }
   });
 
+  // RULE 4: Domain structure validation
   if (layer === 'domain') {
     const hasCorrectStructure =
       filePath.includes('/entities/') ||
@@ -84,11 +92,12 @@ function detectLayer(path) {
   if (normalized.includes('/infrastructure/')) return 'infrastructure';
   if (normalized.includes('/presentation/')) return 'presentation';
 
-  if (normalized.match(/\/(components|pages|app)\
-  if (normalized.match(/\/(hooks|stores)\
-  if (normalized.match(/\/(entities|repositories|value-objects)\
-  if (normalized.match(/\/(use-cases|services)\
-  if (normalized.match(/\/(api|config|lib)\
+  // Next.js/React conventions
+  if (normalized.match(/\/(components|pages|app)\//)) return 'presentation';
+  if (normalized.match(/\/(hooks|stores)\//)) return 'presentation';
+  if (normalized.match(/\/(entities|repositories|value-objects)\//)) return 'domain';
+  if (normalized.match(/\/(use-cases|services)\//)) return 'application';
+  if (normalized.match(/\/(api|config|lib)\//)) return 'infrastructure';
 
   return null;
 }

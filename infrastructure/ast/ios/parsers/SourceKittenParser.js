@@ -1,4 +1,7 @@
 
+// ===== SOURCEKITTEN PARSER - ENTERPRISE =====
+// Native Swift AST parser using SourceKitten (Apple SourceKit wrapper)
+// Clean Architecture: Infrastructure Layer - iOS Native AST Parsing
 
 const { exec } = require('child_process');
 const util = require('util');
@@ -46,8 +49,10 @@ class SourceKittenParser {
     try {
       const absolutePath = path.resolve(filePath);
 
+      // Verify file exists
       await fs.access(absolutePath);
 
+      // Execute SourceKitten structure command
       const { stdout, stderr } = await execPromise(
         `${this.sourceKittenPath} structure --file "${absolutePath}"`,
         { timeout: this.timeout }
@@ -57,6 +62,7 @@ class SourceKittenParser {
         throw new Error(`SourceKitten parse error: ${stderr}`);
       }
 
+      // Parse JSON output
       const ast = JSON.parse(stdout);
 
       return {
@@ -193,6 +199,7 @@ class SourceKittenParser {
           });
         }
 
+        // Recursively traverse substructure
         if (node['key.substructure']) {
           traverse(node['key.substructure']);
         }
@@ -323,6 +330,7 @@ class SourceKittenParser {
    * @returns {boolean}
    */
   usesSwiftUI(ast) {
+    // Check for SwiftUI imports or View protocol conformance
     const hasViewProtocol = (nodes) => {
       if (!Array.isArray(nodes)) return false;
 
@@ -344,6 +352,7 @@ class SourceKittenParser {
    * @returns {boolean}
    */
   usesUIKit(ast) {
+    // Check for UIViewController or UIView inheritance
     const hasUIKitBase = (nodes) => {
       if (!Array.isArray(nodes)) return false;
 
@@ -372,6 +381,7 @@ class SourceKittenParser {
     const forceUnwraps = [];
     const lines = fileContent.split('\n');
 
+    // Regex to find force unwraps (! operator)
     lines.forEach((line, index) => {
       const matches = [...line.matchAll(/(\w+)\s*!/g)];
       matches.forEach(match => {
@@ -388,6 +398,7 @@ class SourceKittenParser {
   }
 }
 
+// TypeScript-like type definitions (JSDoc)
 /**
  * @typedef {Object} SwiftAST
  * @property {string} filePath

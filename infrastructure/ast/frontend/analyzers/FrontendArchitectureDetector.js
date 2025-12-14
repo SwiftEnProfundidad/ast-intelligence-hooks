@@ -16,10 +16,10 @@ class FrontendArchitectureDetector {
   constructor(projectRoot) {
     this.projectRoot = projectRoot;
     this.patterns = {
-      featureFirstClean: 0,
-      componentBased: 0,
-      atomicDesign: 0,
-      stateManagement: 0,
+      featureFirstClean: 0,  // Feature-First + DDD + Clean Architecture
+      componentBased: 0,     // Component-Based Architecture
+      atomicDesign: 0,       // Atomic Design Pattern
+      stateManagement: 0,    // State Management pattern
       mvc: 0
     };
     this.manualConfig = this.loadManualConfig();
@@ -48,16 +48,22 @@ class FrontendArchitectureDetector {
    * @returns {string} Pattern name
    */
   detect() {
+    // If manual config exists, use it (has priority)
     if (this.manualConfig && this.manualConfig.architecturePattern) {
       const manualPattern = this.manualConfig.architecturePattern;
       console.log(`[Frontend Architecture] Using manual configuration: ${manualPattern}`);
       return manualPattern;
     }
 
+    // If no manual config, detect automatically
+    const tsxFiles = glob.sync('**/*.{tsx,jsx}', {
       cwd: this.projectRoot,
+      ignore: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/build/**', '**/*.test.{tsx,jsx}', '**/*.spec.{tsx,jsx}']
     });
 
+    const tsFiles = glob.sync('**/*.ts', {
       cwd: this.projectRoot,
+      ignore: ['**/node_modules/**', '**/.next/**', '**/dist/**', '**/build/**', '**/*.test.ts', '**/*.spec.ts']
     });
 
     const allFiles = [...tsxFiles, ...tsFiles];
@@ -66,13 +72,17 @@ class FrontendArchitectureDetector {
       return 'UNKNOWN';
     }
 
+    // Analyze files to detect patterns
+    // PRIORITY 1: Feature-First + DDD + Clean Architecture
     this.detectFeatureFirstClean(allFiles);
 
+    // PRIORITY 2: Other patterns
     this.detectComponentBased(allFiles);
     this.detectAtomicDesign(allFiles);
     this.detectStateManagement(allFiles);
     this.detectMVC(allFiles);
 
+    // Determine dominant pattern
     return this.getDominantPattern();
   }
 
@@ -85,15 +95,18 @@ class FrontendArchitectureDetector {
    * - Presentation contains: components/, pages/
    */
   detectFeatureFirstClean(files) {
+    // Detect Feature-First folder structure
     const hasFeaturesFolders = files.some(f =>
-      /\/features?\/\w+\/(domain|application|infrastructure|presentation)\
+      /\/features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
     );
 
+    // Detect Clean Architecture layers within features
     const cleanArchFolders = ['domain', 'application', 'infrastructure', 'presentation'];
     const foundCleanFolders = cleanArchFolders.filter(folder => {
       return files.some(f => f.includes(`/${folder}/`));
     });
 
+    // Detect DDD concepts
     const dddConcepts = files.filter(f =>
       f.includes('/entities/') ||
       f.includes('/value-objects/') ||
@@ -104,6 +117,7 @@ class FrontendArchitectureDetector {
       f.includes('Repository.ts')
     );
 
+    // Scoring for Feature-First + Clean + DDD
     if (hasFeaturesFolders) {
       this.patterns.featureFirstClean += 10;
     }
@@ -116,9 +130,10 @@ class FrontendArchitectureDetector {
       this.patterns.featureFirstClean += dddConcepts.length * 2;
     }
 
+    // Detect feature names (bounded contexts)
     const featureNames = new Set();
     files.forEach(f => {
-      const match = f.match(/\/features?\/(\w+)\
+      const match = f.match(/\/features?\/(\w+)\//);
       if (match) {
         featureNames.add(match[1]);
       }
@@ -128,19 +143,23 @@ class FrontendArchitectureDetector {
       this.patterns.featureFirstClean += featureNames.size * 4;
     }
 
+    // Analyze file content for DDD validation
     files.forEach(file => {
       const content = this.readFile(file);
 
+      // Detect Repository interfaces in domain (API abstraction)
       if (file.includes('/domain/') && content.includes('interface ') && content.includes('Repository')) {
         this.patterns.featureFirstClean += 3;
       }
 
+      // Detect Use Cases in application
       if (file.includes('/application/') || file.includes('/use-cases/')) {
         if (content.includes('UseCase') || content.includes('useCase')) {
           this.patterns.featureFirstClean += 2;
         }
       }
 
+      // Detect custom hooks as application layer
       if (file.includes('/hooks/') && file.includes('use') && file.endsWith('.ts')) {
         this.patterns.featureFirstClean += 1;
       }
@@ -157,12 +176,14 @@ class FrontendArchitectureDetector {
    * - Component composition
    */
   detectComponentBased(files) {
+    // Detect components folder
     const hasComponentsFolder = files.some(f => f.includes('/components/'));
     
     if (hasComponentsFolder) {
       this.patterns.componentBased += 10;
     }
 
+    // Count component files
     const componentFiles = files.filter(f =>
       f.includes('/components/') && (f.endsWith('.tsx') || f.endsWith('.jsx'))
     );
@@ -171,11 +192,12 @@ class FrontendArchitectureDetector {
       this.patterns.componentBased += componentFiles.length;
     }
 
+    // Detect component composition (components using other components)
     files.forEach(file => {
       if (!file.includes('/components/')) return;
       
       const content = this.readFile(file);
-      const componentImports = content.match(/from\s+['"]\.\.\/components\
+      const componentImports = content.match(/from\s+['"]\.\.\/components\//g) || [];
       
       if (componentImports.length > 0) {
         this.patterns.componentBased += componentImports.length;
@@ -200,6 +222,7 @@ class FrontendArchitectureDetector {
       this.patterns.atomicDesign += foundFolders.length * 5;
     }
 
+    // Detect atomic design hierarchy (atoms → molecules → organisms)
     if (files.some(f => f.includes('/atoms/')) && 
         files.some(f => f.includes('/molecules/')) && 
         files.some(f => f.includes('/organisms/'))) {
@@ -219,19 +242,23 @@ class FrontendArchitectureDetector {
     files.forEach(file => {
       const content = this.readFile(file);
 
+      // Detect Zustand
       if (content.includes('zustand') || content.includes('create(') && file.includes('store')) {
         this.patterns.stateManagement += 5;
       }
 
+      // Detect Redux
       if (content.includes('redux') || content.includes('@reduxjs/toolkit') || 
           file.includes('slice') || file.includes('reducer')) {
         this.patterns.stateManagement += 5;
       }
 
+      // Detect Context API
       if (content.includes('createContext') || content.includes('Context.Provider')) {
         this.patterns.stateManagement += 2;
       }
 
+      // Detect state management folder
       if (file.includes('/stores/') || file.includes('/state/')) {
         this.patterns.stateManagement += 3;
       }
@@ -251,7 +278,9 @@ class FrontendArchitectureDetector {
       
       const content = this.readFile(file);
       
+      // Anti-pattern: Component with direct API calls
       if (content.includes('fetch(') || content.includes('axios.') || content.includes('.get(')) {
+        // Check if there's a service/hook layer
         const hasHook = files.some(f => 
           f.includes('use') && f.endsWith('.ts') && !f.includes('component')
         );
@@ -264,6 +293,7 @@ class FrontendArchitectureDetector {
         }
       }
 
+      // Anti-pattern: Component with complex business logic
       if (content.match(/const\s+\w+\s*=\s*\(.*\)\s*=>\s*{[\s\S]{0,500}if\s*\(.*\)\s*{[\s\S]{0,500}if\s*\(.*\)\s*{[\s\S]{0,500}if\s*\(.*\)\s*{/)) {
         this.patterns.mvc += 2;
       }

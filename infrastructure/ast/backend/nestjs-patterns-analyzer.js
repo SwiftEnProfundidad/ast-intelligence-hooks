@@ -1,3 +1,6 @@
+// ===== NESTJS PATTERNS ANALYZER =====
+// Backend-specific patterns from rulesbackend.mdc
+// NOT covered by ESLint: NestJS-specific architectural patterns
 
 const { SyntaxKind } = require('ts-morph');
 
@@ -21,6 +24,9 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
   const fullText = sf.getFullText();
   const classDecl = sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration)[0];
 
+  // =========================================================================
+  // RULE 1: Guards en todas las rutas protegidas (rulesbackend.mdc)
+  // =========================================================================
   const hasClassLevelGuard = classDecl?.getDecorators().some(d =>
     d.getExpression().getText().includes('@UseGuards')
   );
@@ -49,6 +55,9 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
     });
   }
 
+  // =========================================================================
+  // RULE 2: Role-based access control (rulesbackend.mdc)
+  // =========================================================================
   const hasRolesAtClass = classDecl?.getDecorators().some(d =>
     d.getExpression().getText().includes('@Roles')
   );
@@ -73,6 +82,9 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
     });
   }
 
+  // =========================================================================
+  // RULE 3: API validation (rulesbackend.mdc: ValidationPipe + DTOs)
+  // =========================================================================
   sf.getDescendantsOfKind(SyntaxKind.MethodDeclaration).forEach(method => {
     const decorators = method.getDecorators();
     const hasValidationPipe = decorators.some(d =>
@@ -104,12 +116,18 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
       findings);
   });
 
+  // =========================================================================
+  // RULE 4: Swagger documentation (rulesbackend.mdc)
+  // =========================================================================
   if (!fullText.includes('@nestjs/swagger') && !fullText.includes('@Api')) {
     pushFinding('backend.api.missing_swagger', 'medium', sf, sf,
       `Controller without Swagger decorators - add @nestjs/swagger for API documentation.`,
       findings);
   }
 
+  // =========================================================================
+  // RULE 5: Audit logging (rulesbackend.mdc: Logging y Observabilidad)
+  // =========================================================================
   const isBusinessLogicFile = /controller|service|gateway|handler|repository|usecase/i.test(filePath);
 
   if (isBusinessLogicFile) {

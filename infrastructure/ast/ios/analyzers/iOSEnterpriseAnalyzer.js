@@ -1,3 +1,7 @@
+// ===== iOS ENTERPRISE ANALYZER =====
+// Complete iOS analysis using native Swift AST (SourceKitten)
+// Implements 170+ iOS rules from AST_IOS.md
+// Clean Architecture: Infrastructure Layer - iOS Deep Analysis
 
 const path = require('path');
 const fs = require('fs').promises;
@@ -27,6 +31,7 @@ class iOSEnterpriseAnalyzer {
     this.findings = findings;
 
     try {
+      // Parse file with SourceKitten
       const ast = await this.parser.parseFile(filePath);
 
       if (!ast.parsed) {
@@ -34,13 +39,16 @@ class iOSEnterpriseAnalyzer {
         return;
       }
 
+      // Read file content for text-based checks
       const content = await fs.readFile(filePath, 'utf-8');
 
+      // Extract AST nodes
       const classes = this.parser.extractClasses(ast);
       const functions = this.parser.extractFunctions(ast);
       const properties = this.parser.extractProperties(ast);
       const protocols = this.parser.extractProtocols(ast);
 
+      // Run analysis rules
       await this.analyzeSwiftModerno(ast, content, filePath);
       await this.analyzeSwiftUI(ast, classes, filePath);
       await this.analyzeUIKit(ast, classes, filePath);
@@ -72,32 +80,38 @@ class iOSEnterpriseAnalyzer {
    * Rules: async/await, structured concurrency, sendable, opaque types, property wrappers, generics
    */
   async analyzeSwiftModerno(ast, content, filePath) {
+    // ios.async_await_missing
     if (content.includes('completion:') && !content.includes('async ')) {
       this.addFinding('ios.async_await_missing', 'medium', filePath, 1,
         'Using completion handlers instead of async/await (Swift 5.9+ required)');
     }
 
+    // ios.structured_concurrency_missing
     const taskCount = (content.match(/\bTask\s*\{/g) || []).length;
     if (taskCount > 3 && !content.includes('TaskGroup')) {
       this.addFinding('ios.structured_concurrency_missing', 'medium', filePath, 1,
         `Multiple Task blocks (${taskCount}) without TaskGroup - use structured concurrency`);
     }
 
+    // ios.sendable_missing
     if (content.includes('actor ') && !content.includes(': Sendable')) {
       this.addFinding('ios.sendable_missing', 'low', filePath, 1,
         'Actor should conform to Sendable protocol for thread-safe types');
     }
 
+    // ios.opaque_types_missing
     if (content.includes('func ') && content.includes('-> View') && !content.includes('some View')) {
       this.addFinding('ios.opaque_types_missing', 'low', filePath, 1,
         'Use "some View" instead of explicit View protocol return');
     }
 
+    // ios.property_wrappers_missing
     if (content.includes('UIViewController') && !content.includes('@State') && !content.includes('@Binding')) {
       this.addFinding('ios.property_wrappers_missing', 'info', filePath, 1,
         'Consider using SwiftUI property wrappers (@State, @Binding) for state management');
     }
 
+    // ios.generics_missing
     const functions = this.parser.extractFunctions(ast);
     functions.forEach(fn => {
       if (fn.name.includes('Array') || fn.name.includes('Collection')) {
@@ -118,32 +132,38 @@ class iOSEnterpriseAnalyzer {
     const usesSwiftUI = this.parser.usesSwiftUI(ast);
     const usesUIKit = this.parser.usesUIKit(ast);
 
+    // ios.swiftui_first
     if (usesUIKit && !usesSwiftUI) {
       this.addFinding('ios.swiftui_first', 'medium', filePath, 1,
         'Consider migrating to SwiftUI for new views (UIKit only when strictly necessary)');
     }
 
     if (usesSwiftUI) {
+      // ios.state_local_missing
       if (!content.includes('@State')) {
         this.addFinding('ios.state_local_missing', 'info', filePath, 1,
           'SwiftUI view without @State - consider if local state is needed');
       }
 
+      // ios.stateobject_missing
       if (content.includes('ObservableObject') && !content.includes('@StateObject')) {
         this.addFinding('ios.stateobject_missing', 'high', filePath, 1,
           'ObservableObject should be owned with @StateObject, not @ObservedObject');
       }
 
+      // ios.environmentobject_missing
       if (content.includes('class') && content.includes('ObservableObject') && !content.includes('@EnvironmentObject')) {
         this.addFinding('ios.environmentobject_missing', 'info', filePath, 1,
           'Consider using @EnvironmentObject for dependency injection in SwiftUI');
       }
 
+      // ios.declarativo_missing
       if (content.includes('.frame(') && content.includes('CGRect(')) {
         this.addFinding('ios.declarativo_missing', 'medium', filePath, 1,
           'Using imperative CGRect in SwiftUI - use declarative .frame() modifiers');
       }
 
+      // ios.geometryreader_moderation
       const geometryReaderCount = (content.match(/GeometryReader/g) || []).length;
       if (geometryReaderCount > 2) {
         this.addFinding('ios.geometryreader_moderation', 'medium', filePath, 1,
@@ -161,12 +181,14 @@ class iOSEnterpriseAnalyzer {
 
     classes.forEach(cls => {
       if (cls.name.includes('ViewController')) {
+        // ios.massive_viewcontrollers
         const linesCount = cls.substructure.length * 10;
         if (linesCount > 300) {
           this.addFinding('ios.massive_viewcontrollers', 'high', filePath, cls.line,
             `Massive ViewController ${cls.name} (~${linesCount} lines) - break down into smaller components`);
         }
 
+        // ios.uikit.viewmodel_delegation
         if (!content.includes('ViewModel')) {
           this.addFinding('ios.uikit.viewmodel_delegation', 'medium', filePath, cls.line,
             `ViewController ${cls.name} should delegate logic to ViewModel (MVVM pattern)`);
@@ -174,6 +196,8 @@ class iOSEnterpriseAnalyzer {
       }
     });
 
+    // ios.storyboards
+    // Only check actual Swift files, not analyzer files themselves
     if (filePath.endsWith('.swift') && !filePath.includes('analyzer') && !filePath.includes('detector')) {
       if (content.includes('storyboard') || content.includes('.xib') || content.includes('.nib')) {
         this.addFinding('ios.storyboards', 'high', filePath, 1,
@@ -189,11 +213,13 @@ class iOSEnterpriseAnalyzer {
   async analyzeProtocolOriented(protocols, filePath) {
     const content = await fs.readFile(filePath, 'utf-8');
 
+    // ios.pop.missing_extensions
     if (protocols.length > 0 && !content.includes('extension ')) {
       this.addFinding('ios.pop.missing_extensions', 'low', filePath, 1,
         'Protocols detected but no extensions - consider protocol extensions for default implementations');
     }
 
+    // ios.pop.missing_composition_over_inheritance
     if (content.includes('class ') && content.includes(': ')) {
       const inheritanceCount = (content.match(/class\s+\w+\s*:\s*\w+/g) || []).length;
       if (inheritanceCount > 2) {
@@ -210,6 +236,7 @@ class iOSEnterpriseAnalyzer {
   async analyzeValueTypes(classes, filePath) {
     const content = await fs.readFile(filePath, 'utf-8');
 
+    // ios.values.classes_instead_structs
     classes.forEach(cls => {
       if (!cls.inheritedTypes.length && !content.includes('ObservableObject')) {
         this.addFinding('ios.values.classes_instead_structs', 'medium', filePath, cls.line,
@@ -217,6 +244,7 @@ class iOSEnterpriseAnalyzer {
       }
     });
 
+    // ios.values.mutability
     const varCount = (content.match(/\bvar\s+/g) || []).length;
     const letCount = (content.match(/\blet\s+/g) || []).length;
     if (varCount > letCount) {
@@ -230,6 +258,7 @@ class iOSEnterpriseAnalyzer {
    * Rules: [weak self], [unowned self], retain cycles, deinit, ARC
    */
   async analyzeMemoryManagement(content, filePath) {
+    // ios.memory.missing_weak_self
     const closureMatches = content.match(/\{\s*\[/g);
     const weakSelfMatches = content.match(/\[weak self\]/g);
     if (closureMatches && closureMatches.length > (weakSelfMatches?.length || 0)) {
@@ -237,11 +266,13 @@ class iOSEnterpriseAnalyzer {
         'Closures without [weak self] - potential retain cycles');
     }
 
+    // ios.memory.retain_cycles
     if (content.includes('self.') && content.includes('{') && !content.includes('[weak self]')) {
       this.addFinding('ios.memory.retain_cycles', 'high', filePath, 1,
         'Potential retain cycle - closure captures self without [weak self]');
     }
 
+    // ios.memory.missing_deinit
     if (content.includes('class ') && !content.includes('deinit')) {
       this.addFinding('ios.memory.missing_deinit', 'low', filePath, 1,
         'Class without deinit - consider adding for cleanup verification');
@@ -253,6 +284,7 @@ class iOSEnterpriseAnalyzer {
    * Rules: No force unwrapping, if let, guard let, nil coalescing
    */
   async analyzeOptionals(content, filePath) {
+    // ios.force_unwrapping
     const forceUnwraps = content.match(/(\w+)\s*!/g);
     if (forceUnwraps && forceUnwraps.length > 0) {
       const nonIBOutlets = forceUnwraps.filter(match => !content.includes(`@IBOutlet`));
@@ -262,6 +294,7 @@ class iOSEnterpriseAnalyzer {
       }
     }
 
+    // ios.optionals.optional_binding
     const ifLetCount = (content.match(/if\s+let\s+/g) || []).length;
     const guardLetCount = (content.match(/guard\s+let\s+/g) || []).length;
     if (ifLetCount === 0 && guardLetCount === 0 && content.includes('?')) {
@@ -269,6 +302,7 @@ class iOSEnterpriseAnalyzer {
         'Optionals present but no optional binding - use if let or guard let');
     }
 
+    // ios.optionals.missing_nil_coalescing
     if (content.includes('?') && !content.includes('??')) {
       this.addFinding('ios.optionals.missing_nil_coalescing', 'info', filePath, 1,
         'Consider using nil coalescing operator (??) for default values');
@@ -296,11 +330,13 @@ class iOSEnterpriseAnalyzer {
   async analyzeDependencyInjection(classes, filePath) {
     const content = await fs.readFile(filePath, 'utf-8');
 
+    // ios.di.singleton_usage
     if (content.includes('.shared') || content.includes('static let shared')) {
       this.addFinding('ios.di.singleton_usage', 'high', filePath, 1,
         'Singleton detected - use dependency injection instead');
     }
 
+    // ios.di.missing_protocol_injection
     classes.forEach(cls => {
       if (cls.name.includes('ViewModel') || cls.name.includes('Service')) {
         const hasInit = content.includes(`init(`);
@@ -311,6 +347,7 @@ class iOSEnterpriseAnalyzer {
       }
     });
 
+    // ios.di.missing_factory
     if (content.includes('init(') && content.match(/init\([^)]{50,}\)/)) {
       this.addFinding('ios.di.missing_factory', 'low', filePath, 1,
         'Complex initialization - consider factory pattern');
@@ -322,33 +359,39 @@ class iOSEnterpriseAnalyzer {
    * Rules: URLSession, async/await, Codable, error handling, SSL pinning, retry logic
    */
   async analyzeNetworking(content, filePath) {
+    // ios.networking.urlsession
     if (!content.includes('URLSession') && !content.includes('Alamofire')) {
-      if (content.includes('http:
+      if (content.includes('http://') || content.includes('https://')) {
         this.addFinding('ios.networking.missing_urlsession', 'high', filePath, 1,
           'Network URLs detected but no URLSession/Alamofire usage');
       }
     }
 
+    // ios.networking.completion_handlers_instead_async
     if (content.includes('URLSession') && content.includes('completionHandler:') && !content.includes('async')) {
       this.addFinding('ios.networking.completion_handlers_instead_async', 'medium', filePath, 1,
         'Using completion handlers with URLSession - migrate to async/await');
     }
 
+    // ios.networking.missing_codable
     if (content.includes('JSONSerialization') && !content.includes('Codable')) {
       this.addFinding('ios.networking.missing_codable', 'medium', filePath, 1,
         'Manual JSON parsing - use Codable for type safety');
     }
 
+    // ios.networking.missing_error_handling
     if (content.includes('URLSession') && !content.includes('NetworkError')) {
       this.addFinding('ios.networking.missing_error_handling', 'high', filePath, 1,
         'Network code without custom NetworkError enum');
     }
 
+    // ios.networking.missing_ssl_pinning
     if (content.includes('URLSession') && !content.includes('serverTrustPolicy') && !content.includes('pinning')) {
       this.addFinding('ios.networking.missing_ssl_pinning', 'medium', filePath, 1,
         'Consider SSL pinning for high-security apps');
     }
 
+    // ios.networking.missing_retry
     if (content.includes('URLSession') && !content.includes('retry')) {
       this.addFinding('ios.networking.missing_retry', 'low', filePath, 1,
         'Network requests without retry logic');
@@ -360,21 +403,25 @@ class iOSEnterpriseAnalyzer {
    * Rules: UserDefaults, Keychain, Core Data, SwiftData, FileManager
    */
   async analyzePersistence(content, filePath) {
+    // ios.persistence.userdefaults_sensitive
     if (content.includes('UserDefaults') && (content.includes('password') || content.includes('token') || content.includes('auth'))) {
       this.addFinding('ios.persistence.userdefaults_sensitive', 'critical', filePath, 1,
         'Sensitive data in UserDefaults - use Keychain instead');
     }
 
+    // ios.persistence.missing_keychain
     if ((content.includes('password') || content.includes('token')) && !content.includes('Keychain') && !content.includes('Security')) {
       this.addFinding('ios.persistence.missing_keychain', 'critical', filePath, 1,
         'Sensitive data detected but no Keychain usage');
     }
 
+    // ios.persistence.core_data_on_main
     if (content.includes('NSManagedObjectContext') && content.includes('.main')) {
       this.addFinding('ios.persistence.core_data_on_main', 'high', filePath, 1,
         'Core Data operations on main thread - use background context');
     }
 
+    // ios.persistence.missing_migration
     if (content.includes('NSPersistentContainer') && !content.includes('NSMigrationManager')) {
       this.addFinding('ios.persistence.missing_migration', 'medium', filePath, 1,
         'Core Data without migration strategy');
@@ -386,21 +433,25 @@ class iOSEnterpriseAnalyzer {
    * Rules: Publishers, @Published, subscribers, operators, cancellables
    */
   async analyzeCombine(content, filePath) {
+    // ios.combine.missing_cancellables
     if (content.includes('.sink(') && !content.includes('AnyCancellable')) {
       this.addFinding('ios.combine.missing_cancellables', 'high', filePath, 1,
         'Combine sink without storing AnyCancellable - memory leak');
     }
 
+    // ios.combine.published_without_combine
     if (content.includes('@Published') && !content.includes('import Combine')) {
       this.addFinding('ios.combine.published_without_combine', 'high', filePath, 1,
         '@Published used but Combine not imported');
     }
 
+    // ios.combine.error_handling
     if (content.includes('.sink(') && !content.includes('receiveCompletion')) {
       this.addFinding('ios.combine.error_handling', 'medium', filePath, 1,
         'Combine subscriber without error handling (receiveCompletion)');
     }
 
+    // ios.combine.prefer_async_await
     if (content.includes('Future<') && !content.includes('async')) {
       this.addFinding('ios.combine.prefer_async_await', 'low', filePath, 1,
         'Combine Future for single value - consider async/await instead');
@@ -412,21 +463,25 @@ class iOSEnterpriseAnalyzer {
    * Rules: async/await, Task, TaskGroup, actor, @MainActor, Sendable
    */
   async analyzeConcurrency(content, filePath) {
+    // ios.concurrency.dispatchqueue_old
     if (content.includes('DispatchQueue') && !content.includes('async func')) {
       this.addFinding('ios.concurrency.dispatchqueue_old', 'medium', filePath, 1,
         'Using DispatchQueue - prefer async/await for new code');
     }
 
+    // ios.concurrency.missing_mainactor
     if (content.includes('DispatchQueue.main') && content.includes('UI')) {
       this.addFinding('ios.concurrency.missing_mainactor', 'medium', filePath, 1,
         'Manual main thread dispatch - use @MainActor annotation');
     }
 
+    // ios.concurrency.task_cancellation
     if (content.includes('Task {') && !content.includes('.cancel()') && !content.includes('Task.isCancelled')) {
       this.addFinding('ios.concurrency.task_cancellation', 'low', filePath, 1,
         'Task without cancellation handling');
     }
 
+    // ios.concurrency.actor_missing
     if (content.includes('var ') && content.includes('queue') && !content.includes('actor')) {
       this.addFinding('ios.concurrency.actor_missing', 'medium', filePath, 1,
         'Manual synchronization with queue - consider actor for thread safety');
@@ -438,16 +493,19 @@ class iOSEnterpriseAnalyzer {
    * Rules: XCTest, Quick/Nimble, makeSUT, trackForMemoryLeaks, protocols, coverage
    */
   async analyzeTesting(content, filePath) {
+    // ios.testing.missing_xctest
     if (filePath.includes('Test') && !content.includes('XCTest') && !content.includes('Quick')) {
       this.addFinding('ios.testing.missing_xctest', 'high', filePath, 1,
         'Test file without XCTest or Quick import');
     }
 
+    // ios.testing.missing_makesut
     if (filePath.includes('Test') && !content.includes('makeSUT') && content.includes('func test')) {
       this.addFinding('ios.testing.missing_makesut', 'medium', filePath, 1,
         'Test without makeSUT pattern - centralize system under test creation');
     }
 
+    // ios.testing.missing_memory_leak_tracking
     if (filePath.includes('Test') && !content.includes('trackForMemoryLeaks') && content.includes('class')) {
       this.addFinding('ios.testing.missing_memory_leak_tracking', 'medium', filePath, 1,
         'Test without trackForMemoryLeaks helper');
@@ -490,7 +548,7 @@ class iOSEnterpriseAnalyzer {
    * Rules: Keychain, SSL pinning, jailbreak detection, ATS, biometric, secure enclave
    */
   async analyzeSecurity(content, filePath) {
-    if (content.includes('http:
+    if (content.includes('http://') && !content.includes('NSAppTransportSecurity')) {
       this.addFinding('ios.security.missing_ats', 'critical', filePath, 1,
         'HTTP URLs without App Transport Security exception');
     }
@@ -553,6 +611,7 @@ class iOSEnterpriseAnalyzer {
    * Rules: NSLocalizedString, Localizable.strings, Stringsdict, RTL, formatters
    */
   async analyzeLocalization(content, filePath) {
+    // ios.i18n.hardcoded_strings
     const textMatches = content.match(/(Text|UILabel)\(["\'][^"\']+["\']\)/g);
     if (textMatches && textMatches.length > 0 && !content.includes('NSLocalizedString')) {
       this.addFinding('ios.i18n.hardcoded_strings', 'medium', filePath, 1,
@@ -613,6 +672,7 @@ class iOSEnterpriseAnalyzer {
    * Rules: Instruments, lazy loading, image optimization, background threads, reuse cells
    */
   async analyzePerformance(functions, content, filePath) {
+    // ios.performance.blocking_main_thread
     if (content.includes('URLSession') && !content.includes('DispatchQueue') && !content.includes('async')) {
       this.addFinding('ios.performance.blocking_main_thread', 'high', filePath, 1,
         'Network call potentially on main thread - use async or background queue');
@@ -648,7 +708,8 @@ class iOSEnterpriseAnalyzer {
    * Rules: SPM, feature modules, extensions, MARK, file naming
    */
   async analyzeCodeOrganization(filePath, content) {
-    if (content.length > 200 && !content.includes('
+    // ios.organization.missing_mark
+    if (content.length > 200 && !content.includes('// MARK:')) {
       this.addFinding('ios.organization.missing_mark', 'low', filePath, 1,
         'Large file without MARK comments for organization');
     }

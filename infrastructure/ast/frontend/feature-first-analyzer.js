@@ -1,3 +1,6 @@
+// ===== FEATURE-FIRST ANALYZER - FRONTEND =====
+// Based on rulesfront.mdc specifications
+// Feature-First with proper boundaries and independence
 
 const path = require('path');
 
@@ -23,8 +26,10 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
     const importPath = imp.getModuleSpecifierValue();
     const targetFeature = detectFeature(importPath);
 
+    // RULE 1: No cross-feature imports
     if (targetFeature && targetFeature !== feature) {
-      const isSharedModule = /\/(ui|shared|lib|common)\
+      // Exceptions: ui/, shared/, lib/ are allowed
+      const isSharedModule = /\/(ui|shared|lib|common)\//i.test(importPath);
 
       if (!isSharedModule) {
         pushFinding('frontend.feature.cross_feature_import', 'high', sf, imp,
@@ -41,17 +46,21 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
 function detectFeature(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
 
-  const appMatch = normalized.match(/\/app\/([^\/]+)\
+  // Next.js App Router: app/{feature}/
+  const appMatch = normalized.match(/\/app\/([^\/]+)\//);
   if (appMatch) {
     const feature = appMatch[1];
+    // Exclude non-features
     if (!['api', 'layout', 'loading', 'error', 'not-found'].includes(feature)) {
       return feature;
     }
   }
 
-  const compMatch = normalized.match(/\/components\/([^\/]+)\
+  // Components by feature: components/{feature}/
+  const compMatch = normalized.match(/\/components\/([^\/]+)\//);
   if (compMatch) {
     const feature = compMatch[1];
+    // Exclude shared UI
     if (feature !== 'ui') {
       return feature;
     }

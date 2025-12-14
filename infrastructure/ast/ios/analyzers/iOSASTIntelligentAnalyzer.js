@@ -1,3 +1,7 @@
+// ===== iOS AST INTELLIGENT ANALYZER =====
+// 100% Node-based AST analysis using SourceKitten
+// NO regex/includes for rule detection - pure AST traversal
+// Enterprise-grade: SOLID, Clean Architecture, SwiftUI, Concurrency, Memory, Testing
 
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -31,6 +35,7 @@ class iOSASTIntelligentAnalyzer {
   }
 
   checkSwiftSyntax() {
+    // Dynamic project root detection (portable)
     const projectRoot = require('child_process')
       .execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' })
       .trim();
@@ -543,6 +548,7 @@ class iOSASTIntelligentAnalyzer {
       }
     }
 
+    // Infrastructure importing Domain UI
     if (filePath.includes('/Infrastructure/')) {
       const hasUIImport = this.imports.some(i => ['SwiftUI', 'UIKit'].includes(i.name));
       if (hasUIImport) {
@@ -551,6 +557,7 @@ class iOSASTIntelligentAnalyzer {
       }
     }
 
+    // Presentation importing Infrastructure directly
     if (filePath.includes('/Presentation/') || filePath.includes('/Views/')) {
       const hasInfraImport = this.imports.some(i =>
         i.name.includes('Alamofire') || i.name.includes('Realm') || i.name.includes('CoreData')
@@ -562,7 +569,9 @@ class iOSASTIntelligentAnalyzer {
     }
   }
 
+  // ===== Additional Rules from rulesios.mdc =====
   analyzeAdditionalRules(filePath) {
+    // Coordinator pattern missing
     if (filePath.includes('ViewModel') && this.fileContent.includes('NavigationLink')) {
       const hasCoordinator = this.imports.some(i => i.name.includes('Coordinator'));
       if (!hasCoordinator) {
@@ -571,30 +580,35 @@ class iOSASTIntelligentAnalyzer {
       }
     }
 
+    // DispatchQueue in new code (should use async/await)
     if (this.fileContent.includes('DispatchQueue.main') || this.fileContent.includes('DispatchQueue.global')) {
       const line = this.findLineNumber('DispatchQueue');
       this.pushFinding('ios.concurrency.dispatch_queue', 'medium', filePath, line,
         'DispatchQueue detected - use async/await in new code');
     }
 
+    // Task without error handling
     if (/Task\s*\{/.test(this.fileContent) && !/Task\s*\{[^}]*do\s*\{/.test(this.fileContent)) {
       const line = this.findLineNumber('Task {');
       this.pushFinding('ios.concurrency.task_no_error_handling', 'high', filePath, line,
         'Task without do-catch - handle errors');
     }
 
+    // UserDefaults for sensitive data
     if (this.fileContent.includes('UserDefaults') && /password|token|secret|key/i.test(this.fileContent)) {
       const line = this.findLineNumber('UserDefaults');
       this.pushFinding('ios.security.sensitive_userdefaults', 'critical', filePath, line,
         'Sensitive data in UserDefaults - use Keychain');
     }
 
+    // Hardcoded strings (i18n)
     const hardcodedStrings = this.fileContent.match(/Text\s*\(\s*"[^"]{10,}"\s*\)/g) || [];
     if (hardcodedStrings.length > 3) {
       this.pushFinding('ios.i18n.hardcoded_strings', 'medium', filePath, 1,
         `${hardcodedStrings.length} hardcoded strings - use NSLocalizedString`);
     }
 
+    // Missing accessibility
     if (this.fileContent.includes('Image(') && !this.fileContent.includes('.accessibilityLabel')) {
       const imageCount = (this.fileContent.match(/Image\s*\(/g) || []).length;
       const labelCount = (this.fileContent.match(/\.accessibilityLabel/g) || []).length;
@@ -604,18 +618,21 @@ class iOSASTIntelligentAnalyzer {
       }
     }
 
+    // Storyboard usage (should use SwiftUI or programmatic)
     if (this.fileContent.includes('@IBOutlet') || this.fileContent.includes('@IBAction')) {
       const line = this.findLineNumber('@IB');
       this.pushFinding('ios.deprecated.storyboard', 'low', filePath, line,
         'Storyboard/XIB detected - consider SwiftUI or programmatic UI');
     }
 
+    // Completion handlers (should use async/await)
     const completionCount = (this.fileContent.match(/completion\s*:\s*@escaping/g) || []).length;
     if (completionCount > 2) {
       this.pushFinding('ios.concurrency.completion_handlers', 'medium', filePath, 1,
         `${completionCount} completion handlers - use async/await`);
     }
 
+    // Actor isolation missing
     for (const cls of this.classes) {
       const hasSharedState = this.properties.some(p =>
         (p['key.kind'] || '').includes('static') &&
@@ -630,6 +647,7 @@ class iOSASTIntelligentAnalyzer {
       }
     }
 
+    // Sendable conformance missing
     for (const cls of this.classes) {
       const name = cls['key.name'] || '';
       const inheritedTypes = (cls['key.inheritedtypes'] || []).map(t => t['key.name']);

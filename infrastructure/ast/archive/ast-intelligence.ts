@@ -206,11 +206,11 @@ function ruleLayeringImports(): Rule {
       const imports = sf.getImportDeclarations();
       for (const imp of imports) {
         const spec = imp.getModuleSpecifierValue();
-        if (/domain\
+        if (/domain\//.test(p) && (/infrastructure\//.test(spec) || /application\//.test(spec))) {
           const { line, column } = positionOf(imp, sf);
           findings.push({ ruleId: "architecture.layering", severity: "error", filePath: p, line, column, message: `domain->${spec}` });
         }
-        if (/application\
+        if (/application\//.test(p) && /infrastructure\//.test(spec)) {
           const { line, column } = positionOf(imp, sf);
           findings.push({ ruleId: "architecture.layering", severity: "error", filePath: p, line, column, message: `application->${spec}` });
         }

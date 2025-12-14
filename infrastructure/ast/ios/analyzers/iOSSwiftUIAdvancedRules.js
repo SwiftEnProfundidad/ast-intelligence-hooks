@@ -64,6 +64,7 @@ struct MyPreferenceKey: PreferenceKey {
    * 2. Custom ViewModifiers - debe usar ViewModifier protocol
    */
   checkCustomViewModifiers(filePath, content) {
+    // Detectar extension View con funciones que deberían ser ViewModifiers
     const extensionView = content.match(/extension\s+View\s*{([\s\S]*?)(?=\nextension|\n})/);
 
     if (extensionView) {
@@ -79,11 +80,13 @@ struct MyPreferenceKey: PreferenceKey {
           line: this.findLineNumber(content, 'extension View'),
           suggestion: `Extraer a ViewModifier protocol:
 
+// ❌ Extension grande
 extension View {
     func myStyle() -> some View { ... }
     func anotherStyle() -> some View { ... }
 }
 
+// ✅ ViewModifier reutilizable
 struct MyStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content.padding()...
@@ -99,6 +102,7 @@ extension View {
       }
     }
 
+    // Detectar ViewModifier sin proper implementation
     const viewModifierMatches = content.match(/struct\s+(\w+):\s*ViewModifier/g);
     if (viewModifierMatches) {
       viewModifierMatches.forEach(match => {
@@ -125,6 +129,7 @@ extension View {
     const usesEnvironment = content.includes('@Environment(');
     const hasCustomKey = content.includes(': EnvironmentKey');
 
+    // Detectar uso de Environment con keys custom sin definir EnvironmentKey
     const environmentMatches = content.match(/@Environment\(\\\.(\w+)\)/g);
     if (environmentMatches && !hasCustomKey) {
       pushFinding(this.findings, {
@@ -175,6 +180,7 @@ withTransaction(transaction) { ... }`
    * 5. Custom Layout protocol (iOS 16+)
    */
   checkCustomLayoutProtocol(filePath, content) {
+    // Detectar GeometryReader para layouts que deberían usar Layout protocol
     const geometryReaderCount = (content.match(/GeometryReader/g) || []).length;
     const hasLayoutProtocol = content.includes(': Layout');
 
@@ -189,9 +195,11 @@ withTransaction(transaction) { ... }`
 
 struct MyCustomLayout: Layout {
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        // Custom logic
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        // Custom placement
     }
 }`
       });
@@ -205,6 +213,7 @@ struct MyCustomLayout: Layout {
     const viewBuilderMatches = content.match(/@ViewBuilder/g);
 
     if (viewBuilderMatches && viewBuilderMatches.length > 0) {
+      // Detectar @ViewBuilder sin buildEither (condicionales)
       const hasBuildEither = content.includes('buildEither');
       const hasConditionals = content.includes('if ') || content.includes('switch ');
 
@@ -231,6 +240,7 @@ struct MyCustomLayout: Layout {
       preferenceKeys.forEach(key => {
         const reduceBody = key.match(/reduce\(([\s\S]*?)\)/)?.[1];
 
+        // Detectar operaciones O(n) en reduce (performance issue)
         if (reduceBody && (reduceBody.includes('.map') || reduceBody.includes('.filter'))) {
           pushFinding(this.findings, {
             ruleId: 'ios.swiftui.preferencekey_expensive_reduce',
@@ -298,12 +308,14 @@ struct MyCustomLayout: Layout {
         line: this.findLineNumber(content, '.onAppear'),
         suggestion: `Usar .task en lugar de .onAppear para async:
 
+// ❌ onAppear no cancela automáticamente
 .onAppear {
     Task {
         await loadData()
     }
 }
 
+// ✅ .task cancela automáticamente cuando View desaparece
 .task {
     await loadData()
 }`
