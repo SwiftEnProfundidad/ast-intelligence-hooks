@@ -79,7 +79,7 @@ function shutdown() {
     try {
       w.close();
     } catch (error) {
-      log(`Error closing watcher: ${error.message}`);
+      log(`Error closing watcher: ${error.message}`); 
     }
   });
 }

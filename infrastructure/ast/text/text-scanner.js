@@ -49,7 +49,11 @@ function runTextScanner(root, findings) {
     const ext = path.extname(file).toLowerCase();
     if (!['.kt', '.kts', '.swift', '.java', '.xml', '.plist', '.stringsdict', '.yml', '.yaml'].includes(ext)) continue;
     let content = '';
-    try { content = fs.readFileSync(file, 'utf-8'); } catch (error) { continue; }
+    try { 
+      content = fs.readFileSync(file, 'utf-8'); 
+    } catch (error) {
+      continue;
+    }
     const plat = platformOf(file) || (ext === '.swift' ? 'ios' : (ext === '.kt' || ext === '.kts' || ext === '.java' || ext === '.xml') ? 'android' : (ext === '.plist' && path.basename(file).toLowerCase().includes('info')) ? 'ios' : (ext === '.stringsdict' ? 'ios' : (ext === '.yml' || ext === '.yaml') ? 'ios' : 'other'));
 
     if (plat === 'android') {

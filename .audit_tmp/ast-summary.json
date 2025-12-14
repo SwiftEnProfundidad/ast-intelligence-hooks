@@ -1,13 +1,13 @@
 {
   "totals": {
-    "errors": 107,
-    "warnings": 13,
+    "errors": 106,
+    "warnings": 12,
     "infos": 115
   },
   "levels": {
     "CRITICAL": 7,
-    "HIGH": 100,
-    "MEDIUM": 13,
+    "HIGH": 99,
+    "MEDIUM": 12,
     "LOW": 115
   },
   "platforms": {
@@ -15,16 +15,16 @@
     "Frontend": 7,
     "iOS": 18,
     "Android": 42,
-    "Other": 71
+    "Other": 69
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
     "workflow.sequence.missing_bdd_specs": 1,
-    "common.quality.comments": 76,
+    "common.quality.comments": 75,
     "common.types.any": 1,
     "common.quality.disabled_lint": 3,
     "common.debug.console": 3,
-    "common.quality.todo_fixme": 2,
+    "common.quality.todo_fixme": 1,
     "common.network.missing_circuit_breaker": 9,
     "common.network.missing_timeout": 2,
     "common.network.missing_retry_policy": 1,
@@ -74,17 +74,17 @@
   "platformDetails": {
     "Other": {
       "CRITICAL": 2,
-      "HIGH": 58,
-      "MEDIUM": 8,
+      "HIGH": 57,
+      "MEDIUM": 7,
       "LOW": 3,
       "rules": {
         "workflow.sequence.tests_lagging": 1,
         "workflow.sequence.missing_bdd_specs": 1,
-        "common.quality.comments": 46,
+        "common.quality.comments": 45,
         "common.types.any": 1,
         "common.quality.disabled_lint": 3,
         "common.debug.console": 3,
-        "common.quality.todo_fixme": 2,
+        "common.quality.todo_fixme": 1,
         "common.network.missing_circuit_breaker": 5,
         "common.network.missing_timeout": 2,
         "common.network.missing_retry_policy": 1,
@@ -104,7 +104,6 @@
         ".coverage/lcov-report/prettify.js",
         ".coverage/lcov-report/sorter.js",
         "application/services/AutonomousOrchestrator.js",
-        "application/services/HookSystemScheduler.js",
         "application/services/IntelligentCommitAnalyzer.js",
         "application/services/IntelligentGitTreeMonitor.js",
         "application/services/PlatformDetectionService.js",
@@ -304,11 +303,11 @@
       ]
     },
     "common.quality.comments": {
-      "count": 76,
+      "count": 75,
       "level": "HIGH",
       "severity": "HIGH",
       "platforms": {
-        "Other": 46,
+        "Other": 45,
         "Android": 7,
         "Backend": 7,
         "Frontend": 6,
@@ -323,7 +322,6 @@
         ".coverage/lcov-report/prettify.js",
         ".coverage/lcov-report/sorter.js",
         "application/services/AutonomousOrchestrator.js",
-        "application/services/HookSystemScheduler.js",
         "application/services/IntelligentCommitAnalyzer.js",
         "application/services/IntelligentGitTreeMonitor.js",
         "application/services/PlatformDetectionService.js",
@@ -431,14 +429,13 @@
       ]
     },
     "common.quality.todo_fixme": {
-      "count": 2,
+      "count": 1,
       "level": "MEDIUM",
       "severity": "MEDIUM",
       "platforms": {
-        "Other": 2
+        "Other": 1
       },
       "files": [
-        "application/services/HookSystemScheduler.js",
         "infrastructure/ast/archive/kotlin-analyzer.js"
       ]
     },
@@ -1117,19 +1114,6 @@
         "CRITICAL": 0,
         "HIGH": 1,
         "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "application/services/HookSystemScheduler.js": {
-      "platform": "Other",
-      "rules": {
-        "common.quality.todo_fixme": 1,
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 1,
         "LOW": 0
       }
     },
@@ -2376,24 +2360,6 @@
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/AutonomousOrchestrator.js",
-      "line": 1,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.todo_fixme",
-      "severity": "MEDIUM",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/HookSystemScheduler.js",
-      "line": 1,
-      "column": 1,
-      "message": "Task marker present in code",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/application/services/HookSystemScheduler.js",
       "line": 1,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
@@ -4438,7 +4404,7 @@
   ],
   "metadata": {
     "totalFiles": 287,
-    "timestamp": "2025-12-14T00:39:20.087Z",
+    "timestamp": "2025-12-14T00:43:37.001Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }

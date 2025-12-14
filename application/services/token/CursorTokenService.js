@@ -72,6 +72,7 @@ class CursorTokenService {
         try {
             await fs.promises.access(this.usageFile, fs.constants.F_OK);
         } catch (error) {
+            this.logger.debug?.('CURSOR_TOKEN_SERVICE_FILE_NOT_FOUND', { path: this.usageFile, error: error.message });
             return null;
         }
 
@@ -89,7 +90,7 @@ class CursorTokenService {
                         return this.normalizeFileRecord(parsed);
                     }
                 } catch (error) {
-                    // ignore malformed line and continue
+                    this.logger.debug?.('CURSOR_TOKEN_SERVICE_MALFORMED_LINE', { error: error.message });
                 }
             }
             return null;
