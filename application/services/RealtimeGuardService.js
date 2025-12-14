@@ -800,10 +800,10 @@ class RealtimeGuardService {
       .filter(Boolean)
       .filter(
         branch =>
-          branch !== this.gitflowDevelopBranch &&
-          branch !== this.gitflowMainBranch &&
-          branch !== currentBranch &&
-          /^(feature|fix|chore|docs|refactor|test|ci)\
+        branch !== this.gitflowDevelopBranch &&
+        branch !== this.gitflowMainBranch &&
+        branch !== currentBranch &&
+        /^(feature|fix|chore|docs|refactor|test|ci)\//.test(branch)
       );
 
     if (!branches.length) {

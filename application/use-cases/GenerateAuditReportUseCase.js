@@ -130,13 +130,15 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    lines.push('');
-    lines.push('═'.repeat(60));
-    lines.push('');
-    lines.push('  🐈💚 PUMUKI TEAM® - Advanced Project Intelligence');
-    lines.push(`  Generated: ${new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })}`);
-    lines.push(`  Project: ${this.getProjectName()}`);
-    lines.push('');
+    if (includeSignature) {
+      lines.push('');
+      lines.push('═'.repeat(60));
+      lines.push('');
+      lines.push('  🐈💚 PUMUKI TEAM® - Advanced Project Intelligence');
+      lines.push(`  Generated: ${new Date().toLocaleString('es-ES', { timeZone: 'Europe/Madrid' })}`);
+      lines.push(`  Project: ${this.getProjectName()}`);
+      lines.push('');
+    }
 
     return lines.join('\n');
   }
