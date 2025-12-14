@@ -68,7 +68,7 @@ This library was conceived to solve this fundamental problem by creating a **per
      - Example: `"Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."`
 
 3. **Rules are automatically loaded**:
-   - `DynamicRulesLoader` scans `.cursor/rules/` for platform-specific rules
+   - `DynamicRulesLoader` scans agentic IDE rules directories (`.cursor/rules/`, `.claude/skills/`, `.windsurf/rules/`, `.vscode/rules/`, `.kilo/rules/`, `.cline/rules/`) for platform-specific rules
    - **Always loads `rulesgold.mdc` first** (generic rules that apply to all projects)
    - Then loads platform-specific rules: `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`
    - Aggregates all 798+ validation rules into a single context
@@ -167,7 +167,7 @@ This library was conceived to solve this fundamental problem by creating a **per
    - Sends macOS notifications for critical events
 
 3. **Automatic Rule Updates**:
-   - When new rules are added to `.cursor/rules/`, they're automatically detected
+   - When new rules are added to any agentic IDE rules directory, they're automatically detected
    - `DynamicRulesLoader` reloads rules on next `ai-start`
    - `auto-context.mdc` is regenerated with latest rules
 
@@ -243,12 +243,12 @@ This library was conceived to solve this fundamental problem by creating a **per
    - Custom analyzers for each platform:
      - `BackendArchitectureDetector`: Detects NestJS patterns, Clean Architecture
      - `FrontendArchitectureDetector`: Detects React/Next.js patterns, Feature-First
-     - `iOSArchitectureDetector`: Detects Swift/SwiftUI patterns, MVVM-C
+     - `iOSArchitectureDetector`: Detects multiple iOS architecture patterns (MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD, MVC Legacy)
      - `AndroidClassAnalyzer`: Detects Kotlin/Jetpack Compose patterns
    - `MaintainabilityAnalyzer`, `PerformanceAnalyzer`, `SecurityAnalyzer`, `StabilityAnalyzer`
 
 4. **Context Management**:
-   - `DynamicRulesLoader`: Loads and aggregates rules from `.cursor/rules/`
+   - `DynamicRulesLoader`: Loads and aggregates rules from any agentic IDE rules directory (Cursor, Claude, Windsurf, VS Code, Kilo, Cline, etc.)
    - `ContextDetectionEngine`: Detects project structure and patterns
    - `PlatformDetectionService`: Identifies platforms (iOS, Android, Backend, Frontend)
    - `AutonomousOrchestrator`: Coordinates context detection and rule loading
@@ -273,7 +273,7 @@ This library was conceived to solve this fundamental problem by creating a **per
 
 1. **Permanent AI Context**: `.AI_EVIDENCE.json` that never gets lost
 2. **798+ Validation Rules**: Platform-specific code quality rules
-3. **Automatic Architecture Detection**: Identifies patterns (Clean, DDD, Feature-First, MVVM-C, etc.)
+3. **Automatic Architecture Detection**: Identifies multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
 4. **Quality Gates**: Blocks commits with CRITICAL/HIGH violations
 5. **Git Flow Automation**: Complete workflow automation (commit → push → PR → merge)
 6. **MCP Integration**: Standard protocol for any agentic IDE
@@ -367,7 +367,7 @@ With this library, your AI assistant **always knows**:
 #### 🔍 Code Validation
 - ✅ **798+ validation rules** across all platforms with severity-based quality gates
 - ✅ **Multi-platform support**: iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose), Backend (TypeScript/NestJS), Frontend (React/Next.js)
-- ✅ **Automatic architecture detection**: Detects MVVM-C, VIPER, TCA, Clean Architecture, DDD, CQRS, and more patterns
+- ✅ **Automatic architecture detection**: Detects multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
 - ✅ **BDD→TDD workflow enforcement**: CRITICAL priority - ensures feature files exist before implementation and tests before code
 - ✅ **Pre-commit Git hooks**: Automatic validation blocks commits with CRITICAL/HIGH violations
 - ✅ **AST analysis engine**: Deep static code analysis using Abstract Syntax Trees
