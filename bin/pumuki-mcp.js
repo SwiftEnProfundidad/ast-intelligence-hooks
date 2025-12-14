@@ -5,7 +5,7 @@ const os = require('os');
 
 const MCP_CONFIG = {
     mcpServers: {
-        'gitflow-automation-watcher': {
+        'ast-intelligence-automation': {
             command: 'node',
             type: 'stdio',
             args: ['./scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js'],
@@ -48,9 +48,9 @@ function configureMCP() {
     }
 
     const config = JSON.parse(JSON.stringify(MCP_CONFIG));
-    config.mcpServers['gitflow-automation-watcher'].args[0] =
+    config.mcpServers['ast-intelligence-automation'].args[0] =
         path.join(cwd, 'scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js');
-    config.mcpServers['gitflow-automation-watcher'].env.REPO_ROOT = cwd;
+    config.mcpServers['ast-intelligence-automation'].env.REPO_ROOT = cwd;
 
     if (fs.existsSync(mcpFile)) {
         const existing = JSON.parse(fs.readFileSync(mcpFile, 'utf8'));
@@ -63,7 +63,7 @@ function configureMCP() {
     }
 
     console.log('\n📋 MCP Server configured:');
-    console.log('   - gitflow-automation-watcher');
+    console.log('   - ast-intelligence-automation');
     console.log('\n🔄 Restart your IDE to activate the MCP server.');
 }
 

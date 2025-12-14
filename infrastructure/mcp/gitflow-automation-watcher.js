@@ -681,9 +681,9 @@ class MCPServer {
                             }
                         },
                         serverInfo: {
-                            name: 'gitflow-automation-watcher',
-                            version: '2.0.0',
-                            description: 'Git Flow Automation + AI Evidence Monitoring'
+                            name: 'ast-intelligence-automation',
+                            version: '3.0.0',
+                            description: 'Autonomous AST Intelligence + Git Flow Automation'
                         }
                     }
                 };
@@ -1245,11 +1245,13 @@ setInterval(async () => {
         const libraryPath = getLibraryInstallPath();
         
         // Filtrar cambios: solo código del proyecto, excluir node_modules, package-lock, librería, etc.
-        const projectChanges = uncommittedChanges
+        const uniqueFiles = new Set();
+        
+        uncommittedChanges
             .split('\n')
-            .filter(line => {
+            .forEach(line => {
                 const file = line.trim().substring(3); // Remover status (ej: " M ")
-                if (!file) return false;
+                if (!file) return;
                 
                 // Excluir siempre: node_modules, package-lock, .git, configs IDE
                 if (file.startsWith('node_modules/') ||
@@ -1259,31 +1261,32 @@ setInterval(async () => {
                     file.startsWith('.claude/') ||
                     file.startsWith('.vscode/') ||
                     file.startsWith('.idea/')) {
-                    return false;
+                    return;
                 }
                 
                 // Excluir ruta de instalación de la librería (si se detectó)
                 if (libraryPath && file.startsWith(libraryPath + '/')) {
-                    return false;
+                    return;
                 }
                 
                 // Solo incluir archivos de código/documentación
-                return file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || 
-                       file.endsWith('.jsx') || file.endsWith('.swift') || file.endsWith('.kt') ||
-                       file.endsWith('.py') || file.endsWith('.java') || file.endsWith('.go') ||
-                       file.endsWith('.rs') || file.endsWith('.md') || file.endsWith('.json') ||
-                       file.endsWith('.yaml') || file.endsWith('.yml');
+                if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || 
+                    file.endsWith('.jsx') || file.endsWith('.swift') || file.endsWith('.kt') ||
+                    file.endsWith('.py') || file.endsWith('.java') || file.endsWith('.go') ||
+                    file.endsWith('.rs') || file.endsWith('.md') || file.endsWith('.json') ||
+                    file.endsWith('.yaml') || file.endsWith('.yml')) {
+                    uniqueFiles.add(file);
+                }
             });
 
-        if (projectChanges.length === 0) {
+        if (uniqueFiles.size === 0) {
             return; // No hay cambios de código del proyecto
         }
 
-        const changedFiles = projectChanges.length;
+        const changedFiles = uniqueFiles.size;
 
-        // Solo añadir los archivos de código del proyecto
-        projectChanges.forEach(line => {
-            const file = line.trim().substring(3);
+        // Solo añadir los archivos de código del proyecto (únicos)
+        uniqueFiles.forEach(file => {
             exec(`git add "${file}"`);
         });
 

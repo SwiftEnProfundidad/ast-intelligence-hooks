@@ -126,7 +126,7 @@ This library was conceived to solve this fundamental problem by creating a **per
            "severity_score": 100
          }
        ],
-       "instruction": "🚨 AI MUST call mcp6_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
+       "instruction": "🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
        "mandatory": true
      },
      "severity_metrics": {
@@ -240,7 +240,7 @@ This library was conceived to solve this fundamental problem by creating a **per
    - `post-commit`: Evidence update after commits
 
 2. **MCP (Model Context Protocol) Server**:
-   - `gitflow-automation-watcher`: Provides AI tools via MCP
+   - `ast-intelligence-automation`: Provides AI tools via MCP
    - Tools: `ai_gate_check`, `auto_execute_ai_start`, `auto_complete_gitflow`, `sync_branches`, `cleanup_stale_branches`, `validate_and_fix`
    - Enables Cursor, Claude Desktop, and other MCP-compatible IDEs to interact with the system
 

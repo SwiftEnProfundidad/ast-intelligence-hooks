@@ -9,7 +9,7 @@
         "REPO_ROOT": "${workspaceFolder}"
       }
     },
-    "gitflow-automation-watcher": {
+    "ast-intelligence-automation": {
       "command": "node",
       "args": [
         "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/gitflow-automation-watcher.js"

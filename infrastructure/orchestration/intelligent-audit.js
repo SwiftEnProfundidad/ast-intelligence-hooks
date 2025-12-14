@@ -203,7 +203,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
         intelligent_evaluation: v.intelligentEvaluation || false,
         severity_score: v.severityScore || 0
       })),
-      instruction: '🚨 AI MUST call mcp6_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!',
+      instruction: '🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!',
       mandatory: true
     };
 

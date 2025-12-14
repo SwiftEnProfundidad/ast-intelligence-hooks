@@ -604,11 +604,17 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
     
     CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\\[CRITICAL\\]" | wc -l | tr -d ' ')
     if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
-      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+        CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+      fi
     fi
     HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\\[HIGH\\]" | wc -l | tr -d ' ')
     if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
-      HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+      HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+        HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+      fi
     fi
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
@@ -643,11 +649,17 @@ if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence
     
     CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\\[CRITICAL\\]" | wc -l | tr -d ' ')
     if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
-      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+        CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+      fi
     fi
     HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\\[HIGH\\]" | wc -l | tr -d ' ')
     if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
-      HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+      HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+        HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+      fi
     fi
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
