@@ -1,3 +1,8 @@
+/**
+ * iOS Architecture Pattern Detector
+ *
+ * Detecta automáticamente el patrón arquitectónico usado en un proyecto iOS:
+ * - MVVM (Model-View-ViewModel)
  * - MVVM-C (MVVM + Coordinator)
  * - MVP (Model-View-Presenter)
  * - VIPER (View-Interactor-Presenter-Entity-Router)

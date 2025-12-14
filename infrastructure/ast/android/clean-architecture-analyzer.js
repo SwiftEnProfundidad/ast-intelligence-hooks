@@ -1,4 +1,8 @@
 
+/**
+ * Analyze Clean Architecture for Android (Kotlin)
+ *
+ * Android Clean Architecture layers:
  * ✅ Domain (models, repositories interfaces, use cases)
  * ✅ Data (repositories impl, data sources, DTOs)
  * ✅ Presentation (UI, ViewModels, Composables)
