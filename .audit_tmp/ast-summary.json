@@ -1,26 +1,26 @@
 {
   "totals": {
-    "errors": 76,
+    "errors": 71,
     "warnings": 12,
     "infos": 122
   },
   "levels": {
     "CRITICAL": 1,
-    "HIGH": 75,
+    "HIGH": 70,
     "MEDIUM": 12,
     "LOW": 122
   },
   "platforms": {
-    "Backend": 102,
+    "Backend": 101,
     "Frontend": 6,
-    "iOS": 12,
+    "iOS": 9,
     "Android": 35,
-    "Other": 55
+    "Other": 54
   },
   "rules": {
     "workflow.sequence.tests_lagging": 1,
     "workflow.sequence.missing_bdd_specs": 1,
-    "common.quality.comments": 75,
+    "common.quality.comments": 70,
     "common.quality.disabled_lint": 3,
     "common.debug.console": 4,
     "common.quality.todo_fixme": 1,
@@ -53,13 +53,13 @@
   "platformDetails": {
     "Other": {
       "CRITICAL": 1,
-      "HIGH": 44,
+      "HIGH": 43,
       "MEDIUM": 7,
       "LOW": 3,
       "rules": {
         "workflow.sequence.tests_lagging": 1,
         "workflow.sequence.missing_bdd_specs": 1,
-        "common.quality.comments": 44,
+        "common.quality.comments": 43,
         "common.quality.disabled_lint": 3,
         "common.debug.console": 4,
         "common.quality.todo_fixme": 1,
@@ -67,7 +67,6 @@
       },
       "files": [
         "PROJECT_ROOT",
-        "eslint.config.js",
         "index.js",
         "__tests__/integration.test.js",
         "tests/guard-system.integration.spec.js",
@@ -89,6 +88,7 @@
         "domain/repositories/IFindingsRepository.js",
         "domain/rules/CommitBlockingRules.js",
         "infrastructure/adapters/LegacyAnalyzerAdapter.js",
+        "infrastructure/adapters/MacOSNotificationAdapter.js",
         "infrastructure/cache/CacheService.ts",
         "infrastructure/external-tools/GitOperations.js",
         "infrastructure/mcp/gitflow-automation-watcher.js",
@@ -102,7 +102,6 @@
         "infrastructure/ast/archive/ast-intelligence.ts",
         "infrastructure/ast/archive/kotlin-analyzer.js",
         "infrastructure/ast/common/BDDTDDWorkflowRules.js",
-        "infrastructure/ast/common/documentation-analyzer.js",
         "infrastructure/ast/text/text-scanner.js",
         "infrastructure/external-tools/eslint/backend.config.template.mjs",
         "infrastructure/severity/analyzers/maintainability-analyzer.js",
@@ -147,11 +146,11 @@
     },
     "Backend": {
       "CRITICAL": 0,
-      "HIGH": 8,
+      "HIGH": 7,
       "MEDIUM": 2,
       "LOW": 92,
       "rules": {
-        "common.quality.comments": 8,
+        "common.quality.comments": 7,
         "backend.images.missing_server_compression": 1,
         "backend.auth.missing_cors": 9,
         "backend.metrics.missing_prometheus": 12,
@@ -177,7 +176,6 @@
         "infrastructure/ast/backend/feature-first-analyzer.js",
         "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
         "infrastructure/ast/backend/solid-analyzer.js",
-        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
         "infrastructure/ast/backend/analyzers/detectors/FeatureFirstCleanDetector.js",
         "infrastructure/ast/backend/ast-backend.js",
         "infrastructure/ast/backend/forbidden-literals-analyzer.js",
@@ -187,6 +185,7 @@
         "infrastructure/ast/backend/__tests__/forbidden-literals-analyzer.spec.js",
         "infrastructure/ast/backend/__tests__/nestjs-patterns-analyzer.spec.js",
         "infrastructure/ast/backend/__tests__/solid-analyzer.spec.js",
+        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
         "infrastructure/ast/backend/analyzers/BackendPatternDetector.js",
         "infrastructure/ast/backend/analyzers/detectors/CleanArchitectureDetector.js",
         "infrastructure/ast/backend/analyzers/detectors/CQRSDetector.js",
@@ -214,11 +213,11 @@
     },
     "iOS": {
       "CRITICAL": 0,
-      "HIGH": 10,
+      "HIGH": 7,
       "MEDIUM": 2,
       "LOW": 0,
       "rules": {
-        "common.quality.comments": 10,
+        "common.quality.comments": 7,
         "common.network.missing_connection_pooling": 1,
         "ios.completion_handlers": 1
       },
@@ -226,12 +225,9 @@
         "infrastructure/ast/ios/analyzers/iOSArchitectureDetector.js",
         "infrastructure/ast/ios/analyzers/iOSArchitectureRules.js",
         "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
-        "infrastructure/ast/ios/analyzers/iOSCICDRules.js",
         "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
-        "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
         "infrastructure/ast/ios/analyzers/iOSSPMRules.js",
         "infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js",
-        "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
         "infrastructure/ast/ios/parsers/SourceKittenParser.js",
         "infrastructure/ast/ios/ast-ios.js"
       ]
@@ -261,18 +257,17 @@
       ]
     },
     "common.quality.comments": {
-      "count": 75,
+      "count": 70,
       "level": "HIGH",
       "severity": "HIGH",
       "platforms": {
-        "Other": 44,
+        "Other": 43,
         "Android": 7,
-        "Backend": 8,
+        "Backend": 7,
         "Frontend": 6,
-        "iOS": 10
+        "iOS": 7
       },
       "files": [
-        "eslint.config.js",
         "index.js",
         "__tests__/integration.test.js",
         "tests/guard-system.integration.spec.js",
@@ -294,6 +289,7 @@
         "domain/repositories/IFindingsRepository.js",
         "domain/rules/CommitBlockingRules.js",
         "infrastructure/adapters/LegacyAnalyzerAdapter.js",
+        "infrastructure/adapters/MacOSNotificationAdapter.js",
         "infrastructure/cache/CacheService.ts",
         "infrastructure/external-tools/GitOperations.js",
         "infrastructure/reporting/report-generator.js",
@@ -315,7 +311,6 @@
         "infrastructure/ast/backend/nestjs-patterns-analyzer.js",
         "infrastructure/ast/backend/solid-analyzer.js",
         "infrastructure/ast/common/BDDTDDWorkflowRules.js",
-        "infrastructure/ast/common/documentation-analyzer.js",
         "infrastructure/ast/frontend/ast-frontend-clean.js",
         "infrastructure/ast/frontend/clean-architecture-analyzer.js",
         "infrastructure/ast/frontend/ddd-analyzer.js",
@@ -333,18 +328,14 @@
         "infrastructure/ast/android/analyzers/AndroidArchitectureDetector.js",
         "infrastructure/ast/android/analyzers/AndroidASTIntelligentAnalyzer.js",
         "infrastructure/ast/android/analyzers/AndroidSOLIDAnalyzer.js",
-        "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
         "infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js",
         "infrastructure/ast/frontend/analyzers/FrontendSOLIDAnalyzer.js",
         "infrastructure/ast/ios/analyzers/iOSArchitectureDetector.js",
         "infrastructure/ast/ios/analyzers/iOSArchitectureRules.js",
         "infrastructure/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js",
-        "infrastructure/ast/ios/analyzers/iOSCICDRules.js",
         "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
-        "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
         "infrastructure/ast/ios/analyzers/iOSSPMRules.js",
         "infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js",
-        "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
         "infrastructure/ast/ios/parsers/SourceKittenParser.js",
         "infrastructure/ast/backend/analyzers/detectors/FeatureFirstCleanDetector.js"
       ]
@@ -729,18 +720,6 @@
         "LOW": 0
       }
     },
-    "eslint.config.js": {
-      "platform": "Other",
-      "rules": {
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "index.js": {
       "platform": "Other",
       "rules": {
@@ -995,6 +974,18 @@
         "CRITICAL": 0,
         "HIGH": 1,
         "MEDIUM": 1,
+        "LOW": 0
+      }
+    },
+    "infrastructure/adapters/MacOSNotificationAdapter.js": {
+      "platform": "Other",
+      "rules": {
+        "common.quality.comments": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 1,
+        "MEDIUM": 0,
         "LOW": 0
       }
     },
@@ -1304,18 +1295,6 @@
         "LOW": 0
       }
     },
-    "infrastructure/ast/common/documentation-analyzer.js": {
-      "platform": "Other",
-      "rules": {
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "infrastructure/ast/frontend/ast-frontend-clean.js": {
       "platform": "Frontend",
       "rules": {
@@ -1526,21 +1505,6 @@
         "LOW": 4
       }
     },
-    "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js": {
-      "platform": "Backend",
-      "rules": {
-        "common.quality.comments": 1,
-        "backend.auth.missing_cors": 1,
-        "backend.metrics.missing_prometheus": 1,
-        "backend.clean.infrastructure": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 3
-      }
-    },
     "infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js": {
       "platform": "Frontend",
       "rules": {
@@ -1601,18 +1565,6 @@
         "LOW": 0
       }
     },
-    "infrastructure/ast/ios/analyzers/iOSCICDRules.js": {
-      "platform": "iOS",
-      "rules": {
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
     "infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js": {
       "platform": "iOS",
       "rules": {
@@ -1623,18 +1575,6 @@
         "CRITICAL": 0,
         "HIGH": 1,
         "MEDIUM": 1,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js": {
-      "platform": "iOS",
-      "rules": {
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
         "LOW": 0
       }
     },
@@ -1651,18 +1591,6 @@
       }
     },
     "infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js": {
-      "platform": "iOS",
-      "rules": {
-        "common.quality.comments": 1
-      },
-      "levels": {
-        "CRITICAL": 0,
-        "HIGH": 1,
-        "MEDIUM": 0,
-        "LOW": 0
-      }
-    },
-    "infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js": {
       "platform": "iOS",
       "rules": {
         "common.quality.comments": 1
@@ -1877,6 +1805,20 @@
         "LOW": 2
       }
     },
+    "infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js": {
+      "platform": "Backend",
+      "rules": {
+        "backend.auth.missing_cors": 1,
+        "backend.metrics.missing_prometheus": 1,
+        "backend.clean.infrastructure": 1
+      },
+      "levels": {
+        "CRITICAL": 0,
+        "HIGH": 0,
+        "MEDIUM": 0,
+        "LOW": 3
+      }
+    },
     "infrastructure/ast/backend/analyzers/BackendPatternDetector.js": {
       "platform": "Backend",
       "rules": {
@@ -1972,15 +1914,6 @@
       "line": 1,
       "column": 1,
       "message": "Tests sin feature files BDD. Workflow debe empezar con especificaciones de comportamiento.",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/eslint.config.js",
-      "line": 1,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
     },
     {
@@ -2220,6 +2153,15 @@
     {
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
+      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/adapters/MacOSNotificationAdapter.js",
+      "line": 7,
+      "column": 1,
+      "message": "Comments present in code - prefer self-documenting code with clear naming",
+      "metrics": {}
+    },
+    {
+      "ruleId": "common.quality.comments",
+      "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/cache/CacheService.ts",
       "line": 6,
       "column": 1,
@@ -2427,15 +2369,6 @@
     {
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/common/documentation-analyzer.js",
-      "line": 1,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/ast-frontend-clean.js",
       "line": 8,
       "column": 1,
@@ -2598,15 +2531,6 @@
     {
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/backend/analyzers/BackendArchitectureDetector.js",
-      "line": 1,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/frontend/analyzers/FrontendArchitectureDetector.js",
       "line": 11,
       "column": 1,
@@ -2652,26 +2576,8 @@
     {
       "ruleId": "common.quality.comments",
       "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSCICDRules.js",
-      "line": 11,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSEnterpriseAnalyzer.js",
       "line": 6,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSNetworkingAdvancedRules.js",
-      "line": 9,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -2690,15 +2596,6 @@
       "severity": "HIGH",
       "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSSwiftUIAdvancedRules.js",
       "line": 13,
-      "column": 1,
-      "message": "Comments present in code - prefer self-documenting code with clear naming",
-      "metrics": {}
-    },
-    {
-      "ruleId": "common.quality.comments",
-      "severity": "HIGH",
-      "filePath": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks/infrastructure/ast/ios/analyzers/iOSTestingAdvancedRules.js",
-      "line": 9,
       "column": 1,
       "message": "Comments present in code - prefer self-documenting code with clear naming",
       "metrics": {}
@@ -3862,7 +3759,7 @@
   ],
   "metadata": {
     "totalFiles": 297,
-    "timestamp": "2025-12-14T02:06:08.358Z",
+    "timestamp": "2025-12-14T02:16:01.728Z",
     "root": "/Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks"
   }
 }
