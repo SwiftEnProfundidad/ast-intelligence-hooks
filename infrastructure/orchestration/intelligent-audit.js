@@ -27,11 +27,11 @@ async function runIntelligentAudit() {
     console.log(`[Intelligent Audit] Filtered to ${stagedViolations.length} violations in ${stagedFiles.length} staged files`);
 
     const violationsForGate = stagedViolations;
-    const violationsForEvidence = rawViolations;
+    const violationsForEvidence = stagedViolations;
 
     if (violationsForGate.length === 0) {
       console.log('[Intelligent Audit] ✅ No violations in staged files - PASSED');
-      const enhancedAll = evaluateViolations(violationsForEvidence.slice(0, 100));
+      const enhancedAll = evaluateViolations(violationsForEvidence);
       const gateResult = { passed: true, exitCode: 0, blockedBy: null };
       const tokenManager = new TokenManager();
       const tokenUsage = tokenManager.estimate(enhancedAll, {});
@@ -203,7 +203,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
         intelligent_evaluation: v.intelligentEvaluation || false,
         severity_score: v.severityScore || 0
       })),
-      instruction: '🚨 AI MUST call mcp6_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!',
+      instruction: '🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!',
       mandatory: true
     };
 

@@ -41,6 +41,7 @@ async function runIOSIntelligence(project, findings, platform) {
   await runSwiftLintNative(findings);
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
 
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
@@ -53,8 +54,8 @@ async function runIOSIntelligence(project, findings, platform) {
 
     const completionHandlerFilePath = sf.getFilePath();
     const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(completionHandlerFilePath);
-    const isTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(completionHandlerFilePath);
-    if (!isAnalyzer && !isTestFile) {
+    const isCompletionTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(completionHandlerFilePath);
+    if (!isAnalyzer && !isCompletionTestFile) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const args = call.getArguments();
         args.forEach((arg) => {
@@ -159,6 +160,7 @@ async function runIOSIntelligence(project, findings, platform) {
   // ═══════════════════════════════════════════════════════════════
   // ═══════════════════════════════════════════════════════════════
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     if (platformOf(filePath) !== "ios") return;
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
@@ -168,6 +170,7 @@ async function runIOSIntelligence(project, findings, platform) {
   });
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     if (platformOf(filePath) !== "ios" || !filePath.endsWith('.swift')) return;
 

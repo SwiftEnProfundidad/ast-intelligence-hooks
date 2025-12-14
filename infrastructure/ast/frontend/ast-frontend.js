@@ -29,7 +29,10 @@ function runFrontendIntelligence(project, findings, platform) {
   }
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
+    const isInfrastructure = /\/infrastructure\/|\/lib\/api\/|\/services\//.test(filePath);
+    const isComponent = /\/(components|app|presentation)\//.test(filePath) && !isInfrastructure;
 
     if (platformOf(filePath) !== "frontend") return;
 
@@ -675,7 +678,6 @@ function runFrontendIntelligence(project, findings, platform) {
     if (!hasCustomI18n && /useTranslation\(/.test(sf.getFullText()) && /useTranslation\(\)/.test(sf.getFullText())) {
       pushFinding("frontend.i18n.missing_namespaces", "warning", sf, sf, "useTranslation without namespace argument", findings);
     }
-    const isInfrastructure = /\/infrastructure\/|\/lib\/api\/|\/services\//.test(filePath);
     if (!isInfrastructure && sf.getFullText().match(/new\s+Date\(|Date\.now\(/) && !/Intl\.|date\-fns|dayjs/.test(sf.getFullText())) {
       pushFinding("frontend.i18n.missing_formatting", "warning", sf, sf, "Date used in UI without localized formatting", findings);
     }
@@ -717,7 +719,6 @@ function runFrontendIntelligence(project, findings, platform) {
       return expr === "fetch" || expr.includes("axios") || expr.includes("api");
     });
 
-    const isComponent = /\/(components|app|presentation)\//.test(filePath) && !isInfrastructure;
     if (hasFetchCalls && !hasReactQuery && isComponent) {
       pushFinding("frontend.state.missing_react_query", "warning", sf, sf, "Server state management without React Query - consider using for caching and synchronization", findings);
     }
@@ -1704,10 +1705,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
 
-  });
-
-
-  const useStateCallsInComponent = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
+    const useStateCallsInComponent = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
     .filter(call => call.getExpression().getText() === 'useState');
 
   sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
@@ -1761,6 +1759,7 @@ function runFrontendIntelligence(project, findings, platform) {
     }
   });
 
+  const fullText = sf.getFullText();
   const hasLargeImports = fullText.includes('import * as') ||
     fullText.match(/import\s+\{[^}]{200,}\}/);
 
@@ -1970,6 +1969,7 @@ function runFrontendIntelligence(project, findings, platform) {
       );
     }
   }
+  });
 }
 
 module.exports = {

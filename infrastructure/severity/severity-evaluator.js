@@ -232,7 +232,7 @@ Example:
 ❌ class ${violation.className} {
 }
 
-✅
+✅ Split into separate classes`;
     }
     return 'Extract responsibilities into separate classes (SRP)';
   }

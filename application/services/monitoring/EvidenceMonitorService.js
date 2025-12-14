@@ -6,7 +6,6 @@ class EvidenceMonitorService {
     constructor({
         repoRoot = process.cwd(),
         evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json'),
-        criticalDocPath = path.join(process.cwd(), 'docs', 'planning', 'LIBRARY_FIVE_STARS_ROADMAP.md'),
         updateScriptPath = path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
         notifier = () => { },
         logger = console,
@@ -14,12 +13,10 @@ class EvidenceMonitorService {
         autoRefreshCooldownMs = Number(process.env.HOOK_GUARD_AUTO_REFRESH_COOLDOWN || 180000),
         staleThresholdMs = Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 10 * 60 * 1000),
         fsModule = fs,
-        execFn = execSync,
-        criticalDocMissingDelayMs = Number(process.env.HOOK_GUARD_CRITICAL_DOC_DELAY_MS || 1500)
+        execFn = execSync
     } = {}) {
         this.repoRoot = repoRoot;
         this.evidencePath = evidencePath;
-        this.criticalDocPath = criticalDocPath;
         this.updateScriptPath = updateScriptPath;
         this.notifier = notifier;
         this.logger = logger;
@@ -30,14 +27,11 @@ class EvidenceMonitorService {
         this.exec = execFn;
         this.watchers = [];
         this.lastAutoRefresh = 0;
-        this.criticalDocMissingDelayMs = criticalDocMissingDelayMs;
-        this.pendingCriticalDocCheck = null;
     }
 
     start() {
         this.performInitialChecks();
         this.watchEvidenceFreshness();
-        this.watchCriticalDocument();
     }
 
     stop() {
@@ -49,10 +43,6 @@ class EvidenceMonitorService {
             }
         });
         this.watchers = [];
-        if (this.pendingCriticalDocCheck) {
-            clearTimeout(this.pendingCriticalDocCheck);
-            this.pendingCriticalDocCheck = null;
-        }
     }
 
     performInitialChecks() {
@@ -66,14 +56,6 @@ class EvidenceMonitorService {
         } else {
             this.evaluateEvidence('initial-check');
         }
-
-        if (!this.fs.existsSync(this.criticalDocPath)) {
-            this.notify({
-                message: 'Critical document LIBRARY_FIVE_STARS_ROADMAP.md is missing.',
-                level: 'error',
-                type: 'evidence_doc_missing'
-            });
-        }
     }
 
     watchEvidenceFreshness() {
@@ -83,51 +65,6 @@ class EvidenceMonitorService {
         } catch (error) {
             this.logger.error?.('EVIDENCE_MONITOR_WATCH_FAILED', { error: error.message });
         }
-    }
-
-    watchCriticalDocument() {
-        const directory = path.dirname(this.criticalDocPath);
-        if (!this.fs.existsSync(directory)) {
-            return;
-        }
-        try {
-            const watcher = this.fs.watch(directory, (eventType, filename) => {
-                if (!filename) {
-                    return;
-                }
-                const target = filename.toString();
-                if (target !== path.basename(this.criticalDocPath)) {
-                    return;
-                }
-                this.handleCriticalDocumentEvent(eventType);
-            });
-            this.watchers.push(watcher);
-        } catch (error) {
-            this.logger.error?.('EVIDENCE_MONITOR_CRITICAL_DOC_WATCH_FAILED', { error: error.message });
-        }
-    }
-
-    handleCriticalDocumentEvent() {
-        if (this.fs.existsSync(this.criticalDocPath)) {
-            if (this.pendingCriticalDocCheck) {
-                clearTimeout(this.pendingCriticalDocCheck);
-                this.pendingCriticalDocCheck = null;
-            }
-            return;
-        }
-        if (this.pendingCriticalDocCheck) {
-            return;
-        }
-        this.pendingCriticalDocCheck = setTimeout(() => {
-            this.pendingCriticalDocCheck = null;
-            if (!this.fs.existsSync(this.criticalDocPath)) {
-                this.notify({
-                    message: 'Critical plan document removed or moved.',
-                    level: 'error',
-                    type: 'evidence_doc_missing'
-                });
-            }
-        }, this.criticalDocMissingDelayMs);
     }
 
     evaluateEvidence(reason) {

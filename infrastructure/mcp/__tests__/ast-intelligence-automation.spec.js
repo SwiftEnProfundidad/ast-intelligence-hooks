@@ -1,15 +1,15 @@
-describe('GitFlow Automation Watcher MCP', () => {
+describe('AST Intelligence Automation MCP', () => {
   describe('module structure', () => {
     it('should exist as a file', () => {
       const fs = require('fs');
       const path = require('path');
-      const filePath = path.join(__dirname, '../gitflow-automation-watcher.js');
+      const filePath = path.join(__dirname, '../ast-intelligence-automation.js');
       expect(fs.existsSync(filePath)).toBe(true);
     });
 
     it('should be valid JavaScript', () => {
       expect(() => {
-        require.resolve('../gitflow-automation-watcher.js');
+        require.resolve('../ast-intelligence-automation.js');
       }).not.toThrow();
     });
   });
@@ -19,7 +19,7 @@ describe('GitFlow Automation Watcher MCP', () => {
       const fs = require('fs');
       const path = require('path');
       const content = fs.readFileSync(
-        path.join(__dirname, '../gitflow-automation-watcher.js'),
+        path.join(__dirname, '../ast-intelligence-automation.js'),
         'utf-8'
       );
       expect(content).toContain('MCP_VERSION');
@@ -29,7 +29,7 @@ describe('GitFlow Automation Watcher MCP', () => {
       const fs = require('fs');
       const path = require('path');
       const content = fs.readFileSync(
-        path.join(__dirname, '../gitflow-automation-watcher.js'),
+        path.join(__dirname, '../ast-intelligence-automation.js'),
         'utf-8'
       );
       expect(content).toContain('REPO_ROOT');

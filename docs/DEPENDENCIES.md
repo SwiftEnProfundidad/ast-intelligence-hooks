@@ -253,7 +253,7 @@ winget install GitHub.cli
 ```
 
 **Usage location:**
-- `infrastructure/mcp/gitflow-automation-watcher.js`
+- `infrastructure/mcp/ast-intelligence-automation.js`
 - Only used by Git Flow MCP server
 - Not critical for basic functionality
 

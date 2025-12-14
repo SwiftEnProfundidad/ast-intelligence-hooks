@@ -453,7 +453,7 @@ if (gateCheck.status === 'BLOCKED') {
 
 ### Configuration
 
-**Location:** `infrastructure/mcp/gitflow-automation-watcher.js`
+**Location:** `infrastructure/mcp/ast-intelligence-automation.js`
 
 **Configuration in `.cursor/mcp.json`:**
 ```json
@@ -462,7 +462,7 @@ if (gateCheck.status === 'BLOCKED') {
     "ast-intelligence-automation": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js"
+        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",
@@ -501,19 +501,19 @@ if (gateCheck.status === 'BLOCKED') {
 ```bash
 # Test 1: Initialize
 echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | \
-  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js
+  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js
 
 # Test 2: List tools
 echo '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}' | \
-  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js
+  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js
 
 # Test 3: Check evidence status
 echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"check_evidence_status","arguments":{}}}' | \
-  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js
+  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js
 
 # Test 4: AI Gate Check
 echo '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"ai_gate_check","arguments":{}}}' | \
-  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js
+  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js
 ```
 
 ---
@@ -539,7 +539,7 @@ Example configuration for `.cursor/mcp.json` (Cursor) or similar file for other 
     "ast-intelligence-automation": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js"
+        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",

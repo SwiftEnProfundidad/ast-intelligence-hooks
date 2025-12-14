@@ -23,6 +23,9 @@ const MAGIC_NUMBERS = [0, 1];
 
 class AndroidForbiddenLiteralsAnalyzer {
     analyze(sf, findings, pushFinding) {
+        if (!sf || typeof sf.getFilePath !== 'function') {
+            return;
+        }
         const stringLiterals = sf.getDescendantsOfKind(SyntaxKind.StringLiteral);
         const numericLiterals = sf.getDescendantsOfKind(SyntaxKind.NumericLiteral);
         const asExpressions = sf.getDescendantsOfKind(SyntaxKind.AsExpression);
@@ -150,6 +153,7 @@ class AndroidForbiddenLiteralsAnalyzer {
     }
 
     analyzeTypeCasts(asExpressions, sf, findings, pushFinding) {
+        if (!sf || typeof sf.getFilePath !== 'function') return;
         asExpressions.forEach((expr) => {
             const fullText = sf.getFullText();
             const exprIndex = expr.getStart();
@@ -165,8 +169,8 @@ class AndroidForbiddenLiteralsAnalyzer {
             pushFinding(
                 'android.types.forbidden_type_cast',
                 'high',
-                expr,
                 sf,
+                expr,
                 `Type casting with 'as' detected. Use type guards, mappers, or proper type narrowing instead of type assertions.`,
                 findings
             );

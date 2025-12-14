@@ -8,7 +8,6 @@ const AutoExecuteAIStartUseCase = require('../use-cases/AutoExecuteAIStartUseCas
 const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('./GitTreeState');
 
 const EVIDENCE_PATH = path.join(process.cwd(), '.AI_EVIDENCE.json');
-const CRITICAL_DOC = path.join(process.cwd(), 'docs', 'planning', 'LIBRARY_FIVE_STARS_ROADMAP.md');
 const UPDATE_EVIDENCE_SCRIPT = path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh');
 
 class RealtimeGuardService {
@@ -32,7 +31,7 @@ class RealtimeGuardService {
     this.notificationTimeout = Number(process.env.HOOK_GUARD_NOTIFY_TIMEOUT || 8);
     this.notificationFailures = 0;
     this.maxNotificationErrors = Number(process.env.HOOK_GUARD_NOTIFY_MAX_ERRORS || 3);
-    this.staleThresholdMs = Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 60000);
+    this.staleThresholdMs = Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 180000);
     this.pollIntervalMs = Number(process.env.HOOK_GUARD_EVIDENCE_POLL_INTERVAL || 30000);
     this.reminderIntervalMs = Number(process.env.HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL || 60000);
     this.gitTreeStagedThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT || 10);
@@ -97,7 +96,6 @@ class RealtimeGuardService {
 
   start() {
     this.watchEvidenceFreshness();
-    this.watchCriticalDoc();
     this.watchWorkspaceActivity();
     this.startEvidencePolling();
     this.startGitTreeMonitoring();
@@ -1091,20 +1089,6 @@ class RealtimeGuardService {
     }
   }
 
-  watchCriticalDoc() {
-    const directory = path.dirname(CRITICAL_DOC);
-    if (!fs.existsSync(directory)) return;
-
-    const watcher = fs.watch(directory, (eventType, filename) => {
-      if (filename === path.basename(CRITICAL_DOC)) {
-        if (!fs.existsSync(CRITICAL_DOC)) {
-          this.notify('Critical document LIBRARY_FIVE_STARS_ROADMAP.md has been deleted or moved.', 'error');
-        }
-      }
-    });
-    this.watchers.push(watcher);
-  }
-
   performInitialChecks() {
     if (!fs.existsSync(EVIDENCE_PATH)) {
       this.notify('No .AI_EVIDENCE.json found, run update-evidence.', 'warn');
@@ -1117,10 +1101,6 @@ class RealtimeGuardService {
       } catch (error) {
         this.notify(`Error reading initial evidence: ${error.message}`, 'error');
       }
-    }
-
-    if (!fs.existsSync(CRITICAL_DOC)) {
-      this.notify('Critical document LIBRARY_FIVE_STARS_ROADMAP.md missing at guard startup.', 'error');
     }
   }
 

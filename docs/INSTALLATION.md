@@ -240,7 +240,7 @@ cat > .cursor/mcp.json << 'EOF'
     "ast-intelligence-automation": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js"
+        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",

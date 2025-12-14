@@ -49,6 +49,7 @@ function runAndroidIntelligence(project, findings, platform) {
   }
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
 
     if (platformOf(filePath) !== "android") return;
@@ -480,6 +481,7 @@ function runAndroidIntelligence(project, findings, platform) {
   });
 
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     if (platformOf(filePath) !== "android" || !filePath.endsWith('.kt')) return;
 

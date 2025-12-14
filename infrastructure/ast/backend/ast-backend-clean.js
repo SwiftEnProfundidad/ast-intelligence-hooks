@@ -8,12 +8,13 @@ const { analyzeForbiddenLiterals } = require(path.join(__dirname, 'forbidden-lit
 
 function runBackendIntelligence(project, findings, platform) {
   project.getSourceFiles().forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
 
     if (platformOf(filePath) !== "backend") return;
 
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
-    if (/\/hooks-system\/infrastructure\/ast\
+    if (/\/hooks-system\/infrastructure\/ast\//.test(filePath)) return;
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const className = cls.getName();

@@ -1,6 +1,7 @@
 const path = require('path');
 
 function analyzeFeatureFirst(sf, findings, pushFinding) {
+  if (!sf || typeof sf.getFilePath !== 'function') return;
   const filePath = sf.getFilePath();
 
   const feature = detectFeature(filePath);

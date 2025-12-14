@@ -156,6 +156,7 @@ ${COLORS.reset}`);
       'presentation/',
       'docs/examples/',
       'docs/guides/',
+      'bin/',
       'index.js'
     ];
 
@@ -263,6 +264,34 @@ ${COLORS.reset}`);
 
   }
 
+  copyIDERules() {
+    const sourceRulesDir = path.join(this.hookSystemRoot, '.cursor', 'rules');
+    
+    if (!fs.existsSync(sourceRulesDir)) {
+      return;
+    }
+
+    const ideTargets = [
+      { name: 'Cursor', dir: path.join(this.targetRoot, '.cursor', 'rules') },
+      { name: 'Windsurf', dir: path.join(this.targetRoot, '.windsurf', 'rules') }
+    ];
+
+    ideTargets.forEach(ide => {
+      if (!fs.existsSync(ide.dir)) {
+        fs.mkdirSync(ide.dir, { recursive: true });
+      }
+
+      const ruleFiles = fs.readdirSync(sourceRulesDir).filter(f => f.endsWith('.mdc'));
+      ruleFiles.forEach(ruleFile => {
+        const sourcePath = path.join(sourceRulesDir, ruleFile);
+        const targetPath = path.join(ide.dir, ruleFile);
+        fs.copyFileSync(sourcePath, targetPath);
+      });
+
+      process.stdout.write(`${COLORS.green}  ✅ Copied ${ruleFiles.length} rules to ${ide.name}${COLORS.reset}\n`);
+    });
+  }
+
   installESLintConfigs() {
     process.stdout.write(`${COLORS.blue}📝 Installing ESLint configurations...${COLORS.reset}`);
 
@@ -289,6 +318,8 @@ ${COLORS.reset}`);
     if (!fs.existsSync(claudeDir)) {
       fs.mkdirSync(claudeDir, { recursive: true });
     }
+
+    this.copyIDERules();
 
     const librarySkillsDir = path.join(this.hookSystemRoot, 'skills');
     const libraryHooksDir = path.join(this.hookSystemRoot, 'hooks');
@@ -370,12 +401,12 @@ ${COLORS.reset}`);
         'ast-intelligence-automation': {
           command: nodePath,
           args: [
-            '${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/gitflow-automation-watcher.js'
+            '${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js'
           ],
           env: {
             REPO_ROOT: '${workspaceFolder}',
-            AUTO_COMMIT_ENABLED: 'true',
-            AUTO_PUSH_ENABLED: 'true',
+            AUTO_COMMIT_ENABLED: 'false',
+            AUTO_PUSH_ENABLED: 'false',
             AUTO_PR_ENABLED: 'false'
           }
         }
@@ -598,23 +629,42 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
   if [ $EXIT_CODE -ne 0 ]; then
     exit $EXIT_CODE
   fi
-  # Check for critical/high violations
   if echo "$OUTPUT" | grep -qE "CRITICAL|HIGH"; then
     echo ""
-    echo "❌ Commit blocked: Critical or High violations detected"
+    echo "❌ Commit blocked: Critical or High violations detected in staged files"
     
-    # Count violations for notification
-    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL" | wc -l | tr -d ' ')
-    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH" | wc -l | tr -d ' ')
+    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\\[CRITICAL\\]" | wc -l | tr -d ' ')
+    if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+        CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+      fi
+    fi
+    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\\[HIGH\\]" | wc -l | tr -d ' ')
+    if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+      HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+        HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+      fi
+    fi
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
-    # Send macOS notification
     if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
-      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      if [[ $CRITICAL_COUNT -gt 0 ]] && [[ $HIGH_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$TOTAL_VIOLATIONS violations ($CRITICAL_COUNT CRITICAL, $HIGH_COUNT HIGH) block commit"
+      elif [[ $CRITICAL_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$CRITICAL_COUNT CRITICAL violations block commit"
+      else
+        NOTIF_MSG="$HIGH_COUNT HIGH violations block commit"
+      fi
       osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
     fi
     
     exit 1
+  fi
+  # Copy ast-summary.json to root if it exists
+  if [ -f ".audit_tmp/ast-summary.json" ]; then
+    cp .audit_tmp/ast-summary.json ast-summary.json 2>/dev/null || true
   fi
   exit 0
 fi
@@ -630,20 +680,40 @@ if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence
   fi
   if echo "$OUTPUT" | grep -qE "CRITICAL|HIGH"; then
     echo ""
-    echo "❌ Commit blocked: Critical or High violations detected"
+    echo "❌ Commit blocked: Critical or High violations detected in staged files"
     
-    # Count violations for notification
-    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL" | wc -l | tr -d ' ')
-    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH" | wc -l | tr -d ' ')
+    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\\[CRITICAL\\]" | wc -l | tr -d ' ')
+    if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
+        CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
+      fi
+    fi
+    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\\[HIGH\\]" | wc -l | tr -d ' ')
+    if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+      HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
+      if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
+        HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
+      fi
+    fi
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     
-    # Send macOS notification
     if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
-      NOTIF_MSG="$TOTAL_VIOLATIONS critical/high violations block commit"
+      if [[ $CRITICAL_COUNT -gt 0 ]] && [[ $HIGH_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$TOTAL_VIOLATIONS violations ($CRITICAL_COUNT CRITICAL, $HIGH_COUNT HIGH) block commit"
+      elif [[ $CRITICAL_COUNT -gt 0 ]]; then
+        NOTIF_MSG="$CRITICAL_COUNT CRITICAL violations block commit"
+      else
+        NOTIF_MSG="$HIGH_COUNT HIGH violations block commit"
+      fi
       osascript -e "display notification \\\"$NOTIF_MSG\\\" with title \\\"🚫 Commit Blocked\\\" sound name \\\"Basso\\\"" 2>/dev/null || true
     fi
     
     exit 1
+  fi
+  # Copy ast-summary.json to root if it exists
+  if [ -f ".audit_tmp/ast-summary.json" ]; then
+    cp .audit_tmp/ast-summary.json ast-summary.json 2>/dev/null || true
   fi
   exit 0
 fi

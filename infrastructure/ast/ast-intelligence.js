@@ -4,6 +4,7 @@ const fs = require("fs");
 
 const astModulesPath = __dirname;
 const { createProject, platformOf, mapToLevel } = require(path.join(astModulesPath, "ast-core"));
+const { MacOSNotificationAdapter } = require(path.join(__dirname, '../adapters/MacOSNotificationAdapter'));
 const { runBackendIntelligence } = require(path.join(astModulesPath, "backend/ast-backend"));
 const { runFrontendIntelligence } = require(path.join(astModulesPath, "frontend/ast-frontend"));
 const { runAndroidIntelligence } = require(path.join(astModulesPath, "android/ast-android"));
@@ -72,6 +73,7 @@ async function runPlatformAnalysis(project, findings, context) {
   const platformsProcessed = new Set();
 
   sourceFiles.forEach((sf) => {
+    if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
     const platform = platformOf(filePath);
     if (platform) {
@@ -221,8 +223,76 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
 
     fs.writeFileSync(path.join(outDir, "ast-summary.json"), JSON.stringify(out, null, 2), "utf-8");
 
+    updateAIEvidenceMetrics(findings, levelTotals, root);
+
   } catch (error) {
     console.error(`Error writing AST summary: ${error.message}`);
+  }
+}
+
+/**
+ * Update .AI_EVIDENCE.json with severity metrics from AST analysis
+ */
+function updateAIEvidenceMetrics(findings, levelTotals, root) {
+  const evidencePath = path.join(root, '.AI_EVIDENCE.json');
+  
+  if (!fs.existsSync(evidencePath)) {
+    return;
+  }
+
+  try {
+    const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+
+    evidence.severity_metrics = {
+      last_updated: new Date().toISOString(),
+      total_violations: findings.length,
+      by_severity: {
+        CRITICAL: levelTotals.CRITICAL || 0,
+        HIGH: levelTotals.HIGH || 0,
+        MEDIUM: levelTotals.MEDIUM || 0,
+        LOW: levelTotals.LOW || 0
+      }
+    };
+
+    fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
+    console.log(`[AST] Updated .AI_EVIDENCE.json with ${findings.length} violations`);
+    
+    sendAuditNotification(findings.length, levelTotals);
+  } catch (error) {
+    console.error(`[AST] Error updating .AI_EVIDENCE.json: ${error.message}`);
+  }
+}
+
+/**
+ * Send macOS notification with audit results
+ */
+function sendAuditNotification(totalViolations, levelTotals) {
+  try {
+    const notifier = new MacOSNotificationAdapter();
+    const critical = levelTotals.CRITICAL || 0;
+    const high = levelTotals.HIGH || 0;
+    
+    let level = 'success';
+    let message = `✅ No violations found`;
+    
+    if (critical > 0) {
+      level = 'error';
+      message = `🔴 ${critical} CRITICAL, ${high} HIGH violations`;
+    } else if (high > 0) {
+      level = 'warn';
+      message = `🟡 ${high} HIGH violations found`;
+    } else if (totalViolations > 0) {
+      level = 'info';
+      message = `🔵 ${totalViolations} violations (no blockers)`;
+    }
+    
+    notifier.send({
+      title: 'AST Audit Complete',
+      message,
+      level
+    });
+  } catch (error) {
+    // Silent fail - notifications are optional
   }
 }
 
@@ -244,6 +314,28 @@ function checkForMigrations(root) {
  * List source files recursively
  */
 function listSourceFiles(root) {
+  if (process.env.STAGING_ONLY_MODE === "1") {
+    const { execSync } = require("child_process");
+    try {
+      const stagedFiles = execSync("git diff --cached --name-only --diff-filter=ACM", {
+        encoding: "utf8",
+        cwd: root
+      })
+        .trim()
+        .split("\n")
+        .filter(f => f.trim())
+        .map(f => path.resolve(root, f.trim()))
+        .filter(f => {
+          const ext = path.extname(f);
+          return [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".swift", ".kt", ".kts"].includes(ext);
+        })
+        .filter(f => fs.existsSync(f) && !shouldIgnore(f.replace(/\\/g, "/")));
+      return stagedFiles;
+    } catch (error) {
+      return [];
+    }
+  }
+
   const exts = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".swift", ".kt", ".kts"]);
   const result = [];
   const stack = [root];
