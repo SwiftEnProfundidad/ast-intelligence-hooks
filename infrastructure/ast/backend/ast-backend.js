@@ -1476,18 +1476,22 @@ function runBackendIntelligence(project, findings, platform) {
 
   // 1. Swagger Completeness Rule
   if (filePath.includes('.controller.ts')) {
-    const hasSwaggerDecorators = fullText.includes('@ApiTags') || fullText.includes('@ApiOperation');
-    const hasEndpoints = fullText.includes('@Get') || fullText.includes('@Post') || fullText.includes('@Put');
+    const swaggerIsAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+    const swaggerIsTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+    if (!swaggerIsAnalyzer && !swaggerIsTestFile) {
+      const hasSwaggerDecorators = fullText.includes('@ApiTags') || fullText.includes('@ApiOperation');
+      const hasEndpoints = fullText.includes('@Get') || fullText.includes('@Post') || fullText.includes('@Put');
 
-    if (hasEndpoints && !hasSwaggerDecorators) {
-      pushFinding(
-        "backend.api.missing_swagger",
-        "medium",
-        sf,
-        sf,
-        'Controller without Swagger documentation. Add: @ApiTags(\'users\'), @ApiOperation({ summary: \'...\' }), @ApiResponse(). Benefits: Auto-generated API docs, TypeScript types for frontend.',
-        findings
-      );
+      if (hasEndpoints && !hasSwaggerDecorators) {
+        pushFinding(
+          "backend.api.missing_swagger",
+          "medium",
+          sf,
+          sf,
+          'Controller without Swagger documentation. Add: @ApiTags(\'users\'), @ApiOperation({ summary: \'...\' }), @ApiResponse(). Benefits: Auto-generated API docs, TypeScript types for frontend.',
+          findings
+        );
+      }
     }
   }
 
