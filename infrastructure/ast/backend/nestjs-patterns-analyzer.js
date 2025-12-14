@@ -1,6 +1,3 @@
-// ===== NESTJS PATTERNS ANALYZER =====
-// Backend-specific patterns from rulesbackend.mdc
-// NOT covered by ESLint: NestJS-specific architectural patterns
 
 const { SyntaxKind } = require('ts-morph');
 
@@ -25,7 +22,6 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
   const classDecl = sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration)[0];
 
   // =========================================================================
-  // RULE 1: Guards en todas las rutas protegidas (rulesbackend.mdc)
   // =========================================================================
   const hasClassLevelGuard = classDecl?.getDecorators().some(d =>
     d.getExpression().getText().includes('@UseGuards')
@@ -56,7 +52,6 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
   }
 
   // =========================================================================
-  // RULE 2: Role-based access control (rulesbackend.mdc)
   // =========================================================================
   const hasRolesAtClass = classDecl?.getDecorators().some(d =>
     d.getExpression().getText().includes('@Roles')
@@ -83,7 +78,6 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
   }
 
   // =========================================================================
-  // RULE 3: API validation (rulesbackend.mdc: ValidationPipe + DTOs)
   // =========================================================================
   sf.getDescendantsOfKind(SyntaxKind.MethodDeclaration).forEach(method => {
     const decorators = method.getDecorators();
@@ -117,7 +111,6 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
   });
 
   // =========================================================================
-  // RULE 4: Swagger documentation (rulesbackend.mdc)
   // =========================================================================
   const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
   const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
@@ -128,7 +121,6 @@ function analyzeNestJSPatterns(sf, findings, pushFinding) {
   }
 
   // =========================================================================
-  // RULE 5: Audit logging (rulesbackend.mdc: Logging y Observabilidad)
   // =========================================================================
   const isBusinessLogicFile = /controller|service|gateway|handler|repository|usecase/i.test(filePath);
 
