@@ -327,7 +327,14 @@ function runCommonIntelligence(project, findings) {
       const withoutShebang = full.replace(/^#![^\n]*$/gm, '');
       if (!/\/\/|\/\*/.test(withoutShebang)) return;
 
-      const withoutUrls = withoutShebang.replace(/https?:\/\//g, '');
+      let withoutStrings = withoutShebang;
+      withoutStrings = withoutStrings.replace(/`[^`]*`/g, '');
+      withoutStrings = withoutStrings.replace(/"[^"]*"/g, '');
+      withoutStrings = withoutStrings.replace(/'[^']*'/g, '');
+      
+      if (!/\/\/|\/\*/.test(withoutStrings)) return;
+
+      const withoutUrls = withoutStrings.replace(/https?:\/\//g, '');
       if (!/\/\/|\/\*/.test(withoutUrls)) return;
 
       const hasOnlyJSDoc = !/\/\/|\/\*[^*]/.test(withoutUrls.replace(/\/\*\*[\s\S]*?\*\//g, ''));
