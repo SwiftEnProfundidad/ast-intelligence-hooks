@@ -185,7 +185,26 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
 
     const { execSync } = require('child_process');
     const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
-    const isProtected = ['main', 'master', 'develop'].includes(currentBranch);
+
+    const resolveBaseBranch = () => {
+        const configured = process.env.AST_BASE_BRANCH;
+        if (configured && configured.trim().length > 0) {
+            return configured.trim();
+        }
+        try {
+            execSync('git show-ref --verify --quiet refs/heads/develop', { stdio: 'ignore' });
+            return 'develop';
+        } catch {
+            try {
+                execSync('git show-ref --verify --quiet refs/heads/main', { stdio: 'ignore' });
+                return 'main';
+            } catch {
+                return 'main';
+            }
+        }
+    };
+    const baseBranch = resolveBaseBranch();
+    const isProtected = ['main', 'master', baseBranch].includes(currentBranch);
     const criticalViolations = violations.filter(v => v.severity === 'CRITICAL');
     const highViolations = violations.filter(v => v.severity === 'HIGH');
     const blockingViolations = [...criticalViolations, ...highViolations].slice(0, 50);
@@ -210,7 +229,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     evidence.git_flow = {
       branch_protection: {
         main: 'protected',
-        develop: 'protected',
+        [baseBranch]: 'protected',
         feature_branches: 'allowed'
       },
       commit_validation: {
@@ -220,7 +239,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
         allow_no_verify: false
       },
       current_branch: currentBranch,
-      base_branch: 'develop',
+      base_branch: baseBranch,
       is_protected: isProtected
     };
 

@@ -4,10 +4,26 @@ const { spawnSync } = require('child_process');
 
 const DEFAULT_PLATFORMS = ['1', '2', '3', '4'];
 
+function resolveUpdateEvidenceScript(repoRoot) {
+    const candidates = [
+        path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
+        path.join(repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+        path.join(repoRoot, 'bin/update-evidence.sh')
+    ];
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
 class EvidenceContextManager {
     constructor({
         repoRoot = process.cwd(),
-        updateScript = path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
+        updateScript = resolveUpdateEvidenceScript(repoRoot) || path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
         thresholdSeconds = 180,
         autoPlatforms = DEFAULT_PLATFORMS,
         notificationCenter = null,

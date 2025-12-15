@@ -8,7 +8,23 @@ const AutoExecuteAIStartUseCase = require('../use-cases/AutoExecuteAIStartUseCas
 const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('./GitTreeState');
 
 const EVIDENCE_PATH = path.join(process.cwd(), '.AI_EVIDENCE.json');
-const UPDATE_EVIDENCE_SCRIPT = path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh');
+function resolveUpdateEvidenceScript(repoRoot) {
+  const candidates = [
+    path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
+    path.join(repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+    path.join(repoRoot, 'bin/update-evidence.sh')
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+const UPDATE_EVIDENCE_SCRIPT = resolveUpdateEvidenceScript(process.cwd());
 
 class RealtimeGuardService {
   constructor({ notifier = console, notifications = true } = {}) {
@@ -1126,7 +1142,7 @@ class RealtimeGuardService {
       return;
     }
 
-    if (!fs.existsSync(UPDATE_EVIDENCE_SCRIPT)) {
+    if (!UPDATE_EVIDENCE_SCRIPT || !fs.existsSync(UPDATE_EVIDENCE_SCRIPT)) {
       return;
     }
 
@@ -1402,6 +1418,12 @@ class RealtimeGuardService {
   }
 
   runDirectEvidenceRefresh(platformsUsed, reason) {
+    if (!UPDATE_EVIDENCE_SCRIPT || !fs.existsSync(UPDATE_EVIDENCE_SCRIPT)) {
+      this.appendDebugLog(`EVIDENCE_REFRESH_SKIPPED|${reason}|missing-script`);
+      this.notify('Failed to refresh evidence: update-evidence.sh not found', 'error');
+      return null;
+    }
+
     const effectivePlatforms = Array.isArray(platformsUsed) && platformsUsed.length
       ? platformsUsed.join(',')
       : 'frontend,backend,ios,android';

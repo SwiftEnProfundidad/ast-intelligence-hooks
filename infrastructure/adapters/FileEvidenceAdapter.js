@@ -7,12 +7,27 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+function resolveUpdateEvidenceScript(repoRoot) {
+    const candidates = [
+        path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
+        path.join(repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+        path.join(repoRoot, 'bin/update-evidence.sh')
+    ];
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
 class FileEvidenceAdapter {
     constructor(config = {}) {
         this.repoRoot = config.repoRoot || process.cwd();
         this.evidencePath = config.evidencePath || path.join(this.repoRoot, '.AI_EVIDENCE.json');
-        this.updateScriptPath = config.updateScriptPath ||
-            path.join(this.repoRoot, 'scripts/hooks-system/bin/update-evidence.sh');
+        this.updateScriptPath = config.updateScriptPath || resolveUpdateEvidenceScript(this.repoRoot);
         this.staleThreshold = config.staleThreshold || 180;
     }
 
@@ -67,6 +82,10 @@ class FileEvidenceAdapter {
         try {
             const platforms = options.platforms || 'backend';
             const mode = options.mode || '--auto';
+
+            if (!this.updateScriptPath || !fs.existsSync(this.updateScriptPath)) {
+                throw new Error('update-evidence.sh not found');
+            }
 
             execSync(`bash "${this.updateScriptPath}" ${mode} --platforms ${platforms}`, {
                 cwd: this.repoRoot,
