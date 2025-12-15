@@ -36,6 +36,24 @@ interface MatchedSkill {
     config: SkillRule;
 }
 
+function logDebug(message: string, error?: unknown): void {
+    const enabled = process.env.DEBUG === '1'
+        || process.env.DEBUG === 'true'
+        || process.env.NODE_ENV === 'development';
+    if (!enabled) {
+        return;
+    }
+    if (error instanceof Error) {
+        console.error(`[skill-activation-prompt] ${message}: ${error.message}`);
+        return;
+    }
+    if (error) {
+        console.error(`[skill-activation-prompt] ${message}: ${String(error)}`);
+        return;
+    }
+    console.error(`[skill-activation-prompt] ${message}`);
+}
+
 async function readStdin(): Promise<string> {
     return new Promise((resolve) => {
         let data = '';
@@ -68,8 +86,8 @@ function updateEvidenceAuto(projectDir: string, platforms: string): void {
                 ...process.env,
                 AUTO_EVIDENCE_REASON: sessionId,
                 AUTO_EVIDENCE_TRIGGER: 'skill-activation-hook',
-                AUTO_EVIDENCE_SUMMARY: 'Auto-update ejecutado por skill-activation-prompt hook',
-                AUTO_EVIDENCE_EXTRA: 'Evidence actualizado automáticamente al detectar skills relevantes.',
+                AUTO_EVIDENCE_SUMMARY: 'Auto-update executed by skill-activation-prompt hook',
+                AUTO_EVIDENCE_EXTRA: 'Evidence auto-updated after detecting relevant skills.',
                 AUTO_EVIDENCE_PLATFORM_LIST: platforms
             },
             stdio: 'ignore'
@@ -84,6 +102,7 @@ function updateEvidenceAuto(projectDir: string, platforms: string): void {
                     sound: 'Ping'
                 });
             } catch (notifyErr) {
+                logDebug('Failed to send success notification', notifyErr);
             }
         }, 500);
     } catch (err) {
@@ -96,6 +115,7 @@ function updateEvidenceAuto(projectDir: string, platforms: string): void {
                     sound: 'Basso'
                 });
             } catch (notifyErr) {
+                logDebug('Failed to send failure notification', notifyErr);
             }
         }, 700);
     }
@@ -152,15 +172,15 @@ async function main() {
         }
 
         if (matchedSkills.length === 0) {
-            const promptLower = originalPrompt.toLowerCase();
-            const isGenericPrompt = /^(continúa?|sigue|ok|vale|compi|sí|yes|go|next|procede|adelante|hazlo|haz|dale|venga|vamos|perfecto|bien|genial|está bien|ok compi|ok compy)$/i.test(originalPrompt.trim());
+            const isGenericPrompt = /^(continue|ok|yes|go|next|proceed|forward|do it|do|run|let's go|perfect|fine|great|sounds good|ok buddy)$/i.test(originalPrompt.trim());
 
             if (isGenericPrompt) {
                 const platformsFromFiles = detectPlatformFromFiles(projectDir);
                 const gitBranch = (() => {
                     try {
                         return execSync('git rev-parse --abbrev-ref HEAD', { cwd: projectDir, encoding: 'utf8' }).trim();
-                    } catch {
+                    } catch (error) {
+                        logDebug('Failed to detect git branch', error);
                         return '';
                     }
                 })();
@@ -214,6 +234,7 @@ async function main() {
                             message: `Auto-loaded: ${skillsToAutoLoad.map(s => s.name).join(', ')}`
                         });
                     } catch (err) {
+                        logDebug('Failed to send skills auto-loaded notification', err);
                     }
                 }, 100);
 
@@ -262,6 +283,7 @@ async function main() {
                             sound: 'Glass'
                         });
                     } catch (err) {
+                        logDebug('Failed to send skills suggested notification', err);
                     }
                 }, 300);
             } else {
