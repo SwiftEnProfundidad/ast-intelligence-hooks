@@ -1,0 +1,265 @@
+---
+alwaysApply: true
+---
+
+---
+description: iOS rules for Swift/SwiftUI/UIKit
+globs: ["**/*.swift", "**/*.xcodeproj/**", "**/*.xcworkspace/**"]
+---
+
+# iOS Rules - Swift/SwiftUI/UIKit
+
+## ANTES de implementar CUALQUIER cosa:
+
+### Fundamentos (heredados de goldrules.md):
+✅ **Siempre responder en español**
+✅ **Actúa como un Arquitecto de Soluciones y Software Designer**
+✅ **Seguir siempre flujo BDD->TDD** - Feature files → Specs (XCTest/Quick) → Implementación
+✅ **En producción ni un mocks ni un spies** - Todo real de APIs y persistencia (Core Data, UserDefaults, Keychain)
+✅ **No poner comentarios en el código** - Nombres autodescriptivos
+✅ **Analizar estructura existente** - Módulos, protocolos, dependencias, SPM packages
+✅ **Verificar que NO viole SOLID** (SRP, OCP, LSP, ISP, DIP)
+✅ **No Singleton** - Usar Inyección de Dependencias (NO compartir instancias globales)
+✅ **Seguir Clean Architecture** - Domain → Application → Infrastructure → Presentation
+✅ **Guard clauses** - Evitar pyramid of doom, early returns
+✅ **Comprobar que compile ANTES de sugerir** - Xcode build sin errores/warnings
+
+### Swift Moderno:
+✅ **Swift 5.9+** - Usar últimas features del lenguaje
+✅ **async/await** - No completion handlers para código nuevo
+✅ **Structured Concurrency** - Task, TaskGroup, actor
+✅ **Sendable conformance** - Para tipos thread-safe
+✅ **Opaque types** - some View, some Publisher cuando sea apropiado
+✅ **Property wrappers** - @State, @Binding, @Published, custom wrappers
+✅ **Result builders** - Para DSLs (SwiftUI ya lo usa)
+✅ **Generics** - Reutilizar código type-safe
+
+### SwiftUI (Preferido):
+✅ **SwiftUI primero** - UIKit solo cuando sea estrictamente necesario
+✅ **Declarativo** - Describe el UI, no cómo construirlo
+✅ **@State para local** - Estado privado del view
+✅ **@Binding para compartir** - Pasar estado editable a child views
+✅ **@StateObject** - Para ObservableObject ownership
+✅ **@ObservedObject** - Para ObservableObject no-owned
+✅ **@EnvironmentObject** - Para dependency injection global
+✅ **@Environment** - Para valores del sistema (colorScheme, locale)
+✅ **Composición de Views** - Views pequeños, reutilizables
+✅ **ViewModifiers** - Extraer estilos comunes
+✅ **PreferenceKeys** - Para comunicación child → parent
+✅ **GeometryReader con moderación** - Solo cuando sea necesario
+
+### UIKit (Legacy/Necesario):
+✅ **Programmatic UI** - NO Storyboards/XIBs (mejor control de versiones)
+✅ **Auto Layout** - NSLayoutConstraint, SnapKit si es apropiado
+✅ **Delegation pattern** - Weak delegates para evitar retain cycles
+✅ **Coordinator pattern** - Para navegación compleja
+✅ **MVVM** - Model-View-ViewModel, binding con Combine
+✅ **UIViewController delgados** - Lógica en ViewModels
+
+### Protocol-Oriented Programming (POP):
+✅ **Protocols over Inheritance** - Composición de comportamiento
+✅ **Protocol extensions** - Default implementations
+✅ **Associated types** - Generics en protocols
+✅ **Protocol composition** - Combinar múltiples protocols
+✅ **Testability** - Inyectar protocols, no tipos concretos
+
+### Value Types (Preferir sobre Reference Types):
+✅ **struct por defecto** - class solo cuando necesites identity o herencia
+✅ **Inmutabilidad** - let > var siempre que sea posible
+✅ **Copy-on-write** - Para structs grandes (Array, Dictionary ya lo hacen)
+✅ **Equatable, Hashable** - Implementar para comparación y colecciones
+✅ **Codable** - Para serialización JSON/Plist
+
+### Memory Management:
+✅ **ARC** - Automatic Reference Counting
+✅ **[weak self]** - En closures que pueden outlive self
+✅ **[unowned self]** - Solo si self siempre existe mientras closure existe
+✅ **Capture lists** - Capturar valores, no referencias
+✅ **Evitar retain cycles** - Especialmente en closures, delegates
+✅ **Instruments** - Leaks, Zombies, Allocations para profiling
+✅ **deinit** - Verificar que se llama cuando debería
+
+### Optionals (Seguridad de Tipos):
+✅ **No force unwrapping (!)** - Casi nunca usar ! (excepción: IBOutlets)
+✅ **if let** - Para unwrap opcional usado una vez
+✅ **guard let** - Para early return, unwrap queda en scope
+✅ **Nil coalescing (??)** - Valores por defecto
+✅ **Optional chaining (?.)**  - Cadenas de opcionales
+✅ **Implicitly unwrapped (!)**  - Solo para IBOutlets y casos muy específicos
+
+### Clean Architecture en iOS:
+
+```
+MyApp/
+  Domain/
+    Entities/              # Order, User, Store (struct)
+    UseCases/              # CreateOrderUseCase
+    Repositories/          # OrdersRepositoryProtocol (protocol)
+  Application/
+    ViewModels/            # OrderViewModel (ObservableObject)
+    Coordinators/          # Navigation logic
+  Infrastructure/
+    Network/
+      API/                 # API client (URLSession, Alamofire)
+      Repositories/        # OrdersRepository (implementa protocol)
+    Persistence/
+      CoreData/            # Core Data stack
+      UserDefaults/        # Simple key-value
+      Keychain/            # Secure storage
+  Presentation/
+    Views/                 # SwiftUI Views o UIKit ViewControllers
+    Components/            # Reusable UI components
+```
+
+### Dependency Injection:
+✅ **Protocols en domain** - OrdersRepositoryProtocol, NetworkServiceProtocol
+✅ **Implementaciones inyectadas** - En initializer, no Singleton
+✅ **Factory pattern** - Para crear dependencias complejas
+✅ **Environment en SwiftUI** - @EnvironmentObject para DI
+✅ **Swinject (opcional)** - DI container para apps grandes
+✅ **No singletons** - Excepto sistema (URLSession.shared está OK)
+
+### Networking:
+✅ **URLSession** - Nativo, async/await
+✅ **Alamofire (opcional)** - Si necesitas features extras
+✅ **Codable** - Decodificación automática de JSON
+✅ **Error handling** - Custom NetworkError enum
+✅ **Retry logic** - Para requests fallidos
+✅ **Request/Response interceptors** - Logging, auth tokens
+✅ **SSL pinning** - Para apps con alta seguridad
+✅ **Network reachability** - Detectar conectividad
+
+### Persistence:
+✅ **UserDefaults** - Settings simples, NO datos sensibles
+✅ **Keychain** - Passwords, tokens, datos sensibles (Security framework)
+✅ **Core Data** - Base de datos relacional, objetos grandes
+✅ **SwiftData** - Alternativa moderna a Core Data (iOS 17+)
+✅ **FileManager** - Archivos, imágenes, documents
+✅ **iCloud** - Sync entre dispositivos (NSUbiquitousKeyValueStore, CloudKit)
+
+### Combine (Reactive):
+✅ **Publishers** - AsyncSequence para async, Combine para streams complejos
+✅ **@Published** - En ViewModels para binding con Views
+✅ **Subscribers** - sink, assign
+✅ **Operators** - map, filter, flatMap, combineLatest, merge
+✅ **Cancellables** - Almacenar en Set<AnyCancellable>
+✅ **Avoid over-use** - async/await más simple para single values
+
+### Concurrency:
+✅ **async/await** - Para operaciones asíncronas
+✅ **Task** - Lanzar trabajo asíncrono
+✅ **TaskGroup** - Paralelismo estructurado
+✅ **actor** - Thread-safe state management
+✅ **@MainActor** - UI updates siempre en main thread
+✅ **Sendable** - Tipos seguros para pasar entre threads
+✅ **NO DispatchQueue en código nuevo** - Usar async/await
+
+### Testing:
+✅ **XCTest** - Framework de testing nativo
+✅ **Quick/Nimble (opcional)** - BDD syntax más expresivo
+✅ **makeSUT pattern** - Factory para System Under Test
+✅ **trackForMemoryLeaks** - Helper para detectar memory leaks en tests
+✅ **Spies > Mocks** - Verificar comportamiento real
+✅ **Protocols para testability** - Mock con clases que conforman protocol
+✅ **XCTAssert variants** - XCTAssertEqual, XCTAssertNil, XCTAssertThrowsError
+✅ **Coverage >80%** - Objetivo 95% en lógica crítica
+✅ **Fast tests** - <10ms unitarios
+
+### UI Testing:
+✅ **XCUITest** - UI testing nativo
+✅ **Accessibility identifiers** - Para localizar elementos
+✅ **Page Object Pattern** - Encapsular lógica de UI en objetos
+✅ **Wait for existence** - XCTWaiter para elementos asíncronos
+
+### Security:
+✅ **Keychain** - Passwords, tokens (NO UserDefaults)
+✅ **SSL pinning** - Prevenir man-in-the-middle
+✅ **Jailbreak detection** - Opcional para apps críticas
+✅ **App Transport Security (ATS)** - HTTPS por defecto
+✅ **Biometric auth** - Face ID, Touch ID (LocalAuthentication)
+✅ **Secure enclave** - Para keys criptográficas
+✅ **Obfuscation** - Strings sensibles en código
+
+### Accessibility:
+✅ **VoiceOver** - Testear con screen reader
+✅ **Dynamic Type** - Font scaling automático
+✅ **Accessibility labels** - .accessibilityLabel()
+✅ **Traits** - .accessibilityAddTraits(.isButton)
+✅ **Reduce motion** - Respetar preferencias del usuario
+✅ **Color contrast** - WCAG AA mínimo
+
+### Localization (i18n):
+✅ **NSLocalizedString** - Strings traducibles
+✅ **Localizable.strings** - Archivos por idioma
+✅ **Stringsdict** - Para plurales
+✅ **Base internationalization** - Base.lproj
+✅ **RTL support** - Right-to-left para árabe, hebreo
+✅ **NumberFormatter** - Formateo de números, monedas
+✅ **DateFormatter** - Fechas localizadas
+
+### Architecture Patterns:
+✅ **MVVM** - Model-View-ViewModel (preferido con SwiftUI)
+✅ **MVVM-C** - + Coordinator para navegación
+✅ **TCA (The Composable Architecture)** - Para apps grandes, funcional
+✅ **VIPER** - Solo si el equipo lo conoce bien (overkill para apps pequeñas)
+✅ **MVC (evitar)** - Massive View Controller, no escalable
+
+### SwiftUI Specific:
+✅ **@StateObject** - ViewModel ownership
+✅ **ObservableObject** - ViewModels con @Published properties
+✅ **Equatable Views** - Para optimizar renders
+✅ **LazyVStack/LazyHStack** - Para listas grandes
+✅ **ScrollViewReader** - Scroll programático
+✅ **Preferences** - Comunicación child → parent
+✅ **GeometryReader moderación** - Solo cuando sea necesario
+✅ **Custom view modifiers** - Reutilizar estilos
+
+### Performance:
+✅ **Instruments** - Time Profiler, Allocations, Leaks
+✅ **Lazy loading** - LazyVStack, on-demand data
+✅ **Image optimization** - Resize, compress, cache
+✅ **Background threads** - No bloquear main thread
+✅ **Reuse cells** - UITableView/UICollectionView
+✅ **Memoization** - Cachear cálculos costosos
+
+### Code Organization:
+✅ **SPM (Swift Package Manager)** - Modularización
+✅ **Feature modules** - Orders, Users, Auth como packages
+✅ **Extensions** - Agrupar por funcionalidad, archivos separados
+✅ **MARK: -** - Organizar código dentro de archivos
+✅ **File naming** - PascalCase para tipos, camelCase para archivos
+
+### Swift Package Manager:
+✅ **Dependencies en Package.swift** - Versiones específicas
+✅ **Local packages** - Para features grandes
+✅ **Testability** - Cada package con sus tests
+✅ **Public API** - Solo exponer lo necesario (public, internal, private)
+
+### CI/CD:
+✅ **Fastlane** - Automatización de builds, tests, deployments
+✅ **xcodebuild** - CLI para builds
+✅ **TestFlight** - Beta distribution
+✅ **GitHub Actions / Bitrise** - CI/CD pipelines
+
+### Anti-patterns a EVITAR:
+❌ **Massive View Controllers** - ViewControllers >300 líneas
+❌ **Force unwrapping (!)** - Salvo IBOutlets y casos justificados
+❌ **Singletons** - Dificultan testing
+❌ **Storyboards grandes** - Merge conflicts, lentitud
+❌ **Magic numbers** - Usar constantes con nombres
+❌ **Ignoring warnings** - Warnings = errores futuros
+❌ **Retain cycles** - Memory leaks
+❌ **Completion handlers** - Usar async/await en código nuevo
+
+### Específicas para RuralGO Mobile:
+✅ **Compartir DTOs con backend** - TypeScript → Swift codegen (quicktype, OpenAPI)
+✅ **Repository pattern** - OrdersRepositoryProtocol → OrdersRepository
+✅ **Use Cases** - CreateOrderUseCase, UpdateOrderStatusUseCase
+✅ **ViewModels por pantalla** - OrdersListViewModel, OrderDetailViewModel
+✅ **Coordinator para navegación** - No acoplamiento entre Views
+✅ **Network layer abstraído** - APIClient protocol
+✅ **Error handling global** - Custom Error enum
+✅ **Offline-first (opcional)** - Sync con Core Data
+
+### Principio fundamental:
+✅ **"Measure twice, cut once"** - Planificar arquitectura, dependencias y flujo de datos antes de implementar. Analizar impacto en memoria, performance y UX.

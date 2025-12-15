@@ -1,0 +1,38 @@
+# 🚨 MANDATORY GATE CHECK - AUTOMATED ENFORCEMENT
+
+---
+description: Forces AI to call ai_gate_check MCP tool at the START of EVERY response
+globs: ["**/*"]
+alwaysApply: true
+---
+
+## 🛑 ABSOLUTE REQUIREMENT
+
+**BEFORE doing ANYTHING else in your response, you MUST call:**
+
+```
+mcp_ast-intelligence-automation_ai_gate_check
+```
+
+## Rules
+
+1. **FIRST action** of EVERY response = `ai_gate_check`
+2. If result is `BLOCKED` → Fix violations BEFORE proceeding
+3. If evidence is stale → Call `auto_execute_ai_start` 
+4. Only AFTER gate passes → Work on user task
+
+## Why This Exists
+
+- You forget to check evidence
+- You skip the gate check
+- The hook-system warns you but you ignore it
+- This rule makes it MANDATORY, not optional
+
+## Enforcement
+
+If you respond WITHOUT calling `ai_gate_check` first:
+- You are violating this rule
+- The user will reject your response
+- You must start over with the gate check
+
+**NO EXCEPTIONS. NO EXCUSES.**
