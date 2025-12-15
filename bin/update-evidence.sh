@@ -973,6 +973,9 @@ if [[ -f "$INTELLIGENT_AUDIT" ]]; then
 fi
 
 if [[ "$AUTO_MODE" == "true" ]]; then
+  if command -v osascript >/dev/null 2>&1; then
+    osascript -e "display notification \"AI evidence updated at $TIMESTAMP\" with title \"✅ Evidence Updated\" sound name \"Glass\"" 2>/dev/null || true
+  fi
   echo "{\"success\":true,\"timestamp\":\"$TIMESTAMP\",\"session\":\"$FEATURE_NAME\",\"platforms\":\"$PLATFORMS\",\"mode\":\"autonomous\"}"
   exit 0
 fi
