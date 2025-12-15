@@ -105,6 +105,9 @@ FEATURE_NAME="${FEATURE_NAME:-$DEFAULT_FEATURE_NAME}"
 # Get last 3 commits for context
 LAST_COMMITS=$(git log --oneline -3 2>/dev/null | head -3 | tr '\n' '; ' || echo "No recent commits")
 
+# JSON-safe string (prevent invalid JSON when commit messages contain quotes)
+LAST_COMMITS_JSON=$(printf '%s' "$LAST_COMMITS" | jq -Rs .)
+
 # Detect which files will be modified (if in git staging)
 STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || echo "")
 
@@ -856,6 +859,14 @@ else
   RULES_SUMMARY=$(get_rules_summary "$RULES_FILE")
 fi
 
+# Generate contextual answers
+generate_contextual_answers "$ALL_CHANGED_FILES" "$CURRENT_BRANCH" "$LAST_COMMITS"
+
+# JSON-safe protocol answers (prevent invalid JSON when answers contain quotes)
+CONTEXTUAL_Q1_JSON=$(printf '%s' "${CONTEXTUAL_Q1:-}" | jq -Rs .)
+CONTEXTUAL_Q2_JSON=$(printf '%s' "${CONTEXTUAL_Q2:-}" | jq -Rs .)
+CONTEXTUAL_Q3_JSON=$(printf '%s' "${CONTEXTUAL_Q3:-}" | jq -Rs .)
+
 # Generate evidence JSON with multi-platform support
 if [[ ${#RULES_FILES[@]} -le 1 ]]; then
   # Single platform (backward compatible)
@@ -875,13 +886,13 @@ if [[ ${#RULES_FILES[@]} -le 1 ]]; then
   },
   "protocol_3_questions": {
     "answered": true,
-    "question_1_file_type": "$CONTEXTUAL_Q1",
-    "question_2_similar_exists": "$CONTEXTUAL_Q2",
-    "question_3_clean_architecture": "$CONTEXTUAL_Q3"
+    "question_1_file_type": $CONTEXTUAL_Q1_JSON,
+    "question_2_similar_exists": $CONTEXTUAL_Q2_JSON,
+    "question_3_clean_architecture": $CONTEXTUAL_Q3_JSON
   },
   "current_context": {
     "branch": "$CURRENT_BRANCH",
-    "last_commits": "$LAST_COMMITS"
+    "last_commits": $LAST_COMMITS_JSON
   },
   "justification": "Context-aware evidence for branch '$CURRENT_BRANCH'. Auto-detected modules and file types from current work.",
   "approved_by": "Pumuki Team®"
@@ -918,13 +929,13 @@ else
   "also_read": [".AI_SESSION_START.md"],
   "protocol_3_questions": {
     "answered": true,
-    "question_1_file_type": "$CONTEXTUAL_Q1",
-    "question_2_similar_exists": "$CONTEXTUAL_Q2",
-    "question_3_clean_architecture": "$CONTEXTUAL_Q3"
+    "question_1_file_type": $CONTEXTUAL_Q1_JSON,
+    "question_2_similar_exists": $CONTEXTUAL_Q2_JSON,
+    "question_3_clean_architecture": $CONTEXTUAL_Q3_JSON
   },
   "current_context": {
     "branch": "$CURRENT_BRANCH",
-    "last_commits": "$LAST_COMMITS"
+    "last_commits": $LAST_COMMITS_JSON
   },
   "justification": "Context-aware evidence for branch '$CURRENT_BRANCH'. Auto-detected modules and file types from current work.",
   "approved_by": "Pumuki Team®"
