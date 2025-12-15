@@ -294,7 +294,11 @@ class RealtimeGuardService {
     this.lastDirtyTreeNotification = 0;
     this.removeDirtyTreeMarker();
     this.appendDebugLog(`DIRTY_TREE_CLEAR|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}`);
-    this.notify('Git tree is clean. You can continue.', 'info');
+    const totalFiles = state.uniqueCount || 0;
+    const message = totalFiles > 0
+      ? `Git tree within limits (${totalFiles} files, thresholds OK). You can continue.`
+      : 'Git tree is clean. You can continue.';
+    this.notify(message, 'info');
   }
 
   persistDirtyTreeState(state, limits, notifiedAt, active = true) {
