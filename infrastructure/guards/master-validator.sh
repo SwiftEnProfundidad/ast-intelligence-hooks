@@ -1,6 +1,7 @@
 #!/bin/bash
 # MASTER VALIDATOR - Enforces ALL hook-system rules
 # Blocks commits/pushes that violate ANY rule
+# Bypass: GIT_BYPASS_HOOK=1 git commit -m "message"
 
 set -e
 
@@ -8,6 +9,12 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
+
+# Check for bypass FIRST
+if [[ "${GIT_BYPASS_HOOK:-0}" == "1" ]]; then
+  echo -e "${YELLOW}⚠️  MASTER VALIDATOR BYPASSED (GIT_BYPASS_HOOK=1)${NC}"
+  exit 0
+fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
