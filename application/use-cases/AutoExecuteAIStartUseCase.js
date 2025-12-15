@@ -1,14 +1,28 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
+function resolveUpdateEvidenceScript(repoRoot) {
+  const candidates = [
+    path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
+    path.join(repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+    path.join(repoRoot, 'bin/update-evidence.sh')
+  ];
+
+  const fs = require('fs');
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
 class AutoExecuteAIStartUseCase {
   constructor(orchestrator, repoRoot) {
     this.orchestrator = orchestrator;
     this.repoRoot = repoRoot || process.cwd();
-    this.updateEvidenceScript = path.join(
-      this.repoRoot,
-      'scripts/hooks-system/bin/update-evidence.sh'
-    );
+    this.updateEvidenceScript = resolveUpdateEvidenceScript(this.repoRoot);
   }
 
   async execute(platforms, confidence) {
@@ -51,6 +65,10 @@ class AutoExecuteAIStartUseCase {
 
       if (!platformsStr) {
         throw new Error('No valid platforms to execute');
+      }
+
+      if (!this.updateEvidenceScript) {
+        throw new Error('update-evidence.sh not found');
       }
 
       const command = `bash "${this.updateEvidenceScript}" --auto --platforms "${platformsStr}"`;

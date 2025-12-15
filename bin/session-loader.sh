@@ -158,7 +158,7 @@ if [[ -f "$EVIDENCE_FILE" ]]; then
           if "$UPDATE_EVIDENCE_SCRIPT" --auto --platforms "$PLATFORMS" >/dev/null 2>&1; then
             echo -e "${GREEN}✅ Evidence updated${NC}"
             # Send macOS notification
-            osascript -e "display notification \"Evidence auto-updated (was ${AGE_FORMATTED} old)\" with title \"🔄 Evidence Refreshed\" sound name \"Glass\"" 2>/dev/null || true
+            osascript -e "display notification \"Evidence auto-updated at $(date '+%Y-%m-%d %H:%M:%S') (was ${AGE_FORMATTED} old)\" with title \"🔄 Evidence Refreshed\" sound name \"Glass\"" 2>/dev/null || true
           else
             echo -e "${YELLOW}⚠️  Evidence update failed${NC}"
           fi

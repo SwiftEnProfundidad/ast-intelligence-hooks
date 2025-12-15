@@ -56,9 +56,56 @@ function getLibraryInstallPath() {
             }
         }
     } catch (e) {
+        if (process.env.DEBUG) {
+            const msg = e instanceof Error ? e.message : String(e);
+            console.error('[MCP] getLibraryInstallPath failed:', msg);
+        }
         // Ignore errors
     }
     return null; // Not found, will use generic exclusions
+}
+
+function formatDuration(seconds) {
+    if (!Number.isFinite(seconds) || seconds < 0) return 'unknown';
+    const s = Math.floor(seconds);
+    const days = Math.floor(s / 86400);
+    const hours = Math.floor((s % 86400) / 3600);
+    const minutes = Math.floor((s % 3600) / 60);
+    const secs = s % 60;
+    const parts = [];
+    if (days) parts.push(`${days}d`);
+    if (hours) parts.push(`${hours}h`);
+    if (minutes) parts.push(`${minutes}m`);
+    parts.push(`${secs}s`);
+    return parts.join(' ');
+}
+
+function formatLocalDateTime(isoOrMs) {
+    const d = new Date(isoOrMs);
+    if (Number.isNaN(d.getTime())) return 'unknown';
+    return d.toLocaleString();
+}
+
+function resolveUpdateEvidenceScript() {
+    const scriptDir = __dirname;
+    const candidates = [
+        path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh'),
+        path.join(process.cwd(), 'scripts/hooks-system/bin/update-evidence.sh'),
+        path.join(REPO_ROOT, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+        path.join(process.cwd(), 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+        path.join(REPO_ROOT, 'bin/update-evidence.sh'),
+        path.join(process.cwd(), 'bin/update-evidence.sh'),
+        path.join(scriptDir, '../../bin/update-evidence.sh'),
+        path.join(scriptDir, '../../../bin/update-evidence.sh')
+    ];
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+
+    return null;
 }
 
 const contextEngine = new ContextDetectionEngine(REPO_ROOT);
@@ -71,7 +118,9 @@ let lastContext = null;
 let lastEvidenceNotification = 0;
 let lastGitFlowNotification = 0;
 let lastAutoCommitTime = 0;
+let lastEvidenceAutoFix = 0;
 const NOTIFICATION_COOLDOWN = 120000;
+const EVIDENCE_AUTOFIX_COOLDOWN = Number(process.env.EVIDENCE_AUTOFIX_COOLDOWN_MS || 300000);
 const AUTO_COMMIT_INTERVAL = 300000; 
 const AUTO_COMMIT_ENABLED = process.env.AUTO_COMMIT_ENABLED === 'true'; 
 const AUTO_PUSH_ENABLED = process.env.AUTO_PUSH_ENABLED !== 'false'; 
@@ -111,6 +160,44 @@ function exec(command, options = {}) {
 function getCurrentBranch() {
     const result = exec('git branch --show-current');
     return typeof result === 'string' ? result : 'unknown';
+}
+
+function branchExists(branchName) {
+    const result = exec(`git show-ref --verify --quiet refs/heads/${branchName} && echo "yes" || echo "no"`);
+    return result === 'yes';
+}
+
+function resolveBaseBranch() {
+    const configured = process.env.AST_BASE_BRANCH;
+    if (configured && typeof configured === 'string' && configured.trim().length > 0) {
+        return configured.trim();
+    }
+
+    if (branchExists('develop')) {
+        return 'develop';
+    }
+
+    if (branchExists('main')) {
+        return 'main';
+    }
+
+    if (branchExists('master')) {
+        return 'master';
+    }
+
+    return 'main';
+}
+
+function getGitChangeCounts() {
+    const unstaged = exec('git status --porcelain');
+    const staged = exec('git diff --cached --name-only');
+    const unstagedCount = typeof unstaged === 'string' && unstaged.length > 0 ? unstaged.split('\n').length : 0;
+    const stagedCount = typeof staged === 'string' && staged.length > 0 ? staged.split('\n').length : 0;
+    return {
+        staged: stagedCount,
+        unstaged: unstagedCount,
+        total: stagedCount + unstagedCount
+    };
 }
 
 /**
@@ -157,27 +244,26 @@ function checkEvidence() {
 
         // Calculate age
         const evidenceTime = new Date(timestamp).getTime();
-        const currentTime = Date.now();
-        const ageSeconds = Math.floor((currentTime - evidenceTime) / 1000);
+        const nowMs = Date.now();
+        const ageSecondsRaw = Math.floor((nowMs - evidenceTime) / 1000);
+        const ageSeconds = Number.isFinite(ageSecondsRaw) && ageSecondsRaw > 0 ? ageSecondsRaw : 0;
         const isStale = ageSeconds > MAX_EVIDENCE_AGE;
+        const checkedAt = new Date(nowMs).toISOString();
 
         return {
             status: isStale ? 'stale' : 'fresh',
-            message: isStale
-                ? `Evidence is STALE (${ageSeconds}s old, max ${MAX_EVIDENCE_AGE}s)`
-                : `Evidence is fresh (${ageSeconds}s old)`,
-            action: isStale ? `Run: ai-start ${getCurrentBranch()}` : null,
+            message: isStale ? `Evidence is STALE (${ageSeconds}s old, max ${MAX_EVIDENCE_AGE}s)` : `Evidence is fresh (${ageSeconds}s old)`,
+            action: isStale ? `Run: ai-start ${getCurrentBranch()}` : 'OK',
             age: ageSeconds,
             isStale: isStale,
-            timestamp: timestamp,
-            session: evidence.session || 'unknown',
-            currentBranch: getCurrentBranch()
+            timestamp: new Date(timestamp).toISOString(),
+            checkedAt
         };
     } catch (err) {
         return {
             status: 'error',
             message: `Error checking evidence: ${err.message}`,
-            action: `Run: ai-start ${getCurrentBranch()}`,
+            action: 'Check .AI_EVIDENCE.json format',
             age: null,
             isStale: true
         };
@@ -191,6 +277,7 @@ function autoCompleteGitFlow(params) {
     const results = [];
     const currentBranch = getCurrentBranch();
     const gitFlowState = getGitFlowState();
+    const baseBranch = resolveBaseBranch();
 
     try {
         if (!currentBranch.match(/^(feature|fix|hotfix)\//)) {
@@ -225,10 +312,10 @@ function autoCompleteGitFlow(params) {
 
         if (exec('which gh') && typeof exec('which gh') === 'string') {
             results.push('Creating pull request...');
-            const prTitle = params.prTitle || `Merge ${currentBranch} into develop`;
+            const prTitle = params.prTitle || `Merge ${currentBranch} into ${baseBranch}`;
             const prBody = params.prBody || 'Automated PR created by Pumuki Team® Git Flow Automation';
 
-            const prResult = exec(`gh pr create --base develop --head ${currentBranch} --title "${prTitle}" --body "${prBody}"`);
+            const prResult = exec(`gh pr create --base ${baseBranch} --head ${currentBranch} --title "${prTitle}" --body "${prBody}"`);
             if (typeof prResult === 'string' && prResult.includes('http')) {
                 results.push(`✅ PR created: ${prResult}`);
 
@@ -238,9 +325,9 @@ function autoCompleteGitFlow(params) {
                     const mergeResult = exec(`gh pr merge ${prNumber} --merge --delete-branch`);
                     results.push(`✅ PR merged and branch deleted`);
 
-                    exec('git checkout develop');
-                    exec('git pull origin develop');
-                    results.push('✅ Switched to develop and pulled latest');
+                    exec(`git checkout ${baseBranch}`);
+                    exec(`git pull origin ${baseBranch}`);
+                    results.push(`✅ Switched to ${baseBranch} and pulled latest`);
                 }
             } else {
                 results.push(`⚠️  PR creation: ${prResult}`);
@@ -270,17 +357,18 @@ function autoCompleteGitFlow(params) {
  */
 function syncBranches(params) {
     const results = [];
+    const baseBranch = resolveBaseBranch();
 
     try {
         results.push('Fetching from remote...');
         exec('git fetch --all --prune');
         results.push('✅ Fetched from remote');
 
-        // Update develop
-        results.push('Updating develop...');
-        exec('git checkout develop');
-        exec('git pull origin develop');
-        results.push('✅ Develop updated');
+        // Update base branch
+        results.push(`Updating ${baseBranch}...`);
+        exec(`git checkout ${baseBranch}`);
+        exec(`git pull origin ${baseBranch}`);
+        results.push(`✅ ${baseBranch} updated`);
 
         // Update main
         results.push('Updating main...');
@@ -288,7 +376,7 @@ function syncBranches(params) {
         exec('git pull origin main');
         results.push('✅ Main updated');
 
-        const targetBranch = params.returnToBranch || 'develop';
+        const targetBranch = params.returnToBranch || baseBranch;
         exec(`git checkout ${targetBranch}`);
         results.push(`✅ Returned to ${targetBranch}`);
 
@@ -311,9 +399,10 @@ function syncBranches(params) {
  */
 function cleanupStaleBranches(params) {
     const results = [];
+    const baseBranch = resolveBaseBranch();
 
     try {
-        const mergedOutput = exec('git branch --merged develop');
+        const mergedOutput = exec(`git branch --merged ${baseBranch}`);
         if (!mergedOutput || typeof mergedOutput !== 'string') {
             return {
                 success: true,
@@ -323,7 +412,7 @@ function cleanupStaleBranches(params) {
         }
         const mergedBranches = mergedOutput.split('\n')
             .map(b => b.trim())
-            .filter(b => b && !b.includes('*') && b !== 'develop' && b !== 'main');
+            .filter(b => b && !b.includes('*') && b !== baseBranch && b !== 'main');
 
         if (mergedBranches.length === 0) {
             return {
@@ -392,9 +481,12 @@ async function autoExecuteAIStart(params) {
         if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
             const platforms = decision.platforms.map(p => p.platform);
             const platformsStr = platforms.join(',');
-            const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
+            const updateScript = resolveUpdateEvidenceScript();
+            if (!updateScript) {
+                throw new Error('update-evidence.sh not found');
+            }
 
-            exec(`bash ${updateScript} --auto --platforms ${platformsStr}`);
+            exec(`bash "${updateScript}" --auto --platforms ${platformsStr}`);
 
             sendNotification(
                 '✅ AI Start Ejecutado',
@@ -428,6 +520,7 @@ async function autoExecuteAIStart(params) {
     }
 }
 
+
 /**
  * Check if changes are coherent with the branch name scope
  * Returns { isCoherent, expectedScope, detectedScope, reason }
@@ -455,6 +548,7 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
 
     let expectedScope = null;
     let expectedKeywords = [];
+
     for (const [scope, keywords] of Object.entries(branchScopeMap)) {
         if (featureName.includes(scope) || scope.includes(featureName)) {
             expectedScope = scope;
@@ -468,12 +562,27 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
     }
 
     const changedFiles = uncommittedChanges.split('\n').filter(line => line.trim().length > 0);
+
+    const toolingPrefixes = ['bin/', 'infrastructure/', 'scripts/'];
+    const isToolingPath = (filePath) => toolingPrefixes.some(prefix => filePath.startsWith(prefix));
+    const onlyToolingChanges = changedFiles
+        .map(line => line.substring(3).trim())
+        .filter(filePath => filePath && !filePath.includes('.AI_EVIDENCE') && !filePath.includes('.gitignore'))
+        .every(filePath => isToolingPath(filePath));
+    if (onlyToolingChanges) {
+        return { isCoherent: true, expectedScope, detectedScope: 'tooling', reason: 'Only tooling/infra files changed' };
+    }
+
     const fileScopes = new Map();
 
     for (const line of changedFiles) {
         const filePath = line.substring(3).trim();
 
         if (filePath.includes('.AI_EVIDENCE') || filePath.includes('.gitignore')) {
+            continue;
+        }
+
+        if (isToolingPath(filePath)) {
             continue;
         }
 
@@ -494,7 +603,11 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
     const dominantScope = [...fileScopes.entries()].sort((a, b) => b[1] - a[1])[0][0];
 
     const matchesExpected = expectedKeywords.some(keyword => {
-        return changedFiles.some(line => line.toLowerCase().includes(keyword.toLowerCase()));
+        return changedFiles
+            .map(line => line.slice(3).trim())
+            .filter(filePath => filePath && !filePath.includes('.AI_EVIDENCE') && !filePath.includes('.gitignore'))
+            .filter(filePath => !isToolingPath(filePath))
+            .some(filePath => filePath.toLowerCase().includes(keyword.toLowerCase()));
     });
 
     if (!matchesExpected && dominantScope !== expectedScope) {
@@ -523,6 +636,7 @@ function aiGateCheck() {
     const warnings = [];
 
     const currentBranch = getCurrentBranch();
+    const baseBranch = resolveBaseBranch();
     const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
     const uncommittedChangesRaw = exec('git status --porcelain');
     const uncommittedChanges = uncommittedChangesRaw
@@ -532,27 +646,31 @@ function aiGateCheck() {
         }).join('\n')
         : '';
 
+    const now = Date.now();
     const evidenceStatus = checkEvidence();
-    if (evidenceStatus.isStale) {
+    if (evidenceStatus.isStale && (now - lastEvidenceAutoFix > EVIDENCE_AUTOFIX_COOLDOWN)) {
         try {
-            const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
-            if (fs.existsSync(updateScript)) {
-                execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
-                    cwd: REPO_ROOT,
-                    encoding: 'utf-8',
-                    stdio: ['pipe', 'pipe', 'pipe']
-                });
-                autoFixes.push('✅ Evidence was stale - AUTO-FIXED');
-                sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence was stale and has been refreshed automatically', 'Purr');
+            const updateScript = resolveUpdateEvidenceScript();
+            if (!updateScript) {
+                throw new Error('update-evidence.sh not found');
             }
+            execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
+                cwd: REPO_ROOT,
+                encoding: 'utf-8',
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+            lastEvidenceAutoFix = now;
+            autoFixes.push('✅ Evidence was stale - AUTO-FIXED');
         } catch (err) {
+            lastEvidenceAutoFix = now;
             violations.push(`❌ EVIDENCE_STALE: Evidence is ${evidenceStatus.age}s old. Auto-fix failed: ${err.message}`);
-            sendNotification('⚠️ Evidence Fix Failed', 'Could not auto-update evidence', 'Basso');
         }
     }
 
     if (isProtectedBranch) {
-            warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
+        violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}'.`);
+        violations.push(`   Required: create a feature branch from ${baseBranch} (git checkout ${baseBranch} && git pull && git checkout -b feature/<name>)`);
+        sendNotification('🚫 Git Flow Required', `Protected branch '${currentBranch}'. Create feature from ${baseBranch} before continuing.`, 'Basso');
     }
 
     const stagedFiles = exec('git diff --cached --name-only');
@@ -613,7 +731,11 @@ function validateAndFix(params) {
         if (evidenceStatus.isStale) {
             issues.push('Evidence is stale');
             results.push('🔧 Fixing: Updating AI evidence...');
-            exec(`bash ${path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh')}`);
+            const updateScript = resolveUpdateEvidenceScript();
+            if (!updateScript) {
+                throw new Error('update-evidence.sh not found');
+            }
+            exec(`bash "${updateScript}"`);
             results.push('✅ Evidence updated');
         } else {
             results.push('✅ Evidence is fresh');
@@ -740,24 +862,29 @@ class MCPServer {
                     const autoFixes = [];
 
                     const evidenceStatus = checkEvidence();
-                    if (evidenceStatus.isStale) {
+                    const now = Date.now();
+                    if (evidenceStatus.isStale && (now - lastEvidenceAutoFix > EVIDENCE_AUTOFIX_COOLDOWN)) {
                         try {
-                            const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
-                            if (fs.existsSync(updateScript)) {
-                                execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
-                                    cwd: REPO_ROOT,
-                                    encoding: 'utf-8',
-                                    stdio: ['pipe', 'pipe', 'pipe']
-                                });
-                                autoFixes.push('Evidence was stale - AUTO-FIXED');
+                            const updateScript = resolveUpdateEvidenceScript();
+                            if (!updateScript) {
+                                throw new Error('update-evidence.sh not found');
                             }
+                            execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
+                                cwd: REPO_ROOT,
+                                encoding: 'utf-8',
+                                stdio: ['pipe', 'pipe', 'pipe']
+                            });
+                            lastEvidenceAutoFix = now;
+                            autoFixes.push('Evidence was stale - AUTO-FIXED');
                         } catch (err) {
+                            lastEvidenceAutoFix = now;
                             violations.push(`EVIDENCE_STALE: Evidence is ${evidenceStatus.age}s old (max 180s). Auto-fix failed.`);
                         }
                     }
 
                     const currentBranch = getCurrentBranch();
-                    const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
+                    const baseBranch = resolveBaseBranch();
+                    const isProtectedBranch = ['main', 'master', baseBranch].includes(currentBranch);
                     const uncommittedChanges = exec('git status --porcelain');
 
                     if (isProtectedBranch && uncommittedChanges && uncommittedChanges.length > 0) {
@@ -941,13 +1068,13 @@ class MCPServer {
                             },
                             {
                                 name: 'sync_branches',
-                                description: 'Synchronize develop and main branches with remote',
+                                description: 'Synchronize base branch and main branches with remote',
                                 inputSchema: {
                                     type: 'object',
                                     properties: {
                                         returnToBranch: {
                                             type: 'string',
-                                            description: 'Branch to return to after sync (default: develop)'
+                                            description: 'Branch to return to after sync (default: base branch)'
                                         }
                                     },
                                     required: []
@@ -1126,7 +1253,8 @@ setInterval(async () => {
         const now = Date.now();
 
         const currentBranch = getCurrentBranch();
-        const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
+        const baseBranch = resolveBaseBranch();
+        const isProtectedBranch = ['main', 'master', baseBranch].includes(currentBranch);
         const hasUncommittedChangesRaw = exec('git status --porcelain');
         const hasUncommittedChanges = hasUncommittedChangesRaw
             ? hasUncommittedChangesRaw.split('\n').filter(line => {
@@ -1137,7 +1265,13 @@ setInterval(async () => {
 
         if (isProtectedBranch && hasUncommittedChanges && hasUncommittedChanges.length > 0) {
             if (now - lastGitFlowNotification > NOTIFICATION_COOLDOWN) {
-                sendNotification('⚠️ Git Flow Violation', `You have uncommitted changes on ${currentBranch}. Create a feature branch!`, 'Basso');
+                const counts = getGitChangeCounts();
+                const timestamp = new Date().toISOString();
+                sendNotification(
+                    '⚠️ Git Flow Violation',
+                    `branch=${currentBranch} staged=${counts.staged} unstaged=${counts.unstaged} total=${counts.total} @ ${timestamp}`,
+                    'Basso'
+                );
                 lastGitFlowNotification = now;
             }
         }
@@ -1146,15 +1280,16 @@ setInterval(async () => {
         if (evidenceStatus.isStale && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
 
             try {
-                const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
-                if (fs.existsSync(updateScript)) {
-                    execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
-                        cwd: REPO_ROOT,
-                        encoding: 'utf-8',
-                        stdio: ['pipe', 'pipe', 'pipe']
-                    });
-                    sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence was stale and has been refreshed automatically', 'Purr');
+                const updateScript = resolveUpdateEvidenceScript();
+                if (!updateScript) {
+                    throw new Error('update-evidence.sh not found');
                 }
+                execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
+                    cwd: REPO_ROOT,
+                    encoding: 'utf-8',
+                    stdio: ['pipe', 'pipe', 'pipe']
+                });
+                sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence was stale and has been refreshed automatically', 'Purr');
             } catch (err) {
                 sendNotification('⚠️ Evidence Stale', `Evidence is ${evidenceStatus.age}s old. Auto-fix failed: ${err.message}`, 'Basso');
             }
@@ -1194,10 +1329,13 @@ setInterval(async () => {
 
                 if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
                     const platforms = decision.platforms.map(p => p.platform).join(', ');
-                    const updateScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh');
+                    const updateScript = resolveUpdateEvidenceScript();
                     const platformsStr = decision.platforms.map(p => p.platform).join(',');
 
                     try {
+                        if (!updateScript) {
+                            throw new Error('update-evidence.sh not found');
+                        }
                         execSync(`bash "${updateScript}" --auto --platforms ${platformsStr}`, {
                             cwd: REPO_ROOT,
                             encoding: 'utf-8',
@@ -1330,10 +1468,11 @@ setInterval(async () => {
                 sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
 
                 if (AUTO_PR_ENABLED) {
-                    const commitCount = exec(`git rev-list --count origin/develop..${currentBranch}`);
+                    const baseBranch = resolveBaseBranch();
+                    const commitCount = exec(`git rev-list --count origin/${baseBranch}..${currentBranch}`);
                     if (parseInt(commitCount) >= 3) {
                         const prTitle = `Auto-PR: ${branchName}`;
-                        const prResult = exec(`gh pr create --base develop --head ${currentBranch} --title "${prTitle}" --body "Automated PR by Pumuki Git Flow"`);
+                        const prResult = exec(`gh pr create --base ${baseBranch} --head ${currentBranch} --title "${prTitle}" --body "Automated PR by Pumuki Git Flow"`);
                         if (typeof prResult === 'string' && prResult.includes('http')) {
                             sendNotification('✅ Auto-PR Created', prTitle, 'Hero');
                         }

@@ -2,11 +2,27 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+function resolveUpdateEvidenceScript(repoRoot) {
+    const candidates = [
+        path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
+        path.join(repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+        path.join(repoRoot, 'bin/update-evidence.sh')
+    ];
+
+    for (const candidate of candidates) {
+        if (fs.existsSync(candidate)) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
 class EvidenceMonitorService {
     constructor({
         repoRoot = process.cwd(),
         evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json'),
-        updateScriptPath = path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
+        updateScriptPath = resolveUpdateEvidenceScript(repoRoot) || path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
         notifier = () => { },
         logger = console,
         autoRefreshEnabled = process.env.HOOK_GUARD_AUTO_REFRESH !== 'false',
@@ -103,8 +119,11 @@ class EvidenceMonitorService {
         if (!this.autoRefreshEnabled) {
             return;
         }
-        if (!this.fs.existsSync(this.updateScriptPath)) {
-            return;
+        if (!this.updateScriptPath || !this.fs.existsSync(this.updateScriptPath)) {
+            this.updateScriptPath = resolveUpdateEvidenceScript(this.repoRoot);
+            if (!this.updateScriptPath || !this.fs.existsSync(this.updateScriptPath)) {
+                return;
+            }
         }
         const now = Date.now();
         if (now - this.lastAutoRefresh < this.autoRefreshCooldownMs) {
