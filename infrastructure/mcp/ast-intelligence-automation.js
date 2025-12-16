@@ -250,6 +250,10 @@ function checkEvidence() {
         const isStale = ageSeconds > MAX_EVIDENCE_AGE;
         const checkedAt = new Date(nowMs).toISOString();
 
+        if (isStale) {
+            sendNotification('⚠️ Evidence Stale', `Evidence is ${ageSeconds}s old (max ${MAX_EVIDENCE_AGE}s). Run ai-start to refresh.`, 'Basso');
+        }
+
         return {
             status: isStale ? 'stale' : 'fresh',
             message: isStale ? `Evidence is STALE (${ageSeconds}s old, max ${MAX_EVIDENCE_AGE}s)` : `Evidence is fresh (${ageSeconds}s old)`,
@@ -1404,7 +1408,7 @@ setInterval(async () => {
                     file.includes('package-lock.json') ||
                     file.startsWith('.git/') ||
                     file.startsWith('.cursor/') ||
-                    file.startsWith('.claude/') ||
+                    file.startsWith('.ast-intelligence/') ||
                     file.startsWith('.vscode/') ||
                     file.startsWith('.idea/')) {
                     return;

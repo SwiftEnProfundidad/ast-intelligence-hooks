@@ -87,15 +87,15 @@ class IntelligentCommitAnalyzer {
             return 'hooks-system';
         }
 
-        if (filePath.includes('.claude/')) {
-            return 'claude-config';
+        if (filePath.includes('.ast-intelligence/')) {
+            return 'ast-intelligence-config'
         }
 
         if (filePath.includes('docs/')) {
             return 'docs';
         }
 
-        if (filePath.match(/^(\.github|\.vscode|\.cursor|\.claude)/)) {
+        if (filePath.match(/^(\.github|\.vscode|\.cursor|\.ast-intelligence)/)) {
             return null;
         }
 

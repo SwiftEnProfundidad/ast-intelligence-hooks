@@ -50,7 +50,7 @@ function detectPlatformFromFiles(projectDir: string): string[] {
     const platforms: string[] = [];
 
     try {
-        const cacheDir = join(projectDir, '.claude', 'tsc-cache');
+        const cacheDir = join(projectDir, '.ast-intelligence', 'tsc-cache');
         const sessionDirs = execSync(`find "${cacheDir}" -type d -maxdepth 1 2>/dev/null | head -5`, { encoding: 'utf8' }).trim().split('\n');
 
         const recentFiles: string[] = [];
