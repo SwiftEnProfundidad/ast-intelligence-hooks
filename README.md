@@ -74,7 +74,7 @@ This library was conceived to solve this fundamental problem by creating a **per
      - Example: `"Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."`
 
 3. **Rules are automatically loaded**:
-   - `DynamicRulesLoader` scans agentic IDE rules directories (`.cursor/rules/`, `.claude/skills/`, `.windsurf/rules/`, `.vscode/rules/`, `.kilo/rules/`, `.cline/rules/`) for platform-specific rules
+   - `DynamicRulesLoader` scans agentic IDE rules directories (`.cursor/rules/`, `.ast-intelligence/skills/`, `.windsurf/rules/`, `.vscode/rules/`, `.kilo/rules/`, `.cline/rules/`) for platform-specific rules
    - **Always loads `rulesgold.mdc` first** (generic rules that apply to all projects)
    - Then loads platform-specific rules: `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`
    - Aggregates all 798+ validation rules into a single context

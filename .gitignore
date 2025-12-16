@@ -38,10 +38,11 @@ ANNOUNCEMENTS.md
 *.tmp
 .cache/
 .audit_tmp/
+.AI_TOKEN_STATUS.txt
 .coverage/
 
-# Claude Desktop configuration (user-specific, similar to .cursor/rules/)
-.claude/
+# AST Intelligence configuration (user-specific, similar to .cursor/rules/)
+.ast-intelligence/
 
 # IDE-specific configurations (user-specific)
 .windsurf/

@@ -1,24 +1,40 @@
 {
-  "timestamp": "2025-11-27T09:21:39.736Z",
+  "timestamp": "2025-12-16T07:26:36.333Z",
   "reason": "cli",
   "status": "error",
   "results": [
     {
       "name": "evidence",
-      "status": "error",
+      "status": "ok",
       "details": {
-        "message": "missing .AI_EVIDENCE.json"
+        "ageMs": 3333,
+        "timestamp": "2025-12-16T08:26:33+01:00"
       }
     },
     {
       "name": "gitTree",
-      "status": "ok",
+      "status": "warn",
       "details": {
         "stagedFiles": [],
-        "workingFiles": [],
+        "workingFiles": [
+          ".AI_EVIDENCE.json",
+          ".gitignore",
+          "README.md",
+          "application/services/IntelligentCommitAnalyzer.js",
+          "bin/install.js",
+          "bin/update-evidence.sh",
+          "hooks/getSkillRulesPath.ts",
+          "hooks/git-status-monitor.ts",
+          "hooks/post-tool-use-tracker.sh",
+          "hooks/skill-activation-prompt.sh",
+          "hooks/skill-activation-prompt.ts",
+          "infrastructure/hooks/pre-tool-use-intelligent-enforcer.sh",
+          "infrastructure/mcp/ast-intelligence-automation.js",
+          "infrastructure/shell/validators/validate-ai-protocol.sh"
+        ],
         "stagedCount": 0,
-        "workingCount": 0,
-        "uniqueCount": 0
+        "workingCount": 14,
+        "uniqueCount": 14
       }
     },
     {

@@ -55,6 +55,7 @@ class HookSystemScheduler {
         message: error.message,
       });
       this.stateMachine.transition('reset');
+      throw error;
     }
   }
 

@@ -22,6 +22,7 @@ const { execSync } = require('child_process');
 const AutonomousOrchestrator = require('../../application/services/AutonomousOrchestrator');
 const ContextDetectionEngine = require('../../application/services/ContextDetectionEngine');
 const MacOSNotificationAdapter = require('../adapters/MacOSNotificationAdapter');
+const { toErrorMessage } = require('../utils/error-utils');
 
 const MCP_VERSION = '2024-11-05';
 
@@ -57,8 +58,7 @@ function getLibraryInstallPath() {
         }
     } catch (e) {
         if (process.env.DEBUG) {
-            const msg = e instanceof Error ? e.message : String(e);
-            console.error('[MCP] getLibraryInstallPath failed:', msg);
+            console.error('[MCP] getLibraryInstallPath failed:', toErrorMessage(e));
         }
         // Ignore errors
     }
@@ -249,6 +249,10 @@ function checkEvidence() {
         const ageSeconds = Number.isFinite(ageSecondsRaw) && ageSecondsRaw > 0 ? ageSecondsRaw : 0;
         const isStale = ageSeconds > MAX_EVIDENCE_AGE;
         const checkedAt = new Date(nowMs).toISOString();
+
+        if (isStale) {
+            sendNotification('⚠️ Evidence Stale', `Evidence is ${ageSeconds}s old (max ${MAX_EVIDENCE_AGE}s). Run ai-start to refresh.`, 'Basso');
+        }
 
         return {
             status: isStale ? 'stale' : 'fresh',
@@ -1404,7 +1408,7 @@ setInterval(async () => {
                     file.includes('package-lock.json') ||
                     file.startsWith('.git/') ||
                     file.startsWith('.cursor/') ||
-                    file.startsWith('.claude/') ||
+                    file.startsWith('.ast-intelligence/') ||
                     file.startsWith('.vscode/') ||
                     file.startsWith('.idea/')) {
                     return;

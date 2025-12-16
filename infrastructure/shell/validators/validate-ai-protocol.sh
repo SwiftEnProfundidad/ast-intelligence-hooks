@@ -186,8 +186,8 @@ detect_platform_for_file() {
   local filename=$(basename "$file")
 
   # Exclude hooks-system tooling files from platform validation
-  if [[ "$file" =~ scripts/hooks-system/ ]] || [[ "$file" =~ \.claude/hooks/ ]]; then
-    # Hooks system scripts and .claude/hooks are tooling, not application code
+  if [[ "$file" =~ scripts/hooks-system/ ]] || [[ "$file" =~ \.ast-intelligence/hooks/ ]]; then
+    # Hooks system scripts and .ast-intelligence/hooks are tooling, not application code
     echo ""
     return
   fi

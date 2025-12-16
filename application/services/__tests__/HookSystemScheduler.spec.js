@@ -1,8 +1,8 @@
 const HookSystemScheduler = require('../HookSystemScheduler');
-const HookSystemStateMachine = require('../state/HookSystemStateMachine');
+const HookSystemStateMachine = require('../../state/HookSystemStateMachine');
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 
-jest.mock('../state/HookSystemStateMachine');
+jest.mock('../../state/HookSystemStateMachine');
 jest.mock('../../../infrastructure/telemetry/metrics-logger');
 
 function makeSUT(options = {}) {
@@ -169,7 +169,7 @@ describe('HookSystemScheduler', () => {
         analyzeContext: jest.fn().mockRejectedValue(new Error('Analysis failed')),
       };
       const scheduler = makeSUT({ orchestrator: mockOrchestrator });
-      await scheduler.tick();
+      await expect(scheduler.tick()).rejects.toThrow('Analysis failed');
       expect(mockStateMachine.transition).toHaveBeenCalledWith('error');
       expect(mockStateMachine.transition).toHaveBeenCalledWith('reset');
       expect(recordMetric).toHaveBeenCalledWith(
@@ -205,4 +205,3 @@ describe('HookSystemScheduler', () => {
     });
   });
 });
-

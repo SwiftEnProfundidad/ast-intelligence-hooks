@@ -78,7 +78,7 @@ describe('network-resilience-analyzer', () => {
     it('should detect multiple retries without circuit breaker', () => {
       const project = createMockProject([{
         path: '/app/services/api.service.ts',
-        content: 'retry retry retry retry'
+        content: 'retry retry retry retry fetch("/api")'
       }]);
       const findings = [];
 

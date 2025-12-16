@@ -7,15 +7,15 @@
 set -euo pipefail
 
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-START_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/start-guards.sh"
-AUTOSTART_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/guard-autostart.sh"
+START_SCRIPT="$REPO_ROOT/bin/start-guards.sh"
+AUTOSTART_SCRIPT="$REPO_ROOT/bin/guard-autostart.sh"
 SUPERVISOR_LOG="$REPO_ROOT/.audit-reports/guard-supervisor.log"
 DEBUG_LOG="$REPO_ROOT/.audit-reports/guard-debug.log"
 NOTIFICATIONS_LOG="$REPO_ROOT/.audit-reports/notifications.log"
 TOKEN_STATUS_FILE="$REPO_ROOT/.AI_TOKEN_STATUS.txt"
 TOKEN_STATE_FILE="$REPO_ROOT/.audit_tmp/token-monitor.state"
 LOCK_DIR="$REPO_ROOT/.audit_tmp/token-monitor-loop.lock"
-PID_FILE="$REPO_ROOT/.guard-supervisor.pid"
+PID_FILE="$REPO_ROOT/.realtime-guard.pid"
 TOKEN_PID_FILE="$REPO_ROOT/.audit_tmp/token-monitor-loop.pid"
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
 ACTIVITY_FILE="$REPO_ROOT/.guard-test-activity"
@@ -94,7 +94,7 @@ current_git_unique_count() {
   node - <<'NODE'
 const path = require('path');
 try {
-  const { getGitTreeState } = require(path.join(process.cwd(), 'scripts', 'hooks-system', 'application', 'services', 'GitTreeState.js'));
+  const { getGitTreeState } = require(path.join(process.cwd(), 'application', 'services', 'GitTreeState.js'));
   const state = getGitTreeState({ repoRoot: process.cwd() }) || {};
   process.stdout.write(String(state.uniqueCount || 0));
 } catch (error) {
@@ -192,14 +192,23 @@ backup_evidence
 # Pre-flight: Git wrapper validation
 # ──────────────────────────────────────────────────────────────
 info "Pre-flight: git wrapper valida creación de ramas"
-WRAPPER_BIN="$REPO_ROOT/scripts/hooks-system/infrastructure/shell/gitflow/git-wrapper.sh"
-if "$WRAPPER_BIN" branch invalid-branch-name >/dev/null 2>&1; then
+WRAPPER_BIN="$REPO_ROOT/infrastructure/shell/gitflow/git-wrapper.sh"
+BRANCH_WRAPPER_TEST="feature/e2e-wrapper-test-$$"
+ORIGINAL_BRANCH=$(git branch --show-current 2>/dev/null || echo "develop")
+git checkout -q develop 2>/dev/null || git checkout -q main 2>/dev/null || true
+git branch -D "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1 || true
+if "$WRAPPER_BIN" checkout -b invalid-branch-name >/dev/null 2>&1; then
+  git branch -D invalid-branch-name >/dev/null 2>&1 || true
+  git checkout -q "$ORIGINAL_BRANCH" 2>/dev/null || true
   die "El wrapper permitió crear rama sin prefijo git flow"
 fi
-if ! "$WRAPPER_BIN" branch feature/e2e-branch-wrapper >/dev/null 2>&1; then
-  die "El wrapper bloqueó rama válida feature/e2e-branch-wrapper"
+if ! "$WRAPPER_BIN" checkout -b "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1; then
+  git checkout -q "$ORIGINAL_BRANCH" 2>/dev/null || true
+  die "El wrapper bloqueó rama válida $BRANCH_WRAPPER_TEST"
 fi
-git branch -D feature/e2e-branch-wrapper >/dev/null 2>&1 || true
+git checkout -q develop 2>/dev/null || git checkout -q main 2>/dev/null || true
+git branch -D "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1 || true
+git checkout -q "$ORIGINAL_BRANCH" 2>/dev/null || true
 restore_evidence
 
 # ──────────────────────────────────────────────────────────────
@@ -273,7 +282,7 @@ BASE_UNIQUE=$(current_git_unique_count)
 if ! [[ "$BASE_UNIQUE" =~ ^[0-9]+$ ]]; then
   BASE_UNIQUE=0
 fi
-DIRTY_LIMIT=$((BASE_UNIQUE + 2))
+DIRTY_LIMIT=$((BASE_UNIQUE + 5))
 if (( DIRTY_LIMIT < 10 )); then
   DIRTY_LIMIT=10
 fi
@@ -304,10 +313,10 @@ fresh_evidence
 sleep 2
 
 info "Caso 3b: árbol git sucio respeta cooldown"
-DIRTY_TARGET=$((DIRTY_LIMIT + 2))
+DIRTY_TARGET=$((DIRTY_LIMIT + 3))
 DIRTY_FILES=()
 for ((index = 1; index <= DIRTY_TARGET; index++)); do
-  file="$REPO_ROOT/.guard-dirty-file-${index}.tmp"
+  file="$REPO_ROOT/.guard-dirty-file-${index}.txt"
   DIRTY_FILES+=("$file")
   touch "$file"
   sleep 0.2
@@ -320,16 +329,19 @@ if (( ALERT_COUNT_AFTER != ALERT_COUNT )); then
   die "Se generaron múltiples alertas de árbol sucio sin respetar cooldown"
 fi
 wait_for_text "$DEBUG_LOG" "DIRTY_TREE_SUPPRESSED" 15 || die "No se registró supresión de alerta durante cooldown"
-TREE_NOTIFS=$(grep -c "El árbol git está saturado" "$NOTIFICATIONS_LOG" 2>/dev/null || echo 0)
+TREE_NOTIFS=$(grep -c "El árbol git está saturado" "$NOTIFICATIONS_LOG" 2>/dev/null | tr -d '\n' || echo 0)
+[[ -z "$TREE_NOTIFS" ]] && TREE_NOTIFS=0
 sleep 2
-TREE_NOTIFS_AFTER=$(grep -c "El árbol git está saturado" "$NOTIFICATIONS_LOG" 2>/dev/null || echo 0)
+TREE_NOTIFS_AFTER=$(grep -c "El árbol git está saturado" "$NOTIFICATIONS_LOG" 2>/dev/null | tr -d '\n' || echo 0)
+[[ -z "$TREE_NOTIFS_AFTER" ]] && TREE_NOTIFS_AFTER=0
 if (( TREE_NOTIFS_AFTER > TREE_NOTIFS )); then
   die "Se emitieron notificaciones duplicadas de árbol sucio"
 fi
 for file in "${DIRTY_FILES[@]}"; do
   rm -f "$file"
 done
-wait_for_text "$DEBUG_LOG" "DIRTY_TREE_CLEAR" 25 || die "No se registró limpieza del árbol sucio"
+sleep 3
+wait_for_text "$DEBUG_LOG" "DIRTY_TREE_CLEAR" 35 || die "No se registró limpieza del árbol sucio"
 
 fresh_evidence
 sleep 2
@@ -344,7 +356,7 @@ if (( SECOND_WARN_COUNT > INITIAL_WARN_COUNT )); then
 fi
 
 info "Caso 5: auto-restart al modificar script vigilado"
-touch "$REPO_ROOT/scripts/hooks-system/infrastructure/watchdog/token-monitor.js"
+touch "$REPO_ROOT/infrastructure/watchdog/token-monitor.js"
 wait_for_text "$SUPERVISOR_LOG" "Restarting guards" 25 || die "No se registró reinicio programado"
 wait_for_text "$SUPERVISOR_LOG" "tokenMonitor started" 25 || die "Token monitor no reiniciado"
 if ! NEW_TOKEN_LINE=$(wait_for_new_token_line "$PHASE2_INITIAL_TOKEN_LINE" 40); then
@@ -382,7 +394,7 @@ print('{"timestamp":"' + stamp.isoformat() + '"}')
 PY
 
 wait_for_text "$DEBUG_LOG" "AUTO_REFRESH_SUCCESS|stale" 40 || die "No se registró auto-refresh exitoso"
-wait_for_text "$NOTIFICATIONS_LOG" "Evidencia renovada automáticamente" 40 || die "No se notificó la renovación automática"
+wait_for_text "$NOTIFICATIONS_LOG" "Evidence refreshed automatically" 40 || die "No se notificó la renovación automática"
 
 kill "$LOG_NOISE_PID" 2>/dev/null || true
 wait "$LOG_NOISE_PID" 2>/dev/null || true

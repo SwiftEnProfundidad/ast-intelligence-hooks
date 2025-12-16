@@ -11,7 +11,7 @@ export function getSkillRulesPath(projectDir: string): string | null {
 
     const nodeModulesPath = join(projectDir, 'node_modules', '@carlos', 'ast-intelligence-hooks', 'skills', 'skill-rules.json');
 
-    const claudePath = join(projectDir, '.claude', 'skills', 'skill-rules.json');
+    const claudePath = join(projectDir, '.ast-intelligence', 'skills', 'skill-rules.json');
 
     if (existsSync(librarySkillsPath)) {
         return librarySkillsPath;
@@ -34,7 +34,7 @@ export function getSkillPath(projectDir: string, skillName: string): string | nu
 
     const nodeModulesPath = join(projectDir, 'node_modules', '@carlos', 'ast-intelligence-hooks', 'skills', skillName, 'SKILL.md');
 
-    const claudePath = join(projectDir, '.claude', 'skills', skillName, 'SKILL.md');
+    const claudePath = join(projectDir, '.ast-intelligence', 'skills', skillName, 'SKILL.md');
 
     if (existsSync(librarySkillPath)) {
         return librarySkillPath;

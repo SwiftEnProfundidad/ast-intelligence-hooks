@@ -17,14 +17,14 @@ REPORTS_DIR="$REPO_ROOT/.audit-reports"
 PID_FILE="$REPO_ROOT/.guard-auto-manager.pid"
 LOCK_DIR="$TMP_DIR/guard-auto-manager.lock"
 LOG_FILE="$REPORTS_DIR/guard-auto-manager.log"
-MANAGER_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/guard-auto-manager.js"
-START_GUARDS="$REPO_ROOT/scripts/hooks-system/bin/start-guards.sh"
+MANAGER_SCRIPT="$REPO_ROOT/bin/guard-auto-manager.js"
+START_GUARDS="$REPO_ROOT/bin/start-guards.sh"
 EVENT_LOG="$REPO_ROOT/.audit_tmp/guard-events.log"
 
 mkdir -p "$TMP_DIR"
 mkdir -p "$REPORTS_DIR"
 touch "$EVENT_LOG"
-source "$REPO_ROOT/scripts/hooks-system/bin/guard-env.sh" 2>/dev/null || true
+source "$REPO_ROOT/bin/guard-env.sh" 2>/dev/null || true
 cd "$REPO_ROOT"
 
 is_manager_running() {

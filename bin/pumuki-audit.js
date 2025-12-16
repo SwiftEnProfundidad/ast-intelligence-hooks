@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 const path = require('path');
 const fs = require('fs');
+const { toErrorMessage } = require('../infrastructure/utils/error-utils');
 
 async function loadConfig(cwd) {
     const configPath = path.join(cwd, '.pumuki.config.js');
@@ -75,7 +76,9 @@ async function runAudit() {
                 const platform = detectFilePlatform(file);
                 findingsByPlatform[platform] = (findingsByPlatform[platform] || 0) + findings.length;
             }
-        } catch {
+        } catch (error) {
+            console.error(`[pumuki-audit] Failed to analyze file: ${file}`);
+            console.error(`[pumuki-audit] ${toErrorMessage(error)}`);
             continue;
         }
     }

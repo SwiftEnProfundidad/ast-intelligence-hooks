@@ -7,7 +7,8 @@ class GitTreeMonitorService {
         intervalMs = 60000,
         getState,
         notifier = () => { },
-        logger = console
+        logger = console,
+        debugLogger = null
     } = {}) {
         this.repoRoot = repoRoot;
         this.limit = limit;
@@ -17,9 +18,11 @@ class GitTreeMonitorService {
         this.getState = getState;
         this.notifier = notifier;
         this.logger = logger;
+        this.debugLogger = debugLogger;
         this.timer = null;
         this.lastCritical = 0;
         this.lastWarning = 0;
+        this.wasOverLimit = false;
     }
 
     start() {
@@ -56,6 +59,8 @@ class GitTreeMonitorService {
 
     evaluateState(state, reason) {
         const now = Date.now();
+        const isOverLimit = state.uniqueCount > this.limit || state.stagedCount > this.limit || state.workingCount > this.limit;
+
         if (this.warning && state.uniqueCount >= this.warning) {
             const withinWarning = this.lastWarning > 0 && now - this.lastWarning < this.reminderMs;
             if (!withinWarning) {
@@ -66,20 +71,35 @@ class GitTreeMonitorService {
             this.lastWarning = 0;
         }
 
-        if (state.uniqueCount > this.limit || state.stagedCount > this.limit || state.workingCount > this.limit) {
+        if (isOverLimit) {
+            this.wasOverLimit = true;
             const withinCritical = this.lastCritical > 0 && now - this.lastCritical < this.reminderMs;
             if (!withinCritical) {
                 this.lastCritical = now;
                 this.lastWarning = now;
+                this.debugLog(`DIRTY_TREE_ALERT|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}`);
                 this.notify(`Git tree limit exceeded (staged ${state.stagedCount}, working ${state.workingCount}, unique ${state.uniqueCount}) during ${reason}.`, 'error');
+            } else {
+                this.debugLog(`DIRTY_TREE_SUPPRESSED|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}`);
             }
             return;
+        }
+
+        if (this.wasOverLimit) {
+            this.wasOverLimit = false;
+            this.debugLog(`DIRTY_TREE_CLEAR|${state.stagedCount}|${state.workingCount}|${state.uniqueCount}`);
         }
 
         if (state.uniqueCount < this.warning) {
             this.lastWarning = 0;
         }
         this.lastCritical = 0;
+    }
+
+    debugLog(message) {
+        if (typeof this.debugLogger === 'function') {
+            this.debugLogger(message);
+        }
     }
 
     notify(message, level) {
