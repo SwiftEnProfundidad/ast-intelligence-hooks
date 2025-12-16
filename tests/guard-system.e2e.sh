@@ -15,7 +15,7 @@ NOTIFICATIONS_LOG="$REPO_ROOT/.audit-reports/notifications.log"
 TOKEN_STATUS_FILE="$REPO_ROOT/.AI_TOKEN_STATUS.txt"
 TOKEN_STATE_FILE="$REPO_ROOT/.audit_tmp/token-monitor.state"
 LOCK_DIR="$REPO_ROOT/.audit_tmp/token-monitor-loop.lock"
-PID_FILE="$REPO_ROOT/.guard-supervisor.pid"
+PID_FILE="$REPO_ROOT/.realtime-guard.pid"
 TOKEN_PID_FILE="$REPO_ROOT/.audit_tmp/token-monitor-loop.pid"
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
 ACTIVITY_FILE="$REPO_ROOT/.guard-test-activity"
@@ -193,7 +193,7 @@ backup_evidence
 # ──────────────────────────────────────────────────────────────
 info "Pre-flight: git wrapper valida creación de ramas"
 WRAPPER_BIN="$REPO_ROOT/infrastructure/shell/gitflow/git-wrapper.sh"
-BRANCH_WRAPPER_TEST="feature/e2e-branch-wrapper"
+BRANCH_WRAPPER_TEST="feature/e2e-wrapper-test-$$"
 
 git checkout -q develop 2>/dev/null || git checkout -q main 2>/dev/null || true
 git branch -D "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1 || true
@@ -203,7 +203,7 @@ fi
 if ! "$WRAPPER_BIN" checkout -b "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1; then
   die "El wrapper bloqueó rama válida ${BRANCH_WRAPPER_TEST}"
 fi
-$WRAPPER_BIN checkout - "$(git branch --show-current 2>/dev/null || echo "")" >/dev/null 2>&1 || true
+$WRAPPER_BIN checkout -q develop >/dev/null 2>&1 || $WRAPPER_BIN checkout -q main >/dev/null 2>&1 || true
 git branch -D "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1 || true
 restore_evidence
 

@@ -22,6 +22,7 @@ const { execSync } = require('child_process');
 const AutonomousOrchestrator = require('../../application/services/AutonomousOrchestrator');
 const ContextDetectionEngine = require('../../application/services/ContextDetectionEngine');
 const MacOSNotificationAdapter = require('../adapters/MacOSNotificationAdapter');
+const { toErrorMessage } = require('../utils/error-utils');
 
 const MCP_VERSION = '2024-11-05';
 
@@ -57,8 +58,7 @@ function getLibraryInstallPath() {
         }
     } catch (e) {
         if (process.env.DEBUG) {
-            const msg = e instanceof Error ? e.message : String(e);
-            console.error('[MCP] getLibraryInstallPath failed:', msg);
+            console.error('[MCP] getLibraryInstallPath failed:', toErrorMessage(e));
         }
         // Ignore errors
     }
