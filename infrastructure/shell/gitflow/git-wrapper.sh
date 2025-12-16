@@ -490,7 +490,7 @@ handle_commit() {
 # Handle git checkout -b (branch creation)
 #───────────────────────────────────────────────────────────────
 handle_branch_creation() {
-  local branch_name="${2:-}"
+  local branch_name="${3:-}"
 
   if [[ -z "$branch_name" ]]; then
     $GIT_BIN "$@"

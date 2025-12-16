@@ -68,7 +68,7 @@ class AutonomousOrchestrator {
         const platforms = new Set();
         const systemFilePatterns = {
             backend: [
-                'scripts/hooks-system/',
+                'bin/',
                 '.AI_EVIDENCE.json',
                 'test-notification.ts',
                 '.github/workflows/',

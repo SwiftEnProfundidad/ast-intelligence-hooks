@@ -5,15 +5,15 @@ const { spawn } = require('child_process');
 
 const repoRoot = process.cwd();
 const debounceMs = Number(process.env.HOOK_GUARD_AUTORELOAD_DEBOUNCE || 1500);
-const restartCmd = path.join(repoRoot, 'scripts', 'hooks-system', 'bin', 'start-guards.sh');
+const restartCmd = path.join(repoRoot, 'bin', 'start-guards.sh');
 
 const targets = [
-  'scripts/hooks-system/bin/watch-hooks.js',
-  'scripts/hooks-system/application/services/RealtimeGuardService.js',
-  'scripts/hooks-system/infrastructure/watchdog/token-monitor-loop.sh',
-  'scripts/hooks-system/infrastructure/watchdog/token-monitor.js',
-  'scripts/hooks-system/infrastructure/watchdog/token-tracker.sh',
-  'scripts/hooks-system/bin/start-guards.sh'
+  'bin/watch-hooks.js',
+  'application/services/RealtimeGuardService.js',
+  'infrastructure/watchdog/token-monitor-loop.sh',
+  'infrastructure/watchdog/token-monitor.js',
+  'infrastructure/watchdog/token-tracker.sh',
+  'bin/start-guards.sh'
 ];
 
 let restartTimer = null;

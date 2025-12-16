@@ -10,7 +10,6 @@ const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('./Gi
 const EVIDENCE_PATH = path.join(process.cwd(), '.AI_EVIDENCE.json');
 function resolveUpdateEvidenceScript(repoRoot) {
   const candidates = [
-    path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
     path.join(repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
     path.join(repoRoot, 'bin/update-evidence.sh')
   ];
@@ -79,8 +78,6 @@ class RealtimeGuardService {
     this.embedTokenMonitor = process.env.HOOK_GUARD_EMBEDDED_TOKEN_MONITOR === 'true';
     this.tokenMonitorScript = path.join(
       this.repoRoot,
-      'scripts',
-      'hooks-system',
       'infrastructure',
       'watchdog',
       'token-monitor-loop.sh'
@@ -178,6 +175,9 @@ class RealtimeGuardService {
   }
 
   startGitTreeMonitoring() {
+    if (process.env.HOOK_GUARD_DIRTY_TREE_DISABLED === 'true') {
+      return;
+    }
     if (!Number.isFinite(this.gitTreeStagedThreshold) || this.gitTreeStagedThreshold <= 0 ||
         !Number.isFinite(this.gitTreeUnstagedThreshold) || this.gitTreeUnstagedThreshold <= 0 ||
         !Number.isFinite(this.gitTreeTotalThreshold) || this.gitTreeTotalThreshold <= 0) {

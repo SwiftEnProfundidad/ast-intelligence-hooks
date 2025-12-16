@@ -11,6 +11,7 @@ const NotificationCenterService = require('../application/services/notification/
 const { AutoRecoveryManager } = require('../application/services/recovery/AutoRecoveryManager');
 const { EvidenceContextManager } = require('../application/services/evidence/EvidenceContextManager');
 const { createUnifiedLogger } = require('../infrastructure/logging/UnifiedLoggerFactory');
+const PlatformDetectionService = require('../application/services/PlatformDetectionService');
 
 const repoRoot = process.cwd();
 const tmpDir = path.join(repoRoot, '.audit_tmp');
@@ -26,6 +27,9 @@ const dirtyTreeReminderMs = Number(process.env.HOOK_GUARD_DIRTY_TREE_REMINDER ||
 const heartbeatRelativePath = process.env.HOOK_GUARD_HEARTBEAT_PATH || '.audit_tmp/guard-heartbeat.json';
 const heartbeatPath = path.isAbsolute(heartbeatRelativePath) ? heartbeatRelativePath : path.join(repoRoot, heartbeatRelativePath);
 const heartbeatIntervalMs = Number(process.env.HOOK_GUARD_HEARTBEAT_INTERVAL || 15000);
+const heartbeatMaxAgeMs = Number(process.env.HOOK_GUARD_HEARTBEAT_MAX_AGE || 60000);
+const heartbeatCheckIntervalMs = Number(process.env.HOOK_GUARD_HEARTBEAT_CHECK_INTERVAL || 5000);
+const debugLogPath = path.join(reportsDir, 'guard-debug.log');
 const healthIntervalMs = Number(process.env.HOOK_GUARD_HEALTH_INTERVAL || 60000);
 const evidenceIntervalMs = Number(process.env.HOOK_GUARD_EVIDENCE_INTERVAL || 120000);
 const evidencePlatforms = process.env.HOOK_GUARD_EVIDENCE_PLATFORMS
@@ -102,26 +106,28 @@ if (!acquireLock()) {
 const childDefs = {
   guard: {
     command: 'node',
-    args: [path.join(repoRoot, 'scripts', 'hooks-system', 'bin', 'watch-hooks.js')],
+    args: [path.join(repoRoot, 'bin', 'watch-hooks.js')],
     cwd: repoRoot,
-    stdio: 'inherit'
+    stdio: 'inherit',
+    env: { ...process.env, HOOK_GUARD_DIRTY_TREE_DISABLED: 'true' }
   },
   tokenMonitor: {
     command: 'bash',
-    args: [path.join(repoRoot, 'scripts', 'hooks-system', 'infrastructure', 'watchdog', 'token-monitor-loop.sh')],
+    args: [path.join(repoRoot, 'infrastructure', 'watchdog', 'token-monitor-loop.sh')],
     cwd: repoRoot,
-    stdio: 'ignore'
+    stdio: 'inherit',
+    env: process.env
   }
 };
 
 const targets = [
-  'scripts/hooks-system/bin/watch-hooks.js',
-  'scripts/hooks-system/bin/guard-supervisor.js',
-  'scripts/hooks-system/bin/start-guards.sh',
-  'scripts/hooks-system/application/services/RealtimeGuardService.js',
-  'scripts/hooks-system/infrastructure/watchdog/token-monitor-loop.sh',
-  'scripts/hooks-system/infrastructure/watchdog/token-monitor.js',
-  'scripts/hooks-system/infrastructure/watchdog/token-tracker.sh'
+  'bin/watch-hooks.js',
+  'bin/guard-supervisor.js',
+  'bin/start-guards.sh',
+  'application/services/RealtimeGuardService.js',
+  'infrastructure/watchdog/token-monitor-loop.sh',
+  'infrastructure/watchdog/token-monitor.js',
+  'infrastructure/watchdog/token-tracker.sh'
 ];
 
 const watchers = [];
@@ -129,6 +135,13 @@ const children = new Map();
 let restartTimer = null;
 let restartPromise = Promise.resolve();
 let shuttingDown = false;
+
+const platformDetector = new PlatformDetectionService();
+
+function appendDebugLogSync(message) {
+  const timestamp = new Date().toISOString();
+  fs.appendFileSync(debugLogPath, `${timestamp}|${message}\n`);
+}
 
 const gitTreeMonitor = new GitTreeMonitorService({
   repoRoot,
@@ -138,7 +151,8 @@ const gitTreeMonitor = new GitTreeMonitorService({
   intervalMs: dirtyTreeIntervalMs,
   getState: getGitTreeState,
   notifier: (message, level) => log(message, { level }),
-  logger: unifiedLogger
+  logger: unifiedLogger,
+  debugLogger: appendDebugLogSync
 });
 
 const heartbeatMonitor = new HeartbeatMonitorService({
@@ -183,7 +197,7 @@ const healthCheckService = new HealthCheckService({
 
 const evidenceContextManager = new EvidenceContextManager({
   repoRoot,
-  updateScript: path.join(repoRoot, 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
+  updateScript: path.join(repoRoot, 'bin', 'update-evidence.sh'),
   notificationCenter,
   logger: unifiedLogger,
   intervalMs: evidenceIntervalMs,
@@ -222,7 +236,8 @@ async function startChild(name) {
   await stopChild(name);
   const child = spawn(def.command, def.args, {
     cwd: def.cwd,
-    stdio: def.stdio
+    stdio: def.stdio,
+    env: def.env || process.env
   });
   children.set(name, { child });
   autoRecoveryManager.clear(name);
@@ -348,7 +363,7 @@ function buildHeartbeatPayload() {
   const tokenStatus = describeChild('tokenMonitor');
   const status = guardStatus.running && tokenStatus.running ? 'healthy' : 'degraded';
   const payload = {
-    timestamp: formatLocalTimestamp(),
+    timestamp: new Date().toISOString(),
     supervisorPid: process.pid,
     status,
     guard: guardStatus,
@@ -400,6 +415,7 @@ function shutdown() {
   });
   gitTreeMonitor.stop();
   heartbeatMonitor.stop();
+  stopHeartbeatStalenessMonitor();
   healthCheckService.stop();
   evidenceContextManager.stop();
   autoRecoveryManager.clear('guard');
@@ -425,10 +441,73 @@ process.on('unhandledRejection', reason => {
 });
 
 log('Guard supervisor started');
+
+let lastHeartbeatStale = false;
+let heartbeatStalenessTimer = null;
+
+function appendDebugLog(message) {
+  const timestamp = new Date().toISOString();
+  fs.appendFileSync(debugLogPath, `${timestamp}|${message}\n`);
+}
+
+function checkHeartbeatStaleness() {
+  if (shuttingDown) {
+    return;
+  }
+  try {
+    if (!fs.existsSync(heartbeatPath)) {
+      return;
+    }
+    const raw = fs.readFileSync(heartbeatPath, 'utf8');
+    if (!raw) {
+      return;
+    }
+    const data = JSON.parse(raw);
+    const timestamp = Date.parse(data.timestamp);
+    if (!Number.isFinite(timestamp)) {
+      return;
+    }
+    const age = Date.now() - timestamp;
+    if (age > heartbeatMaxAgeMs) {
+      if (!lastHeartbeatStale) {
+        lastHeartbeatStale = true;
+        appendDebugLog(`HEARTBEAT_ALERT|stale|ageMs=${age}`);
+      }
+    } else {
+      if (lastHeartbeatStale) {
+        lastHeartbeatStale = false;
+        appendDebugLog('HEARTBEAT_RECOVERED');
+      }
+    }
+  } catch (error) {
+    appendDebugLog(`HEARTBEAT_CHECK_ERROR|${error.message}`);
+  }
+}
+
+function startHeartbeatStalenessMonitor() {
+  if (heartbeatStalenessTimer) {
+    clearInterval(heartbeatStalenessTimer);
+  }
+  if (heartbeatCheckIntervalMs > 0 && heartbeatMaxAgeMs > 0) {
+    heartbeatStalenessTimer = setInterval(checkHeartbeatStaleness, heartbeatCheckIntervalMs);
+    if (heartbeatStalenessTimer && typeof heartbeatStalenessTimer.unref === 'function') {
+      heartbeatStalenessTimer.unref();
+    }
+  }
+}
+
+function stopHeartbeatStalenessMonitor() {
+  if (heartbeatStalenessTimer) {
+    clearInterval(heartbeatStalenessTimer);
+    heartbeatStalenessTimer = null;
+  }
+}
+
 startAll().then(() => {
   watchTargets();
   gitTreeMonitor.start();
   heartbeatMonitor.start();
+  startHeartbeatStalenessMonitor();
   healthCheckService.start('startup');
   evidenceContextManager.start('startup');
 }).catch(error => {

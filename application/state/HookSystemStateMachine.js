@@ -20,6 +20,11 @@ class HookSystemStateMachine {
         }
       }
     } catch (error) {
+      if (error instanceof Error) {
+        console.error(`[HookSystemStateMachine] Failed to load state: ${error.message}`);
+      } else {
+        console.error(`[HookSystemStateMachine] Failed to load state: ${String(error)}`);
+      }
     }
     this.persistState(this.defaultState);
     return this.defaultState;

@@ -75,7 +75,13 @@ async function runAudit() {
                 const platform = detectFilePlatform(file);
                 findingsByPlatform[platform] = (findingsByPlatform[platform] || 0) + findings.length;
             }
-        } catch {
+        } catch (error) {
+            console.error(`[pumuki-audit] Failed to analyze file: ${file}`);
+            if (error instanceof Error) {
+                console.error(`[pumuki-audit] ${error.message}`);
+            } else {
+                console.error(`[pumuki-audit] ${String(error)}`);
+            }
             continue;
         }
     }

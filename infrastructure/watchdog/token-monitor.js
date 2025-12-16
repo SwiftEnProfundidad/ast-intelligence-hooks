@@ -11,7 +11,7 @@ async function runTokenMonitor({
     service = null
 } = {}) {
     const envRoot = process.env.HOOKS_REPO_ROOT ? path.resolve(process.env.HOOKS_REPO_ROOT) : null;
-    const resolvedRepoRoot = repoRoot || envRoot || path.resolve(__dirname, '../../../..');
+    const resolvedRepoRoot = repoRoot || envRoot || path.resolve(__dirname, '../..');
 
     const resolvedNotificationCenter = notificationCenter || new NotificationCenterService({
         repoRoot: resolvedRepoRoot,

@@ -9,13 +9,12 @@
 set -euo pipefail
 
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-SCRIPT="$REPO_ROOT/scripts/hooks-system/infrastructure/watchdog/token-monitor.js"
+SCRIPT="$REPO_ROOT/infrastructure/watchdog/token-monitor.js"
 INTERVAL=${TOKEN_MONITOR_INTERVAL:-300}
 
 trap 'exit 0' SIGINT SIGTERM
 
 while true; do
-  # Ejecutamos el monitor y nunca fallamos para mantener el loop vivo
-  node "$SCRIPT" >/dev/null 2>&1 || true
+  node "$SCRIPT" || true
   sleep "$INTERVAL"
 done
