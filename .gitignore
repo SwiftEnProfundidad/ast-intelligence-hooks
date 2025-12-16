@@ -38,6 +38,7 @@ ANNOUNCEMENTS.md
 *.tmp
 .cache/
 .audit_tmp/
+.AI_TOKEN_STATUS.txt
 .coverage/
 
 # Claude Desktop configuration (user-specific, similar to .cursor/rules/)

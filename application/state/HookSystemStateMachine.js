@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { toErrorMessage } = require('../../infrastructure/utils/error-utils');
 
 const STATE_FILE = path.join(process.cwd(), '.audit_tmp', 'autonomous-state.json');
 const STATE_MAP_PATH = path.join(__dirname, '..', '..', 'config', 'state-map.json');
@@ -20,6 +21,7 @@ class HookSystemStateMachine {
         }
       }
     } catch (error) {
+      console.error(`[HookSystemStateMachine] Failed to load state: ${toErrorMessage(error)}`);
     }
     this.persistState(this.defaultState);
     return this.defaultState;

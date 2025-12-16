@@ -13,7 +13,7 @@ describe('images-backend-analyzer', () => {
   describe('analyzeImagesBackend', () => {
     it('should detect upload without size validation', () => {
       const project = createMockProject([{
-        path: '/app/controllers/upload.controller.ts',
+        path: '/backend/controllers/upload.controller.ts',
         content: '@Post("upload") handleUpload(@UploadedFile() file) {}'
       }]);
       const findings = [];
@@ -27,7 +27,7 @@ describe('images-backend-analyzer', () => {
 
     it('should not flag when size validation present', () => {
       const project = createMockProject([{
-        path: '/app/controllers/upload.controller.ts',
+        path: '/backend/controllers/upload.controller.ts',
         content: '@Post("upload") multer({ limits: { fileSize: 10485760 } })'
       }]);
       const findings = [];
@@ -39,7 +39,7 @@ describe('images-backend-analyzer', () => {
 
     it('should detect upload without compression', () => {
       const project = createMockProject([{
-        path: '/app/services/image.service.ts',
+        path: '/backend/services/image.service.ts',
         content: 'multer({ limits: { maxFileSize: 10000000 } })'
       }]);
       const findings = [];
@@ -53,7 +53,7 @@ describe('images-backend-analyzer', () => {
 
     it('should not flag when sharp compression present', () => {
       const project = createMockProject([{
-        path: '/app/services/image.service.ts',
+        path: '/backend/services/image.service.ts',
         content: `
           multer({ limits: { maxFileSize: 10000000 } });
           sharp(buffer).resize(1920).jpeg({ quality: 80 });
@@ -68,7 +68,7 @@ describe('images-backend-analyzer', () => {
 
     it('should detect multipart uploads', () => {
       const project = createMockProject([{
-        path: '/app/routes/files.ts',
+        path: '/backend/routes/files.ts',
         content: 'app.post("/files", multipart(), handler)'
       }]);
       const findings = [];
@@ -80,7 +80,7 @@ describe('images-backend-analyzer', () => {
 
     it('should accept jimp as compression library', () => {
       const project = createMockProject([{
-        path: '/app/services/image.service.ts',
+        path: '/backend/services/image.service.ts',
         content: `
           multer({ limits: { fileSize: 5000000 } });
           jimp.read(buffer).then(img => img.resize(800));
@@ -95,7 +95,7 @@ describe('images-backend-analyzer', () => {
 
     it('should accept imagemin as compression library', () => {
       const project = createMockProject([{
-        path: '/app/services/image.service.ts',
+        path: '/backend/services/image.service.ts',
         content: `
           multer({ limits: { fileSize: 5000000 } });
           imagemin([input], { destination: output });

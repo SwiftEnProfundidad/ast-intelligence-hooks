@@ -15,11 +15,11 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 
 REALTIME_PID_FILE="$REPO_ROOT/.realtime-guard.pid"
 REALTIME_LOG="$REPO_ROOT/.audit-reports/watch-hooks.log"
-REALTIME_CMD="node $REPO_ROOT/scripts/hooks-system/bin/watch-hooks.js"
+REALTIME_CMD="node $REPO_ROOT/bin/guard-supervisor.js"
 
 TOKEN_PID_FILE="$REPO_ROOT/.token-monitor-guard.pid"
 TOKEN_LOG="$REPO_ROOT/.audit-reports/token-monitor-loop.log"
-TOKEN_CMD="bash $REPO_ROOT/scripts/hooks-system/infrastructure/watchdog/token-monitor-loop.sh"
+TOKEN_CMD="bash $REPO_ROOT/infrastructure/watchdog/token-monitor-loop.sh"
 
 mkdir -p "$REPO_ROOT/.audit-reports"
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
@@ -92,7 +92,7 @@ ensure_evidence_refresh() {
       PLATFORMS="android"
     fi
 
-    bash "$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH"
+    bash "$REPO_ROOT/bin/update-evidence.sh" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH"
   fi
 }
 

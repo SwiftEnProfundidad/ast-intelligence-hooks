@@ -5,6 +5,7 @@ const { GatePolicies } = require('../severity/policies/gate-policies');
 const { ReportGenerator } = require('../reporting/report-generator');
 const { SeverityTracker } = require('../reporting/severity-tracker');
 const { TokenManager } = require('../utils/token-manager');
+const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
 
@@ -90,10 +91,7 @@ async function runIntelligentAudit() {
     process.exit(gateResult.exitCode);
 
   } catch (auditExecutionError) {
-    if (!(auditExecutionError instanceof Error)) {
-      throw new Error('Audit execution failed with non-Error value');
-    }
-    process.stderr.write('[Intelligent Audit] ❌ Fatal error during audit execution\n');
+    process.stderr.write(`[Intelligent Audit] ❌ Fatal error during audit execution: ${toErrorMessage(auditExecutionError)}\n`);
     throw auditExecutionError;
   }
 }
@@ -253,8 +251,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
         }
       }
     } catch (tokenReadError) {
-      const errorMsg = tokenReadError instanceof Error ? tokenReadError.message : 'Unknown error';
-      process.stderr.write(`[Token] Using estimated data (read failed: ${errorMsg})\n`);
+      process.stderr.write(`[Token] Using estimated data (read failed: ${toErrorMessage(tokenReadError)})\n`);
     }
 
     const tokenPercent = Math.round(realTokenData.percentUsed || tokenUsage.percentUsed);
@@ -264,7 +261,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
       try {
         execSync('osascript -e \'display notification "Token usage at ' + tokenPercent + '%! Update evidence to avoid context loss." with title "⚠️ Token Usage Critical" sound name "Basso"\'', { stdio: 'ignore' });
       } catch (notificationError) {
-        if (notificationError instanceof Error && notificationError.message.includes('osascript')) {
+        if (toErrorMessage(notificationError).includes('osascript')) {
           process.stderr.write('[Token] Notification skipped (not macOS)\n');
         }
       }
@@ -297,11 +294,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers)');
 
   } catch (evidenceFileUpdateError) {
-    if (evidenceFileUpdateError instanceof Error) {
-      process.stderr.write(`[Intelligent Audit] ⚠️  Evidence update failed: ${evidenceFileUpdateError.message}\n`);
-    } else {
-      process.stderr.write('[Intelligent Audit] ⚠️  Evidence update failed with non-Error value\n');
-    }
+    process.stderr.write(`[Intelligent Audit] ⚠️  Evidence update failed: ${toErrorMessage(evidenceFileUpdateError)}\n`);
   }
 }
 

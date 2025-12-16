@@ -32,7 +32,7 @@ describe('BDDTDDWorkflowRules', () => {
 
       expect(pushFileFinding).toHaveBeenCalledWith(
         'workflow.bdd.missing_feature_files',
-        'high',
+        'critical',
         expect.any(String),
         expect.any(Number),
         expect.any(Number),
@@ -53,7 +53,7 @@ describe('BDDTDDWorkflowRules', () => {
 
       expect(pushFileFinding).toHaveBeenCalledWith(
         'workflow.bdd.insufficient_features',
-        'medium',
+        'high',
         expect.any(String),
         expect.any(Number),
         expect.any(Number),

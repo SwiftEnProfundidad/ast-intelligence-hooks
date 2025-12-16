@@ -1,13 +1,14 @@
 {
-  "timestamp": "2025-11-27T09:21:39.736Z",
+  "timestamp": "2025-12-16T05:52:46.081Z",
   "reason": "cli",
   "status": "error",
   "results": [
     {
       "name": "evidence",
-      "status": "error",
+      "status": "ok",
       "details": {
-        "message": "missing .AI_EVIDENCE.json"
+        "ageMs": 5081,
+        "timestamp": "2025-12-16T06:52:41+01:00"
       }
     },
     {
@@ -15,10 +16,13 @@
       "status": "ok",
       "details": {
         "stagedFiles": [],
-        "workingFiles": [],
+        "workingFiles": [
+          ".AI_EVIDENCE.json",
+          "infrastructure/ast/backend/nestjs-patterns-analyzer.js"
+        ],
         "stagedCount": 0,
-        "workingCount": 0,
-        "uniqueCount": 0
+        "workingCount": 2,
+        "uniqueCount": 2
       }
     },
     {

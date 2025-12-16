@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { toErrorMessage } = require('../../../infrastructure/utils/error-utils');
 
 class GuardAutoManagerService {
     constructor({
@@ -27,7 +28,7 @@ class GuardAutoManagerService {
         this.lockDir = path.join(this.tmpDir, 'guard-auto-manager.lock');
         this.pidFile = path.join(this.repoRoot, '.guard-auto-manager.pid');
         this.supervisorPidFile = path.join(this.repoRoot, '.guard-supervisor.pid');
-        this.startScript = path.join(this.repoRoot, 'scripts', 'hooks-system', 'bin', 'start-guards.sh');
+        this.startScript = path.join(this.repoRoot, 'bin', 'start-guards.sh');
         this.eventLogPath = path.join(this.tmpDir, 'guard-events.log');
 
         this.heartbeatNotifyCooldownMs = Number(env.GUARD_AUTOSTART_NOTIFY_COOLDOWN || 60000);
@@ -167,8 +168,7 @@ class GuardAutoManagerService {
             this.shutdown();
         });
         this.process.on('unhandledRejection', reason => {
-            const message = reason instanceof Error ? reason.stack || reason.message : reason;
-            this.log(`Unhandled rejection: ${message}`);
+            this.log(`Unhandled rejection: ${toErrorMessage(reason)}`);
             this.shutdown();
         });
     }

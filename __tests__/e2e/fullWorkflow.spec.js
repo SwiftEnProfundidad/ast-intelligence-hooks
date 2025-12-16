@@ -5,7 +5,7 @@ const os = require('os');
 
 describe('E2E: Full Workflow', () => {
     let testDir;
-    const REPO_ROOT = path.resolve(__dirname, '../../../..');
+    const REPO_ROOT = path.resolve(__dirname, '../..');
 
     beforeAll(() => {
         testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'pumuki-e2e-'));
@@ -27,7 +27,7 @@ describe('E2E: Full Workflow', () => {
                 dependencies: { '@nestjs/core': '^10.0.0' }
             }));
 
-            const initScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/pumuki-init.js');
+            const initScript = path.join(REPO_ROOT, 'bin/pumuki-init.js');
             const result = execSync(`node ${initScript}`, { cwd: testDir, encoding: 'utf8' });
 
             expect(result).toContain('Detected platforms');
@@ -44,7 +44,7 @@ describe('E2E: Full Workflow', () => {
         }
       `);
 
-            const auditScript = path.join(REPO_ROOT, 'scripts/hooks-system/bin/pumuki-audit.js');
+            const auditScript = path.join(REPO_ROOT, 'bin/pumuki-audit.js');
 
             try {
                 const result = execSync(`node ${auditScript}`, { cwd: testDir, encoding: 'utf8', timeout: 30000 });
