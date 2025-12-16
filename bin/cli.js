@@ -49,6 +49,7 @@ function buildHealthSnapshot() {
       result.branch = branch;
     }
   } catch (e) {
+    result.branch = null;
   }
 
   const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
