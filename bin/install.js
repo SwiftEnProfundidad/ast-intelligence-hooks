@@ -310,7 +310,7 @@ ${COLORS.reset}`);
   }
 
   installCursorHooks() {
-    const claudeDir = path.join(this.targetRoot, '.claude');
+    const claudeDir = path.join(this.targetRoot, '.ast-intelligence');
     const claudeSkillsDir = path.join(claudeDir, 'skills');
     const claudeHooksDir = path.join(claudeDir, 'hooks');
     const cursorSettingsPath = path.join(this.targetRoot, '.cursor', 'settings.json');

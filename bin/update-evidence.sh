@@ -28,22 +28,20 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
 SESSION_FILE="$REPO_ROOT/.AI_SESSION_START.md"
 
-# Detect if running from node_modules (installed package) or from scripts/hooks-system (local dev)
+# Detect if running from node_modules (installed package) or from local dev
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ "$SCRIPT_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
   # Running from installed package in node_modules
-  HOOKS_SYSTEM_DIR="$SCRIPT_DIR/../.."
-  # In node_modules, the actual hooks-system is in the package root, but scripts are in bin/
-  # So we need to find the real hooks-system directory in the project
-  if [[ -d "$REPO_ROOT/scripts/hooks-system" ]]; then
-    HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
-  else
-    # Fallback: use node_modules path structure
-    HOOKS_SYSTEM_DIR="$SCRIPT_DIR/.."
-  fi
-else
-  # Running from local scripts/hooks-system (development mode)
+  HOOKS_SYSTEM_DIR="$SCRIPT_DIR/.."
+elif [[ -d "$REPO_ROOT/infrastructure/ast" ]]; then
+  # Running from local development (ast-intelligence-hooks repo itself)
+  HOOKS_SYSTEM_DIR="$REPO_ROOT"
+elif [[ -d "$REPO_ROOT/scripts/hooks-system" ]]; then
+  # Legacy: running from scripts/hooks-system
   HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
+else
+  # Fallback: use script directory parent
+  HOOKS_SYSTEM_DIR="$SCRIPT_DIR/.."
 fi
 
 # Parse arguments for autonomous mode
@@ -439,38 +437,71 @@ get_rules_summary() {
   echo "IDE Rules: $ide_sections | AST: $ast_summary"
 }
 
-run_ast_early_check() {
-  if [[ "$AUTO_MODE" == "true" ]]; then
-    return 0
+run_ast_full_analysis() {
+  local ast_intelligence="$HOOKS_SYSTEM_DIR/infrastructure/ast/ast-intelligence.js"
+  if [[ ! -f "$ast_intelligence" ]]; then
+    ast_intelligence="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/ast/ast-intelligence.js"
+    if [[ ! -f "$ast_intelligence" ]]; then
+      ast_intelligence="$REPO_ROOT/infrastructure/ast/ast-intelligence.js"
+      if [[ ! -f "$ast_intelligence" ]]; then
+        return 0
+      fi
+    fi
   fi
 
+  if [[ "$AUTO_MODE" == "true" ]]; then
+    node "$ast_intelligence" >/dev/null 2>&1 || true
+  else
+    echo -e "${BLUE}🧠 Running full AST analysis...${NC}"
+    node "$ast_intelligence" 2>&1 | tail -5 || true
+  fi
+
+  local summary_file="$REPO_ROOT/.audit_tmp/ast-summary.json"
+  if [[ -f "$summary_file" ]]; then
+    local total_findings
+    total_findings=$(jq '.findings | length' "$summary_file" 2>/dev/null || echo "0")
+    local critical=$(jq '.levels.CRITICAL // 0' "$summary_file" 2>/dev/null || echo "0")
+    local high=$(jq '.levels.HIGH // 0' "$summary_file" 2>/dev/null || echo "0")
+    
+    if [[ "$AUTO_MODE" != "true" ]]; then
+      echo -e "${GREEN}🧠 AST Analysis: $total_findings findings (CRITICAL:$critical HIGH:$high)${NC}"
+    fi
+  fi
+}
+
+run_ast_early_check() {
   if [[ "${AST_EARLY_CHECK:-1}" != "1" ]]; then
     return 0
   fi
 
+  run_ast_full_analysis
+
   local ast_adapter="$HOOKS_SYSTEM_DIR/bin/run-ast-adapter.js"
   if [[ ! -f "$ast_adapter" ]]; then
-    # Try node_modules path
     ast_adapter="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/ast/run-ast-adapter.js"
     if [[ ! -f "$ast_adapter" ]]; then
       return 0
     fi
   fi
 
-  echo -e "${BLUE}🧠 Running AST early check on staged files...${NC}"
+  if [[ "$AUTO_MODE" != "true" ]]; then
+    echo -e "${BLUE}🧠 Running AST early check on staged files...${NC}"
+  fi
   local ast_output
   ast_output=$(node "$ast_adapter" 2>/dev/null || echo "[]")
 
   local findings_count
   findings_count=$(echo "$ast_output" | jq 'length' 2>/dev/null || echo "0")
 
-  if [[ "$findings_count" -gt 0 ]]; then
-    echo -e "${YELLOW}🧠 AST Early Check: $findings_count findings on staged files (see AST reports/pre-commit).${NC}"
-  else
-    echo -e "${GREEN}🧠 AST Early Check: no findings on staged files.${NC}"
+  if [[ "$AUTO_MODE" != "true" ]]; then
+    if [[ "$findings_count" -gt 0 ]]; then
+      echo -e "${YELLOW}🧠 AST Early Check: $findings_count findings on staged files (see AST reports/pre-commit).${NC}"
+    else
+      echo -e "${GREEN}🧠 AST Early Check: no findings on staged files.${NC}"
+    fi
   fi
 
-  if [[ "$(uname 2>/dev/null)" == "Darwin" ]]; then
+  if [[ "$(uname 2>/dev/null)" == "Darwin" ]] && [[ "$AUTO_MODE" != "true" ]]; then
     local platforms_label
     platforms_label=$(echo "$PLATFORMS_JSON" | jq -r 'join(", ")' 2>/dev/null || echo "")
 

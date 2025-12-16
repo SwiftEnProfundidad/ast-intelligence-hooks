@@ -128,7 +128,7 @@ async function main() {
         const prompt = data.prompt.toLowerCase();
 
         const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-        const rulesPath = join(projectDir, '.claude', 'skills', 'skill-rules.json');
+        const rulesPath = join(projectDir, '.ast-intelligence', 'skills', 'skill-rules.json');
 
         if (!existsSync(rulesPath)) {
             process.exit(0);

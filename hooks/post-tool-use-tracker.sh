@@ -15,7 +15,7 @@ if [[ "$file_path" =~ \.(md|markdown)$ ]]; then
     exit 0
 fi
 
-cache_dir="$CLAUDE_PROJECT_DIR/.claude/tsc-cache/${session_id:-default}"
+cache_dir="$CLAUDE_PROJECT_DIR/.ast-intelligence/tsc-cache/${session_id:-default}"
 mkdir -p "$cache_dir"
 
 detect_repo() {

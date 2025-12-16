@@ -333,7 +333,7 @@ detect_work_phase_mismatch() {
     fi
 
     if [[ -z "$work_phase" ]] && [[ -n "$file_path" ]]; then
-        if echo "$file_path" | grep -qE "(\.claude/skills/|skill-rules\.json|SKILL\.md|skills/README\.md)"; then
+        if echo "$file_path" | grep -qE "(\.ast-intelligence/skills/|skill-rules\.json|SKILL\.md|skills/README\.md)"; then
             work_phase="2"
         elif echo "$file_path" | grep -qE "(dev-docs|/dev-docs|dev/active)"; then
             work_phase="3"
