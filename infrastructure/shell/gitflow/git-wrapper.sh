@@ -508,10 +508,10 @@ handle_branch_creation() {
   $GIT_BIN "$@"
 
   # Update evidence automatically
-  if [[ -f "$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh" ]]; then
+  if [[ -f "$REPO_ROOT/bin/update-evidence.sh" ]]; then
     echo ""
     echo -e "${CYAN}📝 Updating evidence for new branch...${NC}"
-    bash "$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh" "$branch_name" < /dev/null || true
+    bash "$REPO_ROOT/bin/update-evidence.sh" "$branch_name" < /dev/null || true
   fi
 }
 
