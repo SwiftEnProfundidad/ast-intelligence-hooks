@@ -166,8 +166,8 @@ class RealtimeGuardService {
 
     if (this.notifier && typeof this.notifier.warn === 'function') {
       this.notifier.warn(`[hook-guard] ${message}`);
-    } else {
-      console.warn(`[hook-guard] ${message}`);
+    } else if (typeof this.notifier === 'function') {
+      this.notifier(`[hook-guard] ${message}`);
     }
     if (this.notifications) {
       this.sendMacNotification(message, level, forceDialog);
@@ -954,8 +954,8 @@ class RealtimeGuardService {
       const failure = `Failed to send native notification: ${details}`;
       if (this.notifier && typeof this.notifier.warn === 'function') {
         this.notifier.warn(`[hook-guard] ${failure}`);
-      } else {
-        console.warn(`[hook-guard] ${failure}`);
+      } else if (typeof this.notifier === 'function') {
+        this.notifier(`[hook-guard] ${failure}`);
       }
     }
   }
