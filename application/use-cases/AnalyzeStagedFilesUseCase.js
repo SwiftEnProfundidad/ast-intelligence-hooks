@@ -10,16 +10,23 @@ class AnalyzeStagedFilesUseCase {
 
   async execute(options = {}) {
     try {
-      console.log(`[AnalyzeStagedFilesUseCase] Getting staged files...`);
+      const isTestRun = !!process.env.JEST_WORKER_ID;
+      if (!isTestRun) {
+        console.log(`[AnalyzeStagedFilesUseCase] Getting staged files...`);
+      }
 
       const stagedFiles = await this.gitOperations.getStagedFiles();
 
       if (stagedFiles.length === 0) {
-        console.log(`[AnalyzeStagedFilesUseCase] No staged files to analyze`);
+        if (!isTestRun) {
+          console.log(`[AnalyzeStagedFilesUseCase] No staged files to analyze`);
+        }
         return new AuditResult([]);
       }
 
-      console.log(`[AnalyzeStagedFilesUseCase] Found ${stagedFiles.length} staged files`);
+      if (!isTestRun) {
+        console.log(`[AnalyzeStagedFilesUseCase] Found ${stagedFiles.length} staged files`);
+      }
 
       const filesByPlatform = this.groupFilesByPlatform(stagedFiles);
 
@@ -29,28 +36,38 @@ class AnalyzeStagedFilesUseCase {
         const analyzer = this.platformAnalyzers[platform.toLowerCase()];
 
         if (!analyzer) {
-          console.warn(`[AnalyzeStagedFilesUseCase] No analyzer for platform: ${platform}`);
+          if (!isTestRun) {
+            console.warn(`[AnalyzeStagedFilesUseCase] No analyzer for platform: ${platform}`);
+          }
           continue;
         }
 
-        console.log(`[AnalyzeStagedFilesUseCase] Analyzing ${files.length} ${platform} files...`);
+        if (!isTestRun) {
+          console.log(`[AnalyzeStagedFilesUseCase] Analyzing ${files.length} ${platform} files...`);
+        }
 
         const platformFindings = await analyzer.analyzeFiles(files, options);
 
         if (platformFindings && platformFindings.length > 0) {
           allFindings.push(...platformFindings);
-          console.log(`[AnalyzeStagedFilesUseCase] ${platform}: ${platformFindings.length} findings`);
+          if (!isTestRun) {
+            console.log(`[AnalyzeStagedFilesUseCase] ${platform}: ${platformFindings.length} findings`);
+          }
         }
       }
 
       const auditResult = new AuditResult(allFindings);
 
-      console.log(`[AnalyzeStagedFilesUseCase] Staged files analysis complete: ${auditResult.getTotalViolations()} violations`);
+      if (!isTestRun) {
+        console.log(`[AnalyzeStagedFilesUseCase] Staged files analysis complete: ${auditResult.getTotalViolations()} violations`);
+      }
 
       return auditResult;
 
     } catch (error) {
-      console.error(`[AnalyzeStagedFilesUseCase] Error:`, error.message);
+      if (!process.env.JEST_WORKER_ID) {
+        console.error(`[AnalyzeStagedFilesUseCase] Error:`, error.message);
+      }
       throw error;
     }
   }

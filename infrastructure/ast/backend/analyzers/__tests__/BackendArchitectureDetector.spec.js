@@ -1,4 +1,3 @@
-const { BackendArchitectureDetector } = require('../BackendArchitectureDetector');
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
@@ -6,31 +5,33 @@ const glob = require('glob');
 jest.mock('fs');
 jest.mock('glob');
 
-const FeatureFirstCleanDetector = jest.fn();
-const CleanArchitectureDetector = jest.fn();
-const OnionArchitectureDetector = jest.fn();
-const LayeredArchitectureDetector = jest.fn();
-const CQRSDetector = jest.fn();
-const MVCDetector = jest.fn();
-
 jest.mock('../detectors/FeatureFirstCleanDetector', () => ({
-  FeatureFirstCleanDetector
+  FeatureFirstCleanDetector: jest.fn()
 }));
 jest.mock('../detectors/CleanArchitectureDetector', () => ({
-  CleanArchitectureDetector
+  CleanArchitectureDetector: jest.fn()
 }));
 jest.mock('../detectors/OnionArchitectureDetector', () => ({
-  OnionArchitectureDetector
+  OnionArchitectureDetector: jest.fn()
 }));
 jest.mock('../detectors/LayeredArchitectureDetector', () => ({
-  LayeredArchitectureDetector
+  LayeredArchitectureDetector: jest.fn()
 }));
 jest.mock('../detectors/CQRSDetector', () => ({
-  CQRSDetector
+  CQRSDetector: jest.fn()
 }));
 jest.mock('../detectors/MVCDetector', () => ({
-  MVCDetector
+  MVCDetector: jest.fn()
 }));
+
+const { FeatureFirstCleanDetector } = require('../detectors/FeatureFirstCleanDetector');
+const { CleanArchitectureDetector } = require('../detectors/CleanArchitectureDetector');
+const { OnionArchitectureDetector } = require('../detectors/OnionArchitectureDetector');
+const { LayeredArchitectureDetector } = require('../detectors/LayeredArchitectureDetector');
+const { CQRSDetector } = require('../detectors/CQRSDetector');
+const { MVCDetector } = require('../detectors/MVCDetector');
+
+const { BackendArchitectureDetector } = require('../BackendArchitectureDetector');
 
 function makeSUT(projectRoot = '/test/project') {
   return new BackendArchitectureDetector(projectRoot);

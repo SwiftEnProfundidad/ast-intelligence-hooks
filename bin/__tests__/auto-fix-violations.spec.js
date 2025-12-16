@@ -47,6 +47,7 @@ describe('auto-fix-violations', () => {
       try {
         loadAuditData();
       } catch (e) {
+        expect(e).toBeDefined();
       }
       expect(exitSpy).toHaveBeenCalledWith(1);
       expect(consoleErrorSpy).toHaveBeenCalled();

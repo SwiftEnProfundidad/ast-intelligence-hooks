@@ -166,8 +166,8 @@ class RealtimeGuardService {
 
     if (this.notifier && typeof this.notifier.warn === 'function') {
       this.notifier.warn(`[hook-guard] ${message}`);
-    } else {
-      console.warn(`[hook-guard] ${message}`);
+    } else if (typeof this.notifier === 'function') {
+      this.notifier(`[hook-guard] ${message}`);
     }
     if (this.notifications) {
       this.sendMacNotification(message, level, forceDialog);
@@ -210,13 +210,22 @@ class RealtimeGuardService {
       `DIRTY_TREE_STATE|${state?.stagedCount ?? 0}|${state?.workingCount ?? 0}|${state?.uniqueCount ?? 0}|staged:${limits.stagedLimit}|unstaged:${limits.unstagedLimit}|total:${limits.totalLimit}`
     );
 
-    if (state.uniqueCount > 20) {
+    if (state.uniqueCount >= 2) {
       try {
         const IntelligentGitTreeMonitor = require('./IntelligentGitTreeMonitor');
         const intelligentMonitor = new IntelligentGitTreeMonitor({
           repoRoot: this.repoRoot,
           notifier: (notification) => {
-            if (notification.action === 'suggest_commit' && notification.data && notification.data.length > 0) {
+            if (!notification || !notification.action) {
+              return;
+            }
+
+            const hasData = notification.data && Array.isArray(notification.data) && notification.data.length > 0;
+            if (!hasData) {
+              return;
+            }
+
+            if (notification.action === 'suggest_commit' || notification.action === 'too_many_features') {
               this.sendNotification({
                 title: notification.title || '📦 Atomic Commit Suggestions',
                 subtitle: notification.subtitle || '',
@@ -505,7 +514,6 @@ class RealtimeGuardService {
     if (shouldForceDialog) {
       const dialogDelivered = notifyWithOsascriptDialog();
       delivered = dialogDelivered || delivered;
-    } else if (!delivered) {
     }
 
     if (!delivered) {
@@ -946,8 +954,8 @@ class RealtimeGuardService {
       const failure = `Failed to send native notification: ${details}`;
       if (this.notifier && typeof this.notifier.warn === 'function') {
         this.notifier.warn(`[hook-guard] ${failure}`);
-      } else {
-        console.warn(`[hook-guard] ${failure}`);
+      } else if (typeof this.notifier === 'function') {
+        this.notifier(`[hook-guard] ${failure}`);
       }
     }
   }

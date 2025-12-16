@@ -45,8 +45,7 @@ function analyzeRepositoryPattern(sf, filePath, findings, pushFinding) {
 }
 
 function analyzeBusinessLogicLocation(sf, filePath, findings, pushFinding) {
-  const isComponent = /\/(components|app|pages)\
-                     /\.(tsx|jsx)$/i.test(filePath);
+  const isComponent = /\/(components|app|pages)\/.*\.(tsx|jsx)$/i.test(filePath);
 
   if (!isComponent) return;
 
@@ -64,7 +63,7 @@ function analyzeBusinessLogicLocation(sf, filePath, findings, pushFinding) {
       lines > 30 ||
       (bodyText.match(/if\s*\(/g) || []).length > 5 ||
       bodyText.includes('switch') ||
-      (bodyText.match(/for\s*\(|while\s*\(/g) || []).length > 2;
+      (bodyText.match(/for\s*\(|while\s*\(/g) || []).length > 2);
 
     if (hasComplexLogic) {
       pushFinding('frontend.ddd.business_logic_in_component', 'medium', sf, fn,

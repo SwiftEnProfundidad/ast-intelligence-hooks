@@ -23,6 +23,7 @@ function resolveRepoRoot() {
       return trimmed;
     }
   } catch (e) {
+    return process.cwd();
   }
   return process.cwd();
 }
@@ -48,6 +49,7 @@ function buildHealthSnapshot() {
       result.branch = branch;
     }
   } catch (e) {
+    result.branch = null;
   }
 
   const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');

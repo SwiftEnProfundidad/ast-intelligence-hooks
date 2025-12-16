@@ -65,7 +65,11 @@ class HookSystemScheduler {
     }
 
     if (action.action === 'auto-execute') {
-    } else if (action.action === 'ask') {
+      return;
+    }
+
+    if (action.action === 'ask') {
+      return;
     }
   }
 }
