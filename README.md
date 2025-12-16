@@ -1,12 +1,16 @@
-# @pumuki/ast-intelligence-hooks
+<p align="center">
+  <img src="./assets/logo.png" alt="PUMUKI - AST Intelligence" width="350" />
+</p>
 
-[![npm version](https://img.shields.io/npm/v/@pumuki/ast-intelligence-hooks.svg?label=npm)](https://www.npmjs.com/package/@pumuki/ast-intelligence-hooks)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
-[![npm](https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg)](https://www.npmjs.com/)
-[![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue.svg)]()
+<h1 align="center">@pumuki/ast-intelligence-hooks</h1>
 
-> **Enterprise-grade AST Intelligence System** with multi-platform support (iOS, Android, Backend, Frontend). Enforces **Clean Architecture**, **DDD**, **Feature-First Architecture**, and **BDD→TDD workflow** through **798+ validation rules**. Features automatic architecture detection, Git Flow automation, pre-commit hooks, MCP integration for agentic IDEs, quality gates, and CI/CD ready.
+<p align="center">
+  <a href="https://www.npmjs.com/package/@pumuki/ast-intelligence-hooks"><img src="https://img.shields.io/npm/v/@pumuki/ast-intelligence-hooks.svg?label=npm" alt="npm version" /></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" alt="Node.js Version" /></a>
+  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg" alt="npm" /></a>
+  <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue.svg" alt="Platforms" />
+</p>
 
 ### Visual Overview
 

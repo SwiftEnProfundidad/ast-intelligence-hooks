@@ -9,6 +9,14 @@ describe('DynamicRulesLoader', () => {
     it('should initialize with rules directory', () => {
       const loader = new DynamicRulesLoader('/test/rules');
       expect(loader.rulesDirectory).toBe('/test/rules');
+      expect(loader.rulesDirectories).toEqual(['/test/rules']);
+    });
+
+    it('should initialize with default rules directories', () => {
+      const loader = new DynamicRulesLoader();
+      expect(loader.rulesDirectory).toBeNull();
+      expect(Array.isArray(loader.rulesDirectories)).toBe(true);
+      expect(loader.rulesDirectories.length).toBeGreaterThan(0);
     });
 
     it('should have rules map for platforms', () => {

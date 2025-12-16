@@ -3,7 +3,8 @@ const path = require('path');
 
 class DynamicRulesLoader {
     constructor(rulesDirectory) {
-        this.rulesDirectory = rulesDirectory || path.join(process.cwd(), '.cursor/rules');
+        this.rulesDirectory = rulesDirectory || null;
+        this.rulesDirectories = this.resolveRulesDirectories();
         this.rulesMap = {
             backend: 'rulesbackend.mdc',
             frontend: 'rulesfront.mdc',
@@ -15,6 +16,31 @@ class DynamicRulesLoader {
             timestamp: 0,
             ttl: 60000
         };
+        this.lastLoadWarnings = [];
+    }
+
+    resolveRulesDirectories() {
+        const cwd = process.cwd();
+
+        if (this.rulesDirectory && typeof this.rulesDirectory === 'string') {
+            return [this.rulesDirectory];
+        }
+
+        const envRaw = process.env.AST_RULES_DIRECTORIES;
+        if (envRaw && typeof envRaw === 'string' && envRaw.trim().length > 0) {
+            return envRaw
+                .split(',')
+                .map(entry => entry.trim())
+                .filter(Boolean)
+                .map(entry => (path.isAbsolute(entry) ? entry : path.join(cwd, entry)));
+        }
+
+        return [
+            path.join(cwd, '.cursor', 'rules'),
+            path.join(cwd, '.windsurf', 'rules'),
+            path.join(cwd, '.ast-intelligence', 'rules'),
+            path.join(cwd, '.ast-intelligence', 'skills')
+        ];
     }
 
     async loadRulesForPlatforms(platforms) {
@@ -50,20 +76,33 @@ class DynamicRulesLoader {
             }
         }
 
-        try {
-            const fullPath = path.join(this.rulesDirectory, ruleFileName);
-            const content = await fs.readFile(fullPath, 'utf-8');
+        this.lastLoadWarnings = [];
+        const attempts = [];
 
-            this.cache.rules.set(ruleFileName, {
-                content,
-                timestamp: Date.now()
-            });
-
-            return content;
-        } catch (error) {
-            console.error(`[DynamicRulesLoader] Failed to load ${ruleFileName}:`, error.message);
-            return null;
+        for (const directory of this.rulesDirectories) {
+            const fullPath = path.join(directory, ruleFileName);
+            attempts.push(fullPath);
+            try {
+                const content = await fs.readFile(fullPath, 'utf-8');
+                this.cache.rules.set(ruleFileName, {
+                    content,
+                    timestamp: Date.now(),
+                    fullPath
+                });
+                return content;
+            } catch (error) {
+                this.lastLoadWarnings.push({
+                    file: ruleFileName,
+                    path: fullPath,
+                    error: error && error.message ? error.message : String(error)
+                });
+            }
         }
+
+        console.warn(
+            `[DynamicRulesLoader] Could not load ${ruleFileName}. Tried: ${attempts.join(', ')}`
+        );
+        return null;
     }
 
     aggregateRules(rules) {
@@ -119,7 +158,11 @@ Detected platforms with high confidence. Rules loaded automatically.
 
     async saveDynamicContext(content, outputPath) {
         try {
-            const fullPath = outputPath || path.join(this.rulesDirectory, 'auto-context.mdc');
+            const baseDir = this.rulesDirectory
+                || (Array.isArray(this.rulesDirectories) && this.rulesDirectories.length > 0 ? this.rulesDirectories[0] : null)
+                || path.join(process.cwd(), '.cursor', 'rules');
+            const fullPath = outputPath || path.join(baseDir, 'auto-context.mdc');
+            await fs.mkdir(path.dirname(fullPath), { recursive: true });
             await fs.writeFile(fullPath, content, 'utf-8');
             return fullPath;
         } catch (error) {

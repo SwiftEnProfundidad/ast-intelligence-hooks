@@ -1,3 +1,7 @@
+<p align="center">
+   <img src="../../assets/logo.png" alt="PUMUKI - AST Intelligence" width="150" />
+ </p>
+
 # MCP Server: AI Evidence Watcher
 
 ## 🎯 Objetivo
