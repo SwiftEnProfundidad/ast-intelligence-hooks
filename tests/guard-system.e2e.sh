@@ -194,17 +194,21 @@ backup_evidence
 info "Pre-flight: git wrapper valida creación de ramas"
 WRAPPER_BIN="$REPO_ROOT/infrastructure/shell/gitflow/git-wrapper.sh"
 BRANCH_WRAPPER_TEST="feature/e2e-wrapper-test-$$"
+ORIGINAL_BRANCH=$(git branch --show-current 2>/dev/null || echo "develop")
 git checkout -q develop 2>/dev/null || git checkout -q main 2>/dev/null || true
 git branch -D "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1 || true
 if "$WRAPPER_BIN" checkout -b invalid-branch-name >/dev/null 2>&1; then
   git branch -D invalid-branch-name >/dev/null 2>&1 || true
+  git checkout -q "$ORIGINAL_BRANCH" 2>/dev/null || true
   die "El wrapper permitió crear rama sin prefijo git flow"
 fi
 if ! "$WRAPPER_BIN" checkout -b "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1; then
+  git checkout -q "$ORIGINAL_BRANCH" 2>/dev/null || true
   die "El wrapper bloqueó rama válida $BRANCH_WRAPPER_TEST"
 fi
 git checkout -q develop 2>/dev/null || git checkout -q main 2>/dev/null || true
 git branch -D "$BRANCH_WRAPPER_TEST" >/dev/null 2>&1 || true
+git checkout -q "$ORIGINAL_BRANCH" 2>/dev/null || true
 restore_evidence
 
 # ──────────────────────────────────────────────────────────────
