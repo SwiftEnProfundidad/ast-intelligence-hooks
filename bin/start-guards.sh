@@ -14,12 +14,8 @@ set -euo pipefail
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 
 REALTIME_PID_FILE="$REPO_ROOT/.realtime-guard.pid"
-REALTIME_LOG="$REPO_ROOT/.audit-reports/guard-supervisor.log"
-NODE_PATH="${NODE_PATH:-/opt/homebrew/bin/node}"
-if [[ ! -x "$NODE_PATH" ]]; then
-  NODE_PATH=$(which node 2>/dev/null || echo "node")
-fi
-REALTIME_CMD="$NODE_PATH $REPO_ROOT/bin/guard-supervisor.js"
+REALTIME_LOG="$REPO_ROOT/.audit-reports/watch-hooks.log"
+REALTIME_CMD="node $REPO_ROOT/bin/guard-supervisor.js"
 
 TOKEN_PID_FILE="$REPO_ROOT/.token-monitor-guard.pid"
 TOKEN_LOG="$REPO_ROOT/.audit-reports/token-monitor-loop.log"
