@@ -13,7 +13,7 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
     const targetFeature = detectFeature(importPath);
 
     if (targetFeature && targetFeature !== feature) {
-      const isSharedModule = /\/(ui|shared|lib|common)\
+      const isSharedModule = /\/(ui|shared|lib|common)\//.test(importPath);
 
       if (!isSharedModule) {
         pushFinding('frontend.feature.cross_feature_import', 'high', sf, imp,
@@ -27,7 +27,7 @@ function analyzeFeatureFirst(sf, findings, pushFinding) {
 function detectFeature(filePath) {
   const normalized = filePath.toLowerCase().replace(/\\/g, '/');
 
-  const appMatch = normalized.match(/\/app\/([^\/]+)\
+  const appMatch = normalized.match(/\/app\/([^\/]+)/);
   if (appMatch) {
     const feature = appMatch[1];
     if (!['api', 'layout', 'loading', 'error', 'not-found'].includes(feature)) {
@@ -35,7 +35,7 @@ function detectFeature(filePath) {
     }
   }
 
-  const compMatch = normalized.match(/\/components\/([^\/]+)\
+  const compMatch = normalized.match(/\/components\/([^\/]+)/);
   if (compMatch) {
     const feature = compMatch[1];
     if (feature !== 'ui') {
