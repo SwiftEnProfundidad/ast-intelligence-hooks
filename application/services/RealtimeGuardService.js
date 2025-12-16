@@ -514,7 +514,6 @@ class RealtimeGuardService {
     if (shouldForceDialog) {
       const dialogDelivered = notifyWithOsascriptDialog();
       delivered = dialogDelivered || delivered;
-    } else if (!delivered) {
     }
 
     if (!delivered) {

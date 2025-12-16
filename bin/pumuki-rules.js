@@ -26,7 +26,9 @@ function extractRulesFromFiles(dir, rules) {
                     if (!rules[platform]) rules[platform] = new Set();
                     rules[platform].add(ruleId);
                 }
-            } catch (error) { continue; }
+            } catch (error) {
+                return;
+            }
         }
     });
 }

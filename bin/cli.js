@@ -23,6 +23,7 @@ function resolveRepoRoot() {
       return trimmed;
     }
   } catch (e) {
+    return process.cwd();
   }
   return process.cwd();
 }
