@@ -1,0 +1,60 @@
+# =============================================================================
+# .windsurfignore - Reducir contexto para mejorar rendimiento de Windsurf
+# =============================================================================
+
+# Logs y archivos temporales
+logs/
+*.log
+*.tmp
+*.pid
+
+# Dependencias y build
+node_modules/
+dist/
+build/
+target/
+vendor/
+
+# Archivos de evidencia y reportes (grandes)
+.AI_EVIDENCE.json
+.ast-summary.json
+.audit-reports/
+*.audit.json
+
+# Archivos de sesión y estado
+.AI_SESSION*.json
+.AI_TOKEN_STATUS.txt
+
+# Cache y datos de herramientas
+.cache/
+.nyc_output/
+coverage/
+
+# Archivos binarios y comprimidos
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# IDE y editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos ocultos del sistema
+.DS_Store
+Thumbs.db
+
+# Documentación generada
+docs/api/
+docs/build/
+
+# Tests y coverage (si son muy grandes)
+test/fixtures/
+test/data/
+
+# =============================================================================
+# NOTA: Este archivo ayuda a Windsurf a procesar menos contexto
+# reduciendo timeouts y mejorando el rendimiento.
+# =============================================================================

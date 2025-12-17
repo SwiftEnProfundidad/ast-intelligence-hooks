@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-16T11:28:38+01:00",
+  "timestamp": "2025-12-17T13:20:45+01:00",
   "session_id": "develop",
   "action": "develop",
   "work_type": "code",
@@ -8,7 +8,9 @@
   ],
   "files_modified": [],
   "infra_modified": [
-    ".AI_EVIDENCE.json"
+    ".AI_EVIDENCE.json",
+    "bin/install.js",
+    "infrastructure/mcp/ast-intelligence-automation.js"
   ],
   "rules_read": [
     {
@@ -28,17 +30,17 @@
   "protocol_3_questions": {
     "answered": true,
     "question_1_file_type": "Code task on branch 'develop'. Modifying  javascript, json-config in: general. Target layer: multiple layers.",
-    "question_2_similar_exists": "Modules affected: general. Recent commits: 5147398 feat: improve evidence system and rename .claude to .ast-intelligence (#35);cd657cf Merge pull request #34 from SwiftEnProfundidad/feature/e2e-branch-wrapper;4b978de chore: auto-commit changes on feature/e2e-branch-wrapper;. Check for existing patterns before adding new code.",
+    "question_2_similar_exists": "Modules affected: general. Recent commits: fb90465 fix: correct update-evidence.sh paths from bin/ to scripts/hooks-system/bin/;66a8b26 Merge pull request #37 from SwiftEnProfundidad/feature/restore-main-after-merge;a7f4af3 feature(auto): restore-main-after-merge - 3 files;. Check for existing patterns before adding new code.",
     "question_3_clean_architecture": "Code changes in multiple layers layer affecting general. Ensure dependencies point inward (Domain <- App <- Infra)."
   },
   "current_context": {
     "branch": "develop",
-    "last_commits": "5147398 feat: improve evidence system and rename .claude to .ast-intelligence (#35);cd657cf Merge pull request #34 from SwiftEnProfundidad/feature/e2e-branch-wrapper;4b978de chore: auto-commit changes on feature/e2e-branch-wrapper;"
+    "last_commits": "fb90465 fix: correct update-evidence.sh paths from bin/ to scripts/hooks-system/bin/;66a8b26 Merge pull request #37 from SwiftEnProfundidad/feature/restore-main-after-merge;a7f4af3 feature(auto): restore-main-after-merge - 3 files;"
   },
   "justification": "Context-aware evidence for branch 'develop'. Auto-detected modules and file types from current work.",
   "approved_by": "Pumuki Team®",
   "severity_metrics": {
-    "last_updated": "2025-12-16T10:28:39.686Z",
+    "last_updated": "2025-12-17T12:20:48.138Z",
     "total_violations": 0,
     "by_severity": {
       "CRITICAL": 0,
@@ -59,7 +61,7 @@
   },
   "ai_gate": {
     "status": "ALLOWED",
-    "last_check": "2025-12-16T10:28:39.710Z",
+    "last_check": "2025-12-17T12:20:48.168Z",
     "violations": [],
     "instruction": "🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
     "mandatory": true
@@ -84,7 +86,7 @@
     "token_monitor": {
       "enabled": true,
       "status": "active",
-      "current_usage": "50K/1M tokens (5%)",
+      "current_usage": "81K/1M tokens (8%)",
       "warning_threshold": 750000,
       "critical_threshold": 900000,
       "notify_at_percent": 90

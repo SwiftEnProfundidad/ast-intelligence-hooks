@@ -25,6 +25,61 @@ class ASTHooksInstaller {
     this.platforms = [];
   }
 
+  ensureGitInfoExclude() {
+    const gitDir = path.join(this.targetRoot, '.git');
+    if (!fs.existsSync(gitDir)) return;
+
+    const excludePath = path.join(gitDir, 'info', 'exclude');
+    fs.mkdirSync(path.dirname(excludePath), { recursive: true });
+
+    const header = '# AST Intelligence Hooks (generated artifacts)';
+    const patterns = [
+      '.AI_TOKEN_STATUS.txt',
+      '.audit-reports/*.log',
+      '.realtime-guard.pid',
+      '.token-monitor-guard.pid'
+    ];
+
+    let existing = '';
+    if (fs.existsSync(excludePath)) {
+      existing = fs.readFileSync(excludePath, 'utf8');
+      if (existing.includes(header)) return;
+    }
+
+    const block = '\n' + header + '\n' + patterns.join('\n') + '\n';
+    fs.appendFileSync(excludePath, block);
+    process.stdout.write(`${COLORS.green}  ✅ Added artifact patterns to .git/info/exclude${COLORS.reset}\n`);
+  }
+
+
+  ensureGitInfoExclude() {
+    const gitDir = path.join(this.targetRoot, '.git');
+    if (!fs.existsSync(gitDir)) return;
+
+    const excludePath = path.join(gitDir, 'info', 'exclude');
+    fs.mkdirSync(path.dirname(excludePath), { recursive: true });
+
+    const header = '# AST Intelligence Hooks (generated artifacts)';
+    const patterns = [
+      '.AI_TOKEN_STATUS.txt',
+      '.audit-reports/*.log',
+      '.realtime-guard.pid',
+      '.token-monitor-guard.pid'
+    ];
+
+    let existing = '';
+    if (fs.existsSync(excludePath)) {
+      existing = fs.readFileSync(excludePath, 'utf8');
+      if (existing.includes(header)) return;
+    }
+
+    const block = '\n' + header + '\n' + patterns.join('\n') + '\n';
+    fs.appendFileSync(excludePath, block);
+    process.stdout.write(`${COLORS.green}  ✅ Added artifact patterns to .git/info/exclude${COLORS.reset}\n`);
+  }
+
+
+
   checkGitRepository() {
     const gitDir = path.join(this.targetRoot, '.git');
     if (!fs.existsSync(gitDir)) {
@@ -68,6 +123,14 @@ ${COLORS.reset}`);
       process.exit(1);
     }
     process.stdout.write(`${COLORS.green}✓ Git repository detected${COLORS.reset}`);
+
+    process.stdout.write(`
+${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
+    this.ensureGitInfoExclude();
+
+    process.stdout.write(`\n${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
+    this.ensureGitInfoExclude();
+
 
     process.stdout.write(`\n${COLORS.cyan}[1/8] Detecting project platforms...${COLORS.reset}`);
     this.detectPlatforms();
