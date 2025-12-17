@@ -316,7 +316,7 @@ function restartAll(reason) {
     log(`Restarting guards (${reason})`);
     await stopAll();
     await startAll();
-    emitHeartbeat();
+    heartbeatMonitor.emitHeartbeat();
     evidenceContextManager.ensureFresh('restart').catch(error => {
       unifiedLogger.error('GUARD_EVIDENCE_REFRESH_FAILED', { message: error.message });
     });
