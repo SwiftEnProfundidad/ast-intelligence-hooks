@@ -1,13 +1,15 @@
 {
-  "timestamp": "2025-12-17T15:18:58+01:00",
+  "timestamp": "2025-12-17T16:50:32+01:00",
   "session_id": "feature-fix-evidence-paths",
   "action": "feature_fix_evidence_paths",
-  "work_type": "documentation",
+  "work_type": "code",
   "platforms": [
     "backend"
   ],
   "files_modified": [],
-  "infra_modified": [],
+  "infra_modified": [
+    ".AI_EVIDENCE.json"
+  ],
   "rules_read": [
     {
       "file": "rulesgold.mdc",
@@ -25,18 +27,18 @@
   ],
   "protocol_3_questions": {
     "answered": true,
-    "question_1_file_type": "Documentation task on branch 'feature/fix-evidence-paths'. Modifying mixed files in: general. No code rules apply - focus on clarity and accuracy.",
-    "question_2_similar_exists": "Documentation in: general. Recent commits: ccb4b8b fix(start-guards): prioritize node_modules paths over scripts/hooks-system;00045a7 fix(start-guards): add fallback paths for guard-supervisor.js and token-monitor-loop.sh;5823412 docs(readme): document HOOK_GUARD_AI_START and auto-refresh variables;. Check for duplicate docs before creating new ones.",
-    "question_3_clean_architecture": "Documentation changes in general. Keep docs in sync with code. Update related READMEs if needed."
+    "question_1_file_type": "Code task on branch 'feature/fix-evidence-paths'. Modifying  javascript, json-config in: general. Target layer: multiple layers.",
+    "question_2_similar_exists": "Modules affected: general. Recent commits: 0da50f5 fix(guard-supervisor): fix ReferenceError emitHeartbeat is not defined;ccb4b8b fix(start-guards): prioritize node_modules paths over scripts/hooks-system;00045a7 fix(start-guards): add fallback paths for guard-supervisor.js and token-monitor-loop.sh;. Check for existing patterns before adding new code.",
+    "question_3_clean_architecture": "Code changes in multiple layers layer affecting general. Ensure dependencies point inward (Domain <- App <- Infra)."
   },
   "current_context": {
     "branch": "feature/fix-evidence-paths",
-    "last_commits": "ccb4b8b fix(start-guards): prioritize node_modules paths over scripts/hooks-system;00045a7 fix(start-guards): add fallback paths for guard-supervisor.js and token-monitor-loop.sh;5823412 docs(readme): document HOOK_GUARD_AI_START and auto-refresh variables;"
+    "last_commits": "0da50f5 fix(guard-supervisor): fix ReferenceError emitHeartbeat is not defined;ccb4b8b fix(start-guards): prioritize node_modules paths over scripts/hooks-system;00045a7 fix(start-guards): add fallback paths for guard-supervisor.js and token-monitor-loop.sh;"
   },
   "justification": "Context-aware evidence for branch 'feature/fix-evidence-paths'. Auto-detected modules and file types from current work.",
   "approved_by": "Pumuki Team®",
   "severity_metrics": {
-    "last_updated": "2025-12-17T14:19:02.121Z",
+    "last_updated": "2025-12-17T15:50:35.542Z",
     "total_violations": 0,
     "by_severity": {
       "CRITICAL": 0,
@@ -57,7 +59,7 @@
   },
   "ai_gate": {
     "status": "ALLOWED",
-    "last_check": "2025-12-17T14:19:02.233Z",
+    "last_check": "2025-12-17T15:50:35.675Z",
     "violations": [],
     "instruction": "🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
     "mandatory": true
