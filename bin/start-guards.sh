@@ -13,6 +13,18 @@ set -euo pipefail
 
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 
+# Load environment defaults
+GUARD_ENV_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/guard-env.sh"
+if [[ ! -f "$GUARD_ENV_SCRIPT" ]]; then
+  GUARD_ENV_SCRIPT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/guard-env.sh"
+fi
+if [[ ! -f "$GUARD_ENV_SCRIPT" ]]; then
+  GUARD_ENV_SCRIPT="$REPO_ROOT/bin/guard-env.sh"
+fi
+if [[ -f "$GUARD_ENV_SCRIPT" ]]; then
+  source "$GUARD_ENV_SCRIPT"
+fi
+
 REALTIME_PID_FILE="$REPO_ROOT/.realtime-guard.pid"
 REALTIME_LOG="$REPO_ROOT/.audit-reports/watch-hooks.log"
 REALTIME_CMD="node $REPO_ROOT/bin/guard-supervisor.js"
