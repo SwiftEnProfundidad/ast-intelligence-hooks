@@ -27,11 +27,27 @@ fi
 
 REALTIME_PID_FILE="$REPO_ROOT/.realtime-guard.pid"
 REALTIME_LOG="$REPO_ROOT/.audit-reports/watch-hooks.log"
-REALTIME_CMD="node $REPO_ROOT/bin/guard-supervisor.js"
+
+GUARD_SUPERVISOR="$REPO_ROOT/scripts/hooks-system/bin/guard-supervisor.js"
+if [[ ! -f "$GUARD_SUPERVISOR" ]]; then
+  GUARD_SUPERVISOR="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/guard-supervisor.js"
+fi
+if [[ ! -f "$GUARD_SUPERVISOR" ]]; then
+  GUARD_SUPERVISOR="$REPO_ROOT/bin/guard-supervisor.js"
+fi
+REALTIME_CMD="node $GUARD_SUPERVISOR"
 
 TOKEN_PID_FILE="$REPO_ROOT/.token-monitor-guard.pid"
 TOKEN_LOG="$REPO_ROOT/.audit-reports/token-monitor-loop.log"
-TOKEN_CMD="bash $REPO_ROOT/infrastructure/watchdog/token-monitor-loop.sh"
+
+TOKEN_LOOP="$REPO_ROOT/scripts/hooks-system/infrastructure/watchdog/token-monitor-loop.sh"
+if [[ ! -f "$TOKEN_LOOP" ]]; then
+  TOKEN_LOOP="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/watchdog/token-monitor-loop.sh"
+fi
+if [[ ! -f "$TOKEN_LOOP" ]]; then
+  TOKEN_LOOP="$REPO_ROOT/infrastructure/watchdog/token-monitor-loop.sh"
+fi
+TOKEN_CMD="bash $TOKEN_LOOP"
 
 mkdir -p "$REPO_ROOT/.audit-reports"
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
