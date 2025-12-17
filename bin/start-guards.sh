@@ -92,7 +92,7 @@ ensure_evidence_refresh() {
       PLATFORMS="android"
     fi
 
-    bash "$REPO_ROOT/bin/update-evidence.sh" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH"
+    bash "$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH"
   fi
 }
 
