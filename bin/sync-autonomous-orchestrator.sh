@@ -2,8 +2,8 @@
 set -euo pipefail
 
 project_root="$(git rev-parse --show-toplevel)"
-# Use env var or fallback to ../ast-intelligence-hooks (portable)
-library_root="${LIB_AST_INTELLIGENCE_HOOKS:-$(dirname "$project_root")/ast-intelligence-hooks}"
+# Use env var or fallback to ../Libraries/ast-intelligence-hooks (portable)
+library_root="${LIB_AST_INTELLIGENCE_HOOKS:-$(dirname "$project_root")/Libraries/ast-intelligence-hooks}"
 
 repo_file="${project_root}/scripts/hooks-system/application/services/AutonomousOrchestrator.js"
 library_file="${library_root}/application/services/AutonomousOrchestrator.js"
