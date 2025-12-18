@@ -95,9 +95,9 @@ class ASTHooksInstaller {
     }
 
     try {
-      execSync('git rev-parse --show-toplevel', { 
-        cwd: this.targetRoot, 
-        stdio: 'ignore' 
+      execSync('git rev-parse --show-toplevel', {
+        cwd: this.targetRoot,
+        stdio: 'ignore'
       });
       return true;
     } catch (err) {
@@ -145,6 +145,7 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
 
     process.stdout.write(`\n${COLORS.cyan}[4/8] Copying AST Intelligence system files...${COLORS.reset}`);
     this.copySystemFiles();
+    this.copyManageLibraryScript();
     process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
 
     process.stdout.write(`\n${COLORS.cyan}[5/8] Creating project configuration...${COLORS.reset}`);
@@ -235,6 +236,18 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
         }
       }
     });
+  }
+
+  copyManageLibraryScript() {
+    const libraryRoot = path.resolve(__dirname, '..');
+    const source = path.join(libraryRoot, 'manage-library.sh');
+    const dest = path.join(this.targetRoot, 'manage-library.sh');
+
+    if (fs.existsSync(source) && !fs.existsSync(dest)) {
+      fs.copyFileSync(source, dest);
+      fs.chmodSync(dest, '755');
+      process.stdout.write(`\n${COLORS.green}  ✅ Copied manage-library.sh to project root${COLORS.reset}`);
+    }
   }
 
   copyRecursive(source, dest) {
@@ -329,7 +342,7 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
 
   copyIDERules() {
     const sourceRulesDir = path.join(this.hookSystemRoot, '.cursor', 'rules');
-    
+
     if (!fs.existsSync(sourceRulesDir)) {
       return;
     }
@@ -485,12 +498,12 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
       }
 
       const mcpConfigPath = path.join(ide.configDir, 'mcp.json');
-      
+
       if (!fs.existsSync(mcpConfigPath)) {
-        const configToWrite = ide.name === 'Claude Desktop' 
+        const configToWrite = ide.name === 'Claude Desktop'
           ? this.adaptConfigForClaudeDesktop(mcpConfig)
           : mcpConfig;
-        
+
         fs.writeFileSync(mcpConfigPath, JSON.stringify(configToWrite, null, 2));
         process.stdout.write(`${COLORS.green}  ✅ Configured ${ide.configPath}${COLORS.reset}\n`);
         configuredCount++;
@@ -500,9 +513,9 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
           if (!existing.mcpServers) {
             existing.mcpServers = {};
           }
-          
+
           existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
-          
+
           fs.writeFileSync(mcpConfigPath, JSON.stringify(existing, null, 2));
           process.stdout.write(`${COLORS.green}  ✅ Updated ${ide.configPath} (merged configuration)${COLORS.reset}\n`);
           configuredCount++;
@@ -564,7 +577,7 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
       // Linux
       claudeDesktopConfigDir = path.join(homeDir, '.config', 'claude_desktop_config.json');
     }
-    
+
     if (fs.existsSync(path.dirname(claudeDesktopConfigDir))) {
       ideConfigs.push({
         name: 'Claude Desktop',
@@ -824,7 +837,7 @@ exit 0
 
       let sessionLoaderPath = path.join(this.targetRoot, 'scripts', 'hooks-system', 'bin', 'session-loader.sh');
       const npmPackagePath = path.join(this.targetRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'session-loader.sh');
-      
+
       if (fs.existsSync(npmPackagePath)) {
         sessionLoaderPath = npmPackagePath;
       }
@@ -852,7 +865,7 @@ exit 0
       }
 
       fs.writeFileSync(tasksJsonPath, JSON.stringify(tasksJson, null, 2) + '\n');
-      
+
     } catch (error) {
       process.stdout.write(`${COLORS.yellow}  ⚠️  Could not configure VS Code tasks: ${error.message}${COLORS.reset}\n`);
     }
@@ -860,7 +873,7 @@ exit 0
 
   addNpmScripts() {
     const projectPackageJsonPath = path.join(this.targetRoot, 'package.json');
-    
+
     if (!fs.existsSync(projectPackageJsonPath)) {
       process.stdout.write(`${COLORS.yellow}  ⚠️  package.json not found, skipping npm scripts${COLORS.reset}\n`);
       return;
@@ -868,16 +881,16 @@ exit 0
 
     try {
       const packageJson = JSON.parse(fs.readFileSync(projectPackageJsonPath, 'utf8'));
-      
+
       if (!packageJson.scripts) {
         packageJson.scripts = {};
       }
 
       let installHooksScript;
-      
+
       const npxBinPath = path.join(this.targetRoot, 'node_modules', '.bin', 'ast-install');
       const directBinPath = path.join(this.targetRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'install.js');
-      
+
       if (fs.existsSync(npxBinPath)) {
         // npx should work
         installHooksScript = 'npx ast-install';
@@ -896,7 +909,7 @@ exit 0
       }
 
       fs.writeFileSync(projectPackageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
-      
+
     } catch (error) {
       process.stdout.write(`${COLORS.yellow}  ⚠️  Could not modify package.json: ${error.message}${COLORS.reset}\n`);
     }
