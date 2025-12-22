@@ -1,54 +1,51 @@
 {
-  "timestamp": "2025-12-16T07:26:36.333Z",
+  "timestamp": "2025-12-17T18:22:15.891Z",
   "reason": "cli",
-  "status": "error",
+  "status": "warn",
   "results": [
     {
       "name": "evidence",
       "status": "ok",
       "details": {
-        "ageMs": 3333,
-        "timestamp": "2025-12-16T08:26:33+01:00"
+        "ageMs": 4891,
+        "timestamp": "2025-12-17T19:22:11+01:00"
       }
     },
     {
       "name": "gitTree",
-      "status": "warn",
+      "status": "ok",
       "details": {
         "stagedFiles": [],
         "workingFiles": [
-          ".AI_EVIDENCE.json",
-          ".gitignore",
-          "README.md",
-          "application/services/IntelligentCommitAnalyzer.js",
-          "bin/install.js",
-          "bin/update-evidence.sh",
-          "hooks/getSkillRulesPath.ts",
-          "hooks/git-status-monitor.ts",
-          "hooks/post-tool-use-tracker.sh",
-          "hooks/skill-activation-prompt.sh",
-          "hooks/skill-activation-prompt.ts",
-          "infrastructure/hooks/pre-tool-use-intelligent-enforcer.sh",
-          "infrastructure/mcp/ast-intelligence-automation.js",
-          "infrastructure/shell/validators/validate-ai-protocol.sh"
+          ".AI_EVIDENCE.json"
         ],
         "stagedCount": 0,
-        "workingCount": 14,
-        "uniqueCount": 14
+        "workingCount": 1,
+        "uniqueCount": 1
       }
     },
     {
       "name": "heartbeat",
-      "status": "error",
+      "status": "warn",
       "details": {
-        "message": "missing heartbeat file"
+        "timestamp": "2025-12-16T09:25:53.229Z",
+        "supervisorPid": 78930,
+        "status": "healthy",
+        "guard": {
+          "running": true,
+          "pid": 78939
+        },
+        "tokenMonitor": {
+          "running": true,
+          "pid": 78962
+        }
       }
     },
     {
       "name": "tokens",
-      "status": "warn",
+      "status": "ok",
       "details": {
-        "message": "no usage log found"
+        "percent": 8.06805
       }
     }
   ]

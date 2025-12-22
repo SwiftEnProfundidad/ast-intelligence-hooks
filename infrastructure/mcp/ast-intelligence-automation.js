@@ -27,7 +27,17 @@ const { toErrorMessage } = require('../utils/error-utils');
 const MCP_VERSION = '2024-11-05';
 
 // Configuration
-const REPO_ROOT = process.env.REPO_ROOT || process.cwd();
+function resolveRepoRoot() {
+    const envRoot = (process.env.REPO_ROOT || "").trim();
+    if (envRoot) return envRoot;
+    try {
+        const topLevel = execSync("git rev-parse --show-toplevel", { encoding: "utf-8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+        if (topLevel) return topLevel;
+    } catch (e) {}
+    return process.cwd();
+}
+
+const REPO_ROOT = resolveRepoRoot();
 const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
 const GITFLOW_STATE_FILE = path.join(REPO_ROOT, '.git', 'gitflow-state.json');
 const MAX_EVIDENCE_AGE = 180; // 3 minutes in seconds
@@ -120,7 +130,8 @@ let lastGitFlowNotification = 0;
 let lastAutoCommitTime = 0;
 let lastEvidenceAutoFix = 0;
 const NOTIFICATION_COOLDOWN = 120000;
-const EVIDENCE_AUTOFIX_COOLDOWN = Number(process.env.EVIDENCE_AUTOFIX_COOLDOWN_MS || 300000);
+const evidenceAutoFixCooldownRaw = process.env.EVIDENCE_AUTOFIX_COOLDOWN_MS;
+const EVIDENCE_AUTOFIX_COOLDOWN = Number(evidenceAutoFixCooldownRaw !== undefined ? evidenceAutoFixCooldownRaw : 0);
 const AUTO_COMMIT_INTERVAL = 300000; 
 const AUTO_COMMIT_ENABLED = process.env.AUTO_COMMIT_ENABLED === 'true'; 
 const AUTO_PUSH_ENABLED = process.env.AUTO_PUSH_ENABLED !== 'false'; 
@@ -250,9 +261,7 @@ function checkEvidence() {
         const isStale = ageSeconds > MAX_EVIDENCE_AGE;
         const checkedAt = new Date(nowMs).toISOString();
 
-        if (isStale) {
-            sendNotification('⚠️ Evidence Stale', `Evidence is ${ageSeconds}s old (max ${MAX_EVIDENCE_AGE}s). Run ai-start to refresh.`, 'Basso');
-        }
+
 
         return {
             status: isStale ? 'stale' : 'fresh',
@@ -669,6 +678,14 @@ function aiGateCheck() {
             lastEvidenceAutoFix = now;
             violations.push(`❌ EVIDENCE_STALE: Evidence is ${evidenceStatus.age}s old. Auto-fix failed: ${err.message}`);
         }
+    }
+
+    const developExists = branchExists('develop');
+    if (!developExists) {
+        violations.push(`❌ MISSING_DEVELOP: Branch 'develop' does not exist.`);
+        violations.push(`   Required: create 'develop' branch (git checkout main && git checkout -b develop && git push -u origin develop)`);
+        violations.push(`   Git Flow requires 'develop' as the integration branch for features.`);
+        sendNotification('🚫 Git Flow Broken', `Branch 'develop' missing! Create it before continuing.`, 'Basso');
     }
 
     if (isProtectedBranch) {
@@ -1293,7 +1310,6 @@ setInterval(async () => {
                     encoding: 'utf-8',
                     stdio: ['pipe', 'pipe', 'pipe']
                 });
-                sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence was stale and has been refreshed automatically', 'Purr');
             } catch (err) {
                 sendNotification('⚠️ Evidence Stale', `Evidence is ${evidenceStatus.age}s old. Auto-fix failed: ${err.message}`, 'Basso');
             }

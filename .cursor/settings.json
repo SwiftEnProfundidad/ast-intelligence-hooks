@@ -1,13 +1,13 @@
 {
   "hooks": {
-    "UserPromptSubmit": ".claude/hooks/skill-activation-prompt.sh",
+    "UserPromptSubmit": ".ast-intelligence/hooks/skill-activation-prompt.sh",
     "PreToolUse": [
-      ".claude/hooks/pre-tool-use-evidence-validator.ts",
-      ".claude/hooks/pre-tool-use-guard.ts"
+      ".ast-intelligence/hooks/pre-tool-use-evidence-validator.ts",
+      ".ast-intelligence/hooks/pre-tool-use-guard.ts"
     ],
     "PostToolUse": [
-      ".claude/hooks/post-tool-use-tracker.sh",
-      ".claude/hooks/git-status-monitor.ts"
+      ".ast-intelligence/hooks/post-tool-use-tracker.sh",
+      ".ast-intelligence/hooks/git-status-monitor.ts"
     ]
   }
 }

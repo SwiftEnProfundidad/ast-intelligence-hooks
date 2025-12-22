@@ -1,0 +1,36 @@
+{
+  "version": "3.1.0",
+  "project": {
+    "name": "ast-intelligence-hooks",
+    "platforms": [
+      "backend"
+    ],
+    "created": "2025-12-19T23:19:43.298Z"
+  },
+  "architecture": {
+    "pattern": "FEATURE_FIRST_CLEAN_DDD",
+    "strictMode": true,
+    "enforcement": "strict"
+  },
+  "rules": {
+    "enabled": true,
+    "platforms": {
+      "backend": {
+        "enabled": true,
+        "customRulesPath": null
+      }
+    }
+  },
+  "commitGating": {
+    "mode": "strict",
+    "blockOn": [
+      "critical",
+      "high"
+    ],
+    "stagingAreaOnly": true
+  },
+  "bypass": {
+    "enabled": true,
+    "envVar": "GIT_BYPASS_HOOK"
+  }
+}

@@ -168,8 +168,9 @@ This library was conceived to solve this fundamental problem by creating a **per
 
 2. **Real-Time Monitoring** (`RealtimeGuardService`):
    - Polls `.AI_EVIDENCE.json` every 30 seconds
-   - Detects staleness (>60 seconds)
-   - **Auto-refreshes** evidence if stale (when `HOOK_GUARD_AUTO_REFRESH=true`)
+   - Detects staleness (>180 seconds)
+   - **Auto-refreshes** evidence if stale (`HOOK_GUARD_AUTO_REFRESH=true` by default)
+   - **Auto-executes ai-start** when code files detected (`HOOK_GUARD_AI_START=true` by default)
    - Monitors Git tree state with differentiated thresholds:
      - **Staged files**: Warning at >10 files (configurable via `HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT`)
      - **Unstaged files**: Warning at >15 files (configurable via `HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT`)
@@ -885,8 +886,15 @@ For more details, see [API_REFERENCE.md](./docs/API_REFERENCE.md).
 # Repository root
 export REPO_ROOT=/path/to/project
 
-# Evidence stale threshold (seconds)
-export HOOK_GUARD_EVIDENCE_STALE_THRESHOLD=180
+# Evidence stale threshold (milliseconds, default: 180000 = 3 minutes)
+export HOOK_GUARD_EVIDENCE_STALE_THRESHOLD=180000
+
+# Auto ai-start execution (enabled by default)
+export HOOK_GUARD_AI_START=true
+export HOOK_GUARD_AI_START_COOLDOWN=60000
+
+# Auto-refresh evidence when stale (enabled by default)
+export HOOK_GUARD_AUTO_REFRESH=true
 
 # Auto-commit in Git Flow
 export AUTO_COMMIT_ENABLED=true

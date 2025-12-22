@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# =============================================================================
+# Git Flow Helper Script
+# =============================================================================
+# Usage: gitflow [check|status|workflow|reset]
+# =============================================================================
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENFORCER="${SCRIPT_DIR}/../infrastructure/shell/gitflow-enforcer.sh"
+
+if [[ ! -f "$ENFORCER" ]]; then
+  echo "❌ Error: gitflow-enforcer.sh not found"
+  echo "   Expected at: $ENFORCER"
+  exit 1
+fi
+
+bash "$ENFORCER" "${1:-check}"
