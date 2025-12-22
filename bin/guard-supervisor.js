@@ -106,14 +106,14 @@ if (!acquireLock()) {
 const childDefs = {
   guard: {
     command: 'node',
-    args: [path.join(repoRoot, 'bin', 'watch-hooks.js')],
+    args: [path.join(repoRoot, 'scripts', 'hooks-system', 'bin', 'watch-hooks.js')],
     cwd: repoRoot,
     stdio: 'inherit',
     env: { ...process.env, HOOK_GUARD_DIRTY_TREE_DISABLED: 'true' }
   },
   tokenMonitor: {
     command: 'bash',
-    args: [path.join(repoRoot, 'infrastructure', 'watchdog', 'token-monitor-loop.sh')],
+    args: [path.join(repoRoot, 'scripts', 'hooks-system', 'infrastructure', 'watchdog', 'token-monitor-loop.sh')],
     cwd: repoRoot,
     stdio: 'inherit',
     env: process.env
@@ -121,13 +121,13 @@ const childDefs = {
 };
 
 const targets = [
-  'bin/watch-hooks.js',
-  'bin/guard-supervisor.js',
-  'bin/start-guards.sh',
+  'scripts/hooks-system/bin/watch-hooks.js',
+  'scripts/hooks-system/bin/guard-supervisor.js',
+  'scripts/hooks-system/bin/start-guards.sh',
   'application/services/RealtimeGuardService.js',
-  'infrastructure/watchdog/token-monitor-loop.sh',
-  'infrastructure/watchdog/token-monitor.js',
-  'infrastructure/watchdog/token-tracker.sh'
+  'scripts/hooks-system/infrastructure/watchdog/token-monitor-loop.sh',
+  'scripts/hooks-system/infrastructure/watchdog/token-monitor.js',
+  'scripts/hooks-system/infrastructure/watchdog/token-tracker.sh'
 ];
 
 const watchers = [];
@@ -197,7 +197,7 @@ const healthCheckService = new HealthCheckService({
 
 const evidenceContextManager = new EvidenceContextManager({
   repoRoot,
-  updateScript: path.join(repoRoot, 'bin', 'update-evidence.sh'),
+  updateScript: path.join(repoRoot, 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
   notificationCenter,
   logger: unifiedLogger,
   intervalMs: evidenceIntervalMs,
