@@ -23,6 +23,23 @@ class ASTHooksInstaller {
       this.hookSystemRoot = path.join(__dirname, '..');
     }
     this.platforms = [];
+    this.installMode = this.resolveInstallMode(process.argv);
+  }
+
+  resolveInstallMode(argv) {
+    const envMode = (process.env.AST_INSTALL_MODE || '').trim().toLowerCase();
+    const rawArg = argv.find(arg => arg.startsWith('--mode='));
+    const flagIndex = argv.indexOf('--mode');
+
+    let cliMode = '';
+    if (rawArg) {
+      cliMode = rawArg.slice('--mode='.length).trim().toLowerCase();
+    } else if (flagIndex !== -1 && argv[flagIndex + 1]) {
+      cliMode = String(argv[flagIndex + 1]).trim().toLowerCase();
+    }
+
+    const mode = cliMode || envMode || 'full';
+    return mode === 'lite' ? 'lite' : 'full';
   }
 
   ensureGitInfoExclude() {
@@ -140,13 +157,21 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
     this.installESLintConfigs();
 
     process.stdout.write(`\n${COLORS.cyan}[3/8] Creating hooks-system directory structure...${COLORS.reset}`);
-    this.createDirectoryStructure();
-    process.stdout.write(`${COLORS.green}✓ Directory structure created${COLORS.reset}`);
+    if (this.installMode === 'full') {
+      this.createDirectoryStructure();
+      process.stdout.write(`${COLORS.green}✓ Directory structure created${COLORS.reset}`);
+    } else {
+      process.stdout.write(`${COLORS.green}✓ Skipped (lite mode)${COLORS.reset}`);
+    }
 
     process.stdout.write(`\n${COLORS.cyan}[4/8] Copying AST Intelligence system files...${COLORS.reset}`);
-    this.copySystemFiles();
-    this.copyManageLibraryScript();
-    process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
+    if (this.installMode === 'full') {
+      this.copySystemFiles();
+      this.copyManageLibraryScript();
+      process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
+    } else {
+      process.stdout.write(`${COLORS.green}✓ Skipped (lite mode)${COLORS.reset}`);
+    }
 
     process.stdout.write(`\n${COLORS.cyan}[5/8] Creating project configuration...${COLORS.reset}`);
     this.createProjectConfig();
@@ -335,7 +360,11 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
       }
     });
 
-    const configPath = path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
+    const configPath = this.installMode === 'lite'
+      ? path.join(this.targetRoot, '.ast-intelligence.project.json')
+      : path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
+
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
   }
