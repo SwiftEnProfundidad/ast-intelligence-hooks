@@ -1,14 +1,14 @@
 {
   "mcpServers": {
     "ast-intelligence-automation": {
-      "command": "/opt/homebrew/Cellar/node@20/20.19.4/bin/node",
+      "command": "/opt/homebrew/Cellar/node/24.10.0/bin/node",
       "args": [
-        "${workspaceFolder}/infrastructure/mcp/ast-intelligence-automation.js"
+        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",
-        "AUTO_COMMIT_ENABLED": "true",
-        "AUTO_PUSH_ENABLED": "true",
+        "AUTO_COMMIT_ENABLED": "false",
+        "AUTO_PUSH_ENABLED": "false",
         "AUTO_PR_ENABLED": "false"
       }
     }

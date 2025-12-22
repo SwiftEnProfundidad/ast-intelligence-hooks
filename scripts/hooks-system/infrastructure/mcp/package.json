@@ -1,0 +1,17 @@
+{
+    "name": "mcp-ai-evidence-watcher",
+    "version": "1.0.0",
+    "description": "MCP server to monitor .AI_EVIDENCE.json freshness for AI automation",
+    "type": "commonjs",
+    "bin": {
+        "mcp-ai-evidence-watcher": "./evidence-watcher.js"
+    },
+    "keywords": [
+        "mcp",
+        "cursor",
+        "ai",
+        "evidence"
+    ],
+    "author": "Carlos Merlos",
+    "license": "MIT"
+}

@@ -1,14 +1,18 @@
 {
-  "timestamp": "2025-12-17T23:20:47+01:00",
-  "session_id": "feature-fix-evidence-paths",
-  "action": "feature_fix_evidence_paths",
+  "timestamp": "2025-12-21T15:42:31+01:00",
+  "session_id": "feature/fix-evidence-paths",
+  "action": "feature/fix_evidence_paths",
   "work_type": "code",
   "platforms": [
     "backend"
   ],
   "files_modified": [],
   "infra_modified": [
-    ".AI_EVIDENCE.json"
+    ".AI_EVIDENCE.json",
+    ".cursor/mcp.json",
+    ".cursor/settings.json",
+    "package-lock.json",
+    "package.json"
   ],
   "rules_read": [
     {
@@ -27,79 +31,24 @@
   ],
   "protocol_3_questions": {
     "answered": true,
-    "question_1_file_type": "Code task on branch 'feature/fix-evidence-paths'. Modifying  javascript, json-config in: general. Target layer: multiple layers.",
-    "question_2_similar_exists": "Modules affected: general. Recent commits: 3d9a727 chore: cleanup project structure and organize documentation;280bdd3 refactor: migrate to external ast-intelligence-hooks library;7025429 pre-migration: snapshot before removing local ast-intelligence-hooks;. Check for existing patterns before adding new code.",
-    "question_3_clean_architecture": "Code changes in multiple layers layer affecting general. Ensure dependencies point inward (Domain <- App <- Infra)."
+    "question_1_file_type": "Code task on branch 'feature/fix-evidence-paths'. Modifying  javascript, json-config in:  ide-config. Target layer: multiple layers.",
+    "question_2_similar_exists": "Modules affected:  ide-config. Recent commits: 7ab95ed feat: add manage-library.sh and auto-copy during install;31b9580 chore: reorganize docs structure and update dependencies;3d9a727 chore: cleanup project structure and organize documentation;. Check for existing patterns before adding new code.",
+    "question_3_clean_architecture": "Code changes in multiple layers layer affecting  ide-config. Ensure dependencies point inward (Domain <- App <- Infra)."
   },
   "current_context": {
     "branch": "feature/fix-evidence-paths",
-    "last_commits": "3d9a727 chore: cleanup project structure and organize documentation;280bdd3 refactor: migrate to external ast-intelligence-hooks library;7025429 pre-migration: snapshot before removing local ast-intelligence-hooks;"
+    "last_commits": "7ab95ed feat: add manage-library.sh and auto-copy during install;31b9580 chore: reorganize docs structure and update dependencies;3d9a727 chore: cleanup project structure and organize documentation;"
   },
   "justification": "Context-aware evidence for branch 'feature/fix-evidence-paths'. Auto-detected modules and file types from current work.",
   "approved_by": "Pumuki Team®",
   "severity_metrics": {
-    "last_updated": "2025-12-17T22:20:48.235Z",
+    "last_updated": "2025-12-21T14:42:42.524Z",
     "total_violations": 0,
     "by_severity": {
       "CRITICAL": 0,
       "HIGH": 0,
       "MEDIUM": 0,
       "LOW": 0
-    },
-    "average_severity_score": 0,
-    "intelligent_evaluation_rate": 0,
-    "gate_status": "PASSED",
-    "blocked_by": null
-  },
-  "token_usage": {
-    "estimated": 50000.5,
-    "percent_used": 5,
-    "remaining": 949999.5,
-    "warning_level": "OK"
-  },
-  "ai_gate": {
-    "status": "ALLOWED",
-    "last_check": "2025-12-17T22:20:48.256Z",
-    "violations": [],
-    "instruction": "🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
-    "mandatory": true
-  },
-  "git_flow": {
-    "branch_protection": {
-      "main": "protected",
-      "develop": "protected",
-      "feature_branches": "allowed"
-    },
-    "commit_validation": {
-      "require_evidence": true,
-      "require_tests": true,
-      "require_build": true,
-      "allow_no_verify": false
-    },
-    "current_branch": "feature/fix-evidence-paths",
-    "base_branch": "develop",
-    "is_protected": false
-  },
-  "watchers": {
-    "token_monitor": {
-      "enabled": true,
-      "status": "active",
-      "current_usage": "81K/1M tokens (8%)",
-      "warning_threshold": 750000,
-      "critical_threshold": 900000,
-      "notify_at_percent": 90
-    },
-    "violations_watcher": {
-      "enabled": true,
-      "status": "monitoring",
-      "blocking_threshold": "HIGH",
-      "auto_fix_enabled": false
-    },
-    "evidence_watcher": {
-      "enabled": true,
-      "status": "active",
-      "sla_minutes": 10,
-      "auto_refresh": true
     }
   }
 }
