@@ -39,6 +39,7 @@ ANNOUNCEMENTS.md
 .cache/
 .audit_tmp/
 .AI_TOKEN_STATUS.txt
+.AI_EVIDENCE.json
 .coverage/
 
 # AST Intelligence configuration (user-specific, similar to .cursor/rules/)

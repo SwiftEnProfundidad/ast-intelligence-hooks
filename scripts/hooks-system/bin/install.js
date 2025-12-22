@@ -708,7 +708,7 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
   if echo "$OUTPUT" | grep -qE "CRITICAL|HIGH"; then
     echo ""
     echo "❌ Commit blocked: Critical or High violations detected in staged files"
-    
+
     CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\\[CRITICAL\\]" | wc -l | tr -d ' ')
     if [ -z "$CRITICAL_COUNT" ] || [ "$CRITICAL_COUNT" = "0" ]; then
       CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
@@ -716,6 +716,7 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
         CRITICAL_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*CRITICAL|CRITICAL.*violation" || echo "0")
       fi
     fi
+
     HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\\[HIGH\\]" | wc -l | tr -d ' ')
     if [ -z "$HIGH_COUNT" ] || [ "$HIGH_COUNT" = "0" ]; then
       HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH=\\d+" | grep -oE "\\d+" | head -1 || echo "0")
@@ -723,12 +724,17 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
         HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
       fi
     fi
+
+    CRITICAL_COUNT=$(printf '%s' "$CRITICAL_COUNT" | tr -cd '0-9')
+    HIGH_COUNT=$(printf '%s' "$HIGH_COUNT" | tr -cd '0-9')
+    [ -z "$CRITICAL_COUNT" ] && CRITICAL_COUNT=0
+    [ -z "$HIGH_COUNT" ] && HIGH_COUNT=0
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
-    
-    if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
-      if [[ $CRITICAL_COUNT -gt 0 ]] && [[ $HIGH_COUNT -gt 0 ]]; then
+
+    if [ "$TOTAL_VIOLATIONS" -gt 0 ]; then
+      if [ "$CRITICAL_COUNT" -gt 0 ] && [ "$HIGH_COUNT" -gt 0 ]; then
         NOTIF_MSG="$TOTAL_VIOLATIONS violations ($CRITICAL_COUNT CRITICAL, $HIGH_COUNT HIGH) block commit"
-      elif [[ $CRITICAL_COUNT -gt 0 ]]; then
+      elif [ "$CRITICAL_COUNT" -gt 0 ]; then
         NOTIF_MSG="$CRITICAL_COUNT CRITICAL violations block commit"
       else
         NOTIF_MSG="$HIGH_COUNT HIGH violations block commit"
@@ -772,12 +778,17 @@ if [ -d "$HOOKS_PATH" ] && [ -f "$HOOKS_PATH/infrastructure/ast/ast-intelligence
         HIGH_COUNT=$(echo "$OUTPUT" | grep -cE "severity.*HIGH|HIGH.*violation" || echo "0")
       fi
     fi
+
+    CRITICAL_COUNT=$(printf '%s' "$CRITICAL_COUNT" | tr -cd '0-9')
+    HIGH_COUNT=$(printf '%s' "$HIGH_COUNT" | tr -cd '0-9')
+    [ -z "$CRITICAL_COUNT" ] && CRITICAL_COUNT=0
+    [ -z "$HIGH_COUNT" ] && HIGH_COUNT=0
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
-    
-    if [[ $TOTAL_VIOLATIONS -gt 0 ]]; then
-      if [[ $CRITICAL_COUNT -gt 0 ]] && [[ $HIGH_COUNT -gt 0 ]]; then
+
+    if [ "$TOTAL_VIOLATIONS" -gt 0 ]; then
+      if [ "$CRITICAL_COUNT" -gt 0 ] && [ "$HIGH_COUNT" -gt 0 ]; then
         NOTIF_MSG="$TOTAL_VIOLATIONS violations ($CRITICAL_COUNT CRITICAL, $HIGH_COUNT HIGH) block commit"
-      elif [[ $CRITICAL_COUNT -gt 0 ]]; then
+      elif [ "$CRITICAL_COUNT" -gt 0 ]; then
         NOTIF_MSG="$CRITICAL_COUNT CRITICAL violations block commit"
       else
         NOTIF_MSG="$HIGH_COUNT HIGH violations block commit"
