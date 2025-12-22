@@ -216,6 +216,9 @@ echo ""
 
 # Start realtime guards (watch-hooks + token monitor)
 GUARDS_SCRIPT="$REPO_ROOT/scripts/hooks-system/bin/start-guards.sh"
+if [[ ! -x "$GUARDS_SCRIPT" ]]; then
+  GUARDS_SCRIPT="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/start-guards.sh"
+fi
 if [[ -x "$GUARDS_SCRIPT" ]]; then
   echo -e "${CYAN}🛡️  Background guards:${NC}"
   "$GUARDS_SCRIPT" start || true

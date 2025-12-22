@@ -671,6 +671,14 @@ function aiGateCheck() {
         }
     }
 
+    const developExists = branchExists('develop');
+    if (!developExists) {
+        violations.push(`❌ MISSING_DEVELOP: Branch 'develop' does not exist.`);
+        violations.push(`   Required: create 'develop' branch (git checkout main && git checkout -b develop && git push -u origin develop)`);
+        violations.push(`   Git Flow requires 'develop' as the integration branch for features.`);
+        sendNotification('🚫 Git Flow Broken', `Branch 'develop' missing! Create it before continuing.`, 'Basso');
+    }
+
     if (isProtectedBranch) {
         violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}'.`);
         violations.push(`   Required: create a feature branch from ${baseBranch} (git checkout ${baseBranch} && git pull && git checkout -b feature/<name>)`);
