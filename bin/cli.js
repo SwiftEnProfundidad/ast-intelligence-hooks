@@ -49,6 +49,23 @@ function resolveRepoRoot() {
   return process.cwd();
 }
 
+function getStagedSourceFiles(repoRoot) {
+  try {
+    const out = execSync('git diff --cached --name-only --diff-filter=ACM', {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore']
+    });
+    return out
+      .split('\n')
+      .map(line => line.trim())
+      .filter(Boolean)
+      .filter(file => /\.(ts|tsx|js|jsx|swift|kt)$/.test(file));
+  } catch (e) {
+    return [];
+  }
+}
+
 function buildHealthSnapshot() {
   const repoRoot = resolveRepoRoot();
   const result = {
@@ -175,6 +192,19 @@ const commands = {
   },
 
   ast: () => {
+    const repoRoot = resolveRepoRoot();
+    const stagedFiles = getStagedSourceFiles(repoRoot);
+    const adapterCandidates = [
+      path.join(repoRoot, 'scripts', 'hooks-system', 'bin', 'run-ast-adapter.js'),
+      path.join(HOOKS_ROOT, 'bin', 'run-ast-adapter.js')
+    ];
+    const adapterPath = adapterCandidates.find(candidate => fs.existsSync(candidate));
+
+    if (stagedFiles.length > 0 && adapterPath) {
+      execSync(`node ${adapterPath}`, { stdio: 'inherit', cwd: repoRoot });
+      return;
+    }
+
     execSync(`node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')}`, { stdio: 'inherit' });
   },
 
