@@ -145,9 +145,6 @@ ${COLORS.reset}`);
 ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
     this.ensureGitInfoExclude();
 
-    process.stdout.write(`\n${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
-    this.ensureGitInfoExclude();
-
 
     process.stdout.write(`\n${COLORS.cyan}[1/8] Detecting project platforms...${COLORS.reset}`);
     this.detectPlatforms();

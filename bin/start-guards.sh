@@ -114,7 +114,19 @@ ensure_evidence_refresh() {
       PLATFORMS="android"
     fi
 
-    bash "$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH"
+    UPDATE_EVIDENCE="$REPO_ROOT/scripts/hooks-system/bin/update-evidence.sh"
+    if [[ ! -f "$UPDATE_EVIDENCE" ]]; then
+      UPDATE_EVIDENCE="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh"
+    fi
+    if [[ ! -f "$UPDATE_EVIDENCE" ]]; then
+      UPDATE_EVIDENCE="$REPO_ROOT/bin/update-evidence.sh"
+    fi
+
+    if [[ -f "$UPDATE_EVIDENCE" ]]; then
+      bash "$UPDATE_EVIDENCE" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH"
+    else
+      echo "⚠️  update-evidence.sh not found; skipping evidence refresh"
+    fi
   fi
 }
 
