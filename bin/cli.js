@@ -15,6 +15,27 @@ const args = process.argv.slice(3);
 
 const HOOKS_ROOT = path.join(__dirname, '..');
 
+function isPidRunning(pid) {
+  if (!pid || Number.isNaN(pid)) return false;
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function readPidFile(pidPath) {
+  try {
+    if (!fs.existsSync(pidPath)) return null;
+    const raw = fs.readFileSync(pidPath, 'utf8').trim();
+    const pid = parseInt(raw, 10);
+    return Number.isNaN(pid) ? null : pid;
+  } catch (e) {
+    return null;
+  }
+}
+
 function resolveRepoRoot() {
   try {
     const output = execSync('git rev-parse --show-toplevel', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
@@ -39,6 +60,14 @@ function buildHealthSnapshot() {
     },
     astWatch: {
       running: false
+    },
+    guards: {
+      realtime: {
+        running: false
+      },
+      tokenMonitor: {
+        running: false
+      }
     }
   };
 
@@ -112,6 +141,31 @@ function buildHealthSnapshot() {
     result.astWatch.logPath = logPath;
   }
 
+  const realtimePidPath = path.join(repoRoot, '.realtime-guard.pid');
+  const tokenPidPath = path.join(repoRoot, '.token-monitor-guard.pid');
+  const realtimePid = readPidFile(realtimePidPath);
+  const tokenPid = readPidFile(tokenPidPath);
+
+  if (realtimePid !== null) {
+    result.guards.realtime.pid = realtimePid;
+    result.guards.realtime.running = isPidRunning(realtimePid);
+    if (!result.guards.realtime.running) {
+      result.ok = false;
+    }
+  } else {
+    result.ok = false;
+  }
+
+  if (tokenPid !== null) {
+    result.guards.tokenMonitor.pid = tokenPid;
+    result.guards.tokenMonitor.running = isPidRunning(tokenPid);
+    if (!result.guards.tokenMonitor.running) {
+      result.ok = false;
+    }
+  } else {
+    result.ok = false;
+  }
+
   return result;
 }
 
@@ -145,6 +199,23 @@ const commands = {
     execSync(`node ${path.join(HOOKS_ROOT, 'bin/watch-hooks.js')}`, { stdio: 'inherit' });
   },
 
+  guards: () => {
+    const subcommand = args[0] || 'status';
+    const allowed = new Set(['start', 'stop', 'restart', 'status', 'health']);
+    if (!allowed.has(subcommand)) {
+      console.error('Usage: ast-hooks guards {start|stop|restart|status|health}');
+      process.exit(1);
+    }
+
+    if (subcommand === 'health') {
+      const snapshot = buildHealthSnapshot();
+      console.log(JSON.stringify(snapshot));
+      process.exit(snapshot.ok ? 0 : 1);
+    }
+
+    execSync(`bash ${path.join(HOOKS_ROOT, 'bin/start-guards.sh')} ${subcommand}`, { stdio: 'inherit' });
+  },
+
   'gitflow': () => {
     const subcommand = args[0] || 'check';
     execSync(`bash ${path.join(HOOKS_ROOT, 'infrastructure/shell/gitflow-enforcer.sh')} ${subcommand}`, { stdio: 'inherit' });
@@ -164,6 +235,7 @@ Commands:
   verify-policy    Verify --no-verify policy compliance
   progress         Show violation progress report
   health           Show hook-system health snapshot (JSON)
+  guards           Manage guards (start|stop|restart|status|health)
   gitflow          Check Git Flow compliance (check|reset)
   help             Show this help message
   version          Show version
@@ -175,6 +247,8 @@ Examples:
   ast-hooks verify-policy
   ast-hooks progress
   ast-hooks health
+  ast-hooks guards restart
+  ast-hooks gitflow
 
 Environment Variables:
   GIT_BYPASS_HOOK=1    Bypass hook validation (emergency)
