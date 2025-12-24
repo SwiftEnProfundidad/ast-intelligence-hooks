@@ -284,23 +284,43 @@ extract_ide_rules() {
   local rules_path=""
   local home_dir="${HOME}"
 
-  # 1. Try project-level rules first (project-specific overrides)
-  for ide_dir in ".windsurf" ".cursor" ".vscode" ".kilo" ".cline"; do
-    local candidate="$REPO_ROOT/$ide_dir/rules/$rules_file"
-    if [[ -f "$candidate" ]]; then
-      rules_path="$candidate"
-      break
-    fi
-    # Also try without .mdc extension
-    candidate="$REPO_ROOT/$ide_dir/rules/${rules_file%.mdc}.md"
-    if [[ -f "$candidate" ]]; then
-      rules_path="$candidate"
-      break
-    fi
-  done
+  # 0. Prefer canonical .ast-intelligence/rules (project)
+  local canonical_candidate="$REPO_ROOT/.ast-intelligence/rules/$rules_file"
+  local canonical_md_candidate="$REPO_ROOT/.ast-intelligence/rules/${rules_file%.mdc}.md"
+  if [[ -f "$canonical_candidate" ]]; then
+    rules_path="$canonical_candidate"
+  elif [[ -f "$canonical_md_candidate" ]]; then
+    rules_path="$canonical_md_candidate"
+  fi
 
-  # 2. If not found in project, try Cursor project-specific cache location
-  # Cursor stores rules per project in: ~/.cursor/projects/[sanitized-path]/rules/
+  # 1. Try project-level rules (IDE-specific mirrors)
+  if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+    for ide_dir in ".windsurf" ".cursor" ".vscode" ".kilo" ".cline"; do
+      local candidate="$REPO_ROOT/$ide_dir/rules/$rules_file"
+      if [[ -f "$candidate" ]]; then
+        rules_path="$candidate"
+        break
+      fi
+      candidate="$REPO_ROOT/$ide_dir/rules/${rules_file%.mdc}.md"
+      if [[ -f "$candidate" ]]; then
+        rules_path="$candidate"
+        break
+      fi
+    done
+  fi
+
+  # 1b. Try canonical in node_modules package
+  if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
+    local nm_canonical="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.ast-intelligence/rules/$rules_file"
+    local nm_canonical_md="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.ast-intelligence/rules/${rules_file%.mdc}.md"
+    if [[ -f "$nm_canonical" ]]; then
+      rules_path="$nm_canonical"
+    elif [[ -f "$nm_canonical_md" ]]; then
+      rules_path="$nm_canonical_md"
+    fi
+  fi
+
+  # 2. Cursor project cache (only if still unresolved)
   if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
     # Try to find in Cursor's project cache (where Cursor actually stores project rules)
     local sanitized_repo=$(echo "$REPO_ROOT" | sed 's/[^a-zA-Z0-9]/-/g' | tr '[:upper:]' '[:lower:]')
@@ -310,7 +330,7 @@ extract_ide_rules() {
     fi
   fi
 
-  # 3. If still not found, try global Cursor locations and other projects as fallback
+  # 3. Global Cursor locations and other projects as fallback
   if [[ -z "$rules_path" ]] || [[ ! -f "$rules_path" ]]; then
     # Try Cursor global config locations
     local global_paths=(
@@ -351,7 +371,7 @@ extract_ide_rules() {
     )
     
     # Try project-level gold rules
-    for ide_dir in ".cursor" ".vscode"; do
+    for ide_dir in ".cursor" ".vscode" ".ast-intelligence"; do
       for gold_name in "${gold_names[@]}"; do
         local candidate="$REPO_ROOT/$ide_dir/rules/$gold_name"
         if [[ -f "$candidate" ]]; then
@@ -652,17 +672,26 @@ RULES_FILES=()
 # Always include rulesgold.mdc if available (generic rules that apply to all projects)
 GOLD_RULES_PATH=""
 for gold_name in "rulesgold.mdc" "goldrules.mdc" "@rulesgold.mdc" "rules-gold.mdc"; do
-  # Check library-installed rules first (highest priority for generic rules)
-  if [[ -f "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.cursor/rules/$gold_name" ]]; then
-    GOLD_RULES_PATH="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.cursor/rules/$gold_name"
+  # 0. Prefer canonical .ast-intelligence/rules at project root
+  if [[ -f "$REPO_ROOT/.ast-intelligence/rules/$gold_name" ]]; then
+    GOLD_RULES_PATH="$REPO_ROOT/.ast-intelligence/rules/$gold_name"
     break
   fi
-  # Check project-level
+  # 0b. Canonical inside node_modules package
+  if [[ -f "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.ast-intelligence/rules/$gold_name" ]]; then
+    GOLD_RULES_PATH="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks/.ast-intelligence/rules/$gold_name"
+    break
+  fi
+  # 1. Project-level IDE mirrors
   if [[ -f "$REPO_ROOT/.cursor/rules/$gold_name" ]]; then
     GOLD_RULES_PATH="$REPO_ROOT/.cursor/rules/$gold_name"
     break
   fi
-  # Check global
+  if [[ -f "$REPO_ROOT/.windsurf/rules/$gold_name" ]]; then
+    GOLD_RULES_PATH="$REPO_ROOT/.windsurf/rules/$gold_name"
+    break
+  fi
+  # 2. Global IDE locations
   if [[ -f "${HOME}/.cursor/rules/$gold_name" ]]; then
     GOLD_RULES_PATH="${HOME}/.cursor/rules/$gold_name"
     break

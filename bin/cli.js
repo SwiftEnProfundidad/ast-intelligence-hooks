@@ -136,22 +136,16 @@ function buildHealthSnapshot() {
           if (psOutput && psOutput.includes('watch-hooks.js')) {
             result.astWatch.running = true;
             result.astWatch.command = psOutput.trim();
-          } else {
-            result.ok = false;
           }
         } catch (e) {
-          result.ok = false;
+          result.astWatch.running = false;
         }
       } else {
         result.astWatch.pid = null;
-        result.ok = false;
       }
     } catch (e) {
       result.astWatch.error = e.message;
-      result.ok = false;
     }
-  } else {
-    result.ok = false;
   }
 
   if (fs.existsSync(logPath)) {
@@ -184,6 +178,15 @@ function buildHealthSnapshot() {
   }
 
   return result;
+}
+
+function resolveGuardsScriptPath(repoRoot) {
+  const candidates = [
+    path.join(repoRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'start-guards.sh'),
+    path.join(HOOKS_ROOT, 'bin', 'start-guards.sh')
+  ];
+
+  return candidates.find(candidate => fs.existsSync(candidate));
 }
 
 const commands = {
@@ -243,7 +246,14 @@ const commands = {
       process.exit(snapshot.ok ? 0 : 1);
     }
 
-    execSync(`bash ${path.join(HOOKS_ROOT, 'bin/start-guards.sh')} ${subcommand}`, { stdio: 'inherit' });
+    const repoRoot = resolveRepoRoot();
+    const startGuardsPath = resolveGuardsScriptPath(repoRoot);
+    if (!startGuardsPath) {
+      console.error('Unable to locate start-guards.sh');
+      process.exit(1);
+    }
+
+    execSync(`bash ${startGuardsPath} ${subcommand}`, { stdio: 'inherit' });
   },
 
   'gitflow': () => {
