@@ -14,6 +14,24 @@ const { createUnifiedLogger } = require('../infrastructure/logging/UnifiedLogger
 const PlatformDetectionService = require('../application/services/PlatformDetectionService');
 
 const repoRoot = process.cwd();
+const hooksRoot = path.join(__dirname, '..');
+const nodeModulesRoot = path.join(repoRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks');
+
+function resolveHookPath(relativePathFromHooksRoot) {
+  const candidates = [
+    path.join(repoRoot, 'scripts', 'hooks-system', relativePathFromHooksRoot),
+    path.join(nodeModulesRoot, relativePathFromHooksRoot),
+    path.join(hooksRoot, relativePathFromHooksRoot)
+  ];
+
+  for (const candidate of candidates) {
+    if (fs.existsSync(candidate)) {
+      return candidate;
+    }
+  }
+  return candidates[0];
+}
+
 const tmpDir = path.join(repoRoot, '.audit_tmp');
 const reportsDir = path.join(repoRoot, '.audit-reports');
 const lockDir = path.join(tmpDir, 'guard-supervisor.lock');
@@ -106,14 +124,14 @@ if (!acquireLock()) {
 const childDefs = {
   guard: {
     command: 'node',
-    args: [path.join(repoRoot, 'bin', 'watch-hooks.js')],
+    args: [resolveHookPath(path.join('bin', 'watch-hooks.js'))],
     cwd: repoRoot,
     stdio: 'inherit',
     env: { ...process.env, HOOK_GUARD_DIRTY_TREE_DISABLED: 'true' }
   },
   tokenMonitor: {
     command: 'bash',
-    args: [path.join(repoRoot, 'infrastructure', 'watchdog', 'token-monitor-loop.sh')],
+    args: [resolveHookPath(path.join('infrastructure', 'watchdog', 'token-monitor-loop.sh'))],
     cwd: repoRoot,
     stdio: 'inherit',
     env: process.env
@@ -121,13 +139,7 @@ const childDefs = {
 };
 
 const targets = [
-  'bin/watch-hooks.js',
-  'bin/guard-supervisor.js',
-  'bin/start-guards.sh',
-  'application/services/RealtimeGuardService.js',
-  'infrastructure/watchdog/token-monitor-loop.sh',
-  'infrastructure/watchdog/token-monitor.js',
-  'infrastructure/watchdog/token-tracker.sh'
+  'application/services/RealtimeGuardService.js'
 ];
 
 const watchers = [];
@@ -197,7 +209,7 @@ const healthCheckService = new HealthCheckService({
 
 const evidenceContextManager = new EvidenceContextManager({
   repoRoot,
-  updateScript: path.join(repoRoot, 'bin', 'update-evidence.sh'),
+  updateScript: resolveHookPath(path.join('bin', 'update-evidence.sh')),
   notificationCenter,
   logger: unifiedLogger,
   intervalMs: evidenceIntervalMs,

@@ -23,6 +23,23 @@ class ASTHooksInstaller {
       this.hookSystemRoot = path.join(__dirname, '..');
     }
     this.platforms = [];
+    this.installMode = this.resolveInstallMode(process.argv);
+  }
+
+  resolveInstallMode(argv) {
+    const envMode = (process.env.AST_INSTALL_MODE || '').trim().toLowerCase();
+    const rawArg = argv.find(arg => arg.startsWith('--mode='));
+    const flagIndex = argv.indexOf('--mode');
+
+    let cliMode = '';
+    if (rawArg) {
+      cliMode = rawArg.slice('--mode='.length).trim().toLowerCase();
+    } else if (flagIndex !== -1 && argv[flagIndex + 1]) {
+      cliMode = String(argv[flagIndex + 1]).trim().toLowerCase();
+    }
+
+    const mode = cliMode || envMode || 'full';
+    return mode === 'lite' ? 'lite' : 'full';
   }
 
   ensureGitInfoExclude() {
@@ -34,6 +51,7 @@ class ASTHooksInstaller {
 
     const header = '# AST Intelligence Hooks (generated artifacts)';
     const patterns = [
+      '.AI_EVIDENCE.json',
       '.AI_TOKEN_STATUS.txt',
       '.audit-reports/*.log',
       '.realtime-guard.pid',
@@ -50,35 +68,6 @@ class ASTHooksInstaller {
     fs.appendFileSync(excludePath, block);
     process.stdout.write(`${COLORS.green}  ✅ Added artifact patterns to .git/info/exclude${COLORS.reset}\n`);
   }
-
-
-  ensureGitInfoExclude() {
-    const gitDir = path.join(this.targetRoot, '.git');
-    if (!fs.existsSync(gitDir)) return;
-
-    const excludePath = path.join(gitDir, 'info', 'exclude');
-    fs.mkdirSync(path.dirname(excludePath), { recursive: true });
-
-    const header = '# AST Intelligence Hooks (generated artifacts)';
-    const patterns = [
-      '.AI_TOKEN_STATUS.txt',
-      '.audit-reports/*.log',
-      '.realtime-guard.pid',
-      '.token-monitor-guard.pid'
-    ];
-
-    let existing = '';
-    if (fs.existsSync(excludePath)) {
-      existing = fs.readFileSync(excludePath, 'utf8');
-      if (existing.includes(header)) return;
-    }
-
-    const block = '\n' + header + '\n' + patterns.join('\n') + '\n';
-    fs.appendFileSync(excludePath, block);
-    process.stdout.write(`${COLORS.green}  ✅ Added artifact patterns to .git/info/exclude${COLORS.reset}\n`);
-  }
-
-
 
   checkGitRepository() {
     const gitDir = path.join(this.targetRoot, '.git');
@@ -128,9 +117,6 @@ ${COLORS.reset}`);
 ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
     this.ensureGitInfoExclude();
 
-    process.stdout.write(`\n${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
-    this.ensureGitInfoExclude();
-
 
     process.stdout.write(`\n${COLORS.cyan}[1/8] Detecting project platforms...${COLORS.reset}`);
     this.detectPlatforms();
@@ -140,13 +126,21 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
     this.installESLintConfigs();
 
     process.stdout.write(`\n${COLORS.cyan}[3/8] Creating hooks-system directory structure...${COLORS.reset}`);
-    this.createDirectoryStructure();
-    process.stdout.write(`${COLORS.green}✓ Directory structure created${COLORS.reset}`);
+    if (this.installMode === 'full') {
+      this.createDirectoryStructure();
+      process.stdout.write(`${COLORS.green}✓ Directory structure created${COLORS.reset}`);
+    } else {
+      process.stdout.write(`${COLORS.green}✓ Skipped (lite mode)${COLORS.reset}`);
+    }
 
     process.stdout.write(`\n${COLORS.cyan}[4/8] Copying AST Intelligence system files...${COLORS.reset}`);
-    this.copySystemFiles();
-    this.copyManageLibraryScript();
-    process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
+    if (this.installMode === 'full') {
+      this.copySystemFiles();
+      this.copyManageLibraryScript();
+      process.stdout.write(`${COLORS.green}✓ System files copied${COLORS.reset}`);
+    } else {
+      process.stdout.write(`${COLORS.green}✓ Skipped (lite mode)${COLORS.reset}`);
+    }
 
     process.stdout.write(`\n${COLORS.cyan}[5/8] Creating project configuration...${COLORS.reset}`);
     this.createProjectConfig();
@@ -335,21 +329,26 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
       }
     });
 
-    const configPath = path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
+    const configPath = this.installMode === 'lite'
+      ? path.join(this.targetRoot, '.ast-intelligence.project.json')
+      : path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
+
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
     fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
 
   }
 
   copyIDERules() {
-    const sourceRulesDir = path.join(this.hookSystemRoot, '.cursor', 'rules');
-
-    if (!fs.existsSync(sourceRulesDir)) {
+    // Canonical source: .ast-intelligence/rules inside the hooks system
+    const canonicalDir = path.join(this.hookSystemRoot, '.ast-intelligence', 'rules');
+    if (!fs.existsSync(canonicalDir)) {
       return;
     }
 
     const ideTargets = [
       { name: 'Cursor', dir: path.join(this.targetRoot, '.cursor', 'rules') },
-      { name: 'Windsurf', dir: path.join(this.targetRoot, '.windsurf', 'rules') }
+      { name: 'Windsurf', dir: path.join(this.targetRoot, '.windsurf', 'rules') },
+      { name: 'AST', dir: path.join(this.targetRoot, '.ast-intelligence', 'rules') }
     ];
 
     ideTargets.forEach(ide => {
@@ -357,9 +356,9 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
         fs.mkdirSync(ide.dir, { recursive: true });
       }
 
-      const ruleFiles = fs.readdirSync(sourceRulesDir).filter(f => f.endsWith('.mdc'));
+      const ruleFiles = fs.readdirSync(canonicalDir).filter(f => f.endsWith('.mdc'));
       ruleFiles.forEach(ruleFile => {
-        const sourcePath = path.join(sourceRulesDir, ruleFile);
+        const sourcePath = path.join(canonicalDir, ruleFile);
         const targetPath = path.join(ide.dir, ruleFile);
         fs.copyFileSync(sourcePath, targetPath);
       });
@@ -862,6 +861,31 @@ exit 0
         tasksJson.tasks[existingTaskIndex] = sessionLoaderTask;
       } else {
         tasksJson.tasks.unshift(sessionLoaderTask);
+      }
+
+      if (this.installMode === 'lite') {
+        const guardsTaskIndex = tasksJson.tasks.findIndex(
+          task => task.label === 'AST Guards Restart' || task.identifier === 'ast-guards-restart'
+        );
+
+        const guardsRestartTask = {
+          label: 'AST Guards Restart',
+          type: 'shell',
+          command: 'npx',
+          args: ['ast-hooks', 'guards', 'restart'],
+          problemMatcher: [],
+          presentation: {
+            reveal: 'always',
+            panel: 'new'
+          },
+          identifier: 'ast-guards-restart'
+        };
+
+        if (guardsTaskIndex >= 0) {
+          tasksJson.tasks[guardsTaskIndex] = guardsRestartTask;
+        } else {
+          tasksJson.tasks.unshift(guardsRestartTask);
+        }
       }
 
       fs.writeFileSync(tasksJsonPath, JSON.stringify(tasksJson, null, 2) + '\n');
