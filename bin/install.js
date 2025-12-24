@@ -339,15 +339,16 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
   }
 
   copyIDERules() {
-    const sourceRulesDir = path.join(this.hookSystemRoot, '.cursor', 'rules');
-
-    if (!fs.existsSync(sourceRulesDir)) {
+    // Canonical source: .ast-intelligence/rules inside the hooks system
+    const canonicalDir = path.join(this.hookSystemRoot, '.ast-intelligence', 'rules');
+    if (!fs.existsSync(canonicalDir)) {
       return;
     }
 
     const ideTargets = [
       { name: 'Cursor', dir: path.join(this.targetRoot, '.cursor', 'rules') },
-      { name: 'Windsurf', dir: path.join(this.targetRoot, '.windsurf', 'rules') }
+      { name: 'Windsurf', dir: path.join(this.targetRoot, '.windsurf', 'rules') },
+      { name: 'AST', dir: path.join(this.targetRoot, '.ast-intelligence', 'rules') }
     ];
 
     ideTargets.forEach(ide => {
@@ -355,9 +356,9 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
         fs.mkdirSync(ide.dir, { recursive: true });
       }
 
-      const ruleFiles = fs.readdirSync(sourceRulesDir).filter(f => f.endsWith('.mdc'));
+      const ruleFiles = fs.readdirSync(canonicalDir).filter(f => f.endsWith('.mdc'));
       ruleFiles.forEach(ruleFile => {
-        const sourcePath = path.join(sourceRulesDir, ruleFile);
+        const sourcePath = path.join(canonicalDir, ruleFile);
         const targetPath = path.join(ide.dir, ruleFile);
         fs.copyFileSync(sourcePath, targetPath);
       });
