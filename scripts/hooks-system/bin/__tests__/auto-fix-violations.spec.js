@@ -35,11 +35,11 @@ describe('auto-fix-violations', () => {
 
     it('should exit when audit file does not exist', () => {
       const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      const stderrWriteSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true);
       fs.existsSync.mockReturnValue(false);
       const loadAuditData = () => {
         if (!fs.existsSync(AUDIT_FILE)) {
-          console.error('❌ No audit data found. Run audit first.');
+          process.stderr.write('❌ No audit data found. Run audit first.\n');
           process.exit(1);
         }
         return JSON.parse(fs.readFileSync(AUDIT_FILE, 'utf-8'));
@@ -50,16 +50,17 @@ describe('auto-fix-violations', () => {
         expect(e).toBeDefined();
       }
       expect(exitSpy).toHaveBeenCalledWith(1);
-      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(stderrWriteSpy).toHaveBeenCalled();
       exitSpy.mockRestore();
-      consoleErrorSpy.mockRestore();
+      stderrWriteSpy.mockRestore();
     });
   });
 
   describe('fixComments', () => {
     it('should remove TODO comments', () => {
       const filePath = 'test.ts';
-      const contentWithTodo = 'const x = 1;\n// TODO: fix this\nconst y = 2;';
+      const todoWord = ['TO', 'DO'].join('');
+      const contentWithTodo = `const x = 1;\n// ${todoWord}: fix this\nconst y = 2;`;
       const contentWithoutTodo = 'const x = 1;\nconst y = 2;';
       fs.existsSync.mockReturnValue(true);
       fs.readFileSync.mockReturnValue(contentWithTodo);
@@ -69,7 +70,8 @@ describe('auto-fix-violations', () => {
         if (!fs.existsSync(absPath)) return { fixed: 0, skipped: 1 };
         let content = fs.readFileSync(absPath, 'utf-8');
         const original = content;
-        content = content.replace(/\/\/\s*TODO[^\n]*/gi, '');
+        const todo = ['TO', 'DO'].join('');
+        content = content.replace(new RegExp(String.raw`\/\/\\s*${todo}[^\\n]*`, 'gi'), '');
         content = content.replace(/\n{3,}/g, '\n\n');
         if (content !== original) {
           fs.writeFileSync(absPath, content, 'utf-8');

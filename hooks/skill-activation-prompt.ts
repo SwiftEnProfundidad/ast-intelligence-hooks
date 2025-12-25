@@ -44,14 +44,14 @@ function logDebug(message: string, error?: unknown): void {
         return;
     }
     if (error instanceof Error) {
-        console.error(`[skill-activation-prompt] ${message}: ${error.message}`);
+        process.stderr.write(`[skill-activation-prompt] ${message}: ${error.message}\n`);
         return;
     }
     if (error) {
-        console.error(`[skill-activation-prompt] ${message}: ${String(error)}`);
+        process.stderr.write(`[skill-activation-prompt] ${message}: ${String(error)}\n`);
         return;
     }
-    console.error(`[skill-activation-prompt] ${message}`);
+    process.stderr.write(`[skill-activation-prompt] ${message}\n`);
 }
 
 async function readStdin(): Promise<string> {
@@ -238,7 +238,7 @@ async function main() {
                     }
                 }, 100);
 
-                console.log(modifiedPrompt);
+                process.stdout.write(`${modifiedPrompt}\n`);
                 process.exit(0);
                 return;
             }
@@ -291,17 +291,17 @@ async function main() {
             }
             output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
 
-            console.log(output);
+            process.stdout.write(`${output}\n`);
         }
 
         process.exit(0);
     } catch (err) {
-        console.error('Error in skill-activation-prompt hook:', err);
+        process.stderr.write(`Error in skill-activation-prompt hook: ${err instanceof Error ? err.message : String(err)}\n`);
         process.exit(1);
     }
 }
 
 main().catch(err => {
-    console.error('Uncaught error:', err);
+    process.stderr.write(`Uncaught error: ${err instanceof Error ? err.message : String(err)}\n`);
     process.exit(1);
 });

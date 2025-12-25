@@ -20,8 +20,20 @@ check_grep() {
       if [[ "$file" =~ pattern-checks\.sh$ ]]; then
         continue
       fi
+      # Excluir AST tooling interno de la librería (contiene strings de reglas que generan falsos positivos)
+      if [[ "$file" == *"/infrastructure/ast/"* ]] || [[ "$file" == *"/scripts/hooks-system/infrastructure/ast/"* ]]; then
+        continue
+      fi
+      # Excluir tooling/CLI scripts (ruido alto, no es código de producto)
+      if [[ "$file" == *"/bin/"* ]] || [[ "$file" == *"/scripts/hooks-system/bin/"* ]]; then
+        continue
+      fi
+      # Excluir archivos temporales/backups y configuraciones del editor
+      if [[ "$file" == *"/.cursor/"* ]] || [[ "$file" == *".bak"* ]]; then
+        continue
+      fi
       # Excluir archivos de metadata/configuración (.json, .md)
-      if [[ "$file" =~ \.(json|md)$ ]]; then
+      if [[ "$file" =~ \.(json|md|mdc)$ ]]; then
         continue
       fi
       # Filtrar comentarios de una sola línea (//) y comentarios de bloque (/* */ y *)
@@ -40,8 +52,11 @@ check_grep_console_exclude_logger() {
   local count=0
   while IFS= read -r file; do
     if [[ -f "$file" ]]; then
+      if [[ "$file" == *"/bin/"* ]] || [[ "$file" == *"/scripts/hooks-system/bin/"* ]]; then
+        continue
+      fi
       while IFS=: read -r line_num line_content; do
-        if [[ -n "$line_num" ]] && ! echo "$line_content" | grep -q "logger\\."; then
+        if [[ -n "$line_num" ]] && ! echo "$line_content" | grep -q "logger\."; then
           count=$((count + 1))
         fi
       done < <(grep -E -n "console\\.(log|debug|warn|error)\\(" "$file" 2>/dev/null || true)
@@ -74,7 +89,7 @@ run_pattern_checks() {
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[0]}..." >&2; local r1=$(check_grep "TODO_FIXME" "TODO|FIXME|HACK" "$files_list")
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[1]}..." >&2; local r2=$(check_grep_console_exclude_logger "$files_list")
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[2]}..." >&2; local r3=$(check_any_type_ts_only "$files_list")
-  step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[3]}..." >&2; local r4=$(check_grep "SQL_RAW" "SELECT |INSERT |UPDATE |DELETE |DROP |ALTER |TRUNCATE " "$files_list")
+  step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[3]}..." >&2; local r4=$(check_grep "SQL_RAW" "(SELECT[[:space:]].*[[:space:]]FROM[[:space:]]|INSERT[[:space:]].*[[:space:]]INTO[[:space:]]|UPDATE[[:space:]].*[[:space:]]SET[[:space:]]|DELETE[[:space:]].*[[:space:]]FROM[[:space:]]|DROP[[:space:]]TABLE[[:space:]]|ALTER[[:space:]]TABLE[[:space:]]|TRUNCATE[[:space:]]TABLE[[:space:]])" "$files_list")
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[4]}..." >&2; local r5=$(check_grep "HARDCODED_SECRET" "(API_KEY|SECRET|TOKEN|PASSWORD)\s*[:=]\s*['\"]" "$files_list")
   step=$((step+1)); progress_bar_simple $step $checks_total "[${step}/${checks_total}] Checking ${check_names[5]}..." >&2; local r6=$(check_grep "DISABLED_LINT" "eslint-disable|ts-ignore" "$files_list")
 

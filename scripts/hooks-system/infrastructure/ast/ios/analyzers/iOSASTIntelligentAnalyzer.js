@@ -11,6 +11,7 @@ class iOSASTIntelligentAnalyzer {
     this.hasSwiftSyntax = this.checkSwiftSyntax();
     this.fileContent = '';
     this.currentFilePath = '';
+    this.godClassCandidates = [];
     this.allNodes = [];
     this.imports = [];
     this.classes = [];
@@ -239,9 +240,17 @@ class iOSASTIntelligentAnalyzer {
     const properties = substructure.filter(n => (n['key.kind'] || '').includes('var'));
     const inits = methods.filter(m => (m['key.name'] || '').startsWith('init'));
 
-    if (methods.length > 15 || properties.length > 10 || bodyLength > 400) {
-      this.pushFinding('ios.solid.srp.god_class', 'critical', filePath, line,
-        `God class '${name}': ${methods.length} methods, ${properties.length} properties - VIOLATES SRP`);
+    if (name && !/Spec$|Test$|Mock/.test(name)) {
+      const complexity = this.calculateComplexityAST(substructure);
+      this.godClassCandidates.push({
+        name,
+        filePath,
+        line,
+        methodsCount: methods.length,
+        propertiesCount: properties.length,
+        bodyLength,
+        complexity,
+      });
     }
 
     if (name.includes('ViewController')) {
@@ -773,6 +782,112 @@ class iOSASTIntelligentAnalyzer {
       column: 1,
       message,
     });
+  }
+
+  finalizeGodClassDetection() {
+    if (!this.godClassCandidates || this.godClassCandidates.length < 10) return;
+
+    const quantile = (values, p) => {
+      if (!values || values.length === 0) return 0;
+      const sorted = [...values].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      const idx = Math.max(0, Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1));
+      return sorted[idx];
+    };
+
+    const median = (values) => {
+      if (!values || values.length === 0) return 0;
+      const sorted = [...values].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      const mid = Math.floor(sorted.length / 2);
+      if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
+      return sorted[mid];
+    };
+
+    const mad = (values) => {
+      const med = median(values);
+      const deviations = (values || []).map((v) => Math.abs(v - med));
+      return median(deviations);
+    };
+
+    const robustZ = (x, med, madValue) => {
+      if (!Number.isFinite(x) || !Number.isFinite(med) || !Number.isFinite(madValue) || madValue === 0) return 0;
+      return 0.6745 * (x - med) / madValue;
+    };
+
+    const pOutlier = Number(process.env.AST_GODCLASS_P_OUTLIER || 90);
+    const pExtreme = Number(process.env.AST_GODCLASS_P_EXTREME || 97);
+
+    const methods = this.godClassCandidates.map(c => c.methodsCount);
+    const props = this.godClassCandidates.map(c => c.propertiesCount);
+    const bodies = this.godClassCandidates.map(c => c.bodyLength);
+    const complexities = this.godClassCandidates.map(c => c.complexity);
+
+    const med = {
+      methodsCount: median(methods),
+      propertiesCount: median(props),
+      bodyLength: median(bodies),
+      complexity: median(complexities),
+    };
+    const madValue = {
+      methodsCount: mad(methods),
+      propertiesCount: mad(props),
+      bodyLength: mad(bodies),
+      complexity: mad(complexities),
+    };
+
+    const z = {
+      methodsCount: methods.map(v => robustZ(v, med.methodsCount, madValue.methodsCount)),
+      propertiesCount: props.map(v => robustZ(v, med.propertiesCount, madValue.propertiesCount)),
+      bodyLength: bodies.map(v => robustZ(v, med.bodyLength, madValue.bodyLength)),
+      complexity: complexities.map(v => robustZ(v, med.complexity, madValue.complexity)),
+    };
+
+    const thresholds = {
+      outlier: {
+        methodsCountZ: quantile(z.methodsCount, pOutlier),
+        propertiesCountZ: quantile(z.propertiesCount, pOutlier),
+        bodyLengthZ: quantile(z.bodyLength, pOutlier),
+        complexityZ: quantile(z.complexity, pOutlier),
+      },
+      extreme: {
+        methodsCountZ: quantile(z.methodsCount, pExtreme),
+        propertiesCountZ: quantile(z.propertiesCount, pExtreme),
+        bodyLengthZ: quantile(z.bodyLength, pExtreme),
+        complexityZ: quantile(z.complexity, pExtreme),
+      }
+    };
+
+    for (const c of this.godClassCandidates) {
+      const methodsZ = robustZ(c.methodsCount, med.methodsCount, madValue.methodsCount);
+      const propsZ = robustZ(c.propertiesCount, med.propertiesCount, madValue.propertiesCount);
+      const bodyZ = robustZ(c.bodyLength, med.bodyLength, madValue.bodyLength);
+      const complexityZ = robustZ(c.complexity, med.complexity, madValue.complexity);
+
+      const sizeOutlier =
+        (methodsZ > 0 && methodsZ >= thresholds.outlier.methodsCountZ) ||
+        (propsZ > 0 && propsZ >= thresholds.outlier.propertiesCountZ) ||
+        (bodyZ > 0 && bodyZ >= thresholds.outlier.bodyLengthZ);
+      const complexityOutlier = complexityZ > 0 && complexityZ >= thresholds.outlier.complexityZ;
+
+      const extremeOutlier =
+        (methodsZ > 0 && methodsZ >= thresholds.extreme.methodsCountZ) ||
+        (propsZ > 0 && propsZ >= thresholds.extreme.propertiesCountZ) ||
+        (bodyZ > 0 && bodyZ >= thresholds.extreme.bodyLengthZ) ||
+        (complexityZ > 0 && complexityZ >= thresholds.extreme.complexityZ);
+
+      const signalCount = [sizeOutlier, complexityOutlier].filter(Boolean).length;
+
+      if (extremeOutlier || signalCount >= 2) {
+        this.pushFinding(
+          'ios.solid.srp.god_class',
+          'critical',
+          c.filePath,
+          c.line,
+          `God class '${c.name}': ${c.methodsCount} methods (z=${methodsZ.toFixed(2)}), ${c.propertiesCount} properties (z=${propsZ.toFixed(2)}), body ${c.bodyLength} (z=${bodyZ.toFixed(2)}), complexity ${c.complexity} (z=${complexityZ.toFixed(2)}) - VIOLATES SRP`
+        );
+      }
+    }
   }
 }
 
