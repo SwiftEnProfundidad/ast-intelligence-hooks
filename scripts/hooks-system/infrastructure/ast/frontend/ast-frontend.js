@@ -28,6 +28,100 @@ function runFrontendIntelligence(project, findings, platform) {
     console.error('[Frontend Architecture] Error during architecture detection:', error.message);
   }
 
+  const godComponentBaseline = (() => {
+    const quantile = (values, p) => {
+      if (!values || values.length === 0) return 0;
+      const sorted = [...values].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      const idx = Math.max(0, Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1));
+      return sorted[idx];
+    };
+
+    const median = (values) => {
+      if (!values || values.length === 0) return 0;
+      const sorted = [...values].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      const mid = Math.floor(sorted.length / 2);
+      if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
+      return sorted[mid];
+    };
+
+    const mad = (values) => {
+      const med = median(values);
+      const deviations = (values || []).map((v) => Math.abs(v - med));
+      return median(deviations);
+    };
+
+    const robustZ = (x, med, madValue) => {
+      if (!Number.isFinite(x) || !Number.isFinite(med) || !Number.isFinite(madValue) || madValue === 0) return 0;
+      return 0.6745 * (x - med) / madValue;
+    };
+
+    const pOutlier = Number(process.env.AST_GODCLASS_P_OUTLIER || 90);
+    const pExtreme = Number(process.env.AST_GODCLASS_P_EXTREME || 97);
+
+    const componentPattern = /^(export\s+)?(?:const|function)\s+([A-Z]\w+)\s*[=:].*(?:React\.FC|JSX\.Element|\(\)\s*=>|function)/gm;
+    const metrics = [];
+
+    project.getSourceFiles().forEach((sf) => {
+      if (!sf || typeof sf.getFilePath !== 'function') return;
+      const filePath = sf.getFilePath();
+      if (platformOf(filePath) !== 'frontend') return;
+      if (/\/ast-[^/]+\.js$/.test(filePath)) return;
+      if (isTestFile(filePath)) return;
+
+      const content = sf.getFullText();
+      const components = Array.from(content.matchAll(componentPattern));
+      if (components.length === 0) return;
+
+      components.forEach((compMatch) => {
+        const componentStart = compMatch.index || 0;
+        const componentEnd = content.indexOf('\n}\n', componentStart) || content.length;
+        const componentBody = content.substring(componentStart, componentEnd);
+        const hookCount = (componentBody.match(/\buse[A-Z]\w+\(/g) || []).length;
+        const functionCount = (componentBody.match(/(?:const|let)\s+\w+\s*=\s*(?:async\s*)?\(/g) || []).length;
+        const totalComplexity = hookCount + functionCount;
+        const bodyLines = componentBody.split('\n').length;
+        metrics.push({ totalComplexity, bodyLines });
+      });
+    });
+
+    if (metrics.length === 0) return null;
+
+    const complexities = metrics.map(m => m.totalComplexity);
+    const sizes = metrics.map(m => m.bodyLines);
+
+    const med = {
+      totalComplexity: median(complexities),
+      bodyLines: median(sizes)
+    };
+    const madValue = {
+      totalComplexity: mad(complexities),
+      bodyLines: mad(sizes)
+    };
+
+    const z = {
+      totalComplexity: complexities.map(v => robustZ(v, med.totalComplexity, madValue.totalComplexity)),
+      bodyLines: sizes.map(v => robustZ(v, med.bodyLines, madValue.bodyLines))
+    };
+
+    return {
+      thresholds: {
+        outlier: {
+          totalComplexityZ: quantile(z.totalComplexity, pOutlier),
+          bodyLinesZ: quantile(z.bodyLines, pOutlier)
+        },
+        extreme: {
+          totalComplexityZ: quantile(z.totalComplexity, pExtreme),
+          bodyLinesZ: quantile(z.bodyLines, pExtreme)
+        }
+      },
+      med,
+      mad: madValue,
+      robustZ
+    };
+  })();
+
   project.getSourceFiles().forEach((sf) => {
     if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
@@ -804,8 +898,16 @@ function runFrontendIntelligence(project, findings, platform) {
       pushFinding("frontend.typescript.any_usage", "warning", sf, anyKeyword, "Usage of 'any' type - prefer specific types for better type safety", findings);
     });
 
+    const normalizedFilePath = String(filePath || '').replace(/\\/g, '/').toLowerCase();
+    const looksLikeFrontendAppCode =
+      normalizedFilePath.includes('/src/') ||
+      normalizedFilePath.includes('/app/') ||
+      normalizedFilePath.includes('/pages/') ||
+      normalizedFilePath.includes('/components/') ||
+      normalizedFilePath.includes('/features/');
+    const shouldCheckImplicitAny = looksLikeFrontendAppCode && (normalizedFilePath.endsWith('.ts') || normalizedFilePath.endsWith('.tsx'));
     sf.getDescendantsOfKind(SyntaxKind.Parameter).forEach((param) => {
-      if (!param.getTypeNode()) {
+      if (shouldCheckImplicitAny && !param.getTypeNode()) {
         pushFinding("frontend.typescript.implicit_any", "warning", sf, param, "Parameter without explicit type - add type annotation", findings);
       }
     });
@@ -1069,15 +1171,25 @@ function runFrontendIntelligence(project, findings, platform) {
         const functionCount = (componentBody.match(/(?:const|let)\s+\w+\s*=\s*(?:async\s*)?\(/g) || []).length;
         const totalComplexity = hookCount + functionCount;
 
-        if (totalComplexity > 20) {
+        if (godComponentBaseline) {
+          const totalComplexityZ = godComponentBaseline.robustZ(totalComplexity, godComponentBaseline.med.totalComplexity, godComponentBaseline.mad.totalComplexity);
+          const bodyLines = componentBody.split('\n').length;
+          const bodyLinesZ = godComponentBaseline.robustZ(bodyLines, godComponentBaseline.med.bodyLines, godComponentBaseline.mad.bodyLines);
+
+          const complexityOutlier = totalComplexityZ >= godComponentBaseline.thresholds.outlier.totalComplexityZ;
+          const sizeOutlier = bodyLinesZ >= godComponentBaseline.thresholds.outlier.bodyLinesZ;
+          const extreme = totalComplexityZ >= godComponentBaseline.thresholds.extreme.totalComplexityZ || bodyLinesZ >= godComponentBaseline.thresholds.extreme.bodyLinesZ;
+
+          if (extreme || (complexityOutlier && sizeOutlier)) {
           pushFinding(
             "frontend.solid.srp_god_component",
             "critical",
             sf,
             sf,
-            `Component '${componentName}' has ${hookCount} hooks + ${functionCount} functions = ${totalComplexity} - split responsibilities (SRP)`,
+            `Component '${componentName}' has ${hookCount} hooks + ${functionCount} functions = ${totalComplexity} (z=${totalComplexityZ.toFixed(2)}), ${bodyLines} lines (z=${bodyLinesZ.toFixed(2)}) - split responsibilities (SRP)`,
             findings
           );
+          }
         }
       });
     }
@@ -1370,6 +1482,11 @@ function runFrontendIntelligence(project, findings, platform) {
     let magicCount = 0;
     let magicMatch;
 
+    const isJSXFile = /\.(tsx|jsx)$/i.test(filePath);
+    const isJSXLikeContent = /<\s*[A-Za-z][A-Za-z0-9-]*/.test(content) && (content.includes('return') || content.includes('React'));
+    const isReactUIFile = isJSXFile || isJSXLikeContent;
+    const isInternalAstToolingFile = filePath.includes('/infrastructure/ast/') || filePath.includes('/scripts/hooks-system/');
+
     while ((magicMatch = magicNumberPattern.exec(content)) !== null && magicCount < 5) {
       const number = magicMatch[0].trim();
       const lineNumber = content.substring(0, magicMatch.index).split('\n').length;
@@ -1388,7 +1505,7 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     const callbackPattern = /\([^)]*\)\s*=>\s*\{[^}]*\([^)]*\)\s*=>\s*\{[^}]*\([^)]*\)\s*=>\s*\{/g;
-    if (callbackPattern.test(content)) {
+    if (isReactUIFile && !isInternalAstToolingFile && callbackPattern.test(content)) {
       pushFinding(
         "frontend.code_quality.callback_hell",
         "high",
@@ -1679,7 +1796,7 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     const largeListPattern = /\{.*\.map\(.*=>.*\).*\}/s;
-    if (largeListPattern.test(content) && content.includes('.map(') && !content.includes('react-window') && !content.includes('react-virtualized')) {
+    if (isReactUIFile && !isInternalAstToolingFile && largeListPattern.test(content) && content.includes('.map(') && !content.includes('react-window') && !content.includes('react-virtualized')) {
       const mapCount = (content.match(/\.map\(/g) || []).length;
 
       if (mapCount > 2) {
@@ -1694,7 +1811,7 @@ function runFrontendIntelligence(project, findings, platform) {
       }
     }
 
-    if ((content.includes('modal') || content.includes('Modal') || content.includes('dialog')) && !content.includes('focus') && !content.includes('ref')) {
+    if (isReactUIFile && !isInternalAstToolingFile && (content.includes('modal') || content.includes('Modal') || content.includes('dialog')) && !content.includes('focus') && !content.includes('ref')) {
       pushFinding(
         "frontend.accessibility.focus_trap",
         "high",

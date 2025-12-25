@@ -62,6 +62,10 @@ REPORTS_DIR="${ROOT_DIR}/.audit-reports"
 mkdir -p "$TMP_DIR"
 mkdir -p "$REPORTS_DIR"
 
+if [[ -z "${AUDIT_LIBRARY:-}" ]] && [[ -f "$ROOT_DIR/infrastructure/ast/ast-intelligence.js" ]]; then
+  export AUDIT_LIBRARY=true
+fi
+
 print_signature() {
   printf "${BLUE}"
   cat <<'SIG'

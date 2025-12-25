@@ -31,7 +31,7 @@ function readMetricsWindow(windowMs) {
         entries.push(parsed);
       }
     } catch (error) {
-      // skip malformed lines
+      continue;
     }
   }
   return entries;

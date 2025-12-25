@@ -6,8 +6,21 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HOOKS_SYSTEM_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
-REPO_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+HOOKS_SYSTEM_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+# Default audit artifact directories to temp to avoid polluting repositories.
+# Users/CI can override by setting AUDIT_TMP / AUDIT_REPORTS.
+if [[ -z "${AUDIT_TMP:-}" ]]; then
+    PROJECT_NAME="$(basename "$REPO_ROOT")"
+    AUDIT_TMP="${TMPDIR:-/tmp}/pumuki-audit/${PROJECT_NAME}/.audit_tmp"
+    export AUDIT_TMP
+fi
+if [[ -z "${AUDIT_REPORTS:-}" ]]; then
+    PROJECT_NAME="$(basename "$REPO_ROOT")"
+    AUDIT_REPORTS="${TMPDIR:-/tmp}/pumuki-audit/${PROJECT_NAME}/.audit-reports"
+    export AUDIT_REPORTS
+fi
 
 # Import utilities
 source "$HOOKS_SYSTEM_DIR/infrastructure/shell/core/constants.sh" 2>/dev/null || true
@@ -84,15 +97,15 @@ run_full_analysis() {
 
     # Patterns
     echo "📋 Checking patterns..."
-    bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh" AUDIT_OPTION=5
+    AUDIT_OPTION=5 bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh"
 
     # ESLint
     echo "🔧 Running ESLint..."
-    bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh" AUDIT_OPTION=6
+    AUDIT_OPTION=6 bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh"
 
     # AST
     echo "⚙️  Running AST Intelligence..."
-    bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh" AUDIT_OPTION=7
+    AUDIT_OPTION=7 bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh"
 
     echo "✅ Full analysis complete"
 }
@@ -117,21 +130,21 @@ run_patterns_only() {
     echo "🔍 Checking code patterns..."
     cd "$REPO_ROOT"
 
-    bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh" AUDIT_OPTION=5
+    AUDIT_OPTION=5 bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh"
 }
 
 run_eslint_only() {
     echo "🔧 Running ESLint analysis..."
     cd "$REPO_ROOT"
 
-    bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh" AUDIT_OPTION=6
+    AUDIT_OPTION=6 bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh"
 }
 
 run_ast_only() {
     echo "⚙️  Running AST Intelligence..."
     cd "$REPO_ROOT"
 
-    bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh" AUDIT_OPTION=7
+    AUDIT_OPTION=7 bash "$HOOKS_SYSTEM_DIR/infrastructure/shell/orchestrators/audit-orchestrator.sh"
 }
 
 run_pumuki_audit() {

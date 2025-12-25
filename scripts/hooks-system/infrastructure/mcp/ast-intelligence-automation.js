@@ -650,6 +650,8 @@ function aiGateCheck() {
         }).join('\n')
         : '';
 
+    const hasUncommittedChanges = uncommittedChanges.trim().length > 0;
+
     const now = Date.now();
     const evidenceStatus = checkEvidence();
     if (evidenceStatus.isStale && (now - lastEvidenceAutoFix > EVIDENCE_AUTOFIX_COOLDOWN)) {
@@ -680,9 +682,13 @@ function aiGateCheck() {
     }
 
     if (isProtectedBranch) {
-        violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}'.`);
-        violations.push(`   Required: create a feature branch from ${baseBranch} (git checkout ${baseBranch} && git pull && git checkout -b feature/<name>)`);
-        sendNotification('🚫 Git Flow Required', `Protected branch '${currentBranch}'. Create feature from ${baseBranch} before continuing.`, 'Basso');
+        if (hasUncommittedChanges) {
+            violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}' with uncommitted changes.`);
+            violations.push(`   Required: create a feature branch from ${baseBranch} (git checkout ${baseBranch} && git pull && git checkout -b feature/<name>)`);
+            sendNotification('🚫 Git Flow Required', `Protected branch '${currentBranch}' with changes. Create feature from ${baseBranch}.`, 'Basso');
+        } else {
+            warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
+        }
     }
 
     const stagedFiles = exec('git diff --cached --name-only');

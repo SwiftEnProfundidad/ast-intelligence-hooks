@@ -151,7 +151,7 @@ function printMatches(matchedSkills, mdcRules) {
     output += 'ACTION: Use Skill tool BEFORE responding\n';
     output += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n';
 
-    console.log(output);
+    process.stdout.write(`${output}\n`);
 
     const notificationTitle = critical.length > 0
         ? '⚠️ Critical Skills Required'

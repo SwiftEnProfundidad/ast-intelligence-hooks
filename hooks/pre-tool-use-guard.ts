@@ -135,13 +135,13 @@ async function main() {
 
             const message = rule.blockMessage?.replace('{file_path}', filePath) ||
                 `⚠️ BLOCKED - ${skillName} guardrail triggered for ${filePath}`;
-            console.error(message);
+            process.stderr.write(`${message}\n`);
             process.exit(2);
         }
 
         process.exit(0);
     } catch (err) {
-        console.error('Error in pre-tool-use-guard hook:', err);
+        process.stderr.write(`Error in pre-tool-use-guard hook: ${err instanceof Error ? err.message : String(err)}\n`);
         process.exit(0);
     }
 }

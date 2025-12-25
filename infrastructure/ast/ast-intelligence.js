@@ -26,10 +26,19 @@ async function runASTIntelligence() {
   try {
     const { getRepoRoot } = require('./ast-core');
     const root = getRepoRoot();
-    const allFiles = listSourceFiles(root);
+
+    const isLibraryAudit = process.env.AUDIT_LIBRARY === 'true';
+    const allFiles = listSourceFiles(root).filter(f => {
+      const p = String(f || '').replace(/\\/g, '/');
+      if (!isLibraryAudit && p.includes('/infrastructure/ast/')) return false;
+      return true;
+    });
 
     const project = createProject(allFiles);
     const findings = [];
+
+    runHardcodedThresholdAudit(root, findings);
+    runProjectHardcodedThresholdAudit(root, allFiles, findings);
 
     const context = {
       repoHasMigrations: checkForMigrations(root),
@@ -61,6 +70,214 @@ async function runASTIntelligence() {
       console.error("Stack trace:", error.stack);
     }
     process.exit(1);
+  }
+}
+
+function runProjectHardcodedThresholdAudit(root, allFiles, findings) {
+  if (process.env.AST_INSIGHTS !== '1') return;
+
+  const maxFindings = Number(process.env.AST_INSIGHTS_PROJECT_MAX || 200);
+  if (!Number.isFinite(maxFindings) || maxFindings <= 0) return;
+
+  const isExcludedPath = (filePath) => {
+    const p = String(filePath || '').replace(/\\/g, '/');
+    if (p.includes('/node_modules/')) return true;
+    if (p.includes('/.git/')) return true;
+    if (p.includes('/.next/')) return true;
+    if (p.includes('/dist/')) return true;
+    if (p.includes('/build/')) return true;
+    if (p.includes('/coverage/')) return true;
+    if (p.includes('/.audit_tmp/')) return true;
+    if (p.includes('/infrastructure/ast/')) return true;
+    if (p.includes('/scripts/hooks-system/')) return true;
+    return false;
+  };
+
+  const extractNumbers = (text) => {
+    const nums = new Set();
+    const comparisonRe = /(?:>=|<=|>|<)\s*(\d+(?:\.\d+)?)/g;
+    let m;
+    while ((m = comparisonRe.exec(text)) !== null) {
+      nums.add(m[1]);
+    }
+    const regexQuantifierRe = /\{\s*(\d+)\s*(?:,\s*(\d+)\s*)?\}/g;
+    while ((m = regexQuantifierRe.exec(text)) !== null) {
+      nums.add(m[1]);
+      if (m[2]) nums.add(m[2]);
+    }
+    return Array.from(nums);
+  };
+
+  const isConditionalContext = (line) => {
+    if (!line) return false;
+    const l = String(line);
+    if (/^\s*\/\//.test(l)) return false;
+    return /\bif\s*\(|\belse\s+if\s*\(|\bwhile\s*\(|\bfor\s*\(|\bcase\s+\d+\b|\?\s*[^:]+\s*:\s*/.test(l);
+  };
+
+  const seen = new Set();
+  let emitted = 0;
+
+  for (const filePath of allFiles || []) {
+    if (!filePath || isExcludedPath(filePath)) continue;
+    if (emitted >= maxFindings) break;
+
+    let content;
+    try {
+      content = fs.readFileSync(filePath, 'utf8');
+    } catch {
+      continue;
+    }
+
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      if (emitted >= maxFindings) break;
+
+      const line = lines[i] || '';
+      if (!isConditionalContext(line)) continue;
+
+      const numbers = extractNumbers(line);
+      if (numbers.length === 0) continue;
+
+      const key = `${filePath}::${i + 1}::${numbers.sort().join(',')}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      const rel = path.relative(root, filePath).replace(/\\/g, '/');
+      findings.push({
+        ruleId: 'meta.project.hardcoded_threshold',
+        severity: 'low',
+        filePath,
+        line: i + 1,
+        column: 1,
+        message: `Hardcoded threshold candidate in project code at ${rel}:${i + 1} -> [${numbers.join(', ')}]`,
+        metrics: { numbers }
+      });
+      emitted += 1;
+    }
+  }
+}
+
+function runHardcodedThresholdAudit(root, findings) {
+  if (process.env.AST_INSIGHTS !== '1') return;
+
+  const ruleDirs = [
+    path.join(root, 'infrastructure', 'ast'),
+    path.join(root, 'scripts', 'hooks-system', 'infrastructure', 'ast'),
+  ].filter((d) => {
+    try {
+      return fs.existsSync(d) && fs.statSync(d).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+
+  const ignoreDir = (p) => {
+    const n = p.replace(/\\/g, '/');
+    if (n.includes('/node_modules/')) return true;
+    if (n.includes('/.git/')) return true;
+    if (n.includes('/dist/')) return true;
+    if (n.includes('/build/')) return true;
+    if (n.includes('/.audit_tmp/')) return true;
+    return false;
+  };
+
+  const listJsFiles = (dir) => {
+    const out = [];
+    const stack = [dir];
+    while (stack.length) {
+      const current = stack.pop();
+      if (!current || ignoreDir(current + '/')) continue;
+      let entries;
+      try {
+        entries = fs.readdirSync(current, { withFileTypes: true });
+      } catch {
+        continue;
+      }
+
+      for (const e of entries) {
+        const full = path.join(current, e.name);
+        if (ignoreDir(full)) continue;
+        if (e.isDirectory()) {
+          stack.push(full);
+          continue;
+        }
+        if (e.isFile() && full.endsWith('.js')) out.push(full);
+      }
+    }
+    return out;
+  };
+
+  const files = ruleDirs.flatMap(listJsFiles);
+  const seen = new Set();
+
+  const extractRuleId = (windowText) => {
+    const m = windowText.match(/push(?:File)?Finding\(\s*['"`]{1}([^'"`]+)['"`]{1}/);
+    return m ? m[1] : null;
+  };
+
+  const extractNumbers = (windowText) => {
+    const nums = new Set();
+    const comparisonRe = /(?:>=|<=|>|<|===|!==)\s*(\d+(?:\.\d+)?)/g;
+    let m;
+    while ((m = comparisonRe.exec(windowText)) !== null) {
+      nums.add(m[1]);
+    }
+    const lengthRe = /\.length\s*(?:>=|<=|>|<)\s*(\d+(?:\.\d+)?)/g;
+    while ((m = lengthRe.exec(windowText)) !== null) {
+      nums.add(m[1]);
+    }
+    const timeRe = /(\d+(?:\.\d+)?)\s*(?:ms|s)\b/g;
+    while ((m = timeRe.exec(windowText)) !== null) {
+      nums.add(m[1]);
+    }
+    const regexQuantifierRe = /\{\s*(\d+)\s*(?:,\s*(\d+)\s*)?\}/g;
+    while ((m = regexQuantifierRe.exec(windowText)) !== null) {
+      nums.add(m[1]);
+      if (m[2]) nums.add(m[2]);
+    }
+    return Array.from(nums);
+  };
+
+  for (const filePath of files) {
+    let content;
+    try {
+      content = fs.readFileSync(filePath, 'utf8');
+    } catch {
+      continue;
+    }
+
+    const lines = content.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!line) continue;
+
+      const isPush = line.includes('pushFinding(') || line.includes('pushFileFinding(');
+      if (!isPush) continue;
+
+      const from = Math.max(0, i - 8);
+      const to = Math.min(lines.length - 1, i + 2);
+      const windowText = lines.slice(from, to + 1).join('\n');
+      const ruleId = extractRuleId(windowText);
+      if (!ruleId) continue;
+
+      const numbers = extractNumbers(windowText);
+      if (numbers.length === 0) continue;
+
+      const key = `${filePath}::${i + 1}::${ruleId}::${numbers.sort().join(',')}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+
+      findings.push({
+        ruleId: 'meta.ast.hardcoded_threshold',
+        severity: 'low',
+        filePath,
+        line: i + 1,
+        column: 1,
+        message: `Hardcoded threshold(s) detected for '${ruleId}' in ${path.relative(root, filePath).replace(/\\/g, '/')}:${i + 1} -> [${numbers.join(', ')}]`,
+        metrics: { auditedRuleId: ruleId, numbers }
+      });
+    }
   }
 }
 
@@ -367,7 +584,11 @@ function listSourceFiles(root) {
 function shouldIgnore(file) {
   const p = file.replace(/\\/g, "/");
   if (p.includes("node_modules/")) return true;
-  if (p.includes("scripts/hooks-system/")) return true;
+  const isLibraryAudit = process.env.AUDIT_LIBRARY === 'true';
+  if (!isLibraryAudit && p.includes("scripts/hooks-system/")) return true;
+  if (!isLibraryAudit && p.includes("/infrastructure/ast/")) return true;
+  if (p.includes("/.cursor/")) return true;
+  if (/\.bak/i.test(p)) return true;
   if (p.includes("/.next/")) return true;
   if (p.includes("/dist/")) return true;
   if (p.includes("/.turbo/")) return true;

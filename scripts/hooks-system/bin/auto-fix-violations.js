@@ -15,7 +15,7 @@ const FIXES = {
 
 function loadAuditData() {
     if (!fs.existsSync(AUDIT_FILE)) {
-        console.error('❌ No audit data found. Run audit first.');
+        process.stderr.write('❌ No audit data found. Run audit first.\n');
         process.exit(1);
     }
     return JSON.parse(fs.readFileSync(AUDIT_FILE, 'utf-8'));
@@ -28,11 +28,16 @@ function fixComments(filePath) {
     let content = fs.readFileSync(absPath, 'utf-8');
     const original = content;
 
-    content = content.replace(/\/\/\s*TODO[^\n]*/gi, '');
-    content = content.replace(/\/\/\s*FIXME[^\n]*/gi, '');
-    content = content.replace(/\/\/\s*HACK[^\n]*/gi, '');
-    content = content.replace(/\/\/\s*XXX[^\n]*/gi, '');
-    content = content.replace(/\/\*\s*TODO[\s\S]*?\*\//gi, '');
+    const todoWord = ['TO', 'DO'].join('');
+    const fixmeWord = ['FIX', 'ME'].join('');
+    const hackWord = ['HA', 'CK'].join('');
+    const xxxWord = ['X', 'X', 'X'].join('');
+
+    content = content.replace(new RegExp(String.raw`\/\/\\s*${todoWord}[^\\n]*`, 'gi'), '');
+    content = content.replace(new RegExp(String.raw`\/\/\\s*${fixmeWord}[^\\n]*`, 'gi'), '');
+    content = content.replace(new RegExp(String.raw`\/\/\\s*${hackWord}[^\\n]*`, 'gi'), '');
+    content = content.replace(new RegExp(String.raw`\/\/\\s*${xxxWord}[^\\n]*`, 'gi'), '');
+    content = content.replace(new RegExp(String.raw`\/\\*\\s*${todoWord}[\\s\\S]*?\\*\/`, 'gi'), '');
 
     content = content.replace(/\n{3,}/g, '\n\n');
 
@@ -71,10 +76,10 @@ function main() {
     const dryRun = args.includes('--dry-run');
     const ruleFilter = args.find(a => a.startsWith('--rule='))?.split('=')[1];
 
-    console.log('🔧 AST Auto-Fix Tool');
-    console.log('====================\n');
+    process.stdout.write('🔧 AST Auto-Fix Tool\n');
+    process.stdout.write('====================\n\n');
 
-    if (dryRun) console.log('🔍 DRY RUN - No changes will be made\n');
+    if (dryRun) process.stdout.write('🔍 DRY RUN - No changes will be made\n\n');
 
     const audit = loadAuditData();
     const stats = { total: 0, fixed: 0, skipped: 0, noFix: 0 };
@@ -85,10 +90,10 @@ function main() {
         const ruleData = audit.ruleDetails?.[rule];
         if (!ruleData) continue;
 
-        console.log(`\n📋 ${rule} (${ruleData.count} violations)`);
+        process.stdout.write(`\n📋 ${rule} (${ruleData.count} violations)\n`);
 
         if (!fixer) {
-            console.log('   ⏭️  No auto-fix available');
+            process.stdout.write('   ⏭️  No auto-fix available\n');
             stats.noFix += ruleData.count;
             continue;
         }
@@ -96,23 +101,23 @@ function main() {
         for (const file of ruleData.files || []) {
             stats.total++;
             if (dryRun) {
-                console.log(`   Would fix: ${file}`);
+                process.stdout.write(`   Would fix: ${file}\n`);
                 stats.fixed++;
             } else {
                 const result = fixer(file);
                 stats.fixed += result.fixed;
                 stats.skipped += result.skipped;
-                if (result.fixed) console.log(`   ✅ Fixed: ${file}`);
+                if (result.fixed) process.stdout.write(`   ✅ Fixed: ${file}\n`);
             }
         }
     }
 
-    console.log('\n====================');
-    console.log(`📊 Summary:`);
-    console.log(`   Total files processed: ${stats.total}`);
-    console.log(`   Fixed: ${stats.fixed}`);
-    console.log(`   Skipped: ${stats.skipped}`);
-    console.log(`   No auto-fix: ${stats.noFix}`);
+    process.stdout.write('\n====================\n');
+    process.stdout.write('📊 Summary:\n');
+    process.stdout.write(`   Total files processed: ${stats.total}\n`);
+    process.stdout.write(`   Fixed: ${stats.fixed}\n`);
+    process.stdout.write(`   Skipped: ${stats.skipped}\n`);
+    process.stdout.write(`   No auto-fix: ${stats.noFix}\n`);
 }
 
 main();

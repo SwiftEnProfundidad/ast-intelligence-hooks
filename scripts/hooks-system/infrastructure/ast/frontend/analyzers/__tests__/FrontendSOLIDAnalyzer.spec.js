@@ -15,11 +15,15 @@ function createMockPushFinding() {
   return jest.fn();
 }
 
+function makeSUT() {
+  return new FrontendSOLIDAnalyzer();
+}
+
 describe('FrontendSOLIDAnalyzer', () => {
   let analyzer;
 
   beforeEach(() => {
-    analyzer = new FrontendSOLIDAnalyzer();
+    analyzer = makeSUT();
   });
 
   describe('constructor', () => {

@@ -36,6 +36,8 @@ async function runIOSIntelligence(project, findings, platform) {
   for (const swiftFile of swiftFilesForAST) {
     astAnalyzer.analyzeFile(swiftFile);
   }
+
+  astAnalyzer.finalizeGodClassDetection();
   console.log(`[iOS AST Intelligence] Analyzed ${swiftFilesForAST.length} Swift files with SourceKitten AST`);
 
   await runSwiftLintNative(findings);
