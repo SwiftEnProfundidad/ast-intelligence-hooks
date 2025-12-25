@@ -38,6 +38,7 @@ ANNOUNCEMENTS.md
 *.tmp
 .cache/
 .audit_tmp/
+.audit-reports/
 .AI_TOKEN_STATUS.txt
 .AI_EVIDENCE.json
 .coverage/
@@ -47,6 +48,8 @@ ANNOUNCEMENTS.md
 
 # IDE-specific configurations (user-specific)
 .windsurf/
+.cursor/mcp.json
+.cursor/settings.json
 
 # Analysis and temporary documentation files
 **/RULES_COVERAGE_ANALYSIS.md

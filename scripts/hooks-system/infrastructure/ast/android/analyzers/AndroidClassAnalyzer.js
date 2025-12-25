@@ -1,7 +1,8 @@
 class AndroidClassAnalyzer {
-    constructor(parser, findings) {
+    constructor(parser, findings, godClassBaseline = null) {
         this.parser = parser;
         this.findings = findings;
+        this.godClassBaseline = godClassBaseline;
     }
 
     analyze() {
@@ -24,9 +25,41 @@ class AndroidClassAnalyzer {
     }
 
     checkGodClass(cls) {
-        if (cls.methods.length > 15 || cls.properties.length > 10 || cls.bodyLength > 300) {
+        if (!this.godClassBaseline) {
+            if (cls.methods.length > 15 || cls.properties.length > 10 || cls.bodyLength > 300) {
+                this.pushFinding('android.solid.srp.god_class', 'critical', cls.line,
+                    `God class '${cls.name}': ${cls.methods.length} methods, ${cls.properties.length} props - VIOLATES SRP`);
+            }
+            return;
+        }
+
+        const methodsCount = cls.methods.length;
+        const propertiesCount = cls.properties.length;
+        const bodyLength = cls.bodyLength;
+        const complexity = this.parser.calculateComplexity(cls.body);
+
+        const methodsZ = this.godClassBaseline.robustZ(methodsCount, this.godClassBaseline.med.methodsCount, this.godClassBaseline.mad.methodsCount);
+        const propsZ = this.godClassBaseline.robustZ(propertiesCount, this.godClassBaseline.med.propertiesCount, this.godClassBaseline.mad.propertiesCount);
+        const bodyZ = this.godClassBaseline.robustZ(bodyLength, this.godClassBaseline.med.bodyLength, this.godClassBaseline.mad.bodyLength);
+        const complexityZ = this.godClassBaseline.robustZ(complexity, this.godClassBaseline.med.complexity, this.godClassBaseline.mad.complexity);
+
+        const sizeOutlier =
+            (methodsZ > 0 && methodsZ >= this.godClassBaseline.thresholds.outlier.methodsCountZ) ||
+            (propsZ > 0 && propsZ >= this.godClassBaseline.thresholds.outlier.propertiesCountZ) ||
+            (bodyZ > 0 && bodyZ >= this.godClassBaseline.thresholds.outlier.bodyLengthZ);
+        const complexityOutlier = complexityZ > 0 && complexityZ >= this.godClassBaseline.thresholds.outlier.complexityZ;
+
+        const extremeOutlier =
+            (methodsZ > 0 && methodsZ >= this.godClassBaseline.thresholds.extreme.methodsCountZ) ||
+            (propsZ > 0 && propsZ >= this.godClassBaseline.thresholds.extreme.propertiesCountZ) ||
+            (bodyZ > 0 && bodyZ >= this.godClassBaseline.thresholds.extreme.bodyLengthZ) ||
+            (complexityZ > 0 && complexityZ >= this.godClassBaseline.thresholds.extreme.complexityZ);
+
+        const signalCount = [sizeOutlier, complexityOutlier].filter(Boolean).length;
+
+        if (extremeOutlier || signalCount >= 2) {
             this.pushFinding('android.solid.srp.god_class', 'critical', cls.line,
-                `God class '${cls.name}': ${cls.methods.length} methods, ${cls.properties.length} props - VIOLATES SRP`);
+                `God class '${cls.name}': ${methodsCount} methods (z=${methodsZ.toFixed(2)}), ${propertiesCount} props (z=${propsZ.toFixed(2)}), ${bodyLength} lines (z=${bodyZ.toFixed(2)}), complexity ${complexity} (z=${complexityZ.toFixed(2)}) - VIOLATES SRP`);
         }
     }
 

@@ -9,6 +9,14 @@ const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
 
+function resolveAuditTmpDir() {
+  const configured = (process.env.AUDIT_TMP || '').trim();
+  if (configured.length > 0) {
+    return path.isAbsolute(configured) ? configured : path.join(process.cwd(), configured);
+  }
+  return path.join(process.cwd(), '.audit_tmp');
+}
+
 /**
  * Main orchestration function
  * Called by audit.sh after AST analysis completes
@@ -20,15 +28,28 @@ async function runIntelligentAudit() {
     const rawViolations = loadRawViolations();
     console.log(`[Intelligent Audit] Loaded ${rawViolations.length} violations from AST`);
 
-    const stagedFiles = getStagedFiles();
-    const stagedViolations = rawViolations.filter(v =>
-      stagedFiles.some(sf => v.filePath && v.filePath.includes(sf))
-    );
+    const gateScope = String(process.env.AI_GATE_SCOPE || 'staging').trim().toLowerCase();
+    const isRepoScope = gateScope === 'repo' || gateScope === 'repository';
 
-    console.log(`[Intelligent Audit] Filtered to ${stagedViolations.length} violations in ${stagedFiles.length} staged files`);
+    let violationsForGate = [];
+    let violationsForEvidence = [];
 
-    const violationsForGate = stagedViolations;
-    const violationsForEvidence = stagedViolations;
+    if (isRepoScope) {
+      console.log('[Intelligent Audit] Gate scope: REPOSITORY');
+      violationsForGate = rawViolations;
+      violationsForEvidence = rawViolations;
+    } else {
+      const stagedFiles = getStagedFiles();
+      const stagedViolations = rawViolations.filter(v =>
+        stagedFiles.some(sf => v.filePath && v.filePath.includes(sf))
+      );
+
+      console.log(`[Intelligent Audit] Gate scope: STAGING (${stagedFiles.length} files)`);
+      console.log(`[Intelligent Audit] Filtered to ${stagedViolations.length} violations in staged files`);
+
+      violationsForGate = stagedViolations;
+      violationsForEvidence = stagedViolations;
+    }
 
     if (violationsForGate.length === 0) {
       console.log('[Intelligent Audit] ✅ No violations in staged files - PASSED');
@@ -97,7 +118,7 @@ async function runIntelligentAudit() {
 }
 
 function loadRawViolations() {
-  const astSummaryPath = '.audit_tmp/ast-summary.json';
+  const astSummaryPath = path.join(resolveAuditTmpDir(), 'ast-summary.json');
 
   if (!fs.existsSync(astSummaryPath)) {
     console.error('[Intelligent Audit] ⚠️  No ast-summary.json found - running without violations');
@@ -115,13 +136,14 @@ function getStagedFiles() {
   try {
     const result = execSync('git diff --cached --name-only', { encoding: 'utf8' });
     return result.trim().split('\n').filter(f => f);
-  } catch {
+  } catch (error) {
+    process.stderr.write(`[Intelligent Audit] ⚠️  Failed to read staged files: ${toErrorMessage(error)}\n`);
     return [];
   }
 }
 
 function saveEnhancedViolations(violations) {
-  const outputPath = '.audit_tmp/ast-summary.json';
+  const outputPath = path.join(resolveAuditTmpDir(), 'ast-summary-enhanced.json');
 
   const enhanced = {
     timestamp: new Date().toISOString(),
@@ -138,6 +160,11 @@ function saveEnhancedViolations(violations) {
     }
   };
 
+  try {
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+  } catch (error) {
+    process.stderr.write(`[Intelligent Audit] ⚠️  Failed to create output directory: ${toErrorMessage(error)}\n`);
+  }
   fs.writeFileSync(outputPath, JSON.stringify(enhanced, null, 2));
 }
 
@@ -207,8 +234,24 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     const highViolations = violations.filter(v => v.severity === 'HIGH');
     const blockingViolations = [...criticalViolations, ...highViolations].slice(0, 50);
 
-    evidence.ai_gate = {
+    const gateScope = String(process.env.AI_GATE_SCOPE || 'staging').trim().toLowerCase();
+
+    const existingGate = evidence.ai_gate && typeof evidence.ai_gate === 'object' ? evidence.ai_gate : null;
+    let preserveExistingRepoGate = false;
+    if (gateScope !== 'repo' && gateScope !== 'repository' && existingGate && existingGate.scope === 'repo' && existingGate.status === 'BLOCKED') {
+      const preserveMs = Number(process.env.AI_GATE_REPO_PRESERVE_MS || 600000);
+      const lastCheckMs = Date.parse(existingGate.last_check || '');
+      if (!Number.isNaN(preserveMs) && preserveMs > 0 && !Number.isNaN(lastCheckMs)) {
+        const ageMs = Date.now() - lastCheckMs;
+        if (ageMs >= 0 && ageMs < preserveMs) {
+          preserveExistingRepoGate = true;
+        }
+      }
+    }
+
+    const nextGate = {
       status: gateResult.passed ? 'ALLOWED' : 'BLOCKED',
+      scope: gateScope === 'repo' || gateScope === 'repository' ? 'repo' : 'staging',
       last_check: new Date().toISOString(),
       violations: blockingViolations.map(v => ({
         file: v.filePath || v.file || 'unknown',
@@ -223,6 +266,8 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
       instruction: '🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!',
       mandatory: true
     };
+
+    evidence.ai_gate = preserveExistingRepoGate ? existingGate : nextGate;
 
     evidence.git_flow = {
       branch_protection: {
@@ -241,7 +286,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
       is_protected: isProtected
     };
 
-    const tokenFile = `${process.cwd()}/.audit_tmp/token-usage.jsonl`;
+    const tokenFile = path.join(resolveAuditTmpDir(), 'token-usage.jsonl');
     let realTokenData = { estimated: tokenUsage.estimated, percentUsed: tokenUsage.percentUsed };
     try {
       if (fs.existsSync(tokenFile)) {

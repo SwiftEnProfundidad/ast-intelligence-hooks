@@ -39,6 +39,7 @@ function getInstalledVersion() {
     
     return { version: pkg.version, type: 'npm', path: packageRoot };
   } catch (err) {
+    err = null;
     // Fallback: continue with local project dependency checks
   }
   

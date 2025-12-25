@@ -1,1 +1,0 @@
-[32mESLint Total:[0m 🔴 errors=0 🟡 warnings=0

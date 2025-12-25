@@ -51,15 +51,163 @@ function runBackendIntelligence(project, findings, platform) {
       text.includes("Access-Control-Allow-Origin");
   });
 
+  const godClassBaseline = (() => {
+    const quantile = (values, p) => {
+      if (!values || values.length === 0) return 0;
+      const sorted = [...values].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      const idx = Math.max(0, Math.min(sorted.length - 1, Math.ceil((p / 100) * sorted.length) - 1));
+      return sorted[idx];
+    };
+
+    const median = (values) => {
+      if (!values || values.length === 0) return 0;
+      const sorted = [...values].filter((v) => Number.isFinite(v)).sort((a, b) => a - b);
+      if (sorted.length === 0) return 0;
+      const mid = Math.floor(sorted.length / 2);
+      if (sorted.length % 2 === 0) return (sorted[mid - 1] + sorted[mid]) / 2;
+      return sorted[mid];
+    };
+
+    const mad = (values) => {
+      const med = median(values);
+      const deviations = (values || []).map((v) => Math.abs(v - med));
+      return median(deviations);
+    };
+
+    const robustZ = (x, med, madValue) => {
+      if (!Number.isFinite(x) || !Number.isFinite(med) || !Number.isFinite(madValue) || madValue === 0) return 0;
+      return 0.6745 * (x - med) / madValue;
+    };
+
+    const concernCountOf = (cls) => {
+      const text = cls.getFullText();
+      const concerns = new Set();
+
+      if (/\bfs\.|\bfs\.promises\b|readFileSync|writeFileSync|mkdirSync|unlinkSync|readdirSync/.test(text)) concerns.add('io');
+      if (/\bpath\.|join\(|resolve\(|dirname\(|basename\(/.test(text)) concerns.add('path');
+      if (/execSync\(|spawnSync\(|spawn\(|child_process/.test(text)) concerns.add('process');
+      if (/\bfetch\b|axios\b|http\.|https\.|request\(/.test(text)) concerns.add('network');
+      if (/\bcrypto\b|encrypt|decrypt|hash|jwt|bearer|token/i.test(text)) concerns.add('security');
+      if (/setTimeout\(|setInterval\(|clearInterval\(|cron|schedule/i.test(text)) concerns.add('scheduling');
+      if (/\brepo\b|repository|prisma|typeorm|mongoose|sequelize|knex|\bdb\b|database|sql/i.test(text)) concerns.add('persistence');
+      if (/notification|notifier|terminal-notifier|osascript/i.test(text)) concerns.add('notifications');
+      if (/\bgit\b|rev-parse|git diff|git status|git log/i.test(text)) concerns.add('git');
+
+      return concerns.size;
+    };
+
+    const complexityOf = (cls) => {
+      const decisionKinds = [
+        SyntaxKind.IfStatement,
+        SyntaxKind.ForStatement,
+        SyntaxKind.ForInStatement,
+        SyntaxKind.ForOfStatement,
+        SyntaxKind.WhileStatement,
+        SyntaxKind.DoStatement,
+        SyntaxKind.SwitchStatement,
+        SyntaxKind.ConditionalExpression,
+        SyntaxKind.TryStatement,
+        SyntaxKind.CatchClause
+      ];
+      return decisionKinds.reduce((acc, kind) => acc + cls.getDescendantsOfKind(kind).length, 0);
+    };
+
+    const metrics = [];
+    project.getSourceFiles().forEach((sf) => {
+      if (!sf || typeof sf.getFilePath !== 'function') return;
+      const filePath = sf.getFilePath();
+      if (platformOf(filePath) !== 'backend') return;
+      if (/\/ast-[^/]+\.js$/.test(filePath)) return;
+      if (process.env.AUDIT_LIBRARY !== 'true') {
+        if (/scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath) || /\/infrastructure\/ast\//i.test(filePath)) return;
+      }
+      if (isTestFile(filePath)) return;
+
+      sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
+        const className = cls.getName() || '';
+        const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
+        const isTestClass = /Spec$|Test$|Mock/.test(className);
+        if (isValueObject || isTestClass) return;
+
+        const methodsCount = cls.getMethods().length;
+        const propertiesCount = cls.getProperties().length;
+        const startLine = cls.getStartLineNumber();
+        const endLine = cls.getEndLineNumber();
+        const lineCount = Math.max(0, endLine - startLine);
+        const complexity = complexityOf(cls);
+        const concerns = concernCountOf(cls);
+
+        metrics.push({ methodsCount, propertiesCount, lineCount, complexity, concerns });
+      });
+    });
+
+    if (metrics.length === 0) return null;
+
+    const pOutlier = Number(process.env.AST_GODCLASS_P_OUTLIER || 90);
+    const pExtreme = Number(process.env.AST_GODCLASS_P_EXTREME || 97);
+
+    const methods = metrics.map(m => m.methodsCount);
+    const props = metrics.map(m => m.propertiesCount);
+    const lines = metrics.map(m => m.lineCount);
+    const complexities = metrics.map(m => m.complexity);
+    const concerns = metrics.map(m => m.concerns);
+
+    const med = {
+      methodsCount: median(methods),
+      propertiesCount: median(props),
+      lineCount: median(lines),
+      complexity: median(complexities)
+    };
+    const madValue = {
+      methodsCount: mad(methods),
+      propertiesCount: mad(props),
+      lineCount: mad(lines),
+      complexity: mad(complexities)
+    };
+
+    const z = {
+      methodsCount: methods.map(v => robustZ(v, med.methodsCount, madValue.methodsCount)),
+      propertiesCount: props.map(v => robustZ(v, med.propertiesCount, madValue.propertiesCount)),
+      lineCount: lines.map(v => robustZ(v, med.lineCount, madValue.lineCount)),
+      complexity: complexities.map(v => robustZ(v, med.complexity, madValue.complexity))
+    };
+
+    return {
+      thresholds: {
+        outlier: {
+          methodsCountZ: quantile(z.methodsCount, pOutlier),
+          propertiesCountZ: quantile(z.propertiesCount, pOutlier),
+          lineCountZ: quantile(z.lineCount, pOutlier),
+          complexityZ: quantile(z.complexity, pOutlier),
+          concerns: quantile(concerns, pOutlier)
+        },
+        extreme: {
+          methodsCountZ: quantile(z.methodsCount, pExtreme),
+          propertiesCountZ: quantile(z.propertiesCount, pExtreme),
+          lineCountZ: quantile(z.lineCount, pExtreme),
+          complexityZ: quantile(z.complexity, pExtreme)
+        }
+      },
+      med,
+      mad: madValue,
+      robustZ
+    };
+  })();
+
   project.getSourceFiles().forEach((sf) => {
     if (!sf || typeof sf.getFilePath !== 'function') return;
     const filePath = sf.getFilePath();
 
     if (platformOf(filePath) !== "backend") return;
 
-    if (/\/ast-[^/]+\.js$/.test(filePath) || /scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
+    if (/\/ast-[^/]+\.js$/.test(filePath)) return;
+    if (process.env.AUDIT_LIBRARY !== 'true') {
+      if (/scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath) || /\/infrastructure\/ast\//i.test(filePath)) return;
+    }
 
     const fullText = sf.getFullText();
+    const insightsEnabled = process.env.AST_INSIGHTS === '1';
     const isSpecFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
     const secretPattern = /(password|secret|key|token)\s*[:=]\s*['"`]([^'"]{8,})['"`]/gi;
     const matches = Array.from(fullText.matchAll(secretPattern));
@@ -129,22 +277,78 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.config.missing_validation", "warning", sf, sf, "Environment variables without validation - consider Joi or class-validator", findings);
     }
 
-    sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
-      const className = cls.getName() || '';
-      const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
-      const isTestClass = /Spec$|Test$|Mock/.test(className);
-      if (isValueObject || isTestClass) return;
+    if (godClassBaseline) {
+      sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
+        const className = cls.getName() || '';
+        const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
+        const isTestClass = /Spec$|Test$|Mock/.test(className);
+        if (isValueObject || isTestClass) return;
 
-      const methods = cls.getMethods();
-      const properties = cls.getProperties();
-      const startLine = cls.getStartLineNumber();
-      const endLine = cls.getEndLineNumber();
-      const lineCount = endLine - startLine;
+        const methodsCount = cls.getMethods().length;
+        const propertiesCount = cls.getProperties().length;
+        const startLine = cls.getStartLineNumber();
+        const endLine = cls.getEndLineNumber();
+        const lineCount = Math.max(0, endLine - startLine);
 
-      if (methods.length > 20 || properties.length > 15 || lineCount > 300) {
-        pushFinding("backend.antipattern.god_classes", "critical", sf, cls, `God class detected: ${methods.length} methods, ${properties.length} properties, ${lineCount} lines - VIOLATES SRP`, findings);
-      }
-    });
+        const decisionKinds = [
+          SyntaxKind.IfStatement,
+          SyntaxKind.ForStatement,
+          SyntaxKind.ForInStatement,
+          SyntaxKind.ForOfStatement,
+          SyntaxKind.WhileStatement,
+          SyntaxKind.DoStatement,
+          SyntaxKind.SwitchStatement,
+          SyntaxKind.ConditionalExpression,
+          SyntaxKind.TryStatement,
+          SyntaxKind.CatchClause
+        ];
+        const complexity = decisionKinds.reduce((acc, kind) => acc + cls.getDescendantsOfKind(kind).length, 0);
+
+        const clsText = cls.getFullText();
+        const concerns = new Set();
+        if (/\bfs\.|\bfs\.promises\b|readFileSync|writeFileSync|mkdirSync|unlinkSync|readdirSync/.test(clsText)) concerns.add('io');
+        if (/\bpath\.|join\(|resolve\(|dirname\(|basename\(/.test(clsText)) concerns.add('path');
+        if (/execSync\(|spawnSync\(|spawn\(|child_process/.test(clsText)) concerns.add('process');
+        if (/\bfetch\b|axios\b|http\.|https\.|request\(/.test(clsText)) concerns.add('network');
+        if (/\bcrypto\b|encrypt|decrypt|hash|jwt|bearer|token/i.test(clsText)) concerns.add('security');
+        if (/setTimeout\(|setInterval\(|clearInterval\(|cron|schedule/i.test(clsText)) concerns.add('scheduling');
+        if (/\brepo\b|repository|prisma|typeorm|mongoose|sequelize|knex|\bdb\b|database|sql/i.test(clsText)) concerns.add('persistence');
+        if (/notification|notifier|terminal-notifier|osascript/i.test(clsText)) concerns.add('notifications');
+        if (/\bgit\b|rev-parse|git diff|git status|git log/i.test(clsText)) concerns.add('git');
+        const concernCount = concerns.size;
+
+        const methodsZ = godClassBaseline.robustZ(methodsCount, godClassBaseline.med.methodsCount, godClassBaseline.mad.methodsCount);
+        const propsZ = godClassBaseline.robustZ(propertiesCount, godClassBaseline.med.propertiesCount, godClassBaseline.mad.propertiesCount);
+        const linesZ = godClassBaseline.robustZ(lineCount, godClassBaseline.med.lineCount, godClassBaseline.mad.lineCount);
+        const complexityZ = godClassBaseline.robustZ(complexity, godClassBaseline.med.complexity, godClassBaseline.mad.complexity);
+
+        const sizeOutlier =
+          methodsZ >= godClassBaseline.thresholds.outlier.methodsCountZ ||
+          propsZ >= godClassBaseline.thresholds.outlier.propertiesCountZ ||
+          linesZ >= godClassBaseline.thresholds.outlier.lineCountZ;
+        const complexityOutlier = complexityZ >= godClassBaseline.thresholds.outlier.complexityZ;
+        const concernOutlier = concernCount >= godClassBaseline.thresholds.outlier.concerns;
+
+        const extremeOutlier =
+          methodsZ >= godClassBaseline.thresholds.extreme.methodsCountZ ||
+          propsZ >= godClassBaseline.thresholds.extreme.propertiesCountZ ||
+          linesZ >= godClassBaseline.thresholds.extreme.lineCountZ ||
+          complexityZ >= godClassBaseline.thresholds.extreme.complexityZ;
+
+        const signalCount = [sizeOutlier, complexityOutlier, concernOutlier].filter(Boolean).length;
+
+        if (extremeOutlier || signalCount >= 2) {
+          pushFinding(
+            "backend.antipattern.god_classes",
+            "critical",
+            sf,
+            cls,
+            `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
+            findings
+          );
+        }
+      });
+    }
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
@@ -201,9 +405,16 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    const hasMetrics = sf.getFullText().includes("micrometer") || sf.getFullText().includes("prometheus") ||
-      sf.getFullText().includes("actuator") || sf.getFullText().includes("metrics");
-    if (!hasMetrics && sf.getFullText().includes("controller") || sf.getFullText().includes("service")) {
+    const filePathNormalizedForMetrics = filePath.replace(/\\/g, "/");
+    const filePathNormalizedForMetricsLower = filePathNormalizedForMetrics.toLowerCase();
+    const isInternalAstToolingFileForMetrics = filePathNormalizedForMetricsLower.includes("/infrastructure/ast/") || filePathNormalizedForMetricsLower.includes("infrastructure/ast/") || filePathNormalizedForMetricsLower.includes("/scripts/hooks-system/infrastructure/ast/");
+
+    const fullTextLower = fullText.toLowerCase();
+    const hasMetrics = fullTextLower.includes("micrometer") || fullTextLower.includes("prometheus") ||
+      fullTextLower.includes("actuator") || fullTextLower.includes("metrics");
+    const looksLikeServiceOrController = fullTextLower.includes("controller") || fullTextLower.includes("service");
+
+    if (!isInternalAstToolingFileForMetrics && !hasMetrics && looksLikeServiceOrController) {
       pushFinding("backend.metrics.missing_prometheus", "low", sf, sf, "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring", findings);
     }
 
@@ -606,8 +817,10 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    if (sf.getFullText().includes("@nestjs/jwt") || sf.getFullText().includes("passport-jwt")) {
-      pushFinding("backend.auth.jwt", "low", sf, sf, "JWT authentication detected - ensure proper token validation and refresh strategy", findings);
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("@nestjs/jwt") || sf.getFullText().includes("passport-jwt")) {
+        pushFinding("backend.auth.jwt", "low", sf, sf, "JWT authentication detected - ensure proper token validation and refresh strategy", findings);
+      }
     }
 
     if (isControllerFile) {
@@ -627,14 +840,18 @@ function runBackendIntelligence(project, findings, platform) {
 
     sf.getDescendantsOfKind(SyntaxKind.Decorator).forEach((decorator) => {
       if (decorator.getExpression().getText().includes("@Roles")) {
-        pushFinding("backend.auth.rbac", "low", sf, decorator, "Role-based access control detected - ensure proper role validation", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.auth.rbac", "low", sf, decorator, "Role-based access control detected - ensure proper role validation", findings);
+        }
       } else if (sf.getFullText().includes("@Controller") && !sf.getFullText().includes("@Roles")) {
         pushFinding("backend.auth.missing_roles", "medium", sf, decorator, "Controller without @Roles annotations for RBAC", findings);
       }
     });
 
-    if (sf.getFullText().includes("@nestjs/throttler") || sf.getFullText().includes("rate-limit")) {
-      pushFinding("backend.security.rate_limiting", "low", sf, sf, "Rate limiting detected - good practice for API protection", findings);
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("@nestjs/throttler") || sf.getFullText().includes("rate-limit")) {
+        pushFinding("backend.security.rate_limiting", "low", sf, sf, "Rate limiting detected - good practice for API protection", findings);
+      }
     }
 
     if (sf.getFullText().includes("express()") && !sf.getFullText().includes("helmet")) {
@@ -659,23 +876,31 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    if (sf.getFullText().includes("redis") || sf.getFullText().includes("ioredis")) {
-      pushFinding("backend.caching.redis", "low", sf, sf, "Redis caching detected - ensure proper cache invalidation strategy", findings);
-    }
-
-    sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-      const expr = call.getExpression().getText();
-      if (expr.includes("cache.get") || expr.includes("redis.get")) {
-        pushFinding("backend.caching.pattern", "low", sf, call, "Cache access detected - ensure cache-aside pattern implementation", findings);
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("redis") || sf.getFullText().includes("ioredis")) {
+        pushFinding("backend.caching.redis", "low", sf, sf, "Redis caching detected - ensure proper cache invalidation strategy", findings);
       }
-    });
-
-    if (sf.getFullText().includes("health") || sf.getFullText().includes("readiness") || sf.getFullText().includes("liveness")) {
-      pushFinding("backend.health.checks", "low", sf, sf, "Health checks detected - ensure proper liveness/readiness probes", findings);
     }
 
-    if (sf.getFullText().includes("winston") || sf.getFullText().includes("pino")) {
-      pushFinding("backend.logging.structured", "low", sf, sf, "Structured logging detected - ensure correlation IDs and proper log levels", findings);
+    if (insightsEnabled) {
+      sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+        const expr = call.getExpression().getText();
+        if (expr.includes("cache.get") || expr.includes("redis.get")) {
+          pushFinding("backend.caching.pattern", "low", sf, call, "Cache access detected - ensure cache-aside pattern implementation", findings);
+        }
+      });
+    }
+
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("health") || sf.getFullText().includes("readiness") || sf.getFullText().includes("liveness")) {
+        pushFinding("backend.health.checks", "low", sf, sf, "Health checks detected - ensure proper liveness/readiness probes", findings);
+      }
+    }
+
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("winston") || sf.getFullText().includes("pino")) {
+        pushFinding("backend.logging.structured", "low", sf, sf, "Structured logging detected - ensure correlation IDs and proper log levels", findings);
+      }
     }
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
@@ -701,12 +926,16 @@ function runBackendIntelligence(project, findings, platform) {
       });
     }
 
-    if (isTestFile(filePath) && sf.getFullText().includes("supertest") || sf.getFullText().includes("TestContainer")) {
-      pushFinding("backend.testing.integration", "low", sf, sf, "Integration testing detected - ensure proper test isolation and cleanup", findings);
+    if (insightsEnabled) {
+      if (isTestFile(filePath) && sf.getFullText().includes("supertest") || sf.getFullText().includes("TestContainer")) {
+        pushFinding("backend.testing.integration", "low", sf, sf, "Integration testing detected - ensure proper test isolation and cleanup", findings);
+      }
     }
 
-    if (sf.getFullText().includes("@Module") && sf.getFullText().includes("@nestjs/common")) {
-      pushFinding("backend.architecture.module", "info", sf, sf, "NestJS module detected - ensure proper separation of concerns", findings);
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("@Module") && sf.getFullText().includes("@nestjs/common")) {
+        pushFinding("backend.architecture.module", "info", sf, sf, "NestJS module detected - ensure proper separation of concerns", findings);
+      }
     }
 
     const isServiceOrRepo = /Service|Repository|Controller|Provider/.test(sf.getBaseName());
@@ -716,77 +945,197 @@ function runBackendIntelligence(project, findings, platform) {
         const classDecl = ctor.getParent();
         if (!classDecl || params.length === 0) return;
 
-        const classBody = classDecl.getFullText();
-        const unusedDeps = [];
+        const depNames = [];
+        params.forEach((param) => {
+          const nameNode = typeof param.getNameNode === 'function' ? param.getNameNode() : null;
+          if (nameNode && typeof nameNode.getKind === 'function' && nameNode.getKind() === SyntaxKind.ObjectBindingPattern) {
+            const elements = typeof nameNode.getElements === 'function' ? nameNode.getElements() : [];
+            elements.forEach((el) => {
+              const elNameNode = typeof el.getNameNode === 'function' ? el.getNameNode() : null;
+              const depName = elNameNode ? elNameNode.getText() : null;
+              if (depName) depNames.push(depName);
+            });
+            return;
+          }
 
-        params.forEach(param => {
-          const paramName = param.getName();
-          const usageRegex = new RegExp(`this\\.${paramName}\\.|${paramName}\\.`, 'g');
-          const usages = (classBody.match(usageRegex) || []).length;
-          if (usages <= 1) {
-            unusedDeps.push(paramName);
+          const depName = param.getName();
+          if (depName && /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(depName)) {
+            depNames.push(depName);
+          }
+        });
+
+        if (depNames.length === 0) return;
+
+        const ctorBody = typeof ctor.getBody === 'function' ? ctor.getBody() : null;
+        const depsSet = new Set(depNames);
+
+        const assignedPropsByDep = new Map();
+        const recordAssignedProp = (depName, propName) => {
+          if (!assignedPropsByDep.has(depName)) assignedPropsByDep.set(depName, new Set());
+          assignedPropsByDep.get(depName).add(propName);
+        };
+
+        if (ctorBody) {
+          const binaries = ctorBody.getDescendantsOfKind(SyntaxKind.BinaryExpression);
+          binaries.forEach((bin) => {
+            const op = typeof bin.getOperatorToken === 'function' ? bin.getOperatorToken().getText() : null;
+            if (op !== '=') return;
+            const left = typeof bin.getLeft === 'function' ? bin.getLeft() : null;
+            const right = typeof bin.getRight === 'function' ? bin.getRight() : null;
+            if (!left || !right) return;
+
+            if (left.getKind() === SyntaxKind.PropertyAccessExpression && right.getKind() === SyntaxKind.Identifier) {
+              const leftExpr = left.getExpression();
+              if (leftExpr && leftExpr.getKind() === SyntaxKind.ThisExpression) {
+                const propName = left.getName();
+                const depName = right.getText();
+                if (depsSet.has(depName) && propName) {
+                  recordAssignedProp(depName, propName);
+                }
+              }
+            }
+          });
+        }
+
+        const isThisPropWrite = (node) => {
+          const parent = node.getParent();
+          if (!parent) return false;
+
+          if (parent.getKind && parent.getKind() === SyntaxKind.BinaryExpression) {
+            const op = parent.getOperatorToken?.().getText?.();
+            const left = parent.getLeft?.();
+            return op === '=' && left === node;
+          }
+
+          if (parent.getKind && parent.getKind() === SyntaxKind.PostfixUnaryExpression) return true;
+          if (parent.getKind && parent.getKind() === SyntaxKind.PrefixUnaryExpression) return true;
+          return false;
+        };
+
+        const allThisPropAccesses = classDecl
+          .getDescendantsOfKind(SyntaxKind.PropertyAccessExpression)
+          .filter((pa) => pa.getExpression()?.getKind?.() === SyntaxKind.ThisExpression);
+
+        const readProps = new Set(
+          allThisPropAccesses
+            .filter((pa) => !isThisPropWrite(pa))
+            .map((pa) => pa.getName())
+            .filter(Boolean)
+        );
+
+        const directDepUseCount = new Map();
+        depNames.forEach((depName) => directDepUseCount.set(depName, 0));
+
+        if (ctorBody) {
+          const identifiers = ctorBody.getDescendantsOfKind(SyntaxKind.Identifier);
+          identifiers.forEach((id) => {
+            const depName = id.getText();
+            if (!depsSet.has(depName)) return;
+
+            const bin = id.getFirstAncestorByKind(SyntaxKind.BinaryExpression);
+            if (bin && bin.getRight?.() === id && bin.getOperatorToken?.().getText?.() === '=') {
+              const left = bin.getLeft?.();
+              if (left && left.getKind?.() === SyntaxKind.PropertyAccessExpression && left.getExpression?.().getKind?.() === SyntaxKind.ThisExpression) {
+                return;
+              }
+            }
+
+            directDepUseCount.set(depName, (directDepUseCount.get(depName) || 0) + 1);
+          });
+        }
+
+        const unusedDeps = [];
+        depNames.forEach((depName) => {
+          const assignedProps = assignedPropsByDep.get(depName);
+          const hasReadProp = assignedProps ? Array.from(assignedProps).some((p) => readProps.has(p)) : false;
+          const hasDirectUse = (directDepUseCount.get(depName) || 0) > 0;
+          if (!hasReadProp && !hasDirectUse) {
+            unusedDeps.push(depName);
           }
         });
 
         if (unusedDeps.length > 0) {
-          pushFinding("backend.architecture.di", "high", sf, ctor, `Unused/underused dependencies: ${unusedDeps.join(', ')} - remove or use them (ISP violation)`, findings);
+          pushFinding(
+            "backend.architecture.di",
+            "high",
+            sf,
+            ctor,
+            `Unused/underused dependencies: ${unusedDeps.join(', ')} - remove or use them (ISP violation)`,
+            findings
+          );
         }
       });
     }
 
     const filePathNormalized = filePath.replace(/\\/g, "/");
-    if (filePathNormalized.includes("/domain/")) {
-      pushFinding("backend.clean.domain", "low", sf, sf, "Domain layer file - ensure contains only business logic and entities", findings);
-    }
-    if (filePathNormalized.includes("/application/")) {
-      pushFinding("backend.clean.application", "low", sf, sf, "Application layer file - ensure contains use cases and application logic", findings);
-    }
-    if (filePathNormalized.includes("/infrastructure/")) {
-      pushFinding("backend.clean.infrastructure", "low", sf, sf, "Infrastructure layer file - ensure contains external concerns and implementations", findings);
-    }
-    if (filePathNormalized.includes("/presentation/")) {
-      pushFinding("backend.clean.presentation", "low", sf, sf, "Presentation layer file - ensure contains controllers and DTOs", findings);
+    const filePathNormalizedLower = filePathNormalized.toLowerCase();
+    if (insightsEnabled) {
+      if (filePathNormalized.includes("/domain/")) {
+        pushFinding("backend.clean.domain", "low", sf, sf, "Domain layer file - ensure contains only business logic and entities", findings);
+      }
+      if (filePathNormalized.includes("/application/")) {
+        pushFinding("backend.clean.application", "low", sf, sf, "Application layer file - ensure contains use cases and application logic", findings);
+      }
+      const isInternalAstToolingFile = filePathNormalizedLower.includes("/infrastructure/ast/") || filePathNormalizedLower.includes("/scripts/hooks-system/infrastructure/ast/");
+      if (filePathNormalized.includes("/infrastructure/") && !isInternalAstToolingFile) {
+        pushFinding("backend.clean.infrastructure", "low", sf, sf, "Infrastructure layer file - ensure contains external concerns and implementations", findings);
+      }
+      if (filePathNormalized.includes("/presentation/")) {
+        pushFinding("backend.clean.presentation", "low", sf, sf, "Presentation layer file - ensure contains controllers and DTOs", findings);
+      }
     }
 
     sf.getDescendantsOfKind(SyntaxKind.InterfaceDeclaration).forEach((iface) => {
       const name = iface.getName();
       if (name && name.includes("Repository")) {
-        pushFinding("backend.repository.pattern", "low", sf, iface, "Repository interface detected - good abstraction for data access", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.repository.pattern", "low", sf, iface, "Repository interface detected - good abstraction for data access", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Service") && !name.includes("Repository")) {
-        pushFinding("backend.service.layer", "low", sf, cls, "Service class detected - ensure orchestrates business logic without data access", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.service.layer", "low", sf, cls, "Service class detected - ensure orchestrates business logic without data access", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Controller")) {
-        pushFinding("backend.controller.layer", "low", sf, cls, "Controller detected - ensure thin layer focused on HTTP concerns", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.controller.layer", "low", sf, cls, "Controller detected - ensure thin layer focused on HTTP concerns", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && (name.includes("Dto") || name.includes("DTO") || name.includes("Request") || name.includes("Response"))) {
-        pushFinding("backend.dto.pattern", "low", sf, cls, "DTO detected - ensure used for data transfer between layers", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.dto.pattern", "low", sf, cls, "DTO detected - ensure used for data transfer between layers", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Mapper")) {
-        pushFinding("backend.mapper.pattern", "low", sf, cls, "Mapper detected - ensure handles conversion between domain objects and DTOs", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.mapper.pattern", "low", sf, cls, "Mapper detected - ensure handles conversion between domain objects and DTOs", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && name.includes("Factory")) {
-        pushFinding("backend.factory.pattern", "low", sf, cls, "Factory detected - good for complex object creation", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.factory.pattern", "low", sf, cls, "Factory detected - good for complex object creation", findings);
+        }
       }
     });
 
@@ -800,14 +1149,18 @@ function runBackendIntelligence(project, findings, platform) {
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("subscribe") || expr.includes("on(") || expr.includes("emit")) {
-        pushFinding("backend.observer.pattern", "low", sf, call, "Observer pattern usage detected - good for event-driven architecture", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.observer.pattern", "low", sf, call, "Observer pattern usage detected - good for event-driven architecture", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.InterfaceDeclaration).forEach((iface) => {
       const methods = iface.getMethods();
       if (methods.length === 1) {
-        pushFinding("backend.strategy.pattern", "low", sf, iface, "Single-method interface detected - potential strategy pattern", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.strategy.pattern", "low", sf, iface, "Single-method interface detected - potential strategy pattern", findings);
+        }
       }
     });
 
@@ -816,207 +1169,224 @@ function runBackendIntelligence(project, findings, platform) {
       const hasAbstract = methods.some((m) => m.getText().includes("abstract"));
       const hasOverride = methods.some((m) => m.getText().includes("override"));
       if (hasAbstract && hasOverride) {
-        pushFinding("backend.template.pattern", "low", sf, cls, "Template method pattern detected - good for algorithm customization", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.template.pattern", "low", sf, cls, "Template method pattern detected - good for algorithm customization", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.Decorator).forEach((decorator) => {
       const expr = decorator.getExpression().getText();
       if (expr.includes("@") && !expr.includes("@nestjs")) {
-        pushFinding("backend.decorator.pattern", "low", sf, decorator, "Custom decorator detected - ensure follows decorator pattern principles", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.decorator.pattern", "low", sf, decorator, "Custom decorator detected - ensure follows decorator pattern principles", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("use(") && (expr.includes("middleware") || expr.includes("Middleware"))) {
-        pushFinding("backend.middleware.pattern", "low", sf, call, "Middleware usage detected - ensure proper request/response processing", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.middleware.pattern", "low", sf, call, "Middleware usage detected - ensure proper request/response processing", findings);
+        }
       }
     });
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression().getText();
       if (expr.includes("pipe(") || expr.includes("pipeline")) {
-        pushFinding("backend.pipeline.pattern", "low", sf, call, "Pipeline pattern detected - good for data processing chains", findings);
+        if (insightsEnabled) {
+          pushFinding("backend.pipeline.pattern", "low", sf, call, "Pipeline pattern detected - good for data processing chains", findings);
+        }
       }
     });
 
-    if (sf.getFullText().includes("circuit") || sf.getFullText().includes("breaker")) {
-      pushFinding("backend.circuit_breaker", "low", sf, sf, "Circuit breaker pattern detected - good for fault tolerance", findings);
-    }
-
-    if (sf.getFullText().includes("bulkhead") || sf.getFullText().includes("isolation")) {
-      pushFinding("backend.bulkhead.pattern", "low", sf, sf, "Bulkhead pattern detected - good for resource isolation", findings);
-    }
-
-    if (sf.getFullText().includes("saga") || sf.getFullText().includes("compensation")) {
-      pushFinding("backend.saga.pattern", "low", sf, sf, "Saga pattern detected - good for distributed transactions", findings);
-    }
-
-    if (sf.getFullText().includes("Command") && sf.getFullText().includes("Query")) {
-      pushFinding("backend.cqrs.pattern", "low", sf, sf, "CQRS pattern detected - ensure proper separation of read/write models", findings);
-    }
-
-    if (sf.getFullText().includes("EventStore") || sf.getFullText().includes("event sourcing")) {
-      pushFinding("backend.event_sourcing", "low", sf, sf, "Event sourcing detected - ensure proper event versioning and replay", findings);
-    }
-
-    if (sf.getFullText().includes("axios") || sf.getFullText().includes("HttpService")) {
-      pushFinding("backend.microservices.comm", "low", sf, sf, "Inter-service communication detected - ensure proper error handling and timeouts", findings);
-    }
-
-    sf.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach((str) => {
-      const text = str.getLiteralValue();
-      if (/\/api\/v\d+\//.test(text)) {
-        pushFinding("backend.api.versioning", "low", sf, str, "API versioning detected - ensure proper version management", findings);
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("circuit") || sf.getFullText().includes("breaker")) {
+        pushFinding("backend.circuit_breaker", "low", sf, sf, "Circuit breaker pattern detected - good for fault tolerance", findings);
       }
-    });
-
-    if (sf.getFullText().includes("@nestjs/swagger") || sf.getFullText().includes("swagger")) {
-      pushFinding("backend.api.documentation", "low", sf, sf, "API documentation detected - ensure complete and accurate OpenAPI specs", findings);
     }
 
-    if (sf.getFullText().includes("@nestjs/graphql") || sf.getFullText().includes("graphql")) {
-      pushFinding("backend.graphql.usage", "low", sf, sf, "GraphQL usage detected - ensure proper schema design and resolvers", findings);
-    }
-
-    if (sf.getFullText().includes("@nestjs/websockets") || sf.getFullText().includes("socket.io")) {
-      pushFinding("backend.websocket.usage", "low", sf, sf, "WebSocket usage detected - ensure proper connection management", findings);
-    }
-
-    sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-      const expr = call.getExpression().getText();
-      if (expr.includes("multer") || expr.includes("upload")) {
-        pushFinding("backend.file.upload", "low", sf, call, "File upload detected - ensure proper validation and security checks", findings);
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("bulkhead") || sf.getFullText().includes("isolation")) {
+        pushFinding("backend.bulkhead.pattern", "low", sf, sf, "Bulkhead pattern detected - good for resource isolation", findings);
       }
-    });
 
-    if (sf.getFullText().includes("@nestjs/schedule") || sf.getFullText().includes("cron")) {
-      pushFinding("backend.scheduled.tasks", "low", sf, sf, "Scheduled tasks detected - ensure proper error handling and logging", findings);
-    }
-
-    if (sf.getFullText().includes("i18n") || sf.getFullText().includes("i18next")) {
-      pushFinding("backend.i18n.support", "low", sf, sf, "Internationalization detected - ensure proper message translation and locale handling", findings);
-    }
-
-    if (sf.getFullText().includes("feature.flag") || sf.getFullText().includes("toggle")) {
-      pushFinding("backend.feature.flags", "low", sf, sf, "Feature flags detected - ensure proper flag management and cleanup", findings);
-    }
-
-    if (sf.getFullText().includes("experiment") || sf.getFullText().includes("ab.test")) {
-      pushFinding("backend.ab.testing", "low", sf, sf, "A/B testing detected - ensure proper experiment tracking and analysis", findings);
-    }
-
-    if (sf.getFullText().includes("analytics") || sf.getFullText().includes("tracking")) {
-      pushFinding("backend.analytics.tracking", "low", sf, sf, "Analytics tracking detected - ensure GDPR compliance and proper data handling", findings);
-    }
-
-    if (sf.getFullText().includes("gdpr") || sf.getFullText().includes("consent")) {
-      pushFinding("backend.gdpr.compliance", "low", sf, sf, "GDPR compliance detected - ensure proper data protection measures", findings);
-    }
-
-    if (sf.getFullText().includes("audit") || sf.getFullText().includes("audit_log")) {
-      pushFinding("backend.audit.logging", "low", sf, sf, "Audit logging detected - ensure tamper-proof and comprehensive logging", findings);
-    }
-
-    if (sf.getFullText().includes("encrypt") || sf.getFullText().includes("crypto")) {
-      pushFinding("backend.data.encryption", "low", sf, sf, "Data encryption detected - ensure proper key management and algorithm selection", findings);
-    }
-
-    if (sf.getFullText().includes("backup") || sf.getFullText().includes("snapshot")) {
-      pushFinding("backend.backup.strategy", "low", sf, sf, "Backup strategy detected - ensure regular and tested backups", findings);
-    }
-
-    if (sf.getFullText().includes("alert") || sf.getFullText().includes("notification")) {
-      pushFinding("backend.monitoring.alerts", "low", sf, sf, "Monitoring alerts detected - ensure actionable and non-spammy alerts", findings);
-    }
-
-    if (sf.getFullText().includes("profiler") || sf.getFullText().includes("benchmark")) {
-      pushFinding("backend.performance.profiling", "low", sf, sf, "Performance profiling detected - ensure regular performance monitoring", findings);
-    }
-
-    if (sf.getFullText().includes("heap") || sf.getFullText().includes("garbage")) {
-      pushFinding("backend.memory.management", "low", sf, sf, "Memory management detected - ensure proper resource cleanup", findings);
-    }
-
-    if (sf.getFullText().includes("synchronized") || sf.getFullText().includes("mutex")) {
-      pushFinding("backend.thread.safety", "low", sf, sf, "Thread safety measures detected - ensure proper synchronization", findings);
-    }
-
-    if (sf.getFullText().includes("pool") || sf.getFullText().includes("connection.pool")) {
-      pushFinding("backend.connection.pooling", "low", sf, sf, "Connection pooling detected - ensure proper pool sizing and monitoring", findings);
-    }
-
-    sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-      const expr = call.getExpression().getText();
-      if (expr.includes("timeout") || expr.includes("setTimeout")) {
-        pushFinding("backend.timeout.management", "low", sf, call, "Timeout management detected - ensure reasonable timeout values", findings);
+      if (sf.getFullText().includes("saga") || sf.getFullText().includes("compensation")) {
+        pushFinding("backend.saga.pattern", "low", sf, sf, "Saga pattern detected - good for distributed transactions", findings);
       }
-    });
 
-    if (sf.getFullText().includes("retry") || sf.getFullText().includes("backoff")) {
-      pushFinding("backend.retry.mechanism", "low", sf, sf, "Retry mechanism detected - ensure exponential backoff and circuit breaker", findings);
+      if (sf.getFullText().includes("Command") && sf.getFullText().includes("Query")) {
+        pushFinding("backend.cqrs.pattern", "low", sf, sf, "CQRS pattern detected - ensure proper separation of read/write models", findings);
+      }
+
+      if (sf.getFullText().includes("EventStore") || sf.getFullText().includes("event sourcing")) {
+        pushFinding("backend.event_sourcing", "low", sf, sf, "Event sourcing detected - ensure proper event versioning and replay", findings);
+      }
+
+      if (sf.getFullText().includes("axios") || sf.getFullText().includes("HttpService")) {
+        pushFinding("backend.microservices.comm", "low", sf, sf, "Inter-service communication detected - ensure proper error handling and timeouts", findings);
+      }
+
+      sf.getDescendantsOfKind(SyntaxKind.StringLiteral).forEach((str) => {
+        const text = str.getLiteralValue();
+        if (/\/api\/v\d+\//.test(text)) {
+          pushFinding("backend.api.versioning", "low", sf, str, "API versioning detected - ensure proper version management", findings);
+        }
+      });
+
+      if (sf.getFullText().includes("@nestjs/swagger") || sf.getFullText().includes("swagger")) {
+        pushFinding("backend.api.documentation", "low", sf, sf, "API documentation detected - ensure complete and accurate OpenAPI specs", findings);
+      }
+
+      if (sf.getFullText().includes("@nestjs/graphql") || sf.getFullText().includes("graphql")) {
+        pushFinding("backend.graphql.usage", "low", sf, sf, "GraphQL usage detected - ensure proper schema design and resolvers", findings);
+      }
+
+      if (sf.getFullText().includes("@nestjs/websockets") || sf.getFullText().includes("socket.io")) {
+        pushFinding("backend.websocket.usage", "low", sf, sf, "WebSocket usage detected - ensure proper connection management", findings);
+      }
+
+      sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+        const expr = call.getExpression().getText();
+        if (expr.includes("multer") || expr.includes("upload")) {
+          pushFinding("backend.file.upload", "low", sf, call, "File upload detected - ensure proper validation and security checks", findings);
+        }
+      });
+
+      if (sf.getFullText().includes("@nestjs/schedule") || sf.getFullText().includes("cron")) {
+        pushFinding("backend.scheduled.tasks", "low", sf, sf, "Scheduled tasks detected - ensure proper error handling and logging", findings);
+      }
+
+      if (sf.getFullText().includes("i18n") || sf.getFullText().includes("i18next")) {
+        pushFinding("backend.i18n.support", "low", sf, sf, "Internationalization detected - ensure proper message translation and locale handling", findings);
+      }
+
+      if (sf.getFullText().includes("feature.flag") || sf.getFullText().includes("toggle")) {
+        pushFinding("backend.feature.flags", "low", sf, sf, "Feature flags detected - ensure proper flag management and cleanup", findings);
+      }
+
+      if (sf.getFullText().includes("experiment") || sf.getFullText().includes("ab.test")) {
+        pushFinding("backend.ab.testing", "low", sf, sf, "A/B testing detected - ensure proper experiment tracking and analysis", findings);
+      }
     }
 
-    if (sf.getFullText().includes("shutdown") || sf.getFullText().includes("SIGTERM")) {
-      pushFinding("backend.graceful.shutdown", "low", sf, sf, "Graceful shutdown detected - ensure proper cleanup and request draining", findings);
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("analytics") || sf.getFullText().includes("tracking")) {
+        pushFinding("backend.analytics.tracking", "low", sf, sf, "Analytics tracking detected - ensure GDPR compliance and proper data handling", findings);
+      }
+
+      if (sf.getFullText().includes("gdpr") || sf.getFullText().includes("consent")) {
+        pushFinding("backend.gdpr.compliance", "low", sf, sf, "GDPR compliance detected - ensure proper data protection measures", findings);
+      }
     }
 
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("audit") || sf.getFullText().includes("audit_log")) {
+        pushFinding("backend.audit.logging", "low", sf, sf, "Audit logging detected - ensure tamper-proof and comprehensive logging", findings);
+      }
 
-    if (sf.getFullText().includes("vault") || sf.getFullText().includes("secrets")) {
-      pushFinding("backend.secrets.management", "low", sf, sf, "Secrets management detected - ensure secure key rotation and access control", findings);
+      if (sf.getFullText().includes("encrypt") || sf.getFullText().includes("crypto")) {
+        pushFinding("backend.data.encryption", "low", sf, sf, "Data encryption detected - ensure proper key management and algorithm selection", findings);
+      }
     }
 
-    if (sf.getFullText().includes("docker") || sf.getFullText().includes("Dockerfile")) {
-      pushFinding("backend.containerization", "low", sf, sf, "Containerization detected - ensure proper image optimization and security", findings);
-    }
+    if (insightsEnabled) {
+      if (sf.getFullText().includes("backup") || sf.getFullText().includes("snapshot")) {
+        pushFinding("backend.backup.strategy", "low", sf, sf, "Backup strategy detected - ensure regular and tested backups", findings);
+      }
 
-    if (sf.getFullText().includes("kubernetes") || sf.getFullText().includes("k8s")) {
-      pushFinding("backend.orchestration", "low", sf, sf, "Container orchestration detected - ensure proper resource limits and health checks", findings);
-    }
+      if (sf.getFullText().includes("alert") || sf.getFullText().includes("notification")) {
+        pushFinding("backend.monitoring.alerts", "low", sf, sf, "Monitoring alerts detected - ensure actionable and non-spammy alerts", findings);
+      }
 
-    if (sf.getFullText().includes("pipeline") || sf.getFullText().includes("workflow")) {
-      pushFinding("backend.cicd.pipelines", "low", sf, sf, "CI/CD pipelines detected - ensure automated testing and deployment", findings);
-    }
+      if (sf.getFullText().includes("profiler") || sf.getFullText().includes("benchmark")) {
+        pushFinding("backend.performance.profiling", "low", sf, sf, "Performance profiling detected - ensure regular performance monitoring", findings);
+      }
 
-    if (sf.getFullText().includes("blue.green") || sf.getFullText().includes("canary")) {
-      pushFinding("backend.deployment.strategy", "low", sf, sf, "Advanced deployment strategy detected - ensure proper rollback procedures", findings);
-    }
+      if (sf.getFullText().includes("heap") || sf.getFullText().includes("garbage")) {
+        pushFinding("backend.memory.management", "low", sf, sf, "Memory management detected - ensure proper resource cleanup", findings);
+      }
 
-    if (sf.getFullText().includes("chaos") || sf.getFullText().includes("fault.injection")) {
-      pushFinding("backend.chaos.engineering", "low", sf, sf, "Chaos engineering detected - ensure systematic testing of failure scenarios", findings);
-    }
+      if (sf.getFullText().includes("synchronized") || sf.getFullText().includes("mutex")) {
+        pushFinding("backend.thread.safety", "low", sf, sf, "Thread safety measures detected - ensure proper synchronization", findings);
+      }
 
-    if (sf.getFullText().includes("istio") || sf.getFullText().includes("linkerd")) {
-      pushFinding("backend.service.mesh", "low", sf, sf, "Service mesh detected - ensure proper traffic management and observability", findings);
-    }
+      if (sf.getFullText().includes("pool") || sf.getFullText().includes("connection.pool")) {
+        pushFinding("backend.connection.pooling", "low", sf, sf, "Connection pooling detected - ensure proper pool sizing and monitoring", findings);
+      }
 
-    if (sf.getFullText().includes("gateway") || sf.getFullText().includes("kong")) {
-      pushFinding("backend.api.gateway", "low", sf, sf, "API gateway detected - ensure proper routing and security policies", findings);
-    }
+      sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
+        const expr = call.getExpression().getText();
+        if (expr.includes("timeout") || expr.includes("setTimeout")) {
+          pushFinding("backend.timeout.management", "low", sf, call, "Timeout management detected - ensure reasonable timeout values", findings);
+        }
+      });
 
-    if (sf.getFullText().includes("rabbitmq") || sf.getFullText().includes("kafka")) {
-      pushFinding("backend.message.queues", "low", sf, sf, "Message queue detected - ensure proper message handling and dead letter queues", findings);
-    }
+      if (sf.getFullText().includes("retry") || sf.getFullText().includes("backoff")) {
+        pushFinding("backend.retry.mechanism", "low", sf, sf, "Retry mechanism detected - ensure exponential backoff and circuit breaker", findings);
+      }
 
-    if (sf.getFullText().includes("stream") || sf.getFullText().includes("reactive")) {
-      pushFinding("backend.stream.processing", "low", sf, sf, "Stream processing detected - ensure proper backpressure handling", findings);
-    }
+      if (sf.getFullText().includes("shutdown") || sf.getFullText().includes("SIGTERM")) {
+        pushFinding("backend.graceful.shutdown", "low", sf, sf, "Graceful shutdown detected - ensure proper cleanup and request draining", findings);
+      }
 
-    if (sf.getFullText().includes("warehouse") || sf.getFullText().includes("redshift")) {
-      pushFinding("backend.data.warehousing", "low", sf, sf, "Data warehousing detected - ensure proper ETL processes and data quality", findings);
-    }
+      if (sf.getFullText().includes("vault") || sf.getFullText().includes("secrets")) {
+        pushFinding("backend.secrets.management", "low", sf, sf, "Secrets management detected - ensure secure key rotation and access control", findings);
+      }
 
-    if (sf.getFullText().includes("tensorflow") || sf.getFullText().includes("pytorch")) {
-      pushFinding("backend.ml.integration", "low", sf, sf, "Machine learning integration detected - ensure proper model versioning and monitoring", findings);
-    }
+      if (sf.getFullText().includes("docker") || sf.getFullText().includes("Dockerfile")) {
+        pushFinding("backend.containerization", "low", sf, sf, "Containerization detected - ensure proper image optimization and security", findings);
+      }
 
-    if (sf.getFullText().includes("web3") || sf.getFullText().includes("blockchain")) {
-      pushFinding("backend.blockchain.integration", "low", sf, sf, "Blockchain integration detected - ensure proper smart contract interactions", findings);
-    }
+      if (sf.getFullText().includes("kubernetes") || sf.getFullText().includes("k8s")) {
+        pushFinding("backend.orchestration", "low", sf, sf, "Container orchestration detected - ensure proper resource limits and health checks", findings);
+      }
 
-    if (sf.getFullText().includes("mqtt") || sf.getFullText().includes("iot")) {
-      pushFinding("backend.iot.integration", "low", sf, sf, "IoT integration detected - ensure proper device management and security", findings);
+      if (sf.getFullText().includes("pipeline") || sf.getFullText().includes("workflow")) {
+        pushFinding("backend.cicd.pipelines", "low", sf, sf, "CI/CD pipelines detected - ensure automated testing and deployment", findings);
+      }
+
+      if (sf.getFullText().includes("blue.green") || sf.getFullText().includes("canary")) {
+        pushFinding("backend.deployment.strategy", "low", sf, sf, "Advanced deployment strategy detected - ensure proper rollback procedures", findings);
+      }
+
+      if (sf.getFullText().includes("chaos") || sf.getFullText().includes("fault.injection")) {
+        pushFinding("backend.chaos.engineering", "low", sf, sf, "Chaos engineering detected - ensure systematic testing of failure scenarios", findings);
+      }
+
+      if (sf.getFullText().includes("istio") || sf.getFullText().includes("linkerd")) {
+        pushFinding("backend.service.mesh", "low", sf, sf, "Service mesh detected - ensure proper traffic management and observability", findings);
+      }
+
+      if (sf.getFullText().includes("gateway") || sf.getFullText().includes("kong")) {
+        pushFinding("backend.api.gateway", "low", sf, sf, "API gateway detected - ensure proper routing and security policies", findings);
+      }
+
+      if (sf.getFullText().includes("rabbitmq") || sf.getFullText().includes("kafka")) {
+        pushFinding("backend.message.queues", "low", sf, sf, "Message queue detected - ensure proper message handling and dead letter queues", findings);
+      }
+
+      if (sf.getFullText().includes("stream") || sf.getFullText().includes("reactive")) {
+        pushFinding("backend.stream.processing", "low", sf, sf, "Stream processing detected - ensure proper backpressure handling", findings);
+      }
+
+      if (sf.getFullText().includes("warehouse") || sf.getFullText().includes("redshift")) {
+        pushFinding("backend.data.warehousing", "low", sf, sf, "Data warehousing detected - ensure proper ETL processes and data quality", findings);
+      }
+
+      if (sf.getFullText().includes("tensorflow") || sf.getFullText().includes("pytorch")) {
+        pushFinding("backend.ml.integration", "low", sf, sf, "Machine learning integration detected - ensure proper model versioning and monitoring", findings);
+      }
+
+      if (sf.getFullText().includes("web3") || sf.getFullText().includes("blockchain")) {
+        pushFinding("backend.blockchain.integration", "low", sf, sf, "Blockchain integration detected - ensure proper smart contract interactions", findings);
+      }
+
+      if (sf.getFullText().includes("mqtt") || sf.getFullText().includes("iot")) {
+        pushFinding("backend.iot.integration", "low", sf, sf, "IoT integration detected - ensure proper device management and security", findings);
+      }
     }
     // ==========================================
     // ==========================================
@@ -1256,32 +1626,96 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    const isDomainServiceFile = /\/(services?|use-?cases?|application)\//i.test(filePath) || /Service/.test(filePath) && !/Repository/.test(filePath);
-    if (isDomainServiceFile &&
-      (fullText.includes('.create(') || fullText.includes('.update(') || fullText.includes('.delete(')) &&
-      !fullText.includes('eventEmitter.emit') && !fullText.includes('@OnEvent')) {
-      pushFinding(
-        "backend.architecture.missing_domain_event",
-        "high",
-        sf,
-        sf,
-        '🚨 HIGH: State change without domain event. Emit events for audit/integration: this.eventEmitter.emit(\'user.created\', new UserCreatedEvent(user)). Benefits: Audit trail, microservices integration, async processing.',
-        findings
-      );
+    const isAppOrDomainFile = /\/(domain|application)\//i.test(filePath);
+    const isServiceFile = /\/(services?|use-?cases?)\//i.test(filePath) || /Service/.test(sf.getBaseName());
+    const isDomainServiceFile = isAppOrDomainFile && isServiceFile && !/Repository/.test(filePath);
+    if (isDomainServiceFile && !fullText.includes('eventEmitter.emit') && !fullText.includes('@OnEvent')) {
+      const persistenceReceiverRegex = /(repo|repository|prisma|typeorm|mongoose|model|collection|db|database|entitymanager|manager|client|knex|sequelize|supabase)/i;
+      const persistenceWriteMethods = new Set([
+        'create',
+        'update',
+        'delete',
+        'insert',
+        'save',
+        'upsert',
+        'remove',
+        'destroy'
+      ]);
+
+      const hasPersistenceWrite = sf
+        .getDescendantsOfKind(SyntaxKind.CallExpression)
+        .some((call) => {
+          const expr = call.getExpression();
+          if (!expr || expr.getKind() !== SyntaxKind.PropertyAccessExpression) return false;
+          const method = expr.getName();
+          if (!persistenceWriteMethods.has(method)) return false;
+          const receiverText = expr.getExpression()?.getText?.() || '';
+          return persistenceReceiverRegex.test(receiverText);
+        });
+
+      if (hasPersistenceWrite) {
+        pushFinding(
+          "backend.architecture.missing_domain_event",
+          "high",
+          sf,
+          sf,
+          '🚨 HIGH: State change without domain event. Emit events for audit/integration: this.eventEmitter.emit(\'user.created\', new UserCreatedEvent(user)). Benefits: Audit trail, microservices integration, async processing.',
+          findings
+        );
+      }
     }
 
     const isAnalyzerForPII = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
-    if (!isAnalyzerForPII) {
-      const sensitiveLogPattern = /(logger|console)\.(log|info|debug|warn)\([^)]*password|token|secret|ssn|creditCard/i;
-      if (sensitiveLogPattern.test(fullText)) {
+    if (!isAnalyzerForPII && !isTestFile(filePath)) {
+      const sensitiveKeywords = [
+        'password',
+        'secret',
+        'ssn',
+        'creditcard',
+        'credit_card',
+        'authorization',
+        'bearer',
+        'jwt',
+        'accesstoken',
+        'access_token',
+        'refreshtoken',
+        'refresh_token',
+        'idtoken',
+        'id_token',
+        'apikey',
+        'api_key'
+      ];
+      const redactionKeywords = ['redact', 'mask', 'sanitize', 'obfuscate'];
+      const logCallRegex = /^(console|logger|this\.logger)\.(log|info|debug|warn|error)$/;
+
+      const calls = sf.getDescendantsOfKind(SyntaxKind.CallExpression);
+      for (const call of calls) {
+        const exprText = call.getExpression().getText();
+        if (!logCallRegex.test(exprText)) continue;
+
+        const args = call.getArguments();
+        if (!args || args.length === 0) continue;
+
+        const relevantArgs = args.filter((a) => {
+          const kind = typeof a.getKind === 'function' ? a.getKind() : null;
+          if (kind === SyntaxKind.StringLiteral || kind === SyntaxKind.NoSubstitutionTemplateLiteral) return false;
+          return true;
+        });
+        if (relevantArgs.length === 0) continue;
+
+        const argsText = relevantArgs.map(a => a.getText()).join(' ').toLowerCase();
+        if (!sensitiveKeywords.some(k => argsText.includes(k))) continue;
+        if (redactionKeywords.some(k => argsText.includes(k))) continue;
+
         pushFinding(
           "backend.security.pii_in_logs",
           "high",
           sf,
-          sf,
+          call,
           '🚨 HIGH: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don\'t include sensitive fields. GDPR violation risk.',
           findings
         );
+        break;
       }
     }
 

@@ -57,10 +57,18 @@ source "$INFRASTRUCTURE_DIR/eslint/eslint-integration.sh"
 # Initialize
 START_TIME=$(date +%s)
 ROOT_DIR=$(pwd)
-TMP_DIR="${ROOT_DIR}/.audit_tmp"
-REPORTS_DIR="${ROOT_DIR}/.audit-reports"
-mkdir -p "$TMP_DIR"
-mkdir -p "$REPORTS_DIR"
+
+# Default to temp directories to avoid polluting repositories.
+# Can be overridden by setting AUDIT_TMP / AUDIT_REPORTS.
+PROJECT_NAME="$(basename "$ROOT_DIR")"
+TMP_BASE_DIR="${TMPDIR:-/tmp}/pumuki-audit/${PROJECT_NAME}"
+TMP_DIR="${AUDIT_TMP:-${TMP_BASE_DIR}/.audit_tmp}"
+REPORTS_DIR="${AUDIT_REPORTS:-${TMP_BASE_DIR}/.audit-reports}"
+mkdir -p "$TMP_DIR" "$REPORTS_DIR"
+
+if [[ -z "${AUDIT_LIBRARY:-}" ]] && [[ -f "$ROOT_DIR/infrastructure/ast/ast-intelligence.js" ]]; then
+  export AUDIT_LIBRARY=true
+fi
 
 print_signature() {
   printf "${BLUE}"
@@ -154,10 +162,54 @@ run_eslint_suite() {
   run_eslint_suite_impl "$ROOT_DIR" "$TMP_DIR"
 }
 
+run_intelligent_audit() {
+  local node_bin=""
+  node_bin="$(command -v node 2>/dev/null || true)"
+  if [[ -z "$node_bin" ]]; then
+    if [[ -x "/opt/homebrew/bin/node" ]]; then node_bin="/opt/homebrew/bin/node"; fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    if [[ -x "/usr/local/bin/node" ]]; then node_bin="/usr/local/bin/node"; fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    if [[ -x "/usr/bin/node" ]]; then node_bin="/usr/bin/node"; fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    return 0
+  fi
+
+  local intelligent_audit="$HOOKS_SYSTEM_DIR/infrastructure/orchestration/intelligent-audit.js"
+  if [[ ! -f "$intelligent_audit" ]]; then
+    return 0
+  fi
+
+  export AUDIT_TMP="$TMP_DIR"
+  if [[ "${BLOCK_ON_REPO_VIOLATIONS:-0}" == "1" ]]; then
+    export AI_GATE_SCOPE="repo"
+  else
+    export AI_GATE_SCOPE="staging"
+  fi
+
+  local node_path_value="${NODE_PATH:-}"
+  if [[ -d "$HOOKS_SYSTEM_DIR/node_modules" ]]; then
+    node_path_value="$HOOKS_SYSTEM_DIR/node_modules${node_path_value:+:$node_path_value}"
+  fi
+  if [[ -d "$ROOT_DIR/node_modules" ]]; then
+    node_path_value="$ROOT_DIR/node_modules${node_path_value:+:$node_path_value}"
+  fi
+
+  if [[ -n "$node_path_value" ]]; then
+    (cd "$ROOT_DIR" && export NODE_PATH="$node_path_value" && "$node_bin" "$intelligent_audit" >/dev/null 2>&1) || true
+  else
+    (cd "$ROOT_DIR" && "$node_bin" "$intelligent_audit" >/dev/null 2>&1) || true
+  fi
+}
+
 full_audit() {
   run_basic_checks
   run_eslint_suite
   run_ast_intelligence
+  run_intelligent_audit
   compute_staged_summary
   summarize_all
 }
@@ -867,9 +919,46 @@ run_ast_intelligence() {
   # Ensure TMP_DIR exists
   mkdir -p "$TMP_DIR"
 
+  local node_bin=""
+  node_bin="$(command -v node 2>/dev/null || true)"
+  if [[ -z "$node_bin" ]]; then
+    if [[ -x "/opt/homebrew/bin/node" ]]; then node_bin="/opt/homebrew/bin/node"; fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    if [[ -x "/usr/local/bin/node" ]]; then node_bin="/usr/local/bin/node"; fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    if [[ -x "/usr/bin/node" ]]; then node_bin="/usr/bin/node"; fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    local nvm_dir="${NVM_DIR:-$HOME/.nvm}"
+    local nvm_default=""
+    if [[ -f "$nvm_dir/alias/default" ]]; then
+      nvm_default="$(cat "$nvm_dir/alias/default" 2>/dev/null || true)"
+      nvm_default="${nvm_default##v}"
+      nvm_default="${nvm_default%%[[:space:]]*}"
+    fi
+    if [[ -n "$nvm_default" ]] && [[ -x "$nvm_dir/versions/node/v${nvm_default}/bin/node" ]]; then
+      node_bin="$nvm_dir/versions/node/v${nvm_default}/bin/node"
+    fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    local nvm_dir_fallback="${NVM_DIR:-$HOME/.nvm}"
+    local latest_node=""
+    latest_node="$(ls -1 "$nvm_dir_fallback/versions/node" 2>/dev/null | grep -E '^v[0-9]+' | sort -V | tail -n 1 || true)"
+    if [[ -n "$latest_node" ]] && [[ -x "$nvm_dir_fallback/versions/node/${latest_node}/bin/node" ]]; then
+      node_bin="$nvm_dir_fallback/versions/node/${latest_node}/bin/node"
+    fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    printf "%b❌ Node.js not found in PATH. Install Node.js >= 18 or ensure your shell loads nvm/asdf for non-interactive scripts.%b\n" "$RED" "$NC" >&2
+    return 127
+  fi
+
   # Determine NODE_PATH to include library's node_modules
   # Try multiple locations: HOOKS_SYSTEM_DIR/node_modules, or project root node_modules
-  local node_path_parts=()
+  local -a node_path_parts
+  node_path_parts=()
   
   # If HOOKS_SYSTEM_DIR has its own node_modules
   if [[ -d "$HOOKS_SYSTEM_DIR/node_modules" ]]; then
@@ -899,7 +988,7 @@ run_ast_intelligence() {
 
   # Build NODE_PATH
   local node_path_value="${NODE_PATH:-}"
-  for path_part in "${node_path_parts[@]}"; do
+  for path_part in "${node_path_parts[@]:-}"; do
     if [[ -n "$node_path_value" ]]; then
       node_path_value="$path_part:$node_path_value"
     else
@@ -910,9 +999,9 @@ run_ast_intelligence() {
   # Execute AST with proper error handling and NODE_PATH
   # Change to HOOKS_SYSTEM_DIR so Node.js resolves modules correctly
   if [[ -n "$node_path_value" ]]; then
-    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export NODE_PATH="$node_path_value" && export AUDIT_TMP="$TMP_DIR" && node "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export NODE_PATH="$node_path_value" && export AUDIT_TMP="$TMP_DIR" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
   else
-    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export AUDIT_TMP="$TMP_DIR" && node "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export AUDIT_TMP="$TMP_DIR" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
   fi
 
   # Check if AST script failed

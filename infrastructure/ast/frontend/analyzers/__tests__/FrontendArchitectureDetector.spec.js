@@ -3,17 +3,16 @@ const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
 
-jest.mock('fs');
-jest.mock('glob');
-
 function makeSUT(projectRoot = '/test/project') {
   return new FrontendArchitectureDetector(projectRoot);
 }
 
 describe('FrontendArchitectureDetector', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
-    fs.existsSync.mockReturnValue(false);
+    jest.restoreAllMocks();
+    jest.spyOn(fs, 'existsSync').mockReturnValue(false);
+    jest.spyOn(fs, 'readFileSync').mockReturnValue('');
+    jest.spyOn(glob, 'sync').mockReturnValue([]);
   });
 
   describe('constructor', () => {
