@@ -15,6 +15,15 @@ const args = process.argv.slice(3);
 
 const HOOKS_ROOT = path.join(__dirname, '..');
 
+function runCommandOrExit(commandLine, options = {}) {
+  try {
+    execSync(commandLine, options);
+  } catch (err) {
+    const status = typeof err?.status === 'number' ? err.status : 1;
+    process.exit(status);
+  }
+}
+
 function isPidRunning(pid) {
   if (!pid || Number.isNaN(pid)) return false;
   try {
@@ -191,7 +200,10 @@ function resolveGuardsScriptPath(repoRoot) {
 
 const commands = {
   audit: () => {
-    execSync(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
+    const mode = args[0];
+    const safeMode = typeof mode === 'string' && /^[0-9]+$/.test(mode) ? mode : '';
+    const modeArg = safeMode ? ` ${safeMode}` : '';
+    runCommandOrExit(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}${modeArg}`, { stdio: 'inherit' });
   },
 
   ast: () => {
@@ -204,23 +216,23 @@ const commands = {
     const adapterPath = adapterCandidates.find(candidate => fs.existsSync(candidate));
 
     if (stagedFiles.length > 0 && adapterPath) {
-      execSync(`node ${adapterPath}`, { stdio: 'inherit', cwd: repoRoot });
+      runCommandOrExit(`node ${adapterPath}`, { stdio: 'inherit', cwd: repoRoot });
       return;
     }
 
-    execSync(`node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')}`, { stdio: 'inherit' });
+    runCommandOrExit(`node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')}`, { stdio: 'inherit' });
   },
 
   install: () => {
-    execSync(`node ${path.join(HOOKS_ROOT, 'bin/install.js')}`, { stdio: 'inherit' });
+    runCommandOrExit(`node ${path.join(HOOKS_ROOT, 'bin/install.js')}`, { stdio: 'inherit' });
   },
 
   'verify-policy': () => {
-    execSync(`bash ${path.join(HOOKS_ROOT, 'bin/verify-no-verify.sh')}`, { stdio: 'inherit' });
+    runCommandOrExit(`bash ${path.join(HOOKS_ROOT, 'bin/verify-no-verify.sh')}`, { stdio: 'inherit' });
   },
 
   'progress': () => {
-    execSync(`bash ${path.join(HOOKS_ROOT, 'bin/generate-progress-report.sh')}`, { stdio: 'inherit' });
+    runCommandOrExit(`bash ${path.join(HOOKS_ROOT, 'bin/generate-progress-report.sh')}`, { stdio: 'inherit' });
   },
 
   health: () => {
@@ -229,7 +241,7 @@ const commands = {
   },
 
   watch: () => {
-    execSync(`node ${path.join(HOOKS_ROOT, 'bin/watch-hooks.js')}`, { stdio: 'inherit' });
+    runCommandOrExit(`node ${path.join(HOOKS_ROOT, 'bin/watch-hooks.js')}`, { stdio: 'inherit' });
   },
 
   guards: () => {
@@ -253,7 +265,7 @@ const commands = {
       process.exit(1);
     }
 
-    execSync(`bash ${startGuardsPath} ${subcommand}`, { stdio: 'inherit' });
+    runCommandOrExit(`bash ${startGuardsPath} ${subcommand}`, { stdio: 'inherit' });
   },
 
   'gitflow': () => {
