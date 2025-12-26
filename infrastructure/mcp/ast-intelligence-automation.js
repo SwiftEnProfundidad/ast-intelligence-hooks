@@ -705,6 +705,71 @@ class MCPServer {
         this.buffer = '';
     }
 
+    extractMessages() {
+        const messages = [];
+
+        while (this.buffer.length > 0) {
+            const crlfHeaderEnd = this.buffer.indexOf('\r\n\r\n');
+            const lfHeaderEnd = crlfHeaderEnd === -1 ? this.buffer.indexOf('\n\n') : -1;
+            const headerEnd = crlfHeaderEnd !== -1 ? crlfHeaderEnd : lfHeaderEnd;
+            const headerDelimiter = crlfHeaderEnd !== -1 ? '\r\n\r\n' : (lfHeaderEnd !== -1 ? '\n\n' : null);
+
+            if (headerDelimiter) {
+                const headerBlock = this.buffer.slice(0, headerEnd);
+                const contentLengthLine = headerBlock
+                    .split(/\r?\n/)
+                    .find(line => /^content-length:/i.test(line));
+
+                if (contentLengthLine) {
+                    const match = contentLengthLine.match(/content-length:\s*(\d+)/i);
+                    const contentLength = match ? Number(match[1]) : NaN;
+                    if (!Number.isFinite(contentLength) || contentLength < 0) {
+                        this.buffer = this.buffer.slice(headerEnd + headerDelimiter.length);
+                        continue;
+                    }
+
+                    const bodyStart = headerEnd + headerDelimiter.length;
+                    if (this.buffer.length < bodyStart + contentLength) {
+                        break;
+                    }
+
+                    const body = this.buffer.slice(bodyStart, bodyStart + contentLength);
+                    messages.push({ body, framed: true, delimiter: headerDelimiter });
+                    this.buffer = this.buffer.slice(bodyStart + contentLength);
+                    continue;
+                }
+            }
+
+            const nl = this.buffer.indexOf('\n');
+            if (nl === -1) {
+                break;
+            }
+            const line = this.buffer.slice(0, nl).trim();
+            this.buffer = this.buffer.slice(nl + 1);
+            if (line) {
+                messages.push({ body: line, framed: false });
+            }
+        }
+
+        return messages;
+    }
+
+    writeResponse(response, framed, delimiter) {
+        const responseStr = JSON.stringify(response);
+
+        if (framed) {
+            const len = Buffer.byteLength(responseStr, 'utf8');
+            const sep = delimiter === '\n\n' ? '\n\n' : '\r\n\r\n';
+            process.stdout.write(`Content-Length: ${len}${sep}${responseStr}`);
+        } else {
+            process.stdout.write(responseStr + '\n');
+        }
+
+        if (typeof process.stdout.flush === 'function') {
+            process.stdout.flush();
+        }
+    }
+
     async handleMessage(message) {
         try {
             const request = JSON.parse(message);
@@ -1171,25 +1236,18 @@ class MCPServer {
         process.stdin.on('data', async (chunk) => {
             this.buffer += chunk.toString();
 
-            // Process complete messages (separated by newlines)
-            const lines = this.buffer.split('\n');
-            this.buffer = lines.pop() || '';
+            const messages = this.extractMessages();
+            for (const message of messages) {
+                const payload = message?.body || '';
+                if (payload.trim()) {
+                    console.error(`[MCP] Received: ${payload.substring(0, 100)}...`);
 
-            for (const line of lines) {
-                if (line.trim()) {
-                    console.error(`[MCP] Received: ${line.substring(0, 100)}...`);
-
-                    const response = await this.handleMessage(line);
+                    const response = await this.handleMessage(payload);
 
                     if (response !== null) {
                         const responseStr = JSON.stringify(response);
                         console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
-
-                        process.stdout.write(responseStr + '\n');
-
-                        if (typeof process.stdout.flush === 'function') {
-                            process.stdout.flush();
-                        }
+                        this.writeResponse(response, Boolean(message?.framed), message?.delimiter);
                     }
                 }
             }
