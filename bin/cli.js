@@ -200,7 +200,10 @@ function resolveGuardsScriptPath(repoRoot) {
 
 const commands = {
   audit: () => {
-    runCommandOrExit(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
+    const mode = args[0];
+    const safeMode = typeof mode === 'string' && /^[0-9]+$/.test(mode) ? mode : '';
+    const modeArg = safeMode ? ` ${safeMode}` : '';
+    runCommandOrExit(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}${modeArg}`, { stdio: 'inherit' });
   },
 
   ast: () => {
