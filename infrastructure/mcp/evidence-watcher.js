@@ -124,7 +124,7 @@ class MCPServer {
                     }
 
                     const body = this.buffer.slice(bodyStart, bodyStart + contentLength);
-                    messages.push(body);
+                    messages.push({ body, framed: true });
                     this.buffer = this.buffer.slice(bodyStart + contentLength);
                     continue;
                 }
@@ -138,11 +138,26 @@ class MCPServer {
             const line = this.buffer.slice(0, nl).trim();
             this.buffer = this.buffer.slice(nl + 1);
             if (line) {
-                messages.push(line);
+                messages.push({ body: line, framed: false });
             }
         }
 
         return messages;
+    }
+
+    writeResponse(response, framed) {
+        const responseStr = JSON.stringify(response);
+
+        if (framed) {
+            const len = Buffer.byteLength(responseStr, 'utf8');
+            process.stdout.write(`Content-Length: ${len}\r\n\r\n${responseStr}`);
+        } else {
+            process.stdout.write(responseStr + '\n');
+        }
+
+        if (typeof process.stdout.flush === 'function') {
+            process.stdout.flush();
+        }
     }
 
     handleMessage(message) {
@@ -291,21 +306,16 @@ class MCPServer {
             const messages = this.extractMessages();
 
             for (const message of messages) {
-                if (message.trim()) {
-                    console.error(`[MCP] Received: ${message.substring(0, 100)}...`);
+                const payload = message?.body || '';
+                if (payload.trim()) {
+                    console.error(`[MCP] Received: ${payload.substring(0, 100)}...`);
 
-                    const response = this.handleMessage(message);
+                    const response = this.handleMessage(payload);
 
                     if (response !== null) {
                         const responseStr = JSON.stringify(response);
                         console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
-
-                        // Cursor/Windsurf accept newline-delimited JSON responses.
-                        process.stdout.write(responseStr + '\n');
-
-                        if (typeof process.stdout.flush === 'function') {
-                            process.stdout.flush();
-                        }
+                        this.writeResponse(response, Boolean(message?.framed));
                     }
                 }
             }
