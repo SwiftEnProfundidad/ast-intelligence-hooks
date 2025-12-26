@@ -36,7 +36,7 @@ const MAX_EVIDENCE_AGE = 180; // 3 minutes in seconds
 function getLibraryInstallPath() {
     const scriptPath = __filename; // Current file path
     const repoRoot = REPO_ROOT;
-    
+
     // Try to find library path relative to repo root
     if (scriptPath.includes('node_modules/@pumuki/ast-intelligence-hooks')) {
         return 'node_modules/@pumuki/ast-intelligence-hooks';
@@ -47,8 +47,8 @@ function getLibraryInstallPath() {
     // If script is in repo root, try to detect from package.json
     try {
         const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
-        const libPath = packageJson.devDependencies?.['@pumuki/ast-intelligence-hooks'] || 
-                       packageJson.dependencies?.['@pumuki/ast-intelligence-hooks'];
+        const libPath = packageJson.devDependencies?.['@pumuki/ast-intelligence-hooks'] ||
+            packageJson.dependencies?.['@pumuki/ast-intelligence-hooks'];
         if (libPath && libPath.startsWith('file:')) {
             // Local file path, extract relative path
             const relativePath = libPath.replace('file:', '').replace(/^\.\.\//, '');
@@ -121,10 +121,10 @@ let lastAutoCommitTime = 0;
 let lastEvidenceAutoFix = 0;
 const NOTIFICATION_COOLDOWN = 120000;
 const EVIDENCE_AUTOFIX_COOLDOWN = Number(process.env.EVIDENCE_AUTOFIX_COOLDOWN_MS || 300000);
-const AUTO_COMMIT_INTERVAL = 300000; 
-const AUTO_COMMIT_ENABLED = process.env.AUTO_COMMIT_ENABLED === 'true'; 
-const AUTO_PUSH_ENABLED = process.env.AUTO_PUSH_ENABLED !== 'false'; 
-const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true'; 
+const AUTO_COMMIT_INTERVAL = 300000;
+const AUTO_COMMIT_ENABLED = process.env.AUTO_COMMIT_ENABLED === 'true';
+const AUTO_PUSH_ENABLED = process.env.AUTO_PUSH_ENABLED !== 'false';
+const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true';
 
 /**
  * Helper: Send macOS notification via centralized adapter
@@ -805,6 +805,51 @@ class MCPServer {
         this.buffer = '';
     }
 
+    extractMessages() {
+        const messages = [];
+
+        while (this.buffer.length > 0) {
+            const headerEnd = this.buffer.indexOf('\r\n\r\n');
+            if (headerEnd !== -1) {
+                const headerBlock = this.buffer.slice(0, headerEnd);
+                const contentLengthLine = headerBlock
+                    .split('\r\n')
+                    .find(line => /^content-length:/i.test(line));
+
+                if (contentLengthLine) {
+                    const match = contentLengthLine.match(/content-length:\s*(\d+)/i);
+                    const contentLength = match ? Number(match[1]) : NaN;
+                    if (!Number.isFinite(contentLength) || contentLength < 0) {
+                        this.buffer = this.buffer.slice(headerEnd + 4);
+                        continue;
+                    }
+
+                    const bodyStart = headerEnd + 4;
+                    if (this.buffer.length < bodyStart + contentLength) {
+                        break;
+                    }
+
+                    const body = this.buffer.slice(bodyStart, bodyStart + contentLength);
+                    messages.push(body);
+                    this.buffer = this.buffer.slice(bodyStart + contentLength);
+                    continue;
+                }
+            }
+
+            const nl = this.buffer.indexOf('\n');
+            if (nl == -1) {
+                break;
+            }
+            const line = this.buffer.slice(0, nl).trim();
+            this.buffer = this.buffer.slice(nl + 1);
+            if (line) {
+                messages.push(line);
+            }
+        }
+
+        return messages;
+    }
+
     async handleMessage(message) {
         try {
             const request = JSON.parse(message);
@@ -1231,17 +1276,18 @@ class MCPServer {
         process.stdin.on('data', async (chunk) => {
             this.buffer += chunk.toString();
 
-            const lines = this.buffer.split('\n');
-            this.buffer = lines.pop() || '';
+            const messages = this.extractMessages();
+            for (const message of messages) {
+                if (message.trim()) {
+                    console.error(`[MCP] Received: ${message.substring(0, 100)}...`);
 
-            for (const line of lines) {
-                if (line.trim()) {
-
-                    const response = await this.handleMessage(line);
+                    const response = await this.handleMessage(message);
 
                     if (response !== null) {
                         const responseStr = JSON.stringify(response);
+                        console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
 
+                        // Cursor/Windsurf accept newline-delimited JSON responses.
                         process.stdout.write(responseStr + '\n');
 
                         if (typeof process.stdout.flush === 'function') {
@@ -1407,16 +1453,16 @@ setInterval(async () => {
 
         // Detectar ruta de instalación de la librería dinámicamente
         const libraryPath = getLibraryInstallPath();
-        
+
         // Filtrar cambios: solo código del proyecto, excluir node_modules, package-lock, librería, etc.
         const uniqueFiles = new Set();
-        
+
         uncommittedChanges
             .split('\n')
             .forEach(line => {
                 const file = line.trim().substring(3); // Remover status (ej: " M ")
                 if (!file) return;
-                
+
                 // Excluir siempre: node_modules, package-lock, .git, configs IDE
                 if (file.startsWith('node_modules/') ||
                     file.includes('package-lock.json') ||
@@ -1427,14 +1473,14 @@ setInterval(async () => {
                     file.startsWith('.idea/')) {
                     return;
                 }
-                
+
                 // Excluir ruta de instalación de la librería (si se detectó)
                 if (libraryPath && file.startsWith(libraryPath + '/')) {
                     return;
                 }
-                
+
                 // Solo incluir archivos de código/documentación
-                if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') || 
+                if (file.endsWith('.ts') || file.endsWith('.tsx') || file.endsWith('.js') ||
                     file.endsWith('.jsx') || file.endsWith('.swift') || file.endsWith('.kt') ||
                     file.endsWith('.py') || file.endsWith('.java') || file.endsWith('.go') ||
                     file.endsWith('.rs') || file.endsWith('.md') || file.endsWith('.json') ||
