@@ -1,5 +1,5 @@
-
 const Finding = require('./Finding');
+const { ValidationError } = require('../errors');
 
 class AuditResult {
   constructor(findings = []) {
@@ -14,7 +14,7 @@ class AuditResult {
 
   addFinding(finding) {
     if (!(finding instanceof Finding)) {
-      throw new Error('Can only add Finding instances to AuditResult');
+      throw new ValidationError('Can only add Finding instances to AuditResult', 'finding', finding);
     }
     this.findings.push(finding);
   }
