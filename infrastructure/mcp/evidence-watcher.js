@@ -98,6 +98,53 @@ class MCPServer {
         this.buffer = '';
     }
 
+    extractMessages() {
+        const messages = [];
+
+        while (this.buffer.length > 0) {
+            const headerEnd = this.buffer.indexOf('\r\n\r\n');
+            if (headerEnd !== -1) {
+                const headerBlock = this.buffer.slice(0, headerEnd);
+                const contentLengthLine = headerBlock
+                    .split('\r\n')
+                    .find(line => /^content-length:/i.test(line));
+
+                if (contentLengthLine) {
+                    const match = contentLengthLine.match(/content-length:\s*(\d+)/i);
+                    const contentLength = match ? Number(match[1]) : NaN;
+                    if (!Number.isFinite(contentLength) || contentLength < 0) {
+                        // Malformed header - drop it to avoid infinite loop
+                        this.buffer = this.buffer.slice(headerEnd + 4);
+                        continue;
+                    }
+
+                    const bodyStart = headerEnd + 4;
+                    if (this.buffer.length < bodyStart + contentLength) {
+                        break; // Wait for more data
+                    }
+
+                    const body = this.buffer.slice(bodyStart, bodyStart + contentLength);
+                    messages.push(body);
+                    this.buffer = this.buffer.slice(bodyStart + contentLength);
+                    continue;
+                }
+            }
+
+            // Fallback: newline-delimited JSON
+            const nl = this.buffer.indexOf('\n');
+            if (nl === -1) {
+                break;
+            }
+            const line = this.buffer.slice(0, nl).trim();
+            this.buffer = this.buffer.slice(nl + 1);
+            if (line) {
+                messages.push(line);
+            }
+        }
+
+        return messages;
+    }
+
     handleMessage(message) {
         try {
             const request = JSON.parse(message);
@@ -241,20 +288,19 @@ class MCPServer {
         process.stdin.on('data', (chunk) => {
             this.buffer += chunk.toString();
 
-            const lines = this.buffer.split('\n');
-            this.buffer = lines.pop() || ''; // Keep incomplete line in buffer
+            const messages = this.extractMessages();
 
-            for (const line of lines) {
-                if (line.trim()) {
-                    console.error(`[MCP] Received: ${line.substring(0, 100)}...`);
+            for (const message of messages) {
+                if (message.trim()) {
+                    console.error(`[MCP] Received: ${message.substring(0, 100)}...`);
 
-                    const response = this.handleMessage(line);
+                    const response = this.handleMessage(message);
 
                     if (response !== null) {
                         const responseStr = JSON.stringify(response);
-
                         console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
 
+                        // Cursor/Windsurf accept newline-delimited JSON responses.
                         process.stdout.write(responseStr + '\n');
 
                         if (typeof process.stdout.flush === 'function') {
