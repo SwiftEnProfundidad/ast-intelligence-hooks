@@ -353,10 +353,10 @@ compute_staged_summary() {
     while IFS= read -r fpath; do
       [[ -z "$fpath" ]] && continue
       local ccrit chigh cmed clow
-      ccrit=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="critical" or .=="error" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json")
-      chigh=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="high" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json")
-      cmed=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="warning" or .=="medium" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json")
-      clow=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="info" or .=="low" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json")
+      ccrit=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="critical" or .=="error" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
+      chigh=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="high" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
+      cmed=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="warning" or .=="medium" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
+      clow=$(jq -r --arg p "$fpath" '[ .findings[] | select(.filePath == $p) | .severity | if .=="info" or .=="low" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
       scrit=$((scrit + ccrit)); shigh=$((shigh + chigh)); smed=$((smed + cmed)); slow=$((slow + clow))
     done < "$staged_file"
     printf "  Staged AST → 🔴 CRITICAL:%s 🟠 HIGH:%s 🟡 MEDIUM:%s 🔵 LOW:%s\n" "${scrit:-0}" "${shigh:-0}" "${smed:-0}" "${slow:-0}"
