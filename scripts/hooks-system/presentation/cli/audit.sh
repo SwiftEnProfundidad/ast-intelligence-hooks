@@ -9,17 +9,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HOOKS_SYSTEM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 INFRASTRUCTURE_DIR="$HOOKS_SYSTEM_DIR/infrastructure"
 
-# Source the orchestrator
-source "$INFRASTRUCTURE_DIR/shell/orchestrators/audit-orchestrator.sh"
-
-# Execute the main menu
+# If a mode was provided, set AUDIT_OPTION before sourcing the orchestrator
 MODE="${1:-}"
 if [[ -n "$MODE" ]]; then
-  case "$MODE" in
-    2) full_audit_strict_repo_and_staging ;;
-    3) full_audit_strict_staging_only ;;
-    *) interactive_menu ;;
-  esac
-else
-  interactive_menu
+  export AUDIT_OPTION="$MODE"
 fi
+
+# Source the orchestrator
+source "$INFRASTRUCTURE_DIR/shell/orchestrators/audit-orchestrator.sh"
