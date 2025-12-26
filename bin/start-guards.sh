@@ -80,7 +80,10 @@ from datetime import datetime, timezone
 ts = "$timestamp"
 
 try:
-    dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    normalized = ts.replace("Z", "+00:00")
+    dt = datetime.fromisoformat(normalized)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
     now_utc = datetime.now(timezone.utc)
     diff = now_utc - dt
     print(int(diff.total_seconds()))
