@@ -488,6 +488,27 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
       }
     };
 
+    const shouldRemoveLegacyMcpServer = (serverName, serverConfig) => {
+      const name = String(serverName || '').toLowerCase();
+      if (name === 'ai-evidence-watcher' || name === 'evidence-watcher' || name === 'mcp-ai-evidence') {
+        return true;
+      }
+
+      const args = Array.isArray(serverConfig?.args) ? serverConfig.args.map(String) : [];
+      const argsStr = args.join(' ');
+
+      if (argsStr.includes('packages/mcp-ai-evidence/dist/')) {
+        return true;
+      }
+
+      // Remove legacy watcher entry if configured directly from this repo
+      if (argsStr.includes('/infrastructure/mcp/evidence-watcher.js') || argsStr.includes('infrastructure/mcp/evidence-watcher.js')) {
+        return true;
+      }
+
+      return false;
+    };
+
     const ideConfigs = this.detectIDEs();
     let configuredCount = 0;
 
@@ -514,6 +535,14 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
           }
 
           existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
+
+          // Remove legacy/invalid evidence MCP entries that have been a common source of timeouts.
+          for (const [name, cfg] of Object.entries(existing.mcpServers)) {
+            if (name === 'ast-intelligence-automation') continue;
+            if (shouldRemoveLegacyMcpServer(name, cfg)) {
+              delete existing.mcpServers[name];
+            }
+          }
 
           fs.writeFileSync(mcpConfigPath, JSON.stringify(existing, null, 2));
           process.stdout.write(`${COLORS.green}  ✅ Updated ${ide.configPath} (merged configuration)${COLORS.reset}\n`);
@@ -542,6 +571,14 @@ ${COLORS.cyan}[0.5/8] Configuring artifact exclusions...${COLORS.reset}`);
             existing.mcpServers = {};
           }
           existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
+
+          for (const [name, cfg] of Object.entries(existing.mcpServers)) {
+            if (name === 'ast-intelligence-automation') continue;
+            if (shouldRemoveLegacyMcpServer(name, cfg)) {
+              delete existing.mcpServers[name];
+            }
+          }
+
           fs.writeFileSync(fallbackPath, JSON.stringify(existing, null, 2));
           process.stdout.write(`${COLORS.green}  ✅ Updated .cursor/mcp.json (merged configuration)${COLORS.reset}\n`);
           configuredCount++;
