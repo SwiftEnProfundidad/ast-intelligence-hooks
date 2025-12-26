@@ -4,13 +4,15 @@
  * Port interface for Evidence operations.
  * Infrastructure adapters must implement this interface.
  */
+const { NotImplementedError } = require('../errors');
+
 class IEvidencePort {
     /**
      * Read the current evidence state
      * @returns {Object|null} Evidence object or null if not found
      */
     read() {
-        throw new Error('IEvidencePort.read() must be implemented');
+        throw new NotImplementedError('IEvidencePort.read() must be implemented');
     }
 
     /**
@@ -19,7 +21,7 @@ class IEvidencePort {
      * @returns {boolean} Success status
      */
     write(evidence) {
-        throw new Error('IEvidencePort.write() must be implemented');
+        throw new NotImplementedError('IEvidencePort.write() must be implemented');
     }
 
     /**
@@ -27,7 +29,7 @@ class IEvidencePort {
      * @returns {boolean}
      */
     exists() {
-        throw new Error('IEvidencePort.exists() must be implemented');
+        throw new NotImplementedError('IEvidencePort.exists() must be implemented');
     }
 
     /**
@@ -35,7 +37,7 @@ class IEvidencePort {
      * @returns {number} Age in seconds, or Infinity if not found
      */
     getAgeSeconds() {
-        throw new Error('IEvidencePort.getAgeSeconds() must be implemented');
+        throw new NotImplementedError('IEvidencePort.getAgeSeconds() must be implemented');
     }
 
     /**
@@ -44,7 +46,7 @@ class IEvidencePort {
      * @returns {boolean}
      */
     isStale(thresholdSeconds = 180) {
-        throw new Error('IEvidencePort.isStale() must be implemented');
+        throw new NotImplementedError('IEvidencePort.isStale() must be implemented');
     }
 
     /**
@@ -53,7 +55,7 @@ class IEvidencePort {
      * @returns {boolean} Success status
      */
     refresh(options = {}) {
-        throw new Error('IEvidencePort.refresh() must be implemented');
+        throw new NotImplementedError('IEvidencePort.refresh() must be implemented');
     }
 
     /**
@@ -61,7 +63,7 @@ class IEvidencePort {
      * @returns {string|null}
      */
     getSession() {
-        throw new Error('IEvidencePort.getSession() must be implemented');
+        throw new NotImplementedError('IEvidencePort.getSession() must be implemented');
     }
 
     /**
@@ -69,7 +71,7 @@ class IEvidencePort {
      * @returns {string[]}
      */
     getPlatforms() {
-        throw new Error('IEvidencePort.getPlatforms() must be implemented');
+        throw new NotImplementedError('IEvidencePort.getPlatforms() must be implemented');
     }
 
     /**
@@ -77,7 +79,7 @@ class IEvidencePort {
      * @returns {string[]}
      */
     getModifiedFiles() {
-        throw new Error('IEvidencePort.getModifiedFiles() must be implemented');
+        throw new NotImplementedError('IEvidencePort.getModifiedFiles() must be implemented');
     }
 }
 

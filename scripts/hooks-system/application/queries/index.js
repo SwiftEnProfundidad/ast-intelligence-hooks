@@ -1,3 +1,5 @@
+const { NotFoundError } = require('../../domain/errors');
+
 class GetEvidenceStatusQuery {
     constructor() {
         this.type = 'GET_EVIDENCE_STATUS';
@@ -42,7 +44,7 @@ class QueryBus {
     async execute(query) {
         const handler = this.handlers.get(query.type);
         if (!handler) {
-            throw new Error(`No handler registered for query: ${query.type}`);
+            throw new NotFoundError('Query handler', query.type);
         }
         return handler(query);
     }

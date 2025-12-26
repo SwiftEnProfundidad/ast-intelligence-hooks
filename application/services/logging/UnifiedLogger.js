@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { ValidationError, ConfigurationError } = require('../../../domain/errors');
 
 class UnifiedLogger {
   constructor({
@@ -31,7 +32,7 @@ class UnifiedLogger {
 
     if (this.fileConfig.enabled) {
       if (!this.fileConfig.path) {
-        throw new Error('UnifiedLogger file path is required when file logging is enabled');
+        throw new ConfigurationError('UnifiedLogger file path is required when file logging is enabled', 'fileConfig.path');
       }
       const dir = path.dirname(this.fileConfig.path);
       fs.mkdirSync(dir, { recursive: true });
@@ -56,7 +57,7 @@ class UnifiedLogger {
 
   log(level, event, data = {}, context = {}) {
     if (!this.levelPriority.has(level)) {
-      throw new Error(`Unsupported log level: ${level}`);
+      throw new ValidationError(`Unsupported log level: ${level}`, 'level', level);
     }
 
     const entry = {

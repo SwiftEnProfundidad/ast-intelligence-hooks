@@ -4,6 +4,8 @@
  * Port interface for AST analysis operations.
  * Infrastructure adapters must implement this interface.
  */
+const { NotImplementedError } = require('../errors');
+
 class IAstPort {
     /**
      * Analyze a single file for AST violations
@@ -12,7 +14,7 @@ class IAstPort {
      * @returns {Object[]} Array of findings
      */
     analyzeFile(filePath, platform) {
-        throw new Error('IAstPort.analyzeFile() must be implemented');
+        throw new NotImplementedError('IAstPort.analyzeFile() must be implemented');
     }
 
     /**
@@ -22,7 +24,7 @@ class IAstPort {
      * @returns {Object[]} Array of findings
      */
     analyzeFiles(filePaths, platform) {
-        throw new Error('IAstPort.analyzeFiles() must be implemented');
+        throw new NotImplementedError('IAstPort.analyzeFiles() must be implemented');
     }
 
     /**
@@ -31,7 +33,7 @@ class IAstPort {
      * @returns {Object[]} Array of rule definitions
      */
     getRulesForPlatform(platform) {
-        throw new Error('IAstPort.getRulesForPlatform() must be implemented');
+        throw new NotImplementedError('IAstPort.getRulesForPlatform() must be implemented');
     }
 
     /**
@@ -40,7 +42,7 @@ class IAstPort {
      * @returns {boolean}
      */
     shouldIgnoreFile(filePath) {
-        throw new Error('IAstPort.shouldIgnoreFile() must be implemented');
+        throw new NotImplementedError('IAstPort.shouldIgnoreFile() must be implemented');
     }
 
     /**
@@ -49,7 +51,7 @@ class IAstPort {
      * @returns {Object[]} Only blocking findings
      */
     getBlockingFindings(findings) {
-        throw new Error('IAstPort.getBlockingFindings() must be implemented');
+        throw new NotImplementedError('IAstPort.getBlockingFindings() must be implemented');
     }
 
     /**
@@ -58,7 +60,7 @@ class IAstPort {
      * @returns {string} Formatted output
      */
     formatFindings(findings) {
-        throw new Error('IAstPort.formatFindings() must be implemented');
+        throw new NotImplementedError('IAstPort.formatFindings() must be implemented');
     }
 }
 
