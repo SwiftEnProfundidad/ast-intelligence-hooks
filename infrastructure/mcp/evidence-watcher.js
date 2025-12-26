@@ -102,11 +102,15 @@ class MCPServer {
         const messages = [];
 
         while (this.buffer.length > 0) {
-            const headerEnd = this.buffer.indexOf('\r\n\r\n');
-            if (headerEnd !== -1) {
+            const crlfHeaderEnd = this.buffer.indexOf('\r\n\r\n');
+            const lfHeaderEnd = crlfHeaderEnd === -1 ? this.buffer.indexOf('\n\n') : -1;
+            const headerEnd = crlfHeaderEnd !== -1 ? crlfHeaderEnd : lfHeaderEnd;
+            const headerDelimiter = crlfHeaderEnd !== -1 ? '\r\n\r\n' : (lfHeaderEnd !== -1 ? '\n\n' : null);
+
+            if (headerDelimiter) {
                 const headerBlock = this.buffer.slice(0, headerEnd);
                 const contentLengthLine = headerBlock
-                    .split('\r\n')
+                    .split(/\r?\n/)
                     .find(line => /^content-length:/i.test(line));
 
                 if (contentLengthLine) {
@@ -114,17 +118,17 @@ class MCPServer {
                     const contentLength = match ? Number(match[1]) : NaN;
                     if (!Number.isFinite(contentLength) || contentLength < 0) {
                         // Malformed header - drop it to avoid infinite loop
-                        this.buffer = this.buffer.slice(headerEnd + 4);
+                        this.buffer = this.buffer.slice(headerEnd + headerDelimiter.length);
                         continue;
                     }
 
-                    const bodyStart = headerEnd + 4;
+                    const bodyStart = headerEnd + headerDelimiter.length;
                     if (this.buffer.length < bodyStart + contentLength) {
                         break; // Wait for more data
                     }
 
                     const body = this.buffer.slice(bodyStart, bodyStart + contentLength);
-                    messages.push({ body, framed: true });
+                    messages.push({ body, framed: true, delimiter: headerDelimiter });
                     this.buffer = this.buffer.slice(bodyStart + contentLength);
                     continue;
                 }
@@ -145,12 +149,13 @@ class MCPServer {
         return messages;
     }
 
-    writeResponse(response, framed) {
+    writeResponse(response, framed, delimiter) {
         const responseStr = JSON.stringify(response);
 
         if (framed) {
             const len = Buffer.byteLength(responseStr, 'utf8');
-            process.stdout.write(`Content-Length: ${len}\r\n\r\n${responseStr}`);
+            const sep = delimiter === '\n\n' ? '\n\n' : '\r\n\r\n';
+            process.stdout.write(`Content-Length: ${len}${sep}${responseStr}`);
         } else {
             process.stdout.write(responseStr + '\n');
         }
@@ -315,7 +320,7 @@ class MCPServer {
                     if (response !== null) {
                         const responseStr = JSON.stringify(response);
                         console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
-                        this.writeResponse(response, Boolean(message?.framed));
+                        this.writeResponse(response, Boolean(message?.framed), message?.delimiter);
                     }
                 }
             }
