@@ -1,14 +1,7 @@
 /**
- * Infrastructure Adapters - Implementations of domain ports
+ * Infrastructure Adapters Wrapper
+ * Redirects to the centralized implementation in scripts/hooks-system
  */
-const MacOSNotificationAdapter = require('./MacOSNotificationAdapter');
-const GitCliAdapter = require('./GitCliAdapter');
-const AstAnalyzerAdapter = require('./AstAnalyzerAdapter');
-const FileEvidenceAdapter = require('./FileEvidenceAdapter');
+const adapters = require('../../scripts/hooks-system/infrastructure/adapters');
 
-module.exports = {
-    MacOSNotificationAdapter,
-    GitCliAdapter,
-    AstAnalyzerAdapter,
-    FileEvidenceAdapter
-};
+module.exports = adapters;
