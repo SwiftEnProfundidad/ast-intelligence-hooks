@@ -3,29 +3,22 @@
  *
  * Infrastructure adapter implementing IGitPort using git CLI.
  */
-const { execSync } = require('child_process');
+const GitCommandRunner = require('./git/GitCommandRunner');
 
 class GitCliAdapter {
     constructor(config = {}) {
         this.repoRoot = config.repoRoot || process.cwd();
+        this.logger = config.logger || console;
         this.protectedBranches = config.protectedBranches || ['main', 'master', 'develop'];
+        this.runner = new GitCommandRunner(this.repoRoot, this.logger);
     }
 
     exec(command) {
-        try {
-            return execSync(command, {
-                cwd: this.repoRoot,
-                encoding: 'utf-8',
-                stdio: ['pipe', 'pipe', 'pipe']
-            }).trim();
-        } catch (error) {
-            console.error(`[GitCliAdapter] Command failed: ${command}`, error.message);
-            return null;
-        }
+        return this.runner.exec(command);
     }
 
     getCurrentBranch() {
-        return this.exec('git branch --show-current') || 'unknown';
+        return this.runner.exec('git branch --show-current') || 'unknown';
     }
 
     isProtectedBranch() {
@@ -34,52 +27,52 @@ class GitCliAdapter {
     }
 
     getUncommittedChanges() {
-        return this.exec('git status --porcelain') || '';
+        return this.runner.exec('git status --porcelain') || '';
     }
 
     getStagedFiles() {
-        const output = this.exec('git diff --cached --name-only');
+        const output = this.runner.exec('git diff --cached --name-only');
         if (!output) return [];
         return output.split('\n').filter(f => f.trim().length > 0);
     }
 
     createBranch(branchName) {
-        const result = this.exec(`git checkout -b ${branchName}`);
+        const result = this.runner.exec(`git checkout -b ${branchName}`);
         return result !== null;
     }
 
     checkout(branchName) {
-        const result = this.exec(`git checkout ${branchName}`);
+        const result = this.runner.exec(`git checkout ${branchName}`);
         return result !== null;
     }
 
     stageFiles(files) {
         if (!files || files.length === 0) return false;
         const fileList = files.join(' ');
-        const result = this.exec(`git add ${fileList}`);
+        const result = this.runner.exec(`git add ${fileList}`);
         return result !== null;
     }
 
     stageAll() {
-        const result = this.exec('git add -A');
+        const result = this.runner.exec('git add -A');
         return result !== null;
     }
 
     commit(message) {
         const safeMessage = message.replace(/"/g, '\\"');
-        const result = this.exec(`git commit -m "${safeMessage}"`);
+        const result = this.runner.exec(`git commit -m "${safeMessage}"`);
         return result !== null;
     }
 
     push(remote = 'origin', branch = null) {
         const targetBranch = branch || this.getCurrentBranch();
-        const result = this.exec(`git push ${remote} ${targetBranch}`);
+        const result = this.runner.exec(`git push ${remote} ${targetBranch}`);
         return result !== null;
     }
 
     pushWithUpstream(remote = 'origin') {
         const branch = this.getCurrentBranch();
-        const result = this.exec(`git push -u ${remote} ${branch}`);
+        const result = this.runner.exec(`git push -u ${remote} ${branch}`);
         return result !== null;
     }
 
@@ -94,18 +87,18 @@ class GitCliAdapter {
     }
 
     getRecentCommits(count = 5) {
-        const output = this.exec(`git log -${count} --oneline`);
+        const output = this.runner.exec(`git log -${count} --oneline`);
         if (!output) return [];
         return output.split('\n').filter(l => l.trim().length > 0);
     }
 
     stash(message = 'WIP') {
-        const result = this.exec(`git stash -u -m "${message}"`);
+        const result = this.runner.exec(`git stash -u -m "${message}"`);
         return result !== null;
     }
 
     stashPop() {
-        const result = this.exec('git stash pop');
+        const result = this.runner.exec('git stash pop');
         return result !== null;
     }
 }
