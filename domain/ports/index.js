@@ -1,14 +1,7 @@
 /**
- * Domain Ports - Interfaces for infrastructure adapters
+ * Domain Wrapper
+ * Redirects to the centralized implementation in scripts/hooks-system
  */
-const INotificationPort = require('./INotificationPort');
-const IGitPort = require('./IGitPort');
-const IAstPort = require('./IAstPort');
-const IEvidencePort = require('./IEvidencePort');
+const Core = require('../../../scripts/hooks-system/domain/ports/index.js');
 
-module.exports = {
-    INotificationPort,
-    IGitPort,
-    IAstPort,
-    IEvidencePort
-};
+module.exports = Core;
