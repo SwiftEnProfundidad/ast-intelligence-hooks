@@ -6,6 +6,8 @@ const { StabilityAnalyzer } = require('./analyzers/stability-analyzer');
 const { MaintainabilityAnalyzer } = require('./analyzers/maintainability-analyzer');
 const { ContextBuilder } = require('./context/context-builder');
 const RecommendationGenerator = require('./generators/RecommendationGenerator');
+const ContextMultiplier = require('./scorers/ContextMultiplier');
+const SeverityMapper = require('./mappers/SeverityMapper');
 
 /**
  * Main severity evaluator
@@ -19,6 +21,7 @@ class SeverityEvaluator {
     this.maintainabilityAnalyzer = new MaintainabilityAnalyzer();
     this.contextBuilder = new ContextBuilder();
     this.recommendationGenerator = new RecommendationGenerator();
+    this.contextMultiplier = new ContextMultiplier();
 
     this.weights = {
       security: 0.40,
@@ -49,9 +52,9 @@ class SeverityEvaluator {
         maintainabilityScore * this.weights.maintainability
       );
 
-      const finalScore = this.applyContextMultipliers(baseScore, context, violation);
+      const finalScore = this.contextMultiplier.calculate(baseScore, context, violation);
 
-      const severity = this.mapToSeverity(finalScore);
+      const severity = SeverityMapper.mapToSeverity(finalScore);
 
       return {
         severity,
@@ -83,65 +86,6 @@ class SeverityEvaluator {
         evaluationError: error.message
       };
     }
-  }
-
-  /**
-   * Apply context multipliers to base score
-   */
-  applyContextMultipliers(baseScore, context, violation) {
-    let multiplier = 1.0;
-
-    if (context.isProductionCode) {
-      if (context.criticalPath) multiplier *= 1.5;
-      if (context.handlesPayments) multiplier *= 2.0;
-      if (context.handlesPII) multiplier *= 1.4;
-      if (context.userFacing && !context.hasErrorBoundary) multiplier *= 1.3;
-      if (context.isPublicAPI) multiplier *= 1.2;
-    }
-
-    if (context.isMainThread && baseScore > 30) {
-      multiplier *= 2.0;
-    }
-
-    if (context.dependencyCount > 10) {
-      multiplier *= (1 + context.dependencyCount / 50);
-    }
-
-    if (context.callFrequency > 1000) {
-      multiplier *= 1.2;
-    }
-
-    if (violation.ruleId.includes('solid.') && context.layer === 'DOMAIN') {
-      multiplier *= 1.4;
-    }
-
-    if (violation.ruleId.includes('clean_arch.') && violation.ruleId.includes('domain')) {
-      multiplier *= 1.6;
-    }
-
-    if (context.isTestCode) {
-      multiplier *= 0.3;
-    }
-
-    if (context.hasErrorBoundary && context.hasFallback) {
-      multiplier *= 0.7;
-    }
-
-    if (context.hasRetryLogic) {
-      multiplier *= 0.9;
-    }
-
-    return Math.min(100, baseScore * multiplier);
-  }
-
-  /**
-   * Map final score to severity level
-   */
-  mapToSeverity(score) {
-    if (score >= 85) return 'CRITICAL';
-    if (score >= 65) return 'HIGH';
-    if (score >= 40) return 'MEDIUM';
-    return 'LOW';
   }
 }
 

@@ -4,13 +4,18 @@
  * Infrastructure adapter implementing IGitPort using git CLI.
  */
 const GitCommandRunner = require('./git/GitCommandRunner');
+const GitQueryService = require('./git/GitQueryService');
+const GitCommandService = require('./git/GitCommandService');
 
 class GitCliAdapter {
     constructor(config = {}) {
         this.repoRoot = config.repoRoot || process.cwd();
         this.logger = config.logger || console;
         this.protectedBranches = config.protectedBranches || ['main', 'master', 'develop'];
+
         this.runner = new GitCommandRunner(this.repoRoot, this.logger);
+        this.queryService = new GitQueryService(this.runner);
+        this.commandService = new GitCommandService(this.runner);
     }
 
     exec(command) {
@@ -18,7 +23,7 @@ class GitCliAdapter {
     }
 
     getCurrentBranch() {
-        return this.runner.exec('git branch --show-current') || 'unknown';
+        return this.queryService.getCurrentBranch();
     }
 
     isProtectedBranch() {
@@ -27,79 +32,61 @@ class GitCliAdapter {
     }
 
     getUncommittedChanges() {
-        return this.runner.exec('git status --porcelain') || '';
+        return this.queryService.getUncommittedChanges();
     }
 
     getStagedFiles() {
-        const output = this.runner.exec('git diff --cached --name-only');
-        if (!output) return [];
-        return output.split('\n').filter(f => f.trim().length > 0);
+        return this.queryService.getStagedFiles();
     }
 
     createBranch(branchName) {
-        const result = this.runner.exec(`git checkout -b ${branchName}`);
-        return result !== null;
+        return this.commandService.createBranch(branchName);
     }
 
     checkout(branchName) {
-        const result = this.runner.exec(`git checkout ${branchName}`);
-        return result !== null;
+        return this.commandService.checkout(branchName);
     }
 
     stageFiles(files) {
-        if (!files || files.length === 0) return false;
-        const fileList = files.join(' ');
-        const result = this.runner.exec(`git add ${fileList}`);
-        return result !== null;
+        return this.commandService.stageFiles(files);
     }
 
     stageAll() {
-        const result = this.runner.exec('git add -A');
-        return result !== null;
+        return this.commandService.stageAll();
     }
 
     commit(message) {
-        const safeMessage = message.replace(/"/g, '\\"');
-        const result = this.runner.exec(`git commit -m "${safeMessage}"`);
-        return result !== null;
+        return this.commandService.commit(message);
     }
 
     push(remote = 'origin', branch = null) {
         const targetBranch = branch || this.getCurrentBranch();
-        const result = this.runner.exec(`git push ${remote} ${targetBranch}`);
-        return result !== null;
+        return this.commandService.push(remote, targetBranch);
     }
 
     pushWithUpstream(remote = 'origin') {
         const branch = this.getCurrentBranch();
-        const result = this.runner.exec(`git push -u ${remote} ${branch}`);
-        return result !== null;
+        return this.commandService.pushWithUpstream(remote, branch);
     }
 
     hasUncommittedChanges() {
-        const changes = this.getUncommittedChanges();
-        return changes.length > 0;
+        return this.queryService.hasUncommittedChanges();
     }
 
     hasStagedChanges() {
-        const staged = this.getStagedFiles();
-        return staged.length > 0;
+        return this.queryService.hasStagedChanges();
     }
 
     getRecentCommits(count = 5) {
-        const output = this.runner.exec(`git log -${count} --oneline`);
-        if (!output) return [];
-        return output.split('\n').filter(l => l.trim().length > 0);
+        return this.queryService.getRecentCommits(count);
     }
 
     stash(message = 'WIP') {
-        const result = this.runner.exec(`git stash -u -m "${message}"`);
-        return result !== null;
+        return this.commandService.stash(message);
     }
 
     stashPop() {
-        const result = this.runner.exec('git stash pop');
-        return result !== null;
+        return this.commandService.stashPop();
     }
 }
 
