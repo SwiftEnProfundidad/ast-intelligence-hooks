@@ -1468,6 +1468,9 @@ setInterval(async () => {
                 }
 
             } catch (error) {
+                if (process.env.DEBUG) {
+                    console.error('[MCP] Orchestrator error:', error);
+                }
             }
         }
     } catch (error) {
