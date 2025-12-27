@@ -3,13 +3,18 @@ const path = require('path');
 const fs = require('fs');
 const FeatureDetector = require('./commit/FeatureDetector');
 const CommitMessageGenerator = require('./commit/CommitMessageGenerator');
+const UnifiedLogger = require('./logging/UnifiedLogger');
 
 class IntelligentCommitAnalyzer {
-    constructor({ repoRoot = process.cwd(), logger = console } = {}) {
+    constructor({ repoRoot = process.cwd(), logger = null } = {}) {
         this.repoRoot = repoRoot;
-        this.logger = logger;
-        this.featureDetector = new FeatureDetector();
-        this.messageGenerator = new CommitMessageGenerator();
+        this.logger = logger || new UnifiedLogger({
+            component: 'CommitAnalyzer',
+            console: { enabled: true, level: 'info' },
+            file: { enabled: true, path: path.join(repoRoot, '.audit-reports', 'commit-analyzer.log') }
+        });
+        this.featureDetector = new FeatureDetector(this.logger);
+        this.messageGenerator = new CommitMessageGenerator(this.logger);
     }
 
     /**
@@ -17,6 +22,7 @@ class IntelligentCommitAnalyzer {
      * Only groups related files - ignores unrelated/config files
      */
     groupFilesByFeature(files) {
+        this.logger.debug('ANALYZING_FILES', { count: files.length });
         const groups = new Map();
         const ungrouped = [];
 
@@ -53,8 +59,15 @@ class IntelligentCommitAnalyzer {
         }
 
         const result = Array.from(groups.values());
+        const filtered = result.filter(g => g.files.length >= 2);
 
-        return result.filter(g => g.files.length >= 2);
+        this.logger.info('ANALYSIS_COMPLETE', {
+            totalFiles: files.length,
+            groupsFound: filtered.length,
+            ungroupedCount: ungrouped.length
+        });
+
+        return filtered;
     }
 
     /**
