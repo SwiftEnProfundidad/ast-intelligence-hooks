@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const CompositionRoot = require('../application/CompositionRoot');
+const CompositionRoot = require('../scripts/hooks-system/application/CompositionRoot');
 
 // Initialize Composition Root
 const compositionRoot = CompositionRoot.createForProduction(process.cwd());
