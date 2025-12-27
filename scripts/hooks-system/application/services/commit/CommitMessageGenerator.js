@@ -1,4 +1,8 @@
 class CommitMessageGenerator {
+    constructor(logger = console) {
+        this.logger = logger;
+    }
+
     /**
      * Generate commit message for a feature group
      */
@@ -17,6 +21,10 @@ class CommitMessageGenerator {
 
         if (group.hasTests) {
             message += ' (includes tests)';
+        }
+
+        if (this.logger && this.logger.debug) {
+            this.logger.debug('COMMIT_MESSAGE_GENERATED', { group: group.module, message });
         }
 
         return message;

@@ -1,4 +1,5 @@
 const path = require('path');
+const FeatureDetector = require('./commit/FeatureDetector');
 
 class SmartDirtyTreeAnalyzer {
     constructor({
@@ -9,15 +10,8 @@ class SmartDirtyTreeAnalyzer {
         this.platformDetector = platformDetector;
         this.repoRoot = repoRoot;
         this.logger = logger;
-        this.platformPatterns = {
-            backend: [/\.js$/, /\.ts$/, /\.mjs$/, /\.cjs$/],
-            frontend: [/\.jsx$/, /\.tsx$/, /\.css$/, /\.scss$/, /\.vue$/, /\.svelte$/],
-            ios: [/\.swift$/, /Package\.swift$/, /\.xcodeproj/, /\.pbxproj$/],
-            android: [/\.kt$/, /\.java$/, /build\.gradle/, /\.xml$/],
-            config: [/\.json$/, /\.yaml$/, /\.yml$/, /\.toml$/, /\.env/],
-            docs: [/\.md$/, /\.txt$/, /README/, /CHANGELOG/],
-            test: [/\.spec\./, /\.test\./, /__tests__/]
-        };
+        this.featureDetector = new FeatureDetector(logger);
+
         this.commitTypePatterns = {
             feat: ['feature/', 'feat/', 'add', 'new', 'create', 'implement'],
             fix: ['fix/', 'bugfix/', 'hotfix/', 'patch'],
@@ -113,8 +107,8 @@ class SmartDirtyTreeAnalyzer {
 
         const remaining = files.filter(f => !assigned.has(f));
         if (remaining.length > 0) {
-            const testFiles = remaining.filter(f => this.isTestFile(f));
-            const nonTestFiles = remaining.filter(f => !this.isTestFile(f));
+            const testFiles = remaining.filter(f => this.featureDetector.isTestFile(f));
+            const nonTestFiles = remaining.filter(f => !this.featureDetector.isTestFile(f));
 
             if (testFiles.length >= 2) {
                 groups.push({
@@ -149,6 +143,7 @@ class SmartDirtyTreeAnalyzer {
     }
 
     detectPlatform(file) {
+        // Prefer injected detector if available
         if (this.platformDetector && typeof this.platformDetector.detectPlatformFromFile === 'function') {
             const detected = this.platformDetector.detectPlatformFromFile(file);
             if (detected && detected !== 'other') {
@@ -156,13 +151,9 @@ class SmartDirtyTreeAnalyzer {
             }
         }
 
-        for (const [platform, patterns] of Object.entries(this.platformPatterns)) {
-            if (patterns.some(p => p.test(file))) {
-                return platform;
-            }
-        }
-
-        return 'other';
+        // Fallback to shared feature detector
+        const detected = this.featureDetector.detectPlatform(file);
+        return detected !== 'shared' ? detected : 'other';
     }
 
     inferCommitType(files, context) {
@@ -174,7 +165,7 @@ class SmartDirtyTreeAnalyzer {
             }
         }
 
-        if (files.some(f => this.isTestFile(f))) {
+        if (files.some(f => this.featureDetector.isTestFile(f))) {
             return 'test';
         }
 
@@ -187,10 +178,6 @@ class SmartDirtyTreeAnalyzer {
         }
 
         return 'feat';
-    }
-
-    isTestFile(file) {
-        return /\.spec\.|\.test\.|__tests__/.test(file);
     }
 
     suggestCommitMessage(group) {

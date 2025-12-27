@@ -1,9 +1,22 @@
 class FeatureDetector {
+    constructor(logger = console) {
+        this.logger = logger;
+    }
+
     /**
      * Detect feature name from file path
      * Returns null for non-feature files (config, scripts, docs)
      */
     detectFeature(filePath) {
+        const feature = this._detectFeatureStrategy(filePath);
+        if (feature && this.logger && this.logger.debug) {
+            // High volume log, maybe comment out or keep as debug
+            // this.logger.debug('FEATURE_DETECTED', { filePath, feature });
+        }
+        return feature;
+    }
+
+    _detectFeatureStrategy(filePath) {
         if (filePath.startsWith(' D ') || filePath.includes('(deleted)')) {
             return null;
         }
