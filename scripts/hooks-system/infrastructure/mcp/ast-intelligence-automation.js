@@ -882,13 +882,10 @@ class MCPServer {
     writeResponse(response, framed, delimiter) {
         const responseStr = JSON.stringify(response);
 
-        if (framed) {
-            const len = Buffer.byteLength(responseStr, 'utf8');
-            const sep = delimiter === '\n\n' ? '\n\n' : '\r\n\r\n';
-            process.stdout.write(`Content-Length: ${len}${sep}${responseStr}`);
-        } else {
-            process.stdout.write(responseStr + '\n');
-        }
+        // Always respond using MCP framing with CRLF delimiter.
+        // Some clients are strict about \r\n\r\n even if they send \n\n.
+        const len = Buffer.byteLength(responseStr, 'utf8');
+        process.stdout.write(`Content-Length: ${len}\r\n\r\n${responseStr}`);
 
         if (typeof process.stdout.flush === 'function') {
             process.stdout.flush();
