@@ -1,6 +1,6 @@
 const path = require('path');
 const glob = require('glob');
-const { pushFileFinding } = require('../../../ast-core');
+const { pushFileFinding } = require('../../ast-core');
 
 class TDDRules {
     constructor(projectRoot) {
