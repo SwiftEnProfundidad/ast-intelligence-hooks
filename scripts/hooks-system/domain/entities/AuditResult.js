@@ -1,5 +1,6 @@
 const Finding = require('./Finding');
 const { ValidationError } = require('../errors');
+const AuditScorer = require('../services/AuditScorer');
 
 class AuditResult {
   constructor(findings = []) {
@@ -10,6 +11,7 @@ class AuditResult {
       totalLines: 0,
       platforms: [],
     };
+    this.scorer = new AuditScorer();
   }
 
   addFinding(finding) {
@@ -62,7 +64,9 @@ class AuditResult {
       }
 
       platformMap[platform].total++;
-      platformMap[platform][finding.severity]++;
+      // Handle Severity VO: use .value or .toString() if needed, but here we likely need string key
+      // finding.severity is now a Severity object. toString() returns the value.
+      platformMap[platform][finding.severity.toString()]++;
     });
 
     return platformMap;
@@ -83,22 +87,11 @@ class AuditResult {
   }
 
   getTechnicalDebtHours() {
-    return this.findings.reduce((total, finding) => {
-      return total + finding.getTechnicalDebtHours();
-    }, 0);
+    return this.scorer.calculateTechnicalDebt(this.findings);
   }
 
   getMaintainabilityIndex() {
-    const baseScore = 100;
-    const bySeverity = this.getViolationsBySeverity();
-
-    const criticalPenalty = bySeverity.critical * 5;
-    const highPenalty = bySeverity.high * 2;
-    const mediumPenalty = bySeverity.medium * 1;
-    const lowPenalty = bySeverity.low * 0.5;
-
-    const score = baseScore - criticalPenalty - highPenalty - mediumPenalty - lowPenalty;
-    return Math.max(0, Math.min(100, score));
+    return this.scorer.calculateMaintainabilityIndex(this.findings);
   }
 
   filterByPlatform(platform) {
@@ -110,7 +103,7 @@ class AuditResult {
 
   filterBySeverity(severity) {
     const severityFindings = this.findings.filter(f =>
-      f.severity === severity.toLowerCase()
+      f.severity.toString() === severity.toLowerCase()
     );
     return new AuditResult(severityFindings);
   }
@@ -129,7 +122,7 @@ class AuditResult {
       .map(([ruleId, findings]) => ({
         ruleId,
         count: findings.length,
-        severity: findings[0].severity,
+        severity: findings[0].severity.toString(),
         examples: findings.slice(0, 3),
       }))
       .sort((a, b) => b.count - a.count)
