@@ -1,6 +1,6 @@
 const fs = require('fs');
 const glob = require('glob');
-const { pushFileFinding } = require('../../../ast-core');
+const { pushFileFinding } = require('../../ast-core');
 
 class WorkflowRules {
     constructor(projectRoot) {
