@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { toErrorMessage } = require('../../../infrastructure/utils/error-utils');
+const GuardHeartbeatMonitor = require('./GuardHeartbeatMonitor');
 
 class GuardAutoManagerService {
     constructor({
@@ -12,7 +13,8 @@ class GuardAutoManagerService {
         childProcess = { spawnSync },
         timers = { setInterval, clearInterval },
         env = process.env,
-        processRef = process
+        processRef = process,
+        heartbeatMonitor = null
     } = {}) {
         this.repoRoot = repoRoot;
         this.logger = logger || console;
@@ -37,20 +39,14 @@ class GuardAutoManagerService {
             env.GUARD_AUTOSTART_HEALTHY_COOLDOWN || (this.healthyReminderIntervalMs > 0 ? this.healthyReminderIntervalMs : 0)
         );
 
-        const heartbeatRelative = env.HOOK_GUARD_HEARTBEAT_PATH || path.join('.audit_tmp', 'guard-heartbeat.json');
-        this.heartbeatPath = path.isAbsolute(heartbeatRelative)
-            ? heartbeatRelative
-            : path.join(this.repoRoot, heartbeatRelative);
-        this.heartbeatMaxAgeMs = Number(
-            env.GUARD_AUTOSTART_HEARTBEAT_MAX_AGE || env.HOOK_GUARD_HEARTBEAT_MAX_AGE || 60000
-        );
+        this.heartbeatMonitor = heartbeatMonitor || new GuardHeartbeatMonitor({
+            repoRoot: this.repoRoot,
+            logger: this.logger,
+            fsModule: this.fs,
+            env: this.env
+        });
+
         this.heartbeatRestartCooldownMs = Number(env.GUARD_AUTOSTART_HEARTBEAT_COOLDOWN || 60000);
-        this.heartbeatRestartReasons = new Set(
-            (env.GUARD_AUTOSTART_HEARTBEAT_RESTART || 'missing,stale,invalid,degraded')
-                .split(',')
-                .map(entry => entry.trim().toLowerCase())
-                .filter(Boolean)
-        );
 
         this.monitorIntervalMs = Number(env.GUARD_AUTOSTART_MONITOR_INTERVAL || 5000);
         this.restartCooldownMs = Number(env.GUARD_AUTOSTART_RESTART_COOLDOWN || 2000);
@@ -101,11 +97,11 @@ class GuardAutoManagerService {
             return;
         }
 
-        const heartbeat = this.evaluateHeartbeat();
+        const heartbeat = this.heartbeatMonitor.evaluate();
         if (!heartbeat.healthy) {
             this.lastHealthyReminderAt = 0;
             this.lastHeartbeatState = { healthy: false, reason: heartbeat.reason };
-            if (this.shouldRestartForHeartbeat(heartbeat.reason)) {
+            if (this.heartbeatMonitor.shouldRestart(heartbeat.reason)) {
                 const now = Date.now();
                 if (now - this.lastHeartbeatRestart >= this.heartbeatRestartCooldownMs) {
                     this.log(`Heartbeat degraded (${heartbeat.reason}); attempting supervisor ensure.`);
@@ -289,52 +285,6 @@ class GuardAutoManagerService {
         if (normalizedReason === 'initial-start' || normalizedReason.startsWith('heartbeat-')) {
             this.startHealthyReminder();
         }
-    }
-
-    evaluateHeartbeat() {
-        if (!Number.isFinite(this.heartbeatMaxAgeMs) || this.heartbeatMaxAgeMs <= 0) {
-            return { healthy: true, reason: 'disabled' };
-        }
-        try {
-            const raw = this.fs.readFileSync(this.heartbeatPath, 'utf8');
-            if (!raw) {
-                return { healthy: false, reason: 'missing' };
-            }
-            const data = JSON.parse(raw);
-            const timestamp = Date.parse(data.timestamp);
-            if (!Number.isFinite(timestamp)) {
-                return { healthy: false, reason: 'invalid', data };
-            }
-            const age = Date.now() - timestamp;
-            if (age > this.heartbeatMaxAgeMs) {
-                return { healthy: false, reason: 'stale', data };
-            }
-            const status = (data.status || '').toLowerCase();
-            if (status && status !== 'healthy') {
-                return { healthy: false, reason: status, data };
-            }
-            const guardRunning = Boolean(data?.guard?.running);
-            const tokenRunning = Boolean(data?.tokenMonitor?.running);
-            if (!guardRunning || !tokenRunning) {
-                return { healthy: false, reason: 'degraded', data };
-            }
-            return { healthy: true, reason: 'healthy', data };
-        } catch (error) {
-            if (error && error.code === 'ENOENT') {
-                return { healthy: false, reason: 'missing' };
-            }
-            return { healthy: false, reason: 'error', error };
-        }
-    }
-
-    shouldRestartForHeartbeat(reason) {
-        if (!this.heartbeatRestartReasons.size) {
-            return false;
-        }
-        if (this.heartbeatRestartReasons.has('*')) {
-            return true;
-        }
-        return this.heartbeatRestartReasons.has(reason);
     }
 
     startHealthyReminder() {

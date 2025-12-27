@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { ConfigurationError, DomainError } = require('../../../../domain/errors');
 
 class EvidenceMonitor {
     constructor(repoRoot, options = {}) {
@@ -46,7 +47,7 @@ class EvidenceMonitor {
 
     async refresh() {
         if (!this.updateScript) {
-            throw new Error('Update evidence script not found');
+            throw new ConfigurationError('Update evidence script not found', 'updateScript');
         }
 
         return new Promise((resolve, reject) => {

@@ -4,13 +4,14 @@ const { execSync } = require('child_process');
 
 const fsPromises = fs.promises;
 const CursorTokenService = require('./CursorTokenService');
+const NotificationCenterService = require('../notification/NotificationCenterService');
 
 class TokenMonitorService {
     constructor({
         repoRoot = process.cwd(),
         dataFile = null,
         stateFile = null,
-        notificationCenter = null,
+        notificationService = null,
         logger = console,
         thresholds = {},
         staleThresholdMs = 15 * 60 * 1000,
@@ -20,8 +21,13 @@ class TokenMonitorService {
         this.repoRoot = repoRoot;
         this.dataFile = dataFile || path.join(this.repoRoot, '.audit_tmp', 'token-usage.jsonl');
         this.stateFile = stateFile || path.join(this.repoRoot, '.AI_TOKEN_STATUS.txt');
-        this.notificationCenter = notificationCenter;
         this.logger = logger || console;
+
+        this.notificationService = notificationService || new NotificationCenterService({
+            repoRoot: this.repoRoot,
+            logger: this.logger
+        });
+
         this.thresholds = {
             maxTokens: thresholds.maxTokens ?? 1_000_000,
             warningPercent: thresholds.warningPercent ?? 90,
@@ -221,7 +227,7 @@ class TokenMonitorService {
     }
 
     async emitNotification(metrics) {
-        if (!this.notificationCenter) {
+        if (!this.notificationService) {
             return;
         }
 
@@ -235,7 +241,7 @@ class TokenMonitorService {
         };
 
         if (metrics.untrusted) {
-            this.notificationCenter.enqueue({
+            this.notificationService.enqueue({
                 message: `Token usage heurístico (${metrics.percentUsed}%). Esperando métricas reales antes de alertar.`,
                 level: 'info',
                 type: 'token_ok',
@@ -245,17 +251,17 @@ class TokenMonitorService {
         }
 
         if (metrics.level === 'critical') {
-            this.notificationCenter.enqueue({
+            this.notificationService.enqueue({
                 message: `🚨 Tokens at ${metrics.percentUsed}% (${this.formatNumber(metrics.tokensUsed)} used). Remaining ${this.formatNumber(metrics.remainingTokens)}.`,
                 level: 'error',
                 type: 'token_critical',
-                metadata
+                metadata: { ...metadata, forceDialog: true }
             });
             return;
         }
 
         if (metrics.level === 'warning') {
-            this.notificationCenter.enqueue({
+            this.notificationService.enqueue({
                 message: `⚠️ Tokens at ${metrics.percentUsed}% (${this.formatNumber(metrics.tokensUsed)} used).`,
                 level: 'warn',
                 type: 'token_warning',
@@ -264,7 +270,7 @@ class TokenMonitorService {
             return;
         }
 
-        this.notificationCenter.enqueue({
+        this.notificationService.enqueue({
             message: `Token usage healthy (${metrics.percentUsed}% used).`,
             level: 'info',
             type: 'token_ok',

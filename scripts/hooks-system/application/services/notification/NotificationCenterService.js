@@ -13,12 +13,10 @@
  * - Retry logic para fallos de envío
  */
 
-const { spawnSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 
 const UnifiedLogger = require('../logging/UnifiedLogger');
+const MacNotificationSender = require('./MacNotificationSender');
 
 class NotificationCenterService {
   constructor(config = {}) {
@@ -47,8 +45,6 @@ class NotificationCenterService {
       guard_supervisor: config.guardSupervisorMs || 900000
     };
 
-    this.terminalNotifierPath = this.resolveTerminalNotifier();
-    this.osascriptPath = this.resolveOsascript();
     this.notificationTimeout = config.notificationTimeout || 8;
     this.maxRetries = config.maxRetries || 2;
     this.retryDelayMs = config.retryDelayMs || 1000;
@@ -72,19 +68,8 @@ class NotificationCenterService {
       console: { enabled: true, level: 'info' },
       file: { enabled: true, level: 'debug', path: defaultLogPath }
     });
-  }
 
-  resolveTerminalNotifier() {
-    const candidates = [
-      '/opt/homebrew/bin/terminal-notifier',
-      '/usr/local/bin/terminal-notifier',
-      '/usr/bin/terminal-notifier'
-    ];
-    return candidates.find(p => fs.existsSync(p)) || null;
-  }
-
-  resolveOsascript() {
-    return fs.existsSync('/usr/bin/osascript') ? '/usr/bin/osascript' : null;
+    this.sender = new MacNotificationSender(this.logger);
   }
 
   /**
@@ -260,7 +245,9 @@ class NotificationCenterService {
         await this.sleep(this.retryDelayMs * attempt);
       }
 
-      const success = this.sendMacNotification(notification);
+      const success = this.sender.send(notification, {
+        timeout: this.notificationTimeout
+      });
 
       if (success) {
         this.stats.totalSent++;
@@ -282,89 +269,6 @@ class NotificationCenterService {
       maxRetries: this.maxRetries
     });
     return false;
-  }
-
-  /**
-   * Envía notificación nativa a macOS
-   */
-  sendMacNotification(notification) {
-    const { message, level } = notification;
-
-    if (this.terminalNotifierPath) {
-      if (this.sendWithTerminalNotifier(message, level)) {
-        return true;
-      }
-    }
-
-    if (this.osascriptPath) {
-      if (this.sendWithOsascript(message, level)) {
-        return true;
-      }
-    }
-
-    this.log('warn', 'No notification tools available', { message });
-    return false;
-  }
-
-  /**
-   * Envía notificación con terminal-notifier
-   */
-  sendWithTerminalNotifier(message, level) {
-    try {
-      const title = 'Hook-System Guard';
-      const sound = level === 'error' ? 'Basso' : level === 'warn' ? 'Submarine' : 'Hero';
-      const subtitle = level === 'error' || level === 'warn' ? level.toUpperCase() : '';
-
-      const args = [
-        '-title', title,
-        '-message', message,
-        '-sound', sound,
-        '-group', 'hook-system-guard',
-        '-ignoreDnD'
-      ];
-
-      if (subtitle) {
-        args.push('-subtitle', subtitle);
-      }
-
-      if (this.notificationTimeout > 0) {
-        args.push('-timeout', String(this.notificationTimeout));
-      }
-
-      const result = spawnSync(this.terminalNotifierPath, args, {
-        stdio: 'ignore',
-        timeout: 5000
-      });
-
-      return result.status === 0;
-    } catch (error) {
-      this.log('error', 'terminal-notifier failed', { error: error.message });
-      return false;
-    }
-  }
-
-  /**
-   * Envía notificación con osascript (fallback)
-   */
-  sendWithOsascript(message, level) {
-    try {
-      const title = 'Hook-System Guard';
-      const sound = level === 'error' ? 'Basso' : level === 'warn' ? 'Submarine' : 'Hero';
-      const escapedMessage = message.replace(/"/g, '\\"').replace(/\n/g, ' ');
-      const escapedTitle = title.replace(/"/g, '\\"');
-
-      const script = `display notification "${escapedMessage}" with title "${escapedTitle}" sound name "${sound}"`;
-
-      const result = spawnSync(this.osascriptPath, ['-e', script], {
-        stdio: 'ignore',
-        timeout: 5000
-      });
-
-      return result.status === 0;
-    } catch (error) {
-      this.log('error', 'osascript failed', { error: error.message });
-      return false;
-    }
   }
 
   /**

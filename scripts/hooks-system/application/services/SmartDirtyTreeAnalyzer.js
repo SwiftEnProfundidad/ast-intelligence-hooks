@@ -3,10 +3,12 @@ const path = require('path');
 class SmartDirtyTreeAnalyzer {
     constructor({
         platformDetector = null,
-        repoRoot = process.cwd()
+        repoRoot = process.cwd(),
+        logger = console
     } = {}) {
         this.platformDetector = platformDetector;
         this.repoRoot = repoRoot;
+        this.logger = logger;
         this.platformPatterns = {
             backend: [/\.js$/, /\.ts$/, /\.mjs$/, /\.cjs$/],
             frontend: [/\.jsx$/, /\.tsx$/, /\.css$/, /\.scss$/, /\.vue$/, /\.svelte$/],
@@ -37,6 +39,8 @@ class SmartDirtyTreeAnalyzer {
                 summary: 'No files to analyze'
             };
         }
+
+        this.logger.debug(`[SmartDirtyTreeAnalyzer] Analyzing ${files.length} files`);
 
         const groups = this.groupByContext(files);
         const suggestions = groups.map(g => this.suggestCommitMessage(g));

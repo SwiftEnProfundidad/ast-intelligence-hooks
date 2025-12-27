@@ -6,6 +6,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { ConfigurationError } = require('../../domain/errors');
 
 function resolveUpdateEvidenceScript(repoRoot) {
     const candidates = [
@@ -84,7 +85,7 @@ class FileEvidenceAdapter {
             const mode = options.mode || '--auto';
 
             if (!this.updateScriptPath || !fs.existsSync(this.updateScriptPath)) {
-                throw new Error('update-evidence.sh not found');
+                throw new ConfigurationError('update-evidence.sh not found', 'updateScriptPath');
             }
 
             execSync(`bash "${this.updateScriptPath}" ${mode} --platforms ${platforms}`, {

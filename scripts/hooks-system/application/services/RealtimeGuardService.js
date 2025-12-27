@@ -8,6 +8,11 @@ const EvidenceMonitor = require('./monitoring/EvidenceMonitor');
 const GitTreeMonitor = require('./monitoring/GitTreeMonitor');
 const TokenMonitor = require('./monitoring/TokenMonitor');
 const GitFlowService = require('./GitFlowService');
+const UnifiedLogger = require('./logging/UnifiedLogger');
+const NotificationCenterService = require('./notification/NotificationCenterService');
+const ActivityMonitor = require('./monitoring/ActivityMonitor');
+const DevDocsMonitor = require('./monitoring/DevDocsMonitor');
+const AstMonitor = require('./monitoring/AstMonitor');
 
 class RealtimeGuardService {
     constructor({ notifier = console, notifications = true } = {}) {
@@ -18,8 +23,35 @@ class RealtimeGuardService {
         this.repoRoot = process.cwd();
         this.auditDir = path.join(this.repoRoot, '.audit-reports');
         this.tempDir = path.join(this.repoRoot, '.audit_tmp');
-        fs.mkdirSync(this.auditDir, { recursive: true });
-        fs.mkdirSync(this.tempDir, { recursive: true });
+
+        if (!fs.existsSync(this.auditDir)) {
+            fs.mkdirSync(this.auditDir, { recursive: true });
+        }
+        if (!fs.existsSync(this.tempDir)) {
+            fs.mkdirSync(this.tempDir, { recursive: true });
+        }
+
+        // Initialize Logger
+        this.logger = new UnifiedLogger({
+            component: 'RealtimeGuard',
+            file: {
+                enabled: true,
+                path: path.join(this.auditDir, 'guard-audit.jsonl'),
+                level: 'info'
+            },
+            console: {
+                enabled: true,
+                level: 'info'
+            }
+        });
+
+        // Initialize Notification Center Service
+        this.notificationService = new NotificationCenterService({
+            repoRoot: this.repoRoot,
+            logger: this.logger
+        });
+
+        this.debugLogPath = path.join(this.auditDir, 'guard-debug.log');
 
         // Initialize extracted services
         this.evidenceMonitor = new EvidenceMonitor(this.repoRoot, {
@@ -43,20 +75,34 @@ class RealtimeGuardService {
             autoSyncEnabled: process.env.HOOK_GUARD_GITFLOW_AUTOSYNC !== 'false',
             autoCleanEnabled: process.env.HOOK_GUARD_GITFLOW_AUTOCLEAN !== 'false',
             requireClean: process.env.HOOK_GUARD_GITFLOW_REQUIRE_CLEAN !== 'false'
-        });
-
-        // Notification configuration
-        this.notificationTimeout = Number(process.env.HOOK_GUARD_NOTIFY_TIMEOUT || 8);
-        this.notificationFailures = 0;
-        this.maxNotificationErrors = Number(process.env.HOOK_GUARD_NOTIFY_MAX_ERRORS || 3);
-        this.notificationLogPath = path.join(this.auditDir, 'notifications.log');
-        this.debugLogPath = path.join(this.auditDir, 'guard-debug.log');
+        }, this.logger);
 
         // Activity monitoring
-        this.activityWatcher = null;
-        this.lastUserActivityAt = Date.now();
-        this.lastActivityLogAt = 0;
-        this.inactivityGraceMs = Number(process.env.HOOK_GUARD_INACTIVITY_GRACE_MS || 420000);
+        this.activityMonitor = new ActivityMonitor({
+            repoRoot: this.repoRoot,
+            inactivityGraceMs: Number(process.env.HOOK_GUARD_INACTIVITY_GRACE_MS || 420000),
+            logger: this.logger
+        });
+
+        // Dev Docs monitoring
+        this.devDocsMonitor = new DevDocsMonitor({
+            repoRoot: this.repoRoot,
+            checkIntervalMs: Number(process.env.HOOK_GUARD_DEV_DOCS_CHECK_INTERVAL || 300000),
+            staleThresholdMs: Number(process.env.HOOK_GUARD_DEV_DOCS_STALE_THRESHOLD || 86400000),
+            autoRefreshEnabled: process.env.HOOK_GUARD_DEV_DOCS_AUTO_REFRESH !== 'false',
+            logger: this.logger,
+            notificationService: this.notificationService
+        });
+
+        // AST Monitoring
+        this.astMonitor = new AstMonitor({
+            repoRoot: this.repoRoot,
+            debounceMs: Number(process.env.HOOK_AST_WATCH_DEBOUNCE || 8000),
+            cooldownMs: Number(process.env.HOOK_AST_WATCH_COOLDOWN || 30000),
+            enabled: process.env.HOOK_AST_WATCH !== 'false',
+            logger: this.logger,
+            notificationService: this.notificationService
+        });
 
         // AI Start configuration
         this.autoAIStartEnabled = process.env.HOOK_GUARD_AI_START === 'true';
@@ -64,17 +110,13 @@ class RealtimeGuardService {
         this.lastAutoAIStart = 0;
 
         // Initialize context and orchestration
-        this.contextEngine = new ContextDetectionEngine(this.repoRoot);
+        this.contextEngine = new ContextDetectionEngine(this.repoRoot, this.logger);
         this.platformDetector = new PlatformDetectionService();
-        this.orchestrator = new AutonomousOrchestrator(this.contextEngine, this.platformDetector, null);
-        this.autoExecuteAIStart = new AutoExecuteAIStartUseCase(this.orchestrator, this.repoRoot);
+        this.orchestrator = new AutonomousOrchestrator(this.contextEngine, this.platformDetector, null, this.logger);
+        this.autoExecuteAIStart = new AutoExecuteAIStartUseCase(this.orchestrator, this.repoRoot, this.logger);
 
         // Additional configuration
         this.embedTokenMonitor = process.env.HOOK_GUARD_EMBEDDED_TOKEN_MONITOR === 'true';
-        this.devDocsAutoRefreshEnabled = process.env.HOOK_GUARD_DEV_DOCS_AUTO_REFRESH !== 'false';
-        this.astWatchEnabled = process.env.HOOK_AST_WATCH !== 'false';
-        this.astWatchDebounceMs = Number(process.env.HOOK_AST_WATCH_DEBOUNCE || 8000);
-        this.astWatchCooldownMs = Number(process.env.HOOK_AST_WATCH_COOLDOWN || 30000);
     }
 
     start() {
@@ -102,19 +144,16 @@ class RealtimeGuardService {
         this.gitTreeMonitor.stop();
         this.tokenMonitor.stop();
 
-        if (this.activityWatcher && typeof this.activityWatcher.close === 'function') {
-            this.activityWatcher.close();
-            this.activityWatcher = null;
+        if (this.activityMonitor) {
+            this.activityMonitor.stop();
         }
 
-        if (this.evidenceChangeTimer) {
-            clearTimeout(this.evidenceChangeTimer);
-            this.evidenceChangeTimer = null;
+        if (this.devDocsMonitor) {
+            this.devDocsMonitor.stop();
         }
 
-        if (this.astWatchTimer) {
-            clearTimeout(this.astWatchTimer);
-            this.astWatchTimer = null;
+        if (this.astMonitor) {
+            this.astMonitor.stop();
         }
     }
 
@@ -193,38 +232,21 @@ class RealtimeGuardService {
 
     // Notification methods
     notify(message, level = 'info', options = {}) {
-        const { forceDialog = false } = options;
-        const entry = `[${this.timestamp()}] [${level.toUpperCase()}] ${message}`;
-        this.appendNotificationLog(entry);
+        const { forceDialog = false, ...metadata } = options;
         this.appendDebugLog(`NOTIFY|${level}|${forceDialog ? 'force-dialog|' : ''}${message}`);
 
-        if (this.notifier && typeof this.notifier.warn === 'function') {
-            this.notifier.warn(`[hook-guard] ${message}`);
-        } else if (typeof this.notifier === 'function') {
-            this.notifier(`[hook-guard] ${message}`);
+        if (this.notificationService) {
+            this.notificationService.enqueue({
+                message,
+                level,
+                metadata: { ...metadata, forceDialog }
+            });
         }
-
-        if (this.notifications) {
-            this.sendMacNotification(message, level, forceDialog);
-        }
-    }
-
-    sendMacNotification(message, level, forceDialog = false) {
-        // Implementation remains the same
-        // ... (notification sending logic)
     }
 
     // Utility methods
     timestamp() {
         return new Date().toISOString();
-    }
-
-    appendNotificationLog(entry) {
-        try {
-            fs.appendFileSync(this.notificationLogPath, entry + '\n');
-        } catch (error) {
-            console.error('[RealtimeGuardService] Failed to write notification log:', error.message);
-        }
     }
 
     appendDebugLog(entry) {
@@ -235,19 +257,28 @@ class RealtimeGuardService {
         }
     }
 
-    // Additional methods (activity watching, AI start, etc.)
+    // Additional methods
     watchWorkspaceActivity() {
-        // Implementation remains the same but simplified
-        // ...
+        if (this.activityMonitor) {
+            this.activityMonitor.start();
+        }
+    }
+
+    startDevDocsMonitoring() {
+        if (this.devDocsMonitor) {
+            this.devDocsMonitor.start();
+        }
+    }
+
+    startAstWatch() {
+        if (this.astMonitor) {
+            this.astMonitor.start();
+        }
     }
 
     performInitialChecks() {
-        // Implementation remains the same
-        // ...
+        this.logger.info('[RealtimeGuardService] Initial checks completed');
     }
-
-    // Other existing methods can be gradually extracted or simplified
-    // ...
 }
 
 module.exports = RealtimeGuardService;

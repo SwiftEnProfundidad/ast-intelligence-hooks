@@ -9,6 +9,7 @@ class GitCliAdapter {
     constructor(config = {}) {
         this.repoRoot = config.repoRoot || process.cwd();
         this.protectedBranches = config.protectedBranches || ['main', 'master', 'develop'];
+        this.logger = config.logger || console;
     }
 
     exec(command) {
@@ -19,7 +20,7 @@ class GitCliAdapter {
                 stdio: ['pipe', 'pipe', 'pipe']
             }).trim();
         } catch (error) {
-            console.error(`[GitCliAdapter] Command failed: ${command}`, error.message);
+            this.logger.error(`[GitCliAdapter] Command failed: ${command}`, { error: error.message });
             return null;
         }
     }

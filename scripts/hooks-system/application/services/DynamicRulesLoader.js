@@ -2,8 +2,9 @@ const fs = require('fs').promises;
 const path = require('path');
 
 class DynamicRulesLoader {
-    constructor(rulesDirectory) {
+    constructor(rulesDirectory, logger = console) {
         this.rulesDirectory = rulesDirectory || null;
+        this.logger = logger;
         this.rulesDirectories = this.resolveRulesDirectories();
         this.rulesMap = {
             backend: 'rulesbackend.mdc',
@@ -51,7 +52,7 @@ class DynamicRulesLoader {
             const rulePath = this.rulesMap[platform];
 
             if (!rulePath) {
-                console.warn(`[DynamicRulesLoader] No rules file mapped for platform: ${platform}`);
+                this.logger.warn(`[DynamicRulesLoader] No rules file mapped for platform: ${platform}`, { platform });
                 continue;
             }
 
@@ -99,8 +100,9 @@ class DynamicRulesLoader {
             }
         }
 
-        console.warn(
-            `[DynamicRulesLoader] Could not load ${ruleFileName}. Tried: ${attempts.join(', ')}`
+        this.logger.warn(
+            `[DynamicRulesLoader] Could not load ${ruleFileName}. Tried locations: ${attempts.join(', ')}`,
+            { ruleFileName, attempts }
         );
         return null;
     }
@@ -166,7 +168,7 @@ Detected platforms with high confidence. Rules loaded automatically.
             await fs.writeFile(fullPath, content, 'utf-8');
             return fullPath;
         } catch (error) {
-            console.error(`[DynamicRulesLoader] Failed to save auto-context.mdc:`, error.message);
+            this.logger.error(`[DynamicRulesLoader] Failed to save auto-context.mdc:`, { error: error.message });
             throw error;
         }
     }
