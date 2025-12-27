@@ -1,10 +1,12 @@
 const path = require('path');
+const fs = require('fs');
 
 const GitEnvironmentService = require('./GitEnvironmentService');
 const PlatformDetectorService = require('./PlatformDetectorService');
 const FileSystemInstallerService = require('./FileSystemInstallerService');
 const ConfigurationGeneratorService = require('./ConfigurationGeneratorService');
 const IdeIntegrationService = require('./IdeIntegrationService');
+const UnifiedLogger = require('../logging/UnifiedLogger');
 
 const COLORS = {
     reset: '\x1b[0m',
@@ -19,29 +21,40 @@ class InstallService {
     constructor() {
         this.targetRoot = process.cwd();
         // Assuming this script is located at scripts/hooks-system/application/services/installation/InstallService.js
-        // We need to point to the root of the hook system package source
-        // Ideally this should be determined relative to where the package source is located.
-        // If we are running from bin/install.js, the hook system root is one level up from bin.
-
-        // Let's rely on finding package.json relative to __dirname for robustness if possible, 
-        // but here we are in application/services/installation.
-        // If the structure is scripts/hooks-system/..., then hookSystemRoot is scripts/hooks-system.
         this.hookSystemRoot = path.resolve(__dirname, '../../../');
+
+        // Initialize Audit Logger
+        const auditLogPath = path.join(this.targetRoot, '.audit-reports', 'install.log');
+        if (!fs.existsSync(path.dirname(auditLogPath))) {
+            fs.mkdirSync(path.dirname(auditLogPath), { recursive: true });
+        }
+
+        this.logger = new UnifiedLogger({
+            component: 'Installer',
+            console: { enabled: false }, // Keep console clean for CLI wizard
+            file: {
+                enabled: true,
+                path: auditLogPath,
+                level: 'info'
+            }
+        });
 
         this.gitService = new GitEnvironmentService(this.targetRoot);
         this.platformService = new PlatformDetectorService(this.targetRoot);
-        this.fsInstaller = new FileSystemInstallerService(this.targetRoot, this.hookSystemRoot);
+        this.fsInstaller = new FileSystemInstallerService(this.targetRoot, this.hookSystemRoot, this.logger);
         this.configGenerator = new ConfigurationGeneratorService(this.targetRoot, this.hookSystemRoot);
         this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot);
     }
 
     async run() {
+        this.logger.info('INSTALLATION_STARTED', { targetRoot: this.targetRoot });
         this.printHeader();
 
         this.logStep('0/8', 'Checking Git repository...');
         if (!this.gitService.checkGitRepository()) {
             this.logError('Git repository check failed');
             this.logWarning('Installation aborted. Please initialize Git first.');
+            this.logger.error('INSTALLATION_ABORTED', { reason: 'No git repository' });
             process.exit(1);
         }
         this.logSuccess('Git repository detected');
@@ -52,6 +65,7 @@ class InstallService {
         this.logStep('1/8', 'Detecting project platforms...');
         const platforms = this.platformService.detect();
         this.logSuccess(`Detected: ${platforms.join(', ')}`);
+        this.logger.info('PLATFORMS_DETECTED', { platforms });
 
         this.logStep('2/8', 'Installing ESLint configurations...');
         this.configGenerator.installESLintConfigs();
@@ -79,6 +93,7 @@ class InstallService {
         this.logStep('8/8', 'Adding npm scripts to package.json...');
         this.configGenerator.addNpmScripts();
 
+        this.logger.info('INSTALLATION_COMPLETED_SUCCESSFULLY');
         this.printFooter();
     }
 

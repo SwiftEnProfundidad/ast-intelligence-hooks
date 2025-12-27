@@ -8,9 +8,10 @@ const COLORS = {
 };
 
 class FileSystemInstallerService {
-    constructor(targetRoot, hookSystemRoot) {
+    constructor(targetRoot, hookSystemRoot, logger = null) {
         this.targetRoot = targetRoot || process.cwd();
         this.hookSystemRoot = hookSystemRoot;
+        this.logger = logger;
     }
 
     createDirectoryStructure() {
@@ -24,6 +25,7 @@ class FileSystemInstallerService {
             const fullPath = path.join(this.targetRoot, dir);
             if (!fs.existsSync(fullPath)) {
                 fs.mkdirSync(fullPath, { recursive: true });
+                if (this.logger) this.logger.debug('DIR_CREATED', { path: fullPath });
             }
         });
         this.logSuccess('Directory structure created');
@@ -54,6 +56,7 @@ class FileSystemInstallerService {
             }
         });
         this.logSuccess('System files copied');
+        if (this.logger) this.logger.info('SYSTEM_FILES_COPIED');
     }
 
     copyManageLibraryScript() {
