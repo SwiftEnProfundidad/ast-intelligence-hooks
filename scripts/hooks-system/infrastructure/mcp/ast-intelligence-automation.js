@@ -19,10 +19,11 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const AutonomousOrchestrator = require('../../application/services/AutonomousOrchestrator');
-const ContextDetectionEngine = require('../../application/services/ContextDetectionEngine');
-const MacOSNotificationAdapter = require('../adapters/MacOSNotificationAdapter');
-const { ConfigurationError } = require('../../domain/errors');
+// Removed global requires for performance (Lazy Loading)
+// const AutonomousOrchestrator = require('../../application/services/AutonomousOrchestrator');
+// const ContextDetectionEngine = require('../../application/services/ContextDetectionEngine');
+// const MacOSNotificationAdapter = require('../adapters/MacOSNotificationAdapter');
+// const { ConfigurationError } = require('../../domain/errors');
 
 const MCP_VERSION = '2024-11-05';
 
@@ -108,9 +109,31 @@ function resolveUpdateEvidenceScript() {
     return null;
 }
 
-const contextEngine = new ContextDetectionEngine(REPO_ROOT);
-const orchestrator = new AutonomousOrchestrator(contextEngine, null, null);
-const notificationAdapter = new MacOSNotificationAdapter();
+// Lazy Loading Services
+let contextEngineInstance = null;
+let orchestratorInstance = null;
+let notificationAdapterInstance = null;
+
+function getContextEngine() {
+    if (!contextEngineInstance) {
+        contextEngineInstance = new ContextDetectionEngine(REPO_ROOT);
+    }
+    return contextEngineInstance;
+}
+
+function getOrchestrator() {
+    if (!orchestratorInstance) {
+        orchestratorInstance = new AutonomousOrchestrator(getContextEngine(), null, null);
+    }
+    return orchestratorInstance;
+}
+
+function getNotificationAdapter() {
+    if (!notificationAdapterInstance) {
+        notificationAdapterInstance = new MacOSNotificationAdapter();
+    }
+    return notificationAdapterInstance;
+}
 
 // Polling state
 let lastContext = null;
@@ -130,7 +153,7 @@ const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true';
  * Helper: Send macOS notification via centralized adapter
  */
 function sendNotification(title, message, sound = 'Hero') {
-    notificationAdapter.send({ title, message, sound, level: 'info' })
+    getNotificationAdapter().send({ title, message, sound, level: 'info' })
         .catch(err => {
             if (process.env.DEBUG) {
                 console.error('[MCP] Failed to send notification:', err.message);
@@ -487,6 +510,7 @@ async function autoExecuteAIStart(params) {
             const platformsStr = platforms.join(',');
             const updateScript = resolveUpdateEvidenceScript();
             if (!updateScript) {
+                const { ConfigurationError } = require('../../domain/errors');
                 throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
             }
 
@@ -656,6 +680,7 @@ function aiGateCheck() {
     const evidenceStatus = checkEvidence();
     if (evidenceStatus.isStale && (now - lastEvidenceAutoFix > EVIDENCE_AUTOFIX_COOLDOWN)) {
         try {
+            const { ConfigurationError } = require('../../domain/errors');
             const updateScript = resolveUpdateEvidenceScript();
             if (!updateScript) {
                 throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
@@ -1398,48 +1423,55 @@ setInterval(async () => {
             if (featureGroups.size > 2 && docsCount < stagedFiles.length) {
                 sendNotification('📦 Atomic Commit Suggestion', `${featureGroups.size} feature groups detected: ${Array.from(featureGroups).join(', ')}. Consider splitting commits.`, 'Glass');
             }
-        }
 
-        if (orchestrator.shouldReanalyze()) {
-            const currentContext = await contextEngine.detectContext();
+            const orchestrator = getOrchestrator();
+            const contextEngine = getContextEngine();
 
-            if (contextEngine.hasContextChanged(lastContext)) {
-                const decision = await orchestrator.analyzeContext();
+            try {
+                // Orchestrator polling logic
+                if (orchestrator.shouldReanalyze()) {
+                    const currentContext = await contextEngine.detectContext();
 
-                if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
-                    const platforms = decision.platforms.map(p => p.platform).join(', ');
-                    const updateScript = resolveUpdateEvidenceScript();
-                    const platformsStr = decision.platforms.map(p => p.platform).join(',');
+                    if (contextEngine.hasContextChanged(lastContext)) {
+                        const decision = await orchestrator.analyzeContext();
+                        if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
+                            const platforms = decision.platforms.map(p => p.platform).join(', ');
+                            const updateScript = resolveUpdateEvidenceScript();
+                            const platformsStr = decision.platforms.map(p => p.platform).join(',');
 
-                    try {
-                        if (!updateScript) {
-                            throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
+                            try {
+                                if (!updateScript) {
+                                    throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
+                                }
+                                execSync(`bash "${updateScript}" --auto --platforms ${platformsStr}`, {
+                                    cwd: REPO_ROOT,
+                                    encoding: 'utf-8',
+                                    stdio: ['pipe', 'pipe', 'pipe']
+                                });
+
+                                sendNotification(
+                                    '✅ AI Start Ejecutado',
+                                    `Plataforma: ${platforms.toUpperCase()}`,
+                                    'Glass'
+                                );
+                            } catch (e) {
+                                sendNotification(
+                                    '❌ AI Start Error',
+                                    `Fallo al ejecutar: ${e.message}`,
+                                    'Basso'
+                                );
+                            }
                         }
-                        execSync(`bash "${updateScript}" --auto --platforms ${platformsStr}`, {
-                            cwd: REPO_ROOT,
-                            encoding: 'utf-8',
-                            stdio: ['pipe', 'pipe', 'pipe']
-                        });
 
-                        sendNotification(
-                            '✅ AI Start Ejecutado',
-                            `Plataforma: ${platforms.toUpperCase()}`,
-                            'Glass'
-                        );
-                    } catch (e) {
-                        sendNotification(
-                            '❌ AI Start Error',
-                            `Fallo al ejecutar: ${e.message}`,
-                            'Basso'
-                        );
+                        lastContext = currentContext;
                     }
                 }
 
-                lastContext = currentContext;
+            } catch (error) {
             }
         }
-
     } catch (error) {
+        console.error('[MCP] Polling loop error:', error);
     }
 }, 30000);
 

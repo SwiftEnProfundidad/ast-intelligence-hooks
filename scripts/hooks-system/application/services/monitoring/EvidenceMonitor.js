@@ -65,7 +65,7 @@ class EvidenceMonitor {
                 if (code === 0) {
                     resolve(output);
                 } else {
-                    reject(new Error(`Evidence refresh failed with code ${code}`));
+                    reject(new DomainError(`Evidence refresh failed with code ${code}`, 'EVIDENCE_REFRESH_FAILED'));
                 }
             });
 

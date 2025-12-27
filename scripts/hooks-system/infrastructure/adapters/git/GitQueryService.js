@@ -32,6 +32,19 @@ class GitQueryService {
         if (!output) return [];
         return output.split('\n').filter(l => l.trim().length > 0);
     }
+
+    getDiff(cached = false) {
+        const flag = cached ? '--cached' : '';
+        return this.runner.exec(`git diff ${flag} --patch`) || '';
+    }
+
+    getStatusShort() {
+        return this.runner.exec('git status --short') || '';
+    }
+
+    getLog(count = 10) {
+        return this.runner.exec(`git log -${count} --pretty=format:"%H|%s" --name-only`) || '';
+    }
 }
 
 module.exports = GitQueryService;

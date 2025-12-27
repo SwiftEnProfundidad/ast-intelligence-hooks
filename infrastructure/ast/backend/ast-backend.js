@@ -126,7 +126,7 @@ function runBackendIntelligence(project, findings, platform) {
 
       sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
         const className = cls.getName() || '';
-        const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$|Command$|Event$/.test(className);
+        const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
         const isTestClass = /Spec$|Test$|Mock/.test(className);
         if (isValueObject || isTestClass) return;
 
@@ -262,27 +262,25 @@ function runBackendIntelligence(project, findings, platform) {
       }
     }
 
-    const isToolingFile = /\/(bin|scripts|tools|cli|infrastructure\/ast)\//i.test(filePath);
-
     const hasEnvSpecific = sf.getFullText().includes("process.env.NODE_ENV") ||
       sf.getFullText().includes("app.get('env')") ||
       sf.getFullText().includes("ConfigService");
     const hasConfigUsage = sf.getFullText().includes("config") || sf.getFullText().includes("env");
-    if (!hasEnvSpecific && hasConfigUsage && !isTestFile(filePath) && !isToolingFile) {
+    if (!hasEnvSpecific && hasConfigUsage && !isTestFile(filePath)) {
       pushFinding("backend.config.missing_env_separation", "warning", sf, sf, "Missing environment-specific configuration - consider NODE_ENV or ConfigService", findings);
     }
 
     const hasConfigValidation = sf.getFullText().includes("joi") ||
       sf.getFullText().includes("class-validator") ||
       sf.getFullText().includes("@nestjs/config");
-    if (!hasConfigValidation && sf.getFullText().includes("process.env") && !isToolingFile) {
+    if (!hasConfigValidation && sf.getFullText().includes("process.env")) {
       pushFinding("backend.config.missing_validation", "warning", sf, sf, "Environment variables without validation - consider Joi or class-validator", findings);
     }
 
     if (godClassBaseline) {
       sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
         const className = cls.getName() || '';
-        const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$|Command$|Event$/.test(className);
+        const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
         const isTestClass = /Spec$|Test$|Mock/.test(className);
         if (isValueObject || isTestClass) return;
 
@@ -331,23 +329,16 @@ function runBackendIntelligence(project, findings, platform) {
         const complexityOutlier = complexityZ >= godClassBaseline.thresholds.outlier.complexityZ;
         const concernOutlier = concernCount >= godClassBaseline.thresholds.outlier.concerns;
 
-        const extremeOutlier =
-          methodsZ >= godClassBaseline.thresholds.extreme.methodsCountZ ||
-          propsZ >= godClassBaseline.thresholds.extreme.propertiesCountZ ||
-          linesZ >= godClassBaseline.thresholds.extreme.lineCountZ ||
-          complexityZ >= godClassBaseline.thresholds.extreme.complexityZ;
+        const isAbsoluteGod = lineCount > 600 && methodsCount > 30 && complexity > 80;
+        const isUnderThreshold = lineCount < 400 && methodsCount < 25 && complexity < 50;
 
-        const signalCount = [sizeOutlier, complexityOutlier, concernOutlier].filter(Boolean).length;
+        let signalCount = 0;
+        if (sizeOutlier) signalCount++;
+        if (complexityOutlier) signalCount++;
+        if (concernOutlier) signalCount++;
 
-        const isAbsoluteGod = lineCount > 300 && methodsCount > 20 && complexity > 50;
-        const isUnderThreshold = lineCount < 200 && methodsCount < 15 && complexity < 30;
-
-        if (!isUnderThreshold && (extremeOutlier || signalCount >= 2 || isAbsoluteGod)) {
-          pushFinding(
-            "backend.antipattern.god_classes",
-            "critical",
-            sf,
-            cls,
+        if (!isUnderThreshold && (signalCount >= 2 || isAbsoluteGod)) {
+          pushFinding("backend.antipattern.god_classes", "critical", sf, cls,
             `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
             findings
           );
@@ -358,6 +349,13 @@ function runBackendIntelligence(project, findings, platform) {
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Entity|Model|Domain/.test(name)) {
+        // Exclude Errors, Exceptions, and Events from Anemic Domain check
+        if (/Error$|Exception$|Event$/.test(name)) return;
+
+        // Exclude files in domain/errors or domain/events directories
+        const filePath = sf.getFilePath().replace(/\\/g, '/');
+        if (/\/domain\/errors\//.test(filePath) || /\/domain\/events\//.test(filePath)) return;
+
         const methods = cls.getMethods();
         const hasBusinessLogic = methods.some((method) => {
           const methodName = method.getName();
@@ -863,19 +861,10 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.security.missing_helmet", "high", sf, sf, "Missing Helmet security headers middleware", findings);
     }
 
-    const isBusinessLogic = (/\/(controllers?|services?|use-?cases?|handlers?)\//i.test(filePath) ||
-      /(controller|service|usecase|handler)\.ts$/i.test(filePath)) &&
-      !isSpecFile &&
-      !/\/(tests?|__tests__|mocks?|fixtures?)\//i.test(filePath);
-
-    if (isBusinessLogic) {
-      const text = sf.getFullText();
-      const hasLogger = /winston|audit|Logger|pino|bunyan|monitor|log\./i.test(text);
-      const hasStateChange = /@Post|@Put|@Delete|@Patch|create|update|delete|save|insert|remove|execute/i.test(text);
-
-      if (hasStateChange && !hasLogger) {
-        pushFinding("backend.security.missing_audit_logging", "medium", sf, sf, "Audit logging not detected in state-changing module - add structured audit logs", findings);
-      }
+    const isBusinessLogic = /\/(controllers?|services?|use-?cases?|handlers?)\//i.test(filePath) ||
+      /(controller|service|usecase|handler)\.ts$/i.test(filePath);
+    if (isBusinessLogic && !sf.getFullText().includes("winston") && !sf.getFullText().includes("audit") && !sf.getFullText().includes("Logger")) {
+      pushFinding("backend.security.missing_audit_logging", "medium", sf, sf, "Audit logging not detected - add structured audit logs", findings);
     }
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {

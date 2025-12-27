@@ -3,44 +3,19 @@
  * Enterprise-grade caching for AST Intelligence Hooks
  */
 
-export interface CacheEntry<T> {
-    value: T;
-    timestamp: number;
-    ttl: number;
-}
-
-export interface CacheOptions {
-    ttl?: number;
-    maxSize?: number;
-}
-
-export interface ICacheService {
-    get<T>(key: string): T | null;
-    set<T>(key: string, value: T, ttl?: number): void;
-    has(key: string): boolean;
-    delete(key: string): boolean;
-    clear(): void;
-    size(): number;
-    keys(): string[];
-}
-
 /**
  * In-Memory Cache Service
  * Fast, TTL-based caching for performance optimization
  */
-export class CacheService implements ICacheService {
-    private cache: Map<string, CacheEntry<unknown>> = new Map();
-    private defaultTtl: number;
-    private maxSize: number;
-    private logger: any;
-
-    constructor(options: CacheOptions = {}, logger: any = console) {
+class CacheService {
+    constructor(options = {}, logger = console) {
+        this.cache = new Map();
         this.defaultTtl = options.ttl ?? 300000;
         this.maxSize = options.maxSize ?? 1000;
         this.logger = logger;
     }
 
-    get<T>(key: string): T | null {
+    get(key) {
         const entry = this.cache.get(key);
 
         if (!entry) {
@@ -52,15 +27,15 @@ export class CacheService implements ICacheService {
             return null;
         }
 
-        return entry.value as T;
+        return entry.value;
     }
 
-    set<T>(key: string, value: T, ttl?: number): void {
+    set(key, value, ttl) {
         if (this.cache.size >= this.maxSize) {
             this.evictOldest();
         }
 
-        const entry: CacheEntry<T> = {
+        const entry = {
             value,
             timestamp: Date.now(),
             ttl: ttl ?? this.defaultTtl
@@ -72,7 +47,7 @@ export class CacheService implements ICacheService {
         }
     }
 
-    has(key: string): boolean {
+    has(key) {
         const entry = this.cache.get(key);
 
         if (!entry) {
@@ -87,7 +62,7 @@ export class CacheService implements ICacheService {
         return true;
     }
 
-    delete(key: string): boolean {
+    delete(key) {
         const deleted = this.cache.delete(key);
         if (deleted && this.logger && this.logger.debug) {
             this.logger.debug(`[CacheService] Deleted key: ${key}`);
@@ -95,29 +70,29 @@ export class CacheService implements ICacheService {
         return deleted;
     }
 
-    clear(): void {
+    clear() {
         this.cache.clear();
         if (this.logger && this.logger.info) {
             this.logger.info('[CacheService] Cleared cache');
         }
     }
 
-    size(): number {
+    size() {
         this.cleanExpired();
         return this.cache.size;
     }
 
-    keys(): string[] {
+    keys() {
         this.cleanExpired();
         return Array.from(this.cache.keys());
     }
 
-    private isExpired(entry: CacheEntry<unknown>): boolean {
+    isExpired(entry) {
         return Date.now() - entry.timestamp > entry.ttl;
     }
 
-    private evictOldest(): void {
-        let oldestKey: string | null = null;
+    evictOldest() {
+        let oldestKey = null;
         let oldestTime = Infinity;
 
         const entries = Array.from(this.cache.entries());
@@ -133,8 +108,8 @@ export class CacheService implements ICacheService {
         }
     }
 
-    private cleanExpired(): void {
-        const keysToDelete: string[] = [];
+    cleanExpired() {
+        const keysToDelete = [];
 
         const entries = Array.from(this.cache.entries());
         for (const [key, entry] of entries) {
@@ -148,7 +123,7 @@ export class CacheService implements ICacheService {
         }
     }
 
-    getStats(): { size: number; hits: number; misses: number } {
+    getStats() {
         return {
             size: this.cache.size,
             hits: 0,
@@ -159,14 +134,13 @@ export class CacheService implements ICacheService {
 
 /**
  * Create a cached version of an async function
+ * @param {Function} fn 
+ * @param {CacheService} cache 
+ * @param {Function} keyGenerator 
+ * @param {number} [ttl] 
  */
-export function withCache<T extends (...args: unknown[]) => Promise<unknown>>(
-    fn: T,
-    cache: ICacheService,
-    keyGenerator: (...args: Parameters<T>) => string,
-    ttl?: number
-): T {
-    return (async (...args: Parameters<T>) => {
+function withCache(fn, cache, keyGenerator, ttl) {
+    return async (...args) => {
         const key = keyGenerator(...args);
         const cached = cache.get(key);
 
@@ -177,7 +151,10 @@ export function withCache<T extends (...args: unknown[]) => Promise<unknown>>(
         const result = await fn(...args);
         cache.set(key, result, ttl);
         return result;
-    }) as T;
+    };
 }
 
-export default CacheService;
+module.exports = {
+    CacheService,
+    withCache
+};

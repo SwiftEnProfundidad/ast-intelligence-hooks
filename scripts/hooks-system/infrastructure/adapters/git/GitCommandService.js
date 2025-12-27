@@ -42,6 +42,17 @@ class GitCommandService {
         return result !== null;
     }
 
+    fetchRemote(remote = 'origin') {
+        const result = this.runner.exec(`git fetch ${remote}`);
+        return result !== null;
+    }
+
+    pull(remote = 'origin', branch = null) {
+        const target = branch ? `${remote} ${branch}` : '';
+        const result = this.runner.exec(`git pull ${target}`.trim());
+        return result !== null;
+    }
+
     stash(message = 'WIP') {
         const result = this.runner.exec(`git stash -u -m "${message}"`);
         return result !== null;

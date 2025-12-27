@@ -1,7 +1,7 @@
-const fs = require('fs');
 const path = require('path');
-const { DomainError } = require('../../../domain/errors');
 const ICursorTokenRepository = require('../../domain/repositories/ICursorTokenRepository');
+const CursorApiDataSource = require('./datasources/CursorApiDataSource');
+const CursorFileDataSource = require('./datasources/CursorFileDataSource');
 
 const DEFAULT_MAX_TOKENS = 1_000_000;
 
@@ -14,10 +14,8 @@ class CursorTokenRepository extends ICursorTokenRepository {
         logger = console
     } = {}) {
         super();
-        this.usageFile = usageFile;
-        this.apiUrl = apiUrl;
-        this.apiToken = apiToken;
-        this.fetch = fetchImpl;
+        this.apiDataSource = new CursorApiDataSource({ apiUrl, apiToken, fetchImpl, logger });
+        this.fileDataSource = new CursorFileDataSource({ usageFile, logger });
         this.logger = logger;
     }
 
@@ -25,87 +23,19 @@ class CursorTokenRepository extends ICursorTokenRepository {
      * Fetches token usage from API with exponential backoff retry policy.
      */
     async getUsageFromApi(maxRetries = 3, initialDelayMs = 1000) {
-        if (!this.apiUrl || !this.fetch) {
+        const payload = await this.apiDataSource.fetchUsage(maxRetries, initialDelayMs);
+        if (!payload) {
             return null;
         }
-
-        const retryPolicy = { maxAttempts: maxRetries, backoff: 'exponential' };
-        const requestTimeoutMs = 30000;
-
-        for (let attempt = 0; attempt <= retryPolicy.maxAttempts; attempt++) {
-            try {
-                const abortController = typeof AbortController !== 'undefined' ? new AbortController() : null;
-                const timeoutId = abortController ? setTimeout(() => abortController.abort(), requestTimeoutMs) : null;
-
-                try {
-                    const response = await this.fetch(this.apiUrl, {
-                        headers: this.apiToken ? { Authorization: `Bearer ${this.apiToken}` } : {},
-                        signal: abortController?.signal
-                    });
-
-                    if (timeoutId) clearTimeout(timeoutId);
-
-                    if (!response.ok) {
-                        throw new DomainError(`Cursor API error: status ${response.status}`, 'API_ERROR');
-                    }
-                    const payload = await response.json();
-                    if (!payload) {
-                        return null;
-                    }
-
-                    return this._normalizePayload(payload, 'api');
-                } catch (fetchError) {
-                    if (timeoutId) clearTimeout(timeoutId);
-                    if (fetchError.name === 'AbortError') {
-                        throw new DomainError(`Request timeout after ${requestTimeoutMs}ms`, 'TIMEOUT_ERROR');
-                    }
-                    throw fetchError;
-                }
-            } catch (error) {
-                const isLastAttempt = attempt === retryPolicy.maxAttempts;
-                if (isLastAttempt) {
-                    this.logger.warn?.('CURSOR_REPO_API_FAILED', { error: error.message, attempts: attempt + 1 });
-                    return null;
-                }
-                if (retryPolicy.backoff === 'exponential') {
-                    const delayMs = initialDelayMs * Math.pow(2, attempt);
-                    await new Promise(resolve => setTimeout(resolve, delayMs));
-                }
-            }
-        }
-        return null;
+        return this._normalizePayload(payload, 'api');
     }
 
     async getUsageFromFile() {
-        try {
-            await fs.promises.access(this.usageFile, fs.constants.F_OK);
-        } catch (error) {
-            this.logger.debug?.('CURSOR_REPO_FILE_NOT_FOUND', { path: this.usageFile, error: error.message });
+        const payload = await this.fileDataSource.readUsage();
+        if (!payload) {
             return null;
         }
-
-        try {
-            const content = await fs.promises.readFile(this.usageFile, 'utf8');
-            const lines = content.trimEnd().split('\n');
-            for (let index = lines.length - 1; index >= 0; index -= 1) {
-                const line = lines[index].trim();
-                if (!line) {
-                    continue;
-                }
-                try {
-                    const parsed = JSON.parse(line);
-                    if (parsed && typeof parsed === 'object') {
-                        return this._normalizePayload(parsed, 'file');
-                    }
-                } catch (error) {
-                    this.logger.debug?.('CURSOR_REPO_MALFORMED_LINE', { error: error.message });
-                }
-            }
-            return null;
-        } catch (error) {
-            this.logger.error?.('CURSOR_REPO_FILE_READ_FAILED', { error: error.message });
-            return null;
-        }
+        return this._normalizePayload(payload, 'file');
     }
 
     _normalizePayload(payload, defaultSource) {

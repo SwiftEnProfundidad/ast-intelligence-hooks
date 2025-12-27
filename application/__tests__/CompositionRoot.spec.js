@@ -1,6 +1,8 @@
 jest.mock('../../infrastructure/adapters/MacOSNotificationAdapter');
 jest.mock('../../infrastructure/adapters/FileEvidenceAdapter');
-jest.mock('../../infrastructure/adapters/GitCliAdapter');
+jest.mock('../../infrastructure/adapters/GitQueryAdapter');
+jest.mock('../../infrastructure/adapters/GitCommandAdapter');
+jest.mock('../../infrastructure/adapters/GitHubCliAdapter');
 jest.mock('../../infrastructure/adapters/AstAnalyzerAdapter');
 jest.mock('../services/AutonomousOrchestrator');
 jest.mock('../services/ContextDetectionEngine');
@@ -38,9 +40,21 @@ describe('CompositionRoot', () => {
             expect(first).toBe(second);
         });
 
-        it('creates git adapter', () => {
+        it('creates git query adapter', () => {
             const root = new CompositionRoot(repoRoot);
-            const adapter = root.getGitAdapter();
+            const adapter = root.getGitQueryAdapter();
+            expect(adapter).toBeDefined();
+        });
+
+        it('creates git command adapter', () => {
+            const root = new CompositionRoot(repoRoot);
+            const adapter = root.getGitCommandAdapter();
+            expect(adapter).toBeDefined();
+        });
+
+        it('creates github adapter', () => {
+            const root = new CompositionRoot(repoRoot);
+            const adapter = root.getGitHubAdapter();
             expect(adapter).toBeDefined();
         });
 

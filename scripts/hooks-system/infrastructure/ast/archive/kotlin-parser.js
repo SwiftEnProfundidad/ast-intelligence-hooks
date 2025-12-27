@@ -9,6 +9,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const xml2js = require('xml2js');
+const { ConfigurationError } = require('../../../../domain/errors');
 
 class KotlinParser {
   constructor() {
@@ -32,7 +33,7 @@ class KotlinParser {
   parseFile(filePath) {
     try {
       if (!fs.existsSync(filePath)) {
-        throw new Error(`File not found: ${filePath}`);
+        throw new ConfigurationError(`File not found: ${filePath}`);
       }
 
       const tmpXml = path.join('/tmp', `detekt-${Date.now()}.xml`);

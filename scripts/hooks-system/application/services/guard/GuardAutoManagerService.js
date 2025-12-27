@@ -1,8 +1,15 @@
 const fs = require('fs');
-const path = require('path');
 const { spawnSync } = require('child_process');
 const { toErrorMessage } = require('../../../infrastructure/utils/error-utils');
 const GuardHeartbeatMonitor = require('./GuardHeartbeatMonitor');
+const GuardLockManager = require('./GuardLockManager');
+const GuardProcessManager = require('./GuardProcessManager');
+const GuardEventLogger = require('./GuardEventLogger');
+const GuardRecoveryService = require('./GuardRecoveryService');
+const GuardConfig = require('./GuardConfig');
+const GuardNotificationHandler = require('./GuardNotificationHandler');
+const GuardMonitorLoop = require('./GuardMonitorLoop');
+const GuardHealthReminder = require('./GuardHealthReminder');
 
 class GuardAutoManagerService {
     constructor({
@@ -16,367 +23,141 @@ class GuardAutoManagerService {
         processRef = process,
         heartbeatMonitor = null
     } = {}) {
-        this.repoRoot = repoRoot;
-        this.logger = logger || console;
-        this.notificationCenter = notificationCenter;
-        this.fs = fsModule;
-        this.childProcess = childProcess;
-        this.timers = timers;
-        this.env = env;
         this.process = processRef;
 
-        this.tmpDir = path.join(this.repoRoot, '.audit_tmp');
-        this.reportsDir = path.join(this.repoRoot, '.audit-reports');
-        this.lockDir = path.join(this.tmpDir, 'guard-auto-manager.lock');
-        this.pidFile = path.join(this.repoRoot, '.guard-auto-manager.pid');
-        this.supervisorPidFile = path.join(this.repoRoot, '.guard-supervisor.pid');
-        this.startScript = path.join(this.repoRoot, 'bin', 'start-guards.sh');
-        this.eventLogPath = path.join(this.tmpDir, 'guard-events.log');
+        // Configuration & Infrastructure
+        this.config = new GuardConfig(env);
+        this.eventLogger = new GuardEventLogger({ repoRoot, logger, fsModule });
+        this.lockManager = new GuardLockManager({ repoRoot, logger, fsModule });
+        this.processManager = new GuardProcessManager({ repoRoot, logger, fsModule, childProcess });
 
-        this.heartbeatNotifyCooldownMs = Number(env.GUARD_AUTOSTART_NOTIFY_COOLDOWN || 60000);
-        this.healthyReminderIntervalMs = Number(env.GUARD_AUTOSTART_HEALTHY_INTERVAL || 0);
-        this.healthyReminderCooldownMs = Number(
-            env.GUARD_AUTOSTART_HEALTHY_COOLDOWN || (this.healthyReminderIntervalMs > 0 ? this.healthyReminderIntervalMs : 0)
-        );
-
+        // Monitors & Handlers
         this.heartbeatMonitor = heartbeatMonitor || new GuardHeartbeatMonitor({
-            repoRoot: this.repoRoot,
-            logger: this.logger,
-            fsModule: this.fs,
-            env: this.env
+            repoRoot, logger, fsModule, env
+        });
+        this.notificationHandler = new GuardNotificationHandler(notificationCenter, this.eventLogger, this.config);
+        this.recoveryService = new GuardRecoveryService({
+            repoRoot, logger, startScript: this.processManager.startScript,
+            notificationHandler: this.notificationHandler, restartCooldownMs: this.config.restartCooldownMs
         });
 
-        this.heartbeatRestartCooldownMs = Number(env.GUARD_AUTOSTART_HEARTBEAT_COOLDOWN || 60000);
+        // Loops
+        this.monitorLoop = new GuardMonitorLoop(timers, this.config.monitorIntervalMs, () => this.monitorTick(), this.eventLogger);
+        this.healthReminder = new GuardHealthReminder(timers, this.notificationHandler, this.config);
 
-        this.monitorIntervalMs = Number(env.GUARD_AUTOSTART_MONITOR_INTERVAL || 5000);
-        this.restartCooldownMs = Number(env.GUARD_AUTOSTART_RESTART_COOLDOWN || 2000);
-        this.stopSupervisorOnExit = env.GUARD_AUTOSTART_STOP_SUPERVISOR_ON_EXIT !== 'false';
-
-        this.lastNotificationState = { reason: null, at: 0 };
+        // State
         this.lastHeartbeatState = { healthy: true, reason: 'healthy' };
         this.lastHeartbeatRestart = 0;
-        this.lastEnsure = 0;
-        this.lastHealthyReminderAt = 0;
-        this.healthyReminderTimer = null;
-        this.monitorTimer = null;
         this.shuttingDown = false;
-
-        this.fs.mkdirSync(this.tmpDir, { recursive: true });
-        this.fs.mkdirSync(this.reportsDir, { recursive: true });
-        this.fs.appendFileSync(this.eventLogPath, '', { encoding: 'utf8' });
     }
 
     start() {
-        if (!this.acquireLock()) {
-            this.log('Another guard auto manager instance detected. Exiting.');
+        if (!this.lockManager.acquireLock()) {
+            this.eventLogger.log('Another guard auto manager instance detected. Exiting.');
             return false;
         }
-        this.writePidFile();
-        this.log('Guard auto manager started');
+        this.lockManager.writePidFile();
+        this.eventLogger.log('Guard auto manager started');
+
         this.ensureSupervisor('initial-start');
-        this.startHealthyReminder();
-        this.monitorTimer = this.timers.setInterval(() => {
-            try {
-                this.monitorTick();
-            } catch (error) {
-                this.log(`Monitor error: ${error.message}`);
-            }
-        }, this.monitorIntervalMs);
+        this._startReminder();
+        this.monitorLoop.start();
         this.registerProcessHooks();
         return true;
     }
 
     monitorTick() {
-        if (this.shuttingDown) {
-            return;
-        }
-        if (!this.isSupervisorRunning()) {
-            this.lastHeartbeatState = { healthy: false, reason: 'missing-supervisor' };
-            this.recordEvent('Guard supervisor no se encuentra en ejecución; reinicio automático.');
-            this.ensureSupervisor('missing-supervisor');
+        if (this.shuttingDown) return;
+
+        if (!this.processManager.isSupervisorRunning()) {
+            this.handleMissingSupervisor();
             return;
         }
 
         const heartbeat = this.heartbeatMonitor.evaluate();
         if (!heartbeat.healthy) {
-            this.lastHealthyReminderAt = 0;
-            this.lastHeartbeatState = { healthy: false, reason: heartbeat.reason };
-            if (this.heartbeatMonitor.shouldRestart(heartbeat.reason)) {
-                const now = Date.now();
-                if (now - this.lastHeartbeatRestart >= this.heartbeatRestartCooldownMs) {
-                    this.log(`Heartbeat degraded (${heartbeat.reason}); attempting supervisor ensure.`);
-                    this.lastHeartbeatRestart = now;
-                    this.ensureSupervisor(`heartbeat-${heartbeat.reason}`);
-                } else {
-                    this.log(`Heartbeat degraded (${heartbeat.reason}); restart suppressed (cooldown).`);
-                    this.recordEvent(`Heartbeat degradado (${heartbeat.reason}); reinicio omitido por cooldown.`);
-                }
-            } else {
-                this.recordEvent(`Heartbeat en estado ${heartbeat.reason}; reinicio no requerido.`);
-            }
+            this.handleUnhealthyHeartbeat(heartbeat);
             return;
         }
 
         if (!this.lastHeartbeatState.healthy || this.lastHeartbeatState.reason !== 'healthy') {
-            this.startHealthyReminder();
+            this._startReminder();
         }
         this.lastHeartbeatState = { healthy: true, reason: 'healthy' };
     }
 
-    shutdown() {
-        if (this.shuttingDown) {
-            return;
-        }
-        this.shuttingDown = true;
-        this.log('Shutting down guard auto manager');
-        if (this.monitorTimer) {
-            this.timers.clearInterval(this.monitorTimer);
-            this.monitorTimer = null;
-        }
-        if (this.stopSupervisorOnExit) {
-            try {
-                const result = this.childProcess.spawnSync(this.startScript, ['stop'], {
-                    cwd: this.repoRoot,
-                    stdio: 'pipe'
-                });
-                const stdout = (result.stdout || '').toString().trim();
-                const stderr = (result.stderr || '').toString().trim();
-                if (stdout) {
-                    this.log(`[stop stdout] ${stdout}`);
-                }
-                if (stderr) {
-                    this.log(`[stop stderr] ${stderr}`);
-                }
-            } catch (error) {
-                this.log(`Error stopping supervisor: ${error.message}`);
+    handleMissingSupervisor() {
+        this.lastHeartbeatState = { healthy: false, reason: 'missing-supervisor' };
+        this.eventLogger.recordEvent('Guard supervisor no se encuentra en ejecución; reinicio automático.');
+        this.ensureSupervisor('missing-supervisor');
+    }
+
+    handleUnhealthyHeartbeat(heartbeat) {
+        this.lastHeartbeatState = { healthy: false, reason: heartbeat.reason };
+
+        if (this.heartbeatMonitor.shouldRestart(heartbeat.reason)) {
+            const now = Date.now();
+            if (now - this.lastHeartbeatRestart >= this.config.heartbeatRestartCooldownMs) {
+                this.eventLogger.log(`Heartbeat degraded (${heartbeat.reason}); attempting supervisor ensure.`);
+                this.lastHeartbeatRestart = now;
+                this.ensureSupervisor(`heartbeat-${heartbeat.reason}`);
+            } else {
+                this.eventLogger.log(`Heartbeat degraded (${heartbeat.reason}); restart suppressed (cooldown).`);
+                this.eventLogger.recordEvent(`Heartbeat degradado (${heartbeat.reason}); reinicio omitido por cooldown.`);
             }
+        } else {
+            this.eventLogger.recordEvent(`Heartbeat en estado ${heartbeat.reason}; reinicio no requerido.`);
+        }
+    }
+
+    shutdown() {
+        if (this.shuttingDown) return;
+        this.shuttingDown = true;
+        this.eventLogger.log('Shutting down guard auto manager');
+
+        this.monitorLoop.stop();
+        this.healthReminder.stop();
+
+        if (this.config.stopSupervisorOnExit) {
+            const result = this.processManager.stopSupervisor();
+            if (!result.success) this.eventLogger.log(`Error stopping supervisor: ${result.error?.message}`);
         }
         this.cleanup();
     }
 
     registerProcessHooks() {
-        this.process.on('SIGINT', () => this.shutdown());
-        this.process.on('SIGTERM', () => this.shutdown());
-        this.process.on('SIGHUP', () => this.shutdown());
+        const shutdownHandler = () => this.shutdown();
+        ['SIGINT', 'SIGTERM', 'SIGHUP'].forEach(sig => this.process.on(sig, shutdownHandler));
         this.process.on('exit', () => this.cleanup());
-        this.process.on('uncaughtException', error => {
-            this.log(`Uncaught exception: ${error.stack || error.message}`);
+        this.process.on('uncaughtException', e => {
+            this.eventLogger.log(`Uncaught exception: ${e.stack || e.message}`);
             this.shutdown();
         });
-        this.process.on('unhandledRejection', reason => {
-            this.log(`Unhandled rejection: ${toErrorMessage(reason)}`);
+        this.process.on('unhandledRejection', r => {
+            this.eventLogger.log(`Unhandled rejection: ${toErrorMessage(r)}`);
             this.shutdown();
         });
-    }
-
-    acquireLock() {
-        try {
-            this.fs.mkdirSync(this.lockDir, { recursive: false });
-            return true;
-        } catch (error) {
-            return false;
-        }
-    }
-
-    releaseLock() {
-        try {
-            this.fs.rmdirSync(this.lockDir);
-        } catch (error) {
-            this.logger.warn(`Error releasing lock: ${error.message}`);
-        }
-    }
-
-    writePidFile() {
-        this.fs.writeFileSync(this.pidFile, String(process.pid), { encoding: 'utf8' });
-    }
-
-    removePidFile() {
-        try {
-            this.fs.unlinkSync(this.pidFile);
-        } catch (error) {
-            this.logger.warn(`Error removing PID file: ${error.message}`);
-        }
-    }
-
-    log(message, data = {}) {
-        if (this.logger?.info) {
-            this.logger.info(message, data);
-        } else {
-            console.log(message, data);
-        }
-    }
-
-    recordEvent(message) {
-        if (!message) {
-            return;
-        }
-        const entry = `[${this.formatLocalTimestamp()}] ${message}`;
-        this.fs.appendFileSync(this.eventLogPath, `${entry}\n`, { encoding: 'utf8' });
-    }
-
-    notifyUser(message, level = 'info', options = {}) {
-        if (!message) {
-            return;
-        }
-        const { reason = null, cooldownMs = this.heartbeatNotifyCooldownMs } = options;
-        if (reason) {
-            const now = Date.now();
-            if (this.lastNotificationState.reason === reason && now - this.lastNotificationState.at < cooldownMs) {
-                this.log(`NOTIFY_SUPPRESSED|${reason}|cooldown`);
-                return;
-            }
-            this.lastNotificationState = { reason, at: now };
-        }
-
-        this.recordEvent(`${(level || 'info').toUpperCase()} ${message}`);
-        this.log(`NOTIFY|${level}|${message}`);
-
-        if (this.notificationCenter && typeof this.notificationCenter.enqueue === 'function') {
-            this.notificationCenter.enqueue({
-                message,
-                level,
-                type: `guard_auto_manager_${reason || level}`,
-                metadata: { reason, cooldownMs }
-            });
-        }
-    }
-
-    ensureSupervisor(reason) {
-        const now = Date.now();
-        if (now - this.lastEnsure < this.restartCooldownMs) {
-            return;
-        }
-        this.lastEnsure = now;
-        const normalizedReason = reason || 'unknown';
-        const severity =
-            normalizedReason === 'missing-supervisor'
-                ? 'error'
-                : normalizedReason.startsWith('heartbeat-')
-                    ? 'warn'
-                    : 'info';
-        this.recordEvent(`Asegurando guard-supervisor (motivo: ${normalizedReason}).`);
-        const result = this.childProcess.spawnSync(this.startScript, ['start'], {
-            cwd: this.repoRoot,
-            stdio: 'pipe'
-        });
-        if (result.error) {
-            this.log(`Failed to start supervisor (${reason}): ${result.error.message}`);
-            this.notifyUser(`Fallo al reiniciar guard-supervisor (${normalizedReason}).`, 'error', {
-                reason: `${normalizedReason}-failed`
-            });
-            return;
-        }
-        const stdout = (result.stdout || '').toString().trim();
-        const stderr = (result.stderr || '').toString().trim();
-        if (stdout) {
-            this.log(`[start stdout] ${stdout}`);
-        }
-        if (stderr) {
-            this.log(`[start stderr] ${stderr}`);
-        }
-        this.log(`Supervisor ensured (${reason})`);
-        this.notifyUser(
-            normalizedReason === 'initial-start'
-                ? 'Guard-supervisor operativo.'
-                : `Guard-supervisor reiniciado (${normalizedReason}).`,
-            severity,
-            { reason: normalizedReason }
-        );
-        if (normalizedReason === 'initial-start' || normalizedReason.startsWith('heartbeat-')) {
-            this.startHealthyReminder();
-        }
-    }
-
-    startHealthyReminder() {
-        if (!Number.isFinite(this.healthyReminderIntervalMs) || this.healthyReminderIntervalMs <= 0) {
-            if (this.healthyReminderTimer) {
-                this.timers.clearInterval(this.healthyReminderTimer);
-                this.healthyReminderTimer = null;
-            }
-            return;
-        }
-        if (this.healthyReminderTimer) {
-            this.timers.clearInterval(this.healthyReminderTimer);
-        }
-        this.lastHealthyReminderAt = 0;
-        const triggerReminder = () => {
-            if (this.shuttingDown) {
-                return;
-            }
-            if (!this.lastHeartbeatState.healthy || this.lastHeartbeatState.reason !== 'healthy') {
-                return;
-            }
-            const now = Date.now();
-            const cooldown = Number.isFinite(this.healthyReminderCooldownMs) && this.healthyReminderCooldownMs > 0
-                ? this.healthyReminderCooldownMs
-                : this.healthyReminderIntervalMs;
-            if (cooldown > 0 && now - this.lastHealthyReminderAt < cooldown) {
-                return;
-            }
-            this.lastHealthyReminderAt = now;
-            this.notifyUser('Guard-supervisor en ejecución.', 'info', {
-                reason: 'healthy-reminder',
-                cooldownMs: cooldown
-            });
-        };
-        this.healthyReminderTimer = this.timers.setInterval(triggerReminder, this.healthyReminderIntervalMs);
-        if (this.healthyReminderTimer && typeof this.healthyReminderTimer.unref === 'function') {
-            this.healthyReminderTimer.unref();
-        }
-    }
-
-    isSupervisorRunning() {
-        const pid = this.readSupervisorPid();
-        return pid ? this.isProcessAlive(pid) : false;
-    }
-
-    readSupervisorPid() {
-        if (!this.fs.existsSync(this.supervisorPidFile)) {
-            return null;
-        }
-        const raw = this.fs.readFileSync(this.supervisorPidFile, 'utf8').trim();
-        if (!raw) {
-            return null;
-        }
-        const pid = Number(raw);
-        return Number.isFinite(pid) ? pid : null;
-    }
-
-    isProcessAlive(pid) {
-        if (!pid) {
-            return false;
-        }
-        try {
-            process.kill(pid, 0);
-            return true;
-        } catch (error) {
-            return false;
-        }
     }
 
     cleanup() {
-        this.removePidFile();
-        this.releaseLock();
-        if (this.healthyReminderTimer) {
-            this.timers.clearInterval(this.healthyReminderTimer);
-            this.healthyReminderTimer = null;
+        this.lockManager.removePidFile();
+        this.lockManager.releaseLock();
+        this.healthReminder.stop();
+    }
+
+    ensureSupervisor(reason) {
+        const ensured = this.recoveryService.ensureSupervisor(reason, this.eventLogger);
+        if (ensured && (reason === 'initial-start' || reason.startsWith('heartbeat-'))) {
+            this._startReminder();
         }
     }
 
-    formatLocalTimestamp(date = new Date()) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const hours = String(date.getHours()).padStart(2, '0');
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const seconds = String(date.getSeconds()).padStart(2, '0');
-        const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
-        const offsetMinutes = date.getTimezoneOffset();
-        const sign = offsetMinutes <= 0 ? '+' : '-';
-        const absolute = Math.abs(offsetMinutes);
-        const offsetHours = String(Math.floor(absolute / 60)).padStart(2, '0');
-        const offsetMins = String(absolute % 60).padStart(2, '0');
-        return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${sign}${offsetHours}:${offsetMins}`;
+    _startReminder() {
+        this.healthReminder.start(() =>
+            !this.shuttingDown &&
+            this.lastHeartbeatState.healthy &&
+            this.lastHeartbeatState.reason === 'healthy'
+        );
     }
 }
 

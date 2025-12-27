@@ -47,7 +47,7 @@ class HookSystemStateMachine {
 
   transition(event) {
     if (!this.canTransition(event)) {
-      throw new Error(`Invalid transition from '${this.state}' via '${event}'`);
+      throw new DomainError(`Invalid transition from '${this.state}' via '${event}'`, 'INVALID_STATE_TRANSITION');
     }
     const nextState = this.stateMap[this.state].on[event];
     this.state = nextState;

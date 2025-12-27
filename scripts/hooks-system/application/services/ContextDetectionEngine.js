@@ -1,11 +1,8 @@
-const { execSync } = require('child_process');
-const path = require('path');
-const fs = require('fs');
 const crypto = require('crypto');
 
 class ContextDetectionEngine {
-    constructor(repoRoot, logger = console) {
-        this.repoRoot = repoRoot || process.cwd();
+    constructor(gitPort, logger = console) {
+        this.git = gitPort;
         this.logger = logger;
         this.cache = {
             context: null,
@@ -51,26 +48,17 @@ class ContextDetectionEngine {
 
     getStagedFiles() {
         try {
-            const output = execSync('git diff --cached --name-only', {
-                cwd: this.repoRoot,
-                encoding: 'utf-8'
-            }).trim();
-
-            return output ? output.split('\n').filter(Boolean) : [];
+            return this.git.getStagedFiles();
         } catch (error) {
+            this.logger.error('ContextDetectionEngine: Failed to get staged files', error);
             return [];
         }
     }
 
     getStagedSignature() {
         try {
-            const patch = execSync('git diff --cached --patch', {
-                cwd: this.repoRoot,
-                encoding: 'utf-8'
-            });
-
+            const patch = this.git.getDiff(true);
             if (!patch) return '';
-
             return crypto.createHash('sha1').update(patch).digest('hex');
         } catch (error) {
             return '';
@@ -79,17 +67,13 @@ class ContextDetectionEngine {
 
     getRecentlyModifiedFiles() {
         try {
-            const output = execSync('git status --short', {
-                cwd: this.repoRoot,
-                encoding: 'utf-8'
-            }).trim();
-
+            const output = this.git.getStatusShort();
             if (!output) return [];
 
             return output
                 .split('\n')
                 .filter(Boolean)
-                .map(line => line.trim().substring(2))
+                .map(line => line.trim().substring(2)) // Remove status code
                 .filter(file => !file.startsWith('.git'));
         } catch (error) {
             return [];
@@ -98,12 +82,7 @@ class ContextDetectionEngine {
 
     getRecentCommitPatterns() {
         try {
-            const output = execSync('git log -10 --pretty=format:"%H|%s" --name-only', {
-                cwd: this.repoRoot,
-                encoding: 'utf-8',
-                maxBuffer: 1024 * 1024
-            }).trim();
-
+            const output = this.git.getLog(10);
             if (!output) return [];
 
             const commits = [];
@@ -138,10 +117,7 @@ class ContextDetectionEngine {
 
     getCurrentBranch() {
         try {
-            return execSync('git branch --show-current', {
-                cwd: this.repoRoot,
-                encoding: 'utf-8'
-            }).trim();
+            return this.git.getCurrentBranch();
         } catch (error) {
             return 'unknown';
         }

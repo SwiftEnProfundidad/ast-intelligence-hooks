@@ -1,10 +1,13 @@
 
+const { ValidationError } = require('../errors');
+const Severity = require('../values/Severity');
+
 class Finding {
   constructor(ruleId, severity, message, filePath, line, platform) {
-    this.validateInputs(ruleId, severity, message, filePath, line, platform);
+    this.validateInputs(ruleId, message, filePath);
 
     this.ruleId = ruleId;
-    this.severity = this.normalizeSeverity(severity);
+    this.severity = new Severity(severity);
     this.message = message;
     this.filePath = filePath;
     this.line = line || 1;
@@ -13,40 +16,16 @@ class Finding {
     this.id = this.generateId();
   }
 
-  validateInputs(ruleId, severity, message, filePath, line, platform) {
+  validateInputs(ruleId, message, filePath) {
     if (!ruleId || typeof ruleId !== 'string') {
-      throw new Error('Finding requires valid ruleId (string)');
+      throw new ValidationError('Finding requires valid ruleId (string)', 'ruleId', ruleId);
     }
-
-    const normalizedSeverity = this.normalizeSeverity(severity);
-    if (!normalizedSeverity) {
-      throw new Error(`Invalid severity: ${severity}. Must be critical, high, medium, low, info, warning, or error`);
-    }
-
     if (!message || typeof message !== 'string') {
-      throw new Error('Finding requires valid message (string)');
+      throw new ValidationError('Finding requires valid message (string)', 'message', message);
     }
     if (!filePath || typeof filePath !== 'string') {
-      throw new Error('Finding requires valid filePath (string)');
+      throw new ValidationError('Finding requires valid filePath (string)', 'filePath', filePath);
     }
-  }
-
-  normalizeSeverity(severity) {
-    if (!severity) return null;
-
-    const sev = severity.toLowerCase();
-
-    const severityMap = {
-      'error': 'high',
-      'warning': 'medium',
-      'critical': 'critical',
-      'high': 'high',
-      'medium': 'medium',
-      'low': 'low',
-      'info': 'info',
-    };
-
-    return severityMap[sev] || null;
   }
 
   generateId() {
@@ -54,61 +33,30 @@ class Finding {
     return Buffer.from(hash).toString('base64').substring(0, 16);
   }
 
-  isCritical() {
-    return this.severity === 'critical';
-  }
-
-  isHigh() {
-    return this.severity === 'high';
-  }
-
-  isMedium() {
-    return this.severity === 'medium';
-  }
-
-  isLow() {
-    return this.severity === 'low';
-  }
-
-  isInfo() {
-    return this.severity === 'info';
-  }
-
-  isBlockingLevel() {
-    return this.isCritical() || this.isHigh();
-  }
+  isCritical() { return this.severity.isCritical(); }
+  isHigh() { return this.severity.isHigh(); }
+  isMedium() { return this.severity.isMedium(); }
+  isLow() { return this.severity.isLow(); }
+  isInfo() { return this.severity.isInfo(); }
+  isBlockingLevel() { return this.severity.isBlocking(); }
 
   belongsToPlatform(platform) {
     return this.platform === platform.toLowerCase();
   }
 
   getSeverityWeight() {
-    const weights = {
-      critical: 4,
-      high: 3,
-      medium: 2,
-      low: 1,
-      info: 0,
-    };
-    return weights[this.severity] || 0;
+    return this.severity.getWeight();
   }
 
   getTechnicalDebtHours() {
-    const hoursPerSeverity = {
-      critical: 4,
-      high: 2,
-      medium: 1,
-      low: 0.5,
-      info: 0,
-    };
-    return hoursPerSeverity[this.severity] || 0;
+    return this.severity.getDebtHours();
   }
 
   toJSON() {
     return {
       id: this.id,
       ruleId: this.ruleId,
-      severity: this.severity,
+      severity: this.severity.toString(),
       message: this.message,
       filePath: this.filePath,
       line: this.line,
