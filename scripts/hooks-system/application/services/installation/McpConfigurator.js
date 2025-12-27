@@ -10,12 +10,14 @@ const COLORS = {
 };
 
 class McpConfigurator {
-    constructor(targetRoot, hookSystemRoot) {
+    constructor(targetRoot, hookSystemRoot, logger = null) {
         this.targetRoot = targetRoot;
         this.hookSystemRoot = hookSystemRoot;
+        this.logger = logger;
     }
 
     configure() {
+        if (this.logger) this.logger.info('MCP_CONFIGURATION_STARTED');
         let nodePath = process.execPath;
         if (!nodePath || !fs.existsSync(nodePath)) {
             try {
@@ -59,6 +61,7 @@ class McpConfigurator {
 
                 fs.writeFileSync(mcpConfigPath, JSON.stringify(configToWrite, null, 2));
                 this.logSuccess(`Configured ${ide.configPath}`);
+                if (this.logger) this.logger.info('MCP_CONFIGURED', { ide: ide.name, path: ide.configPath });
                 configuredCount++;
             } else {
                 try {
@@ -71,9 +74,11 @@ class McpConfigurator {
 
                     fs.writeFileSync(mcpConfigPath, JSON.stringify(existing, null, 2));
                     this.logSuccess(`Updated ${ide.configPath} (merged configuration)`);
+                    if (this.logger) this.logger.info('MCP_CONFIG_UPDATED', { ide: ide.name, path: ide.configPath });
                     configuredCount++;
                 } catch (mergeError) {
                     this.logWarning(`${ide.configPath} already exists and couldn't be merged, skipping`);
+                    if (this.logger) this.logger.warn('MCP_CONFIG_MERGE_FAILED', { ide: ide.name, error: mergeError.message });
                 }
             }
         });
@@ -93,6 +98,7 @@ class McpConfigurator {
             fs.writeFileSync(fallbackPath, JSON.stringify(mcpConfig, null, 2));
             this.logSuccess('Configured .cursor/mcp.json (generic fallback)');
             this.logInfo('Note: MCP servers work with any MCP-compatible IDE');
+            if (this.logger) this.logger.info('MCP_FALLBACK_CONFIGURED', { path: fallbackPath });
         } else {
             try {
                 const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
@@ -102,8 +108,10 @@ class McpConfigurator {
                 existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
                 fs.writeFileSync(fallbackPath, JSON.stringify(existing, null, 2));
                 this.logSuccess('Updated .cursor/mcp.json (merged configuration)');
+                if (this.logger) this.logger.info('MCP_FALLBACK_UPDATED', { path: fallbackPath });
             } catch (mergeError) {
                 this.logWarning('.cursor/mcp.json exists and couldn\'t be merged, skipping');
+                if (this.logger) this.logger.warn('MCP_FALLBACK_MERGE_FAILED', { error: mergeError.message });
             }
         }
     }

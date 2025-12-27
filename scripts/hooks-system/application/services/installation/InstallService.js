@@ -43,7 +43,7 @@ class InstallService {
         this.platformService = new PlatformDetectorService(this.targetRoot);
         this.fsInstaller = new FileSystemInstallerService(this.targetRoot, this.hookSystemRoot, this.logger);
         this.configGenerator = new ConfigurationGeneratorService(this.targetRoot, this.hookSystemRoot);
-        this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot);
+        this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot, this.logger);
     }
 
     async run() {

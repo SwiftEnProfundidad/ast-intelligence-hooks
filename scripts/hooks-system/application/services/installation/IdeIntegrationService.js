@@ -11,10 +11,11 @@ const COLORS = {
 };
 
 class IdeIntegrationService {
-    constructor(targetRoot, hookSystemRoot) {
+    constructor(targetRoot, hookSystemRoot, logger = null) {
         this.targetRoot = targetRoot || process.cwd();
         this.hookSystemRoot = hookSystemRoot;
-        this.mcpConfigurator = new McpConfigurator(this.targetRoot, this.hookSystemRoot);
+        this.logger = logger;
+        this.mcpConfigurator = new McpConfigurator(this.targetRoot, this.hookSystemRoot, this.logger);
     }
 
     installCursorHooks(platforms) {
