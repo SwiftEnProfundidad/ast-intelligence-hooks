@@ -1,11 +1,15 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const FeatureDetector = require('./commit/FeatureDetector');
+const CommitMessageGenerator = require('./commit/CommitMessageGenerator');
 
 class IntelligentCommitAnalyzer {
     constructor({ repoRoot = process.cwd(), logger = console } = {}) {
         this.repoRoot = repoRoot;
         this.logger = logger;
+        this.featureDetector = new FeatureDetector();
+        this.messageGenerator = new CommitMessageGenerator();
     }
 
     /**
@@ -17,14 +21,14 @@ class IntelligentCommitAnalyzer {
         const ungrouped = [];
 
         for (const file of files) {
-            const feature = this.detectFeature(file);
+            const feature = this.featureDetector.detectFeature(file);
 
             if (feature === null) {
                 ungrouped.push(file);
                 continue;
             }
 
-            const module = this.detectModule(file);
+            const module = this.featureDetector.detectModule(file);
             const key = `${feature}:${module}`;
 
             if (!groups.has(key)) {
@@ -32,7 +36,7 @@ class IntelligentCommitAnalyzer {
                     feature,
                     module,
                     files: [],
-                    platform: this.detectPlatform(file),
+                    platform: this.featureDetector.detectPlatform(file),
                     hasTests: false,
                     hasImplementation: false
                 });
@@ -41,7 +45,7 @@ class IntelligentCommitAnalyzer {
             const group = groups.get(key);
             group.files.push(file);
 
-            if (this.isTestFile(file)) {
+            if (this.featureDetector.isTestFile(file)) {
                 group.hasTests = true;
             } else {
                 group.hasImplementation = true;
@@ -51,91 +55,6 @@ class IntelligentCommitAnalyzer {
         const result = Array.from(groups.values());
 
         return result.filter(g => g.files.length >= 2);
-    }
-
-    /**
-     * Detect feature name from file path
-     * Returns null for non-feature files (config, scripts, docs)
-     */
-    detectFeature(filePath) {
-        if (filePath.startsWith(' D ') || filePath.includes('(deleted)')) {
-            return null;
-        }
-
-        if (filePath.match(/\.(json|yaml|yml|toml|lock)$/) &&
-            (filePath.includes('package.json') || filePath.includes('tsconfig') || filePath.includes('build'))) {
-            return null;
-        }
-
-        if (filePath.match(/\/bin\/|\/dist\/|\/build\/|\.(class|jar|o|so|dylib)$/)) {
-            return null;
-        }
-
-        const backendMatch = filePath.match(/apps\/backend\/src\/([^\/]+)/);
-        if (backendMatch) return backendMatch[1];
-
-        const frontendMatch = filePath.match(/apps\/(?:admin-dashboard|web-app)\/src\/([^\/]+)/);
-        if (frontendMatch) return frontendMatch[1];
-
-        const iosMatch = filePath.match(/apps\/ios\/([^\/]+)/);
-        if (iosMatch) return iosMatch[1];
-
-        const androidMatch = filePath.match(/apps\/android\/feature\/([^\/]+)/);
-        if (androidMatch) return androidMatch[1];
-
-        if (filePath.includes('hooks-system')) {
-            return 'hooks-system';
-        }
-
-        if (filePath.includes('.ast-intelligence/')) {
-            return 'ast-intelligence-config'
-        }
-
-        if (filePath.includes('docs/')) {
-            return 'docs';
-        }
-
-        if (filePath.match(/^(\.github|\.vscode|\.cursor|\.ast-intelligence)/)) {
-            return null;
-        }
-
-        return null;
-    }
-
-    /**
-     * Detect module/concern from file path
-     */
-    detectModule(filePath) {
-        if (filePath.includes('/domain/')) return 'domain';
-        if (filePath.includes('/application/')) return 'application';
-        if (filePath.includes('/infrastructure/')) return 'infrastructure';
-        if (filePath.includes('/presentation/')) return 'presentation';
-        if (filePath.includes('/data/')) return 'data';
-        if (filePath.includes('/ui/')) return 'ui';
-        if (filePath.includes('/hooks/')) return 'hooks';
-        if (filePath.includes('/components/')) return 'components';
-        return 'root';
-    }
-
-    /**
-     * Detect platform from file path
-     */
-    detectPlatform(filePath) {
-        if (filePath.includes('apps/backend')) return 'backend';
-        if (filePath.includes('apps/admin-dashboard') || filePath.includes('apps/web-app')) return 'frontend';
-        if (filePath.includes('apps/ios')) return 'ios';
-        if (filePath.includes('apps/android')) return 'android';
-        return 'shared';
-    }
-
-    /**
-     * Check if file is a test file
-     */
-    isTestFile(filePath) {
-        return /\.(test|spec)\.(ts|tsx|js|jsx|swift|kt)$/.test(filePath) ||
-            filePath.includes('/__tests__/') ||
-            filePath.includes('/test/') ||
-            filePath.includes('/tests/');
     }
 
     /**
@@ -176,36 +95,13 @@ class IntelligentCommitAnalyzer {
                 files: group.files,
                 fileCount: group.files.length,
                 hasTests: group.hasTests,
-                commitMessage: this.generateCommitMessage(group)
+                commitMessage: this.messageGenerator.generate(group)
             };
 
             suggestions.push(suggestion);
         }
 
         return suggestions;
-    }
-
-    /**
-     * Generate commit message for a feature group
-     */
-    generateCommitMessage(group) {
-        const type = group.hasTests ? 'feat' : 'chore';
-        const scope = group.feature || group.module;
-        const platform = group.platform !== 'shared' ? `(${group.platform})` : '';
-
-        let message = `${type}${platform}(${scope}): `;
-
-        if (group.feature && group.feature !== 'unknown') {
-            message += `update ${group.feature} ${group.module}`;
-        } else {
-            message += `update ${group.module} files`;
-        }
-
-        if (group.hasTests) {
-            message += ' (includes tests)';
-        }
-
-        return message;
     }
 
     /**
