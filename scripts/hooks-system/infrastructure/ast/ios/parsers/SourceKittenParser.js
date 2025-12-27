@@ -4,6 +4,7 @@ const { exec } = require('child_process');
 const util = require('util');
 const fs = require('fs').promises;
 const path = require('path');
+const { DomainError } = require('../../../../domain/errors');
 
 const execPromise = util.promisify(exec);
 
@@ -54,7 +55,7 @@ class SourceKittenParser {
       );
 
       if (stderr && stderr.includes('error')) {
-        throw new Error(`SourceKitten parse error: ${stderr}`);
+        throw new DomainError(`SourceKitten parse error: ${stderr}`, 'PARSE_ERROR');
       }
 
       const ast = JSON.parse(stdout);
@@ -96,7 +97,7 @@ class SourceKittenParser {
       );
 
       if (stderr && stderr.includes('error')) {
-        throw new Error(`SourceKitten project parse error: ${stderr}`);
+        throw new DomainError(`SourceKitten project parse error: ${stderr}`, 'PARSE_ERROR');
       }
 
       const projectAST = JSON.parse(stdout);
@@ -218,9 +219,9 @@ class SourceKittenParser {
         const kind = node['key.kind'];
 
         if (kind === 'source.lang.swift.decl.function.method.instance' ||
-            kind === 'source.lang.swift.decl.function.method.class' ||
-            kind === 'source.lang.swift.decl.function.method.static' ||
-            kind === 'source.lang.swift.decl.function.free') {
+          kind === 'source.lang.swift.decl.function.method.class' ||
+          kind === 'source.lang.swift.decl.function.method.static' ||
+          kind === 'source.lang.swift.decl.function.free') {
 
           functions.push({
             name: node['key.name'],
@@ -259,8 +260,8 @@ class SourceKittenParser {
         const kind = node['key.kind'];
 
         if (kind === 'source.lang.swift.decl.var.instance' ||
-            kind === 'source.lang.swift.decl.var.class' ||
-            kind === 'source.lang.swift.decl.var.static') {
+          kind === 'source.lang.swift.decl.var.class' ||
+          kind === 'source.lang.swift.decl.var.static') {
 
           properties.push({
             name: node['key.name'],

@@ -4,8 +4,9 @@ const fs = require('fs');
 const crypto = require('crypto');
 
 class ContextDetectionEngine {
-    constructor(repoRoot) {
+    constructor(repoRoot, logger = console) {
         this.repoRoot = repoRoot || process.cwd();
+        this.logger = logger;
         this.cache = {
             context: null,
             timestamp: 0,
@@ -27,6 +28,12 @@ class ContextDetectionEngine {
             openFiles: this.inferFromGitStatus(),
             timestamp: Date.now()
         };
+
+        this.logger.info('Context detected', {
+            branch: context.branchName,
+            stagedCount: context.stagedFiles.length,
+            recentCount: context.recentFiles.length
+        });
 
         this.cache = {
             context,

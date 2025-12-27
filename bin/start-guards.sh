@@ -45,6 +45,7 @@ TOKEN_CMD="bash $TOKEN_LOOP"
 
 mkdir -p "$REPO_ROOT/.audit-reports"
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
+EVIDENCE_SUMMARY_FILE="$REPO_ROOT/.AI_EVIDENCE_SUMMARY.md"
 
 needs_evidence_refresh() {
   if [[ ! -f "$EVIDENCE_FILE" ]]; then
@@ -123,9 +124,28 @@ ensure_evidence_refresh() {
     fi
 
     if [[ -f "$UPDATE_EVIDENCE" ]]; then
-      bash "$UPDATE_EVIDENCE" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH"
+      bash "$UPDATE_EVIDENCE" --auto --platforms "$PLATFORMS" "$CURRENT_BRANCH" || {
+        echo "❌ Evidence refresh failed. Aborting guards startup."
+        exit 1
+      }
     else
-      echo "⚠️  update-evidence.sh not found; skipping evidence refresh"
+      echo "❌ update-evidence.sh not found; cannot refresh evidence. Aborting guards startup."
+      exit 1
+    fi
+
+    if needs_evidence_refresh; then
+      echo "❌ Evidence still stale/invalid after refresh. Aborting guards startup."
+      exit 1
+    fi
+
+    if command -v jq >/dev/null 2>&1 && [[ -f "$EVIDENCE_FILE" ]]; then
+      {
+        echo "# AI Evidence Summary"
+        echo ""
+        echo "- **timestamp**: $(jq -r '.timestamp // "unknown"' "$EVIDENCE_FILE" 2>/dev/null)"
+        echo "- **session**: $(jq -r '.session // .session_id // "unknown"' "$EVIDENCE_FILE" 2>/dev/null)"
+        echo "- **action**: $(jq -r '.action // "unknown"' "$EVIDENCE_FILE" 2>/dev/null)"
+      } > "$EVIDENCE_SUMMARY_FILE" 2>/dev/null || true
     fi
   fi
 }

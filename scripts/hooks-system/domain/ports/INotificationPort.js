@@ -6,6 +6,8 @@
  *
  * @interface
  */
+const { NotImplementedError } = require('../errors');
+
 class INotificationPort {
     /**
      * Send a notification to the user
@@ -18,7 +20,7 @@ class INotificationPort {
      * @returns {Promise<boolean>} true if sent successfully
      */
     async send(notification) {
-        throw new Error('INotificationPort.send() must be implemented');
+        throw new NotImplementedError('INotificationPort.send() must be implemented');
     }
 
     /**
@@ -26,7 +28,7 @@ class INotificationPort {
      * @returns {boolean}
      */
     isEnabled() {
-        throw new Error('INotificationPort.isEnabled() must be implemented');
+        throw new NotImplementedError('INotificationPort.isEnabled() must be implemented');
     }
 }
 

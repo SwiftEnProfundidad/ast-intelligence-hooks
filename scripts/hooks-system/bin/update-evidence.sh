@@ -1014,6 +1014,97 @@ if [[ -f "$INTELLIGENT_AUDIT" ]]; then
   node "$INTELLIGENT_AUDIT" >/dev/null 2>&1 || true
 fi
 
+# Export non-gitignored public artifacts for AI + tooling (summary + public JSON)
+# Rationale: .AI_EVIDENCE.json is gitignored and may be blocked by some tooling.
+PUBLIC_EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE_PUBLIC.json"
+EVIDENCE_SUMMARY_FILE="$REPO_ROOT/.AI_EVIDENCE_SUMMARY.md"
+AST_SUMMARY_FILE="$REPO_ROOT/.audit_tmp/ast-summary.json"
+AST_SUMMARY_ENHANCED_FILE="$REPO_ROOT/.audit_tmp/ast-summary-enhanced.json"
+
+if command -v jq >/dev/null 2>&1 && [[ -f "$EVIDENCE_FILE" ]]; then
+  # Prefer enhanced AST summary (includes intelligent evaluation), fallback to raw.
+  AST_SOURCE_FILE=""
+  if [[ -f "$AST_SUMMARY_ENHANCED_FILE" ]]; then
+    AST_SOURCE_FILE="$AST_SUMMARY_ENHANCED_FILE"
+  elif [[ -f "$AST_SUMMARY_FILE" ]]; then
+    AST_SOURCE_FILE="$AST_SUMMARY_FILE"
+  fi
+
+  # Public JSON (sanitized subset) + embed ast_summary if available
+  if [[ -n "$AST_SOURCE_FILE" ]]; then
+    jq -S --argfile ast "$AST_SOURCE_FILE" '
+      {
+        timestamp: .timestamp,
+        session: (.session // .session_id // null),
+        action: (.action // null),
+        platforms_detected: (.platforms_detected // null),
+        severity_metrics: (.severity_metrics // null),
+        token_usage: (.token_usage // null),
+        git_flow: (.git_flow // null),
+        ai_gate: (.ai_gate // null),
+        watchers: (.watchers // null),
+        ast_summary: $ast
+      }
+    ' "$EVIDENCE_FILE" > "$PUBLIC_EVIDENCE_FILE" 2>/dev/null || true
+  else
+    jq -S '
+      {
+        timestamp: .timestamp,
+        session: (.session // .session_id // null),
+        action: (.action // null),
+        platforms_detected: (.platforms_detected // null),
+        severity_metrics: (.severity_metrics // null),
+        token_usage: (.token_usage // null),
+        git_flow: (.git_flow // null),
+        ai_gate: (.ai_gate // null),
+        watchers: (.watchers // null)
+      }
+    ' "$EVIDENCE_FILE" > "$PUBLIC_EVIDENCE_FILE" 2>/dev/null || true
+  fi
+
+  # Markdown summary (stable, human + AI friendly)
+  {
+    echo "# AI Evidence Summary"
+    echo ""
+    echo "- **timestamp**: $(jq -r '.timestamp // "unknown"' "$EVIDENCE_FILE" 2>/dev/null)"
+    echo "- **session**: $(jq -r '.session // .session_id // "unknown"' "$EVIDENCE_FILE" 2>/dev/null)"
+    echo "- **action**: $(jq -r '.action // "unknown"' "$EVIDENCE_FILE" 2>/dev/null)"
+    echo ""
+
+    if [[ -n "$AST_SOURCE_FILE" ]]; then
+      echo "## Levels"
+      echo ""
+      echo "- **CRITICAL**: $(jq -r '.levels.CRITICAL // .summary.CRITICAL // 0' "$AST_SOURCE_FILE" 2>/dev/null)"
+      echo "- **HIGH**: $(jq -r '.levels.HIGH // .summary.HIGH // 0' "$AST_SOURCE_FILE" 2>/dev/null)"
+      echo "- **MEDIUM**: $(jq -r '.levels.MEDIUM // .summary.MEDIUM // 0' "$AST_SOURCE_FILE" 2>/dev/null)"
+      echo "- **LOW**: $(jq -r '.levels.LOW // .summary.LOW // 0' "$AST_SOURCE_FILE" 2>/dev/null)"
+      echo ""
+      echo "## Top Rules"
+      echo ""
+      jq -r '
+        (.findings // [])
+        | sort_by(-(.count // 1))
+        | .[:10]
+        | .[]
+        | "- **\(.ruleId // .rule // \"unknown\")**: \(.count // 1) (\(.severity // .level // \"unknown\"), \(.platform // \"unknown\"))"
+      ' "$AST_SOURCE_FILE" 2>/dev/null || true
+      echo ""
+    fi
+
+    if jq -e '.ai_gate.violations | length > 0' "$EVIDENCE_FILE" >/dev/null 2>&1; then
+      echo "## Top Gate Violations"
+      echo ""
+      jq -r '
+        (.ai_gate.violations // [])
+        | .[:10]
+        | .[]
+        | "- **\(.rule // \"unknown\")**: \(.severity // \"unknown\") - \(.file // \"unknown\"):\(.line // 0)"
+      ' "$EVIDENCE_FILE" 2>/dev/null || true
+      echo ""
+    fi
+  } > "$EVIDENCE_SUMMARY_FILE" 2>/dev/null || true
+fi
+
 if [[ "$AUTO_MODE" == "true" ]]; then
   if command -v osascript >/dev/null 2>&1; then
     osascript -e "display notification \"AI evidence updated at $TIMESTAMP\" with title \"✅ Evidence Updated\" sound name \"Glass\"" 2>/dev/null || true

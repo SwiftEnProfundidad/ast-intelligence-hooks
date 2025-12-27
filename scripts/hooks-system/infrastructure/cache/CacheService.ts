@@ -32,10 +32,12 @@ export class CacheService implements ICacheService {
     private cache: Map<string, CacheEntry<unknown>> = new Map();
     private defaultTtl: number;
     private maxSize: number;
+    private logger: any;
 
-    constructor(options: CacheOptions = {}) {
+    constructor(options: CacheOptions = {}, logger: any = console) {
         this.defaultTtl = options.ttl ?? 300000;
         this.maxSize = options.maxSize ?? 1000;
+        this.logger = logger;
     }
 
     get<T>(key: string): T | null {
@@ -65,6 +67,9 @@ export class CacheService implements ICacheService {
         };
 
         this.cache.set(key, entry);
+        if (this.logger && this.logger.debug) {
+            this.logger.debug(`[CacheService] Set key: ${key}`);
+        }
     }
 
     has(key: string): boolean {
@@ -83,11 +88,18 @@ export class CacheService implements ICacheService {
     }
 
     delete(key: string): boolean {
-        return this.cache.delete(key);
+        const deleted = this.cache.delete(key);
+        if (deleted && this.logger && this.logger.debug) {
+            this.logger.debug(`[CacheService] Deleted key: ${key}`);
+        }
+        return deleted;
     }
 
     clear(): void {
         this.cache.clear();
+        if (this.logger && this.logger.info) {
+            this.logger.info('[CacheService] Cleared cache');
+        }
     }
 
     size(): number {

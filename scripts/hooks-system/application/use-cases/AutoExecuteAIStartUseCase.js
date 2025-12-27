@@ -19,9 +19,10 @@ function resolveUpdateEvidenceScript(repoRoot) {
 }
 
 class AutoExecuteAIStartUseCase {
-  constructor(orchestrator, repoRoot) {
+  constructor(orchestrator, repoRoot, logger = console) {
     this.orchestrator = orchestrator;
     this.repoRoot = repoRoot || process.cwd();
+    this.logger = logger;
     this.updateEvidenceScript = resolveUpdateEvidenceScript(this.repoRoot);
   }
 
@@ -64,16 +65,16 @@ class AutoExecuteAIStartUseCase {
         .join(',');
 
       if (!platformsStr) {
-        throw new Error('No valid platforms to execute');
+        throw new ValidationError('No valid platforms to execute', 'platforms');
       }
 
       if (!this.updateEvidenceScript) {
-        throw new Error('update-evidence.sh not found');
+        throw new ConfigurationError('update-evidence.sh not found', 'updateEvidenceScript');
       }
 
       const command = `bash "${this.updateEvidenceScript}" --auto --platforms "${platformsStr}"`;
 
-      console.log(`[AutoExecuteAIStartUseCase] Executing: ${command}`);
+      this.logger.info(`[AutoExecuteAIStartUseCase] Executing AI Start`, { command, platforms: platformsStr });
 
       const output = execSync(command, {
         cwd: this.repoRoot,
@@ -88,6 +89,8 @@ class AutoExecuteAIStartUseCase {
         parsedOutput = { raw: output };
       }
 
+      this.logger.info(`[AutoExecuteAIStartUseCase] Execution successful`, { platforms: platformsStr });
+
       return {
         success: true,
         action: 'auto-executed',
@@ -98,7 +101,7 @@ class AutoExecuteAIStartUseCase {
       };
 
     } catch (error) {
-      console.error(`[AutoExecuteAIStartUseCase] Error:`, error.message);
+      this.logger.error(`[AutoExecuteAIStartUseCase] Execution failed`, { error: error.message, platforms });
 
       return {
         success: false,

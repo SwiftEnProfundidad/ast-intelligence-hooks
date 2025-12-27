@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { DomainError } = require('../../../domain/errors');
 
 const DEFAULT_PLATFORMS = ['1', '2', '3', '4'];
 
@@ -52,7 +53,7 @@ class EvidenceContextManager {
             throw result.error;
         }
         if (result.status !== 0) {
-            throw new Error(result.stderr?.toString() || `update script exited with ${result.status}`);
+            throw new DomainError(result.stderr?.toString() || `update script exited with ${result.status}`, 'SCRIPT_ERROR');
         }
         return {
             stdout: result.stdout?.toString() || ''

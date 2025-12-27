@@ -1,4 +1,6 @@
 
+const { ValidationError } = require('../errors');
+
 class Finding {
   constructor(ruleId, severity, message, filePath, line, platform) {
     this.validateInputs(ruleId, severity, message, filePath, line, platform);
@@ -15,19 +17,19 @@ class Finding {
 
   validateInputs(ruleId, severity, message, filePath, line, platform) {
     if (!ruleId || typeof ruleId !== 'string') {
-      throw new Error('Finding requires valid ruleId (string)');
+      throw new ValidationError('Finding requires valid ruleId (string)', 'ruleId', ruleId);
     }
 
     const normalizedSeverity = this.normalizeSeverity(severity);
     if (!normalizedSeverity) {
-      throw new Error(`Invalid severity: ${severity}. Must be critical, high, medium, low, info, warning, or error`);
+      throw new ValidationError(`Invalid severity: ${severity}. Must be critical, high, medium, low, info, warning, or error`, 'severity', severity);
     }
 
     if (!message || typeof message !== 'string') {
-      throw new Error('Finding requires valid message (string)');
+      throw new ValidationError('Finding requires valid message (string)', 'message', message);
     }
     if (!filePath || typeof filePath !== 'string') {
-      throw new Error('Finding requires valid filePath (string)');
+      throw new ValidationError('Finding requires valid filePath (string)', 'filePath', filePath);
     }
   }
 

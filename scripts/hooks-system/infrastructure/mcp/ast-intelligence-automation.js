@@ -22,7 +22,7 @@ const { execSync } = require('child_process');
 const AutonomousOrchestrator = require('../../application/services/AutonomousOrchestrator');
 const ContextDetectionEngine = require('../../application/services/ContextDetectionEngine');
 const MacOSNotificationAdapter = require('../adapters/MacOSNotificationAdapter');
-const { toErrorMessage } = require('../utils/error-utils');
+const { ConfigurationError } = require('../../domain/errors');
 
 const MCP_VERSION = '2024-11-05';
 
@@ -487,7 +487,7 @@ async function autoExecuteAIStart(params) {
             const platformsStr = platforms.join(',');
             const updateScript = resolveUpdateEvidenceScript();
             if (!updateScript) {
-                throw new Error('update-evidence.sh not found');
+                throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
             }
 
             exec(`bash "${updateScript}" --auto --platforms ${platformsStr}`);
@@ -658,7 +658,7 @@ function aiGateCheck() {
         try {
             const updateScript = resolveUpdateEvidenceScript();
             if (!updateScript) {
-                throw new Error('update-evidence.sh not found');
+                throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
             }
             execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
                 cwd: REPO_ROOT,
@@ -751,7 +751,7 @@ function validateAndFix(params) {
             results.push('🔧 Fixing: Updating AI evidence...');
             const updateScript = resolveUpdateEvidenceScript();
             if (!updateScript) {
-                throw new Error('update-evidence.sh not found');
+                throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
             }
             exec(`bash "${updateScript}"`);
             results.push('✅ Evidence updated');
@@ -950,7 +950,7 @@ class MCPServer {
                         try {
                             const updateScript = resolveUpdateEvidenceScript();
                             if (!updateScript) {
-                                throw new Error('update-evidence.sh not found');
+                                throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
                             }
                             execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
                                 cwd: REPO_ROOT,
@@ -1361,7 +1361,7 @@ setInterval(async () => {
             try {
                 const updateScript = resolveUpdateEvidenceScript();
                 if (!updateScript) {
-                    throw new Error('update-evidence.sh not found');
+                    throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
                 }
                 execSync(`bash "${updateScript}" --auto --refresh-only --platforms backend`, {
                     cwd: REPO_ROOT,
@@ -1413,7 +1413,7 @@ setInterval(async () => {
 
                     try {
                         if (!updateScript) {
-                            throw new Error('update-evidence.sh not found');
+                            throw new ConfigurationError('update-evidence.sh not found', 'updateScript');
                         }
                         execSync(`bash "${updateScript}" --auto --platforms ${platformsStr}`, {
                             cwd: REPO_ROOT,

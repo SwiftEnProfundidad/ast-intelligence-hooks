@@ -15,6 +15,146 @@ const args = process.argv.slice(3);
 
 const HOOKS_ROOT = path.join(__dirname, '..');
 
+function resolveUpdateEvidenceScript(repoRoot) {
+  const candidates = [
+    path.join(repoRoot, 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
+    path.join(repoRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'update-evidence.sh'),
+    path.join(repoRoot, 'bin', 'update-evidence.sh'),
+    path.join(HOOKS_ROOT, 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
+    path.join(HOOKS_ROOT, 'bin', 'update-evidence.sh')
+  ];
+
+  return candidates.find(candidate => fs.existsSync(candidate)) || null;
+}
+
+function detectPlatformsFromBranch(branchName) {
+  const lower = String(branchName || '').toLowerCase();
+  if (lower.includes('frontend') || lower.includes('web') || lower.includes('dashboard')) return 'frontend';
+  if (lower.includes('ios') || lower.includes('swift') || lower.includes('apple')) return 'ios';
+  if (lower.includes('android') || lower.includes('kotlin')) return 'android';
+  return 'backend';
+}
+
+function readEvidence(evidencePath) {
+  try {
+    if (!fs.existsSync(evidencePath)) return { ok: false, reason: 'missing' };
+    const raw = fs.readFileSync(evidencePath, 'utf8');
+    const json = JSON.parse(raw);
+    const ts = typeof json?.timestamp === 'string' ? Date.parse(json.timestamp) : NaN;
+    if (!Number.isFinite(ts)) return { ok: false, reason: 'invalid_timestamp', json };
+    return { ok: true, timestampMs: ts, json };
+  } catch (e) {
+    return { ok: false, reason: 'read_error', error: e };
+  }
+}
+
+function isEvidenceFresh(timestampMs, thresholdSeconds) {
+  if (!Number.isFinite(timestampMs)) return false;
+  const ageMs = Date.now() - timestampMs;
+  return ageMs <= thresholdSeconds * 1000;
+}
+
+function writeEvidenceSummary(repoRoot, evidenceJson) {
+  try {
+    const outPath = path.join(repoRoot, '.AI_EVIDENCE_SUMMARY.md');
+    const timestamp = evidenceJson?.timestamp || 'unknown';
+    const session = evidenceJson?.session || evidenceJson?.session_id || 'unknown';
+    const action = evidenceJson?.action || 'unknown';
+    const platforms = evidenceJson?.platforms_detected
+      ? Object.entries(evidenceJson.platforms_detected).filter(([, v]) => v === true).map(([k]) => k)
+      : [];
+    const astSummary = evidenceJson?.ast_summary;
+    const levels = astSummary?.levels || null;
+    const topRules = Array.isArray(astSummary?.findings)
+      ? astSummary.findings
+        .slice()
+        .sort((a, b) => (b.count || 0) - (a.count || 0))
+        .slice(0, 10)
+      : [];
+
+    const lines = [];
+    lines.push('# AI Evidence Summary');
+    lines.push('');
+    lines.push(`- **timestamp**: ${timestamp}`);
+    lines.push(`- **session**: ${session}`);
+    lines.push(`- **action**: ${action}`);
+    if (platforms.length > 0) {
+      lines.push(`- **platforms_detected**: ${platforms.join(', ')}`);
+    }
+    lines.push('');
+
+    if (levels) {
+      lines.push('## Levels');
+      lines.push('');
+      lines.push(`- **CRITICAL**: ${levels.CRITICAL ?? levels.critical ?? 0}`);
+      lines.push(`- **HIGH**: ${levels.HIGH ?? levels.high ?? 0}`);
+      lines.push(`- **MEDIUM**: ${levels.MEDIUM ?? levels.medium ?? 0}`);
+      lines.push(`- **LOW**: ${levels.LOW ?? levels.low ?? 0}`);
+      lines.push('');
+    }
+
+    if (topRules.length > 0) {
+      lines.push('## Top Rules');
+      lines.push('');
+      topRules.forEach(rule => {
+        const ruleId = rule.ruleId || rule.id || 'unknown';
+        const count = rule.count || 0;
+        const level = rule.level || 'unknown';
+        const platform = rule.platform || 'unknown';
+        lines.push(`- **${ruleId}**: ${count} (${level}, ${platform})`);
+      });
+      lines.push('');
+    }
+
+    fs.writeFileSync(outPath, `${lines.join('\n')}\n`, 'utf8');
+  } catch (e) {
+    // Do not block CLI for summary generation failures
+  }
+}
+
+function ensureEvidenceFreshOrExit({ repoRoot, reason }) {
+  const thresholdSeconds = Number(process.env.HOOK_EVIDENCE_STALE_THRESHOLD_SECONDS || 180);
+  const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
+
+  const initial = readEvidence(evidencePath);
+  if (initial.ok && isEvidenceFresh(initial.timestampMs, thresholdSeconds)) {
+    writeEvidenceSummary(repoRoot, initial.json);
+    return;
+  }
+
+  const updateEvidence = resolveUpdateEvidenceScript(repoRoot);
+  if (!updateEvidence) {
+    console.error('❌ Missing update-evidence.sh; cannot refresh .AI_EVIDENCE.json');
+    process.exit(1);
+  }
+
+  let branch = 'manual-update';
+  try {
+    branch = execSync('git branch --show-current', { cwd: repoRoot, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim() || branch;
+  } catch (e) {
+    // ignore
+  }
+  const platforms = detectPlatformsFromBranch(branch);
+
+  try {
+    execSync(`bash "${updateEvidence}" --auto --platforms "${platforms}" "${branch}"`, {
+      cwd: repoRoot,
+      stdio: 'inherit'
+    });
+  } catch (e) {
+    console.error('❌ Evidence refresh failed. Aborting.');
+    process.exit(1);
+  }
+
+  const refreshed = readEvidence(evidencePath);
+  if (!refreshed.ok || !isEvidenceFresh(refreshed.timestampMs, thresholdSeconds)) {
+    console.error('❌ Evidence still stale/invalid after refresh. Aborting.');
+    process.exit(1);
+  }
+
+  writeEvidenceSummary(repoRoot, refreshed.json);
+}
+
 function runCommandOrExit(commandLine, options = {}) {
   try {
     execSync(commandLine, options);
@@ -329,6 +469,22 @@ Documentation:
 if (!command || !commands[command]) {
   commands.help();
   process.exit(command ? 1 : 0);
+}
+
+const commandsThatRequireEvidence = new Set([
+  'audit',
+  'ast',
+  'install',
+  'verify-policy',
+  'progress',
+  'watch',
+  'guards',
+  'gitflow'
+]);
+
+if (commandsThatRequireEvidence.has(command)) {
+  const repoRoot = resolveRepoRoot();
+  ensureEvidenceFreshOrExit({ repoRoot, reason: `cli:${command}` });
 }
 
 commands[command]();

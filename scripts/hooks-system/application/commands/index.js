@@ -1,4 +1,5 @@
 const path = require('path');
+const { NotFoundError } = require('../../domain/errors');
 
 class ValidateEvidenceCommand {
     constructor(evidencePath) {
@@ -47,7 +48,7 @@ class CommandBus {
     async execute(command) {
         const handler = this.handlers.get(command.type);
         if (!handler) {
-            throw new Error(`No handler registered for command: ${command.type}`);
+            throw new NotFoundError('Command handler', command.type);
         }
         return handler(command.payload);
     }

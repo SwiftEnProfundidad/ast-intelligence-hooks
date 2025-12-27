@@ -20,7 +20,7 @@ class KotlinParser {
     try {
       execSync(`${this.detektPath} --version`, { encoding: 'utf-8' });
     } catch (error) {
-      throw new Error('Detekt not found. Install with: brew install detekt');
+      throw new ConfigurationError('Detekt not found. Install with: brew install detekt', 'detektPath');
     }
   }
 
@@ -276,7 +276,7 @@ class KotlinParser {
         for (let j = index + 1; j < Math.min(index + 20, lines.length); j++) {
           const bodyLine = lines[j];
           if (bodyLine.includes('Column') || bodyLine.includes('Row') ||
-              bodyLine.includes('Text(') || bodyLine.includes('Button(')) {
+            bodyLine.includes('Text(') || bodyLine.includes('Button(')) {
             foundComposableUsage = true;
             break;
           }

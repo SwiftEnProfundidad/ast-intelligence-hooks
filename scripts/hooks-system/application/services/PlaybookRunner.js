@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const { DomainError, NotFoundError } = require('../../domain/errors');
 
 const PLAYBOOKS_PATH = path.join(process.cwd(), 'scripts', 'hooks-system', 'config', 'playbooks.json');
 
@@ -17,7 +18,7 @@ class PlaybookRunner {
   run(id) {
     const playbook = this.playbooks[id];
     if (!playbook) {
-      throw new Error(`Playbook '${id}' not found`);
+      throw new NotFoundError('Playbook', id);
     }
 
     for (const step of playbook.steps) {
@@ -28,7 +29,7 @@ class PlaybookRunner {
           cwd: this.cwd,
         });
         if (result.status !== 0) {
-          throw new Error(`Step failed: ${step.cmd}`);
+          throw new DomainError(`Playbook step failed: ${step.cmd}`, 'PLAYBOOK_STEP_FAILED', { cmd: step.cmd, status: result.status });
         }
       }
     }
