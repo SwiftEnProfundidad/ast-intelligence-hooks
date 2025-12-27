@@ -285,7 +285,7 @@ class CompositionRoot {
                 logger,
                 notificationService,
                 monitors,
-                orchestration,
+                orchestration: orchestrator,
                 config
             }));
         }
