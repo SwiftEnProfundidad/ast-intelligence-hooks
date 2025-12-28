@@ -46,6 +46,8 @@ ANNOUNCEMENTS.md
 # AST Intelligence configuration (user-specific, similar to .cursor/rules/)
 .ast-intelligence/
 
+scripts/hooks-system/.hook-system/
+
 # IDE-specific configurations (user-specific)
 .windsurf/
 .cursor/mcp.json

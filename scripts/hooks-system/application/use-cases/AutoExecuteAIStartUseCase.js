@@ -1,5 +1,6 @@
 const { execSync } = require('child_process');
 const path = require('path');
+const { ValidationError, ConfigurationError } = require('../../domain/errors');
 
 function resolveUpdateEvidenceScript(repoRoot) {
   const candidates = [
@@ -60,7 +61,11 @@ class AutoExecuteAIStartUseCase {
   async autoExecute(platforms, confidence) {
     try {
       const platformsStr = platforms
-        .map(p => p.platform || p)
+        .map(p => {
+          if (!p) return null;
+          if (typeof p === 'object') return p.platform;
+          return p;
+        })
         .filter(Boolean)
         .join(',');
 

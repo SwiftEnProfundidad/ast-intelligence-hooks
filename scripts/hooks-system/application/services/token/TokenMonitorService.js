@@ -14,6 +14,7 @@ class TokenMonitorService {
         dataFile = null,
         stateFile = null,
         notificationService = null,
+        notificationCenter = null,
         logger = console,
         thresholds = {},
         staleThresholdMs = 15 * 60 * 1000,
@@ -25,7 +26,7 @@ class TokenMonitorService {
         this.stateFile = stateFile || path.join(this.repoRoot, '.AI_TOKEN_STATUS.txt');
         this.logger = logger || console;
 
-        this.notificationService = notificationService || new NotificationCenterService({
+        this.notificationService = notificationService || notificationCenter || new NotificationCenterService({
             repoRoot: this.repoRoot,
             logger: this.logger
         });
@@ -76,6 +77,8 @@ class TokenMonitorService {
                 });
                 commitsCount = parseInt(commitsOutput.toString('utf8').trim(), 10);
             } catch (error) {
+                const msg = error && error.message ? error.message : String(error);
+                this.logger?.debug?.('TOKEN_MONITOR_FALLBACK_COMMITS_FAILED', { error: msg });
                 commitsCount = 0;
             }
 
@@ -86,6 +89,8 @@ class TokenMonitorService {
                 });
                 filesModified = filesOutput.toString('utf8').split('\n').filter(Boolean).length;
             } catch (error) {
+                const msg = error && error.message ? error.message : String(error);
+                this.logger?.debug?.('TOKEN_MONITOR_FALLBACK_FILES_FAILED', { error: msg });
                 filesModified = 0;
             }
 
@@ -115,7 +120,7 @@ class TokenMonitorService {
 
         if (metrics.untrusted) {
             this.notificationService.enqueue({
-                message: `Token usage heurístico (${metrics.percentUsed}%). Esperando métricas reales antes de alertar.`,
+                message: `Token usage is heuristic (${metrics.percentUsed}%). Waiting for real metrics before alerting.`,
                 level: 'info',
                 type: 'token_ok',
                 metadata

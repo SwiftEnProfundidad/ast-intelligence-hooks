@@ -17,6 +17,22 @@ class AutonomousOrchestrator {
         this.lastAnalysisTime = 0;
     }
 
+    detectFromASTSystemFiles(files) {
+        try {
+            const PlatformHeuristics = require('./platform/PlatformHeuristics');
+            const heuristics = new PlatformHeuristics(this.platformDetector);
+            return heuristics.detectFromASTSystemFiles(files);
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            this.logger?.debug?.('ORCHESTRATOR_AST_SYSTEM_FILES_DETECTION_ERROR', { error: msg });
+            return [];
+        }
+    }
+
+    detectFromASTSystemFilesLegacy(files) {
+        return this.detectFromASTSystemFiles(files);
+    }
+
     async analyzeContext() {
         const platforms = await this.detectActivePlatforms();
         const scores = await this.scoreConfidence(platforms);

@@ -18,7 +18,7 @@ class PlaybookRunner {
   run(id) {
     const playbook = this.playbooks[id];
     if (!playbook) {
-      throw new NotFoundError('Playbook', id);
+      throw new Error(`Playbook '${id}' not found`);
     }
 
     for (const step of playbook.steps) {
@@ -29,7 +29,7 @@ class PlaybookRunner {
           cwd: this.cwd,
         });
         if (result.status !== 0) {
-          throw new DomainError(`Playbook step failed: ${step.cmd}`, 'PLAYBOOK_STEP_FAILED', { cmd: step.cmd, status: result.status });
+          throw new DomainError(`Step failed: ${step.cmd}`, 'PLAYBOOK_STEP_FAILED', { cmd: step.cmd, status: result.status });
         }
       }
     }

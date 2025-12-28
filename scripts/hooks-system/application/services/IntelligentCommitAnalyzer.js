@@ -8,13 +8,29 @@ const UnifiedLogger = require('./logging/UnifiedLogger');
 class IntelligentCommitAnalyzer {
     constructor({ repoRoot = process.cwd(), logger = null } = {}) {
         this.repoRoot = repoRoot;
-        this.logger = logger || new UnifiedLogger({
-            component: 'CommitAnalyzer',
-            console: { enabled: true, level: 'info' },
-            file: { enabled: true, path: path.join(repoRoot, '.audit-reports', 'commit-analyzer.log') }
-        });
+        this.logger = logger || console;
         this.featureDetector = new FeatureDetector(this.logger);
         this.messageGenerator = new CommitMessageGenerator(this.logger);
+    }
+
+    detectFeature(filePath) {
+        return this.featureDetector.detectFeature(filePath);
+    }
+
+    detectModule(filePath) {
+        return this.featureDetector.detectModule(filePath);
+    }
+
+    detectPlatform(filePath) {
+        return this.featureDetector.detectPlatform(filePath);
+    }
+
+    isTestFile(filePath) {
+        return this.featureDetector.isTestFile(filePath);
+    }
+
+    generateCommitMessage(group) {
+        return this.messageGenerator.generate(group);
     }
 
     /**
