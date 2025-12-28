@@ -1,6 +1,7 @@
 ---
 alwaysApply: true
-trigger: always_on
+auto_execution_mode: 1
+description: gold
 ---
 
 ### ANTES de implementar CUALQUIER cosa (aplicables en todas las tecnologías):
@@ -12,7 +13,7 @@ trigger: always_on
 ✅ **Analizar estructura existente (archivos, protocolos, dependencias)**
 ✅ **Verificar que NO viole SOLID** (SRP, OCP, LSP, ISP, DIP)
 ✅ **No Singleton, en su lugar Inyección de Dependencias**
-✅ **Seguir Clean Architecture y Clean Code (capas, dependencias hacia adentro)**
+✅ **Seguir Clean Architecture, Clean Code, feature-first (capas, dependencias hacia adentro)**
 ✅ **Preferencias por guard/early returns antes que if anidados y evitar doom pyramid**
 ✅ **Aplicar reglas de testing (makeSUT, trackForMemoryLeaks, helpers separados)**
 ✅ **Preferir spies frente a stubs o mocks si es posible**
