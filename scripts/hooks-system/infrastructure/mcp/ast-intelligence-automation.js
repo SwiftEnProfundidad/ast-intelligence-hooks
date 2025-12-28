@@ -502,7 +502,7 @@ async function aiGateCheck() {
     }
 
     // 3. Block Commit Use Case Integration
-    const blockCommitUseCase = new (require('../../application/use-cases/BlockCommitUseCase'))();
+    const blockCommitUseCase = compositionRoot.getBlockCommitUseCase();
     const astAdapter = compositionRoot.getAstAdapter();
 
     try {
@@ -596,457 +596,294 @@ async function validateAndFix(params) {
 /**
  * MCP Protocol Handler
  */
-class MCPServer {
-    constructor() {
-        this.buffer = '';
-    }
+const protocolHandler = compositionRoot.getMcpProtocolHandler(process.stdin, process.stdout);
 
-    extractMessages() {
-        const messages = [];
+async function handleMcpMessage(message) {
+    try {
+        const request = JSON.parse(message);
 
-        while (this.buffer.length > 0) {
-            const crlfHeaderEnd = this.buffer.indexOf('\r\n\r\n');
-            const lfHeaderEnd = crlfHeaderEnd === -1 ? this.buffer.indexOf('\n\n') : -1;
-            const headerEnd = crlfHeaderEnd !== -1 ? crlfHeaderEnd : lfHeaderEnd;
-            const headerDelimiter = crlfHeaderEnd !== -1 ? '\r\n\r\n' : (lfHeaderEnd !== -1 ? '\n\n' : null);
-
-            if (headerDelimiter) {
-                const headerBlock = this.buffer.slice(0, headerEnd);
-                const contentLengthLine = headerBlock
-                    .split(/\r?\n/)
-                    .find(line => /^content-length:/i.test(line));
-
-                if (contentLengthLine) {
-                    const match = contentLengthLine.match(/content-length:\s*(\d+)/i);
-                    const contentLength = match ? Number(match[1]) : NaN;
-                    if (!Number.isFinite(contentLength) || contentLength < 0) {
-                        this.buffer = this.buffer.slice(headerEnd + headerDelimiter.length);
-                        continue;
-                    }
-
-                    const bodyStart = headerEnd + headerDelimiter.length;
-                    if (this.buffer.length < bodyStart + contentLength) {
-                        break;
-                    }
-
-                    const body = this.buffer.slice(bodyStart, bodyStart + contentLength);
-                    messages.push({ body, framed: true, delimiter: headerDelimiter });
-                    this.buffer = this.buffer.slice(bodyStart + contentLength);
-                    continue;
-                }
-            }
-
-            const nl = this.buffer.indexOf('\n');
-            if (nl == -1) {
-                break;
-            }
-            const line = this.buffer.slice(0, nl).trim();
-            this.buffer = this.buffer.slice(nl + 1);
-            if (line) {
-                messages.push({ body: line, framed: false });
-            }
+        if ((typeof request.id === 'undefined' || request.id === null) && request.method?.startsWith('notifications/')) {
+            return null;
         }
 
-        return messages;
-    }
-
-    writeResponse(response, framed, delimiter) {
-        const responseStr = JSON.stringify(response);
-
-        // Always respond using MCP framing with CRLF delimiter.
-        // Some clients are strict about \r\n\r\n even if they send \n\n.
-        const len = Buffer.byteLength(responseStr, 'utf8');
-        process.stdout.write(`Content-Length: ${len}\r\n\r\n${responseStr}`);
-
-        if (typeof process.stdout.flush === 'function') {
-            process.stdout.flush();
-        }
-    }
-
-    async handleMessage(message) {
-        try {
-            const request = JSON.parse(message);
-
-            if ((typeof request.id === 'undefined' || request.id === null) && request.method?.startsWith('notifications/')) {
-                return null;
-            }
-
-            if (request.method === 'initialize') {
-                return {
-                    jsonrpc: '2.0',
-                    id: request.id,
-                    result: {
-                        protocolVersion: MCP_VERSION,
-                        capabilities: {
-                            resources: {
-                                subscribe: false,
-                                listChanged: false
-                            },
-                            tools: {
-                                listChanged: false
-                            }
+        if (request.method === 'initialize') {
+            return {
+                jsonrpc: '2.0',
+                id: request.id,
+                result: {
+                    protocolVersion: MCP_VERSION,
+                    capabilities: {
+                        resources: {
+                            subscribe: false,
+                            listChanged: false
                         },
-                        serverInfo: {
-                            name: 'ast-intelligence-automation',
-                            version: '3.0.0',
-                            description: 'Autonomous AST Intelligence + Git Flow Automation'
+                        tools: {
+                            listChanged: false
                         }
+                    },
+                    serverInfo: {
+                        name: 'ast-intelligence-automation',
+                        version: '3.0.0',
+                        description: 'Autonomous AST Intelligence + Git Flow Automation'
                     }
-                };
-            }
+                }
+            };
+        }
 
-            if (request.method === 'resources/list') {
-                return {
-                    jsonrpc: '2.0',
-                    id: request.id,
-                    result: {
-                        resources: [
-                            {
+        if (request.method === 'resources/list') {
+            return {
+                jsonrpc: '2.0',
+                id: request.id,
+                result: {
+                    resources: [
+                        {
+                            uri: 'ai://gate',
+                            name: '🚦 AI Gate Check (MANDATORY)',
+                            description: 'MUST READ AT START OF EVERY RESPONSE. Returns BLOCKED or ALLOWED status. If BLOCKED, AI must fix issues before proceeding.',
+                            mimeType: 'application/json'
+                        },
+                        {
+                            uri: 'evidence://status',
+                            name: 'Evidence Status',
+                            description: 'Current status of .AI_EVIDENCE.json (fresh or stale)',
+                            mimeType: 'application/json'
+                        },
+                        {
+                            uri: 'gitflow://state',
+                            name: 'Git Flow State',
+                            description: 'Current Git Flow cycle step and status',
+                            mimeType: 'application/json'
+                        },
+                        {
+                            uri: 'context://active',
+                            name: 'Active Context Analysis',
+                            description: 'Multi-platform context detection with confidence scoring',
+                            mimeType: 'application/json'
+                        }
+                    ]
+                }
+            };
+        }
+
+        if (request.method === 'resources/read') {
+            const uri = request.params?.uri;
+
+            if (uri === 'ai://gate') {
+                try {
+                    const gateResult = await aiGateCheck();
+                    return {
+                        jsonrpc: '2.0',
+                        id: request.id,
+                        result: {
+                            contents: [{
                                 uri: 'ai://gate',
-                                name: '🚦 AI Gate Check (MANDATORY)',
-                                description: 'MUST READ AT START OF EVERY RESPONSE. Returns BLOCKED or ALLOWED status. If BLOCKED, AI must fix issues before proceeding.',
-                                mimeType: 'application/json'
-                            },
-                            {
-                                uri: 'evidence://status',
-                                name: 'Evidence Status',
-                                description: 'Current status of .AI_EVIDENCE.json (fresh or stale)',
-                                mimeType: 'application/json'
-                            },
-                            {
-                                uri: 'gitflow://state',
-                                name: 'Git Flow State',
-                                description: 'Current Git Flow cycle step and status',
-                                mimeType: 'application/json'
-                            },
-                            {
-                                uri: 'context://active',
-                                name: 'Active Context Analysis',
-                                description: 'Multi-platform context detection with confidence scoring',
-                                mimeType: 'application/json'
-                            }
-                        ]
-                    }
-                };
-            }
-
-            if (request.method === 'resources/read') {
-                const uri = request.params?.uri;
-
-                if (uri === 'ai://gate') {
-                    try {
-                        const gateResult = await aiGateCheck();
-                        return {
-                            jsonrpc: '2.0',
-                            id: request.id,
-                            result: {
-                                contents: [{
-                                    uri: 'ai://gate',
-                                    mimeType: 'application/json',
-                                    text: JSON.stringify(gateResult, null, 2)
-                                }]
-                            }
-                        };
-                    } catch (error) {
-                        return {
-                            jsonrpc: '2.0',
-                            id: request.id,
-                            error: {
-                                code: -32603,
-                                message: `Failed to read AI Gate: ${error.message}`
-                            }
-                        };
-                    }
-                }
-
-                if (uri === 'evidence://status') {
-                    const status = checkEvidence();
-                    return {
-                        jsonrpc: '2.0',
-                        id: request.id,
-                        result: {
-                            contents: [{
-                                uri: 'evidence://status',
                                 mimeType: 'application/json',
-                                text: JSON.stringify(status, null, 2)
+                                text: JSON.stringify(gateResult, null, 2)
                             }]
                         }
                     };
-                }
-
-                if (uri === 'gitflow://state') {
-                    const gitFlow = compositionRoot.getGitFlowService();
-                    const gitQuery = compositionRoot.getGitQueryAdapter();
-                    const currentBranch = gitFlow.getCurrentBranch();
-                    const branchState = gitQuery.getBranchState(currentBranch);
-
-                    const state = {
-                        branch: currentBranch,
-                        isClean: gitFlow.isClean(),
-                        ahead: branchState.ahead,
-                        behind: branchState.behind,
-                        timestamp: new Date().toISOString()
-                    };
-
+                } catch (error) {
                     return {
                         jsonrpc: '2.0',
                         id: request.id,
-                        result: {
-                            contents: [{
-                                uri: 'gitflow://state',
-                                mimeType: 'application/json',
-                                text: JSON.stringify(state, null, 2)
-                            }]
+                        error: {
+                            code: -32603,
+                            message: `Failed to read AI Gate: ${error.message}`
                         }
                     };
                 }
-
-                if (uri === 'context://active') {
-                    const orchestrator = compositionRoot.getOrchestrator();
-                    try {
-                        const decision = await orchestrator.analyzeContext();
-                        return {
-                            jsonrpc: '2.0',
-                            id: request.id,
-                            result: {
-                                contents: [{
-                                    uri: 'context://active',
-                                    mimeType: 'application/json',
-                                    text: JSON.stringify(analysisResult, null, 2)
-                                }]
-                            }
-                        };
-                    } catch (error) {
-                        return {
-                            jsonrpc: '2.0',
-                            id: request.id,
-                            error: {
-                                code: -32603,
-                                message: `Failed to analyze context: ${error.message}`
-                            }
-                        };
-                    }
-                }
             }
 
-            if (request.method === 'tools/list') {
+            if (uri === 'evidence://status') {
+                const status = checkEvidence();
                 return {
                     jsonrpc: '2.0',
                     id: request.id,
                     result: {
-                        tools: [
-                            {
-                                name: 'check_evidence_status',
-                                description: 'Check if .AI_EVIDENCE.json is stale (>3 minutes old)',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {},
-                                    required: []
-                                }
-                            },
-                            {
-                                name: 'auto_complete_gitflow',
-                                description: 'Automatically complete Git Flow cycle: commit → push → PR → merge → cleanup',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {
-                                        commitMessage: {
-                                            type: 'string',
-                                            description: 'Commit message (optional, auto-generated if not provided)'
-                                        },
-                                        prTitle: {
-                                            type: 'string',
-                                            description: 'PR title (optional)'
-                                        },
-                                        prBody: {
-                                            type: 'string',
-                                            description: 'PR description (optional)'
-                                        },
-                                        autoMerge: {
-                                            type: 'boolean',
-                                            description: 'Auto-merge PR after creation (default: false)'
-                                        }
-                                    },
-                                    required: []
-                                }
-                            },
-                            {
-                                name: 'sync_branches',
-                                description: 'Synchronize base branch and main branches with remote',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {
-                                        returnToBranch: {
-                                            type: 'string',
-                                            description: 'Branch to return to after sync (default: base branch)'
-                                        }
-                                    },
-                                    required: []
-                                }
-                            },
-                            {
-                                name: 'cleanup_stale_branches',
-                                description: 'Delete merged branches (local + remote)',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {},
-                                    required: []
-                                }
-                            },
-                            {
-                                name: 'auto_execute_ai_start',
-                                description: 'Analyze context and auto-execute ai-start if code files detected (>=30% confidence). Always notifies with sound.',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {
-                                        forceAnalysis: {
-                                            type: 'boolean',
-                                            description: 'Force re-analysis even if recent (default: false)'
-                                        }
-                                    },
-                                    required: []
-                                }
-                            },
-                            {
-                                name: 'validate_and_fix',
-                                description: 'Validate common issues and auto-fix when possible (evidence, sync, etc.)',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {},
-                                    required: []
-                                }
-                            },
-                            {
-                                name: 'ai_gate_check',
-                                description: '🚦 MANDATORY: Call this at the START of EVERY response. Returns BLOCKED or ALLOWED. If BLOCKED, do NOT proceed with user task until violations are fixed.',
-                                inputSchema: {
-                                    type: 'object',
-                                    properties: {},
-                                    required: []
-                                }
-                            }
-                        ]
-                    }
-                };
-            }
-
-            if (request.method === 'tools/call') {
-                const toolName = request.params?.name;
-                const toolParams = request.params?.arguments || {};
-
-                let result;
-                switch (toolName) {
-                    case 'check_evidence_status':
-                        result = checkEvidence();
-                        break;
-
-                    case 'auto_complete_gitflow':
-                        result = autoCompleteGitFlow(toolParams);
-                        break;
-
-                    case 'sync_branches':
-                        result = syncBranches(toolParams);
-                        break;
-
-                    case 'cleanup_stale_branches':
-                        result = cleanupStaleBranches(toolParams);
-                        break;
-
-                    case 'auto_execute_ai_start':
-                        result = await autoExecuteAIStart(toolParams);
-                        break;
-
-                    case 'validate_and_fix':
-                        result = validateAndFix(toolParams);
-                        break;
-
-                    case 'ai_gate_check':
-                        result = aiGateCheck();
-                        break;
-
-                    default:
-                        return {
-                            jsonrpc: '2.0',
-                            id: request.id,
-                            error: {
-                                code: -32602,
-                                message: `Unknown tool: ${toolName}`
-                            }
-                        };
-                }
-
-                return {
-                    jsonrpc: '2.0',
-                    id: request.id,
-                    result: {
-                        content: [{
-                            type: 'text',
-                            text: JSON.stringify(result, null, 2)
+                        contents: [{
+                            uri: 'evidence://status',
+                            mimeType: 'application/json',
+                            text: JSON.stringify(status, null, 2)
                         }]
                     }
                 };
             }
 
-            // Unknown method
+            if (uri === 'gitflow://state') {
+                const gitFlow = compositionRoot.getGitFlowService();
+                const gitQuery = compositionRoot.getGitQueryAdapter();
+                const currentBranch = gitFlow.getCurrentBranch();
+                const branchState = gitQuery.getBranchState(currentBranch);
+
+                const state = {
+                    branch: currentBranch,
+                    isClean: gitFlow.isClean(),
+                    ahead: branchState.ahead,
+                    behind: branchState.behind,
+                    timestamp: new Date().toISOString()
+                };
+
+                return {
+                    jsonrpc: '2.0',
+                    id: request.id,
+                    result: {
+                        contents: [{
+                            uri: 'gitflow://state',
+                            mimeType: 'application/json',
+                            text: JSON.stringify(state, null, 2)
+                        }]
+                    }
+                };
+            }
+
+            if (uri === 'context://active') {
+                const orchestrator = compositionRoot.getOrchestrator();
+                try {
+                    const decision = await orchestrator.analyzeContext();
+                    return {
+                        jsonrpc: '2.0',
+                        id: request.id,
+                        result: {
+                            contents: [{
+                                uri: 'context://active',
+                                mimeType: 'application/json',
+                                text: JSON.stringify(decision, null, 2)
+                            }]
+                        }
+                    };
+                } catch (error) {
+                    return {
+                        jsonrpc: '2.0',
+                        id: request.id,
+                        error: {
+                            code: -32603,
+                            message: `Failed to analyze context: ${error.message}`
+                        }
+                    };
+                }
+            }
+        }
+
+        if (request.method === 'tools/list') {
             return {
                 jsonrpc: '2.0',
                 id: request.id,
-                error: {
-                    code: -32601,
-                    message: `Method not found: ${request.method}`
-                }
-            };
-
-        } catch (err) {
-            return {
-                jsonrpc: '2.0',
-                id: null,
-                error: {
-                    code: -32700,
-                    message: `Parse error: ${err.message}`
+                result: {
+                    tools: [
+                        {
+                            name: 'check_evidence_status',
+                            description: 'Check if .AI_EVIDENCE.json is fresh or stale',
+                            inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'auto_complete_gitflow',
+                            description: 'Automatically complete Git Flow cycle: commit → push → PR → merge → cleanup',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    commitMessage: { type: 'string' },
+                                    prTitle: { type: 'string' },
+                                    prBody: { type: 'string' },
+                                    autoMerge: { type: 'boolean' }
+                                }
+                            }
+                        },
+                        {
+                            name: 'sync_branches',
+                            description: 'Synchronize branches with remote',
+                            inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'cleanup_stale_branches',
+                            description: 'Delete merged local and remote branches',
+                            inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'auto_execute_ai_start',
+                            description: 'Analyze context and run ai-start if needed',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    forceAnalysis: { type: 'boolean' }
+                                }
+                            }
+                        },
+                        {
+                            name: 'validate_and_fix',
+                            description: 'Validate and fix common issues',
+                            inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'ai_gate_check',
+                            description: '🚦 MANDATORY gate check',
+                            inputSchema: { type: 'object', properties: {} }
+                        }
+                    ]
                 }
             };
         }
-    }
 
-    start() {
+        if (request.method === 'tools/call') {
+            const toolName = request.params?.name;
+            const toolParams = request.params?.arguments || {};
 
-        process.stdin.setEncoding('utf8');
-
-        // Read from stdin
-        process.stdin.on('data', async (chunk) => {
-            this.buffer += chunk.toString();
-
-            const messages = this.extractMessages();
-            for (const message of messages) {
-                const payload = message?.body || '';
-                if (payload.trim()) {
-                    console.error(`[MCP] Received: ${payload.substring(0, 100)}...`);
-
-                    const response = await this.handleMessage(payload);
-
-                    if (response !== null) {
-                        const responseStr = JSON.stringify(response);
-                        console.error(`[MCP] Sending: ${responseStr.substring(0, 100)}...`);
-                        this.writeResponse(response, Boolean(message?.framed), message?.delimiter);
-                    }
-                }
+            let result;
+            switch (toolName) {
+                case 'check_evidence_status':
+                    result = checkEvidence();
+                    break;
+                case 'auto_complete_gitflow':
+                    result = await autoCompleteGitFlow(toolParams);
+                    break;
+                case 'sync_branches':
+                    result = syncBranches(toolParams);
+                    break;
+                case 'cleanup_stale_branches':
+                    result = cleanupStaleBranches(toolParams);
+                    break;
+                case 'auto_execute_ai_start':
+                    result = await autoExecuteAIStart(toolParams);
+                    break;
+                case 'validate_and_fix':
+                    result = await validateAndFix(toolParams);
+                    break;
+                case 'ai_gate_check':
+                    result = await aiGateCheck();
+                    break;
+                default:
+                    return {
+                        jsonrpc: '2.0',
+                        id: request.id,
+                        error: { code: -32602, message: `Unknown tool: ${toolName}` }
+                    };
             }
-        });
 
-        process.stdin.on('end', () => {
-            process.exit(0);
-        });
+            return {
+                jsonrpc: '2.0',
+                id: request.id,
+                result: {
+                    content: [{ type: 'text', text: JSON.stringify(result, null, 2) }]
+                }
+            };
+        }
 
-        process.stdin.on('error', (err) => {
-            process.exit(1);
-        });
+        return {
+            jsonrpc: '2.0',
+            id: request.id,
+            error: { code: -32601, message: `Method not found: ${request.method}` }
+        };
+
+    } catch (error) {
+        return {
+            jsonrpc: '2.0',
+            id: null,
+            error: { code: -32700, message: `Parse error: ${error.message}` }
+        };
     }
 }
 
-// Start server
-const server = new MCPServer();
-server.start();
+// Start protocol handler
+protocolHandler.start(handleMcpMessage);
 
 /**
  * Polling loop for background notifications and automations
