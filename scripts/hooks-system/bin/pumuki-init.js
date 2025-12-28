@@ -64,7 +64,8 @@ function installGitHooks(cwd) {
     const preCommitPath = path.join(hooksDir, 'pre-commit');
     const hookContent = `#!/bin/sh
 # Pumuki Hooks - Pre-commit
-npx pumuki-hooks check
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+"$REPO_ROOT/scripts/hooks-system/infrastructure/guards/master-validator.sh"
 `;
 
     fs.writeFileSync(preCommitPath, hookContent);
@@ -93,7 +94,7 @@ function main() {
     }
 
     console.log('\n🎉 Pumuki Hooks initialized successfully!');
-    console.log('   Run `npx pumuki-hooks audit` to analyze your code.');
+    console.log('   Run `node scripts/hooks-system/bin/pumuki-audit.js` to analyze your code.');
 }
 
 if (require.main === module) {

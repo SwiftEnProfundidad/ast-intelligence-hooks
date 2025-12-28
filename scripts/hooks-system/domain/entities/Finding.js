@@ -7,7 +7,7 @@ class Finding {
     this.validateInputs(ruleId, message, filePath);
 
     this.ruleId = ruleId;
-    this.severity = new Severity(severity);
+    this._severity = new Severity(severity);
     this.message = message;
     this.filePath = filePath;
     this.line = line || 1;
@@ -19,14 +19,18 @@ class Finding {
 
   validateInputs(ruleId, message, filePath) {
     if (!ruleId || typeof ruleId !== 'string' || ruleId.trim().length === 0) {
-      throw new ValidationError('Finding requires non-empty ruleId (string)', 'ruleId', ruleId);
+      throw new ValidationError('Finding requires valid ruleId (string)', 'ruleId', ruleId);
     }
     if (!message || typeof message !== 'string' || message.trim().length === 0) {
-      throw new ValidationError('Finding requires non-empty message (string)', 'message', message);
+      throw new ValidationError('Finding requires valid message (string)', 'message', message);
     }
     if (!filePath || typeof filePath !== 'string' || filePath.trim().length === 0) {
-      throw new ValidationError('Finding requires non-empty filePath (string)', 'filePath', filePath);
+      throw new ValidationError('Finding requires valid filePath (string)', 'filePath', filePath);
     }
+  }
+
+  get severity() {
+    return this._severity.toString();
   }
 
   generateId() {
@@ -35,12 +39,12 @@ class Finding {
     return Buffer.from(hashData).toString('base64').substring(0, 16);
   }
 
-  isCritical() { return this.severity.isCritical(); }
-  isHigh() { return this.severity.isHigh(); }
-  isMedium() { return this.severity.isMedium(); }
-  isLow() { return this.severity.isLow(); }
-  isInfo() { return this.severity.isInfo(); }
-  isBlockingLevel() { return this.severity.isBlocking(); }
+  isCritical() { return this._severity.isCritical(); }
+  isHigh() { return this._severity.isHigh(); }
+  isMedium() { return this._severity.isMedium(); }
+  isLow() { return this._severity.isLow(); }
+  isInfo() { return this._severity.isInfo(); }
+  isBlockingLevel() { return this._severity.isBlocking(); }
 
   belongsToPlatform(platform) {
     if (!platform) return false;
@@ -48,11 +52,11 @@ class Finding {
   }
 
   getSeverityWeight() {
-    return this.severity.getWeight();
+    return this._severity.getWeight();
   }
 
   getTechnicalDebtHours() {
-    return this.severity.getDebtHours();
+    return this._severity.getDebtHours();
   }
 
   getDisplayPath() {
@@ -60,7 +64,7 @@ class Finding {
   }
 
   getFormattedSummary() {
-    return `[${this.severity.toUpperCase()}] ${this.ruleId}: ${this.message} (${this.getDisplayPath()})`;
+    return `[${this._severity.toUpperCase()}] ${this.ruleId}: ${this.message} (${this.getDisplayPath()})`;
   }
 
   addMetadata(key, value) {

@@ -11,6 +11,9 @@ const McpProtocolHandler = require('./services/McpProtocolHandler');
 const EvidenceService = require('./services/EvidenceService');
 const UnifiedLogger = require('../../application/services/logging/UnifiedLogger');
 
+const MCP_VERSION = '1.0.0';
+const MAX_EVIDENCE_AGE = 3 * 60 * 1000;
+
 // Initialize Logger
 const repoRoot = process.env.REPO_ROOT || process.cwd();
 const logger = new UnifiedLogger({

@@ -91,6 +91,45 @@ function formatLocalDateTime(isoOrMs) {
     return d.toLocaleString();
 }
 
+function getCurrentGitBranch(repoRoot) {
+    try {
+        const out = execSync('git rev-parse --abbrev-ref HEAD', {
+            cwd: repoRoot,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore']
+        });
+        const branch = String(out || '').trim();
+        return branch || 'unknown';
+    } catch (error) {
+        return 'unknown';
+    }
+}
+
+function getBranchStateSafe(gitQuery, repoRoot, branch) {
+    if (gitQuery && typeof gitQuery.getBranchState === 'function') {
+        try {
+            return gitQuery.getBranchState(branch);
+        } catch (error) {
+            // Fall through to CLI-based state
+        }
+    }
+
+    try {
+        const upstream = `origin/${branch}`;
+        const out = execSync(`git rev-list --left-right --count ${upstream}...${branch}`, {
+            cwd: repoRoot,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore']
+        }).trim();
+        const [behindRaw, aheadRaw] = out.split(/\s+/);
+        const behind = Number(behindRaw) || 0;
+        const ahead = Number(aheadRaw) || 0;
+        return { ahead, behind };
+    } catch (error) {
+        return { ahead: 0, behind: 0 };
+    }
+}
+
 function resolveUpdateEvidenceScript() {
     const scriptDir = __dirname;
     const candidates = [
@@ -466,7 +505,7 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
 async function aiGateCheck() {
     const gitFlowService = compositionRoot.getGitFlowService();
     const gitQuery = compositionRoot.getGitQueryAdapter();
-    const currentBranch = gitFlowService.getCurrentBranch();
+    const currentBranch = getCurrentGitBranch(REPO_ROOT);
     const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
 
     const uncommittedChanges = gitQuery.getUncommittedChanges();
@@ -564,8 +603,8 @@ async function validateAndFix(params) {
             results.push('✅ No uncommitted changes');
         }
 
-        const currentBranch = gitFlowService.getCurrentBranch();
-        const branchState = gitQuery.getBranchState(currentBranch);
+        const currentBranch = getCurrentGitBranch(REPO_ROOT);
+        const branchState = getBranchStateSafe(gitQuery, REPO_ROOT, currentBranch);
 
         if (branchState.behind > 0) {
             issues.push(`Behind origin by ${branchState.behind} commits`);
@@ -712,8 +751,8 @@ async function handleMcpMessage(message) {
             if (uri === 'gitflow://state') {
                 const gitFlow = compositionRoot.getGitFlowService();
                 const gitQuery = compositionRoot.getGitQueryAdapter();
-                const currentBranch = gitFlow.getCurrentBranch();
-                const branchState = gitQuery.getBranchState(currentBranch);
+                const currentBranch = getCurrentGitBranch(REPO_ROOT);
+                const branchState = getBranchStateSafe(gitQuery, REPO_ROOT, currentBranch);
 
                 const state = {
                     branch: currentBranch,
@@ -755,9 +794,17 @@ async function handleMcpMessage(message) {
                     return {
                         jsonrpc: '2.0',
                         id: request.id,
-                        error: {
-                            code: -32603,
-                            message: `Failed to analyze context: ${error.message}`
+                        result: {
+                            contents: [{
+                                uri: 'context://active',
+                                mimeType: 'application/json',
+                                text: JSON.stringify({
+                                    confidence: 0,
+                                    platforms: [],
+                                    context: null,
+                                    error: error && error.message ? error.message : String(error)
+                                }, null, 2)
+                            }]
                         }
                     };
                 }

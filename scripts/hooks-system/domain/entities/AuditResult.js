@@ -2,7 +2,6 @@ const Finding = require('./Finding');
 const { ValidationError } = require('../errors');
 const AuditScorer = require('../services/AuditScorer');
 const AuditAnalyzer = require('../services/AuditAnalyzer');
-const AuditResultSerializer = require('../services/AuditResultSerializer');
 
 class AuditResult {
     constructor(findings = []) {
@@ -11,13 +10,10 @@ class AuditResult {
         this.metadata = {
             totalFiles: 0,
             totalLines: 0,
-            platforms: [],
-            session: null,
-            action: null
+            platforms: []
         };
         this.scorer = new AuditScorer();
         this.analyzer = new AuditAnalyzer(this.scorer);
-        this.serializer = new AuditResultSerializer();
     }
 
     addFinding(finding) {
@@ -56,6 +52,10 @@ class AuditResult {
         return this.analyzer.getViolationsByPlatform(this.findings);
     }
 
+    getViolationsByRuleId() {
+        return this.analyzer.getViolationsByRuleId(this.findings);
+    }
+
     getTechnicalDebtHours() {
         return this.scorer.calculateTechnicalDebt(this.findings);
     }
@@ -76,12 +76,44 @@ class AuditResult {
         };
     }
 
-    setMetadata(metadata = {}) {
+    setMetadata(totalFilesOrMetadata = {}, totalLines, platforms) {
+        if (typeof totalFilesOrMetadata === 'number') {
+            this.metadata = {
+                ...this.metadata,
+                totalFiles: totalFilesOrMetadata,
+                totalLines: Number(totalLines) || 0,
+                platforms: Array.isArray(platforms) ? platforms : []
+            };
+            return this;
+        }
+
+        const metadata = totalFilesOrMetadata && typeof totalFilesOrMetadata === 'object'
+            ? totalFilesOrMetadata
+            : {};
+
         this.metadata = {
             ...this.metadata,
             ...metadata
         };
         return this;
+    }
+
+    filterByFile(filePath) {
+        return new AuditResult(this.analyzer.filterByFile(this.findings, filePath))
+            .setMetadata(this.metadata);
+    }
+
+    filterBySeverity(severity) {
+        return new AuditResult(this.analyzer.filterBySeverity(this.findings, severity))
+            .setMetadata(this.metadata);
+    }
+
+    getTopViolatedRules(limit = 10) {
+        return this.analyzer.getTopViolatedRules(this.findings, limit);
+    }
+
+    getTopViolatedFiles(limit = 10) {
+        return this.analyzer.getTopViolatedFiles(this.findings, limit);
     }
 
     filterByPlatform(platform) {
@@ -94,12 +126,13 @@ class AuditResult {
     }
 
     toJSON() {
-        return this.serializer.toJSON(this);
+        const AuditResultSerializer = require('../services/AuditResultSerializer');
+        return new AuditResultSerializer().toJSON(this);
     }
 
     static fromJSON(json) {
-        const serializer = new AuditResultSerializer();
-        return serializer.fromJSON(json);
+        const AuditResultSerializer = require('../services/AuditResultSerializer');
+        return new AuditResultSerializer().fromJSON(json);
     }
 }
 
