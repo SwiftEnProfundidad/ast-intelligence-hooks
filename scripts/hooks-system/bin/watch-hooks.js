@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 
-const RealtimeGuardService = require('../application/services/RealtimeGuardService');
-const NotificationCenterService = require('../application/services/notification/NotificationCenterService');
+const CompositionRoot = require('../application/CompositionRoot');
 
-const notificationCenter = new NotificationCenterService({ repoRoot: process.cwd() });
-const guard = new RealtimeGuardService({ notifier: console, notificationCenter });
+// Initialize Composition Root
+const compositionRoot = CompositionRoot.createForProduction(process.cwd());
+
+// Resolve dependencies graph
+const guard = compositionRoot.getRealtimeGuardService();
+const notificationCenter = compositionRoot.getNotificationService();
 
 guard.start();
 console.log('Realtime guard active. Watching evidence freshness and critical docs...');

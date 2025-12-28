@@ -33,7 +33,7 @@ function runBackendIntelligence(project, findings, platform) {
     const detectedPattern = architectureDetector.detect();
     const detectionSummary = architectureDetector.getDetectionSummary();
 
-    console.log(`[Backend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
+    console.error(`[Backend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
     if (detectionSummary.warnings.length > 0) {
       detectionSummary.warnings.forEach(warning => {
@@ -329,20 +329,16 @@ function runBackendIntelligence(project, findings, platform) {
         const complexityOutlier = complexityZ >= godClassBaseline.thresholds.outlier.complexityZ;
         const concernOutlier = concernCount >= godClassBaseline.thresholds.outlier.concerns;
 
-        const extremeOutlier =
-          methodsZ >= godClassBaseline.thresholds.extreme.methodsCountZ ||
-          propsZ >= godClassBaseline.thresholds.extreme.propertiesCountZ ||
-          linesZ >= godClassBaseline.thresholds.extreme.lineCountZ ||
-          complexityZ >= godClassBaseline.thresholds.extreme.complexityZ;
+        const isAbsoluteGod = lineCount > 600 && methodsCount > 30 && complexity > 80;
+        const isUnderThreshold = lineCount < 400 && methodsCount < 25 && complexity < 50;
 
-        const signalCount = [sizeOutlier, complexityOutlier, concernOutlier].filter(Boolean).length;
+        let signalCount = 0;
+        if (sizeOutlier) signalCount++;
+        if (complexityOutlier) signalCount++;
+        if (concernOutlier) signalCount++;
 
-        if (extremeOutlier || signalCount >= 2) {
-          pushFinding(
-            "backend.antipattern.god_classes",
-            "critical",
-            sf,
-            cls,
+        if (!isUnderThreshold && (signalCount >= 2 || isAbsoluteGod)) {
+          pushFinding("backend.antipattern.god_classes", "critical", sf, cls,
             `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
             findings
           );
@@ -353,6 +349,13 @@ function runBackendIntelligence(project, findings, platform) {
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
       if (name && /Entity|Model|Domain/.test(name)) {
+        // Exclude Errors, Exceptions, and Events from Anemic Domain check
+        if (/Error$|Exception$|Event$/.test(name)) return;
+
+        // Exclude files in domain/errors or domain/events directories
+        const filePath = sf.getFilePath().replace(/\\/g, '/');
+        if (/\/domain\/errors\//.test(filePath) || /\/domain\/events\//.test(filePath)) return;
+
         const methods = cls.getMethods();
         const hasBusinessLogic = methods.some((method) => {
           const methodName = method.getName();
@@ -1752,291 +1755,291 @@ function runBackendIntelligence(project, findings, platform) {
     }
 
     if (filePath.includes('.controller.ts')) {
-    const swaggerIsAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
-    const swaggerIsTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
-    if (!swaggerIsAnalyzer && !swaggerIsTestFile) {
-      const hasSwaggerDecorators = fullText.includes('@ApiTags') || fullText.includes('@ApiOperation');
-      const hasEndpoints = fullText.includes('@Get') || fullText.includes('@Post') || fullText.includes('@Put');
+      const swaggerIsAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
+      const swaggerIsTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
+      if (!swaggerIsAnalyzer && !swaggerIsTestFile) {
+        const hasSwaggerDecorators = fullText.includes('@ApiTags') || fullText.includes('@ApiOperation');
+        const hasEndpoints = fullText.includes('@Get') || fullText.includes('@Post') || fullText.includes('@Put');
 
-      if (hasEndpoints && !hasSwaggerDecorators) {
+        if (hasEndpoints && !hasSwaggerDecorators) {
+          pushFinding(
+            "backend.api.missing_swagger",
+            "medium",
+            sf,
+            sf,
+            'Controller without Swagger documentation. Add: @ApiTags(\'users\'), @ApiOperation({ summary: \'...\' }), @ApiResponse(). Benefits: Auto-generated API docs, TypeScript types for frontend.',
+            findings
+          );
+        }
+      }
+    }
+
+    if (filePath.includes('.controller.ts')) {
+      const hasVersioning = fullText.includes('@Version(') || fullText.includes('/v1/') || fullText.includes('/v2/');
+      const isMainController = fullText.includes('@Controller(') && !filePath.includes('.spec.ts');
+
+      if (isMainController && !hasVersioning) {
         pushFinding(
-          "backend.api.missing_swagger",
+          "backend.api.missing_versioning",
           "medium",
           sf,
           sf,
-          'Controller without Swagger documentation. Add: @ApiTags(\'users\'), @ApiOperation({ summary: \'...\' }), @ApiResponse(). Benefits: Auto-generated API docs, TypeScript types for frontend.',
+          'Controller without API versioning. Add: @Controller(\'v1/users\'). Or enable global versioning in main.ts. Prevents breaking changes for existing clients.',
           findings
         );
       }
     }
-  }
 
-  if (filePath.includes('.controller.ts')) {
-    const hasVersioning = fullText.includes('@Version(') || fullText.includes('/v1/') || fullText.includes('/v2/');
-    const isMainController = fullText.includes('@Controller(') && !filePath.includes('.spec.ts');
+    if (filePath.includes('health') || fullText.includes('HealthCheck')) {
+      const hasDatabase = fullText.includes('database') || fullText.includes('TypeOrmHealthIndicator');
+      const hasMemory = fullText.includes('memory') || fullText.includes('MemoryHealthIndicator');
+      const hasDisk = fullText.includes('disk') || fullText.includes('DiskHealthIndicator');
 
-    if (isMainController && !hasVersioning) {
-      pushFinding(
-        "backend.api.missing_versioning",
-        "medium",
-        sf,
-        sf,
-        'Controller without API versioning. Add: @Controller(\'v1/users\'). Or enable global versioning in main.ts. Prevents breaking changes for existing clients.',
-        findings
-      );
+      if (!hasDatabase || !hasMemory) {
+        pushFinding(
+          "backend.monitoring.incomplete_health_check",
+          "medium",
+          sf,
+          sf,
+          'Incomplete health check. Add indicators: database, memory, disk. Use @nestjs/terminus. Kubernetes needs /health liveness and /health/ready readiness probes.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('health') || fullText.includes('HealthCheck')) {
-    const hasDatabase = fullText.includes('database') || fullText.includes('TypeOrmHealthIndicator');
-    const hasMemory = fullText.includes('memory') || fullText.includes('MemoryHealthIndicator');
-    const hasDisk = fullText.includes('disk') || fullText.includes('DiskHealthIndicator');
+    if (filePath.includes('middleware') || filePath.includes('interceptor')) {
+      const hasRequestId = fullText.includes('requestId') || fullText.includes('x-request-id') || fullText.includes('correlationId');
 
-    if (!hasDatabase || !hasMemory) {
-      pushFinding(
-        "backend.monitoring.incomplete_health_check",
-        "medium",
-        sf,
-        sf,
-        'Incomplete health check. Add indicators: database, memory, disk. Use @nestjs/terminus. Kubernetes needs /health liveness and /health/ready readiness probes.',
-        findings
-      );
+      if (!hasRequestId && fullText.includes('logger')) {
+        pushFinding(
+          "backend.observability.missing_request_id",
+          "medium",
+          sf,
+          sf,
+          'Logger without request ID. Generate: const requestId = uuidv4(); Add to headers: res.set(\'X-Request-ID\', requestId). Include in all logs. Traces requests across microservices.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('middleware') || filePath.includes('interceptor')) {
-    const hasRequestId = fullText.includes('requestId') || fullText.includes('x-request-id') || fullText.includes('correlationId');
+    if (filePath.includes('main.ts')) {
+      const hasCompression = fullText.includes('compression(') || fullText.includes('@nestjs/platform-fastify');
 
-    if (!hasRequestId && fullText.includes('logger')) {
-      pushFinding(
-        "backend.observability.missing_request_id",
-        "medium",
-        sf,
-        sf,
-        'Logger without request ID. Generate: const requestId = uuidv4(); Add to headers: res.set(\'X-Request-ID\', requestId). Include in all logs. Traces requests across microservices.',
-        findings
-      );
+      if (!hasCompression) {
+        pushFinding(
+          "backend.performance.missing_compression",
+          "medium",
+          sf,
+          sf,
+          'Missing GZIP compression. Install: npm i compression. Add in main.ts: app.use(compression()). Reduces response size by 70-90%. Faster API responses.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('main.ts')) {
-    const hasCompression = fullText.includes('compression(') || fullText.includes('@nestjs/platform-fastify');
+    if (filePath.includes('config') || filePath.includes('env')) {
+      const hasValidation = fullText.includes('Joi') || fullText.includes('class-validator') || fullText.includes('validate');
+      const hasEnvVars = fullText.includes('process.env');
 
-    if (!hasCompression) {
-      pushFinding(
-        "backend.performance.missing_compression",
-        "medium",
-        sf,
-        sf,
-        'Missing GZIP compression. Install: npm i compression. Add in main.ts: app.use(compression()). Reduces response size by 70-90%. Faster API responses.',
-        findings
-      );
+      if (hasEnvVars && !hasValidation) {
+        pushFinding(
+          "backend.config.missing_env_validation",
+          "medium",
+          sf,
+          sf,
+          'Environment variables without validation. Use Joi: validationSchema: Joi.object({ NODE_ENV: Joi.string().valid(\'dev\', \'prod\').required() }). Fails fast on missing/invalid config.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('config') || filePath.includes('env')) {
-    const hasValidation = fullText.includes('Joi') || fullText.includes('class-validator') || fullText.includes('validate');
-    const hasEnvVars = fullText.includes('process.env');
 
-    if (hasEnvVars && !hasValidation) {
+    if (fullText.includes('metrics') && !fullText.includes('prom-client') && !fullText.includes('@Prometheus')) {
       pushFinding(
-        "backend.config.missing_env_validation",
-        "medium",
-        sf,
-        sf,
-        'Environment variables without validation. Use Joi: validationSchema: Joi.object({ NODE_ENV: Joi.string().valid(\'dev\', \'prod\').required() }). Fails fast on missing/invalid config.',
-        findings
-      );
-    }
-  }
-
-
-  if (fullText.includes('metrics') && !fullText.includes('prom-client') && !fullText.includes('@Prometheus')) {
-    pushFinding(
-      "backend.observability.missing_prometheus",
-      "low",
-      sf,
-      sf,
-      'Metrics without Prometheus. Install: npm i prom-client @willsoto/nestjs-prometheus. Expose: /metrics endpoint. Monitor: request_duration, error_rate, throughput.',
-      findings
-    );
-  }
-
-  if (filePath.includes('prometheus') || filePath.includes('metrics')) {
-    const hasDashboardComment = fullText.includes('Grafana') || fullText.includes('dashboard');
-
-    if (!hasDashboardComment) {
-      pushFinding(
-        "backend.observability.missing_grafana_setup",
+        "backend.observability.missing_prometheus",
         "low",
         sf,
         sf,
-        'Prometheus metrics without Grafana dashboard. Export metrics.json. Import to Grafana. Create: API latency, error rate, throughput dashboards. Visualize production health.',
+        'Metrics without Prometheus. Install: npm i prom-client @willsoto/nestjs-prometheus. Expose: /metrics endpoint. Monitor: request_duration, error_rate, throughput.',
         findings
       );
     }
-  }
 
-  if (filePath.includes('monitoring') || filePath.includes('alert')) {
-    const hasAlertManager = fullText.includes('AlertManager') || fullText.includes('webhook') || fullText.includes('notification');
+    if (filePath.includes('prometheus') || filePath.includes('metrics')) {
+      const hasDashboardComment = fullText.includes('Grafana') || fullText.includes('dashboard');
 
-    if (!hasAlertManager) {
+      if (!hasDashboardComment) {
+        pushFinding(
+          "backend.observability.missing_grafana_setup",
+          "low",
+          sf,
+          sf,
+          'Prometheus metrics without Grafana dashboard. Export metrics.json. Import to Grafana. Create: API latency, error rate, throughput dashboards. Visualize production health.',
+          findings
+        );
+      }
+    }
+
+    if (filePath.includes('monitoring') || filePath.includes('alert')) {
+      const hasAlertManager = fullText.includes('AlertManager') || fullText.includes('webhook') || fullText.includes('notification');
+
+      if (!hasAlertManager) {
+        pushFinding(
+          "backend.observability.missing_alerting",
+          "low",
+          sf,
+          sf,
+          'Monitoring without alerts. Configure Prometheus AlertManager or PagerDuty. Alert on: error_rate > 5%, latency_p99 > 1s, cpu > 80%. Get notified BEFORE users complain.',
+          findings
+        );
+      }
+    }
+
+    if (filePath.includes('logger') && !fullText.includes('elasticsearch') && !fullText.includes('logstash')) {
+      const hasStructuredLogging = fullText.includes('JSON.stringify') || fullText.includes('winston');
+
+      if (hasStructuredLogging) {
+        pushFinding(
+          "backend.observability.missing_log_aggregation",
+          "low",
+          sf,
+          sf,
+          'Structured logs without aggregation. Send to: ELK Stack (Elasticsearch, Logstash, Kibana) or Datadog. Search logs across servers. Debug production issues faster.',
+          findings
+        );
+      }
+    }
+
+    if (filePath.includes('main.ts') && !fullText.includes('newrelic') && !fullText.includes('datadog') && !fullText.includes('@sentry/node')) {
       pushFinding(
-        "backend.observability.missing_alerting",
+        "backend.observability.missing_apm",
         "low",
         sf,
         sf,
-        'Monitoring without alerts. Configure Prometheus AlertManager or PagerDuty. Alert on: error_rate > 5%, latency_p99 > 1s, cpu > 80%. Get notified BEFORE users complain.',
+        'No APM integration. Install: New Relic, Datadog, or Elastic APM. Track: slow queries, external API calls, memory leaks. Find performance bottlenecks.',
         findings
       );
     }
-  }
 
-  if (filePath.includes('logger') && !fullText.includes('elasticsearch') && !fullText.includes('logstash')) {
-    const hasStructuredLogging = fullText.includes('JSON.stringify') || fullText.includes('winston');
+    if (filePath.includes('e2e') || filePath.includes('test')) {
+      const hasLoadTest = fullText.includes('artillery') || fullText.includes('k6') || fullText.includes('jmeter');
 
-    if (hasStructuredLogging) {
-      pushFinding(
-        "backend.observability.missing_log_aggregation",
-        "low",
-        sf,
-        sf,
-        'Structured logs without aggregation. Send to: ELK Stack (Elasticsearch, Logstash, Kibana) or Datadog. Search logs across servers. Debug production issues faster.',
-        findings
-      );
+      if (!hasLoadTest && filePath.includes('e2e')) {
+        pushFinding(
+          "backend.testing.missing_load_tests",
+          "low",
+          sf,
+          sf,
+          'E2E tests without load testing. Add: artillery or k6. Test: 100 concurrent users, 1000 requests/second. Find: rate limits, connection pool issues, memory leaks.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('main.ts') && !fullText.includes('newrelic') && !fullText.includes('datadog') && !fullText.includes('@sentry/node')) {
-    pushFinding(
-      "backend.observability.missing_apm",
-      "low",
-      sf,
-      sf,
-      'No APM integration. Install: New Relic, Datadog, or Elastic APM. Track: slow queries, external API calls, memory leaks. Find performance bottlenecks.',
-      findings
-    );
-  }
+    if (filePath.includes('database') || filePath.includes('typeorm')) {
+      const hasBackup = fullText.includes('backup') || fullText.includes('pg_dump') || fullText.includes('snapshot');
 
-  if (filePath.includes('e2e') || filePath.includes('test')) {
-    const hasLoadTest = fullText.includes('artillery') || fullText.includes('k6') || fullText.includes('jmeter');
-
-    if (!hasLoadTest && filePath.includes('e2e')) {
-      pushFinding(
-        "backend.testing.missing_load_tests",
-        "low",
-        sf,
-        sf,
-        'E2E tests without load testing. Add: artillery or k6. Test: 100 concurrent users, 1000 requests/second. Find: rate limits, connection pool issues, memory leaks.',
-        findings
-      );
+      if (!hasBackup && fullText.includes('createConnection')) {
+        pushFinding(
+          "backend.reliability.missing_backup_strategy",
+          "low",
+          sf,
+          sf,
+          'Database connection without backup strategy. Configure: Daily automated backups, 30-day retention, test restore monthly. Use: pg_dump, AWS RDS snapshots, or backup service.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('database') || filePath.includes('typeorm')) {
-    const hasBackup = fullText.includes('backup') || fullText.includes('pg_dump') || fullText.includes('snapshot');
+    if (filePath.includes('config') && fullText.includes('database')) {
+      const hasReplication = fullText.includes('replication') || fullText.includes('replica') || fullText.includes('standby');
 
-    if (!hasBackup && fullText.includes('createConnection')) {
-      pushFinding(
-        "backend.reliability.missing_backup_strategy",
-        "low",
-        sf,
-        sf,
-        'Database connection without backup strategy. Configure: Daily automated backups, 30-day retention, test restore monthly. Use: pg_dump, AWS RDS snapshots, or backup service.',
-        findings
-      );
+      if (!hasReplication) {
+        pushFinding(
+          "backend.reliability.missing_dr_plan",
+          "low",
+          sf,
+          sf,
+          'Database config without disaster recovery. Setup: Read replicas, failover automation, cross-region backup. Target: RTO < 1 hour, RPO < 15 minutes. Survive data center outage.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('config') && fullText.includes('database')) {
-    const hasReplication = fullText.includes('replication') || fullText.includes('replica') || fullText.includes('standby');
+    if (filePath.includes('main.ts') || filePath.includes('app.module')) {
+      const hasThrottler = fullText.includes('@nestjs/throttler') || fullText.includes('ThrottlerModule');
 
-    if (!hasReplication) {
-      pushFinding(
-        "backend.reliability.missing_dr_plan",
-        "low",
-        sf,
-        sf,
-        'Database config without disaster recovery. Setup: Read replicas, failover automation, cross-region backup. Target: RTO < 1 hour, RPO < 15 minutes. Survive data center outage.',
-        findings
-      );
+      if (!hasThrottler) {
+        pushFinding(
+          "backend.security.missing_rate_limiting",
+          "low",
+          sf,
+          sf,
+          'No rate limiting. Install: @nestjs/throttler. Configure: 10 requests/second per IP. Prevents: DDoS, brute force, API abuse. Saves infrastructure costs.',
+          findings
+        );
+      }
     }
-  }
 
-  if (filePath.includes('main.ts') || filePath.includes('app.module')) {
-    const hasThrottler = fullText.includes('@nestjs/throttler') || fullText.includes('ThrottlerModule');
+    if (fullText.includes('axios') || fullText.includes('fetch') || fullText.includes('HttpService')) {
+      const hasCircuitBreaker = fullText.includes('opossum') || fullText.includes('CircuitBreaker');
 
-    if (!hasThrottler) {
-      pushFinding(
-        "backend.security.missing_rate_limiting",
-        "low",
-        sf,
-        sf,
-        'No rate limiting. Install: @nestjs/throttler. Configure: 10 requests/second per IP. Prevents: DDoS, brute force, API abuse. Saves infrastructure costs.',
-        findings
-      );
+      if (!hasCircuitBreaker && filePath.includes('.service.ts')) {
+        pushFinding(
+          "backend.reliability.missing_circuit_breaker",
+          "low",
+          sf,
+          sf,
+          'External API call without circuit breaker. Install: opossum. Prevents: Cascading failures, timeout avalanche. Opens circuit after 5 failures, retries after 30s.',
+          findings
+        );
+      }
     }
-  }
 
-  if (fullText.includes('axios') || fullText.includes('fetch') || fullText.includes('HttpService')) {
-    const hasCircuitBreaker = fullText.includes('opossum') || fullText.includes('CircuitBreaker');
+    if (fullText.includes('async') && fullText.includes('await') && fullText.includes('for')) {
+      const hasBulkhead = fullText.includes('Promise.all') || fullText.includes('p-limit');
 
-    if (!hasCircuitBreaker && filePath.includes('.service.ts')) {
-      pushFinding(
-        "backend.reliability.missing_circuit_breaker",
-        "low",
-        sf,
-        sf,
-        'External API call without circuit breaker. Install: opossum. Prevents: Cascading failures, timeout avalanche. Opens circuit after 5 failures, retries after 30s.',
-        findings
-      );
+      if (!hasBulkhead) {
+        pushFinding(
+          "backend.reliability.missing_bulkhead",
+          "low",
+          sf,
+          sf,
+          'Parallel async operations without bulkhead. Use: p-limit to control concurrency. const limit = pLimit(10). Prevents: Thread pool exhaustion, connection pool depletion.',
+          findings
+        );
+      }
     }
-  }
 
-  if (fullText.includes('async') && fullText.includes('await') && fullText.includes('for')) {
-    const hasBulkhead = fullText.includes('Promise.all') || fullText.includes('p-limit');
+    if ((fullText.includes('axios') || fullText.includes('fetch')) && !fullText.includes('retry')) {
+      const isExternalCall = fullText.includes('http://') || fullText.includes('https://');
 
-    if (!hasBulkhead) {
-      pushFinding(
-        "backend.reliability.missing_bulkhead",
-        "low",
-        sf,
-        sf,
-        'Parallel async operations without bulkhead. Use: p-limit to control concurrency. const limit = pLimit(10). Prevents: Thread pool exhaustion, connection pool depletion.',
-        findings
-      );
+      if (isExternalCall) {
+        pushFinding(
+          "backend.reliability.missing_retry_policy",
+          "low",
+          sf,
+          sf,
+          'External API call without retry. Use: axios-retry or custom exponential backoff. Retry 3 times with delays: 1s, 2s, 4s. Handles transient network failures.',
+          findings
+        );
+      }
     }
-  }
 
-  if ((fullText.includes('axios') || fullText.includes('fetch')) && !fullText.includes('retry')) {
-    const isExternalCall = fullText.includes('http://') || fullText.includes('https://');
+    if (filePath.includes('Dockerfile') || filePath.includes('.yml') || filePath.includes('deploy')) {
+      const hasStrategy = fullText.includes('blue-green') || fullText.includes('canary') || fullText.includes('rolling');
 
-    if (isExternalCall) {
-      pushFinding(
-        "backend.reliability.missing_retry_policy",
-        "low",
-        sf,
-        sf,
-        'External API call without retry. Use: axios-retry or custom exponential backoff. Retry 3 times with delays: 1s, 2s, 4s. Handles transient network failures.',
-        findings
-      );
+      if (!hasStrategy && (fullText.includes('deploy') || fullText.includes('kubernetes'))) {
+        pushFinding(
+          "backend.devops.missing_deployment_strategy",
+          "low",
+          sf,
+          sf,
+          'Deployment config without strategy. Use: Blue-green (zero downtime), Canary (gradual rollout), or Rolling update. Kubernetes: set strategy.type, maxSurge, maxUnavailable.',
+          findings
+        );
+      }
     }
-  }
-
-  if (filePath.includes('Dockerfile') || filePath.includes('.yml') || filePath.includes('deploy')) {
-    const hasStrategy = fullText.includes('blue-green') || fullText.includes('canary') || fullText.includes('rolling');
-
-    if (!hasStrategy && (fullText.includes('deploy') || fullText.includes('kubernetes'))) {
-      pushFinding(
-        "backend.devops.missing_deployment_strategy",
-        "low",
-        sf,
-        sf,
-        'Deployment config without strategy. Use: Blue-green (zero downtime), Canary (gradual rollout), or Rolling update. Kubernetes: set strategy.type, maxSurge, maxUnavailable.',
-        findings
-      );
-    }
-  }
   });
 }
 

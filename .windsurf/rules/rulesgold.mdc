@@ -1,5 +1,6 @@
 ---
 alwaysApply: true
+trigger: always_on
 ---
 
 ### ANTES de implementar CUALQUIER cosa (aplicables en todas las tecnologías):

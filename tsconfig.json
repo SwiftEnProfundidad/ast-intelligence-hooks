@@ -26,9 +26,9 @@
         "noUnusedParameters": false
     },
     "include": [
-        "infrastructure/**/*.ts",
-        "domain/**/*.ts",
-        "application/**/*.ts"
+        "scripts/hooks-system/infrastructure/**/*.ts",
+        "scripts/hooks-system/domain/**/*.ts",
+        "scripts/hooks-system/application/**/*.ts"
     ],
     "exclude": [
         "node_modules",

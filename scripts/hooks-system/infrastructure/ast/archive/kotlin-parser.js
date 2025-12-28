@@ -9,6 +9,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const xml2js = require('xml2js');
+const { ConfigurationError } = require('../../../domain/errors');
 
 class KotlinParser {
   constructor() {
@@ -20,7 +21,7 @@ class KotlinParser {
     try {
       execSync(`${this.detektPath} --version`, { encoding: 'utf-8' });
     } catch (error) {
-      throw new Error('Detekt not found. Install with: brew install detekt');
+      throw new ConfigurationError('Detekt not found. Install with: brew install detekt', 'detektPath');
     }
   }
 
@@ -32,7 +33,7 @@ class KotlinParser {
   parseFile(filePath) {
     try {
       if (!fs.existsSync(filePath)) {
-        throw new Error(`File not found: ${filePath}`);
+        throw new ConfigurationError(`File not found: ${filePath}`);
       }
 
       const tmpXml = path.join('/tmp', `detekt-${Date.now()}.xml`);
@@ -276,7 +277,7 @@ class KotlinParser {
         for (let j = index + 1; j < Math.min(index + 20, lines.length); j++) {
           const bodyLine = lines[j];
           if (bodyLine.includes('Column') || bodyLine.includes('Row') ||
-              bodyLine.includes('Text(') || bodyLine.includes('Button(')) {
+            bodyLine.includes('Text(') || bodyLine.includes('Button(')) {
             foundComposableUsage = true;
             break;
           }

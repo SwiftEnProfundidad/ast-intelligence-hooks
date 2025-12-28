@@ -24,7 +24,7 @@ const { iOSASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/iO
  */
 async function runIOSIntelligence(project, findings, platform) {
 
-  console.log(`[iOS AST Intelligence] Running SourceKitten-based analysis...`);
+  console.error(`[iOS AST Intelligence] Running SourceKitten-based analysis...`);
   const astAnalyzer = new iOSASTIntelligentAnalyzer(findings);
   const root = getRepoRoot();
   const swiftFilesForAST = glob.sync('**/*.swift', {
@@ -38,7 +38,7 @@ async function runIOSIntelligence(project, findings, platform) {
   }
 
   astAnalyzer.finalizeGodClassDetection();
-  console.log(`[iOS AST Intelligence] Analyzed ${swiftFilesForAST.length} Swift files with SourceKitten AST`);
+  console.error(`[iOS AST Intelligence] Analyzed ${swiftFilesForAST.length} Swift files with SourceKitten AST`);
 
   await runSwiftLintNative(findings);
 
@@ -94,14 +94,14 @@ async function runIOSIntelligence(project, findings, platform) {
     });
 
     if (swiftFiles.length > 0) {
-      console.log(`[iOS Enterprise] Analyzing ${swiftFiles.length} Swift files with SourceKitten...`);
+      console.error(`[iOS Enterprise] Analyzing ${swiftFiles.length} Swift files with SourceKitten...`);
 
       const repoRoot = getRepoRoot();
       const architectureDetector = new iOSArchitectureDetector(repoRoot);
       const detectedPattern = architectureDetector.detect();
       const detectionSummary = architectureDetector.getDetectionSummary();
 
-      console.log(`[iOS Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
+      console.error(`[iOS Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
       if (detectionSummary.warnings.length > 0) {
         detectionSummary.warnings.forEach(warning => {
@@ -119,31 +119,31 @@ async function runIOSIntelligence(project, findings, platform) {
       const architectureRules = new iOSArchitectureRules(findings, detectedPattern);
       architectureRules.runRules(swiftFiles);
 
-      console.log(`[iOS Performance] Analyzing SwiftUI performance...`);
+      console.error(`[iOS Performance] Analyzing SwiftUI performance...`);
       const performanceRules = new iOSPerformanceRules(findings);
       swiftFiles.forEach(swiftFile => {
         performanceRules.analyzeFile(swiftFile, null);
       });
 
-      console.log(`[iOS SwiftUI Advanced] Analyzing advanced patterns...`);
+      console.error(`[iOS SwiftUI Advanced] Analyzing advanced patterns...`);
       const swiftUIAdvanced = new iOSSwiftUIAdvancedRules(findings);
       swiftFiles.forEach(swiftFile => {
         swiftUIAdvanced.analyzeFile(swiftFile, null);
       });
 
-      console.log(`[iOS SPM] Analyzing code organization...`);
+      console.error(`[iOS SPM] Analyzing code organization...`);
       const spmRules = new iOSSPMRules(findings, repoRoot);
       spmRules.analyze();
 
-      console.log(`[iOS Testing] Analyzing testing patterns...`);
+      console.error(`[iOS Testing] Analyzing testing patterns...`);
       const testingRules = new iOSTestingAdvancedRules(findings, repoRoot);
       testingRules.analyze();
 
-      console.log(`[iOS Networking] Analyzing networking layer...`);
+      console.error(`[iOS Networking] Analyzing networking layer...`);
       const networkingRules = new iOSNetworkingAdvancedRules(findings, repoRoot);
       networkingRules.analyze();
 
-      console.log(`[iOS CI/CD] Analyzing CI/CD configuration...`);
+      console.error(`[iOS CI/CD] Analyzing CI/CD configuration...`);
       const cicdRules = new iOSCICDRules(findings, repoRoot);
       cicdRules.analyze();
 
@@ -153,7 +153,7 @@ async function runIOSIntelligence(project, findings, platform) {
         await analyzer.analyzeFile(swiftFile, findings);
       }
 
-      console.log(`[iOS Enterprise] Completed Swift analysis`);
+      console.error(`[iOS Enterprise] Completed Swift analysis`);
     }
   } catch (error) {
     console.error(`[iOS Enterprise] Error during Swift analysis:`, error.message);

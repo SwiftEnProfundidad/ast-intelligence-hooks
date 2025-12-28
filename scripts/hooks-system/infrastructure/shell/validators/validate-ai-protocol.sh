@@ -16,7 +16,7 @@ BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 NC='\033[0m'
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../../.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 EVIDENCE_FILE="$REPO_ROOT/.AI_EVIDENCE.json"
 
 echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"

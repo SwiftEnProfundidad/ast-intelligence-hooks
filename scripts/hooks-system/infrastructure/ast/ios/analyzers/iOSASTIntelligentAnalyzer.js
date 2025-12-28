@@ -37,7 +37,7 @@ class iOSASTIntelligentAnalyzer {
       .trim();
 
     const possiblePaths = [
-      path.join(__dirname, '../../../../../../CustomLintRules/.build/debug/swift-ast-analyzer'),
+      path.join(__dirname, '../../../../../CustomLintRules/.build/debug/swift-ast-analyzer'),
       path.join(projectRoot, 'CustomLintRules/.build/debug/swift-ast-analyzer'),
       path.join(projectRoot, '.build/debug/swift-ast-analyzer')
     ];

@@ -4,13 +4,15 @@
  * Port interface for Git operations.
  * Infrastructure adapters must implement this interface.
  */
+const { NotImplementedError } = require('../errors');
+
 class IGitPort {
     /**
      * Get current branch name
      * @returns {string}
      */
     getCurrentBranch() {
-        throw new Error('IGitPort.getCurrentBranch() must be implemented');
+        throw new NotImplementedError('IGitPort.getCurrentBranch() must be implemented');
     }
 
     /**
@@ -18,7 +20,7 @@ class IGitPort {
      * @returns {boolean}
      */
     isProtectedBranch() {
-        throw new Error('IGitPort.isProtectedBranch() must be implemented');
+        throw new NotImplementedError('IGitPort.isProtectedBranch() must be implemented');
     }
 
     /**
@@ -26,7 +28,7 @@ class IGitPort {
      * @returns {string}
      */
     getUncommittedChanges() {
-        throw new Error('IGitPort.getUncommittedChanges() must be implemented');
+        throw new NotImplementedError('IGitPort.getUncommittedChanges() must be implemented');
     }
 
     /**
@@ -34,7 +36,7 @@ class IGitPort {
      * @returns {string[]}
      */
     getStagedFiles() {
-        throw new Error('IGitPort.getStagedFiles() must be implemented');
+        throw new NotImplementedError('IGitPort.getStagedFiles() must be implemented');
     }
 
     /**
@@ -43,7 +45,7 @@ class IGitPort {
      * @returns {boolean}
      */
     createBranch(branchName) {
-        throw new Error('IGitPort.createBranch() must be implemented');
+        throw new NotImplementedError('IGitPort.createBranch() must be implemented');
     }
 
     /**
@@ -52,7 +54,7 @@ class IGitPort {
      * @returns {boolean}
      */
     checkout(branchName) {
-        throw new Error('IGitPort.checkout() must be implemented');
+        throw new NotImplementedError('IGitPort.checkout() must be implemented');
     }
 
     /**
@@ -61,7 +63,7 @@ class IGitPort {
      * @returns {boolean}
      */
     stageFiles(files) {
-        throw new Error('IGitPort.stageFiles() must be implemented');
+        throw new NotImplementedError('IGitPort.stageFiles() must be implemented');
     }
 
     /**
@@ -70,17 +72,42 @@ class IGitPort {
      * @returns {boolean}
      */
     commit(message) {
-        throw new Error('IGitPort.commit() must be implemented');
+        throw new NotImplementedError('IGitPort.commit() must be implemented');
     }
 
     /**
-     * Push to remote
-     * @param {string} remote
-     * @param {string} branch
-     * @returns {boolean}
+     * Get recent commits log
+     * @param {number} count
+     * @returns {string[]}
      */
-    push(remote, branch) {
-        throw new Error('IGitPort.push() must be implemented');
+    getRecentCommits(count) {
+        throw new NotImplementedError('IGitPort.getRecentCommits() must be implemented');
+    }
+
+    /**
+     * Get git diff output
+     * @param {boolean} cached - Whether to diff cached (staged) files
+     * @returns {string}
+     */
+    getDiff(cached = false) {
+        throw new NotImplementedError('IGitPort.getDiff() must be implemented');
+    }
+
+    /**
+     * Get status output (short format)
+     * @returns {string}
+     */
+    getStatusShort() {
+        throw new NotImplementedError('IGitPort.getStatusShort() must be implemented');
+    }
+
+    /**
+     * Get detailed log with stats
+     * @param {number} count
+     * @returns {string}
+     */
+    getLog(count) {
+        throw new NotImplementedError('IGitPort.getLog() must be implemented');
     }
 }
 
