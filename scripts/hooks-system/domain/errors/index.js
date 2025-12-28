@@ -10,6 +10,21 @@ class DomainError extends Error {
         Error.captureStackTrace(this, this.constructor);
     }
 
+    isFatal() {
+        return this.code === 'CRITICAL_ERROR' ||
+            this.code === 'AUTHENTICATION_ERROR' ||
+            this.code === 'AUTHORIZATION_ERROR';
+    }
+
+    shouldNotify() {
+        return true;
+    }
+
+    getLoggingLevel() {
+        if (this.isFatal()) return 'error';
+        return 'warn';
+    }
+
     toJSON() {
         return {
             name: this.name,
@@ -17,7 +32,8 @@ class DomainError extends Error {
             code: this.code,
             details: this.details,
             timestamp: this.timestamp,
-            stack: this.stack
+            stack: this.stack,
+            isFatal: this.isFatal()
         };
     }
 }
@@ -98,11 +114,23 @@ class GuardError extends DomainError {
     constructor(message, gate = null) {
         super(message, 'GUARD_ERROR', { gate });
     }
+
+    static fromViolation(violation, gate) {
+        return new GuardError(`Guard violation: ${violation}`, gate);
+    }
 }
 
 class EvidenceError extends DomainError {
     constructor(message, evidencePath = null) {
         super(message, 'EVIDENCE_ERROR', { evidencePath });
+    }
+
+    static stale(path, age) {
+        return new EvidenceError(`Evidence at ${path} is stale (${age}s old)`, path);
+    }
+
+    static missing(path) {
+        return new EvidenceError(`Evidence file not found: ${path}`, path);
     }
 }
 
