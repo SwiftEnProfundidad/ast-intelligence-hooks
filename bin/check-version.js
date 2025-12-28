@@ -3,4 +3,17 @@
  * Script Wrapper
  * Redirects to the centralized implementation in scripts/hooks-system
  */
-require('../scripts/hooks-system/bin/check-version.js');
+const path = require('path');
+const { spawnSync } = require('child_process');
+
+const implPath = path.join(__dirname, '..', 'scripts', 'hooks-system', 'bin', 'check-version.js');
+
+if (require.main === module) {
+    const res = spawnSync(process.execPath, [implPath], {
+        stdio: 'inherit',
+        env: process.env
+    });
+    process.exit(res.status ?? 1);
+}
+
+module.exports = require(implPath);

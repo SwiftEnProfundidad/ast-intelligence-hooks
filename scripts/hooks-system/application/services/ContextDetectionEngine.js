@@ -1,8 +1,15 @@
 const crypto = require('crypto');
 
 class ContextDetectionEngine {
-    constructor(gitPort, logger = console) {
-        this.git = gitPort;
+    constructor(repoRootOrGitPort = null, logger = console) {
+        if (typeof repoRootOrGitPort === 'string') {
+            this.repoRoot = repoRootOrGitPort;
+            this.git = null;
+        } else {
+            this.git = repoRootOrGitPort;
+            this.repoRoot = repoRootOrGitPort?.repoRoot;
+        }
+
         this.logger = logger;
         this.cache = {
             context: null,

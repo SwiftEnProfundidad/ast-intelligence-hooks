@@ -21,10 +21,31 @@ class BDDTDDWorkflowRules {
     }
 
     analyze() {
-        this.bddRules.analyze(this.findings);
-        this.tddRules.analyze(this.findings);
-        this.implementationRules.analyze(this.findings);
-        this.workflowRules.analyze(this.findings);
+        this.checkBDDFeatureFiles();
+        this.checkTDDTestCoverage();
+        this.checkImplementationAlignment();
+        this.checkWorkflowSequence();
+        this.checkFeatureTestImplementationTriad();
+    }
+
+    checkBDDFeatureFiles() {
+        return this.bddRules.checkBDDFeatureFiles(this.findings);
+    }
+
+    checkTDDTestCoverage() {
+        return this.tddRules.checkTDDTestCoverage(this.findings);
+    }
+
+    checkImplementationAlignment() {
+        return this.implementationRules.checkImplementationAlignment(this.findings);
+    }
+
+    checkWorkflowSequence() {
+        return this.workflowRules.checkWorkflowSequence(this.findings);
+    }
+
+    checkFeatureTestImplementationTriad() {
+        return this.workflowRules.checkFeatureTestImplementationTriad(this.findings);
     }
 }
 

@@ -7,34 +7,52 @@ const { getGitTreeState } = require('../../application/services/GitTreeState');
 const { createHealthCheckProviders } = require('../../application/services/monitoring/HealthCheckProviders');
 const path = require('path');
 
-const repoRoot = process.env.HOOKS_REPO_ROOT ? path.resolve(process.env.HOOKS_REPO_ROOT) : process.cwd();
-const logger = createUnifiedLogger({
-    repoRoot,
-    component: 'HealthCheck',
-    fileName: 'health-check.log'
-});
+async function runHealthCheck({ repoRoot = null } = {}) {
+    const resolvedRepoRoot = repoRoot
+        || (process.env.HOOKS_REPO_ROOT ? path.resolve(process.env.HOOKS_REPO_ROOT) : null)
+        || process.cwd();
 
-const notificationCenter = new NotificationCenterService({
-    repoRoot,
-    logger
-});
+    const logger = createUnifiedLogger({
+        repoRoot: resolvedRepoRoot,
+        component: 'HealthCheck',
+        fileName: 'health-check.log'
+    });
 
-const providers = createHealthCheckProviders({
-    repoRoot,
-    getGitTreeState,
-    heartbeatPath: path.join('.audit_tmp', 'guard-heartbeat.json'),
-    tokenUsagePath: path.join('.audit_tmp', 'token-usage.jsonl'),
-    evidencePath: '.AI_EVIDENCE.json'
-});
+    const notificationCenter = new NotificationCenterService({
+        repoRoot: resolvedRepoRoot,
+        logger
+    });
 
-const service = new HealthCheckService({
-    repoRoot,
-    providers,
-    notificationCenter,
-    logger,
-    outputFile: path.join(repoRoot, '.audit_tmp', 'health-status.json')
-});
+    const providers = createHealthCheckProviders({
+        repoRoot: resolvedRepoRoot,
+        getGitTreeState,
+        heartbeatPath: path.join('.audit_tmp', 'guard-heartbeat.json'),
+        tokenUsagePath: path.join('.audit_tmp', 'token-usage.jsonl'),
+        evidencePath: '.AI_EVIDENCE.json'
+    });
 
-service.collect('cli').finally(() => {
-    notificationCenter.shutdown();
-});
+    const service = new HealthCheckService({
+        repoRoot: resolvedRepoRoot,
+        providers,
+        notificationCenter,
+        logger,
+        outputFile: path.join(resolvedRepoRoot, '.audit_tmp', 'health-status.json')
+    });
+
+    try {
+        await service.collect('cli');
+    } finally {
+        notificationCenter.shutdown();
+    }
+}
+
+if (require.main === module) {
+    runHealthCheck()
+        .then(() => process.exit(0))
+        .catch(error => {
+            console.error('[health-check] Execution failed', error);
+            process.exit(1);
+        });
+}
+
+module.exports = { runHealthCheck };

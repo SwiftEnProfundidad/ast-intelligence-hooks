@@ -51,6 +51,11 @@ class GuardAutoManagerService {
         this.shuttingDown = false;
     }
 
+    notifyUser(message, level = 'info', metadata = {}) {
+        if (!this.notificationHandler) return;
+        this.notificationHandler.notify(message, level, metadata);
+    }
+
     start() {
         if (!this.lockManager.acquireLock()) {
             this.eventLogger.log('Another guard auto manager instance detected. Exiting.');

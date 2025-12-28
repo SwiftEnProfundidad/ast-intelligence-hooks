@@ -1,6 +1,8 @@
 #!/usr/bin/env node
-/**
- * Script Wrapper
- * Redirects to the centralized implementation in scripts/hooks-system
- */
-require('../scripts/hooks-system/bin/nightly-metrics-report.js');
+const impl = require('../scripts/hooks-system/bin/nightly-metrics-report.js');
+
+if (require.main === module) {
+    impl.run();
+}
+
+module.exports = impl;

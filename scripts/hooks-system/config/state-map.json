@@ -1,0 +1,12 @@
+{
+    "idle": {
+        "on": {
+            "start": "active"
+        }
+    },
+    "active": {
+        "on": {
+            "stop": "idle"
+        }
+    }
+}

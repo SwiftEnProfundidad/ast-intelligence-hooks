@@ -49,8 +49,16 @@ else
   fi
 
   # Check rules were read
-  RULES_READ=$(jq -r '.rules_read.verified' "$EVIDENCE_FILE" 2>/dev/null || echo "false")
-  if [ "$RULES_READ" != "true" ]; then
+  RULES_READ_VERIFIED=$(jq -r '
+    if (.rules_read | type) == "object" then
+      (.rules_read.verified // false)
+    elif (.rules_read | type) == "array" then
+      ((.rules_read | map(.verified == true) | all) // false)
+    else
+      false
+    end
+  ' "$EVIDENCE_FILE" 2>/dev/null || echo "false")
+  if [ "$RULES_READ_VERIFIED" != "true" ]; then
     CRITICAL_VIOLATIONS+=("❌ CRITICAL: AI did not read rules (rules_read.verified != true)")
   fi
 
@@ -112,7 +120,7 @@ if [ -n "$STAGED_FILES" ]; then
   # Run AST check on staged files only
   if [ -f "$REPO_ROOT/scripts/hooks-system/bin/run-ast-adapter.js" ]; then
     AST_RESULT=$(node "$REPO_ROOT/scripts/hooks-system/bin/run-ast-adapter.js" 2>&1 || true)
-    if echo "$AST_RESULT" | grep -q "CRITICAL\|HIGH"; then
+    if echo "$AST_RESULT" | grep -qE "CRITICAL=[1-9]|HIGH=[1-9]|\[CRITICAL\]|\[HIGH\]"; then
       CRITICAL_VIOLATIONS+=("❌ CRITICAL: AST found violations in staged files - fix before committing")
     fi
   fi

@@ -1,5 +1,4 @@
 const Finding = require('../entities/Finding');
-const AuditResult = require('../entities/AuditResult');
 
 class AuditResultSerializer {
     toJSON(auditResult) {
@@ -19,6 +18,7 @@ class AuditResultSerializer {
 
     fromJSON(json) {
         const findings = json.findings.map(f => Finding.fromJSON(f));
+        const AuditResult = require('../entities/AuditResult');
         const result = new AuditResult(findings);
 
         if (json.timestamp) {

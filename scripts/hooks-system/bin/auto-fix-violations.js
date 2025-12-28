@@ -13,6 +13,10 @@ const FIXES = {
     'common.quality.disabled_lint': null,
 };
 
+if (fs.existsSync(AUDIT_FILE)) {
+    fs.readFileSync(AUDIT_FILE, 'utf-8');
+}
+
 function loadAuditData() {
     if (!fs.existsSync(AUDIT_FILE)) {
         process.stderr.write('❌ No audit data found. Run audit first.\n');
@@ -28,16 +32,10 @@ function fixComments(filePath) {
     let content = fs.readFileSync(absPath, 'utf-8');
     const original = content;
 
-    const todoWord = ['TO', 'DO'].join('');
-    const fixmeWord = ['FIX', 'ME'].join('');
-    const hackWord = ['HA', 'CK'].join('');
-    const xxxWord = ['X', 'X', 'X'].join('');
-
-    content = content.replace(new RegExp(String.raw`\/\/\\s*${todoWord}[^\\n]*`, 'gi'), '');
-    content = content.replace(new RegExp(String.raw`\/\/\\s*${fixmeWord}[^\\n]*`, 'gi'), '');
-    content = content.replace(new RegExp(String.raw`\/\/\\s*${hackWord}[^\\n]*`, 'gi'), '');
-    content = content.replace(new RegExp(String.raw`\/\/\\s*${xxxWord}[^\\n]*`, 'gi'), '');
-    content = content.replace(new RegExp(String.raw`\/\\*\\s*${todoWord}[\\s\\S]*?\\*\/`, 'gi'), '');
+    // Remove single-line comment markers
+    content = content.replace(/\/\/\s*(TODO|FIXME|HACK|XXX)[^\n]*\n?/gi, '');
+    // Remove block TODO comments
+    content = content.replace(/\/\*\s*TODO[\s\S]*?\*\//gi, '');
 
     content = content.replace(/\n{3,}/g, '\n\n');
 
@@ -120,4 +118,13 @@ function main() {
     process.stdout.write(`   No auto-fix: ${stats.noFix}\n`);
 }
 
-main();
+if (require.main === module) {
+    main();
+}
+
+module.exports = {
+    loadAuditData,
+    fixComments,
+    fixConsoleLog,
+    FIXES
+};
