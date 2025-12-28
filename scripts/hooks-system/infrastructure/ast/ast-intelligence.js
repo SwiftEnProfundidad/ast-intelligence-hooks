@@ -343,7 +343,7 @@ function generateOutput(findings, context, project, root) {
   const yellow = "\x1b[33m";
   const nc = "\x1b[0m";
 
-  console.log(`${yellow}AST Intelligence running on ${project.getSourceFiles().length} files${nc}`);
+  console.error(`${yellow}AST Intelligence running on ${project.getSourceFiles().length} files${nc}`);
 
   // Top violations
   const grouped = {};
@@ -358,15 +358,15 @@ function generateOutput(findings, context, project, root) {
       const severity = ruleId.includes("types.any") || ruleId.includes("security.") || ruleId.includes("architecture.") ? "error" :
         ruleId.includes("performance.") || ruleId.includes("debug.") ? "warning" : "info";
       const emoji = severity === "error" ? "🔴" : severity === "warning" ? "🟡" : "🔵";
-      console.log(`${emoji} ${ruleId} - ${count} violations`);
+      console.error(`${emoji} ${ruleId} - ${count} violations`);
     });
 
   // Summary
   const totals = { errors: levelTotals.CRITICAL + levelTotals.HIGH, warnings: levelTotals.MEDIUM, infos: levelTotals.LOW };
-  console.log(`${green}AST Totals: errors=${totals.errors} warnings=${totals.warnings} infos=${totals.infos}${nc}`);
+  console.error(`${green}AST Totals: errors=${totals.errors} warnings=${totals.warnings} infos=${totals.infos}${nc}`);
 
-  console.log(`AST SUMMARY LEVELS: CRITICAL=${levelTotals.CRITICAL} HIGH=${levelTotals.HIGH} MEDIUM=${levelTotals.MEDIUM} LOW=${levelTotals.LOW}`);
-  console.log(`AST SUMMARY PLATFORM: Backend=${platformTotals.Backend} Frontend=${platformTotals.Frontend} iOS=${platformTotals.iOS} Android=${platformTotals.Android} Other=${platformTotals.Other}`);
+  console.error(`AST SUMMARY LEVELS: CRITICAL=${levelTotals.CRITICAL} HIGH=${levelTotals.HIGH} MEDIUM=${levelTotals.MEDIUM} LOW=${levelTotals.LOW}`);
+  console.error(`AST SUMMARY PLATFORM: Backend=${platformTotals.Backend} Frontend=${platformTotals.Frontend} iOS=${platformTotals.iOS} Android=${platformTotals.Android} Other=${platformTotals.Other}`);
 
   saveDetailedReport(findings, levelTotals, platformTotals, project, root);
 }
@@ -452,7 +452,7 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
  */
 function updateAIEvidenceMetrics(findings, levelTotals, root) {
   const evidencePath = path.join(root, '.AI_EVIDENCE.json');
-  
+
   if (!fs.existsSync(evidencePath)) {
     return;
   }
@@ -472,8 +472,8 @@ function updateAIEvidenceMetrics(findings, levelTotals, root) {
     };
 
     fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
-    console.log(`[AST] Updated .AI_EVIDENCE.json with ${findings.length} violations`);
-    
+    console.error(`[AST] Updated .AI_EVIDENCE.json with ${findings.length} violations`);
+
     sendAuditNotification(findings.length, levelTotals);
   } catch (error) {
     console.error(`[AST] Error updating .AI_EVIDENCE.json: ${error.message}`);
@@ -488,10 +488,10 @@ function sendAuditNotification(totalViolations, levelTotals) {
     const notifier = new MacOSNotificationAdapter();
     const critical = levelTotals.CRITICAL || 0;
     const high = levelTotals.HIGH || 0;
-    
+
     let level = 'success';
     let message = `✅ No violations found`;
-    
+
     if (critical > 0) {
       level = 'error';
       message = `🔴 ${critical} CRITICAL, ${high} HIGH violations`;
@@ -502,7 +502,7 @@ function sendAuditNotification(totalViolations, levelTotals) {
       level = 'info';
       message = `🔵 ${totalViolations} violations (no blockers)`;
     }
-    
+
     notifier.send({
       title: 'AST Audit Complete',
       message,

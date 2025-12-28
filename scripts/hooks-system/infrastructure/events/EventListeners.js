@@ -12,31 +12,28 @@ class EventListeners {
     }
 
     async subscribeToEvents() {
-        console.log('[EventListeners] Subscribing to events...');
+        console.error('[EventListeners] Subscribing to events...');
 
         this.onSessionLoad(() => this.triggerAnalysis('session-load'));
-
         this.onPreCommit(() => this.triggerAnalysis('pre-commit'));
-
         this.startGitWatcher();
-
         this.onBranchSwitch(() => this.triggerAnalysis('branch-switch'));
 
-        console.log('[EventListeners] Event subscriptions active');
+        console.error('[EventListeners] Event subscriptions active');
     }
 
     onSessionLoad(callback) {
-        console.log('[EventListeners] Session load listener registered');
+        console.error('[EventListeners] Session load listener registered');
         this.listeners.push({ event: 'session-load', callback });
     }
 
     onPreCommit(callback) {
-        console.log('[EventListeners] Pre-commit listener registered');
+        console.error('[EventListeners] Pre-commit listener registered');
         this.listeners.push({ event: 'pre-commit', callback });
     }
 
     onBranchSwitch(callback) {
-        console.log('[EventListeners] Branch switch listener registered');
+        console.error('[EventListeners] Branch switch listener registered');
         this.listeners.push({ event: 'branch-switch', callback });
     }
 
@@ -45,7 +42,7 @@ class EventListeners {
             return;
         }
 
-        console.log('[EventListeners] Starting Git watcher (poll every 30s)...');
+        console.error('[EventListeners] Starting Git watcher (poll every 30s)...');
 
         this.lastGitState = this.getGitState();
 
@@ -53,7 +50,7 @@ class EventListeners {
             const currentState = this.getGitState();
 
             if (this.hasGitStateChanged(currentState)) {
-                console.log('[EventListeners] Git state changed, triggering analysis...');
+                console.error('[EventListeners] Git state changed, triggering analysis...');
                 await this.triggerAnalysis('git-change');
                 this.lastGitState = currentState;
             }
@@ -98,23 +95,23 @@ class EventListeners {
 
     async triggerAnalysis(event) {
         try {
-            console.log(`[EventListeners] Triggered by event: ${event}`);
+            console.error(`[EventListeners] Triggered by event: ${event}`);
 
             const result = await this.orchestrator.analyzeContext();
 
-            console.log(`[EventListeners] Analysis result: ${result.action} (confidence: ${result.confidence}%)`);
+            console.error(`[EventListeners] Analysis result: ${result.action} (confidence: ${result.confidence}%)`);
 
             if (result.action === 'auto-execute') {
-                console.log(`[EventListeners] Auto-executing ai-start for: ${result.platforms.map(p => p.platform).join(', ')}`);
+                console.error(`[EventListeners] Auto-executing ai-start for: ${result.platforms.map(p => p.platform).join(', ')}`);
                 return { executed: true, result };
             }
 
             if (result.action === 'ask') {
-                console.log(`[EventListeners] AI should ask user about: ${result.platforms.map(p => p.platform).join(', ')}`);
+                console.error(`[EventListeners] AI should ask user about: ${result.platforms.map(p => p.platform).join(', ')}`);
                 return { executed: false, shouldAsk: true, result };
             }
 
-            console.log(`[EventListeners] Action: ${result.action} - ${result.reason}`);
+            console.error(`[EventListeners] Action: ${result.action} - ${result.reason}`);
             return { executed: false, result };
 
         } catch (error) {
@@ -127,7 +124,7 @@ class EventListeners {
         if (this.pollingInterval) {
             clearInterval(this.pollingInterval);
             this.pollingInterval = null;
-            console.log('[EventListeners] Git watcher stopped');
+            console.error('[EventListeners] Git watcher stopped');
         }
     }
 

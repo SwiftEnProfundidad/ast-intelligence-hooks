@@ -15,7 +15,7 @@ const { AndroidArchitectureDetector } = require(path.join(__dirname, 'analyzers/
  * @param {string} platform - Platform identifier
  */
 function runAndroidIntelligence(project, findings, platform) {
-  console.log(`[Android AST Intelligence] Running Kotlin AST analysis...`);
+  console.error(`[Android AST Intelligence] Running Kotlin AST analysis...`);
   const astAnalyzer = new AndroidASTIntelligentAnalyzer(findings);
   const { getRepoRoot } = require(path.join(__dirname, '../ast-core'));
   const root = getRepoRoot();
@@ -28,7 +28,7 @@ function runAndroidIntelligence(project, findings, platform) {
   for (const kotlinFile of kotlinFiles) {
     astAnalyzer.analyzeFile(kotlinFile);
   }
-  console.log(`[Android AST Intelligence] Analyzed ${kotlinFiles.length} Kotlin files with AST`);
+  console.error(`[Android AST Intelligence] Analyzed ${kotlinFiles.length} Kotlin files with AST`);
 
   if (kotlinFiles.length > 0) {
     try {
@@ -36,7 +36,7 @@ function runAndroidIntelligence(project, findings, platform) {
       const detectedPattern = architectureDetector.detect();
       const detectionSummary = architectureDetector.getDetectionSummary();
 
-      console.log(`[Android Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
+      console.error(`[Android Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
       if (detectionSummary.warnings.length > 0) {
         detectionSummary.warnings.forEach(warning => {

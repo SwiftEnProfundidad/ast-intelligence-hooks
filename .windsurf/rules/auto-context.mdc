@@ -3,6 +3,7 @@ alwaysApply: true
 description: Auto-generated multi-platform context (placeholder)
 author: Pumuki Team®
 version: 1.0.0
+trigger: always_on
 ---
 
 # 🤖 Autonomous Context Detection

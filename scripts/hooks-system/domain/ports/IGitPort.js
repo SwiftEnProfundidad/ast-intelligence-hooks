@@ -76,13 +76,38 @@ class IGitPort {
     }
 
     /**
-     * Push to remote
-     * @param {string} remote
-     * @param {string} branch
-     * @returns {boolean}
+     * Get recent commits log
+     * @param {number} count
+     * @returns {string[]}
      */
-    push(remote, branch) {
-        throw new NotImplementedError('IGitPort.push() must be implemented');
+    getRecentCommits(count) {
+        throw new NotImplementedError('IGitPort.getRecentCommits() must be implemented');
+    }
+
+    /**
+     * Get git diff output
+     * @param {boolean} cached - Whether to diff cached (staged) files
+     * @returns {string}
+     */
+    getDiff(cached = false) {
+        throw new NotImplementedError('IGitPort.getDiff() must be implemented');
+    }
+
+    /**
+     * Get status output (short format)
+     * @returns {string}
+     */
+    getStatusShort() {
+        throw new NotImplementedError('IGitPort.getStatusShort() must be implemented');
+    }
+
+    /**
+     * Get detailed log with stats
+     * @param {number} count
+     * @returns {string}
+     */
+    getLog(count) {
+        throw new NotImplementedError('IGitPort.getLog() must be implemented');
     }
 }
 

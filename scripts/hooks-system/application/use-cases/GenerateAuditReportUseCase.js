@@ -1,7 +1,9 @@
 
 class GenerateAuditReportUseCase {
-  constructor(outputFormatter) {
+  constructor(outputFormatter, auditAnalyzer, auditScorer) {
     this.outputFormatter = outputFormatter;
+    this.auditAnalyzer = auditAnalyzer; // Inject Analyzer
+    this.auditScorer = auditScorer;     // Inject Scorer
   }
 
   async execute(auditResult, options = {}) {
@@ -32,6 +34,7 @@ class GenerateAuditReportUseCase {
   }
 
   generateJSONReport(auditResult) {
+    // AuditResult.toJSON already handles serialization via serializer
     return JSON.stringify(auditResult.toJSON(), null, 2);
   }
 
@@ -72,6 +75,20 @@ class GenerateAuditReportUseCase {
 
   generateConsoleReport(auditResult, includeSignature) {
     const lines = [];
+    const findings = auditResult.findings;
+
+    // Use injected analyzer/scorer or fallback to helpers if not injected (for backward compat/tests)
+    // Assuming for now they are passed or we use the ones attached to result if refactor isn't 100% complete in consumers
+    // But target is to decouple. Let's assume we use the methods on result which we are about to move?
+    // No, we are moving them OUT. So we must compute them here or use the helper.
+    // To properly decouple, we should use the Analyzer here.
+
+    // Fallback instantiation if not provided in DI (to keep robust)
+    const AuditAnalyzer = require('../../domain/services/AuditAnalyzer');
+    const AuditScorer = require('../../domain/services/AuditScorer');
+
+    const scorer = this.auditScorer || new AuditScorer();
+    const analyzer = this.auditAnalyzer || new AuditAnalyzer(scorer);
 
     if (includeSignature) {
       if (this.outputFormatter && this.outputFormatter.generateSignature) {
@@ -86,18 +103,21 @@ class GenerateAuditReportUseCase {
     lines.push('═'.repeat(60));
     lines.push(`Total Violations: ${auditResult.getTotalViolations()}`);
 
-    const bySeverity = auditResult.getViolationsBySeverity();
+    const bySeverity = analyzer.getViolationsBySeverity(findings);
     lines.push(`  🔴 CRITICAL: ${bySeverity.critical}`);
     lines.push(`  🟠 HIGH:     ${bySeverity.high}`);
     lines.push(`  🟡 MEDIUM:   ${bySeverity.medium}`);
     lines.push(`  🟢 LOW:      ${bySeverity.low}`);
     lines.push('');
 
-    lines.push(`⏱️  Technical Debt: ${auditResult.getTechnicalDebtHours().toFixed(1)} hours`);
-    lines.push(`📈 Maintainability Index: ${auditResult.getMaintainabilityIndex().toFixed(1)}/100`);
+    const debt = scorer.calculateTechnicalDebt(findings);
+    const maintainability = scorer.calculateMaintainabilityIndex(findings);
+
+    lines.push(`⏱️  Technical Debt: ${debt.toFixed(1)} hours`);
+    lines.push(`📈 Maintainability Index: ${maintainability.toFixed(1)}/100`);
     lines.push('');
 
-    const byPlatform = auditResult.getViolationsByPlatform();
+    const byPlatform = analyzer.getViolationsByPlatform(findings);
     if (Object.keys(byPlatform).length > 0) {
       lines.push('🔧 BY PLATFORM');
       lines.push('─'.repeat(60));
@@ -108,7 +128,7 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    const topRules = auditResult.getTopViolatedRules(5);
+    const topRules = analyzer.getTopViolatedRules(findings, 5);
     if (topRules.length > 0) {
       lines.push('🔝 TOP VIOLATED RULES');
       lines.push('─'.repeat(60));
@@ -118,7 +138,7 @@ class GenerateAuditReportUseCase {
       lines.push('');
     }
 
-    const topFiles = auditResult.getTopViolatedFiles(5);
+    const topFiles = analyzer.getTopViolatedFiles(findings, 5);
     if (topFiles.length > 0) {
       lines.push('📁 TOP VIOLATED FILES');
       lines.push('─'.repeat(60));
@@ -145,7 +165,7 @@ class GenerateAuditReportUseCase {
 
   getProjectName() {
     try {
-      const packageJson = require('../../../../package.json');
+      const packageJson = require('../../../package.json');
       return packageJson.name || 'unknown-project';
     } catch {
       return 'unknown-project';

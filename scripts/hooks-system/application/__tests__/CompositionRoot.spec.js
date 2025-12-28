@@ -1,6 +1,8 @@
 jest.mock('../../infrastructure/adapters/MacOSNotificationAdapter');
 jest.mock('../../infrastructure/adapters/FileEvidenceAdapter');
-jest.mock('../../infrastructure/adapters/GitCliAdapter');
+jest.mock('../../infrastructure/adapters/GitQueryAdapter');
+jest.mock('../../infrastructure/adapters/GitCommandAdapter');
+jest.mock('../../infrastructure/adapters/GitHubCliAdapter');
 jest.mock('../../infrastructure/adapters/AstAnalyzerAdapter');
 jest.mock('../services/AutonomousOrchestrator');
 jest.mock('../services/ContextDetectionEngine');
@@ -24,23 +26,29 @@ describe('CompositionRoot', () => {
         it('creates testing instance with overrides', () => {
             const mockNotification = { send: jest.fn() };
             const root = CompositionRoot.createForTesting(repoRoot, {
-                notification: mockNotification
+                notificationAdapter: mockNotification
             });
             expect(root.getNotificationAdapter()).toBe(mockNotification);
         });
     });
 
     describe('lazy initialization', () => {
-        it('returns same instance on multiple calls', () => {
+        it('returns same instance on multiple calls (singleton behavior)', () => {
             const root = new CompositionRoot(repoRoot);
             const first = root.getEvidenceAdapter();
             const second = root.getEvidenceAdapter();
             expect(first).toBe(second);
         });
 
-        it('creates git adapter', () => {
+        it('creates git query adapter', () => {
             const root = new CompositionRoot(repoRoot);
-            const adapter = root.getGitAdapter();
+            const adapter = root.getGitQueryAdapter();
+            expect(adapter).toBeDefined();
+        });
+
+        it('creates git command adapter', () => {
+            const root = new CompositionRoot(repoRoot);
+            const adapter = root.getGitCommandAdapter();
             expect(adapter).toBeDefined();
         });
 
@@ -63,6 +71,14 @@ describe('CompositionRoot', () => {
             const first = root.getOrchestrator();
             const second = root.getOrchestrator();
             expect(first).toBe(second);
+        });
+    });
+
+    describe('guard service', () => {
+        it('creates RealtimeGuardService', () => {
+            const root = new CompositionRoot(repoRoot);
+            const guard = root.getRealtimeGuardService();
+            expect(guard).toBeDefined();
         });
     });
 });

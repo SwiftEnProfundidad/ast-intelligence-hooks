@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
+const { ConfigurationError } = require('../../../domain/errors');
 
 class TokenMonitor {
     constructor(repoRoot, options = {}) {
@@ -15,7 +16,7 @@ class TokenMonitor {
 
     start() {
         if (!this.isAvailable()) {
-            throw new Error('Token monitor script not found');
+            throw new ConfigurationError('Token monitor script not found', 'scriptPath');
         }
 
         if (this.process) {

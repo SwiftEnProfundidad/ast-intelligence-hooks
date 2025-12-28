@@ -1,36 +1,116 @@
 const MacOSNotificationAdapter = require('../infrastructure/adapters/MacOSNotificationAdapter');
 const FileEvidenceAdapter = require('../infrastructure/adapters/FileEvidenceAdapter');
-const GitCliAdapter = require('../infrastructure/adapters/GitCliAdapter');
+const GitQueryAdapter = require('../infrastructure/adapters/GitQueryAdapter');
+const GitCommandAdapter = require('../infrastructure/adapters/GitCommandAdapter');
+const GitHubCliAdapter = require('../infrastructure/adapters/GitHubCliAdapter');
 const AstAnalyzerAdapter = require('../infrastructure/adapters/AstAnalyzerAdapter');
 
 const AutonomousOrchestrator = require('./services/AutonomousOrchestrator');
 const ContextDetectionEngine = require('./services/ContextDetectionEngine');
+const PlatformDetectionService = require('./services/PlatformDetectionService');
+const AutoExecuteAIStartUseCase = require('./use-cases/AutoExecuteAIStartUseCase');
+
+// Services & Monitors
+const RealtimeGuardService = require('./services/RealtimeGuardService');
+const UnifiedLogger = require('./services/logging/UnifiedLogger');
+const NotificationCenterService = require('./services/notification/NotificationCenterService');
+const GitFlowService = require('./services/GitFlowService');
+const EvidenceMonitor = require('./services/monitoring/EvidenceMonitor');
+const GitTreeMonitor = require('./services/monitoring/GitTreeMonitor');
+const TokenMonitor = require('./services/monitoring/TokenMonitor');
+const ActivityMonitor = require('./services/monitoring/ActivityMonitor');
+const DevDocsMonitor = require('./services/monitoring/DevDocsMonitor');
+const AstMonitor = require('./services/monitoring/AstMonitor');
+
+const path = require('path');
+const fs = require('fs');
 
 class CompositionRoot {
     constructor(repoRoot) {
         this.repoRoot = repoRoot;
         this.instances = new Map();
+
+        // Ensure audit directories exist
+        this.auditDir = path.join(repoRoot, '.audit-reports');
+        this.tempDir = path.join(repoRoot, '.audit_tmp');
+        this._ensureDirectories([this.auditDir, this.tempDir]);
     }
 
-    getNotificationAdapter() {
-        if (!this.instances.has('notification')) {
-            this.instances.set('notification', new MacOSNotificationAdapter());
+    _ensureDirectories(dirs) {
+        dirs.forEach(dir => {
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+        });
+    }
+
+    getLogger() {
+        if (!this.instances.has('logger')) {
+            this.instances.set('logger', new UnifiedLogger({
+                component: 'HookSystem',
+                file: {
+                    enabled: true,
+                    path: path.join(this.auditDir, 'guard-audit.jsonl'),
+                    level: process.env.HOOK_LOG_LEVEL || 'info'
+                },
+                console: {
+                    enabled: false,
+                    level: 'info'
+                }
+            }));
         }
-        return this.instances.get('notification');
+        return this.instances.get('logger');
+    }
+
+    getNotificationService() {
+        if (!this.instances.has('notificationService')) {
+            const logger = this.getLogger();
+            this.instances.set('notificationService', new NotificationCenterService({
+                repoRoot: this.repoRoot,
+                logger
+            }));
+        }
+        return this.instances.get('notificationService');
+    }
+
+    // --- Infrastructure Adapters ---
+
+    getNotificationAdapter() {
+        if (!this.instances.has('notificationAdapter')) {
+            this.instances.set('notificationAdapter', new MacOSNotificationAdapter());
+        }
+        return this.instances.get('notificationAdapter');
     }
 
     getEvidenceAdapter() {
-        if (!this.instances.has('evidence')) {
-            this.instances.set('evidence', new FileEvidenceAdapter(this.repoRoot));
+        if (!this.instances.has('evidenceAdapter')) {
+            this.instances.set('evidenceAdapter', new FileEvidenceAdapter(this.repoRoot));
         }
-        return this.instances.get('evidence');
+        return this.instances.get('evidenceAdapter');
     }
 
-    getGitAdapter() {
-        if (!this.instances.has('git')) {
-            this.instances.set('git', new GitCliAdapter(this.repoRoot));
+    getGitQueryAdapter() {
+        if (!this.instances.has('gitQuery')) {
+            const logger = this.getLogger();
+            this.instances.set('gitQuery', new GitQueryAdapter({ repoRoot: this.repoRoot, logger }));
         }
-        return this.instances.get('git');
+        return this.instances.get('gitQuery');
+    }
+
+    getGitCommandAdapter() {
+        if (!this.instances.has('gitCommand')) {
+            const logger = this.getLogger();
+            this.instances.set('gitCommand', new GitCommandAdapter({ repoRoot: this.repoRoot, logger }));
+        }
+        return this.instances.get('gitCommand');
+    }
+
+    getGitHubAdapter() {
+        if (!this.instances.has('github')) {
+            const logger = this.getLogger();
+            this.instances.set('github', new GitHubCliAdapter(this.repoRoot, logger));
+        }
+        return this.instances.get('github');
     }
 
     getAstAdapter() {
@@ -40,26 +120,191 @@ class CompositionRoot {
         return this.instances.get('ast');
     }
 
+    // --- Domain Services ---
+
     getContextDetectionEngine() {
         if (!this.instances.has('contextEngine')) {
-            this.instances.set('contextEngine', new ContextDetectionEngine(this.repoRoot));
+            const gitQuery = this.getGitQueryAdapter();
+            const logger = this.getLogger();
+            this.instances.set('contextEngine', new ContextDetectionEngine(gitQuery, logger));
         }
         return this.instances.get('contextEngine');
+    }
+
+    getPlatformDetectionService() {
+        if (!this.instances.has('platformDetector')) {
+            this.instances.set('platformDetector', new PlatformDetectionService());
+        }
+        return this.instances.get('platformDetector');
     }
 
     getOrchestrator() {
         if (!this.instances.has('orchestrator')) {
             const contextEngine = this.getContextDetectionEngine();
-            const notificationAdapter = this.getNotificationAdapter();
-            const evidenceAdapter = this.getEvidenceAdapter();
+            const platformDetector = this.getPlatformDetectionService();
+            const logger = this.getLogger();
+            // Note: RulesLoader is currently null in Factory, maintaining that behavior or adding if needed
 
             this.instances.set('orchestrator', new AutonomousOrchestrator(
                 contextEngine,
-                notificationAdapter,
-                evidenceAdapter
+                platformDetector,
+                null,
+                logger
             ));
         }
         return this.instances.get('orchestrator');
+    }
+
+    getAutoExecuteAIStartUseCase() {
+        if (!this.instances.has('autoExecuteAIStart')) {
+            const orchestrator = this.getOrchestrator();
+            const logger = this.getLogger();
+            this.instances.set('autoExecuteAIStart', new AutoExecuteAIStartUseCase(orchestrator, this.repoRoot, logger));
+        }
+        return this.instances.get('autoExecuteAIStart');
+    }
+
+    getBlockCommitUseCase() {
+        if (!this.instances.has('blockCommit')) {
+            const BlockCommitUseCase = require('./use-cases/BlockCommitUseCase');
+            this.instances.set('blockCommit', new BlockCommitUseCase());
+        }
+        return this.instances.get('blockCommit');
+    }
+
+    getMcpProtocolHandler(inputStream, outputStream) {
+        const McpProtocolHandler = require('../infrastructure/mcp/services/McpProtocolHandler');
+        const logger = this.getLogger();
+        return new McpProtocolHandler(inputStream, outputStream, logger);
+    }
+
+    // --- Monitors ---
+
+    getEvidenceMonitor() {
+        if (!this.instances.has('evidenceMonitor')) {
+            this.instances.set('evidenceMonitor', new EvidenceMonitor(this.repoRoot, {
+                staleThresholdMs: Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 180000),
+                pollIntervalMs: Number(process.env.HOOK_GUARD_EVIDENCE_POLL_INTERVAL || 30000),
+                reminderIntervalMs: Number(process.env.HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL || 60000)
+            }));
+        }
+        return this.instances.get('evidenceMonitor');
+    }
+
+    getGitTreeMonitor() {
+        if (!this.instances.has('gitTreeMonitor')) {
+            this.instances.set('gitTreeMonitor', new GitTreeMonitor(this.repoRoot, {
+                stagedThreshold: Number(process.env.HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT || 10),
+                unstagedThreshold: Number(process.env.HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT || 15),
+                totalThreshold: Number(process.env.HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT || 20),
+                checkIntervalMs: Number(process.env.HOOK_GUARD_DIRTY_TREE_INTERVAL || 60000),
+                reminderMs: Number(process.env.HOOK_GUARD_DIRTY_TREE_REMINDER || 300000)
+            }));
+        }
+        return this.instances.get('gitTreeMonitor');
+    }
+
+    getTokenMonitor() {
+        if (!this.instances.has('tokenMonitor')) {
+            this.instances.set('tokenMonitor', new TokenMonitor(this.repoRoot));
+        }
+        return this.instances.get('tokenMonitor');
+    }
+
+    getGitFlowService() {
+        if (!this.instances.has('gitFlowService')) {
+            const logger = this.getLogger();
+            const gitQuery = this.getGitQueryAdapter();
+            const gitCommand = this.getGitCommandAdapter();
+            const github = this.getGitHubAdapter();
+
+            this.instances.set('gitFlowService', new GitFlowService(this.repoRoot, {
+                developBranch: process.env.HOOK_GUARD_GITFLOW_DEVELOP_BRANCH || 'develop',
+                mainBranch: process.env.HOOK_GUARD_GITFLOW_MAIN_BRANCH || 'main',
+                autoSyncEnabled: process.env.HOOK_GUARD_GITFLOW_AUTOSYNC !== 'false',
+                autoCleanEnabled: process.env.HOOK_GUARD_GITFLOW_AUTOCLEAN !== 'false',
+                requireClean: process.env.HOOK_GUARD_GITFLOW_REQUIRE_CLEAN !== 'false'
+            }, logger, gitQuery, gitCommand, github));
+        }
+        return this.instances.get('gitFlowService');
+    }
+
+    getActivityMonitor() {
+        if (!this.instances.has('activityMonitor')) {
+            const logger = this.getLogger();
+            this.instances.set('activityMonitor', new ActivityMonitor({
+                repoRoot: this.repoRoot,
+                inactivityGraceMs: Number(process.env.HOOK_GUARD_INACTIVITY_GRACE_MS || 420000),
+                logger
+            }));
+        }
+        return this.instances.get('activityMonitor');
+    }
+
+    getDevDocsMonitor() {
+        if (!this.instances.has('devDocsMonitor')) {
+            const logger = this.getLogger();
+            const notificationService = this.getNotificationService();
+            this.instances.set('devDocsMonitor', new DevDocsMonitor({
+                repoRoot: this.repoRoot,
+                checkIntervalMs: Number(process.env.HOOK_GUARD_DEV_DOCS_CHECK_INTERVAL || 300000),
+                staleThresholdMs: Number(process.env.HOOK_GUARD_DEV_DOCS_STALE_THRESHOLD || 86400000),
+                autoRefreshEnabled: process.env.HOOK_GUARD_DEV_DOCS_AUTO_REFRESH !== 'false',
+                logger,
+                notificationService
+            }));
+        }
+        return this.instances.get('devDocsMonitor');
+    }
+
+    getAstMonitor() {
+        if (!this.instances.has('astMonitor')) {
+            const logger = this.getLogger();
+            const notificationService = this.getNotificationService();
+            this.instances.set('astMonitor', new AstMonitor({
+                repoRoot: this.repoRoot,
+                debounceMs: Number(process.env.HOOK_AST_WATCH_DEBOUNCE || 8000),
+                cooldownMs: Number(process.env.HOOK_AST_WATCH_COOLDOWN || 30000),
+                enabled: process.env.HOOK_AST_WATCH !== 'false',
+                logger,
+                notificationService
+            }));
+        }
+        return this.instances.get('astMonitor');
+    }
+
+    getMonitors() {
+        return {
+            evidence: this.getEvidenceMonitor(),
+            gitTree: this.getGitTreeMonitor(),
+            token: this.getTokenMonitor(),
+            gitFlow: this.getGitFlowService(),
+            activity: this.getActivityMonitor(),
+            devDocs: this.getDevDocsMonitor(),
+            ast: this.getAstMonitor()
+        };
+    }
+
+    getRealtimeGuardService() {
+        if (!this.instances.has('guardService')) {
+            const logger = this.getLogger();
+            const notificationService = this.getNotificationService();
+            const monitors = this.getMonitors();
+            const orchestrator = this.getOrchestrator();
+            const config = {
+                debugLogPath: path.join(this.auditDir, 'guard-debug.log'),
+                repoRoot: this.repoRoot
+            };
+
+            this.instances.set('guardService', new RealtimeGuardService({
+                logger,
+                notificationService,
+                monitors,
+                orchestration: orchestrator,
+                config
+            }));
+        }
+        return this.instances.get('guardService');
     }
 
     static createForProduction(repoRoot) {
@@ -68,20 +313,11 @@ class CompositionRoot {
 
     static createForTesting(repoRoot, overrides = {}) {
         const root = new CompositionRoot(repoRoot);
-
-        if (overrides.notification) {
-            root.instances.set('notification', overrides.notification);
+        if (overrides) {
+            Object.entries(overrides).forEach(([key, value]) => {
+                root.instances.set(key, value);
+            });
         }
-        if (overrides.evidence) {
-            root.instances.set('evidence', overrides.evidence);
-        }
-        if (overrides.git) {
-            root.instances.set('git', overrides.git);
-        }
-        if (overrides.ast) {
-            root.instances.set('ast', overrides.ast);
-        }
-
         return root;
     }
 }

@@ -1,27 +1,5 @@
-#!/usr/bin/env bash
-# =============================================================================
-# FIX: Eliminar enforcer de shell actual
-# =============================================================================
-
-echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║  🔧 FIX: Eliminar enforcer de shell actual                   ║"
-echo "╚═══════════════════════════════════════════════════════════════╝"
-echo ""
-
-echo "📋 Eliminando funciones de memoria..."
-unset -f cd 2>/dev/null && echo "  ✅ cd() eliminada" || echo "  ℹ️  cd no estaba definida"
-unset -f check_gitflow_silent 2>/dev/null && echo "  ✅ check_gitflow_silent() eliminada" || echo "  ℹ️  No estaba definida"
-
-echo ""
-echo "🔍 Buscando si el enforcer está en PROMPT o precmd..."
-env | grep -i gitflow
-echo $PROMPT | grep -i gitflow || echo "  ✅ No está en PROMPT"
-
-echo ""
-echo "════════════════════════════════════════════════════════════════"
-echo "✅ FUNCIONES ELIMINADAS"
-echo ""
-echo "💡 Si el enforcer SIGUE apareciendo:"
-echo "   - Está en PROMPT o precmd_functions"
-echo "   - Mejor abrir terminal NUEVA (fix en .zshrc ya aplicado)"
-echo "════════════════════════════════════════════════════════════════"
+#!/bin/bash
+# Script Wrapper
+# Redirects to the centralized implementation in scripts/hooks-system
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+bash "$REPO_ROOT/scripts/hooks-system/bin/fix-enforcer" "$@"

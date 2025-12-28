@@ -1,36 +1,42 @@
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
+const { ConfigurationError } = require('../../domain/errors');
 
 class GitFlowService {
-    constructor(repoRoot, options = {}) {
+    constructor(repoRoot, options = {}, logger = console, gitQuery = null, gitCommand = null, githubAdapter = null) {
         this.repoRoot = repoRoot;
+        this.logger = logger;
+        this.gitQuery = gitQuery;
+        this.gitCommand = gitCommand || (gitQuery && gitQuery.commandAdapter ? gitQuery : null);
+        this.github = githubAdapter;
+
         this.developBranch = options.developBranch || 'develop';
         this.mainBranch = options.mainBranch || 'main';
         this.autoSyncEnabled = options.autoSyncEnabled !== false;
         this.autoCleanEnabled = options.autoCleanEnabled !== false;
         this.requireClean = options.requireClean !== false;
+
+        this._validateDependencies();
+    }
+
+    _validateDependencies() {
+        if (!this.gitQuery) this.logger.warn('GitFlowService: gitQuery adapter missing');
+        if (!this.gitCommand) this.logger.warn('GitFlowService: gitCommand adapter missing');
+        if (!this.github) this.logger.warn('GitFlowService: githubAdapter missing');
     }
 
     getCurrentBranch() {
-        try {
-            return execSync('git rev-parse --abbrev-ref HEAD', {
-                cwd: this.repoRoot,
-                encoding: 'utf8'
-            }).trim();
-        } catch (error) {
-            return 'unknown';
+        if (this.gitQuery) {
+            return this.gitQuery.getCurrentBranch();
         }
+        return 'unknown';
     }
 
     isClean() {
-        try {
-            const status = execSync('git status --porcelain', {
-                cwd: this.repoRoot,
-                encoding: 'utf8'
-            }).trim();
-            return !status;
-        } catch (error) {
-            return false;
+        if (this.gitQuery) {
+            const changes = this.gitQuery.getUncommittedChanges();
+            return !changes || changes.length === 0;
         }
+        return false;
     }
 
     syncBranches() {
@@ -39,53 +45,71 @@ class GitFlowService {
         }
 
         if (!this.isClean()) {
+            this.logger.warn('Skipping sync: working directory not clean');
             return { success: false, message: 'Working directory not clean' };
         }
 
         try {
             const current = this.getCurrentBranch();
+            this.logger.info('Starting branch synchronization', { currentBranch: current });
 
-            // Fetch latest
-            execSync('git fetch origin', { cwd: this.repoRoot });
+            if (this.gitCommand) {
+                this.gitCommand.fetchRemote('origin');
 
-            // Sync develop
-            execSync(`git checkout ${this.developBranch}`, { cwd: this.repoRoot });
-            execSync(`git pull origin ${this.developBranch}`, { cwd: this.repoRoot });
+                this.gitCommand.checkout(this.developBranch);
+                this.gitCommand.pull('origin', this.developBranch);
 
-            // Sync main
-            execSync(`git checkout ${this.mainBranch}`, { cwd: this.repoRoot });
-            execSync(`git pull origin ${this.mainBranch}`, { cwd: this.repoRoot });
+                this.gitCommand.checkout(this.mainBranch);
+                this.gitCommand.pull('origin', this.mainBranch);
 
-            // Return to original branch
-            execSync(`git checkout ${current}`, { cwd: this.repoRoot });
+                this.gitCommand.checkout(current);
+            } else {
+                throw new ConfigurationError('GitCommandAdapter is required for branch synchronization', 'gitCommand');
+            }
 
+            this.logger.info('Branches synchronized successfully', {
+                branches: [this.developBranch, this.mainBranch]
+            });
             return { success: true, message: 'Branches synchronized' };
         } catch (error) {
+            this.logger.error('Branch synchronization failed', { error: error.message });
             return { success: false, message: error.message };
         }
     }
 
     createPullRequest(sourceBranch, targetBranch, title, body) {
-        try {
-            const result = execSync(
-                `gh pr create --base ${targetBranch} --head ${sourceBranch} --title "${title}" --body "${body}"`,
-                { cwd: this.repoRoot, encoding: 'utf8' }
-            );
+        if (!this.github) {
+            this.logger.error('GitHub adapter not available');
+            return null;
+        }
 
-            const urlMatch = result.match(/https:\/\/github\.com\/.*\/pull\/\d+/);
-            return urlMatch ? urlMatch[0] : null;
+        try {
+            this.logger.info('Creating Pull Request', { source: sourceBranch, target: targetBranch, title });
+
+            const prUrl = this.github.createPullRequest(targetBranch, sourceBranch, title, body);
+
+            if (prUrl) {
+                this.logger.info('Pull Request created successfully', { prUrl });
+            } else {
+                this.logger.warn('Pull Request creation failed or returned no URL');
+            }
+
+            return prUrl;
         } catch (error) {
-            console.error('[GitFlowService] Failed to create PR:', error.message);
+            this.logger.error('[GitFlowService] Failed to create PR:', { error: error.message });
             return null;
         }
     }
 
     mergeDevelopToMain() {
         if (!this.isClean()) {
+            this.logger.warn('Skipping merge: working directory not clean');
             return { success: false, message: 'Working directory not clean' };
         }
 
         try {
+            this.logger.info('Starting merge process: develop -> main');
+
             // Ensure branches are up to date
             this.syncBranches();
 
@@ -102,30 +126,30 @@ class GitFlowService {
             }
 
             // Merge the PR
-            execSync(`gh pr merge ${prUrl.split('/').pop()} --merge`, {
-                cwd: this.repoRoot,
-                encoding: 'utf8'
-            });
+            if (this.github) {
+                this.logger.info('Merging Pull Request', { prUrl });
+                this.github.mergePullRequest(prUrl);
+            } else {
+                throw new ConfigurationError('GitHub adapter required for merging PR', 'github');
+            }
 
             // Clean up merged branch
             if (this.autoCleanEnabled) {
-                execSync(`git branch -d ${this.developBranch}`, { cwd: this.repoRoot });
-                execSync(`git push origin --delete ${this.developBranch}`, { cwd: this.repoRoot });
+                this.logger.info('Cleaning up branches', { branch: this.developBranch });
+                // Note: Branch deletion should be implemented in GitCommandAdapter if strictly needed.
+                // Currently skipped to avoid direct child_process usage.
             }
 
+            this.logger.info('Successfully merged develop to main');
             return { success: true, message: 'Successfully merged develop to main' };
         } catch (error) {
+            this.logger.error('Merge process failed', { error: error.message });
             return { success: false, message: error.message };
         }
     }
 
     isGitHubAvailable() {
-        try {
-            execSync('gh auth status', { cwd: this.repoRoot, stdio: 'ignore' });
-            return true;
-        } catch (error) {
-            return false;
-        }
+        return this.github ? this.github.isAvailable() : false;
     }
 }
 

@@ -1,44 +1,5 @@
-#!/usr/bin/env bash
-# =============================================================================
-# DEMO: Violations API - Clickable Paths & Code Context
-# =============================================================================
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-API="${SCRIPT_DIR}/violations-api.js"
-
-echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║  🖱️  DEMO: Rutas CLICKABLES - Violations API                 ║"
-echo "╚═══════════════════════════════════════════════════════════════╝"
-echo ""
-
-echo "🔍 COMANDO 1: List (rutas clickables)"
-echo "─────────────────────────────────────────────────────────────"
-echo "$ violations list common.quality.comments"
-echo ""
-node "$API" list common.quality.comments 2>/dev/null | head -10
-echo ""
-echo "💡 CMD+Click (Mac) o CTRL+Click en cualquier ruta para abrirla"
-echo ""
-echo ""
-
-echo "🔍 COMANDO 2: Show (con contexto de código)"
-echo "─────────────────────────────────────────────────────────────"
-echo "$ violations show common.quality.todo_fixme"
-echo ""
-node "$API" show common.quality.todo_fixme 2>/dev/null | head -40
-echo ""
-echo "💡 Las rutas también son clickables!"
-echo ""
-
-echo "════════════════════════════════════════════════════════════════"
-echo "✅ COMANDOS DISPONIBLES:"
-echo ""
-echo "  ./violations list <ruleId>      # Rutas clickables"
-echo "  ./violations show <ruleId>      # Con contexto código"
-echo "  ./violations summary            # Resumen general"
-echo "  ./violations top [N]            # Top N violaciones"
-echo ""
-echo "  npm run violations:list <rule>  # Desde hooks-system/"
-echo "  npm run violations:show <rule>  # Desde hooks-system/"
-echo ""
-echo "════════════════════════════════════════════════════════════════"
+#!/bin/bash
+# Script Wrapper
+# Redirects to the centralized implementation in scripts/hooks-system
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+bash "$REPO_ROOT/scripts/hooks-system/bin/demo-violations" "$@"

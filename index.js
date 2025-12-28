@@ -9,21 +9,21 @@
  * @license MIT
  */
 
-const { runASTIntelligence } = require('./infrastructure/ast/ast-intelligence');
-const { Finding } = require('./domain/entities/Finding');
-const { AuditResult } = require('./domain/entities/AuditResult');
-const { CommitBlockingRules } = require('./domain/rules/CommitBlockingRules');
+const { runASTIntelligence } = require('./scripts/hooks-system/infrastructure/ast/ast-intelligence');
+const { Finding } = require('./scripts/hooks-system/domain/entities/Finding');
+const { AuditResult } = require('./scripts/hooks-system/domain/entities/AuditResult');
+const { CommitBlockingRules } = require('./scripts/hooks-system/domain/rules/CommitBlockingRules');
 
-const { AnalyzeCodebaseUseCase } = require('./application/use-cases/AnalyzeCodebaseUseCase');
-const { AnalyzeStagedFilesUseCase } = require('./application/use-cases/AnalyzeStagedFilesUseCase');
-const { GenerateAuditReportUseCase } = require('./application/use-cases/GenerateAuditReportUseCase');
-const { BlockCommitUseCase } = require('./application/use-cases/BlockCommitUseCase');
+const { AnalyzeCodebaseUseCase } = require('./scripts/hooks-system/application/use-cases/AnalyzeCodebaseUseCase');
+const { AnalyzeStagedFilesUseCase } = require('./scripts/hooks-system/application/use-cases/AnalyzeStagedFilesUseCase');
+const { GenerateAuditReportUseCase } = require('./scripts/hooks-system/application/use-cases/GenerateAuditReportUseCase');
+const { BlockCommitUseCase } = require('./scripts/hooks-system/application/use-cases/BlockCommitUseCase');
 
-const { runBackendIntelligence } = require('./infrastructure/ast/backend/ast-backend');
-const { runFrontendIntelligence } = require('./infrastructure/ast/frontend/ast-frontend');
-const { runIOSIntelligence } = require('./infrastructure/ast/ios/ast-ios');
-const { runAndroidIntelligence } = require('./infrastructure/ast/android/ast-android');
-const { runCommonIntelligence } = require('./infrastructure/ast/common/ast-common');
+const { runBackendIntelligence } = require('./scripts/hooks-system/infrastructure/ast/backend/ast-backend');
+const { runFrontendIntelligence } = require('./scripts/hooks-system/infrastructure/ast/frontend/ast-frontend');
+const { runIOSIntelligence } = require('./scripts/hooks-system/infrastructure/ast/ios/ast-ios');
+const { runAndroidIntelligence } = require('./scripts/hooks-system/infrastructure/ast/android/ast-android');
+const { runCommonIntelligence } = require('./scripts/hooks-system/infrastructure/ast/common/ast-common');
 
 module.exports = {
   runASTIntelligence,

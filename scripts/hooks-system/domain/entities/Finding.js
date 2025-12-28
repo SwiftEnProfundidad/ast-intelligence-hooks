@@ -1,122 +1,85 @@
 
 const { ValidationError } = require('../errors');
+const Severity = require('../values/Severity');
 
 class Finding {
   constructor(ruleId, severity, message, filePath, line, platform) {
-    this.validateInputs(ruleId, severity, message, filePath, line, platform);
+    this.validateInputs(ruleId, message, filePath);
 
     this.ruleId = ruleId;
-    this.severity = this.normalizeSeverity(severity);
+    this.severity = new Severity(severity);
     this.message = message;
     this.filePath = filePath;
     this.line = line || 1;
-    this.platform = platform ? platform.toLowerCase() : 'unknown';
+    this.platform = (platform || 'unknown').toLowerCase();
     this.timestamp = new Date();
     this.id = this.generateId();
+    this.metadata = {};
   }
 
-  validateInputs(ruleId, severity, message, filePath, line, platform) {
-    if (!ruleId || typeof ruleId !== 'string') {
-      throw new ValidationError('Finding requires valid ruleId (string)', 'ruleId', ruleId);
+  validateInputs(ruleId, message, filePath) {
+    if (!ruleId || typeof ruleId !== 'string' || ruleId.trim().length === 0) {
+      throw new ValidationError('Finding requires non-empty ruleId (string)', 'ruleId', ruleId);
     }
-
-    const normalizedSeverity = this.normalizeSeverity(severity);
-    if (!normalizedSeverity) {
-      throw new ValidationError(`Invalid severity: ${severity}. Must be critical, high, medium, low, info, warning, or error`, 'severity', severity);
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      throw new ValidationError('Finding requires non-empty message (string)', 'message', message);
     }
-
-    if (!message || typeof message !== 'string') {
-      throw new ValidationError('Finding requires valid message (string)', 'message', message);
+    if (!filePath || typeof filePath !== 'string' || filePath.trim().length === 0) {
+      throw new ValidationError('Finding requires non-empty filePath (string)', 'filePath', filePath);
     }
-    if (!filePath || typeof filePath !== 'string') {
-      throw new ValidationError('Finding requires valid filePath (string)', 'filePath', filePath);
-    }
-  }
-
-  normalizeSeverity(severity) {
-    if (!severity) return null;
-
-    const sev = severity.toLowerCase();
-
-    const severityMap = {
-      'error': 'high',
-      'warning': 'medium',
-      'critical': 'critical',
-      'high': 'high',
-      'medium': 'medium',
-      'low': 'low',
-      'info': 'info',
-    };
-
-    return severityMap[sev] || null;
   }
 
   generateId() {
-    const hash = `${this.ruleId}:${this.filePath}:${this.line}:${this.timestamp.getTime()}`;
-    return Buffer.from(hash).toString('base64').substring(0, 16);
+    // Deterministic ID based on content, not timestamp, for better deduplication
+    const hashData = `${this.ruleId}:${this.filePath}:${this.line}:${this.message}:${this.platform}`;
+    return Buffer.from(hashData).toString('base64').substring(0, 16);
   }
 
-  isCritical() {
-    return this.severity === 'critical';
-  }
-
-  isHigh() {
-    return this.severity === 'high';
-  }
-
-  isMedium() {
-    return this.severity === 'medium';
-  }
-
-  isLow() {
-    return this.severity === 'low';
-  }
-
-  isInfo() {
-    return this.severity === 'info';
-  }
-
-  isBlockingLevel() {
-    return this.isCritical() || this.isHigh();
-  }
+  isCritical() { return this.severity.isCritical(); }
+  isHigh() { return this.severity.isHigh(); }
+  isMedium() { return this.severity.isMedium(); }
+  isLow() { return this.severity.isLow(); }
+  isInfo() { return this.severity.isInfo(); }
+  isBlockingLevel() { return this.severity.isBlocking(); }
 
   belongsToPlatform(platform) {
+    if (!platform) return false;
     return this.platform === platform.toLowerCase();
   }
 
   getSeverityWeight() {
-    const weights = {
-      critical: 4,
-      high: 3,
-      medium: 2,
-      low: 1,
-      info: 0,
-    };
-    return weights[this.severity] || 0;
+    return this.severity.getWeight();
   }
 
   getTechnicalDebtHours() {
-    const hoursPerSeverity = {
-      critical: 4,
-      high: 2,
-      medium: 1,
-      low: 0.5,
-      info: 0,
-    };
-    return hoursPerSeverity[this.severity] || 0;
+    return this.severity.getDebtHours();
+  }
+
+  getDisplayPath() {
+    return `${this.filePath}:${this.line}`;
+  }
+
+  getFormattedSummary() {
+    return `[${this.severity.toUpperCase()}] ${this.ruleId}: ${this.message} (${this.getDisplayPath()})`;
+  }
+
+  addMetadata(key, value) {
+    this.metadata[key] = value;
+    return this;
   }
 
   toJSON() {
     return {
       id: this.id,
       ruleId: this.ruleId,
-      severity: this.severity,
+      severity: this.severity.toString(),
       message: this.message,
       filePath: this.filePath,
       line: this.line,
       platform: this.platform,
       timestamp: this.timestamp.toISOString(),
       technicalDebtHours: this.getTechnicalDebtHours(),
+      metadata: this.metadata
     };
   }
 
@@ -135,11 +98,14 @@ class Finding {
     if (json.id) {
       finding.id = json.id;
     }
+    if (json.metadata) {
+      finding.metadata = json.metadata;
+    }
     return finding;
   }
 
   toString() {
-    return `[${this.severity.toUpperCase()}] ${this.ruleId} at ${this.filePath}:${this.line} - ${this.message}`;
+    return this.getFormattedSummary();
   }
 }
 

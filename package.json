@@ -21,8 +21,8 @@
   "scripts": {
     "install-hooks": "npx ast-install",
     "check-version": "node bin/check-version.js",
-    "audit": "node infrastructure/ast/ast-intelligence.js",
-    "ast": "node infrastructure/ast/ast-intelligence.js",
+    "audit": "node bin/ast",
+    "ast": "node bin/ast",
     "audit-library": "node bin/audit-library.js",
     "gitflow": "bash bin/gitflow check",
     "gitflow:status": "bash bin/gitflow status",
@@ -36,7 +36,7 @@
     "violations:demo": "bash bin/demo-violations",
     "test": "jest --runInBand",
     "lint": "npm run lint:hooks",
-    "lint:hooks": "eslint \"application/**/*.js\" \"bin/**/*.js\"",
+    "lint:hooks": "eslint \"scripts/hooks-system/application/**/*.js\" \"bin/**/*.js\"",
     "build:ts": "tsc --noEmit",
     "typecheck": "tsc --noEmit"
   },
@@ -91,9 +91,7 @@
   },
   "files": [
     "bin/",
-    "domain/",
-    "application/",
-    "infrastructure/",
+    "scripts/hooks-system/",
     "presentation/",
     "skills/",
     "hooks/",
@@ -108,9 +106,9 @@
   },
   "exports": {
     ".": "./index.js",
-    "./ast": "./infrastructure/ast/ast-intelligence.js",
-    "./domain": "./domain/index.js",
-    "./application": "./application/index.js",
+    "./ast": "./scripts/hooks-system/infrastructure/ast/ast-intelligence.js",
+    "./domain": "./scripts/hooks-system/domain/index.js",
+    "./application": "./scripts/hooks-system/application/index.js",
     "./config": "./config/index.js",
     "./skills": "./skills/skill-rules.json",
     "./hooks": "./hooks/index.js"
