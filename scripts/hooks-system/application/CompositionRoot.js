@@ -164,6 +164,20 @@ class CompositionRoot {
         return this.instances.get('autoExecuteAIStart');
     }
 
+    getBlockCommitUseCase() {
+        if (!this.instances.has('blockCommit')) {
+            const BlockCommitUseCase = require('./use-cases/BlockCommitUseCase');
+            this.instances.set('blockCommit', new BlockCommitUseCase());
+        }
+        return this.instances.get('blockCommit');
+    }
+
+    getMcpProtocolHandler(inputStream, outputStream) {
+        const McpProtocolHandler = require('../infrastructure/mcp/services/McpProtocolHandler');
+        const logger = this.getLogger();
+        return new McpProtocolHandler(inputStream, outputStream, logger);
+    }
+
     // --- Monitors ---
 
     getEvidenceMonitor() {
