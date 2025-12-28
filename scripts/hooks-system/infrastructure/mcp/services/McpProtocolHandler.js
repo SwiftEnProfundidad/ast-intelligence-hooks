@@ -12,23 +12,7 @@ class McpProtocolHandler {
         this.inputStream.setEncoding('utf8');
 
         this.inputStream.on('data', (chunk) => {
-            this.buffer += chunk.toString();
-            const messages = this.extractMessages();
-
-            for (const message of messages) {
-                const payload = message?.body || '';
-                if (payload.trim()) {
-                    if (this.logger) this.logger.debug('MCP_RECEIVED', { payload: payload.substring(0, 100) });
-
-                    const response = messageHandler(payload);
-
-                    if (response !== null) {
-                        const responseStr = JSON.stringify(response);
-                        if (this.logger) this.logger.debug('MCP_SENDING', { response: responseStr.substring(0, 100) });
-                        this.writeResponse(response, Boolean(message?.framed), message?.delimiter);
-                    }
-                }
-            }
+            void this._handleChunk(chunk, messageHandler);
         });
 
         this.inputStream.on('end', () => {
@@ -40,6 +24,41 @@ class McpProtocolHandler {
             if (this.logger) this.logger.error('MCP_STDIN_ERROR', { error: err.message });
             process.exit(1);
         });
+    }
+
+    async _handleChunk(chunk, messageHandler) {
+        this.buffer += chunk.toString();
+        const messages = this.extractMessages();
+
+        for (const message of messages) {
+            const payload = message?.body || '';
+            if (!payload.trim()) {
+                continue;
+            }
+
+            if (this.logger) {
+                this.logger.debug('MCP_RECEIVED', { payload: payload.substring(0, 100) });
+            }
+
+            try {
+                const response = await Promise.resolve(messageHandler(payload));
+                if (response === null || typeof response === 'undefined') {
+                    continue;
+                }
+
+                const responseStr = JSON.stringify(response);
+                if (this.logger) {
+                    this.logger.debug('MCP_SENDING', { response: responseStr.substring(0, 100) });
+                }
+                this.writeResponse(response, Boolean(message?.framed), message?.delimiter);
+            } catch (error) {
+                if (this.logger) {
+                    this.logger.error('MCP_MESSAGE_HANDLER_ERROR', { error: error.message });
+                }
+                const errResponse = this.createErrorResponse(null, -32603, `Internal error: ${error.message}`);
+                this.writeResponse(errResponse, Boolean(message?.framed), message?.delimiter);
+            }
+        }
     }
 
     extractMessages() {
