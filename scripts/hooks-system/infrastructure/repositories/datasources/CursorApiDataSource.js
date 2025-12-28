@@ -1,4 +1,4 @@
-const { DomainError } = require('../../../../domain/errors');
+const { DomainError } = require('../../../domain/errors');
 
 class CursorApiDataSource {
     constructor({

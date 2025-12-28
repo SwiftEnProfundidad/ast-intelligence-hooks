@@ -11,6 +11,7 @@ const PlatformDetectionService = require('./services/PlatformDetectionService');
 const AutoExecuteAIStartUseCase = require('./use-cases/AutoExecuteAIStartUseCase');
 
 // Services & Monitors
+const RealtimeGuardService = require('./services/RealtimeGuardService');
 const UnifiedLogger = require('./services/logging/UnifiedLogger');
 const NotificationCenterService = require('./services/notification/NotificationCenterService');
 const GitFlowService = require('./services/GitFlowService');

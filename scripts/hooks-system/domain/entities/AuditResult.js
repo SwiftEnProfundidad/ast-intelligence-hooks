@@ -12,6 +12,8 @@ class AuditResult {
             totalFiles: 0,
             totalLines: 0,
             platforms: [],
+            session: null,
+            action: null
         };
         this.scorer = new AuditScorer();
         this.analyzer = new AuditAnalyzer(this.scorer);
@@ -23,10 +25,15 @@ class AuditResult {
             throw new ValidationError('Can only add Finding instances to AuditResult', 'finding', finding);
         }
         this.findings.push(finding);
+        return this;
     }
 
     addFindings(findings) {
+        if (!Array.isArray(findings)) {
+            throw new ValidationError('Findings must be an array', 'findings', findings);
+        }
         findings.forEach(f => this.addFinding(f));
+        return this;
     }
 
     hasViolations() {
@@ -41,6 +48,14 @@ class AuditResult {
         return this.findings.length;
     }
 
+    getViolationsBySeverity() {
+        return this.analyzer.getViolationsBySeverity(this.findings);
+    }
+
+    getViolationsByPlatform() {
+        return this.analyzer.getViolationsByPlatform(this.findings);
+    }
+
     getTechnicalDebtHours() {
         return this.scorer.calculateTechnicalDebt(this.findings);
     }
@@ -49,12 +64,33 @@ class AuditResult {
         return this.scorer.calculateMaintainabilityIndex(this.findings);
     }
 
-    setMetadata(totalFiles, totalLines, platforms) {
-        this.metadata = {
-            totalFiles,
-            totalLines,
-            platforms,
+    getSummary() {
+        return {
+            timestamp: this.timestamp.toISOString(),
+            totalViolations: this.getTotalViolations(),
+            blockingViolations: this.findings.filter(f => f.isBlockingLevel()).length,
+            technicalDebtHours: this.getTechnicalDebtHours(),
+            maintainabilityIndex: this.getMaintainabilityIndex(),
+            bySeverity: this.getViolationsBySeverity(),
+            byPlatform: this.getViolationsByPlatform()
         };
+    }
+
+    setMetadata(metadata = {}) {
+        this.metadata = {
+            ...this.metadata,
+            ...metadata
+        };
+        return this;
+    }
+
+    filterByPlatform(platform) {
+        return new AuditResult(this.analyzer.filterByPlatform(this.findings, platform))
+            .setMetadata(this.metadata);
+    }
+
+    getTopViolations(limit = 10) {
+        return this.analyzer.getTopViolatedRules(this.findings, limit);
     }
 
     toJSON() {
@@ -62,11 +98,6 @@ class AuditResult {
     }
 
     static fromJSON(json) {
-        // Since fromJSON is static, we instantiate the serializer or use it directly if it was static.
-        // But AuditResultSerializer is an instance class.
-        // Ideally fromJSON should just create the instance and populate it.
-        // Let's use the serializer instance if we can, or just delegate logic.
-        // For static method, we'll instantiate the serializer temporarily.
         const serializer = new AuditResultSerializer();
         return serializer.fromJSON(json);
     }

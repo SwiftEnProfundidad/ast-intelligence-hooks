@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { ConfigurationError, DomainError } = require('../../../../domain/errors');
+const { ConfigurationError, DomainError } = require('../../../domain/errors');
 
 class EvidenceMonitor {
     constructor(repoRoot, options = {}) {

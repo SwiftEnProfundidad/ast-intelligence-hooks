@@ -11,26 +11,28 @@ class Finding {
     this.message = message;
     this.filePath = filePath;
     this.line = line || 1;
-    this.platform = platform ? platform.toLowerCase() : 'unknown';
+    this.platform = (platform || 'unknown').toLowerCase();
     this.timestamp = new Date();
     this.id = this.generateId();
+    this.metadata = {};
   }
 
   validateInputs(ruleId, message, filePath) {
-    if (!ruleId || typeof ruleId !== 'string') {
-      throw new ValidationError('Finding requires valid ruleId (string)', 'ruleId', ruleId);
+    if (!ruleId || typeof ruleId !== 'string' || ruleId.trim().length === 0) {
+      throw new ValidationError('Finding requires non-empty ruleId (string)', 'ruleId', ruleId);
     }
-    if (!message || typeof message !== 'string') {
-      throw new ValidationError('Finding requires valid message (string)', 'message', message);
+    if (!message || typeof message !== 'string' || message.trim().length === 0) {
+      throw new ValidationError('Finding requires non-empty message (string)', 'message', message);
     }
-    if (!filePath || typeof filePath !== 'string') {
-      throw new ValidationError('Finding requires valid filePath (string)', 'filePath', filePath);
+    if (!filePath || typeof filePath !== 'string' || filePath.trim().length === 0) {
+      throw new ValidationError('Finding requires non-empty filePath (string)', 'filePath', filePath);
     }
   }
 
   generateId() {
-    const hash = `${this.ruleId}:${this.filePath}:${this.line}:${this.timestamp.getTime()}`;
-    return Buffer.from(hash).toString('base64').substring(0, 16);
+    // Deterministic ID based on content, not timestamp, for better deduplication
+    const hashData = `${this.ruleId}:${this.filePath}:${this.line}:${this.message}:${this.platform}`;
+    return Buffer.from(hashData).toString('base64').substring(0, 16);
   }
 
   isCritical() { return this.severity.isCritical(); }
@@ -41,6 +43,7 @@ class Finding {
   isBlockingLevel() { return this.severity.isBlocking(); }
 
   belongsToPlatform(platform) {
+    if (!platform) return false;
     return this.platform === platform.toLowerCase();
   }
 
@@ -50,6 +53,19 @@ class Finding {
 
   getTechnicalDebtHours() {
     return this.severity.getDebtHours();
+  }
+
+  getDisplayPath() {
+    return `${this.filePath}:${this.line}`;
+  }
+
+  getFormattedSummary() {
+    return `[${this.severity.toUpperCase()}] ${this.ruleId}: ${this.message} (${this.getDisplayPath()})`;
+  }
+
+  addMetadata(key, value) {
+    this.metadata[key] = value;
+    return this;
   }
 
   toJSON() {
@@ -63,6 +79,7 @@ class Finding {
       platform: this.platform,
       timestamp: this.timestamp.toISOString(),
       technicalDebtHours: this.getTechnicalDebtHours(),
+      metadata: this.metadata
     };
   }
 
@@ -81,11 +98,14 @@ class Finding {
     if (json.id) {
       finding.id = json.id;
     }
+    if (json.metadata) {
+      finding.metadata = json.metadata;
+    }
     return finding;
   }
 
   toString() {
-    return `[${this.severity.toUpperCase()}] ${this.ruleId} at ${this.filePath}:${this.line} - ${this.message}`;
+    return this.getFormattedSummary();
   }
 }
 

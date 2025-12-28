@@ -1,10 +1,6 @@
 #!/usr/bin/env node
-
-const InstallService = require('../scripts/hooks-system/application/services/installation/InstallService');
-
-// Run installation
-const installer = new InstallService();
-installer.run().catch(error => {
-  console.error('\n\x1b[31mInstallation failed:\x1b[0m', error);
-  process.exit(1);
-});
+/**
+ * Script Wrapper
+ * Redirects to the centralized implementation in scripts/hooks-system
+ */
+require('../scripts/hooks-system/bin/install.js');

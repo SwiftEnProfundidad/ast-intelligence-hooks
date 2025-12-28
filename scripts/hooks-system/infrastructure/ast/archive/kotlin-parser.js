@@ -9,7 +9,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const xml2js = require('xml2js');
-const { ConfigurationError } = require('../../../../domain/errors');
+const { ConfigurationError } = require('../../../domain/errors');
 
 class KotlinParser {
   constructor() {

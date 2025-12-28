@@ -4,7 +4,7 @@ const { exec } = require('child_process');
 const util = require('util');
 const fs = require('fs').promises;
 const path = require('path');
-const { DomainError } = require('../../../../domain/errors');
+const { DomainError } = require('../../../domain/errors');
 
 const execPromise = util.promisify(exec);
 

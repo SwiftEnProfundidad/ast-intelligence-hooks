@@ -1,7 +1,7 @@
 const PlatformDetectionService = require('./PlatformDetectionService');
 const { execSync } = require('child_process');
 const path = require('path');
-const UnifiedLogger = require('./UnifiedLogger'); // Assuming UnifiedLogger is defined in a separate file
+const UnifiedLogger = require('./logging/UnifiedLogger');
 
 class AutonomousOrchestrator {
     constructor(contextEngine, platformDetector, rulesLoader, logger = new UnifiedLogger()) {

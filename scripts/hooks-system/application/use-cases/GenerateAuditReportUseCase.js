@@ -165,7 +165,7 @@ class GenerateAuditReportUseCase {
 
   getProjectName() {
     try {
-      const packageJson = require('../../../../package.json');
+      const packageJson = require('../../../package.json');
       return packageJson.name || 'unknown-project';
     } catch {
       return 'unknown-project';

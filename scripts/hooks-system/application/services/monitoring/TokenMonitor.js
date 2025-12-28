@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
-const { ConfigurationError } = require('../../../../domain/errors');
+const { ConfigurationError } = require('../../../domain/errors');
 
 class TokenMonitor {
     constructor(repoRoot, options = {}) {
