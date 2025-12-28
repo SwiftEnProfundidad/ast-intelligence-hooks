@@ -33,7 +33,7 @@ function runBackendIntelligence(project, findings, platform) {
     const detectedPattern = architectureDetector.detect();
     const detectionSummary = architectureDetector.getDetectionSummary();
 
-    console.log(`[Backend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
+    console.error(`[Backend Architecture] Pattern detected: ${detectedPattern} (confidence: ${detectionSummary.confidence}%)`);
 
     if (detectionSummary.warnings.length > 0) {
       detectionSummary.warnings.forEach(warning => {

@@ -14,17 +14,14 @@ class GuardEventLogger {
         this.tmpDir = path.join(this.repoRoot, '.audit_tmp');
         this.eventLogPath = path.join(this.tmpDir, 'guard-events.log');
 
-        // Ensure tmp dir exists
         try {
             if (!this.fs.existsSync(this.tmpDir)) {
                 this.fs.mkdirSync(this.tmpDir, { recursive: true });
             }
-            // Ensure log file exists
             if (!this.fs.existsSync(this.eventLogPath)) {
                 this.fs.writeFileSync(this.eventLogPath, '', { encoding: 'utf8' });
             }
         } catch (error) {
-            // Log setup failure for debugging purposes instead of silencing
             if (this.logger?.debug) {
                 this.logger.debug('GUARD_EVENT_LOGGER_INIT_ERROR', { error: error.message });
             }
@@ -34,8 +31,8 @@ class GuardEventLogger {
     log(message, data = {}) {
         if (this.logger?.info) {
             this.logger.info(message, data);
-        } else {
-            console.log(message, data);
+        } else if (this.logger === console) {
+            console.error(message, data);
         }
     }
 

@@ -47,14 +47,14 @@ class CompositionRoot {
     getLogger() {
         if (!this.instances.has('logger')) {
             this.instances.set('logger', new UnifiedLogger({
-                component: 'RealtimeGuard',
+                component: 'HookSystem',
                 file: {
                     enabled: true,
                     path: path.join(this.auditDir, 'guard-audit.jsonl'),
-                    level: 'info'
+                    level: process.env.HOOK_LOG_LEVEL || 'info'
                 },
                 console: {
-                    enabled: true,
+                    enabled: false,
                     level: 'info'
                 }
             }));

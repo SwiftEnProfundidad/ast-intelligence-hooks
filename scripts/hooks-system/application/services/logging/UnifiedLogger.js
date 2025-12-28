@@ -88,15 +88,8 @@ class UnifiedLogger {
 
     writeConsole(entry) {
         const message = `[${entry.timestamp}] [${entry.component}] [${entry.level.toUpperCase()}] ${entry.event}`;
-        if (entry.level === 'error') {
-            console.error(message, entry.data, entry.context);
-        } else if (entry.level === 'warn') {
-            console.warn(message, entry.data, entry.context);
-        } else if (entry.level === 'debug') {
-            console.debug(message, entry.data, entry.context);
-        } else {
-            console.info(message, entry.data, entry.context);
-        }
+        // MCP communication happens on stdout. All logs MUST go to stderr.
+        console.error(message, entry.data, entry.context);
     }
 
     writeFile(entry) {

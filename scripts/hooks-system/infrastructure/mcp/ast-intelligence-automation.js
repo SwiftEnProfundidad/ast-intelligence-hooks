@@ -337,8 +337,8 @@ async function autoExecuteAIStart(params) {
 
         if (result.action === 'auto-executed') {
             sendNotification(
-                '✅ AI Start Ejecutado',
-                `Plataforma: ${result.platforms.join(', ').toUpperCase()}`,
+                '✅ AI Start Executed',
+                `Platform: ${result.platforms.join(', ').toUpperCase()}`,
                 'Glass'
             );
         }
@@ -933,9 +933,9 @@ setInterval(async () => {
             if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
                 try {
                     await evidenceMonitor.refresh();
-                    sendNotification('✅ AI Start Ejecutado', `Plataformas: ${decision.platforms.map(p => p.platform.toUpperCase()).join(', ')}`, 'Glass');
+                    sendNotification('✅ AI Start Executed', `Platforms: ${decision.platforms.map(p => p.platform.toUpperCase()).join(', ')}`, 'Glass');
                 } catch (e) {
-                    sendNotification('❌ AI Start Error', `Fallo al ejecutar: ${e.message}`, 'Basso');
+                    sendNotification('❌ AI Start Error', `Failed to execute: ${e.message}`, 'Basso');
                 }
             }
         }
@@ -945,7 +945,7 @@ setInterval(async () => {
     }
 }, 30000);
 
-// AUTO-COMMIT: Solo para cambios de código del proyecto (no node_modules, no librería)
+// AUTO-COMMIT: Only for project code changes (no node_modules, no library)
 setInterval(async () => {
     if (!AUTO_COMMIT_ENABLED) {
         return;
@@ -1015,7 +1015,7 @@ setInterval(async () => {
         // Commit
         gitCommand.commit(commitMessage);
 
-        sendNotification('✅ Auto-Commit', `${filesToCommit.length} archivos en ${currentBranch}`, 'Purr');
+        sendNotification('✅ Auto-Commit', `${filesToCommit.length} files in ${currentBranch}`, 'Purr');
         lastAutoCommitTime = now;
 
         if (AUTO_PUSH_ENABLED) {
