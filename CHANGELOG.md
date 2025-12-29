@@ -5,6 +5,18 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.5] - 2025-12-29
+
+### Fixed
+- **Performance**: Optimized `compute_staged_summary` to use single-pass jq filtering instead of loop per file
+  - Previous implementation was O(n*m) where n=staged files, m=violations
+  - New implementation is O(m) with single jq pass
+  - Fixes timeout/slowness with large numbers of staged files (500+)
+  - Fixes incorrect "0 violations in staging" when many files are staged
+
+### Changed
+- Improved path matching in staging summary to use both `endswith` and `contains` for better reliability
+
 ## [5.3.4] - 2025-12-29
 
 ### 🐛 Fixed

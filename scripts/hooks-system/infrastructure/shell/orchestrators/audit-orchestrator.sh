@@ -218,6 +218,7 @@ full_audit_strict_repo_and_staging() {
   export AUDIT_STRICT=1
   export BLOCK_ALL_SEVERITIES=1
   export BLOCK_ON_REPO_VIOLATIONS=1
+  export AUDIT_LIBRARY=true
   unset STAGING_ONLY_MODE
   full_audit
 }
@@ -357,18 +358,30 @@ compute_staged_summary() {
     local total_findings=$(jq -r '.findings | length' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
     
     if [[ "$total_findings" -gt 0 ]] && [[ -s "$staged_file_rel" ]]; then
-      # Use relative paths for matching - more reliable across different path formats
-      while IFS= read -r relpath; do
-        [[ -z "$relpath" ]] && continue
-        local ccrit chigh cmed clow
-        # Match using 'endswith' with relative path OR exact match with absolute path
-        local abs_path="$ROOT_DIR/$relpath"
-        ccrit=$(jq -r --arg rel "$relpath" --arg abs "$abs_path" '[ .findings[] | select((.filePath | endswith($rel)) or .filePath == $abs) | .severity | ascii_downcase | if .=="critical" or .=="error" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
-        chigh=$(jq -r --arg rel "$relpath" --arg abs "$abs_path" '[ .findings[] | select((.filePath | endswith($rel)) or .filePath == $abs) | .severity | ascii_downcase | if .=="high" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
-        cmed=$(jq -r --arg rel "$relpath" --arg abs "$abs_path" '[ .findings[] | select((.filePath | endswith($rel)) or .filePath == $abs) | .severity | ascii_downcase | if .=="warning" or .=="medium" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
-        clow=$(jq -r --arg rel "$relpath" --arg abs "$abs_path" '[ .findings[] | select((.filePath | endswith($rel)) or .filePath == $abs) | .severity | ascii_downcase | if .=="info" or .=="low" then 1 else 0 end ] | add // 0' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
-        scrit=$((scrit + ccrit)); shigh=$((shigh + chigh)); smed=$((smed + cmed)); slow=$((slow + clow))
-      done < "$staged_file_rel"
+      # Build jq array of staged files for efficient matching in single pass
+      local staged_array=$(jq -R -s 'split("\n") | map(select(length > 0))' "$staged_file_rel")
+      
+      # Single jq pass: filter findings by staged files and count by severity
+      local counts=$(jq -r --argjson staged "$staged_array" '
+        .findings 
+        | map(select(
+            .filePath as $fp 
+            | $staged[] as $sf 
+            | ($fp | endswith($sf)) or ($fp | contains("/" + $sf))
+          ))
+        | group_by(.severity | ascii_downcase)
+        | map({key: .[0].severity | ascii_downcase, value: length})
+        | from_entries
+        | {
+            critical: ((.critical // 0) + (.error // 0)),
+            high: (.high // 0),
+            medium: ((.medium // 0) + (.warning // 0)),
+            low: ((.low // 0) + (.info // 0))
+          }
+        | "\(.critical) \(.high) \(.medium) \(.low)"
+      ' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0 0 0 0")
+      
+      read scrit shigh smed slow <<< "$counts"
     fi
     printf "  Staged AST → 🔴 CRITICAL:%s 🟠 HIGH:%s 🟡 MEDIUM:%s 🔵 LOW:%s\n" "${scrit:-0}" "${shigh:-0}" "${smed:-0}" "${slow:-0}"
     export STAGED_CRIT=${scrit:-0}
@@ -1010,9 +1023,9 @@ run_ast_intelligence() {
   # Execute AST with proper error handling and NODE_PATH
   # Change to HOOKS_SYSTEM_DIR so Node.js resolves modules correctly
   if [[ -n "$node_path_value" ]]; then
-    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export NODE_PATH="$node_path_value" && export AUDIT_TMP="$TMP_DIR" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export NODE_PATH="$node_path_value" && export AUDIT_TMP="$TMP_DIR" && export AUDIT_LIBRARY="${AUDIT_LIBRARY:-false}" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
   else
-    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export AUDIT_TMP="$TMP_DIR" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export AUDIT_TMP="$TMP_DIR" && export AUDIT_LIBRARY="${AUDIT_LIBRARY:-false}" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
   fi
 
   # Check if AST script failed
