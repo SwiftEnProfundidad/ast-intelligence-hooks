@@ -218,7 +218,6 @@ full_audit_strict_repo_and_staging() {
   export AUDIT_STRICT=1
   export BLOCK_ALL_SEVERITIES=1
   export BLOCK_ON_REPO_VIOLATIONS=1
-  unset STAGING_ONLY_MODE
   full_audit
 }
 

@@ -2,6 +2,33 @@
 
 All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in this file.
 
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [5.3.4] - 2025-12-29
+
+### 🐛 Fixed
+
+- **Audit Orchestrator**: Fixed `STAGING_ONLY_MODE` being incorrectly set in option 2 (Strict REPO+STAGING)
+  - Option 2 now correctly analyzes all repository files instead of only staged files
+  - Added `unset STAGING_ONLY_MODE` to ensure full repository scan
+- **Library Audit**: Fixed `AUDIT_LIBRARY` environment variable not being passed to Node.js process
+  - Variable is now correctly exported when executing AST intelligence script
+  - Ensures library's own files are included when `AUDIT_LIBRARY=true`
+- **Staged Summary**: Improved file path matching for staged files
+  - Now uses relative paths for more robust matching across different path formats
+  - Better detection of violations in staged files
+
+### 🔧 Changed
+
+- Enhanced `compute_staged_summary` function with relative path matching
+- Improved error handling in audit orchestrator
+
+### 📝 Documentation
+
+- Updated CHANGELOG with detailed release notes
+- Added migration guide for users upgrading from 5.3.3
+
 ## [6.0.0] - 2025-12-02
 
 ### 🎉 Major Release - Complete Rewrite

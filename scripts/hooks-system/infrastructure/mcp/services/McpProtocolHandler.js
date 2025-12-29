@@ -5,14 +5,13 @@ class McpProtocolHandler {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.logger = logger;
-        this.buffer = '';
+        this.buffer = Buffer.alloc(0);
     }
 
     start(messageHandler) {
-        this.inputStream.setEncoding('utf8');
-
         this.inputStream.on('data', (chunk) => {
-            void this._handleChunk(chunk, messageHandler);
+            const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk), 'utf8');
+            void this._handleChunk(buf, messageHandler);
         });
 
         this.inputStream.on('end', () => {
@@ -27,7 +26,7 @@ class McpProtocolHandler {
     }
 
     async _handleChunk(chunk, messageHandler) {
-        this.buffer += chunk.toString();
+        this.buffer = Buffer.concat([this.buffer, chunk]);
         const messages = this.extractMessages();
 
         for (const message of messages) {
@@ -64,14 +63,19 @@ class McpProtocolHandler {
     extractMessages() {
         const messages = [];
 
-        while (this.buffer.length > 0) {
-            const crlfHeaderEnd = this.buffer.indexOf('\r\n\r\n');
-            const lfHeaderEnd = crlfHeaderEnd === -1 ? this.buffer.indexOf('\n\n') : -1;
-            const headerEnd = crlfHeaderEnd !== -1 ? crlfHeaderEnd : lfHeaderEnd;
-            const headerDelimiter = crlfHeaderEnd !== -1 ? '\r\n\r\n' : (lfHeaderEnd !== -1 ? '\n\n' : null);
+        const CRLF_HEADER = Buffer.from('\r\n\r\n', 'utf8');
+        const LF_HEADER = Buffer.from('\n\n', 'utf8');
+        const NL = 0x0a;
 
-            if (headerDelimiter) {
-                const headerBlock = this.buffer.slice(0, headerEnd);
+        while (this.buffer.length > 0) {
+            const crlfHeaderEnd = this.buffer.indexOf(CRLF_HEADER);
+            const lfHeaderEnd = crlfHeaderEnd === -1 ? this.buffer.indexOf(LF_HEADER) : -1;
+            const headerEnd = crlfHeaderEnd !== -1 ? crlfHeaderEnd : lfHeaderEnd;
+            const headerDelimiterBuf = crlfHeaderEnd !== -1 ? CRLF_HEADER : (lfHeaderEnd !== -1 ? LF_HEADER : null);
+
+            if (headerDelimiterBuf) {
+                const headerBlockBuf = this.buffer.slice(0, headerEnd);
+                const headerBlock = headerBlockBuf.toString('ascii');
                 const contentLengthLine = headerBlock
                     .split(/\r?\n/)
                     .find(line => /^content-length:/i.test(line));
@@ -80,29 +84,31 @@ class McpProtocolHandler {
                     const match = contentLengthLine.match(/content-length:\s*(\d+)/i);
                     const contentLength = match ? Number(match[1]) : NaN;
                     if (!Number.isFinite(contentLength) || contentLength < 0) {
-                        this.buffer = this.buffer.slice(headerEnd + headerDelimiter.length);
+                        this.buffer = this.buffer.slice(headerEnd + headerDelimiterBuf.length);
                         continue;
                     }
 
-                    const bodyStart = headerEnd + headerDelimiter.length;
+                    const bodyStart = headerEnd + headerDelimiterBuf.length;
                     if (this.buffer.length < bodyStart + contentLength) {
                         break;
                     }
 
-                    const body = this.buffer.slice(bodyStart, bodyStart + contentLength);
-                    messages.push({ body, framed: true, delimiter: headerDelimiter });
+                    const bodyBuf = this.buffer.slice(bodyStart, bodyStart + contentLength);
+                    const body = bodyBuf.toString('utf8');
+                    messages.push({ body, framed: true, delimiter: headerDelimiterBuf.toString('utf8') });
                     this.buffer = this.buffer.slice(bodyStart + contentLength);
                     continue;
                 }
             }
 
-            const nl = this.buffer.indexOf('\n');
+            const nl = this.buffer.indexOf(NL);
             if (nl === -1) {
                 break;
             }
 
-            const line = this.buffer.slice(0, nl).trim();
+            const lineBuf = this.buffer.slice(0, nl);
             this.buffer = this.buffer.slice(nl + 1);
+            const line = lineBuf.toString('utf8').trim();
             if (line) {
                 messages.push({ body: line, framed: false });
             }
