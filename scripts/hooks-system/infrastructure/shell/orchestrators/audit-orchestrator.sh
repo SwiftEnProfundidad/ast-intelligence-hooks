@@ -56,7 +56,13 @@ source "$INFRASTRUCTURE_DIR/eslint/eslint-integration.sh"
 
 # Initialize
 START_TIME=$(date +%s)
-ROOT_DIR=$(pwd)
+
+# Determine repository root using git
+if command -v git >/dev/null 2>&1; then
+  ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+else
+  ROOT_DIR=$(pwd)
+fi
 
 # Default to temp directories to avoid polluting repositories.
 # Can be overridden by setting AUDIT_TMP / AUDIT_REPORTS.

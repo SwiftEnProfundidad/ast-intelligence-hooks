@@ -5,6 +5,15 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.7] - 2025-12-29
+
+### Fixed
+- **Critical**: Fixed `ROOT_DIR` hardcoded to `pwd` instead of using git repository root
+  - Previous versions used `ROOT_DIR=$(pwd)` which caused audits to analyze wrong directory
+  - Now uses `git rev-parse --show-toplevel` to correctly determine repository root
+  - This was causing identical violation counts across different projects (hardcoded path issue)
+  - Verified: R_GO and library now show different violation counts correctly
+
 ## [5.3.6] - 2025-12-29
 
 ### Fixed
