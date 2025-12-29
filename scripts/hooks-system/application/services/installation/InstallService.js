@@ -24,12 +24,32 @@ class InstallService {
         this.hookSystemRoot = path.resolve(__dirname, '../../../');
 
         // Read version dynamically from package.json
-        const packageJsonPath = path.resolve(this.hookSystemRoot, '../package.json');
-        try {
-            const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-            this.version = pkg.version || 'unknown';
-        } catch {
-            this.version = 'unknown';
+        // Resolve package.json reliably both in repo and in node_modules
+        const candidates = [
+            path.resolve(this.hookSystemRoot, 'package.json'),
+            path.resolve(this.hookSystemRoot, '../package.json'),
+            path.resolve(this.hookSystemRoot, '../../package.json'),
+            (() => {
+                try { return require.resolve('pumuki-ast-hooks/package.json'); } catch { return null; }
+            })()
+        ].filter(Boolean);
+
+        this.version = 'unknown';
+        const versionWarnings = [];
+        for (const pkgPath of candidates) {
+            try {
+                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+                if (pkg.version) {
+                    this.version = pkg.version;
+                    break;
+                }
+            } catch (err) {
+                versionWarnings.push({ pkgPath, error: err && err.message ? err.message : String(err) });
+            }
+        }
+        if (this.version === 'unknown' && versionWarnings.length > 0) {
+            // Log a single warning to avoid empty catch and give visibility
+            console.warn('[InstallService] Unable to read version from package.json', versionWarnings);
         }
 
         // Initialize Audit Logger
