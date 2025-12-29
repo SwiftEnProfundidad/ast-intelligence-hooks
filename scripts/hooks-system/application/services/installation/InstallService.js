@@ -23,6 +23,15 @@ class InstallService {
         // Assuming this script is located at scripts/hooks-system/application/services/installation/InstallService.js
         this.hookSystemRoot = path.resolve(__dirname, '../../../');
 
+        // Read version dynamically from package.json
+        const packageJsonPath = path.resolve(this.hookSystemRoot, '../package.json');
+        try {
+            const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            this.version = pkg.version || 'unknown';
+        } catch {
+            this.version = 'unknown';
+        }
+
         // Initialize Audit Logger
         const auditLogPath = path.join(this.targetRoot, '.audit-reports', 'install.log');
         if (!fs.existsSync(path.dirname(auditLogPath))) {
@@ -39,7 +48,7 @@ class InstallService {
             }
         });
 
-        this.gitService = new GitEnvironmentService(this.targetRoot);
+        this.gitService = new GitEnvironmentService(this.targetRoot, this.version);
         this.platformService = new PlatformDetectorService(this.targetRoot);
         this.fsInstaller = new FileSystemInstallerService(this.targetRoot, this.hookSystemRoot, this.logger);
         this.configGenerator = new ConfigurationGeneratorService(this.targetRoot, this.hookSystemRoot);
@@ -98,10 +107,11 @@ class InstallService {
     }
 
     printHeader() {
+        const versionPadded = `v${this.version}`.padStart(24).padEnd(48);
         process.stdout.write(`${COLORS.blue}
 ╔════════════════════════════════════════════════════════════════╗
 ║          AST Intelligence Hooks - Installation Wizard          ║
-║                         v5.3.1                                 ║
+║${versionPadded}                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 ${COLORS.reset}\n`);
     }

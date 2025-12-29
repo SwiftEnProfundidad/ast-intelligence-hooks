@@ -5,6 +5,18 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.8] - 2025-12-29
+
+### Fixed
+- **Critical**: Version was hardcoded as "v5.3.1" in installation wizard
+  - Now reads version dynamically from package.json
+  - Wizard header and pre-commit hook show correct version
+  - GitEnvironmentService now receives version as parameter
+
+### Changed
+- InstallService reads version from package.json at startup
+- Pre-commit hook comment now shows correct package name: `pumuki-ast-hooks`
+
 ## [5.3.7] - 2025-12-29
 
 ### Fixed
