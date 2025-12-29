@@ -5,6 +5,14 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.6] - 2025-12-29
+
+### Fixed
+- **Critical**: Fixed jq logic in `compute_staged_summary` using `any()` for correct staged file matching
+  - Previous version incorrectly filtered violations, showing "0 violations in staging" even when violations existed
+  - Now correctly detects violations in staged files
+  - Verified with 62 staged files in R_GO project
+
 ## [5.3.5] - 2025-12-29
 
 ### Fixed
@@ -12,7 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Previous implementation was O(n*m) where n=staged files, m=violations
   - New implementation is O(m) with single jq pass
   - Fixes timeout/slowness with large numbers of staged files (500+)
-  - Fixes incorrect "0 violations in staging" when many files are staged
 
 ### Changed
 - Improved path matching in staging summary to use both `endswith` and `contains` for better reliability

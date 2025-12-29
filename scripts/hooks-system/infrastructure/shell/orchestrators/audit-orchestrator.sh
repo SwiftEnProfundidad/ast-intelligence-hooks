@@ -366,8 +366,7 @@ compute_staged_summary() {
         .findings 
         | map(select(
             .filePath as $fp 
-            | $staged[] as $sf 
-            | ($fp | endswith($sf)) or ($fp | contains("/" + $sf))
+            | any($staged[]; . as $sf | ($fp | endswith($sf)) or ($fp | contains("/" + $sf)))
           ))
         | group_by(.severity | ascii_downcase)
         | map({key: .[0].severity | ascii_downcase, value: length})
