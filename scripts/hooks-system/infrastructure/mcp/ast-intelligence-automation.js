@@ -27,11 +27,18 @@ const { execSync } = require('child_process');
 
 const MCP_VERSION = '2024-11-05';
 
-// Configuration
-const CompositionRoot = require('../../application/CompositionRoot');
-
+// Configuration - LAZY LOADING to avoid blocking MCP initialization
 const REPO_ROOT = process.env.REPO_ROOT || process.cwd();
-const compositionRoot = CompositionRoot.createForProduction(REPO_ROOT);
+
+// Lazy-loaded CompositionRoot - only initialized when first needed
+let _compositionRoot = null;
+function getCompositionRoot() {
+    if (!_compositionRoot) {
+        const CompositionRoot = require('../../application/CompositionRoot');
+        _compositionRoot = CompositionRoot.createForProduction(REPO_ROOT);
+    }
+    return _compositionRoot;
+}
 
 const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
 const GITFLOW_STATE_FILE = path.join(REPO_ROOT, '.git', 'gitflow-state.json');
@@ -154,15 +161,15 @@ function resolveUpdateEvidenceScript() {
 
 // Lazy Loading Services
 function getContextEngine() {
-    return compositionRoot.getContextDetectionEngine();
+    return getCompositionRoot().getContextDetectionEngine();
 }
 
 function getOrchestrator() {
-    return compositionRoot.getOrchestrator();
+    return getCompositionRoot().getOrchestrator();
 }
 
 function getNotificationAdapter() {
-    return compositionRoot.getNotificationService();
+    return getCompositionRoot().getNotificationService();
 }
 
 // Polling state
@@ -183,7 +190,7 @@ const AUTO_PR_ENABLED = process.env.AUTO_PR_ENABLED === 'true';
  * Helper: Send macOS notification via centralized adapter
  */
 function sendNotification(title, message, sound = 'Hero') {
-    compositionRoot.getNotificationService().notify({
+    getCompositionRoot().getNotificationService().notify({
         type: 'mcp_automation',
         level: 'info',
         title,
@@ -196,9 +203,9 @@ function sendNotification(title, message, sound = 'Hero') {
  * Check evidence status
  */
 function checkEvidence() {
-    const monitor = compositionRoot.getEvidenceMonitor();
+    const monitor = getCompositionRoot().getEvidenceMonitor();
     const isStale = monitor.isStale();
-    const gitFlow = compositionRoot.getGitFlowService();
+    const gitFlow = getCompositionRoot().getGitFlowService();
     const currentBranch = gitFlow.getCurrentBranch();
 
     if (isStale) {
@@ -217,7 +224,7 @@ function checkEvidence() {
  * Auto-complete Git Flow cycle
  */
 async function autoCompleteGitFlow(params) {
-    const gitFlowService = compositionRoot.getGitFlowService();
+    const gitFlowService = getCompositionRoot().getGitFlowService();
     const results = [];
     const currentBranch = gitFlowService.getCurrentBranch();
     const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
@@ -235,7 +242,7 @@ async function autoCompleteGitFlow(params) {
 
         if (!gitFlowService.isClean()) {
             results.push('⚠️  Uncommitted changes detected, committing...');
-            const gitCommand = compositionRoot.getGitCommandAdapter();
+            const gitCommand = getCompositionRoot().getGitCommandAdapter();
             gitCommand.addAll();
             const message = params.commitMessage || `chore: auto-commit changes on ${currentBranch}`;
             gitCommand.commit(message);
@@ -245,7 +252,7 @@ async function autoCompleteGitFlow(params) {
         }
 
         results.push('Pushing to origin...');
-        const gitCommand = compositionRoot.getGitCommandAdapter();
+        const gitCommand = getCompositionRoot().getGitCommandAdapter();
         gitCommand.push('origin', currentBranch, { setUpstream: true });
         results.push('✅ Pushed to origin');
 
@@ -260,7 +267,7 @@ async function autoCompleteGitFlow(params) {
 
                 if (params.autoMerge) {
                     results.push('Auto-merging PR...');
-                    const github = compositionRoot.getGitHubAdapter();
+                    const github = getCompositionRoot().getGitHubAdapter();
                     github.mergePullRequest(prUrl);
                     results.push(`✅ PR merged and branch deleted`);
 
@@ -295,7 +302,7 @@ async function autoCompleteGitFlow(params) {
  * Sync branches (develop ↔ main)
  */
 function syncBranches(params) {
-    const gitFlowService = compositionRoot.getGitFlowService();
+    const gitFlowService = getCompositionRoot().getGitFlowService();
     const result = gitFlowService.syncBranches();
 
     return {
@@ -309,11 +316,11 @@ function syncBranches(params) {
  * Cleanup stale branches (local + remote)
  */
 function cleanupStaleBranches(params) {
-    const gitFlowService = compositionRoot.getGitFlowService();
+    const gitFlowService = getCompositionRoot().getGitFlowService();
     const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
-    const gitQuery = compositionRoot.getGitQueryAdapter();
-    const gitCommand = compositionRoot.getGitCommandAdapter();
-    const github = compositionRoot.getGitHubAdapter();
+    const gitQuery = getCompositionRoot().getGitQueryAdapter();
+    const gitCommand = getCompositionRoot().getGitCommandAdapter();
+    const github = getCompositionRoot().getGitHubAdapter();
 
     const results = [];
 
@@ -367,7 +374,7 @@ function cleanupStaleBranches(params) {
  * Auto-execute ai-start when code files detected
  */
 async function autoExecuteAIStart(params) {
-    const useCase = compositionRoot.getAutoExecuteAIStartUseCase();
+    const useCase = getCompositionRoot().getAutoExecuteAIStartUseCase();
 
     try {
         const result = await useCase.execute({
@@ -503,8 +510,8 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
  * Returns BLOCKED or ALLOWED status with auto-fixes applied
  */
 async function aiGateCheck() {
-    const gitFlowService = compositionRoot.getGitFlowService();
-    const gitQuery = compositionRoot.getGitQueryAdapter();
+    const gitFlowService = getCompositionRoot().getGitFlowService();
+    const gitQuery = getCompositionRoot().getGitQueryAdapter();
     const currentBranch = getCurrentGitBranch(REPO_ROOT);
     const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
 
@@ -516,7 +523,7 @@ async function aiGateCheck() {
     const autoFixes = [];
 
     // 1. Evidence Freshness Check (Auto-fix included)
-    const evidenceMonitor = compositionRoot.getEvidenceMonitor();
+    const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
     if (evidenceMonitor.isStale()) {
         try {
             await evidenceMonitor.refresh();
@@ -541,8 +548,8 @@ async function aiGateCheck() {
     }
 
     // 3. Block Commit Use Case Integration
-    const blockCommitUseCase = compositionRoot.getBlockCommitUseCase();
-    const astAdapter = compositionRoot.getAstAdapter();
+    const blockCommitUseCase = getCompositionRoot().getBlockCommitUseCase();
+    const astAdapter = getCompositionRoot().getAstAdapter();
 
     try {
         const auditResult = await astAdapter.analyzeStagedFiles();
@@ -581,10 +588,10 @@ async function aiGateCheck() {
 async function validateAndFix(params) {
     const results = [];
     const issues = [];
-    const gitFlowService = compositionRoot.getGitFlowService();
-    const gitQuery = compositionRoot.getGitQueryAdapter();
-    const gitCommand = compositionRoot.getGitCommandAdapter();
-    const evidenceMonitor = compositionRoot.getEvidenceMonitor();
+    const gitFlowService = getCompositionRoot().getGitFlowService();
+    const gitQuery = getCompositionRoot().getGitQueryAdapter();
+    const gitCommand = getCompositionRoot().getGitCommandAdapter();
+    const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
 
     try {
         if (evidenceMonitor.isStale()) {
@@ -633,9 +640,10 @@ async function validateAndFix(params) {
 }
 
 /**
- * MCP Protocol Handler
+ * MCP Protocol Handler - Direct instantiation to avoid blocking on CompositionRoot
  */
-const protocolHandler = compositionRoot.getMcpProtocolHandler(process.stdin, process.stdout);
+const McpProtocolHandler = require('./services/McpProtocolHandler');
+const protocolHandler = new McpProtocolHandler(process.stdin, process.stdout);
 
 async function handleMcpMessage(message) {
     try {
@@ -749,8 +757,8 @@ async function handleMcpMessage(message) {
             }
 
             if (uri === 'gitflow://state') {
-                const gitFlow = compositionRoot.getGitFlowService();
-                const gitQuery = compositionRoot.getGitQueryAdapter();
+                const gitFlow = getCompositionRoot().getGitFlowService();
+                const gitQuery = getCompositionRoot().getGitQueryAdapter();
                 const currentBranch = getCurrentGitBranch(REPO_ROOT);
                 const branchState = getBranchStateSafe(gitQuery, REPO_ROOT, currentBranch);
 
@@ -776,7 +784,7 @@ async function handleMcpMessage(message) {
             }
 
             if (uri === 'context://active') {
-                const orchestrator = compositionRoot.getOrchestrator();
+                const orchestrator = getCompositionRoot().getOrchestrator();
                 try {
                     const decision = await orchestrator.analyzeContext();
                     return {
@@ -938,10 +946,10 @@ protocolHandler.start(handleMcpMessage);
 setInterval(async () => {
     try {
         const now = Date.now();
-        const gitFlowService = compositionRoot.getGitFlowService();
-        const gitQuery = compositionRoot.getGitQueryAdapter();
-        const evidenceMonitor = compositionRoot.getEvidenceMonitor();
-        const orchestrator = compositionRoot.getOrchestrator();
+        const gitFlowService = getCompositionRoot().getGitFlowService();
+        const gitQuery = getCompositionRoot().getGitQueryAdapter();
+        const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+        const orchestrator = getCompositionRoot().getOrchestrator();
 
         const currentBranch = gitFlowService.getCurrentBranch();
         const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
@@ -1002,9 +1010,9 @@ setInterval(async () => {
     if (now - lastAutoCommitTime < AUTO_COMMIT_INTERVAL) return;
 
     try {
-        const gitFlowService = compositionRoot.getGitFlowService();
-        const gitQuery = compositionRoot.getGitQueryAdapter();
-        const gitCommand = compositionRoot.getGitCommandAdapter();
+        const gitFlowService = getCompositionRoot().getGitFlowService();
+        const gitQuery = getCompositionRoot().getGitQueryAdapter();
+        const gitCommand = getCompositionRoot().getGitCommandAdapter();
 
         const currentBranch = gitFlowService.getCurrentBranch();
         const isFeatureBranch = currentBranch.match(/^(feature|fix|hotfix)\//);
