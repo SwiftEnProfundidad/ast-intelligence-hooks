@@ -5,8 +5,8 @@
 <h1 align="center">@pumuki/ast-intelligence-hooks</h1>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@pumuki/ast-intelligence-hooks"><img src="https://img.shields.io/npm/v/@pumuki/ast-intelligence-hooks.svg?style=flat-square&label=npm&color=CB3837" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/@pumuki/ast-intelligence-hooks"><img src="https://img.shields.io/npm/dm/@pumuki/ast-intelligence-hooks.svg?style=flat-square&color=CB3837" alt="npm downloads" /></a>
+  <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/v/pumuki-ast-hooks.svg?style=flat-square&label=npm&color=CB3837" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/dm/pumuki-ast-hooks.svg?style=flat-square&color=CB3837" alt="npm downloads" /></a>
   <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT" /></a>
   <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg?style=flat-square&logo=node.js" alt="Node.js Version" /></a>
   <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg?style=flat-square&logo=npm" alt="npm" /></a>
