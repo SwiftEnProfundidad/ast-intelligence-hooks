@@ -4,8 +4,9 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const env = require('../../config/env');
 
-const REPO_ROOT = process.env.HOOK_GUARD_REPO_ROOT || process.cwd();
+const REPO_ROOT = env.get('HOOK_GUARD_REPO_ROOT', process.cwd());
 const CONFIG_PATH = path.join(REPO_ROOT, 'scripts', 'hooks-system', 'config', 'language-guard.json');
 const DEFAULT_IGNORED_SEGMENTS = [
     `${path.sep}node_modules${path.sep}`,
@@ -22,7 +23,7 @@ function decodeUnicode(value) {
     try {
         return JSON.parse(`"${value}"`);
     } catch (error) {
-        if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+        if (env.isDev || env.getBool('DEBUG', false)) {
             console.debug(`[enforce-english-literals] Failed to decode Unicode value "${value}": ${error.message}`);
         }
         return value;
@@ -119,13 +120,10 @@ function analyzeFile(relativePath, config) {
 
 function collectStagedFiles() {
     try {
-        const raw = execSync('git diff --cached --name-only --diff-filter=ACMR', {
-            cwd: REPO_ROOT,
-            encoding: 'utf8'
-        });
-        return raw.split('\n').map(entry => entry.trim()).filter(Boolean);
+        const stagedFilesRaw = execSync('git diff --cached --name-only', { encoding: 'utf8' });
+        return stagedFilesRaw.split('\n').filter(Boolean).map(file => file.trim());
     } catch (error) {
-        if (process.env.NODE_ENV === 'development' || process.env.DEBUG) {
+        if (env.isDev || env.getBool('DEBUG', false)) {
             console.debug(`[enforce-english-literals] Failed to collect staged files: ${error.message}`);
         }
         return [];

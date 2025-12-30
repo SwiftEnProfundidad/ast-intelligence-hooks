@@ -21,9 +21,11 @@ const TokenMonitor = require('./services/monitoring/TokenMonitor');
 const ActivityMonitor = require('./services/monitoring/ActivityMonitor');
 const DevDocsMonitor = require('./services/monitoring/DevDocsMonitor');
 const AstMonitor = require('./services/monitoring/AstMonitor');
+const AuditLogger = require('./services/logging/AuditLogger');
 
 const path = require('path');
 const fs = require('fs');
+const env = require('../config/env');
 
 class CompositionRoot {
     constructor(repoRoot) {
@@ -51,7 +53,7 @@ class CompositionRoot {
                 file: {
                     enabled: true,
                     path: path.join(this.auditDir, 'guard-audit.jsonl'),
-                    level: process.env.HOOK_LOG_LEVEL || 'info'
+                    level: env.get('HOOK_LOG_LEVEL', env.isProd ? 'warn' : 'info')
                 },
                 console: {
                     enabled: false,
@@ -71,6 +73,18 @@ class CompositionRoot {
             }));
         }
         return this.instances.get('notificationService');
+    }
+
+    getAuditLogger() {
+        if (!this.instances.has('auditLogger')) {
+            const logger = this.getLogger();
+            this.instances.set('auditLogger', new AuditLogger({
+                repoRoot: this.repoRoot,
+                filename: path.join('.audit_tmp', 'audit.log'),
+                logger
+            }));
+        }
+        return this.instances.get('auditLogger');
     }
 
     // --- Infrastructure Adapters ---
@@ -183,9 +197,9 @@ class CompositionRoot {
     getEvidenceMonitor() {
         if (!this.instances.has('evidenceMonitor')) {
             this.instances.set('evidenceMonitor', new EvidenceMonitor(this.repoRoot, {
-                staleThresholdMs: Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 180000),
-                pollIntervalMs: Number(process.env.HOOK_GUARD_EVIDENCE_POLL_INTERVAL || 30000),
-                reminderIntervalMs: Number(process.env.HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL || 60000)
+                staleThresholdMs: env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 180000),
+                pollIntervalMs: env.getNumber('HOOK_GUARD_EVIDENCE_POLL_INTERVAL', 30000),
+                reminderIntervalMs: env.getNumber('HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL', 60000)
             }));
         }
         return this.instances.get('evidenceMonitor');
@@ -194,11 +208,11 @@ class CompositionRoot {
     getGitTreeMonitor() {
         if (!this.instances.has('gitTreeMonitor')) {
             this.instances.set('gitTreeMonitor', new GitTreeMonitor(this.repoRoot, {
-                stagedThreshold: Number(process.env.HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT || 10),
-                unstagedThreshold: Number(process.env.HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT || 15),
-                totalThreshold: Number(process.env.HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT || 20),
-                checkIntervalMs: Number(process.env.HOOK_GUARD_DIRTY_TREE_INTERVAL || 60000),
-                reminderMs: Number(process.env.HOOK_GUARD_DIRTY_TREE_REMINDER || 300000)
+                stagedThreshold: env.getNumber('HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT', 10),
+                unstagedThreshold: env.getNumber('HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT', 15),
+                totalThreshold: env.getNumber('HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT', 20),
+                checkIntervalMs: env.getNumber('HOOK_GUARD_DIRTY_TREE_INTERVAL', 60000),
+                reminderMs: env.getNumber('HOOK_GUARD_DIRTY_TREE_REMINDER', 300000)
             }));
         }
         return this.instances.get('gitTreeMonitor');
@@ -219,11 +233,11 @@ class CompositionRoot {
             const github = this.getGitHubAdapter();
 
             this.instances.set('gitFlowService', new GitFlowService(this.repoRoot, {
-                developBranch: process.env.HOOK_GUARD_GITFLOW_DEVELOP_BRANCH || 'develop',
-                mainBranch: process.env.HOOK_GUARD_GITFLOW_MAIN_BRANCH || 'main',
-                autoSyncEnabled: process.env.HOOK_GUARD_GITFLOW_AUTOSYNC !== 'false',
-                autoCleanEnabled: process.env.HOOK_GUARD_GITFLOW_AUTOCLEAN !== 'false',
-                requireClean: process.env.HOOK_GUARD_GITFLOW_REQUIRE_CLEAN !== 'false'
+                developBranch: env.get('HOOK_GUARD_GITFLOW_DEVELOP_BRANCH', 'develop'),
+                mainBranch: env.get('HOOK_GUARD_GITFLOW_MAIN_BRANCH', 'main'),
+                autoSyncEnabled: env.getBool('HOOK_GUARD_GITFLOW_AUTOSYNC', true),
+                autoCleanEnabled: env.getBool('HOOK_GUARD_GITFLOW_AUTOCLEAN', true),
+                requireClean: env.getBool('HOOK_GUARD_GITFLOW_REQUIRE_CLEAN', true)
             }, logger, gitQuery, gitCommand, github));
         }
         return this.instances.get('gitFlowService');
@@ -234,7 +248,7 @@ class CompositionRoot {
             const logger = this.getLogger();
             this.instances.set('activityMonitor', new ActivityMonitor({
                 repoRoot: this.repoRoot,
-                inactivityGraceMs: Number(process.env.HOOK_GUARD_INACTIVITY_GRACE_MS || 420000),
+                inactivityGraceMs: env.getNumber('HOOK_GUARD_INACTIVITY_GRACE_MS', 420000),
                 logger
             }));
         }
@@ -247,9 +261,9 @@ class CompositionRoot {
             const notificationService = this.getNotificationService();
             this.instances.set('devDocsMonitor', new DevDocsMonitor({
                 repoRoot: this.repoRoot,
-                checkIntervalMs: Number(process.env.HOOK_GUARD_DEV_DOCS_CHECK_INTERVAL || 300000),
-                staleThresholdMs: Number(process.env.HOOK_GUARD_DEV_DOCS_STALE_THRESHOLD || 86400000),
-                autoRefreshEnabled: process.env.HOOK_GUARD_DEV_DOCS_AUTO_REFRESH !== 'false',
+                checkIntervalMs: env.getNumber('HOOK_GUARD_DEV_DOCS_CHECK_INTERVAL', 300000),
+                staleThresholdMs: env.getNumber('HOOK_GUARD_DEV_DOCS_STALE_THRESHOLD', 86400000),
+                autoRefreshEnabled: env.getBool('HOOK_GUARD_DEV_DOCS_AUTO_REFRESH', true),
                 logger,
                 notificationService
             }));
@@ -263,9 +277,9 @@ class CompositionRoot {
             const notificationService = this.getNotificationService();
             this.instances.set('astMonitor', new AstMonitor({
                 repoRoot: this.repoRoot,
-                debounceMs: Number(process.env.HOOK_AST_WATCH_DEBOUNCE || 8000),
-                cooldownMs: Number(process.env.HOOK_AST_WATCH_COOLDOWN || 30000),
-                enabled: process.env.HOOK_AST_WATCH !== 'false',
+                debounceMs: env.getNumber('HOOK_AST_WATCH_DEBOUNCE', 8000),
+                cooldownMs: env.getNumber('HOOK_AST_WATCH_COOLDOWN', 30000),
+                enabled: env.getBool('HOOK_AST_WATCH', true),
                 logger,
                 notificationService
             }));
@@ -291,6 +305,7 @@ class CompositionRoot {
             const notificationService = this.getNotificationService();
             const monitors = this.getMonitors();
             const orchestrator = this.getOrchestrator();
+            const auditLogger = this.getAuditLogger();
             const config = {
                 debugLogPath: path.join(this.auditDir, 'guard-debug.log'),
                 repoRoot: this.repoRoot
@@ -301,7 +316,8 @@ class CompositionRoot {
                 notificationService,
                 monitors,
                 orchestration: orchestrator,
-                config
+                config,
+                auditLogger
             }));
         }
         return this.instances.get('guardService');

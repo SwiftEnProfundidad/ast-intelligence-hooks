@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { getGitTreeState, isTreeBeyondLimit } = require('./GitTreeState');
+const AuditLogger = require('./logging/AuditLogger');
+const { recordMetric } = require('../../infrastructure/telemetry/metrics-logger');
+const env = require('../../config/env');
 
 class RealtimeGuardService {
     /**
@@ -30,39 +33,42 @@ class RealtimeGuardService {
         this.monitors = monitors || {};
         this.orchestration = orchestration;
         this.config = config || {};
+        this.auditLogger = dependencies.auditLogger || new AuditLogger({ repoRoot: process.cwd(), logger: this.logger });
 
         if (!this.config.debugLogPath) {
             this.config.debugLogPath = path.join(process.cwd(), '.audit-reports', 'guard-debug.log');
         }
 
         this.evidencePath = this.config.evidencePath || path.join(process.cwd(), '.AI_EVIDENCE.json');
-        this.staleThresholdMs = Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 60000);
-        this.reminderIntervalMs = Number(process.env.HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL || 60000);
-        this.inactivityGraceMs = Number(process.env.HOOK_GUARD_INACTIVITY_GRACE_MS || 120000);
-        this.pollIntervalMs = Number(process.env.HOOK_GUARD_EVIDENCE_POLL_INTERVAL || 30000);
+        this.staleThresholdMs = env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 60000);
+        this.reminderIntervalMs = env.getNumber('HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL', 60000);
+        this.inactivityGraceMs = env.getNumber('HOOK_GUARD_INACTIVITY_GRACE_MS', 120000);
+        this.pollIntervalMs = env.getNumber('HOOK_GUARD_EVIDENCE_POLL_INTERVAL', 30000);
         this.pollTimer = null;
         this.lastStaleNotification = 0;
         this.lastUserActivityAt = 0;
 
-        this.gitTreeStagedThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT || 10);
-        this.gitTreeUnstagedThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT || 15);
-        this.gitTreeTotalThreshold = Number(process.env.HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT || 20);
-        this.gitTreeCheckIntervalMs = Number(process.env.HOOK_GUARD_DIRTY_TREE_INTERVAL || 60000);
-        this.gitTreeReminderMs = Number(process.env.HOOK_GUARD_DIRTY_TREE_REMINDER || 300000);
+        this.gitTreeStagedThreshold = env.getNumber('HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT', 10);
+        this.gitTreeUnstagedThreshold = env.getNumber('HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT', 15);
+        this.gitTreeTotalThreshold = env.getNumber('HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT', 20);
+        this.gitTreeCheckIntervalMs = env.getNumber('HOOK_GUARD_DIRTY_TREE_INTERVAL', 60000);
+        this.gitTreeReminderMs = env.getNumber('HOOK_GUARD_DIRTY_TREE_REMINDER', 300000);
         this.gitTreeTimer = null;
         this.lastDirtyTreeNotification = 0;
         this.dirtyTreeActive = false;
 
-        this.autoRefreshCooldownMs = Number(process.env.HOOK_GUARD_EVIDENCE_AUTO_REFRESH_COOLDOWN || 180000);
+        this.autoRefreshCooldownMs = env.getNumber('HOOK_GUARD_EVIDENCE_AUTO_REFRESH_COOLDOWN', 180000);
         this.lastAutoRefresh = 0;
         this.autoRefreshInFlight = false;
 
         this.watchers = [];
-        this.embedTokenMonitor = process.env.HOOK_GUARD_EMBEDDED_TOKEN_MONITOR === 'true';
+        this.embedTokenMonitor = env.getBool('HOOK_GUARD_EMBEDDED_TOKEN_MONITOR', false);
     }
 
     start() {
         this.logger.info('Starting RealtimeGuardService...');
+        this.auditLogger.record({ action: 'guard.realtime.start', resource: 'realtime_guard', status: 'success' });
+        recordMetric({ hook: 'realtime_guard', status: 'start' });
 
         // Start all monitors
         this._startEvidenceMonitoring();
@@ -82,6 +88,8 @@ class RealtimeGuardService {
 
     stop() {
         this.logger.info('Stopping RealtimeGuardService...');
+        this.auditLogger.record({ action: 'guard.realtime.stop', resource: 'realtime_guard', status: 'success' });
+        recordMetric({ hook: 'realtime_guard', status: 'stop' });
 
         this.watchers.forEach(w => w.close());
         this.watchers = [];
@@ -103,14 +111,27 @@ class RealtimeGuardService {
     }
 
     _startGitTreeMonitoring() {
-        if (process.env.HOOK_GUARD_DIRTY_TREE_DISABLED === 'true') return;
+        if (env.getBool('HOOK_GUARD_DIRTY_TREE_DISABLED', false)) return;
 
         this.monitors.gitTree.startMonitoring((state) => {
             if (state.isBeyondLimit) {
                 const message = `Git tree has too many files: ${state.total} total (${state.staged} staged, ${state.unstaged} unstaged)`;
                 this.notify(message, 'error', { forceDialog: true });
+                this.auditLogger.record({
+                    action: 'guard.git_tree.dirty',
+                    resource: 'git_tree',
+                    status: 'warning',
+                    meta: { total: state.total, staged: state.staged, unstaged: state.unstaged }
+                });
+                recordMetric({ hook: 'git_tree', status: 'dirty', total: state.total, staged: state.staged, unstaged: state.unstaged });
             } else {
                 this.notify('✅ Git tree is clean', 'success');
+                this.auditLogger.record({
+                    action: 'guard.git_tree.clean',
+                    resource: 'git_tree',
+                    status: 'success'
+                });
+                recordMetric({ hook: 'git_tree', status: 'clean' });
             }
         });
     }
@@ -124,22 +145,44 @@ class RealtimeGuardService {
         try {
             this.monitors.token.start();
             this.notify('🔋 Token monitor started', 'info');
+            this.auditLogger.record({
+                action: 'guard.token_monitor.start',
+                resource: 'token_monitor',
+                status: 'success'
+            });
+            recordMetric({ hook: 'token_monitor', status: 'start' });
         } catch (error) {
             this.notify(`Failed to start token monitor: ${error.message}`, 'error');
+            this.auditLogger.record({
+                action: 'guard.token_monitor.start',
+                resource: 'token_monitor',
+                status: 'fail',
+                meta: { message: error.message }
+            });
+            recordMetric({ hook: 'token_monitor', status: 'fail' });
         }
     }
 
     _startGitFlowSync() {
         if (!this.monitors.gitFlow.autoSyncEnabled) return;
 
+        this.auditLogger.record({
+            action: 'guard.gitflow.autosync.enabled',
+            resource: 'gitflow',
+            status: 'success',
+            meta: { intervalMs: env.getNumber('HOOK_GUARD_GITFLOW_AUTOSYNC_INTERVAL', 300000) }
+        });
+        recordMetric({ hook: 'gitflow_autosync', status: 'enabled' });
+
         const syncInterval = setInterval(() => {
             if (this.monitors.gitFlow.isClean()) {
                 const result = this.monitors.gitFlow.syncBranches();
                 if (result.success) {
                     this.notify('🔄 Branches synchronized', 'info');
+                    recordMetric({ hook: 'gitflow_autosync', status: 'sync_success' });
                 }
             }
-        }, Number(process.env.HOOK_GUARD_GITFLOW_AUTOSYNC_INTERVAL || 300000));
+        }, env.getNumber('HOOK_GUARD_GITFLOW_AUTOSYNC_INTERVAL', 300000));
 
         syncInterval.unref();
     }
@@ -247,11 +290,18 @@ class RealtimeGuardService {
         this.lastStaleNotification = now;
         const ageSec = Math.floor(ageMs / 1000);
         this.notify(`Evidence has been stale for ${ageSec}s (source: ${source}).`, 'warn', { forceDialog: true });
+        this.auditLogger.record({
+            action: 'guard.evidence.stale',
+            resource: 'evidence',
+            status: 'warning',
+            meta: { ageSec, source }
+        });
+        recordMetric({ hook: 'evidence', status: 'stale', ageSec, source });
         void this.attemptAutoRefresh('stale');
     }
 
     async attemptAutoRefresh(reason = 'manual') {
-        if (process.env.HOOK_GUARD_AUTO_REFRESH !== 'true') {
+        if (!env.getBool('HOOK_GUARD_AUTO_REFRESH', false)) {
             return;
         }
 
@@ -284,6 +334,13 @@ class RealtimeGuardService {
         try {
             await this.runDirectEvidenceRefresh(reason);
             this.lastAutoRefresh = now;
+            this.auditLogger.record({
+                action: 'guard.evidence.auto_refresh',
+                resource: 'evidence',
+                status: 'success',
+                meta: { reason }
+            });
+            recordMetric({ hook: 'evidence', status: 'auto_refresh_success', reason });
         } finally {
             this.autoRefreshInFlight = false;
         }

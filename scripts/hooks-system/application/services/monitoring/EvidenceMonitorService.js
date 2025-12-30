@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const env = require('../../config/env');
 
 function resolveUpdateEvidenceScript(repoRoot) {
     const candidates = [
@@ -25,9 +26,9 @@ class EvidenceMonitorService {
         updateScriptPath = resolveUpdateEvidenceScript(repoRoot) || path.join(process.cwd(), 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
         notifier = () => { },
         logger = console,
-        autoRefreshEnabled = process.env.HOOK_GUARD_AUTO_REFRESH !== 'false',
-        autoRefreshCooldownMs = Number(process.env.HOOK_GUARD_AUTO_REFRESH_COOLDOWN || 180000),
-        staleThresholdMs = Number(process.env.HOOK_GUARD_EVIDENCE_STALE_THRESHOLD || 10 * 60 * 1000),
+        autoRefreshEnabled = env.getBool('HOOK_GUARD_AUTO_REFRESH', true),
+        autoRefreshCooldownMs = env.getNumber('HOOK_GUARD_AUTO_REFRESH_COOLDOWN', 180000),
+        staleThresholdMs = env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 10 * 60 * 1000),
         fsModule = fs,
         execFn = execSync
     } = {}) {
