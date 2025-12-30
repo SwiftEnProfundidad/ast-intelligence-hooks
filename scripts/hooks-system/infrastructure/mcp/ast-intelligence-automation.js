@@ -28,7 +28,30 @@ const { execSync } = require('child_process');
 const MCP_VERSION = '2024-11-05';
 
 // Configuration - LAZY LOADING to avoid blocking MCP initialization
-const REPO_ROOT = process.env.REPO_ROOT || process.cwd();
+function safeGitRoot(startDir) {
+    try {
+        const out = execSync('git rev-parse --show-toplevel', {
+            cwd: startDir,
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'ignore']
+        });
+        const root = String(out || '').trim();
+        return root || null;
+    } catch {
+        return null;
+    }
+}
+
+function resolveRepoRoot() {
+    const envRoot = (process.env.REPO_ROOT || '').trim() || null;
+    const cwdRoot = safeGitRoot(process.cwd());
+    // Prefer explicit REPO_ROOT to avoid cross-repo bleed when MCP server is launched from another workspace
+    if (envRoot) return envRoot;
+    if (cwdRoot) return cwdRoot;
+    return process.cwd();
+}
+
+const REPO_ROOT = resolveRepoRoot();
 
 // Lazy-loaded CompositionRoot - only initialized when first needed
 let _compositionRoot = null;

@@ -1,6 +1,6 @@
 {
   "name": "pumuki-ast-hooks",
-  "version": "5.3.5",
+  "version": "5.3.16",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
@@ -39,7 +39,9 @@
     "lint": "npm run lint:hooks",
     "lint:hooks": "eslint \"scripts/hooks-system/application/**/*.js\" \"bin/**/*.js\"",
     "build:ts": "tsc --noEmit",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "ast:refresh": "node scripts/hooks-system/bin/update-evidence.sh",
+    "ast:audit": "node scripts/hooks-system/infrastructure/ast/ast-intelligence.js"
   },
   "keywords": [
     "ast",

@@ -56,7 +56,13 @@ source "$INFRASTRUCTURE_DIR/eslint/eslint-integration.sh"
 
 # Initialize
 START_TIME=$(date +%s)
-ROOT_DIR=$(pwd)
+
+# Determine repository root using git
+if command -v git >/dev/null 2>&1; then
+  ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+else
+  ROOT_DIR=$(pwd)
+fi
 
 # Default to temp directories to avoid polluting repositories.
 # Can be overridden by setting AUDIT_TMP / AUDIT_REPORTS.
@@ -366,8 +372,7 @@ compute_staged_summary() {
         .findings 
         | map(select(
             .filePath as $fp 
-            | $staged[] as $sf 
-            | ($fp | endswith($sf)) or ($fp | contains("/" + $sf))
+            | any($staged[]; . as $sf | ($fp | endswith($sf)) or ($fp | contains("/" + $sf)))
           ))
         | group_by(.severity | ascii_downcase)
         | map({key: .[0].severity | ascii_downcase, value: length})

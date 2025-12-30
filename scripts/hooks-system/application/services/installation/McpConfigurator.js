@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const crypto = require('crypto');
+const os = require('os');
 
 const COLORS = {
     reset: '\x1b[0m',
@@ -9,6 +11,35 @@ const COLORS = {
     cyan: '\x1b[36m'
 };
 
+function slugifyId(input) {
+    return String(input || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 48);
+}
+
+function computeRepoFingerprint(repoRoot) {
+    try {
+        const real = fs.realpathSync(repoRoot);
+        return crypto.createHash('sha1').update(real).digest('hex').slice(0, 8);
+    } catch {
+        return crypto.createHash('sha1').update(String(repoRoot || '')).digest('hex').slice(0, 8);
+    }
+}
+
+function computeServerIdForRepo(repoRoot) {
+    const legacyServerId = 'ast-intelligence-automation';
+    const forced = (process.env.MCP_SERVER_ID || '').trim();
+    if (forced.length > 0) return forced;
+
+    const repoName = path.basename(repoRoot || process.cwd());
+    const slug = slugifyId(repoName) || 'repo';
+    const fp = computeRepoFingerprint(repoRoot);
+    return `${legacyServerId}-${slug}-${fp}`;
+}
+
 class McpConfigurator {
     constructor(targetRoot, hookSystemRoot, logger = null) {
         this.targetRoot = targetRoot;
@@ -16,26 +47,32 @@ class McpConfigurator {
         this.logger = logger;
     }
 
+    getGlobalWindsurfConfigPath() {
+        return path.join(os.homedir(), '.codeium', 'windsurf', 'mcp_config.json');
+    }
+
     configure() {
         if (this.logger) this.logger.info('MCP_CONFIGURATION_STARTED');
+
         let nodePath = process.execPath;
         if (!nodePath || !fs.existsSync(nodePath)) {
             try {
                 nodePath = execSync('which node', { encoding: 'utf-8' }).trim();
-            } catch (err) {
+            } catch {
                 nodePath = 'node';
             }
         }
 
+        const serverId = computeServerIdForRepo(this.targetRoot);
         const mcpConfig = {
             mcpServers: {
-                'ast-intelligence-automation': {
+                [serverId]: {
                     command: nodePath,
                     args: [
-                        '${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js'
+                        path.join(this.targetRoot, 'scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js')
                     ],
                     env: {
-                        REPO_ROOT: '${workspaceFolder}',
+                        REPO_ROOT: this.targetRoot,
                         AUTO_COMMIT_ENABLED: 'false',
                         AUTO_PUSH_ENABLED: 'false',
                         AUTO_PR_ENABLED: 'false'
@@ -44,75 +81,30 @@ class McpConfigurator {
             }
         };
 
-        const ideConfigs = this.detectIDEs();
-        let configuredCount = 0;
+        const globalConfigPath = this.getGlobalWindsurfConfigPath();
+        const globalConfigDir = path.dirname(globalConfigPath);
+        if (!fs.existsSync(globalConfigDir)) {
+            fs.mkdirSync(globalConfigDir, { recursive: true });
+        }
 
-        ideConfigs.forEach(ide => {
-            if (!fs.existsSync(ide.configDir)) {
-                fs.mkdirSync(ide.configDir, { recursive: true });
-            }
-
-            const mcpConfigPath = path.join(ide.configDir, 'mcp.json');
-
-            if (!fs.existsSync(mcpConfigPath)) {
-                const configToWrite = ide.name === 'Claude Desktop'
-                    ? this.adaptConfigForClaudeDesktop(mcpConfig)
-                    : mcpConfig;
-
-                fs.writeFileSync(mcpConfigPath, JSON.stringify(configToWrite, null, 2));
-                this.logSuccess(`Configured ${ide.configPath}`);
-                if (this.logger) this.logger.info('MCP_CONFIGURED', { ide: ide.name, path: ide.configPath });
-                configuredCount++;
+        try {
+            if (!fs.existsSync(globalConfigPath)) {
+                fs.writeFileSync(globalConfigPath, JSON.stringify(mcpConfig, null, 2));
+                this.logSuccess(`Configured global Windsurf MCP at ${globalConfigPath}`);
+                if (this.logger) this.logger.info('MCP_GLOBAL_CONFIGURED', { path: globalConfigPath });
             } else {
-                try {
-                    const existing = JSON.parse(fs.readFileSync(mcpConfigPath, 'utf8'));
-                    if (!existing.mcpServers) {
-                        existing.mcpServers = {};
-                    }
+                const existing = JSON.parse(fs.readFileSync(globalConfigPath, 'utf8'));
+                if (!existing.mcpServers) existing.mcpServers = {};
 
-                    existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
+                existing.mcpServers[serverId] = mcpConfig.mcpServers[serverId];
 
-                    fs.writeFileSync(mcpConfigPath, JSON.stringify(existing, null, 2));
-                    this.logSuccess(`Updated ${ide.configPath} (merged configuration)`);
-                    if (this.logger) this.logger.info('MCP_CONFIG_UPDATED', { ide: ide.name, path: ide.configPath });
-                    configuredCount++;
-                } catch (mergeError) {
-                    this.logWarning(`${ide.configPath} already exists and couldn't be merged, skipping`);
-                    if (this.logger) this.logger.warn('MCP_CONFIG_MERGE_FAILED', { ide: ide.name, error: mergeError.message });
-                }
+                fs.writeFileSync(globalConfigPath, JSON.stringify(existing, null, 2));
+                this.logSuccess(`Updated global Windsurf MCP at ${globalConfigPath}`);
+                if (this.logger) this.logger.info('MCP_GLOBAL_UPDATED', { path: globalConfigPath });
             }
-        });
-
-        if (configuredCount === 0 && ideConfigs.length === 0) {
-            this.configureFallback(mcpConfig);
-        }
-    }
-
-    configureFallback(mcpConfig) {
-        const cursorDir = path.join(this.targetRoot, '.cursor');
-        if (!fs.existsSync(cursorDir)) {
-            fs.mkdirSync(cursorDir, { recursive: true });
-        }
-        const fallbackPath = path.join(cursorDir, 'mcp.json');
-        if (!fs.existsSync(fallbackPath)) {
-            fs.writeFileSync(fallbackPath, JSON.stringify(mcpConfig, null, 2));
-            this.logSuccess('Configured .cursor/mcp.json (generic fallback)');
-            this.logInfo('Note: MCP servers work with any MCP-compatible IDE');
-            if (this.logger) this.logger.info('MCP_FALLBACK_CONFIGURED', { path: fallbackPath });
-        } else {
-            try {
-                const existing = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-                if (!existing.mcpServers) {
-                    existing.mcpServers = {};
-                }
-                existing.mcpServers['ast-intelligence-automation'] = mcpConfig.mcpServers['ast-intelligence-automation'];
-                fs.writeFileSync(fallbackPath, JSON.stringify(existing, null, 2));
-                this.logSuccess('Updated .cursor/mcp.json (merged configuration)');
-                if (this.logger) this.logger.info('MCP_FALLBACK_UPDATED', { path: fallbackPath });
-            } catch (mergeError) {
-                this.logWarning('.cursor/mcp.json exists and couldn\'t be merged, skipping');
-                if (this.logger) this.logger.warn('MCP_FALLBACK_MERGE_FAILED', { error: mergeError.message });
-            }
+        } catch (mergeError) {
+            this.logWarning(`${globalConfigPath} exists but couldn't be merged, skipping`);
+            if (this.logger) this.logger.warn('MCP_GLOBAL_MERGE_FAILED', { error: mergeError.message });
         }
     }
 
