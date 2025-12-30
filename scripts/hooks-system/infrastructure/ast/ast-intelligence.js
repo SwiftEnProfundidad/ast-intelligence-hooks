@@ -28,6 +28,7 @@ async function runASTIntelligence() {
     const root = getRepoRoot();
 
     const isLibraryAudit = process.env.AUDIT_LIBRARY === 'true';
+
     const allFiles = listSourceFiles(root).filter(f => {
       const p = String(f || '').replace(/\\/g, '/');
       if (!isLibraryAudit && p.includes('/infrastructure/ast/')) return false;
@@ -534,19 +535,34 @@ function listSourceFiles(root) {
   if (process.env.STAGING_ONLY_MODE === "1") {
     const { execSync } = require("child_process");
     try {
-      const stagedFiles = execSync("git diff --cached --name-only --diff-filter=ACM", {
+      const allStaged = execSync("git diff --cached --name-only --diff-filter=ACM", {
         encoding: "utf8",
         cwd: root
       })
         .trim()
         .split("\n")
-        .filter(f => f.trim())
+        .filter(f => f.trim());
+
+      if (allStaged.length === 0) {
+        return [];
+      }
+
+      const stagedFiles = allStaged
         .map(f => path.resolve(root, f.trim()))
         .filter(f => {
           const ext = path.extname(f);
           return [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".swift", ".kt", ".kts"].includes(ext);
         })
         .filter(f => fs.existsSync(f) && !shouldIgnore(f.replace(/\\/g, "/")));
+
+      // Si hay staged files pero ninguno es compatible con AST
+      if (stagedFiles.length === 0 && allStaged.length > 0) {
+        console.error('\n⚠️  No AST-compatible files in staging area');
+        console.error('   Staged files found:', allStaged.length);
+        console.error('   AST analyzes: .ts, .tsx, .js, .jsx, .mjs, .cjs, .swift, .kt, .kts');
+        console.error('   Consider staging source code files or use option 2 for full repository analysis\n');
+      }
+
       return stagedFiles;
     } catch (error) {
       return [];
@@ -584,7 +600,9 @@ function listSourceFiles(root) {
 function shouldIgnore(file) {
   const p = file.replace(/\\/g, "/");
   if (p.includes("node_modules/")) return true;
+
   const isLibraryAudit = process.env.AUDIT_LIBRARY === 'true';
+
   if (!isLibraryAudit && p.includes("scripts/hooks-system/")) return true;
   if (!isLibraryAudit && p.includes("/infrastructure/ast/")) return true;
   if (p.includes("/.cursor/")) return true;

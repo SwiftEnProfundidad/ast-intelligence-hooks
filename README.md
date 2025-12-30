@@ -5,24 +5,40 @@
 <h1 align="center">@pumuki/ast-intelligence-hooks</h1>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@pumuki/ast-intelligence-hooks"><img src="https://img.shields.io/npm/v/@pumuki/ast-intelligence-hooks.svg?label=npm" alt="npm version" /></a>
-  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg" alt="Node.js Version" /></a>
-  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg" alt="npm" /></a>
-  <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue.svg" alt="Platforms" />
+  <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/v/pumuki-ast-hooks.svg?style=flat-square&label=npm&color=CB3837" alt="npm version" /></a>
+  <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/dm/pumuki-ast-hooks.svg?style=flat-square&color=CB3837" alt="npm downloads" /></a>
+  <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg?style=flat-square&logo=node.js" alt="Node.js Version" /></a>
+  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg?style=flat-square&logo=npm" alt="npm" /></a>
+  <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue.svg?style=flat-square" alt="Platforms" />
+  <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/releases"><img src="https://img.shields.io/github/release-date/SwiftEnProfundidad/ast-intelligence-hooks.svg?style=flat-square&label=last%20release" alt="Last Release" /></a>
+  <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues"><img src="https://img.shields.io/github/issues/SwiftEnProfundidad/ast-intelligence-hooks.svg?style=flat-square" alt="GitHub Issues" /></a>
+</p>
+
+<p align="center">
+  <strong>Enterprise-grade AST Intelligence System for multi-platform code quality enforcement</strong>
+</p>
+
+<p align="center">
+  <a href="#-quick-start">Quick Start</a> •
+  <a href="#-features">Features</a> •
+  <a href="./docs/INSTALLATION.md">Installation</a> •
+  <a href="./docs/API_REFERENCE.md">API Reference</a> •
+  <a href="./CHANGELOG.md">Changelog</a> •
+  <a href="./docs/CONTRIBUTING.md">Contributing</a>
 </p>
 
 ### Visual Overview
 
-<img src="./docs/images/ast_intelligence_01.png" alt="AST Intelligence System Overview" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_01.png" alt="AST Intelligence System Overview" width="100%" />
 
-<img src="./docs/images/ast_intelligence_02.png" alt="AST Intelligence Workflow" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_02.png" alt="AST Intelligence Workflow" width="100%" />
 
-<img src="./docs/images/ast_intelligence_03.png" alt="AST Intelligence Audit - Part 1" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_03.png" alt="AST Intelligence Audit - Part 1" width="100%" />
 
-<img src="./docs/images/ast_intelligence_04.png" alt="AST Intelligence Audit - Part 2" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_04.png" alt="AST Intelligence Audit - Part 2" width="100%" />
 
-<img src="./docs/images/ast_intelligence_05.png" alt="AST Intelligence Audit - Part 3" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_05.png" alt="AST Intelligence Audit - Part 3" width="100%" />
 
 ---
 
@@ -291,7 +307,7 @@ This library was conceived to solve this fundamental problem by creating a **per
 
 ### **How** Does It Work?
 
-1. **Installation**: `npm install --save-dev @pumuki/ast-intelligence-hooks && npm run install-hooks`
+1. **Installation**: `npm install --save-dev pumuki-ast-hooks && npm run install-hooks`
 2. **Initialization**: Run `ai-start` before coding (or it auto-executes)
 3. **Development**: System monitors and validates automatically
 4. **Commits**: Pre-commit hooks analyze and block if needed
@@ -316,17 +332,57 @@ This library was conceived to solve this fundamental problem by creating a **per
 
 ---
 
-## 🎯 The Result: Never Lose Context Again
+## Complete Architecture and Workflow
 
-With this library, your AI assistant **always knows**:
+The library operates through a multi-phase process that integrates with Git and development workflows to ensure code quality and context persistence. Below is a high-level overview of the architecture and key components:
 
-- ✅ **What you're working on**: Current branch, recent commits, active modules
-- ✅ **What rules apply**: All 798+ platform-specific rules loaded automatically
-- ✅ **What patterns exist**: Architecture patterns detected and documented
-- ✅ **What violations need fixing**: Real-time violation tracking with severity
-- ✅ **How the architecture should be structured**: Clean Architecture, DDD, Feature-First validation
+### Architectural Diagram
 
-**This is not just a validation tool**—it's a **context persistence system** that transforms AI assistants from forgetful helpers into **permanent, context-aware collaborators**.
+```mermaid
+graph LR
+  A[Developer] -->|Runs `ai-start`| B(AI Evidence Initialization)
+  B --> C[.AI_EVIDENCE.json]
+  C --> D[Pre-Tool-Use Validator]
+  D --> E[AI Gate Check]
+  E --> F[Allow/Block Actions]
+  F --> G[Code Editing]
+  G --> H[Pre-Commit Analysis]
+  H --> I[Block Commit if Violations]
+  I --> J[Update Evidence]
+  J --> K[Commit]
+```
+
+### Key Components
+1. **AI Evidence Initialization (`ai-start`)**
+   - Generates `.AI_EVIDENCE.json` with project context and rules.
+   - Answers three critical questions about the task.
+   - Example:
+     ```bash
+     ai-start feature/user-authentication
+     ```
+
+2. **Pre-Tool-Use Validator**
+   - Validates `.AI_EVIDENCE.json` before every AI edit operation.
+   - Ensures context is fresh and rules are loaded.
+
+3. **AI Gate Check**
+   - Checks for blocking violations before allowing actions.
+   - Enforces quality gates.
+
+4. **Pre-Commit Analysis**
+   - Runs AST analysis on staged files.
+   - Blocks commits with critical violations.
+
+5. **Evidence Update**
+   - Updates `.AI_EVIDENCE.json` before commits to maintain context.
+
+### Example Workflow
+1. Developer runs `ai-start` to initialize context.
+2. AI uses context to perform edits.
+3. Pre-commit hook analyzes code and blocks if violations exist.
+4. Developer fixes violations and commits.
+
+For a detailed architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
@@ -342,7 +398,7 @@ With this library, your AI assistant **always knows**:
   - [Phase 4: Evidence Update Before Commits](#phase-4-evidence-update-before-commits)
 - [Tools & Technologies](#️-tools--technologies)
 - [What, How, and When: The Developer's Perspective](#-what-how-and-when-the-developers-perspective)
-- [The Result: Never Lose Context Again](#-the-result-never-lose-context-again)
+- [Complete Architecture and Workflow](#complete-architecture-and-workflow)
 - [What is it?](#what-is-it)
 - [What problems does it solve?](#what-problems-does-it-solve)
 - [Features](#features)
@@ -378,7 +434,7 @@ With this library, your AI assistant **always knows**:
 #### 🔍 Code Validation
 - ✅ **798+ validation rules** across all platforms with severity-based quality gates
 - ✅ **Multi-platform support**: iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose), Backend (TypeScript/NestJS), Frontend (React/Next.js)
-- ✅ **Automatic architecture detection**: Detects multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
+- ✅ **Automatic architecture detection**: Identifies multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
 - ✅ **BDD→TDD workflow enforcement**: CRITICAL priority - ensures feature files exist before implementation and tests before code
 - ✅ **Pre-commit Git hooks**: Automatic validation blocks commits with CRITICAL/HIGH violations
 - ✅ **AST analysis engine**: Deep static code analysis using Abstract Syntax Trees
@@ -549,13 +605,15 @@ hook-status
 ### Option 1: Installation via npm (Recommended)
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
+npm run install-hooks
 ```
 
 ### Option 2: Installation via Git
 
 ```bash
 npm install --save-dev git+https://github.com/carlos/ast-intelligence-hooks.git
+npm run install-hooks
 ```
 
 ### Option 3: Manual Installation
@@ -565,6 +623,7 @@ git clone https://github.com/carlos/ast-intelligence-hooks.git
 cd ast-intelligence-hooks
 npm install
 npm link
+npm run install-hooks
 ```
 
 ### Configure Git Hooks
@@ -900,11 +959,6 @@ export HOOK_GUARD_AUTO_REFRESH=true
 export AUTO_COMMIT_ENABLED=true
 export AUTO_PUSH_ENABLED=true
 export AUTO_PR_ENABLED=false
-
-# Analysis mode
-export AUDIT_STRICT=false
-export AUDIT_STAGED_ONLY=false
-export AUDIT_CRITICAL_HIGH_ONLY=false
 ```
 
 ### Configuration Files
@@ -931,8 +985,8 @@ For more details, see [USAGE.md](./docs/USAGE.md).
 ### 1. Install Hooks in All Projects
 
 ```bash
-# In each new project
-npm install --save-dev @pumuki/ast-intelligence-hooks
+# on each new project
+npm install --save-dev pumuki-ast-hooks
 npm run install-hooks
 ```
 
@@ -1004,7 +1058,7 @@ Start by fixing CRITICAL and HIGH. MEDIUM and LOW are warnings and don't block c
 ```bash
 # Automatically via MCP
 # Or manually
-./bin/update-evidence.sh --auto --platforms backend,frontend
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
 For more questions, check the issues on GitHub.
@@ -1083,7 +1137,7 @@ Developed by **Pumuki Team®**
 
 - **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development)
 - **Contact**: freelancemerlos@gmail.com
-- **Version**: 5.3.1
+- **Version**: 5.3.9
 - **Repository**: [GitHub](https://github.com/carlos/ast-intelligence-hooks)
 
 ---
@@ -1103,3 +1157,19 @@ Developed by **Pumuki Team®**
 ---
 
 **⭐ If this project is useful to you, please consider giving it a star on GitHub.**
+
+### Run the Audit
+
+To start the interactive audit menu, run:
+
+```bash
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
+```
+
+This will present a menu with options for different audit modes.
+
+For non-interactive use, specify the mode directly:
+
+```bash
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh analyze  # Full repository analysis
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh staged    # Analyze only staged files (pre-commit mode)

@@ -3,93 +3,94 @@ const path = require('path');
 const { execSync, spawnSync } = require('child_process');
 
 const COLORS = {
-    reset: '\x1b[0m',
-    blue: '\x1b[34m',
-    green: '\x1b[32m',
-    yellow: '\x1b[33m',
-    red: '\x1b[31m',
-    cyan: '\x1b[36m'
+  reset: '\x1b[0m',
+  blue: '\x1b[34m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  red: '\x1b[31m',
+  cyan: '\x1b[36m'
 };
 
 class GitEnvironmentService {
-    constructor(targetRoot) {
-        this.targetRoot = targetRoot || process.cwd();
+  constructor(targetRoot, version = 'unknown') {
+    this.targetRoot = targetRoot || process.cwd();
+    this.version = version;
+  }
+
+  checkGitRepository() {
+    const gitDir = path.join(this.targetRoot, '.git');
+    if (!fs.existsSync(gitDir)) {
+      this.logError('❌ CRITICAL: Git repository not found!');
+      this.logWarning('   This library REQUIRES a Git repository to function properly.');
+      this.logInfo('   Please run: git init\n');
+      this.logWarning('⚠️  Without Git:');
+      this.logInfo('   • Pre-commit hooks cannot be installed');
+      this.logInfo('   • Git Flow automation will not work');
+      this.logInfo('   • Code analysis on commits is disabled\n');
+      return false;
     }
 
-    checkGitRepository() {
-        const gitDir = path.join(this.targetRoot, '.git');
-        if (!fs.existsSync(gitDir)) {
-            this.logError('❌ CRITICAL: Git repository not found!');
-            this.logWarning('   This library REQUIRES a Git repository to function properly.');
-            this.logInfo('   Please run: git init\n');
-            this.logWarning('⚠️  Without Git:');
-            this.logInfo('   • Pre-commit hooks cannot be installed');
-            this.logInfo('   • Git Flow automation will not work');
-            this.logInfo('   • Code analysis on commits is disabled\n');
-            return false;
-        }
+    try {
+      execSync('git rev-parse --show-toplevel', {
+        cwd: this.targetRoot,
+        stdio: 'ignore'
+      });
+      return true;
+    } catch (err) {
+      this.logError('❌ Git repository is not properly initialized!');
+      this.logWarning('   Found .git directory but git commands fail.');
+      this.logInfo('   Please ensure Git is installed and working.\n');
+      return false;
+    }
+  }
 
-        try {
-            execSync('git rev-parse --show-toplevel', {
-                cwd: this.targetRoot,
-                stdio: 'ignore'
-            });
-            return true;
-        } catch (err) {
-            this.logError('❌ Git repository is not properly initialized!');
-            this.logWarning('   Found .git directory but git commands fail.');
-            this.logInfo('   Please ensure Git is installed and working.\n');
-            return false;
-        }
+  ensureGitInfoExclude() {
+    const gitDir = path.join(this.targetRoot, '.git');
+    if (!fs.existsSync(gitDir)) return;
+
+    const excludePath = path.join(gitDir, 'info', 'exclude');
+    fs.mkdirSync(path.dirname(excludePath), { recursive: true });
+
+    const header = '# AST Intelligence Hooks (generated artifacts)';
+    const patterns = [
+      '.AI_TOKEN_STATUS.txt',
+      '.audit-reports/*.log',
+      '.realtime-guard.pid',
+      '.token-monitor-guard.pid'
+    ];
+
+    let existing = '';
+    if (fs.existsSync(excludePath)) {
+      existing = fs.readFileSync(excludePath, 'utf8');
+      if (existing.includes(header)) return;
     }
 
-    ensureGitInfoExclude() {
-        const gitDir = path.join(this.targetRoot, '.git');
-        if (!fs.existsSync(gitDir)) return;
+    const block = '\n' + header + '\n' + patterns.join('\n') + '\n';
+    fs.appendFileSync(excludePath, block);
+    this.logSuccess('  ✅ Added artifact patterns to .git/info/exclude');
+  }
 
-        const excludePath = path.join(gitDir, 'info', 'exclude');
-        fs.mkdirSync(path.dirname(excludePath), { recursive: true });
+  installGitHooks() {
+    const gitHooksDir = path.join(this.targetRoot, '.git/hooks');
 
-        const header = '# AST Intelligence Hooks (generated artifacts)';
-        const patterns = [
-            '.AI_TOKEN_STATUS.txt',
-            '.audit-reports/*.log',
-            '.realtime-guard.pid',
-            '.token-monitor-guard.pid'
-        ];
-
-        let existing = '';
-        if (fs.existsSync(excludePath)) {
-            existing = fs.readFileSync(excludePath, 'utf8');
-            if (existing.includes(header)) return;
-        }
-
-        const block = '\n' + header + '\n' + patterns.join('\n') + '\n';
-        fs.appendFileSync(excludePath, block);
-        this.logSuccess('  ✅ Added artifact patterns to .git/info/exclude');
+    if (!fs.existsSync(gitHooksDir)) {
+      this.logError('✗ .git/hooks directory not found');
+      this.logWarning('  Git hooks cannot be installed without a valid Git repository.');
+      return;
     }
 
-    installGitHooks() {
-        const gitHooksDir = path.join(this.targetRoot, '.git/hooks');
+    const preCommitHook = this.getPreCommitHookContent();
+    const preCommitPath = path.join(gitHooksDir, 'pre-commit');
 
-        if (!fs.existsSync(gitHooksDir)) {
-            this.logError('✗ .git/hooks directory not found');
-            this.logWarning('  Git hooks cannot be installed without a valid Git repository.');
-            return;
-        }
+    fs.writeFileSync(preCommitPath, preCommitHook);
+    fs.chmodSync(preCommitPath, '755');
+    this.logSuccess('  ✅ Installed pre-commit hook');
+  }
 
-        const preCommitHook = this.getPreCommitHookContent();
-        const preCommitPath = path.join(gitHooksDir, 'pre-commit');
-
-        fs.writeFileSync(preCommitPath, preCommitHook);
-        fs.chmodSync(preCommitPath, '755');
-        this.logSuccess('  ✅ Installed pre-commit hook');
-    }
-
-    getPreCommitHookContent() {
-        return `#!/bin/bash
+  getPreCommitHookContent() {
+    return `#!/bin/bash
 # AST Intelligence Hooks - Pre-commit
-# Auto-generated by @pumuki/ast-intelligence-hooks v5.3.1
+# Auto-generated by pumuki-ast-hooks v${this.version}
 
 # Check for bypass
 if [[ -n "\${GIT_BYPASS_HOOK}" ]]; then
@@ -155,12 +156,12 @@ fi
 echo "⚠️  ast-intelligence-hooks not found"
 exit 0
 `;
-    }
+  }
 
-    logInfo(msg) { process.stdout.write(`${COLORS.cyan}${msg}${COLORS.reset}\n`); }
-    logSuccess(msg) { process.stdout.write(`${COLORS.green}${msg}${COLORS.reset}\n`); }
-    logWarning(msg) { process.stdout.write(`${COLORS.yellow}${msg}${COLORS.reset}\n`); }
-    logError(msg) { process.stdout.write(`${COLORS.red}${msg}${COLORS.reset}\n`); }
+  logInfo(msg) { process.stdout.write(`${COLORS.cyan}${msg}${COLORS.reset}\n`); }
+  logSuccess(msg) { process.stdout.write(`${COLORS.green}${msg}${COLORS.reset}\n`); }
+  logWarning(msg) { process.stdout.write(`${COLORS.yellow}${msg}${COLORS.reset}\n`); }
+  logError(msg) { process.stdout.write(`${COLORS.red}${msg}${COLORS.reset}\n`); }
 }
 
 module.exports = GitEnvironmentService;

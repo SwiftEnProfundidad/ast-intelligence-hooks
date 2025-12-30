@@ -23,6 +23,35 @@ class InstallService {
         // Assuming this script is located at scripts/hooks-system/application/services/installation/InstallService.js
         this.hookSystemRoot = path.resolve(__dirname, '../../../');
 
+        // Read version dynamically from package.json
+        // Resolve package.json reliably both in repo and in node_modules
+        const candidates = [
+            path.resolve(this.hookSystemRoot, 'package.json'),
+            path.resolve(this.hookSystemRoot, '../package.json'),
+            path.resolve(this.hookSystemRoot, '../../package.json'),
+            (() => {
+                try { return require.resolve('pumuki-ast-hooks/package.json'); } catch { return null; }
+            })()
+        ].filter(Boolean);
+
+        this.version = 'unknown';
+        const versionWarnings = [];
+        for (const pkgPath of candidates) {
+            try {
+                const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+                if (pkg.version) {
+                    this.version = pkg.version;
+                    break;
+                }
+            } catch (err) {
+                versionWarnings.push({ pkgPath, error: err && err.message ? err.message : String(err) });
+            }
+        }
+        if (this.version === 'unknown' && versionWarnings.length > 0) {
+            // Log a single warning to avoid empty catch and give visibility
+            console.warn('[InstallService] Unable to read version from package.json', versionWarnings);
+        }
+
         // Initialize Audit Logger
         const auditLogPath = path.join(this.targetRoot, '.audit-reports', 'install.log');
         if (!fs.existsSync(path.dirname(auditLogPath))) {
@@ -39,7 +68,7 @@ class InstallService {
             }
         });
 
-        this.gitService = new GitEnvironmentService(this.targetRoot);
+        this.gitService = new GitEnvironmentService(this.targetRoot, this.version);
         this.platformService = new PlatformDetectorService(this.targetRoot);
         this.fsInstaller = new FileSystemInstallerService(this.targetRoot, this.hookSystemRoot, this.logger);
         this.configGenerator = new ConfigurationGeneratorService(this.targetRoot, this.hookSystemRoot);
@@ -98,10 +127,11 @@ class InstallService {
     }
 
     printHeader() {
+        const versionPadded = `v${this.version}`.padStart(24).padEnd(48);
         process.stdout.write(`${COLORS.blue}
 ╔════════════════════════════════════════════════════════════════╗
 ║          AST Intelligence Hooks - Installation Wizard          ║
-║                         v5.3.1                                 ║
+║${versionPadded}                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 ${COLORS.reset}\n`);
     }
