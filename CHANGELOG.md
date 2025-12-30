@@ -5,6 +5,34 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.15] - 2025-12-30
+
+### Fixed
+- MCP is no longer configured per workspace in Windsurf; single global entry with absolute path to the local binary (avoids collisions with multiple repos open).
+- Removed legacy hardcode from CLI configurator (`pumuki-mcp.js`) and aligned with the global configuration.
+
+### Changed
+- Documentation: new guide `docs/MCP_CONFIGURATION.md` explaining global configuration and `ai_gate_check` validation.
+
+## [5.3.14] - 2025-12-29
+
+### Added
+- Default architecture rules for Android, Frontend, and Backend platforms
+
+### Changed
+- Unified configuration approach across all platforms
+
+## [5.3.13] - 2025-12-29
+
+### Added
+- iOS default patterns: MVP, MVVM, VIPER, HEXAGONAL, TCA
+- Prohibit MVVM-C and MVC by default
+- Enforce event-driven navigation for iOS architectures (including TCA)
+
+### Changed
+- Updated package version to 5.3.13
+- Synced default project config to iOS allowed/prohibited patterns and navigation
+
 ## [5.3.9] - 2025-12-29
 
 ### Fixed
@@ -12,6 +40,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Reads `package.json` from multiple candidate paths (repo/node_modules)
   - Avoids wizard showing `vunknown` when run from consuming projects
   - Pre-commit hook comment uses resolved version
+
+## [5.3.10] - 2025-12-29
+
+### Fixed
+- **Critical**: AST execution now runs from project ROOT (not library path)
+  - Ensures `git rev-parse` resolves the correct repo
+  - Fixes identical violation counts across different projects
+  - Corrects staging-only audits to match staged files in the project
 
 ## [5.3.8] - 2025-12-29
 
@@ -153,4 +189,3 @@ npx ast-violations list
 - Initial multi-platform support
 - Basic AST analysis
 - Git Flow integration
-
