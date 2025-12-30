@@ -45,11 +45,10 @@ function safeGitRoot(startDir) {
 function resolveRepoRoot() {
     const envRoot = (process.env.REPO_ROOT || '').trim() || null;
     const cwdRoot = safeGitRoot(process.cwd());
-    if (cwdRoot && envRoot && cwdRoot !== envRoot) {
-        // Prefer actual git root of current working directory to avoid cross-repo bleed
-        return cwdRoot;
-    }
-    return envRoot || cwdRoot || process.cwd();
+    // Prefer explicit REPO_ROOT to avoid cross-repo bleed when MCP server is launched from another workspace
+    if (envRoot) return envRoot;
+    if (cwdRoot) return cwdRoot;
+    return process.cwd();
 }
 
 const REPO_ROOT = resolveRepoRoot();

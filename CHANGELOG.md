@@ -5,11 +5,12 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [5.3.15] - 2025-12-30
+## [5.3.16] - 2025-12-30
 
 ### Fixed
 - MCP is no longer configured per workspace in Windsurf; single global entry with absolute path to the local binary (avoids collisions with multiple repos open).
 - Removed legacy hardcode from CLI configurator (`pumuki-mcp.js`) and aligned with the global configuration.
+- MCP server now resolves repo root via REPO_ROOT first (no cross-repo bleed when multiple servers run) and serverId is per repo.
 
 ### Changed
 - Documentation: new guide `docs/MCP_CONFIGURATION.md` explaining global configuration and `ai_gate_check` validation.
