@@ -212,6 +212,11 @@ run_intelligent_audit() {
 }
 
 full_audit() {
+  export AUDIT_STRICT=1
+  export BLOCK_ALL_SEVERITIES=1
+  export BLOCK_ON_REPO_VIOLATIONS=1
+  export AUDIT_LIBRARY=true
+  unset STAGING_ONLY_MODE
   run_basic_checks
   run_eslint_suite
   run_ast_intelligence
