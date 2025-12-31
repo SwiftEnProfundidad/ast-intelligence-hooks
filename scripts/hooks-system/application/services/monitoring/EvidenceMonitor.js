@@ -19,6 +19,7 @@ class EvidenceMonitor {
     resolveUpdateEvidenceScript() {
         const candidates = [
             path.join(this.repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+            path.join(this.repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
             path.join(this.repoRoot, 'bin/update-evidence.sh')
         ];
 
