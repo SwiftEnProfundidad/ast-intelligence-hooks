@@ -25,6 +25,22 @@ const { runIOSIntelligence } = require('./scripts/hooks-system/infrastructure/as
 const { runAndroidIntelligence } = require('./scripts/hooks-system/infrastructure/ast/android/ast-android');
 const { runCommonIntelligence } = require('./scripts/hooks-system/infrastructure/ast/common/ast-common');
 
+const config = require('./scripts/hooks-system/infrastructure/config/config');
+
+const express = require('express');
+const cors = require('cors'); // Add CORS module
+
+const app = express();
+const port = config.port; // Use config.port instead of process.env.PORT
+
+// Enable CORS for all routes
+app.use(cors({
+  origin: config.allowedOrigins ? config.allowedOrigins.split(',') : '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+}));
+
 module.exports = {
   runASTIntelligence,
 
@@ -45,5 +61,6 @@ module.exports = {
 
   version: '3.1.0',
   platforms: ['ios', 'android', 'backend', 'frontend'],
-  totalRules: 798
+  totalRules: 798,
+  app
 };

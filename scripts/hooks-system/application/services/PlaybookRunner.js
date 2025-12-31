@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { DomainError, NotFoundError } = require('../../domain/errors');
+const { NotFoundException } = require('../domain/exceptions');
 
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 
@@ -37,7 +38,7 @@ class PlaybookRunner {
     m_run.started();
     const playbook = this.playbooks[id];
     if (!playbook) {
-      throw new NotFoundError('Playbook', id);
+      throw new NotFoundException('Playbook', { id });
     }
 
     for (const step of playbook.steps) {
