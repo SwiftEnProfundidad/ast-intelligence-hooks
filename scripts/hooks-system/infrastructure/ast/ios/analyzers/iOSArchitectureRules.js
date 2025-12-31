@@ -7,17 +7,12 @@ class iOSArchitectureRules {
   }
 
   runRules(files) {
-    console.log(`[iOS Architecture] Detected pattern: ${this.pattern}`);
-
     switch (this.pattern) {
       case 'FEATURE_FIRST_CLEAN_DDD':
         this.checkFeatureFirstCleanDDDRules(files);
         break;
       case 'MVVM':
         this.checkMVVMRules(files);
-        break;
-      case 'MVVM-C':
-        this.checkMVVMCRules(files);
         break;
       case 'MVP':
         this.checkMVPRules(files);
@@ -38,7 +33,7 @@ class iOSArchitectureRules {
         this.checkMixedArchitectureRules(files);
         break;
       default:
-        console.log(`[iOS Architecture] No specific rules for pattern: ${this.pattern}`);
+        break;
     }
   }
 
@@ -68,10 +63,10 @@ class iOSArchitectureRules {
         });
 
         if (file.includes('/domain/') && !file.includes('/entities/') &&
-            !file.includes('/value-objects/') && !file.includes('/interfaces/')) {
+          !file.includes('/value-objects/') && !file.includes('/interfaces/')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.domain_structure',
-            severity: 'medium',
+            severity: 'critical',
             message: 'Archivo en domain/ sin estructura correcta. Usar entities/, value-objects/, interfaces/',
             filePath: file,
             line: 1
@@ -86,7 +81,7 @@ class iOSArchitectureRules {
         if (hasProperties > 3 && hasMethods === 0) {
           pushFinding(this.findings, {
             ruleId: 'ios.ddd.anemic_entity',
-            severity: 'high',
+            severity: 'critical',
             message: 'Entity anémica (solo properties, sin comportamiento). Añadir métodos de negocio.',
             filePath: file,
             line: 1,
@@ -99,7 +94,7 @@ class iOSArchitectureRules {
         if (content.includes('var ') && !content.includes('private(set)')) {
           pushFinding(this.findings, {
             ruleId: 'ios.ddd.mutable_value_object',
-            severity: 'high',
+            severity: 'critical',
             message: 'Value Object con properties mutables. VOs deben ser inmutables (usar let).',
             filePath: file,
             line: 1,
@@ -110,7 +105,7 @@ class iOSArchitectureRules {
         if (!content.includes('init(') || !content.includes('throw')) {
           pushFinding(this.findings, {
             ruleId: 'ios.ddd.value_object_no_validation',
-            severity: 'medium',
+            severity: 'critical',
             message: 'Value Object sin validación en init(). VOs deben garantizar invariantes.',
             filePath: file,
             line: 1,
@@ -128,7 +123,7 @@ class iOSArchitectureRules {
         if (!content.includes('func execute(')) {
           pushFinding(this.findings, {
             ruleId: 'ios.ddd.usecase_missing_execute',
-            severity: 'high',
+            severity: 'critical',
             message: 'Use Case sin método execute(). Convención: func execute(input: Input) async throws -> Output',
             filePath: file,
             line: 1
@@ -138,7 +133,7 @@ class iOSArchitectureRules {
         if (content.includes('UIKit') || content.includes('SwiftUI')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.usecase_ui_dependency',
-            severity: 'high',
+            severity: 'critical',
             message: 'Use Case depende de UI framework. Application layer debe ser UI-agnostic.',
             filePath: file,
             line: 1
@@ -150,7 +145,7 @@ class iOSArchitectureRules {
         if (!file.includes('/infrastructure/')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.repository_wrong_layer',
-            severity: 'high',
+            severity: 'critical',
             message: 'Repository implementation fuera de infrastructure/. Mover a infrastructure/repositories/',
             filePath: file,
             line: 1
@@ -162,7 +157,7 @@ class iOSArchitectureRules {
         if (!file.includes('/domain/')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.repository_interface_wrong_layer',
-            severity: 'high',
+            severity: 'critical',
             message: 'Repository protocol fuera de domain/. Mover a domain/interfaces/',
             filePath: file,
             line: 1
@@ -174,7 +169,7 @@ class iOSArchitectureRules {
         if (!file.includes('/application/')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.dto_wrong_layer',
-            severity: 'medium',
+            severity: 'critical',
             message: 'DTO fuera de application/. Mover a application/dto/',
             filePath: file,
             line: 1
@@ -213,7 +208,7 @@ class iOSArchitectureRules {
         if (complexMethods.length > 0) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.infrastructure_business_logic',
-            severity: 'high',
+            severity: 'critical',
             message: 'Infrastructure con lógica de negocio compleja. Mover a domain/ o application/',
             filePath: file,
             line: 1,
@@ -226,7 +221,7 @@ class iOSArchitectureRules {
         if (content.includes('Entity') && !content.includes('DTO') && !content.includes('Dto')) {
           pushFinding(this.findings, {
             ruleId: 'ios.clean.presentation_uses_entity',
-            severity: 'medium',
+            severity: 'critical',
             message: 'Presentation usando Entities de domain directamente. Usar DTOs para desacoplar.',
             filePath: file,
             line: 1,
@@ -245,7 +240,7 @@ class iOSArchitectureRules {
         if (!content.includes('ObservableObject') && !content.includes('@Observable')) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvvm.viewmodel_not_observable',
-            severity: 'high',
+            severity: 'critical',
             message: 'ViewModel debe conformar ObservableObject o usar @Observable macro (iOS 17+)',
             filePath: file,
             line: 1
@@ -255,7 +250,7 @@ class iOSArchitectureRules {
         if (content.match(/import\s+UIKit/) && !content.includes('#if canImport(UIKit)')) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvvm.viewmodel_uikit_dependency',
-            severity: 'high',
+            severity: 'critical',
             message: 'ViewModel NO debe depender de UIKit. Usar tipos agnósticos de plataforma.',
             filePath: file,
             line: content.split('\n').findIndex(line => line.includes('import UIKit')) + 1
@@ -266,7 +261,7 @@ class iOSArchitectureRules {
         if (classMatch && content.includes('var ') && !content.includes('@Published')) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvvm.missing_published',
-            severity: 'medium',
+            severity: 'critical',
             message: 'ViewModel properties que cambian deben usar @Published para notificar a la View',
             filePath: file,
             line: 1
@@ -276,7 +271,7 @@ class iOSArchitectureRules {
 
       if (file.includes('View.swift') || content.includes('struct ') && content.includes(': View')) {
         const hasBusinessLogic =
-          /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{100,}/.test(content) || 
+          /func\s+\w+\([^)]*\)\s*->\s*\w+\s*{[\s\S]{100,}/.test(content) ||
           content.includes('URLSession') ||
           content.includes('CoreData') ||
           /\.save\(|\.fetch\(|\.delete\(/.test(content);
@@ -284,65 +279,8 @@ class iOSArchitectureRules {
         if (hasBusinessLogic) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvvm.view_business_logic',
-            severity: 'high',
+            severity: 'critical',
             message: 'View contiene lógica de negocio. Mover al ViewModel.',
-            filePath: file,
-            line: 1
-          });
-        }
-      }
-    });
-  }
-
-  checkMVVMCRules(files) {
-    this.checkMVVMRules(files);
-
-    files.forEach(file => {
-      const content = this.readFile(file);
-
-      if (file.includes('Coordinator.swift')) {
-        if (!content.includes('protocol Coordinator') && !content.includes(': Coordinator')) {
-          pushFinding(this.findings, {
-            ruleId: 'ios.mvvmc.coordinator_protocol',
-            severity: 'medium',
-            message: 'Coordinator debe conformar protocol Coordinator con start() y navigate(to:)',
-            filePath: file,
-            line: 1
-          });
-        }
-
-        if (!/func\s+start\(\)/.test(content)) {
-          pushFinding(this.findings, {
-            ruleId: 'ios.mvvmc.coordinator_missing_start',
-            severity: 'high',
-            message: 'Coordinator debe implementar func start() para iniciar el flujo',
-            filePath: file,
-            line: 1
-          });
-        }
-
-        const hasBusinessLogic =
-          content.includes('URLSession') ||
-          content.includes('CoreData') ||
-          /\.save\(|\.fetch\(|\.delete\(/.test(content);
-
-        if (hasBusinessLogic) {
-          pushFinding(this.findings, {
-            ruleId: 'ios.mvvmc.coordinator_business_logic',
-            severity: 'high',
-            message: 'Coordinator NO debe contener lógica de negocio. Solo navegación.',
-            filePath: file,
-            line: 1
-          });
-        }
-      }
-
-      if (file.includes('ViewModel.swift')) {
-        if (content.includes('navigationController') || content.includes('.present(')) {
-          pushFinding(this.findings, {
-            ruleId: 'ios.mvvmc.viewmodel_navigation',
-            severity: 'high',
-            message: 'ViewModel NO debe manejar navegación. Delegar al Coordinator.',
             filePath: file,
             line: 1
           });
@@ -359,7 +297,7 @@ class iOSArchitectureRules {
         if (!content.includes('protocol ') && content.includes('View')) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvp.view_not_protocol',
-            severity: 'high',
+            severity: 'critical',
             message: 'En MVP, View debe ser un protocol implementado por ViewController',
             filePath: file,
             line: 1
@@ -371,7 +309,7 @@ class iOSArchitectureRules {
         if (content.includes('var view:') && !content.includes('weak var view')) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvp.presenter_strong_view',
-            severity: 'high',
+            severity: 'critical',
             message: 'Presenter debe tener referencia weak a View para evitar retain cycles',
             filePath: file,
             line: content.split('\n').findIndex(line => line.includes('var view:')) + 1
@@ -385,7 +323,7 @@ class iOSArchitectureRules {
         if (hasLogic < 3) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvp.presenter_thin',
-            severity: 'medium',
+            severity: 'critical',
             message: 'Presenter parece tener poca lógica. En MVP, Presenter debe contener toda la lógica de presentación.',
             filePath: file,
             line: 1
@@ -402,7 +340,7 @@ class iOSArchitectureRules {
         if (hasBusinessLogic) {
           pushFinding(this.findings, {
             ruleId: 'ios.mvp.viewcontroller_business_logic',
-            severity: 'high',
+            severity: 'critical',
             message: 'ViewController NO debe contener lógica de negocio. Delegar al Presenter.',
             filePath: file,
             line: 1
@@ -494,7 +432,7 @@ class iOSArchitectureRules {
 
       if (file.includes('Entity.swift')) {
         const hasMethods = (content.match(/func\s+/g) || []).length;
-        if (hasMethods > 2) { 
+        if (hasMethods > 2) {
           pushFinding(this.findings, {
             ruleId: 'ios.viper.entity_with_logic',
             severity: 'medium',
@@ -537,7 +475,7 @@ class iOSArchitectureRules {
 
       if (content.includes(': Reducer')) {
         if ((content.includes('URLSession') || content.includes('async ')) &&
-            !content.includes('Effect')) {
+          !content.includes('Effect')) {
           pushFinding(this.findings, {
             ruleId: 'ios.tca.missing_effect',
             severity: 'high',

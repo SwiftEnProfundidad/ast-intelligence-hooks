@@ -1,16 +1,53 @@
 const { execSync } = require('child_process');
 
+// Import recordMetric for prometheus metrics
+const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
+
 const extractFilePath = line => {
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'extract_file_path',
+        status: 'started',
+        lineLength: line ? line.length : 0
+    });
+
     if (!line) {
+        recordMetric({
+            hook: 'git_tree_state',
+            operation: 'extract_file_path',
+            status: 'success',
+            result: ''
+        });
         return '';
     }
     if (line.startsWith('??')) {
-        return line.slice(3).trim();
+        const result = line.slice(3).trim();
+        recordMetric({
+            hook: 'git_tree_state',
+            operation: 'extract_file_path',
+            status: 'success',
+            resultLength: result.length
+        });
+        return result;
     }
-    return line.length > 3 ? line.slice(3).trim() : line.trim();
+    const result = line.length > 3 ? line.slice(3).trim() : line.trim();
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'extract_file_path',
+        status: 'success',
+        resultLength: result.length
+    });
+    return result;
 };
 
 const buildStateFromStatus = (statusOutput = '') => {
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'build_state_from_status',
+        status: 'started',
+        statusOutputLength: statusOutput ? statusOutput.length : 0
+    });
+
     const lines = statusOutput
         .split('\n')
         .map(entry => entry.replace(/\r$/, ''))
@@ -44,24 +81,51 @@ const buildStateFromStatus = (statusOutput = '') => {
 
     const uniqueSet = new Set([...stagedSet, ...workingSet]);
 
-    return {
+    const result = {
         stagedFiles: Array.from(stagedSet),
         workingFiles: Array.from(workingSet),
         stagedCount: stagedSet.size,
         workingCount: workingSet.size,
         uniqueCount: uniqueSet.size
     };
+
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'build_state_from_status',
+        status: 'success',
+        stagedCount: stagedSet.size,
+        workingCount: workingSet.size,
+        uniqueCount: uniqueSet.size
+    });
+
+    return result;
 };
 
 const getGitTreeState = ({ repoRoot = process.cwd() } = {}) => {
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'get_git_tree_state',
+        status: 'started',
+        repoRoot: repoRoot.substring(0, 100)
+    });
+
     try {
         const statusOutput = execSync('git status --porcelain', {
             cwd: repoRoot,
             encoding: 'utf8'
         });
-        return buildStateFromStatus(statusOutput);
+        const result = buildStateFromStatus(statusOutput);
+        recordMetric({
+            hook: 'git_tree_state',
+            operation: 'get_git_tree_state',
+            status: 'success',
+            stagedCount: result.stagedCount,
+            workingCount: result.workingCount,
+            uniqueCount: result.uniqueCount
+        });
+        return result;
     } catch (error) {
-        return {
+        const result = {
             stagedFiles: [],
             workingFiles: [],
             stagedCount: 0,
@@ -69,37 +133,92 @@ const getGitTreeState = ({ repoRoot = process.cwd() } = {}) => {
             uniqueCount: 0,
             error: error.message
         };
+        recordMetric({
+            hook: 'git_tree_state',
+            operation: 'get_git_tree_state',
+            status: 'failed',
+            error: error.message
+        });
+        return result;
     }
 };
 
 const isTreeBeyondLimit = (state, limits) => {
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'is_tree_beyond_limit',
+        status: 'started',
+        hasState: !!state,
+        limitsType: typeof limits
+    });
+
     if (!state) {
+        recordMetric({
+            hook: 'git_tree_state',
+            operation: 'is_tree_beyond_limit',
+            status: 'success',
+            result: false
+        });
         return false;
     }
-    
+
     if (typeof limits === 'number') {
         const limit = limits;
         if (!Number.isFinite(limit) || limit <= 0) {
+            recordMetric({
+                hook: 'git_tree_state',
+                operation: 'is_tree_beyond_limit',
+                status: 'success',
+                result: false
+            });
             return false;
         }
-        return (
+        const result = (
             state.stagedCount > limit ||
             state.workingCount > limit ||
             state.uniqueCount > limit
         );
+        recordMetric({
+            hook: 'git_tree_state',
+            operation: 'is_tree_beyond_limit',
+            status: 'success',
+            result: result
+        });
+        return result;
     }
-    
+
     const { stagedLimit = 10, unstagedLimit = 15, totalLimit = 20 } = limits || {};
-    
+
     const stagedExceeded = Number.isFinite(stagedLimit) && stagedLimit > 0 && state.stagedCount > stagedLimit;
     const unstagedExceeded = Number.isFinite(unstagedLimit) && unstagedLimit > 0 && state.workingCount > unstagedLimit;
     const totalExceeded = Number.isFinite(totalLimit) && totalLimit > 0 && state.uniqueCount > totalLimit;
-    
-    return stagedExceeded || unstagedExceeded || totalExceeded;
+
+    const result = stagedExceeded || unstagedExceeded || totalExceeded;
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'is_tree_beyond_limit',
+        status: 'success',
+        result: result
+    });
+    return result;
 };
 
 const summarizeTreeState = (state, limits) => {
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'summarize_tree_state',
+        status: 'started',
+        hasState: !!state,
+        limitsType: typeof limits
+    });
+
     if (!state) {
+        recordMetric({
+            hook: 'git_tree_state',
+            operation: 'summarize_tree_state',
+            status: 'success',
+            result: 'no data'
+        });
         return 'no data';
     }
     const parts = [
@@ -107,7 +226,7 @@ const summarizeTreeState = (state, limits) => {
         `working ${state.workingCount}`,
         `unique ${state.uniqueCount}`
     ];
-    
+
     if (typeof limits === 'number') {
         const limit = limits;
         if (Number.isFinite(limit) && limit > 0) {
@@ -129,7 +248,14 @@ const summarizeTreeState = (state, limits) => {
             parts.push(`(${limitParts.join(', ')})`);
         }
     }
-    return parts.join(', ');
+    const result = parts.join(', ');
+    recordMetric({
+        hook: 'git_tree_state',
+        operation: 'summarize_tree_state',
+        status: 'success',
+        resultLength: result.length
+    });
+    return result;
 };
 
 module.exports = {

@@ -3,23 +3,66 @@ const HookSystemStateMachine = require('../state/HookSystemStateMachine');
 
 class HookSystemScheduler {
   constructor({ orchestrator, contextEngine, intervalMs = 30000 }) {
+    recordMetric({
+      hook: 'hook_system_scheduler',
+      operation: 'constructor',
+      status: 'started',
+      intervalMs
+    });
+
     this.orchestrator = orchestrator;
     this.contextEngine = contextEngine;
     this.intervalMs = intervalMs;
     this.stateMachine = new HookSystemStateMachine();
     this.timer = null;
+
+    recordMetric({
+      hook: 'hook_system_scheduler',
+      operation: 'constructor',
+      status: 'success',
+      intervalMs
+    });
   }
 
   start() {
+    recordMetric({
+      hook: 'hook_system_scheduler',
+      operation: 'start',
+      status: 'started',
+      intervalMs: this.intervalMs
+    });
+
     if (this.timer) return;
+
     this.timer = setInterval(() => this.tick(), this.intervalMs);
+
+    recordMetric({
+      hook: 'hook_system_scheduler',
+      operation: 'start',
+      status: 'success',
+      intervalMs: this.intervalMs
+    });
   }
 
   stop() {
+    recordMetric({
+      hook: 'hook_system_scheduler',
+      operation: 'stop',
+      status: 'started',
+      hadTimer: !!this.timer
+    });
+
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
     }
+
+    recordMetric({
+      hook: 'hook_system_scheduler',
+      operation: 'stop',
+      status: 'success',
+      hadTimer: !!this.timer
+    });
   }
 
   async tick() {
