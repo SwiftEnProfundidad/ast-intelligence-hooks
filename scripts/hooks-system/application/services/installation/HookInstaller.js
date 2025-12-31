@@ -1,8 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class HookInstaller {
     constructor(targetRoot, hookSystemRoot, logger = null) {
+        const m_constructor = createMetricScope({
+            hook: 'hook_installer',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.targetRoot = targetRoot;
         this.hookSystemRoot = hookSystemRoot;
         this.logger = logger;
@@ -12,6 +22,7 @@ class HookInstaller {
             yellow: '\x1b[33m',
             cyan: '\x1b[36m'
         };
+        m_constructor.success();
     }
 
     install(platforms) {
@@ -128,6 +139,12 @@ class HookInstaller {
     }
 
     getRelevantSkills(platforms) {
+        const m_get_relevant_skills = createMetricScope({
+            hook: 'hook_installer',
+            operation: 'get_relevant_skills'
+        });
+
+        m_get_relevant_skills.started();
         const allSkills = ['backend-guidelines', 'frontend-guidelines', 'ios-guidelines', 'android-guidelines'];
         const relevantSkills = [];
 
@@ -135,6 +152,8 @@ class HookInstaller {
         if (platforms.includes('frontend')) relevantSkills.push('frontend-guidelines');
         if (platforms.includes('ios')) relevantSkills.push('ios-guidelines');
         if (platforms.includes('android')) relevantSkills.push('android-guidelines');
+
+        m_get_relevant_skills.success();
 
         return relevantSkills.length > 0 ? relevantSkills : allSkills;
     }

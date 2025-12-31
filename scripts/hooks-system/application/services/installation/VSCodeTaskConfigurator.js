@@ -1,8 +1,18 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class VSCodeTaskConfigurator {
     constructor(targetRoot, logger = null) {
+        const m_constructor = createMetricScope({
+            hook: 'vscode_task_configurator',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.targetRoot = targetRoot;
         this.logger = logger;
         this.COLORS = {
@@ -11,6 +21,7 @@ class VSCodeTaskConfigurator {
             yellow: '\x1b[33m',
             cyan: '\x1b[36m'
         };
+        m_constructor.success();
     }
 
     configure() {

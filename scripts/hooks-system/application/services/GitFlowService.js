@@ -1,8 +1,22 @@
 const { execSync, spawnSync } = require('child_process');
 const { ConfigurationError } = require('../../domain/errors');
 
+const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
+
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class GitFlowService {
     constructor(repoRoot, options = {}, logger = console, gitQuery = null, gitCommand = null, githubAdapter = null) {
+        recordMetric({
+            hook: 'git_flow_service',
+            operation: 'constructor',
+            status: 'started',
+            repoRoot: repoRoot.substring(0, 100),
+            hasOptions: !!options
+        });
+
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.gitQuery = gitQuery;
@@ -16,6 +30,16 @@ class GitFlowService {
         this.requireClean = options.requireClean !== false;
 
         this._validateDependencies();
+
+        recordMetric({
+            hook: 'git_flow_service',
+            operation: 'constructor',
+            status: 'success',
+            developBranch: this.developBranch,
+            mainBranch: this.mainBranch,
+            autoSyncEnabled: this.autoSyncEnabled,
+            autoCleanEnabled: this.autoCleanEnabled
+        });
     }
 
     _validateDependencies() {
@@ -25,9 +49,17 @@ class GitFlowService {
     }
 
     getCurrentBranch() {
+        const m_get_current_branch = createMetricScope({
+            hook: 'git_flow_service',
+            operation: 'get_current_branch'
+        });
+
+        m_get_current_branch.started();
         if (this.gitQuery) {
+            m_get_current_branch.success();
             return this.gitQuery.getCurrentBranch();
         }
+        m_get_current_branch.success();
         return 'unknown';
     }
 
@@ -40,12 +72,31 @@ class GitFlowService {
     }
 
     syncBranches() {
+        recordMetric({
+            hook: 'git_flow_service',
+            operation: 'sync_branches',
+            status: 'started',
+            autoSyncEnabled: this.autoSyncEnabled
+        });
+
         if (!this.autoSyncEnabled) {
+            recordMetric({
+                hook: 'git_flow_service',
+                operation: 'sync_branches',
+                status: 'skipped',
+                reason: 'auto_sync_disabled'
+            });
             return { success: false, message: 'Auto-sync disabled' };
         }
 
         if (!this.isClean()) {
             this.logger.warn('Skipping sync: working directory not clean');
+            recordMetric({
+                hook: 'git_flow_service',
+                operation: 'sync_branches',
+                status: 'skipped',
+                reason: 'working_directory_not_clean'
+            });
             return { success: false, message: 'Working directory not clean' };
         }
 
@@ -64,22 +115,47 @@ class GitFlowService {
 
                 this.gitCommand.checkout(current);
             } else {
+                recordMetric({
+                    hook: 'git_flow_service',
+                    operation: 'sync_branches',
+                    status: 'failed',
+                    reason: 'no_git_command_adapter'
+                });
                 throw new ConfigurationError('GitCommandAdapter is required for branch synchronization', 'gitCommand');
             }
 
             this.logger.info('Branches synchronized successfully', {
                 branches: [this.developBranch, this.mainBranch]
             });
+            recordMetric({
+                hook: 'git_flow_service',
+                operation: 'sync_branches',
+                status: 'success',
+                branches: [this.developBranch, this.mainBranch].join(',')
+            });
             return { success: true, message: 'Branches synchronized' };
         } catch (error) {
             this.logger.error('Branch synchronization failed', { error: error.message });
+            recordMetric({
+                hook: 'git_flow_service',
+                operation: 'sync_branches',
+                status: 'failed',
+                error: error.message.substring(0, 100)
+            });
             return { success: false, message: error.message };
         }
     }
 
     createPullRequest(sourceBranch, targetBranch, title, body) {
+        const m_create_pull_request = createMetricScope({
+            hook: 'git_flow_service',
+            operation: 'create_pull_request'
+        });
+
+        m_create_pull_request.started();
         if (!this.github) {
             this.logger.error('GitHub adapter not available');
+            m_create_pull_request.success();
             return null;
         }
 
@@ -94,11 +170,15 @@ class GitFlowService {
                 this.logger.warn('Pull Request creation failed or returned no URL');
             }
 
+            m_create_pull_request.success();
+
             return prUrl;
         } catch (error) {
             this.logger.error('[GitFlowService] Failed to create PR:', { error: error.message });
+            m_create_pull_request.success();
             return null;
         }
+        m_create_pull_request.success();
     }
 
     mergeDevelopToMain() {

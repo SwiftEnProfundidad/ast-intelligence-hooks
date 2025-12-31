@@ -1,9 +1,20 @@
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class GuardNotificationHandler {
     constructor(notificationCenter, eventLogger, config) {
+        const m_constructor = createMetricScope({
+            hook: 'guard_notification_handler',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.notificationCenter = notificationCenter;
         this.eventLogger = eventLogger;
         this.config = config;
         this.lastNotificationState = { reason: null, at: 0 };
+        m_constructor.success();
     }
 
     notify(message, level = 'info', options = {}) {

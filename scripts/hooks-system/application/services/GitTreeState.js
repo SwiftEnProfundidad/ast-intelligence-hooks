@@ -3,6 +3,10 @@ const { execSync } = require('child_process');
 // Import recordMetric for prometheus metrics
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 const extractFilePath = line => {
     recordMetric({
         hook: 'git_tree_state',

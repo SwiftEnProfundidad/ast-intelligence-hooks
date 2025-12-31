@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 const COLORS = {
     reset: '\x1b[0m',
     green: '\x1b[32m',
@@ -10,11 +14,24 @@ const COLORS = {
 
 class ConfigurationGeneratorService {
     constructor(targetRoot, hookSystemRoot) {
+        const m_constructor = createMetricScope({
+            hook: 'configuration_generator_service',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.targetRoot = targetRoot || process.cwd();
         this.hookSystemRoot = hookSystemRoot;
+        m_constructor.success();
     }
 
     createProjectConfig(platforms) {
+        const m_create_project_config = createMetricScope({
+            hook: 'configuration_generator_service',
+            operation: 'create_project_config'
+        });
+
+        m_create_project_config.started();
         const config = {
             version: '3.1.0',
             project: {
@@ -73,6 +90,7 @@ class ConfigurationGeneratorService {
 
         fs.writeFileSync(configPath, JSON.stringify(config, null, 2));
         this.logSuccess('Configuration created');
+        m_create_project_config.success();
     }
 
     installESLintConfigs() {

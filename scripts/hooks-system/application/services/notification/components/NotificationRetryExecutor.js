@@ -1,12 +1,29 @@
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class NotificationRetryExecutor {
     constructor(sender, config = {}, logger = null) {
+        const m_constructor = createMetricScope({
+            hook: 'notification_retry_executor',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.sender = sender;
         this.maxRetries = config.maxRetries || 2;
         this.retryDelayMs = config.retryDelayMs || 1000;
         this.logger = logger;
+        m_constructor.success();
     }
 
     async execute(notification, options = {}) {
+        const m_execute = createMetricScope({
+            hook: 'notification_retry_executor',
+            operation: 'execute'
+        });
+
+        m_execute.started();
         const currentRetries = notification.retries || 0;
         const remainingRetries = currentRetries < this.maxRetries ? this.maxRetries - currentRetries : 0;
 
@@ -21,12 +38,15 @@ class NotificationRetryExecutor {
                     if (attempt > 0) {
                         this.logRetrySuccess(notification, attempt);
                     }
+                    m_execute.success();
                     return { success: true, attempts: attempt + 1 };
                 }
             } catch (error) {
                 this.logError(notification, error, attempt);
             }
         }
+
+        m_execute.success();
 
         return { success: false, attempts: remainingRetries + 1 };
     }

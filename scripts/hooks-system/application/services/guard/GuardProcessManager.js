@@ -1,6 +1,10 @@
 const path = require('path');
 const { spawnSync } = require('child_process');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class GuardProcessManager {
     constructor({
         repoRoot = process.cwd(),
@@ -8,6 +12,12 @@ class GuardProcessManager {
         fsModule = require('fs'),
         childProcess = { spawnSync }
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'guard_process_manager',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.fs = fsModule;
@@ -15,6 +25,7 @@ class GuardProcessManager {
 
         this.supervisorPidFile = path.join(this.repoRoot, '.guard-supervisor.pid');
         this.startScript = path.join(this.repoRoot, 'bin', 'start-guards.sh');
+        m_constructor.success();
     }
 
     isSupervisorRunning() {

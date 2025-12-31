@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class DevDocsMonitor {
     constructor({
         repoRoot = process.cwd(),
@@ -10,6 +14,12 @@ class DevDocsMonitor {
         logger = console,
         notificationService = null
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'dev_docs_monitor',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.checkIntervalMs = checkIntervalMs;
         this.staleThresholdMs = staleThresholdMs;
@@ -18,11 +28,19 @@ class DevDocsMonitor {
         this.notificationService = notificationService;
         this.timer = null;
         this.docsStatePath = path.join(repoRoot, '.audit_tmp', 'dev-docs-state.json');
+        m_constructor.success();
     }
 
     start() {
+        const m_start = createMetricScope({
+            hook: 'dev_docs_monitor',
+            operation: 'start'
+        });
+
+        m_start.started();
         if (!this.autoRefreshEnabled) {
             this.logger.info('[DevDocsMonitor] Auto-refresh disabled');
+            m_start.success();
             return;
         }
 
@@ -32,13 +50,21 @@ class DevDocsMonitor {
             this.timer.unref();
         }
         this.logger.info('[DevDocsMonitor] Started');
+        m_start.success();
     }
 
     stop() {
+        const m_stop = createMetricScope({
+            hook: 'dev_docs_monitor',
+            operation: 'stop'
+        });
+
+        m_stop.started();
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
         }
+        m_stop.success();
     }
 
     async checkDocs() {

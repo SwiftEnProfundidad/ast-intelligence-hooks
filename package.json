@@ -86,10 +86,16 @@
     "ts-morph": "^21.0.0"
   },
   "devDependencies": {
+    "@babel/generator": "^7.28.5",
+    "@babel/parser": "^7.28.5",
+    "@babel/traverse": "^7.28.5",
     "@pumuki/ast-intelligence-hooks": "file:pumuki-ast-intelligence-hooks-5.3.1.tgz",
     "@types/node": "^20.10.0",
     "eslint": "^9.12.0",
     "jest": "^30.2.0",
+    "jscodeshift": "^17.3.0",
+    "pumuki-ast-hooks": "^5.3.19",
+    "recast": "^0.23.11",
     "typescript": "^5.3.0"
   },
   "files": [

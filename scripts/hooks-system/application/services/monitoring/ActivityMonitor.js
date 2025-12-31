@@ -1,22 +1,40 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class ActivityMonitor {
     constructor({
         repoRoot = process.cwd(),
         inactivityGraceMs = 420000, // 7 minutes
         logger = console
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'activity_monitor',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.inactivityGraceMs = inactivityGraceMs;
         this.logger = logger;
         this.lastUserActivityAt = Date.now();
         this.watcher = null;
         this.debounceTimer = null;
+        m_constructor.success();
     }
 
     start() {
+        const m_start = createMetricScope({
+            hook: 'activity_monitor',
+            operation: 'start'
+        });
+
+        m_start.started();
         if (this.watcher) {
+            m_start.success();
             return;
         }
 
@@ -42,9 +60,16 @@ class ActivityMonitor {
         } catch (error) {
             this.logger.error('[ActivityMonitor] Failed to start watcher:', { error: error.message });
         }
+        m_start.success();
     }
 
     stop() {
+        const m_stop = createMetricScope({
+            hook: 'activity_monitor',
+            operation: 'stop'
+        });
+
+        m_stop.started();
         if (this.watcher) {
             this.watcher.close();
             this.watcher = null;
@@ -53,6 +78,7 @@ class ActivityMonitor {
             clearTimeout(this.debounceTimer);
             this.debounceTimer = null;
         }
+        m_stop.success();
     }
 
     recordActivity(source = 'unknown') {
@@ -73,6 +99,13 @@ class ActivityMonitor {
     }
 
     getLastActivityTime() {
+        const m_get_last_activity_time = createMetricScope({
+            hook: 'activity_monitor',
+            operation: 'get_last_activity_time'
+        });
+
+        m_get_last_activity_time.started();
+        m_get_last_activity_time.success();
         return this.lastUserActivityAt;
     }
 }

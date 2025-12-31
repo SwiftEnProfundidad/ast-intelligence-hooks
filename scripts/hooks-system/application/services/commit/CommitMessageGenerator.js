@@ -1,6 +1,17 @@
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class CommitMessageGenerator {
     constructor(logger = console) {
+        const m_constructor = createMetricScope({
+            hook: 'commit_message_generator',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.logger = logger;
+        m_constructor.success();
     }
 
     /**

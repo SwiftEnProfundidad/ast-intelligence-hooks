@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 const defaultHeartbeatPath = repoRoot => path.join(repoRoot, '.audit_tmp', 'guard-heartbeat.json');
 const defaultTokenUsagePath = repoRoot => path.join(repoRoot, '.audit_tmp', 'token-usage.jsonl');
 const defaultEvidencePath = repoRoot => path.join(repoRoot, '.AI_EVIDENCE.json');

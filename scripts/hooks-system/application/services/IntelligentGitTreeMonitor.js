@@ -1,6 +1,10 @@
 const IntelligentCommitAnalyzer = require('./IntelligentCommitAnalyzer');
 const { getGitTreeState } = require('./GitTreeState');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class IntelligentGitTreeMonitor {
     constructor({
         repoRoot = process.cwd(),
@@ -8,11 +12,18 @@ class IntelligentGitTreeMonitor {
         logger = console,
         autoCommitEnabled = false
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'intelligent_git_tree_monitor',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.notifier = notifier;
         this.logger = logger;
         this.autoCommitEnabled = autoCommitEnabled;
         this.analyzer = new IntelligentCommitAnalyzer({ repoRoot, logger });
+        m_constructor.success();
     }
 
     /**

@@ -1,3 +1,7 @@
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class GuardRecoveryService {
     constructor({
         repoRoot,
@@ -6,12 +10,19 @@ class GuardRecoveryService {
         notificationHandler,
         restartCooldownMs = 2000
     }) {
+        const m_constructor = createMetricScope({
+            hook: 'guard_recovery_service',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.startScript = startScript;
         this.notificationHandler = notificationHandler;
         this.restartCooldownMs = restartCooldownMs;
         this.lastEnsure = 0;
+        m_constructor.success();
     }
 
     ensureSupervisor(reason, eventLogger) {

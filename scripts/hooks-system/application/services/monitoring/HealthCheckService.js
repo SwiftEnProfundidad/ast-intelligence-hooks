@@ -1,6 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class HealthCheckService {
     constructor({
         repoRoot = process.cwd(),
@@ -12,6 +16,12 @@ class HealthCheckService {
         intervalMs = 0,
         timers = { setInterval, clearInterval }
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'health_check_service',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.providers = Array.isArray(providers) ? providers : [];
         this.notificationCenter = notificationCenter;
@@ -22,9 +32,16 @@ class HealthCheckService {
         this.timers = timers;
         this.history = [];
         this.timerRef = null;
+        m_constructor.success();
     }
 
     start(reason = 'startup') {
+        const m_start = createMetricScope({
+            hook: 'health_check_service',
+            operation: 'start'
+        });
+
+        m_start.started();
         this.collect(reason);
         if (this.intervalMs > 0) {
             this.timerRef = this.timers.setInterval(() => this.collect('interval'), this.intervalMs);
@@ -32,13 +49,21 @@ class HealthCheckService {
                 this.timerRef.unref();
             }
         }
+        m_start.success();
     }
 
     stop() {
+        const m_stop = createMetricScope({
+            hook: 'health_check_service',
+            operation: 'stop'
+        });
+
+        m_stop.started();
         if (this.timerRef) {
             this.timers.clearInterval(this.timerRef);
             this.timerRef = null;
         }
+        m_stop.success();
     }
 
     async collect(reason = 'manual') {
