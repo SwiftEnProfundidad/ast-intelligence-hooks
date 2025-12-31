@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 const fsPromises = fs.promises;
 const CursorTokenService = require('./CursorTokenService');
 const NotificationCenterService = require('../notification/NotificationCenterService');
@@ -21,6 +25,12 @@ class TokenMonitorService {
         fallbackEstimator = null,
         cursorTokenService = null
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'token_monitor_service',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.dataFile = dataFile || path.join(this.repoRoot, '.audit_tmp', 'token-usage.jsonl');
         this.stateFile = stateFile || path.join(this.repoRoot, '.AI_TOKEN_STATUS.txt');
@@ -47,9 +57,16 @@ class TokenMonitorService {
 
         this.metricsService = new TokenMetricsService(this.cursorTokenService, this.thresholds, this.logger);
         this.statusReporter = new TokenStatusReporter(this.stateFile);
+        m_constructor.success();
     }
 
     async run() {
+        const m_run = createMetricScope({
+            hook: 'token_monitor_service',
+            operation: 'run'
+        });
+
+        m_run.started();
         // Collect metrics
         const metrics = await this.metricsService.collectMetrics(this.fallbackEstimator);
 
@@ -58,6 +75,8 @@ class TokenMonitorService {
 
         // Notify
         await this.emitNotification(metrics);
+
+        m_run.success();
 
         return metrics;
     }

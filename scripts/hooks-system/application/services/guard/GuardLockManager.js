@@ -1,12 +1,22 @@
 const fs = require('fs');
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class GuardLockManager {
     constructor({
         repoRoot = process.cwd(),
         logger = console,
         fsModule = fs
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'guard_lock_manager',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.fs = fsModule;
@@ -26,6 +36,7 @@ class GuardLockManager {
                 this.logger.debug('GUARD_LOCK_MANAGER_INIT_DEBUG', { error: error.message });
             }
         }
+        m_constructor.success();
     }
 
     acquireLock() {

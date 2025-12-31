@@ -4,6 +4,10 @@ const { execSync } = require('child_process');
 const crypto = require('crypto');
 const os = require('os');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 const COLORS = {
     reset: '\x1b[0m',
     green: '\x1b[32m',
@@ -42,12 +46,26 @@ function computeServerIdForRepo(repoRoot) {
 
 class McpConfigurator {
     constructor(targetRoot, hookSystemRoot, logger = null) {
+        const m_constructor = createMetricScope({
+            hook: 'mcp_configurator',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.targetRoot = targetRoot;
         this.hookSystemRoot = hookSystemRoot;
         this.logger = logger;
+        m_constructor.success();
     }
 
     getGlobalWindsurfConfigPath() {
+        const m_get_global_windsurf_config_path = createMetricScope({
+            hook: 'mcp_configurator',
+            operation: 'get_global_windsurf_config_path'
+        });
+
+        m_get_global_windsurf_config_path.started();
+        m_get_global_windsurf_config_path.success();
         return path.join(os.homedir(), '.codeium', 'windsurf', 'mcp_config.json');
     }
 

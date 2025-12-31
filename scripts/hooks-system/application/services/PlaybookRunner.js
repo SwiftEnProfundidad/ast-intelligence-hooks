@@ -2,13 +2,27 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { DomainError, NotFoundError } = require('../../domain/errors');
+const { NotFoundException } = require('../domain/exceptions');
+
+const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
+
+const {
+  createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
 
 const PLAYBOOKS_PATH = path.join(process.cwd(), 'scripts', 'hooks-system', 'config', 'playbooks.json');
 
 class PlaybookRunner {
   constructor(options = {}) {
+    const m_constructor = createMetricScope({
+      hook: 'playbook_runner',
+      operation: 'constructor'
+    });
+
+    m_constructor.started();
     this.cwd = options.cwd || process.cwd();
     this.playbooks = JSON.parse(fs.readFileSync(PLAYBOOKS_PATH, 'utf8'));
+    m_constructor.success();
   }
 
   list() {
@@ -16,9 +30,15 @@ class PlaybookRunner {
   }
 
   run(id) {
+    const m_run = createMetricScope({
+      hook: 'playbook_runner',
+      operation: 'run'
+    });
+
+    m_run.started();
     const playbook = this.playbooks[id];
     if (!playbook) {
-      throw new Error(`Playbook '${id}' not found`);
+      throw new NotFoundException('Playbook', { id });
     }
 
     for (const step of playbook.steps) {
@@ -33,6 +53,7 @@ class PlaybookRunner {
         }
       }
     }
+    m_run.success();
   }
 }
 

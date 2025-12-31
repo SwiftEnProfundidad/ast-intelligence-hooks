@@ -1,3 +1,7 @@
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class GitTreeMonitorService {
     constructor({
         repoRoot = process.cwd(),
@@ -10,6 +14,12 @@ class GitTreeMonitorService {
         logger = console,
         debugLogger = null
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'git_tree_monitor_service',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.limit = limit;
         this.warning = warning;
@@ -23,10 +33,18 @@ class GitTreeMonitorService {
         this.lastCritical = 0;
         this.lastWarning = 0;
         this.wasOverLimit = false;
+        m_constructor.success();
     }
 
     start() {
+        const m_start = createMetricScope({
+            hook: 'git_tree_monitor_service',
+            operation: 'start'
+        });
+
+        m_start.started();
         if (!Number.isFinite(this.limit) || this.limit <= 0 || typeof this.getState !== 'function') {
+            m_start.success();
             return;
         }
         this.check('startup');
@@ -36,13 +54,21 @@ class GitTreeMonitorService {
                 this.timer.unref();
             }
         }
+        m_start.success();
     }
 
     stop() {
+        const m_stop = createMetricScope({
+            hook: 'git_tree_monitor_service',
+            operation: 'stop'
+        });
+
+        m_stop.started();
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
         }
+        m_stop.success();
     }
 
     check(reason) {

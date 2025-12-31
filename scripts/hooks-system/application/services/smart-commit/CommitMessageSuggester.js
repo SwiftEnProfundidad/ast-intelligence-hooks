@@ -1,7 +1,17 @@
 const path = require('path');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class CommitMessageSuggester {
     constructor(featureDetector) {
+        const m_constructor = createMetricScope({
+            hook: 'commit_message_suggester',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.featureDetector = featureDetector;
         this.commitTypePatterns = {
             feat: ['feature/', 'feat/', 'add', 'new', 'create', 'implement'],
@@ -12,6 +22,7 @@ class CommitMessageSuggester {
             chore: ['chore/', 'config/', 'build/', 'ci/'],
             style: ['style/', 'css/', 'scss/', 'styling']
         };
+        m_constructor.success();
     }
 
     suggest(group) {

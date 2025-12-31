@@ -1,5 +1,13 @@
+const {
+    ValidationException,
+    BadRequestException,
+    InternalServerException
+} = require('../exceptions');
+
 class DomainEvent {
     constructor(type, payload) {
+        if (!type) throw new ValidationException('Event type is required', { field: 'type' });
+        if (!payload) throw new ValidationException('Event payload is required', { field: 'payload' });
         this.type = type;
         this.payload = payload;
         this.timestamp = new Date().toISOString();
@@ -7,8 +15,8 @@ class DomainEvent {
     }
 
     validate() {
-        if (!this.type) throw new Error('Event type is required');
-        if (!this.payload) throw new Error('Event payload is required');
+        if (!this.type) throw new ValidationException('Event type is required', { field: 'type' });
+        if (!this.payload) throw new ValidationException('Event payload is required', { field: 'payload' });
         return true;
     }
 
@@ -29,7 +37,7 @@ class EvidenceStaleEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!this.payload.evidencePath) throw new Error('Evidence path is required');
+        if (!this.payload.evidencePath) throw new ValidationException('Evidence path is required', { field: 'evidencePath' });
     }
 }
 
@@ -41,8 +49,8 @@ class GitFlowViolationEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!this.payload.branch) throw new Error('Branch name is required');
-        if (!this.payload.violation) throw new Error('Violation details are required');
+        if (!this.payload.branch) throw new ValidationException('Branch name is required', { field: 'branch' });
+        if (!this.payload.violation) throw new ValidationException('Violation details are required', { field: 'violation' });
     }
 }
 
@@ -54,7 +62,7 @@ class AstCriticalFoundEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!Array.isArray(this.payload.findings)) throw new Error('Findings must be an array');
+        if (!Array.isArray(this.payload.findings)) throw new ValidationException('Findings must be an array', { field: 'findings' });
     }
 }
 
@@ -63,12 +71,23 @@ class PreCommitBlockedEvent extends DomainEvent {
         super('PRE_COMMIT_BLOCKED', { reason, violations });
         this.validate();
     }
+
+    validate() {
+        super.validate();
+        if (!this.payload.reason) throw new ValidationException('Reason is required', { field: 'reason' });
+        if (!this.payload.violations) throw new ValidationException('Violations are required', { field: 'violations' });
+    }
 }
 
 class AnalysisCompletedEvent extends DomainEvent {
     constructor(summary) {
         super('ANALYSIS_COMPLETED', summary);
         this.validate();
+    }
+
+    validate() {
+        super.validate();
+        if (!this.payload) throw new ValidationException('Summary is required', { field: 'summary' });
     }
 }
 

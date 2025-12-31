@@ -1,9 +1,21 @@
 const fs = require('fs');
+
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 const fsPromises = fs.promises;
 
 class TokenStatusReporter {
     constructor(stateFile) {
+        const m_constructor = createMetricScope({
+            hook: 'token_status_reporter',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.stateFile = stateFile;
+        m_constructor.success();
     }
 
     async writeStatusFile(metrics) {

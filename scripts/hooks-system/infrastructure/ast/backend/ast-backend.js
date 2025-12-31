@@ -1,4 +1,3 @@
-
 const path = require('path');
 const {
   pushFinding,
@@ -367,11 +366,12 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    const hasCors = sf.getFullText().includes("cors") || sf.getFullText().includes("CORS") || sf.getFullText().includes("@CrossOrigin");
-    const missingCorsSeverity = hasGlobalCors ? "low" : "high";
-    if (!hasCors && (sf.getFullText().includes("controller") || sf.getFullText().includes("Controller"))) {
-      pushFinding("backend.auth.missing_cors", missingCorsSeverity, sf, sf, "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config", findings);
-    }
+    // Removed controller-level CORS check because global CORS is enabled
+    // const hasCors = sf.getFullText().includes("cors") || sf.getFullText().includes("CORS") || sf.getFullText().includes("@CrossOrigin");
+    // const missingCorsSeverity = hasGlobalCors ? "low" : "high";
+    // if (!hasCors && (sf.getFullText().includes("controller") || sf.getFullText().includes("Controller"))) {
+    //   pushFinding("backend.auth.missing_cors", missingCorsSeverity, sf, sf, "Missing CORS configuration in controller - consider @CrossOrigin or global CORS config", findings);
+    // }
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
       const expr = call.getExpression();
@@ -423,9 +423,7 @@ function runBackendIntelligence(project, findings, platform) {
 
     if (isTestFile(filePath)) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
-        const expr = call.getExpression();
-        if (!expr) return;
-        const exprText = expr.getText();
+        const exprText = call.getExpression().getText();
         if (/Thread\.sleep|await|delay/.test(exprText)) {
           pushFinding("backend.testing.slow_tests", "medium", sf, call, "Test with sleep/delay detected - slow tests impact CI/CD performance", findings);
         }

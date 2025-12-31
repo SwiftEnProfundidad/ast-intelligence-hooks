@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 function resolveUpdateEvidenceScript(repoRoot) {
     const candidates = [
         path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
@@ -31,6 +35,12 @@ class EvidenceMonitorService {
         fsModule = fs,
         execFn = execSync
     } = {}) {
+        const m_constructor = createMetricScope({
+            hook: 'evidence_monitor_service',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.repoRoot = repoRoot;
         this.evidencePath = evidencePath;
         this.updateScriptPath = updateScriptPath;
@@ -43,14 +53,28 @@ class EvidenceMonitorService {
         this.exec = execFn;
         this.watchers = [];
         this.lastAutoRefresh = 0;
+        m_constructor.success();
     }
 
     start() {
+        const m_start = createMetricScope({
+            hook: 'evidence_monitor_service',
+            operation: 'start'
+        });
+
+        m_start.started();
         this.performInitialChecks();
         this.watchEvidenceFreshness();
+        m_start.success();
     }
 
     stop() {
+        const m_stop = createMetricScope({
+            hook: 'evidence_monitor_service',
+            operation: 'stop'
+        });
+
+        m_stop.started();
         this.watchers.forEach(watcher => {
             try {
                 watcher.close();
@@ -59,6 +83,7 @@ class EvidenceMonitorService {
             }
         });
         this.watchers = [];
+        m_stop.success();
     }
 
     performInitialChecks() {

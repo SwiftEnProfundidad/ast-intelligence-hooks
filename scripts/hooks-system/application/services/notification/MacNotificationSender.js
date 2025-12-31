@@ -1,11 +1,22 @@
 const { spawnSync } = require('child_process');
 const fs = require('fs');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 class MacNotificationSender {
     constructor(logger) {
+        const m_constructor = createMetricScope({
+            hook: 'mac_notification_sender',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.logger = logger;
         this.terminalNotifierPath = this.resolveTerminalNotifier();
         this.osascriptPath = this.resolveOsascript();
+        m_constructor.success();
     }
 
     resolveTerminalNotifier() {

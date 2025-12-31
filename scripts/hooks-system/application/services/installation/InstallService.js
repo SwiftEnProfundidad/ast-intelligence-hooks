@@ -8,6 +8,10 @@ const ConfigurationGeneratorService = require('./ConfigurationGeneratorService')
 const IdeIntegrationService = require('./IdeIntegrationService');
 const UnifiedLogger = require('../logging/UnifiedLogger');
 
+const {
+    createMetricScope: createMetricScope
+} = require('../../../infrastructure/telemetry/metric-scope');
+
 const COLORS = {
     reset: '\x1b[0m',
     blue: '\x1b[34m',
@@ -19,6 +23,12 @@ const COLORS = {
 
 class InstallService {
     constructor() {
+        const m_constructor = createMetricScope({
+            hook: 'install_service',
+            operation: 'constructor'
+        });
+
+        m_constructor.started();
         this.targetRoot = process.cwd();
         // Assuming this script is located at scripts/hooks-system/application/services/installation/InstallService.js
         this.hookSystemRoot = path.resolve(__dirname, '../../../');
@@ -30,7 +40,13 @@ class InstallService {
             path.resolve(this.hookSystemRoot, '../package.json'),
             path.resolve(this.hookSystemRoot, '../../package.json'),
             (() => {
-                try { return require.resolve('pumuki-ast-hooks/package.json'); } catch { return null; }
+                try {
+                    m_constructor.success();
+                    return require.resolve('pumuki-ast-hooks/package.json');
+                } catch {
+                    m_constructor.success();
+                    return null;
+                }
             })()
         ].filter(Boolean);
 
@@ -73,9 +89,16 @@ class InstallService {
         this.fsInstaller = new FileSystemInstallerService(this.targetRoot, this.hookSystemRoot, this.logger);
         this.configGenerator = new ConfigurationGeneratorService(this.targetRoot, this.hookSystemRoot);
         this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot, this.logger);
+        m_constructor.success();
     }
 
     async run() {
+        const m_run = createMetricScope({
+            hook: 'install_service',
+            operation: 'run'
+        });
+
+        m_run.started();
         this.logger.info('INSTALLATION_STARTED', { targetRoot: this.targetRoot });
         this.printHeader();
 
@@ -124,6 +147,7 @@ class InstallService {
 
         this.logger.info('INSTALLATION_COMPLETED_SUCCESSFULLY');
         this.printFooter();
+        m_run.success();
     }
 
     printHeader() {
