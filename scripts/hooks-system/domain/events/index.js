@@ -1,3 +1,5 @@
+const { ValidationException, BadRequestException } = require('../exceptions');
+
 class DomainEvent {
     constructor(type, payload) {
         this.type = type;
@@ -7,8 +9,8 @@ class DomainEvent {
     }
 
     validate() {
-        if (!this.type) throw new Error('Event type is required');
-        if (!this.payload) throw new Error('Event payload is required');
+        if (!this.type) throw new ValidationException('Event type is required');
+        if (!this.payload) throw new ValidationException('Event payload is required');
         return true;
     }
 
@@ -29,7 +31,7 @@ class EvidenceStaleEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!this.payload.evidencePath) throw new Error('Evidence path is required');
+        if (!this.payload.evidencePath) throw new ValidationException('Evidence path is required');
     }
 }
 
@@ -41,8 +43,8 @@ class GitFlowViolationEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!this.payload.branch) throw new Error('Branch name is required');
-        if (!this.payload.violation) throw new Error('Violation details are required');
+        if (!this.payload.branch) throw new ValidationException('Branch name is required');
+        if (!this.payload.violation) throw new ValidationException('Violation details are required');
     }
 }
 
@@ -54,7 +56,7 @@ class AstCriticalFoundEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!Array.isArray(this.payload.findings)) throw new Error('Findings must be an array');
+        if (!Array.isArray(this.payload.findings)) throw new ValidationException('Findings must be an array');
     }
 }
 
