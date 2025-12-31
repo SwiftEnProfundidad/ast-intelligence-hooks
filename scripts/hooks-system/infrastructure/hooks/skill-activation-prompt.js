@@ -3,8 +3,9 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const env = require('../../config/env');
 
-const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
+const projectDir = env.get('CLAUDE_PROJECT_DIR', process.cwd());
 const rulesPath = path.join(projectDir, '.cursor', 'ai-skills', 'skill-rules.json');
 const mdcRulesDir = path.join(projectDir, '.cursor', 'rules');
 const debugLogPath = path.join(projectDir, '.audit_tmp', 'skill-activation-debug.log');
@@ -54,7 +55,7 @@ function sendMacNotification(title, message) {
         return;
     }
 
-    const enabled = process.env.HOOK_GUARD_ENABLE_SKILL_ACTIVATION !== '0';
+    const enabled = env.getBool('HOOK_GUARD_ENABLE_SKILL_ACTIVATION', true);
     if (!enabled) {
         appendDebugLog('Notifications disabled via HOOK_GUARD_ENABLE_SKILL_ACTIVATION');
         return;

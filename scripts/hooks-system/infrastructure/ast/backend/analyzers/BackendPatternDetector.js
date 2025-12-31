@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const env = require('../../../../config/env');
 
 class BackendPatternDetector {
   constructor(projectRoot) {
@@ -11,7 +12,7 @@ class BackendPatternDetector {
       const fullPath = path.join(this.projectRoot, relativePath);
       return fs.readFileSync(fullPath, 'utf-8');
     } catch (error) {
-      if (process.env.DEBUG) {
+      if (env.getBool('DEBUG', false)) {
         console.debug(`[BackendPatternDetector] Failed to read file ${relativePath}: ${error.message}`);
       }
       return '';

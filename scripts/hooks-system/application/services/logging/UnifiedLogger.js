@@ -97,10 +97,19 @@ class UnifiedLogger {
             this.rotateFileIfNeeded();
             fs.appendFileSync(this.fileConfig.path, `${JSON.stringify(entry)}\n`, 'utf8');
         } catch (error) {
-            if (process.env.DEBUG) {
-                console.error('[UnifiedLogger] Failed to write log file', {
-                    path: this.fileConfig.path,
-                    error: error.message
+            try {
+                const env = require('../../../config/env');
+                if (env.getBool('DEBUG', false)) {
+                    console.error('[UnifiedLogger] Failed to write log file', {
+                        path: this.fileConfig.path,
+                        error: error.message
+                    });
+                } else {
+                    console.warn('[UnifiedLogger] File logging skipped due to error');
+                }
+            } catch (secondaryError) {
+                console.error('[UnifiedLogger] Secondary logging failure', {
+                    error: secondaryError.message
                 });
             }
         }

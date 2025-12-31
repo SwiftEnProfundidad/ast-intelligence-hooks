@@ -10,6 +10,9 @@ const GuardConfig = require('./GuardConfig');
 const GuardNotificationHandler = require('./GuardNotificationHandler');
 const GuardMonitorLoop = require('./GuardMonitorLoop');
 const GuardHealthReminder = require('./GuardHealthReminder');
+const AuditLogger = require('../logging/AuditLogger');
+const envHelper = require('../../../config/env');
+const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 
 class GuardAutoManagerService {
     constructor({
@@ -19,9 +22,10 @@ class GuardAutoManagerService {
         fsModule = fs,
         childProcess = { spawnSync },
         timers = { setInterval, clearInterval },
-        env = process.env,
+        env = envHelper,
         processRef = process,
-        heartbeatMonitor = null
+        heartbeatMonitor = null,
+        auditLogger = null
     } = {}) {
         this.process = processRef;
 
@@ -30,6 +34,7 @@ class GuardAutoManagerService {
         this.eventLogger = new GuardEventLogger({ repoRoot, logger, fsModule });
         this.lockManager = new GuardLockManager({ repoRoot, logger, fsModule });
         this.processManager = new GuardProcessManager({ repoRoot, logger, fsModule, childProcess });
+        this.auditLogger = auditLogger || new AuditLogger({ repoRoot, logger });
 
         // Monitors & Handlers
         this.heartbeatMonitor = heartbeatMonitor || new GuardHeartbeatMonitor({
@@ -59,10 +64,14 @@ class GuardAutoManagerService {
     start() {
         if (!this.lockManager.acquireLock()) {
             this.eventLogger.log('Another guard auto manager instance detected. Exiting.');
+            this.auditLogger.record({ action: 'guard.lock.acquire', resource: 'guard_auto_manager', status: 'fail', meta: { reason: 'lock_exists' } });
+            recordMetric({ hook: 'guard_auto_manager', status: 'lock_fail' });
             return false;
         }
         this.lockManager.writePidFile();
         this.eventLogger.log('Guard auto manager started');
+        this.auditLogger.record({ action: 'guard.manager.start', resource: 'guard_auto_manager', status: 'success' });
+        recordMetric({ hook: 'guard_auto_manager', status: 'start' });
 
         this.ensureSupervisor('initial-start');
         this._startReminder();
@@ -94,6 +103,12 @@ class GuardAutoManagerService {
     handleMissingSupervisor() {
         this.lastHeartbeatState = { healthy: false, reason: 'missing-supervisor' };
         this.eventLogger.recordEvent('Guard supervisor no se encuentra en ejecución; reinicio automático.');
+        this.auditLogger.record({
+            action: 'guard.supervisor.missing',
+            resource: 'guard_supervisor',
+            status: 'fail',
+            meta: { reason: 'missing-supervisor' }
+        });
         this.ensureSupervisor('missing-supervisor');
     }
 
@@ -106,9 +121,21 @@ class GuardAutoManagerService {
                 this.eventLogger.log(`Heartbeat degraded (${heartbeat.reason}); attempting supervisor ensure.`);
                 this.lastHeartbeatRestart = now;
                 this.ensureSupervisor(`heartbeat-${heartbeat.reason}`);
+                this.auditLogger.record({
+                    action: 'guard.supervisor.ensure',
+                    resource: 'guard_supervisor',
+                    status: 'success',
+                    meta: { reason: heartbeat.reason }
+                });
             } else {
                 this.eventLogger.log(`Heartbeat degraded (${heartbeat.reason}); restart suppressed (cooldown).`);
                 this.eventLogger.recordEvent(`Heartbeat degradado (${heartbeat.reason}); reinicio omitido por cooldown.`);
+                this.auditLogger.record({
+                    action: 'guard.supervisor.ensure',
+                    resource: 'guard_supervisor',
+                    status: 'fail',
+                    meta: { reason: heartbeat.reason, suppressed: true }
+                });
             }
         } else {
             this.eventLogger.recordEvent(`Heartbeat en estado ${heartbeat.reason}; reinicio no requerido.`);
@@ -148,6 +175,8 @@ class GuardAutoManagerService {
         this.lockManager.removePidFile();
         this.lockManager.releaseLock();
         this.healthReminder.stop();
+        this.auditLogger.record({ action: 'guard.manager.stop', resource: 'guard_auto_manager', status: 'success' });
+        recordMetric({ hook: 'guard_auto_manager', status: 'stop' });
     }
 
     ensureSupervisor(reason) {

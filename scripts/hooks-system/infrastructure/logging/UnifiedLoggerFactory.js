@@ -1,13 +1,14 @@
 const fs = require('fs');
 const path = require('path');
+const env = require('../../config/env');
 
 const UnifiedLogger = require('../../application/services/logging/UnifiedLogger');
 
 function createUnifiedLogger({
     repoRoot = process.cwd(),
     component = 'HookSystem',
-    consoleLevel = process.env.HOOK_LOG_CONSOLE_LEVEL || 'info',
-    fileLevel = process.env.HOOK_LOG_FILE_LEVEL || 'debug',
+    consoleLevel = env.get('HOOK_LOG_CONSOLE_LEVEL', 'info'),
+    fileLevel = env.get('HOOK_LOG_FILE_LEVEL', 'debug'),
     fileName = null,
     defaultData = {}
 } = {}) {
@@ -17,8 +18,8 @@ function createUnifiedLogger({
     const logFileName = fileName || `${component.replace(/\s+/g, '-').toLowerCase()}.log`;
     const filePath = path.join(reportsDir, logFileName);
 
-    const maxSizeBytes = Number(process.env.HOOK_LOG_MAX_SIZE || 5 * 1024 * 1024);
-    const maxFiles = Number(process.env.HOOK_LOG_MAX_FILES || 5);
+    const maxSizeBytes = env.getNumber('HOOK_LOG_MAX_SIZE', 5 * 1024 * 1024);
+    const maxFiles = env.getNumber('HOOK_LOG_MAX_FILES', 5);
 
     return new UnifiedLogger({
         component,

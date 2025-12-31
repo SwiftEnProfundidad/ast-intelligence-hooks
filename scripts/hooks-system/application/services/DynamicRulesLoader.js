@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const env = require('../config/env');
 
 class DynamicRulesLoader {
     constructor(rulesDirectory, logger = console) {
@@ -27,7 +28,7 @@ class DynamicRulesLoader {
             return [this.rulesDirectory];
         }
 
-        const envRaw = process.env.AST_RULES_DIRECTORIES;
+        const envRaw = env.get('AST_RULES_DIRECTORIES');
         if (envRaw && typeof envRaw === 'string' && envRaw.trim().length > 0) {
             return envRaw
                 .split(',')

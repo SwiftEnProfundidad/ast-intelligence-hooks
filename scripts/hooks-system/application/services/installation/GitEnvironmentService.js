@@ -110,7 +110,7 @@ fi
 
 # Try node_modules/.bin first (works with npm install)
 if [ -f "node_modules/.bin/ast-hooks" ]; then
-  OUTPUT=$(node_modules/.bin/ast-hooks ast 2>&1)
+  OUTPUT=$(node_modules/.bin/ast-hooks ast --staged 2>&1)
   EXIT_CODE=$?
   echo "$OUTPUT"
   if [ $EXIT_CODE -ne 0 ]; then

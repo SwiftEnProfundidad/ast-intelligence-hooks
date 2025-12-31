@@ -3,6 +3,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const crypto = require('crypto');
 const os = require('os');
+const env = require('../../config/env');
 
 const COLORS = {
     reset: '\x1b[0m',
@@ -31,7 +32,7 @@ function computeRepoFingerprint(repoRoot) {
 
 function computeServerIdForRepo(repoRoot) {
     const legacyServerId = 'ast-intelligence-automation';
-    const forced = (process.env.MCP_SERVER_ID || '').trim();
+    const forced = (env.get('MCP_SERVER_ID', '') || '').trim();
     if (forced.length > 0) return forced;
 
     const repoName = path.basename(repoRoot || process.cwd());

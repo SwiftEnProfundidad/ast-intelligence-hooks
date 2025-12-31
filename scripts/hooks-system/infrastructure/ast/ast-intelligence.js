@@ -1,6 +1,7 @@
 
 const path = require("path");
 const fs = require("fs");
+const env = require("../../config/env");
 
 const astModulesPath = __dirname;
 const { createProject, platformOf, mapToLevel } = require(path.join(astModulesPath, "ast-core"));
@@ -27,13 +28,7 @@ async function runASTIntelligence() {
     const { getRepoRoot } = require('./ast-core');
     const root = getRepoRoot();
 
-    const isLibraryAudit = process.env.AUDIT_LIBRARY === 'true';
-
-    const allFiles = listSourceFiles(root).filter(f => {
-      const p = String(f || '').replace(/\\/g, '/');
-      if (!isLibraryAudit && p.includes('/infrastructure/ast/')) return false;
-      return true;
-    });
+    const allFiles = listSourceFiles(root);
 
     const project = createProject(allFiles);
     const findings = [];
@@ -75,9 +70,9 @@ async function runASTIntelligence() {
 }
 
 function runProjectHardcodedThresholdAudit(root, allFiles, findings) {
-  if (process.env.AST_INSIGHTS !== '1') return;
+  if (env.get('AST_INSIGHTS', '0') !== '1') return;
 
-  const maxFindings = Number(process.env.AST_INSIGHTS_PROJECT_MAX || 200);
+  const maxFindings = env.getNumber('AST_INSIGHTS_PROJECT_MAX', 200);
   if (!Number.isFinite(maxFindings) || maxFindings <= 0) return;
 
   const isExcludedPath = (filePath) => {
@@ -160,7 +155,7 @@ function runProjectHardcodedThresholdAudit(root, allFiles, findings) {
 }
 
 function runHardcodedThresholdAudit(root, findings) {
-  if (process.env.AST_INSIGHTS !== '1') return;
+  if (env.get('AST_INSIGHTS', '0') !== '1') return;
 
   const ruleDirs = [
     path.join(root, 'infrastructure', 'ast'),
@@ -317,7 +312,7 @@ async function runPlatformAnalysis(project, findings, context) {
       }
     } catch (error) {
       console.error(`[ERROR] Error processing platform ${platform}:`, error.message);
-      if (process.env.DEBUG_AST) {
+      if (env.getBool('DEBUG_AST', false)) {
         console.error(error.stack);
       }
     }
@@ -376,7 +371,7 @@ function generateOutput(findings, context, project, root) {
  * Save detailed JSON report
  */
 function saveDetailedReport(findings, levelTotals, platformTotals, project, root) {
-  const outDir = process.env.AUDIT_TMP || path.join(root, ".audit_tmp");
+  const outDir = env.get('AUDIT_TMP', path.join(root, ".audit_tmp"));
   try {
     fs.mkdirSync(outDir, { recursive: true });
 
@@ -532,7 +527,7 @@ function checkForMigrations(root) {
  * List source files recursively
  */
 function listSourceFiles(root) {
-  if (process.env.STAGING_ONLY_MODE === "1") {
+  if (env.get('STAGING_ONLY_MODE', '0') === "1") {
     const { execSync } = require("child_process");
     try {
       const allStaged = execSync("git diff --cached --name-only --diff-filter=ACM", {
@@ -600,11 +595,6 @@ function listSourceFiles(root) {
 function shouldIgnore(file) {
   const p = file.replace(/\\/g, "/");
   if (p.includes("node_modules/")) return true;
-
-  const isLibraryAudit = process.env.AUDIT_LIBRARY === 'true';
-
-  if (!isLibraryAudit && p.includes("scripts/hooks-system/")) return true;
-  if (!isLibraryAudit && p.includes("/infrastructure/ast/")) return true;
   if (p.includes("/.cursor/")) return true;
   if (/\.bak/i.test(p)) return true;
   if (p.includes("/.next/")) return true;

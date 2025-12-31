@@ -1,11 +1,13 @@
-
 const path = require('path');
+const env = require('../../../config/env');
 const {
-  pushFinding,
-  mapToLevel,
-  SyntaxKind,
-  isTestFile,
   platformOf,
+  pushFinding,
+  pushFileFinding,
+  mapToLevel,
+  positionOf,
+  isTestFile,
+  SyntaxKind,
   hasImport,
   hasDecorator,
   findStringLiterals,
@@ -119,7 +121,7 @@ function runBackendIntelligence(project, findings, platform) {
       const filePath = sf.getFilePath();
       if (platformOf(filePath) !== 'backend') return;
       if (/\/ast-[^/]+\.js$/.test(filePath)) return;
-      if (process.env.AUDIT_LIBRARY !== 'true') {
+      if (!env.getBool('AUDIT_LIBRARY', false)) {
         if (/scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath) || /\/infrastructure\/ast\//i.test(filePath)) return;
       }
       if (isTestFile(filePath)) return;
@@ -144,8 +146,8 @@ function runBackendIntelligence(project, findings, platform) {
 
     if (metrics.length === 0) return null;
 
-    const pOutlier = Number(process.env.AST_GODCLASS_P_OUTLIER || 90);
-    const pExtreme = Number(process.env.AST_GODCLASS_P_EXTREME || 97);
+    const pOutlier = env.getNumber('AST_GODCLASS_P_OUTLIER', 90);
+    const pExtreme = env.getNumber('AST_GODCLASS_P_EXTREME', 97);
 
     const methods = metrics.map(m => m.methodsCount);
     const props = metrics.map(m => m.propertiesCount);
@@ -202,12 +204,12 @@ function runBackendIntelligence(project, findings, platform) {
     if (platformOf(filePath) !== "backend") return;
 
     if (/\/ast-[^/]+\.js$/.test(filePath)) return;
-    if (process.env.AUDIT_LIBRARY !== 'true') {
+    if (!env.getBool('AUDIT_LIBRARY', false)) {
       if (/scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath) || /\/infrastructure\/ast\//i.test(filePath)) return;
     }
 
     const fullText = sf.getFullText();
-    const insightsEnabled = process.env.AST_INSIGHTS === '1';
+    const insightsEnabled = env.get('AST_INSIGHTS', '0') === '1';
     const isSpecFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
     const secretPattern = /(password|secret|key|token)\s*[:=]\s*['"`]([^'"]{8,})['"`]/gi;
     const matches = Array.from(fullText.matchAll(secretPattern));
