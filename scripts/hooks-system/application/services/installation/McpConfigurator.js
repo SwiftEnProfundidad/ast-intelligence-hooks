@@ -4,6 +4,7 @@ const { execSync } = require('child_process');
 const crypto = require('crypto');
 const os = require('os');
 const env = require('../../../config/env.js');
+const AuditLogger = require('../logging/AuditLogger');
 
 const COLORS = {
     reset: '\x1b[0m',

@@ -1,4 +1,5 @@
 const CursorTokenRepository = require('../../../infrastructure/repositories/CursorTokenRepository');
+const AuditLogger = require('../logging/AuditLogger');
 
 class CursorTokenService {
     constructor({
