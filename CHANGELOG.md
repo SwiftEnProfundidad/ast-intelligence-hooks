@@ -5,6 +5,18 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.21] - 2026-01-02
+
+### Fixed
+- **Critical**: Pre-commit hook now correctly uses `--staged` flag to analyze only staged files instead of entire repository
+- **Critical**: Fixed regex character classes in pre-commit blocking condition (escaped `[CRITICAL]` and `[HIGH]` to prevent false positives)
+- Pre-commit hook now respects `commitGating.stagingAreaOnly=true` configuration
+- Removed false positive blocking when CRITICAL=0 and HIGH=0 (no actual violations)
+
+### Changed
+- Hook generator now always includes `--staged` flag when invoking `ast-hooks ast`
+- Improved pre-commit hook regex to match only actual violation counts (CRITICAL=[1-9][0-9]*|HIGH=[1-9][0-9]*)
+
 ## [5.3.20] - 2025-12-31
 
 ### Fixed
