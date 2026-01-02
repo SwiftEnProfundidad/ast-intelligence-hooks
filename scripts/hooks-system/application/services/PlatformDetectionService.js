@@ -1,19 +1,9 @@
 
-const {
-  createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 const fs = require('fs').promises;
 const path = require('path');
 
 class PlatformDetectionService {
   constructor() {
-    const m_constructor = createMetricScope({
-      hook: 'platform_detection_service',
-      operation: 'constructor'
-    });
-
-    m_constructor.started();
     this.cache = {
       detections: new Map(),
       timestamp: 0,
@@ -53,7 +43,6 @@ class PlatformDetectionService {
         '*.java',
       ],
     };
-    m_constructor.success();
   }
 
   async detectPlatforms(targetPath) {
@@ -153,12 +142,6 @@ class PlatformDetectionService {
   }
 
   getAmbiguityScore(filePath) {
-    const m_get_ambiguity_score = createMetricScope({
-      hook: 'platform_detection_service',
-      operation: 'get_ambiguity_score'
-    });
-
-    m_get_ambiguity_score.started();
     const platform = this._detectPlatformUncached(filePath);
     const lowerPath = filePath.toLowerCase();
     const ext = path.extname(filePath);
@@ -172,8 +155,6 @@ class PlatformDetectionService {
 
     if (ext === '.ts' || ext === '.tsx') return 60;
     if (ext === '.js' || ext === '.jsx') return 70;
-
-    m_get_ambiguity_score.success();
 
     return 100;
   }

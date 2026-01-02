@@ -11,10 +11,6 @@ const GuardNotificationHandler = require('./GuardNotificationHandler');
 const GuardMonitorLoop = require('./GuardMonitorLoop');
 const GuardHealthReminder = require('./GuardHealthReminder');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class GuardAutoManagerService {
     constructor({
         repoRoot = process.cwd(),
@@ -27,12 +23,6 @@ class GuardAutoManagerService {
         processRef = process,
         heartbeatMonitor = null
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'guard_auto_manager_service',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.process = processRef;
 
         // Configuration & Infrastructure
@@ -59,7 +49,6 @@ class GuardAutoManagerService {
         this.lastHeartbeatState = { healthy: true, reason: 'healthy' };
         this.lastHeartbeatRestart = 0;
         this.shuttingDown = false;
-        m_constructor.success();
     }
 
     notifyUser(message, level = 'info', metadata = {}) {
@@ -68,15 +57,8 @@ class GuardAutoManagerService {
     }
 
     start() {
-        const m_start = createMetricScope({
-            hook: 'guard_auto_manager_service',
-            operation: 'start'
-        });
-
-        m_start.started();
         if (!this.lockManager.acquireLock()) {
             this.eventLogger.log('Another guard auto manager instance detected. Exiting.');
-            m_start.success();
             return false;
         }
         this.lockManager.writePidFile();
@@ -86,7 +68,6 @@ class GuardAutoManagerService {
         this._startReminder();
         this.monitorLoop.start();
         this.registerProcessHooks();
-        m_start.success();
         return true;
     }
 

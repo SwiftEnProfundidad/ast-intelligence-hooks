@@ -1,20 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class PlatformHeuristics {
     constructor(platformDetector) {
-        const m_constructor = createMetricScope({
-            hook: 'platform_heuristics',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.platformDetector = platformDetector;
-        m_constructor.success();
     }
 
     detectFromASTSystemFiles(files) {
@@ -140,12 +129,6 @@ class PlatformHeuristics {
     }
 
     getPlatformFrequencyInHistory(platform, commits) {
-        const m_get_platform_frequency_in_history = createMetricScope({
-            hook: 'platform_heuristics',
-            operation: 'get_platform_frequency_in_history'
-        });
-
-        m_get_platform_frequency_in_history.started();
         if (!commits || commits.length === 0) return 0;
 
         const platformCommits = commits.filter(commit =>
@@ -153,8 +136,6 @@ class PlatformHeuristics {
                 this.platformDetector.detectPlatformFromFile(file) === platform
             )
         );
-
-        m_get_platform_frequency_in_history.success();
 
         return platformCommits.length / commits.length;
     }

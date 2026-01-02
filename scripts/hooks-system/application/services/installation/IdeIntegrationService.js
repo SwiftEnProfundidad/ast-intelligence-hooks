@@ -2,10 +2,6 @@ const McpConfigurator = require('./McpConfigurator');
 const HookInstaller = require('./HookInstaller');
 const VSCodeTaskConfigurator = require('./VSCodeTaskConfigurator');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 const COLORS = {
     reset: '\x1b[0m',
     green: '\x1b[32m',
@@ -15,12 +11,6 @@ const COLORS = {
 
 class IdeIntegrationService {
     constructor(targetRoot, hookSystemRoot, logger = null) {
-        const m_constructor = createMetricScope({
-            hook: 'ide_integration_service',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.targetRoot = targetRoot || process.cwd();
         this.hookSystemRoot = hookSystemRoot;
         this.logger = logger;
@@ -28,7 +18,6 @@ class IdeIntegrationService {
         this.mcpConfigurator = new McpConfigurator(this.targetRoot, this.hookSystemRoot, this.logger);
         this.hookInstaller = new HookInstaller(this.targetRoot, this.hookSystemRoot, this.logger);
         this.vscodeConfigurator = new VSCodeTaskConfigurator(this.targetRoot, this.logger);
-        m_constructor.success();
     }
 
     installCursorHooks(platforms) {

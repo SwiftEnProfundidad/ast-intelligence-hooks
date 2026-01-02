@@ -1,10 +1,6 @@
 const { recordMetric } = require('../../infrastructure/telemetry/metrics-logger');
 const HookSystemStateMachine = require('../state/HookSystemStateMachine');
 
-const {
-  createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class HookSystemScheduler {
   constructor({ orchestrator, contextEngine, intervalMs = 30000 }) {
     recordMetric({

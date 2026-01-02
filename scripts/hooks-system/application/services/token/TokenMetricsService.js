@@ -1,22 +1,11 @@
 const { execSync } = require('child_process');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class TokenMetricsService {
     constructor(cursorTokenService, thresholds, logger) {
-        const m_constructor = createMetricScope({
-            hook: 'token_metrics_service',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.cursorTokenService = cursorTokenService;
         this.thresholds = thresholds;
         this.logger = logger;
         this.repoRoot = process.cwd();
-        m_constructor.success();
     }
 
     async collectMetrics(fallbackEstimator) {

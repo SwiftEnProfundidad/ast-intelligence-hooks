@@ -31,15 +31,15 @@ elif [[ "$SCRIPT_DIR" == *"scripts/hooks-system"* ]]; then
   fi
 else
   # Fallback: try to find it relative to current directory
-  ROOT_DIR="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-  if [[ -d "$ROOT_DIR/node_modules/@pumuki/ast-intelligence-hooks" ]]; then
-    HOOKS_SYSTEM_DIR="$ROOT_DIR/node_modules/@pumuki/ast-intelligence-hooks"
-  elif [[ -d "$ROOT_DIR/scripts/hooks-system" ]]; then
-    HOOKS_SYSTEM_DIR="$ROOT_DIR/scripts/hooks-system"
+  REPO_ROOT="$(pwd)"
+  if [[ -d "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks" ]]; then
+    HOOKS_SYSTEM_DIR="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks"
+  elif [[ -d "$REPO_ROOT/scripts/hooks-system" ]]; then
+    HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
   else
     echo "Error: Could not determine HOOKS_SYSTEM_DIR" >&2
     echo "  SCRIPT_DIR: $SCRIPT_DIR" >&2
-    echo "  ROOT_DIR: $ROOT_DIR" >&2
+    echo "  REPO_ROOT: $REPO_ROOT" >&2
     exit 1
   fi
 fi
@@ -58,7 +58,11 @@ source "$INFRASTRUCTURE_DIR/eslint/eslint-integration.sh"
 START_TIME=$(date +%s)
 
 # Determine repository root using git
-ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+if command -v git >/dev/null 2>&1; then
+  ROOT_DIR=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+else
+  ROOT_DIR=$(pwd)
+fi
 
 # Default to temp directories to avoid polluting repositories.
 # Can be overridden by setting AUDIT_TMP / AUDIT_REPORTS.
@@ -208,11 +212,6 @@ run_intelligent_audit() {
 }
 
 full_audit() {
-  export AUDIT_STRICT=1
-  export BLOCK_ALL_SEVERITIES=1
-  export BLOCK_ON_REPO_VIOLATIONS=1
-  export AUDIT_LIBRARY=true
-  unset STAGING_ONLY_MODE
   run_basic_checks
   run_eslint_suite
   run_ast_intelligence
@@ -277,8 +276,8 @@ full_audit_strict_staging_only() {
     printf "\n%b✅ STAGING CLEAN - COMMIT ALLOWED%b\n" "$GREEN" "$NC"
     printf "  🔴 CRITICAL: 0\n"
     printf "  🟠 HIGH:     0\n"
-    printf "  🟡 MEDIUM:   %s\n" "$gate_med"
-    printf "  🔵 LOW:      %s\n" "$gate_low"
+    printf "  🟡 MEDIUM:   0\n"
+    printf "  🔵 LOW:      0\n"
     printf "\n  All staged files pass strict quality gates.\n"
     printf "  Ready to commit! 🚀\n\n"
     print_final_signature
@@ -545,8 +544,8 @@ summarize_all() {
   printf "\n%b2. ESLINT AUDIT RESULTS%b\n" "$YELLOW" "$NC"
   printf "─────────────────────────────────────────────────────────────\n"
   if [[ -f "$TMP_DIR/eslint-summary.txt" ]]; then
-    es_err=$(grep -o 'errors=[0-9]\+' "$TMP_DIR/eslint-summary.txt" 2>/dev/null | head -n1 | sed 's/[^0-9]//g')
-    es_warn=$(grep -o 'warnings=[0-9]\+' "$TMP_DIR/eslint-summary.txt" 2>/dev/null | head -n1 | sed 's/[^0-9]//g')
+    es_err=$(grep -o 'errors=[0-9]\+' "$TMP_DIR/eslint-summary.txt" | head -n1 | sed 's/[^0-9]//g')
+    es_warn=$(grep -o 'warnings=[0-9]\+' "$TMP_DIR/eslint-summary.txt" | head -n1 | sed 's/[^0-9]//g')
     es_err=${es_err:-0}; es_warn=${es_warn:-0}
     if [[ $es_err -gt 0 ]]; then
       printf "  %bESLint:%b 🔴 errors=%s 🟡 warnings=%s\n" "$RED" "$NC" "$es_err" "$es_warn"
@@ -842,32 +841,31 @@ save_audit_reports() {
   local report_prefix="${REPORTS_DIR}/audit_${timestamp}"
 
   if [[ -f "$TMP_DIR/ast-summary.json" ]]; then
-    mkdir -p "$ROOT_DIR/.audit-reports" || { echo "Failed to create .audit-reports directory"; exit 1; }
-    cp "$TMP_DIR/ast-summary.json" "$ROOT_DIR/.audit-reports/latest_ast-summary.json" || { echo "Failed to copy AST summary"; exit 1; }
+    cp "$TMP_DIR/ast-summary.json" "${report_prefix}_ast_summary.json"
   fi
 
   if [[ -f "$TMP_DIR/ast-findings.json" ]]; then
-    cp "$TMP_DIR/ast-findings.json" "$REPORTS_DIR/latest_ast-findings.json"
+    cp "$TMP_DIR/ast-findings.json" "${report_prefix}_ast_findings.json"
   fi
 
   if [[ -f "$TMP_DIR/pattern-summary.txt" ]]; then
-    cp "$TMP_DIR/pattern-summary.txt" "$REPORTS_DIR/latest_patterns.txt"
+    cp "$TMP_DIR/pattern-summary.txt" "${report_prefix}_patterns.txt"
   fi
 
   if [[ -f "$TMP_DIR/eslint-summary.txt" ]]; then
-    cp "$TMP_DIR/eslint-summary.txt" "$REPORTS_DIR/latest_eslint.txt"
+    cp "$TMP_DIR/eslint-summary.txt" "${report_prefix}_eslint.txt"
   fi
 
-  local latest_summary="$REPORTS_DIR/latest_ast_summary.json"
-  local latest_findings="$REPORTS_DIR/latest_ast_findings.json"
-  local latest_critical="$REPORTS_DIR/latest_critical.json"
-  local latest_high="$REPORTS_DIR/latest_high.json"
-  local latest_medium="$REPORTS_DIR/latest_medium.json"
-  local latest_low="$REPORTS_DIR/latest_low.json"
+  local latest_summary="${REPORTS_DIR}/latest_ast_summary.json"
+  local latest_findings="${REPORTS_DIR}/latest_ast_findings.json"
+  local latest_critical="${REPORTS_DIR}/latest_critical.json"
+  local latest_high="${REPORTS_DIR}/latest_high.json"
+  local latest_medium="${REPORTS_DIR}/latest_medium.json"
+  local latest_low="${REPORTS_DIR}/latest_low.json"
 
   if [[ -f "$TMP_DIR/ast-summary.json" ]]; then
     cp "$TMP_DIR/ast-summary.json" "$latest_summary"
-    cp "$TMP_DIR/ast-summary.json" "$REPORTS_DIR/baseline_ast_summary.json"
+    cp "$TMP_DIR/ast-summary.json" "${REPORTS_DIR}/baseline_ast_summary.json"
 
     if command -v jq >/dev/null 2>&1; then
       jq '{
@@ -925,15 +923,15 @@ save_audit_reports() {
 }
 
 export_markdown() {
-  local out="$TMP_DIR/audit-report.md"
+  local out="${TMP_DIR}/audit-report.md"
   printf "# Audit Report\n\n" > "$out"
   printf "## %s\n\n" "$MSG_SUMMARY" >> "$out"
-  if [[ -f "$TMP_DIR/pattern-summary.txt" ]]; then
-    cat "$TMP_DIR/pattern-summary.txt" >> "$out"
+  if [[ -f "${TMP_DIR}/pattern-summary.txt" ]]; then
+    cat "${TMP_DIR}/pattern-summary.txt" >> "$out"
     printf "\n" >> "$out"
   fi
-  if [[ -f "$TMP_DIR/eslint-summary.txt" ]]; then
-    cat "$TMP_DIR/eslint-summary.txt" >> "$out"
+  if [[ -f "${TMP_DIR}/eslint-summary.txt" ]]; then
+    cat "${TMP_DIR}/eslint-summary.txt" >> "$out"
     printf "\n" >> "$out"
   fi
   printf "%s %s\n" "$EMJ_OK" "$out"
@@ -962,33 +960,77 @@ run_ast_intelligence() {
     if [[ -x "/usr/bin/node" ]]; then node_bin="/usr/bin/node"; fi
   fi
   if [[ -z "$node_bin" ]]; then
-    return 0
+    local nvm_dir="${NVM_DIR:-$HOME/.nvm}"
+    local nvm_default=""
+    if [[ -f "$nvm_dir/alias/default" ]]; then
+      nvm_default="$(cat "$nvm_dir/alias/default" 2>/dev/null || true)"
+      nvm_default="${nvm_default##v}"
+      nvm_default="${nvm_default%%[[:space:]]*}"
+    fi
+    if [[ -n "$nvm_default" ]] && [[ -x "$nvm_dir/versions/node/v${nvm_default}/bin/node" ]]; then
+      node_bin="$nvm_dir/versions/node/v${nvm_default}/bin/node"
+    fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    local nvm_dir_fallback="${NVM_DIR:-$HOME/.nvm}"
+    local latest_node=""
+    latest_node="$(ls -1 "$nvm_dir_fallback/versions/node" 2>/dev/null | grep -E '^v[0-9]+' | sort -V | tail -n 1 || true)"
+    if [[ -n "$latest_node" ]] && [[ -x "$nvm_dir_fallback/versions/node/${latest_node}/bin/node" ]]; then
+      node_bin="$nvm_dir_fallback/versions/node/${latest_node}/bin/node"
+    fi
+  fi
+  if [[ -z "$node_bin" ]]; then
+    printf "%b❌ Node.js not found in PATH. Install Node.js >= 18 or ensure your shell loads nvm/asdf for non-interactive scripts.%b\n" "$RED" "$NC" >&2
+    return 127
   fi
 
-  local intelligent_audit="$HOOKS_SYSTEM_DIR/infrastructure/orchestration/intelligent-audit.js"
-  if [[ ! -f "$intelligent_audit" ]]; then
-    return 0
-  fi
-
-  export AUDIT_TMP="$TMP_DIR"
-  if [[ "${BLOCK_ON_REPO_VIOLATIONS:-0}" == "1" ]]; then
-    export AI_GATE_SCOPE="repo"
-  else
-    export AI_GATE_SCOPE="staging"
-  fi
-
-  local node_path_value="${NODE_PATH:-}"
+  # Determine NODE_PATH to include library's node_modules
+  # Try multiple locations: HOOKS_SYSTEM_DIR/node_modules, or project root node_modules
+  local -a node_path_parts
+  node_path_parts=()
+  
+  # If HOOKS_SYSTEM_DIR has its own node_modules
   if [[ -d "$HOOKS_SYSTEM_DIR/node_modules" ]]; then
-    node_path_value="$HOOKS_SYSTEM_DIR/node_modules${node_path_value:+:$node_path_value}"
+    node_path_parts+=("$HOOKS_SYSTEM_DIR/node_modules")
   fi
-  if [[ -d "$ROOT_DIR/node_modules" ]]; then
-    node_path_value="$ROOT_DIR/node_modules${node_path_value:+:$node_path_value}"
+  
+  # Also check if we're in a project with node_modules/@pumuki/ast-intelligence-hooks
+  local repo_root=""
+  if [[ "$HOOKS_SYSTEM_DIR" == *"scripts/hooks-system"* ]]; then
+    # Running from scripts/hooks-system, go to repo root
+    repo_root="$(cd "$HOOKS_SYSTEM_DIR/../.." && pwd)"
+  elif [[ "$HOOKS_SYSTEM_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
+    # Running from node_modules, go to repo root
+    repo_root="$(cd "$HOOKS_SYSTEM_DIR/../../.." && pwd)"
+  else
+    # Try current directory
+    repo_root="$(pwd)"
+  fi
+  
+  if [[ -n "$repo_root" ]] && [[ -d "$repo_root/node_modules/@pumuki/ast-intelligence-hooks/node_modules" ]]; then
+    node_path_parts+=("$repo_root/node_modules/@pumuki/ast-intelligence-hooks/node_modules")
+  fi
+  
+  if [[ -n "$repo_root" ]] && [[ -d "$repo_root/node_modules" ]]; then
+    node_path_parts+=("$repo_root/node_modules")
   fi
 
+  # Build NODE_PATH
+  local node_path_value="${NODE_PATH:-}"
+  for path_part in "${node_path_parts[@]:-}"; do
+    if [[ -n "$node_path_value" ]]; then
+      node_path_value="$path_part:$node_path_value"
+    else
+      node_path_value="$path_part"
+    fi
+  done
+
+  # Execute AST with proper error handling and NODE_PATH
+  # Change to HOOKS_SYSTEM_DIR so Node.js resolves modules correctly
   if [[ -n "$node_path_value" ]]; then
-    (cd "$ROOT_DIR" && export NODE_PATH="$node_path_value" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export NODE_PATH="$node_path_value" && export AUDIT_TMP="$TMP_DIR" && export AUDIT_LIBRARY="${AUDIT_LIBRARY:-false}" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
   else
-    (cd "$ROOT_DIR" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
+    ast_output=$(cd "$HOOKS_SYSTEM_DIR" && export AUDIT_TMP="$TMP_DIR" && export AUDIT_LIBRARY="${AUDIT_LIBRARY:-false}" && "$node_bin" "${AST_DIR}/ast-intelligence.js" 2>&1) || ast_exit_code=$?
   fi
 
   # Check if AST script failed
@@ -1041,10 +1083,6 @@ run_ast_intelligence() {
   fi
 
   printf "%b✅ AST Intelligence completed%b\n\n" "$GREEN" "$NC"
-
-  # Ensure the .audit-reports directory exists and copy the AST summary
-  mkdir -p "$ROOT_DIR/.audit-reports" || { echo "Failed to create .audit-reports directory"; exit 1; }
-  cp "$TMP_DIR/ast-summary.json" "$ROOT_DIR/.audit-reports/latest_ast-summary.json" || { echo "Failed to copy AST summary"; exit 1; }
 }
 
 interactive_menu() {

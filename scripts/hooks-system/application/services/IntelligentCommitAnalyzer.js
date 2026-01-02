@@ -5,23 +5,12 @@ const FeatureDetector = require('./commit/FeatureDetector');
 const CommitMessageGenerator = require('./commit/CommitMessageGenerator');
 const UnifiedLogger = require('./logging/UnifiedLogger');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class IntelligentCommitAnalyzer {
     constructor({ repoRoot = process.cwd(), logger = null } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'intelligent_commit_analyzer',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger || console;
         this.featureDetector = new FeatureDetector(this.logger);
         this.messageGenerator = new CommitMessageGenerator(this.logger);
-        m_constructor.success();
     }
 
     detectFeature(filePath) {
@@ -148,13 +137,6 @@ class IntelligentCommitAnalyzer {
      * Get ready-to-commit groups (all groups are ready - no verification)
      */
     getReadyCommits(suggestions) {
-        const m_get_ready_commits = createMetricScope({
-            hook: 'intelligent_commit_analyzer',
-            operation: 'get_ready_commits'
-        });
-
-        m_get_ready_commits.started();
-        m_get_ready_commits.success();
         return suggestions;
     }
 
@@ -162,13 +144,6 @@ class IntelligentCommitAnalyzer {
      * Get groups that need attention (none - we don't verify)
      */
     getNeedsAttention(suggestions) {
-        const m_get_needs_attention = createMetricScope({
-            hook: 'intelligent_commit_analyzer',
-            operation: 'get_needs_attention'
-        });
-
-        m_get_needs_attention.started();
-        m_get_needs_attention.success();
         return [];
     }
 }

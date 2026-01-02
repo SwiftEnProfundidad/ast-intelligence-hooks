@@ -1,21 +1,10 @@
 const crypto = require('crypto');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class NotificationDeduplicator {
     constructor(windowMs = 5000, logger = null) {
-        const m_constructor = createMetricScope({
-            hook: 'notification_deduplicator',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.deduplicationMap = new Map();
         this.windowMs = windowMs;
         this.logger = logger;
-        m_constructor.success();
     }
 
     isDuplicate(notification) {
@@ -65,13 +54,6 @@ class NotificationDeduplicator {
     }
 
     getStats() {
-        const m_get_stats = createMetricScope({
-            hook: 'notification_deduplicator',
-            operation: 'get_stats'
-        });
-
-        m_get_stats.started();
-        m_get_stats.success();
         return {
             size: this.deduplicationMap.size
         };

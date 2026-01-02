@@ -1,9 +1,5 @@
 const EvidenceMonitorService = require('./monitoring/EvidenceMonitorService');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class EvidenceRealtimeGuardPlugin {
     constructor({
         repoRoot = process.cwd(),
@@ -11,12 +7,6 @@ class EvidenceRealtimeGuardPlugin {
         logger = console,
         evidenceMonitor = null
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'realtime_guard_plugin',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.notificationCenter = notificationCenter;
         this.logger = logger || console;
@@ -26,33 +16,18 @@ class EvidenceRealtimeGuardPlugin {
             logger: this.logger,
             notifier: payload => this.forwardNotification(payload)
         });
-        m_constructor.success();
     }
 
     start() {
-        const m_start = createMetricScope({
-            hook: 'realtime_guard_plugin',
-            operation: 'start'
-        });
-
-        m_start.started();
         if (typeof this.evidenceMonitor.start === 'function') {
             this.evidenceMonitor.start();
         }
-        m_start.success();
     }
 
     stop() {
-        const m_stop = createMetricScope({
-            hook: 'realtime_guard_plugin',
-            operation: 'stop'
-        });
-
-        m_stop.started();
         if (typeof this.evidenceMonitor.stop === 'function') {
             this.evidenceMonitor.stop();
         }
-        m_stop.success();
     }
 
     forwardNotification(payload) {

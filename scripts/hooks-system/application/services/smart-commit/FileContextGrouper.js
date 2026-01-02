@@ -1,20 +1,9 @@
 const path = require('path');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class FileContextGrouper {
     constructor(featureDetector, platformDetector = null) {
-        const m_constructor = createMetricScope({
-            hook: 'file_context_grouper',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.featureDetector = featureDetector;
         this.platformDetector = platformDetector;
-        m_constructor.success();
     }
 
     group(files) {
@@ -100,18 +89,10 @@ class FileContextGrouper {
     }
 
     getContextDirectory(file) {
-        const m_get_context_directory = createMetricScope({
-            hook: 'file_context_grouper',
-            operation: 'get_context_directory'
-        });
-
-        m_get_context_directory.started();
         const parts = file.split(path.sep);
         if (parts.length <= 2) {
-            m_get_context_directory.success();
             return parts[0] || 'root';
         }
-        m_get_context_directory.success();
         return parts.slice(0, 2).join(path.sep);
     }
 

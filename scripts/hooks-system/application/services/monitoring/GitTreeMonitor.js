@@ -2,18 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class GitTreeMonitor {
     constructor(repoRoot, options = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'git_tree_monitor',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.stagedThreshold = options.stagedThreshold || 10;
         this.unstagedThreshold = options.unstagedThreshold || 15;
@@ -27,7 +17,6 @@ class GitTreeMonitor {
         this.timer = null;
         this.lastState = null;
         this.loadState();
-        m_constructor.success();
     }
 
     loadState() {
@@ -50,12 +39,6 @@ class GitTreeMonitor {
     }
 
     getTreeState() {
-        const m_get_tree_state = createMetricScope({
-            hook: 'git_tree_monitor',
-            operation: 'get_tree_state'
-        });
-
-        m_get_tree_state.started();
         try {
             const stagedRaw = execSync('git diff --cached --name-only', {
                 cwd: this.repoRoot,
@@ -75,8 +58,6 @@ class GitTreeMonitor {
             const untracked = untrackedRaw ? untrackedRaw.split('\n').length : 0;
             const total = staged + unstaged + untracked;
 
-            m_get_tree_state.success();
-
             return {
                 staged,
                 unstaged,
@@ -88,7 +69,6 @@ class GitTreeMonitor {
                 timestamp: Date.now()
             };
         } catch (error) {
-            m_get_tree_state.success();
             return {
                 staged: 0,
                 unstaged: 0,
@@ -99,7 +79,6 @@ class GitTreeMonitor {
                 timestamp: Date.now()
             };
         }
-        m_get_tree_state.success();
     }
 
     startMonitoring(onStateChange) {
@@ -130,17 +109,10 @@ class GitTreeMonitor {
     }
 
     stop() {
-        const m_stop = createMetricScope({
-            hook: 'git_tree_monitor',
-            operation: 'stop'
-        });
-
-        m_stop.started();
         if (this.timer) {
             clearInterval(this.timer);
             this.timer = null;
         }
-        m_stop.success();
     }
 
     isActive() {

@@ -3,22 +3,12 @@ const FileContextGrouper = require('./smart-commit/FileContextGrouper');
 const CommitMessageSuggester = require('./smart-commit/CommitMessageSuggester');
 const SmartCommitSummaryBuilder = require('./smart-commit/SmartCommitSummaryBuilder');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class SmartDirtyTreeAnalyzer {
     constructor({
         platformDetector = null,
         repoRoot = process.cwd(),
         logger = console
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'smart_dirty_tree_analyzer',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger;
 
@@ -26,7 +16,6 @@ class SmartDirtyTreeAnalyzer {
         this.grouper = new FileContextGrouper(this.featureDetector, platformDetector);
         this.suggester = new CommitMessageSuggester(this.featureDetector);
         this.summaryBuilder = new SmartCommitSummaryBuilder();
-        m_constructor.success();
     }
 
     analyze(files) {

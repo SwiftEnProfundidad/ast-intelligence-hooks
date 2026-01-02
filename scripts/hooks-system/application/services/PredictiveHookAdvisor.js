@@ -1,22 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-  createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 const METRICS_FILE = path.join(process.cwd(), '.audit_tmp', 'hook-metrics.jsonl');
 
 class PredictiveHookAdvisor {
   constructor({ windowSize = 200 } = {}) {
-    const m_constructor = createMetricScope({
-      hook: 'predictive_hook_advisor',
-      operation: 'constructor'
-    });
-
-    m_constructor.started();
     this.windowSize = windowSize;
-    m_constructor.success();
   }
 
   loadMetrics() {
@@ -35,12 +24,6 @@ class PredictiveHookAdvisor {
   }
 
   getFailureProbabilities() {
-    const m_get_failure_probabilities = createMetricScope({
-      hook: 'predictive_hook_advisor',
-      operation: 'get_failure_probabilities'
-    });
-
-    m_get_failure_probabilities.started();
     const metrics = this.loadMetrics();
     const stats = {};
 
@@ -54,8 +37,6 @@ class PredictiveHookAdvisor {
         stats[key].failures += 1;
       }
     }
-
-    m_get_failure_probabilities.success();
 
     return Object.entries(stats)
       .map(([hook, { total, failures }]) => ({

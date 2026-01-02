@@ -3,18 +3,8 @@ const path = require('path');
 const { execSync } = require('child_process');
 const { ConfigurationError, DomainError } = require('../../../domain/errors');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class EvidenceMonitor {
     constructor(repoRoot, options = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'evidence_monitor',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.staleThresholdMs = options.staleThresholdMs || 180000;
         this.pollIntervalMs = options.pollIntervalMs || 30000;
@@ -24,7 +14,6 @@ class EvidenceMonitor {
         this.evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
         this.tempDir = path.join(repoRoot, '.audit_tmp');
         this.updateScript = this.resolveUpdateEvidenceScript();
-        m_constructor.success();
     }
 
     resolveUpdateEvidenceScript() {
@@ -105,17 +94,10 @@ class EvidenceMonitor {
     }
 
     stop() {
-        const m_stop = createMetricScope({
-            hook: 'evidence_monitor',
-            operation: 'stop'
-        });
-
-        m_stop.started();
         if (this.pollTimer) {
             clearInterval(this.pollTimer);
             this.pollTimer = null;
         }
-        m_stop.success();
     }
 }
 

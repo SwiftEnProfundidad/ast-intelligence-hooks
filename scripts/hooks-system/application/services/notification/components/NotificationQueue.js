@@ -1,18 +1,7 @@
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class NotificationQueue {
     constructor(maxSize = 100) {
-        const m_constructor = createMetricScope({
-            hook: 'notification_queue',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.maxSize = maxSize;
         this.items = [];
-        m_constructor.success();
     }
 
     enqueue(item) {

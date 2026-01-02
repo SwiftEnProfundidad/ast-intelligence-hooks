@@ -1,22 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class GuardEventLogger {
     constructor({
         repoRoot = process.cwd(),
         logger = console,
         fsModule = fs
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'guard_event_logger',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.fs = fsModule;
@@ -36,7 +26,6 @@ class GuardEventLogger {
                 this.logger.debug('GUARD_EVENT_LOGGER_INIT_ERROR', { error: error.message });
             }
         }
-        m_constructor.success();
     }
 
     log(message, data = {}) {

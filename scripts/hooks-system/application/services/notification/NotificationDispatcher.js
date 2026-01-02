@@ -1,20 +1,9 @@
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class NotificationDispatcher {
     constructor(sender, retryExecutor, cooldownManager, logger) {
-        const m_constructor = createMetricScope({
-            hook: 'notification_dispatcher',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.sender = sender;
         this.retryExecutor = retryExecutor;
         this.cooldownManager = cooldownManager;
         this.logger = logger;
-        m_constructor.success();
     }
 
     async dispatch(notification, stats) {
