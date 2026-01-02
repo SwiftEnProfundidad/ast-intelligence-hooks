@@ -1,8 +1,10 @@
 const env = require('../../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
 
 class FeatureDetector {
     constructor(logger = console) {
-        this.logger = logger;
+        
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });this.logger = logger;
     }
 
     /**
