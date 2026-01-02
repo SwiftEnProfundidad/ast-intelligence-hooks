@@ -343,7 +343,7 @@ async function runPlatformAnalysis(project, findings, context) {
  * Generate analysis output and reports
  */
 function generateOutput(findings, context, project, root) {
-  const stagingOnlyMode = env.get('STAGING_ONLY_MODE', '0') === '1';
+  const stagingOnlyMode = context && context.stagingOnlyMode;
   if (stagingOnlyMode) {
     try {
       const { execSync } = require('child_process');
