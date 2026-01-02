@@ -5,6 +5,17 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.25] - 2026-01-02
+
+### Fixed
+- **Critical**: Fixed `--staged` flag not being respected by CLI
+- Modified CLI to correctly pass STAGING_ONLY_MODE environment variable to AST analysis
+- Pre-commit hook now analyzes only staged files, not entire repository
+- Fixed env.js to read environment variables dynamically
+
+### Changed
+- CLI now properly handles `--staged` flag for atomic commits
+
 ## [5.3.24] - 2026-01-02
 
 ### Fixed

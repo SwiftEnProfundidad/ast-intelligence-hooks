@@ -1,4 +1,6 @@
-const ENV = (process.env.NODE_ENV || 'development').toLowerCase();
+const ENV = (function () {
+    return (process.env.NODE_ENV || 'development').toLowerCase();
+})();
 
 function normalizeBool(val, defaultValue = false) {
     if (val === undefined) return defaultValue;
