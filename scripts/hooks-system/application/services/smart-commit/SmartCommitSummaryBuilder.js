@@ -1,7 +1,3 @@
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class SmartCommitSummaryBuilder {
     build(suggestions, orphans) {
         const lines = [];

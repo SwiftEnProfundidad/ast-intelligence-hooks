@@ -3,10 +3,6 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const { DomainError } = require('../../../domain/errors');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 const DEFAULT_PLATFORMS = ['1', '2', '3', '4'];
 
 function resolveUpdateEvidenceScript(repoRoot) {
@@ -37,12 +33,6 @@ class EvidenceContextManager {
         timers = { setInterval, clearInterval },
         runCommand = EvidenceContextManager.runUpdateScript
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'evidence_context_manager',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.updateScript = updateScript;
         this.thresholdSeconds = thresholdSeconds;
@@ -54,7 +44,6 @@ class EvidenceContextManager {
         this.runCommand = runCommand;
         this.timerRef = null;
         this.refreshInProgress = false;
-        m_constructor.success();
     }
 
     static runUpdateScript(scriptPath, platforms) {
@@ -72,12 +61,6 @@ class EvidenceContextManager {
     }
 
     start(reason = 'startup') {
-        const m_start = createMetricScope({
-            hook: 'evidence_context_manager',
-            operation: 'start'
-        });
-
-        m_start.started();
         this.ensureFresh(reason).catch(error => {
             this.log('error', 'EVIDENCE_STARTUP_REFRESH_FAILED', { error: error.message });
         });
@@ -91,21 +74,13 @@ class EvidenceContextManager {
                 this.timerRef.unref();
             }
         }
-        m_start.success();
     }
 
     stop() {
-        const m_stop = createMetricScope({
-            hook: 'evidence_context_manager',
-            operation: 'stop'
-        });
-
-        m_stop.started();
         if (this.timerRef) {
             this.timers.clearInterval(this.timerRef);
             this.timerRef = null;
         }
-        m_stop.success();
     }
 
     async ensureFresh(reason = 'manual') {

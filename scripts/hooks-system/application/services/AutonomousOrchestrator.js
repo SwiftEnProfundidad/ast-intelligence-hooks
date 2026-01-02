@@ -3,18 +3,8 @@ const { execSync } = require('child_process');
 const path = require('path');
 const UnifiedLogger = require('./logging/UnifiedLogger');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class AutonomousOrchestrator {
     constructor(contextEngine, platformDetector, rulesLoader, logger = new UnifiedLogger()) {
-        const m_constructor = createMetricScope({
-            hook: 'autonomous_orchestrator',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.contextEngine = contextEngine;
         this.platformDetector = platformDetector || new PlatformDetectionService();
         this.rulesLoader = rulesLoader;
@@ -25,7 +15,6 @@ class AutonomousOrchestrator {
         };
         this.lastAnalysis = null;
         this.lastAnalysisTime = 0;
-        m_constructor.success();
     }
 
     detectFromASTSystemFiles(files) {
@@ -134,13 +123,6 @@ class AutonomousOrchestrator {
     }
 
     getLastAnalysis() {
-        const m_get_last_analysis = createMetricScope({
-            hook: 'autonomous_orchestrator',
-            operation: 'get_last_analysis'
-        });
-
-        m_get_last_analysis.started();
-        m_get_last_analysis.success();
         return this.lastAnalysis;
     }
 }

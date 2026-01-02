@@ -21,18 +21,8 @@ const NotificationQueue = require('./components/NotificationQueue');
 const NotificationRetryExecutor = require('./components/NotificationRetryExecutor');
 const NotificationDispatcher = require('./NotificationDispatcher');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class NotificationCenterService {
     constructor(config = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'notification_center_service',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = config.repoRoot || process.cwd();
         this.enabled = config.enabled !== false;
 
@@ -93,7 +83,6 @@ class NotificationCenterService {
             totalFailed: 0,
             totalRetries: 0
         };
-        m_constructor.success();
     }
 
     /**
@@ -184,13 +173,6 @@ class NotificationCenterService {
      * Gets service statistics
      */
     getStats() {
-        const m_get_stats = createMetricScope({
-            hook: 'notification_center_service',
-            operation: 'get_stats'
-        });
-
-        m_get_stats.started();
-        m_get_stats.success();
         return {
             ...this.stats,
             queueSize: this.queue.size(),

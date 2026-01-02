@@ -1,20 +1,9 @@
 const glob = require('glob');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class PlatformDetectorService {
     constructor(targetRoot) {
-        const m_constructor = createMetricScope({
-            hook: 'platform_detector_service',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.targetRoot = targetRoot || process.cwd();
         this.platforms = [];
-        m_constructor.success();
     }
 
     detect() {

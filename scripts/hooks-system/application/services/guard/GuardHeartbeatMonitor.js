@@ -1,10 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class GuardHeartbeatMonitor {
     constructor({
         repoRoot = process.cwd(),
@@ -12,12 +8,6 @@ class GuardHeartbeatMonitor {
         fsModule = fs,
         env = process.env
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'guard_heartbeat_monitor',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.fs = fsModule;
@@ -38,7 +28,6 @@ class GuardHeartbeatMonitor {
                 .map(entry => entry.trim().toLowerCase())
                 .filter(Boolean)
         );
-        m_constructor.success();
     }
 
     evaluate() {

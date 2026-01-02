@@ -2,10 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class AstMonitor {
     constructor({
         repoRoot = process.cwd(),
@@ -15,12 +11,6 @@ class AstMonitor {
         logger = console,
         notificationService = null
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'ast_monitor',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.debounceMs = debounceMs;
         this.cooldownMs = cooldownMs;
@@ -36,24 +26,15 @@ class AstMonitor {
         this.evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
         this.tempDir = path.join(repoRoot, '.audit_tmp');
         this.astScript = path.join(repoRoot, 'infrastructure', 'ast', 'ast-intelligence.js');
-        m_constructor.success();
     }
 
     start() {
-        const m_start = createMetricScope({
-            hook: 'ast_monitor',
-            operation: 'start'
-        });
-
-        m_start.started();
         if (!this.enabled) {
             this.logger.info('[AstMonitor] AST Watch disabled');
-            m_start.success();
             return;
         }
 
         if (this.watcher) {
-            m_start.success();
             return;
         }
 
@@ -77,16 +58,9 @@ class AstMonitor {
         } catch (error) {
             this.logger.error('[AstMonitor] Failed to start watchers:', { error: error.message });
         }
-        m_start.success();
     }
 
     stop() {
-        const m_stop = createMetricScope({
-            hook: 'ast_monitor',
-            operation: 'stop'
-        });
-
-        m_stop.started();
         // fs.watch returns FSWatcher which has close(). 
         // Since we might have multiple watchers (one per dir), we should track them if we want to close properly.
         // For simplicity in this iteration, we assume the process exit handles it, or we rely on the debounce timer clear.
@@ -96,7 +70,6 @@ class AstMonitor {
             this.timer = null;
         }
         // Ideally we would close all FSWatchers here
-        m_stop.success();
     }
 
     scheduleAnalysis() {

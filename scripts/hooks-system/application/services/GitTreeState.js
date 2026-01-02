@@ -1,11 +1,8 @@
 const { execSync } = require('child_process');
+const path = require('path');
 
 // Import recordMetric for prometheus metrics
-const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
-
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
+const { recordMetric } = require(path.join(__dirname, '..', '..', 'infrastructure', 'telemetry', 'metrics-logger'));
 
 const extractFilePath = line => {
     recordMetric({

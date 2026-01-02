@@ -1,18 +1,8 @@
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 const fs = require('fs').promises;
 const path = require('path');
 
 class DynamicRulesLoader {
     constructor(rulesDirectory, logger = console) {
-        const m_constructor = createMetricScope({
-            hook: 'dynamic_rules_loader',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.rulesDirectory = rulesDirectory || null;
         this.logger = logger;
         this.rulesDirectories = this.resolveRulesDirectories();
@@ -28,7 +18,6 @@ class DynamicRulesLoader {
             ttl: 60000
         };
         this.lastLoadWarnings = [];
-        m_constructor.success();
     }
 
     resolveRulesDirectories() {

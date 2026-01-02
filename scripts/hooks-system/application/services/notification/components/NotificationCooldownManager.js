@@ -1,20 +1,9 @@
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class NotificationCooldownManager {
     constructor(defaultCooldownMs = 60000, cooldownsByType = {}, logger = null) {
-        const m_constructor = createMetricScope({
-            hook: 'notification_cooldown_manager',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.cooldowns = new Map();
         this.defaultCooldownMs = defaultCooldownMs;
         this.cooldownsByType = cooldownsByType;
         this.logger = logger;
-        m_constructor.success();
     }
 
     isInCooldown(notification) {
@@ -60,13 +49,6 @@ class NotificationCooldownManager {
     }
 
     getStats() {
-        const m_get_stats = createMetricScope({
-            hook: 'notification_cooldown_manager',
-            operation: 'get_stats'
-        });
-
-        m_get_stats.started();
-        m_get_stats.success();
         return {
             activeCooldowns: this.cooldowns.size
         };

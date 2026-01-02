@@ -4,10 +4,6 @@ const path = require('path');
 // Import recordMetric for prometheus metrics
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class AuditLogger {
     /**
      * @param {Object} options

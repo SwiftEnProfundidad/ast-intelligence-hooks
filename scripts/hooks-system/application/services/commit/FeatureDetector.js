@@ -1,17 +1,6 @@
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class FeatureDetector {
     constructor(logger = console) {
-        const m_constructor = createMetricScope({
-            hook: 'feature_detector',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.logger = logger;
-        m_constructor.success();
     }
 
     /**

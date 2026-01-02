@@ -1,9 +1,5 @@
 const path = require('path');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class AutoRecoveryManager {
     constructor({
         repoRoot = process.cwd(),
@@ -15,12 +11,6 @@ class AutoRecoveryManager {
         baseBackoffMs = 2000,
         jitter = 0.25
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'auto_recovery_manager',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.repoRoot = repoRoot;
         this.logger = logger || console;
         this.notificationCenter = notificationCenter;
@@ -33,23 +23,14 @@ class AutoRecoveryManager {
             : [AutoRecoveryManager.createSupervisorRestartStrategy()];
         this.attempts = new Map();
         this.timeouts = new Map();
-        m_constructor.success();
     }
 
     static createSupervisorRestartStrategy() {
-        const m_create_supervisor_restart_strategy = createMetricScope({
-            hook: 'auto_recovery_manager',
-            operation: 'create_supervisor_restart_strategy'
-        });
-
-        m_create_supervisor_restart_strategy.started();
-        m_create_supervisor_restart_strategy.success();
         return {
             id: 'guard-supervisor-restart',
             condition: ({ reason }) => reason && reason.startsWith('heartbeat-'),
             action: async ({ logger }) => {
                 logger.info('Attempting guard-supervisor restart via start-guards.sh');
-                m_create_supervisor_restart_strategy.success();
                 return AutoRecoveryManager.runScript('start-guards.sh', ['restart']);
             }
         };

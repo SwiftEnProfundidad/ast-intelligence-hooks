@@ -2,21 +2,10 @@ const path = require('path');
 const fs = require('fs');
 const PlatformHeuristics = require('./platform/PlatformHeuristics');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class PlatformAnalysisService {
     constructor(platformDetector) {
-        const m_constructor = createMetricScope({
-            hook: 'platform_analysis_service',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.platformDetector = platformDetector;
         this.heuristics = new PlatformHeuristics(platformDetector);
-        m_constructor.success();
     }
 
     /**
@@ -141,12 +130,6 @@ class PlatformAnalysisService {
     }
 
     getScoreReasons(platform, context) {
-        const m_get_score_reasons = createMetricScope({
-            hook: 'platform_analysis_service',
-            operation: 'get_score_reasons'
-        });
-
-        m_get_score_reasons.started();
         const reasons = [];
 
         if (context.stagedFiles && context.stagedFiles.length > 0) {
@@ -182,8 +165,6 @@ class PlatformAnalysisService {
                 reasons.push('Evidence file references platform rules');
             }
         }
-
-        m_get_score_reasons.success();
 
         return reasons;
     }

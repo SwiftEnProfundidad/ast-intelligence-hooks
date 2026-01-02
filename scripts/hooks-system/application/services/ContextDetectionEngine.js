@@ -1,17 +1,7 @@
 const crypto = require('crypto');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class ContextDetectionEngine {
     constructor(repoRootOrGitPort = null, logger = console) {
-        const m_constructor = createMetricScope({
-            hook: 'context_detection_engine',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         if (typeof repoRootOrGitPort === 'string') {
             this.repoRoot = repoRootOrGitPort;
             this.git = null;
@@ -26,7 +16,6 @@ class ContextDetectionEngine {
             timestamp: 0,
             ttl: 10000
         };
-        m_constructor.success();
     }
 
     async detectContext() {
@@ -65,54 +54,28 @@ class ContextDetectionEngine {
     }
 
     getStagedFiles() {
-        const m_get_staged_files = createMetricScope({
-            hook: 'context_detection_engine',
-            operation: 'get_staged_files'
-        });
-
-        m_get_staged_files.started();
         try {
-            m_get_staged_files.success();
             return this.git.getStagedFiles();
         } catch (error) {
             this.logger.error('ContextDetectionEngine: Failed to get staged files', error);
-            m_get_staged_files.success();
             return [];
         }
-        m_get_staged_files.success();
     }
 
     getStagedSignature() {
-        const m_get_staged_signature = createMetricScope({
-            hook: 'context_detection_engine',
-            operation: 'get_staged_signature'
-        });
-
-        m_get_staged_signature.started();
         try {
             const patch = this.git.getDiff(true);
             if (!patch) return '';
-            m_get_staged_signature.success();
             return crypto.createHash('sha1').update(patch).digest('hex');
         } catch (error) {
-            m_get_staged_signature.success();
             return '';
         }
-        m_get_staged_signature.success();
     }
 
     getRecentlyModifiedFiles() {
-        const m_get_recently_modified_files = createMetricScope({
-            hook: 'context_detection_engine',
-            operation: 'get_recently_modified_files'
-        });
-
-        m_get_recently_modified_files.started();
         try {
             const output = this.git.getStatusShort();
             if (!output) return [];
-
-            m_get_recently_modified_files.success();
 
             return output
                 .split('\n')
@@ -120,19 +83,11 @@ class ContextDetectionEngine {
                 .map(line => line.trim().substring(2)) // Remove status code
                 .filter(file => !file.startsWith('.git'));
         } catch (error) {
-            m_get_recently_modified_files.success();
             return [];
         }
-        m_get_recently_modified_files.success();
     }
 
     getRecentCommitPatterns() {
-        const m_get_recent_commit_patterns = createMetricScope({
-            hook: 'context_detection_engine',
-            operation: 'get_recent_commit_patterns'
-        });
-
-        m_get_recent_commit_patterns.started();
         try {
             const output = this.git.getLog(10);
             if (!output) return [];
@@ -161,31 +116,18 @@ class ContextDetectionEngine {
                 commits.push(currentCommit);
             }
 
-            m_get_recent_commit_patterns.success();
-
             return commits.slice(0, 10);
         } catch (error) {
-            m_get_recent_commit_patterns.success();
             return [];
         }
-        m_get_recent_commit_patterns.success();
     }
 
     getCurrentBranch() {
-        const m_get_current_branch = createMetricScope({
-            hook: 'context_detection_engine',
-            operation: 'get_current_branch'
-        });
-
-        m_get_current_branch.started();
         try {
-            m_get_current_branch.success();
             return this.git.getCurrentBranch();
         } catch (error) {
-            m_get_current_branch.success();
             return 'unknown';
         }
-        m_get_current_branch.success();
     }
 
     inferFromGitStatus() {

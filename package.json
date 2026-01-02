@@ -20,7 +20,7 @@
     "hook-plan-review": "./bin/plan-review.js"
   },
   "scripts": {
-    "install-hooks": "npx ast-install",
+    "install-hooks": "node bin/install.js",
     "check-version": "node bin/check-version.js",
     "audit": "node bin/ast",
     "ast": "node bin/ast",

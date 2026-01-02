@@ -1,10 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 const COLORS = {
     reset: '\x1b[0m',
     green: '\x1b[32m',
@@ -13,25 +9,12 @@ const COLORS = {
 
 class FileSystemInstallerService {
     constructor(targetRoot, hookSystemRoot, logger = null) {
-        const m_constructor = createMetricScope({
-            hook: 'file_system_installer_service',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.targetRoot = targetRoot || process.cwd();
         this.hookSystemRoot = hookSystemRoot;
         this.logger = logger;
-        m_constructor.success();
     }
 
     createDirectoryStructure() {
-        const m_create_directory_structure = createMetricScope({
-            hook: 'file_system_installer_service',
-            operation: 'create_directory_structure'
-        });
-
-        m_create_directory_structure.started();
         const dirs = [
             'scripts/hooks-system',
             'scripts/hooks-system/docs',
@@ -46,7 +29,6 @@ class FileSystemInstallerService {
             }
         });
         this.logSuccess('Directory structure created');
-        m_create_directory_structure.success();
     }
 
     copySystemFiles() {

@@ -2,10 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { ConfigurationError } = require('../../../domain/errors');
 
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class UnifiedLogger {
     constructor({
         component = 'HookSystem',
@@ -13,12 +9,6 @@ class UnifiedLogger {
         file: fileConfig = { enabled: false },
         defaultData = {}
     } = {}) {
-        const m_constructor = createMetricScope({
-            hook: 'unified_logger',
-            operation: 'constructor'
-        });
-
-        m_constructor.started();
         this.component = component;
         this.consoleConfig = {
             enabled: consoleConfig.enabled !== false,
@@ -51,7 +41,6 @@ class UnifiedLogger {
                 // Directory creation might fail if race condition, can be ignored as next write will retry or fail
             }
         }
-        m_constructor.success();
     }
 
     debug(event, data = {}, context = {}) {

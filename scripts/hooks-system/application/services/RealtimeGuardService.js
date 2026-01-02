@@ -2,12 +2,6 @@ const fs = require('fs');
 const path = require('path');
 const { getGitTreeState, isTreeBeyondLimit } = require('./GitTreeState');
 
-const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
-
-const {
-    createMetricScope: createMetricScope
-} = require('../../../infrastructure/telemetry/metric-scope');
-
 class RealtimeGuardService {
     /**
      * @param {Object} dependencies
@@ -18,13 +12,6 @@ class RealtimeGuardService {
      * @param {Object} dependencies.config
      */
     constructor(dependencies = {}) {
-        recordMetric({
-            hook: 'realtime_guard_service',
-            operation: 'constructor',
-            status: 'started',
-            hasDependencies: !!dependencies
-        });
-
         const {
             logger,
             notificationService,
@@ -75,12 +62,6 @@ class RealtimeGuardService {
     }
 
     start() {
-        const m_start = createMetricScope({
-            hook: 'realtime_guard_service',
-            operation: 'start'
-        });
-
-        m_start.started();
         this.logger.info('Starting RealtimeGuardService...');
 
         // Start all monitors
@@ -97,16 +78,9 @@ class RealtimeGuardService {
         this._startGitFlowSync();
 
         this.logger.info('[RealtimeGuardService] All services started');
-        m_start.success();
     }
 
     stop() {
-        const m_stop = createMetricScope({
-            hook: 'realtime_guard_service',
-            operation: 'stop'
-        });
-
-        m_stop.started();
         this.logger.info('Stopping RealtimeGuardService...');
 
         this.watchers.forEach(w => w.close());
@@ -119,7 +93,6 @@ class RealtimeGuardService {
         });
 
         this.logger.info('[RealtimeGuardService] All services stopped');
-        m_stop.success();
     }
 
     _startEvidenceMonitoring() {
