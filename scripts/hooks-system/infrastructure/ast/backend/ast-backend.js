@@ -504,7 +504,7 @@ function runBackendIntelligence(project, findings, platform) {
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
       const name = cls.getName();
-      if (name && /Dto|DTO|Request|Response/.test(name)) {
+      if (name && /Dto|DTO|Request|Response/.test(name) && !/Exception|Error/.test(name)) {
         const hasValidation = sf.getFullText().includes("@IsString") ||
           sf.getFullText().includes("@IsEmail") ||
           sf.getFullText().includes("@IsNotEmpty") ||
@@ -1604,7 +1604,7 @@ function runBackendIntelligence(project, findings, platform) {
     if (fullText.includes('extends HttpException') || fullText.includes('extends Error')) {
       const hasFilter = fullText.includes('@Catch(');
 
-      if (!hasFilter && filePath.includes('/exceptions/')) {
+      if (!hasFilter && filePath.includes('/exceptions/') && !fullText.includes('class ') && !fullText.includes('extends BaseException')) {
         pushFinding(
           "backend.error_handling.missing_exception_filter",
           "high",

@@ -31,7 +31,7 @@ class NotificationCenterService {
         try {
             fs.mkdirSync(path.dirname(defaultLogPath), { recursive: true });
         } catch (e) {
-            // Ignore if it already exists or permissions issues during init
+            console.warn(`[NotificationCenter] Failed to create log directory:`, e.message);
         }
 
         this.logger = config.logger || new UnifiedLogger({

@@ -11,10 +11,53 @@ class CursorApiDataSource {
         this.apiToken = apiToken;
         this.fetch = fetchImpl;
         this.logger = logger;
+        this.failureCount = 0;
+        this.failureThreshold = 5;
+        this.circuitOpenUntil = null;
+        this.circuitResetTimeoutMs = 60000;
+    }
+
+    isCircuitOpen() {
+        if (!this.circuitOpenUntil) return false;
+        if (Date.now() >= this.circuitOpenUntil) {
+            this.circuitOpenUntil = null;
+            this.failureCount = 0;
+            return false;
+        }
+        return true;
+    }
+
+    recordFailure() {
+        this.failureCount++;
+        if (this.failureCount >= this.failureThreshold) {
+            this.circuitOpenUntil = Date.now() + this.circuitResetTimeoutMs;
+            if (this.logger && this.logger.warn) {
+                this.logger.warn('CURSOR_API_CIRCUIT_BREAKER_OPEN', {
+                    failureCount: this.failureCount,
+                    resetTimeoutMs: this.circuitResetTimeoutMs
+                });
+            }
+        }
+    }
+
+    recordSuccess() {
+        this.failureCount = 0;
+        this.circuitOpenUntil = null;
+    }
+
+    circuitBreaker() {
+        return this.isCircuitOpen();
     }
 
     async fetchUsage(maxRetries = 3, initialDelayMs = 1000) {
         if (!this.apiUrl || !this.fetch) {
+            return null;
+        }
+
+        if (this.isCircuitOpen()) {
+            if (this.logger && this.logger.warn) {
+                this.logger.warn('CURSOR_API_CIRCUIT_BREAKER_OPEN', { message: 'Circuit is open, skipping request' });
+            }
             return null;
         }
 
@@ -43,6 +86,7 @@ class CursorApiDataSource {
                         return null;
                     }
 
+                    this.recordSuccess();
                     return payload;
                 } catch (fetchError) {
                     if (timeoutId) clearTimeout(timeoutId);
@@ -54,6 +98,7 @@ class CursorApiDataSource {
             } catch (error) {
                 const isLastAttempt = attempt === retryPolicy.maxAttempts;
                 if (isLastAttempt) {
+                    this.recordFailure();
                     if (this.logger && this.logger.warn) {
                         this.logger.warn('CURSOR_API_DATASOURCE_FAILED', { error: error.message, attempts: attempt + 1 });
                     }

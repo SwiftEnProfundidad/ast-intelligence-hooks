@@ -38,7 +38,7 @@ class UnifiedLogger {
             try {
                 fs.mkdirSync(dir, { recursive: true });
             } catch (error) {
-                // Directory creation might fail if race condition, can be ignored as next write will retry or fail
+                console.warn(`[UnifiedLogger] Failed to create directory ${dir}:`, error.message);
             }
         }
     }
