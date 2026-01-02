@@ -1,9 +1,11 @@
 const fs = require('fs').promises;
 const path = require('path');
 const env = require('../../config/env');
+const AuditLogger = require('./logging/AuditLogger');
 
 class PlatformDetectionService {
   constructor() {
+    this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     this.cache = {
       detections: new Map(),
       timestamp: 0,
