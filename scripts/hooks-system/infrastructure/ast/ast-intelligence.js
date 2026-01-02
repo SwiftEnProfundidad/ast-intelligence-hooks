@@ -409,13 +409,13 @@ function generateOutput(findings, context, project, root) {
   console.error(`AST SUMMARY LEVELS: CRITICAL=${levelTotals.CRITICAL} HIGH=${levelTotals.HIGH} MEDIUM=${levelTotals.MEDIUM} LOW=${levelTotals.LOW}`);
   console.error(`AST SUMMARY PLATFORM: Backend=${platformTotals.Backend} Frontend=${platformTotals.Frontend} iOS=${platformTotals.iOS} Android=${platformTotals.Android} Other=${platformTotals.Other}`);
 
-  saveDetailedReport(findings, levelTotals, platformTotals, project, root);
+  saveDetailedReport(findings, levelTotals, platformTotals, project, root, context);
 }
 
 /**
  * Save detailed JSON report
  */
-function saveDetailedReport(findings, levelTotals, platformTotals, project, root) {
+function saveDetailedReport(findings, levelTotals, platformTotals, project, root, context) {
   const outDir = env.get('AUDIT_TMP', path.join(root, ".audit_tmp"));
   try {
     fs.mkdirSync(outDir, { recursive: true });
