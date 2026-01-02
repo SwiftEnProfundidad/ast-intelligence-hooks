@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const AuditLogger = require('../logging/AuditLogger');
 
 class ActivityMonitor {
     constructor({
@@ -8,6 +9,7 @@ class ActivityMonitor {
         logger = console
     } = {}) {
         this.repoRoot = repoRoot;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.inactivityGraceMs = inactivityGraceMs;
         this.logger = logger;
         this.lastUserActivityAt = Date.now();
