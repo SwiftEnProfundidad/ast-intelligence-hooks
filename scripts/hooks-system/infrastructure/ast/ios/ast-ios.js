@@ -1250,7 +1250,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    if (filePath.endsWith('.swift') && !filePath.includes('/Domain/') && !filePath.includes('/Application/') &&
+    if (filePath.endsWith('.swift') && !filePath.endsWith('/Package.swift') && !filePath.endsWith('Package.swift') && !filePath.includes('/Domain/') && !filePath.includes('/Application/') &&
       !filePath.includes('/Infrastructure/') && !filePath.includes('/Presentation/') &&
       !filePath.includes('/Tests/') && !filePath.includes('AppDelegate')) {
       pushFinding(

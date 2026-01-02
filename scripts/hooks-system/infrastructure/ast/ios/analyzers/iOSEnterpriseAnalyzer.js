@@ -269,6 +269,9 @@ class iOSEnterpriseAnalyzer {
   }
 
   async analyzeNetworking(content, filePath) {
+    if (String(filePath || '').endsWith('/Package.swift') || String(filePath || '').endsWith('Package.swift')) {
+      return;
+    }
     if (!content.includes('URLSession') && !content.includes('Alamofire')) {
       if (content.includes('http://') || content.includes('https://')) {
         this.addFinding('ios.networking.missing_urlsession', 'high', filePath, 1,

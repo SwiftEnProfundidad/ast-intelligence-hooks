@@ -5,6 +5,12 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.27] - 2026-01-02
+
+### Fixed
+- **Critical**: Excluded `Package.swift` from `ios.clean_arch.root_code` (SPM manifest must live at package root).
+- **Critical**: Excluded `Package.swift` from `ios.networking.missing_urlsession` (URLs in SPM manifests are not runtime networking).
+
 ## [5.3.26] - 2026-01-02
 
 ### Fixed
