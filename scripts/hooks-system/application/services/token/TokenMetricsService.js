@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const { execSync } = require('child_process');
 
 class TokenMetricsService {

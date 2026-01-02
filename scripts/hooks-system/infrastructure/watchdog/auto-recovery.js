@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../../config/env');
 const path = require('path');
 
 const { createUnifiedLogger } = require('../logging/UnifiedLoggerFactory');

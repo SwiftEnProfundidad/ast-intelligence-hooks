@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const GitCommandRunner = require('./git/GitCommandRunner');
 
 class GitCliAdapter {

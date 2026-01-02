@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const env = require('../config/env');
+const env = require('../../config/env');
 
 class DynamicRulesLoader {
     constructor(rulesDirectory, logger = console) {

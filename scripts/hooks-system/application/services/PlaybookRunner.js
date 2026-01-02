@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const env = require('../../config/env');
 const { spawnSync } = require('child_process');
 const { DomainError, NotFoundError } = require('../../domain/errors');
 

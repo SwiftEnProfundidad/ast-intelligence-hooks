@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../config/env');
 const ContextDetectionEngine = require('../application/services/ContextDetectionEngine');
 const AutonomousOrchestrator = require('../application/services/AutonomousOrchestrator');
 const PlatformDetectionService = require('../application/services/PlatformDetectionService');

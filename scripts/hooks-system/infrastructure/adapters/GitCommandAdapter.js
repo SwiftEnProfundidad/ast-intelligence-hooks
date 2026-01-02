@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const IGitCommandPort = require('../../domain/ports/IGitCommandPort');
 const GitCommandRunner = require('./git/GitCommandRunner');
 const GitCommandService = require('./git/GitCommandService');

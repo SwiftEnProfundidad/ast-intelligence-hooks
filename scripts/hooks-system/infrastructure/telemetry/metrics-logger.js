@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const env = require('../../config/env');
+
 /**
  * Simple metrics logger stub for the hook-system platform.
  * Usage (programmatic):

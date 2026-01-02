@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const path = require('path');
 
 const NotificationCenterService = require('../../application/services/notification/NotificationCenterService');

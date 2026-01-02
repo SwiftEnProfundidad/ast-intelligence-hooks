@@ -6,6 +6,7 @@
  * The AI can automatically check if evidence is stale and update it
  */
 
+const env = require('../../config/env');
 const path = require('path');
 const McpProtocolHandler = require('./services/McpProtocolHandler');
 const EvidenceService = require('./services/EvidenceService');

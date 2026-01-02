@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const IGitQueryPort = require('../../domain/ports/IGitQueryPort');
 const GitCommandRunner = require('./git/GitCommandRunner');
 const GitQueryService = require('./git/GitQueryService');

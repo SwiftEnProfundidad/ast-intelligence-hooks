@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const glob = require('glob');
 
 class PlatformDetectorService {

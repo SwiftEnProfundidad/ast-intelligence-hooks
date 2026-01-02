@@ -1,6 +1,7 @@
 const { execSync } = require('child_process');
-const path = require('path');
 const fs = require('fs');
+const path = require('path');
+const env = require('../../config/env');
 const FeatureDetector = require('./commit/FeatureDetector');
 const CommitMessageGenerator = require('./commit/CommitMessageGenerator');
 const UnifiedLogger = require('./logging/UnifiedLogger');

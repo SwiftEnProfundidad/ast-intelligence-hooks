@@ -4,6 +4,7 @@
  * Infrastructure adapter implementing IAstPort.
  * Wraps the existing AST intelligence modules.
  */
+const env = require('../../config/env');
 const path = require('path');
 const fs = require('fs');
 

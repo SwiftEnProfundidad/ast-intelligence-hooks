@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const { DomainError } = require('../../../domain/errors');
 
 class CursorApiDataSource {

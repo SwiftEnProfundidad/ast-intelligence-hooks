@@ -1,3 +1,5 @@
+const env = require('../../../config/env');
+
 class GuardHealthReminder {
     constructor(timers, notificationHandler, config) {
         this.timers = timers;

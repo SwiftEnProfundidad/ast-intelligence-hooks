@@ -1,3 +1,5 @@
+const env = require('../../../config/env');
+
 class FeatureDetector {
     constructor(logger = console) {
         this.logger = logger;

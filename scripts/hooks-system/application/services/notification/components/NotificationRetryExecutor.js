@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 class NotificationRetryExecutor {
     constructor(sender, config = {}, logger = null) {
         this.sender = sender;

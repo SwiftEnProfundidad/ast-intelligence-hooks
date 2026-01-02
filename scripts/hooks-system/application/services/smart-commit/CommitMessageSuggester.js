@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const path = require('path');
 
 class CommitMessageSuggester {

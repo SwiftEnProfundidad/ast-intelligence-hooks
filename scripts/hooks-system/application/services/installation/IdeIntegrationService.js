@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const McpConfigurator = require('./McpConfigurator');
 const HookInstaller = require('./HookInstaller');
 const VSCodeTaskConfigurator = require('./VSCodeTaskConfigurator');

@@ -1,3 +1,5 @@
+const env = require('../../../config/env');
+
 class GuardNotificationHandler {
     constructor(notificationCenter, eventLogger, config) {
         this.notificationCenter = notificationCenter;
