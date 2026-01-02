@@ -1,4 +1,5 @@
 const env = require('../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
 
 const glob = require('glob');
 
@@ -6,6 +7,7 @@ class PlatformDetectorService {
     constructor(targetRoot) {
         this.targetRoot = targetRoot || process.cwd();
         this.platforms = [];
+        this.auditLogger = new AuditLogger({ repoRoot: this.targetRoot });
     }
 
     detect() {
