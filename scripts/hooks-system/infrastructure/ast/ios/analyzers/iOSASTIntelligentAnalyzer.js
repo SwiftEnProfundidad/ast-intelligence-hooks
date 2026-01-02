@@ -2,6 +2,8 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
+const env = require('../../../config/env');
 
 class iOSASTIntelligentAnalyzer {
   constructor(findings) {
@@ -20,6 +22,30 @@ class iOSASTIntelligentAnalyzer {
     this.functions = [];
     this.properties = [];
     this.closures = [];
+  }
+
+  resolveAuditTmpDir(repoRoot) {
+    const configured = String(env.get('AUDIT_TMP', '') || '').trim();
+    if (configured.length > 0) {
+      return path.isAbsolute(configured) ? configured : path.join(repoRoot, configured);
+    }
+    return path.join(repoRoot, '.audit_tmp');
+  }
+
+  safeTempFilePath(repoRoot, displayPath) {
+    const tmpDir = this.resolveAuditTmpDir(repoRoot);
+    const hash = crypto.createHash('sha1').update(String(displayPath)).digest('hex').slice(0, 10);
+    const base = path.basename(displayPath, '.swift');
+    const filename = `${base}.${hash}.staged.swift`;
+    return path.join(tmpDir, filename);
+  }
+
+  readStagedFileContent(repoRoot, relPath) {
+    try {
+      return execSync(`git show :"${relPath}"`, { encoding: 'utf8', cwd: repoRoot, stdio: ['ignore', 'pipe', 'pipe'] });
+    } catch {
+      return null;
+    }
   }
 
   checkSourceKitten() {
@@ -50,7 +76,7 @@ class iOSASTIntelligentAnalyzer {
     return false;
   }
 
-  analyzeWithSwiftSyntax(filePath) {
+  analyzeWithSwiftSyntax(filePath, displayPath = null) {
     if (!this.swiftSyntaxPath) return;
     try {
       const result = execSync(`"${this.swiftSyntaxPath}" "${filePath}"`, {
@@ -58,8 +84,9 @@ class iOSASTIntelligentAnalyzer {
       });
       const violations = JSON.parse(result);
       for (const v of violations) {
+        const reportedPath = displayPath || filePath;
         this.findings.push({
-          ruleId: v.ruleId, severity: v.severity, filePath,
+          ruleId: v.ruleId, severity: v.severity, filePath: reportedPath,
           line: v.line, column: v.column, message: v.message
         });
       }
@@ -81,21 +108,46 @@ class iOSASTIntelligentAnalyzer {
     }
   }
 
-  analyzeFile(filePath) {
-    if (!filePath.endsWith('.swift')) return;
+  analyzeFile(filePath, options = {}) {
+    if (!filePath || !String(filePath).endsWith('.swift')) return;
 
-    if (this.hasSwiftSyntax) {
-      this.analyzeWithSwiftSyntax(filePath);
+    const repoRoot = options.repoRoot || require('../ast-core').getRepoRoot();
+    const displayPath = options.displayPath || filePath;
+    const stagedRelPath = options.stagedRelPath || null;
+    const stagingOnly = env.get('STAGING_ONLY_MODE', '0') === '1';
+
+    let parsePath = filePath;
+    let contentOverride = null;
+
+    if (stagingOnly && stagedRelPath) {
+      const stagedContent = this.readStagedFileContent(repoRoot, stagedRelPath);
+      if (typeof stagedContent === 'string') {
+        const tmpPath = this.safeTempFilePath(repoRoot, stagedRelPath);
+        try {
+          fs.mkdirSync(path.dirname(tmpPath), { recursive: true });
+          fs.writeFileSync(tmpPath, stagedContent, 'utf8');
+          parsePath = tmpPath;
+          contentOverride = stagedContent;
+        } catch {
+          // Fall back to working tree file
+        }
+      }
     }
 
-    const ast = this.parseFile(filePath);
+    if (this.hasSwiftSyntax) {
+      this.analyzeWithSwiftSyntax(parsePath, displayPath);
+    }
+
+    const ast = this.parseFile(parsePath);
     if (!ast) return;
 
-    this.currentFilePath = filePath;
+    this.currentFilePath = displayPath;
     this.resetCollections();
 
     try {
-      this.fileContent = fs.readFileSync(filePath, 'utf8');
+      this.fileContent = typeof contentOverride === 'string'
+        ? contentOverride
+        : fs.readFileSync(parsePath, 'utf8');
     } catch {
       this.fileContent = '';
     }
@@ -103,7 +155,7 @@ class iOSASTIntelligentAnalyzer {
     const substructure = ast['key.substructure'] || [];
 
     this.collectAllNodes(substructure, null);
-    this.analyzeCollectedNodes(filePath);
+    this.analyzeCollectedNodes(displayPath);
   }
 
   resetCollections() {
@@ -427,10 +479,28 @@ class iOSASTIntelligentAnalyzer {
     }
   }
 
+  countLinesInBody(node) {
+    const offset = Number(node['key.bodyoffset']);
+    const length = Number(node['key.bodylength']);
+    if (!Number.isFinite(offset) || !Number.isFinite(length) || offset < 0 || length <= 0) {
+      return 0;
+    }
+
+    try {
+      const buf = Buffer.from(this.fileContent || '', 'utf8');
+      const slice = buf.subarray(offset, Math.min(buf.length, offset + length));
+      const text = slice.toString('utf8');
+      if (!text) return 0;
+      return text.split('\n').length;
+    } catch {
+      return 0;
+    }
+  }
+
   analyzeFunctionAST(node, filePath) {
     const name = node['key.name'] || '';
     const line = node['key.line'] || 1;
-    const bodyLength = node['key.bodylength'] || 0;
+    const bodyLength = this.countLinesInBody(node) || 0;
     const attributes = this.getAttributes(node);
     const substructure = node['key.substructure'] || [];
 

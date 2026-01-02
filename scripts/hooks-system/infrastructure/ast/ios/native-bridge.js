@@ -2,12 +2,32 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { pushFileFinding } = require('../ast-core');
+const env = require('../../config/env');
+
+function getStagedSwiftFiles(repoRoot) {
+  try {
+    return execSync('git diff --cached --name-only --diff-filter=ACM', {
+      encoding: 'utf8',
+      cwd: repoRoot,
+      stdio: ['ignore', 'pipe', 'pipe']
+    })
+      .trim()
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .filter(p => p.endsWith('.swift'));
+  } catch {
+    return [];
+  }
+}
 
 async function runSwiftLintNative(findings) {
   try {
     const { getRepoRoot } = require('../ast-core');
     const projectRoot = getRepoRoot();
     const customRulesPath = path.join(projectRoot, 'CustomLintRules');
+    const stagingOnly = env.get('STAGING_ONLY_MODE', '0') === '1';
+    const stagedSwiftRel = stagingOnly ? getStagedSwiftFiles(projectRoot) : null;
 
     if (!fs.existsSync(customRulesPath)) {
       console.log('[SwiftLint Native] CustomLintRules package not found - skipping');
@@ -35,7 +55,10 @@ async function runSwiftLintNative(findings) {
       timeout: 60000
     });
 
-    parseSwiftLintOutput(result, findings);
+    parseSwiftLintOutput(result, findings, {
+      repoRoot: projectRoot,
+      stagedSwiftRel
+    });
 
     console.log('[SwiftLint Native] ✅ Custom rules executed');
 
@@ -44,7 +67,13 @@ async function runSwiftLintNative(findings) {
   }
 }
 
-function parseSwiftLintOutput(output, findings) {
+function parseSwiftLintOutput(output, findings, options = {}) {
+  const { repoRoot, stagedSwiftRel } = options;
+  const stagingOnly = Array.isArray(stagedSwiftRel);
+  const stagedAbs = stagingOnly && repoRoot
+    ? new Set(stagedSwiftRel.map(rel => path.join(repoRoot, rel)))
+    : null;
+
   const lines = output.split('\n');
 
   for (const line of lines) {
@@ -52,6 +81,14 @@ function parseSwiftLintOutput(output, findings) {
       const match = line.match(/(.+\.swift):(\d+):(\d+):\s*(warning|error):\s*(.+)/);
       if (match) {
         const [, filePath, lineNum, col, severity, message] = match;
+
+        if (stagingOnly && stagedAbs) {
+          const normalized = String(filePath || '');
+          const isStaged = stagedAbs.has(normalized) || Array.from(stagedAbs).some(p => normalized.endsWith(p));
+          if (!isStaged) {
+            continue;
+          }
+        }
 
         const level = severity === 'error' ? 'high' : 'medium';
         const ruleId = extractRuleId(message);
