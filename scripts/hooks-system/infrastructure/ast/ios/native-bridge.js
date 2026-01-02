@@ -2,7 +2,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { pushFileFinding } = require('../ast-core');
-const env = require('../../config/env');
+const env = require(path.join(__dirname, '../../../config/env'));
 
 function getStagedSwiftFiles(repoRoot) {
   try {
