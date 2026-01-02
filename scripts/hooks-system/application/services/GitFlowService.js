@@ -1,10 +1,12 @@
 const { execSync, spawnSync } = require('child_process');
 const { ConfigurationError } = require('../../domain/errors');
+const AuditLogger = require('./logging/AuditLogger');
 
 class GitFlowService {
     constructor(repoRoot, options = {}, logger = console, gitQuery = null, gitCommand = null, githubAdapter = null) {
         this.repoRoot = repoRoot;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.gitQuery = gitQuery;
         this.gitCommand = gitCommand || (gitQuery && gitQuery.commandAdapter ? gitQuery : null);
         this.github = githubAdapter;
