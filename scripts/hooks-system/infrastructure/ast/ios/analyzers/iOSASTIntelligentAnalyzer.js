@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const env = require('../../../config/env');
+const env = require(path.join(__dirname, '../../../../config/env'));
 
 class iOSASTIntelligentAnalyzer {
   constructor(findings) {
