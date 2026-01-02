@@ -5,6 +5,16 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.23] - 2026-01-02
+
+### Fixed
+- **Critical**: Fixed MODULE_NOT_FOUND error during pre-commit hook execution (config/env.js not included in npm package)
+- Added explicit inclusion of `scripts/hooks-system/config/` directory in package.json files
+- Pre-commit hook now works correctly after installation
+
+### Changed
+- Ensured all config files are included in npm distribution
+
 ## [5.3.22] - 2026-01-02
 
 ### Fixed
