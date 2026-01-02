@@ -106,9 +106,7 @@ class RealtimeGuardService {
     }
 
     _startGitTreeMonitoring() {
-        this.gitTreeManager.startMonitoring((state) => {
-            // Already handled internally in GitTreeManager
-        });
+        this.gitTreeManager.startMonitoring();
     }
 
     _startTokenMonitoring() {
