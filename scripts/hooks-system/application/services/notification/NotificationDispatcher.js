@@ -1,9 +1,12 @@
+const AuditLogger = require('../logging/AuditLogger');
+
 class NotificationDispatcher {
     constructor(sender, retryExecutor, cooldownManager, logger) {
         this.sender = sender;
         this.retryExecutor = retryExecutor;
         this.cooldownManager = cooldownManager;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
     }
 
     async dispatch(notification, stats) {

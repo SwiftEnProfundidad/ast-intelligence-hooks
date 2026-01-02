@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const env = require('../../../config/env.js');
+const AuditLogger = require('../logging/AuditLogger');
 
 function resolveUpdateEvidenceScript(repoRoot) {
     const candidates = [
