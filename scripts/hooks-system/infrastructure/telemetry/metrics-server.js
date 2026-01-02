@@ -3,7 +3,7 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const env = require('../../config/env');
+const env = require('../../../config/env');
 
 const PORT = env.getNumber('HOOK_METRICS_PORT', 9464);
 const METRICS_FILE = path.join(process.cwd(), env.get('HOOK_METRICS_FILE', '.audit_tmp/hook-metrics.jsonl'));

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const env = require('../../config/env');
+const env = require('../../../config/env');
 
 function resolveUpdateEvidenceScript(repoRoot) {
     const candidates = [

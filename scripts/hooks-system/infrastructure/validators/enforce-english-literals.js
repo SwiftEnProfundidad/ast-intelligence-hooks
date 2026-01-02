@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const env = require('../../config/env');
+const env = require('../../../config/env');
 
 const REPO_ROOT = env.get('HOOK_GUARD_REPO_ROOT', process.cwd());
 const CONFIG_PATH = path.join(REPO_ROOT, 'scripts', 'hooks-system', 'config', 'language-guard.json');

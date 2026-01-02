@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const env = require('../../config/env');
+const env = require('../../../config/env');
 
 const projectDir = env.get('CLAUDE_PROJECT_DIR', process.cwd());
 const rulesPath = path.join(projectDir, '.cursor', 'ai-skills', 'skill-rules.json');

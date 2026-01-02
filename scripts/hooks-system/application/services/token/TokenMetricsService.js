@@ -54,7 +54,7 @@ class TokenMetricsService {
         if (untrusted) {
             level = 'ok';
         }
-        const env = require('../../config/env');
+        const env = require('../../../config/env');
         const forceLevel = (env.get('TOKEN_MONITOR_FORCE_LEVEL', '') || '').toLowerCase();
         if (forceLevel === 'warning' || forceLevel === 'critical' || forceLevel === 'ok') {
             level = forceLevel;

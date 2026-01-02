@@ -5,6 +5,18 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.22] - 2026-01-02
+
+### Fixed
+- **Critical**: Fixed MODULE_NOT_FOUND error during installation (require path to config/env was incorrect)
+- Corrected relative paths from `../../config/env` to `../../../config/env` in 11 files across application/services and infrastructure
+- Installation now works correctly with `npx ast-hooks install`
+
+### Changed
+- Fixed import paths in McpConfigurator, RealtimeGuardService, EvidenceMonitorService, TokenMetricsService
+- Fixed import paths in enforce-english-literals, metrics-server, UnifiedLoggerFactory, intelligent-audit
+- Fixed import paths in ast-intelligence, skill-activation-prompt, ast-core
+
 ## [5.3.21] - 2026-01-02
 
 ### Fixed
