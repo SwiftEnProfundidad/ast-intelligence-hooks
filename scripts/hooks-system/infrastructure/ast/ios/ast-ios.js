@@ -2,7 +2,7 @@
 const path = require('path');
 const glob = require('glob');
 const { execSync } = require('child_process');
-const env = require('../../config/env');
+const env = require(path.join(__dirname, '../../../config/env'));
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
 const { iOSEnterpriseAnalyzer } = require(path.join(__dirname, 'analyzers/iOSEnterpriseAnalyzer'));
 const { iOSArchitectureDetector } = require(path.join(__dirname, 'analyzers/iOSArchitectureDetector'));
