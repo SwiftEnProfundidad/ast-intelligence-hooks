@@ -121,7 +121,21 @@ const commands = {
   },
 
   ast: () => {
-    execSync(`node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')}`, { stdio: 'inherit' });
+    const env = { ...process.env };
+    const filteredArgs = [];
+
+    for (const arg of args) {
+      if (arg === '--staged') {
+        env.STAGING_ONLY_MODE = '1';
+      } else {
+        filteredArgs.push(arg);
+      }
+    }
+
+    execSync(
+      `node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')} ${filteredArgs.join(' ')}`,
+      { stdio: 'inherit', env }
+    );
   },
 
   install: () => {

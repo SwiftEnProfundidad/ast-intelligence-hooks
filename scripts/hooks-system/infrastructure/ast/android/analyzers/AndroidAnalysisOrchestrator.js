@@ -40,8 +40,9 @@ class AndroidAnalysisOrchestrator {
             return 0.6745 * (x - med) / madValue;
         };
 
-        const pOutlier = Number(process.env.AST_GODCLASS_P_OUTLIER || 90);
-        const pExtreme = Number(process.env.AST_GODCLASS_P_EXTREME || 97);
+        const env = require('../../../../config/env');
+        const pOutlier = env.getNumber('AST_GODCLASS_P_OUTLIER', 90);
+        const pExtreme = env.getNumber('AST_GODCLASS_P_EXTREME', 97);
 
         const methods = this.godClassCandidates.map(c => c.methodsCount);
         const props = this.godClassCandidates.map(c => c.propertiesCount);

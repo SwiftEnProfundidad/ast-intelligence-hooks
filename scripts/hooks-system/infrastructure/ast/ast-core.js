@@ -2,6 +2,7 @@
 const { Project, Node, SyntaxKind, ScriptTarget, ModuleKind } = require("ts-morph");
 const path = require("path");
 const fs = require("fs");
+const env = require("../../config/env");
 
 let SeverityEvaluator = null;
 let severityEvaluatorInstance = null;
@@ -19,7 +20,7 @@ function getSeverityEvaluator() {
   return severityEvaluatorInstance;
 }
 
-let INTELLIGENT_SEVERITY_ENABLED = process.env.INTELLIGENT_SEVERITY === 'true';
+let INTELLIGENT_SEVERITY_ENABLED = env.getBool('INTELLIGENT_SEVERITY', false);
 
 /**
  * Get repository root directory (portable - dynamic detection)
@@ -179,18 +180,18 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
   let mappedSeverity = mapToLevel(severity);
   const isCleanLayerMarkerRule = ruleId === 'backend.clean.domain' || ruleId === 'backend.clean.application' || ruleId === 'backend.clean.infrastructure' || ruleId === 'backend.clean.presentation';
   let isStrictCriticalRule = false;
-  if (process.env.AUDIT_STRICT === '1' && !isCleanLayerMarkerRule) {
+  if (env.get('AUDIT_STRICT', '0') === '1' && !isCleanLayerMarkerRule) {
     const defaultStrictCriticalRegex = '(solid\\.|architecture\\.|clean\\.|cqrs\\.|tdd\\.|bdd\\.|security\\.|error\\.|testing\\.|performance\\.|metrics\\.|observability\\.|validation\\.|i18n\\.|accessibility\\.|naming\\.)';
     const defaultStrictCriticalRegexLibrary = '(solid\\.|architecture\\.|clean\\.|cqrs\\.|tdd\\.|bdd\\.|security\\.|error\\.|testing\\.|validation\\.|naming\\.)';
-    const strictRegexSource = process.env.AST_STRICT_CRITICAL_RULES_REGEX ||
-      (process.env.AUDIT_LIBRARY === 'true'
-        ? (process.env.AST_STRICT_CRITICAL_RULES_REGEX_LIBRARY || defaultStrictCriticalRegexLibrary)
+    const strictRegexSource = env.get('AST_STRICT_CRITICAL_RULES_REGEX',
+      env.getBool('AUDIT_LIBRARY', false)
+        ? env.get('AST_STRICT_CRITICAL_RULES_REGEX_LIBRARY', defaultStrictCriticalRegexLibrary)
         : defaultStrictCriticalRegex);
     let strictRegex;
     try {
       strictRegex = new RegExp(strictRegexSource, 'i');
     } catch {
-      strictRegex = new RegExp(process.env.AUDIT_LIBRARY === 'true' ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
+      strictRegex = new RegExp(env.getBool('AUDIT_LIBRARY', false) ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
     }
     isStrictCriticalRule = strictRegex.test(ruleId);
     if (isStrictCriticalRule) {
@@ -241,18 +242,18 @@ function pushFileFinding(ruleId, severity, filePath, line, column, message, find
   let mappedSeverity = mapToLevel(severity);
   const isCleanLayerMarkerRule = ruleId === 'backend.clean.domain' || ruleId === 'backend.clean.application' || ruleId === 'backend.clean.infrastructure' || ruleId === 'backend.clean.presentation';
   let isStrictCriticalRule = false;
-  if (process.env.AUDIT_STRICT === '1' && !isCleanLayerMarkerRule) {
+  if (env.get('AUDIT_STRICT', '0') === '1' && !isCleanLayerMarkerRule) {
     const defaultStrictCriticalRegex = '(solid\\.|architecture\\.|clean\\.|cqrs\\.|tdd\\.|bdd\\.|security\\.|error\\.|testing\\.|performance\\.|metrics\\.|observability\\.|validation\\.|i18n\\.|accessibility\\.|naming\\.)';
     const defaultStrictCriticalRegexLibrary = '(solid\\.|architecture\\.|clean\\.|cqrs\\.|tdd\\.|bdd\\.|security\\.|error\\.|testing\\.|validation\\.|naming\\.)';
-    const strictRegexSource = process.env.AST_STRICT_CRITICAL_RULES_REGEX ||
-      (process.env.AUDIT_LIBRARY === 'true'
-        ? (process.env.AST_STRICT_CRITICAL_RULES_REGEX_LIBRARY || defaultStrictCriticalRegexLibrary)
+    const strictRegexSource = env.get('AST_STRICT_CRITICAL_RULES_REGEX',
+      env.getBool('AUDIT_LIBRARY', false)
+        ? env.get('AST_STRICT_CRITICAL_RULES_REGEX_LIBRARY', defaultStrictCriticalRegexLibrary)
         : defaultStrictCriticalRegex);
     let strictRegex;
     try {
       strictRegex = new RegExp(strictRegexSource, 'i');
     } catch {
-      strictRegex = new RegExp(process.env.AUDIT_LIBRARY === 'true' ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
+      strictRegex = new RegExp(env.getBool('AUDIT_LIBRARY', false) ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
     }
     isStrictCriticalRule = strictRegex.test(ruleId);
     if (isStrictCriticalRule) {
@@ -331,15 +332,6 @@ function mapToLevel(severity) {
  */
 function platformOf(filePath) {
   const p = filePath.replace(/\\/g, "/");
-
-  if (p.includes("/infrastructure/ast/") && process.env.AUDIT_LIBRARY !== 'true') return null;
-
-  if (process.env.AUDIT_LIBRARY === 'true') {
-    if (p.includes("/infrastructure/ast/backend/") || p.includes("/scripts/hooks-system/infrastructure/ast/backend/")) return "backend";
-    if (p.includes("/infrastructure/ast/frontend/") || p.includes("/scripts/hooks-system/infrastructure/ast/frontend/")) return "frontend";
-    if (p.includes("/infrastructure/ast/android/") || p.includes("/scripts/hooks-system/infrastructure/ast/android/")) return "android";
-    if (p.includes("/infrastructure/ast/ios/") || p.includes("/scripts/hooks-system/infrastructure/ast/ios/")) return "ios";
-  }
 
   if (p.includes("/apps/backend/") || p.includes("apps/backend/")) return "backend";
   if (p.includes("/apps/admin/") || p.includes("/admin-dashboard/")) return "frontend";

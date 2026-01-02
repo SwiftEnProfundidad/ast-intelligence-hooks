@@ -15,6 +15,7 @@ class GuardProcessManager {
 
         this.supervisorPidFile = path.join(this.repoRoot, '.guard-supervisor.pid');
         this.startScript = path.join(this.repoRoot, 'bin', 'start-guards.sh');
+        this.busy = false;
     }
 
     isSupervisorRunning() {
@@ -58,6 +59,15 @@ class GuardProcessManager {
     }
 
     startSupervisor() {
+        if (this.busy) {
+            return {
+                success: false,
+                error: new Error('bulkhead_busy'),
+                stdout: '',
+                stderr: 'bulkhead_busy'
+            };
+        }
+        this.busy = true;
         try {
             const result = this.childProcess.spawnSync(this.startScript, ['start'], {
                 cwd: this.repoRoot,
@@ -80,10 +90,21 @@ class GuardProcessManager {
                 stdout: '',
                 stderr: error.message
             };
+        } finally {
+            this.busy = false;
         }
     }
 
     stopSupervisor() {
+        if (this.busy) {
+            return {
+                success: false,
+                error: new Error('bulkhead_busy'),
+                stdout: '',
+                stderr: 'bulkhead_busy'
+            };
+        }
+        this.busy = true;
         try {
             const result = this.childProcess.spawnSync(this.startScript, ['stop'], {
                 cwd: this.repoRoot,
@@ -106,6 +127,8 @@ class GuardProcessManager {
                 stdout: '',
                 stderr: error.message
             };
+        } finally {
+            this.busy = false;
         }
     }
 }

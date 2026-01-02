@@ -3,7 +3,6 @@ const path = require('path');
 
 // Import recordMetric for prometheus metrics
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
-
 class AuditLogger {
     /**
      * @param {Object} options
@@ -18,7 +17,6 @@ class AuditLogger {
             status: 'started',
             repoRoot: repoRoot.substring(0, 100)
         });
-
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.logPath = filename
@@ -147,7 +145,6 @@ class AuditLogger {
             status: 'started',
             metaKeys: Object.keys(meta || {}).length
         });
-
         const forbidden = ['token', 'password', 'secret', 'authorization', 'auth', 'apiKey'];
         const clone = {};
         Object.entries(meta).forEach(([k, v]) => {
@@ -165,7 +162,6 @@ class AuditLogger {
             status: 'success',
             metaKeys: Object.keys(clone).length
         });
-
         return clone;
     }
 }

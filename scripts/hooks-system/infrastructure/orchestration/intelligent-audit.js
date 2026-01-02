@@ -8,9 +8,10 @@ const { TokenManager } = require('../utils/token-manager');
 const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
+const env = require('../../config/env');
 
 function resolveAuditTmpDir() {
-  const configured = (process.env.AUDIT_TMP || '').trim();
+  const configured = (env.get('AUDIT_TMP', '') || '').trim();
   if (configured.length > 0) {
     return path.isAbsolute(configured) ? configured : path.join(process.cwd(), configured);
   }
@@ -28,7 +29,7 @@ async function runIntelligentAudit() {
     const rawViolations = loadRawViolations();
     console.log(`[Intelligent Audit] Loaded ${rawViolations.length} violations from AST`);
 
-    const gateScope = String(process.env.AI_GATE_SCOPE || 'staging').trim().toLowerCase();
+    const gateScope = String(env.get('AI_GATE_SCOPE', 'staging') || 'staging').trim().toLowerCase();
     const isRepoScope = gateScope === 'repo' || gateScope === 'repository';
 
     let violationsForGate = [];
@@ -212,21 +213,21 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     const currentBranch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
 
     const resolveBaseBranch = () => {
-        const configured = process.env.AST_BASE_BRANCH;
-        if (configured && configured.trim().length > 0) {
-            return configured.trim();
-        }
+      const configured = env.get('AST_BASE_BRANCH', '');
+      if (configured && configured.trim().length > 0) {
+        return configured.trim();
+      }
+      try {
+        execSync('git show-ref --verify --quiet refs/heads/develop', { stdio: 'ignore' });
+        return 'develop';
+      } catch {
         try {
-            execSync('git show-ref --verify --quiet refs/heads/develop', { stdio: 'ignore' });
-            return 'develop';
+          execSync('git show-ref --verify --quiet refs/heads/main', { stdio: 'ignore' });
+          return 'main';
         } catch {
-            try {
-                execSync('git show-ref --verify --quiet refs/heads/main', { stdio: 'ignore' });
-                return 'main';
-            } catch {
-                return 'main';
-            }
+          return 'main';
         }
+      }
     };
     const baseBranch = resolveBaseBranch();
     const isProtected = ['main', 'master', baseBranch].includes(currentBranch);
@@ -234,12 +235,12 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     const highViolations = violations.filter(v => v.severity === 'HIGH');
     const blockingViolations = [...criticalViolations, ...highViolations].slice(0, 50);
 
-    const gateScope = String(process.env.AI_GATE_SCOPE || 'staging').trim().toLowerCase();
+    const gateScope = String(env.get('AI_GATE_SCOPE', 'staging') || 'staging').trim().toLowerCase();
 
     const existingGate = evidence.ai_gate && typeof evidence.ai_gate === 'object' ? evidence.ai_gate : null;
     let preserveExistingRepoGate = false;
     if (gateScope !== 'repo' && gateScope !== 'repository' && existingGate && existingGate.scope === 'repo' && existingGate.status === 'BLOCKED') {
-      const preserveMs = Number(process.env.AI_GATE_REPO_PRESERVE_MS || 600000);
+      const preserveMs = env.getNumber('AI_GATE_REPO_PRESERVE_MS', 600000);
       const lastCheckMs = Date.parse(existingGate.last_check || '');
       if (!Number.isNaN(preserveMs) && preserveMs > 0 && !Number.isNaN(lastCheckMs)) {
         const ageMs = Date.now() - lastCheckMs;

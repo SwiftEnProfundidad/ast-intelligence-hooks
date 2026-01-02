@@ -16,6 +16,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Published npm package `pumuki-ast-hooks@5.3.20` (tag latest).
 - Updated docs/notes for safe installation.
 
+## [5.3.18] - 2025-12-30
+
+### Fixed
+- AST analysis now correctly audits the hook-system repository itself (was detecting only 1 violation instead of ~485)
+- Removed filters in `shouldIgnore()` that excluded `scripts/hooks-system/` and `/infrastructure/ast/` when `AUDIT_LIBRARY=false`
+- Fixed `platformOf()` blocking analysis of `/infrastructure/ast/` files
+- Added missing `env` module import in `ast-backend.js` that caused `ReferenceError` and prevented backend analysis
+
+### Changed
+- AST now analyzes all hook-system code regardless of `AUDIT_LIBRARY` flag, ensuring self-audit capability
+
 ## [5.3.16] - 2025-12-30
 
 ### Fixed
@@ -25,6 +36,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Documentation: new guide `docs/MCP_CONFIGURATION.md` explaining global configuration and `ai_gate_check` validation.
+
+## [5.3.17] - 2025-12-30
+
+### Added
+- CLI `ast-hooks ast --staged` activa `STAGING_ONLY_MODE=1` para auditorías solo sobre staged files.
+
+### Changed
+- Pre-commit hook usa `ast-hooks ast --staged` cuando hay archivos staged (análisis incremental); sin staged, sale limpio.
+- No se altera el modo repo completo: las opciones de menú/CI siguen analizando todo el repositorio cuando corresponde.
 
 ## [5.3.14] - 2025-12-29
 

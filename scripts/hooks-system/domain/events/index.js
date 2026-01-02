@@ -1,3 +1,5 @@
+const { ValidationError } = require('../errors');
+
 class DomainEvent {
     constructor(type, payload) {
         this.type = type;
@@ -7,8 +9,8 @@ class DomainEvent {
     }
 
     validate() {
-        if (!this.type) throw new Error('Event type is required');
-        if (!this.payload) throw new Error('Event payload is required');
+        if (!this.type) throw new ValidationError('Event type is required', 'type', this.type);
+        if (!this.payload) throw new ValidationError('Event payload is required', 'payload', this.payload);
         return true;
     }
 
@@ -29,7 +31,9 @@ class EvidenceStaleEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!this.payload.evidencePath) throw new Error('Evidence path is required');
+        if (!this.payload.evidencePath) {
+            throw new ValidationError('Evidence path is required', 'payload.evidencePath', this.payload.evidencePath);
+        }
     }
 }
 
@@ -41,8 +45,12 @@ class GitFlowViolationEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!this.payload.branch) throw new Error('Branch name is required');
-        if (!this.payload.violation) throw new Error('Violation details are required');
+        if (!this.payload.branch) {
+            throw new ValidationError('Branch name is required', 'payload.branch', this.payload.branch);
+        }
+        if (!this.payload.violation) {
+            throw new ValidationError('Violation details are required', 'payload.violation', this.payload.violation);
+        }
     }
 }
 
@@ -54,7 +62,9 @@ class AstCriticalFoundEvent extends DomainEvent {
 
     validate() {
         super.validate();
-        if (!Array.isArray(this.payload.findings)) throw new Error('Findings must be an array');
+        if (!Array.isArray(this.payload.findings)) {
+            throw new ValidationError('Findings must be an array', 'payload.findings', this.payload.findings);
+        }
     }
 }
 
@@ -75,6 +85,8 @@ class AnalysisCompletedEvent extends DomainEvent {
 class EventBus {
     constructor() {
         this.subscribers = new Map();
+        this.processedIds = new Set();
+        this.maxProcessed = 500;
     }
 
     subscribe(eventType, handler) {
@@ -94,11 +106,25 @@ class EventBus {
     }
 
     async publish(event) {
+        if (event?.id && this.processedIds.has(event.id)) {
+            return event;
+        }
         const handlers = this.subscribers.get(event.type) || [];
         const wildcardHandlers = this.subscribers.get('*') || [];
         const allHandlers = [...handlers, ...wildcardHandlers];
 
         await Promise.all(allHandlers.map(handler => handler(event)));
+
+        if (event?.id) {
+            this.processedIds.add(event.id);
+            if (this.processedIds.size > this.maxProcessed) {
+                const iter = this.processedIds.values();
+                for (let i = 0; i < 50 && this.processedIds.size > this.maxProcessed; i++) {
+                    const next = iter.next();
+                    if (!next.done) this.processedIds.delete(next.value);
+                }
+            }
+        }
         return event;
     }
 

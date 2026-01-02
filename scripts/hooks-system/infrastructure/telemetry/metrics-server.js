@@ -3,9 +3,10 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const env = require('../../config/env');
 
-const PORT = Number(process.env.HOOK_METRICS_PORT || 9464);
-const METRICS_FILE = path.join(process.cwd(), '.audit_tmp', 'hook-metrics.jsonl');
+const PORT = env.getNumber('HOOK_METRICS_PORT', 9464);
+const METRICS_FILE = path.join(process.cwd(), env.get('HOOK_METRICS_FILE', '.audit_tmp/hook-metrics.jsonl'));
 
 function loadMetrics() {
   if (!fs.existsSync(METRICS_FILE)) return [];

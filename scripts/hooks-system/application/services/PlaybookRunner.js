@@ -18,7 +18,7 @@ class PlaybookRunner {
   run(id) {
     const playbook = this.playbooks[id];
     if (!playbook) {
-      throw new Error(`Playbook '${id}' not found`);
+      throw new NotFoundError(`Playbook '${id}'`);
     }
 
     for (const step of playbook.steps) {

@@ -57,8 +57,8 @@ function runFrontendIntelligence(project, findings, platform) {
       return 0.6745 * (x - med) / madValue;
     };
 
-    const pOutlier = Number(process.env.AST_GODCLASS_P_OUTLIER || 90);
-    const pExtreme = Number(process.env.AST_GODCLASS_P_EXTREME || 97);
+    const pOutlier = env.getNumber('AST_GODCLASS_P_OUTLIER', 90);
+    const pExtreme = env.getNumber('AST_GODCLASS_P_EXTREME', 97);
 
     const componentPattern = /^(export\s+)?(?:const|function)\s+([A-Z]\w+)\s*[=:].*(?:React\.FC|JSX\.Element|\(\)\s*=>|function)/gm;
     const metrics = [];
@@ -1129,10 +1129,10 @@ function runFrontendIntelligence(project, findings, platform) {
       }
       if (/page\.tsx$/.test(filePath)) {
         const candidate = filePath.replace(/\/app\//, '/e2e/').replace(/\.tsx$/, '.spec.ts');
-        try { 
-          if (!fs.existsSync(candidate)) { 
-            pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings); 
-          } 
+        try {
+          if (!fs.existsSync(candidate)) {
+            pushFinding("frontend.testing.missing_e2e", "info", sf, sf, "No E2E spec found for this page (heuristic)", findings);
+          }
         } catch (error) {
           if (process.env.DEBUG) {
             console.debug(`[frontend-ast] Failed to check E2E spec file: ${error.message}`);
@@ -1181,14 +1181,14 @@ function runFrontendIntelligence(project, findings, platform) {
           const extreme = totalComplexityZ >= godComponentBaseline.thresholds.extreme.totalComplexityZ || bodyLinesZ >= godComponentBaseline.thresholds.extreme.bodyLinesZ;
 
           if (extreme || (complexityOutlier && sizeOutlier)) {
-          pushFinding(
-            "frontend.solid.srp_god_component",
-            "critical",
-            sf,
-            sf,
-            `Component '${componentName}' has ${hookCount} hooks + ${functionCount} functions = ${totalComplexity} (z=${totalComplexityZ.toFixed(2)}), ${bodyLines} lines (z=${bodyLinesZ.toFixed(2)}) - split responsibilities (SRP)`,
-            findings
-          );
+            pushFinding(
+              "frontend.solid.srp_god_component",
+              "critical",
+              sf,
+              sf,
+              `Component '${componentName}' has ${hookCount} hooks + ${functionCount} functions = ${totalComplexity} (z=${totalComplexityZ.toFixed(2)}), ${bodyLines} lines (z=${bodyLinesZ.toFixed(2)}) - split responsibilities (SRP)`,
+              findings
+            );
           }
         }
       });
@@ -1823,269 +1823,269 @@ function runFrontendIntelligence(project, findings, platform) {
     }
 
     const useStateCallsInComponent = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
-    .filter(call => call.getExpression().getText() === 'useState');
+      .filter(call => call.getExpression().getText() === 'useState');
 
-  sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
-    const name = fn.getName();
-    if (name && /^[A-Z]/.test(name)) {
-      const useStatesInFn = useStateCallsInComponent.filter(call =>
-        fn.getDescendants().includes(call)
+    sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
+      const name = fn.getName();
+      if (name && /^[A-Z]/.test(name)) {
+        const useStatesInFn = useStateCallsInComponent.filter(call =>
+          fn.getDescendants().includes(call)
+        );
+
+        if (useStatesInFn.length >= 4) {
+          pushFinding(
+            "frontend.hooks.useState_overuse",
+            "medium",
+            sf,
+            fn,
+            `Component ${name} has ${useStatesInFn.length}+ useState. Consider useReducer for complex state. Benefits: Single state object, predictable updates, easier testing.`,
+            findings
+          );
+        }
+      }
+    });
+
+    const contextCreations = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
+      .filter(call => call.getExpression().getText() === 'createContext');
+
+    if (contextCreations.length >= 3 && !sf.getFilePath().includes('context')) {
+      pushFinding(
+        "frontend.state.context_overuse",
+        "medium",
+        sf,
+        sf,
+        `Multiple Context creations (${contextCreations.length}). Consider Zustand for global state. Context rerenders all consumers. Zustand: Selective subscriptions, better performance.`,
+        findings
       );
+    }
 
-      if (useStatesInFn.length >= 4) {
+    sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
+      const name = fn.getName();
+      const body = fn.getBody()?.getText() || '';
+      const hasHookCall = /use[A-Z]/.test(body);
+
+      if (name && hasHookCall && !/^use[A-Z]/.test(name)) {
         pushFinding(
-          "frontend.hooks.useState_overuse",
+          "frontend.hooks.naming_convention",
           "medium",
           sf,
           fn,
-          `Component ${name} has ${useStatesInFn.length}+ useState. Consider useReducer for complex state. Benefits: Single state object, predictable updates, easier testing.`,
+          `Function ${name} uses hooks but doesn't start with 'use'. Rename to use${name[0].toUpperCase()}${name.slice(1)}. React ESLint requires 'use' prefix for hook functions.`,
+          findings
+        );
+      }
+    });
+
+    const fullText = sf.getFullText();
+    const hasLargeImports = fullText.includes('import * as') ||
+      fullText.match(/import\s+\{[^}]{200,}\}/);
+
+    if (hasLargeImports) {
+      pushFinding(
+        "frontend.performance.large_imports",
+        "medium",
+        sf,
+        sf,
+        'Large import detected. Use tree-shaking: import { Button } from \'@mui/material/Button\' (not from \'@mui/material\'). Reduces bundle size by importing only needed components.',
+        findings
+      );
+    }
+
+    if (content.includes('class') && content.includes('extends Component') &&
+      !content.includes('componentDidCatch') && !content.includes('getDerivedStateFromError')) {
+
+      const hasChildrenRender = content.includes('render()') && content.includes('children');
+
+      if (hasChildrenRender) {
+        pushFinding(
+          "frontend.error_handling.missing_error_boundary",
+          "medium",
+          sf,
+          sf,
+          'Component renders children without error boundary. Add: componentDidCatch(error, errorInfo) { logError(error); }. Prevents whole app crash from single component error.',
           findings
         );
       }
     }
-  });
 
-  const contextCreations = sf.getDescendantsOfKind(SyntaxKind.CallExpression)
-    .filter(call => call.getExpression().getText() === 'createContext');
+    const hasRoutes = content.includes('Route') || content.includes('router');
+    const hasLazy = content.includes('React.lazy') || content.includes('dynamic(');
 
-  if (contextCreations.length >= 3 && !sf.getFilePath().includes('context')) {
-    pushFinding(
-      "frontend.state.context_overuse",
-      "medium",
-      sf,
-      sf,
-      `Multiple Context creations (${contextCreations.length}). Consider Zustand for global state. Context rerenders all consumers. Zustand: Selective subscriptions, better performance.`,
-      findings
-    );
-  }
-
-  sf.getDescendantsOfKind(SyntaxKind.FunctionDeclaration).forEach(fn => {
-    const name = fn.getName();
-    const body = fn.getBody()?.getText() || '';
-    const hasHookCall = /use[A-Z]/.test(body);
-
-    if (name && hasHookCall && !/^use[A-Z]/.test(name)) {
+    if (hasRoutes && !hasLazy && sf.getFilePath().includes('app')) {
       pushFinding(
-        "frontend.hooks.naming_convention",
-        "medium",
-        sf,
-        fn,
-        `Function ${name} uses hooks but doesn't start with 'use'. Rename to use${name[0].toUpperCase()}${name.slice(1)}. React ESLint requires 'use' prefix for hook functions.`,
-        findings
-      );
-    }
-  });
-
-  const fullText = sf.getFullText();
-  const hasLargeImports = fullText.includes('import * as') ||
-    fullText.match(/import\s+\{[^}]{200,}\}/);
-
-  if (hasLargeImports) {
-    pushFinding(
-      "frontend.performance.large_imports",
-      "medium",
-      sf,
-      sf,
-      'Large import detected. Use tree-shaking: import { Button } from \'@mui/material/Button\' (not from \'@mui/material\'). Reduces bundle size by importing only needed components.',
-      findings
-    );
-  }
-
-  if (content.includes('class') && content.includes('extends Component') &&
-    !content.includes('componentDidCatch') && !content.includes('getDerivedStateFromError')) {
-
-    const hasChildrenRender = content.includes('render()') && content.includes('children');
-
-    if (hasChildrenRender) {
-      pushFinding(
-        "frontend.error_handling.missing_error_boundary",
+        "frontend.performance.missing_lazy_loading",
         "medium",
         sf,
         sf,
-        'Component renders children without error boundary. Add: componentDidCatch(error, errorInfo) { logError(error); }. Prevents whole app crash from single component error.',
+        'Routes without lazy loading. Use: const Dashboard = lazy(() => import(\'./Dashboard\')). Wrap with <Suspense>. Reduces initial bundle, faster First Contentful Paint.',
         findings
       );
     }
-  }
-
-  const hasRoutes = content.includes('Route') || content.includes('router');
-  const hasLazy = content.includes('React.lazy') || content.includes('dynamic(');
-
-  if (hasRoutes && !hasLazy && sf.getFilePath().includes('app')) {
-    pushFinding(
-      "frontend.performance.missing_lazy_loading",
-      "medium",
-      sf,
-      sf,
-      'Routes without lazy loading. Use: const Dashboard = lazy(() => import(\'./Dashboard\')). Wrap with <Suspense>. Reduces initial bundle, faster First Contentful Paint.',
-      findings
-    );
-  }
 
 
-  if (sf.getFilePath().includes('layout.tsx') || sf.getFilePath().includes('page.tsx')) {
-    const hasMetadata = content.includes('metadata') || content.includes('generateMetadata');
+    if (sf.getFilePath().includes('layout.tsx') || sf.getFilePath().includes('page.tsx')) {
+      const hasMetadata = content.includes('metadata') || content.includes('generateMetadata');
 
-    if (!hasMetadata) {
+      if (!hasMetadata) {
+        pushFinding(
+          "frontend.seo.missing_metadata",
+          "low",
+          sf,
+          sf,
+          'Missing SEO metadata. Export: export const metadata = { title, description, openGraph }. Improves Google ranking, social media previews.',
+          findings
+        );
+      }
+    }
+
+    if (sf.getFilePath().includes('sitemap')) {
+      const hasDynamicRoutes = content.includes('fetch') || content.includes('database');
+
+      if (!hasDynamicRoutes && content.length < 200) {
+        pushFinding(
+          "frontend.seo.static_sitemap",
+          "low",
+          sf,
+          sf,
+          'Static sitemap. Generate dynamically: fetch all routes from API/DB. Update automatically when content changes. Better SEO indexing.',
+          findings
+        );
+      }
+    }
+
+    if (sf.getFilePath().includes('robots')) {
+      const hasDisallow = content.includes('Disallow');
+
+      if (!hasDisallow) {
+        pushFinding(
+          "frontend.seo.robots_config",
+          "low",
+          sf,
+          sf,
+          'Robots.txt incomplete. Add Disallow rules for: /api, /admin, /_next. Prevents search engines indexing private routes.',
+          findings
+        );
+      }
+    }
+
+    if (sf.getFilePath().includes('manifest')) {
+      const hasIcons = content.includes('icons');
+      const hasThemeColor = content.includes('theme_color');
+
+      if (!hasIcons || !hasThemeColor) {
+        pushFinding(
+          "frontend.pwa.manifest_incomplete",
+          "low",
+          sf,
+          sf,
+          'PWA manifest incomplete. Add: icons (192x192, 512x512), theme_color, background_color, display: standalone. Enables Add to Home Screen.',
+          findings
+        );
+      }
+    }
+
+    if (content.includes('serviceWorker') && !content.includes('unregister')) {
       pushFinding(
-        "frontend.seo.missing_metadata",
+        "frontend.pwa.missing_sw_unregister",
         "low",
         sf,
         sf,
-        'Missing SEO metadata. Export: export const metadata = { title, description, openGraph }. Improves Google ranking, social media previews.',
+        'Service Worker registration without unregister fallback. Add: if (!production) navigator.serviceWorker.unregister(). Prevents caching issues in development.',
         findings
       );
     }
-  }
 
-  if (sf.getFilePath().includes('sitemap')) {
-    const hasDynamicRoutes = content.includes('fetch') || content.includes('database');
+    if (sf.getFilePath().includes('lighthouse') || sf.getFilePath().includes('performance')) {
+      const hasThresholds = content.includes('performance') && content.includes('accessibility');
 
-    if (!hasDynamicRoutes && content.length < 200) {
+      if (!hasThresholds) {
+        pushFinding(
+          "frontend.performance.lighthouse_monitoring",
+          "low",
+          sf,
+          sf,
+          'Lighthouse config without thresholds. Set CI thresholds: performance: 90, accessibility: 95, best-practices: 90, seo: 90. Prevents performance regressions.',
+          findings
+        );
+      }
+    }
+
+    const hasWebVitals = content.includes('reportWebVitals') || content.includes('web-vitals');
+    const hasAnalytics = content.includes('analytics') || content.includes('gtag');
+
+    if (hasWebVitals && !hasAnalytics) {
       pushFinding(
-        "frontend.seo.static_sitemap",
+        "frontend.monitoring.web_vitals_no_analytics",
         "low",
         sf,
         sf,
-        'Static sitemap. Generate dynamically: fetch all routes from API/DB. Update automatically when content changes. Better SEO indexing.',
+        'Web Vitals captured but not sent to analytics. Send to Google Analytics: gtag(\'event\', metric.name, { value: metric.value }). Track LCP, FID, CLS in production.',
         findings
       );
     }
-  }
 
-  if (sf.getFilePath().includes('robots')) {
-    const hasDisallow = content.includes('Disallow');
-
-    if (!hasDisallow) {
+    if (sf.getFilePath().includes('layout') && !content.includes('analytics') && !content.includes('gtag')) {
       pushFinding(
-        "frontend.seo.robots_config",
+        "frontend.monitoring.missing_analytics",
         "low",
         sf,
         sf,
-        'Robots.txt incomplete. Add Disallow rules for: /api, /admin, /_next. Prevents search engines indexing private routes.',
+        'Root layout without analytics. Add Google Analytics: <Script src="https://www.googletagmanager.com/gtag/js" />. Track user behavior, conversion rates.',
         findings
       );
     }
-  }
 
-  if (sf.getFilePath().includes('manifest')) {
-    const hasIcons = content.includes('icons');
-    const hasThemeColor = content.includes('theme_color');
-
-    if (!hasIcons || !hasThemeColor) {
+    if (sf.getFilePath().includes('error.tsx') && !content.includes('Sentry') && !content.includes('captureException')) {
       pushFinding(
-        "frontend.pwa.manifest_incomplete",
+        "frontend.monitoring.missing_error_tracking",
         "low",
         sf,
         sf,
-        'PWA manifest incomplete. Add: icons (192x192, 512x512), theme_color, background_color, display: standalone. Enables Add to Home Screen.',
+        'Error page without error tracking. Install: npm i @sentry/nextjs. Track production errors: Sentry.captureException(error). Get alerts when users hit errors.',
         findings
       );
     }
-  }
 
-  if (content.includes('serviceWorker') && !content.includes('unregister')) {
-    pushFinding(
-      "frontend.pwa.missing_sw_unregister",
-      "low",
-      sf,
-      sf,
-      'Service Worker registration without unregister fallback. Add: if (!production) navigator.serviceWorker.unregister(). Prevents caching issues in development.',
-      findings
-    );
-  }
+    if (content.includes('if (') && /feature|experiment|rollout|beta/i.test(content)) {
+      const hasFeatureFlagLib = content.includes('unleash') || content.includes('launchdarkly') || content.includes('flagsmith');
 
-  if (sf.getFilePath().includes('lighthouse') || sf.getFilePath().includes('performance')) {
-    const hasThresholds = content.includes('performance') && content.includes('accessibility');
+      if (!hasFeatureFlagLib) {
+        pushFinding(
+          "frontend.devops.hardcoded_feature_flag",
+          "low",
+          sf,
+          sf,
+          'Hardcoded feature flag. Use feature flag service: Unleash, LaunchDarkly, Flagsmith. Benefits: Toggle features without deployment, gradual rollout, A/B testing.',
+          findings
+        );
+      }
+    }
 
-    if (!hasThresholds) {
+    if (content.includes('variant') && content.includes('Math.random')) {
       pushFinding(
-        "frontend.performance.lighthouse_monitoring",
+        "frontend.devops.manual_ab_testing",
         "low",
         sf,
         sf,
-        'Lighthouse config without thresholds. Set CI thresholds: performance: 90, accessibility: 95, best-practices: 90, seo: 90. Prevents performance regressions.',
+        'Manual A/B testing with Math.random. Use: Google Optimize, Optimizely, VWO. Benefits: Statistical significance, reporting, targeting rules.',
         findings
       );
     }
-  }
 
-  const hasWebVitals = content.includes('reportWebVitals') || content.includes('web-vitals');
-  const hasAnalytics = content.includes('analytics') || content.includes('gtag');
+    if (content.includes('fetch') && !content.includes('cache') && !content.includes('revalidate')) {
+      const isFetchInServerComponent = content.includes('async function') && !content.includes('\'use client\'');
 
-  if (hasWebVitals && !hasAnalytics) {
-    pushFinding(
-      "frontend.monitoring.web_vitals_no_analytics",
-      "low",
-      sf,
-      sf,
-      'Web Vitals captured but not sent to analytics. Send to Google Analytics: gtag(\'event\', metric.name, { value: metric.value }). Track LCP, FID, CLS in production.',
-      findings
-    );
-  }
-
-  if (sf.getFilePath().includes('layout') && !content.includes('analytics') && !content.includes('gtag')) {
-    pushFinding(
-      "frontend.monitoring.missing_analytics",
-      "low",
-      sf,
-      sf,
-      'Root layout without analytics. Add Google Analytics: <Script src="https://www.googletagmanager.com/gtag/js" />. Track user behavior, conversion rates.',
-      findings
-    );
-  }
-
-  if (sf.getFilePath().includes('error.tsx') && !content.includes('Sentry') && !content.includes('captureException')) {
-    pushFinding(
-      "frontend.monitoring.missing_error_tracking",
-      "low",
-      sf,
-      sf,
-      'Error page without error tracking. Install: npm i @sentry/nextjs. Track production errors: Sentry.captureException(error). Get alerts when users hit errors.',
-      findings
-    );
-  }
-
-  if (content.includes('if (') && /feature|experiment|rollout|beta/i.test(content)) {
-    const hasFeatureFlagLib = content.includes('unleash') || content.includes('launchdarkly') || content.includes('flagsmith');
-
-    if (!hasFeatureFlagLib) {
-      pushFinding(
-        "frontend.devops.hardcoded_feature_flag",
-        "low",
-        sf,
-        sf,
-        'Hardcoded feature flag. Use feature flag service: Unleash, LaunchDarkly, Flagsmith. Benefits: Toggle features without deployment, gradual rollout, A/B testing.',
-        findings
-      );
+      if (isFetchInServerComponent) {
+        pushFinding(
+          "frontend.performance.missing_cache_strategy",
+          "low",
+          sf,
+          sf,
+          'Fetch without cache strategy. Add: { cache: \'force-cache\' } or { next: { revalidate: 3600 } }. Default behavior may change. Be explicit.',
+          findings
+        );
+      }
     }
-  }
-
-  if (content.includes('variant') && content.includes('Math.random')) {
-    pushFinding(
-      "frontend.devops.manual_ab_testing",
-      "low",
-      sf,
-      sf,
-      'Manual A/B testing with Math.random. Use: Google Optimize, Optimizely, VWO. Benefits: Statistical significance, reporting, targeting rules.',
-      findings
-    );
-  }
-
-  if (content.includes('fetch') && !content.includes('cache') && !content.includes('revalidate')) {
-    const isFetchInServerComponent = content.includes('async function') && !content.includes('\'use client\'');
-
-    if (isFetchInServerComponent) {
-      pushFinding(
-        "frontend.performance.missing_cache_strategy",
-        "low",
-        sf,
-        sf,
-        'Fetch without cache strategy. Add: { cache: \'force-cache\' } or { next: { revalidate: 3600 } }. Default behavior may change. Be explicit.',
-        findings
-      );
-    }
-  }
   });
 }
 

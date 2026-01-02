@@ -1,29 +1,26 @@
 const fs = require('fs');
 const path = require('path');
+const env = require('../../../config/env');
 
 class GuardHeartbeatMonitor {
     constructor({
         repoRoot = process.cwd(),
         logger = console,
-        fsModule = fs,
-        env = process.env
+        fsModule = fs
     } = {}) {
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.fs = fsModule;
-        this.env = env;
-
-        const heartbeatRelative = env.HOOK_GUARD_HEARTBEAT_PATH || path.join('.audit_tmp', 'guard-heartbeat.json');
+        const heartbeatRelative = env.get('HOOK_GUARD_HEARTBEAT_PATH', path.join('.audit_tmp', 'guard-heartbeat.json'));
         this.heartbeatPath = path.isAbsolute(heartbeatRelative)
             ? heartbeatRelative
             : path.join(this.repoRoot, heartbeatRelative);
 
-        this.heartbeatMaxAgeMs = Number(
-            env.GUARD_AUTOSTART_HEARTBEAT_MAX_AGE || env.HOOK_GUARD_HEARTBEAT_MAX_AGE || 60000
-        );
+        this.heartbeatMaxAgeMs = env.getNumber('GUARD_AUTOSTART_HEARTBEAT_MAX_AGE',
+            env.getNumber('HOOK_GUARD_HEARTBEAT_MAX_AGE', 60000));
 
         this.heartbeatRestartReasons = new Set(
-            (env.GUARD_AUTOSTART_HEARTBEAT_RESTART || 'missing,stale,invalid,degraded')
+            (env.get('GUARD_AUTOSTART_HEARTBEAT_RESTART', 'missing,stale,invalid,degraded'))
                 .split(',')
                 .map(entry => entry.trim().toLowerCase())
                 .filter(Boolean)
