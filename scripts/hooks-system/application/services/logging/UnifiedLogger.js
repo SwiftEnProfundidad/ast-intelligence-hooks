@@ -98,7 +98,7 @@ class UnifiedLogger {
             fs.appendFileSync(this.fileConfig.path, `${JSON.stringify(entry)}\n`, 'utf8');
         } catch (error) {
             try {
-                const env = require('../../../config/env');
+                const env = require('../../../config/env.js');
                 if (env.getBool('DEBUG', false)) {
                     console.error('[UnifiedLogger] Failed to write log file', {
                         path: this.fileConfig.path,

@@ -11,7 +11,7 @@ const GuardNotificationHandler = require('./GuardNotificationHandler');
 const GuardMonitorLoop = require('./GuardMonitorLoop');
 const GuardHealthReminder = require('./GuardHealthReminder');
 const AuditLogger = require('../logging/AuditLogger');
-const envHelper = require('../../../config/env');
+const envHelper = require('../../../config/env.js');
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 
 class GuardAutoManagerService {

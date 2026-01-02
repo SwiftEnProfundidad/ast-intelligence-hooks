@@ -3,7 +3,7 @@ const path = require('path');
 const { getGitTreeState, isTreeBeyondLimit } = require('./GitTreeState');
 const AuditLogger = require('./logging/AuditLogger');
 const { recordMetric } = require('../../infrastructure/telemetry/metrics-logger');
-const env = require('../../../config/env');
+const env = require('../../config/env.js');
 
 class RealtimeGuardService {
     /**

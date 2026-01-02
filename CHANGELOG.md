@@ -5,6 +5,16 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.24] - 2026-01-02
+
+### Fixed
+- **Critical**: Reverted incorrect paths from `../../../config/env` to `../../config/env` (2 levels up, not 3)
+- Corrected paths in 17 files across application/services and infrastructure
+- Pre-commit hook now works correctly with proper path resolution
+
+### Changed
+- Fixed import paths in all services and infrastructure modules
+
 ## [5.3.23] - 2026-01-02
 
 ### Fixed

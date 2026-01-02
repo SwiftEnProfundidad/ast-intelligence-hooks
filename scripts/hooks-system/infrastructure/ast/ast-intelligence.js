@@ -1,7 +1,7 @@
 
 const path = require("path");
 const fs = require("fs");
-const env = require("../../../config/env");
+const env = require("../../config/env.js");
 
 const astModulesPath = __dirname;
 const { createProject, platformOf, mapToLevel } = require(path.join(astModulesPath, "ast-core"));

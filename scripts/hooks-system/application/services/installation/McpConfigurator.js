@@ -3,7 +3,7 @@ const path = require('path');
 const { execSync } = require('child_process');
 const crypto = require('crypto');
 const os = require('os');
-const env = require('../../../config/env');
+const env = require('../../../config/env.js');
 
 const COLORS = {
     reset: '\x1b[0m',

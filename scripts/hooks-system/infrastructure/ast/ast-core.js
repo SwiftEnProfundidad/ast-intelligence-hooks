@@ -2,7 +2,7 @@
 const { Project, Node, SyntaxKind, ScriptTarget, ModuleKind } = require("ts-morph");
 const path = require("path");
 const fs = require("fs");
-const env = require("../../../config/env");
+const env = require("../../config/env.js");
 
 let SeverityEvaluator = null;
 let severityEvaluatorInstance = null;

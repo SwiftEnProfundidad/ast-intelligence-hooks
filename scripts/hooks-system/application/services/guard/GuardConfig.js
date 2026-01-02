@@ -1,4 +1,4 @@
-const envHelper = require('../../../config/env');
+const envHelper = require('../../../config/env.js');
 
 class GuardConfig {
     constructor(env = envHelper) {

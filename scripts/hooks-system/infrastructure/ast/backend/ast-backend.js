@@ -1,5 +1,5 @@
 const path = require('path');
-const env = require('../../../config/env');
+const env = require('../../../config/env.js');
 const {
   platformOf,
   pushFinding,

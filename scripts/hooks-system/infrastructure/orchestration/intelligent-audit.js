@@ -8,7 +8,7 @@ const { TokenManager } = require('../utils/token-manager');
 const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
-const env = require('../../../config/env');
+const env = require('../../../config/env.js');
 
 function resolveAuditTmpDir() {
   const configured = (env.get('AUDIT_TMP', '') || '').trim();
