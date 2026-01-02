@@ -1,5 +1,6 @@
 const path = require('path');
 const { spawnSync } = require('child_process');
+const AuditLogger = require('../logging/AuditLogger');
 
 class GuardProcessManager {
     constructor({
@@ -8,6 +9,7 @@ class GuardProcessManager {
         fsModule = require('fs'),
         childProcess = { spawnSync }
     } = {}) {
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.repoRoot = repoRoot;
         this.logger = logger;
         this.fs = fsModule;

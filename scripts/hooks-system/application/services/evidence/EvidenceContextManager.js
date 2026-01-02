@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { DomainError } = require('../../../domain/errors');
+const AuditLogger = require('../logging/AuditLogger');
 
 const DEFAULT_PLATFORMS = ['1', '2', '3', '4'];
 
