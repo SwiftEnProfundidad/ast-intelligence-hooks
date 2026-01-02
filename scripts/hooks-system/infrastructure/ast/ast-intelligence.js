@@ -368,18 +368,36 @@ function generateOutput(findings, context, project, root) {
 
   // Top violations
   const grouped = {};
+  const levelRank = { LOW: 1, MEDIUM: 2, HIGH: 3, CRITICAL: 4 };
+  const emojiForLevel = (level) => (level === 'CRITICAL' || level === 'HIGH' ? '🔴' : '🔵');
+
   findings.forEach(f => {
-    grouped[f.ruleId] = (grouped[f.ruleId] || 0) + 1;
+    if (!f || !f.ruleId) return;
+    const level = mapToLevel(f.severity);
+    if (!grouped[f.ruleId]) {
+      grouped[f.ruleId] = { count: 0, worstLevel: level };
+    }
+    grouped[f.ruleId].count += 1;
+    if ((levelRank[level] || 0) > (levelRank[grouped[f.ruleId].worstLevel] || 0)) {
+      grouped[f.ruleId].worstLevel = level;
+    }
   });
 
-  Object.entries(grouped)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 20)
-    .forEach(([ruleId, count]) => {
-      const severity = ruleId.includes("types.any") || ruleId.includes("security.") || ruleId.includes("architecture.") ? "error" :
-        ruleId.includes("performance.") || ruleId.includes("debug.") ? "warning" : "info";
-      const emoji = severity === "error" ? "🔴" : severity === "warning" ? "🟡" : "🔵";
-      console.error(`${emoji} ${ruleId} - ${count} violations`);
+  const entries = Object.entries(grouped)
+    .map(([ruleId, data]) => ({ ruleId, count: data.count, worstLevel: data.worstLevel }))
+    .sort((a, b) => b.count - a.count);
+
+  const blockers = entries.filter(e => e.worstLevel === 'CRITICAL' || e.worstLevel === 'HIGH');
+  const nonBlockers = entries.filter(e => e.worstLevel !== 'CRITICAL' && e.worstLevel !== 'HIGH');
+
+  blockers.forEach(({ ruleId, count, worstLevel }) => {
+    console.error(`${emojiForLevel(worstLevel)} ${ruleId} - ${count} violations`);
+  });
+
+  nonBlockers
+    .slice(0, Math.max(0, 20 - blockers.length))
+    .forEach(({ ruleId, count, worstLevel }) => {
+      console.error(`${emojiForLevel(worstLevel)} ${ruleId} - ${count} violations`);
     });
 
   // Summary
