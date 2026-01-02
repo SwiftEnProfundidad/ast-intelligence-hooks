@@ -39,6 +39,7 @@ class FileSystemInstallerService {
             'presentation/',
             'docs/examples/',
             'docs/guides/',
+            'config/',
             'bin/',
             'index.js'
         ];

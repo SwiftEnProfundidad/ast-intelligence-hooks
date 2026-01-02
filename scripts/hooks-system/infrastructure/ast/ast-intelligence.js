@@ -323,6 +323,31 @@ async function runPlatformAnalysis(project, findings, context) {
  * Generate analysis output and reports
  */
 function generateOutput(findings, context, project, root) {
+  const stagingOnlyMode = env.get('STAGING_ONLY_MODE', '0') === '1';
+  if (stagingOnlyMode) {
+    try {
+      const { execSync } = require('child_process');
+      const stagedRel = execSync('git diff --cached --name-only --diff-filter=ACM', {
+        encoding: 'utf8',
+        cwd: root
+      })
+        .trim()
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const stagedAbs = new Set(stagedRel.map(r => path.resolve(root, r)));
+      findings = (findings || []).filter(f => {
+        if (!f || !f.filePath) return false;
+        const fp = String(f.filePath);
+        if (stagedAbs.has(fp)) return true;
+        return stagedRel.some(rel => fp.endsWith(rel) || fp.includes(`/${rel}`));
+      });
+    } catch {
+      findings = [];
+    }
+  }
+
   const levelTotals = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 };
   const platformTotals = { Backend: 0, Frontend: 0, iOS: 0, Android: 0, Other: 0 };
 
