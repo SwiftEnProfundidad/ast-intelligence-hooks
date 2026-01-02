@@ -53,6 +53,94 @@ function resolveRepoRoot() {
 
 const REPO_ROOT = resolveRepoRoot();
 
+const MCP_LOCK_DIR = path.join(REPO_ROOT, '.audit_tmp', 'mcp-singleton.lock');
+const MCP_LOCK_PID = path.join(MCP_LOCK_DIR, 'pid');
+
+function isPidRunning(pid) {
+    if (!pid || !Number.isFinite(pid) || pid <= 0) return false;
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+function safeReadPid(filePath) {
+    try {
+        if (!fs.existsSync(filePath)) return null;
+        const raw = String(fs.readFileSync(filePath, 'utf8') || '').trim();
+        const pid = Number(raw);
+        if (!Number.isFinite(pid) || pid <= 0) return null;
+        return pid;
+    } catch {
+        return null;
+    }
+}
+
+function removeLockDir() {
+    try {
+        if (fs.existsSync(MCP_LOCK_PID)) {
+            fs.unlinkSync(MCP_LOCK_PID);
+        }
+    } catch {
+        // ignore
+    }
+    try {
+        if (fs.existsSync(MCP_LOCK_DIR)) {
+            fs.rmdirSync(MCP_LOCK_DIR);
+        }
+    } catch {
+        // ignore
+    }
+}
+
+function acquireSingletonLock() {
+    try {
+        fs.mkdirSync(path.join(REPO_ROOT, '.audit_tmp'), { recursive: true });
+    } catch {
+        // ignore
+    }
+
+    try {
+        fs.mkdirSync(MCP_LOCK_DIR);
+    } catch (error) {
+        const existingPid = safeReadPid(MCP_LOCK_PID);
+        if (existingPid && isPidRunning(existingPid)) {
+            process.stderr.write(`[MCP] Another instance is already running (pid ${existingPid}). Exiting.\n`);
+            process.exit(0);
+        }
+
+        removeLockDir();
+        fs.mkdirSync(MCP_LOCK_DIR);
+    }
+
+    try {
+        fs.writeFileSync(MCP_LOCK_PID, String(process.pid), { encoding: 'utf8' });
+    } catch {
+        // ignore
+    }
+
+    const cleanup = () => {
+        const pid = safeReadPid(MCP_LOCK_PID);
+        if (pid === process.pid) {
+            removeLockDir();
+        }
+    };
+
+    process.on('exit', cleanup);
+    process.on('SIGINT', () => {
+        cleanup();
+        process.exit(0);
+    });
+    process.on('SIGTERM', () => {
+        cleanup();
+        process.exit(0);
+    });
+}
+
+acquireSingletonLock();
+
 // Lazy-loaded CompositionRoot - only initialized when first needed
 let _compositionRoot = null;
 function getCompositionRoot() {

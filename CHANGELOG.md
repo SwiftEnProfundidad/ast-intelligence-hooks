@@ -5,6 +5,17 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.20] - 2025-12-31
+
+### Fixed
+- Removed runtime Express/CORS side-effects from the library entry point (`index.js` has no server or CORS).
+- Removed `dotenv.config()` side-effect from `config.js` (no env pollution for consumers).
+- Fixed broken test block in `ast-backend.js` (lint/syntax OK).
+
+### Changed
+- Published npm package `pumuki-ast-hooks@5.3.20` (tag latest).
+- Updated docs/notes for safe installation.
+
 ## [5.3.18] - 2025-12-30
 
 ### Fixed

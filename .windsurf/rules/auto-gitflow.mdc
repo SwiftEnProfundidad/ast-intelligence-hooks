@@ -1,6 +1,5 @@
 ---
 alwaysApply: true
-trigger: always_on
 ---
 # 🤖 Automatic Git Flow Workflow
 

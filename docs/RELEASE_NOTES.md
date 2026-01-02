@@ -34,6 +34,41 @@ npm run install-hooks
 
 ---
 
+# Release Notes - v5.3.20
+
+**Release Date**: December 31, 2025  
+**Type**: Patch Release (compatible with 5.3.x)
+**Compatibility**: Fully backward compatible with 5.3.x
+
+---
+
+## 🎯 Overview
+- Removed runtime side-effects in the library: Express/CORS stripped from entry point; `dotenv.config()` removed from config.
+- Fixed syntax in `ast-backend.js` (test block) to ensure lint/parse correctness.
+- Published npm `pumuki-ast-hooks@5.3.20` (tag `latest`).
+
+---
+
+## 🐛 Bug Fixes
+
+### Fixed: Runtime side-effects
+- **Issue**: Library had runtime side-effects due to Express/CORS and `dotenv.config()`.
+- **Resolution**: Removed Express/CORS from entry point and `dotenv.config()` from config.
+- **Impact**: Library no longer has runtime side-effects.
+
+### Fixed: Syntax in `ast-backend.js`
+- **Issue**: Syntax error in `ast-backend.js` (test block) caused lint/parse issues.
+- **Resolution**: Fixed syntax in `ast-backend.js` (test block).
+- **Impact**: `ast-backend.js` now lint/parse correct.
+
+---
+
+## 📚 Documentation
+- CHANGELOG updated with 5.3.20.
+- Installation notes reviewed for safe npm consumption.
+
+---
+
 # Release Notes - v5.3.9
 
 **Release Date**: December 29, 2025  

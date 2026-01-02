@@ -14,6 +14,50 @@ class HookInstaller {
         };
     }
 
+    getPackageRoot() {
+        let dir = this.hookSystemRoot;
+        for (let i = 0; i < 8; i++) {
+            const pkgJson = path.join(dir, 'package.json');
+            try {
+                if (fs.existsSync(pkgJson) && fs.statSync(pkgJson).isFile()) {
+                    return dir;
+                }
+            } catch (error) {
+                const msg = error && error.message ? error.message : String(error);
+                this.logger?.debug?.('HOOK_INSTALLER_PACKAGE_ROOT_PROBE_ERROR', {
+                    pkgJson,
+                    error: msg
+                });
+            }
+
+            const parent = path.dirname(dir);
+            if (parent === dir) {
+                break;
+            }
+            dir = parent;
+        }
+
+        return path.resolve(this.hookSystemRoot, '..', '..', '..');
+    }
+
+    resolveFirstExistingDir(candidates) {
+        for (const candidate of candidates) {
+            if (!candidate) continue;
+            try {
+                if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+                    return candidate;
+                }
+            } catch (error) {
+                const msg = error && error.message ? error.message : String(error);
+                this.logger?.debug?.('HOOK_INSTALLER_DIR_PROBE_ERROR', {
+                    candidate,
+                    error: msg
+                });
+            }
+        }
+        return null;
+    }
+
     install(platforms) {
         const claudeDir = path.join(this.targetRoot, '.ast-intelligence');
         const claudeSkillsDir = path.join(claudeDir, 'skills');
@@ -31,10 +75,18 @@ class HookInstaller {
     }
 
     installSkills(claudeSkillsDir, platforms) {
-        const librarySkillsDir = path.join(this.hookSystemRoot, 'skills');
+        const packageRoot = this.getPackageRoot();
+        const librarySkillsDir = this.resolveFirstExistingDir([
+            path.join(this.hookSystemRoot, 'skills'),
+            path.join(packageRoot, 'skills')
+        ]);
 
-        if (!fs.existsSync(librarySkillsDir)) {
+        if (!librarySkillsDir) {
             return;
+        }
+
+        if (!fs.existsSync(claudeSkillsDir)) {
+            fs.mkdirSync(claudeSkillsDir, { recursive: true });
         }
 
         const relevantSkills = this.getRelevantSkills(platforms);
@@ -58,9 +110,13 @@ class HookInstaller {
     }
 
     installHooks(claudeHooksDir) {
-        const libraryHooksDir = path.join(this.hookSystemRoot, 'hooks');
+        const packageRoot = this.getPackageRoot();
+        const libraryHooksDir = this.resolveFirstExistingDir([
+            path.join(this.hookSystemRoot, 'hooks'),
+            path.join(packageRoot, 'hooks')
+        ]);
 
-        if (!fs.existsSync(libraryHooksDir)) {
+        if (!libraryHooksDir) {
             return;
         }
 
@@ -100,7 +156,8 @@ class HookInstaller {
     }
 
     copyIDERules() {
-        const sourceRulesDir = path.join(this.hookSystemRoot, '.cursor', 'rules');
+        const packageRoot = this.getPackageRoot();
+        const sourceRulesDir = path.join(packageRoot, '.cursor', 'rules');
 
         if (!fs.existsSync(sourceRulesDir)) {
             return;
