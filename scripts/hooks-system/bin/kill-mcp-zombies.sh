@@ -16,8 +16,12 @@ NC='\033[0m'
 echo -e "${YELLOW}🧟 Searching for zombie MCP processes...${NC}"
 echo ""
 
-# Find all mcp-ai-evidence-watcher processes
-PIDS=$(pgrep -f "mcp-ai-evidence-watcher" || true)
+# Find all MCP-related processes
+PIDS=$( (
+  pgrep -f "mcp-ai-evidence-watcher" || true
+  pgrep -f "scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation\.js" || true
+  pgrep -f "update-evidence\.sh.*--auto.*--refresh-only" || true
+) | sort -u || true )
 
 if [[ -z "$PIDS" ]]; then
   echo -e "${GREEN}✅ No zombie processes found!${NC}"

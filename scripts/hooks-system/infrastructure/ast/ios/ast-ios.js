@@ -1803,7 +1803,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    if (content.includes('Keychain') && !content.includes('SecItemAdd') && !content.includes('KeychainSwift')) {
+    if (!filePath.includes('Package.swift') && content.includes('Keychain') && !content.includes('SecItemAdd') && !content.includes('KeychainSwift')) {
       pushFinding(
         "ios.security.keychain_usage",
         "low",
