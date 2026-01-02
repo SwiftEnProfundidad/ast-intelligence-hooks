@@ -41,7 +41,7 @@ class RealtimeGuardService {
         this.evidencePath = this.config.evidencePath || path.join(process.cwd(), '.AI_EVIDENCE.json');
         this.embedTokenMonitor = env.getBool('HOOK_GUARD_EMBEDDED_TOKEN_MONITOR', false);
 
-        // Inicializar componentes especializados
+        // Initialize specialized components
         this.notifier = new GuardNotifier(
             this.logger,
             notificationService,
@@ -91,7 +91,7 @@ class RealtimeGuardService {
             }
         });
 
-        // Detener managers especializados
+        // Stop specialized managers
         this.evidenceManager.stopPolling();
         this.gitTreeManager.stopMonitoring();
 
@@ -100,14 +100,14 @@ class RealtimeGuardService {
 
     _startEvidenceMonitoring() {
         this.evidenceManager.startPolling(
-            () => this.notifier.notify('🔄 Evidence is stale - Auto-refreshing...', 'warning'),
-            () => this.notifier.notify('✅ Evidence refreshed successfully', 'success')
+            () => this.notifier.notify('Evidence is stale - Auto-refreshing...', 'warning'),
+            () => this.notifier.notify('Evidence refreshed successfully', 'success')
         );
     }
 
     _startGitTreeMonitoring() {
         this.gitTreeManager.startMonitoring((state) => {
-            // Ya se maneja internamente en GitTreeManager
+            // Already handled internally in GitTreeManager
         });
     }
 
