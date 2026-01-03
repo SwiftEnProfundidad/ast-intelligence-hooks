@@ -339,7 +339,7 @@ function platformOf(filePath) {
   if (p.includes("/apps/mobile-android/") || p.includes("/apps/android/")) return "android";
 
   if (p.includes("/landing-page/") || p.includes("landing-page/")) return "frontend";
-  if (p.includes("/scripts/hooks-system/") || p.includes("scripts/hooks-system/")) return "backend";
+  if (p.includes("/scripts/hooks-system/") || p.includes("scripts/hooks-system/")) return null;
   if (p.includes("/packages/ast-hooks/") || p.includes("packages/ast-hooks/")) return "backend";
 
   if (p.endsWith(".swift")) return "ios";
