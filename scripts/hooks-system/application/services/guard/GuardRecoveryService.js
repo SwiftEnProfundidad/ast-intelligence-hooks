@@ -1,3 +1,5 @@
+const AuditLogger = require('../logging/AuditLogger');
+
 class GuardRecoveryService {
     constructor({
         repoRoot,
@@ -8,6 +10,7 @@ class GuardRecoveryService {
     }) {
         this.repoRoot = repoRoot;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.startScript = startScript;
         this.notificationHandler = notificationHandler;
         this.restartCooldownMs = restartCooldownMs;

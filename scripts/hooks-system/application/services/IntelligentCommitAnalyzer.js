@@ -5,11 +5,13 @@ const env = require('../../config/env');
 const FeatureDetector = require('./commit/FeatureDetector');
 const CommitMessageGenerator = require('./commit/CommitMessageGenerator');
 const UnifiedLogger = require('./logging/UnifiedLogger');
+const AuditLogger = require('./logging/AuditLogger');
 
 class IntelligentCommitAnalyzer {
     constructor({ repoRoot = process.cwd(), logger = null } = {}) {
         this.repoRoot = repoRoot;
         this.logger = logger || console;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.featureDetector = new FeatureDetector(this.logger);
         this.messageGenerator = new CommitMessageGenerator(this.logger);
     }

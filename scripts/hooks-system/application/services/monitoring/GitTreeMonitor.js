@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const AuditLogger = require('../logging/AuditLogger');
 
 class GitTreeMonitor {
     constructor(repoRoot, options = {}) {
         this.repoRoot = repoRoot;
+        this.auditLogger = new AuditLogger({ repoRoot });
         this.stagedThreshold = options.stagedThreshold || 10;
         this.unstagedThreshold = options.unstagedThreshold || 15;
         this.totalThreshold = options.totalThreshold || 20;

@@ -1,4 +1,5 @@
 const env = require('../../config/env');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 const IGitCommandPort = require('../../domain/ports/IGitCommandPort');
 const GitCommandRunner = require('./git/GitCommandRunner');
@@ -9,6 +10,7 @@ class GitCommandAdapter extends IGitCommandPort {
         super();
         this.repoRoot = config.repoRoot || process.cwd();
         this.logger = config.logger || console;
+        this.auditLogger = new AuditLogger({ repoRoot: this.repoRoot, logger: this.logger });
 
         this.runner = new GitCommandRunner(this.repoRoot, this.logger);
         this.commandService = new GitCommandService(this.runner);

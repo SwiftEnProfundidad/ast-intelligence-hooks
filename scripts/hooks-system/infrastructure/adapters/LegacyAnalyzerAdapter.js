@@ -1,11 +1,13 @@
 
 const Finding = require('../../domain/entities/Finding');
 const { createProject, listSourceFiles } = require('../ast/ast-core');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 class LegacyAnalyzerAdapter {
   constructor(legacyAnalyzerFunction, platform) {
     this.legacyAnalyzerFunction = legacyAnalyzerFunction;
     this.platform = platform;
+    this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
   }
 
   async analyze(targetPath, options = {}) {

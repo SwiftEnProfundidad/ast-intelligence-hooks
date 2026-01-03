@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const AuditLogger = require('../logging/AuditLogger');
 
 class HealthCheckService {
     constructor({
@@ -13,6 +14,7 @@ class HealthCheckService {
         timers = { setInterval, clearInterval }
     } = {}) {
         this.repoRoot = repoRoot;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.providers = Array.isArray(providers) ? providers : [];
         this.notificationCenter = notificationCenter;
         this.logger = logger || console;

@@ -1,10 +1,12 @@
 const { execSync } = require('child_process');
 const { ConfigurationError } = require('../../../domain/errors');
+const AuditLogger = require('../../../application/services/logging/AuditLogger');
 
 class GitCommandRunner {
     constructor(repoRoot, logger = console, options = {}) {
         this.repoRoot = repoRoot;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.options = {
             timeout: options.timeout || 30000, // 30s default timeout
             maxRetries: options.maxRetries || 3,

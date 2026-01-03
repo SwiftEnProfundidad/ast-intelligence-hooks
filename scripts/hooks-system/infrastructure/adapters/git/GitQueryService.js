@@ -1,6 +1,9 @@
+const AuditLogger = require('../../../application/services/logging/AuditLogger');
+
 class GitQueryService {
     constructor(commandRunner) {
         this.runner = commandRunner;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     getCurrentBranch() {

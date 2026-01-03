@@ -1,4 +1,5 @@
 const env = require('../../config/env');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -8,6 +9,7 @@ class MacOSNotificationAdapter {
         this.enabled = config.enabled !== false;
         this.defaultSound = config.defaultSound || 'Hero';
         this.defaultTitle = config.defaultTitle || 'Hook-System Guard';
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
         this.terminalNotifierPath = this.resolveTerminalNotifier();
         this.osascriptPath = '/usr/bin/osascript';
 

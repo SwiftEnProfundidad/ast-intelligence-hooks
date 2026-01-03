@@ -7,10 +7,12 @@
 const env = require('../../config/env');
 const path = require('path');
 const fs = require('fs');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 class AstAnalyzerAdapter {
     constructor(config = {}) {
         this.repoRoot = config.repoRoot || process.cwd();
+        this.auditLogger = new AuditLogger({ repoRoot: this.repoRoot });
         this.astModulesPath = config.astModulesPath || path.join(__dirname, '../ast');
 
         this.ignoredPatterns = [
