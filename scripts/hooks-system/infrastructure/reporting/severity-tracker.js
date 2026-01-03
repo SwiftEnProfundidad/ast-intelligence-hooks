@@ -1,10 +1,12 @@
 
 const fs = require('fs');
 const path = require('path');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 class SeverityTracker {
   constructor(historyPath = '.audit_tmp/severity-history.jsonl') {
     this.historyPath = historyPath;
+    this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     this.ensureHistoryFile();
   }
 

@@ -40,6 +40,7 @@ class EvidenceContextManager {
         this.autoPlatforms = Array.isArray(autoPlatforms) && autoPlatforms.length ? autoPlatforms : DEFAULT_PLATFORMS;
         this.notificationCenter = notificationCenter;
         this.logger = logger || console;
+        this.auditLogger = new AuditLogger({ repoRoot, logger: this.logger });
         this.intervalMs = intervalMs;
         this.timers = timers;
         this.runCommand = runCommand;
