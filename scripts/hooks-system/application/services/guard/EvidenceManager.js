@@ -4,10 +4,11 @@ const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logg
 const env = require('../../../config/env.js');
 
 class EvidenceManager {
-    constructor(evidencePath, notifier, auditLogger) {
+    constructor(evidencePath, notifier, auditLogger, delegate = null) {
         this.evidencePath = evidencePath;
         this.notifier = notifier;
         this.auditLogger = auditLogger;
+        this.delegate = delegate;
         this.staleThresholdMs = env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 60000);
         this.reminderIntervalMs = env.getNumber('HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL', 60000);
         this.inactivityGraceMs = env.getNumber('HOOK_GUARD_INACTIVITY_GRACE_MS', 120000);
@@ -31,7 +32,11 @@ class EvidenceManager {
         if (this.pollIntervalMs <= 0) return;
 
         this.pollTimer = setInterval(() => {
-            this.evaluateEvidenceAge('polling');
+            if (this.delegate && typeof this.delegate.evaluateEvidenceAge === 'function') {
+                this.delegate.evaluateEvidenceAge('polling');
+            } else {
+                this.evaluateEvidenceAge('polling');
+            }
         }, this.pollIntervalMs);
     }
 
@@ -63,7 +68,9 @@ class EvidenceManager {
 
     evaluateEvidenceAge(source = 'manual', notifyFresh = false) {
         const now = Date.now();
-        const timestamp = this.readEvidenceTimestamp();
+        const timestamp = (this.delegate && typeof this.delegate.readEvidenceTimestamp === 'function')
+            ? this.delegate.readEvidenceTimestamp()
+            : this.readEvidenceTimestamp();
         if (!timestamp) return;
 
         const ageMs = now - timestamp;
@@ -71,12 +78,20 @@ class EvidenceManager {
         const isRecentlyActive = this.lastUserActivityAt && (now - this.lastUserActivityAt) < this.inactivityGraceMs;
 
         if (isStale && !isRecentlyActive) {
-            this.triggerStaleAlert(source, ageMs);
+            if (this.delegate && typeof this.delegate.triggerStaleAlert === 'function') {
+                this.delegate.triggerStaleAlert(source, ageMs);
+            } else {
+                this.triggerStaleAlert(source, ageMs);
+            }
             return;
         }
 
         if (notifyFresh && this.lastStaleNotification > 0 && !isStale) {
-            this.notifier.notify('Evidence updated; back within SLA.', 'info');
+            if (this.delegate && typeof this.delegate.notify === 'function') {
+                this.delegate.notify('Evidence updated; back within SLA.', 'info');
+            } else {
+                this.notifier.notify('Evidence updated; back within SLA.', 'info');
+            }
             this.lastStaleNotification = 0;
         }
     }
@@ -89,7 +104,12 @@ class EvidenceManager {
 
         this.lastStaleNotification = now;
         const ageSec = Math.floor(ageMs / 1000);
-        this.notifier.notify(`Evidence has been stale for ${ageSec}s (source: ${source}).`, 'warn', { forceDialog: true });
+        const message = `Evidence has been stale for ${ageSec}s (source: ${source}).`;
+        if (this.delegate && typeof this.delegate.notify === 'function') {
+            this.delegate.notify(message, 'warn', { forceDialog: true });
+        } else {
+            this.notifier.notify(message, 'warn', { forceDialog: true });
+        }
         this.auditLogger.record({
             action: 'guard.evidence.stale',
             resource: 'evidence',
@@ -97,7 +117,11 @@ class EvidenceManager {
             meta: { ageSec, source }
         });
         recordMetric({ hook: 'evidence', status: 'stale', ageSec, source });
-        this.attemptAutoRefresh('stale');
+        if (this.delegate && typeof this.delegate.attemptAutoRefresh === 'function') {
+            this.delegate.attemptAutoRefresh('stale');
+        } else {
+            this.attemptAutoRefresh('stale');
+        }
 
         if (this.onStale) this.onStale();
     }

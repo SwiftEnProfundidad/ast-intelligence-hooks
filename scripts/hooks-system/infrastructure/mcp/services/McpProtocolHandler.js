@@ -1,16 +1,22 @@
 const MCP_VERSION = '2024-11-05';
 const AuditLogger = require('../../../application/services/logging/AuditLogger');
+const env = require('../../../config/env');
 
 class McpProtocolHandler {
     constructor(inputStream, outputStream, logger) {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.logger = logger;
-        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
+        const repoRoot = (env.get('REPO_ROOT') || '').trim() || process.cwd();
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.buffer = Buffer.alloc(0);
     }
 
     start(messageHandler) {
+        if (process.env.DEBUG) {
+            process.stderr.write('[MCP] Protocol handler starting...\n');
+        }
+
         this.inputStream.on('data', (chunk) => {
             const buf = Buffer.isBuffer(chunk) ? chunk : Buffer.from(String(chunk), 'utf8');
             void this._handleChunk(buf, messageHandler);
@@ -25,6 +31,10 @@ class McpProtocolHandler {
             if (this.logger) this.logger.error('MCP_STDIN_ERROR', { error: err.message });
             process.exit(1);
         });
+
+        if (process.env.DEBUG) {
+            process.stderr.write('[MCP] Protocol handler ready\n');
+        }
     }
 
     async _handleChunk(chunk, messageHandler) {
@@ -109,8 +119,12 @@ class McpProtocolHandler {
             }
 
             const lineBuf = this.buffer.slice(0, nl);
-            this.buffer = this.buffer.slice(nl + 1);
             const line = lineBuf.toString('utf8').trim();
+            if (/^content-length:/i.test(line)) {
+                break;
+            }
+
+            this.buffer = this.buffer.slice(nl + 1);
             if (line) {
                 messages.push({ body: line, framed: false });
             }

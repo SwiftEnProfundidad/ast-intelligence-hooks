@@ -4,8 +4,8 @@ const AuditLogger = require('../logging/AuditLogger');
 
 class GuardNotifier {
     constructor(logger, notificationService, notifier = null, notificationsEnabled = true) {
-        
-        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
+        this.logger = logger;
         this.notificationService = notificationService;
         this.notifier = typeof notifier === 'function' ? notifier : null;
         this.notificationsEnabled = notificationsEnabled;

@@ -50,10 +50,154 @@ class RealtimeGuardService {
         );
         this.notifier.setDebugLogPath(this.config.debugLogPath);
 
-        this.evidenceManager = new EvidenceManager(this.evidencePath, this.notifier, this.auditLogger);
-        this.gitTreeManager = new GitTreeManager(this.notifier, this.auditLogger);
+        this.evidenceManager = new EvidenceManager(this.evidencePath, this.notifier, this.auditLogger, this);
+        this.gitTreeManager = new GitTreeManager(this.notifier, this.auditLogger, this);
 
         this.watchers = [];
+    }
+
+    get staleThresholdMs() {
+        return this.evidenceManager.staleThresholdMs;
+    }
+
+    set staleThresholdMs(value) {
+        this.evidenceManager.staleThresholdMs = value;
+    }
+
+    get reminderIntervalMs() {
+        return this.evidenceManager.reminderIntervalMs;
+    }
+
+    set reminderIntervalMs(value) {
+        this.evidenceManager.reminderIntervalMs = value;
+    }
+
+    get pollIntervalMs() {
+        return this.evidenceManager.pollIntervalMs;
+    }
+
+    set pollIntervalMs(value) {
+        this.evidenceManager.pollIntervalMs = value;
+    }
+
+    get pollTimer() {
+        return this.evidenceManager.pollTimer;
+    }
+
+    set pollTimer(value) {
+        this.evidenceManager.pollTimer = value;
+    }
+
+    get lastStaleNotification() {
+        return this.evidenceManager.lastStaleNotification;
+    }
+
+    set lastStaleNotification(value) {
+        this.evidenceManager.lastStaleNotification = value;
+    }
+
+    get lastUserActivityAt() {
+        return this.evidenceManager.lastUserActivityAt;
+    }
+
+    set lastUserActivityAt(value) {
+        this.evidenceManager.lastUserActivityAt = value;
+    }
+
+    get inactivityGraceMs() {
+        return this.evidenceManager.inactivityGraceMs;
+    }
+
+    set inactivityGraceMs(value) {
+        this.evidenceManager.inactivityGraceMs = value;
+    }
+
+    get autoRefreshCooldownMs() {
+        return this.evidenceManager.autoRefreshCooldownMs;
+    }
+
+    set autoRefreshCooldownMs(value) {
+        this.evidenceManager.autoRefreshCooldownMs = value;
+    }
+
+    get lastAutoRefresh() {
+        return this.evidenceManager.lastAutoRefresh;
+    }
+
+    set lastAutoRefresh(value) {
+        this.evidenceManager.lastAutoRefresh = value;
+    }
+
+    get autoRefreshInFlight() {
+        return this.evidenceManager.autoRefreshInFlight;
+    }
+
+    set autoRefreshInFlight(value) {
+        this.evidenceManager.autoRefreshInFlight = value;
+    }
+
+    get gitTreeStagedThreshold() {
+        return this.gitTreeManager.gitTreeStagedThreshold;
+    }
+
+    set gitTreeStagedThreshold(value) {
+        this.gitTreeManager.gitTreeStagedThreshold = value;
+    }
+
+    get gitTreeUnstagedThreshold() {
+        return this.gitTreeManager.gitTreeUnstagedThreshold;
+    }
+
+    set gitTreeUnstagedThreshold(value) {
+        this.gitTreeManager.gitTreeUnstagedThreshold = value;
+    }
+
+    get gitTreeTotalThreshold() {
+        return this.gitTreeManager.gitTreeTotalThreshold;
+    }
+
+    set gitTreeTotalThreshold(value) {
+        this.gitTreeManager.gitTreeTotalThreshold = value;
+    }
+
+    get gitTreeCheckIntervalMs() {
+        return this.gitTreeManager.gitTreeCheckIntervalMs;
+    }
+
+    set gitTreeCheckIntervalMs(value) {
+        this.gitTreeManager.gitTreeCheckIntervalMs = value;
+    }
+
+    get gitTreeReminderMs() {
+        return this.gitTreeManager.gitTreeReminderMs;
+    }
+
+    set gitTreeReminderMs(value) {
+        this.gitTreeManager.gitTreeReminderMs = value;
+    }
+
+    get gitTreeTimer() {
+        return this.gitTreeManager.gitTreeTimer;
+    }
+
+    set gitTreeTimer(value) {
+        this.gitTreeManager.gitTreeTimer = value;
+    }
+
+    get lastDirtyTreeNotification() {
+        return this.gitTreeManager.lastDirtyTreeNotification;
+    }
+
+    set lastDirtyTreeNotification(value) {
+        this.gitTreeManager.lastDirtyTreeNotification = value;
+    }
+
+    get dirtyTreeActive() {
+        return this.gitTreeManager.dirtyTreeActive;
+    }
+
+    set dirtyTreeActive(value) {
+        this.gitTreeManager.dirtyTreeActive = value;
     }
 
     start() {

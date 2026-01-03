@@ -1,9 +1,9 @@
-const MacOSNotificationAdapter = require('../../adapters/MacOSNotificationAdapter');
-const FileEvidenceAdapter = require('../../adapters/FileEvidenceAdapter');
-const GitQueryAdapter = require('../../adapters/GitQueryAdapter');
-const GitCommandAdapter = require('../../adapters/GitCommandAdapter');
-const GitHubCliAdapter = require('../../adapters/GitHubCliAdapter');
-const AstAnalyzerAdapter = require('../../adapters/AstAnalyzerAdapter');
+const MacOSNotificationAdapter = require('../../infrastructure/adapters/MacOSNotificationAdapter');
+const FileEvidenceAdapter = require('../../infrastructure/adapters/FileEvidenceAdapter');
+const GitQueryAdapter = require('../../infrastructure/adapters/GitQueryAdapter');
+const GitCommandAdapter = require('../../infrastructure/adapters/GitCommandAdapter');
+const GitHubCliAdapter = require('../../infrastructure/adapters/GitHubCliAdapter');
+const AstAnalyzerAdapter = require('../../infrastructure/adapters/AstAnalyzerAdapter');
 
 class AdapterFactory {
     constructor(repoRoot, instances, logger) {

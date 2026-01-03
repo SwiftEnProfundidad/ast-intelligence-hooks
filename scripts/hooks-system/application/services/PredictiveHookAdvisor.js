@@ -1,13 +1,11 @@
 const fs = require('fs');
 const path = require('path');
-const AuditLogger = require('./logging/AuditLogger');
 
 const METRICS_FILE = path.join(process.cwd(), '.audit_tmp', 'hook-metrics.jsonl');
 
 class PredictiveHookAdvisor {
   constructor({ windowSize = 200 } = {}) {
     this.windowSize = windowSize;
-    this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
   }
 
   loadMetrics() {

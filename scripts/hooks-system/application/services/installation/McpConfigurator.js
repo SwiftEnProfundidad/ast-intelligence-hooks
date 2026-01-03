@@ -26,7 +26,10 @@ function computeRepoFingerprint(repoRoot) {
     try {
         const real = fs.realpathSync(repoRoot);
         return crypto.createHash('sha1').update(real).digest('hex').slice(0, 8);
-    } catch {
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] computeRepoFingerprint fallback: ${error && error.message ? error.message : String(error)}\n`);
+        }
         return crypto.createHash('sha1').update(String(repoRoot || '')).digest('hex').slice(0, 8);
     }
 }
@@ -100,7 +103,10 @@ class McpConfigurator {
         if (!nodePath || !fs.existsSync(nodePath)) {
             try {
                 nodePath = execSync('which node', { encoding: 'utf-8' }).trim();
-            } catch {
+            } catch (error) {
+                if (process.env.DEBUG) {
+                    process.stderr.write(`[MCP] which node failed: ${error && error.message ? error.message : String(error)}\n`);
+                }
                 nodePath = 'node';
             }
         }
@@ -110,6 +116,7 @@ class McpConfigurator {
         const mcpConfig = {
             mcpServers: {
                 [serverId]: {
+                    type: 'stdio',
                     command: nodePath,
                     args: [
                         entrypoint

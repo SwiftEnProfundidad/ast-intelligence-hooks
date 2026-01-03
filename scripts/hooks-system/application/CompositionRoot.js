@@ -19,29 +19,32 @@ class CompositionRoot {
         this._serviceFactory = null;
         this._monitorFactory = null;
 
-        // Create dynamic proxy for automatic delegation
         return new Proxy(this, {
             get(target, prop) {
-                // If method exists in CompositionRoot, use it
-                if (typeof target[prop] === 'function' && target.hasOwnProperty(prop)) {
+                if (typeof target[prop] === 'function' && Object.prototype.hasOwnProperty.call(target, prop)) {
                     return target[prop].bind(target);
                 }
 
-                // Delegate to specialized factories
-                if (target._serviceFactory && typeof target._serviceFactory[prop] === 'function') {
-                    return target._serviceFactory[prop].bind(target._serviceFactory);
-                }
-                if (target._adapterFactory && typeof target._adapterFactory[prop] === 'function') {
-                    return target._adapterFactory[prop].bind(target._adapterFactory);
-                }
-                if (target._monitorFactory && typeof target._monitorFactory[prop] === 'function') {
-                    return target._monitorFactory[prop].bind(target._monitorFactory);
-                }
+                if (prop === '_serviceFactory') return target._getServiceFactory();
+                if (prop === '_adapterFactory') return target._getAdapterFactory();
+                if (prop === '_monitorFactory') return target._getMonitorFactory();
 
-                // Para acceso a propiedades de factories
-                if (prop === '_serviceFactory') return target._serviceFactory;
-                if (prop === '_adapterFactory') return target._adapterFactory;
-                if (prop === '_monitorFactory') return target._monitorFactory;
+                if (typeof prop === 'string' && prop.startsWith('get')) {
+                    const serviceFactory = target._getServiceFactory();
+                    if (serviceFactory && typeof serviceFactory[prop] === 'function') {
+                        return serviceFactory[prop].bind(serviceFactory);
+                    }
+
+                    const adapterFactory = target._getAdapterFactory();
+                    if (adapterFactory && typeof adapterFactory[prop] === 'function') {
+                        return adapterFactory[prop].bind(adapterFactory);
+                    }
+
+                    const monitorFactory = target._getMonitorFactory();
+                    if (monitorFactory && typeof monitorFactory[prop] === 'function') {
+                        return monitorFactory[prop].bind(monitorFactory);
+                    }
+                }
 
                 return target[prop];
             }
@@ -58,14 +61,23 @@ class CompositionRoot {
 
     _getAdapterFactory() {
         if (!this._adapterFactory) {
-            this._adapterFactory = new AdapterFactory(this.repoRoot, this.instances, this.getLogger());
+            this._adapterFactory = new AdapterFactory(this.repoRoot, this.instances, null);
         }
         return this._adapterFactory;
     }
 
     _getServiceFactory() {
         if (!this._serviceFactory) {
-            this._serviceFactory = new ServiceFactory(this.repoRoot, this.instances, this._getAdapterFactory());
+            const adapterFactory = this._getAdapterFactory();
+            this._serviceFactory = new ServiceFactory(this.repoRoot, this.instances, adapterFactory);
+            try {
+                if (adapterFactory && !adapterFactory.logger) {
+                    adapterFactory.logger = this._serviceFactory.getLogger();
+                }
+            } catch (error) {
+                const msg = error && error.message ? error.message : String(error);
+                this._serviceFactory?.getLogger?.()?.debug?.('COMPOSITIONROOT_ADAPTER_LOGGER_BIND_FAILED', { error: msg });
+            }
         }
         return this._serviceFactory;
     }

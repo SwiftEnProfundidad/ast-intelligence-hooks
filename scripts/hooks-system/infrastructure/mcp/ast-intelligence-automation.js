@@ -38,7 +38,10 @@ function safeGitRoot(startDir) {
         });
         const root = String(out || '').trim();
         return root || null;
-    } catch {
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] safeGitRoot failed: ${error && error.message ? error.message : String(error)}\n`);
+        }
         return null;
     }
 }
@@ -53,6 +56,16 @@ function resolveRepoRoot() {
 }
 
 const REPO_ROOT = resolveRepoRoot();
+
+try {
+    if (REPO_ROOT && typeof REPO_ROOT === 'string' && fs.existsSync(REPO_ROOT)) {
+        process.chdir(REPO_ROOT);
+    }
+} catch (error) {
+    if (process.env.DEBUG) {
+        process.stderr.write(`[MCP] Failed to chdir to REPO_ROOT: ${error && error.message ? error.message : String(error)}\n`);
+    }
+}
 
 // NO singleton lock - Windsurf manages process lifecycle
 // Each project gets its own independent MCP process
@@ -184,6 +197,34 @@ function resolveUpdateEvidenceScript() {
     }
 
     return null;
+}
+
+async function runWithTimeout(fn, timeoutMs) {
+    const ms = Number(timeoutMs);
+    if (!Number.isFinite(ms) || ms <= 0) {
+        try {
+            return { ok: true, timedOut: false, value: await fn() };
+        } catch (error) {
+            return { ok: false, timedOut: false, error };
+        }
+    }
+
+    let timer = null;
+    try {
+        const result = await Promise.race([
+            Promise.resolve().then(fn).then(value => ({ ok: true, timedOut: false, value })),
+            new Promise(resolve => {
+                timer = setTimeout(() => resolve({ ok: false, timedOut: true, error: new Error('timeout') }), ms);
+            })
+        ]);
+        return result;
+    } catch (error) {
+        return { ok: false, timedOut: false, error };
+    } finally {
+        if (timer) {
+            clearTimeout(timer);
+        }
+    }
 }
 
 // Lazy Loading Services
@@ -537,75 +578,123 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
  * Returns BLOCKED or ALLOWED status with auto-fixes applied
  */
 async function aiGateCheck() {
-    const gitFlowService = getCompositionRoot().getGitFlowService();
-    const gitQuery = getCompositionRoot().getGitQueryAdapter();
-    const currentBranch = getCurrentGitBranch(REPO_ROOT);
-    const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
+    const startedAt = Date.now();
+    const gateTimeoutMs = Number(process.env.MCP_GATE_TIMEOUT_MS || 1200);
+    const strict = process.env.MCP_GATE_STRICT === 'true';
+    const allowEvidenceAutofix = process.env.MCP_GATE_AUTOFIX_EVIDENCE === 'true';
 
-    const uncommittedChanges = gitQuery.getUncommittedChanges();
-    const hasUncommittedChanges = uncommittedChanges && uncommittedChanges.length > 0;
+    const core = async () => {
+        const gitFlowService = getCompositionRoot().getGitFlowService();
+        const gitQuery = getCompositionRoot().getGitQueryAdapter();
+        const currentBranch = getCurrentGitBranch(REPO_ROOT);
+        const isProtectedBranch = ['main', 'master', 'develop'].includes(currentBranch);
 
-    const violations = [];
-    const warnings = [];
-    const autoFixes = [];
-
-    // 1. Evidence Freshness Check (Auto-fix included)
-    const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
-    if (evidenceMonitor.isStale()) {
+        let uncommittedChanges = [];
         try {
-            await evidenceMonitor.refresh();
-            autoFixes.push('✅ Evidence was stale - AUTO-FIXED');
-        } catch (err) {
-            violations.push(`❌ EVIDENCE_STALE: Auto-fix failed: ${err.message}`);
+            uncommittedChanges = gitQuery.getUncommittedChanges();
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Gate gitQuery.getUncommittedChanges failed: ${msg}\n`);
+            }
         }
-    }
+        const hasUncommittedChanges = Array.isArray(uncommittedChanges) && uncommittedChanges.length > 0;
 
-    // 2. Git Flow Integrity
-    if (!gitFlowService.isGitHubAvailable()) {
-        warnings.push('⚠️ GitHub CLI not available - some automations may be limited');
-    }
+        const violations = [];
+        const warnings = [];
+        const autoFixes = [];
 
-    if (isProtectedBranch) {
-        if (hasUncommittedChanges) {
-            violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}' with uncommitted changes.`);
-            violations.push(`   Required: create a feature branch first.`);
-        } else {
-            warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
+        const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+        if (evidenceMonitor.isStale()) {
+            if (!allowEvidenceAutofix) {
+                violations.push('❌ EVIDENCE_STALE: Evidence is stale. Run ai-start to refresh.');
+            } else {
+                const elapsed = Date.now() - startedAt;
+                const remaining = Math.max(150, gateTimeoutMs - elapsed);
+                const refreshResult = await runWithTimeout(() => evidenceMonitor.refresh(), remaining);
+                if (refreshResult.ok) {
+                    autoFixes.push('✅ Evidence was stale - AUTO-FIXED');
+                } else if (refreshResult.timedOut) {
+                    violations.push('❌ EVIDENCE_STALE: Auto-fix timed out. Run ai-start to refresh.');
+                } else {
+                    const msg = refreshResult.error && refreshResult.error.message ? refreshResult.error.message : String(refreshResult.error);
+                    violations.push(`❌ EVIDENCE_STALE: Auto-fix failed: ${msg}`);
+                }
+            }
         }
-    }
 
-    // 3. Block Commit Use Case Integration
-    const blockCommitUseCase = getCompositionRoot().getBlockCommitUseCase();
-    const astAdapter = getCompositionRoot().getAstAdapter();
-
-    try {
-        const auditResult = await astAdapter.analyzeStagedFiles();
-        const decision = await blockCommitUseCase.execute(auditResult, {
-            useStagedOnly: true
-        });
-
-        if (decision.shouldBlock) {
-            violations.push(`❌ AST_VIOLATIONS: ${decision.reason}`);
+        try {
+            const elapsed = Date.now() - startedAt;
+            const remaining = Math.max(120, gateTimeoutMs - elapsed);
+            const ghAvailable = await runWithTimeout(() => gitFlowService.isGitHubAvailable(), remaining);
+            if (!ghAvailable.ok || ghAvailable.timedOut || ghAvailable.value === false) {
+                warnings.push('⚠️ GitHub CLI not available - some automations may be limited');
+            }
+        } catch (error) {
+            warnings.push('⚠️ GitHub CLI not available - some automations may be limited');
         }
-    } catch (err) {
-        if (process.env.DEBUG) console.error('[MCP] AST Check failed:', err.message);
+
+        if (isProtectedBranch) {
+            if (hasUncommittedChanges) {
+                violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}' with uncommitted changes.`);
+                violations.push(`   Required: create a feature branch first.`);
+            } else {
+                warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
+            }
+        }
+
+        if (strict) {
+            const elapsed = Date.now() - startedAt;
+            const remaining = Math.max(200, gateTimeoutMs - elapsed);
+            const blockCommitUseCase = getCompositionRoot().getBlockCommitUseCase();
+            const astAdapter = getCompositionRoot().getAstAdapter();
+
+            const astResult = await runWithTimeout(async () => {
+                const auditResult = await astAdapter.analyzeStagedFiles();
+                return blockCommitUseCase.execute(auditResult, { useStagedOnly: true });
+            }, remaining);
+
+            if (astResult.ok && astResult.value && astResult.value.shouldBlock) {
+                violations.push(`❌ AST_VIOLATIONS: ${astResult.value.reason}`);
+            } else if (!astResult.ok && process.env.DEBUG) {
+                const msg = astResult.error && astResult.error.message ? astResult.error.message : String(astResult.error);
+                process.stderr.write(`[MCP] Gate AST check skipped: ${astResult.timedOut ? 'timeout' : msg}\n`);
+            }
+        }
+
+        const isBlocked = violations.length > 0;
+
+        return {
+            status: isBlocked ? 'BLOCKED' : 'ALLOWED',
+            timestamp: new Date().toISOString(),
+            branch: currentBranch,
+            violations,
+            warnings,
+            autoFixes,
+            summary: isBlocked
+                ? `🚫 BLOCKED: ${violations.length} violation(s). Fix before proceeding.`
+                : `🚦 ALLOWED: Gate passed.${warnings.length > 0 ? ` ${warnings.length} warning(s).` : ''}`,
+            instructions: isBlocked
+                ? 'DO NOT proceed with user task. Announce violations and fix them first.'
+                : 'You may proceed with user task.'
+        };
+    };
+
+    const result = await runWithTimeout(core, gateTimeoutMs);
+    if (result.ok) {
+        return result.value;
     }
 
-    const isBlocked = violations.length > 0;
-
+    const currentBranch = getCurrentGitBranch(REPO_ROOT);
     return {
-        status: isBlocked ? 'BLOCKED' : 'ALLOWED',
+        status: 'BLOCKED',
         timestamp: new Date().toISOString(),
         branch: currentBranch,
-        violations,
-        warnings,
-        autoFixes,
-        summary: isBlocked
-            ? `🚫 BLOCKED: ${violations.length} violation(s). Fix before proceeding.`
-            : `🚦 ALLOWED: Gate passed.${warnings.length > 0 ? ` ${warnings.length} warning(s).` : ''}`,
-        instructions: isBlocked
-            ? 'DO NOT proceed with user task. Announce violations and fix them first.'
-            : 'You may proceed with user task.'
+        violations: ['❌ GATE_TIMEOUT: AI gate check timed out. Retry or run ai-start manually.'],
+        warnings: [],
+        autoFixes: [],
+        summary: '🚫 BLOCKED: Gate check timed out.',
+        instructions: 'DO NOT proceed with user task. Retry the gate check.'
     };
 }
 
@@ -676,8 +765,11 @@ async function handleMcpMessage(message) {
     try {
         const request = JSON.parse(message);
 
-        if ((typeof request.id === 'undefined' || request.id === null) && request.method?.startsWith('notifications/')) {
-            return null;
+        // Handle notifications (no id) - don't send response
+        if (typeof request.id === 'undefined' || request.id === null) {
+            if (request.method === 'initialized' || request.method?.startsWith('notifications/')) {
+                return null;
+            }
         }
 
         if (request.method === 'initialize') {
@@ -964,17 +1056,34 @@ async function handleMcpMessage(message) {
     }
 }
 
-// Start protocol handler
-protocolHandler.start(handleMcpMessage);
+// Flag to track if MCP has been initialized
+let mcpInitialized = false;
 
-// Log MCP ready
-process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
+// Start protocol handler
+protocolHandler.start(async (message) => {
+    const response = await handleMcpMessage(message);
+
+    // Start polling loops ONLY after receiving 'initialized' notification from Windsurf
+    if (!mcpInitialized && message.includes('"method":"initialized"')) {
+        mcpInitialized = true;
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] Received 'initialized' - starting background loops\n`);
+        }
+        startPollingLoops();
+    }
+
+    return response;
+});
+
+if (process.env.DEBUG) {
+    process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
+}
 
 /**
- * Polling loop for background notifications and automations
- * IMPORTANT: Delayed start to avoid blocking MCP initialization handshake
+ * Start polling loops for background notifications and automations
+ * Called ONLY after MCP handshake is complete
  */
-setTimeout(() => {
+function startPollingLoops() {
     setInterval(async () => {
         try {
             const now = Date.now();
@@ -1135,4 +1244,4 @@ setTimeout(() => {
             if (process.env.DEBUG) console.error('[MCP] Auto-commit error:', error);
         }
     }, AUTO_COMMIT_INTERVAL);
-}, 2000); // Delay 2 seconds to allow MCP handshake to complete first
+}
