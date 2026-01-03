@@ -967,166 +967,172 @@ async function handleMcpMessage(message) {
 // Start protocol handler
 protocolHandler.start(handleMcpMessage);
 
+// Log MCP ready
+process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
+
 /**
  * Polling loop for background notifications and automations
+ * IMPORTANT: Delayed start to avoid blocking MCP initialization handshake
  */
-setInterval(async () => {
-    try {
-        const now = Date.now();
-        const gitFlowService = getCompositionRoot().getGitFlowService();
-        const gitQuery = getCompositionRoot().getGitQueryAdapter();
-        const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
-        const orchestrator = getCompositionRoot().getOrchestrator();
+setTimeout(() => {
+    setInterval(async () => {
+        try {
+            const now = Date.now();
+            const gitFlowService = getCompositionRoot().getGitFlowService();
+            const gitQuery = getCompositionRoot().getGitQueryAdapter();
+            const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+            const orchestrator = getCompositionRoot().getOrchestrator();
 
-        const currentBranch = gitFlowService.getCurrentBranch();
-        const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
-        const isProtectedBranch = ['main', 'master', baseBranch].includes(currentBranch);
+            const currentBranch = gitFlowService.getCurrentBranch();
+            const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
+            const isProtectedBranch = ['main', 'master', baseBranch].includes(currentBranch);
 
-        const uncommittedChanges = gitQuery.getUncommittedChanges();
-        const hasUncommittedChanges = uncommittedChanges && uncommittedChanges.length > 0;
+            const uncommittedChanges = gitQuery.getUncommittedChanges();
+            const hasUncommittedChanges = uncommittedChanges && uncommittedChanges.length > 0;
 
-        // 1. Protected Branch Guard
-        if (isProtectedBranch && hasUncommittedChanges) {
-            if (now - lastGitFlowNotification > NOTIFICATION_COOLDOWN) {
-                const state = gitQuery.getBranchState(currentBranch);
-                sendNotification(
-                    '⚠️ Git Flow Violation',
-                    `branch=${currentBranch} changes detected on protected branch. Create a feature branch.`,
-                    'Basso'
-                );
-                lastGitFlowNotification = now;
+            // 1. Protected Branch Guard
+            if (isProtectedBranch && hasUncommittedChanges) {
+                if (now - lastGitFlowNotification > NOTIFICATION_COOLDOWN) {
+                    const state = gitQuery.getBranchState(currentBranch);
+                    sendNotification(
+                        '⚠️ Git Flow Violation',
+                        `branch=${currentBranch} changes detected on protected branch. Create a feature branch.`,
+                        'Basso'
+                    );
+                    lastGitFlowNotification = now;
+                }
             }
-        }
 
-        // 2. Evidence Freshness Guard
-        if (evidenceMonitor.isStale() && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
-            try {
-                await evidenceMonitor.refresh();
-                sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence has been refreshed automatically', 'Purr');
-            } catch (err) {
-                sendNotification('⚠️ Evidence Stale', `Failed to auto-refresh evidence: ${err.message}`, 'Basso');
-            }
-            lastEvidenceNotification = now;
-        }
-
-        // 3. Autonomous Orchestration
-        if (orchestrator.shouldReanalyze()) {
-            const decision = await orchestrator.analyzeContext();
-            if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
+            // 2. Evidence Freshness Guard
+            if (evidenceMonitor.isStale() && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
                 try {
                     await evidenceMonitor.refresh();
-                    sendNotification('✅ AI Start Executed', `Platforms: ${decision.platforms.map(p => p.platform.toUpperCase()).join(', ')}`, 'Glass');
-                } catch (e) {
-                    sendNotification('❌ AI Start Error', `Failed to execute: ${e.message}`, 'Basso');
+                    sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence has been refreshed automatically', 'Purr');
+                } catch (err) {
+                    sendNotification('⚠️ Evidence Stale', `Failed to auto-refresh evidence: ${err.message}`, 'Basso');
+                }
+                lastEvidenceNotification = now;
+            }
+
+            // 3. Autonomous Orchestration
+            if (orchestrator.shouldReanalyze()) {
+                const decision = await orchestrator.analyzeContext();
+                if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
+                    try {
+                        await evidenceMonitor.refresh();
+                        sendNotification('✅ AI Start Executed', `Platforms: ${decision.platforms.map(p => p.platform.toUpperCase()).join(', ')}`, 'Glass');
+                    } catch (e) {
+                        sendNotification('❌ AI Start Error', `Failed to execute: ${e.message}`, 'Basso');
+                    }
                 }
             }
+
+        } catch (error) {
+            if (process.env.DEBUG) console.error('[MCP] Polling loop error:', error);
         }
+    }, 30000);
 
-    } catch (error) {
-        if (process.env.DEBUG) console.error('[MCP] Polling loop error:', error);
-    }
-}, 30000);
-
-// AUTO-COMMIT: Only for project code changes (no node_modules, no library)
-setInterval(async () => {
-    if (!AUTO_COMMIT_ENABLED) {
-        return;
-    }
-
-    const now = Date.now();
-    if (now - lastAutoCommitTime < AUTO_COMMIT_INTERVAL) return;
-
-    try {
-        const gitFlowService = getCompositionRoot().getGitFlowService();
-        const gitQuery = getCompositionRoot().getGitQueryAdapter();
-        const gitCommand = getCompositionRoot().getGitCommandAdapter();
-
-        const currentBranch = gitFlowService.getCurrentBranch();
-        const isFeatureBranch = currentBranch.match(/^(feature|fix|hotfix)\//);
-
-        if (!isFeatureBranch) {
+    // AUTO-COMMIT: Only for project code changes (no node_modules, no library)
+    setInterval(async () => {
+        if (!AUTO_COMMIT_ENABLED) {
             return;
         }
 
-        if (gitFlowService.isClean()) {
-            return;
-        }
+        const now = Date.now();
+        if (now - lastAutoCommitTime < AUTO_COMMIT_INTERVAL) return;
 
-        // Get uncommitted changes
-        const uncommittedChanges = gitQuery.getUncommittedChanges();
+        try {
+            const gitFlowService = getCompositionRoot().getGitFlowService();
+            const gitQuery = getCompositionRoot().getGitQueryAdapter();
+            const gitCommand = getCompositionRoot().getGitCommandAdapter();
 
-        // Detect library installation path
-        const libraryPath = getLibraryInstallPath();
+            const currentBranch = gitFlowService.getCurrentBranch();
+            const isFeatureBranch = currentBranch.match(/^(feature|fix|hotfix)\//);
 
-        // Filter changes: project code only
-        const filesToCommit = uncommittedChanges.filter(file => {
-            // Exclude noise
-            if (file.startsWith('node_modules/') ||
-                file.includes('package-lock.json') ||
-                file.startsWith('.git/') ||
-                file.startsWith('.cursor/') ||
-                file.startsWith('.ast-intelligence/') ||
-                file.startsWith('.vscode/') ||
-                file.startsWith('.idea/')) {
-                return false;
+            if (!isFeatureBranch) {
+                return;
             }
 
-            // Exclude library itself
-            if (libraryPath && file.startsWith(libraryPath + '/')) {
-                return false;
+            if (gitFlowService.isClean()) {
+                return;
             }
 
-            // Code/Doc files only
-            const codeExtensions = ['.ts', '.tsx', '.js', '.jsx', '.swift', '.kt', '.py', '.java', '.go', '.rs', '.md', '.json', '.yaml', '.yml'];
-            return codeExtensions.some(ext => file.endsWith(ext));
-        });
+            // Get uncommitted changes
+            const uncommittedChanges = gitQuery.getUncommittedChanges();
 
-        if (filesToCommit.length === 0) {
-            return;
-        }
+            // Detect library installation path
+            const libraryPath = getLibraryInstallPath();
 
-        // Stage files
-        filesToCommit.forEach(file => {
-            gitCommand.add(file);
-        });
+            // Filter changes: project code only
+            const filesToCommit = uncommittedChanges.filter(file => {
+                // Exclude noise
+                if (file.startsWith('node_modules/') ||
+                    file.includes('package-lock.json') ||
+                    file.startsWith('.git/') ||
+                    file.startsWith('.cursor/') ||
+                    file.startsWith('.ast-intelligence/') ||
+                    file.startsWith('.vscode/') ||
+                    file.startsWith('.idea/')) {
+                    return false;
+                }
 
-        const branchType = currentBranch.split('/')[0];
-        const branchName = currentBranch.split('/').slice(1).join('/');
-        const commitMessage = `${branchType}(auto): ${branchName} - ${filesToCommit.length} files`;
+                // Exclude library itself
+                if (libraryPath && file.startsWith(libraryPath + '/')) {
+                    return false;
+                }
 
-        // Commit
-        gitCommand.commit(commitMessage);
+                // Code/Doc files only
+                const codeExtensions = ['.ts', '.tsx', '.js', '.jsx', '.swift', '.kt', '.py', '.java', '.go', '.rs', '.md', '.json', '.yaml', '.yml'];
+                return codeExtensions.some(ext => file.endsWith(ext));
+            });
 
-        sendNotification('✅ Auto-Commit', `${filesToCommit.length} files in ${currentBranch}`, 'Purr');
-        lastAutoCommitTime = now;
+            if (filesToCommit.length === 0) {
+                return;
+            }
 
-        if (AUTO_PUSH_ENABLED) {
-            if (gitFlowService.isGitHubAvailable()) {
-                try {
-                    gitCommand.push('origin', currentBranch);
-                    sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
+            // Stage files
+            filesToCommit.forEach(file => {
+                gitCommand.add(file);
+            });
 
-                    if (AUTO_PR_ENABLED) {
-                        const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
-                        const branchState = gitQuery.getBranchState(currentBranch);
+            const branchType = currentBranch.split('/')[0];
+            const branchName = currentBranch.split('/').slice(1).join('/');
+            const commitMessage = `${branchType}(auto): ${branchName} - ${filesToCommit.length} files`;
 
-                        if (branchState.ahead >= 3) {
-                            const prTitle = `Auto-PR: ${branchName}`;
-                            const prUrl = gitFlowService.createPullRequest(currentBranch, baseBranch, prTitle, 'Automated PR by Pumuki Git Flow');
-                            if (prUrl) {
-                                sendNotification('✅ Auto-PR Created', prTitle, 'Hero');
+            // Commit
+            gitCommand.commit(commitMessage);
+
+            sendNotification('✅ Auto-Commit', `${filesToCommit.length} files in ${currentBranch}`, 'Purr');
+            lastAutoCommitTime = now;
+
+            if (AUTO_PUSH_ENABLED) {
+                if (gitFlowService.isGitHubAvailable()) {
+                    try {
+                        gitCommand.push('origin', currentBranch);
+                        sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
+
+                        if (AUTO_PR_ENABLED) {
+                            const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
+                            const branchState = gitQuery.getBranchState(currentBranch);
+
+                            if (branchState.ahead >= 3) {
+                                const prTitle = `Auto-PR: ${branchName}`;
+                                const prUrl = gitFlowService.createPullRequest(currentBranch, baseBranch, prTitle, 'Automated PR by Pumuki Git Flow');
+                                if (prUrl) {
+                                    sendNotification('✅ Auto-PR Created', prTitle, 'Hero');
+                                }
                             }
                         }
-                    }
-                } catch (e) {
-                    if (!e.message.includes('No remote')) {
-                        sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
+                    } catch (e) {
+                        if (!e.message.includes('No remote')) {
+                            sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
+                        }
                     }
                 }
             }
-        }
 
-    } catch (error) {
-        if (process.env.DEBUG) console.error('[MCP] Auto-commit error:', error);
-    }
-}, AUTO_COMMIT_INTERVAL);
+        } catch (error) {
+            if (process.env.DEBUG) console.error('[MCP] Auto-commit error:', error);
+        }
+    }, AUTO_COMMIT_INTERVAL);
+}, 2000); // Delay 2 seconds to allow MCP handshake to complete first
