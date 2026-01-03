@@ -1,5 +1,5 @@
-const env = require('../../config/env');
-const AuditLogger = require('../../application/services/logging/AuditLogger');
+const env = require('../../../config/env');
+const AuditLogger = require('../../../application/services/logging/AuditLogger');
 
 const fs = require('fs');
 const path = require('path');

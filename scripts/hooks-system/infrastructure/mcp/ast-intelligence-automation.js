@@ -18,6 +18,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const env = require('../../config/env');
 
 // Removed global requires for performance (Lazy Loading)
 // const AutonomousOrchestrator = require('../../application/services/AutonomousOrchestrator');
@@ -43,7 +44,7 @@ function safeGitRoot(startDir) {
 }
 
 function resolveRepoRoot() {
-    const envRoot = (process.env.REPO_ROOT || '').trim() || null;
+    const envRoot = (env.get('REPO_ROOT') || '').trim() || null;
     const cwdRoot = safeGitRoot(process.cwd());
     // Prefer explicit REPO_ROOT to avoid cross-repo bleed when MCP server is launched from another workspace
     if (envRoot) return envRoot;
@@ -64,7 +65,7 @@ function logMcpError(context, error) {
 }
 
 function logMcpDebug(message) {
-    if (process.env.DEBUG) {
+    if (env.getBool('DEBUG', false)) {
         process.stderr.write(`[MCP][DEBUG] ${message}\n`);
     }
 }
