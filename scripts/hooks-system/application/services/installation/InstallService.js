@@ -1,7 +1,6 @@
-const env = require('../../config/env');
-
-const path = require('path');
+const env = require('../../../config/env.js');
 const fs = require('fs');
+const path = require('path');
 
 const GitEnvironmentService = require('./GitEnvironmentService');
 const PlatformDetectorService = require('./PlatformDetectorService');
