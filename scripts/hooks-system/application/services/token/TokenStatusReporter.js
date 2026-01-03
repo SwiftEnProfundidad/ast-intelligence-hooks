@@ -1,9 +1,11 @@
 const fs = require('fs');
 const fsPromises = fs.promises;
+const AuditLogger = require('../logging/AuditLogger');
 
 class TokenStatusReporter {
     constructor(stateFile) {
         this.stateFile = stateFile;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     async writeStatusFile(metrics) {

@@ -1,7 +1,10 @@
+const AuditLogger = require('../../logging/AuditLogger');
+
 class NotificationQueue {
     constructor(maxSize = 100) {
         this.maxSize = maxSize;
         this.items = [];
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     enqueue(item) {

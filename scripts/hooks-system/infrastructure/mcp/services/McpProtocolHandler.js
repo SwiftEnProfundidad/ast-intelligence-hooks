@@ -1,10 +1,12 @@
 const MCP_VERSION = '2024-11-05';
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 class McpProtocolHandler {
     constructor(inputStream, outputStream, logger) {
         this.inputStream = inputStream;
         this.outputStream = outputStream;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
         this.buffer = Buffer.alloc(0);
     }
 
