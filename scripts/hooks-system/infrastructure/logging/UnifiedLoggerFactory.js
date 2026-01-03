@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const env = require('../../../config/env.js');
+const env = require('../../config/env.js');
 
 const UnifiedLogger = require('../../application/services/logging/UnifiedLogger');
 

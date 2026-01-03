@@ -121,6 +121,22 @@ const commands = {
     execSync(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
   },
 
+  'evidence:update': () => {
+    const repoRoot = resolveRepoRoot();
+    const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
+
+    const payload = {
+      timestamp: new Date().toISOString(),
+      trigger: process.env.AUTO_EVIDENCE_TRIGGER,
+      reason: process.env.AUTO_EVIDENCE_REASON,
+      summary: process.env.AUTO_EVIDENCE_SUMMARY,
+      action: 'evidence:update'
+    };
+
+    fs.writeFileSync(evidencePath, JSON.stringify(payload, null, 2), 'utf8');
+    process.stdout.write(`${evidencePath}\n`);
+  },
+
   ast: () => {
     const filteredArgs = [];
     let stagingOnlyMode = false;

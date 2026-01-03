@@ -1,4 +1,4 @@
-const env = require('../../config/env');
+const env = require('../../../config/env.js');
 const AuditLogger = require('../logging/AuditLogger');
 
 const { execSync } = require('child_process');
