@@ -18,8 +18,6 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const crypto = require('crypto');
-const os = require('os');
 const env = require('../../config/env');
 
 // Removed global requires for performance (Lazy Loading)
@@ -56,165 +54,8 @@ function resolveRepoRoot() {
 
 const REPO_ROOT = resolveRepoRoot();
 
-// Create unique lock per project using hash of REPO_ROOT
-// This allows multiple projects to run MCP simultaneously
-const repoHash = crypto.createHash('md5').update(REPO_ROOT).digest('hex').substring(0, 8);
-const MCP_LOCK_DIR = path.join(os.tmpdir(), `mcp-ast-intelligence-${repoHash}.lock`);
-const MCP_LOCK_PID = path.join(MCP_LOCK_DIR, 'pid');
-
-let MCP_IS_PRIMARY = true;
-
-function logMcpError(context, error) {
-    const msg = error instanceof Error ? error.message : String(error);
-    process.stderr.write(`[MCP][ERROR] ${context}: ${msg}\n`);
-}
-
-function logMcpDebug(message) {
-    if (env.getBool('DEBUG', false)) {
-        process.stderr.write(`[MCP][DEBUG] ${message}\n`);
-    }
-}
-
-function isPidRunning(pid) {
-    if (!pid || !Number.isFinite(pid) || pid <= 0) return false;
-    try {
-        process.kill(pid, 0);
-        return true;
-    } catch (error) {
-        logMcpDebug(`isPidRunning(${pid}) = false: ${error.code || error.message}`);
-        return false;
-    }
-}
-
-function safeReadPid(filePath) {
-    try {
-        if (!fs.existsSync(filePath)) return null;
-        const raw = String(fs.readFileSync(filePath, 'utf8') || '').trim();
-        const pid = Number(raw);
-        if (!Number.isFinite(pid) || pid <= 0) return null;
-        return pid;
-    } catch (error) {
-        logMcpError('safeReadPid', error);
-        return null;
-    }
-}
-
-function removeLockDir() {
-    try {
-        if (fs.existsSync(MCP_LOCK_PID)) {
-            fs.unlinkSync(MCP_LOCK_PID);
-            logMcpDebug('Removed lock PID file');
-        }
-    } catch (error) {
-        logMcpError('removeLockDir (pid file)', error);
-    }
-    try {
-        if (fs.existsSync(MCP_LOCK_DIR)) {
-            fs.rmdirSync(MCP_LOCK_DIR);
-            logMcpDebug('Removed lock directory');
-        }
-    } catch (error) {
-        logMcpError('removeLockDir (directory)', error);
-    }
-}
-
-function cleanupAndExit(code = 0) {
-    const myPid = process.pid;
-    const lockPid = safeReadPid(MCP_LOCK_PID);
-
-    if (lockPid === myPid) {
-        logMcpDebug(`Cleaning up lock (my pid=${myPid})`);
-        removeLockDir();
-    } else {
-        logMcpDebug(`Not cleaning lock (lockPid=${lockPid}, myPid=${myPid})`);
-    }
-
-    process.exit(code);
-}
-
-function installStdioExitHandlers() {
-    const handleStdioTermination = (source) => (error) => {
-        if (error) {
-            const code = String(error.code || '').toUpperCase();
-            if (code === 'EPIPE' || code === 'ERR_STREAM_DESTROYED' || code === 'ECONNRESET') {
-                logMcpDebug(`STDIO ${source} closed (${code}), exiting cleanly`);
-                cleanupAndExit(0);
-                return;
-            }
-            logMcpError(`STDIO ${source} error`, error);
-        } else {
-            logMcpDebug(`STDIO ${source} ended, exiting cleanly`);
-        }
-        cleanupAndExit(0);
-    };
-
-    try {
-        process.stdin.on('end', handleStdioTermination('stdin'));
-        process.stdin.on('close', handleStdioTermination('stdin'));
-        process.stdin.on('error', handleStdioTermination('stdin'));
-    } catch (error) {
-        logMcpError('installStdioExitHandlers (stdin)', error);
-    }
-
-    try {
-        process.stdout.on('error', handleStdioTermination('stdout'));
-        process.stderr.on('error', handleStdioTermination('stderr'));
-    } catch (error) {
-        logMcpError('installStdioExitHandlers (stdout/stderr)', error);
-    }
-}
-
-function acquireSingletonLock() {
-    // No need to create .audit_tmp since lock is in /tmp/
-
-    try {
-        fs.mkdirSync(MCP_LOCK_DIR);
-    } catch (error) {
-        const existingPid = safeReadPid(MCP_LOCK_PID);
-
-        if (existingPid && isPidRunning(existingPid)) {
-            process.stderr.write(`[MCP] Another instance is already running (pid ${existingPid}). Exiting.\n`);
-            process.exit(0);
-        }
-
-        logMcpDebug(`Lock exists but PID ${existingPid || 'unknown'} is not running, cleaning up`);
-        removeLockDir();
-
-        try {
-            fs.mkdirSync(MCP_LOCK_DIR);
-        } catch (retryError) {
-            logMcpError('acquireSingletonLock (retry mkdir)', retryError);
-            process.stderr.write(`[MCP] Failed to acquire lock after cleanup. Exiting.\n`);
-            process.exit(1);
-        }
-    }
-
-    try {
-        fs.writeFileSync(MCP_LOCK_PID, String(process.pid), { encoding: 'utf8' });
-        logMcpDebug(`Lock acquired, PID ${process.pid} written`);
-    } catch (error) {
-        logMcpError('acquireSingletonLock (write pid)', error);
-    }
-
-    process.on('exit', () => {
-        const lockPid = safeReadPid(MCP_LOCK_PID);
-        if (lockPid === process.pid) {
-            removeLockDir();
-        }
-    });
-
-    process.on('SIGINT', () => cleanupAndExit(0));
-    process.on('SIGTERM', () => cleanupAndExit(0));
-    process.on('SIGHUP', () => cleanupAndExit(0));
-
-    return { acquired: true, pid: process.pid };
-}
-
-const singleton = acquireSingletonLock();
-if (!singleton.acquired) {
-    process.exit(0);
-}
-installStdioExitHandlers();
+// NO singleton lock - Windsurf manages process lifecycle
+// Each project gets its own independent MCP process
 
 // Lazy-loaded CompositionRoot - only initialized when first needed
 let _compositionRoot = null;
@@ -1129,167 +970,163 @@ protocolHandler.start(handleMcpMessage);
 /**
  * Polling loop for background notifications and automations
  */
-if (MCP_IS_PRIMARY) {
-    setInterval(async () => {
-        try {
-            const now = Date.now();
-            const gitFlowService = getCompositionRoot().getGitFlowService();
-            const gitQuery = getCompositionRoot().getGitQueryAdapter();
-            const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
-            const orchestrator = getCompositionRoot().getOrchestrator();
+setInterval(async () => {
+    try {
+        const now = Date.now();
+        const gitFlowService = getCompositionRoot().getGitFlowService();
+        const gitQuery = getCompositionRoot().getGitQueryAdapter();
+        const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+        const orchestrator = getCompositionRoot().getOrchestrator();
 
-            const currentBranch = gitFlowService.getCurrentBranch();
-            const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
-            const isProtectedBranch = ['main', 'master', baseBranch].includes(currentBranch);
+        const currentBranch = gitFlowService.getCurrentBranch();
+        const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
+        const isProtectedBranch = ['main', 'master', baseBranch].includes(currentBranch);
 
-            const uncommittedChanges = gitQuery.getUncommittedChanges();
-            const hasUncommittedChanges = uncommittedChanges && uncommittedChanges.length > 0;
+        const uncommittedChanges = gitQuery.getUncommittedChanges();
+        const hasUncommittedChanges = uncommittedChanges && uncommittedChanges.length > 0;
 
-            // 1. Protected Branch Guard
-            if (isProtectedBranch && hasUncommittedChanges) {
-                if (now - lastGitFlowNotification > NOTIFICATION_COOLDOWN) {
-                    const state = gitQuery.getBranchState(currentBranch);
-                    sendNotification(
-                        '⚠️ Git Flow Violation',
-                        `branch=${currentBranch} changes detected on protected branch. Create a feature branch.`,
-                        'Basso'
-                    );
-                    lastGitFlowNotification = now;
-                }
+        // 1. Protected Branch Guard
+        if (isProtectedBranch && hasUncommittedChanges) {
+            if (now - lastGitFlowNotification > NOTIFICATION_COOLDOWN) {
+                const state = gitQuery.getBranchState(currentBranch);
+                sendNotification(
+                    '⚠️ Git Flow Violation',
+                    `branch=${currentBranch} changes detected on protected branch. Create a feature branch.`,
+                    'Basso'
+                );
+                lastGitFlowNotification = now;
             }
+        }
 
-            // 2. Evidence Freshness Guard
-            if (evidenceMonitor.isStale() && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
+        // 2. Evidence Freshness Guard
+        if (evidenceMonitor.isStale() && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
+            try {
+                await evidenceMonitor.refresh();
+                sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence has been refreshed automatically', 'Purr');
+            } catch (err) {
+                sendNotification('⚠️ Evidence Stale', `Failed to auto-refresh evidence: ${err.message}`, 'Basso');
+            }
+            lastEvidenceNotification = now;
+        }
+
+        // 3. Autonomous Orchestration
+        if (orchestrator.shouldReanalyze()) {
+            const decision = await orchestrator.analyzeContext();
+            if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
                 try {
                     await evidenceMonitor.refresh();
-                    sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence has been refreshed automatically', 'Purr');
-                } catch (err) {
-                    sendNotification('⚠️ Evidence Stale', `Failed to auto-refresh evidence: ${err.message}`, 'Basso');
-                }
-                lastEvidenceNotification = now;
-            }
-
-            // 3. Autonomous Orchestration
-            if (orchestrator.shouldReanalyze()) {
-                const decision = await orchestrator.analyzeContext();
-                if (decision.action === 'auto-execute' && decision.platforms.length > 0) {
-                    try {
-                        await evidenceMonitor.refresh();
-                        sendNotification('✅ AI Start Executed', `Platforms: ${decision.platforms.map(p => p.platform.toUpperCase()).join(', ')}`, 'Glass');
-                    } catch (e) {
-                        sendNotification('❌ AI Start Error', `Failed to execute: ${e.message}`, 'Basso');
-                    }
+                    sendNotification('✅ AI Start Executed', `Platforms: ${decision.platforms.map(p => p.platform.toUpperCase()).join(', ')}`, 'Glass');
+                } catch (e) {
+                    sendNotification('❌ AI Start Error', `Failed to execute: ${e.message}`, 'Basso');
                 }
             }
-
-        } catch (error) {
-            if (process.env.DEBUG) console.error('[MCP] Polling loop error:', error);
         }
-    }, 30000);
-}
+
+    } catch (error) {
+        if (process.env.DEBUG) console.error('[MCP] Polling loop error:', error);
+    }
+}, 30000);
 
 // AUTO-COMMIT: Only for project code changes (no node_modules, no library)
-if (MCP_IS_PRIMARY) {
-    setInterval(async () => {
-        if (!AUTO_COMMIT_ENABLED) {
+setInterval(async () => {
+    if (!AUTO_COMMIT_ENABLED) {
+        return;
+    }
+
+    const now = Date.now();
+    if (now - lastAutoCommitTime < AUTO_COMMIT_INTERVAL) return;
+
+    try {
+        const gitFlowService = getCompositionRoot().getGitFlowService();
+        const gitQuery = getCompositionRoot().getGitQueryAdapter();
+        const gitCommand = getCompositionRoot().getGitCommandAdapter();
+
+        const currentBranch = gitFlowService.getCurrentBranch();
+        const isFeatureBranch = currentBranch.match(/^(feature|fix|hotfix)\//);
+
+        if (!isFeatureBranch) {
             return;
         }
 
-        const now = Date.now();
-        if (now - lastAutoCommitTime < AUTO_COMMIT_INTERVAL) return;
+        if (gitFlowService.isClean()) {
+            return;
+        }
 
-        try {
-            const gitFlowService = getCompositionRoot().getGitFlowService();
-            const gitQuery = getCompositionRoot().getGitQueryAdapter();
-            const gitCommand = getCompositionRoot().getGitCommandAdapter();
+        // Get uncommitted changes
+        const uncommittedChanges = gitQuery.getUncommittedChanges();
 
-            const currentBranch = gitFlowService.getCurrentBranch();
-            const isFeatureBranch = currentBranch.match(/^(feature|fix|hotfix)\//);
+        // Detect library installation path
+        const libraryPath = getLibraryInstallPath();
 
-            if (!isFeatureBranch) {
-                return;
+        // Filter changes: project code only
+        const filesToCommit = uncommittedChanges.filter(file => {
+            // Exclude noise
+            if (file.startsWith('node_modules/') ||
+                file.includes('package-lock.json') ||
+                file.startsWith('.git/') ||
+                file.startsWith('.cursor/') ||
+                file.startsWith('.ast-intelligence/') ||
+                file.startsWith('.vscode/') ||
+                file.startsWith('.idea/')) {
+                return false;
             }
 
-            if (gitFlowService.isClean()) {
-                return;
+            // Exclude library itself
+            if (libraryPath && file.startsWith(libraryPath + '/')) {
+                return false;
             }
 
-            // Get uncommitted changes
-            const uncommittedChanges = gitQuery.getUncommittedChanges();
+            // Code/Doc files only
+            const codeExtensions = ['.ts', '.tsx', '.js', '.jsx', '.swift', '.kt', '.py', '.java', '.go', '.rs', '.md', '.json', '.yaml', '.yml'];
+            return codeExtensions.some(ext => file.endsWith(ext));
+        });
 
-            // Detect library installation path
-            const libraryPath = getLibraryInstallPath();
+        if (filesToCommit.length === 0) {
+            return;
+        }
 
-            // Filter changes: project code only
-            const filesToCommit = uncommittedChanges.filter(file => {
-                // Exclude noise
-                if (file.startsWith('node_modules/') ||
-                    file.includes('package-lock.json') ||
-                    file.startsWith('.git/') ||
-                    file.startsWith('.cursor/') ||
-                    file.startsWith('.ast-intelligence/') ||
-                    file.startsWith('.vscode/') ||
-                    file.startsWith('.idea/')) {
-                    return false;
-                }
+        // Stage files
+        filesToCommit.forEach(file => {
+            gitCommand.add(file);
+        });
 
-                // Exclude library itself
-                if (libraryPath && file.startsWith(libraryPath + '/')) {
-                    return false;
-                }
+        const branchType = currentBranch.split('/')[0];
+        const branchName = currentBranch.split('/').slice(1).join('/');
+        const commitMessage = `${branchType}(auto): ${branchName} - ${filesToCommit.length} files`;
 
-                // Code/Doc files only
-                const codeExtensions = ['.ts', '.tsx', '.js', '.jsx', '.swift', '.kt', '.py', '.java', '.go', '.rs', '.md', '.json', '.yaml', '.yml'];
-                return codeExtensions.some(ext => file.endsWith(ext));
-            });
+        // Commit
+        gitCommand.commit(commitMessage);
 
-            if (filesToCommit.length === 0) {
-                return;
-            }
+        sendNotification('✅ Auto-Commit', `${filesToCommit.length} files in ${currentBranch}`, 'Purr');
+        lastAutoCommitTime = now;
 
-            // Stage files
-            filesToCommit.forEach(file => {
-                gitCommand.add(file);
-            });
+        if (AUTO_PUSH_ENABLED) {
+            if (gitFlowService.isGitHubAvailable()) {
+                try {
+                    gitCommand.push('origin', currentBranch);
+                    sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
 
-            const branchType = currentBranch.split('/')[0];
-            const branchName = currentBranch.split('/').slice(1).join('/');
-            const commitMessage = `${branchType}(auto): ${branchName} - ${filesToCommit.length} files`;
+                    if (AUTO_PR_ENABLED) {
+                        const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
+                        const branchState = gitQuery.getBranchState(currentBranch);
 
-            // Commit
-            gitCommand.commit(commitMessage);
-
-            sendNotification('✅ Auto-Commit', `${filesToCommit.length} files in ${currentBranch}`, 'Purr');
-            lastAutoCommitTime = now;
-
-            if (AUTO_PUSH_ENABLED) {
-                if (gitFlowService.isGitHubAvailable()) {
-                    try {
-                        gitCommand.push('origin', currentBranch);
-                        sendNotification('✅ Auto-Push', `Pushed to origin/${currentBranch}`, 'Glass');
-
-                        if (AUTO_PR_ENABLED) {
-                            const baseBranch = process.env.AST_BASE_BRANCH || 'develop';
-                            const branchState = gitQuery.getBranchState(currentBranch);
-
-                            if (branchState.ahead >= 3) {
-                                const prTitle = `Auto-PR: ${branchName}`;
-                                const prUrl = gitFlowService.createPullRequest(currentBranch, baseBranch, prTitle, 'Automated PR by Pumuki Git Flow');
-                                if (prUrl) {
-                                    sendNotification('✅ Auto-PR Created', prTitle, 'Hero');
-                                }
+                        if (branchState.ahead >= 3) {
+                            const prTitle = `Auto-PR: ${branchName}`;
+                            const prUrl = gitFlowService.createPullRequest(currentBranch, baseBranch, prTitle, 'Automated PR by Pumuki Git Flow');
+                            if (prUrl) {
+                                sendNotification('✅ Auto-PR Created', prTitle, 'Hero');
                             }
                         }
-                    } catch (e) {
-                        if (!e.message.includes('No remote')) {
-                            sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
-                        }
+                    }
+                } catch (e) {
+                    if (!e.message.includes('No remote')) {
+                        sendNotification('⚠️ Auto-Push Failed', 'Push manual required', 'Basso');
                     }
                 }
             }
-
-        } catch (error) {
-            if (process.env.DEBUG) console.error('[MCP] Auto-commit error:', error);
         }
-    }, AUTO_COMMIT_INTERVAL);
-}
+
+    } catch (error) {
+        if (process.env.DEBUG) console.error('[MCP] Auto-commit error:', error);
+    }
+}, AUTO_COMMIT_INTERVAL);
