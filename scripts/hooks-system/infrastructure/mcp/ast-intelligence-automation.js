@@ -18,6 +18,8 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const crypto = require('crypto');
+const os = require('os');
 const env = require('../../config/env');
 
 // Removed global requires for performance (Lazy Loading)
@@ -54,7 +56,10 @@ function resolveRepoRoot() {
 
 const REPO_ROOT = resolveRepoRoot();
 
-const MCP_LOCK_DIR = path.join(REPO_ROOT, '.audit_tmp', 'mcp-singleton.lock');
+// Create unique lock per project using hash of REPO_ROOT
+// This allows multiple projects to run MCP simultaneously
+const repoHash = crypto.createHash('md5').update(REPO_ROOT).digest('hex').substring(0, 8);
+const MCP_LOCK_DIR = path.join(os.tmpdir(), `mcp-ast-intelligence-${repoHash}.lock`);
 const MCP_LOCK_PID = path.join(MCP_LOCK_DIR, 'pid');
 
 let MCP_IS_PRIMARY = true;
@@ -160,11 +165,7 @@ function installStdioExitHandlers() {
 }
 
 function acquireSingletonLock() {
-    try {
-        fs.mkdirSync(path.join(REPO_ROOT, '.audit_tmp'), { recursive: true });
-    } catch (error) {
-        logMcpError('acquireSingletonLock (create .audit_tmp)', error);
-    }
+    // No need to create .audit_tmp since lock is in /tmp/
 
     try {
         fs.mkdirSync(MCP_LOCK_DIR);
