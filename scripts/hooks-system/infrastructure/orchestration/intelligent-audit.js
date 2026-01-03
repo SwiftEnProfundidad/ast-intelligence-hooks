@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../../config/env');
 const { evaluateViolations } = require('../severity/severity-evaluator');
 const { GatePolicies } = require('../severity/policies/gate-policies');
 const { ReportGenerator } = require('../reporting/report-generator');
@@ -8,7 +9,6 @@ const { TokenManager } = require('../utils/token-manager');
 const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
-const env = require('../../config/env');
 
 function resolveAuditTmpDir() {
   const configured = (env.get('AUDIT_TMP', '') || '').trim();

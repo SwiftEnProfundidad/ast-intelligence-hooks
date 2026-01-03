@@ -8,6 +8,8 @@
  * - Orchestrate notification flow
  * - Delegate specific logic to components (Queue, Dedupe, Cooldown, Retry)
  */
+const env = require('../../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
 
 const crypto = require('crypto');
 const fs = require('fs');
@@ -31,7 +33,7 @@ class NotificationCenterService {
         try {
             fs.mkdirSync(path.dirname(defaultLogPath), { recursive: true });
         } catch (e) {
-            // Ignore if it already exists or permissions issues during init
+            console.warn(`[NotificationCenter] Failed to create log directory:`, e.message);
         }
 
         this.logger = config.logger || new UnifiedLogger({
@@ -83,6 +85,28 @@ class NotificationCenterService {
             totalFailed: 0,
             totalRetries: 0
         };
+    }
+
+    notify(notification) {
+        if (!notification) return false;
+
+        const type = notification.type || 'generic';
+        const level = notification.level || 'info';
+        const message = notification.message || notification.title || '';
+
+        if (!String(message).trim()) {
+            return false;
+        }
+
+        return this.enqueue({
+            type,
+            level,
+            message: String(message),
+            metadata: notification.metadata || {
+                title: notification.title,
+                sound: notification.sound
+            }
+        });
     }
 
     /**

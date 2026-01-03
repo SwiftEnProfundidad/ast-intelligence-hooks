@@ -1,14 +1,18 @@
+const env = require('../../config/env');
+
 const fs = require('fs');
 const path = require('path');
 const ReportPresenter = require('./ReportPresenter');
 const ReportMetricsCalculator = require('./ReportMetricsCalculator');
 const ReportImpactAnalyzer = require('./ReportImpactAnalyzer');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 class ReportGenerator {
     constructor() {
         this.presenter = new ReportPresenter();
         this.metricsCalculator = new ReportMetricsCalculator();
         this.impactAnalyzer = new ReportImpactAnalyzer(this.metricsCalculator);
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     /**

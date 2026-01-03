@@ -1,9 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const AuditLogger = require('../logging/AuditLogger');
 
 class PlatformHeuristics {
     constructor(platformDetector) {
         this.platformDetector = platformDetector;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     detectFromASTSystemFiles(files) {

@@ -117,27 +117,19 @@ if [ -f "node_modules/.bin/ast-hooks" ]; then
     exit $EXIT_CODE
   fi
   # Block commits only when there are actual CRITICAL/HIGH violations.
-  # Do NOT block on summary lines like: "CRITICAL=0 HIGH=0".
-  if echo "$OUTPUT" | grep -qE "CRITICAL=[1-9]|HIGH=[1-9]|\[CRITICAL\]|\[HIGH\]"; then
+  # Source of truth is the AST SUMMARY LEVELS line.
+  SUMMARY_LINE=$(echo "$OUTPUT" | grep -E "^AST SUMMARY LEVELS:" | tail -1)
+  CRITICAL_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "CRITICAL=[0-9]+" | head -1 | cut -d= -f2)
+  HIGH_COUNT=$(echo "$SUMMARY_LINE" | grep -oE "HIGH=[0-9]+" | head -1 | cut -d= -f2)
+  CRITICAL_COUNT=$(printf '%s' "$CRITICAL_COUNT" | tr -cd '0-9')
+  HIGH_COUNT=$(printf '%s' "$HIGH_COUNT" | tr -cd '0-9')
+  [ -z "$CRITICAL_COUNT" ] && CRITICAL_COUNT=0
+  [ -z "$HIGH_COUNT" ] && HIGH_COUNT=0
+
+  if [ "$CRITICAL_COUNT" -gt 0 ] || [ "$HIGH_COUNT" -gt 0 ]; then
     echo ""
     echo "❌ Commit blocked: Critical or High violations detected in staged files"
     
-    # Extract counts (best-effort) for notification.
-    # Prefer explicit totals (CRITICAL=, HIGH=) and fallback to tag counts.
-    CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "CRITICAL=[0-9]+" | head -1 | cut -d= -f2)
-    HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "HIGH=[0-9]+" | head -1 | cut -d= -f2)
-
-    if [ -z "$CRITICAL_COUNT" ]; then
-      CRITICAL_COUNT=$(echo "$OUTPUT" | grep -oE "\[CRITICAL\]" | wc -l | tr -d ' ')
-    fi
-    if [ -z "$HIGH_COUNT" ]; then
-      HIGH_COUNT=$(echo "$OUTPUT" | grep -oE "\[HIGH\]" | wc -l | tr -d ' ')
-    fi
-
-    CRITICAL_COUNT=$(printf '%s' "$CRITICAL_COUNT" | tr -cd '0-9')
-    HIGH_COUNT=$(printf '%s' "$HIGH_COUNT" | tr -cd '0-9')
-    [ -z "$CRITICAL_COUNT" ] && CRITICAL_COUNT=0
-    [ -z "$HIGH_COUNT" ] && HIGH_COUNT=0
     TOTAL_VIOLATIONS=$((CRITICAL_COUNT + HIGH_COUNT))
     [ "$TOTAL_VIOLATIONS" -le 0 ] && TOTAL_VIOLATIONS=1
     

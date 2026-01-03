@@ -9,6 +9,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const env = require('../config/env');
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
@@ -121,20 +122,25 @@ const commands = {
   },
 
   ast: () => {
-    const env = { ...process.env };
     const filteredArgs = [];
+    let stagingOnlyMode = false;
 
     for (const arg of args) {
       if (arg === '--staged') {
-        env.STAGING_ONLY_MODE = '1';
+        stagingOnlyMode = true;
       } else {
         filteredArgs.push(arg);
       }
     }
 
+    const execEnv = { ...process.env };
+    if (stagingOnlyMode) {
+      execEnv.STAGING_ONLY_MODE = '1';
+    }
+
     execSync(
       `node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')} ${filteredArgs.join(' ')}`,
-      { stdio: 'inherit', env }
+      { stdio: 'inherit', env: execEnv }
     );
   },
 

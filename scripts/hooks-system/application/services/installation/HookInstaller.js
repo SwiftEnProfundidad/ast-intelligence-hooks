@@ -1,3 +1,6 @@
+const env = require('../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -6,6 +9,7 @@ class HookInstaller {
         this.targetRoot = targetRoot;
         this.hookSystemRoot = hookSystemRoot;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: targetRoot, logger });
         this.COLORS = {
             reset: '\x1b[0m',
             green: '\x1b[32m',

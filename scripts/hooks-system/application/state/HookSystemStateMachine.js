@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const fs = require('fs');
 const path = require('path');
 const { toErrorMessage } = require('../../infrastructure/utils/error-utils');

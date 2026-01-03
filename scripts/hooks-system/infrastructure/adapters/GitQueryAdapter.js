@@ -1,3 +1,6 @@
+const env = require('../../config/env');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
+
 const IGitQueryPort = require('../../domain/ports/IGitQueryPort');
 const GitCommandRunner = require('./git/GitCommandRunner');
 const GitQueryService = require('./git/GitQueryService');
@@ -7,6 +10,7 @@ class GitQueryAdapter extends IGitQueryPort {
         super();
         this.repoRoot = config.repoRoot || process.cwd();
         this.logger = config.logger || console;
+        this.auditLogger = new AuditLogger({ repoRoot: this.repoRoot, logger: this.logger });
         this.protectedBranches = config.protectedBranches || ['main', 'master', 'develop'];
 
         this.runner = new GitCommandRunner(this.repoRoot, this.logger);

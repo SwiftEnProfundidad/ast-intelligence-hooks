@@ -1,10 +1,12 @@
 const crypto = require('crypto');
+const AuditLogger = require('../../logging/AuditLogger');
 
 class NotificationDeduplicator {
     constructor(windowMs = 5000, logger = null) {
         this.deduplicationMap = new Map();
         this.windowMs = windowMs;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
     }
 
     isDuplicate(notification) {

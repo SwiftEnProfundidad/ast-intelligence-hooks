@@ -1,3 +1,6 @@
+const env = require('../../../config/env');
+const AuditLogger = require('../../../application/services/logging/AuditLogger');
+
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -5,6 +8,7 @@ const { execSync } = require('child_process');
 class EvidenceService {
     constructor(repoRoot, logger) {
         this.repoRoot = repoRoot || process.env.REPO_ROOT || process.cwd();
+        this.auditLogger = new AuditLogger({ repoRoot: this.repoRoot, logger });
         this.evidenceFile = path.join(this.repoRoot, '.AI_EVIDENCE.json');
         this.maxEvidenceAge = 180; // 3 minutes
         this.logger = logger;

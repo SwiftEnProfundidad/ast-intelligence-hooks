@@ -1,6 +1,7 @@
 const fs = require('fs');
 const { spawnSync } = require('child_process');
 const { toErrorMessage } = require('../../../infrastructure/utils/error-utils');
+const env = require('../../../config/env');
 const GuardHeartbeatMonitor = require('./GuardHeartbeatMonitor');
 const GuardLockManager = require('./GuardLockManager');
 const GuardProcessManager = require('./GuardProcessManager');
@@ -11,7 +12,7 @@ const GuardNotificationHandler = require('./GuardNotificationHandler');
 const GuardMonitorLoop = require('./GuardMonitorLoop');
 const GuardHealthReminder = require('./GuardHealthReminder');
 const AuditLogger = require('../logging/AuditLogger');
-const envHelper = require('../../../config/env');
+const envHelper = require('../../../config/env.js');
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 
 class GuardAutoManagerService {

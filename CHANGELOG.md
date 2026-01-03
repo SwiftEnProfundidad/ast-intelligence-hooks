@@ -5,6 +5,73 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.3.27] - 2026-01-02
+
+### Fixed
+- **Critical**: Excluded `Package.swift` from `ios.clean_arch.root_code` (SPM manifest must live at package root).
+- **Critical**: Excluded `Package.swift` from `ios.networking.missing_urlsession` (URLs in SPM manifests are not runtime networking).
+
+## [5.3.26] - 2026-01-02
+
+### Fixed
+- **Critical**: Installer now copies `scripts/hooks-system/config/` into the target project (includes `config/env.js`) to prevent `MODULE_NOT_FOUND` when running installed AST CLI.
+- **Critical**: When `STAGING_ONLY_MODE=1`, AST output is filtered to staged file paths only, preventing non-staged violations from blocking atomic commits.
+
+## [5.3.25] - 2026-01-02
+
+### Fixed
+- **Critical**: Fixed `--staged` flag not being respected by CLI
+- Modified CLI to correctly pass STAGING_ONLY_MODE environment variable to AST analysis
+- Pre-commit hook now analyzes only staged files, not entire repository
+- Fixed env.js to read environment variables dynamically
+
+### Changed
+- CLI now properly handles `--staged` flag for atomic commits
+
+## [5.3.24] - 2026-01-02
+
+### Fixed
+- **Critical**: Reverted incorrect paths from `../../../config/env` to `../../config/env` (2 levels up, not 3)
+- Corrected paths in 17 files across application/services and infrastructure
+- Pre-commit hook now works correctly with proper path resolution
+
+### Changed
+- Fixed import paths in all services and infrastructure modules
+
+## [5.3.23] - 2026-01-02
+
+### Fixed
+- **Critical**: Fixed MODULE_NOT_FOUND error during pre-commit hook execution (config/env.js not included in npm package)
+- Added explicit inclusion of `scripts/hooks-system/config/` directory in package.json files
+- Pre-commit hook now works correctly after installation
+
+### Changed
+- Ensured all config files are included in npm distribution
+
+## [5.3.22] - 2026-01-02
+
+### Fixed
+- **Critical**: Fixed MODULE_NOT_FOUND error during installation (require path to config/env was incorrect)
+- Corrected relative paths from `../../config/env` to `../../../config/env` in 11 files across application/services and infrastructure
+- Installation now works correctly with `npx ast-hooks install`
+
+### Changed
+- Fixed import paths in McpConfigurator, RealtimeGuardService, EvidenceMonitorService, TokenMetricsService
+- Fixed import paths in enforce-english-literals, metrics-server, UnifiedLoggerFactory, intelligent-audit
+- Fixed import paths in ast-intelligence, skill-activation-prompt, ast-core
+
+## [5.3.21] - 2026-01-02
+
+### Fixed
+- **Critical**: Pre-commit hook now correctly uses `--staged` flag to analyze only staged files instead of entire repository
+- **Critical**: Fixed regex character classes in pre-commit blocking condition (escaped `[CRITICAL]` and `[HIGH]` to prevent false positives)
+- Pre-commit hook now respects `commitGating.stagingAreaOnly=true` configuration
+- Removed false positive blocking when CRITICAL=0 and HIGH=0 (no actual violations)
+
+### Changed
+- Hook generator now always includes `--staged` flag when invoking `ast-hooks ast`
+- Improved pre-commit hook regex to match only actual violation counts (CRITICAL=[1-9][0-9]*|HIGH=[1-9][0-9]*)
+
 ## [5.3.20] - 2025-12-31
 
 ### Fixed

@@ -20,15 +20,18 @@ class BaseException extends Error {
     }
 
     toJSON() {
-        return {
+        const result = {
             name: this.name,
             message: this.message,
             code: this.code,
             statusCode: this.statusCode,
             timestamp: this.timestamp,
-            context: this.context,
-            stack: this.stack
+            context: this.context
         };
+        if (process.env.NODE_ENV !== 'production') {
+            result.stack = this.stack;
+        }
+        return result;
     }
 }
 

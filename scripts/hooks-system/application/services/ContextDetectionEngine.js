@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const AuditLogger = require('./logging/AuditLogger');
 
 class ContextDetectionEngine {
     constructor(repoRootOrGitPort = null, logger = console) {
@@ -11,6 +12,7 @@ class ContextDetectionEngine {
         }
 
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: this.repoRoot, logger });
         this.cache = {
             context: null,
             timestamp: 0,

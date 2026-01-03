@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const AuditLogger = require('../logging/AuditLogger');
 
 class GuardEventLogger {
     constructor({
@@ -9,6 +10,7 @@ class GuardEventLogger {
     } = {}) {
         this.repoRoot = repoRoot;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.fs = fsModule;
 
         this.tmpDir = path.join(this.repoRoot, '.audit_tmp');

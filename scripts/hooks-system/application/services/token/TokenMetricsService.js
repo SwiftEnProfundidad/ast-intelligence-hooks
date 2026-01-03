@@ -1,3 +1,6 @@
+const env = require('../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 const { execSync } = require('child_process');
 
 class TokenMetricsService {
@@ -6,6 +9,7 @@ class TokenMetricsService {
         this.thresholds = thresholds;
         this.logger = logger;
         this.repoRoot = process.cwd();
+        this.auditLogger = new AuditLogger({ repoRoot: this.repoRoot, logger });
     }
 
     async collectMetrics(fallbackEstimator) {
@@ -54,7 +58,7 @@ class TokenMetricsService {
         if (untrusted) {
             level = 'ok';
         }
-        const env = require('../../config/env');
+        const env = require('../../../config/env.js');
         const forceLevel = (env.get('TOKEN_MONITOR_FORCE_LEVEL', '') || '').toLowerCase();
         if (forceLevel === 'warning' || forceLevel === 'critical' || forceLevel === 'ok') {
             level = forceLevel;

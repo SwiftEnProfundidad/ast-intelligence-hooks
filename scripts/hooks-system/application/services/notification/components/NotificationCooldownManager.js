@@ -1,9 +1,12 @@
+const AuditLogger = require('../../logging/AuditLogger');
+
 class NotificationCooldownManager {
     constructor(defaultCooldownMs = 60000, cooldownsByType = {}, logger = null) {
         this.cooldowns = new Map();
         this.defaultCooldownMs = defaultCooldownMs;
         this.cooldownsByType = cooldownsByType;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
     }
 
     isInCooldown(notification) {

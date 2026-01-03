@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../config/env');
 const PlaybookRunner = require('../application/services/PlaybookRunner');
 
 const runner = new PlaybookRunner();

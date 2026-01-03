@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const AuditLogger = require('../logging/AuditLogger');
 
 class HeartbeatMonitorService {
     constructor({
@@ -10,6 +11,7 @@ class HeartbeatMonitorService {
         logger = console
     } = {}) {
         this.repoRoot = repoRoot;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.heartbeatPath = heartbeatPath;
         this.intervalMs = intervalMs;
         this.statusProvider = statusProvider;

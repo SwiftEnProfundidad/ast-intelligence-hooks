@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
+const env = require('../../config/env');
 const fs = require('fs');
 
 const COMMON_ENGLISH_WORDS = new Set([

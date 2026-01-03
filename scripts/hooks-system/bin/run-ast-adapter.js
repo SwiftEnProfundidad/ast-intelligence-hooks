@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const env = require('../config/env');
+
 /**
  * AST ADAPTER FOR AST-HOOKS LIBRARY
  *

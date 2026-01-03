@@ -1,12 +1,13 @@
 #!/usr/bin/env node
 
+const env = require('../../config/env');
 const path = require('path');
 
 const { createUnifiedLogger } = require('../logging/UnifiedLoggerFactory');
 const NotificationCenterService = require('../../application/services/notification/NotificationCenterService');
 const { AutoRecoveryManager } = require('../../application/services/recovery/AutoRecoveryManager');
 
-const repoRoot = process.env.HOOKS_REPO_ROOT ? path.resolve(process.env.HOOKS_REPO_ROOT) : process.cwd();
+const repoRoot = env.get('HOOKS_REPO_ROOT') ? path.resolve(env.get('HOOKS_REPO_ROOT')) : process.cwd();
 const logger = createUnifiedLogger({
     repoRoot,
     component: 'AutoRecovery',

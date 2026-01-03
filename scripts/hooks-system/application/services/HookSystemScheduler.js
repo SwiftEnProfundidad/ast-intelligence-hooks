@@ -1,5 +1,6 @@
 const { recordMetric } = require('../../infrastructure/telemetry/metrics-logger');
 const HookSystemStateMachine = require('../state/HookSystemStateMachine');
+const AuditLogger = require('./logging/AuditLogger');
 
 class HookSystemScheduler {
   constructor({ orchestrator, contextEngine, intervalMs = 30000 }) {
@@ -13,6 +14,7 @@ class HookSystemScheduler {
     this.orchestrator = orchestrator;
     this.contextEngine = contextEngine;
     this.intervalMs = intervalMs;
+    this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     this.stateMachine = new HookSystemStateMachine();
     this.timer = null;
 

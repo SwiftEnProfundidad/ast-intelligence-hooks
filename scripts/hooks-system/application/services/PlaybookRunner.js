@@ -1,12 +1,15 @@
 const fs = require('fs');
 const path = require('path');
+const env = require('../../config/env');
 const { spawnSync } = require('child_process');
 const { DomainError, NotFoundError } = require('../../domain/errors');
+const AuditLogger = require('./logging/AuditLogger');
 
 const PLAYBOOKS_PATH = path.join(process.cwd(), 'scripts', 'hooks-system', 'config', 'playbooks.json');
 
 class PlaybookRunner {
   constructor(options = {}) {
+    this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     this.cwd = options.cwd || process.cwd();
     this.playbooks = JSON.parse(fs.readFileSync(PLAYBOOKS_PATH, 'utf8'));
   }

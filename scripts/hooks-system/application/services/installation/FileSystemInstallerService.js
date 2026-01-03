@@ -1,3 +1,6 @@
+const env = require('../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 const fs = require('fs');
 const path = require('path');
 
@@ -39,6 +42,7 @@ class FileSystemInstallerService {
             'presentation/',
             'docs/examples/',
             'docs/guides/',
+            'config/',
             'bin/',
             'index.js'
         ];

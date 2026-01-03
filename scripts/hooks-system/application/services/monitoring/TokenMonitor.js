@@ -2,10 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const { spawn, spawnSync } = require('child_process');
 const { ConfigurationError } = require('../../../domain/errors');
+const AuditLogger = require('../logging/AuditLogger');
 
 class TokenMonitor {
     constructor(repoRoot, options = {}) {
         this.repoRoot = repoRoot;
+        this.auditLogger = new AuditLogger({ repoRoot });
         this.scriptPath = path.join(repoRoot, 'infrastructure', 'watchdog', 'token-monitor-loop.sh');
         this.process = null;
     }

@@ -1,8 +1,12 @@
+const env = require('../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 const path = require('path');
 
 class CommitMessageSuggester {
     constructor(featureDetector) {
         this.featureDetector = featureDetector;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
         this.commitTypePatterns = {
             feat: ['feature/', 'feat/', 'add', 'new', 'create', 'implement'],
             fix: ['fix/', 'bugfix/', 'hotfix/', 'patch'],

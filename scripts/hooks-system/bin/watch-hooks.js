@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../config/env');
 const CompositionRoot = require('../application/CompositionRoot');
 
 // Initialize Composition Root

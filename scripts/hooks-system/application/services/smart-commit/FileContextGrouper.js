@@ -1,9 +1,11 @@
 const path = require('path');
+const AuditLogger = require('../logging/AuditLogger');
 
 class FileContextGrouper {
     constructor(featureDetector, platformDetector = null) {
         this.featureDetector = featureDetector;
         this.platformDetector = platformDetector;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     group(files) {

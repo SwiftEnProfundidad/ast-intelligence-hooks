@@ -1,3 +1,6 @@
+const env = require('../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 const McpConfigurator = require('./McpConfigurator');
 const HookInstaller = require('./HookInstaller');
 const VSCodeTaskConfigurator = require('./VSCodeTaskConfigurator');

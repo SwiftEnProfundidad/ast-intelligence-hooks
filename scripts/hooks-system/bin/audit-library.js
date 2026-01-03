@@ -6,6 +6,7 @@
  * it follows its own rules (practice what we preach)
  */
 
+const env = require('../config/env');
 const path = require('path');
 const { execSync } = require('child_process');
 
@@ -32,9 +33,9 @@ console.log(`${COLORS.cyan}📋 Auditing library code at: ${libraryRoot}${COLORS
 
 try {
   process.chdir(libraryRoot);
-  
+
   console.log(`${COLORS.cyan}🔍 Running AST intelligence...${COLORS.reset}\n`);
-  
+
   execSync(`node "${astScript}"`, {
     stdio: 'inherit',
     cwd: libraryRoot,
@@ -43,10 +44,10 @@ try {
       AUDIT_LIBRARY: 'true'
     }
   });
-  
+
   console.log(`\n${COLORS.green}✅ Library audit completed${COLORS.reset}`);
   console.log(`${COLORS.yellow}📊 Check ast-summary.json for detailed results${COLORS.reset}\n`);
-  
+
 } catch (error) {
   console.error(`${COLORS.red}❌ Audit failed: ${error.message}${COLORS.reset}`);
   process.exit(1);

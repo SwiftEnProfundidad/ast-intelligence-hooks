@@ -1,4 +1,10 @@
+const AuditLogger = require('../../application/services/logging/AuditLogger');
+
 class AuditScorer {
+    constructor() {
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
+    }
+
     calculateTechnicalDebt(findings) {
         return findings.reduce((total, finding) => {
             // Assuming finding.severity is an instance of Severity or finding has access to getDebtHours

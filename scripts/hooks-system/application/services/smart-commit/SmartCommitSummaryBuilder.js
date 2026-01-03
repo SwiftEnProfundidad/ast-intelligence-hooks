@@ -1,4 +1,10 @@
+const AuditLogger = require('../logging/AuditLogger');
+
 class SmartCommitSummaryBuilder {
+    constructor() {
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
+    }
+
     build(suggestions, orphans) {
         const lines = [];
 

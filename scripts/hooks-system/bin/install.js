@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../config/env');
 const InstallService = require('../application/services/installation/InstallService');
 
 // Run installation

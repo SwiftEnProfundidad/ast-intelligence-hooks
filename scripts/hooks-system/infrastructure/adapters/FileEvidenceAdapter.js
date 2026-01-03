@@ -3,10 +3,12 @@
  *
  * Infrastructure adapter implementing IEvidencePort using file system.
  */
+const env = require('../../config/env');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { ConfigurationError } = require('../../domain/errors');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 function resolveUpdateEvidenceScript(repoRoot) {
     const candidates = [

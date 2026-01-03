@@ -1,11 +1,13 @@
 const fs = require('fs').promises;
 const path = require('path');
-const env = require('../config/env');
+const env = require('../../config/env');
+const AuditLogger = require('./logging/AuditLogger');
 
 class DynamicRulesLoader {
     constructor(rulesDirectory, logger = console) {
         this.rulesDirectory = rulesDirectory || null;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
         this.rulesDirectories = this.resolveRulesDirectories();
         this.rulesMap = {
             backend: 'rulesbackend.mdc',

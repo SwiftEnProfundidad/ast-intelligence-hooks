@@ -1,6 +1,8 @@
+const AuditLogger = require('../logging/AuditLogger');
 class CommitMessageGenerator {
     constructor(logger = console) {
-        this.logger = logger;
+        
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });this.logger = logger;
     }
 
     /**

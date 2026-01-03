@@ -1,6 +1,8 @@
 
 const path = require('path');
 const glob = require('glob');
+const { execSync } = require('child_process');
+const env = require(path.join(__dirname, '../../../config/env'));
 const { pushFinding, mapToLevel, SyntaxKind, isTestFile, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
 const { iOSEnterpriseAnalyzer } = require(path.join(__dirname, 'analyzers/iOSEnterpriseAnalyzer'));
 const { iOSArchitectureDetector } = require(path.join(__dirname, 'analyzers/iOSArchitectureDetector'));
@@ -27,20 +29,50 @@ async function runIOSIntelligence(project, findings, platform) {
   console.error(`[iOS AST Intelligence] Running SourceKitten-based analysis...`);
   const astAnalyzer = new iOSASTIntelligentAnalyzer(findings);
   const root = getRepoRoot();
-  const swiftFilesForAST = glob.sync('**/*.swift', {
-    cwd: root,
-    ignore: ['**/node_modules/**', '**/build/**', '**/Pods/**', '**/.build/**', '**/CustomLintRules/**'],
-    absolute: true,
-  });
+  const stagingOnly = env.get('STAGING_ONLY_MODE', '0') === '1';
+  let stagedRelSwift = [];
+  if (stagingOnly) {
+    try {
+      stagedRelSwift = execSync('git diff --cached --name-only --diff-filter=ACM', {
+        encoding: 'utf8',
+        cwd: root,
+        stdio: ['ignore', 'pipe', 'pipe']
+      })
+        .trim()
+        .split('\n')
+        .map(s => s.trim())
+        .filter(Boolean)
+        .filter(p => p.endsWith('.swift'));
+    } catch {
+      stagedRelSwift = [];
+    }
+  }
+
+  const swiftFilesForAST = stagingOnly
+    ? stagedRelSwift.map(rel => path.join(root, rel))
+    : glob.sync('**/*.swift', {
+      cwd: root,
+      ignore: ['**/node_modules/**', '**/build/**', '**/Pods/**', '**/.build/**', '**/CustomLintRules/**'],
+      absolute: true,
+    });
 
   for (const swiftFile of swiftFilesForAST) {
-    astAnalyzer.analyzeFile(swiftFile);
+    const rel = stagingOnly ? path.relative(root, swiftFile).replace(/\\/g, '/') : null;
+    astAnalyzer.analyzeFile(swiftFile, {
+      repoRoot: root,
+      displayPath: swiftFile,
+      stagedRelPath: stagingOnly ? rel : null
+    });
   }
 
   astAnalyzer.finalizeGodClassDetection();
   console.error(`[iOS AST Intelligence] Analyzed ${swiftFilesForAST.length} Swift files with SourceKitten AST`);
 
   await runSwiftLintNative(findings);
+
+  if (stagingOnly) {
+    return;
+  }
 
   project.getSourceFiles().forEach((sf) => {
     if (!sf || typeof sf.getFilePath !== 'function') return;
@@ -87,11 +119,13 @@ async function runIOSIntelligence(project, findings, platform) {
 
   try {
     const root = getRepoRoot();
-    const swiftFiles = glob.sync('**/*.swift', {
-      cwd: root,
-      ignore: ['**/node_modules/**', '**/build/**', '**/Pods/**', '**/.build/**'],
-      absolute: true,
-    });
+    const swiftFiles = stagingOnly
+      ? stagedRelSwift.map(rel => path.join(root, rel))
+      : glob.sync('**/*.swift', {
+        cwd: root,
+        ignore: ['**/node_modules/**', '**/build/**', '**/Pods/**', '**/.build/**'],
+        absolute: true,
+      });
 
     if (swiftFiles.length > 0) {
       console.error(`[iOS Enterprise] Analyzing ${swiftFiles.length} Swift files with SourceKitten...`);
@@ -1250,7 +1284,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    if (filePath.endsWith('.swift') && !filePath.includes('/Domain/') && !filePath.includes('/Application/') &&
+    if (filePath.endsWith('.swift') && !filePath.endsWith('/Package.swift') && !filePath.endsWith('Package.swift') && !filePath.includes('/Domain/') && !filePath.includes('/Application/') &&
       !filePath.includes('/Infrastructure/') && !filePath.includes('/Presentation/') &&
       !filePath.includes('/Tests/') && !filePath.includes('AppDelegate')) {
       pushFinding(
@@ -1803,7 +1837,7 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    if (content.includes('Keychain') && !content.includes('SecItemAdd') && !content.includes('KeychainSwift')) {
+    if (!filePath.includes('Package.swift') && content.includes('Keychain') && !content.includes('SecItemAdd') && !content.includes('KeychainSwift')) {
       pushFinding(
         "ios.security.keychain_usage",
         "low",

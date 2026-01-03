@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 const path = require('path');
 
 const NotificationCenterService = require('../../application/services/notification/NotificationCenterService');
@@ -10,7 +12,7 @@ async function runTokenMonitor({
     logger = null,
     service = null
 } = {}) {
-    const envRoot = process.env.HOOKS_REPO_ROOT ? path.resolve(process.env.HOOKS_REPO_ROOT) : null;
+    const envRoot = env.get('HOOKS_REPO_ROOT') ? path.resolve(env.get('HOOKS_REPO_ROOT')) : null;
     const resolvedRepoRoot = repoRoot || envRoot || path.resolve(__dirname, '../..');
 
     const resolvedNotificationCenter = notificationCenter || new NotificationCenterService({

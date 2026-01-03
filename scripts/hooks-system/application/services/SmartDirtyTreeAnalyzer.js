@@ -2,6 +2,7 @@ const FeatureDetector = require('./commit/FeatureDetector');
 const FileContextGrouper = require('./smart-commit/FileContextGrouper');
 const CommitMessageSuggester = require('./smart-commit/CommitMessageSuggester');
 const SmartCommitSummaryBuilder = require('./smart-commit/SmartCommitSummaryBuilder');
+const AuditLogger = require('./logging/AuditLogger');
 
 class SmartDirtyTreeAnalyzer {
     constructor({
