@@ -1,8 +1,10 @@
 const { ValidationError } = require('../errors');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 class AuditAnalyzer {
     constructor(scorer) {
         this.scorer = scorer;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     getViolationsBySeverity(findings) {

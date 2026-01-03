@@ -5,6 +5,7 @@
  * Helps detect when updates are available
  */
 
+const env = require('../config/env');
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -20,37 +21,37 @@ const COLORS = {
 
 function getInstalledVersion() {
   const projectRoot = process.cwd();
-  
+
   try {
     const packageJsonPath = require.resolve('@pumuki/ast-intelligence-hooks/package.json');
     const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
     const packageRoot = path.dirname(path.dirname(packageJsonPath));
-    
+
     const projectPkgPath = path.join(projectRoot, 'package.json');
     if (fs.existsSync(projectPkgPath)) {
       const projectPkg = JSON.parse(fs.readFileSync(projectPkgPath, 'utf-8'));
       const deps = { ...projectPkg.dependencies, ...projectPkg.devDependencies };
       const depVersion = deps['@pumuki/ast-intelligence-hooks'];
-      
+
       if (depVersion && depVersion.startsWith('file:')) {
         return { version: pkg.version, type: 'local', path: packageRoot };
       }
     }
-    
+
     return { version: pkg.version, type: 'npm', path: packageRoot };
   } catch (err) {
     err = null;
     // Fallback: continue with local project dependency checks
   }
-  
+
   const projectPkgPath = path.join(projectRoot, 'package.json');
   if (fs.existsSync(projectPkgPath)) {
     const projectPkg = JSON.parse(fs.readFileSync(projectPkgPath, 'utf-8'));
     const deps = { ...projectPkg.dependencies, ...projectPkg.devDependencies };
-    
+
     if (deps['@pumuki/ast-intelligence-hooks']) {
       let version = deps['@pumuki/ast-intelligence-hooks'];
-      
+
       if (version.startsWith('file:')) {
         const libPath = path.resolve(projectRoot, version.replace('file:', ''));
         const libPackageJson = path.join(libPath, 'package.json');
@@ -60,35 +61,35 @@ function getInstalledVersion() {
         }
         return { version: 'unknown (local)', type: 'local', path: libPath };
       }
-      
+
       const nodeModulesPath = path.join(projectRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'package.json');
       if (fs.existsSync(nodeModulesPath)) {
         const installedPkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
         return { version: installedPkg.version, type: 'npm', declaredVersion: version };
       }
-      
+
       return { version: version.replace(/^[\^~]/, ''), type: 'npm', declaredVersion: version };
     }
   }
-  
+
   const nodeModulesPath = path.join(projectRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'package.json');
   if (fs.existsSync(nodeModulesPath)) {
     const pkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
     return { version: pkg.version, type: 'npm' };
   }
-  
+
   const scriptsPath = path.join(projectRoot, 'scripts', 'hooks-system');
   if (fs.existsSync(scriptsPath)) {
     return { version: 'unknown', type: 'partial', message: 'Scripts installed but package not found in node_modules' };
   }
-  
+
   return null;
 }
 
 function getLatestVersion() {
   try {
     // Try npm view
-    const output = execSync('npm view @pumuki/ast-intelligence-hooks version', { 
+    const output = execSync('npm view @pumuki/ast-intelligence-hooks version', {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 5000
@@ -102,7 +103,7 @@ function getLatestVersion() {
 function compareVersions(v1, v2) {
   const parts1 = v1.split('.').map(Number);
   const parts2 = v2.split('.').map(Number);
-  
+
   for (let i = 0; i < Math.max(parts1.length, parts2.length); i++) {
     const p1 = parts1[i] || 0;
     const p2 = parts2[i] || 0;
@@ -116,9 +117,9 @@ function main() {
   console.log(`${COLORS.blue}╔══════════════════════════════════════════════════════════════╗${COLORS.reset}`);
   console.log(`${COLORS.blue}║     AST Intelligence Hooks - Version Check                   ║${COLORS.reset}`);
   console.log(`${COLORS.blue}╚══════════════════════════════════════════════════════════════╝${COLORS.reset}\n`);
-  
+
   const installed = getInstalledVersion();
-  
+
   if (!installed) {
     console.log(`${COLORS.red}❌ ast-intelligence-hooks not found in this project${COLORS.reset}`);
     console.log(`\n${COLORS.cyan}Install it with:${COLORS.reset}`);
@@ -126,7 +127,7 @@ function main() {
     console.log(`  npm run install-hooks\n`);
     process.exit(1);
   }
-  
+
   console.log(`${COLORS.cyan}Installed version:${COLORS.reset}`);
   console.log(`  ${COLORS.green}${installed.version}${COLORS.reset} (${installed.type})`);
   if (installed.path) {
@@ -139,13 +140,13 @@ function main() {
     console.log(`  ${COLORS.yellow}⚠️  ${installed.message}${COLORS.reset}`);
   }
   console.log();
-  
+
   if (installed.type === 'local') {
     console.log(`${COLORS.yellow}ℹ️  Using local installation (development mode)${COLORS.reset}`);
     console.log(`  Updates come from the linked library directory.\n`);
     process.exit(0);
   }
-  
+
   if (installed.type === 'partial') {
     console.log(`${COLORS.yellow}⚠️  Partial installation detected${COLORS.reset}`);
     console.log(`  It seems hooks are installed but the package is missing.\n`);
@@ -154,24 +155,24 @@ function main() {
     console.log(`  npm run install-hooks\n`);
     process.exit(0);
   }
-  
+
   if (installed.version === 'unknown') {
     console.log(`${COLORS.red}❌ Cannot determine installed version${COLORS.reset}\n`);
     process.exit(1);
   }
-  
+
   console.log(`${COLORS.cyan}Checking latest version on npm...${COLORS.reset}`);
   const latest = getLatestVersion();
-  
+
   if (!latest) {
     console.log(`${COLORS.yellow}⚠️  Could not check latest version (network issue or package not published)${COLORS.reset}\n`);
     process.exit(0);
   }
-  
+
   console.log(`  Latest: ${COLORS.green}${latest}${COLORS.reset}\n`);
-  
+
   const comparison = compareVersions(installed.version, latest);
-  
+
   if (comparison < 0) {
     console.log(`${COLORS.yellow}⚠️  UPDATE AVAILABLE${COLORS.reset}`);
     console.log(`\n${COLORS.cyan}To update:${COLORS.reset}`);

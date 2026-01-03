@@ -1,11 +1,13 @@
 const path = require('path');
 const fs = require('fs');
 const PlatformHeuristics = require('./platform/PlatformHeuristics');
+const AuditLogger = require('./logging/AuditLogger');
 
 class PlatformAnalysisService {
     constructor(platformDetector) {
         this.platformDetector = platformDetector;
         this.heuristics = new PlatformHeuristics(platformDetector);
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
     }
 
     /**

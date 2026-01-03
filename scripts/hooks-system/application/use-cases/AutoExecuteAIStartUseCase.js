@@ -1,6 +1,7 @@
 const { execSync } = require('child_process');
 const path = require('path');
 const { ValidationError, ConfigurationError } = require('../../domain/errors');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 function resolveUpdateEvidenceScript(repoRoot) {
   const candidates = [

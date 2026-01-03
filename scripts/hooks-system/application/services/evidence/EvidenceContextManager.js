@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { DomainError } = require('../../../domain/errors');
+const AuditLogger = require('../logging/AuditLogger');
 
 const DEFAULT_PLATFORMS = ['1', '2', '3', '4'];
 
@@ -39,6 +40,7 @@ class EvidenceContextManager {
         this.autoPlatforms = Array.isArray(autoPlatforms) && autoPlatforms.length ? autoPlatforms : DEFAULT_PLATFORMS;
         this.notificationCenter = notificationCenter;
         this.logger = logger || console;
+        this.auditLogger = new AuditLogger({ repoRoot, logger: this.logger });
         this.intervalMs = intervalMs;
         this.timers = timers;
         this.runCommand = runCommand;

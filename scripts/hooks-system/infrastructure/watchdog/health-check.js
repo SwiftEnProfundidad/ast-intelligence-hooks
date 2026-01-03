@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../../config/env');
 const { createUnifiedLogger } = require('../logging/UnifiedLoggerFactory');
 const NotificationCenterService = require('../../application/services/notification/NotificationCenterService');
 const { HealthCheckService } = require('../../application/services/monitoring/HealthCheckService');
@@ -9,7 +10,7 @@ const path = require('path');
 
 async function runHealthCheck({ repoRoot = null } = {}) {
     const resolvedRepoRoot = repoRoot
-        || (process.env.HOOKS_REPO_ROOT ? path.resolve(process.env.HOOKS_REPO_ROOT) : null)
+        || (env.get('HOOKS_REPO_ROOT') ? path.resolve(env.get('HOOKS_REPO_ROOT')) : null)
         || process.cwd();
 
     const logger = createUnifiedLogger({

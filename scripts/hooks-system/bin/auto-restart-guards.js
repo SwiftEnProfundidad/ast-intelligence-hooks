@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const env = require('../config/env');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
@@ -79,7 +80,7 @@ function shutdown() {
     try {
       w.close();
     } catch (error) {
-      log(`Error closing watcher: ${error.message}`); 
+      log(`Error closing watcher: ${error.message}`);
     }
   });
 }
@@ -90,4 +91,4 @@ process.on('SIGTERM', shutdown);
 log('Auto-restart guard running');
 targets.forEach(watchFile);
 
-setInterval(() => {}, 1 << 30);
+setInterval(() => { }, 1 << 30);

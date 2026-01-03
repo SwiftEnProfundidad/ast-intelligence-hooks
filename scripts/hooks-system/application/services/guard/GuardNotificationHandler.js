@@ -1,8 +1,12 @@
+const env = require('../../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 class GuardNotificationHandler {
     constructor(notificationCenter, eventLogger, config) {
         this.notificationCenter = notificationCenter;
         this.eventLogger = eventLogger;
         this.config = config;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
         this.lastNotificationState = { reason: null, at: 0 };
     }
 

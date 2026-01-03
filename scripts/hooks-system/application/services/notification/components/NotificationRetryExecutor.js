@@ -1,9 +1,13 @@
+const env = require('../../../../config/env');
+const AuditLogger = require('../../logging/AuditLogger');
+
 class NotificationRetryExecutor {
     constructor(sender, config = {}, logger = null) {
         this.sender = sender;
         this.maxRetries = config.maxRetries || 2;
         this.retryDelayMs = config.retryDelayMs || 1000;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
     }
 
     async execute(notification, options = {}) {

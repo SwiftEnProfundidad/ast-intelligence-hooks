@@ -1,3 +1,6 @@
+const env = require('../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 const { execSync } = require('child_process');
 
 class TokenMetricsService {
@@ -6,6 +9,7 @@ class TokenMetricsService {
         this.thresholds = thresholds;
         this.logger = logger;
         this.repoRoot = process.cwd();
+        this.auditLogger = new AuditLogger({ repoRoot: this.repoRoot, logger });
     }
 
     async collectMetrics(fallbackEstimator) {

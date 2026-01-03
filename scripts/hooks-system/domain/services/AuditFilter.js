@@ -1,6 +1,11 @@
 const AuditResult = require('../entities/AuditResult');
+const AuditLogger = require('../../application/services/logging/AuditLogger');
 
 class AuditFilter {
+    constructor() {
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
+    }
+
     filterByPlatform(findings, platform) {
         return findings.filter(f => f.belongsToPlatform(platform));
     }

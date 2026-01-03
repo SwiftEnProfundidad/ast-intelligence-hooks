@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+const env = require('../config/env');
 const PredictiveHookAdvisor = require('../application/services/PredictiveHookAdvisor');
 
 const advisor = new PredictiveHookAdvisor();

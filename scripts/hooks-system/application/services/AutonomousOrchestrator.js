@@ -2,6 +2,7 @@ const PlatformDetectionService = require('./PlatformDetectionService');
 const { execSync } = require('child_process');
 const path = require('path');
 const UnifiedLogger = require('./logging/UnifiedLogger');
+const AuditLogger = require('./logging/AuditLogger');
 
 class AutonomousOrchestrator {
     constructor(contextEngine, platformDetector, rulesLoader, logger = new UnifiedLogger()) {
@@ -9,6 +10,7 @@ class AutonomousOrchestrator {
         this.platformDetector = platformDetector || new PlatformDetectionService();
         this.rulesLoader = rulesLoader;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
         this.confidenceThresholds = {
             autoExecute: 30,
             ignore: 0

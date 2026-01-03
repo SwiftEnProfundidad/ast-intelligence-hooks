@@ -2,10 +2,12 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { ConfigurationError, DomainError } = require('../../../domain/errors');
+const AuditLogger = require('../logging/AuditLogger');
 
 class EvidenceMonitor {
     constructor(repoRoot, options = {}) {
         this.repoRoot = repoRoot;
+        this.auditLogger = new AuditLogger({ repoRoot });
         this.staleThresholdMs = options.staleThresholdMs || 180000;
         this.pollIntervalMs = options.pollIntervalMs || 30000;
         this.reminderIntervalMs = options.reminderIntervalMs || 60000;

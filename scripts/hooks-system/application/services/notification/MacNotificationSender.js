@@ -1,9 +1,11 @@
 const { spawnSync } = require('child_process');
 const fs = require('fs');
+const AuditLogger = require('../logging/AuditLogger');
 
 class MacNotificationSender {
     constructor(logger) {
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd(), logger });
         this.terminalNotifierPath = this.resolveTerminalNotifier();
         this.osascriptPath = this.resolveOsascript();
     }

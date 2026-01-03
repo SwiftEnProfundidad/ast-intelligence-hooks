@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+const env = require('../config/env');
 const { createUnifiedLogger } = require('../infrastructure/logging/UnifiedLoggerFactory');
 const NotificationCenterService = require('../application/services/notification/NotificationCenterService');
 const { GuardAutoManagerService } = require('../application/services/guard/GuardAutoManagerService');

@@ -1,6 +1,10 @@
+const env = require('../../../config/env');
+const AuditLogger = require('../logging/AuditLogger');
+
 class GuardHealthReminder {
     constructor(timers, notificationHandler, config) {
-        this.timers = timers;
+        
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });this.timers = timers;
         this.notificationHandler = notificationHandler;
         this.config = config;
         this.timer = null;

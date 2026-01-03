@@ -1,6 +1,8 @@
+const AuditLogger = require('../logging/AuditLogger');
 class GuardMonitorLoop {
     constructor(timers, intervalMs, tickCallback, logger) {
-        this.timers = timers;
+        
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });this.timers = timers;
         this.intervalMs = intervalMs;
         this.tickCallback = tickCallback;
         this.logger = logger;

@@ -1,5 +1,6 @@
 const { execSync } = require('child_process');
 const path = require('path');
+const AuditLogger = require('./logging/AuditLogger');
 
 // Import recordMetric for prometheus metrics
 const { recordMetric } = require(path.join(__dirname, '..', '..', 'infrastructure', 'telemetry', 'metrics-logger'));

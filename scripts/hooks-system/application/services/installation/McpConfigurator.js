@@ -4,6 +4,7 @@ const { execSync } = require('child_process');
 const crypto = require('crypto');
 const os = require('os');
 const env = require('../../../config/env.js');
+const AuditLogger = require('../logging/AuditLogger');
 
 const COLORS = {
     reset: '\x1b[0m',
@@ -25,7 +26,10 @@ function computeRepoFingerprint(repoRoot) {
     try {
         const real = fs.realpathSync(repoRoot);
         return crypto.createHash('sha1').update(real).digest('hex').slice(0, 8);
-    } catch {
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] computeRepoFingerprint fallback: ${error && error.message ? error.message : String(error)}\n`);
+        }
         return crypto.createHash('sha1').update(String(repoRoot || '')).digest('hex').slice(0, 8);
     }
 }
@@ -48,6 +52,46 @@ class McpConfigurator {
         this.logger = logger;
     }
 
+    resolveAutomationEntrypoint() {
+        // Prefer dependency-installed hook system (node_modules) to avoid requiring scripts/hooks-system in consumer repos
+        // Fallback to repo-local hook system if it exists.
+        const candidates = [
+            this.hookSystemRoot
+                ? path.join(this.hookSystemRoot, 'infrastructure', 'mcp', 'ast-intelligence-automation.js')
+                : null,
+            path.join(this.targetRoot, 'scripts', 'hooks-system', 'infrastructure', 'mcp', 'ast-intelligence-automation.js')
+        ].filter(Boolean);
+
+        for (const c of candidates) {
+            try {
+                if (fs.existsSync(c)) return c;
+            } catch (error) {
+                // Log error but continue checking other candidates
+                console.warn(`Failed to check path ${c}:`, error.message);
+            }
+        }
+
+        // Last resort: keep previous behaviour
+        return path.join(this.targetRoot, 'scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js');
+    }
+
+    disableDuplicateServersForRepo(existing, currentServerId) {
+        if (!existing || !existing.mcpServers) return;
+
+        Object.entries(existing.mcpServers).forEach(([id, server]) => {
+            if (!server || id === currentServerId) return;
+            const envObj = server.env || {};
+            const repoRoot = envObj.REPO_ROOT;
+            if (repoRoot !== this.targetRoot) return;
+
+            const args0 = Array.isArray(server.args) ? String(server.args[0] || '') : '';
+            // Disable legacy server pointing to repo-local scripts/hooks-system when we already configure the canonical one
+            if (args0.includes('/scripts/hooks-system/') || args0.includes('\\scripts\\hooks-system\\')) {
+                server.disabled = true;
+            }
+        });
+    }
+
     getGlobalWindsurfConfigPath() {
         return path.join(os.homedir(), '.codeium', 'windsurf', 'mcp_config.json');
     }
@@ -59,18 +103,23 @@ class McpConfigurator {
         if (!nodePath || !fs.existsSync(nodePath)) {
             try {
                 nodePath = execSync('which node', { encoding: 'utf-8' }).trim();
-            } catch {
+            } catch (error) {
+                if (process.env.DEBUG) {
+                    process.stderr.write(`[MCP] which node failed: ${error && error.message ? error.message : String(error)}\n`);
+                }
                 nodePath = 'node';
             }
         }
 
         const serverId = computeServerIdForRepo(this.targetRoot);
+        const entrypoint = this.resolveAutomationEntrypoint();
         const mcpConfig = {
             mcpServers: {
                 [serverId]: {
+                    type: 'stdio',
                     command: nodePath,
                     args: [
-                        path.join(this.targetRoot, 'scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js')
+                        entrypoint
                     ],
                     env: {
                         REPO_ROOT: this.targetRoot,
@@ -96,6 +145,9 @@ class McpConfigurator {
             } else {
                 const existing = JSON.parse(fs.readFileSync(globalConfigPath, 'utf8'));
                 if (!existing.mcpServers) existing.mcpServers = {};
+
+                // Prevent duplicate MCP servers for the same repoRoot by disabling legacy entries.
+                this.disableDuplicateServersForRepo(existing, serverId);
 
                 existing.mcpServers[serverId] = mcpConfig.mcpServers[serverId];
 

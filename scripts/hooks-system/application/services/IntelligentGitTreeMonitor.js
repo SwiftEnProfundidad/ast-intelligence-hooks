@@ -1,5 +1,6 @@
 const IntelligentCommitAnalyzer = require('./IntelligentCommitAnalyzer');
 const { getGitTreeState } = require('./GitTreeState');
+const AuditLogger = require('./logging/AuditLogger');
 
 class IntelligentGitTreeMonitor {
     constructor({
@@ -8,6 +9,7 @@ class IntelligentGitTreeMonitor {
         logger = console,
         autoCommitEnabled = false
     } = {}) {
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.repoRoot = repoRoot;
         this.notifier = notifier;
         this.logger = logger;

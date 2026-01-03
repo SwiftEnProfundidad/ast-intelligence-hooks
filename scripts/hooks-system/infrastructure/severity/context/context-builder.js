@@ -3,6 +3,7 @@ const { CodeClassificationAnalyzer } = require('./analyzers/CodeClassificationAn
 const { ImpactAnalyzer } = require('./analyzers/ImpactAnalyzer');
 const { SafetyAnalyzer } = require('./analyzers/SafetyAnalyzer');
 const { DataAnalyzer } = require('./analyzers/DataAnalyzer');
+const AuditLogger = require('../../../application/services/logging/AuditLogger');
 
 class ContextBuilder {
   constructor() {
@@ -10,6 +11,7 @@ class ContextBuilder {
     this.impactAnalyzer = new ImpactAnalyzer();
     this.safetyAnalyzer = new SafetyAnalyzer();
     this.dataAnalyzer = new DataAnalyzer();
+    this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
   }
 
   /**

@@ -1,4 +1,5 @@
 const EvidenceMonitorService = require('./monitoring/EvidenceMonitorService');
+const AuditLogger = require('./logging/AuditLogger');
 
 class EvidenceRealtimeGuardPlugin {
     constructor({
@@ -8,6 +9,7 @@ class EvidenceRealtimeGuardPlugin {
         evidenceMonitor = null
     } = {}) {
         this.repoRoot = repoRoot;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.notificationCenter = notificationCenter;
         this.logger = logger || console;
 

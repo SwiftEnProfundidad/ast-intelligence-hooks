@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const env = require('../../../config/env.js');
+const AuditLogger = require('../logging/AuditLogger');
 
 class GuardHeartbeatMonitor {
     constructor({
@@ -10,6 +11,7 @@ class GuardHeartbeatMonitor {
     } = {}) {
         this.repoRoot = repoRoot;
         this.logger = logger;
+        this.auditLogger = new AuditLogger({ repoRoot, logger });
         this.fs = fsModule;
         const heartbeatRelative = env.get('HOOK_GUARD_HEARTBEAT_PATH', path.join('.audit_tmp', 'guard-heartbeat.json'));
         this.heartbeatPath = path.isAbsolute(heartbeatRelative)

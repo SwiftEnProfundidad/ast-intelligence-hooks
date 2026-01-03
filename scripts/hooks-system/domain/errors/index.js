@@ -1,3 +1,5 @@
+const env = require('../../config/env');
+
 class DomainError extends Error {
     constructor(message, code = null, details = {}) {
         super(message);

@@ -28,6 +28,9 @@ async function runASTIntelligence() {
     const { getRepoRoot } = require('./ast-core');
     const root = getRepoRoot();
 
+    const stagingOnlyMode = env.get('STAGING_ONLY_MODE', '0') === '1';
+    const stagedRelFiles = stagingOnlyMode ? getStagedFilesRel(root) : [];
+
     const allFiles = listSourceFiles(root);
 
     const project = createProject(allFiles);
@@ -58,7 +61,7 @@ async function runASTIntelligence() {
     await runPlatformAnalysis(project, findings, context);
 
     // Generate output
-    generateOutput(findings, context, project, root);
+    generateOutput(findings, { ...context, stagingOnlyMode, stagedFiles: stagedRelFiles }, project, root);
 
   } catch (error) {
     console.error("AST Intelligence Error:", error.message);
@@ -66,6 +69,23 @@ async function runASTIntelligence() {
       console.error("Stack trace:", error.stack);
     }
     process.exit(1);
+  }
+}
+
+function getStagedFilesRel(root) {
+  try {
+    const { execSync } = require('child_process');
+    return execSync('git diff --cached --name-only --diff-filter=ACM', {
+      encoding: 'utf8',
+      cwd: root,
+      stdio: ['ignore', 'pipe', 'pipe']
+    })
+      .trim()
+      .split('\n')
+      .map(s => s.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
   }
 }
 
@@ -323,7 +343,7 @@ async function runPlatformAnalysis(project, findings, context) {
  * Generate analysis output and reports
  */
 function generateOutput(findings, context, project, root) {
-  const stagingOnlyMode = env.get('STAGING_ONLY_MODE', '0') === '1';
+  const stagingOnlyMode = context && context.stagingOnlyMode;
   if (stagingOnlyMode) {
     try {
       const { execSync } = require('child_process');
@@ -389,13 +409,13 @@ function generateOutput(findings, context, project, root) {
   console.error(`AST SUMMARY LEVELS: CRITICAL=${levelTotals.CRITICAL} HIGH=${levelTotals.HIGH} MEDIUM=${levelTotals.MEDIUM} LOW=${levelTotals.LOW}`);
   console.error(`AST SUMMARY PLATFORM: Backend=${platformTotals.Backend} Frontend=${platformTotals.Frontend} iOS=${platformTotals.iOS} Android=${platformTotals.Android} Other=${platformTotals.Other}`);
 
-  saveDetailedReport(findings, levelTotals, platformTotals, project, root);
+  saveDetailedReport(findings, levelTotals, platformTotals, project, root, context);
 }
 
 /**
  * Save detailed JSON report
  */
-function saveDetailedReport(findings, levelTotals, platformTotals, project, root) {
+function saveDetailedReport(findings, levelTotals, platformTotals, project, root, context) {
   const outDir = env.get('AUDIT_TMP', path.join(root, ".audit_tmp"));
   try {
     fs.mkdirSync(outDir, { recursive: true });
@@ -456,6 +476,8 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
         totalFiles: project.getSourceFiles().length,
         timestamp: new Date().toISOString(),
         root,
+        stagingOnlyMode: !!(context && context.stagingOnlyMode),
+        stagedFiles: Array.isArray(context && context.stagedFiles) ? context.stagedFiles : [],
       },
     };
 
@@ -575,7 +597,7 @@ function listSourceFiles(root) {
         })
         .filter(f => fs.existsSync(f) && !shouldIgnore(f.replace(/\\/g, "/")));
 
-      // Si hay staged files pero ninguno es compatible con AST
+      // If there are staged files but none are compatible with AST
       if (stagedFiles.length === 0 && allStaged.length > 0) {
         console.error('\n⚠️  No AST-compatible files in staging area');
         console.error('   Staged files found:', allStaged.length);

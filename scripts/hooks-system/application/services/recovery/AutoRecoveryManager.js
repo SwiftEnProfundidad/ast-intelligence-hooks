@@ -1,4 +1,5 @@
 const path = require('path');
+const AuditLogger = require('../logging/AuditLogger');
 
 class AutoRecoveryManager {
     constructor({

@@ -9,6 +9,7 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
+const env = require('../config/env');
 
 const command = process.argv[2];
 const args = process.argv.slice(3);
