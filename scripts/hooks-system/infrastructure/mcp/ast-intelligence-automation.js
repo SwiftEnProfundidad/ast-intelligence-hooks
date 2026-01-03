@@ -57,14 +57,25 @@ const MCP_LOCK_DIR = path.join(REPO_ROOT, '.audit_tmp', 'mcp-singleton.lock');
 const MCP_LOCK_PID = path.join(MCP_LOCK_DIR, 'pid');
 
 let MCP_IS_PRIMARY = true;
-let MCP_PRIMARY_PID = null;
+
+function logMcpError(context, error) {
+    const msg = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`[MCP][ERROR] ${context}: ${msg}\n`);
+}
+
+function logMcpDebug(message) {
+    if (process.env.DEBUG) {
+        process.stderr.write(`[MCP][DEBUG] ${message}\n`);
+    }
+}
 
 function isPidRunning(pid) {
     if (!pid || !Number.isFinite(pid) || pid <= 0) return false;
     try {
         process.kill(pid, 0);
         return true;
-    } catch {
+    } catch (error) {
+        logMcpDebug(`isPidRunning(${pid}) = false: ${error.code || error.message}`);
         return false;
     }
 }
@@ -76,7 +87,8 @@ function safeReadPid(filePath) {
         const pid = Number(raw);
         if (!Number.isFinite(pid) || pid <= 0) return null;
         return pid;
-    } catch {
+    } catch (error) {
+        logMcpError('safeReadPid', error);
         return null;
     }
 }
@@ -85,68 +97,122 @@ function removeLockDir() {
     try {
         if (fs.existsSync(MCP_LOCK_PID)) {
             fs.unlinkSync(MCP_LOCK_PID);
+            logMcpDebug('Removed lock PID file');
         }
-    } catch {
-        // ignore
+    } catch (error) {
+        logMcpError('removeLockDir (pid file)', error);
     }
     try {
         if (fs.existsSync(MCP_LOCK_DIR)) {
             fs.rmdirSync(MCP_LOCK_DIR);
+            logMcpDebug('Removed lock directory');
         }
-    } catch {
-        // ignore
+    } catch (error) {
+        logMcpError('removeLockDir (directory)', error);
+    }
+}
+
+function cleanupAndExit(code = 0) {
+    const myPid = process.pid;
+    const lockPid = safeReadPid(MCP_LOCK_PID);
+
+    if (lockPid === myPid) {
+        logMcpDebug(`Cleaning up lock (my pid=${myPid})`);
+        removeLockDir();
+    } else {
+        logMcpDebug(`Not cleaning lock (lockPid=${lockPid}, myPid=${myPid})`);
+    }
+
+    process.exit(code);
+}
+
+function installStdioExitHandlers() {
+    const handleStdioTermination = (source) => (error) => {
+        if (error) {
+            const code = String(error.code || '').toUpperCase();
+            if (code === 'EPIPE' || code === 'ERR_STREAM_DESTROYED' || code === 'ECONNRESET') {
+                logMcpDebug(`STDIO ${source} closed (${code}), exiting cleanly`);
+                cleanupAndExit(0);
+                return;
+            }
+            logMcpError(`STDIO ${source} error`, error);
+        } else {
+            logMcpDebug(`STDIO ${source} ended, exiting cleanly`);
+        }
+        cleanupAndExit(0);
+    };
+
+    try {
+        process.stdin.on('end', handleStdioTermination('stdin'));
+        process.stdin.on('close', handleStdioTermination('stdin'));
+        process.stdin.on('error', handleStdioTermination('stdin'));
+    } catch (error) {
+        logMcpError('installStdioExitHandlers (stdin)', error);
+    }
+
+    try {
+        process.stdout.on('error', handleStdioTermination('stdout'));
+        process.stderr.on('error', handleStdioTermination('stderr'));
+    } catch (error) {
+        logMcpError('installStdioExitHandlers (stdout/stderr)', error);
     }
 }
 
 function acquireSingletonLock() {
     try {
         fs.mkdirSync(path.join(REPO_ROOT, '.audit_tmp'), { recursive: true });
-    } catch {
-        // ignore
+    } catch (error) {
+        logMcpError('acquireSingletonLock (create .audit_tmp)', error);
     }
 
     try {
         fs.mkdirSync(MCP_LOCK_DIR);
     } catch (error) {
         const existingPid = safeReadPid(MCP_LOCK_PID);
+
         if (existingPid && isPidRunning(existingPid)) {
-            MCP_IS_PRIMARY = false;
-            MCP_PRIMARY_PID = existingPid;
-            process.stderr.write(`[MCP] Another instance is already running (pid ${existingPid}). Secondary mode enabled.\n`);
-            return { acquired: false, pid: existingPid };
+            process.stderr.write(`[MCP] Another instance is already running (pid ${existingPid}). Exiting.\n`);
+            process.exit(0);
         }
 
+        logMcpDebug(`Lock exists but PID ${existingPid || 'unknown'} is not running, cleaning up`);
         removeLockDir();
-        fs.mkdirSync(MCP_LOCK_DIR);
+
+        try {
+            fs.mkdirSync(MCP_LOCK_DIR);
+        } catch (retryError) {
+            logMcpError('acquireSingletonLock (retry mkdir)', retryError);
+            process.stderr.write(`[MCP] Failed to acquire lock after cleanup. Exiting.\n`);
+            process.exit(1);
+        }
     }
 
     try {
         fs.writeFileSync(MCP_LOCK_PID, String(process.pid), { encoding: 'utf8' });
-    } catch {
-        // ignore
+        logMcpDebug(`Lock acquired, PID ${process.pid} written`);
+    } catch (error) {
+        logMcpError('acquireSingletonLock (write pid)', error);
     }
 
-    const cleanup = () => {
-        const pid = safeReadPid(MCP_LOCK_PID);
-        if (pid === process.pid) {
+    process.on('exit', () => {
+        const lockPid = safeReadPid(MCP_LOCK_PID);
+        if (lockPid === process.pid) {
             removeLockDir();
         }
-    };
+    });
 
-    process.on('exit', cleanup);
-    process.on('SIGINT', () => {
-        cleanup();
-        process.exit(0);
-    });
-    process.on('SIGTERM', () => {
-        cleanup();
-        process.exit(0);
-    });
+    process.on('SIGINT', () => cleanupAndExit(0));
+    process.on('SIGTERM', () => cleanupAndExit(0));
+    process.on('SIGHUP', () => cleanupAndExit(0));
 
     return { acquired: true, pid: process.pid };
 }
 
-acquireSingletonLock();
+const singleton = acquireSingletonLock();
+if (!singleton.acquired) {
+    process.exit(0);
+}
+installStdioExitHandlers();
 
 // Lazy-loaded CompositionRoot - only initialized when first needed
 let _compositionRoot = null;
@@ -766,17 +832,6 @@ const protocolHandler = new McpProtocolHandler(process.stdin, process.stdout);
 async function handleMcpMessage(message) {
     try {
         const request = JSON.parse(message);
-
-        if (!MCP_IS_PRIMARY && request.method !== 'initialize' && request.method !== 'resources/list' && request.method !== 'resources/read' && request.method !== 'tools/list') {
-            return {
-                jsonrpc: '2.0',
-                id: request.id,
-                error: {
-                    code: -32603,
-                    message: `MCP instance already running (pid ${MCP_PRIMARY_PID || 'unknown'}). Please restart the IDE or kill the running instance.`
-                }
-            };
-        }
 
         if ((typeof request.id === 'undefined' || request.id === null) && request.method?.startsWith('notifications/')) {
             return null;
