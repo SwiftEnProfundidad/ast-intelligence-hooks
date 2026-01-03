@@ -125,15 +125,29 @@ const commands = {
     const repoRoot = resolveRepoRoot();
     const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
 
-    const payload = {
+    let existing = {};
+    try {
+      if (fs.existsSync(evidencePath)) {
+        const raw = fs.readFileSync(evidencePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') {
+          existing = parsed;
+        }
+      }
+    } catch (e) {
+      existing = {};
+    }
+
+    const next = {
+      ...existing,
       timestamp: new Date().toISOString(),
-      trigger: process.env.AUTO_EVIDENCE_TRIGGER,
-      reason: process.env.AUTO_EVIDENCE_REASON,
-      summary: process.env.AUTO_EVIDENCE_SUMMARY,
+      trigger: process.env.AUTO_EVIDENCE_TRIGGER ?? existing.trigger,
+      reason: process.env.AUTO_EVIDENCE_REASON ?? existing.reason,
+      summary: process.env.AUTO_EVIDENCE_SUMMARY ?? existing.summary,
       action: 'evidence:update'
     };
 
-    fs.writeFileSync(evidencePath, JSON.stringify(payload, null, 2), 'utf8');
+    fs.writeFileSync(evidencePath, JSON.stringify(next, null, 2), 'utf8');
     process.stdout.write(`${evidencePath}\n`);
   },
 
