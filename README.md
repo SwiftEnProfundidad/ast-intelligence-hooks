@@ -28,6 +28,37 @@
   <a href="./docs/CONTRIBUTING.md">Contributing</a>
 </p>
 
+## 📖 Table of Contents
+
+- [The Vision: Solving AI Context Loss](#-the-vision-solving-ai-context-loss-in-software-development)
+  - [The Fundamental Problem](#the-fundamental-problem)
+  - [The Solution: Permanent Context Persistence](#the-solution-permanent-context-persistence)
+- [How It Works: The Complete Flow](#-how-it-works-the-complete-flow)
+  - [Phase 1: Context Initialization (`ai_start` Protocol)](#phase-1-context-initialization-ai_start-protocol)
+  - [Phase 2: Continuous Context Maintenance](#phase-2-continuous-context-maintenance)
+  - [Phase 3: Code Quality Enforcement](#phase-3-code-quality-enforcement)
+  - [Phase 4: Evidence Update Before Commits](#phase-4-evidence-update-before-commits)
+- [Tools & Technologies](#️-tools--technologies)
+- [What, How, and When: The Developer's Perspective](#-what-how-and-when-the-developers-perspective)
+- [Complete Architecture and Workflow](#complete-architecture-and-workflow)
+- [What is it?](#what-is-it)
+- [What problems does it solve?](#what-problems-does-it-solve)
+- [Features](#features)
+- [Use Cases](#use-cases)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [📚 Documentation Guide - Step by Step](#-documentation-guide---step-by-step)
+- [Architecture](#architecture)
+- [MCP Servers](#mcp-servers)
+- [API Reference](#api-reference)
+- [Configuration](#configuration)
+- [Best Practices](#best-practices)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ### Visual Overview
 
 <img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_01.png" alt="AST Intelligence System Overview" width="100%" />
@@ -386,65 +417,11 @@ For a detailed architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ---
 
-## 📖 Table of Contents
-
-- [The Vision: Solving AI Context Loss](#-the-vision-solving-ai-context-loss-in-software-development)
-  - [The Fundamental Problem](#the-fundamental-problem)
-  - [The Solution: Permanent Context Persistence](#the-solution-permanent-context-persistence)
-- [How It Works: The Complete Flow](#-how-it-works-the-complete-flow)
-  - [Phase 1: Context Initialization (`ai_start` Protocol)](#phase-1-context-initialization-ai_start-protocol)
-  - [Phase 2: Continuous Context Maintenance](#phase-2-continuous-context-maintenance)
-  - [Phase 3: Code Quality Enforcement](#phase-3-code-quality-enforcement)
-  - [Phase 4: Evidence Update Before Commits](#phase-4-evidence-update-before-commits)
-- [Tools & Technologies](#️-tools--technologies)
-- [What, How, and When: The Developer's Perspective](#-what-how-and-when-the-developers-perspective)
-- [Complete Architecture and Workflow](#complete-architecture-and-workflow)
-- [What is it?](#what-is-it)
-- [What problems does it solve?](#what-problems-does-it-solve)
-- [Features](#features)
-- [Use Cases](#use-cases)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [📚 Documentation Guide - Step by Step](#-documentation-guide---step-by-step)
-- [Architecture](#architecture)
-- [MCP Servers](#mcp-servers)
-- [API Reference](#api-reference)
-- [Configuration](#configuration)
-- [Best Practices](#best-practices)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
-
----
-
 ## What is it?
 
 `ast-intelligence-hooks` is an intelligent static analysis system that automatically validates that your code complies with **Clean Architecture**, **Domain-Driven Design (DDD)**, and **Feature-First Architecture** principles.
 
 **But more importantly**, it's a **context persistence system** that ensures AI assistants maintain permanent understanding of your project through the `ai_start` protocol, automatic rule loading, and continuously updated `.AI_EVIDENCE.json`.
-
-### Key Features
-
-#### 🧠 Context Persistence (Core Purpose)
-- ✅ **`ai_start` Protocol**: Automatically answers the three critical questions for AI context
-- ✅ **`.AI_EVIDENCE.json`**: Permanent context file that never goes stale
-- ✅ **Automatic rule loading**: All 798+ rules loaded automatically for AI awareness
-- ✅ **Context detection**: Real-time understanding of what you're working on
-
-#### 🔍 Code Validation
-- ✅ **798+ validation rules** across all platforms with severity-based quality gates
-- ✅ **Multi-platform support**: iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose), Backend (TypeScript/NestJS), Frontend (React/Next.js)
-- ✅ **Automatic architecture detection**: Identifies multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
-- ✅ **BDD→TDD workflow enforcement**: CRITICAL priority - ensures feature files exist before implementation and tests before code
-- ✅ **Pre-commit Git hooks**: Automatic validation blocks commits with CRITICAL/HIGH violations
-- ✅ **AST analysis engine**: Deep static code analysis using Abstract Syntax Trees
-- ✅ **Clean Architecture enforcement**: Strict SOLID principles validation and dependency rules
-
-#### 🤖 Automation & Integration
-- ✅ **Git Flow automation**: Complete workflow automation via MCP (commit → push → PR → merge)
-- ✅ **MCP integration**: Standard Model Context Protocol (MCP) support for any agentic IDE or AI client (Cursor, Claude Desktop, etc.)
-- ✅ **Version checking**: Automatic detection of library updates
-- ✅ **CI/CD ready**: Seamless integration with GitHub Actions and other CI systems
 
 ---
 
@@ -594,7 +571,7 @@ hook-status
 
 ---
 
-## Installation
+## Quick Start
 
 ### Prerequisites
 
@@ -602,50 +579,10 @@ hook-status
 - **npm** ≥9.0.0
 - **Git** (for hooks)
 
-### Option 1: Installation via npm (Recommended)
-
-```bash
-npm install --save-dev pumuki-ast-hooks
-npm run install-hooks
-```
-
-### Option 2: Installation via Git
-
-```bash
-npm install --save-dev git+https://github.com/carlos/ast-intelligence-hooks.git
-npm run install-hooks
-```
-
-### Option 3: Manual Installation
-
-```bash
-git clone https://github.com/carlos/ast-intelligence-hooks.git
-cd ast-intelligence-hooks
-npm install
-npm link
-npm run install-hooks
-```
-
-### Configure Git Hooks
-
-```bash
-# Install hooks automatically
-npm run install-hooks
-
-# Or manually
-ast-install
-```
-
-For more details, see [INSTALLATION.md](./docs/INSTALLATION.md).
-
----
-
-## Quick Start
-
 ### 1. Install the library
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 ```
 
 ### 2. Configure hooks
@@ -666,7 +603,7 @@ The hooks will run automatically and validate your code.
 ### 4. View full report
 
 ```bash
-npm run audit
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
 ### 5. Check violations
@@ -1125,6 +1062,54 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 
 ---
 
+## 📝 Recent Changes
+
+### Version 5.5.16 (2026-01-04)
+
+**✨ New Features:**
+- Restored evidence fields: `protocol_3_questions`, `rules_read`, `current_context`, `platforms`, `session_id`
+- Added macOS notifications when AI Gate status=BLOCKED
+- Comprehensive notification types documentation in MCP_SERVERS.md
+- E2E tests for notification system
+
+**🔧 Improvements:**
+- Reorganized README with Table of Contents at the beginning
+- Consolidated duplicate Features sections
+- Removed duplicate architectural diagrams
+- Enhanced documentation structure for better navigation
+
+**🐛 Bug Fixes:**
+- Fixed evidence staleness detection in RealtimeGuardService
+- Improved notification error handling with graceful fallbacks
+
+---
+
+## ⚠️ Known Issues
+
+### Current Limitations
+
+1. **macOS Notifications Only**
+   - Notifications currently use osascript (macOS-only)
+   - Other platforms fall back gracefully without errors
+   - Future versions will add cross-platform notification support
+
+2. **Evidence Staleness Threshold**
+   - Default threshold is 180 seconds (3 minutes)
+   - May need adjustment for slower systems
+   - Configure via `HOOK_GUARD_EVIDENCE_STALE_THRESHOLD` environment variable
+
+3. **Token Monitor Integration**
+   - Token monitor requires explicit environment variable `HOOK_GUARD_EMBEDDED_TOKEN_MONITOR=true`
+   - Not enabled by default to avoid overhead
+
+### Workarounds
+
+- For non-macOS systems: Disable notifications via `HOOK_GUARD_MACOS_NOTIFICATIONS=false`
+- For slower systems: Increase staleness threshold via environment variable
+- For token monitoring: Enable explicitly if needed for your workflow
+
+---
+
 ## License
 
 This project is licensed under the **MIT License** - see [LICENSE](./LICENSE) for more details.
@@ -1137,8 +1122,8 @@ Developed by **Pumuki Team®**
 
 - **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development)
 - **Contact**: freelancemerlos@gmail.com
-- **Version**: 5.3.9
-- **Repository**: [GitHub](https://github.com/carlos/ast-intelligence-hooks)
+- **Version**: 5.5.16
+- **Repository**: [GitHub](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks)
 
 ---
 
