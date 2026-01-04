@@ -16,6 +16,24 @@ const args = process.argv.slice(3);
 
 const HOOKS_ROOT = path.join(__dirname, '..');
 
+function formatLocalTimestamp(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+
+  const offsetMinutes = date.getTimezoneOffset();
+  const sign = offsetMinutes <= 0 ? '+' : '-';
+  const absolute = Math.abs(offsetMinutes);
+  const offsetHours = String(Math.floor(absolute / 60)).padStart(2, '0');
+  const offsetMins = String(absolute % 60).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${sign}${offsetHours}:${offsetMins}`;
+}
+
 function resolveRepoRoot() {
   try {
     const output = execSync('git rev-parse --show-toplevel', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
@@ -140,7 +158,7 @@ const commands = {
 
     const next = {
       ...existing,
-      timestamp: new Date().toISOString(),
+      timestamp: formatLocalTimestamp(),
       trigger: process.env.AUTO_EVIDENCE_TRIGGER ?? existing.trigger,
       reason: process.env.AUTO_EVIDENCE_REASON ?? existing.reason,
       summary: process.env.AUTO_EVIDENCE_SUMMARY ?? existing.summary,

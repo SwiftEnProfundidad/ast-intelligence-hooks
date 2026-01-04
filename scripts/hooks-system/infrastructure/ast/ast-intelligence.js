@@ -3,6 +3,24 @@ const path = require("path");
 const fs = require("fs");
 const env = require("../../config/env.js");
 
+function formatLocalTimestamp(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+
+  const offsetMinutes = date.getTimezoneOffset();
+  const sign = offsetMinutes <= 0 ? '+' : '-';
+  const absolute = Math.abs(offsetMinutes);
+  const offsetHours = String(Math.floor(absolute / 60)).padStart(2, '0');
+  const offsetMins = String(absolute % 60).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${sign}${offsetHours}:${offsetMins}`;
+}
+
 const astModulesPath = __dirname;
 const { createProject, platformOf, mapToLevel } = require(path.join(astModulesPath, "ast-core"));
 const { MacOSNotificationAdapter } = require(path.join(__dirname, '../adapters/MacOSNotificationAdapter'));
@@ -474,7 +492,7 @@ function saveDetailedReport(findings, levelTotals, platformTotals, project, root
       findings,
       metadata: {
         totalFiles: project.getSourceFiles().length,
-        timestamp: new Date().toISOString(),
+        timestamp: formatLocalTimestamp(),
         root,
         stagingOnlyMode: !!(context && context.stagingOnlyMode),
         stagedFiles: Array.isArray(context && context.stagedFiles) ? context.stagedFiles : [],
@@ -504,7 +522,7 @@ function updateAIEvidenceMetrics(findings, levelTotals, root) {
     const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
 
     evidence.severity_metrics = {
-      last_updated: new Date().toISOString(),
+      last_updated: formatLocalTimestamp(),
       total_violations: findings.length,
       by_severity: {
         CRITICAL: levelTotals.CRITICAL || 0,
