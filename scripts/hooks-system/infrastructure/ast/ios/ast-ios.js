@@ -1544,7 +1544,13 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    if (content.includes('URLSession') && content.includes('https') && !content.includes('ServerTrustPolicy') && !content.includes('pinning')) {
+    // Check for SSL pinning implementation
+    const hasSSLPinningImplementation =
+      content.includes('ServerTrustPolicy') ||
+      content.includes('pinning') ||
+      (content.includes('URLSessionDelegate') && content.includes('URLAuthenticationChallenge'));
+
+    if (content.includes('URLSession') && content.includes('https') && !hasSSLPinningImplementation) {
       if (content.includes('production') || content.includes('release')) {
         pushFinding(
           "ios.security.missing_ssl_pinning",

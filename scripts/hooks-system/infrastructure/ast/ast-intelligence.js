@@ -570,7 +570,10 @@ function sendAuditNotification(totalViolations, levelTotals) {
       level
     });
   } catch (error) {
-    // Silent fail - notifications are optional
+    const errorMsg = error && error.message ? error.message : String(error);
+    if (process.env.DEBUG) {
+      console.warn(`[ast-intelligence] Notification failed (optional): ${errorMsg}`);
+    }
   }
 }
 

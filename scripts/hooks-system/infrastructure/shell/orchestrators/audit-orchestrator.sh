@@ -114,6 +114,52 @@ print_header() {
   printf "%b%s%b\n\n" "$BLUE" "$MSG_TITLE" "$NC"
 }
 
+print_blocking_violations() {
+  if [[ ! -f "$TMP_DIR/ast-summary.json" ]]; then
+    return
+  fi
+  if ! command -v jq >/dev/null 2>&1; then
+    return
+  fi
+
+  local max_show=${1:-20}
+
+  local critical_violations
+  critical_violations=$(jq -r '
+    [.findings[] | select(.severity == "CRITICAL" or .severity == "critical" or .severity == "error")]
+    | .[0:'"$max_show"']
+    | .[] | "🔴 CRITICAL: \(.ruleId) - File: \(.filePath):\(.line // 1)"
+  ' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "")
+
+  local high_violations
+  high_violations=$(jq -r '
+    [.findings[] | select(.severity == "HIGH" or .severity == "high")]
+    | .[0:'"$max_show"']
+    | .[] | "🟠 HIGH: \(.ruleId) - File: \(.filePath):\(.line // 1)"
+  ' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "")
+
+  if [[ -n "$critical_violations" || -n "$high_violations" ]]; then
+    printf "\n%b📋 BLOCKING VIOLATIONS DETAIL:%b\n" "$YELLOW" "$NC"
+    printf "─────────────────────────────────────────────────────────────\n"
+  fi
+
+  if [[ -n "$critical_violations" ]]; then
+    printf "%b%s%b\n" "$RED" "$critical_violations" "$NC"
+  fi
+
+  if [[ -n "$high_violations" ]]; then
+    printf "%b%s%b\n" "$YELLOW" "$high_violations" "$NC"
+  fi
+
+  local total_crit total_high
+  total_crit=$(jq '[.findings[] | select(.severity == "CRITICAL" or .severity == "critical" or .severity == "error")] | length' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
+  total_high=$(jq '[.findings[] | select(.severity == "HIGH" or .severity == "high")] | length' "$TMP_DIR/ast-summary.json" 2>/dev/null || echo "0")
+
+  if (( total_crit > max_show )) || (( total_high > max_show )); then
+    printf "\n  %b(Showing first %d of each severity. Run full audit for complete list)%b\n" "$BLUE" "$max_show" "$NC"
+  fi
+}
+
 ignored_globs() {
   cat <<'EOF'
 node_modules
@@ -268,6 +314,7 @@ full_audit_strict_staging_only() {
     printf "  🟠 HIGH:     %s\n" "$gate_high"
     printf "  🟡 MEDIUM:   %s\n" "$gate_med"
     printf "  🔵 LOW:      %s\n" "$gate_low"
+    print_blocking_violations
     printf "\n  Action: Fix ALL violations in staged files.\n"
     printf "\n"
     print_final_signature
@@ -324,6 +371,7 @@ full_audit_standard() {
     printf "  🟠 HIGH:     %s\n" "$gate_high"
     printf "  🟡 MEDIUM:   %s (allowed)\n" "$gate_med"
     printf "  🔵 LOW:      %s (allowed)\n" "$gate_low"
+    print_blocking_violations
     printf "\n  Action: Fix CRITICAL/HIGH violations in staged files.\n"
     printf "\n"
     print_final_signature
@@ -802,6 +850,7 @@ summarize_all() {
           printf "  MEDIUM violations (repository):   %s\n" "$gate_med"
           printf "  LOW violations (repository):      %s\n" "$gate_low"
           printf "  ESLint errors (repository):       %s\n" "$gate_es"
+          print_blocking_violations
           printf "  Action: Clean entire repository before committing.\n"
         else
           printf "%b[COMMIT BLOCKED - STRICT STAGING]%b\n" "$RED" "$NC"
@@ -809,6 +858,7 @@ summarize_all() {
           printf "  HIGH violations in staging:     %s\n" "$gate_high"
           printf "  MEDIUM violations in staging:   %s\n" "$gate_med"
           printf "  LOW violations in staging:      %s\n" "$gate_low"
+          print_blocking_violations
           printf "  Action: Fix violations in staged files before committing.\n"
         fi
         printf "\n"
@@ -822,6 +872,7 @@ summarize_all() {
         printf "%b[COMMIT BLOCKED - CRITICAL/HIGH]%b\n" "$RED" "$NC"
         printf "  CRITICAL violations in staging: %s\n" "$gate_crit"
         printf "  HIGH violations in staging:     %s\n" "$gate_high"
+        print_blocking_violations
         printf "  Action: Fix critical/high violations in staged files before committing.\n"
         printf "\n"
         print_final_signature

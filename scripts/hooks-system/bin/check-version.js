@@ -21,27 +21,33 @@ const COLORS = {
 
 function getInstalledVersion() {
   const projectRoot = process.cwd();
+  const packageNames = ['@pumuki/ast-intelligence-hooks', 'pumuki-ast-hooks'];
 
-  try {
-    const packageJsonPath = require.resolve('@pumuki/ast-intelligence-hooks/package.json');
-    const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
-    const packageRoot = path.dirname(path.dirname(packageJsonPath));
+  for (const packageName of packageNames) {
+    try {
+      const packageJsonPath = require.resolve(`${packageName}/package.json`);
+      const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      const packageRoot = path.dirname(path.dirname(packageJsonPath));
 
-    const projectPkgPath = path.join(projectRoot, 'package.json');
-    if (fs.existsSync(projectPkgPath)) {
-      const projectPkg = JSON.parse(fs.readFileSync(projectPkgPath, 'utf-8'));
-      const deps = { ...projectPkg.dependencies, ...projectPkg.devDependencies };
-      const depVersion = deps['@pumuki/ast-intelligence-hooks'];
+      const projectPkgPath = path.join(projectRoot, 'package.json');
+      if (fs.existsSync(projectPkgPath)) {
+        const projectPkg = JSON.parse(fs.readFileSync(projectPkgPath, 'utf-8'));
+        const deps = { ...projectPkg.dependencies, ...projectPkg.devDependencies };
+        const depVersion = deps[packageName];
 
-      if (depVersion && depVersion.startsWith('file:')) {
-        return { version: pkg.version, type: 'local', path: packageRoot };
+        if (depVersion && depVersion.startsWith('file:')) {
+          return { version: pkg.version, type: 'local', path: packageRoot, packageName };
+        }
+      }
+
+      return { version: pkg.version, type: 'npm', path: packageRoot, packageName };
+    } catch (err) {
+      // Try next package name
+      const error = err && err.message ? err.message : String(err);
+      if (process.env.DEBUG) {
+        console.warn(`[check-version] Failed to resolve ${packageName}: ${error}`);
       }
     }
-
-    return { version: pkg.version, type: 'npm', path: packageRoot };
-  } catch (err) {
-    err = null;
-    // Fallback: continue with local project dependency checks
   }
 
   const projectPkgPath = path.join(projectRoot, 'package.json');
@@ -49,33 +55,43 @@ function getInstalledVersion() {
     const projectPkg = JSON.parse(fs.readFileSync(projectPkgPath, 'utf-8'));
     const deps = { ...projectPkg.dependencies, ...projectPkg.devDependencies };
 
-    if (deps['@pumuki/ast-intelligence-hooks']) {
-      let version = deps['@pumuki/ast-intelligence-hooks'];
+    for (const packageName of packageNames) {
+      if (deps[packageName]) {
+        let version = deps[packageName];
 
-      if (version.startsWith('file:')) {
-        const libPath = path.resolve(projectRoot, version.replace('file:', ''));
-        const libPackageJson = path.join(libPath, 'package.json');
-        if (fs.existsSync(libPackageJson)) {
-          const libPkg = JSON.parse(fs.readFileSync(libPackageJson, 'utf-8'));
-          return { version: libPkg.version, type: 'local', path: libPath };
+        if (version.startsWith('file:')) {
+          const libPath = path.resolve(projectRoot, version.replace('file:', ''));
+          const libPackageJson = path.join(libPath, 'package.json');
+          if (fs.existsSync(libPackageJson)) {
+            const libPkg = JSON.parse(fs.readFileSync(libPackageJson, 'utf-8'));
+            return { version: libPkg.version, type: 'local', path: libPath, packageName };
+          }
+          return { version: 'unknown (local)', type: 'local', path: libPath, packageName };
         }
-        return { version: 'unknown (local)', type: 'local', path: libPath };
-      }
 
-      const nodeModulesPath = path.join(projectRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'package.json');
-      if (fs.existsSync(nodeModulesPath)) {
-        const installedPkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
-        return { version: installedPkg.version, type: 'npm', declaredVersion: version };
-      }
+        const nodeModulesPath = packageName.startsWith('@')
+          ? path.join(projectRoot, 'node_modules', packageName.replace('/', path.sep), 'package.json')
+          : path.join(projectRoot, 'node_modules', packageName, 'package.json');
 
-      return { version: version.replace(/^[\^~]/, ''), type: 'npm', declaredVersion: version };
+        if (fs.existsSync(nodeModulesPath)) {
+          const installedPkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
+          return { version: installedPkg.version, type: 'npm', declaredVersion: version, packageName };
+        }
+
+        return { version: version.replace(/^[\^~]/, ''), type: 'npm', declaredVersion: version, packageName };
+      }
     }
   }
 
-  const nodeModulesPath = path.join(projectRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'package.json');
-  if (fs.existsSync(nodeModulesPath)) {
-    const pkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
-    return { version: pkg.version, type: 'npm' };
+  for (const packageName of packageNames) {
+    const nodeModulesPath = packageName.startsWith('@')
+      ? path.join(projectRoot, 'node_modules', packageName.replace('/', path.sep), 'package.json')
+      : path.join(projectRoot, 'node_modules', packageName, 'package.json');
+
+    if (fs.existsSync(nodeModulesPath)) {
+      const pkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
+      return { version: pkg.version, type: 'npm', packageName };
+    }
   }
 
   const scriptsPath = path.join(projectRoot, 'scripts', 'hooks-system');
@@ -88,8 +104,8 @@ function getInstalledVersion() {
 
 function getLatestVersion() {
   try {
-    // Try npm view
-    const output = execSync('npm view @pumuki/ast-intelligence-hooks version', {
+    // Try npm view (correct package name: pumuki-ast-hooks)
+    const output = execSync('npm view pumuki-ast-hooks version', {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 5000

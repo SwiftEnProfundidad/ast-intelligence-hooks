@@ -116,7 +116,6 @@ class McpConfigurator {
         const mcpConfig = {
             mcpServers: {
                 [serverId]: {
-                    type: 'stdio',
                     command: nodePath,
                     args: [
                         entrypoint

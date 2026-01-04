@@ -44,6 +44,10 @@ class KotlinParser {
           { encoding: 'utf-8', stdio: 'pipe' }
         );
       } catch (error) {
+        const errorMsg = error && error.message ? error.message : String(error);
+        if (process.env.DEBUG) {
+          console.warn(`[kotlin-parser] Detekt execution failed for ${filePath}: ${errorMsg}`);
+        }
       }
 
       if (!fs.existsSync(tmpXml)) {
