@@ -423,29 +423,6 @@ For a detailed architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 **But more importantly**, it's a **context persistence system** that ensures AI assistants maintain permanent understanding of your project through the `ai_start` protocol, automatic rule loading, and continuously updated `.AI_EVIDENCE.json`.
 
-### Key Features
-
-#### 🧠 Context Persistence (Core Purpose)
-- ✅ **`ai_start` Protocol**: Automatically answers the three critical questions for AI context
-- ✅ **`.AI_EVIDENCE.json`**: Permanent context file that never goes stale
-- ✅ **Automatic rule loading**: All 798+ rules loaded automatically for AI awareness
-- ✅ **Context detection**: Real-time understanding of what you're working on
-
-#### 🔍 Code Validation
-- ✅ **798+ validation rules** across all platforms with severity-based quality gates
-- ✅ **Multi-platform support**: iOS (Swift/SwiftUI), Android (Kotlin/Jetpack Compose), Backend (TypeScript/NestJS), Frontend (React/Next.js)
-- ✅ **Automatic architecture detection**: Identifies multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
-- ✅ **BDD→TDD workflow enforcement**: CRITICAL priority - ensures feature files exist before implementation and tests before code
-- ✅ **Pre-commit Git hooks**: Automatic validation blocks commits with CRITICAL/HIGH violations
-- ✅ **AST analysis engine**: Deep static code analysis using Abstract Syntax Trees
-- ✅ **Clean Architecture enforcement**: Strict SOLID principles validation and dependency rules
-
-#### 🤖 Automation & Integration
-- ✅ **Git Flow automation**: Complete workflow automation via MCP (commit → push → PR → merge)
-- ✅ **MCP integration**: Standard Model Context Protocol (MCP) support for any agentic IDE or AI client (Cursor, Claude Desktop, etc.)
-- ✅ **Version checking**: Automatic detection of library updates
-- ✅ **CI/CD ready**: Seamless integration with GitHub Actions and other CI systems
-
 ---
 
 ## What problems does it solve?
