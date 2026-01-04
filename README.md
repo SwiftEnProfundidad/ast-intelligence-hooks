@@ -1062,6 +1062,54 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 
 ---
 
+## 📝 Recent Changes
+
+### Version 5.5.16 (2026-01-04)
+
+**✨ New Features:**
+- Restored evidence fields: `protocol_3_questions`, `rules_read`, `current_context`, `platforms`, `session_id`
+- Added macOS notifications when AI Gate status=BLOCKED
+- Comprehensive notification types documentation in MCP_SERVERS.md
+- E2E tests for notification system
+
+**🔧 Improvements:**
+- Reorganized README with Table of Contents at the beginning
+- Consolidated duplicate Features sections
+- Removed duplicate architectural diagrams
+- Enhanced documentation structure for better navigation
+
+**🐛 Bug Fixes:**
+- Fixed evidence staleness detection in RealtimeGuardService
+- Improved notification error handling with graceful fallbacks
+
+---
+
+## ⚠️ Known Issues
+
+### Current Limitations
+
+1. **macOS Notifications Only**
+   - Notifications currently use osascript (macOS-only)
+   - Other platforms fall back gracefully without errors
+   - Future versions will add cross-platform notification support
+
+2. **Evidence Staleness Threshold**
+   - Default threshold is 180 seconds (3 minutes)
+   - May need adjustment for slower systems
+   - Configure via `HOOK_GUARD_EVIDENCE_STALE_THRESHOLD` environment variable
+
+3. **Token Monitor Integration**
+   - Token monitor requires explicit environment variable `HOOK_GUARD_EMBEDDED_TOKEN_MONITOR=true`
+   - Not enabled by default to avoid overhead
+
+### Workarounds
+
+- For non-macOS systems: Disable notifications via `HOOK_GUARD_MACOS_NOTIFICATIONS=false`
+- For slower systems: Increase staleness threshold via environment variable
+- For token monitoring: Enable explicitly if needed for your workflow
+
+---
+
 ## License
 
 This project is licensed under the **MIT License** - see [LICENSE](./LICENSE) for more details.
