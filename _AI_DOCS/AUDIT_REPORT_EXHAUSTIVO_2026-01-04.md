@@ -895,10 +895,14 @@ osascript (macOS)
 
 ## 9. Plan de Actuación Fase por Fase
 
-### Leyenda
+### Leyenda de Estado
 - ✅ **Hecho**
 - 🚧 **En construcción**
 - ⏳ **Pendiente**
+
+### Leyenda de Asignación de Modelo
+- 🤖 **Haiku 4.5** - Tareas de implementación directa (70% más económico)
+- 🧠 **Sonnet 4.5** - Tareas de arquitectura, análisis y decisiones complejas
 
 ---
 
