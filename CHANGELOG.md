@@ -5,6 +5,16 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.38] - 2026-01-04
+
+### Fixed
+- **auto-context.mdc**: Evidence now generates always-on context file with actual rules content (gold + detected platforms)
+- **auto-context.mdc**: Writes to both `.cursor/rules` and `.windsurf/rules` to support Cursor/Windsurf engines
+- **auto-context.mdc**: Skips writing when running inside library repo to avoid dirtying tracked templates
+
+### Added
+- **intelligent-audit.js**: `buildAutoContextFrontmatter`, `buildAutoContextContent`, `writeAutoContextFiles` functions
+
 ## [5.5.37] - 2026-01-04
 
 ### Fixed
