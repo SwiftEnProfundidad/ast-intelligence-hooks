@@ -10,7 +10,7 @@ if [ -f "$TOKEN_TRACKER" ]; then
 fi
 
 # Display AST hooks status
-echo "🚀 AST Intelligence Hooks v5.5.16"
+echo "🚀 AST Intelligence Hooks v5.5.17"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "✅ AST Hooks loaded successfully"
