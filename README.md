@@ -1065,6 +1065,24 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 
 ## 📝 Recent Changes
 
+### Version 5.5.25 (2026-01-04)
+
+**⚡ Performance Fix:**
+- Removed slow full AST analysis (35 minutes) from evidence guard refresh loop
+- Evidence guard now uses fast `update-evidence.sh` (seconds) instead of `intelligent-audit.js`
+- Evidence refreshes every 3 minutes as intended, notifications work correctly
+
+---
+
+### Version 5.5.24 (2026-01-04)
+
+**🔔 Notifications Fix:**
+- Replaced empty catch blocks with proper error handling via `MacNotificationSender`
+- macOS notifications now sent on every evidence update with proper error management
+- Notifications show "AI Evidence has been refreshed automatically" or "AI Gate BLOCKED"
+
+---
+
 ### Version 5.5.22 (2026-01-04)
 
 **🔴 CRITICAL Fix:**

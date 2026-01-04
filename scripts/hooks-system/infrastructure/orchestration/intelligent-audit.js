@@ -391,6 +391,16 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
     console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers)');
 
+    const MacNotificationSender = require('../../application/services/notification/MacNotificationSender');
+    const notificationSender = new MacNotificationSender(null);
+    const gateStatus = evidence.ai_gate.status;
+    const violationCount = evidence.severity_metrics.total_violations;
+    const level = gateStatus === 'BLOCKED' ? 'error' : 'info';
+    const notifMsg = gateStatus === 'BLOCKED'
+      ? `AI Gate BLOCKED - ${violationCount} violations need fixing`
+      : `AI Evidence has been refreshed automatically`;
+    notificationSender.send({ message: notifMsg, level });
+
   } catch (evidenceFileUpdateError) {
     process.stderr.write(`[Intelligent Audit] ⚠️  Evidence update failed: ${toErrorMessage(evidenceFileUpdateError)}\n`);
   }
