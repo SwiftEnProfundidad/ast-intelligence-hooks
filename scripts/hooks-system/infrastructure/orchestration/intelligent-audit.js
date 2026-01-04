@@ -95,6 +95,68 @@ function summarizeRulesContent(content) {
   return firstLine.length > 0 ? firstLine : `loaded (${content.length} chars)`;
 }
 
+function buildAutoContextFrontmatter(detectedPlatforms) {
+  const platforms = Array.isArray(detectedPlatforms) ? detectedPlatforms.filter(Boolean) : [];
+  const generated = formatLocalTimestamp();
+  const platformStr = platforms.length > 0 ? platforms.join(', ') : 'none';
+  return `---\nalwaysApply: true\ndescription: Auto-generated context for detected platforms\nplatforms: ${platformStr}\ngenerated: ${generated}\n---\n\n`;
+}
+
+async function buildAutoContextContent(platformsEvidence) {
+  const loader = new DynamicRulesLoader();
+  const detectedPlatforms = ['backend', 'frontend', 'ios', 'android']
+    .filter(p => platformsEvidence && platformsEvidence[p] && platformsEvidence[p].detected);
+
+  const files = ['rulesgold.mdc', ...detectedPlatforms.map(p => loader.rulesMap[p]).filter(Boolean)];
+  const uniqueFiles = Array.from(new Set(files));
+
+  let content = buildAutoContextFrontmatter(detectedPlatforms);
+
+  for (const file of uniqueFiles) {
+    let ruleContent = null;
+    try {
+      ruleContent = await loader.loadRule(file);
+    } catch {
+      ruleContent = null;
+    }
+
+    content += `## Source: ${file}\n\n`;
+    content += ruleContent ? `${ruleContent}\n\n` : `not found\n\n`;
+    content += `---\n\n`;
+  }
+
+  return content;
+}
+
+async function writeAutoContextFiles(platformsEvidence) {
+  try {
+    const pkgPath = path.join(process.cwd(), 'package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (pkg && pkg.name === 'pumuki-ast-hooks') {
+        return;
+      }
+    }
+  } catch (error) {
+    process.stderr.write(`[Intelligent Audit] ⚠️  Failed to inspect package.json for auto-context skip logic (${toErrorMessage(error)})\n`);
+  }
+
+  const content = await buildAutoContextContent(platformsEvidence);
+  const targets = [
+    path.join(process.cwd(), '.cursor', 'rules', 'auto-context.mdc'),
+    path.join(process.cwd(), '.windsurf', 'rules', 'auto-context.mdc')
+  ];
+
+  for (const target of targets) {
+    try {
+      await fs.promises.mkdir(path.dirname(target), { recursive: true });
+      await fs.promises.writeFile(target, content, 'utf-8');
+    } catch (error) {
+      process.stderr.write(`[Intelligent Audit] ⚠️  Failed to write auto-context: ${target} (${toErrorMessage(error)})\n`);
+    }
+  }
+}
+
 async function buildRulesReadEvidence(platformsEvidence) {
   const loader = new DynamicRulesLoader();
   const entries = [];
@@ -439,6 +501,8 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
     const stagedFiles = getStagedFiles();
     const platformsEvidence = buildPlatformsEvidence(stagedFiles, violations);
     const rulesRead = await buildRulesReadEvidence(platformsEvidence);
+
+    await writeAutoContextFiles(platformsEvidence);
 
     evidence.rules_read = rulesRead.entries;
     evidence.rules_read_flags = rulesRead.legacyFlags;
