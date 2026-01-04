@@ -674,6 +674,9 @@ async function aiGateCheck() {
                     execSync(notificationCmd, { stdio: 'ignore' });
                 }
             } catch (error) {
+                if (process.env.DEBUG) {
+                    process.stderr.write(`[MCP] Failed to send macOS notification: ${error.message}\n`);
+                }
             }
         }
 
