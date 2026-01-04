@@ -1,6 +1,6 @@
 {
   "name": "pumuki-ast-hooks",
-  "version": "5.5.34",
+  "version": "5.5.36",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
@@ -31,6 +31,7 @@
     "gitflow:workflow": "bash bin/gitflow workflow",
     "gitflow:reset": "bash bin/gitflow reset",
     "ast:gitflow": "node scripts/hooks-system/bin/gitflow-cycle.js",
+    "ast:release": "node scripts/hooks-system/bin/gitflow-release.js",
     "violations": "node bin/violations",
     "violations:list": "node bin/violations list",
     "violations:show": "node bin/violations show",
@@ -43,7 +44,13 @@
     "build:ts": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "ast:refresh": "node scripts/hooks-system/bin/update-evidence.sh",
-    "ast:audit": "node scripts/hooks-system/infrastructure/ast/ast-intelligence.js"
+    "ast:audit": "node scripts/hooks-system/infrastructure/ast/ast-intelligence.js",
+    "ast:guard:start": "bash scripts/hooks-system/bin/evidence-guard start",
+    "ast:guard:stop": "bash scripts/hooks-system/bin/evidence-guard stop",
+    "ast:guard:restart": "bash scripts/hooks-system/bin/evidence-guard restart",
+    "ast:guard:status": "bash scripts/hooks-system/bin/evidence-guard status",
+    "ast:guard:logs": "bash scripts/hooks-system/bin/evidence-guard logs",
+    "ast:check-version": "node scripts/hooks-system/bin/check-version.js"
   },
   "keywords": [
     "ast",

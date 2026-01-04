@@ -104,8 +104,8 @@ function getInstalledVersion() {
 
 function getLatestVersion() {
   try {
-    // Try npm view
-    const output = execSync('npm view @pumuki/ast-intelligence-hooks version', {
+    // Try npm view (correct package name: pumuki-ast-hooks)
+    const output = execSync('npm view pumuki-ast-hooks version', {
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'ignore'],
       timeout: 5000
