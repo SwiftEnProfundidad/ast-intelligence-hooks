@@ -5,6 +5,31 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.25] - 2026-01-04
+
+### Fixed
+- **Evidence Guard Performance**: Removed slow full AST analysis (35 minutes) from evidence guard refresh loop
+- **Evidence Guard**: Now uses fast `update-evidence.sh` (seconds) instead of `intelligent-audit.js`
+- **Evidence Updates**: Evidence now refreshes every 3 minutes as intended, notifications work correctly
+
+### Technical Details
+- Evidence guard was calling `intelligent-audit.js` directly with full repository scan
+- This caused 35-minute delays between evidence updates and notifications
+- Solution: Use `update-evidence.sh` which performs incremental analysis on staged files only
+- Refresh interval remains 180 seconds but now completes in seconds instead of minutes
+
+## [5.5.24] - 2026-01-04
+
+### Fixed
+- **Notifications**: Replaced empty catch blocks with proper error handling via `MacNotificationSender`
+- **Notifications**: macOS notifications now sent on every evidence update with proper error management
+- **Intelligent Audit**: Uses `MacNotificationSender` service for consistent notification behavior
+
+### Technical Details
+- Previous implementation had empty catch blocks that silently failed
+- `MacNotificationSender` provides terminal-notifier and osascript fallbacks with error logging
+- Notifications show "AI Evidence has been refreshed automatically" or "AI Gate BLOCKED - X violations"
+
 ## [5.5.22] - 2026-01-04
 
 ### Fixed

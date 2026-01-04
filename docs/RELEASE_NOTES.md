@@ -1,3 +1,104 @@
+# Release Notes - v5.5.25
+
+**Release Date**: January 4, 2026
+**Type**: Performance Patch Release
+**Compatibility**: Fully backward compatible with 5.5.x
+
+---
+
+## ⚡ Performance Fix
+
+### Problem
+
+The evidence guard daemon was running full AST analysis on every refresh (every 3 minutes), causing:
+
+- **35-minute delays** between evidence updates
+- **Notifications not appearing** until analysis completed
+- **High CPU usage** during full repository scans
+
+### Root Cause
+
+Evidence guard was calling `intelligent-audit.js` directly:
+
+```javascript
+const astScript = 'node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/orchestration/intelligent-audit.js';
+spawn('node', [astScript], { stdio: 'ignore' });
+```
+
+This script performs a full repository scan (1687 files, 11356 violations) which takes 35 minutes.
+
+### Solution
+
+Use `update-evidence.sh` which performs incremental analysis on staged files only:
+
+```javascript
+spawn('bash', [this.updateScript, '--auto'], { stdio: 'ignore' });
+```
+
+### Impact
+
+- **Before**: Evidence refresh takes 35 minutes, notifications delayed
+- **After**: Evidence refresh takes seconds, notifications appear immediately
+- Refresh interval remains 180 seconds but now completes in seconds instead of minutes
+
+---
+
+## 📦 Installation / Upgrade
+```bash
+npm install --save-dev pumuki-ast-hooks@5.5.25
+npm run install-hooks
+npm run ast:guard:restart
+```
+
+---
+
+# Release Notes - v5.5.24
+
+**Release Date**: January 4, 2026
+**Type**: Patch Release
+**Compatibility**: Fully backward compatible with 5.5.x
+
+---
+
+## 🔔 Notifications Fix
+
+### Problem
+
+macOS notifications had empty catch blocks that silently failed:
+
+```javascript
+try {
+  execSync('osascript ...');
+} catch (e) {
+}
+```
+
+### Solution
+
+Use `MacNotificationSender` service with proper error handling:
+
+```javascript
+const MacNotificationSender = require('../../application/services/notification/MacNotificationSender');
+const notificationSender = new MacNotificationSender(null);
+notificationSender.send({ message: notifMsg, level });
+```
+
+### Impact
+
+- Notifications now appear on every evidence update
+- Proper error logging when notifications fail
+- Consistent behavior across all notification types
+
+---
+
+## 📦 Installation / Upgrade
+```bash
+npm install --save-dev pumuki-ast-hooks@5.5.24
+npm run install-hooks
+```
+
+---
+
 # Release Notes - v5.5.22
 
 **Release Date**: January 4, 2026  
