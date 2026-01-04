@@ -5,6 +5,16 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.39] - 2026-01-04
+
+### Added
+- **InstallService**: `cleanupDuplicateRules()` method to remove .md duplicate files when .mdc exists
+- **InstallService**: Cleanup controlled by `HOOK_CLEANUP_DUPLICATES` environment variable (disabled by default)
+- **Tests**: Added test suite for cleanup duplicate rules functionality
+
+### Fixed
+- **InstallService**: Integrated cleanup step into installation flow (step 7.5/8)
+
 ## [5.5.38] - 2026-01-04
 
 ### Fixed

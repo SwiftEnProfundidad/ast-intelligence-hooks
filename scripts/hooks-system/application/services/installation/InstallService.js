@@ -157,7 +157,10 @@ class InstallService {
         this.logStep('7/8', 'Installing Git hooks...');
         this.gitService.installGitHooks();
 
-        this.logStep('7.5/8', 'Configuring VS Code/Cursor tasks for auto-start...');
+        this.logStep('7.5/8', 'Cleaning up duplicate rule files...');
+        this.cleanupDuplicateRules();
+
+        this.logStep('7.75/8', 'Configuring VS Code/Cursor tasks for auto-start...');
         this.ideIntegration.configureVSCodeTasks();
 
         this.logStep('8/8', 'Adding npm scripts to package.json...');
@@ -202,6 +205,55 @@ class InstallService {
             });
         } catch (error) {
             this.logWarning(`Failed to start evidence guard: ${error.message}`);
+        }
+    }
+
+    cleanupDuplicateRules() {
+        const cleanupEnabled = env.getBool('HOOK_CLEANUP_DUPLICATES', false);
+        if (!cleanupEnabled) {
+            this.logStep('7.75/8', 'Skipping duplicate cleanup (disabled via HOOK_CLEANUP_DUPLICATES)');
+            return;
+        }
+
+        this.logStep('7.75/8', 'Cleaning up duplicate rule files (.md when .mdc exists)...');
+
+        const rulesDirs = [
+            path.join(this.targetRoot, '.cursor', 'rules'),
+            path.join(this.targetRoot, '.windsurf', 'rules')
+        ];
+
+        let deletedCount = 0;
+
+        for (const rulesDir of rulesDirs) {
+            if (!fs.existsSync(rulesDir)) {
+                continue;
+            }
+
+            try {
+                const files = fs.readdirSync(rulesDir);
+                for (const file of files) {
+                    if (!file.endsWith('.md')) {
+                        continue;
+                    }
+
+                    const mdPath = path.join(rulesDir, file);
+                    const mdcPath = path.join(rulesDir, file + 'c');
+
+                    if (fs.existsSync(mdcPath)) {
+                        fs.unlinkSync(mdPath);
+                        deletedCount++;
+                        this.logger.info('DUPLICATE_RULE_DELETED', { file: mdPath });
+                    }
+                }
+            } catch (error) {
+                this.logWarning(`Failed to cleanup duplicates in ${rulesDir}: ${error.message}`);
+            }
+        }
+
+        if (deletedCount > 0) {
+            this.logSuccess(`Cleaned up ${deletedCount} duplicate .md files`);
+        } else {
+            this.logSuccess('No duplicate .md files found');
         }
     }
 
