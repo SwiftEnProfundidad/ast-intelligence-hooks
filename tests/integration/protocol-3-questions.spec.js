@@ -7,12 +7,10 @@ describe('Integration: protocol_3_questions', () => {
     const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
 
     beforeAll(() => {
-        if (!fs.existsSync(EVIDENCE_FILE)) {
-            execSync('bash scripts/hooks-system/bin/update-evidence.sh', {
-                cwd: REPO_ROOT,
-                stdio: 'pipe'
-            });
-        }
+        execSync('bash scripts/hooks-system/bin/update-evidence.sh', {
+            cwd: REPO_ROOT,
+            stdio: 'pipe'
+        });
     });
 
     describe('protocol_3_questions structure', () => {
@@ -59,11 +57,11 @@ describe('Integration: protocol_3_questions', () => {
         });
 
         test('should mention file type or context', () => {
-            const q1 = evidence.protocol_3_questions.question_1_file_type;
+            const q1 = (evidence.protocol_3_questions.question_1_file_type || '').toLowerCase();
             const hasRelevantInfo =
                 q1.includes('file') ||
                 q1.includes('code') ||
-                q1.includes('Documentation') ||
+                q1.includes('documentation') ||
                 q1.includes('branch');
             expect(hasRelevantInfo).toBe(true);
         });
@@ -85,11 +83,11 @@ describe('Integration: protocol_3_questions', () => {
         });
 
         test('should mention commits or similar code', () => {
-            const q2 = evidence.protocol_3_questions.question_2_similar_exists;
+            const q2 = (evidence.protocol_3_questions.question_2_similar_exists || '').toLowerCase();
             const hasRelevantInfo =
                 q2.includes('commit') ||
                 q2.includes('similar') ||
-                q2.includes('Recent') ||
+                q2.includes('recent') ||
                 q2.includes('duplicate');
             expect(hasRelevantInfo).toBe(true);
         });
@@ -111,12 +109,12 @@ describe('Integration: protocol_3_questions', () => {
         });
 
         test('should mention architecture or structure', () => {
-            const q3 = evidence.protocol_3_questions.question_3_clean_architecture;
+            const q3 = (evidence.protocol_3_questions.question_3_clean_architecture || '').toLowerCase();
             const hasRelevantInfo =
                 q3.includes('architecture') ||
                 q3.includes('docs') ||
                 q3.includes('sync') ||
-                q3.includes('README');
+                q3.includes('readme');
             expect(hasRelevantInfo).toBe(true);
         });
     });

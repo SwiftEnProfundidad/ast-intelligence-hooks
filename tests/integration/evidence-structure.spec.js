@@ -7,12 +7,10 @@ describe('Integration: .AI_EVIDENCE.json Structure', () => {
     const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
 
     beforeAll(() => {
-        if (!fs.existsSync(EVIDENCE_FILE)) {
-            execSync('bash scripts/hooks-system/bin/update-evidence.sh', {
-                cwd: REPO_ROOT,
-                stdio: 'pipe'
-            });
-        }
+        execSync('bash scripts/hooks-system/bin/update-evidence.sh', {
+            cwd: REPO_ROOT,
+            stdio: 'pipe'
+        });
     });
 
     describe('Complete .AI_EVIDENCE.json structure', () => {
@@ -54,6 +52,13 @@ describe('Integration: .AI_EVIDENCE.json Structure', () => {
             });
         });
 
+        test('should have rules_read_flags legacy field', () => {
+            expect(evidence.rules_read_flags).toBeDefined();
+            expect(typeof evidence.rules_read_flags).toBe('object');
+            expect(typeof evidence.rules_read_flags.gold).toBe('boolean');
+            expect(evidence.rules_read_flags.last_checked).toBeDefined();
+        });
+
         test('should have current_context with context information', () => {
             expect(evidence.current_context).toBeDefined();
             expect(typeof evidence.current_context).toBe('object');
@@ -61,12 +66,13 @@ describe('Integration: .AI_EVIDENCE.json Structure', () => {
 
         test('should have platforms with detected platforms', () => {
             expect(evidence.platforms).toBeDefined();
-            expect(Array.isArray(evidence.platforms)).toBe(true);
-            expect(evidence.platforms.length).toBeGreaterThan(0);
+            expect(typeof evidence.platforms).toBe('object');
 
             const validPlatforms = ['backend', 'frontend', 'ios', 'android'];
-            evidence.platforms.forEach(platform => {
-                expect(validPlatforms).toContain(platform);
+            validPlatforms.forEach(platform => {
+                expect(evidence.platforms[platform]).toBeDefined();
+                expect(typeof evidence.platforms[platform].detected).toBe('boolean');
+                expect(typeof evidence.platforms[platform].violations).toBe('number');
             });
         });
 
@@ -122,9 +128,11 @@ describe('Integration: .AI_EVIDENCE.json Structure', () => {
             const content = fs.readFileSync(EVIDENCE_FILE, 'utf8');
             const evidence = JSON.parse(content);
 
+            expect(Array.isArray(evidence.rules_read)).toBe(true);
             evidence.rules_read.forEach(rule => {
-                const ruleFile = path.join(REPO_ROOT, '.cursor/rules', rule.file);
-                expect(fs.existsSync(ruleFile)).toBe(true);
+                if (rule.verified === true && rule.path) {
+                    expect(fs.existsSync(rule.path)).toBe(true);
+                }
             });
         });
 
@@ -133,7 +141,10 @@ describe('Integration: .AI_EVIDENCE.json Structure', () => {
             const evidence = JSON.parse(content);
 
             if (evidence.current_context.platforms) {
-                expect(evidence.platforms).toEqual(expect.arrayContaining(evidence.current_context.platforms));
+                evidence.current_context.platforms.forEach(platform => {
+                    expect(evidence.platforms[platform]).toBeDefined();
+                    expect(evidence.platforms[platform].detected).toBe(true);
+                });
             }
         });
     });

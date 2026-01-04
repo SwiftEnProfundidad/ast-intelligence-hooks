@@ -9,6 +9,7 @@ const { TokenManager } = require('../utils/token-manager');
 const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
+const DynamicRulesLoader = require('../../application/services/DynamicRulesLoader');
 
 function deriveCategoryFromRuleId(ruleId) {
   if (!ruleId || typeof ruleId !== 'string') return 'unknown';
@@ -22,6 +23,121 @@ function deriveCategoryFromRuleId(ruleId) {
     return domain;
   }
   return parts[0] || 'unknown';
+}
+
+function detectPlatformsFromStagedFiles(stagedFiles) {
+  const platforms = new Set();
+  const files = Array.isArray(stagedFiles) ? stagedFiles : [];
+
+  files.forEach(filePath => {
+    const lowerPath = String(filePath || '').toLowerCase();
+
+    if (lowerPath.includes('apps/backend/') || lowerPath.includes('/services/') || lowerPath.includes('services/') || lowerPath.includes('/functions/') || lowerPath.includes('functions/')) {
+      platforms.add('backend');
+    }
+    if (lowerPath.includes('apps/web-app/') || lowerPath.includes('apps/admin') || lowerPath.includes('apps/frontend/') || lowerPath.includes('frontend/')) {
+      platforms.add('frontend');
+    }
+    if (lowerPath.includes('apps/ios/') || lowerPath.endsWith('.swift')) {
+      platforms.add('ios');
+    }
+    if (lowerPath.includes('apps/android/') || lowerPath.endsWith('.kt') || lowerPath.endsWith('.kts') || lowerPath.endsWith('.java')) {
+      platforms.add('android');
+    }
+  });
+
+  return platforms;
+}
+
+function countViolationsByPlatform(violations) {
+  const counts = { backend: 0, frontend: 0, ios: 0, android: 0 };
+  const list = Array.isArray(violations) ? violations : [];
+
+  list.forEach(v => {
+    const ruleId = v.ruleId || v.rule || 'unknown';
+    const category = String(v.category || deriveCategoryFromRuleId(ruleId) || '').toLowerCase();
+    const platform = category.split('.')[0];
+    if (counts[platform] !== undefined) {
+      counts[platform] += 1;
+    }
+  });
+
+  return counts;
+}
+
+function buildPlatformsEvidence(stagedFiles, violations) {
+  const stagedDetected = detectPlatformsFromStagedFiles(stagedFiles);
+  const violationCounts = countViolationsByPlatform(violations);
+
+  const platforms = ['backend', 'frontend', 'ios', 'android'];
+  const result = {};
+
+  platforms.forEach(p => {
+    const violationsCount = violationCounts[p] || 0;
+    result[p] = {
+      detected: stagedDetected.has(p) || violationsCount > 0,
+      violations: violationsCount
+    };
+  });
+
+  return result;
+}
+
+function summarizeRulesContent(content) {
+  if (!content || typeof content !== 'string') {
+    return 'not found';
+  }
+  const firstNonEmpty = content
+    .split('\n')
+    .map(l => l.trim())
+    .find(l => l.length > 0);
+  const firstLine = firstNonEmpty ? firstNonEmpty.slice(0, 140) : '';
+  return firstLine.length > 0 ? firstLine : `loaded (${content.length} chars)`;
+}
+
+async function buildRulesReadEvidence(platformsEvidence) {
+  const loader = new DynamicRulesLoader();
+  const entries = [];
+
+  const detectedPlatforms = ['backend', 'frontend', 'ios', 'android']
+    .filter(p => platformsEvidence && platformsEvidence[p] && platformsEvidence[p].detected);
+
+  const uniqueFiles = ['rulesgold.mdc', ...detectedPlatforms.map(p => loader.rulesMap[p]).filter(Boolean)];
+
+  for (const file of uniqueFiles) {
+    let verified = false;
+    let summary = 'not found';
+    let resolvedPath = null;
+
+    try {
+      const content = await loader.loadRule(file);
+      verified = Boolean(content);
+      summary = summarizeRulesContent(content);
+      const cached = loader.cache && loader.cache.rules ? loader.cache.rules.get(file) : null;
+      resolvedPath = cached && cached.fullPath ? cached.fullPath : null;
+    } catch (error) {
+      summary = `error: ${toErrorMessage(error)}`;
+    }
+
+    entries.push({
+      file,
+      verified,
+      summary,
+      path: resolvedPath
+    });
+  }
+
+  return {
+    entries,
+    legacyFlags: {
+      backend: detectedPlatforms.includes('backend'),
+      frontend: detectedPlatforms.includes('frontend'),
+      ios: detectedPlatforms.includes('ios'),
+      android: detectedPlatforms.includes('android'),
+      gold: true,
+      last_checked: formatLocalTimestamp()
+    }
+  };
 }
 
 function formatLocalTimestamp(date = new Date()) {
@@ -90,7 +206,7 @@ async function runIntelligentAudit() {
       const gateResult = { passed: true, exitCode: 0, blockedBy: null };
       const tokenManager = new TokenManager();
       const tokenUsage = tokenManager.estimate(enhancedAll, {});
-      updateAIEvidence(enhancedAll, gateResult, tokenUsage);
+      await updateAIEvidence(enhancedAll, gateResult, tokenUsage);
       process.exit(0);
     }
 
@@ -136,7 +252,7 @@ async function runIntelligentAudit() {
 
     tokenManager.record(tokenUsage);
 
-    updateAIEvidence(enhancedViolations, gateResult, tokenUsage);
+    await updateAIEvidence(enhancedViolations, gateResult, tokenUsage);
 
     saveEnhancedViolations(enhancedViolations);
 
@@ -201,7 +317,7 @@ function saveEnhancedViolations(violations) {
   fs.writeFileSync(outputPath, JSON.stringify(enhanced, null, 2));
 }
 
-function updateAIEvidence(violations, gateResult, tokenUsage) {
+async function updateAIEvidence(violations, gateResult, tokenUsage) {
   const evidencePath = '.AI_EVIDENCE.json';
 
   if (!fs.existsSync(evidencePath)) {
@@ -320,14 +436,12 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
       last_answered: formatLocalTimestamp()
     };
 
-    evidence.rules_read = {
-      backend: true,
-      frontend: false,
-      ios: false,
-      android: false,
-      gold: true,
-      last_checked: formatLocalTimestamp()
-    };
+    const stagedFiles = getStagedFiles();
+    const platformsEvidence = buildPlatformsEvidence(stagedFiles, violations);
+    const rulesRead = await buildRulesReadEvidence(platformsEvidence);
+
+    evidence.rules_read = rulesRead.entries;
+    evidence.rules_read_flags = rulesRead.legacyFlags;
 
     evidence.current_context = {
       working_on: env.get('AUTO_EVIDENCE_SUMMARY', 'AST Intelligence Analysis'),
@@ -337,12 +451,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
       timestamp: formatLocalTimestamp()
     };
 
-    evidence.platforms = {
-      backend: { detected: true, violations: violations.filter(v => v.category && v.category.includes('backend')).length },
-      frontend: { detected: false, violations: 0 },
-      ios: { detected: false, violations: 0 },
-      android: { detected: false, violations: 0 }
-    };
+    evidence.platforms = platformsEvidence;
 
     evidence.session_id = `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 

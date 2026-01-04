@@ -23,7 +23,15 @@ describe('AI_EVIDENCE.json structure validation', () => {
       question_3_clean_architecture: 'Verify that the code follows Clean Architecture and SOLID principles',
       last_answered: new Date().toISOString()
     },
-    rules_read: {
+    rules_read: [
+      {
+        file: 'rulesgold.mdc',
+        verified: true,
+        summary: 'loaded (example)',
+        path: '/tmp/rulesgold.mdc'
+      }
+    ],
+    rules_read_flags: {
       backend: true,
       frontend: false,
       ios: false,
@@ -79,15 +87,25 @@ describe('AI_EVIDENCE.json structure validation', () => {
     expect(evidence.protocol_3_questions.last_answered).toBeDefined();
   });
 
-  it('should have rules_read field tracking all platforms', () => {
+  it('should have rules_read field with rule load evidence entries', () => {
     const evidence = createMockEvidence();
     expect(evidence.rules_read).toBeDefined();
-    expect(evidence.rules_read.backend).toBe(true);
-    expect(evidence.rules_read.frontend).toBe(false);
-    expect(evidence.rules_read.ios).toBe(false);
-    expect(evidence.rules_read.android).toBe(false);
-    expect(evidence.rules_read.gold).toBe(true);
-    expect(evidence.rules_read.last_checked).toBeDefined();
+    expect(Array.isArray(evidence.rules_read)).toBe(true);
+    expect(evidence.rules_read.length).toBeGreaterThan(0);
+    expect(evidence.rules_read[0]).toHaveProperty('file');
+    expect(evidence.rules_read[0]).toHaveProperty('verified');
+    expect(evidence.rules_read[0]).toHaveProperty('summary');
+  });
+
+  it('should have rules_read_flags legacy field tracking platform flags', () => {
+    const evidence = createMockEvidence();
+    expect(evidence.rules_read_flags).toBeDefined();
+    expect(evidence.rules_read_flags.backend).toBe(true);
+    expect(evidence.rules_read_flags.frontend).toBe(false);
+    expect(evidence.rules_read_flags.ios).toBe(false);
+    expect(evidence.rules_read_flags.android).toBe(false);
+    expect(evidence.rules_read_flags.gold).toBe(true);
+    expect(evidence.rules_read_flags.last_checked).toBeDefined();
   });
 
   it('should have current_context field with branch and file info', () => {
