@@ -895,10 +895,14 @@ osascript (macOS)
 
 ## 9. Plan de Actuación Fase por Fase
 
-### Leyenda
+### Leyenda de Estado
 - ✅ **Hecho**
 - 🚧 **En construcción**
 - ⏳ **Pendiente**
+
+### Leyenda de Asignación de Modelo
+- 🤖 **Haiku 4.5** - Tareas de implementación directa (70% más económico)
+- 🧠 **Sonnet 4.5** - Tareas de arquitectura, análisis y decisiones complejas
 
 ---
 
@@ -911,7 +915,7 @@ osascript (macOS)
 | 1.3 | ✅ | `bin/update-evidence.sh` | Modificar para usar `evidence:full-update` |
 | 1.4 | ✅ | `package.json` | Verificar que `ts-morph` se declare como peer dependency |
 | 1.5 | ✅ | `InstallService.js` | Añadir verificación de dependencias críticas |
-| 1.6 | 🚧 | Versión | Publicar v5.5.16 con correcciones |
+| 1.6 | ✅ | Versión | Publicar v5.5.16 con correcciones |
 
 ---
 
@@ -919,38 +923,44 @@ osascript (macOS)
 
 | Tarea | Estado | Archivo | Descripción |
 |-------|--------|---------|-------------|
-| 2.1 | ⏳ | `intelligent-audit.js` | Añadir generación de `protocol_3_questions` |
-| 2.2 | ⏳ | `intelligent-audit.js` | Añadir generación de `rules_read` |
-| 2.3 | ⏳ | `intelligent-audit.js` | Añadir generación de `current_context` |
-| 2.4 | ⏳ | `intelligent-audit.js` | Añadir generación de `platforms` |
-| 2.5 | ⏳ | `intelligent-audit.js` | Añadir generación de `session_id` |
-| 2.6 | ⏳ | Tests | Crear tests para verificar estructura completa de evidence |
+| 2.1 | ✅ | `intelligent-audit.js` | Añadir generación de `protocol_3_questions` |
+| 2.2 | ✅ | `intelligent-audit.js` | Añadir generación de `rules_read` |
+| 2.3 | ✅ | `intelligent-audit.js` | Añadir generación de `current_context` |
+| 2.4 | ✅ | `intelligent-audit.js` | Añadir generación de `platforms` |
+| 2.5 | ✅ | `intelligent-audit.js` | Añadir generación de `session_id` |
+| 2.6 | ✅ | Tests | Crear tests para verificar estructura completa de evidence |
+
+**Fase 2 COMPLETADA** ✅
 
 ---
 
-### Fase 3: Mejoras de Notificaciones (P1 - ESTA SEMANA)
+### Fase 3: Mejoras de Notificaciones (P1 - COMPLETADA)
 
 | Tarea | Estado | Archivo | Descripción |
 |-------|--------|---------|-------------|
-| 3.1 | ⏳ | `aiGateCheck()` | Añadir notificación cuando status=BLOCKED |
-| 3.2 | ⏳ | `RealtimeGuardService.js` | Verificar que se inicia automáticamente |
-| 3.3 | ⏳ | Docs | Documentar todos los tipos de notificaciones |
-| 3.4 | ⏳ | Tests | Crear tests E2E para notificaciones |
+| 3.1 | ✅ | `aiGateCheck()` | Añadir notificación cuando status=BLOCKED |
+| 3.2 | ✅ | `RealtimeGuardService.js` | Verificar que se inicia automáticamente |
+| 3.3 | ✅ | Docs | Documentar todos los tipos de notificaciones |
+| 3.4 | ✅ | Tests | Crear tests E2E para notificaciones |
+
+**Fase 3 COMPLETADA** ✅ - PR #84 mergeada
 
 ---
 
-### Fase 4: Reestructuración del README (P2 - PRÓXIMA SEMANA)
+### Fase 4: Reestructuración del README (P2 - COMPLETADA)
 
 | Tarea | Estado | Archivo | Descripción |
 |-------|--------|---------|-------------|
-| 4.1 | ⏳ | README.md | Mover Table of Contents al inicio |
-| 4.2 | ⏳ | README.md | Eliminar segundo diagrama de arquitectura |
-| 4.3 | ⏳ | README.md | Consolidar secciones de features |
-| 4.4 | ⏳ | README.md | Consolidar secciones de instalación |
-| 4.5 | ⏳ | README.md | Añadir sección "Recent Changes" |
-| 4.6 | ⏳ | README.md | Añadir sección "Known Issues" |
-| 4.7 | ⏳ | README.md | Actualizar versión (5.3.9 → 5.5.x) |
-| 4.8 | ⏳ | Todos los docs | Verificar enlaces internos |
+| 4.1 | ✅ | README.md | Mover Table of Contents al inicio |
+| 4.2 | ✅ | README.md | Eliminar segundo diagrama de arquitectura |
+| 4.3 | ✅ | README.md | Consolidar secciones de features |
+| 4.4 | ✅ | README.md | Consolidar secciones de instalación |
+| 4.5 | ✅ | README.md | Añadir sección "Recent Changes" |
+| 4.6 | ✅ | README.md | Añadir sección "Known Issues" |
+| 4.7 | ✅ | README.md | Actualizar versión (5.3.9 → 5.5.16) |
+| 4.8 | ✅ | Todos los docs | Verificar enlaces internos |
+
+**Fase 4 COMPLETADA** ✅ - PR #85 creada
 
 ---
 
