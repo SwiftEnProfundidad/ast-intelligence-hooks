@@ -5,6 +5,31 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.16] - 2026-01-04
+
+### Added
+- **Integration Tests**: Complete test suite for `.AI_EVIDENCE.json` structure validation
+- **Integration Tests**: Tests for `ai_gate.violations[]` and `severity_metrics` validation
+- **Integration Tests**: Tests for `protocol_3_questions` validation
+- **Documentation**: Phase 5 Testing and Validation Report (`_AI_DOCS/PHASE5_TESTING_VALIDATION_REPORT.md`)
+
+### Changed
+- **Test Directory**: Renamed `__tests__` to `tests` for cleaner structure
+- **Test Language**: Translated all test strings from Spanish to English
+- **Jest Configuration**: Updated `jest.config.js` to use `tests/**` pattern
+- **README**: Restructured with consolidated sections (Installation, Quick Start)
+- **README**: Added "Recent Changes" and "Known Issues" sections
+- **README**: Updated version from 5.3.9 to 5.5.16
+
+### Fixed
+- **Notifications**: Added proper error handling for macOS notifications in `aiGateCheck`
+- **Evidence**: Restored full functionality of evidence management system
+
+### Test Results
+- 32/32 integration tests passing
+- 3 test suites completed
+- Execution time: 0.173s
+
 ## [5.3.27] - 2026-01-02
 
 ### Fixed
