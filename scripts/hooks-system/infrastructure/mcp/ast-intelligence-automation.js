@@ -664,6 +664,19 @@ async function aiGateCheck() {
 
         const isBlocked = violations.length > 0;
 
+        if (isBlocked) {
+            try {
+                const { execSync } = require('child_process');
+                const os = require('os');
+
+                if (os.platform() === 'darwin') {
+                    const notificationCmd = `osascript -e 'display notification "${violations.length} violation(s) detected. Fix before proceeding." with title "🚨 AI Gate BLOCKED" sound name "Basso"'`;
+                    execSync(notificationCmd, { stdio: 'ignore' });
+                }
+            } catch (error) {
+            }
+        }
+
         return {
             status: isBlocked ? 'BLOCKED' : 'ALLOWED',
             timestamp: new Date().toISOString(),
