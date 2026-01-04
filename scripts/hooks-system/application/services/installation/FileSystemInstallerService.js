@@ -54,6 +54,9 @@ class FileSystemInstallerService {
             if (fs.existsSync(source)) {
                 if (item === 'infrastructure/') {
                     this.copyRecursiveExcluding(source, dest, ['scripts']);
+                } else if (item === 'bin/') {
+                    // Exclude wrapper scripts that would cause fork bombs
+                    this.copyRecursiveExcluding(source, dest, ['session-loader.sh', 'cli.js', 'install.js']);
                 } else {
                     this.copyRecursive(source, dest);
                 }
