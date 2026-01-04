@@ -123,8 +123,46 @@ class InstallService {
         this.logStep('8/8', 'Adding npm scripts to package.json...');
         this.configGenerator.addNpmScripts();
 
+        this.logStep('8.5/8', 'Starting evidence guard daemon...');
+        this.startEvidenceGuard();
+
         this.logger.info('INSTALLATION_COMPLETED_SUCCESSFULLY');
         this.printFooter();
+    }
+
+    startEvidenceGuard() {
+        const { spawn } = require('child_process');
+        const guardScript = path.join(this.targetRoot, 'scripts/hooks-system/bin/evidence-guard');
+
+        if (!fs.existsSync(guardScript)) {
+            this.logWarning('Evidence guard script not found, skipping daemon start');
+            return;
+        }
+
+        try {
+            const child = spawn('bash', [guardScript, 'start'], {
+                cwd: this.targetRoot,
+                stdio: 'pipe',
+                detached: false
+            });
+
+            let output = '';
+            child.stdout.on('data', (data) => { output += data.toString(); });
+            child.stderr.on('data', (data) => { output += data.toString(); });
+
+            child.on('close', (code) => {
+                if (code === 0) {
+                    this.logSuccess('Evidence guard daemon started');
+                } else {
+                    this.logWarning('Failed to start evidence guard daemon');
+                    if (output) {
+                        console.log(output);
+                    }
+                }
+            });
+        } catch (error) {
+            this.logWarning(`Failed to start evidence guard: ${error.message}`);
+        }
     }
 
     printHeader() {
@@ -140,6 +178,10 @@ ${COLORS.reset}\n`);
     printFooter() {
         process.stdout.write(`
 ${COLORS.green}✨ Installation Complete! ✨${COLORS.reset}
+
+${COLORS.cyan}Evidence Guard Daemon:${COLORS.reset}
+- Auto-refresh is now running in background (every 180 seconds)
+- Manage with: ${COLORS.yellow}npm run ast:guard:{start|stop|status|logs}${COLORS.reset}
 
 ${COLORS.cyan}Next Steps:${COLORS.reset}
 1. Review generated configuration in ${COLORS.yellow}scripts/hooks-system/config/project.config.json${COLORS.reset}
