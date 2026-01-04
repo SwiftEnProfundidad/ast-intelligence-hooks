@@ -391,6 +391,16 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
     console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers)');
 
+    try {
+      const gateStatus = evidence.ai_gate.status;
+      const violationCount = evidence.severity_metrics.total_violations;
+      const notifTitle = gateStatus === 'BLOCKED' ? '🚨 AI Gate BLOCKED' : '✅ Evidence Updated';
+      const notifMsg = `Gate: ${gateStatus} | Violations: ${violationCount} | Tokens: ${tokenPercent}%`;
+      execSync(`osascript -e 'display notification "${notifMsg}" with title "${notifTitle}" sound name "Glass"'`, { stdio: 'ignore' });
+    } catch (notifErr) {
+      // Silent fail for non-macOS
+    }
+
   } catch (evidenceFileUpdateError) {
     process.stderr.write(`[Intelligent Audit] ⚠️  Evidence update failed: ${toErrorMessage(evidenceFileUpdateError)}\n`);
   }
