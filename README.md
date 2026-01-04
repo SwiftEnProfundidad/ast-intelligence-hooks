@@ -43,6 +43,7 @@
 - [Complete Architecture and Workflow](#complete-architecture-and-workflow)
 - [What is it?](#what-is-it)
 - [What problems does it solve?](#what-problems-does-it-solve)
+- [Git Flow Automation](#git-flow-automation)
 - [Features](#features)
 - [Use Cases](#use-cases)
 - [Installation](#installation)
@@ -510,6 +511,49 @@ See [HOW_IT_WORKS.md](./docs/HOW_IT_WORKS.md#architecture-detection-by-platform)
 - **MEDIUM/LOW**: Generate warnings in reports
 - **Configurable**: Adjust levels according to your project
 
+### 🔄 Git Flow Automation
+
+**Complete Git Flow workflow automation** with automatic enforcement:
+
+- **Protected Branch Blocking**: Automatically blocks commits and pushes to `main`, `master`, and `develop` branches
+- **Auto-Create Feature Branch**: Automatically creates feature branch when on `develop`/`main` based on changes
+- **Smart Branch Naming**: Generates branch names based on file types (feature/, fix/, chore/, docs/, etc.)
+- **One-Command Cycle**: Execute complete Git Flow with `npm run ast:gitflow`
+- **Automatic PR Creation**: Creates Pull Requests using GitHub CLI (requires `gh`)
+- **Optional Auto-Merge**: Automatically merges PRs with `--auto-merge` flag
+- **Branch Cleanup**: Automatically deletes merged branches (local and remote)
+- **Branch Synchronization**: Syncs `develop` and `main` with remote
+
+**Workflow:**
+```bash
+# Work on develop/main (changes detected)
+
+# Run complete cycle (auto-creates feature branch)
+npm run ast:gitflow -- --auto-merge
+```
+
+**Branch Naming Logic:**
+- `fix/` - Files containing "fix", "bug", "error"
+- `test/` - Test files or "spec" files
+- `docs/` - Documentation files (README, CHANGELOG)
+- `refactor/` - Files containing "refactor", "cleanup"
+- `ci/` - CI/CD files (workflow, github actions)
+- `chore/` - Config files, package.json
+- `feature/` - Default for other changes
+
+**Options:**
+```bash
+npm run ast:gitflow                              # Basic cycle (auto-creates branch if needed)
+npm run ast:gitflow -- -m "feat: new feature"    # Custom commit message
+npm run ast:gitflow -- --auto-merge              # Auto-merge PR
+npm run ast:gitflow -- --skip-cleanup            # Skip branch cleanup
+npm run ast:gitflow -- --skip-sync               # Skip branch sync
+```
+
+**Hooks:**
+- `pre-commit`: Blocks commits on protected branches + AST analysis
+- `pre-push`: Blocks push to protected branches + validates naming
+
 ---
 
 ## Use Cases
@@ -566,6 +610,21 @@ hook-watch
 
 # System status
 hook-status
+```
+
+### 6. Git Flow Automation
+
+```bash
+# Complete Git Flow cycle
+npm run ast:gitflow
+
+# With options
+npm run ast:gitflow -- -m "feat: new feature" --auto-merge
+
+# Using MCP tools (from IDE)
+mcp0_auto_complete_gitflow
+mcp0_sync_branches
+mcp0_cleanup_stale_branches
 ```
 
 ---
@@ -1023,6 +1082,9 @@ hook-predict                   # Violation prediction
 hook-playbook                  # Execute playbook
 
 # Git Flow
+npm run ast:gitflow              # Complete Git Flow cycle
+npm run ast:gitflow -- -m "msg" # With commit message
+npm run ast:gitflow -- --auto-merge  # Auto-merge PR
 gitflow check                  # Verify Git Flow
 gitflow status                 # Current status
 gitflow workflow               # View full workflow
@@ -1033,6 +1095,7 @@ gitflow workflow               # View full workflow
 ```bash
 npm run audit                  # Full analysis
 npm run install-hooks          # Install hooks
+npm run ast:gitflow            # Complete Git Flow cycle
 npm test                       # Run tests
 npm run lint                   # Linter
 npm run typecheck              # Type checking
@@ -1064,6 +1127,63 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 ---
 
 ## 📝 Recent Changes
+
+### Version 5.5.34 (2026-01-04)
+
+**✨ New Features:**
+- **Git Flow Auto-Create Branch**: Automatically creates feature branch when on `develop`/`main` based on changes
+- **Smart Branch Naming**: Generates branch names based on file types (feature/, fix/, chore/, docs/, etc.)
+
+**Technical Details:**
+- When running `npm run ast:gitflow` on protected branch, script now:
+  - Analyzes changed files to infer branch type
+  - Generates descriptive branch name with timestamp
+  - Creates and switches to new feature branch automatically
+  - Continues with complete Git Flow cycle
+- Branch naming logic:
+  - `fix/` - Files containing "fix", "bug", "error"
+  - `test/` - Test files or "spec" files
+  - `docs/` - Documentation files (README, CHANGELOG)
+  - `refactor/` - Files containing "refactor", "cleanup"
+  - `ci/` - CI/CD files (workflow, github actions)
+  - `chore/` - Config files, package.json
+  - `feature/` - Default for other changes
+
+---
+
+### Version 5.5.33 (2026-01-04)
+
+**🐛 Bug Fixes:**
+- **iOS Security Analyzer**: Fixed false positive in `ios.security.missing_ssl_pinning` rule
+- Now recognizes SSL pinning implementations using `URLSessionDelegate` + `URLAuthenticationChallenge`
+- **iOS Enterprise Analyzer**: Fixed same false positive in `ios.networking.missing_ssl_pinning` rule
+
+**Technical Details:**
+- Previous implementation only checked for `ServerTrustPolicy` or `pinning` keywords
+- Files implementing SSL pinning with `URLSessionDelegate` were incorrectly flagged
+- Added detection for `URLSessionDelegate` + `URLAuthenticationChallenge` pattern
+- This fixes false positives on files like `SSLPinningDelegate.swift` that properly implement SSL pinning
+
+---
+
+### Version 5.5.32 (2026-01-04)
+
+**✨ New Features:**
+- **Git Flow Automation**: Complete Git Flow cycle with `npm run ast:gitflow`
+- **Protected Branch Blocking**: Pre-commit hook now blocks commits on `main`, `master`, and `develop`
+- **Pre-Push Hook**: Automatically installed, blocks push to protected branches and validates naming conventions
+- **Auto PR Creation**: Creates Pull Requests using GitHub CLI (`gh`)
+- **Auto-Merge Support**: Optional auto-merge with `--auto-merge` flag
+- **Branch Cleanup**: Automatically deletes merged branches (local + remote)
+- **Branch Synchronization**: Syncs `develop` and `main` with remote
+
+**🔧 Improvements:**
+- Added `ast-gitflow` binary to package.json
+- Added `ast:gitflow` npm script
+- Updated GitEnvironmentService to install pre-push hook
+- Updated pre-commit hook to validate protected branches
+
+---
 
 ### Version 5.5.25 (2026-01-04)
 
@@ -1174,7 +1294,7 @@ Developed by **Pumuki Team®**
 
 - **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development)
 - **Contact**: freelancemerlos@gmail.com
-- **Version**: 5.5.16
+- **Version**: 5.5.34
 - **Repository**: [GitHub](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks)
 
 ---

@@ -5,6 +5,64 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.34] - 2026-01-04
+
+### Added
+- **Git Flow Auto-Create Branch**: Automatically creates feature branch when on `develop`/`main` based on changes
+- **Smart Branch Naming**: Generates branch names based on file types (feature/, fix/, chore/, docs/, etc.)
+
+### Technical Details
+- When running `npm run ast:gitflow` on protected branch, script now:
+  - Analyzes changed files to infer branch type
+  - Generates descriptive branch name with timestamp
+  - Creates and switches to new feature branch automatically
+  - Continues with complete Git Flow cycle
+- Branch naming logic:
+  - `fix/` - Files containing "fix", "bug", "error"
+  - `test/` - Test files or "spec" files
+  - `docs/` - Documentation files (README, CHANGELOG)
+  - `refactor/` - Files containing "refactor", "cleanup"
+  - `ci/` - CI/CD files (workflow, github actions)
+  - `chore/` - Config files, package.json
+  - `feature/` - Default for other changes
+
+## [5.5.33] - 2026-01-04
+
+### Fixed
+- **iOS Security Analyzer**: Fixed false positive in `ios.security.missing_ssl_pinning` rule
+- **iOS Security Analyzer**: Now recognizes SSL pinning implementations using `URLSessionDelegate` + `URLAuthenticationChallenge`
+- **iOS Enterprise Analyzer**: Fixed same false positive in `ios.networking.missing_ssl_pinning` rule
+
+### Technical Details
+- Previous implementation only checked for `ServerTrustPolicy` or `pinning` keywords
+- Files implementing SSL pinning with `URLSessionDelegate` were incorrectly flagged
+- Added detection for `URLSessionDelegate` + `URLAuthenticationChallenge` pattern
+- This fixes false positives on files like `SSLPinningDelegate.swift` that properly implement SSL pinning
+
+## [5.5.32] - 2026-01-04
+
+### Added
+- **Git Flow Automation**: Complete Git Flow cycle automation with `npm run ast:gitflow`
+- **Protected Branch Blocking**: Pre-commit hook now blocks commits on `main`, `master`, and `develop` branches
+- **Pre-Push Hook**: Automatically installed hook that blocks push to protected branches and validates Git Flow naming conventions
+- **Auto PR Creation**: Automatic Pull Request creation using GitHub CLI (`gh`)
+- **Auto-Merge Support**: Optional automatic PR merge with `--auto-merge` flag
+- **Branch Cleanup**: Automatic deletion of merged branches (both local and remote)
+- **Branch Synchronization**: Automatic synchronization of `develop` and `main` branches with remote
+- **Binary**: Added `ast-gitflow` binary to package.json for direct execution
+- **NPM Script**: Added `ast:gitflow` npm script for easy access
+
+### Changed
+- **GitEnvironmentService**: Updated to automatically install pre-push hook during installation
+- **Pre-Commit Hook**: Enhanced to validate current branch and block commits on protected branches
+- **ConfigurationGeneratorService**: Added `ast:gitflow` script to generated package.json
+
+### Technical Details
+- Git Flow cycle includes: validate branch → commit changes → push to origin → create PR → optional merge → cleanup branches → sync branches
+- Hooks enforce Git Flow best practices without requiring manual intervention
+- All Git Flow operations can be performed via single command or individual steps
+- Compatible with GitHub CLI for PR operations
+
 ## [5.5.25] - 2026-01-04
 
 ### Fixed

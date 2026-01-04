@@ -597,7 +597,7 @@ The library includes a version checker to detect if updates are available:
 
 ```bash
 # Using npm script
-npm run check-version
+npm run ast:check-version
 
 # Or using CLI directly
 npx ast-check-version
@@ -666,7 +666,7 @@ This ensures:
 
 ```bash
 # Check version
-npm run check-version
+npm run ast:check-version
 
 # Verify hooks work
 git commit --allow-empty -m "test: verify hooks after update"
@@ -678,7 +678,7 @@ You can check for updates periodically:
 
 ```bash
 # Add to your workflow (weekly/monthly)
-npm run check-version
+npm run ast:check-version
 ```
 
 ### For Local Development Installations
