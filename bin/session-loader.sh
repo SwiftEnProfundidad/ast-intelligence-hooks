@@ -1,5 +1,5 @@
 #!/bin/bash
-# AST Session Loader v5.5.20
+# AST Session Loader v5.5.22
 # Runs on IDE startup to initialize AST hooks, show context and check tokens
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 
@@ -26,7 +26,7 @@ fi
 # Banner
 echo ""
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║         🤖 AST Intelligence Hooks v5.5.20                ║${NC}"
+echo -e "${BLUE}║         🤖 AST Intelligence Hooks v5.5.22                ║${NC}"
 echo -e "${BLUE}║         Workspace Opened - Loading Context...            ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
