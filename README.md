@@ -1122,8 +1122,8 @@ Developed by **Pumuki Team®**
 
 - **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development)
 - **Contact**: freelancemerlos@gmail.com
-- **Version**: 5.3.9
-- **Repository**: [GitHub](https://github.com/carlos/ast-intelligence-hooks)
+- **Version**: 5.5.16
+- **Repository**: [GitHub](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks)
 
 ---
 
