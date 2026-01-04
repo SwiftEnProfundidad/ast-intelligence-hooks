@@ -179,6 +179,12 @@ Seguir las recomendaciones de la **Sección 7** del `AUDIT_REPORT_EXHAUSTIVO_202
 - Violaciones detalladas en `ai_gate.violations[]`
 - Campos `protocol_3_questions`, `rules_read`, etc.
 
+**Refactor Tests (2026-01-04) ✅ COMPLETADO:**
+- Renombrar carpeta `__tests__` → `tests`
+- Traducir strings de tests a inglés
+- Actualizar configuración de Jest
+- PR #88 creada
+
 **Sonnet 4.5 (5.4-5.5):** 
 - Ejecutar pruebas de integración en proyecto R_GO
 - Analizar resultados y detectar problemas

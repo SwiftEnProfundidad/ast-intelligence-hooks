@@ -974,6 +974,12 @@ osascript (macOS)
 | 5.4 | ⏳ | R_GO | Ejecutar pruebas en proyecto limpio |
 | 5.5 | ⏳ | Docs | Documentar resultados y cerrar ciclo |
 
+**Refactor Tests (2026-01-04):**
+- ✅ Renombrar carpeta `__tests__` → `tests`
+- ✅ Traducir strings de tests a inglés
+- ✅ Actualizar configuración de Jest
+- ✅ PR #88 creada
+
 ---
 
 ### Fase 6: Documentación y Mantenimiento (P2 - CONTINUA)
