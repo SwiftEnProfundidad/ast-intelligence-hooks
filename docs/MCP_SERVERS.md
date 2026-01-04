@@ -654,6 +654,62 @@ if (aiStart.success && aiStart.evidenceUpdated) {
 
 ---
 
+## Notification Types
+
+The system supports multiple notification channels to keep AI informed of critical events:
+
+### macOS Notifications
+
+**Triggered by:** `ai_gate_check()` when violations are detected (status=BLOCKED)
+
+**Format:**
+- **Title:** `🚨 AI Gate BLOCKED`
+- **Message:** `{violation_count} violation(s) detected. Fix before proceeding.`
+- **Sound:** Basso (critical alert)
+- **Platform:** macOS only (graceful fallback on other systems)
+
+**Example:**
+```
+Title: 🚨 AI Gate BLOCKED
+Message: 3 violation(s) detected. Fix before proceeding.
+Sound: Basso
+```
+
+### Evidence Staleness Notifications
+
+**Triggered by:** `RealtimeGuardService` when evidence becomes stale
+
+**Levels:**
+- **Warning:** Evidence is stale - Auto-refreshing...
+- **Success:** Evidence refreshed successfully
+- **Error:** Failed to refresh evidence
+
+### Token Monitor Notifications
+
+**Triggered by:** Token monitor when usage exceeds thresholds
+
+**Levels:**
+- **Info:** 🔋 Token monitor started
+- **Warning:** Token usage at 75%+
+- **Critical:** Token usage at 90%+
+
+### Git Flow Notifications
+
+**Triggered by:** Git flow auto-sync when branches are synchronized
+
+**Format:**
+- **Info:** 🔄 Branches synchronized
+- **Error:** Git flow sync failed
+
+### Notification Configuration
+
+**Environment Variables:**
+- `HOOK_GUARD_NOTIFICATIONS_ENABLED` - Enable/disable all notifications (default: true)
+- `HOOK_GUARD_NOTIFICATION_LEVEL` - Minimum level to display (info|warning|error)
+- `HOOK_GUARD_MACOS_NOTIFICATIONS` - Enable macOS notifications (default: true)
+
+---
+
 ## Troubleshooting
 
 ### MCP Server Doesn't Start
