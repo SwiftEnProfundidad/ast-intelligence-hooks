@@ -1065,6 +1065,21 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 
 ## 📝 Recent Changes
 
+### Version 5.5.20 (2026-01-04)
+
+**🐛 Bug Fixes:**
+- Restored comprehensive session context report on IDE startup
+- Fixed evidence age calculation for ISO 8601 timestamps with timezone offsets
+- Removed `exec "$SHELL"` that caused infinite loop on macOS
+- Added Python-based timestamp parsing for reliable timezone conversion
+
+**🔧 Improvements:**
+- Session loader now displays branch, recent commits, session context, violations summary, and evidence freshness
+- Added quick commands section for user convenience
+- Violations summary now reads from `ast-summary.json` with severity breakdown
+
+---
+
 ### Version 5.5.16 (2026-01-04)
 
 **✨ New Features:**
