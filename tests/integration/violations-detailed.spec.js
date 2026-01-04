@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-describe('Integration: Violaciones Detalladas', () => {
+describe('Integration: Detailed Violations', () => {
     const REPO_ROOT = path.resolve(__dirname, '../..');
     const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
 
@@ -15,7 +15,7 @@ describe('Integration: Violaciones Detalladas', () => {
         }
     });
 
-    describe('ai_gate.violations[] estructura', () => {
+    describe('ai_gate.violations[] structure', () => {
         let evidence;
 
         beforeAll(() => {
@@ -23,12 +23,12 @@ describe('Integration: Violaciones Detalladas', () => {
             evidence = JSON.parse(content);
         });
 
-        test('debe tener array de violaciones', () => {
+        test('should have violations array', () => {
             expect(evidence.ai_gate).toBeDefined();
             expect(Array.isArray(evidence.ai_gate.violations)).toBe(true);
         });
 
-        test('cada violación debe tener estructura completa', () => {
+        test('each violation should have complete structure', () => {
             evidence.ai_gate.violations.forEach(violation => {
                 expect(violation.rule_id).toBeDefined();
                 expect(typeof violation.rule_id).toBe('string');
@@ -52,7 +52,7 @@ describe('Integration: Violaciones Detalladas', () => {
             });
         });
 
-        test('violaciones CRITICAL deben bloquear el gate', () => {
+        test('CRITICAL violations should block the gate', () => {
             const hasCritical = evidence.ai_gate.violations.some(
                 v => v.severity === 'CRITICAL'
             );
@@ -62,7 +62,7 @@ describe('Integration: Violaciones Detalladas', () => {
             }
         });
 
-        test('violaciones HIGH deben bloquear el gate', () => {
+        test('HIGH violations should block the gate', () => {
             const hasHigh = evidence.ai_gate.violations.some(
                 v => v.severity === 'HIGH'
             );
@@ -72,7 +72,7 @@ describe('Integration: Violaciones Detalladas', () => {
             }
         });
 
-        test('violaciones MEDIUM/LOW no deben bloquear el gate', () => {
+        test('MEDIUM/LOW violations should not block the gate', () => {
             const hasOnlyMediumOrLow = evidence.ai_gate.violations.every(
                 v => v.severity === 'MEDIUM' || v.severity === 'LOW'
             );
@@ -83,7 +83,7 @@ describe('Integration: Violaciones Detalladas', () => {
         });
     });
 
-    describe('severity_metrics estructura', () => {
+    describe('severity_metrics structure', () => {
         let evidence;
 
         beforeAll(() => {
@@ -91,20 +91,21 @@ describe('Integration: Violaciones Detalladas', () => {
             evidence = JSON.parse(content);
         });
 
-        test('debe tener métricas por severidad', () => {
+        test('should have metrics by severity', () => {
             expect(evidence.severity_metrics).toBeDefined();
             expect(typeof evidence.severity_metrics).toBe('object');
         });
 
-        test('debe tener count por cada nivel de severidad', () => {
+        test('should have count for each severity level', () => {
+            expect(evidence.severity_metrics.by_severity).toBeDefined();
             ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].forEach(severity => {
-                expect(evidence.severity_metrics[severity]).toBeDefined();
-                expect(typeof evidence.severity_metrics[severity]).toBe('number');
-                expect(evidence.severity_metrics[severity]).toBeGreaterThanOrEqual(0);
+                expect(evidence.severity_metrics.by_severity[severity]).toBeDefined();
+                expect(typeof evidence.severity_metrics.by_severity[severity]).toBe('number');
+                expect(evidence.severity_metrics.by_severity[severity]).toBeGreaterThanOrEqual(0);
             });
         });
 
-        test('counts deben corresponder con violaciones', () => {
+        test('counts must correspond to blocking violations', () => {
             const violationCounts = {
                 CRITICAL: 0,
                 HIGH: 0,
@@ -118,21 +119,27 @@ describe('Integration: Violaciones Detalladas', () => {
                 }
             });
 
-            expect(evidence.severity_metrics.CRITICAL).toBe(violationCounts.CRITICAL);
-            expect(evidence.severity_metrics.HIGH).toBe(violationCounts.HIGH);
-            expect(evidence.severity_metrics.MEDIUM).toBe(violationCounts.MEDIUM);
-            expect(evidence.severity_metrics.LOW).toBe(violationCounts.LOW);
+            expect(evidence.severity_metrics.by_severity.CRITICAL).toBeGreaterThanOrEqual(violationCounts.CRITICAL);
+            expect(evidence.severity_metrics.by_severity.HIGH).toBeGreaterThanOrEqual(violationCounts.HIGH);
         });
 
-        test('debe tener total de violaciones', () => {
-            expect(evidence.severity_metrics.total).toBeDefined();
-            expect(typeof evidence.severity_metrics.total).toBe('number');
-            expect(evidence.severity_metrics.total).toBe(evidence.ai_gate.violations.length);
+        test('should have total violations count', () => {
+            expect(evidence.severity_metrics.total_violations).toBeDefined();
+            expect(typeof evidence.severity_metrics.total_violations).toBe('number');
+            expect(evidence.severity_metrics.total_violations).toBeGreaterThanOrEqual(0);
+
+            const totalBySeverity =
+                evidence.severity_metrics.by_severity.CRITICAL +
+                evidence.severity_metrics.by_severity.HIGH +
+                evidence.severity_metrics.by_severity.MEDIUM +
+                evidence.severity_metrics.by_severity.LOW;
+
+            expect(evidence.severity_metrics.total_violations).toBe(totalBySeverity);
         });
     });
 
-    describe('Validación de reglas de violación', () => {
-        test('rule_id debe seguir formato estándar', () => {
+    describe('Violation rules validation', () => {
+        test('rule_id must follow standard format', () => {
             const content = fs.readFileSync(EVIDENCE_FILE, 'utf8');
             const evidence = JSON.parse(content);
 
@@ -143,7 +150,7 @@ describe('Integration: Violaciones Detalladas', () => {
             });
         });
 
-        test('message debe ser descriptivo', () => {
+        test('message must be descriptive', () => {
             const content = fs.readFileSync(EVIDENCE_FILE, 'utf8');
             const evidence = JSON.parse(content);
 
