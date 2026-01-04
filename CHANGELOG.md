@@ -5,6 +5,16 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.37] - 2026-01-04
+
+### Fixed
+- **.AI_EVIDENCE.json**: Removed hardcoded `platforms.*.detected` values and compute platforms from staged files + violation categories
+- **.AI_EVIDENCE.json**: Removed hardcoded `rules_read` flags and record actual loaded rules via `DynamicRulesLoader`
+
+### Added
+- **.AI_EVIDENCE.json**: `rules_read` now uses evidence entries array (`{file, verified, summary, path}`)
+- **.AI_EVIDENCE.json**: Added `rules_read_flags` legacy field to preserve previous boolean-flag format
+
 ## [5.5.36] - 2026-01-04
 
 ### Fixed
