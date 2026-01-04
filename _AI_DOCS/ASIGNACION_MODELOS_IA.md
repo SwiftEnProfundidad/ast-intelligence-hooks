@@ -166,15 +166,15 @@ Seguir las recomendaciones de la **Sección 7** del `AUDIT_REPORT_EXHAUSTIVO_202
 
 | Tarea | Estado | Modelo | Archivo | Razón del Modelo |
 |-------|--------|--------|---------|------------------|
-| 5.1 | ⏳ | 🤖 | Tests | Tests unitarios estándar |
-| 5.2 | ⏳ | 🤖 | Tests | Tests unitarios estándar |
-| 5.3 | ⏳ | 🤖 | Tests | Tests unitarios estándar |
+| 5.1 | ✅ | 🤖 | Tests | Tests unitarios estándar |
+| 5.2 | ✅ | 🤖 | Tests | Tests unitarios estándar |
+| 5.3 | ✅ | 🤖 | Tests | Tests unitarios estándar |
 | 5.4 | ⏳ | 🧠 | R_GO | Requiere análisis de integración completa |
 | 5.5 | ⏳ | 🧠 | Docs | Requiere análisis y criterio para documentar resultados |
 
 ### 📝 División de Trabajo:
 
-**Haiku 4.5 (5.1-5.3):** Crear tests unitarios para verificar:
+**Haiku 4.5 (5.1-5.3) ✅ COMPLETADO:** Tests unitarios creados para verificar:
 - Estructura completa de `.AI_EVIDENCE.json`
 - Violaciones detalladas en `ai_gate.violations[]`
 - Campos `protocol_3_questions`, `rules_read`, etc.

@@ -964,13 +964,13 @@ osascript (macOS)
 
 ---
 
-### Fase 5: Pruebas y Validación (P1 - CONTINUA)
+### Fase 5: Pruebas y Validación (P1 - EN PROGRESO)
 
 | Tarea | Estado | Archivo | Descripción |
 |-------|--------|---------|-------------|
-| 5.1 | ⏳ | Tests | Test de integración para `.AI_EVIDENCE.json` completo |
-| 5.2 | ⏳ | Tests | Test para verificar violaciones detalladas |
-| 5.3 | ⏳ | Tests | Test para verificar `protocol_3_questions` |
+| 5.1 | ✅ | Tests | Test de integración para `.AI_EVIDENCE.json` completo |
+| 5.2 | ✅ | Tests | Test para verificar violaciones detalladas |
+| 5.3 | ✅ | Tests | Test para verificar `protocol_3_questions` |
 | 5.4 | ⏳ | R_GO | Ejecutar pruebas en proyecto limpio |
 | 5.5 | ⏳ | Docs | Documentar resultados y cerrar ciclo |
 
