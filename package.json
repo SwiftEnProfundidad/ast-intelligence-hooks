@@ -43,7 +43,13 @@
     "build:ts": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "ast:refresh": "node scripts/hooks-system/bin/update-evidence.sh",
-    "ast:audit": "node scripts/hooks-system/infrastructure/ast/ast-intelligence.js"
+    "ast:audit": "node scripts/hooks-system/infrastructure/ast/ast-intelligence.js",
+    "ast:guard:start": "bash scripts/hooks-system/bin/evidence-guard start",
+    "ast:guard:stop": "bash scripts/hooks-system/bin/evidence-guard stop",
+    "ast:guard:restart": "bash scripts/hooks-system/bin/evidence-guard restart",
+    "ast:guard:status": "bash scripts/hooks-system/bin/evidence-guard status",
+    "ast:guard:logs": "bash scripts/hooks-system/bin/evidence-guard logs",
+    "ast:check-version": "node scripts/hooks-system/bin/check-version.js"
   },
   "keywords": [
     "ast",
