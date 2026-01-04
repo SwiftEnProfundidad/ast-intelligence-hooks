@@ -528,8 +528,7 @@ git commit -m "feat: add new feature"
 
 ```bash
 # Analyzes entire codebase
-npm run audit
-
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 # Or using CLI
 ast-hooks analyze
 ```
@@ -539,7 +538,7 @@ ast-hooks analyze
 ```yaml
 # .github/workflows/ci.yml
 - name: Run AST Analysis
-  run: npm run audit
+  run: bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
 ### 4. Programmatic Usage
@@ -610,10 +609,10 @@ bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.
 
 ```bash
 # List all violations
-npm run violations:list
+npm run violations
 
 # View summary
-npm run violations:summary
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 
 # Top violations
 npm run violations:top
@@ -932,14 +931,14 @@ npm run install-hooks
 ```yaml
 # .github/workflows/ci.yml
 - name: AST Analysis
-  run: npm run audit
+  run: bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
 ### 3. Review Violations Regularly
 
 ```bash
 # Weekly
-npm run violations:summary
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
 ### 4. Configure Appropriate Exclusions
@@ -1037,6 +1036,8 @@ npm run install-hooks          # Install hooks
 npm test                       # Run tests
 npm run lint                   # Linter
 npm run typecheck              # Type checking
+npm run violations             # List violations
+npm run violations:top         # Top violations
 ```
 
 ---
