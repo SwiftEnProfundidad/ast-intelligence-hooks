@@ -1,3 +1,39 @@
+# Release Notes - v5.5.21
+
+**Release Date**: January 4, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 5.5.x
+
+---
+
+## 🎯 Overview
+
+This release fixes a critical fork bomb issue in the installer caused by wrapper scripts being copied to incorrect locations, preventing recursive calls that would exhaust system resources.
+
+---
+
+## 🐛 Bug Fixes
+
+### Fixed: Fork bomb in session-loader
+- **Issue**: Wrapper scripts (`session-loader.sh`, `cli.js`, `install.js`) were copied from `/bin/` to `scripts/hooks-system/bin/`, causing them to call themselves recursively
+- **Resolution**: Modified `FileSystemInstallerService` to exclude wrapper scripts when copying the `bin/` directory
+- **Impact**: Session loader now works correctly without causing fork resource exhaustion or infinite loops
+
+### Technical Details
+- Wrapper scripts in the library's `/bin/` directory are now excluded during installation
+- This prevents the wrapper from being copied to the location where it would call itself
+- Installation process is now safe and doesn't cause resource exhaustion
+
+---
+
+## 📦 Installation / Upgrade
+```bash
+npm install --save-dev pumuki-ast-hooks@5.5.21
+npm run install-hooks
+```
+
+---
+
 # Release Notes - v5.5.20
 
 **Release Date**: January 4, 2026  

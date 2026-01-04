@@ -1065,6 +1065,15 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 
 ## 📝 Recent Changes
 
+### Version 5.5.21 (2026-01-04)
+
+**🐛 Bug Fixes:**
+- Fixed fork bomb caused by wrapper scripts being copied to incorrect location
+- Excluded wrapper scripts from bin/ copy to prevent recursive calls
+- Session loader now works correctly without causing resource exhaustion
+
+---
+
 ### Version 5.5.20 (2026-01-04)
 
 **🐛 Bug Fixes:**

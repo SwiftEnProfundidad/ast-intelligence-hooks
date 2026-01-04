@@ -5,6 +5,18 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.21] - 2026-01-04
+
+### Fixed
+- **Installer**: Fixed fork bomb caused by wrapper scripts being copied to incorrect location
+- **Installer**: Excluded `session-loader.sh`, `cli.js`, `install.js` from bin/ copy to prevent recursive calls
+- **FileSystemInstallerService**: Added exclusion logic for wrapper scripts that would cause infinite loops
+
+### Technical Details
+- Wrapper scripts in `/bin/` are now excluded when copying to `scripts/hooks-system/bin/`
+- This prevents the wrapper from calling itself recursively during installation
+- Session loader now works correctly without causing resource exhaustion
+
 ## [5.5.20] - 2026-01-04
 
 ### Fixed
