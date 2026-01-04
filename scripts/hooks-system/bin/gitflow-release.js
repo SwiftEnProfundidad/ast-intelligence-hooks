@@ -112,11 +112,10 @@ function step2_syncDevelop() {
     log(COLORS.cyan, '═══════════════════════════════════════════════════════════════\n');
 
     log(COLORS.blue, 'Fetching from origin...');
-    exec('git fetch origin', { silent: true });
+    exec('git fetch origin');
 
     log(COLORS.blue, 'Pulling latest changes from develop...');
-    exec('git pull origin develop', { silent: true });
-
+    exec('git pull --ff-only origin develop');
     log(COLORS.green, '✅ Develop synced');
 }
 
@@ -125,13 +124,19 @@ function step3_syncMain() {
     log(COLORS.cyan, '🔄 Step 3: Sync Main');
     log(COLORS.cyan, '═══════════════════════════════════════════════════════════════\n');
 
+    const current = getCurrentBranch();
+
     log(COLORS.blue, 'Fetching from origin...');
-    exec('git fetch origin', { silent: true });
+    exec('git fetch origin');
 
     log(COLORS.blue, 'Pulling latest changes from main...');
-    exec('git pull origin main', { silent: true });
-
+    exec('git checkout main');
+    exec('git pull --ff-only origin main');
     log(COLORS.green, '✅ Main synced');
+
+    if (current && current !== 'main') {
+        exec(`git checkout ${current}`);
+    }
 }
 
 function step4_createReleasePR(prTitle, prBody) {
