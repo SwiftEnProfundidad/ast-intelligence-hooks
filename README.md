@@ -571,7 +571,7 @@ hook-status
 
 ---
 
-## Installation
+## Quick Start
 
 ### Prerequisites
 
@@ -579,50 +579,10 @@ hook-status
 - **npm** ≥9.0.0
 - **Git** (for hooks)
 
-### Option 1: Installation via npm (Recommended)
-
-```bash
-npm install --save-dev pumuki-ast-hooks
-npm run install-hooks
-```
-
-### Option 2: Installation via Git
-
-```bash
-npm install --save-dev git+https://github.com/carlos/ast-intelligence-hooks.git
-npm run install-hooks
-```
-
-### Option 3: Manual Installation
-
-```bash
-git clone https://github.com/carlos/ast-intelligence-hooks.git
-cd ast-intelligence-hooks
-npm install
-npm link
-npm run install-hooks
-```
-
-### Configure Git Hooks
-
-```bash
-# Install hooks automatically
-npm run install-hooks
-
-# Or manually
-ast-install
-```
-
-For more details, see [INSTALLATION.md](./docs/INSTALLATION.md).
-
----
-
-## Quick Start
-
 ### 1. Install the library
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 ```
 
 ### 2. Configure hooks
@@ -643,7 +603,7 @@ The hooks will run automatically and validate your code.
 ### 4. View full report
 
 ```bash
-npm run audit
+bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
 ### 5. Check violations
