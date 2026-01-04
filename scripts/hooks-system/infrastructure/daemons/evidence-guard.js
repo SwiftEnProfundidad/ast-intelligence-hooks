@@ -80,25 +80,61 @@ class EvidenceGuard {
 
     async refreshEvidence() {
         return new Promise((resolve) => {
-            const child = spawn('bash', [this.updateScript, '--auto'], {
-                cwd: this.projectRoot,
-                stdio: 'ignore',
-                detached: false
-            });
+            const astScript = path.join(
+                this.projectRoot,
+                'node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/orchestration/intelligent-audit.js'
+            );
 
-            child.on('close', (code) => {
-                if (code === 0) {
-                    console.log(`[EvidenceGuard] Evidence refreshed at ${new Date().toISOString()}`);
-                } else {
-                    console.error(`[EvidenceGuard] Refresh failed with code ${code}`);
-                }
-                resolve();
-            });
+            if (fs.existsSync(astScript)) {
+                console.log('[EvidenceGuard] Running full AST analysis...');
+                const child = spawn('node', [astScript], {
+                    cwd: this.projectRoot,
+                    stdio: 'ignore',
+                    detached: false,
+                    env: {
+                        ...process.env,
+                        REPO_ROOT: this.projectRoot,
+                        AUTO_EVIDENCE_TRIGGER: 'auto',
+                        AUTO_EVIDENCE_REASON: 'evidence_guard_refresh',
+                        AUTO_EVIDENCE_SUMMARY: 'Automatic refresh by evidence guard'
+                    }
+                });
 
-            child.on('error', (error) => {
-                console.error('[EvidenceGuard] Refresh error:', error.message);
-                resolve();
-            });
+                child.on('close', (code) => {
+                    if (code === 0) {
+                        console.log(`[EvidenceGuard] Full AST analysis completed at ${new Date().toISOString()}`);
+                    } else {
+                        console.error(`[EvidenceGuard] AST analysis failed with code ${code}`);
+                    }
+                    resolve();
+                });
+
+                child.on('error', (error) => {
+                    console.error('[EvidenceGuard] Failed to spawn AST analysis:', error.message);
+                    resolve();
+                });
+            } else {
+                console.warn('[EvidenceGuard] intelligent-audit.js not found, falling back to update-evidence.sh');
+                const child = spawn('bash', [this.updateScript, '--auto'], {
+                    cwd: this.projectRoot,
+                    stdio: 'ignore',
+                    detached: false
+                });
+
+                child.on('close', (code) => {
+                    if (code === 0) {
+                        console.log(`[EvidenceGuard] Evidence refreshed (fallback) at ${new Date().toISOString()}`);
+                    } else {
+                        console.error(`[EvidenceGuard] Refresh failed with code ${code}`);
+                    }
+                    resolve();
+                });
+
+                child.on('error', (error) => {
+                    console.error('[EvidenceGuard] Refresh error:', error.message);
+                    resolve();
+                });
+            }
         });
     }
 

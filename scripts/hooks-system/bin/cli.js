@@ -169,6 +169,37 @@ const commands = {
     process.stdout.write(`${evidencePath}\n`);
   },
 
+  'evidence:full-update': () => {
+    const auditScript = path.join(HOOKS_ROOT, 'infrastructure/orchestration/intelligent-audit.js');
+
+    if (!fs.existsSync(auditScript)) {
+      console.error('❌ intelligent-audit.js not found');
+      process.exit(1);
+    }
+
+    console.log('🔍 Running full AST analysis and updating evidence...');
+
+    try {
+      execSync(`node "${auditScript}"`, {
+        stdio: 'inherit',
+        env: {
+          ...process.env,
+          AUTO_EVIDENCE_TRIGGER: process.env.AUTO_EVIDENCE_TRIGGER || 'manual',
+          AUTO_EVIDENCE_REASON: process.env.AUTO_EVIDENCE_REASON || 'full_update',
+          AUTO_EVIDENCE_SUMMARY: process.env.AUTO_EVIDENCE_SUMMARY || 'Full evidence update with AST analysis'
+        }
+      });
+
+      console.log('✅ Evidence updated with full AST analysis');
+
+      commands['evidence:update']();
+
+    } catch (error) {
+      console.error('❌ Failed to run full evidence update:', error.message);
+      process.exit(1);
+    }
+  },
+
   ast: () => {
     const filteredArgs = [];
     let stagingOnlyMode = false;

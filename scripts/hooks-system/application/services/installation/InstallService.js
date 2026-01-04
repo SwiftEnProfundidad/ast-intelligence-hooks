@@ -76,6 +76,43 @@ class InstallService {
         this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot, this.logger);
     }
 
+    checkCriticalDependencies() {
+        const packageJsonPath = path.join(this.targetRoot, 'package.json');
+
+        if (!fs.existsSync(packageJsonPath)) {
+            this.logWarning('package.json not found. Skipping dependency check.');
+            return;
+        }
+
+        try {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            const allDeps = {
+                ...packageJson.dependencies,
+                ...packageJson.devDependencies
+            };
+
+            const criticalDeps = ['ts-morph'];
+            const missingDeps = [];
+
+            for (const dep of criticalDeps) {
+                if (!allDeps[dep]) {
+                    missingDeps.push(dep);
+                }
+            }
+
+            if (missingDeps.length > 0) {
+                this.logWarning(`Missing critical dependencies: ${missingDeps.join(', ')}`);
+                this.logWarning('AST analysis may fail without these dependencies.');
+                this.logWarning(`Install with: npm install --save-dev ${missingDeps.join(' ')}`);
+                this.logger.warn('MISSING_CRITICAL_DEPENDENCIES', { missingDeps });
+            } else {
+                this.logSuccess('All critical dependencies present');
+            }
+        } catch (error) {
+            this.logWarning(`Failed to check dependencies: ${error.message}`);
+        }
+    }
+
     async run() {
         this.logger.info('INSTALLATION_STARTED', { targetRoot: this.targetRoot });
         this.printHeader();
@@ -88,6 +125,9 @@ class InstallService {
             process.exit(1);
         }
         this.logSuccess('Git repository detected');
+
+        this.logStep('0.25/8', 'Verifying critical dependencies...');
+        this.checkCriticalDependencies();
 
         this.logStep('0.5/8', 'Configuring artifact exclusions...');
         this.gitService.ensureGitInfoExclude();
