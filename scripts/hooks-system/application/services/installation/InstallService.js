@@ -1,7 +1,6 @@
-const env = require('../../config/env');
-
-const path = require('path');
+const env = require('../../../config/env.js');
 const fs = require('fs');
+const path = require('path');
 
 const GitEnvironmentService = require('./GitEnvironmentService');
 const PlatformDetectorService = require('./PlatformDetectorService');
@@ -77,6 +76,43 @@ class InstallService {
         this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot, this.logger);
     }
 
+    checkCriticalDependencies() {
+        const packageJsonPath = path.join(this.targetRoot, 'package.json');
+
+        if (!fs.existsSync(packageJsonPath)) {
+            this.logWarning('package.json not found. Skipping dependency check.');
+            return;
+        }
+
+        try {
+            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+            const allDeps = {
+                ...packageJson.dependencies,
+                ...packageJson.devDependencies
+            };
+
+            const criticalDeps = ['ts-morph'];
+            const missingDeps = [];
+
+            for (const dep of criticalDeps) {
+                if (!allDeps[dep]) {
+                    missingDeps.push(dep);
+                }
+            }
+
+            if (missingDeps.length > 0) {
+                this.logWarning(`Missing critical dependencies: ${missingDeps.join(', ')}`);
+                this.logWarning('AST analysis may fail without these dependencies.');
+                this.logWarning(`Install with: npm install --save-dev ${missingDeps.join(' ')}`);
+                this.logger.warn('MISSING_CRITICAL_DEPENDENCIES', { missingDeps });
+            } else {
+                this.logSuccess('All critical dependencies present');
+            }
+        } catch (error) {
+            this.logWarning(`Failed to check dependencies: ${error.message}`);
+        }
+    }
+
     async run() {
         this.logger.info('INSTALLATION_STARTED', { targetRoot: this.targetRoot });
         this.printHeader();
@@ -89,6 +125,9 @@ class InstallService {
             process.exit(1);
         }
         this.logSuccess('Git repository detected');
+
+        this.logStep('0.25/8', 'Verifying critical dependencies...');
+        this.checkCriticalDependencies();
 
         this.logStep('0.5/8', 'Configuring artifact exclusions...');
         this.gitService.ensureGitInfoExclude();
@@ -124,8 +163,46 @@ class InstallService {
         this.logStep('8/8', 'Adding npm scripts to package.json...');
         this.configGenerator.addNpmScripts();
 
+        this.logStep('8.5/8', 'Starting evidence guard daemon...');
+        this.startEvidenceGuard();
+
         this.logger.info('INSTALLATION_COMPLETED_SUCCESSFULLY');
         this.printFooter();
+    }
+
+    startEvidenceGuard() {
+        const { spawn } = require('child_process');
+        const guardScript = path.join(this.targetRoot, 'scripts/hooks-system/bin/evidence-guard');
+
+        if (!fs.existsSync(guardScript)) {
+            this.logWarning('Evidence guard script not found, skipping daemon start');
+            return;
+        }
+
+        try {
+            const child = spawn('bash', [guardScript, 'start'], {
+                cwd: this.targetRoot,
+                stdio: 'pipe',
+                detached: false
+            });
+
+            let output = '';
+            child.stdout.on('data', (data) => { output += data.toString(); });
+            child.stderr.on('data', (data) => { output += data.toString(); });
+
+            child.on('close', (code) => {
+                if (code === 0) {
+                    this.logSuccess('Evidence guard daemon started');
+                } else {
+                    this.logWarning('Failed to start evidence guard daemon');
+                    if (output) {
+                        console.log(output);
+                    }
+                }
+            });
+        } catch (error) {
+            this.logWarning(`Failed to start evidence guard: ${error.message}`);
+        }
     }
 
     printHeader() {
@@ -141,6 +218,10 @@ ${COLORS.reset}\n`);
     printFooter() {
         process.stdout.write(`
 ${COLORS.green}✨ Installation Complete! ✨${COLORS.reset}
+
+${COLORS.cyan}Evidence Guard Daemon:${COLORS.reset}
+- Auto-refresh is now running in background (every 180 seconds)
+- Manage with: ${COLORS.yellow}npm run ast:guard:{start|stop|status|logs}${COLORS.reset}
 
 ${COLORS.cyan}Next Steps:${COLORS.reset}
 1. Review generated configuration in ${COLORS.yellow}scripts/hooks-system/config/project.config.json${COLORS.reset}

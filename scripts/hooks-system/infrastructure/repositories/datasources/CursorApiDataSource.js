@@ -1,4 +1,4 @@
-const env = require('../../config/env');
+const env = require('../../../config/env.js');
 
 const { DomainError } = require('../../../domain/errors');
 

@@ -1,4 +1,4 @@
-const env = require('../../config/env');
+const env = require('../../../config/env.js');
 
 const fs = require('fs');
 const path = require('path');
@@ -110,6 +110,11 @@ class ConfigurationGeneratorService {
             // Add helper scripts
             packageJson.scripts['ast:refresh'] = 'node scripts/hooks-system/bin/update-evidence.sh';
             packageJson.scripts['ast:audit'] = 'node scripts/hooks-system/infrastructure/ast/ast-intelligence.js';
+            packageJson.scripts['ast:guard:start'] = 'bash scripts/hooks-system/bin/evidence-guard start';
+            packageJson.scripts['ast:guard:stop'] = 'bash scripts/hooks-system/bin/evidence-guard stop';
+            packageJson.scripts['ast:guard:restart'] = 'bash scripts/hooks-system/bin/evidence-guard restart';
+            packageJson.scripts['ast:guard:status'] = 'bash scripts/hooks-system/bin/evidence-guard status';
+            packageJson.scripts['ast:guard:logs'] = 'bash scripts/hooks-system/bin/evidence-guard logs';
 
             fs.writeFileSync(projectPackageJsonPath, JSON.stringify(packageJson, null, 2));
             this.logSuccess('npm scripts added');

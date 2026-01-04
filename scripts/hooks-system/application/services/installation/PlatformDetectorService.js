@@ -1,4 +1,4 @@
-const env = require('../../config/env');
+const env = require('../../../config/env.js');
 const AuditLogger = require('../logging/AuditLogger');
 
 const glob = require('glob');

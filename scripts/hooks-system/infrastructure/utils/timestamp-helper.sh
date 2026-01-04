@@ -11,7 +11,9 @@
 # Get current timestamp in ISO 8601 with milliseconds
 # Returns: 2025-11-06T10:45:23.123Z
 get_current_timestamp() {
-  date -u +"%Y-%m-%dT%H:%M:%S.000Z"
+  local raw
+  raw=$(date +"%Y-%m-%dT%H:%M:%S.000%z")
+  echo "$raw" | sed -E 's/([+-][0-9]{2})([0-9]{2})$/\1:\2/'
 }
 
 # Get current timestamp in epoch seconds
@@ -26,10 +28,16 @@ iso_to_epoch() {
   local timestamp="$1"
 
   # Strip milliseconds if present (2025-11-06T10:45:23.123Z → 2025-11-06T10:45:23Z)
-  local clean_ts=$(echo "$timestamp" | sed 's/\.[0-9]*Z$/Z/')
+  local clean_ts
+  clean_ts=$(echo "$timestamp" | sed -E 's/\.[0-9]+Z$/Z/')
 
-  # Convert to epoch (macOS date command)
-  TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$clean_ts" +%s 2>/dev/null || echo "0"
+  if echo "$clean_ts" | grep -qE 'Z$'; then
+    TZ=UTC date -j -f "%Y-%m-%dT%H:%M:%SZ" "$clean_ts" +%s 2>/dev/null || echo "0"
+    return 0
+  fi
+
+  clean_ts=$(echo "$timestamp" | sed -E 's/\.[0-9]+([+-][0-9]{2}):([0-9]{2})$/\1\2/' | sed -E 's/([+-][0-9]{2}):([0-9]{2})$/\1\2/')
+  date -j -f "%Y-%m-%dT%H:%M:%S%z" "$clean_ts" +%s 2>/dev/null || echo "0"
 }
 
 # Get age of timestamp in seconds

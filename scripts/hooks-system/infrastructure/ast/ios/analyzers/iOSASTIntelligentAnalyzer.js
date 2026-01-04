@@ -642,6 +642,23 @@ class iOSASTIntelligentAnalyzer {
   }
 
   analyzeAdditionalRules(filePath) {
+    const hasSwiftUIViewType = (this.imports || []).some(i => i && i.name === 'SwiftUI') &&
+      (this.structs || []).some(s => (s['key.inheritedtypes'] || []).some(t => t && t['key.name'] === 'View'));
+
+    if (this.fileContent.includes('pushViewController') || this.fileContent.includes('popViewController') || this.fileContent.includes('present(')) {
+      const line = this.findLineNumber('pushViewController') || this.findLineNumber('popViewController') || this.findLineNumber('present(');
+      this.pushFinding('ios.navigation.imperative_navigation', 'critical', filePath, line,
+        'Imperative navigation detected - use event-driven navigation/coordinator');
+    }
+
+    const swiftuiNavTokens = ['NavigationLink', 'NavigationStack', 'NavigationSplitView', '.navigationDestination'];
+    const hasSwiftUINavigation = swiftuiNavTokens.some(token => this.fileContent.includes(token));
+    if (hasSwiftUINavigation && !hasSwiftUIViewType) {
+      const line = this.findLineNumber('NavigationLink') || this.findLineNumber('NavigationStack') || this.findLineNumber('.navigationDestination');
+      this.pushFinding('ios.navigation.swiftui_navigation_outside_view', 'critical', filePath, line,
+        'SwiftUI navigation API detected outside View types');
+    }
+
     if (filePath.includes('ViewModel') && this.fileContent.includes('NavigationLink')) {
       const hasCoordinator = this.imports.some(i => i.name.includes('Coordinator'));
       if (!hasCoordinator) {

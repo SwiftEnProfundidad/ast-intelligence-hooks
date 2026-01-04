@@ -281,6 +281,7 @@ class RealtimeGuardService {
     }
 
     _startGitFlowSync() {
+        if (!this.monitors || !this.monitors.gitFlow) return;
         if (!this.monitors.gitFlow.autoSyncEnabled) return;
 
         this.auditLogger.record({

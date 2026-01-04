@@ -10,6 +10,24 @@ const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
 
+function formatLocalTimestamp(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  const milliseconds = String(date.getMilliseconds()).padStart(3, '0');
+
+  const offsetMinutes = date.getTimezoneOffset();
+  const sign = offsetMinutes <= 0 ? '+' : '-';
+  const absolute = Math.abs(offsetMinutes);
+  const offsetHours = String(Math.floor(absolute / 60)).padStart(2, '0');
+  const offsetMins = String(absolute % 60).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${sign}${offsetHours}:${offsetMins}`;
+}
+
 function resolveAuditTmpDir() {
   const configured = (env.get('AUDIT_TMP', '') || '').trim();
   if (configured.length > 0) {
@@ -147,7 +165,7 @@ function saveEnhancedViolations(violations) {
   const outputPath = path.join(resolveAuditTmpDir(), 'ast-summary-enhanced.json');
 
   const enhanced = {
-    timestamp: new Date().toISOString(),
+    timestamp: formatLocalTimestamp(),
     generator: 'AST Intelligence v2.0 with Severity Evaluation',
     intelligentEvaluation: true,
     totalViolations: violations.length,
@@ -181,7 +199,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
 
     evidence.severity_metrics = {
-      last_updated: new Date().toISOString(),
+      last_updated: formatLocalTimestamp(),
       total_violations: violations.length,
       by_severity: {
         CRITICAL: violations.filter(v => v.severity === 'CRITICAL').length,
@@ -253,7 +271,7 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     const nextGate = {
       status: gateResult.passed ? 'ALLOWED' : 'BLOCKED',
       scope: gateScope === 'repo' || gateScope === 'repository' ? 'repo' : 'staging',
-      last_check: new Date().toISOString(),
+      last_check: formatLocalTimestamp(),
       violations: blockingViolations.map(v => ({
         file: v.filePath || v.file || 'unknown',
         line: v.line || null,
