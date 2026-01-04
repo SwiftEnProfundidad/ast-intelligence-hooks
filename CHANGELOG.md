@@ -5,6 +5,18 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.22] - 2026-01-04
+
+### Fixed
+- **Session Loader**: CRITICAL - Replaced self-referential wrapper in `scripts/hooks-system/bin/session-loader.sh` with complete implementation
+- **Fork Bomb**: Root cause was wrapper calling `$REPO_ROOT/scripts/hooks-system/bin/session-loader.sh` (itself) causing infinite recursion
+- **Consuming Projects**: Session loader now works correctly in all consuming projects without resource exhaustion
+
+### Technical Details
+- The wrapper pattern was architecturally flawed - it redirected to the same file path
+- Solution: Full 108-line implementation directly in `scripts/hooks-system/bin/session-loader.sh`
+- This ensures installing the library copies working code, not a broken wrapper
+
 ## [5.5.21] - 2026-01-04
 
 ### Fixed

@@ -1065,6 +1065,15 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 
 ## 📝 Recent Changes
 
+### Version 5.5.22 (2026-01-04)
+
+**🔴 CRITICAL Fix:**
+- Replaced self-referential wrapper with complete session-loader implementation
+- Root cause: wrapper called itself causing infinite recursion
+- Session loader now works correctly in all consuming projects
+
+---
+
 ### Version 5.5.21 (2026-01-04)
 
 **🐛 Bug Fixes:**

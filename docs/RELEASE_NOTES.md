@@ -1,3 +1,43 @@
+# Release Notes - v5.5.22
+
+**Release Date**: January 4, 2026  
+**Type**: Critical Patch Release  
+**Compatibility**: Fully backward compatible with 5.5.x
+
+---
+
+## 🔴 CRITICAL Fix
+
+### Root Cause Analysis
+
+The session-loader fork bomb was caused by an **architectural flaw** in the wrapper pattern:
+
+```
+scripts/hooks-system/bin/session-loader.sh (WRAPPER)
+  → calls: bash "$REPO_ROOT/scripts/hooks-system/bin/session-loader.sh"
+    → which is THE SAME FILE
+      → INFINITE RECURSION → FORK BOMB
+```
+
+### Solution
+
+Replaced the 6-line self-referential wrapper with the **complete 108-line implementation** directly in `scripts/hooks-system/bin/session-loader.sh`.
+
+### Impact
+
+- **Before**: Any project installing the library would get the broken wrapper, causing fork bombs on IDE startup
+- **After**: Projects get a fully working session-loader that displays context correctly
+
+---
+
+## 📦 Installation / Upgrade
+```bash
+npm install --save-dev pumuki-ast-hooks@5.5.22
+npm run install-hooks
+```
+
+---
+
 # Release Notes - v5.5.21
 
 **Release Date**: January 4, 2026  
