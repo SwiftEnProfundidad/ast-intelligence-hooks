@@ -9,6 +9,20 @@ const RecommendationGenerator = require('./generators/RecommendationGenerator');
 const ContextMultiplier = require('./scorers/ContextMultiplier');
 const SeverityMapper = require('./mappers/SeverityMapper');
 
+function applySeverityFloor(originalSeverity, evaluatedSeverity) {
+  const order = {
+    LOW: 1,
+    MEDIUM: 2,
+    HIGH: 3,
+    CRITICAL: 4
+  };
+
+  const original = order[String(originalSeverity || '').toUpperCase()] || order.MEDIUM;
+  const evaluated = order[String(evaluatedSeverity || '').toUpperCase()] || original;
+
+  return evaluated >= original ? String(evaluatedSeverity || originalSeverity || 'MEDIUM').toUpperCase() : String(originalSeverity).toUpperCase();
+}
+
 /**
  * Main severity evaluator
  * Analyzes violations across 4 dimensions: Security, Performance, Stability, Maintainability
@@ -98,10 +112,13 @@ function evaluateViolations(violations) {
   return violations.map(violation => {
     const evaluation = evaluator.evaluate(violation);
 
+    const baseSeverity = violation.severity;
+    const finalSeverity = applySeverityFloor(baseSeverity, evaluation.severity);
+
     return {
       ...violation,
       originalSeverity: violation.severity,
-      severity: evaluation.severity,
+      severity: finalSeverity,
       severityScore: evaluation.score,
       baseScore: evaluation.baseScore,
       impactBreakdown: evaluation.breakdown,
