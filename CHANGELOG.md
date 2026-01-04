@@ -5,6 +5,16 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.36] - 2026-01-04
+
+### Fixed
+- **check-version.js**: Fixed blocking issue when checking npm version (incorrect package name: `@pumuki/ast-intelligence-hooks` → `pumuki-ast-hooks`)
+- **gitflow-release.js**: Fixed main sync to checkout main before pulling (avoids pulling main into develop)
+
+### Added
+- **gitflow-release.js**: New script for release cycle (develop → main)
+- **npm run ast:release**: New command for automated release PRs with optional auto-merge and tagging
+
 ## [5.5.35] - 2026-01-04
 
 ### Added
