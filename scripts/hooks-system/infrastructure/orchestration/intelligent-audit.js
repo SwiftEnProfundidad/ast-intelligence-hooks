@@ -220,6 +220,21 @@ function formatLocalTimestamp(date = new Date()) {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${milliseconds}${sign}${offsetHours}:${offsetMins}`;
 }
 
+function normalizePathForMatch(value) {
+  const s = String(value || '');
+  const normalized = path.normalize(s).replace(/\\/g, '/');
+  return normalized;
+}
+
+function toRepoRelativePath(filePath) {
+  const normalized = normalizePathForMatch(filePath);
+  const cwd = normalizePathForMatch(process.cwd());
+  if (normalized.startsWith(cwd + '/')) {
+    return normalized.slice(cwd.length + 1);
+  }
+  return normalized;
+}
+
 function resolveAuditTmpDir() {
   const configured = (env.get('AUDIT_TMP', '') || '').trim();
   if (configured.length > 0) {
@@ -251,9 +266,23 @@ async function runIntelligentAudit() {
       violationsForEvidence = rawViolations;
     } else {
       const stagedFiles = getStagedFiles();
-      const stagedViolations = rawViolations.filter(v =>
-        stagedFiles.some(sf => v.filePath && v.filePath.includes(sf))
-      );
+      const stagedSet = new Set((Array.isArray(stagedFiles) ? stagedFiles : []).map(toRepoRelativePath));
+
+      const stagedViolations = rawViolations.filter(v => {
+        const violationPath = toRepoRelativePath(v.filePath || v.file || '');
+        if (!violationPath) {
+          return false;
+        }
+        if (stagedSet.has(violationPath)) {
+          return true;
+        }
+        for (const sf of stagedSet) {
+          if (sf && (violationPath === sf || violationPath.endsWith('/' + sf) || violationPath.includes('/' + sf))) {
+            return true;
+          }
+        }
+        return false;
+      });
 
       console.log(`[Intelligent Audit] Gate scope: STAGING (${stagedFiles.length} files)`);
       console.log(`[Intelligent Audit] Filtered to ${stagedViolations.length} violations in staged files`);
