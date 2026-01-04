@@ -5,6 +5,24 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.35] - 2026-01-04
+
+### Added
+- **Git Flow Release Cycle**: New `npm run ast:release` command for creating release PRs (develop → main)
+- **Release Automation**: Automatic PR creation from develop to main with optional auto-merge
+- **Git Tag Support**: Optional git tag creation with `--tag` flag
+
+### Technical Details
+- Separation of concerns: `ast:gitflow` for features, `ast:release` for releases
+- Release cycle steps:
+  1. Validates branch (must be develop)
+  2. Syncs develop with origin
+  3. Syncs main with origin
+  4. Creates PR: develop → main
+  5. Optionally auto-merges PR
+  6. Optionally creates git tag
+- Follows Git Flow best practices with clear separation between development and release workflows
+
 ## [5.5.34] - 2026-01-04
 
 ### Added

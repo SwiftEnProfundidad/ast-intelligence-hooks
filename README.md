@@ -518,18 +518,31 @@ See [HOW_IT_WORKS.md](./docs/HOW_IT_WORKS.md#architecture-detection-by-platform)
 - **Protected Branch Blocking**: Automatically blocks commits and pushes to `main`, `master`, and `develop` branches
 - **Auto-Create Feature Branch**: Automatically creates feature branch when on `develop`/`main` based on changes
 - **Smart Branch Naming**: Generates branch names based on file types (feature/, fix/, chore/, docs/, etc.)
-- **One-Command Cycle**: Execute complete Git Flow with `npm run ast:gitflow`
+- **Feature Cycle**: Execute complete Git Flow with `npm run ast:gitflow`
+- **Release Cycle**: Create release PR from develop to main with `npm run ast:release`
 - **Automatic PR Creation**: Creates Pull Requests using GitHub CLI (requires `gh`)
 - **Optional Auto-Merge**: Automatically merges PRs with `--auto-merge` flag
 - **Branch Cleanup**: Automatically deletes merged branches (local and remote)
 - **Branch Synchronization**: Syncs `develop` and `main` with remote
 
-**Workflow:**
+**Feature Development Workflow:**
 ```bash
 # Work on develop/main (changes detected)
 
 # Run complete cycle (auto-creates feature branch)
 npm run ast:gitflow -- --auto-merge
+```
+
+**Release Workflow:**
+```bash
+# Switch to develop branch
+git checkout develop
+
+# Create release PR (develop → main)
+npm run ast:release -- --auto-merge
+
+# Or with version tag
+npm run ast:release -- --tag 5.5.35 --auto-merge
 ```
 
 **Branch Naming Logic:**
@@ -541,13 +554,21 @@ npm run ast:gitflow -- --auto-merge
 - `chore/` - Config files, package.json
 - `feature/` - Default for other changes
 
-**Options:**
+**Feature Cycle Options:**
 ```bash
 npm run ast:gitflow                              # Basic cycle (auto-creates branch if needed)
 npm run ast:gitflow -- -m "feat: new feature"    # Custom commit message
 npm run ast:gitflow -- --auto-merge              # Auto-merge PR
 npm run ast:gitflow -- --skip-cleanup            # Skip branch cleanup
 npm run ast:gitflow -- --skip-sync               # Skip branch sync
+```
+
+**Release Cycle Options:**
+```bash
+npm run ast:release                              # Create release PR
+npm run ast:release -- --auto-merge              # Auto-merge release PR
+npm run ast:release -- --tag 5.5.35              # Create and push git tag
+npm run ast:release -- --pr-title "Release v5.5.35"  # Custom PR title
 ```
 
 **Hooks:**
@@ -1128,6 +1149,26 @@ For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
 
 ## 📝 Recent Changes
 
+### Version 5.5.35 (2026-01-04)
+
+**✨ New Features:**
+- **Git Flow Release Cycle**: New `npm run ast:release` command for creating release PRs (develop → main)
+- **Release Automation**: Automatic PR creation from develop to main with optional auto-merge
+- **Git Tag Support**: Optional git tag creation with `--tag` flag
+
+**Technical Details:**
+- Separation of concerns: `ast:gitflow` for features, `ast:release` for releases
+- Release cycle steps:
+  1. Validates branch (must be develop)
+  2. Syncs develop with origin
+  3. Syncs main with origin
+  4. Creates PR: develop → main
+  5. Optionally auto-merges PR
+  6. Optionally creates git tag
+- Follows Git Flow best practices with clear separation between development and release workflows
+
+---
+
 ### Version 5.5.34 (2026-01-04)
 
 **✨ New Features:**
@@ -1294,7 +1335,7 @@ Developed by **Pumuki Team®**
 
 - **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development)
 - **Contact**: freelancemerlos@gmail.com
-- **Version**: 5.5.34
+- **Version**: 5.5.35
 - **Repository**: [GitHub](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks)
 
 ---
