@@ -28,6 +28,37 @@
   <a href="./docs/CONTRIBUTING.md">Contributing</a>
 </p>
 
+## 📖 Table of Contents
+
+- [The Vision: Solving AI Context Loss](#-the-vision-solving-ai-context-loss-in-software-development)
+  - [The Fundamental Problem](#the-fundamental-problem)
+  - [The Solution: Permanent Context Persistence](#the-solution-permanent-context-persistence)
+- [How It Works: The Complete Flow](#-how-it-works-the-complete-flow)
+  - [Phase 1: Context Initialization (`ai_start` Protocol)](#phase-1-context-initialization-ai_start-protocol)
+  - [Phase 2: Continuous Context Maintenance](#phase-2-continuous-context-maintenance)
+  - [Phase 3: Code Quality Enforcement](#phase-3-code-quality-enforcement)
+  - [Phase 4: Evidence Update Before Commits](#phase-4-evidence-update-before-commits)
+- [Tools & Technologies](#️-tools--technologies)
+- [What, How, and When: The Developer's Perspective](#-what-how-and-when-the-developers-perspective)
+- [Complete Architecture and Workflow](#complete-architecture-and-workflow)
+- [What is it?](#what-is-it)
+- [What problems does it solve?](#what-problems-does-it-solve)
+- [Features](#features)
+- [Use Cases](#use-cases)
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [📚 Documentation Guide - Step by Step](#-documentation-guide---step-by-step)
+- [Architecture](#architecture)
+- [MCP Servers](#mcp-servers)
+- [API Reference](#api-reference)
+- [Configuration](#configuration)
+- [Best Practices](#best-practices)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
 ### Visual Overview
 
 <img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_01.png" alt="AST Intelligence System Overview" width="100%" />
@@ -383,37 +414,6 @@ graph LR
 4. Developer fixes violations and commits.
 
 For a detailed architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
-
----
-
-## 📖 Table of Contents
-
-- [The Vision: Solving AI Context Loss](#-the-vision-solving-ai-context-loss-in-software-development)
-  - [The Fundamental Problem](#the-fundamental-problem)
-  - [The Solution: Permanent Context Persistence](#the-solution-permanent-context-persistence)
-- [How It Works: The Complete Flow](#-how-it-works-the-complete-flow)
-  - [Phase 1: Context Initialization (`ai_start` Protocol)](#phase-1-context-initialization-ai_start-protocol)
-  - [Phase 2: Continuous Context Maintenance](#phase-2-continuous-context-maintenance)
-  - [Phase 3: Code Quality Enforcement](#phase-3-code-quality-enforcement)
-  - [Phase 4: Evidence Update Before Commits](#phase-4-evidence-update-before-commits)
-- [Tools & Technologies](#️-tools--technologies)
-- [What, How, and When: The Developer's Perspective](#-what-how-and-when-the-developers-perspective)
-- [Complete Architecture and Workflow](#complete-architecture-and-workflow)
-- [What is it?](#what-is-it)
-- [What problems does it solve?](#what-problems-does-it-solve)
-- [Features](#features)
-- [Use Cases](#use-cases)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [📚 Documentation Guide - Step by Step](#-documentation-guide---step-by-step)
-- [Architecture](#architecture)
-- [MCP Servers](#mcp-servers)
-- [API Reference](#api-reference)
-- [Configuration](#configuration)
-- [Best Practices](#best-practices)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
 
 ---
 
