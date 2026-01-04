@@ -915,7 +915,7 @@ osascript (macOS)
 | 1.3 | ✅ | `bin/update-evidence.sh` | Modificar para usar `evidence:full-update` |
 | 1.4 | ✅ | `package.json` | Verificar que `ts-morph` se declare como peer dependency |
 | 1.5 | ✅ | `InstallService.js` | Añadir verificación de dependencias críticas |
-| 1.6 | 🚧 | Versión | Publicar v5.5.16 con correcciones |
+| 1.6 | ✅ | Versión | Publicar v5.5.16 con correcciones |
 
 ---
 
@@ -923,12 +923,14 @@ osascript (macOS)
 
 | Tarea | Estado | Archivo | Descripción |
 |-------|--------|---------|-------------|
-| 2.1 | ⏳ | `intelligent-audit.js` | Añadir generación de `protocol_3_questions` |
-| 2.2 | ⏳ | `intelligent-audit.js` | Añadir generación de `rules_read` |
-| 2.3 | ⏳ | `intelligent-audit.js` | Añadir generación de `current_context` |
-| 2.4 | ⏳ | `intelligent-audit.js` | Añadir generación de `platforms` |
-| 2.5 | ⏳ | `intelligent-audit.js` | Añadir generación de `session_id` |
-| 2.6 | ⏳ | Tests | Crear tests para verificar estructura completa de evidence |
+| 2.1 | ✅ | `intelligent-audit.js` | Añadir generación de `protocol_3_questions` |
+| 2.2 | ✅ | `intelligent-audit.js` | Añadir generación de `rules_read` |
+| 2.3 | ✅ | `intelligent-audit.js` | Añadir generación de `current_context` |
+| 2.4 | ✅ | `intelligent-audit.js` | Añadir generación de `platforms` |
+| 2.5 | ✅ | `intelligent-audit.js` | Añadir generación de `session_id` |
+| 2.6 | ✅ | Tests | Crear tests para verificar estructura completa de evidence |
+
+**Fase 2 COMPLETADA** ✅
 
 ---
 
