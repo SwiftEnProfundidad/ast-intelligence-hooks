@@ -5,6 +5,24 @@ All notable changes to `@pumuki/ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.20] - 2026-01-04
+
+### Fixed
+- **Session Loader**: Restored comprehensive session context report on IDE startup
+- **Session Loader**: Fixed evidence age calculation for ISO 8601 timestamps with timezone offsets
+- **Session Loader**: Removed `exec "$SHELL"` that caused infinite loop on macOS
+- **Evidence Parsing**: Added Python-based timestamp parsing for reliable timezone conversion
+
+### Changed
+- **Session Loader**: Now displays branch, recent commits, session context, violations summary, and evidence freshness
+- **Session Loader**: Added quick commands section for user convenience
+- **Session Loader**: Violations summary now reads from `ast-summary.json` with severity breakdown
+
+### Technical Details
+- Evidence timestamps with timezone offsets (e.g., `+01:00`) now correctly parsed using Python's `datetime.fromisoformat()`
+- Session loader no longer forks shell process, preventing resource exhaustion
+- All session information displayed in a single, organized banner
+
 ## [5.5.16] - 2026-01-04
 
 ### Added

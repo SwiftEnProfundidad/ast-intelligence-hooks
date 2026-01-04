@@ -1,3 +1,62 @@
+# Release Notes - v5.5.20
+
+**Release Date**: January 4, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 5.5.x
+
+---
+
+## 🎯 Overview
+
+This release restores the comprehensive session context report on IDE startup and fixes critical bugs in the session loader, including infinite loop prevention and correct timestamp parsing for evidence freshness checks.
+
+---
+
+## 🐛 Bug Fixes
+
+### Fixed: Session loader infinite loop on macOS
+- **Issue**: `exec "$SHELL"` at the end of session-loader.sh caused fork resource exhaustion
+- **Resolution**: Removed shell exec, script now completes without forking
+- **Impact**: IDE startup no longer hangs or creates zombie processes
+
+### Fixed: Evidence age calculation showing incorrect values
+- **Issue**: ISO 8601 timestamps with timezone offsets (e.g., `2026-01-04T08:12:13.372+01:00`) were parsed incorrectly, showing millions of seconds
+- **Resolution**: Added Python-based timestamp parsing using `datetime.fromisoformat()` for reliable timezone conversion
+- **Impact**: Evidence freshness check now displays correct age in seconds
+
+### Fixed: Session loader showing minimal context
+- **Issue**: Session loader was simplified to basic status only, losing branch info, commits, violations summary
+- **Resolution**: Restored full context report with branch, recent commits, session context, violations summary, and evidence freshness
+- **Impact**: Users now see complete project context on IDE startup
+
+---
+
+## 🔧 Improvements
+
+### Enhanced Session Loader Output
+- Displays current branch with color coding
+- Shows last 3 commits with one-line format
+- Reads session context from `.AI_EVIDENCE.json`
+- Shows violations summary from `ast-summary.json` with severity breakdown (CRITICAL/HIGH/MEDIUM/LOW)
+- Displays evidence freshness with correct age calculation
+- Added quick commands section for common actions
+
+### Technical Details
+- Evidence timestamps with timezone offsets now correctly parsed
+- Session loader no longer forks shell process
+- All session information displayed in a single, organized banner
+- Violations summary reads from JSON report for accurate counts
+
+---
+
+## 📦 Installation / Upgrade
+```bash
+npm install --save-dev pumuki-ast-hooks@5.5.20
+npm run install-hooks
+```
+
+---
+
 # Release Notes - v5.3.15
 
 **Release Date**: December 30, 2025  
