@@ -157,7 +157,10 @@ function getBranchStateSafe(gitQuery, repoRoot, branch) {
         try {
             return gitQuery.getBranchState(branch);
         } catch (error) {
-            // Fall through to CLI-based state
+            const errorMsg = error && error.message ? error.message : String(error);
+            if (process.env.DEBUG) {
+                console.warn(`[ast-intelligence-automation] gitQuery.getBranchState failed, falling through to CLI: ${errorMsg}`);
+            }
         }
     }
 

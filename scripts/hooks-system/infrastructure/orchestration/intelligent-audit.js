@@ -10,6 +10,20 @@ const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
 
+function deriveCategoryFromRuleId(ruleId) {
+  if (!ruleId || typeof ruleId !== 'string') return 'unknown';
+  const parts = ruleId.split('.');
+  if (parts.length >= 2) {
+    const platform = parts[0].toLowerCase();
+    const domain = parts[1].toLowerCase();
+    if (['ios', 'android', 'backend', 'frontend'].includes(platform)) {
+      return `${platform}.${domain}`;
+    }
+    return domain;
+  }
+  return parts[0] || 'unknown';
+}
+
 function formatLocalTimestamp(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -251,7 +265,14 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
     const isProtected = ['main', 'master', baseBranch].includes(currentBranch);
     const criticalViolations = violations.filter(v => v.severity === 'CRITICAL');
     const highViolations = violations.filter(v => v.severity === 'HIGH');
-    const blockingViolations = [...criticalViolations, ...highViolations].slice(0, 50);
+    const mediumViolations = violations.filter(v => v.severity === 'MEDIUM');
+    const lowViolations = violations.filter(v => v.severity === 'LOW');
+
+    let gateViolations = [...criticalViolations, ...highViolations];
+    if (gateViolations.length === 0) {
+      gateViolations = [...mediumViolations, ...lowViolations];
+    }
+    const blockingViolations = gateViolations.slice(0, 50);
 
     const gateScope = String(env.get('AI_GATE_SCOPE', 'staging') || 'staging').trim().toLowerCase();
 
@@ -272,16 +293,19 @@ function updateAIEvidence(violations, gateResult, tokenUsage) {
       status: gateResult.passed ? 'ALLOWED' : 'BLOCKED',
       scope: gateScope === 'repo' || gateScope === 'repository' ? 'repo' : 'staging',
       last_check: formatLocalTimestamp(),
-      violations: blockingViolations.map(v => ({
-        file: v.filePath || v.file || 'unknown',
-        line: v.line || null,
-        severity: v.severity,
-        rule: v.ruleId || v.rule || 'unknown',
-        message: v.message || v.description || '',
-        category: v.category || 'unknown',
-        intelligent_evaluation: v.intelligentEvaluation || false,
-        severity_score: v.severityScore || 0
-      })),
+      violations: blockingViolations.map(v => {
+        const ruleId = v.ruleId || v.rule || 'unknown';
+        return {
+          file: v.filePath || v.file || 'unknown',
+          line: v.line || null,
+          severity: v.severity,
+          rule: ruleId,
+          message: v.message || v.description || '',
+          category: v.category || deriveCategoryFromRuleId(ruleId),
+          intelligent_evaluation: v.intelligentEvaluation || false,
+          severity_score: v.severityScore || 0
+        };
+      }),
       instruction: '🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!',
       mandatory: true
     };

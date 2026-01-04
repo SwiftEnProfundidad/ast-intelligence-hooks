@@ -294,7 +294,13 @@ class iOSEnterpriseAnalyzer {
         'Network code without custom NetworkError enum');
     }
 
-    if (content.includes('URLSession') && !content.includes('serverTrustPolicy') && !content.includes('pinning')) {
+    // Check for SSL pinning implementation
+    const hasSSLPinningImplementation =
+      content.includes('serverTrustPolicy') ||
+      content.includes('pinning') ||
+      (content.includes('URLSessionDelegate') && content.includes('URLAuthenticationChallenge'));
+
+    if (content.includes('URLSession') && !hasSSLPinningImplementation) {
       this.addFinding('ios.networking.missing_ssl_pinning', 'medium', filePath, 1,
         'Consider SSL pinning for high-security apps');
     }

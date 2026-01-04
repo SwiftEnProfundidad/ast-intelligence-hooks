@@ -115,6 +115,8 @@ class ConfigurationGeneratorService {
             packageJson.scripts['ast:guard:restart'] = 'bash scripts/hooks-system/bin/evidence-guard restart';
             packageJson.scripts['ast:guard:status'] = 'bash scripts/hooks-system/bin/evidence-guard status';
             packageJson.scripts['ast:guard:logs'] = 'bash scripts/hooks-system/bin/evidence-guard logs';
+            packageJson.scripts['ast:check-version'] = 'node scripts/hooks-system/bin/check-version.js';
+            packageJson.scripts['ast:gitflow'] = 'node scripts/hooks-system/bin/gitflow-cycle.js';
 
             fs.writeFileSync(projectPackageJsonPath, JSON.stringify(packageJson, null, 2));
             this.logSuccess('npm scripts added');
