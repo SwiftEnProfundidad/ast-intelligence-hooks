@@ -2,6 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
 const env = require('../../../config/env.js');
+const { execFile } = require('child_process');
+const { promisify } = require('util');
+
+const execFileAsync = promisify(execFile);
 
 class EvidenceManager {
     constructor(evidencePath, notifier, auditLogger, delegate = null) {
@@ -9,7 +13,7 @@ class EvidenceManager {
         this.notifier = notifier;
         this.auditLogger = auditLogger;
         this.delegate = delegate;
-        this.staleThresholdMs = env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 60000);
+        this.staleThresholdMs = env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 180000);
         this.reminderIntervalMs = env.getNumber('HOOK_GUARD_EVIDENCE_REMINDER_INTERVAL', 60000);
         this.inactivityGraceMs = env.getNumber('HOOK_GUARD_INACTIVITY_GRACE_MS', 120000);
         this.pollIntervalMs = env.getNumber('HOOK_GUARD_EVIDENCE_POLL_INTERVAL', 30000);
@@ -127,7 +131,7 @@ class EvidenceManager {
     }
 
     async attemptAutoRefresh(reason = 'manual') {
-        if (!env.getBool('HOOK_GUARD_AUTO_REFRESH', false)) return;
+        if (!env.getBool('HOOK_GUARD_AUTO_REFRESH', true)) return;
 
         const updateScriptCandidates = [
             path.join(process.cwd(), 'scripts/hooks-system/bin/update-evidence.sh'),
@@ -165,8 +169,29 @@ class EvidenceManager {
     }
 
     async runDirectEvidenceRefresh(_reason) {
-        // Specific implementation if needed
-        return;
+        const updateScriptCandidates = [
+            path.join(process.cwd(), 'scripts/hooks-system/bin/update-evidence.sh'),
+            path.join(process.cwd(), 'node_modules/@pumuki/ast-intelligence-hooks/scripts/hooks-system/bin/update-evidence.sh'),
+            path.join(process.cwd(), 'node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/update-evidence.sh')
+        ];
+
+        const updateScript = updateScriptCandidates.find(p => fs.existsSync(p));
+        if (!updateScript) return;
+
+        try {
+            await execFileAsync('bash', [updateScript, '--auto'], {
+                cwd: process.cwd(),
+                env: {
+                    ...process.env,
+                    AUTO_EVIDENCE_TRIGGER: 'auto',
+                    AUTO_EVIDENCE_REASON: 'guard.auto_refresh',
+                    AUTO_EVIDENCE_SUMMARY: 'auto-refresh'
+                }
+            });
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            this.notifier.appendDebugLog(`EVIDENCE_AUTO_REFRESH_ERROR|${msg}`);
+        }
     }
 
     updateUserActivity() {

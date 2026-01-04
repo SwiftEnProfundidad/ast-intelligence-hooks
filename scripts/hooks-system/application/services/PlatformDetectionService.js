@@ -116,7 +116,11 @@ class PlatformDetectionService {
   _detectPlatformUncached(filePath) {
     const lowerPath = filePath.toLowerCase();
 
-    if (lowerPath.includes('apps/backend/') || lowerPath.includes('scripts/hooks-system/') || lowerPath.includes('/services/') || lowerPath.includes('services/') || lowerPath.includes('/functions/') || lowerPath.includes('functions/')) {
+    if (lowerPath.includes('scripts/hooks-system/')) {
+      return 'other';
+    }
+
+    if (lowerPath.includes('apps/backend/') || lowerPath.includes('/services/') || lowerPath.includes('services/') || lowerPath.includes('/functions/') || lowerPath.includes('functions/')) {
       return 'backend';
     }
     if (lowerPath.includes('apps/web-app/') || lowerPath.includes('apps/admin')) {
