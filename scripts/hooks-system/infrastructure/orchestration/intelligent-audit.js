@@ -324,6 +324,42 @@ async function runIntelligentAudit() {
     console.log(`  - JSON: ${reportPaths.jsonPath}`);
     console.log(`  - Text: ${reportPaths.textPath}`);
 
+    // Generate detailed console output for God classes and critical violations
+    console.log('\n🔍 DETAILED VIOLATION ANALYSIS:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    const godClassViolations = enhancedViolations.filter(v =>
+      v.ruleId && v.ruleId.includes('god_class') && v.severity === 'CRITICAL'
+    );
+
+    if (godClassViolations.length > 0) {
+      console.log(`\n🚨 GOD CLASSES DETECTED (${godClassViolations.length}):`);
+      godClassViolations.forEach((violation, idx) => {
+        console.log(`\n${idx + 1}. ${violation.ruleId}`);
+        console.log(`   File: ${violation.filePath}:${violation.line}`);
+        console.log(`   Message: ${violation.message}`);
+        if (violation.intelligentEvaluation && violation.recommendation) {
+          console.log(`   Recommendation: ${violation.recommendation}`);
+        }
+      });
+    }
+
+    // Show top critical violations with details
+    const otherCritical = enhancedViolations.filter(v =>
+      v.severity === 'CRITICAL' && !v.ruleId.includes('god_class')
+    ).slice(0, 5);
+
+    if (otherCritical.length > 0) {
+      console.log(`\n🚨 OTHER CRITICAL VIOLATIONS (Top ${otherCritical.length}):`);
+      otherCritical.forEach((violation, idx) => {
+        console.log(`\n${idx + 1}. ${violation.ruleId}`);
+        console.log(`   File: ${violation.filePath}:${violation.line}`);
+        console.log(`   Message: ${violation.message}`);
+      });
+    }
+
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
     const tracker = new SeverityTracker();
     tracker.record(enhancedViolations, gateResult);
 
