@@ -5,6 +5,11 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.42] - 2026-01-05
+
+### Fixed
+- **exports**: Exported `./package.json` so consumers can safely read the installed version via `require('pumuki-ast-hooks/package.json')` (Node 20+ compatible)
+
 ## [5.5.41] - 2026-01-05
 
 ### Fixed
