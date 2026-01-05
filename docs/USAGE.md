@@ -61,7 +61,33 @@ Done! You now have AST Intelligence working in your project.
 
 ### Code Analysis
 
-#### Interactive Menu (Recommended)
+### Evidence Guard (auto-refresh)
+
+The Evidence Guard daemon refreshes `.AI_EVIDENCE.json` periodically (default: every 180s).
+
+Notes:
+- The refresh updates evidence and records the current quality gate status.
+- In auto-refresh mode, a failing quality gate does not break the daemon.
+
+Useful commands:
+```bash
+# Daemon control
+npm run ast:guard:start
+npm run ast:guard:stop
+npm run ast:guard:status
+npm run ast:guard:logs
+```
+
+Gate scope:
+```bash
+# Default is staging (only staged files)
+AI_GATE_SCOPE=staging bash ./scripts/hooks-system/bin/update-evidence.sh --auto
+
+# Repository-wide gate evaluation
+AI_GATE_SCOPE=repo bash ./scripts/hooks-system/bin/update-evidence.sh --auto
+```
+
+### Interactive Menu (Recommended)
 
 The library includes an **interactive menu** for selecting audit options:
 
