@@ -23,7 +23,7 @@ function formatLocalTimestamp(date = new Date()) {
 
 const astModulesPath = __dirname;
 const { createProject, platformOf, mapToLevel } = require(path.join(astModulesPath, "ast-core"));
-const { MacOSNotificationAdapter } = require(path.join(__dirname, '../adapters/MacOSNotificationAdapter'));
+const MacOSNotificationAdapter = require(path.join(__dirname, '../adapters/MacOSNotificationAdapter'));
 const { runBackendIntelligence } = require(path.join(astModulesPath, "backend/ast-backend"));
 const { runFrontendIntelligence } = require(path.join(astModulesPath, "frontend/ast-frontend"));
 const { runAndroidIntelligence } = require(path.join(astModulesPath, "android/ast-android"));
@@ -36,6 +36,12 @@ const { analyzeNetworkResilience } = require(path.join(astModulesPath, "common/n
 const { analyzeOfflineBackend } = require(path.join(astModulesPath, "common/offline-backend-analyzer"));
 const { analyzePushBackend } = require(path.join(astModulesPath, "common/push-backend-analyzer"));
 const { analyzeImagesBackend } = require(path.join(astModulesPath, "common/images-backend-analyzer"));
+
+const debugEnabled = process.env.DEBUG === '1' || process.env.DEBUG === 'true';
+const debugLog = (msg) => {
+  if (!debugEnabled) return;
+  process.stderr.write(`[AST DEBUG] ${msg}\n`);
+};
 
 /**
  * Main AST intelligence function
@@ -50,12 +56,10 @@ async function runASTIntelligence() {
     const stagedRelFiles = stagingOnlyMode ? getStagedFilesRel(root) : [];
 
     const allFiles = listSourceFiles(root);
+    debugLog(`source files: ${allFiles.length}`);
 
     const project = createProject(allFiles);
     const findings = [];
-
-    runHardcodedThresholdAudit(root, findings);
-    runProjectHardcodedThresholdAudit(root, allFiles, findings);
 
     const context = {
       repoHasMigrations: checkForMigrations(root),
@@ -68,15 +72,24 @@ async function runASTIntelligence() {
     };
 
     runCommonIntelligence(project, findings);
+    debugLog(`after common: ${findings.length}`);
     runTextScanner(root, findings);
+    debugLog(`after text: ${findings.length}`);
     analyzeDocumentation(root, findings);
+    debugLog(`after docs: ${findings.length}`);
     analyzeMonorepoHealth(root, findings);
+    debugLog(`after monorepo: ${findings.length}`);
     analyzeNetworkResilience(project, findings);
+    debugLog(`after resilience: ${findings.length}`);
     analyzeOfflineBackend(project, findings);
+    debugLog(`after offline: ${findings.length}`);
     analyzePushBackend(project, findings);
+    debugLog(`after push: ${findings.length}`);
     analyzeImagesBackend(project, findings);
+    debugLog(`after images: ${findings.length}`);
 
     await runPlatformAnalysis(project, findings, context);
+    debugLog(`after platforms: ${findings.length}`);
 
     // Generate output
     generateOutput(findings, { ...context, stagingOnlyMode, stagedFiles: stagedRelFiles }, project, root);
@@ -319,6 +332,11 @@ function runHardcodedThresholdAudit(root, findings) {
  * Run platform-specific AST analysis
  */
 async function runPlatformAnalysis(project, findings, context) {
+  debugLog(`project source files: ${project.getSourceFiles().length}`);
+  if (debugEnabled) {
+    const sample = project.getSourceFiles().slice(0, 5).map(sf => sf.getFilePath());
+    debugLog(`sample files: ${JSON.stringify(sample)}`);
+  }
   const sourceFiles = project.getSourceFiles();
 
   const platformsProcessed = new Set();
@@ -333,6 +351,7 @@ async function runPlatformAnalysis(project, findings, context) {
   });
 
   for (const platform of platformsProcessed) {
+    console.error(`[PLATFORMS] Processing platform: ${platform}`);
     try {
       switch (platform.toLowerCase()) {
         case "backend":
@@ -374,13 +393,15 @@ function generateOutput(findings, context, project, root) {
         .map(s => s.trim())
         .filter(Boolean);
 
-      const stagedAbs = new Set(stagedRel.map(r => path.resolve(root, r)));
-      findings = (findings || []).filter(f => {
-        if (!f || !f.filePath) return false;
-        const fp = String(f.filePath);
-        if (stagedAbs.has(fp)) return true;
-        return stagedRel.some(rel => fp.endsWith(rel) || fp.includes(`/${rel}`));
-      });
+      if (stagedRel.length > 0) {
+        const stagedAbs = new Set(stagedRel.map(r => path.resolve(root, r)));
+        findings = (findings || []).filter(f => {
+          if (!f || !f.filePath) return false;
+          const fp = String(f.filePath);
+          if (stagedAbs.has(fp)) return true;
+          return stagedRel.some(rel => fp.endsWith(rel) || fp.includes(`/${rel}`));
+        });
+      }
     } catch {
       findings = [];
     }
