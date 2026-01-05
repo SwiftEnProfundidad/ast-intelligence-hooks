@@ -94,12 +94,27 @@ refresh_evidence() {
 }
 
 lint_hooks_system() {
-  if npm --prefix "${REPO_ROOT}/scripts/hooks-system" run lint:hooks >/dev/null 2>&1; then
-    printf "${GREEN}✅ Lint hooks-system OK.${NC}\n"
-  else
-    printf "${RED}❌ Lint hooks-system falló.${NC}\n"
-    return 1
+  local repo_pkg="${REPO_ROOT}/package.json"
+  local hooks_pkg="${REPO_ROOT}/scripts/hooks-system/package.json"
+
+  if [[ -f "${repo_pkg}" ]]; then
+    printf "${CYAN}🔎 Ejecutando lint (repo root)...${NC}\n"
+    if npm --prefix "${REPO_ROOT}" run lint:hooks; then
+      printf "${GREEN}✅ Lint hooks-system OK.${NC}\n"
+      return 0
+    fi
   fi
+
+  if [[ -f "${hooks_pkg}" ]]; then
+    printf "${CYAN}🔎 Ejecutando lint (scripts/hooks-system)...${NC}\n"
+    if npm --prefix "${REPO_ROOT}/scripts/hooks-system" run lint:hooks; then
+      printf "${GREEN}✅ Lint hooks-system OK.${NC}\n"
+      return 0
+    fi
+  fi
+
+  printf "${RED}❌ Lint hooks-system falló.${NC}\n"
+  return 1
 }
 
 run_mobile_checks() {
