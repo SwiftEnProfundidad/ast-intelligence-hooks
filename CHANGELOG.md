@@ -5,6 +5,11 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.44] - 2026-01-05
+
+### Fixed
+- **gitflow-enforcer**: Lint hooks-system se ejecuta contra el `package.json` del repo (y muestra output en caso de fallo) para evitar falsos negativos en pre-push
+
 ## [5.5.43] - 2026-01-05
 
 ### Fixed
