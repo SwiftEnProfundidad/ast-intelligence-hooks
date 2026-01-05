@@ -1,6 +1,6 @@
 {
   "name": "pumuki-ast-hooks",
-  "version": "5.5.41",
+  "version": "5.5.42",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
@@ -126,6 +126,7 @@
   },
   "exports": {
     ".": "./index.js",
+    "./package.json": "./package.json",
     "./ast": "./scripts/hooks-system/infrastructure/ast/ast-intelligence.js",
     "./domain": "./scripts/hooks-system/domain/index.js",
     "./application": "./scripts/hooks-system/application/index.js",
