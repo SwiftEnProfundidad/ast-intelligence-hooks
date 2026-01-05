@@ -254,6 +254,9 @@ async function runIntelligentAudit() {
     const rawViolations = loadRawViolations();
     console.log(`[Intelligent Audit] Loaded ${rawViolations.length} violations from AST`);
 
+    const autoEvidenceTrigger = String(env.get('AUTO_EVIDENCE_TRIGGER', process.env.AUTO_EVIDENCE_TRIGGER || '') || '').trim().toLowerCase();
+    const isAutoEvidenceRefresh = autoEvidenceTrigger === 'auto';
+
     const gateScope = String(env.get('AI_GATE_SCOPE', 'staging') || 'staging').trim().toLowerCase();
     const isRepoScope = gateScope === 'repo' || gateScope === 'repository';
 
@@ -310,6 +313,11 @@ async function runIntelligentAudit() {
     console.log('[Intelligent Audit] Applying quality gate...');
     const gatePolicies = new GatePolicies();
     const gateResult = gatePolicies.apply(enhancedViolations);
+
+    if (isAutoEvidenceRefresh && !gateResult.passed) {
+      console.log('[Intelligent Audit] ℹ️  Auto evidence refresh: preserving gate status but not failing process exit code');
+      gateResult.exitCode = 0;
+    }
 
     console.log(`[Intelligent Audit] Gate status: ${gateResult.passed ? '✅ PASSED' : '❌ FAILED'}`);
     if (gateResult.blockedBy) {
