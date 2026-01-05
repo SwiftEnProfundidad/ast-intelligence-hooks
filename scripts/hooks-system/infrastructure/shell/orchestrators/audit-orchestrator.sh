@@ -64,12 +64,10 @@ else
   ROOT_DIR=$(pwd)
 fi
 
-# Default to temp directories to avoid polluting repositories.
+# Default to stable repo-local directories to avoid cross-run TMP drift.
 # Can be overridden by setting AUDIT_TMP / AUDIT_REPORTS.
-PROJECT_NAME="$(basename "$ROOT_DIR")"
-TMP_BASE_DIR="${TMPDIR:-/tmp}/pumuki-audit/${PROJECT_NAME}"
-TMP_DIR="${AUDIT_TMP:-${TMP_BASE_DIR}/.audit_tmp}"
-REPORTS_DIR="${AUDIT_REPORTS:-${TMP_BASE_DIR}/.audit-reports}"
+TMP_DIR="${AUDIT_TMP:-$ROOT_DIR/.audit_tmp}"
+REPORTS_DIR="${AUDIT_REPORTS:-$ROOT_DIR/.audit-reports}"
 mkdir -p "$TMP_DIR" "$REPORTS_DIR"
 
 if [[ -z "${AUDIT_LIBRARY:-}" ]] && [[ -f "$ROOT_DIR/infrastructure/ast/ast-intelligence.js" ]]; then
@@ -258,6 +256,9 @@ run_intelligent_audit() {
 }
 
 full_audit() {
+  export STAGING_ONLY_MODE=0
+  export BLOCK_ON_REPO_VIOLATIONS=1
+  export AI_GATE_SCOPE="repo"
   run_basic_checks
   run_eslint_suite
   run_ast_intelligence
