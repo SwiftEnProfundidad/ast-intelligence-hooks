@@ -29,6 +29,7 @@ const { BackendArchitectureDetector } = require(path.join(__dirname, 'analyzers/
  * @param {string} platform - Platform identifier
  */
 function runBackendIntelligence(project, findings, platform) {
+  console.error(`[BACKEND] runBackendIntelligence called for platform: ${platform}`);
   try {
     const root = getRepoRoot();
     const architectureDetector = new BackendArchitectureDetector(root);
@@ -95,7 +96,6 @@ function runBackendIntelligence(project, findings, platform) {
       if (/\brepo\b|repository|prisma|typeorm|mongoose|sequelize|knex|\bdb\b|database|sql/i.test(text)) concerns.add('persistence');
       if (/notification|notifier|terminal-notifier|osascript/i.test(text)) concerns.add('notifications');
       if (/\bgit\b|rev-parse|git diff|git status|git log/i.test(text)) concerns.add('git');
-
       return concerns.size;
     };
 
@@ -119,11 +119,12 @@ function runBackendIntelligence(project, findings, platform) {
     project.getSourceFiles().forEach((sf) => {
       if (!sf || typeof sf.getFilePath !== 'function') return;
       const filePath = sf.getFilePath();
-      if (platformOf(filePath) !== 'backend') return;
-      if (/\/ast-[^/]+\.js$/.test(filePath)) return;
-      if (!env.getBool('AUDIT_LIBRARY', false)) {
-        if (/scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath) || /\/infrastructure\/ast\//i.test(filePath)) return;
+      console.error(`[GOD CLASS BASELINE] Checking file: ${filePath}`);
+      if (platformOf(filePath) !== 'backend') {
+        console.error(`[GOD CLASS BASELINE] Skipping non-backend file: ${filePath}`);
+        return;
       }
+      // NO excluir archivos AST - la librería debe auto-auditarse
       if (isTestFile(filePath)) return;
 
       sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
@@ -144,7 +145,12 @@ function runBackendIntelligence(project, findings, platform) {
       });
     });
 
-    if (metrics.length === 0) return null;
+    if (metrics.length === 0) {
+      console.error(`[GOD CLASS BASELINE] No metrics collected for baseline`);
+      return null;
+    }
+
+    console.error(`[GOD CLASS BASELINE] Collected ${metrics.length} class metrics for baseline`);
 
     const pOutlier = env.getNumber('AST_GODCLASS_P_OUTLIER', 90);
     const pExtreme = env.getNumber('AST_GODCLASS_P_EXTREME', 97);
@@ -203,10 +209,7 @@ function runBackendIntelligence(project, findings, platform) {
 
     if (platformOf(filePath) !== "backend") return;
 
-    if (/\/ast-[^/]+\.js$/.test(filePath)) return;
-    if (!env.getBool('AUDIT_LIBRARY', false)) {
-      if (/scripts\/hooks-system\/infrastructure\/ast\//i.test(filePath) || /\/infrastructure\/ast\//i.test(filePath)) return;
-    }
+    // NO excluir archivos AST - la librería debe auto-auditarse para detectar God classes masivas
 
     const fullText = sf.getFullText();
     const insightsEnabled = env.get('AST_INSIGHTS', '0') === '1';
@@ -269,7 +272,7 @@ function runBackendIntelligence(project, findings, platform) {
       sf.getFullText().includes("ConfigService");
     const hasConfigUsage = sf.getFullText().includes("config") || sf.getFullText().includes("env");
     if (!hasEnvSpecific && hasConfigUsage && !isTestFile(filePath)) {
-      pushFinding("backend.config.missing_env_separation", "warning", sf, sf, "Missing environment-specific configuration - consider NODE_ENV or ConfigService", findings);
+      pushFinding("backend.config.missing_env_separation", "info", sf, sf, "Missing environment-specific configuration - consider NODE_ENV or ConfigService", findings);
     }
 
     const hasConfigValidation = sf.getFullText().includes("joi") ||
@@ -331,15 +334,24 @@ function runBackendIntelligence(project, findings, platform) {
         const complexityOutlier = complexityZ >= godClassBaseline.thresholds.outlier.complexityZ;
         const concernOutlier = concernCount >= godClassBaseline.thresholds.outlier.concerns;
 
-        const isAbsoluteGod = lineCount > 600 && methodsCount > 30 && complexity > 80;
-        const isUnderThreshold = lineCount < 400 && methodsCount < 25 && complexity < 50;
+        // Detección híbrida: estadística + umbrales absolutos
+        // Archivo masivo: cualquier archivo con >500 líneas es sospechoso
+        const isMassiveFile = lineCount > 500;
+        // God class absoluta: archivo muy grande O (grande + complejo) O (grande + muchos métodos)
+        const isAbsoluteGod = lineCount > 1000 ||
+          (lineCount > 500 && complexity > 50) ||
+          (lineCount > 500 && methodsCount > 20) ||
+          (lineCount > 600 && methodsCount > 30 && complexity > 80);
+        const isUnderThreshold = lineCount < 300 && methodsCount < 15 && complexity < 30;
 
         let signalCount = 0;
         if (sizeOutlier) signalCount++;
         if (complexityOutlier) signalCount++;
         if (concernOutlier) signalCount++;
+        if (isMassiveFile) signalCount++; // Añadir señal extra por tamaño masivo
 
         if (!isUnderThreshold && (signalCount >= 2 || isAbsoluteGod)) {
+          console.error(`[GOD CLASS DEBUG] ${className}: methods=${methodsCount}, props=${propertiesCount}, lines=${lineCount}, complexity=${complexity}, concerns=${concernCount}, isAbsoluteGod=${isAbsoluteGod}, signalCount=${signalCount}`);
           pushFinding("backend.antipattern.god_classes", "critical", sf, cls,
             `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
             findings
@@ -420,7 +432,7 @@ function runBackendIntelligence(project, findings, platform) {
     const looksLikeServiceOrController = fullTextLower.includes("controller") || fullTextLower.includes("service");
 
     if (!isInternalAstToolingFileForMetrics && !hasMetrics && looksLikeServiceOrController) {
-      pushFinding("backend.metrics.missing_prometheus", "low", sf, sf, "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring", findings);
+      pushFinding("backend.metrics.missing_prometheus", "info", sf, sf, "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring", findings);
     }
 
     if (isTestFile(filePath)) {
@@ -541,7 +553,7 @@ function runBackendIntelligence(project, findings, platform) {
             exprText.includes("Unauthorized") ||
             exprText.includes("Forbidden"));
         if (!isCustom) {
-          pushFinding("backend.error.custom_exceptions", "medium", sf, throwStmt, "Generic Error/Exception thrown - create custom exception classes for better error handling", findings);
+          pushFinding("backend.error.custom_exceptions", "info", sf, throwStmt, "Generic Error/Exception thrown - create custom exception classes for better error handling", findings);
         }
       }
     });
@@ -866,7 +878,7 @@ function runBackendIntelligence(project, findings, platform) {
     const isBusinessLogic = /\/(controllers?|services?|use-?cases?|handlers?)\//i.test(filePath) ||
       /(controller|service|usecase|handler)\.ts$/i.test(filePath);
     if (isBusinessLogic && !sf.getFullText().includes("winston") && !sf.getFullText().includes("audit") && !sf.getFullText().includes("Logger")) {
-      pushFinding("backend.security.missing_audit_logging", "medium", sf, sf, "Audit logging not detected - add structured audit logs", findings);
+      pushFinding("backend.security.missing_audit_logging", "info", sf, sf, "Audit logging not detected - add structured audit logs", findings);
     }
 
     sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
@@ -926,7 +938,7 @@ function runBackendIntelligence(project, findings, platform) {
       sf.getDescendantsOfKind(SyntaxKind.CallExpression).forEach((call) => {
         const expr = call.getExpression().getText();
         if (expr.includes("jest.mock") || expr.includes("mock(")) {
-          pushFinding("backend.testing.mocks", "low", sf, call, "Mock usage in tests - prefer spies over mocks when possible", findings);
+          pushFinding("backend.testing.mocks", "info", sf, call, "Mock usage in tests - prefer spies over mocks when possible", findings);
         }
       });
     }

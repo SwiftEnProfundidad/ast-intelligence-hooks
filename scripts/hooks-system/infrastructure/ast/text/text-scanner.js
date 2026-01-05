@@ -45,12 +45,53 @@ function runTextScanner(root, findings) {
   let iosHasInfrastructureFolder = false;
   let iosHasPresentationFolder = false;
   walk(root, files);
+
+  // Detectar archivos shell masivos (God scripts)
+  for (const file of files) {
+    const ext = path.extname(file).toLowerCase();
+    if (ext === '.sh' || ext === '.bash' || ext === '.zsh') {
+      try {
+        const content = fs.readFileSync(file, 'utf-8');
+        const lineCount = content.split('\n').length;
+        const functionCount = (content.match(/^\s*(function\s+\w+|[\w_]+\s*\(\s*\))\s*\{/gm) || []).length;
+
+        // Detectar God script: >300 líneas O >500 líneas con muchas funciones
+        if (lineCount > 500 || (lineCount > 300 && functionCount > 10)) {
+          pushFileFinding(
+            'shell.antipattern.god_script',
+            'critical',
+            file,
+            1,
+            1,
+            `God script detected: ${lineCount} lines, ${functionCount} functions - split into smaller modules`,
+            findings
+          );
+        } else if (lineCount > 200) {
+          pushFileFinding(
+            'shell.maintainability.large_script',
+            'medium',
+            file,
+            1,
+            1,
+            `Large shell script: ${lineCount} lines - consider modularization`,
+            findings
+          );
+        }
+      } catch (error) {
+        // Skip unreadable files - log if debug enabled
+        if (process.env.DEBUG === '1') {
+          console.error(`[text-scanner] Failed to read shell file ${file}: ${error.message}`);
+        }
+      }
+    }
+  }
+
   for (const file of files) {
     const ext = path.extname(file).toLowerCase();
     if (!['.kt', '.kts', '.swift', '.java', '.xml', '.plist', '.stringsdict', '.yml', '.yaml'].includes(ext)) continue;
     let content = '';
-    try { 
-      content = fs.readFileSync(file, 'utf-8'); 
+    try {
+      content = fs.readFileSync(file, 'utf-8');
     } catch (error) {
       continue;
     }
@@ -129,7 +170,7 @@ function runTextScanner(root, findings) {
       if (/class\s+\w+ViewModel\b/.test(content) && !/SharedFlow\b|MutableSharedFlow\b/.test(content)) {
         pushFileFinding('android.flow.missing_sharedflow', 'low', file, 1, 1, 'ViewModel without SharedFlow for events', findings);
       }
-      if (/Flow<[^>]+>/.test(content) && !/(\.map\(|\.filter\(|combine\(|flatMapLatest\(|catch\()/ .test(content)) {
+      if (/Flow<[^>]+>/.test(content) && !/(\.map\(|\.filter\(|combine\(|flatMapLatest\(|catch\()/.test(content)) {
         pushFileFinding('android.flow.missing_operators', 'low', file, 1, 1, 'Flow used without operators', findings);
       }
       if (/@Composable\b/.test(content) && /StateFlow\b/.test(content) && !/collectAsState\b/.test(content)) {
@@ -787,8 +828,8 @@ function runTextScanner(root, findings) {
 
     const kotlinFiles = files.filter(f => f.endsWith('.kt'));
     const allContent = kotlinFiles.map(f => {
-      try { 
-        return fs.readFileSync(f, 'utf8'); 
+      try {
+        return fs.readFileSync(f, 'utf8');
       } catch (error) {
         return '';
       }

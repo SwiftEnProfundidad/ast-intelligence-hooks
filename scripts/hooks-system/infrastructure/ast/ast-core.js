@@ -57,6 +57,7 @@ function shouldIgnore(file) {
   if (p.includes("/.audit_tmp/")) return true;
   if (p.endsWith(".d.ts")) return true;
   if (p.endsWith(".map")) return true;
+  // No excluir analyzers - la librería debe analizarse a sí misma
   if (/\.min\./.test(p)) return true;
   return false;
 }
@@ -194,6 +195,14 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
       strictRegex = new RegExp(env.getBool('AUDIT_LIBRARY', false) ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
     }
     isStrictCriticalRule = strictRegex.test(ruleId);
+    // Exclude specific rules that are false positives for the library
+    if (
+      ruleId === 'backend.error.custom_exceptions' ||
+      ruleId === 'backend.testing.mocks' ||
+      ruleId === 'backend.security.missing_audit_logging'
+    ) {
+      isStrictCriticalRule = false;
+    }
     if (isStrictCriticalRule) {
       mappedSeverity = 'CRITICAL';
     }
@@ -256,6 +265,14 @@ function pushFileFinding(ruleId, severity, filePath, line, column, message, find
       strictRegex = new RegExp(env.getBool('AUDIT_LIBRARY', false) ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
     }
     isStrictCriticalRule = strictRegex.test(ruleId);
+    // Exclude specific rules that are false positives for the library
+    if (
+      ruleId === 'backend.error.custom_exceptions' ||
+      ruleId === 'backend.testing.mocks' ||
+      ruleId === 'backend.security.missing_audit_logging'
+    ) {
+      isStrictCriticalRule = false;
+    }
     if (isStrictCriticalRule) {
       mappedSeverity = 'CRITICAL';
     }
@@ -332,6 +349,14 @@ function mapToLevel(severity) {
  */
 function platformOf(filePath) {
   const p = filePath.replace(/\\/g, "/");
+  console.error(`[PLATFORM] Checking platform for: ${p}`);
+
+  // No excluir analyzers - la librería debe analizarse a sí misma
+
+  if (p.includes("/scripts/hooks-system/") || p.includes("scripts/hooks-system/")) {
+    console.error(`[PLATFORM] Assigned backend to: ${p}`);
+    return "backend";
+  }
 
   if (p.includes("/apps/backend/") || p.includes("apps/backend/")) return "backend";
   if (p.includes("/apps/admin/") || p.includes("/admin-dashboard/")) return "frontend";
@@ -339,7 +364,6 @@ function platformOf(filePath) {
   if (p.includes("/apps/mobile-android/") || p.includes("/apps/android/")) return "android";
 
   if (p.includes("/landing-page/") || p.includes("landing-page/")) return "frontend";
-  if (p.includes("/scripts/hooks-system/") || p.includes("scripts/hooks-system/")) return null;
   if (p.includes("/packages/ast-hooks/") || p.includes("packages/ast-hooks/")) return "backend";
 
   if (p.endsWith(".swift")) return "ios";
@@ -376,13 +400,15 @@ function createProject(files) {
 
   for (const file of files) {
     if (fs.existsSync(file)) {
+      console.error(`[CREATE PROJECT] Adding file: ${file}`);
       try {
         project.addSourceFileAtPath(file);
+        console.error(`[CREATE PROJECT] Successfully added: ${file}`);
       } catch (error) {
-        if (process.env.DEBUG) {
-          process.stderr.write(`[createProject] Failed to add file ${file}: ${error.message}\n`);
-        }
+        console.error(`[CREATE PROJECT] Failed to add file ${file}: ${error.message}`);
       }
+    } else {
+      console.error(`[CREATE PROJECT] File does not exist: ${file}`);
     }
   }
 

@@ -5,6 +5,29 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.41] - 2026-01-05
+
+### Fixed
+- **God class detection**: Removed exclusions for AST library files - library now self-audits (practice what we preach)
+- **God class detection**: Adjusted hybrid thresholds - files >1000 lines OR (>500 lines + complexity) now detected as CRITICAL
+- **Shell script analysis**: Added detection for God scripts (>500 lines) in `.sh/.bash/.zsh` files
+- **text-scanner.js**: Fixed empty catch block with debug logging for unreadable files
+- **intelligent-audit.js**: Enhanced console output with detailed God class analysis and metrics
+
+### Changed
+- **BREAKING**: AST library files (`ast-backend.js`, `ast-core.js`, `ast-intelligence.js`) are no longer excluded from God class detection
+- **God class baseline**: Now uses hybrid detection combining statistical baseline with absolute thresholds
+
+### Added
+- **Shell script analysis**: New rule `shell.antipattern.god_script` for massive shell files
+- **Shell script analysis**: New rule `shell.maintainability.large_script` for large shell files (>200 lines)
+- **Audit output**: Detailed violation analysis section showing God classes with file paths and metrics
+
+### Results
+- CRITICAL violations increased from 8 to 25 (+17) due to proper detection of massive library files
+- God classes detected increased from 8 to 15 (+7)
+- Shell scripts now analyzed: 2 God scripts detected (including `audit-orchestrator.sh` with 1188 lines)
+
 ## [5.5.40] - 2026-01-04
 
 ### Fixed
