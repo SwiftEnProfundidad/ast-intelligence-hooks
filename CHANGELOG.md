@@ -5,6 +5,20 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.45] - 2026-01-05
+
+### Added
+- **iOSModernPracticesRules**: Nuevo analizador para Swift 6.2 / iOS 17+ que detecta:
+  - **Librerías prohibidas**: Alamofire, Swinject, Quick/Nimble, RxSwift, SwiftyJSON, Realm, etc.
+  - **Gestores de dependencias prohibidos**: CocoaPods (Podfile), Carthage (Cartfile)
+  - **Patrones GCD obsoletos**: DispatchQueue.main.async, DispatchGroup, DispatchSemaphore
+  - **SwiftUI deprecado**: ObservableObject, @Published, @StateObject, @ObservedObject, NavigationView, AnyView
+  - **APIs legacy**: NSLocalizedString, JSONSerialization, NSAttributedString
+  - **Anti-patterns**: .onAppear { Task { } } en vez de .task, completion handlers
+
+### Changed
+- **rulesios.mdc**: Actualizado con directrices completas para iOS 26, Swift 6.2, Liquid Glass design
+
 ## [5.5.44] - 2026-01-05
 
 ### Fixed
