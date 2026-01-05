@@ -16,6 +16,7 @@ const { iOSNetworkingAdvancedRules } = require(path.join(__dirname, 'analyzers/i
 const { iOSCICDRules } = require(path.join(__dirname, 'analyzers/iOSCICDRules'));
 const { iOSForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analyzers/iOSForbiddenLiteralsAnalyzer'));
 const { iOSASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/iOSASTIntelligentAnalyzer'));
+const { iOSModernPracticesRules } = require(path.join(__dirname, 'analyzers/iOSModernPracticesRules'));
 
 /**
  * Run iOS-specific AST intelligence analysis
@@ -180,6 +181,13 @@ async function runIOSIntelligence(project, findings, platform) {
       console.error(`[iOS CI/CD] Analyzing CI/CD configuration...`);
       const cicdRules = new iOSCICDRules(findings, repoRoot);
       cicdRules.analyze();
+
+      console.error(`[iOS Modern Practices] Analyzing Swift 6.2 / iOS 17+ compliance...`);
+      const modernPractices = new iOSModernPracticesRules(findings, repoRoot);
+      modernPractices.analyze();
+      swiftFiles.forEach(swiftFile => {
+        modernPractices.analyzeFile(swiftFile, null);
+      });
 
       const analyzer = new iOSEnterpriseAnalyzer();
 
