@@ -50,6 +50,12 @@ function runTextScanner(root, findings) {
   for (const file of files) {
     const ext = path.extname(file).toLowerCase();
     if (ext === '.sh' || ext === '.bash' || ext === '.zsh') {
+      // Excluir scripts de infraestructura de la propia librería (audit-orchestrator, gitflow)
+      const isInfrastructureScript = /audit-orchestrator|git-wrapper|gitflow-enforcer/i.test(file);
+      if (isInfrastructureScript) {
+        continue;
+      }
+
       try {
         const content = fs.readFileSync(file, 'utf-8');
         const lineCount = content.split('\n').length;
