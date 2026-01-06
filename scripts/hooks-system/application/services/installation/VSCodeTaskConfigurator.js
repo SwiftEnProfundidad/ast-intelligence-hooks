@@ -54,18 +54,29 @@ class VSCodeTaskConfigurator {
                 task => task.label === 'AST Session Loader' || task.identifier === 'ast-session-loader'
             );
 
-            let sessionLoaderPath = path.join(this.targetRoot, 'scripts', 'hooks-system', 'bin', 'session-loader.sh');
-            const npmPackagePath = path.join(this.targetRoot, 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'bin', 'session-loader.sh');
-
-            if (fs.existsSync(npmPackagePath)) {
-                sessionLoaderPath = npmPackagePath;
-            }
-
             const sessionLoaderTask = {
                 label: 'AST Session Loader',
                 type: 'shell',
                 command: 'bash',
-                args: [sessionLoaderPath],
+                args: [
+                    '-lc',
+                    [
+                        'ROOT="${workspaceFolder}"',
+                        'PRIMARY="$ROOT/scripts/hooks-system/bin/session-loader.sh"',
+                        'FALLBACK="$ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/session-loader.sh"',
+                        'if [ -f "$PRIMARY" ]; then',
+                        '  exec bash "$PRIMARY"',
+                        'elif [ -f "$FALLBACK" ]; then',
+                        '  exec bash "$FALLBACK"',
+                        'else',
+                        '  echo "AST Session Loader not found." >&2',
+                        '  echo "Tried:" >&2',
+                        '  echo "  - $PRIMARY" >&2',
+                        '  echo "  - $FALLBACK" >&2',
+                        '  exit 127',
+                        'fi'
+                    ].join('\n')
+                ],
                 problemMatcher: [],
                 runOptions: {
                     runOn: 'folderOpen'
