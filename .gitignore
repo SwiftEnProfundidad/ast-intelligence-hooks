@@ -36,6 +36,7 @@ ANNOUNCEMENTS.md
 # Temporary/cache files
 *.log
 *.tmp
+*.pid
 .cache/
 .audit_tmp/
 .audit-reports/

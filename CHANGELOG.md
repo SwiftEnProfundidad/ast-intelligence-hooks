@@ -5,6 +5,16 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.48] - 2026-01-06
+
+### Fixed
+- **iOS SRP / God Class false positives**: Swift navigation handlers (clases pequeñas sin estado) ya no se reportan incorrectamente como `ios.solid.srp.god_class`.
+  - `bodyLength` ahora se calcula por nodo con `bodyoffset/bodylength` sobre el contenido real del fichero (líneas), evitando métricas incoherentes.
+  - Se alinea el criterio con cohesión: se omiten candidatos sin propiedades o con <2 métodos significativos (excluyendo `init*` y `deinit`).
+
+### Added
+- **AST rule**: `common.error.empty_catch` (CRITICAL) para detectar `catch` vacíos.
+
 ## [5.5.45] - 2026-01-05
 
 ### Added

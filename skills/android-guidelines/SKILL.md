@@ -34,6 +34,7 @@ Automatically activates when working on:
 - [ ] **ViewModel**: Presentation/ui/{feature}/ViewModel
 - [ ] **Tests**: Unit + integration tests
 - [ ] **Error Handling**: Sealed class Result<T>
+- [ ] **No empty catch**: Prohibido silenciar errores en tooling (AST: common.error.empty_catch)
 
 ### New Module Checklist
 

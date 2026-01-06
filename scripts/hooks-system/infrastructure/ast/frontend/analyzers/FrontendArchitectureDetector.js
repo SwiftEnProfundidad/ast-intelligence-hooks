@@ -1,6 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
+const {
+  detectFeatureFirstClean,
+  detectComponentBased,
+  detectAtomicDesign,
+  detectStateManagement,
+  detectMVC,
+} = require('../detectors/frontend-architecture-strategies');
 
 class FrontendArchitectureDetector {
   constructor(projectRoot) {
@@ -62,161 +69,24 @@ class FrontendArchitectureDetector {
   }
 
   detectFeatureFirstClean(files) {
-    const hasFeaturesFolders = files.some(f =>
-      /\/features?\/\w+\/(domain|application|infrastructure|presentation)\//.test(f)
-    );
-
-    const cleanArchFolders = ['domain', 'application', 'infrastructure', 'presentation'];
-    const foundCleanFolders = cleanArchFolders.filter(folder => {
-      return files.some(f => f.includes(`/${folder}/`));
-    });
-
-    const dddConcepts = files.filter(f =>
-      f.includes('/entities/') ||
-      f.includes('/value-objects/') ||
-      f.includes('/use-cases/') ||
-      f.includes('/repositories/') ||
-      f.includes('Entity.ts') ||
-      f.includes('UseCase.ts') ||
-      f.includes('Repository.ts')
-    );
-
-    if (hasFeaturesFolders) {
-      this.patterns.featureFirstClean += 10;
-    }
-
-    if (foundCleanFolders.length >= 3) {
-      this.patterns.featureFirstClean += foundCleanFolders.length * 3;
-    }
-
-    if (dddConcepts.length > 0) {
-      this.patterns.featureFirstClean += dddConcepts.length * 2;
-    }
-
-    const featureNames = new Set();
-    files.forEach(f => {
-      const match = f.match(/\/features?\/(\w+)\//);
-      if (match) {
-        featureNames.add(match[1]);
-      }
-    });
-
-    if (featureNames.size >= 2) {
-      this.patterns.featureFirstClean += featureNames.size * 4;
-    }
-
-    files.forEach(file => {
-      const content = this.readFile(file);
-
-      if (file.includes('/domain/') && content.includes('interface ') && content.includes('Repository')) {
-        this.patterns.featureFirstClean += 3;
-      }
-
-      if (file.includes('/application/') || file.includes('/use-cases/')) {
-        if (content.includes('UseCase') || content.includes('useCase')) {
-          this.patterns.featureFirstClean += 2;
-        }
-      }
-
-      if (file.includes('/hooks/') && file.includes('use') && file.endsWith('.ts')) {
-        this.patterns.featureFirstClean += 1;
-      }
-    });
-
+    detectFeatureFirstClean(this.projectRoot, files, this.patterns);
     console.log(`[Architecture Detection] Feature-First + Clean + DDD score: ${this.patterns.featureFirstClean}`);
   }
 
   detectComponentBased(files) {
-    const hasComponentsFolder = files.some(f => f.includes('/components/'));
-    
-    if (hasComponentsFolder) {
-      this.patterns.componentBased += 10;
-    }
-
-    const componentFiles = files.filter(f =>
-      f.includes('/components/') && (f.endsWith('.tsx') || f.endsWith('.jsx'))
-    );
-
-    if (componentFiles.length > 0) {
-      this.patterns.componentBased += componentFiles.length;
-    }
-
-    files.forEach(file => {
-      if (!file.includes('/components/')) return;
-      
-      const content = this.readFile(file);
-      const componentImports = content.match(/from\s+['"]\.\.\/components\//g) || [];
-      
-      if (componentImports.length > 0) {
-        this.patterns.componentBased += componentImports.length;
-      }
-    });
+    detectComponentBased(this.projectRoot, files, this.patterns);
   }
 
   detectAtomicDesign(files) {
-    const atomicFolders = ['atoms', 'molecules', 'organisms', 'templates', 'pages'];
-    
-    const foundFolders = atomicFolders.filter(folder => {
-      return files.some(f => f.includes(`/${folder}/`));
-    });
-
-    if (foundFolders.length >= 3) {
-      this.patterns.atomicDesign += foundFolders.length * 5;
-    }
-
-    if (files.some(f => f.includes('/atoms/')) && 
-        files.some(f => f.includes('/molecules/')) && 
-        files.some(f => f.includes('/organisms/'))) {
-      this.patterns.atomicDesign += 10;
-    }
+    detectAtomicDesign(this.projectRoot, files, this.patterns);
   }
 
   detectStateManagement(files) {
-    files.forEach(file => {
-      const content = this.readFile(file);
-
-      if (content.includes('zustand') || content.includes('create(') && file.includes('store')) {
-        this.patterns.stateManagement += 5;
-      }
-
-      if (content.includes('redux') || content.includes('@reduxjs/toolkit') || 
-          file.includes('slice') || file.includes('reducer')) {
-        this.patterns.stateManagement += 5;
-      }
-
-      if (content.includes('createContext') || content.includes('Context.Provider')) {
-        this.patterns.stateManagement += 2;
-      }
-
-      if (file.includes('/stores/') || file.includes('/state/')) {
-        this.patterns.stateManagement += 3;
-      }
-    });
+    detectStateManagement(this.projectRoot, files, this.patterns);
   }
 
   detectMVC(files) {
-    files.forEach(file => {
-      if (!file.includes('component') && !file.endsWith('.tsx') && !file.endsWith('.jsx')) return;
-      
-      const content = this.readFile(file);
-      
-      if (content.includes('fetch(') || content.includes('axios.') || content.includes('.get(')) {
-        const hasHook = files.some(f => 
-          f.includes('use') && f.endsWith('.ts') && !f.includes('component')
-        );
-        const hasService = files.some(f => 
-          f.includes('service') || f.includes('api')
-        );
-        
-        if (!hasHook && !hasService) {
-          this.patterns.mvc += 3;
-        }
-      }
-
-      if (content.match(/const\s+\w+\s*=\s*\(.*\)\s*=>\s*{[\s\S]{0,500}if\s*\(.*\)\s*{[\s\S]{0,500}if\s*\(.*\)\s*{[\s\S]{0,500}if\s*\(.*\)\s*{/)) {
-        this.patterns.mvc += 2;
-      }
-    });
+    detectMVC(this.projectRoot, files, this.patterns);
   }
 
   readFile(relativePath) {

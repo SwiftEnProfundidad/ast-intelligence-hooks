@@ -254,7 +254,10 @@ class iOSModernPracticesRules {
         if (!content) {
             try {
                 content = fs.readFileSync(filePath, 'utf-8');
-            } catch {
+            } catch (error) {
+                if (process.env.DEBUG) {
+                    console.debug(`[iOSModernPracticesRules] Failed to read file ${filePath}: ${error.message}`);
+                }
                 return;
             }
         }

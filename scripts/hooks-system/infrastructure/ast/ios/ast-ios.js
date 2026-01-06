@@ -44,7 +44,10 @@ async function runIOSIntelligence(project, findings, platform) {
         .map(s => s.trim())
         .filter(Boolean)
         .filter(p => p.endsWith('.swift'));
-    } catch {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[iOS AST Intelligence] Failed to read staged swift files: ${error.message}`);
+      }
       stagedRelSwift = [];
     }
   }

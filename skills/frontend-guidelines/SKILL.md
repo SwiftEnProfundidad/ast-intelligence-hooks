@@ -36,6 +36,7 @@ Creating a component? Follow this checklist:
 - [ ] **i18n** - Use translation hooks, no hardcoded strings
 - [ ] **Performance** - useMemo, useCallback when appropriate
 - [ ] **Testing** - React Testing Library tests
+- [ ] **No empty catch** - Prohibido silenciar errores (AST: common.error.empty_catch)
 
 ### New Feature Checklist
 
