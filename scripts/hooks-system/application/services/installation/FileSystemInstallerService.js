@@ -56,7 +56,7 @@ class FileSystemInstallerService {
                     this.copyRecursiveExcluding(source, dest, ['scripts']);
                 } else if (item === 'bin/') {
                     // Exclude wrapper scripts that would cause fork bombs
-                    this.copyRecursiveExcluding(source, dest, ['session-loader.sh', 'cli.js', 'install.js']);
+                    this.copyRecursiveExcluding(source, dest, ['cli.js', 'install.js']);
                 } else {
                     this.copyRecursive(source, dest);
                 }
