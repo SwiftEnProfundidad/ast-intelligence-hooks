@@ -63,16 +63,20 @@ class VSCodeTaskConfigurator {
                     [
                         'ROOT="${workspaceFolder}"',
                         'PRIMARY="$ROOT/scripts/hooks-system/bin/session-loader.sh"',
-                        'FALLBACK="$ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/session-loader.sh"',
+                        'FALLBACK="$ROOT/node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/session-loader.sh"',
+                        'FALLBACK2="$ROOT/node_modules/@pumuki/ast-intelligence-hooks/bin/session-loader.sh"',
                         'if [ -f "$PRIMARY" ]; then',
                         '  exec bash "$PRIMARY"',
                         'elif [ -f "$FALLBACK" ]; then',
                         '  exec bash "$FALLBACK"',
+                        'elif [ -f "$FALLBACK2" ]; then',
+                        '  exec bash "$FALLBACK2"',
                         'else',
                         '  echo "AST Session Loader not found." >&2',
                         '  echo "Tried:" >&2',
                         '  echo "  - $PRIMARY" >&2',
                         '  echo "  - $FALLBACK" >&2',
+                        '  echo "  - $FALLBACK2" >&2',
                         '  exit 127',
                         'fi'
                     ].join('\n')
