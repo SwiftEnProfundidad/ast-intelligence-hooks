@@ -34,6 +34,7 @@ Automatically activates when working on:
 - [ ] **ViewModel**: Application/ViewModels/ (if needed)
 - [ ] **Tests**: Unit + integration tests
 - [ ] **Error Handling**: Custom Error enum
+- [ ] **No empty catch**: Prohibido `catch` vacío (AST: common.error.empty_catch)
 
 ### New Module Checklist
 

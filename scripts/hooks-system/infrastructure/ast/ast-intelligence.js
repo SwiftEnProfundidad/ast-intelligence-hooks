@@ -115,7 +115,10 @@ function getStagedFilesRel(root) {
       .split('\n')
       .map(s => s.trim())
       .filter(Boolean);
-  } catch {
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.debug(`[ast-intelligence] Failed to read staged files: ${error.message}`);
+    }
     return [];
   }
 }
@@ -172,7 +175,10 @@ function runProjectHardcodedThresholdAudit(root, allFiles, findings) {
     let content;
     try {
       content = fs.readFileSync(filePath, 'utf8');
-    } catch {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[ast-intelligence] Failed to read file ${filePath}: ${error.message}`);
+      }
       continue;
     }
 
@@ -214,7 +220,10 @@ function runHardcodedThresholdAudit(root, findings) {
   ].filter((d) => {
     try {
       return fs.existsSync(d) && fs.statSync(d).isDirectory();
-    } catch {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[ast-intelligence] Failed to stat dir ${d}: ${error.message}`);
+      }
       return false;
     }
   });
@@ -238,7 +247,10 @@ function runHardcodedThresholdAudit(root, findings) {
       let entries;
       try {
         entries = fs.readdirSync(current, { withFileTypes: true });
-      } catch {
+      } catch (error) {
+        if (process.env.DEBUG) {
+          console.debug(`[ast-intelligence] Failed to read dir ${current}: ${error.message}`);
+        }
         continue;
       }
 
@@ -290,7 +302,10 @@ function runHardcodedThresholdAudit(root, findings) {
     let content;
     try {
       content = fs.readFileSync(filePath, 'utf8');
-    } catch {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[ast-intelligence] Failed to read file ${filePath}: ${error.message}`);
+      }
       continue;
     }
 
@@ -394,15 +409,23 @@ function generateOutput(findings, context, project, root) {
         .filter(Boolean);
 
       if (stagedRel.length > 0) {
-        const stagedAbs = new Set(stagedRel.map(r => path.resolve(root, r)));
-        findings = (findings || []).filter(f => {
-          if (!f || !f.filePath) return false;
-          const fp = String(f.filePath);
-          if (stagedAbs.has(fp)) return true;
-          return stagedRel.some(rel => fp.endsWith(rel) || fp.includes(`/${rel}`));
-        });
+        try {
+          findings = findings.filter((f) => {
+            if (!f || !f.filePath) return false;
+            const fp = String(f.filePath).replace(/\\/g, '/');
+            return stagedRel.some(rel => fp.endsWith(rel) || fp.includes(`/${rel}`));
+          });
+        } catch (error) {
+          if (process.env.DEBUG) {
+            console.debug(`[ast-intelligence] Failed to filter findings by staged files: ${error.message}`);
+          }
+          findings = [];
+        }
       }
-    } catch {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[ast-intelligence] Failed to get staged files: ${error.message}`);
+      }
       findings = [];
     }
   }

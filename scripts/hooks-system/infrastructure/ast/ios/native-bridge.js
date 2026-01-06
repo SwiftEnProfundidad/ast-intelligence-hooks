@@ -16,7 +16,10 @@ function getStagedSwiftFiles(repoRoot) {
       .map(s => s.trim())
       .filter(Boolean)
       .filter(p => p.endsWith('.swift'));
-  } catch {
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.debug(`[iOS NativeBridge] Failed to read staged swift files: ${error.message}`);
+    }
     return [];
   }
 }

@@ -120,6 +120,7 @@ globs: ["**/*.tsx", "**/*.ts", "**/*.jsx", "**/*.js"]
 ✅ **API client abstraído** - axios/fetch en capa de infraestructura
 ✅ **Tipos compartidos** - Sincronizar con backend (tRPC o Zod)
 ✅ **Error handling global** - Interceptors para 401, 500, etc.
+✅ **No catch vacíos** - Prohibido silenciar errores (AST: common.error.empty_catch)
 ✅ **Loading states** - Skeleton screens, spinners, optimistic updates
 ✅ **Retry logic** - Reintentar requests fallidos (React Query retry)
 
