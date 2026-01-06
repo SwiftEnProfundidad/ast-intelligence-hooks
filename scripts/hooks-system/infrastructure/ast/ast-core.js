@@ -30,7 +30,10 @@ function getRepoRoot() {
   try {
     const { execSync } = require('child_process');
     return execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
-  } catch {
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.debug(`[ast-core] Failed to detect git repo root, using cwd: ${error.message}`);
+    }
     return process.cwd();
   }
 }
@@ -191,7 +194,10 @@ function pushFinding(ruleId, severity, sf, node, message, findings, metrics = {}
     let strictRegex;
     try {
       strictRegex = new RegExp(strictRegexSource, 'i');
-    } catch {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[ast-core] Invalid STRICT_CRITICAL_RULES_REGEX, using default: ${error.message}`);
+      }
       strictRegex = new RegExp(env.getBool('AUDIT_LIBRARY', false) ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
     }
     isStrictCriticalRule = strictRegex.test(ruleId);
@@ -261,7 +267,10 @@ function pushFileFinding(ruleId, severity, filePath, line, column, message, find
     let strictRegex;
     try {
       strictRegex = new RegExp(strictRegexSource, 'i');
-    } catch {
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[ast-core] Invalid STRICT_CRITICAL_RULES_REGEX, using default: ${error.message}`);
+      }
       strictRegex = new RegExp(env.getBool('AUDIT_LIBRARY', false) ? defaultStrictCriticalRegexLibrary : defaultStrictCriticalRegex, 'i');
     }
     isStrictCriticalRule = strictRegex.test(ruleId);

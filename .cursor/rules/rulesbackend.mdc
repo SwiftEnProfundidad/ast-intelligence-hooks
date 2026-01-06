@@ -205,7 +205,7 @@ src/
 ❌ **Callback hell** - Usar async/await
 ❌ **Hardcoded values** - Config en variables de entorno
 ❌ **Mocks en producción** - Solo datos reales
-❌ **try-catch silenciosos** - Siempre loggear o propagar
+❌ **try-catch silenciosos** - Siempre loggear o propagar (AST: common.error.empty_catch)
 ❌ **Lógica en controllers** - Mover a servicios/use cases
 
 ### Principio fundamental:

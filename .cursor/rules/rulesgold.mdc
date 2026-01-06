@@ -82,6 +82,7 @@ alwaysApply: true
 
 ### Error Handling:
 ✅ **Nunca silenciar errores** - Siempre loggear o propagar
+✅ **AST rule: common.error.empty_catch** - Prohibido `catch` vacío (sin statements). Manejar: log/rethrow/wrap.
 ✅ **Mensajes de error útiles** - Para desarrolladores Y usuarios finales
 ✅ **Tipos de error específicos** - Custom exceptions (ValidationError, NotFoundError, etc.)
 ✅ **Rollback automático** - Transacciones en operaciones críticas

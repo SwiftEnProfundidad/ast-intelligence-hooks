@@ -691,6 +691,7 @@ final class APIClientSpy: @unchecked Sendable, APIClientProtocol {
 ❌ **Retain cycles** - Memory leaks
 ❌ **Completion handlers** - Usar async/await en código nuevo
 ❌ **DispatchQueue** - Usar async/await
+❌ **catch vacíos** - Prohibido silenciar errores (AST: common.error.empty_catch)
 ❌ **Librerías de terceros** - Usar APIs nativas
 ❌ **any (type erasure)** - Usar generics con protocolos de frontera
 ❌ **ObservableObject** - Usar @Observable (iOS 17+)

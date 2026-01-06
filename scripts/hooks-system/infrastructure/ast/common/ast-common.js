@@ -145,6 +145,21 @@ function runCommonIntelligence(project, findings) {
       }
     });
 
+    sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((clause) => {
+      const block = typeof clause.getBlock === 'function' ? clause.getBlock() : null;
+      const statements = block && typeof block.getStatements === 'function' ? block.getStatements() : [];
+      if ((statements || []).length === 0) {
+        pushFinding(
+          'common.error.empty_catch',
+          'critical',
+          sf,
+          clause,
+          'Empty catch block detected - always handle errors (log, rethrow, wrap, or return Result)',
+          findings
+        );
+      }
+    });
+
     sf.getDescendantsOfKind(SyntaxKind.AnyKeyword).forEach((node) => {
 
       const isUtilityScript = /\/(scripts?|migrations?|seeders?|fixtures?)\//i.test(filePath);
@@ -318,7 +333,7 @@ function runCommonIntelligence(project, findings) {
       withoutStrings = withoutStrings.replace(/`[^`]*`/g, '');
       withoutStrings = withoutStrings.replace(/"[^"]*"/g, '');
       withoutStrings = withoutStrings.replace(/'[^']*'/g, '');
-      
+
       if (!/\/\/|\/\*/.test(withoutStrings)) return;
 
       const withoutUrls = withoutStrings.replace(/https?:\/\//g, '');
@@ -327,7 +342,7 @@ function runCommonIntelligence(project, findings) {
       const withoutJSDoc = withoutUrls.replace(/\/\*\*[\s\S]*?\*\//g, '');
       const hasOnlyJSDoc = !/\/\/|\/\*/.test(withoutJSDoc);
       if (hasOnlyJSDoc) return;
-      
+
       const withoutAllComments = withoutJSDoc.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
       if (!/\/\/|\/\*/.test(withoutAllComments)) return;
 

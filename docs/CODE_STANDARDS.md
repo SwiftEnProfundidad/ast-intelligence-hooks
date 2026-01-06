@@ -179,6 +179,11 @@ const DEFAULT_TIMEOUT = 5000;
 const defaultConfig = { timeout: 5000 };
 ```
 
+### Error Handling
+
+- **No empty catch blocks**: Never write `catch {}` or `catch (e) {}` with an empty body. Always handle the error (log, rethrow, wrap, or return a Result).
+- **AST enforcement**: `common.error.empty_catch` (CRITICAL)
+
 ### Files
 
 - **kebab-case** for file names

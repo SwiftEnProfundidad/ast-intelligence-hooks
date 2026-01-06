@@ -87,7 +87,9 @@ class VSCodeTaskConfigurator {
                 },
                 presentation: {
                     reveal: 'always',
-                    panel: 'new'
+                    panel: 'new',
+                    clear: true,
+                    showReuseMessage: false
                 },
                 identifier: 'ast-session-loader'
             };
