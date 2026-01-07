@@ -130,33 +130,99 @@ class McpConfigurator {
             }
         };
 
-        const globalConfigPath = this.getGlobalWindsurfConfigPath();
-        const globalConfigDir = path.dirname(globalConfigPath);
-        if (!fs.existsSync(globalConfigDir)) {
-            fs.mkdirSync(globalConfigDir, { recursive: true });
-        }
+        this.configureProjectScoped(mcpConfig, serverId);
+        this.cleanupGlobalConfig(serverId);
+    }
+
+    configureProjectScoped(mcpConfig, serverId) {
+        const windsurfProjectDir = path.join(this.targetRoot, '.windsurf');
+        const windsurfProjectPath = path.join(windsurfProjectDir, 'mcp.json');
 
         try {
-            if (!fs.existsSync(globalConfigPath)) {
-                fs.writeFileSync(globalConfigPath, JSON.stringify(mcpConfig, null, 2));
-                this.logSuccess(`Configured global Windsurf MCP at ${globalConfigPath}`);
-                if (this.logger) this.logger.info('MCP_GLOBAL_CONFIGURED', { path: globalConfigPath });
-            } else {
-                const existing = JSON.parse(fs.readFileSync(globalConfigPath, 'utf8'));
-                if (!existing.mcpServers) existing.mcpServers = {};
-
-                // Prevent duplicate MCP servers for the same repoRoot by disabling legacy entries.
-                this.disableDuplicateServersForRepo(existing, serverId);
-
-                existing.mcpServers[serverId] = mcpConfig.mcpServers[serverId];
-
-                fs.writeFileSync(globalConfigPath, JSON.stringify(existing, null, 2));
-                this.logSuccess(`Updated global Windsurf MCP at ${globalConfigPath}`);
-                if (this.logger) this.logger.info('MCP_GLOBAL_UPDATED', { path: globalConfigPath });
+            if (!fs.existsSync(windsurfProjectDir)) {
+                fs.mkdirSync(windsurfProjectDir, { recursive: true });
             }
-        } catch (mergeError) {
-            this.logWarning(`${globalConfigPath} exists but couldn't be merged, skipping`);
-            if (this.logger) this.logger.warn('MCP_GLOBAL_MERGE_FAILED', { error: mergeError.message });
+
+            let finalConfig = mcpConfig;
+            if (fs.existsSync(windsurfProjectPath)) {
+                const existing = JSON.parse(fs.readFileSync(windsurfProjectPath, 'utf8'));
+                if (!existing.mcpServers) existing.mcpServers = {};
+                Object.keys(existing.mcpServers).forEach(id => {
+                    if (id.startsWith('ast-intelligence-automation-') && id !== serverId) {
+                        delete existing.mcpServers[id];
+                    }
+                });
+                existing.mcpServers[serverId] = mcpConfig.mcpServers[serverId];
+                finalConfig = existing;
+            }
+
+            fs.writeFileSync(windsurfProjectPath, JSON.stringify(finalConfig, null, 2));
+            this.logSuccess(`Configured project-scoped Windsurf MCP at ${windsurfProjectPath}`);
+            if (this.logger) this.logger.info('MCP_PROJECT_CONFIGURED', { path: windsurfProjectPath, serverId });
+        } catch (error) {
+            this.logWarning(`Failed to configure project-scoped MCP: ${error.message}`);
+            if (this.logger) this.logger.warn('MCP_PROJECT_CONFIGURE_FAILED', { error: error.message });
+        }
+
+        const cursorProjectDir = path.join(this.targetRoot, '.cursor');
+        const cursorProjectPath = path.join(cursorProjectDir, 'mcp.json');
+
+        try {
+            if (!fs.existsSync(cursorProjectDir)) {
+                fs.mkdirSync(cursorProjectDir, { recursive: true });
+            }
+
+            let finalConfig = mcpConfig;
+            if (fs.existsSync(cursorProjectPath)) {
+                const existing = JSON.parse(fs.readFileSync(cursorProjectPath, 'utf8'));
+                if (!existing.mcpServers) existing.mcpServers = {};
+                Object.keys(existing.mcpServers).forEach(id => {
+                    if (id.startsWith('ast-intelligence-automation-') && id !== serverId) {
+                        delete existing.mcpServers[id];
+                    }
+                });
+                existing.mcpServers[serverId] = mcpConfig.mcpServers[serverId];
+                finalConfig = existing;
+            }
+
+            fs.writeFileSync(cursorProjectPath, JSON.stringify(finalConfig, null, 2));
+            this.logSuccess(`Configured project-scoped Cursor MCP at ${cursorProjectPath}`);
+            if (this.logger) this.logger.info('MCP_CURSOR_CONFIGURED', { path: cursorProjectPath, serverId });
+        } catch (error) {
+            this.logWarning(`Failed to configure Cursor MCP: ${error.message}`);
+            if (this.logger) this.logger.warn('MCP_CURSOR_CONFIGURE_FAILED', { error: error.message });
+        }
+    }
+
+    cleanupGlobalConfig(currentServerId) {
+        const globalConfigPath = this.getGlobalWindsurfConfigPath();
+
+        try {
+            if (!fs.existsSync(globalConfigPath)) return;
+
+            const existing = JSON.parse(fs.readFileSync(globalConfigPath, 'utf8'));
+            if (!existing.mcpServers) return;
+
+            let modified = false;
+            Object.keys(existing.mcpServers).forEach(id => {
+                const server = existing.mcpServers[id];
+                if (!server || !server.env) return;
+
+                if (server.env.REPO_ROOT === this.targetRoot) {
+                    delete existing.mcpServers[id];
+                    modified = true;
+                    this.logInfo(`Removed ${id} from global config (now project-scoped)`);
+                }
+            });
+
+            if (modified) {
+                fs.writeFileSync(globalConfigPath, JSON.stringify(existing, null, 2));
+                if (this.logger) this.logger.info('MCP_GLOBAL_CLEANUP', { removedForRepo: this.targetRoot });
+            }
+        } catch (error) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] cleanupGlobalConfig failed: ${error.message}\n`);
+            }
         }
     }
 
