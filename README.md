@@ -866,6 +866,15 @@ Automates the complete Git Flow cycle: commit → push → PR → merge, plus co
 
 For more details, see [MCP_SERVERS.md](./docs/MCP_SERVERS.md).
 
+#### Troubleshooting
+
+If `ai_gate_check` behaves inconsistently (stale branch name, missing rules, or intermittent transport errors), verify you are not running multiple `ast-intelligence-automation` servers across different repositories.
+
+- Prefer enabling a single MCP server for the repository you are working on.
+- Verify the active process points to this repository path:
+  - `.../ast-intelligence-hooks/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js`
+- If you detect multiple processes, stop the duplicates and restart your IDE/MCP servers.
+
 ---
 
 ## API Reference
