@@ -31,6 +31,30 @@ class AutonomousOrchestrator {
         }
     }
 
+    detectFromBranchKeywords(branchName) {
+        try {
+            const PlatformHeuristics = require('./platform/PlatformHeuristics');
+            const heuristics = new PlatformHeuristics(this.platformDetector);
+            return heuristics.detectFromBranchKeywords(branchName);
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            this.logger?.debug?.('ORCHESTRATOR_BRANCH_KEYWORDS_DETECTION_ERROR', { error: msg });
+            return [];
+        }
+    }
+
+    detectFromEvidenceFile() {
+        try {
+            const PlatformHeuristics = require('./platform/PlatformHeuristics');
+            const heuristics = new PlatformHeuristics(this.platformDetector);
+            return heuristics.detectFromEvidenceFile();
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            this.logger?.debug?.('ORCHESTRATOR_EVIDENCE_FILE_DETECTION_ERROR', { error: msg });
+            return [];
+        }
+    }
+
     detectFromASTSystemFilesLegacy(files) {
         return this.detectFromASTSystemFiles(files);
     }

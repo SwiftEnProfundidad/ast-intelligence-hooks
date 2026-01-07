@@ -128,6 +128,20 @@ if [[ "$CURRENT_BRANCH" == "main" ]] || [[ "$CURRENT_BRANCH" == "master" ]] || [
   exit 1
 fi
 
+# Enforce Git Flow checks (strict) before allowing commit
+ENFORCER_SCRIPT="scripts/hooks-system/infrastructure/shell/gitflow/gitflow-enforcer.sh"
+if [[ -f "$ENFORCER_SCRIPT" ]]; then
+  echo ""
+  echo "🔍 Running Git Flow checks (strict)..."
+  echo ""
+  if ! GITFLOW_STRICT_CHECK=true bash "$ENFORCER_SCRIPT" check; then
+    echo ""
+    echo "🚨 COMMIT BLOCKED: Git Flow checks failed"
+    echo ""
+    exit 1
+  fi
+fi
+
 # Check if there are staged files
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null | grep -E '\\.(ts|tsx|js|jsx|swift|kt)$' || true)
 if [ -z "$STAGED_FILES" ]; then
@@ -263,10 +277,14 @@ fi
 # Run gitflow-enforcer if available (optional validation)
 ENFORCER_SCRIPT="scripts/hooks-system/infrastructure/shell/gitflow/gitflow-enforcer.sh"
 if [[ -f "$ENFORCER_SCRIPT" ]]; then
-  if ! bash "$ENFORCER_SCRIPT" check 2>/dev/null; then
+  echo ""
+  echo "🔍 Running Git Flow checks (strict)..."
+  echo ""
+  if ! GITFLOW_STRICT_CHECK=true bash "$ENFORCER_SCRIPT" check; then
     echo ""
-    echo "⚠️  Git Flow check completed with warnings (non-blocking)"
+    echo "🚨 PUSH BLOCKED: Git Flow checks failed"
     echo ""
+    exit 1
   fi
 fi
 
