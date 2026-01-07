@@ -577,8 +577,77 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
 }
 
 /**
+ * Load platform rules from .cursor/rules or .windsurf/rules
+ * Returns the content of the rules file for the detected platform
+ */
+async function loadPlatformRules(platforms) {
+    const DynamicRulesLoader = require('../../application/services/DynamicRulesLoader');
+    const loader = new DynamicRulesLoader();
+    const rules = {};
+    const criticalRules = [];
+
+    for (const platform of platforms) {
+        try {
+            const content = await loader.loadRule(`rules${platform}.mdc`);
+            if (content) {
+                rules[platform] = content;
+                const criticalPatterns = extractCriticalPatterns(content, platform);
+                criticalRules.push(...criticalPatterns);
+            }
+        } catch (error) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Failed to load rules for ${platform}: ${error.message}\n`);
+            }
+        }
+    }
+
+    try {
+        const goldContent = await loader.loadRule('rulesgold.mdc');
+        if (goldContent) {
+            rules.gold = goldContent;
+            const goldPatterns = extractCriticalPatterns(goldContent, 'gold');
+            criticalRules.push(...goldPatterns);
+        }
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] Failed to load gold rules: ${error.message}\n`);
+        }
+    }
+
+    return { rules, criticalRules };
+}
+
+/**
+ * Extract critical patterns from rules content that AI MUST follow
+ */
+function extractCriticalPatterns(content, platform) {
+    const patterns = [];
+    if (!content) return patterns;
+
+    const lines = content.split('\n');
+    for (const line of lines) {
+        if (line.includes('❌') || line.includes('NUNCA') || line.includes('PROHIBIDO') || line.includes('NO ')) {
+            patterns.push({ platform, rule: line.trim(), severity: 'CRITICAL' });
+        }
+        if (line.includes('✅') && (line.includes('OBLIGATORIO') || line.includes('SIEMPRE'))) {
+            patterns.push({ platform, rule: line.trim(), severity: 'MANDATORY' });
+        }
+    }
+
+    if (platform === 'ios') {
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA usar GCD (DispatchQueue) - usar Swift Concurrency (async/await, Task, actor)', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA usar completion handlers - usar async/await', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA dejar catch vacíos - siempre gestionar errores', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO usar Swift 6.2 Strict Concurrency', severity: 'MANDATORY' });
+    }
+
+    return patterns;
+}
+
+/**
  * AI Gate Check - MANDATORY at start of every AI response
  * Returns BLOCKED or ALLOWED status with auto-fixes applied
+ * NOW INCLUDES: mandatory_rules that AI MUST read and follow
  */
 async function aiGateCheck() {
     const startedAt = Date.now();
@@ -683,6 +752,29 @@ async function aiGateCheck() {
             }
         }
 
+        let mandatoryRules = null;
+        let detectedPlatforms = [];
+        try {
+            const orchestrator = getCompositionRoot().getOrchestrator();
+            const contextDecision = await orchestrator.analyzeContext();
+            if (contextDecision && contextDecision.platforms) {
+                detectedPlatforms = contextDecision.platforms.map(p => p.platform || p);
+            }
+            if (detectedPlatforms.length > 0) {
+                const rulesData = await loadPlatformRules(detectedPlatforms);
+                mandatoryRules = {
+                    platforms: detectedPlatforms,
+                    criticalRules: rulesData.criticalRules,
+                    rulesLoaded: Object.keys(rulesData.rules),
+                    warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification'
+                };
+            }
+        } catch (error) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Failed to load mandatory rules: ${error.message}\n`);
+            }
+        }
+
         return {
             status: isBlocked ? 'BLOCKED' : 'ALLOWED',
             timestamp: new Date().toISOString(),
@@ -690,12 +782,15 @@ async function aiGateCheck() {
             violations,
             warnings,
             autoFixes,
+            mandatory_rules: mandatoryRules,
             summary: isBlocked
                 ? `🚫 BLOCKED: ${violations.length} violation(s). Fix before proceeding.`
                 : `🚦 ALLOWED: Gate passed.${warnings.length > 0 ? ` ${warnings.length} warning(s).` : ''}`,
             instructions: isBlocked
                 ? 'DO NOT proceed with user task. Announce violations and fix them first.'
-                : 'You may proceed with user task.'
+                : mandatoryRules
+                    ? `You may proceed with user task. CRITICAL: Review mandatory_rules.criticalRules BEFORE generating ANY code.`
+                    : 'You may proceed with user task.'
         };
     };
 
@@ -715,6 +810,47 @@ async function aiGateCheck() {
         summary: '🚫 BLOCKED: Gate check timed out.',
         instructions: 'DO NOT proceed with user task. Retry the gate check.'
     };
+}
+
+/**
+ * Read platform rules handler - returns critical rules for a specific platform
+ */
+async function readPlatformRulesHandler(params) {
+    const platform = params.platform;
+    if (!platform) {
+        return {
+            success: false,
+            error: 'Platform is required. Use: ios, android, backend, or frontend'
+        };
+    }
+
+    try {
+        const rulesData = await loadPlatformRules([platform]);
+        const DynamicRulesLoader = require('../../application/services/DynamicRulesLoader');
+        const loader = new DynamicRulesLoader();
+        const fullContent = await loader.loadRule(`rules${platform}.mdc`);
+
+        return {
+            success: true,
+            platform,
+            rulesLoaded: true,
+            criticalRules: rulesData.criticalRules,
+            fullRulesContent: fullContent,
+            warning: `⚠️ YOU MUST FOLLOW ALL THESE RULES. Violations will block commits.`,
+            instructions: [
+                `❌ NEVER violate any rule marked with ❌ or NUNCA/PROHIBIDO`,
+                `✅ ALWAYS follow rules marked with ✅ or OBLIGATORIO/SIEMPRE`,
+                `🚨 If you violate these rules, the commit will be BLOCKED`,
+                `📝 Read the fullRulesContent carefully before generating ANY code`
+            ]
+        };
+    } catch (error) {
+        return {
+            success: false,
+            platform,
+            error: `Failed to load rules: ${error.message}`
+        };
+    }
 }
 
 /**
@@ -1010,6 +1146,21 @@ async function handleMcpMessage(message) {
                             name: 'ai_gate_check',
                             description: '🚦 MANDATORY gate check',
                             inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'read_platform_rules',
+                            description: '📚 MANDATORY: Read platform-specific rules BEFORE any code generation. Returns critical rules that AI MUST follow.',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    platform: {
+                                        type: 'string',
+                                        enum: ['ios', 'android', 'backend', 'frontend'],
+                                        description: 'Platform to load rules for'
+                                    }
+                                },
+                                required: ['platform']
+                            }
                         }
                     ]
                 }
@@ -1042,6 +1193,9 @@ async function handleMcpMessage(message) {
                     break;
                 case 'ai_gate_check':
                     result = await aiGateCheck();
+                    break;
+                case 'read_platform_rules':
+                    result = await readPlatformRulesHandler(toolParams);
                     break;
                 default:
                     return {
