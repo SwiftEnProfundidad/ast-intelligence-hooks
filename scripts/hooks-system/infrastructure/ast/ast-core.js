@@ -45,6 +45,18 @@ function getRepoRoot() {
  */
 function shouldIgnore(file) {
   const p = file.replace(/\\/g, "/");
+  try {
+    const configPaths = loadExclusions()?.exclusions?.paths;
+    if (configPaths && typeof configPaths === 'object') {
+      for (const [key, enabled] of Object.entries(configPaths)) {
+        if (enabled && p.includes(key)) return true;
+      }
+    }
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.debug(`[ast-core] Failed to load exclusions for shouldIgnore: ${error.message || String(error)}`);
+    }
+  }
   if (p.includes("node_modules/")) return true;
   if (p.includes("/.next/")) return true;
   if (p.includes("/dist/")) return true;
@@ -125,7 +137,7 @@ let exclusionsConfig = null;
 function loadExclusions() {
   if (exclusionsConfig) return exclusionsConfig;
   try {
-    const configPath = path.join(__dirname, '../../config/ast-exclusions.json');
+    const configPath = path.join(getRepoRoot(), 'config', 'ast-exclusions.json');
     if (fs.existsSync(configPath)) {
       exclusionsConfig = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     }

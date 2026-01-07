@@ -42,6 +42,7 @@ function getGitStatus(projectDir: string): GitStatus | null {
             hasUncommittedChanges: lines.length > 0
         };
     } catch (err) {
+        console.error(`[git-status-monitor] Failed to read git status: ${(err as Error).message}`);
         return null;
     }
 }
@@ -79,6 +80,7 @@ function detectPlatformFromFiles(projectDir: string): string[] {
             }
         }
     } catch (err) {
+        console.error(`[git-status-monitor] Failed to detect platforms from files: ${(err as Error).message}`);
     }
 
     return platforms.length > 0 ? platforms : ['frontend', 'backend', 'ios', 'android'];
@@ -134,6 +136,7 @@ async function main() {
                     sound: 'Ping'
                 });
             } catch (err) {
+                console.error(`[git-status-monitor] Notification failed (staged): ${(err as Error).message}`);
             }
         } else if (totalChanges > 10) {
             try {
@@ -144,11 +147,13 @@ async function main() {
                     sound: 'Glass'
                 });
             } catch (err) {
+                console.error(`[git-status-monitor] Notification failed (unstaged): ${(err as Error).message}`);
             }
         }
 
         process.exit(0);
     } catch (err) {
+        console.error(`[git-status-monitor] Unexpected error: ${(err as Error).message}`);
         process.exit(0);
     }
 }

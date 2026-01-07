@@ -11,6 +11,22 @@ describe('intelligent-audit', () => {
     const mod = require('../intelligent-audit');
     expect(typeof mod.runIntelligentAudit).toBe('function');
   });
+
+  it('should filter staged violations strictly (no substring matches, no .audit_tmp)', () => {
+    const mod = require('../intelligent-audit');
+
+    expect(typeof mod.isViolationInStagedFiles).toBe('function');
+
+    const stagedSet = new Set([
+      'apps/ios/Application/AppCoordinator.swift'
+    ]);
+
+    expect(mod.isViolationInStagedFiles('apps/ios/Application/AppCoordinator.swift', stagedSet)).toBe(true);
+    expect(mod.isViolationInStagedFiles('apps/ios/Application/AppCoordinator.swift.backup', stagedSet)).toBe(false);
+    expect(mod.isViolationInStagedFiles('.audit_tmp/AppCoordinator.123.staged.swift', stagedSet)).toBe(false);
+    expect(mod.isViolationInStagedFiles('some/dir/.audit_tmp/AppCoordinator.123.staged.swift', stagedSet)).toBe(false);
+    expect(mod.isViolationInStagedFiles('apps/ios/Application/AppCoordinator', stagedSet)).toBe(false);
+  });
 });
 
 describe('AI_EVIDENCE.json structure validation', () => {

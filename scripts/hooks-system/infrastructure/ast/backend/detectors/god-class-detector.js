@@ -7,8 +7,7 @@ function analyzeGodClasses(sourceFile, findings, { SyntaxKind, pushFinding, godC
     sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
         const className = cls.getName() || '';
         const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
-        const isTestClass = /Spec$|Test$|Mock/.test(className);
-        if (isValueObject || isTestClass) return;
+        if (isValueObject) return;
 
         const methodsCount = cls.getMethods().length;
         const propertiesCount = cls.getProperties().length;

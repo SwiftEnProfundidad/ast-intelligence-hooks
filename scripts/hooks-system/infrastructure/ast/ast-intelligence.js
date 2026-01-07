@@ -22,7 +22,7 @@ function formatLocalTimestamp(date = new Date()) {
 }
 
 const astModulesPath = __dirname;
-const { createProject, platformOf, mapToLevel } = require(path.join(astModulesPath, "ast-core"));
+const { createProject, platformOf, mapToLevel, shouldIgnore: coreShouldIgnore } = require(path.join(astModulesPath, "ast-core"));
 const MacOSNotificationAdapter = require(path.join(__dirname, '../adapters/MacOSNotificationAdapter'));
 const { runBackendIntelligence } = require(path.join(astModulesPath, "backend/ast-backend"));
 const { runFrontendIntelligence } = require(path.join(astModulesPath, "frontend/ast-frontend"));
@@ -138,8 +138,6 @@ function runProjectHardcodedThresholdAudit(root, allFiles, findings) {
     if (p.includes('/build/')) return true;
     if (p.includes('/coverage/')) return true;
     if (p.includes('/.audit_tmp/')) return true;
-    if (p.includes('/infrastructure/ast/')) return true;
-    if (p.includes('/scripts/hooks-system/')) return true;
     return false;
   };
 
@@ -706,6 +704,7 @@ function listSourceFiles(root) {
  */
 function shouldIgnore(file) {
   const p = file.replace(/\\/g, "/");
+  if (typeof coreShouldIgnore === 'function' && coreShouldIgnore(p)) return true;
   if (p.includes("node_modules/")) return true;
   if (p.includes("/.cursor/")) return true;
   if (/\.bak/i.test(p)) return true;

@@ -18,12 +18,7 @@
     },
     "rules": {
       "ios.force_unwrapping": {
-        "excludePatterns": [
-          "*Tests.swift",
-          "*Spec.swift",
-          "*Test.swift"
-        ],
-        "reason": "Tests can use force unwrap for test assertions"
+        "reason": ""
       },
       "common.docs.missing_readme": {
         "excludePatterns": [
