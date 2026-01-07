@@ -207,6 +207,9 @@ function runBackendIntelligence(project, findings, platform) {
 
     if (platformOf(filePath) !== "backend") return;
 
+    const normalizedBackendPath = filePath.replace(/\\/g, '/');
+    const isRealBackendAppFile = normalizedBackendPath.includes('/apps/backend/') || normalizedBackendPath.includes('apps/backend/');
+
     // NO excluir archivos AST - la librería debe auto-auditarse para detectar God classes masivas
 
     const fullText = sf.getFullText();
@@ -272,7 +275,7 @@ function runBackendIntelligence(project, findings, platform) {
       fullTextUpper.includes("ConfigService") ||
       usesEnvHelper;
     const hasConfigUsage = /process\.env\b|ConfigService|env\.get(Bool|Number)?\(|\bconfig\s*[\.\[]/i.test(sf.getFullText());
-    if (!hasEnvSpecific && hasConfigUsage && !isTestFile(filePath)) {
+    if (isRealBackendAppFile && !hasEnvSpecific && hasConfigUsage && !isTestFile(filePath)) {
       pushFinding("backend.config.missing_env_separation", "info", sf, sf, "Missing environment-specific configuration - consider NODE_ENV or ConfigService", findings);
     }
 
@@ -285,6 +288,10 @@ function runBackendIntelligence(project, findings, platform) {
 
     if (godClassBaseline) {
       analyzeGodClasses(sf, findings, { SyntaxKind, pushFinding, godClassBaseline });
+    }
+
+    if (!isRealBackendAppFile) {
+      return;
     }
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
@@ -349,16 +356,12 @@ function runBackendIntelligence(project, findings, platform) {
       }
     });
 
-    const filePathNormalizedForMetrics = filePath.replace(/\\/g, "/");
-    const filePathNormalizedForMetricsLower = filePathNormalizedForMetrics.toLowerCase();
-    const isInternalAstToolingFileForMetrics = filePathNormalizedForMetricsLower.includes("/infrastructure/ast/") || filePathNormalizedForMetricsLower.includes("infrastructure/ast/") || filePathNormalizedForMetricsLower.includes("/scripts/hooks-system/infrastructure/ast/");
-
     const fullTextLower = fullText.toLowerCase();
     const hasMetrics = fullTextLower.includes("micrometer") || fullTextLower.includes("prometheus") ||
       fullTextLower.includes("actuator") || fullTextLower.includes("metrics");
     const looksLikeServiceOrController = fullTextLower.includes("controller") || fullTextLower.includes("service");
 
-    if (!isInternalAstToolingFileForMetrics && !hasMetrics && looksLikeServiceOrController) {
+    if (isRealBackendAppFile && !hasMetrics && looksLikeServiceOrController) {
       pushFinding("backend.metrics.missing_prometheus", "info", sf, sf, "Missing application metrics - consider Spring Boot Actuator or Micrometer for monitoring", findings);
     }
 
@@ -478,7 +481,7 @@ function runBackendIntelligence(project, findings, platform) {
     sf.getDescendantsOfKind(SyntaxKind.ThrowStatement).forEach((throwStmt) => {
       const expr = throwStmt.getExpression();
       if (!expr) return;
-      const exprText = expr.getText();
+      const exprText = throwStmt.getExpression().getText();
       if (exprText.includes("Error(") || exprText.includes("Exception(")) {
         const isCustom = exprText.includes("Exception") &&
           (exprText.includes("Validation") ||
@@ -486,7 +489,9 @@ function runBackendIntelligence(project, findings, platform) {
             exprText.includes("Unauthorized") ||
             exprText.includes("Forbidden"));
         if (!isCustom) {
-          pushFinding("backend.error.custom_exceptions", "info", sf, throwStmt, "Generic Error/Exception thrown - create custom exception classes for better error handling", findings);
+          if (isRealBackendAppFile) {
+            pushFinding("backend.error.custom_exceptions", "info", sf, throwStmt, "Generic Error/Exception thrown - create custom exception classes for better error handling", findings);
+          }
         }
       }
     });
