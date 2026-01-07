@@ -8,20 +8,17 @@
             ".next": true,
             "coverage": true,
             ".audit_tmp": true,
+            ".ast-intelligence/tsc-cache": true,
+            ".ast-intelligence/hooks": true,
             "build": true,
             ".build": true,
             "checkouts": true,
             "Pods": true,
-            "DerivedData": true,
-            "scripts/hooks-system": true
+            "DerivedData": true
         },
         "rules": {
             "ios.force_unwrapping": {
-                "excludePatterns": [
-                    "*Tests.swift",
-                    "*Spec.swift"
-                ],
-                "reason": "Tests can use force unwrap for test assertions"
+                "reason": ""
             }
         }
     },

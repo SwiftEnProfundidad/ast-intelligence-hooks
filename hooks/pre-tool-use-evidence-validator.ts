@@ -235,6 +235,7 @@ async function main() {
                     sound: 'Basso'
                 });
             } catch (err) {
+                process.stderr.write(`Notification failed: ${err instanceof Error ? err.message : String(err)}\n`);
             }
             process.stderr.write(`${validation.error || ''}\n`);
             process.exit(2);

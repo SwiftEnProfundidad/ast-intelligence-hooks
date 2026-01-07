@@ -3,9 +3,11 @@ const AuditLogger = require('../logging/AuditLogger');
 
 class GuardConfig {
     constructor(env = envHelper) {
-        
-        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });const getNumber = (name, def) =>
+        this.auditLogger = new AuditLogger({ repoRoot: process.cwd() });
+
+        const getNumber = (name, def) =>
             typeof env.getNumber === 'function' ? env.getNumber(name, def) : Number(env[name] || def);
+
         const getBool = (name, def) =>
             typeof env.getBool === 'function' ? env.getBool(name, def) : (env[name] !== 'false');
 
