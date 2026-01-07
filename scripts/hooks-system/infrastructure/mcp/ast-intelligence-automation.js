@@ -980,11 +980,15 @@ async function aiGateCheck() {
                 .filter(Boolean);
             const normalizedPlatforms = Array.from(new Set(platformsForRules));
             const rulesData = await loadPlatformRules(normalizedPlatforms);
+            const rulesSample = rulesData.criticalRules.slice(0, 5).map(r => r.rule || r);
+            const rulesCount = rulesData.criticalRules.length;
             mandatoryRules = {
                 platforms: normalizedPlatforms,
                 criticalRules: rulesData.criticalRules,
                 rulesLoaded: Object.keys(rulesData.rules),
-                warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification'
+                totalRulesCount: rulesCount,
+                rulesSample: rulesSample,
+                proofOfRead: `✅ VERIFIED: ${rulesCount} critical rules loaded from ${Object.keys(rulesData.rules).join(', ')}`
             };
         } catch (error) {
             if (process.env.DEBUG) {
@@ -997,27 +1001,37 @@ async function aiGateCheck() {
                 platforms: normalizedPlatforms,
                 criticalRules: [],
                 rulesLoaded: [],
-                warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification',
+                status: 'FAILED_TO_LOAD',
                 error: `Failed to load rules content: ${error && error.message ? error.message : String(error)}`
             };
         }
 
+        const rulesLoadedSuccessfully = mandatoryRules &&
+            mandatoryRules.criticalRules &&
+            mandatoryRules.criticalRules.length > 0;
+
+        if (!rulesLoadedSuccessfully) {
+            violations.push('❌ RULES_NOT_LOADED: Critical platform rules could not be loaded. AI cannot proceed without reading mandatory rules.');
+        }
+
+        const finalBlocked = isBlocked || !rulesLoadedSuccessfully;
+
         return {
-            status: isBlocked ? 'BLOCKED' : 'ALLOWED',
+            status: finalBlocked ? 'BLOCKED' : 'ALLOWED',
             timestamp: new Date().toISOString(),
             branch: currentBranch,
             violations,
             warnings,
             autoFixes,
-            mandatory_rules: mandatoryRules,
-            summary: isBlocked
+            mandatory_rules: rulesLoadedSuccessfully
+                ? { ...mandatoryRules, status: 'LOADED_OK' }
+                : mandatoryRules,
+            summary: finalBlocked
                 ? `🚫 BLOCKED: ${violations.length} violation(s). Fix before proceeding.`
-                : `🚦 ALLOWED: Gate passed.${warnings.length > 0 ? ` ${warnings.length} warning(s).` : ''}`,
-            instructions: isBlocked
+                : `🚦 ALLOWED: Gate passed. ${mandatoryRules.totalRulesCount} critical rules loaded and verified.`,
+            instructions: finalBlocked
                 ? 'DO NOT proceed with user task. Announce violations and fix them first.'
-                : mandatoryRules
-                    ? `You may proceed with user task. CRITICAL: Review mandatory_rules.criticalRules BEFORE generating ANY code.`
-                    : 'You may proceed with user task.'
+                : `✅ ${mandatoryRules.totalRulesCount} RULES LOADED. Sample: ${mandatoryRules.rulesSample.slice(0, 2).join(' | ')}... Review ALL rules in mandatory_rules.criticalRules before ANY code generation.`
         };
     };
 
