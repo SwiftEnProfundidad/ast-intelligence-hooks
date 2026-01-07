@@ -1,236 +1,12 @@
 const path = require('path');
 const fs = require('fs').promises;
 const { SourceKittenParser } = require('../parsers/SourceKittenParser');
-const { pushFinding, mapToLevel } = require(path.join(__dirname, '../../ast-core'));
+const checks = require('./iOSEnterpriseChecks');
 
 class iOSEnterpriseAnalyzer {
   constructor() {
     this.parser = new SourceKittenParser();
     this.findings = [];
-  }
-
-  async analyzeFile(filePath, findings) {
-    this.findings = findings;
-
-    try {
-      const ast = await this.parser.parseFile(filePath);
-
-      if (!ast.parsed) {
-        console.warn(`[iOS Enterprise] Could not parse ${filePath}: ${ast.error}`);
-        return;
-      }
-
-      const content = await fs.readFile(filePath, 'utf-8');
-
-      const classes = this.parser.extractClasses(ast);
-      const functions = this.parser.extractFunctions(ast);
-      const properties = this.parser.extractProperties(ast);
-      const protocols = this.parser.extractProtocols(ast);
-
-      await this.analyzeSwiftModerno(ast, content, filePath);
-      await this.analyzeSwiftUI(ast, classes, filePath);
-      await this.analyzeUIKit(ast, classes, filePath);
-      await this.analyzeProtocolOriented(protocols, filePath);
-      await this.analyzeValueTypes(classes, filePath);
-      await this.analyzeMemoryManagement(content, filePath);
-      await this.analyzeOptionals(content, filePath);
-      await this.analyzeDependencyInjection(classes, filePath);
-      await this.analyzeNetworking(content, filePath);
-      await this.analyzePersistence(content, filePath);
-      await this.analyzeCombine(content, filePath);
-      await this.analyzeConcurrency(content, filePath);
-      await this.analyzeTesting(content, filePath);
-      await this.analyzeUITesting(content, filePath);
-      await this.analyzeSecurity(content, filePath);
-      await this.analyzeAccessibility(content, filePath);
-      await this.analyzeLocalization(content, filePath);
-      await this.analyzeArchitecturePatterns(classes, functions, filePath);
-      await this.analyzePerformance(functions, content, filePath);
-      await this.analyzeCodeOrganization(filePath, content);
-
-    } catch (error) {
-      console.error(`[iOS Enterprise] Error analyzing ${filePath}:`, error.message);
-    }
-  }
-
-  async analyzeSwiftModerno(ast, content, filePath) {
-    if (content.includes('completion:') && !content.includes('async ')) {
-      this.addFinding('ios.async_await_missing', 'medium', filePath, 1,
-        'Using completion handlers instead of async/await (Swift 5.9+ required)');
-    }
-
-    const taskCount = (content.match(/\bTask\s*\{/g) || []).length;
-    if (taskCount > 3 && !content.includes('TaskGroup')) {
-      this.addFinding('ios.structured_concurrency_missing', 'medium', filePath, 1,
-        `Multiple Task blocks (${taskCount}) without TaskGroup - use structured concurrency`);
-    }
-
-    if (content.includes('actor ') && !content.includes(': Sendable')) {
-      this.addFinding('ios.sendable_missing', 'low', filePath, 1,
-        'Actor should conform to Sendable protocol for thread-safe types');
-    }
-
-    if (content.includes('func ') && content.includes('-> View') && !content.includes('some View')) {
-      this.addFinding('ios.opaque_types_missing', 'low', filePath, 1,
-        'Use "some View" instead of explicit View protocol return');
-    }
-
-    if (content.includes('UIViewController') && !content.includes('@State') && !content.includes('@Binding')) {
-      this.addFinding('ios.property_wrappers_missing', 'info', filePath, 1,
-        'Consider using SwiftUI property wrappers (@State, @Binding) for state management');
-    }
-
-    const functions = this.parser.extractFunctions(ast);
-    functions.forEach(fn => {
-      if (fn.name.includes('Array') || fn.name.includes('Collection')) {
-        if (!content.includes('<T>') && !content.includes('<Element>')) {
-          this.addFinding('ios.generics_missing', 'low', filePath, fn.line,
-            `Function ${fn.name} should use generics for type safety`);
-        }
-      }
-    });
-  }
-
-  async analyzeSwiftUI(ast, classes, filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-    const usesSwiftUI = this.parser.usesSwiftUI(ast);
-    const usesUIKit = this.parser.usesUIKit(ast);
-
-    if (usesUIKit && !usesSwiftUI) {
-      this.addFinding('ios.swiftui_first', 'medium', filePath, 1,
-        'Consider migrating to SwiftUI for new views (UIKit only when strictly necessary)');
-    }
-
-    if (usesSwiftUI) {
-      if (!content.includes('@State')) {
-        this.addFinding('ios.state_local_missing', 'info', filePath, 1,
-          'SwiftUI view without @State - consider if local state is needed');
-      }
-
-      if (content.includes('ObservableObject') && !content.includes('@StateObject')) {
-        this.addFinding('ios.stateobject_missing', 'high', filePath, 1,
-          'ObservableObject should be owned with @StateObject, not @ObservedObject');
-      }
-
-      if (content.includes('class') && content.includes('ObservableObject') && !content.includes('@EnvironmentObject')) {
-        this.addFinding('ios.environmentobject_missing', 'info', filePath, 1,
-          'Consider using @EnvironmentObject for dependency injection in SwiftUI');
-      }
-
-      if (content.includes('.frame(') && content.includes('CGRect(')) {
-        this.addFinding('ios.declarativo_missing', 'medium', filePath, 1,
-          'Using imperative CGRect in SwiftUI - use declarative .frame() modifiers');
-      }
-
-      const geometryReaderCount = (content.match(/GeometryReader/g) || []).length;
-      if (geometryReaderCount > 2) {
-        this.addFinding('ios.geometryreader_moderation', 'medium', filePath, 1,
-          `Excessive GeometryReader usage (${geometryReaderCount}x) - use only when necessary`);
-      }
-    }
-  }
-
-  async analyzeUIKit(ast, classes, filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-
-    classes.forEach(cls => {
-      if (cls.name.includes('ViewController')) {
-        const linesCount = cls.substructure.length * 10;
-        if (linesCount > 300) {
-          this.addFinding('ios.massive_viewcontrollers', 'high', filePath, cls.line,
-            `Massive ViewController ${cls.name} (~${linesCount} lines) - break down into smaller components`);
-        }
-
-        if (!content.includes('ViewModel')) {
-          this.addFinding('ios.uikit.viewmodel_delegation', 'medium', filePath, cls.line,
-            `ViewController ${cls.name} should delegate logic to ViewModel (MVVM pattern)`);
-        }
-      }
-    });
-
-    if (filePath.endsWith('.swift') && !filePath.includes('analyzer') && !filePath.includes('detector')) {
-      if (content.includes('storyboard') || content.includes('.xib') || content.includes('.nib')) {
-        this.addFinding('ios.storyboards', 'high', filePath, 1,
-          'Storyboard/XIB detected - use programmatic UI for better version control');
-      }
-    }
-  }
-
-  async analyzeProtocolOriented(protocols, filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-
-    if (protocols.length > 0 && !content.includes('extension ')) {
-      this.addFinding('ios.pop.missing_extensions', 'low', filePath, 1,
-        'Protocols detected but no extensions - consider protocol extensions for default implementations');
-    }
-
-    if (content.includes('class ') && content.includes(': ')) {
-      const inheritanceCount = (content.match(/class\s+\w+\s*:\s*\w+/g) || []).length;
-      if (inheritanceCount > 2) {
-        this.addFinding('ios.pop.missing_composition_over_inheritance', 'medium', filePath, 1,
-          `Excessive class inheritance (${inheritanceCount}x) - prefer protocol composition`);
-      }
-    }
-  }
-
-  async analyzeValueTypes(classes, filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-
-    classes.forEach(cls => {
-      if (!cls.inheritedTypes.length && !content.includes('ObservableObject')) {
-        this.addFinding('ios.values.classes_instead_structs', 'medium', filePath, cls.line,
-          `Class ${cls.name} without inheritance - consider struct for value semantics`);
-      }
-    });
-
-    const varCount = (content.match(/\bvar\s+/g) || []).length;
-    const letCount = (content.match(/\blet\s+/g) || []).length;
-    if (varCount > letCount) {
-      this.addFinding('ios.values.mutability', 'low', filePath, 1,
-        `More var (${varCount}) than let (${letCount}) - prefer immutability`);
-    }
-  }
-
-  async analyzeMemoryManagement(content, filePath) {
-    const closureMatches = content.match(/\{\s*\[/g);
-    const weakSelfMatches = content.match(/\[weak self\]/g);
-    if (closureMatches && closureMatches.length > (weakSelfMatches?.length || 0)) {
-      this.addFinding('ios.memory.missing_weak_self', 'high', filePath, 1,
-        'Closures without [weak self] - potential retain cycles');
-    }
-
-    if (content.includes('self.') && content.includes('{') && !content.includes('[weak self]')) {
-      this.addFinding('ios.memory.retain_cycles', 'high', filePath, 1,
-        'Potential retain cycle - closure captures self without [weak self]');
-    }
-
-    if (content.includes('class ') && !content.includes('deinit')) {
-      this.addFinding('ios.memory.missing_deinit', 'low', filePath, 1,
-        'Class without deinit - consider adding for cleanup verification');
-    }
-  }
-
-  async analyzeOptionals(content, filePath) {
-    const forceUnwraps = content.match(/(\w+)\s*!/g);
-    if (forceUnwraps && forceUnwraps.length > 0) {
-      const nonIBOutlets = forceUnwraps.filter(match => !content.includes(`@IBOutlet`));
-      if (nonIBOutlets.length > 0) {
-        this.addFinding('ios.force_unwrapping', 'high', filePath, 1,
-          `Force unwrapping (!) detected ${nonIBOutlets.length}x - use if let or guard let`);
-      }
-    }
-
-    const ifLetCount = (content.match(/if\s+let\s+/g) || []).length;
-    const guardLetCount = (content.match(/guard\s+let\s+/g) || []).length;
-    if (ifLetCount === 0 && guardLetCount === 0 && content.includes('?')) {
-      this.addFinding('ios.optionals.optional_binding', 'medium', filePath, 1,
-        'Optionals present but no optional binding - use if let or guard let');
-    }
-
-    if (content.includes('?') && !content.includes('??')) {
-      this.addFinding('ios.optionals.missing_nil_coalescing', 'info', filePath, 1,
-        'Consider using nil coalescing operator (??) for default values');
-    }
   }
 
   addFinding(ruleId, severity, filePath, line, message) {
@@ -244,180 +20,41 @@ class iOSEnterpriseAnalyzer {
     });
   }
 
-  async analyzeDependencyInjection(classes, filePath) {
-    const content = await fs.readFile(filePath, 'utf-8');
-
-    if (content.includes('.shared') || content.includes('static let shared')) {
-      this.addFinding('ios.di.singleton_usage', 'high', filePath, 1,
-        'Singleton detected - use dependency injection instead');
-    }
-
-    classes.forEach(cls => {
-      if (cls.name.includes('ViewModel') || cls.name.includes('Service')) {
-        const hasInit = content.includes(`init(`);
-        if (!hasInit) {
-          this.addFinding('ios.di.missing_protocol_injection', 'medium', filePath, cls.line,
-            `${cls.name} should inject dependencies via initializer`);
-        }
+  async analyzeFile(filePath, findings) {
+    this.findings = findings;
+    try {
+      const ast = await this.parser.parseFile(filePath);
+      if (!ast.parsed) {
+        console.warn(`[iOS Enterprise] Could not parse ${filePath}: ${ast.error}`);
+        return;
       }
-    });
 
-    if (content.includes('init(') && content.match(/init\([^)]{50,}\)/)) {
-      this.addFinding('ios.di.missing_factory', 'low', filePath, 1,
-        'Complex initialization - consider factory pattern');
-    }
-  }
+      const content = await fs.readFile(filePath, 'utf-8');
+      const classes = this.parser.extractClasses(ast) || [];
+      const functions = this.parser.extractFunctions(ast) || [];
+      const protocols = this.parser.extractProtocols(ast) || [];
+      const usesSwiftUI = typeof this.parser.usesSwiftUI === 'function' ? this.parser.usesSwiftUI(ast) : false;
+      const usesUIKit = typeof this.parser.usesUIKit === 'function' ? this.parser.usesUIKit(ast) : false;
 
-  async analyzeNetworking(content, filePath) {
-    if (String(filePath || '').endsWith('/Package.swift') || String(filePath || '').endsWith('Package.swift')) {
-      return;
-    }
-    if (!content.includes('URLSession') && !content.includes('Alamofire')) {
-      if (content.includes('http://') || content.includes('https://')) {
-        this.addFinding('ios.networking.missing_urlsession', 'high', filePath, 1,
-          'Network URLs detected but no URLSession/Alamofire usage');
-      }
-    }
+      const add = (ruleId, severity, line, message) =>
+        this.addFinding(ruleId, severity, filePath, line, message);
 
-    if (content.includes('URLSession') && content.includes('completionHandler:') && !content.includes('async')) {
-      this.addFinding('ios.networking.completion_handlers_instead_async', 'medium', filePath, 1,
-        'Using completion handlers with URLSession - migrate to async/await');
-    }
-
-    if (content.includes('JSONSerialization') && !content.includes('Codable')) {
-      this.addFinding('ios.networking.missing_codable', 'medium', filePath, 1,
-        'Manual JSON parsing - use Codable for type safety');
-    }
-
-    if (content.includes('URLSession') && !content.includes('NetworkError')) {
-      this.addFinding('ios.networking.missing_error_handling', 'high', filePath, 1,
-        'Network code without custom NetworkError enum');
-    }
-
-    // Check for SSL pinning implementation
-    const hasSSLPinningImplementation =
-      content.includes('serverTrustPolicy') ||
-      content.includes('pinning') ||
-      (content.includes('URLSessionDelegate') && content.includes('URLAuthenticationChallenge'));
-
-    if (content.includes('URLSession') && !hasSSLPinningImplementation) {
-      this.addFinding('ios.networking.missing_ssl_pinning', 'medium', filePath, 1,
-        'Consider SSL pinning for high-security apps');
-    }
-
-    if (content.includes('URLSession') && !content.includes('retry')) {
-      this.addFinding('ios.networking.missing_retry', 'low', filePath, 1,
-        'Network requests without retry logic');
-    }
-  }
-
-  async analyzePersistence(content, filePath) {
-    if (content.includes('UserDefaults') && (content.includes('password') || content.includes('token') || content.includes('auth'))) {
-      this.addFinding('ios.persistence.userdefaults_sensitive', 'critical', filePath, 1,
-        'Sensitive data in UserDefaults - use Keychain instead');
-    }
-
-    if ((content.includes('password') || content.includes('token')) && !content.includes('Keychain') && !content.includes('Security')) {
-      this.addFinding('ios.persistence.missing_keychain', 'critical', filePath, 1,
-        'Sensitive data detected but no Keychain usage');
-    }
-
-    if (content.includes('NSManagedObjectContext') && content.includes('.main')) {
-      this.addFinding('ios.persistence.core_data_on_main', 'high', filePath, 1,
-        'Core Data operations on main thread - use background context');
-    }
-
-    if (content.includes('NSPersistentContainer') && !content.includes('NSMigrationManager')) {
-      this.addFinding('ios.persistence.missing_migration', 'medium', filePath, 1,
-        'Core Data without migration strategy');
-    }
-  }
-
-  async analyzeCombine(content, filePath) {
-    if (content.includes('.sink(') && !content.includes('AnyCancellable')) {
-      this.addFinding('ios.combine.missing_cancellables', 'high', filePath, 1,
-        'Combine sink without storing AnyCancellable - memory leak');
-    }
-
-    if (content.includes('@Published') && !content.includes('import Combine')) {
-      this.addFinding('ios.combine.published_without_combine', 'high', filePath, 1,
-        '@Published used but Combine not imported');
-    }
-
-    if (content.includes('.sink(') && !content.includes('receiveCompletion')) {
-      this.addFinding('ios.combine.error_handling', 'medium', filePath, 1,
-        'Combine subscriber without error handling (receiveCompletion)');
-    }
-
-    if (content.includes('Future<') && !content.includes('async')) {
-      this.addFinding('ios.combine.prefer_async_await', 'low', filePath, 1,
-        'Combine Future for single value - consider async/await instead');
-    }
-  }
-
-  async analyzeConcurrency(content, filePath) {
-    if (content.includes('DispatchQueue') && !content.includes('async func')) {
-      this.addFinding('ios.concurrency.dispatchqueue_old', 'medium', filePath, 1,
-        'Using DispatchQueue - prefer async/await for new code');
-    }
-
-    if (content.includes('DispatchQueue.main') && content.includes('UI')) {
-      this.addFinding('ios.concurrency.missing_mainactor', 'medium', filePath, 1,
-        'Manual main thread dispatch - use @MainActor annotation');
-    }
-
-    if (content.includes('Task {') && !content.includes('.cancel()') && !content.includes('Task.isCancelled')) {
-      this.addFinding('ios.concurrency.task_cancellation', 'low', filePath, 1,
-        'Task without cancellation handling');
-    }
-
-    if (content.includes('var ') && content.includes('queue') && !content.includes('actor')) {
-      this.addFinding('ios.concurrency.actor_missing', 'medium', filePath, 1,
-        'Manual synchronization with queue - consider actor for thread safety');
-    }
-  }
-
-  async analyzeTesting(content, filePath) {
-    if (filePath.includes('Test') && !content.includes('XCTest') && !content.includes('Quick')) {
-      this.addFinding('ios.testing.missing_xctest', 'high', filePath, 1,
-        'Test file without XCTest or Quick import');
-    }
-
-    if (filePath.includes('Test') && !content.includes('makeSUT') && content.includes('func test')) {
-      this.addFinding('ios.testing.missing_makesut', 'medium', filePath, 1,
-        'Test without makeSUT pattern - centralize system under test creation');
-    }
-
-    if (filePath.includes('Test') && !content.includes('trackForMemoryLeaks') && content.includes('class')) {
-      this.addFinding('ios.testing.missing_memory_leak_tracking', 'medium', filePath, 1,
-        'Test without trackForMemoryLeaks helper');
-    }
-
-    if (filePath.includes('Test') && content.includes('init(') && !content.includes('Protocol')) {
-      this.addFinding('ios.testing.concrete_dependencies', 'medium', filePath, 1,
-        'Test using concrete dependencies - inject protocols for testability');
-    }
-  }
-
-  async analyzeUITesting(content, filePath) {
-    if (filePath.includes('UITest') && !content.includes('XCUIApplication')) {
-      this.addFinding('ios.uitesting.missing_xcuitest', 'high', filePath, 1,
-        'UI test file without XCUIApplication');
-    }
-
-    if (filePath.includes('UITest') && !content.includes('accessibilityIdentifier')) {
-      this.addFinding('ios.uitesting.missing_accessibility', 'medium', filePath, 1,
-        'UI test without accessibility identifiers for element location');
-    }
-
-    if (filePath.includes('UITest') && content.includes('XCUIElement') && !content.includes('Page')) {
-      this.addFinding('ios.uitesting.missing_page_object', 'low', filePath, 1,
-        'UI test without Page Object pattern for encapsulation');
-    }
-
-    if (filePath.includes('UITest') && content.includes('.tap()') && !content.includes('waitForExistence')) {
-      this.addFinding('ios.uitesting.missing_wait', 'high', filePath, 1,
-        'UI test tapping without waitForExistence - flaky test');
+      checks.analyzeSwiftModerno({ content, functions, filePath, addFinding: add });
+      checks.analyzeSwiftUI({ usesSwiftUI, usesUIKit, content, classes, filePath, addFinding: add });
+      checks.analyzeUIKit({ classes, content, filePath, addFinding: add });
+      checks.analyzeProtocolOriented({ protocols, content, filePath, addFinding: add });
+      checks.analyzeValueTypes({ classes, content, filePath, addFinding: add });
+      checks.analyzeMemoryManagement({ content, filePath, addFinding: add });
+      checks.analyzeOptionals({ content, filePath, addFinding: add });
+      checks.analyzeDependencyInjection({ classes, content, filePath, addFinding: add });
+      checks.analyzeNetworking({ content, filePath, addFinding: add });
+      checks.analyzePersistence({ content, filePath, addFinding: add });
+      checks.analyzeCombine({ content, filePath, addFinding: add });
+      checks.analyzeConcurrency({ content, filePath, addFinding: add });
+      checks.analyzeTesting({ content, filePath, addFinding: add });
+      checks.analyzeUITesting({ content, filePath, addFinding: add });
+    } catch (error) {
+      console.error(`[iOS Enterprise] Error analyzing ${filePath}:`, error.message);
     }
   }
 

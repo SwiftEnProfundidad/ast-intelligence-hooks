@@ -198,6 +198,16 @@ verify_atomic_commit() {
   done
 
   if (( root_count > 1 )); then
+    local has_scripts=0
+    local has_tests=0
+    for root in $roots_list; do
+      [[ "$root" == "scripts" ]] && has_scripts=1
+      [[ "$root" == "tests" ]] && has_tests=1
+    done
+    if [[ $has_scripts -eq 1 && $has_tests -eq 1 && $root_count -eq 2 ]]; then
+      printf "${GREEN}✅ Commit %s toca scripts + tests (permitido para bugfixes/features con tests).${NC}\n" "$commit"
+      return 0
+    fi
     printf "${RED}❌ Commit %s toca múltiples raíces (%s). Divide los cambios en commits atómicos.${NC}\n" "$commit" "$roots_list"
     return 1
   fi

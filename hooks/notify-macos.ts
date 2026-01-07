@@ -24,6 +24,7 @@ export function sendMacOSNotification(options: NotificationOptions): void {
     try {
         execSync(`osascript -e '${script}'`, { stdio: 'ignore' });
     } catch (err) {
+        console.error(`[notify-macos] Failed to send notification: ${(err as Error).message}`);
     }
 }
 
