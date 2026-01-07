@@ -235,6 +235,28 @@ function toRepoRelativePath(filePath) {
   return normalized;
 }
 
+function isAuditTmpPath(repoRelativePath) {
+  const normalized = normalizePathForMatch(repoRelativePath);
+  return normalized.startsWith('.audit_tmp/') || normalized.includes('/.audit_tmp/');
+}
+
+function isViolationInStagedFiles(violationPath, stagedSet) {
+  if (!violationPath) {
+    return false;
+  }
+
+  const repoRelative = toRepoRelativePath(violationPath);
+  if (!repoRelative) {
+    return false;
+  }
+
+  if (isAuditTmpPath(repoRelative)) {
+    return false;
+  }
+
+  return stagedSet.has(repoRelative);
+}
+
 function resolveAuditTmpDir() {
   const configured = (env.get('AUDIT_TMP', '') || '').trim();
   if (configured.length > 0) {
@@ -273,18 +295,7 @@ async function runIntelligentAudit() {
 
       const stagedViolations = rawViolations.filter(v => {
         const violationPath = toRepoRelativePath(v.filePath || v.file || '');
-        if (!violationPath) {
-          return false;
-        }
-        if (stagedSet.has(violationPath)) {
-          return true;
-        }
-        for (const sf of stagedSet) {
-          if (sf && (violationPath === sf || violationPath.endsWith('/' + sf) || violationPath.includes('/' + sf))) {
-            return true;
-          }
-        }
-        return false;
+        return isViolationInStagedFiles(violationPath, stagedSet);
       });
 
       console.log(`[Intelligent Audit] Gate scope: STAGING (${stagedFiles.length} files)`);
@@ -683,4 +694,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runIntelligentAudit };
+module.exports = { runIntelligentAudit, isViolationInStagedFiles, toRepoRelativePath };
