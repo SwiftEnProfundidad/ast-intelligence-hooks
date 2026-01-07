@@ -59,6 +59,19 @@ class AutonomousOrchestrator {
         return this.detectFromASTSystemFiles(files);
     }
 
+    async scoreConfidence(platforms) {
+        try {
+            const PlatformAnalysisService = require('./PlatformAnalysisService');
+            const analysisService = new PlatformAnalysisService(this.platformDetector);
+            const context = await this.contextEngine.detectContext();
+            return analysisService.analyzeConfidence(platforms || [], context || {});
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            this.logger?.debug?.('ORCHESTRATOR_SCORE_CONFIDENCE_ERROR', { error: msg });
+            return [];
+        }
+    }
+
     async analyzeContext() {
         const platforms = await this.detectActivePlatforms();
         const scores = await this.scoreConfidence(platforms);
