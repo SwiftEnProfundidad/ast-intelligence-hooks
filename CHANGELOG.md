@@ -5,6 +5,21 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.50] - 2026-01-07
+
+### Fixed
+- **MCP Project Isolation**: Configuration now writes to project-scoped files (`.windsurf/mcp.json`, `.cursor/mcp.json`) instead of global config, preventing cross-project conflicts and 60s timeouts when multiple projects are open simultaneously
+- **mandatory_rules in timeout**: Gate timeout responses now include `mandatory_rules` object for consistency
+- **gitflow-enforcer.sh**: Bash 3.2 compatible with scripts+tests exception
+
+### Changed
+- **AI Gate enforces rule loading**: Gate now **BLOCKS** if critical platform rules cannot be loaded (not just warning)
+- **Proof of read**: Gate output includes `proofOfRead`, `totalRulesCount`, and `rulesSample` to demonstrate rules were actually loaded and processed
+- **Summary includes rule count**: `🚦 ALLOWED: Gate passed. 47 critical rules loaded and verified.`
+
+### Added
+- **CQRS rule**: Added Command Query Responsibility Segregation rule to iOS, Android, Backend, and Frontend platforms
+
 ## [5.5.48] - 2026-01-06
 
 ### Fixed
