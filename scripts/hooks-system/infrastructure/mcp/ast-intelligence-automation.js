@@ -638,7 +638,85 @@ function extractCriticalPatterns(content, platform) {
         patterns.push({ platform: 'ios', rule: '❌ NUNCA usar GCD (DispatchQueue) - usar Swift Concurrency (async/await, Task, actor)', severity: 'CRITICAL' });
         patterns.push({ platform: 'ios', rule: '❌ NUNCA usar completion handlers - usar async/await', severity: 'CRITICAL' });
         patterns.push({ platform: 'ios', rule: '❌ NUNCA dejar catch vacíos - siempre gestionar errores', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA usar Singleton - usar Inyección de Dependencias', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA usar force unwrap (!) - usar guard/if let', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA usar librerías de terceros (Alamofire, etc.) sin autorización - usar URLSession', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA añadir comentarios en el código', severity: 'CRITICAL' });
+        patterns.push({ platform: 'ios', rule: '❌ NUNCA usar prints/logs ad-hoc', severity: 'CRITICAL' });
         patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO usar Swift 6.2 Strict Concurrency', severity: 'MANDATORY' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO usar SwiftUI (UIKit solo si estrictamente necesario)', severity: 'MANDATORY' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO usar @Observable (iOS 17+) en vez de ObservableObject', severity: 'MANDATORY' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO usar guard/early returns - evitar pyramid of doom', severity: 'MANDATORY' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO seguir Clean Architecture (Domain → Application → Infrastructure)', severity: 'MANDATORY' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO verificar SOLID (SRP, OCP, LSP, ISP, DIP)', severity: 'MANDATORY' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO nombres autodescriptivos en inglés', severity: 'MANDATORY' });
+        patterns.push({ platform: 'ios', rule: '✅ OBLIGATORIO comprobar que compila ANTES de sugerir', severity: 'MANDATORY' });
+    }
+
+    if (platform === 'android') {
+        patterns.push({ platform: 'android', rule: '❌ NUNCA usar Singleton - usar Hilt para Inyección de Dependencias', severity: 'CRITICAL' });
+        patterns.push({ platform: 'android', rule: '❌ NUNCA usar XML layouts - usar Jetpack Compose', severity: 'CRITICAL' });
+        patterns.push({ platform: 'android', rule: '❌ NUNCA usar Java - usar Kotlin', severity: 'CRITICAL' });
+        patterns.push({ platform: 'android', rule: '❌ NUNCA usar LiveData - usar StateFlow/SharedFlow', severity: 'CRITICAL' });
+        patterns.push({ platform: 'android', rule: '❌ NUNCA dejar catch vacíos - siempre gestionar errores', severity: 'CRITICAL' });
+        patterns.push({ platform: 'android', rule: '❌ NUNCA añadir comentarios en el código', severity: 'CRITICAL' });
+        patterns.push({ platform: 'android', rule: '✅ OBLIGATORIO usar Jetpack Compose + Material 3', severity: 'MANDATORY' });
+        patterns.push({ platform: 'android', rule: '✅ OBLIGATORIO usar Hilt para DI', severity: 'MANDATORY' });
+        patterns.push({ platform: 'android', rule: '✅ OBLIGATORIO usar Kotlin Coroutines + Flow', severity: 'MANDATORY' });
+        patterns.push({ platform: 'android', rule: '✅ OBLIGATORIO seguir Clean Architecture', severity: 'MANDATORY' });
+        patterns.push({ platform: 'android', rule: '✅ OBLIGATORIO verificar SOLID', severity: 'MANDATORY' });
+        patterns.push({ platform: 'android', rule: '✅ OBLIGATORIO nombres autodescriptivos en inglés', severity: 'MANDATORY' });
+        patterns.push({ platform: 'android', rule: '✅ OBLIGATORIO comprobar que compila ANTES de sugerir', severity: 'MANDATORY' });
+    }
+
+    if (platform === 'backend') {
+        patterns.push({ platform: 'backend', rule: '❌ NUNCA usar Singleton - usar NestJS DI (@Injectable)', severity: 'CRITICAL' });
+        patterns.push({ platform: 'backend', rule: '❌ NUNCA usar console.log/console.error - usar Logger de NestJS', severity: 'CRITICAL' });
+        patterns.push({ platform: 'backend', rule: '❌ NUNCA usar any/unknown en TypeScript', severity: 'CRITICAL' });
+        patterns.push({ platform: 'backend', rule: '❌ NUNCA dejar catch vacíos - siempre gestionar errores', severity: 'CRITICAL' });
+        patterns.push({ platform: 'backend', rule: '❌ NUNCA hardcodear secretos - usar variables de entorno', severity: 'CRITICAL' });
+        patterns.push({ platform: 'backend', rule: '❌ NUNCA añadir comentarios en el código', severity: 'CRITICAL' });
+        patterns.push({ platform: 'backend', rule: '❌ NUNCA exponer datos sin validar - usar class-validator', severity: 'CRITICAL' });
+        patterns.push({ platform: 'backend', rule: '✅ OBLIGATORIO usar Repository Pattern (interfaces en domain, impl en infrastructure)', severity: 'MANDATORY' });
+        patterns.push({ platform: 'backend', rule: '✅ OBLIGATORIO usar DTOs + class-validator para validación', severity: 'MANDATORY' });
+        patterns.push({ platform: 'backend', rule: '✅ OBLIGATORIO usar Guards para autorización', severity: 'MANDATORY' });
+        patterns.push({ platform: 'backend', rule: '✅ OBLIGATORIO paginación en todos los endpoints de listado', severity: 'MANDATORY' });
+        patterns.push({ platform: 'backend', rule: '✅ OBLIGATORIO seguir Clean Architecture', severity: 'MANDATORY' });
+        patterns.push({ platform: 'backend', rule: '✅ OBLIGATORIO verificar SOLID', severity: 'MANDATORY' });
+        patterns.push({ platform: 'backend', rule: '✅ OBLIGATORIO TypeScript strict mode', severity: 'MANDATORY' });
+    }
+
+    if (platform === 'frontend') {
+        patterns.push({ platform: 'frontend', rule: '❌ NUNCA usar any/unknown en TypeScript', severity: 'CRITICAL' });
+        patterns.push({ platform: 'frontend', rule: '❌ NUNCA usar class components - usar functional components + hooks', severity: 'CRITICAL' });
+        patterns.push({ platform: 'frontend', rule: '❌ NUNCA hardcodear strings - usar i18n', severity: 'CRITICAL' });
+        patterns.push({ platform: 'frontend', rule: '❌ NUNCA dejar catch vacíos - siempre gestionar errores', severity: 'CRITICAL' });
+        patterns.push({ platform: 'frontend', rule: '❌ NUNCA añadir comentarios en el código', severity: 'CRITICAL' });
+        patterns.push({ platform: 'frontend', rule: '❌ NUNCA usar console.log en producción', severity: 'CRITICAL' });
+        patterns.push({ platform: 'frontend', rule: '✅ OBLIGATORIO usar TypeScript strict mode', severity: 'MANDATORY' });
+        patterns.push({ platform: 'frontend', rule: '✅ OBLIGATORIO usar React functional components + hooks', severity: 'MANDATORY' });
+        patterns.push({ platform: 'frontend', rule: '✅ OBLIGATORIO usar TailwindCSS para estilos', severity: 'MANDATORY' });
+        patterns.push({ platform: 'frontend', rule: '✅ OBLIGATORIO API client en capa infrastructure', severity: 'MANDATORY' });
+        patterns.push({ platform: 'frontend', rule: '✅ OBLIGATORIO tests con RTL/Playwright', severity: 'MANDATORY' });
+        patterns.push({ platform: 'frontend', rule: '✅ OBLIGATORIO seguir Clean Architecture', severity: 'MANDATORY' });
+        patterns.push({ platform: 'frontend', rule: '✅ OBLIGATORIO verificar SOLID', severity: 'MANDATORY' });
+    }
+
+    if (platform === 'gold') {
+        patterns.push({ platform: 'gold', rule: '❌ NUNCA usar Singleton - usar Inyección de Dependencias', severity: 'CRITICAL' });
+        patterns.push({ platform: 'gold', rule: '❌ NUNCA dejar catch vacíos - siempre gestionar errores', severity: 'CRITICAL' });
+        patterns.push({ platform: 'gold', rule: '❌ NUNCA añadir comentarios en el código', severity: 'CRITICAL' });
+        patterns.push({ platform: 'gold', rule: '❌ NUNCA usar mocks/spies en producción - todo real contra BBDD/servicios', severity: 'CRITICAL' });
+        patterns.push({ platform: 'gold', rule: '❌ NUNCA usar --no-verify sin autorización explícita', severity: 'CRITICAL' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO responder siempre en español', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO actuar como Arquitecto de Soluciones', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO seguir flujo BDD → TDD', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO seguir Clean Architecture y Clean Code', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO verificar SOLID (SRP, OCP, LSP, ISP, DIP)', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO preferir guard/early returns - evitar pyramid of doom', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO nombres autodescriptivos en inglés', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO comprobar que compila ANTES de sugerir', severity: 'MANDATORY' });
+        patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO "Measure twice, cut once" - planificar bien', severity: 'MANDATORY' });
     }
 
     return patterns;
