@@ -561,7 +561,7 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
           file: v.filePath || v.file || 'unknown',
           line: v.line || null,
           severity: v.severity,
-          rule: ruleId,
+          rule_id: ruleId,
           message: v.message || v.description || '',
           category: v.category || deriveCategoryFromRuleId(ruleId),
           intelligent_evaluation: v.intelligentEvaluation || false,
