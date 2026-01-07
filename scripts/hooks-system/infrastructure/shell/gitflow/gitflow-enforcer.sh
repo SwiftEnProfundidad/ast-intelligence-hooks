@@ -167,7 +167,10 @@ verify_atomic_commit() {
     return 0
   fi
 
-  mapfile -t files < <($GIT_BIN diff --name-only "${commit}^..${commit}")
+  local -a files=()
+  while IFS= read -r file; do
+    [[ -n "$file" ]] && files+=("$file")
+  done < <($GIT_BIN diff --name-only "${commit}^..${commit}")
   if [[ "${#files[@]}" -eq 0 ]]; then
     return 0
   fi
@@ -219,7 +222,10 @@ verify_pending_commits_atomic() {
     return $?
   fi
 
-  mapfile -t commits < <($GIT_BIN rev-list "${base_ref}..${branch}")
+  local -a commits=()
+  while IFS= read -r commit; do
+    [[ -n "$commit" ]] && commits+=("$commit")
+  done < <($GIT_BIN rev-list "${base_ref}..${branch}")
   local failed=0
   for commit in "${commits[@]}"; do
     if ! verify_atomic_commit "$commit"; then
