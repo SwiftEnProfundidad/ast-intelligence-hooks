@@ -25,6 +25,7 @@ AUTO_MERGE_PR=${GITFLOW_AUTO_MERGE:-false}
 PR_BASE_BRANCH=${GITFLOW_PR_BASE:-develop}
 STRICT_ATOMIC=${GITFLOW_STRICT_ATOMIC:-true}
 REQUIRE_TEST_RELATIONS=${GITFLOW_REQUIRE_TESTS:-true}
+STRICT_CHECK=${GITFLOW_STRICT_CHECK:-false}
 
 print_section() {
   printf "${BLUE}═══════════════════════════════════════════════════════════════${NC}\n"
@@ -167,12 +168,17 @@ verify_atomic_commit() {
     return 0
   fi
 
-  mapfile -t files < <($GIT_BIN diff --name-only "${commit}^..${commit}")
+  local files=()
+  while IFS= read -r file; do
+    [[ -z "$file" ]] && continue
+    files+=("$file")
+  done < <($GIT_BIN diff --name-only "${commit}^..${commit}")
   if [[ "${#files[@]}" -eq 0 ]]; then
     return 0
   fi
 
-  declare -A roots=()
+  local roots_list
+  roots_list=()
   for file in "${files[@]}"; do
     local root="${file%%/*}"
     if [[ "$root" == "$file" ]]; then
@@ -186,12 +192,37 @@ verify_atomic_commit() {
         root="(root)"
         ;;
     esac
-    roots["$root"]=1
+
+    local seen=0
+    local existing
+    if (( ${#roots_list[@]:-0} > 0 )); then
+      for existing in "${roots_list[@]}"; do
+        if [[ "$existing" == "$root" ]]; then
+          seen=1
+          break
+        fi
+      done
+    fi
+    if [[ "$seen" -eq 0 ]]; then
+      roots_list+=("$root")
+    fi
   done
 
-  local root_count=${#roots[@]}
+  local root_count=${#roots_list[@]}
   if (( root_count > 1 )); then
-    printf "${RED}❌ Commit %s toca múltiples raíces (%s). Divide los cambios en commits atómicos.${NC}\n" "$commit" "$(printf "%s " "${!roots[@]}")"
+    local has_scripts=0
+    local has_tests=0
+    for root in "${roots_list[@]}"; do
+      [[ "$root" == "scripts" ]] && has_scripts=1
+      [[ "$root" == "tests" ]] && has_tests=1
+    done
+    
+    if [[ $has_scripts -eq 1 && $has_tests -eq 1 && $root_count -eq 2 ]]; then
+      printf "${GREEN}✅ Commit %s toca scripts + tests (permitido para bugfixes/features con tests).${NC}\n" "$commit"
+      return 0
+    fi
+    
+    printf "${RED}❌ Commit %s toca múltiples raíces (%s). Divide los cambios en commits atómicos.${NC}\n" "$commit" "$(printf "%s " "${roots_list[@]}")"
     return 1
   fi
   if (( root_count == 0 )); then
@@ -199,7 +230,7 @@ verify_atomic_commit() {
     return 0
   fi
   local root_name
-  for root_name in "${!roots[@]}"; do
+  for root_name in "${roots_list[@]}"; do
     printf "${GREEN}✅ Commit %s cumple atomicidad (raíz %s).${NC}\n" "$commit" "$root_name"
   done
   return 0
@@ -219,7 +250,11 @@ verify_pending_commits_atomic() {
     return $?
   fi
 
-  mapfile -t commits < <($GIT_BIN rev-list "${base_ref}..${branch}")
+  local commits=()
+  while IFS= read -r commit; do
+    [[ -z "$commit" ]] && continue
+    commits+=("$commit")
+  done < <($GIT_BIN rev-list "${base_ref}..${branch}")
   local failed=0
   for commit in "${commits[@]}"; do
     if ! verify_atomic_commit "$commit"; then
@@ -349,22 +384,50 @@ cmd_check() {
   local branch
   branch=$(current_branch)
   printf "${CYAN}📍 Rama actual: %s${NC}\n" "$branch"
-  ensure_evidence_fresh || true
-  lint_hooks_system || true
-  run_mobile_checks || true
+  local failed=0
+
+  if [[ "${STRICT_CHECK}" == "true" ]]; then
+    ensure_evidence_fresh || failed=1
+    lint_hooks_system || failed=1
+    run_mobile_checks || failed=1
+  else
+    ensure_evidence_fresh || true
+    lint_hooks_system || true
+    run_mobile_checks || true
+  fi
   print_sync_table
   print_cleanup_candidates
-  verify_atomic_commit "HEAD" || true
-  if [[ "$REQUIRE_TEST_RELATIONS" == "true" ]]; then
-    verify_related_files_commit "HEAD" || true
+  if [[ "${STRICT_CHECK}" == "true" ]]; then
+    verify_atomic_commit "HEAD" || failed=1
+    if [[ "$REQUIRE_TEST_RELATIONS" == "true" ]]; then
+      verify_related_files_commit "HEAD" || failed=1
+    fi
+    if ! verify_pending_commits_atomic "$branch"; then
+      failed=1
+    fi
+    if [[ "$REQUIRE_TEST_RELATIONS" == "true" ]]; then
+      if ! verify_pending_commits_related "$branch"; then
+        failed=1
+      fi
+    fi
+  else
+    verify_atomic_commit "HEAD" || true
+    if [[ "$REQUIRE_TEST_RELATIONS" == "true" ]]; then
+      verify_related_files_commit "HEAD" || true
+    fi
   fi
   local pending
   pending=$(unpushed_commits "$branch")
   if [[ "$pending" != "0" ]]; then
     printf "${YELLOW}⚠️  Commits sin subir (${pending}). Ejecuta git push.${NC}\n"
+    if [[ "${STRICT_CHECK}" == "true" ]]; then
+      failed=1
+    fi
   else
     printf "${GREEN}✅ No hay commits pendientes de push.${NC}\n"
   fi
+
+  return $failed
 }
 
 cmd_cycle() {
@@ -518,8 +581,6 @@ main() {
   esac
 }
 
-main "$@"
-
 is_test_file() {
   local file="$1"
   case "$file" in
@@ -620,10 +681,15 @@ verify_pending_commits_related() {
   local base_ref="origin/${branch}"
 
   if ! $GIT_BIN show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
-    return verify_related_files_commit "HEAD"
+    verify_related_files_commit "HEAD"
+    return $?
   fi
 
-  mapfile -t commits < <($GIT_BIN rev-list "${base_ref}..${branch}")
+  local commits=()
+  while IFS= read -r commit; do
+    [[ -z "$commit" ]] && continue
+    commits+=("$commit")
+  done < <($GIT_BIN rev-list "${base_ref}..${branch}")
   local failed=0
   local commit
   for commit in "${commits[@]}"; do
@@ -633,3 +699,5 @@ verify_pending_commits_related() {
   done
   return $failed
 }
+
+main "$@"
