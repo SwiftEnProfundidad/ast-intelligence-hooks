@@ -975,19 +975,31 @@ async function aiGateCheck() {
             if (contextDecision && contextDecision.platforms) {
                 detectedPlatforms = contextDecision.platforms.map(p => p.platform || p);
             }
-            if (detectedPlatforms.length > 0) {
-                const rulesData = await loadPlatformRules(detectedPlatforms);
-                mandatoryRules = {
-                    platforms: detectedPlatforms,
-                    criticalRules: rulesData.criticalRules,
-                    rulesLoaded: Object.keys(rulesData.rules),
-                    warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification'
-                };
-            }
+            const fallbackPlatforms = ['backend', 'frontend', 'ios', 'android'];
+            const platformsForRules = (detectedPlatforms.length > 0 ? detectedPlatforms : fallbackPlatforms)
+                .filter(Boolean);
+            const normalizedPlatforms = Array.from(new Set(platformsForRules));
+            const rulesData = await loadPlatformRules(normalizedPlatforms);
+            mandatoryRules = {
+                platforms: normalizedPlatforms,
+                criticalRules: rulesData.criticalRules,
+                rulesLoaded: Object.keys(rulesData.rules),
+                warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification'
+            };
         } catch (error) {
             if (process.env.DEBUG) {
                 process.stderr.write(`[MCP] Failed to load mandatory rules: ${error.message}\n`);
             }
+
+            const fallbackPlatforms = ['backend', 'frontend', 'ios', 'android'];
+            const normalizedPlatforms = Array.from(new Set((detectedPlatforms.length > 0 ? detectedPlatforms : fallbackPlatforms).filter(Boolean)));
+            mandatoryRules = {
+                platforms: normalizedPlatforms,
+                criticalRules: [],
+                rulesLoaded: [],
+                warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification',
+                error: `Failed to load rules content: ${error && error.message ? error.message : String(error)}`
+            };
         }
 
         return {
