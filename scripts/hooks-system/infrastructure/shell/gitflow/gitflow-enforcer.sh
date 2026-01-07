@@ -175,7 +175,8 @@ verify_atomic_commit() {
     return 0
   fi
 
-  declare -A roots=()
+  local roots_list=""
+  local root_count=0
   for file in "${files[@]}"; do
     local root="${file%%/*}"
     if [[ "$root" == "$file" ]]; then
@@ -189,12 +190,15 @@ verify_atomic_commit() {
         root="(root)"
         ;;
     esac
-    roots["$root"]=1
+
+    if [[ " $roots_list " != *" $root "* ]]; then
+      roots_list="${roots_list}${root} "
+      root_count=$((root_count + 1))
+    fi
   done
 
-  local root_count=${#roots[@]}
   if (( root_count > 1 )); then
-    printf "${RED}❌ Commit %s toca múltiples raíces (%s). Divide los cambios en commits atómicos.${NC}\n" "$commit" "$(printf "%s " "${!roots[@]}")"
+    printf "${RED}❌ Commit %s toca múltiples raíces (%s). Divide los cambios en commits atómicos.${NC}\n" "$commit" "$roots_list"
     return 1
   fi
   if (( root_count == 0 )); then
@@ -202,7 +206,7 @@ verify_atomic_commit() {
     return 0
   fi
   local root_name
-  for root_name in "${!roots[@]}"; do
+  for root_name in $roots_list; do
     printf "${GREEN}✅ Commit %s cumple atomicidad (raíz %s).${NC}\n" "$commit" "$root_name"
   done
   return 0
@@ -523,9 +527,6 @@ main() {
       ;;
   esac
 }
-
-main "$@"
-
 is_test_file() {
   local file="$1"
   case "$file" in
@@ -629,7 +630,10 @@ verify_pending_commits_related() {
     return verify_related_files_commit "HEAD"
   fi
 
-  mapfile -t commits < <($GIT_BIN rev-list "${base_ref}..${branch}")
+  local -a commits=()
+  while IFS= read -r commit; do
+    [[ -n "$commit" ]] && commits+=("$commit")
+  done < <($GIT_BIN rev-list "${base_ref}..${branch}")
   local failed=0
   local commit
   for commit in "${commits[@]}"; do
@@ -639,3 +643,5 @@ verify_pending_commits_related() {
   done
   return $failed
 }
+
+main "$@"
