@@ -1034,6 +1034,13 @@ async function aiGateCheck() {
         violations: ['❌ GATE_TIMEOUT: AI gate check timed out. Retry or run ai-start manually.'],
         warnings: [],
         autoFixes: [],
+        mandatory_rules: {
+            platforms: ['backend', 'frontend', 'ios', 'android'],
+            criticalRules: [],
+            rulesLoaded: [],
+            warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification',
+            error: 'Rules could not be loaded due to timeout'
+        },
         summary: '🚫 BLOCKED: Gate check timed out.',
         instructions: 'DO NOT proceed with user task. Retry the gate check.'
     };
