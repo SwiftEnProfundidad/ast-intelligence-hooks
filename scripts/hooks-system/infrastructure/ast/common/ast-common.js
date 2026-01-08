@@ -145,27 +145,30 @@ function runCommonIntelligence(project, findings) {
       }
     });
 
-    sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((clause) => {
-      const block = typeof clause.getBlock === 'function' ? clause.getBlock() : null;
-      const statements = block && typeof block.getStatements === 'function' ? block.getStatements() : [];
+    // Skip Swift files - they should only be analyzed by iOS-specific detectors
+    if (!/\.swift$/i.test(filePath)) {
+      sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((clause) => {
+        const block = typeof clause.getBlock === 'function' ? clause.getBlock() : null;
+        const statements = block && typeof block.getStatements === 'function' ? block.getStatements() : [];
 
-      if ((statements || []).length === 0) {
-        const blockText = block ? block.getText() : '';
-        const hasTestAssertions = /XCTFail|XCTAssert|guard\s+case|expect\(|assert/i.test(blockText);
-        const hasErrorHandling = /throw|console\.|logger\.|log\(|print\(/i.test(blockText);
+        if ((statements || []).length === 0) {
+          const blockText = block ? block.getText() : '';
+          const hasTestAssertions = /XCTFail|XCTAssert|guard\s+case|expect\(|assert/i.test(blockText);
+          const hasErrorHandling = /throw|console\.|logger\.|log\(|print\(/i.test(blockText);
 
-        if (!hasTestAssertions && !hasErrorHandling) {
-          pushFinding(
-            'common.error.empty_catch',
-            'critical',
-            sf,
-            clause,
-            'Empty catch block detected - always handle errors (log, rethrow, wrap, or return Result)',
-            findings
-          );
+          if (!hasTestAssertions && !hasErrorHandling) {
+            pushFinding(
+              'common.error.empty_catch',
+              'critical',
+              sf,
+              clause,
+              'Empty catch block detected - always handle errors (log, rethrow, wrap, or return Result)',
+              findings
+            );
+          }
         }
-      }
-    });
+      });
+    }
 
     sf.getDescendantsOfKind(SyntaxKind.AnyKeyword).forEach((node) => {
 
