@@ -967,7 +967,6 @@ async function aiGateCheck() {
             }
         }
 
-        let mandatoryRules = null;
         let detectedPlatforms = [];
         try {
             const orchestrator = getCompositionRoot().getOrchestrator();
@@ -975,19 +974,48 @@ async function aiGateCheck() {
             if (contextDecision && contextDecision.platforms) {
                 detectedPlatforms = contextDecision.platforms.map(p => p.platform || p);
             }
-            if (detectedPlatforms.length > 0) {
-                const rulesData = await loadPlatformRules(detectedPlatforms);
-                mandatoryRules = {
-                    platforms: detectedPlatforms,
-                    criticalRules: rulesData.criticalRules,
-                    rulesLoaded: Object.keys(rulesData.rules),
-                    warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification'
-                };
-            }
-        } catch (error) {
+        } catch (err) {
             if (process.env.DEBUG) {
-                process.stderr.write(`[MCP] Failed to load mandatory rules: ${error.message}\n`);
+                process.stderr.write(`[MCP] analyzeContext failed, using fallback: ${err.message}\n`);
             }
+        }
+
+        if (detectedPlatforms.length === 0) {
+            try {
+                const PlatformDetectionService = require('../../application/services/PlatformDetectionService');
+                const detector = new PlatformDetectionService();
+                detectedPlatforms = await detector.detectPlatforms(REPO_ROOT);
+            } catch (err) {
+                if (process.env.DEBUG) {
+                    process.stderr.write(`[MCP] PlatformDetectionService failed: ${err.message}\n`);
+                }
+            }
+        }
+
+        const platformsToLoad = detectedPlatforms.length > 0
+            ? detectedPlatforms.map(p => String(p).toLowerCase())
+            : ['backend', 'frontend', 'ios', 'android'];
+
+        let mandatoryRules = null;
+        try {
+            const rulesData = await loadPlatformRules(platformsToLoad);
+            mandatoryRules = {
+                platforms: platformsToLoad,
+                criticalRules: rulesData.criticalRules || [],
+                rulesLoaded: Object.keys(rulesData.rules || {}),
+                warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification'
+            };
+        } catch (err) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] loadPlatformRules failed: ${err.message}\n`);
+            }
+            mandatoryRules = {
+                platforms: platformsToLoad,
+                criticalRules: [],
+                rulesLoaded: [],
+                warning: '⚠️ Rules loading failed but AI MUST still follow project conventions',
+                error: err.message
+            };
         }
 
         return {

@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **AST rule**: `common.error.empty_catch` (CRITICAL) para detectar `catch` vacíos.
 
+## [5.5.51] - 2026-01-07
+
+### Fixed
+- **MCP ai_gate_check**: `mandatory_rules` ya no puede ser `null`.
+  - Si `analyzeContext()` falla o no detecta plataformas, se usa fallback con `PlatformDetectionService`.
+  - Si aun así no se detecta nada, se fuerza fallback determinista: `backend`, `frontend`, `ios`, `android`.
+  - Si la carga de reglas falla, se devuelve un objeto `mandatory_rules` con `criticalRules: []` y `error`.
+
 ## [5.5.45] - 2026-01-05
 
 ### Added
