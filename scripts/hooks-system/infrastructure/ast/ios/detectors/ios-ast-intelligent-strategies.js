@@ -153,7 +153,7 @@ function analyzeClassAST(analyzer, node, filePath) {
         return true;
     });
 
-    if (name && !/Spec$|Test$|Mock/.test(name)) {
+    if (name && !/Spec$|Test$|Mock/.test(name) && !name.includes('Coordinator')) {
         const complexity = calculateComplexityAST(substructure);
         analyzer.godClassCandidates.push({
             name,
