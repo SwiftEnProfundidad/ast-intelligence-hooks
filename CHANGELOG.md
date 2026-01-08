@@ -25,6 +25,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - **common.error.empty_catch detector improvements**: Enhanced detector to recognize test assertions (XCTFail, XCTAssert, guard case, expect, assert) and error handling patterns (throw, console, logger, log, print) as valid error handling, reducing false positives.
 
+## [5.5.53] - 2026-01-07
+
+### Fixed
+- **AI Gate stability**: `ai_gate_check` reliably loads and verifies critical rules (includes `proofOfRead`, `totalRulesCount`, `rulesSample`)
+- **AutonomousOrchestrator**: Restored missing wrappers (`detectFromBranchKeywords`, `detectFromEvidenceFile`, `scoreConfidence`) to prevent rule-loading regressions
+- **MCP duplication resilience**: Operational guidance to avoid running multiple `ast-intelligence-automation` servers across repos (prevents stale branches and inconsistent gate output)
+
+### Changed
+- **Summary includes rule count**: `🚦 ALLOWED: Gate passed. 225 critical rules loaded and verified.`
+
 ## [5.5.51] - 2026-01-07
 
 ### Fixed
@@ -35,7 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - **AI Gate enforces rule loading**: Gate now **BLOCKS** if critical platform rules cannot be loaded (not just warning)
 - **Proof of read**: Gate output includes `proofOfRead`, `totalRulesCount`, and `rulesSample` to demonstrate rules were actually loaded and processed
-- **Summary includes rule count**: `🚦 ALLOWED: Gate passed. 47 critical rules loaded and verified.`
+- **Summary includes rule count**: `🚦 ALLOWED: Gate passed. 225 critical rules loaded and verified.`
 
 ### Added
 - **CQRS rule**: Added Command Query Responsibility Segregation rule to iOS, Android, Backend, and Frontend platforms
