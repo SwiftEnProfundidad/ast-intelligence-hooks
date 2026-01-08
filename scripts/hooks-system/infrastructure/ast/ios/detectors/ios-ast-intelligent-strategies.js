@@ -232,15 +232,19 @@ function analyzeClassAST(analyzer, node, filePath) {
         analyzer.pushFinding('ios.naming.god_naming', 'medium', filePath, line, `Suspicious class name '${name}' - often indicates SRP violation`);
     }
 
-    const unusedProps = findUnusedPropertiesAST(analyzer, properties, methods);
-    for (const prop of unusedProps) {
-        analyzer.pushFinding(
-            'ios.solid.isp.unused_dependency',
-            'high',
-            filePath,
-            line,
-            `Unused property '${prop}' in '${name}' - ISP violation`
-        );
+    // Skip ISP validation for test files - spies/mocks are allowed to have unused properties
+    const isTestFile = /Tests?\/|Spec|Mock|Spy|Stub|Fake|Dummy/.test(filePath);
+    if (!isTestFile) {
+        const unusedProps = findUnusedPropertiesAST(analyzer, properties, methods);
+        for (const prop of unusedProps) {
+            analyzer.pushFinding(
+                'ios.solid.isp.unused_dependency',
+                'high',
+                filePath,
+                line,
+                `Unused property '${prop}' in '${name}' - ISP violation`
+            );
+        }
     }
 
     checkDependencyInjectionAST(analyzer, properties, filePath, name, line);
@@ -655,6 +659,17 @@ function checkDependencyInjectionAST(analyzer, properties, filePath, className, 
         const typename = prop['key.typename'] || '';
 
         if (['String', 'Int', 'Bool', 'Double', 'Float', 'Date', 'URL', 'Data'].includes(typename)) {
+            continue;
+        }
+
+        // Skip generic type parameters (e.g., "Client" in LoginUseCaseImpl<Client: APIClientProtocol>)
+        // These are not concrete dependencies - they are constrained by protocols
+        const propName = prop['key.name'] || '';
+        const isGenericTypeParameter = typename.length === 1 ||
+            (typename.match(/^[A-Z][a-z]*$/) && !typename.includes('Impl') &&
+                (className.includes('<') || propName === 'apiClient' || propName === 'client'));
+
+        if (isGenericTypeParameter) {
             continue;
         }
 
