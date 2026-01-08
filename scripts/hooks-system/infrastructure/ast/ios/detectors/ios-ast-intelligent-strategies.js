@@ -233,10 +233,15 @@ function analyzeClassAST(analyzer, node, filePath) {
     }
 
     // Skip ISP validation for test files - spies/mocks are allowed to have unused properties
+<<<<<<< HEAD
     // Also skip ObservableObject classes - their @Published properties are inherently observed externally
     const isTestFile = /Tests?\/|Spec|Mock|Spy|Stub|Fake|Dummy/.test(filePath);
     const isObservableObject = inheritedTypes.some((t) => t['key.name'] === 'ObservableObject');
     if (!isTestFile && !isObservableObject) {
+=======
+    const isTestFile = /Tests?\/|Spec|Mock|Spy|Stub|Fake|Dummy/.test(filePath);
+    if (!isTestFile) {
+>>>>>>> origin/main
         const unusedProps = findUnusedPropertiesAST(analyzer, properties, methods);
         for (const prop of unusedProps) {
             analyzer.pushFinding(
