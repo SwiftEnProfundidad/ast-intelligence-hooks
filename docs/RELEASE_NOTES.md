@@ -52,9 +52,9 @@ npm run ast:guard:restart
 
 ---
 
-# Release Notes - v5.5.51
+# Release Notes - v5.5.52
 
-**Release Date**: January 7, 2026
+**Release Date**: January 8, 2026
 **Type**: Patch Release
 **Compatibility**: Fully backward compatible with 5.5.x
 
@@ -80,7 +80,7 @@ npm run ast:guard:restart
 ## 📦 Installation / Upgrade
 
 ```bash
-npm install --save-dev pumuki-ast-hooks@5.5.51
+npm install --save-dev pumuki-ast-hooks@5.5.52
 npm run install-hooks
 ```
 
