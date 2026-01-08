@@ -5,6 +5,26 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.58] - 2026-01-08
+
+### Fixed
+- **ISP detector excludes test files**: Test spies/mocks are now excluded from ISP unused_dependency detection. Test doubles are allowed to have unused properties as they implement complete protocols for testing purposes.
+
+## [5.5.57] - 2026-01-08
+
+### Fixed
+- **DIP detector recognizes generic type parameters with protocol constraints**: Generic type parameters (e.g., `<Client: APIClientProtocol>`) are no longer incorrectly flagged as concrete dependencies. Generics constrained by protocols are architecturally correct according to DIP.
+
+## [5.5.56] - 2026-01-08
+
+### Fixed
+- **Swift files excluded from common.error.empty_catch detector**: Swift files are now only analyzed by iOS-specific detectors using SourceKitten. TypeScript AST parser cannot correctly parse Swift catch blocks, causing false positives in test files with XCTFail/guard case patterns.
+
+## [5.5.55] - 2026-01-08
+
+### Fixed
+- **common.error.empty_catch detector improvements**: Enhanced detector to recognize test assertions (XCTFail, XCTAssert, guard case, expect, assert) and error handling patterns (throw, console, logger, log, print) as valid error handling, reducing false positives.
+
 ## [5.5.51] - 2026-01-07
 
 ### Fixed
