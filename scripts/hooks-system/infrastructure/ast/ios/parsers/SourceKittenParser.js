@@ -1,12 +1,10 @@
 
 
-const { exec } = require('child_process');
-const util = require('util');
 const fs = require('fs').promises;
 const path = require('path');
 const { DomainError } = require('../../../../domain/errors');
-
-const execPromise = util.promisify(exec);
+const SourceKittenRunner = require('./SourceKittenRunner');
+const SourceKittenExtractor = require('./SourceKittenExtractor');
 
 /**
  * SourceKittenParser
@@ -17,9 +15,11 @@ const execPromise = util.promisify(exec);
  * @see https://github.com/jpsim/SourceKitten
  */
 class SourceKittenParser {
-  constructor() {
-    this.sourceKittenPath = '/opt/homebrew/bin/sourcekitten';
-    this.timeout = 30000;
+  constructor({ runner = null, timeout = 30000 } = {}) {
+    this.runner = runner || new SourceKittenRunner({ defaultTimeoutMs: timeout });
+    this.sourceKittenPath = this.runner.binaryPath;
+    this.timeout = timeout;
+    this.extractor = new SourceKittenExtractor();
   }
 
   /**
@@ -28,10 +28,8 @@ class SourceKittenParser {
    */
   async isInstalled() {
     try {
-      const { stdout } = await execPromise(`${this.sourceKittenPath} version`, {
-        timeout: 5000,
-      });
-      return stdout.includes('SourceKitten');
+      const { stdout } = await this.runner.version();
+      return Boolean(stdout) && stdout.includes('SourceKitten');
     } catch (error) {
       console.error('[SourceKitten] Not installed. Run: brew install sourcekitten');
       return false;
@@ -49,16 +47,13 @@ class SourceKittenParser {
 
       await fs.access(absolutePath);
 
-      const { stdout, stderr } = await execPromise(
-        `${this.sourceKittenPath} structure --file "${absolutePath}"`,
-        { timeout: this.timeout }
-      );
+      const { stdout, stderr } = await this.runner.structure(absolutePath);
 
       if (stderr && stderr.includes('error')) {
         throw new DomainError(`SourceKitten parse error: ${stderr}`, 'PARSE_ERROR');
       }
 
-      const ast = JSON.parse(stdout);
+      const ast = stdout;
 
       return {
         filePath: absolutePath,
@@ -89,18 +84,14 @@ class SourceKittenParser {
   async parseProject(projectPath, moduleName, scheme) {
     try {
       const isWorkspace = projectPath.endsWith('.xcworkspace');
-      const projectFlag = isWorkspace ? '-workspace' : '-project';
 
-      const { stdout, stderr } = await execPromise(
-        `${this.sourceKittenPath} doc ${projectFlag} "${projectPath}" -scheme "${scheme}"`,
-        { timeout: 120000 }
-      );
+      const { stdout, stderr } = await this.runner.projectDoc(projectPath, scheme, isWorkspace);
 
       if (stderr && stderr.includes('error')) {
         throw new DomainError(`SourceKitten project parse error: ${stderr}`, 'PARSE_ERROR');
       }
 
-      const projectAST = JSON.parse(stdout);
+      const projectAST = stdout;
 
       return {
         projectPath,
@@ -132,12 +123,8 @@ class SourceKittenParser {
     try {
       const absolutePath = path.resolve(filePath);
 
-      const { stdout } = await execPromise(
-        `${this.sourceKittenPath} syntax --file "${absolutePath}"`,
-        { timeout: this.timeout }
-      );
-
-      const syntaxMap = JSON.parse(stdout);
+      const { stdout } = await this.runner.syntax(absolutePath);
+      const syntaxMap = stdout;
 
       return {
         filePath: absolutePath,
@@ -175,33 +162,7 @@ class SourceKittenParser {
    * @returns {ClassNode[]}
    */
   extractClasses(ast) {
-    const classes = [];
-
-    const traverse = (nodes) => {
-      if (!Array.isArray(nodes)) return;
-
-      nodes.forEach(node => {
-        const kind = node['key.kind'];
-
-        if (kind === 'source.lang.swift.decl.class') {
-          classes.push({
-            name: node['key.name'],
-            line: node['key.line'],
-            column: node['key.column'],
-            accessibility: node['key.accessibility'],
-            inheritedTypes: node['key.inheritedtypes'] || [],
-            substructure: node['key.substructure'] || [],
-          });
-        }
-
-        if (node['key.substructure']) {
-          traverse(node['key.substructure']);
-        }
-      });
-    };
-
-    traverse(ast.substructure);
-    return classes;
+    return this.extractor.extractClasses(ast);
   }
 
   /**
@@ -210,39 +171,7 @@ class SourceKittenParser {
    * @returns {FunctionNode[]}
    */
   extractFunctions(ast) {
-    const functions = [];
-
-    const traverse = (nodes) => {
-      if (!Array.isArray(nodes)) return;
-
-      nodes.forEach(node => {
-        const kind = node['key.kind'];
-
-        if (kind === 'source.lang.swift.decl.function.method.instance' ||
-          kind === 'source.lang.swift.decl.function.method.class' ||
-          kind === 'source.lang.swift.decl.function.method.static' ||
-          kind === 'source.lang.swift.decl.function.free') {
-
-          functions.push({
-            name: node['key.name'],
-            line: node['key.line'],
-            column: node['key.column'],
-            kind,
-            accessibility: node['key.accessibility'],
-            typename: node['key.typename'],
-            length: node['key.length'],
-            bodyLength: node['key.bodylength'],
-          });
-        }
-
-        if (node['key.substructure']) {
-          traverse(node['key.substructure']);
-        }
-      });
-    };
-
-    traverse(ast.substructure);
-    return functions;
+    return this.extractor.extractFunctions(ast);
   }
 
   /**
@@ -251,36 +180,7 @@ class SourceKittenParser {
    * @returns {PropertyNode[]}
    */
   extractProperties(ast) {
-    const properties = [];
-
-    const traverse = (nodes) => {
-      if (!Array.isArray(nodes)) return;
-
-      nodes.forEach(node => {
-        const kind = node['key.kind'];
-
-        if (kind === 'source.lang.swift.decl.var.instance' ||
-          kind === 'source.lang.swift.decl.var.class' ||
-          kind === 'source.lang.swift.decl.var.static') {
-
-          properties.push({
-            name: node['key.name'],
-            line: node['key.line'],
-            column: node['key.column'],
-            kind,
-            typename: node['key.typename'],
-            accessibility: node['key.accessibility'],
-          });
-        }
-
-        if (node['key.substructure']) {
-          traverse(node['key.substructure']);
-        }
-      });
-    };
-
-    traverse(ast.substructure);
-    return properties;
+    return this.extractor.extractProperties(ast);
   }
 
   /**
@@ -289,33 +189,7 @@ class SourceKittenParser {
    * @returns {ProtocolNode[]}
    */
   extractProtocols(ast) {
-    const protocols = [];
-
-    const traverse = (nodes) => {
-      if (!Array.isArray(nodes)) return;
-
-      nodes.forEach(node => {
-        const kind = node['key.kind'];
-
-        if (kind === 'source.lang.swift.decl.protocol') {
-          protocols.push({
-            name: node['key.name'],
-            line: node['key.line'],
-            column: node['key.column'],
-            accessibility: node['key.accessibility'],
-            inheritedTypes: node['key.inheritedtypes'] || [],
-            substructure: node['key.substructure'] || [],
-          });
-        }
-
-        if (node['key.substructure']) {
-          traverse(node['key.substructure']);
-        }
-      });
-    };
-
-    traverse(ast.substructure);
-    return protocols;
+    return this.extractor.extractProtocols(ast);
   }
 
   /**
@@ -324,19 +198,7 @@ class SourceKittenParser {
    * @returns {boolean}
    */
   usesSwiftUI(ast) {
-    const hasViewProtocol = (nodes) => {
-      if (!Array.isArray(nodes)) return false;
-
-      return nodes.some(node => {
-        const inheritedTypes = node['key.inheritedtypes'] || [];
-        if (inheritedTypes.some(t => t['key.name'] === 'View')) {
-          return true;
-        }
-        return hasViewProtocol(node['key.substructure'] || []);
-      });
-    };
-
-    return hasViewProtocol(ast.substructure);
+    return this.extractor.usesSwiftUI(ast);
   }
 
   /**
@@ -345,22 +207,7 @@ class SourceKittenParser {
    * @returns {boolean}
    */
   usesUIKit(ast) {
-    const hasUIKitBase = (nodes) => {
-      if (!Array.isArray(nodes)) return false;
-
-      return nodes.some(node => {
-        const inheritedTypes = node['key.inheritedtypes'] || [];
-        if (inheritedTypes.some(t =>
-          t['key.name'] === 'UIViewController' ||
-          t['key.name'] === 'UIView'
-        )) {
-          return true;
-        }
-        return hasUIKitBase(node['key.substructure'] || []);
-      });
-    };
-
-    return hasUIKitBase(ast.substructure);
+    return this.extractor.usesUIKit(ast);
   }
 
   /**
@@ -370,22 +217,7 @@ class SourceKittenParser {
    * @returns {ForceUnwrap[]}
    */
   detectForceUnwraps(syntaxMap, fileContent) {
-    const forceUnwraps = [];
-    const lines = fileContent.split('\n');
-
-    lines.forEach((line, index) => {
-      const matches = [...line.matchAll(/(\w+)\s*!/g)];
-      matches.forEach(match => {
-        forceUnwraps.push({
-          line: index + 1,
-          column: match.index + 1,
-          variable: match[1],
-          context: line.trim(),
-        });
-      });
-    });
-
-    return forceUnwraps;
+    return this.extractor.detectForceUnwraps(syntaxMap, fileContent);
   }
 }
 

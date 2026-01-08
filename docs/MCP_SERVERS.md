@@ -426,11 +426,25 @@ Checks if there are violations blocking work and returns `BLOCKED` or `ALLOWED`.
 ```json
 {
   "status": "ALLOWED|BLOCKED",
-  "message": "All checks passed",
+  "timestamp": "2026-01-07T22:19:30.363Z",
+  "branch": "feature/my-task",
   "violations": [],
-  "blockingReason": null
+  "warnings": [],
+  "autoFixes": [],
+  "mandatory_rules": {
+    "platforms": ["backend", "frontend", "ios", "android"],
+    "criticalRules": [],
+    "rulesLoaded": ["gold"],
+    "warning": "⚠️ AI MUST read and follow these rules before ANY code generation or modification"
+  },
+  "summary": "🚦 ALLOWED: Gate passed.",
+  "instructions": "You may proceed with user task. CRITICAL: Review mandatory_rules.criticalRules BEFORE generating ANY code."
 }
 ```
+
+**Guarantee:** `mandatory_rules` is always returned (never `null`).
+- If context/platform detection fails, it falls back to `['backend','frontend','ios','android']`.
+- If rules loading fails, it returns an object with `criticalRules: []` and an `error` field instead of `null`.
 
 **When it returns `BLOCKED`:**
 - There are CRITICAL or HIGH violations
