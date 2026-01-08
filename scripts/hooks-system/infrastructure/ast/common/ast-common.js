@@ -281,6 +281,11 @@ function runCommonIntelligence(project, findings) {
 
     const full = sf.getFullText();
     const isSpecFile = /\.(spec|test)\.(ts|tsx|js|jsx)$/.test(filePath);
+    const isSwiftFile = /\.swift$/i.test(filePath);
+
+    // Skip secret detection for Swift struct/class properties - they're not hardcoded secrets
+    if (isSwiftFile) return;
+
     const secretPattern = /(PASSWORD|TOKEN|SECRET|API_KEY)\s*[:=]\s*['"]([^'"]{8,})['"]/gi;
     const matches = Array.from(full.matchAll(secretPattern));
 

@@ -5,6 +5,12 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [5.5.59] - 2026-01-08
+
+### Fixed
+- **Secret detector excludes Swift files**: Swift struct/class properties are no longer flagged as hardcoded secrets. The detector was incorrectly identifying `password` properties in DTOs as secrets.
+- **God Class detector excludes Coordinators**: Navigation Coordinators are now excluded from God Class detection. Coordinators are orchestration classes, not business logic classes.
+
 ## [5.5.58] - 2026-01-08
 
 ### Fixed
