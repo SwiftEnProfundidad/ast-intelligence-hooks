@@ -658,6 +658,17 @@ function checkDependencyInjectionAST(analyzer, properties, filePath, className, 
             continue;
         }
 
+        // Skip generic type parameters (e.g., "Client" in LoginUseCaseImpl<Client: APIClientProtocol>)
+        // These are not concrete dependencies - they are constrained by protocols
+        const propName = prop['key.name'] || '';
+        const isGenericTypeParameter = typename.length === 1 ||
+            (typename.match(/^[A-Z][a-z]*$/) && !typename.includes('Impl') &&
+                (className.includes('<') || propName === 'apiClient' || propName === 'client'));
+
+        if (isGenericTypeParameter) {
+            continue;
+        }
+
         const isConcreteService = /Service$|Repository$|UseCase$|Client$/.test(typename) && !typename.includes('Protocol') && !typename.includes('any ') && !typename.includes('some ');
 
         if (isConcreteService) {
