@@ -595,15 +595,32 @@ function findUnusedPropertiesAST(analyzer, properties, methods) {
             continue;
         }
 
-        let usageCount = 0;
+        const typeName = String(prop['key.typename'] || '');
+        const isReactiveType =
+            typeName.includes('Publisher') ||
+            typeName.includes('AnyPublisher') ||
+            typeName.includes('Subject') ||
+            typeName.includes('PassthroughSubject') ||
+            typeName.includes('CurrentValueSubject') ||
+            typeName.includes('Published<');
+
+        if (isReactiveType) {
+            continue;
+        }
+
+        const escapedPropName = String(propName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const usagePattern = new RegExp(`(^|[^A-Za-z0-9_])\\$?${escapedPropName}([^A-Za-z0-9_]|$)`);
+
+        let isUsed = false;
         for (const method of methods) {
             const methodText = analyzer.safeStringify(method);
-            if (methodText.includes(`"${propName}"`)) {
-                usageCount++;
+            if (usagePattern.test(methodText)) {
+                isUsed = true;
+                break;
             }
         }
 
-        if (usageCount === 0) {
+        if (!isUsed) {
             unused.push(propName);
         }
     }
