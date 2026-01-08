@@ -4,7 +4,7 @@ description: instructions
 ---
 Continúa y decide tú como arquitecto senior de soluciones, ya que ese es tu rol y actuando como tal, qué opción es la mejor para el proyecto, la más robusta, modularizable, escalable, mantenible y testable.
 
-Sigue estrictamente mis reglas:  /rulesbackend , /rulesfront , /rulesios , /rulesandroid   y el ciclo de git flow, no son negociables, siempre tienes que adherirte a ellas sin excepciones.
+Sigue estrictamente mis reglas:  @rulesbackend , @rulesfront , @rulesios , @rulesandroid y el ciclo de git flow, no son negociables, siempre tienes que adherirte a ellas sin excepciones,no son negociables.
 
 Aplica siempre:
 ✅ **Comprobar que compile ANTES de sugerir cualquier cambio o implementación**
