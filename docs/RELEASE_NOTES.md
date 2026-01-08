@@ -52,6 +52,40 @@ npm run ast:guard:restart
 
 ---
 
+# Release Notes - v5.5.51
+
+**Release Date**: January 7, 2026
+**Type**: Patch Release
+**Compatibility**: Fully backward compatible with 5.5.x
+
+---
+
+## 🚦 MCP AI Gate: mandatory_rules always present
+
+### Problem
+`ai_gate_check` could return `mandatory_rules: null` when context/platform detection failed, forcing manual rule loading.
+
+### Solution
+`ai_gate_check` now guarantees `mandatory_rules` is always returned:
+- Fallback to `PlatformDetectionService` when `analyzeContext()` fails or returns no platforms.
+- Deterministic fallback to `backend`, `frontend`, `ios`, `android` when detection is inconclusive.
+- If rule loading fails, returns a non-null object with `criticalRules: []` and an `error` field.
+
+### Impact
+- The AI can reliably read and apply rules on every iteration.
+- Removes a class of regressions caused by missing rule payload in MCP responses.
+
+---
+
+## 📦 Installation / Upgrade
+
+```bash
+npm install --save-dev pumuki-ast-hooks@5.5.51
+npm run install-hooks
+```
+
+---
+
 # Release Notes - v5.5.24
 
 **Release Date**: January 4, 2026

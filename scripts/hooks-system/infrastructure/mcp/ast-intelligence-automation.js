@@ -967,7 +967,6 @@ async function aiGateCheck() {
             }
         }
 
-        let mandatoryRules = null;
         let detectedPlatforms = [];
         try {
             const orchestrator = getCompositionRoot().getOrchestrator();
@@ -975,10 +974,31 @@ async function aiGateCheck() {
             if (contextDecision && contextDecision.platforms) {
                 detectedPlatforms = contextDecision.platforms.map(p => p.platform || p);
             }
-            const fallbackPlatforms = ['backend', 'frontend', 'ios', 'android'];
-            const platformsForRules = (detectedPlatforms.length > 0 ? detectedPlatforms : fallbackPlatforms)
-                .filter(Boolean);
-            const normalizedPlatforms = Array.from(new Set(platformsForRules));
+        } catch (err) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] analyzeContext failed, using fallback: ${err.message}\n`);
+            }
+        }
+
+        if (detectedPlatforms.length === 0) {
+            try {
+                const PlatformDetectionService = require('../../application/services/PlatformDetectionService');
+                const detector = new PlatformDetectionService();
+                detectedPlatforms = await detector.detectPlatforms(REPO_ROOT);
+            } catch (err) {
+                if (process.env.DEBUG) {
+                    process.stderr.write(`[MCP] PlatformDetectionService failed: ${err.message}\n`);
+                }
+            }
+        }
+
+        const fallbackPlatforms = ['backend', 'frontend', 'ios', 'android'];
+        const platformsForRules = (detectedPlatforms.length > 0 ? detectedPlatforms : fallbackPlatforms)
+            .filter(Boolean);
+        const normalizedPlatforms = Array.from(new Set(platformsForRules));
+
+        let mandatoryRules = null;
+        try {
             const rulesData = await loadPlatformRules(normalizedPlatforms);
             const rulesSample = rulesData.criticalRules.slice(0, 5).map(r => r.rule || r);
             const rulesCount = rulesData.criticalRules.length;
@@ -987,16 +1007,14 @@ async function aiGateCheck() {
                 criticalRules: rulesData.criticalRules,
                 rulesLoaded: Object.keys(rulesData.rules),
                 totalRulesCount: rulesCount,
-                rulesSample: rulesSample,
+                rulesSample,
                 proofOfRead: `✅ VERIFIED: ${rulesCount} critical rules loaded from ${Object.keys(rulesData.rules).join(', ')}`
             };
         } catch (error) {
             if (process.env.DEBUG) {
-                process.stderr.write(`[MCP] Failed to load mandatory rules: ${error.message}\n`);
+                process.stderr.write(`[MCP] loadPlatformRules failed: ${error.message}\n`);
             }
 
-            const fallbackPlatforms = ['backend', 'frontend', 'ios', 'android'];
-            const normalizedPlatforms = Array.from(new Set((detectedPlatforms.length > 0 ? detectedPlatforms : fallbackPlatforms).filter(Boolean)));
             mandatoryRules = {
                 platforms: normalizedPlatforms,
                 criticalRules: [],
