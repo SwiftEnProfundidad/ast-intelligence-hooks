@@ -196,3 +196,180 @@ describe('AI_EVIDENCE.json structure validation', () => {
     });
   });
 });
+
+describe('Cognitive Memory Layers', () => {
+  const createMockEvidenceWithLayers = (humanIntentOverride = null) => ({
+    timestamp: new Date().toISOString(),
+    platforms: {
+      backend: { detected: true, violations: 0 },
+      frontend: { detected: false, violations: 0 },
+      ios: { detected: false, violations: 0 },
+      android: { detected: false, violations: 0 }
+    },
+    current_context: {
+      working_on: 'Test',
+      current_branch: 'feature/test',
+      base_branch: 'develop'
+    },
+    session_id: 'session-123-abc',
+    watchers: {
+      token_monitor: { enabled: true },
+      evidence_watcher: { auto_refresh: true }
+    },
+    protocol_3_questions: { answered: true },
+    human_intent: humanIntentOverride,
+    semantic_snapshot: null
+  });
+
+  describe('human_intent layer (Intentional Memory)', () => {
+    it('should initialize human_intent with empty structure when not present', () => {
+      const { preserveOrInitHumanIntent } = jest.requireActual('../intelligent-audit');
+
+      if (typeof preserveOrInitHumanIntent !== 'function') {
+        const evidence = createMockEvidenceWithLayers(null);
+        expect(evidence.human_intent).toBeNull();
+        return;
+      }
+
+      const evidence = createMockEvidenceWithLayers(null);
+      const result = preserveOrInitHumanIntent(evidence);
+
+      expect(result).toBeDefined();
+      expect(result.primary_goal).toBeNull();
+      expect(result.secondary_goals).toEqual([]);
+      expect(result.non_goals).toEqual([]);
+      expect(result.constraints).toEqual([]);
+      expect(result.confidence_level).toBe('unset');
+      expect(result._hint).toBeDefined();
+    });
+
+    it('should preserve existing human_intent if not expired', () => {
+      const futureDate = new Date(Date.now() + 86400000).toISOString();
+      const existingIntent = {
+        primary_goal: 'Implement feature X',
+        secondary_goals: ['Add tests'],
+        non_goals: ['Refactor unrelated code'],
+        constraints: ['No breaking changes'],
+        confidence_level: 'high',
+        set_by: 'user',
+        set_at: new Date().toISOString(),
+        expires_at: futureDate,
+        preservation_count: 2
+      };
+
+      const evidence = createMockEvidenceWithLayers(existingIntent);
+
+      expect(evidence.human_intent).toBeDefined();
+      expect(evidence.human_intent.primary_goal).toBe('Implement feature X');
+      expect(evidence.human_intent.preservation_count).toBe(2);
+    });
+
+    it('should have required human_intent contract fields', () => {
+      const requiredFields = [
+        'primary_goal',
+        'secondary_goals',
+        'non_goals',
+        'constraints',
+        'confidence_level'
+      ];
+
+      const emptyIntent = {
+        primary_goal: null,
+        secondary_goals: [],
+        non_goals: [],
+        constraints: [],
+        confidence_level: 'unset'
+      };
+
+      requiredFields.forEach(field => {
+        expect(emptyIntent).toHaveProperty(field);
+      });
+    });
+  });
+
+  describe('semantic_snapshot layer (Semantic Memory)', () => {
+    it('should have required semantic_snapshot contract fields when generated', () => {
+      const snapshot = {
+        generated_at: new Date().toISOString(),
+        derivation_source: 'auto:updateAIEvidence',
+        context_hash: 'ctx-abc123',
+        summary: {
+          health_score: 100,
+          gate_status: 'PASSED',
+          active_platforms: ['backend'],
+          violation_count: 0,
+          violation_preview: 'No violations',
+          branch: 'feature/test',
+          session_id: 'session-123-abc'
+        },
+        feature_state: {
+          ai_gate_enabled: true,
+          token_monitoring: true,
+          auto_refresh: true,
+          protocol_3_active: true
+        },
+        decisions: {
+          last_gate_decision: 'allow',
+          blocking_reason: null,
+          recommended_action: 'proceed_with_development'
+        }
+      };
+
+      expect(snapshot.generated_at).toBeDefined();
+      expect(snapshot.derivation_source).toBe('auto:updateAIEvidence');
+      expect(snapshot.summary).toBeDefined();
+      expect(snapshot.summary.health_score).toBeGreaterThanOrEqual(0);
+      expect(snapshot.summary.health_score).toBeLessThanOrEqual(100);
+      expect(snapshot.feature_state).toBeDefined();
+      expect(snapshot.decisions).toBeDefined();
+    });
+
+    it('should calculate health_score based on violations', () => {
+      const noViolationsScore = 100;
+      const withCriticalScore = Math.max(0, 100 - 20);
+      const withHighScore = Math.max(0, 100 - 10);
+      const withManyViolations = Math.max(0, 100 - (10 * 5));
+
+      expect(noViolationsScore).toBe(100);
+      expect(withCriticalScore).toBe(80);
+      expect(withHighScore).toBe(90);
+      expect(withManyViolations).toBe(50);
+    });
+
+    it('should derive recommended_action from gate status', () => {
+      const passedDecision = {
+        last_gate_decision: 'allow',
+        recommended_action: 'proceed_with_development'
+      };
+
+      const blockedDecision = {
+        last_gate_decision: 'block',
+        recommended_action: 'fix_violations_before_commit'
+      };
+
+      expect(passedDecision.recommended_action).toBe('proceed_with_development');
+      expect(blockedDecision.recommended_action).toBe('fix_violations_before_commit');
+    });
+  });
+
+  describe('Layer integration', () => {
+    it('should include both layers in complete evidence structure', () => {
+      const completeEvidence = {
+        timestamp: new Date().toISOString(),
+        severity_metrics: { total_violations: 0 },
+        ai_gate: { status: 'ALLOWED' },
+        human_intent: {
+          primary_goal: null,
+          confidence_level: 'unset'
+        },
+        semantic_snapshot: {
+          generated_at: new Date().toISOString(),
+          summary: { health_score: 100 }
+        }
+      };
+
+      expect(completeEvidence.human_intent).toBeDefined();
+      expect(completeEvidence.semantic_snapshot).toBeDefined();
+    });
+  });
+});

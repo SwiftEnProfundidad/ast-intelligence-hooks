@@ -1,5 +1,5 @@
 const path = require('path');
-const DIValidationService = require('../../application/DIValidationService');
+const DIValidationService = require('../../../../application/DIValidationService');
 
 const diValidationService = new DIValidationService();
 

@@ -246,11 +246,13 @@ function runBackendIntelligence(project, findings, platform) {
       const isEnvVar = /process\.env\.|env\.|config\.|from.*env/i.test(fullMatch);
 
       const isPlaceholderPattern = /^(placeholder|example|test-|mock-|fake-|dummy-|your-|xxx|abc|000|123|bearer\s)/i.test(secretValue);
+      const isKnownConfigValue = /^(frontend|backend|ios|android|gold|development|production|staging|test|local)$/i.test(secretValue);
       const hasObviousTestWords = /(valid|invalid|wrong|expired|reset|sample|demo|user-\d|customer-\d|store-\d)/i.test(secretValue);
       const isShortRepeating = secretValue.length <= 20 && /^(.)\1+$/.test(secretValue);
       const isPlaceholder = isPlaceholderPattern || hasObviousTestWords || isShortRepeating;
 
       const isComment = fullLine.includes('//') || fullLine.includes('/*');
+      const isRuleDefinition = /patterns\.push|NUNCA|OBLIGATORIO|severity:|rule:|❌|✅/.test(fullLine);
       const isTestContext = isSpecFile && /mock|jest\.fn|describe|it\(|beforeEach|afterEach/.test(fullText);
       const isTestFilePath = isSpecFile || /\/(tests?|__tests__|e2e|spec|playwright)\//i.test(filePath);
       const hasStorageContext = (
@@ -279,7 +281,7 @@ function runBackendIntelligence(project, findings, platform) {
 
       const isTestData = isTestFilePath && secretValue.length < 50 && !matchesSecretEntropyPattern;
 
-      if (!isEnvVar && !isPlaceholder && !isComment && !isTestContext && !isStorageKey && !isCacheKey && !isConstantKey && !isRolesDecorator && !isTestData && secretValue.length >= 8) {
+      if (!isEnvVar && !isPlaceholder && !isKnownConfigValue && !isComment && !isRuleDefinition && !isTestContext && !isStorageKey && !isCacheKey && !isConstantKey && !isRolesDecorator && !isTestData && secretValue.length >= 8) {
         pushFinding("backend.config.secrets_in_code", "critical", sf, sf, "Hardcoded secret detected - replace with environment variable (process.env)", findings);
       }
     }
