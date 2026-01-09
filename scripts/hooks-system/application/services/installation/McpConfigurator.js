@@ -3,7 +3,6 @@ const path = require('path');
 const AuditLogger = require('../logging/AuditLogger');
 const McpServerConfigBuilder = require('./mcp/McpServerConfigBuilder');
 const McpProjectConfigWriter = require('./mcp/McpProjectConfigWriter');
-const McpGlobalConfigCleaner = require('./mcp/McpGlobalConfigCleaner');
 
 const COLORS = {
     reset: '\x1b[0m',
@@ -19,7 +18,6 @@ class McpConfigurator {
         this.logger = logger;
         this.serverConfigBuilder = new McpServerConfigBuilder(targetRoot, hookSystemRoot, logger);
         this.projectWriter = new McpProjectConfigWriter(targetRoot, logger, this.logSuccess.bind(this), this.logWarning.bind(this), this.logInfo.bind(this));
-        this.globalCleaner = new McpGlobalConfigCleaner(targetRoot, logger, this.logInfo.bind(this));
     }
 
     configure() {
@@ -27,7 +25,6 @@ class McpConfigurator {
 
         const { serverId, mcpConfig } = this.serverConfigBuilder.build();
         this.projectWriter.configureProjectScoped(mcpConfig, serverId);
-        this.globalCleaner.cleanupGlobalConfig(serverId);
     }
 
     detectIDEs() {

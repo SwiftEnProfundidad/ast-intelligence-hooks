@@ -1,4 +1,7 @@
 const path = require('path');
+const DIValidationService = require('../../application/DIValidationService');
+
+const diValidationService = new DIValidationService();
 
 function resetCollections(analyzer) {
     analyzer.allNodes = [];
@@ -37,13 +40,13 @@ function collectAllNodes(analyzer, nodes, parent) {
     }
 }
 
-function analyzeCollectedNodes(analyzer, filePath) {
+async function analyzeCollectedNodes(analyzer, filePath) {
     extractImports(analyzer);
 
     analyzeImportsAST(analyzer, filePath);
 
     for (const cls of analyzer.classes) {
-        analyzeClassAST(analyzer, cls, filePath);
+        await analyzeClassAST(analyzer, cls, filePath);
     }
 
     for (const struct of analyzer.structs) {
@@ -134,7 +137,7 @@ function analyzeImportsAST(analyzer, filePath) {
     }
 }
 
-function analyzeClassAST(analyzer, node, filePath) {
+async function analyzeClassAST(analyzer, node, filePath) {
     const name = node['key.name'] || '';
     const line = node['key.line'] || 1;
     const bodyLength = countLinesInBody(analyzer, node) || 0;
@@ -233,10 +236,8 @@ function analyzeClassAST(analyzer, node, filePath) {
     }
 
     // Skip ISP validation for test files - spies/mocks are allowed to have unused properties
-    // Also skip ObservableObject classes - their @Published properties are inherently observed externally
     const isTestFile = /Tests?\/|Spec|Mock|Spy|Stub|Fake|Dummy/.test(filePath);
-    const isObservableObject = inheritedTypes.some((t) => t['key.name'] === 'ObservableObject');
-    if (!isTestFile && !isObservableObject) {
+    if (!isTestFile) {
         const unusedProps = findUnusedPropertiesAST(analyzer, properties, methods);
         for (const prop of unusedProps) {
             analyzer.pushFinding(
@@ -249,7 +250,7 @@ function analyzeClassAST(analyzer, node, filePath) {
         }
     }
 
-    checkDependencyInjectionAST(analyzer, properties, filePath, name, line);
+    await checkDependencyInjectionAST(analyzer, properties, filePath, name, line);
 
     const hasDeinit = methods.some((m) => m['key.name'] === 'deinit');
     const hasObservers = analyzer.closures.some((c) => c._parent === node) || properties.some((p) => analyzer.hasAttribute(p, 'Published'));
@@ -559,8 +560,10 @@ function analyzeAdditionalRules(analyzer, filePath) {
     }
 
     for (const cls of analyzer.classes) {
-        const hasSharedState = analyzer.properties.some((p) => (p['key.kind'] || '').includes('static') && !analyzer.hasAttribute(p, 'MainActor') && !analyzer.hasAttribute(p, 'nonisolated'));
-        if (hasSharedState && !(analyzer.fileContent || '').includes('actor ')) {
+        const fileContent = analyzer.fileContent || '';
+        const hasSharedState = /\bstatic\s+var\b/.test(fileContent);
+        const hasActorIsolation = fileContent.includes('actor ') || fileContent.includes('@MainActor');
+        if (hasSharedState && !hasActorIsolation) {
             const name = cls['key.name'] || '';
             const line = cls['key.line'] || 1;
             analyzer.pushFinding('ios.concurrency.missing_actor', 'high', filePath, line, `Class '${name}' has shared state - consider actor for thread safety`);
@@ -590,15 +593,38 @@ function findUnusedPropertiesAST(analyzer, properties, methods) {
             continue;
         }
 
-        let usageCount = 0;
+        const typeName = String(prop['key.typename'] || '');
+        const isReactiveType =
+            typeName.includes('Publisher') ||
+            typeName.includes('AnyPublisher') ||
+            typeName.includes('Subject') ||
+            typeName.includes('PassthroughSubject') ||
+            typeName.includes('CurrentValueSubject') ||
+            typeName.includes('Published<');
+
+        if (isReactiveType) {
+            continue;
+        }
+
+        const escapedPropName = String(propName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const usagePattern = new RegExp(`(^|[^A-Za-z0-9_])\\$?${escapedPropName}([^A-Za-z0-9_]|$)`);
+
+        let isUsed = false;
+
+        const fileContent = analyzer.fileContent || '';
+        const fileMatches = fileContent.match(new RegExp(`\\b${escapedPropName}\\b`, 'g')) || [];
+        if (fileMatches.length > 1) {
+            isUsed = true;
+        }
         for (const method of methods) {
             const methodText = analyzer.safeStringify(method);
-            if (methodText.includes(`"${propName}"`)) {
-                usageCount++;
+            if (usagePattern.test(methodText)) {
+                isUsed = true;
+                break;
             }
         }
 
-        if (usageCount === 0) {
+        if (!isUsed) {
             unused.push(propName);
         }
     }
@@ -652,35 +678,8 @@ function countStatementsOfType(substructure, stmtType) {
     return count;
 }
 
-function checkDependencyInjectionAST(analyzer, properties, filePath, className, line) {
-    if (!className.includes('ViewModel') && !className.includes('Service') && !className.includes('Repository') && !className.includes('UseCase')) {
-        return;
-    }
-
-    for (const prop of properties) {
-        const typename = prop['key.typename'] || '';
-
-        if (['String', 'Int', 'Bool', 'Double', 'Float', 'Date', 'URL', 'Data'].includes(typename)) {
-            continue;
-        }
-
-        // Skip generic type parameters (e.g., "Client" in LoginUseCaseImpl<Client: APIClientProtocol>)
-        // These are not concrete dependencies - they are constrained by protocols
-        const propName = prop['key.name'] || '';
-        const isGenericTypeParameter = typename.length === 1 ||
-            (typename.match(/^[A-Z][a-z]*$/) && !typename.includes('Impl') &&
-                (className.includes('<') || propName === 'apiClient' || propName === 'client'));
-
-        if (isGenericTypeParameter) {
-            continue;
-        }
-
-        const isConcreteService = /Service$|Repository$|UseCase$|Client$/.test(typename) && !typename.includes('Protocol') && !typename.includes('any ') && !typename.includes('some ');
-
-        if (isConcreteService) {
-            analyzer.pushFinding('ios.solid.dip.concrete_dependency', 'high', filePath, line, `'${className}' depends on concrete '${typename}' - use protocol`);
-        }
-    }
+async function checkDependencyInjectionAST(analyzer, properties, filePath, className, line) {
+    await diValidationService.validateDependencyInjection(analyzer, properties, filePath, className, line);
 }
 
 function finalizeGodClassDetection(analyzer) {

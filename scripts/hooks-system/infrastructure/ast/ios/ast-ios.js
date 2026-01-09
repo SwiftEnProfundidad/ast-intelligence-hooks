@@ -62,7 +62,7 @@ async function runIOSIntelligence(project, findings, platform) {
 
   for (const swiftFile of swiftFilesForAST) {
     const rel = stagingOnly ? path.relative(root, swiftFile).replace(/\\/g, '/') : null;
-    astAnalyzer.analyzeFile(swiftFile, {
+    await astAnalyzer.analyzeFile(swiftFile, {
       repoRoot: root,
       displayPath: swiftFile,
       stagedRelPath: stagingOnly ? rel : null
