@@ -66,6 +66,87 @@ function getResilience() {
 }
 
 // =============================================================================
+// RULES ENFORCEMENT: Force AI to actually APPLY rules, not just read them
+// =============================================================================
+const rulesEnforcement = {
+    TOP_CRITICAL_RULES: [
+        '🔴 BDD→TDD: Crear test ANTES de implementar. Sin test = BLOQUEADO',
+        '🔴 No empty catch: Siempre loggear o propagar errores',
+        '🔴 No Singleton: Usar Inyección de Dependencias',
+        '🔴 No comentarios: Nombres autodescriptivos',
+        '🔴 Verificar que compila ANTES de sugerir código'
+    ],
+
+    acknowledgedRules: false,
+    lastAcknowledgment: null,
+    implementationCount: 0,
+
+    getPreImplementationChecklist() {
+        return {
+            mandatory_checklist: [
+                '☐ ¿Existe test para esta funcionalidad? Si NO → CREAR TEST PRIMERO',
+                '☐ ¿El código sigue Clean Architecture?',
+                '☐ ¿Cumple SOLID (SRP, OCP, LSP, ISP, DIP)?',
+                '☐ ¿Usa guard/early returns?',
+                '☐ ¿Nombres autodescriptivos en inglés?',
+                '☐ ¿Compila sin errores?'
+            ],
+            blocking_patterns: [
+                '❌ Implementar sin test previo',
+                '❌ catch vacío o silenciar errores',
+                '❌ Usar Singleton en lugar de DI',
+                '❌ Añadir comentarios explicativos',
+                '❌ Código que no compila'
+            ],
+            instruction: '🚨 ANTES de escribir código, VERIFICA cada punto del checklist. Si falta test, CRÉALO PRIMERO.'
+        };
+    },
+
+    generateRulesReminder() {
+        return `
+╔══════════════════════════════════════════════════════════════════╗
+║  🚨 REGLAS CRÍTICAS - DEBES APLICAR EN CADA IMPLEMENTACIÓN 🚨   ║
+╠══════════════════════════════════════════════════════════════════╣
+║ ${this.TOP_CRITICAL_RULES.join('\n║ ')}
+╠══════════════════════════════════════════════════════════════════╣
+║ ⚠️  Si implementas sin test primero = VIOLACIÓN CRÍTICA         ║
+║ ⚠️  El pre-commit te bloqueará, pero YA ES TARDE                ║
+║ ✅  Crea el test AHORA, antes de cualquier implementación        ║
+╚══════════════════════════════════════════════════════════════════╝`;
+    },
+
+    validateProposedAction(actionType, targetFile) {
+        const violations = [];
+
+        if (actionType === 'create_file' || actionType === 'edit') {
+            const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/.test(targetFile);
+            const isImplementationFile = !isTestFile && /\.(js|ts|swift|kt)$/.test(targetFile);
+
+            if (isImplementationFile && this.implementationCount === 0) {
+                violations.push({
+                    rule: 'BDD→TDD',
+                    message: `⚠️ Estás creando/editando ${targetFile} sin haber creado un test primero en esta sesión.`,
+                    suggestion: 'Crea primero el test .spec.js/.test.ts para esta funcionalidad'
+                });
+            }
+        }
+
+        return {
+            hasViolations: violations.length > 0,
+            violations,
+            reminder: this.generateRulesReminder()
+        };
+    },
+
+    recordImplementation(isTest) {
+        if (isTest) {
+            this.implementationCount = 0;
+        }
+        this.implementationCount++;
+    }
+};
+
+// =============================================================================
 // GATE ENFORCEMENT: Track if ai_gate_check was called this session
 // =============================================================================
 const gateSession = {
@@ -1174,12 +1255,30 @@ async function aiGateCheck() {
     const result = await runWithTimeout(core, gateTimeoutMs);
     if (result.ok) {
         gateSession.recordCheck(result.value);
+
+        const preChecklist = rulesEnforcement.getPreImplementationChecklist();
+        const rulesReminder = rulesEnforcement.generateRulesReminder();
+
         return {
             ...result.value,
             _enforcement: {
                 session_id: gateSession.sessionId,
                 check_count: gateSession.checkCount,
                 valid_for_minutes: Math.round(gateSession.GATE_VALIDITY_MS / 60000)
+            },
+            _rules_enforcement: {
+                top_5_critical: rulesEnforcement.TOP_CRITICAL_RULES,
+                pre_implementation_checklist: preChecklist.mandatory_checklist,
+                blocking_patterns: preChecklist.blocking_patterns,
+                active_reminder: rulesReminder,
+                bdd_tdd_warning: '🚨 CREAR TEST PRIMERO. Si implementas sin test = VIOLACIÓN CRÍTICA que bloqueará el commit.',
+                implementation_order: [
+                    '1️⃣ PRIMERO: Crear/localizar el archivo .spec.js o .test.ts',
+                    '2️⃣ SEGUNDO: Escribir el test que falla (RED)',
+                    '3️⃣ TERCERO: Implementar el código mínimo para pasar (GREEN)',
+                    '4️⃣ CUARTO: Refactorizar si es necesario (REFACTOR)',
+                    '5️⃣ QUINTO: Verificar que compila antes de sugerir'
+                ]
             }
         };
     }
