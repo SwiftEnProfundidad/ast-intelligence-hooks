@@ -6,17 +6,19 @@ Este sistema combina **IDE Hooks** (donde estén disponibles) con **Git Pre-Comm
 
 ### Soporte por IDE (Actualizado: Enero 2026)
 
-| IDE | Hook Pre-Write | ¿Bloquea antes? | Exit Code | Config |
+| IDE | Hook Pre-Write | ¿Bloquea antes? | Mecanismo | Config |
 |-----|----------------|-----------------|-----------|--------|
 | **Windsurf** | `pre_write_code` | ✅ SÍ | exit(2) | `~/.codeium/windsurf/cascade/hooks.json` |
-| **Claude Code** | `PreToolUse` (matcher: `Write`, `Edit`) | ✅ SÍ | exit(2) | `~/.config/claude-code/settings.json` |
+| **Claude Code** | `PreToolUse` (Write/Edit) | ✅ SÍ | exit(2) | `~/.config/claude-code/settings.json` |
+| **OpenCode** | Plugin `tool.execute.before` | ✅ SÍ | throw Error | `opencode.json` o `~/.config/opencode/opencode.json` |
+| **Codex CLI** | ❌ Solo approval policies | ⚠️ NO (manual) | - | `~/.codex/config.toml` |
 | **Cursor** | ❌ Solo `afterFileEdit` | ⚠️ NO (post-write) | - | `.cursor/hooks.json` |
 | **Kilo Code** | ❌ No documentado | ⚠️ NO | - | - |
-| **OpenCode** | ❌ No documentado | ⚠️ NO | - | - |
 
 ### Resumen de Enforcement
 
-- ✅ **Windsurf + Claude Code**: Bloqueo REAL antes de escribir
+- ✅ **Windsurf + Claude Code + OpenCode**: Bloqueo REAL antes de escribir
+- ⚠️ **Codex CLI**: Requiere aprobación manual (no automatizable)
 - ⚠️ **Cursor**: Solo logging post-escritura (requiere Git pre-commit)
 - ⚠️ **Otros IDEs**: Solo Git pre-commit
 

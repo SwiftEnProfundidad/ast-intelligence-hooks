@@ -216,6 +216,39 @@ The framework is extensible to additional platforms and languages.
 
 ---
 
+## AI IDE Compatibility (Pre-Write Enforcement)
+
+Pumuki supports **real-time code blocking** in IDEs with pre-write hooks:
+
+| IDE | Hook Support | Blocks Before Write? | Fallback |
+|-----|--------------|---------------------|----------|
+| **Windsurf** | `pre_write_code` | ✅ YES | Git pre-commit |
+| **Claude Code** | `PreToolUse` (Write/Edit) | ✅ YES | Git pre-commit |
+| **OpenCode** | Plugin `tool.execute.before` | ✅ YES | Git pre-commit |
+| **Codex CLI** | Approval policies only | ⚠️ Manual | Git pre-commit |
+| **Cursor** | `afterFileEdit` only | ⚠️ Post-write | Git pre-commit |
+| **Kilo Code** | Not documented | ⚠️ No | Git pre-commit |
+
+### How It Works
+
+```
+AI generates code → IDE Hook intercepts → AST Intelligence analyzes → 
+  ├─ Critical violations? → ❌ BLOCKED (code not written)
+  └─ No violations? → ✅ ALLOWED (code written)
+```
+
+### Enforcement Layers
+
+1. **IDE Hooks** (Windsurf, Claude Code, OpenCode): Block BEFORE code is written
+2. **Git Pre-Commit**: Block commits with violations (100% fallback for all IDEs)
+3. **MCP Gate**: AI cannot proceed without passing `ai_gate_check`
+
+> **Note**: For IDEs without pre-write hooks, the Git pre-commit hook provides 100% enforcement at commit time.
+
+See [`scripts/hooks-system/infrastructure/cascade-hooks/README.md`](./scripts/hooks-system/infrastructure/cascade-hooks/README.md) for installation instructions.
+
+---
+
 ## Typical Enterprise Use Cases
 
 * Long-running feature development with AI assistance
