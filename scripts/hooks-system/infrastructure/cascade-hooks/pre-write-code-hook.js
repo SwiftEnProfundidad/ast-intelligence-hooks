@@ -20,14 +20,25 @@
 const path = require('path');
 const fs = require('fs');
 
-const REPO_ROOT = (() => {
-    try {
+function getRepoRoot(filePath) {
+    if (filePath) {
         const { execSync } = require('child_process');
-        return execSync('git rev-parse --show-toplevel', { encoding: 'utf-8' }).trim();
-    } catch (error) {
-        return process.cwd();
+        try {
+            return execSync('git rev-parse --show-toplevel', {
+                encoding: 'utf-8',
+                cwd: path.dirname(filePath)
+            }).trim();
+        } catch (e) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[pre-write-hook] Git root lookup failed: ${e.message}\n`);
+            }
+        }
     }
-})();
+    // Fallback: this script is in scripts/hooks-system/infrastructure/cascade-hooks/
+    return path.resolve(__dirname, '..', '..', '..', '..');
+}
+
+let REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
 
 const LOG_FILE = path.join(REPO_ROOT, '.audit_tmp', 'cascade-hook.log');
 
@@ -39,7 +50,9 @@ function log(message) {
         fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
         fs.appendFileSync(LOG_FILE, logLine);
     } catch (error) {
-        // Silently ignore log errors
+        if (process.env.DEBUG) {
+            process.stderr.write(`[pre-write-hook] Log write failed: ${error.message}\n`);
+        }
     }
 
     if (process.env.DEBUG) {
@@ -78,7 +91,10 @@ async function main() {
         process.exit(0);
     }
 
-    log(`ANALYZING: ${filePath} (${edits.length} edits)`);
+    // Update REPO_ROOT based on the file being edited
+    REPO_ROOT = getRepoRoot(filePath);
+
+    log(`ANALYZING: ${filePath} (${edits.length} edits) [REPO: ${REPO_ROOT}]`);
 
     // Skip test files from blocking (allow TDD flow)
     if (/\.(spec|test)\.(js|ts|swift|kt)$/.test(filePath)) {
