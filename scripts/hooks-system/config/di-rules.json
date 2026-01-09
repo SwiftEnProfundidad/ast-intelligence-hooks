@@ -1,0 +1,42 @@
+{
+    "dependencyInjection": {
+        "severity": "high",
+        "targetClasses": [
+            "ViewModel",
+            "Service",
+            "Repository",
+            "UseCase"
+        ],
+        "allowedTypes": [
+            "String",
+            "Int",
+            "Bool",
+            "Double",
+            "Float",
+            "Date",
+            "URL",
+            "Data"
+        ],
+        "concretePatterns": [
+            "Service$",
+            "Repository$",
+            "UseCase$",
+            "Client$"
+        ],
+        "protocolIndicators": [
+            "Protocol",
+            "any ",
+            "some "
+        ],
+        "genericTypePatterns": {
+            "singleLetter": true,
+            "camelCase": "^[A-Z][a-z]*$",
+            "excludeWithImpl": true,
+            "contextHints": [
+                "<",
+                "apiClient",
+                "client"
+            ]
+        }
+    }
+}
