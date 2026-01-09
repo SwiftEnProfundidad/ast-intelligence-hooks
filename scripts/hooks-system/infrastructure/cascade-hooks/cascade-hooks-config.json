@@ -1,0 +1,20 @@
+{
+    "description": "AST Intelligence Cascade Hooks - 100% enforcement of code quality rules",
+    "version": "1.0.0",
+    "hooks": {
+        "pre_write_code": [
+            {
+                "command": "node ${workspaceFolder}/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js",
+                "show_output": true,
+                "timeout_ms": 10000
+            }
+        ],
+        "post_write_code": [
+            {
+                "command": "node ${workspaceFolder}/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js",
+                "show_output": false,
+                "timeout_ms": 5000
+            }
+        ]
+    }
+}

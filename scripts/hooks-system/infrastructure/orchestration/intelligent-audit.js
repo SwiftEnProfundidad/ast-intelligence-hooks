@@ -25,6 +25,88 @@ function deriveCategoryFromRuleId(ruleId) {
   return parts[0] || 'unknown';
 }
 
+/**
+ * Generate semantic_snapshot automatically from current evidence state.
+ * This is the Semantic Memory Layer - derived, never manually input.
+ */
+function generateSemanticSnapshot(evidence, violations, gateResult) {
+  const now = new Date();
+  const activePlatforms = Object.entries(evidence.platforms || {})
+    .filter(([, v]) => v.detected)
+    .map(([k]) => k);
+
+  const violationSummary = violations.length > 0
+    ? violations.slice(0, 5).map(v => `${v.severity}: ${v.ruleId || v.rule || 'unknown'}`).join('; ')
+    : 'No violations';
+
+  const healthScore = Math.max(0, 100 - (violations.length * 5) -
+    (violations.filter(v => v.severity === 'CRITICAL').length * 20) -
+    (violations.filter(v => v.severity === 'HIGH').length * 10));
+
+  return {
+    generated_at: now.toISOString(),
+    derivation_source: 'auto:updateAIEvidence',
+    context_hash: `ctx-${Date.now().toString(36)}`,
+    summary: {
+      health_score: healthScore,
+      gate_status: gateResult.passed ? 'PASSED' : 'FAILED',
+      active_platforms: activePlatforms,
+      violation_count: violations.length,
+      violation_preview: violationSummary,
+      branch: evidence.current_context?.current_branch || 'unknown',
+      session_id: evidence.session_id || 'unknown'
+    },
+    feature_state: {
+      ai_gate_enabled: true,
+      token_monitoring: evidence.watchers?.token_monitor?.enabled ?? true,
+      auto_refresh: evidence.watchers?.evidence_watcher?.auto_refresh ?? true,
+      protocol_3_active: evidence.protocol_3_questions?.answered ?? false
+    },
+    decisions: {
+      last_gate_decision: gateResult.passed ? 'allow' : 'block',
+      blocking_reason: gateResult.blockedBy || null,
+      recommended_action: gateResult.passed
+        ? 'proceed_with_development'
+        : 'fix_violations_before_commit'
+    }
+  };
+}
+
+/**
+ * Preserve or initialize human_intent layer.
+ * This is the Intentional Memory Layer - set by human, preserved across updates.
+ */
+function preserveOrInitHumanIntent(existingEvidence) {
+  const existing = existingEvidence.human_intent;
+
+  if (existing && typeof existing === 'object' && existing.primary_goal) {
+    const expiresAt = existing.expires_at ? new Date(existing.expires_at) : null;
+    const isExpired = expiresAt && expiresAt < new Date();
+
+    if (!isExpired) {
+      return {
+        ...existing,
+        preserved_at: new Date().toISOString(),
+        preservation_count: (existing.preservation_count || 0) + 1
+      };
+    }
+  }
+
+  return {
+    primary_goal: null,
+    secondary_goals: [],
+    non_goals: [],
+    constraints: [],
+    confidence_level: 'unset',
+    set_by: null,
+    set_at: null,
+    expires_at: null,
+    preserved_at: new Date().toISOString(),
+    preservation_count: 0,
+    _hint: 'Set via CLI: ast-hooks intent --goal "your goal" or manually edit this file'
+  };
+}
+
 function detectPlatformsFromStagedFiles(stagedFiles) {
   const platforms = new Set();
   const files = Array.isArray(stagedFiles) ? stagedFiles : [];
@@ -669,8 +751,12 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
       }
     };
 
+    evidence.human_intent = preserveOrInitHumanIntent(evidence);
+
+    evidence.semantic_snapshot = generateSemanticSnapshot(evidence, violations, gateResult);
+
     fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
-    console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers)');
+    console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers, human_intent, semantic_snapshot)');
 
     const MacNotificationSender = require('../../application/services/notification/MacNotificationSender');
     const notificationSender = new MacNotificationSender(null);

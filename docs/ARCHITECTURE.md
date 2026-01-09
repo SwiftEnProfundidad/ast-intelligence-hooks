@@ -3,10 +3,63 @@
 ## Table of Contents
 
 - [High-Level Architecture](#high-level-architecture)
+- [Framework Invariants](#framework-invariants)
+- [Control Primitives](#control-primitives)
 - [Data Flow](#data-flow)
 - [Key Components](#key-components)
 - [Quality Gates](#quality-gates)
 - [Integrations](#integrations)
+
+---
+
+## Framework Invariants
+
+These invariants are non-negotiable. If any of them is violated, the framework is considered misconfigured.
+
+- **Evidence is the source of truth**
+  `.AI_EVIDENCE.json` is the authoritative state for AI-assisted work. The framework treats chat history as untrusted.
+
+- **Evidence freshness is mandatory**
+  Actions that rely on evidence must validate freshness (SLA) and surface stale conditions explicitly.
+
+- **AI Gate is a hard control point**
+  The framework must be able to deterministically decide `ALLOWED` vs `BLOCKED` before risky actions.
+
+- **Governance is Git-native**
+  Enforcement happens as early as possible (pre-commit / pre-push) to prevent invalid states from reaching CI/CD.
+
+- **Dependencies must point inward**
+  Presentation and Infrastructure may depend on Domain and Application, but never the opposite.
+
+---
+
+## Control Primitives
+
+Pumuki is a governance framework built around two primitives:
+
+### 1) AI Evidence (`.AI_EVIDENCE.json`)
+
+Responsibilities:
+
+- Persist project state for long-running work (multi-day, multi-chat)
+- Store severity metrics, platform detection, session metadata, and workflow state
+- Provide a stable input for AI clients and automation tools
+
+Failure-mode expectations:
+
+- If evidence cannot be read or parsed, the framework should fail safe (treat as missing) and emit a diagnosable signal (logs / guard debug log).
+
+### 2) AI Gate (Allow/Block)
+
+Responsibilities:
+
+- Provide deterministic control over AI-assisted actions
+- Encode mandatory rules (by platform/scope)
+- Enforce blocking thresholds (typically `CRITICAL`/`HIGH`)
+
+Failure-mode expectations:
+
+- If gate state cannot be loaded, the framework should fail safe and avoid proceeding with protected operations.
 
 ---
 
@@ -128,6 +181,7 @@ flowchart LR
 ```
 
 **Pipeline Steps:**
+
 1. **AST Analysis**: Parse code and extract violations
 2. **Severity Evaluation**: Apply intelligent severity evaluation
 3. **Gate Policies**: Apply quality gates (CRITICAL/HIGH block)
@@ -218,6 +272,17 @@ flowchart TD
 - **Severity Intelligence**: Updates severity based on impact
 - **Token Monitoring**: Monitors AI usage and alerts on thresholds
 - **Trend Analysis**: Historical violation tracking
+
+---
+
+## Integrations
+
+Pumuki is designed to integrate into existing enterprise workflows without requiring changes to product code.
+
+- **Git hooks**: pre-commit / pre-push enforcement
+- **CI/CD**: run audits in pipelines to enforce the same gates as local development
+- **IDE / agentic clients**: MCP servers for evidence, gate checks, and automation
+- **Local developer tools**: CLI entrypoints for manual audits, troubleshooting, and operational flows
 
 ---
 

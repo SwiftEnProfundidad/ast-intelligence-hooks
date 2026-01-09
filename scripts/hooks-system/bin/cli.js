@@ -249,6 +249,111 @@ const commands = {
     execSync(`bash ${path.join(HOOKS_ROOT, 'infrastructure/shell/gitflow-enforcer.sh')} ${subcommand}`, { stdio: 'inherit' });
   },
 
+  'intent': () => {
+    const repoRoot = resolveRepoRoot();
+    const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
+
+    const subcommand = args[0];
+
+    if (!subcommand || subcommand === 'show') {
+      if (!fs.existsSync(evidencePath)) {
+        console.log('❌ No .AI_EVIDENCE.json found');
+        process.exit(1);
+      }
+      const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      const intent = evidence.human_intent || {};
+      console.log('\n🎯 Current Human Intent:');
+      console.log(`  Primary Goal: ${intent.primary_goal || '(not set)'}`);
+      console.log(`  Secondary:    ${(intent.secondary_goals || []).join(', ') || '(none)'}`);
+      console.log(`  Non-Goals:    ${(intent.non_goals || []).join(', ') || '(none)'}`);
+      console.log(`  Constraints:  ${(intent.constraints || []).join(', ') || '(none)'}`);
+      console.log(`  Confidence:   ${intent.confidence_level || 'unset'}`);
+      console.log(`  Expires:      ${intent.expires_at || '(never)'}`);
+      console.log(`  Preserved:    ${intent.preservation_count || 0} times\n`);
+      return;
+    }
+
+    if (subcommand === 'set') {
+      const goalArg = args.find(a => a.startsWith('--goal='));
+      const expiresArg = args.find(a => a.startsWith('--expires='));
+      const confidenceArg = args.find(a => a.startsWith('--confidence='));
+      const secondaryArg = args.find(a => a.startsWith('--secondary='));
+      const nonGoalsArg = args.find(a => a.startsWith('--non-goals='));
+      const constraintsArg = args.find(a => a.startsWith('--constraints='));
+
+      if (!goalArg) {
+        console.log('❌ Usage: ast-hooks intent set --goal="Your primary goal" [--expires=24h] [--confidence=high]');
+        process.exit(1);
+      }
+
+      const goal = goalArg.split('=').slice(1).join('=');
+      const expiresIn = expiresArg ? expiresArg.split('=')[1] : '24h';
+      const confidence = confidenceArg ? confidenceArg.split('=')[1] : 'medium';
+      const secondary = secondaryArg ? secondaryArg.split('=')[1].split(',').map(s => s.trim()) : [];
+      const nonGoals = nonGoalsArg ? nonGoalsArg.split('=')[1].split(',').map(s => s.trim()) : [];
+      const constraints = constraintsArg ? constraintsArg.split('=')[1].split(',').map(s => s.trim()) : [];
+
+      const hoursMatch = expiresIn.match(/^(\d+)h$/);
+      const daysMatch = expiresIn.match(/^(\d+)d$/);
+      let expiresAt = null;
+      if (hoursMatch) {
+        expiresAt = new Date(Date.now() + parseInt(hoursMatch[1], 10) * 3600000).toISOString();
+      } else if (daysMatch) {
+        expiresAt = new Date(Date.now() + parseInt(daysMatch[1], 10) * 86400000).toISOString();
+      }
+
+      let evidence = {};
+      if (fs.existsSync(evidencePath)) {
+        evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      }
+
+      evidence.human_intent = {
+        primary_goal: goal,
+        secondary_goals: secondary,
+        non_goals: nonGoals,
+        constraints: constraints,
+        confidence_level: confidence,
+        set_by: 'cli',
+        set_at: new Date().toISOString(),
+        expires_at: expiresAt,
+        preserved_at: new Date().toISOString(),
+        preservation_count: 0
+      };
+
+      fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
+      console.log(`✅ Human intent set: "${goal}"`);
+      console.log(`   Expires: ${expiresAt || 'never'}`);
+      return;
+    }
+
+    if (subcommand === 'clear') {
+      if (!fs.existsSync(evidencePath)) {
+        console.log('❌ No .AI_EVIDENCE.json found');
+        process.exit(1);
+      }
+      const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      evidence.human_intent = {
+        primary_goal: null,
+        secondary_goals: [],
+        non_goals: [],
+        constraints: [],
+        confidence_level: 'unset',
+        set_by: null,
+        set_at: null,
+        expires_at: null,
+        preserved_at: new Date().toISOString(),
+        preservation_count: 0,
+        _hint: 'Set via CLI: ast-hooks intent set --goal="your goal"'
+      };
+      fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
+      console.log('✅ Human intent cleared');
+      return;
+    }
+
+    console.log('❌ Unknown subcommand. Use: show, set, clear');
+    process.exit(1);
+  },
+
   help: () => {
     console.log(`
 AST Intelligence Hooks CLI v3.3.0
@@ -264,6 +369,7 @@ Commands:
   progress         Show violation progress report
   health           Show hook-system health snapshot (JSON)
   gitflow          Check Git Flow compliance (check|reset)
+  intent           Manage human intent (show|set|clear)
   help             Show this help message
   version          Show version
 
@@ -274,6 +380,9 @@ Examples:
   ast-hooks verify-policy
   ast-hooks progress
   ast-hooks health
+  ast-hooks intent show
+  ast-hooks intent set --goal="Implement feature X" --expires=24h
+  ast-hooks intent clear
 
 Environment Variables:
   GIT_BYPASS_HOOK=1    Bypass hook validation (emergency)
