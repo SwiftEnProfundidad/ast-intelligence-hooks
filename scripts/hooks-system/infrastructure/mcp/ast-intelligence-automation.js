@@ -28,6 +28,105 @@ const env = require('../../config/env');
 
 const MCP_VERSION = '2024-11-05';
 
+// =============================================================================
+// ENTERPRISE MODULES (Lazy Loading)
+// =============================================================================
+let _metricsModule = null;
+let _resilienceModule = null;
+
+function getMetrics() {
+    if (!_metricsModule) {
+        try {
+            _metricsModule = require('../observability');
+        } catch (e) {
+            _metricsModule = {
+                gateCheckCounter: { inc: () => { } },
+                gateCheckDuration: { observe: () => { } },
+                mcpToolCallCounter: { inc: () => { } },
+                globalCollector: { toPrometheusFormat: () => '', getMetricsJSON: () => ({}) }
+            };
+        }
+    }
+    return _metricsModule;
+}
+
+function getResilience() {
+    if (!_resilienceModule) {
+        try {
+            _resilienceModule = require('../resilience');
+        } catch (e) {
+            _resilienceModule = {
+                mcpCircuit: { execute: fn => fn(), getState: () => ({ state: 'CLOSED' }) },
+                gitCircuit: { execute: fn => fn(), getState: () => ({ state: 'CLOSED' }) },
+                globalRegistry: { getAll: () => ({}) }
+            };
+        }
+    }
+    return _resilienceModule;
+}
+
+// =============================================================================
+// GATE ENFORCEMENT: Track if ai_gate_check was called this session
+// =============================================================================
+const gateSession = {
+    lastCheckTimestamp: null,
+    lastCheckResult: null,
+    sessionId: `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+    checkCount: 0,
+    GATE_VALIDITY_MS: 10 * 60 * 1000, // Gate valid for 10 minutes
+
+    recordCheck(result) {
+        this.lastCheckTimestamp = Date.now();
+        this.lastCheckResult = result;
+        this.checkCount++;
+    },
+
+    isGateValid() {
+        if (!this.lastCheckTimestamp) return false;
+        const elapsed = Date.now() - this.lastCheckTimestamp;
+        return elapsed < this.GATE_VALIDITY_MS && this.lastCheckResult?.status === 'ALLOWED';
+    },
+
+    getEnforcementStatus() {
+        if (!this.lastCheckTimestamp) {
+            return {
+                enforced: true,
+                blocked: true,
+                reason: '🚨 GATE NOT EXECUTED: You MUST call ai_gate_check before using any other tool.',
+                action: 'Call ai_gate_check first'
+            };
+        }
+
+        const elapsed = Date.now() - this.lastCheckTimestamp;
+        if (elapsed > this.GATE_VALIDITY_MS) {
+            return {
+                enforced: true,
+                blocked: true,
+                reason: `🚨 GATE EXPIRED: Last check was ${Math.round(elapsed / 60000)} minutes ago. Re-run ai_gate_check.`,
+                action: 'Call ai_gate_check to refresh'
+            };
+        }
+
+        if (this.lastCheckResult?.status === 'BLOCKED') {
+            return {
+                enforced: true,
+                blocked: true,
+                reason: '🚨 GATE BLOCKED: Previous gate check failed. Fix violations first.',
+                violations: this.lastCheckResult.violations,
+                action: 'Fix violations and re-run ai_gate_check'
+            };
+        }
+
+        return {
+            enforced: true,
+            blocked: false,
+            reason: null,
+            gateStatus: this.lastCheckResult?.status,
+            validFor: Math.round((this.GATE_VALIDITY_MS - elapsed) / 60000) + ' minutes'
+        };
+    }
+};
+
 // Configuration - LAZY LOADING to avoid blocking MCP initialization
 function safeGitRoot(startDir) {
     try {
@@ -1034,6 +1133,20 @@ async function aiGateCheck() {
 
         const finalBlocked = isBlocked || !rulesLoadedSuccessfully;
 
+        let humanIntent = null;
+        let semanticSnapshot = null;
+        try {
+            if (fs.existsSync(EVIDENCE_FILE)) {
+                const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+                humanIntent = evidence.human_intent || null;
+                semanticSnapshot = evidence.semantic_snapshot || null;
+            }
+        } catch (evidenceReadError) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Failed to read cognitive layers from evidence: ${evidenceReadError.message}\n`);
+            }
+        }
+
         return {
             status: finalBlocked ? 'BLOCKED' : 'ALLOWED',
             timestamp: new Date().toISOString(),
@@ -1041,6 +1154,8 @@ async function aiGateCheck() {
             violations,
             warnings,
             autoFixes,
+            human_intent: humanIntent,
+            semantic_snapshot: semanticSnapshot,
             mandatory_rules: rulesLoadedSuccessfully
                 ? { ...mandatoryRules, status: 'LOADED_OK' }
                 : mandatoryRules,
@@ -1049,17 +1164,28 @@ async function aiGateCheck() {
                 : `🚦 ALLOWED: Gate passed. ${mandatoryRules.totalRulesCount} critical rules loaded and verified.`,
             instructions: finalBlocked
                 ? 'DO NOT proceed with user task. Announce violations and fix them first.'
-                : `✅ ${mandatoryRules.totalRulesCount} RULES LOADED. Sample: ${mandatoryRules.rulesSample.slice(0, 2).join(' | ')}... Review ALL rules in mandatory_rules.criticalRules before ANY code generation.`
+                : `✅ ${mandatoryRules.totalRulesCount} RULES LOADED. Sample: ${mandatoryRules.rulesSample.slice(0, 2).join(' | ')}... Review ALL rules in mandatory_rules.criticalRules before ANY code generation.`,
+            cognitive_context: humanIntent?.primary_goal
+                ? `🎯 USER INTENT: ${humanIntent.primary_goal} (confidence: ${humanIntent.confidence_level || 'unset'})`
+                : null
         };
     };
 
     const result = await runWithTimeout(core, gateTimeoutMs);
     if (result.ok) {
-        return result.value;
+        gateSession.recordCheck(result.value);
+        return {
+            ...result.value,
+            _enforcement: {
+                session_id: gateSession.sessionId,
+                check_count: gateSession.checkCount,
+                valid_for_minutes: Math.round(gateSession.GATE_VALIDITY_MS / 60000)
+            }
+        };
     }
 
     const currentBranch = getCurrentGitBranch(REPO_ROOT);
-    return {
+    const timeoutResult = {
         status: 'BLOCKED',
         timestamp: new Date().toISOString(),
         branch: currentBranch,
@@ -1076,6 +1202,8 @@ async function aiGateCheck() {
         summary: '🚫 BLOCKED: Gate check timed out.',
         instructions: 'DO NOT proceed with user task. Retry the gate check.'
     };
+    gateSession.recordCheck(timeoutResult);
+    return timeoutResult;
 }
 
 /**
@@ -1116,6 +1244,120 @@ async function readPlatformRulesHandler(params) {
             platform,
             error: `Failed to load rules: ${error.message}`
         };
+    }
+}
+
+/**
+ * Set human intent in .AI_EVIDENCE.json
+ */
+function setHumanIntent(params) {
+    const { goal, secondary_goals, non_goals, constraints, confidence, expires_hours } = params;
+
+    if (!goal) {
+        return { success: false, error: 'Goal is required' };
+    }
+
+    try {
+        if (!fs.existsSync(EVIDENCE_FILE)) {
+            return { success: false, error: '.AI_EVIDENCE.json not found' };
+        }
+
+        const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+        const expiresAt = new Date(Date.now() + (expires_hours || 24) * 60 * 60 * 1000);
+
+        evidence.human_intent = {
+            primary_goal: goal,
+            secondary_goals: secondary_goals || [],
+            non_goals: non_goals || [],
+            constraints: constraints || [],
+            confidence_level: confidence || 'medium',
+            set_by: 'mcp',
+            set_at: new Date().toISOString(),
+            expires_at: expiresAt.toISOString(),
+            preservation_count: 0
+        };
+
+        fs.writeFileSync(EVIDENCE_FILE, JSON.stringify(evidence, null, 2));
+
+        return {
+            success: true,
+            message: `Human intent set: "${goal}"`,
+            expires_at: expiresAt.toISOString(),
+            human_intent: evidence.human_intent
+        };
+    } catch (error) {
+        return { success: false, error: `Failed to set intent: ${error.message}` };
+    }
+}
+
+/**
+ * Get current human intent from .AI_EVIDENCE.json
+ */
+function getHumanIntent() {
+    try {
+        if (!fs.existsSync(EVIDENCE_FILE)) {
+            return { success: false, error: '.AI_EVIDENCE.json not found' };
+        }
+
+        const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+        const intent = evidence.human_intent;
+
+        if (!intent || !intent.primary_goal) {
+            return {
+                success: true,
+                has_intent: false,
+                message: 'No human intent set',
+                human_intent: null
+            };
+        }
+
+        const isExpired = intent.expires_at && new Date(intent.expires_at) < new Date();
+
+        return {
+            success: true,
+            has_intent: !isExpired,
+            is_expired: isExpired,
+            human_intent: intent,
+            cognitive_context: `🎯 USER INTENT: ${intent.primary_goal} (confidence: ${intent.confidence_level || 'unset'})`
+        };
+    } catch (error) {
+        return { success: false, error: `Failed to get intent: ${error.message}` };
+    }
+}
+
+/**
+ * Clear human intent in .AI_EVIDENCE.json
+ */
+function clearHumanIntent() {
+    try {
+        if (!fs.existsSync(EVIDENCE_FILE)) {
+            return { success: false, error: '.AI_EVIDENCE.json not found' };
+        }
+
+        const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+
+        evidence.human_intent = {
+            primary_goal: null,
+            secondary_goals: [],
+            non_goals: [],
+            constraints: [],
+            confidence_level: 'unset',
+            set_by: null,
+            set_at: null,
+            expires_at: null,
+            preservation_count: 0,
+            _hint: 'Set via MCP: mcp1_set_human_intent or CLI: ast-hooks intent set --goal "your goal"'
+        };
+
+        fs.writeFileSync(EVIDENCE_FILE, JSON.stringify(evidence, null, 2));
+
+        return {
+            success: true,
+            message: 'Human intent cleared',
+            human_intent: evidence.human_intent
+        };
+    } catch (error) {
+        return { success: false, error: `Failed to clear intent: ${error.message}` };
     }
 }
 
@@ -1410,7 +1652,7 @@ async function handleMcpMessage(message) {
                         },
                         {
                             name: 'ai_gate_check',
-                            description: '🚦 MANDATORY gate check',
+                            description: '🚦 MANDATORY gate check. Returns: status, violations, human_intent (user goals), semantic_snapshot (project state), and mandatory_rules.',
                             inputSchema: { type: 'object', properties: {} }
                         },
                         {
@@ -1427,6 +1669,32 @@ async function handleMcpMessage(message) {
                                 },
                                 required: ['platform']
                             }
+                        },
+                        {
+                            name: 'set_human_intent',
+                            description: '🎯 Set the human intent/goal for the current session. This helps AI understand user objectives.',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    goal: { type: 'string', description: 'Primary goal/intent for the session' },
+                                    secondary_goals: { type: 'array', items: { type: 'string' }, description: 'Secondary goals' },
+                                    non_goals: { type: 'array', items: { type: 'string' }, description: 'Explicitly what NOT to do' },
+                                    constraints: { type: 'array', items: { type: 'string' }, description: 'Constraints to follow' },
+                                    confidence: { type: 'string', enum: ['high', 'medium', 'low'], description: 'Confidence level' },
+                                    expires_hours: { type: 'number', description: 'Hours until intent expires (default: 24)' }
+                                },
+                                required: ['goal']
+                            }
+                        },
+                        {
+                            name: 'get_human_intent',
+                            description: '🎯 Get the current human intent/goal for the session.',
+                            inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'clear_human_intent',
+                            description: '🎯 Clear/reset the human intent to empty state.',
+                            inputSchema: { type: 'object', properties: {} }
                         }
                     ]
                 }
@@ -1436,6 +1704,38 @@ async function handleMcpMessage(message) {
         if (request.method === 'tools/call') {
             const toolName = request.params?.name;
             const toolParams = request.params?.arguments || {};
+
+            // Tools that require gate enforcement (destructive operations)
+            const GATE_ENFORCED_TOOLS = [
+                'auto_complete_gitflow',
+                'sync_branches',
+                'cleanup_stale_branches',
+                'validate_and_fix'
+            ];
+
+            // Check gate enforcement for critical tools
+            if (GATE_ENFORCED_TOOLS.includes(toolName)) {
+                const enforcement = gateSession.getEnforcementStatus();
+                if (enforcement.blocked) {
+                    return {
+                        jsonrpc: '2.0',
+                        id: request.id,
+                        result: {
+                            content: [{
+                                type: 'text',
+                                text: JSON.stringify({
+                                    success: false,
+                                    error: 'GATE_ENFORCEMENT_BLOCKED',
+                                    reason: enforcement.reason,
+                                    action: enforcement.action,
+                                    violations: enforcement.violations || [],
+                                    hint: '🚦 Call ai_gate_check first to unlock this tool'
+                                }, null, 2)
+                            }]
+                        }
+                    };
+                }
+            }
 
             let result;
             switch (toolName) {
@@ -1462,6 +1762,15 @@ async function handleMcpMessage(message) {
                     break;
                 case 'read_platform_rules':
                     result = await readPlatformRulesHandler(toolParams);
+                    break;
+                case 'set_human_intent':
+                    result = setHumanIntent(toolParams);
+                    break;
+                case 'get_human_intent':
+                    result = getHumanIntent();
+                    break;
+                case 'clear_human_intent':
+                    result = clearHumanIntent();
                     break;
                 default:
                     return {

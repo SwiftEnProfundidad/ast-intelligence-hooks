@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="AST Intelligence Workflow">
+  <defs>
+    <style>
+      .bg { fill: #0b0f14; }
+      .panel { fill: #0f1620; stroke: #1f2a37; stroke-width: 2; }
+      .h { fill: #a7f3d0; font: 700 26px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .t { fill: #e5e7eb; font: 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .m { fill: #9ca3af; font: 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .accent { fill: #fbbf24; font: 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .warn { fill: #f59e0b; font: 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="900" />
+  <rect class="panel" x="40" y="40" width="1520" height="820" rx="18" />
+
+  <text class="h" x="80" y="120">QUICK SUMMARY</text>
+
+  <text class="t" x="80" y="190">Files scanned:          269</text>
+  <text class="t" x="80" y="220">Total violations:       69</text>
+  <text class="t" x="80" y="250">ESLint errors:          0</text>
+  <text class="t" x="80" y="280">Critical issues:        3</text>
+  <text class="t" x="80" y="310">High priority:          38</text>
+
+  <text class="warn" x="80" y="365">⚠ STATUS: ACTION REQUIRED</text>
+  <text class="accent" x="80" y="395">Critical or high-severity issues detected</text>
+
+  <text class="h" x="80" y="465">1) PATTERN CHECKS</text>
+  <text class="t" x="110" y="510">• TODO / FIXME: 4</text>
+  <text class="t" x="110" y="540">• CONSOLE_LOG: 205</text>
+  <text class="t" x="110" y="570">• ANY TYPE: 8</text>
+  <text class="t" x="110" y="600">• SQL_RAW: 3</text>
+
+  <text class="h" x="80" y="670">2) ESLINT AUDIT RESULTS</text>
+  <text class="t" x="110" y="715">ESLint: errors=0  warnings=0</text>
+
+  <text class="h" x="80" y="785">3) AST INTELLIGENCE — SEVERITY BREAKDOWN</text>
+  <text class="m" x="110" y="830">Staging Area: no staged files to analyze</text>
+</svg>

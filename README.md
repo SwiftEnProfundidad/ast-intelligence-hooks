@@ -8,8 +8,8 @@
   <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/v/pumuki-ast-hooks.svg?style=flat-square&label=npm&color=CB3837" alt="npm version" /></a>
   <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/dm/pumuki-ast-hooks.svg?style=flat-square&color=CB3837" alt="npm downloads" /></a>
   <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT" /></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg?style=flat-square&logo=node.js" alt="Node.js Version" /></a>
-  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-%3E%3D9.0.0-red.svg?style=flat-square&logo=npm" alt="npm" /></a>
+  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-20.x-brightgreen.svg?style=flat-square&logo=node.js" alt="Node.js Version" /></a>
+  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-10%2B-red.svg?style=flat-square&logo=npm" alt="npm" /></a>
   <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue.svg?style=flat-square" alt="Platforms" />
   <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/releases"><img src="https://img.shields.io/github/release-date/SwiftEnProfundidad/ast-intelligence-hooks.svg?style=flat-square&label=last%20release" alt="Last Release" /></a>
   <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues"><img src="https://img.shields.io/github/issues/SwiftEnProfundidad/ast-intelligence-hooks.svg?style=flat-square" alt="GitHub Issues" /></a>
@@ -19,1364 +19,491 @@
   <strong>Enterprise-grade AST Intelligence System for multi-platform code quality enforcement</strong>
 </p>
 
-<p align="center">
-  <a href="#-quick-start">Quick Start</a> •
-  <a href="#-features">Features</a> •
-  <a href="./docs/INSTALLATION.md">Installation</a> •
-  <a href="./docs/API_REFERENCE.md">API Reference</a> •
-  <a href="./CHANGELOG.md">Changelog</a> •
-  <a href="./docs/CONTRIBUTING.md">Contributing</a>
-</p>
+### Navigation
 
-## 📖 Table of Contents
+| Section | Description |
+|---------|-------------|
+| [Quick Start](#quick-start) | Get started in 30 seconds |
+| [Features](#features) | Main capabilities |
+| [Installation](./docs/INSTALLATION.md) | Full installation guide |
+| [Architecture](./docs/ARCHITECTURE.md) | System design & contracts |
+| [API Reference](./docs/API_REFERENCE.md) | Programmatic interface |
+| [Roadmap](./docs/TODO.md) | Planned improvements |
+| [Changelog](./CHANGELOG.md) | Version history |
+| [Contributing](./docs/CONTRIBUTING.md) | How to contribute |
 
-- [The Vision: Solving AI Context Loss](#-the-vision-solving-ai-context-loss-in-software-development)
-  - [The Fundamental Problem](#the-fundamental-problem)
-  - [The Solution: Permanent Context Persistence](#the-solution-permanent-context-persistence)
-- [How It Works: The Complete Flow](#-how-it-works-the-complete-flow)
-  - [Phase 1: Context Initialization (`ai_start` Protocol)](#phase-1-context-initialization-ai_start-protocol)
-  - [Phase 2: Continuous Context Maintenance](#phase-2-continuous-context-maintenance)
-  - [Phase 3: Code Quality Enforcement](#phase-3-code-quality-enforcement)
-  - [Phase 4: Evidence Update Before Commits](#phase-4-evidence-update-before-commits)
-- [Tools & Technologies](#️-tools--technologies)
-- [What, How, and When: The Developer's Perspective](#-what-how-and-when-the-developers-perspective)
-- [Complete Architecture and Workflow](#complete-architecture-and-workflow)
-- [What is it?](#what-is-it)
-- [What problems does it solve?](#what-problems-does-it-solve)
-- [Git Flow Automation](#git-flow-automation)
-- [Features](#features)
-- [Use Cases](#use-cases)
-- [Installation](#installation)
-- [Quick Start](#quick-start)
-- [📚 Documentation Guide - Step by Step](#-documentation-guide---step-by-step)
-- [Architecture](#architecture)
-- [MCP Servers](#mcp-servers)
-- [API Reference](#api-reference)
-- [Configuration](#configuration)
-- [Best Practices](#best-practices)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
+# Pumuki AST Intelligence Framework
+
+## Enterprise AI Context Governance & Code Quality Enforcement
+
+Pumuki AST Intelligence Framework is a **portable, enterprise-grade framework** designed to **govern AI-assisted software development** in large, long-lived, multi-platform projects.
+
+It provides a **deterministic control layer** over AI behavior by combining:
+
+* AST-based static analysis
+* Persistent AI context evidence
+* Rule-based validation
+* Hard AI gating (block / allow)
+* Native Git workflow integration
+
+The framework is **project-agnostic** by design and can be adopted by any organization seeking to use AI **safely, predictably, and at scale**.
 
 ---
 
-### Visual Overview
+## Problem Statement
 
-<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_01.png" alt="AST Intelligence System Overview" width="100%" />
+AI assistants are powerful but fundamentally unreliable when used in real-world, enterprise codebases:
 
-<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_02.png" alt="AST Intelligence Workflow" width="100%" />
+* Context degrades across sessions, chats, and tools
+* Architectural rules are suggested but not enforced
+* AI hallucinations introduce subtle, high-impact defects
+* There is no persistent or auditable source of truth
+* Long-running features suffer from context drift
 
-<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_03.png" alt="AST Intelligence Audit - Part 1" width="100%" />
-
-<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_04.png" alt="AST Intelligence Audit - Part 2" width="100%" />
-
-<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_05.png" alt="AST Intelligence Audit - Part 3" width="100%" />
-
----
-
-## 🧠 The Vision: Solving AI Context Loss in Software Development
-
-### The Fundamental Problem
-
-In modern AI-assisted development, a critical limitation emerges: **AI assistants lose context**. Whether due to token limits, session resets, or conversation boundaries, AI agents repeatedly forget:
-
-- **Project architecture**: "What's the structure here? Clean Architecture? DDD? Feature-First?"
-- **Active rules**: "Which validation rules apply? What are the coding standards?"
-- **Current work**: "What branch am I on? What files were recently changed? What patterns exist?"
-- **Quality gates**: "Are there blocking violations? What needs to be fixed?"
-
-This forces developers into a **repetitive, inefficient cycle** of re-explaining context, re-loading rules, and re-establishing project understanding—defeating the purpose of AI assistance.
-
-### The Solution: Permanent Context Persistence
-
-This library was conceived to solve this fundamental problem by creating a **permanent, always-on context system** for AI assistants. It transforms AI from a "stateless helper" into a **context-aware collaborator** that maintains deep, persistent understanding of your project.
-
----
-
-## 🔄 How It Works: The Complete Flow
-
-### Phase 1: Context Initialization (`ai_start` Protocol)
-
-**When**: Before any code editing begins, or when context becomes stale (>3 minutes)
-
-**What Happens**:
-
-1. **Developer runs `ai-start`** (or it auto-executes via MCP):
-   ```bash
-   ai-start feature/user-authentication
-   # or automatically via MCP: auto_execute_ai_start
-   ```
-
-2. **The system answers three critical questions**:
-   - **Q1: What file types am I working with?**
-     - Analyzes staged/modified files
-     - Detects platforms (iOS, Android, Backend, Frontend)
-     - Identifies target Clean Architecture layers (Domain, Application, Infrastructure, Presentation)
-     - Example: `"Code task on branch 'feature/auth'. Modifying typescript, kotlin in: auth, users. Target layer: Domain."`
-   
-   - **Q2: Does similar code already exist?**
-     - Analyzes recent Git commits
-     - Identifies affected modules
-     - Suggests existing patterns to follow
-     - Example: `"Modules affected: auth, users. Recent commits: abc123 feat: Add JWT validation. Check for existing patterns before adding new code."`
-   
-   - **Q3: How does this fit in Clean Architecture?**
-     - Validates layer dependencies
-     - Ensures dependencies point inward (Domain ← Application ← Infrastructure)
-     - Example: `"Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."`
-
-3. **Rules are automatically loaded**:
-   - `DynamicRulesLoader` scans agentic IDE rules directories (`.cursor/rules/`, `.ast-intelligence/skills/`, `.windsurf/rules/`, `.vscode/rules/`, `.kilo/rules/`, `.cline/rules/`) for platform-specific rules
-   - **Always loads `rulesgold.mdc` first** (generic rules that apply to all projects)
-   - Then loads platform-specific rules: `rulesbackend.mdc`, `rulesios.mdc`, `rulesandroid.mdc`, `rulesfront.mdc`
-   - Aggregates all 798+ validation rules into a single context
-   - Creates `auto-context.mdc` with all active rules
-
-4. **`.AI_EVIDENCE.json` is created/updated**:
-   ```json
-   {
-     "timestamp": "2025-12-13T23:07:19.632Z",
-     "session_id": "feature/user-authentication",
-     "protocol_3_questions": {
-       "answered": true,
-       "question_1_file_type": "Code task on branch 'feature/auth'. Modifying typescript, kotlin in: auth, users. Target layer: Domain.",
-       "question_2_similar_exists": "Modules affected: auth, users. Recent commits: abc123 feat: Add JWT validation. Check for existing patterns before adding new code.",
-       "question_3_clean_architecture": "Code changes in Domain layer affecting auth, users. Ensure dependencies point inward."
-     },
-     "rules_read": [
-       { "file": "rulesgold.mdc", "verified": true, "summary": "IDE Rules: ### ANTES de implementar CUALQUIER cosa (aplicables en todas las tecnologías):;### Reglas de Arquitectura:;### Seguridad y Validación:;### Performance y Escalabilidad:;### Testing y Calidad:;### Observabilidad y Debugging:;### Arquitectura y Diseño:;### Control de Versiones y Colaboración:;### i18n y Accesibilidad:;### Error Handling:; | AST: Files: 96, Rules: types.any,debug.console,security.secret,security.sql.raw,performance.pagination,performance.nplus1,architecture.layering,ios.force_unwrapping" },
-       { "file": "rulesbackend.mdc", "verified": true, "summary": "IDE Rules: ### NestJS Architecture:;### Repository Pattern:;### Use Cases Pattern:;### DTOs y Validación:;### Database y ORM:;### Autenticación y Autorización:;### Event-Driven Architecture:;### Caché (Redis):;### Logging y Observabilidad:;### Testing Backend:;### Error Handling:;### Seguridad:;### Performance:;### API Design:;### Configuración:;### Documentación:; | AST: Files: 16, Rules: backend.error_handling.untyped_catch,backend.security.pii_in_logs,backend.performance.nplus1" },
-       { "file": "rulesios.mdc", "verified": true, "summary": "IDE Rules: ### Swift Moderno:;### SwiftUI (Preferido):;### UIKit (Legacy/Necesario):;### Protocol-Oriented Programming:;### Value Types:;### Memory Management:;### Optionals:;### Clean Architecture en iOS:;### Dependency Injection:;### Networking:;### Persistence:;### Combine (Reactive):;### Concurrency:;### Testing:;### Security:;### Accessibility:;### Localization:; | AST: Files: 24, Rules: ios.force_unwrapping,ios.singleton,ios.massive_view_controller" }
-     ],
-     "current_context": {
-       "branch": "feature/user-authentication",
-       "last_commits": "abc123 feat: Add JWT validation"
-     },
-     "platforms": ["backend", "ios"],
-     "ai_gate": {
-       "status": "BLOCKED",
-       "last_check": "2025-12-13T23:16:39.736Z",
-       "violations": [
-         {
-           "file": "/path/to/project/src/auth/user.service.ts",
-           "line": 45,
-           "severity": "HIGH",
-           "rule": "backend.error_handling.untyped_catch",
-           "message": "Catch parameter MUST be typed as ': unknown' - use type guards (error instanceof HttpException/Error)",
-           "category": "Error Handling",
-           "intelligent_evaluation": false,
-           "severity_score": 50
-         },
-         {
-           "file": "/path/to/project/src/auth/auth.controller.ts",
-           "line": 12,
-           "severity": "CRITICAL",
-           "rule": "backend.security.pii_in_logs",
-           "message": "🚨 CRITICAL: Potential PII in logs. Never log: passwords, tokens, SSN, credit cards. Sanitize: logger.info({ userId, action }) - don't include sensitive fields. GDPR violation risk.",
-           "category": "Security",
-           "intelligent_evaluation": true,
-           "severity_score": 100
-         }
-       ],
-       "instruction": "🚨 AI MUST call mcp_ast-intelligence-automation_ai_gate_check BEFORE any action. If BLOCKED, fix violations first!",
-       "mandatory": true
-     },
-     "severity_metrics": {
-       "last_updated": "2025-12-13T23:16:39.726Z",
-       "total_violations": 2,
-       "by_severity": {
-         "CRITICAL": 1,
-         "HIGH": 1,
-         "MEDIUM": 0,
-         "LOW": 0
-       },
-       "average_severity_score": 75,
-       "gate_status": "FAILED",
-       "blocked_by": "CRITICAL"
-     }
-   }
-   ```
-
-### Phase 2: Continuous Context Maintenance
-
-**When**: Throughout the development session
-
-**What Happens**:
-
-1. **Pre-Tool-Use Validation** (`pre-tool-use-evidence-validator.ts`):
-   - **Before every AI edit operation**, validates `.AI_EVIDENCE.json`:
-     - ✅ File exists
-     - ✅ Valid JSON structure
-     - ✅ Timestamp is fresh (<180 seconds old)
-     - ✅ Rules were read
-     - ✅ Protocol 3 questions answered
-     - ✅ AI gate is not BLOCKED
-   - **If stale or missing**: Blocks the edit and prompts to run `ai-start`
-   - **If BLOCKED**: Shows violations and requires fixing before proceeding
-
-2. **Real-Time Monitoring** (`RealtimeGuardService`):
-   - Polls `.AI_EVIDENCE.json` every 30 seconds
-   - Detects staleness (>180 seconds)
-   - **Auto-refreshes** evidence if stale (`HOOK_GUARD_AUTO_REFRESH=true` by default)
-   - **Auto-executes ai-start** when code files detected (`HOOK_GUARD_AI_START=true` by default)
-   - Monitors Git tree state with differentiated thresholds:
-     - **Staged files**: Warning at >10 files (configurable via `HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT`)
-     - **Unstaged files**: Warning at >15 files (configurable via `HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT`)
-     - **Total files**: Warning at >20 files (configurable via `HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT`)
-   - Sends macOS notifications for critical events
-
-3. **Automatic Rule Updates**:
-   - When new rules are added to any agentic IDE rules directory, they're automatically detected
-   - `DynamicRulesLoader` reloads rules on next `ai-start`
-   - `auto-context.mdc` is regenerated with latest rules
-
-### Phase 3: Code Quality Enforcement
-
-**When**: Before commits, during development, via MCP tools
-
-**What Happens**:
-
-1. **Pre-Commit Analysis** (Git Hook):
-   - Analyzes staged files using AST (Abstract Syntax Tree)
-   - Applies 798+ validation rules
-   - Checks Clean Architecture violations
-   - Validates SOLID principles
-   - Detects security issues, performance problems, maintainability issues
-   - **Blocks commit** if CRITICAL/HIGH violations found
-
-2. **AI Gate Check** (`ai_gate_check` MCP tool):
-   - **Called at the start of every AI response** (enforced by Cursor rules)
-   - Reads `.AI_EVIDENCE.json` → `ai_gate.status`
-   - Returns `BLOCKED` or `ALLOWED`
-   - If `BLOCKED`: Shows violations, requires fixing before proceeding
-   - If `ALLOWED`: AI can proceed with user's task
-
-3. **Violation Detection**:
-   - AST analyzers scan code for:
-     - Architecture violations (wrong layer dependencies)
-     - SOLID violations (God classes, tight coupling)
-     - Security issues (PII in logs, SQL injection risks)
-     - Performance issues (N+1 queries, missing pagination)
-     - Code quality (comments, magic numbers, force unwrapping)
-   - Findings are aggregated into `AuditResult`
-   - Severity-based blocking (CRITICAL/HIGH block, MEDIUM/LOW warn)
-
-### Phase 4: Evidence Update Before Commits
-
-**When**: Before every Git commit
-
-**What Happens**:
-
-1. **`ai-commit.sh` is executed** (via Git alias or directly):
-   ```bash
-   git commit -m "feat: Add user authentication"
-   # Internally calls: ai-commit.sh
-   ```
-
-2. **Evidence is refreshed**:
-   - Updates `.AI_EVIDENCE.json` timestamp
-   - Re-analyzes current context (branch, files, commits)
-   - Updates violation status
-   - Ensures evidence is fresh for next AI interaction
-
-3. **Commit proceeds** with fresh evidence
-
----
-
-## 🛠️ Tools & Technologies
-
-### Core Components
-
-1. **Git Hooks**:
-   - `pre-commit`: AST analysis before commits
-   - `pre-push`: Additional validation before pushing
-   - `post-commit`: Evidence update after commits
-
-2. **MCP (Model Context Protocol) Server**:
-   - `ast-intelligence-automation`: Provides AI tools via MCP
-   - Tools: `ai_gate_check`, `auto_execute_ai_start`, `auto_complete_gitflow`, `sync_branches`, `cleanup_stale_branches`, `validate_and_fix`
-   - Enables Cursor, Claude Desktop, and other MCP-compatible IDEs to interact with the system
-
-3. **AST Analysis Engine**:
-   - `ts-morph`: TypeScript AST parsing
-   - Custom analyzers for each platform:
-     - `BackendArchitectureDetector`: Detects NestJS patterns, Clean Architecture
-     - `FrontendArchitectureDetector`: Detects React/Next.js patterns, Feature-First
-     - `iOSArchitectureDetector`: Detects multiple iOS architecture patterns (MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD, MVC Legacy)
-     - `AndroidClassAnalyzer`: Detects Kotlin/Jetpack Compose patterns
-   - `MaintainabilityAnalyzer`, `PerformanceAnalyzer`, `SecurityAnalyzer`, `StabilityAnalyzer`
-
-4. **Context Management**:
-   - `DynamicRulesLoader`: Loads and aggregates rules from any agentic IDE rules directory (Cursor, Claude, Windsurf, VS Code, Kilo, Cline, etc.)
-   - `ContextDetectionEngine`: Detects project structure and patterns
-   - `PlatformDetectionService`: Identifies platforms (iOS, Android, Backend, Frontend)
-   - `AutonomousOrchestrator`: Coordinates context detection and rule loading
-
-5. **Real-Time Services**:
-   - `RealtimeGuardService`: Monitors evidence freshness, Git tree state
-   - `IntelligentGitTreeMonitor`: Tracks Git changes and suggests actions
-   - `EvidenceMonitorService`: Watches for evidence staleness
-
-6. **Use Cases** (Clean Architecture):
-   - `AnalyzeCodebaseUseCase`: Full codebase analysis
-   - `AnalyzeStagedFilesUseCase`: Staged files only
-   - `BlockCommitUseCase`: Determines if commit should be blocked
-   - `AutoExecuteAIStartUseCase`: Auto-executes `ai-start` based on confidence
-   - `GenerateAuditReportUseCase`: Creates audit reports (console, JSON, HTML)
-
----
-
-## 📊 What, How, and When: The Developer's Perspective
-
-### **What** Does This Library Provide?
-
-1. **Permanent AI Context**: `.AI_EVIDENCE.json` that never gets lost
-2. **798+ Validation Rules**: Platform-specific code quality rules
-3. **Automatic Architecture Detection**: Identifies multiple patterns per platform (iOS: MVVM, MVVM-C, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD; Backend: Clean Architecture, DDD, CQRS; Frontend: Feature-First, Component-Based, Atomic Design; Android: MVVM, MVI, MVP, Clean Architecture)
-4. **Quality Gates**: Blocks commits with CRITICAL/HIGH violations
-5. **Git Flow Automation**: Complete workflow automation (commit → push → PR → merge)
-6. **MCP Integration**: Standard protocol for any agentic IDE
-
-### **How** Does It Work?
-
-1. **Installation**: `npm install --save-dev pumuki-ast-hooks && npm run install-hooks`
-2. **Initialization**: Run `ai-start` before coding (or it auto-executes)
-3. **Development**: System monitors and validates automatically
-4. **Commits**: Pre-commit hooks analyze and block if needed
-5. **AI Interaction**: AI always has fresh context via `.AI_EVIDENCE.json`
-
-### **When** Does It Activate?
-
-- **On Installation**: Sets up Git hooks, MCP server, rules
-- **Before Coding**: `ai-start` initializes context (manual or auto)
-- **During Editing**: Pre-tool-use hooks validate evidence freshness
-- **Before Commits**: Pre-commit hooks analyze staged files
-- **On AI Requests**: `ai_gate_check` validates before AI actions
-- **Continuously**: `RealtimeGuardService` monitors and auto-refreshes
-
-### **Why** Does It Matter?
-
-- **Efficiency**: AI never asks "What's the architecture?" again
-- **Quality**: Catches violations before they reach production
-- **Consistency**: Enforces standards across entire team
-- **Automation**: Reduces manual Git Flow tasks
-- **Context Persistence**: Survives token limits, session resets, conversation boundaries
-
----
-
-## Complete Architecture and Workflow
-
-The library operates through a multi-phase process that integrates with Git and development workflows to ensure code quality and context persistence. Below is a high-level overview of the architecture and key components:
-
-### Architectural Diagram
-
-```mermaid
-graph LR
-  A[Developer] -->|Runs `ai-start`| B(AI Evidence Initialization)
-  B --> C[.AI_EVIDENCE.json]
-  C --> D[Pre-Tool-Use Validator]
-  D --> E[AI Gate Check]
-  E --> F[Allow/Block Actions]
-  F --> G[Code Editing]
-  G --> H[Pre-Commit Analysis]
-  H --> I[Block Commit if Violations]
-  I --> J[Update Evidence]
-  J --> K[Commit]
-```
-
-### Key Components
-1. **AI Evidence Initialization (`ai-start`)**
-   - Generates `.AI_EVIDENCE.json` with project context and rules.
-   - Answers three critical questions about the task.
-   - Example:
-     ```bash
-     ai-start feature/user-authentication
-     ```
-
-2. **Pre-Tool-Use Validator**
-   - Validates `.AI_EVIDENCE.json` before every AI edit operation.
-   - Ensures context is fresh and rules are loaded.
-
-3. **AI Gate Check**
-   - Checks for blocking violations before allowing actions.
-   - Enforces quality gates.
-
-4. **Pre-Commit Analysis**
-   - Runs AST analysis on staged files.
-   - Blocks commits with critical violations.
-
-5. **Evidence Update**
-   - Updates `.AI_EVIDENCE.json` before commits to maintain context.
-
-### Example Workflow
-1. Developer runs `ai-start` to initialize context.
-2. AI uses context to perform edits.
-3. Pre-commit hook analyzes code and blocks if violations exist.
-4. Developer fixes violations and commits.
-
-For a detailed architecture, see [ARCHITECTURE.md](ARCHITECTURE.md).
-
----
-
-## What is it?
-
-`ast-intelligence-hooks` is an intelligent static analysis system that automatically validates that your code complies with **Clean Architecture**, **Domain-Driven Design (DDD)**, and **Feature-First Architecture** principles.
-
-**But more importantly**, it's a **context persistence system** that ensures AI assistants maintain permanent understanding of your project through the `ai_start` protocol, automatic rule loading, and continuously updated `.AI_EVIDENCE.json`.
-
----
-
-## What problems does it solve?
-
-### ❌ Common Problems
-
-1. **Clean Architecture Violations**
-   - Domain layer importing frameworks
-   - Infrastructure coupled to Presentation
-   - Circular dependencies
-
-2. **Undetected Code Smells**
-   - Magic numbers without constants
-   - Functions that are too long
-   - Classes with too many responsibilities
-
-3. **Lack of Architectural Consistency**
-   - Incorrect folder structure
-   - Forbidden imports between layers
-   - Missing separation of concerns
-
-4. **Production-time Errors**
-   - Security violations (passwords without hash)
-   - Performance issues
-   - Untestable code
-
-### ✅ Solutions
-
-- **Automatic validation** before each commit
-- **798+ rules** specific to each platform
-- **Detailed reports** with correction suggestions
-- **CI/CD integration** for continuous validation
-
----
-
-## Features
-
-### 🎯 Platform-specific Analysis
-
-#### Backend (TypeScript/NestJS)
-- 150+ Clean Architecture rules
-- **Automatic architecture detection**: Clean Architecture, Onion, Layered, Feature-First + Clean + DDD, CQRS
-- DDD pattern validation
-- Circular dependency detection
-- Decorator and module analysis
-
-#### Frontend (React/Next.js)
-- 200+ architecture rules
-- **Automatic architecture detection**: Component-Based, Atomic Design, Feature-First + Clean + DDD, State Management patterns
-- Server/Client Components validation
-- Hooks and state management analysis
-- Prop drilling detection
-
-#### iOS (Swift/SwiftUI)
-- 150+ iOS-specific rules
-- **Automatic architecture detection**: MVVM-C, MVVM, MVP, VIPER, TCA, Clean Swift, Feature-First + Clean + DDD
-- SwiftUI best practices analysis
-- Potential memory leak detection
-
-#### Android (Kotlin/Jetpack Compose)
-- 200+ Android-specific rules
-- **Automatic architecture detection**: MVVM, MVI, MVP, Clean Architecture, Feature-First + Clean + DDD
-- Compose pattern analysis
-- Common anti-pattern detection
-
-### 🏗️ Automatic Architecture Detection
-
-All platforms now support **automatic architecture pattern detection**:
-- **No configuration needed** - works out of the box
-- Detects patterns by analyzing project structure, imports, and code
-- Supports manual override via `.ast-architecture.json` (optional)
-- Works for iOS, Android, Backend, and Frontend
-
-See [HOW_IT_WORKS.md](./docs/HOW_IT_WORKS.md#architecture-detection-by-platform) for details on detected patterns per platform.
-
-### 🤖 MCP Integration
-
-- **evidence-watcher**: Automatic monitoring of `.AI_EVIDENCE.json`
-- **ast-intelligence-automation**: Complete Git Flow automation and context detection
-- **Standard MCP protocol**: Works with any MCP-compatible agentic IDE (Cursor, Claude Desktop, and others)
-
-### 🔒 Quality Gates
-
-- **CRITICAL/HIGH**: Automatically block commits
-- **MEDIUM/LOW**: Generate warnings in reports
-- **Configurable**: Adjust levels according to your project
-
-### 🔄 Git Flow Automation
-
-**Complete Git Flow workflow automation** with automatic enforcement:
-
-- **Protected Branch Blocking**: Automatically blocks commits and pushes to `main`, `master`, and `develop` branches
-- **Auto-Create Feature Branch**: Automatically creates feature branch when on `develop`/`main` based on changes
-- **Smart Branch Naming**: Generates branch names based on file types (feature/, fix/, chore/, docs/, etc.)
-- **Feature Cycle**: Execute complete Git Flow with `npm run ast:gitflow`
-- **Release Cycle**: Create release PR from develop to main with `npm run ast:release`
-- **Automatic PR Creation**: Creates Pull Requests using GitHub CLI (requires `gh`)
-- **Optional Auto-Merge**: Automatically merges PRs with `--auto-merge` flag
-- **Branch Cleanup**: Automatically deletes merged branches (local and remote)
-- **Branch Synchronization**: Syncs `develop` and `main` with remote
-
-**Feature Development Workflow:**
-```bash
-# Work on develop/main (changes detected)
-
-# Run complete cycle (auto-creates feature branch)
-npm run ast:gitflow -- --auto-merge
-```
-
-**Release Workflow:**
-```bash
-# Switch to develop branch
-git checkout develop
-
-# Create release PR (develop → main)
-npm run ast:release -- --auto-merge
-
-# Or with version tag
-npm run ast:release -- --tag 5.5.35 --auto-merge
-```
-
-**Branch Naming Logic:**
-- `fix/` - Files containing "fix", "bug", "error"
-- `test/` - Test files or "spec" files
-- `docs/` - Documentation files (README, CHANGELOG)
-- `refactor/` - Files containing "refactor", "cleanup"
-- `ci/` - CI/CD files (workflow, github actions)
-- `chore/` - Config files, package.json
-- `feature/` - Default for other changes
-
-**Feature Cycle Options:**
-```bash
-npm run ast:gitflow                              # Basic cycle (auto-creates branch if needed)
-npm run ast:gitflow -- -m "feat: new feature"    # Custom commit message
-npm run ast:gitflow -- --auto-merge              # Auto-merge PR
-npm run ast:gitflow -- --skip-cleanup            # Skip branch cleanup
-npm run ast:gitflow -- --skip-sync               # Skip branch sync
-```
-
-**Release Cycle Options:**
-```bash
-npm run ast:release                              # Create release PR
-npm run ast:release -- --auto-merge              # Auto-merge release PR
-npm run ast:release -- --tag 5.5.35              # Create and push git tag
-npm run ast:release -- --pr-title "Release v5.5.35"  # Custom PR title
-```
-
-**Hooks:**
-- `pre-commit`: Blocks commits on protected branches + AST analysis
-- `pre-push`: Blocks push to protected branches + validates naming
-
----
-
-## Use Cases
-
-### 1. Automatic Validation on Pre-commit
-
-```bash
-# Runs automatically on each git commit
-git commit -m "feat: add new feature"
-# → Analyzes only staged files
-# → Blocks commit if CRITICAL/HIGH violations found
-# → Generates violation report
-```
-
-### 2. Full Project Analysis
-
-```bash
-# Analyzes entire codebase
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-# Or using CLI
-ast-hooks analyze
-```
-
-### 3. CI/CD Integration
-
-```yaml
-# .github/workflows/ci.yml
-- name: Run AST Analysis
-  run: bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-```
-
-### 4. Programmatic Usage
-
-```javascript
-const { runASTIntelligence } = require('@pumuki/ast-intelligence-hooks');
-
-const result = await runASTIntelligence({
-  files: ['src/**/*.ts'],
-  platforms: ['backend'],
-  strict: true
-});
-
-if (result.hasCriticalViolations()) {
-  console.error('❌ Critical violations found!');
-  process.exit(1);
-}
-```
-
-### 5. Continuous Monitoring
-
-```bash
-# Watch mode for development
-hook-watch
-
-# System status
-hook-status
-```
-
-### 6. Git Flow Automation
-
-```bash
-# Complete Git Flow cycle
-npm run ast:gitflow
-
-# With options
-npm run ast:gitflow -- -m "feat: new feature" --auto-merge
-
-# Using MCP tools (from IDE)
-mcp0_auto_complete_gitflow
-mcp0_sync_branches
-mcp0_cleanup_stale_branches
-```
+Pumuki addresses these issues by **removing trust from the AI** and replacing it with **evidence, validation, and enforcement**.
 
 ---
 
 ## Quick Start
 
-### Prerequisites
+1. Instala dependencias: `npm install`
+2. Usa los ganchos: `npx ast-hooks` (menú interactivo)
+3. Modo CI/CD: `bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh`
+4. Consulta la guía: [docs/INSTALLATION.md](./docs/INSTALLATION.md)
 
-- **Node.js** ≥18.0.0
-- **npm** ≥9.0.0
-- **Git** (for hooks)
+---
 
-### 1. Install the library
+## Installation & Hooks CLI
+
+* Install (dev): `npm install --save-dev @pumuki/ast-intelligence-hooks`
+* Update to latest: `npm install --save-dev @pumuki/ast-intelligence-hooks@latest && npm run install-hooks`
+* Uninstall: `npm uninstall @pumuki/ast-intelligence-hooks`
+* Install/reinstall hooks: `npm run install-hooks` (alias `npx ast-install`)
+* Interactive menu (hook-system): `npx ast-hooks`
+* Evidence guard daemon: `npm run ast:guard:start|stop|restart|status|logs`
+* Refresh evidence: `npm run ast:refresh`
+* Check installed vs latest version: `npm run ast:check-version`
+
+---
+
+## Features
+
+* AST intelligence multi-plataforma (iOS, Android, Backend, Frontend)
+* Evidence file `.AI_EVIDENCE.json` como fuente de verdad
+* AI Gate (block/allow) con métricas
+* Git-native (pre-commit / pre-push / CI)
+* Notificaciones macOS + guardrails de árbol Git
+* Automatización Git Flow (`ast:gitflow`, `ast:release`)
+
+---
+
+## Visual Overview
+
+<img src="./docs/images/ast_intelligence_01.svg" alt="AST Intelligence System Overview" width="100%" />
+
+<img src="./docs/images/ast_intelligence_02.svg" alt="AST Intelligence Workflow" width="100%" />
+
+<img src="./docs/images/ast_intelligence_03.svg" alt="AST Intelligence Audit - Part 1" width="100%" />
+
+<img src="./docs/images/ast_intelligence_04.svg" alt="AST Intelligence Audit - Part 2" width="100%" />
+
+<img src="./docs/images/ast_intelligence_05.svg" alt="AST Intelligence Audit - Part 3" width="100%" />
+
+---
+
+## Design Philosophy
+
+Pumuki is built on a few non-negotiable principles:
+
+* **Evidence over conversation**
+  AI does not rely on chat memory. All decisions depend on a persistent evidence file.
+
+* **Gated intelligence**
+  AI actions are explicitly allowed or blocked based on project state.
+
+* **AST, not heuristics**
+  Code is analyzed structurally, not via regex or conventions.
+
+* **Fail fast, block early**
+  Unsafe or invalid AI actions are prevented before code changes occur.
+
+* **Platform-agnostic governance**
+  The same rules apply consistently across iOS, Android, backend, and frontend.
+
+---
+
+## Core Capabilities
+
+### 1. AI Evidence System
+
+Pumuki introduces a mandatory, versioned **AI Evidence File** (`.AI_EVIDENCE.json`) that acts as the **single source of truth** for AI-assisted development.
+
+It stores:
+
+* Active platforms and scopes
+* Architectural and quality rules
+* Detected violations and severities
+* Session and workflow metadata
+* AI gate state
+
+The AI **cannot operate** without valid and fresh evidence.
+
+---
+
+### 2. AI Gate (Control Primitive)
+
+The AI Gate is the core control mechanism of the framework.
+
+Before any AI-assisted operation:
+
+* Evidence freshness is validated
+
+* Violations are evaluated
+
+* A deterministic decision is made:
+
+* **ALLOWED** → operation may proceed
+
+* **BLOCKED** → operation is rejected with actionable feedback
+
+This transforms AI from an advisory tool into a **controlled execution actor**.
+
+---
+
+### 3. AST Intelligence Engine
+
+The AST Intelligence Engine performs deep, language-aware analysis across platforms.
+
+Capabilities include:
+
+* Architectural rule enforcement
+* Security and data safety validation
+* Performance anti-pattern detection
+* Detection of forbidden constructs and flows
+
+The engine operates on **real ASTs**, not text approximations.
+
+---
+
+### 4. Git-Native Enforcement
+
+Pumuki integrates directly with Git workflows:
+
+* Pre-commit hooks
+* Pre-push hooks
+* Branch and flow validation
+
+Violations can:
+
+* Block commits
+* Block pushes
+* Prevent unsafe changes from reaching CI/CD
+
+Governance happens **before** code reaches production.
+
+---
+
+## Supported Platforms
+
+Pumuki is multi-platform by default:
+
+* iOS (Swift)
+* Android (Kotlin)
+* Backend (Node.js / NestJS)
+* Frontend (React / Next.js)
+
+The framework is extensible to additional platforms and languages.
+
+---
+
+## Typical Enterprise Use Cases
+
+* Long-running feature development with AI assistance
+* Multi-day or multi-chat workflows
+* Large monorepos and distributed teams
+* Strict Clean Architecture enforcement
+* Regulated or compliance-sensitive environments
+
+---
+
+## Installation
+
+**Requirements**
+
+* Node.js 20 (see `.nvmrc`)
+* npm 10+
+
+Install as a development dependency:
+
+```bash
+npm install --save-dev @pumuki/ast-intelligence-hooks
+```
+
+Legacy (deprecated):
 
 ```bash
 npm install --save-dev pumuki-ast-hooks
 ```
 
-### 2. Configure hooks
+Initialize AI evidence:
+
+```bash
+npx ai-start
+```
+
+---
+
+## Installation & Lifecycle Commands
+
+### Update to latest version
+
+```bash
+npm install --save-dev @pumuki/ast-intelligence-hooks@latest
+npm run install-hooks
+````
+
+### Uninstall
+
+```bash
+npm uninstall @pumuki/ast-intelligence-hooks
+```
+
+Legacy:
+
+```bash
+npm uninstall pumuki-ast-hooks
+```
+
+---
+
+## Hook Installation & Management
+
+Install or update Git hooks (wizard-driven):
 
 ```bash
 npm run install-hooks
 ```
 
-### 3. Make a test commit
+(Equivalent to `npx ast-install`)
+
+---
+
+## Operational Commands
+
+### Check installed version vs. latest published
 
 ```bash
-git add .
-git commit -m "test: verify hooks"
+npm run ast:check-version
 ```
 
-The hooks will run automatically and validate your code.
+### Run hook system with interactive menu
 
-### 4. View full report
+```bash
+npx ast-hooks
+```
+
+---
+
+## Manual Hook-System (Interactive Menu)
+
+Pumuki can be used fully manually (without waiting for Git hooks) via the interactive audit menu.
+
+### Recommended
+
+```bash
+npx ast-hooks
+```
+
+### Direct CLI (explicit)
+
+```bash
+ast-hooks audit
+```
+
+### Run the orchestrator directly (local repository)
 
 ```bash
 bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
-### 5. Check violations
+### Non-interactive mode
+
+You can run specific audit modes without the menu:
 
 ```bash
-# List all violations
-npm run violations
+# Example: run AST Intelligence directly
+AUDIT_OPTION=7 bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 
-# View summary
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-
-# Top violations
-npm run violations:top
+# Example: analyze staged files only (pre-commit equivalent)
+AUDIT_OPTION=3 bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
 ```
 
----
-
-## 📚 Documentation Guide - Step by Step
-
-This section provides a recommended reading order to fully understand the library and its capabilities.
-
-### For New Users (Start Here)
-
-1. **[HOW_IT_WORKS.md](./docs/HOW_IT_WORKS.md)** ⭐ **START HERE**
-   - Complete step-by-step explanation of what the library does
-   - Installation process breakdown
-   - How each component works (Git hooks, MCP servers, AST analysis)
-   - Execution flows and real-world examples
-   - **Read this first to understand the system!**
-
-1. **[INSTALLATION.md](./docs/INSTALLATION.md)** - Start here! Complete installation guide with platform-specific instructions
-   - Prerequisites and requirements
-   - Installation methods (npm, Git, manual)
-   - Initial configuration
-   - Verification steps
-
-2. **[USAGE.md](./docs/USAGE.md)** - Learn how to use the library
-   - Minimal example (5 minutes)
-   - Basic commands
-   - Git hooks integration
-   - Programmatic usage
-   - Advanced examples
-   - CI/CD integration
-
-3. **[Quick Start](#quick-start)** (this README) - Get up and running quickly
-   - Fast setup in 5 steps
-   - First test commit
-
-### For Understanding the System
-
-4. **[ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - High-level architecture overview
-   - System layers
-   - Data flow
-   - Key components
-   - Quality gates
-
-5. **[ARCHITECTURE_DETAILED.md](./docs/ARCHITECTURE_DETAILED.md)** - Deep dive into architecture
-   - Detailed layer architecture
-   - Module dependencies
-   - Extension points
-   - Key files mapping
-
-### For Integration and Advanced Usage
-
-6. **[MCP_SERVERS.md](./docs/MCP_SERVERS.md)** - MCP integration for agentic IDEs
-   - evidence-watcher setup
-   - ast-intelligence-automation setup
-   - Usage examples
-   - Troubleshooting
-
-7. **[API_REFERENCE.md](./docs/API_REFERENCE.md)** - Complete API documentation
-   - Core services
-   - Use Cases
-   - Domain entities
-   - Entry points
-
-### For Configuration and Customization
-
-8. **[CODE_STANDARDS.md](./docs/CODE_STANDARDS.md)** - Code style and conventions
-   - ESLint configuration
-   - TypeScript conventions
-   - Clean code principles
-   - Git commit format
-
-9. **[DEPENDENCIES.md](./docs/DEPENDENCIES.md)** - Dependencies analysis
-   - Runtime dependencies
-   - Development dependencies
-   - Optional tools
-   - Platform compatibility
-
-### For Development and Testing
-
-10. **[TESTING.md](./docs/TESTING.md)** - Testing guide
-    - Test structure
-    - Running tests
-    - Writing new tests
-    - Best practices
-
-### Quick Reference
-
-- **Need to install?** → [INSTALLATION.md](./docs/INSTALLATION.md)
-- **Need examples?** → [USAGE.md](./docs/USAGE.md) or `examples/` folder
-- **Need API docs?** → [API_REFERENCE.md](./docs/API_REFERENCE.md)
-- **Need to configure?** → [USAGE.md](./docs/USAGE.md#rule-configuration)
-- **Need to understand architecture?** → [ARCHITECTURE.md](./docs/ARCHITECTURE.md)
-
----
-
-## Architecture
-
-The project follows **strict Clean Architecture** with 4 well-defined layers:
-
-```
-┌─────────────────────────────────────────┐
-│  PRESENTATION LAYER                     │
-│  - CLI Interface                        │
-│  - Git Hooks                            │
-│  - MCP Servers                          │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│  APPLICATION LAYER                      │
-│  - Use Cases                            │
-│  - Services                             │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│  DOMAIN LAYER                           │
-│  - Entities                             │
-│  - Business Rules                       │
-│  - Repository Interfaces                │
-└──────────────┬──────────────────────────┘
-               ▲
-┌──────────────┴──────────────────────────┐
-│  INFRASTRUCTURE LAYER                   │
-│  - AST Analyzers                        │
-│  - Repository Implementations           │
-│  - External Tools                       │
-└─────────────────────────────────────────┘
-```
-
-**Principles:**
-- **Dependencies inward**: Presentation → Application → Domain
-- **Domain without dependencies**: Zero external dependencies
-- **Dependency Inversion**: Interfaces in Domain, implementations in Infrastructure
-
-For more details, see [ARCHITECTURE.md](./docs/ARCHITECTURE.md) and [ARCHITECTURE_DETAILED.md](./docs/ARCHITECTURE_DETAILED.md).
-
----
-
-## MCP Servers
-
-The project includes MCP (Model Context Protocol) servers for integration with any agentic IDE or AI client:
-
-### evidence-watcher
-
-Monitors the status of `.AI_EVIDENCE.json` and allows AI to verify if it's up to date.
-
-**Resources:**
-- `evidence://status`: Evidence status (fresh/stale/missing)
-
-**Tools:**
-- `check_evidence_status`: Checks if the evidence is stale
-
-### ast-intelligence-automation
-
-Automates the complete Git Flow cycle: commit → push → PR → merge, plus context detection and AI gate checks.
-
-**Resources:**
-- `evidence://status`: Evidence status
-- `gitflow://state`: Git Flow workflow state
-- `context://active`: Active project context
-
-**Tools:**
-- `auto_complete_gitflow`: Automatically completes Git Flow cycle
-- `sync_branches`: Syncs develop/main branches
-- `cleanup_stale_branches`: Cleans up merged branches
-- `auto_execute_ai_start`: Automatically executes ai-start
-- `validate_and_fix`: Validates and fixes common issues
-- `ai_gate_check`: Gate check before tasks
-
-For more details, see [MCP_SERVERS.md](./docs/MCP_SERVERS.md).
-
-#### Troubleshooting
-
-If `ai_gate_check` behaves inconsistently (stale branch name, missing rules, or intermittent transport errors), verify you are not running multiple `ast-intelligence-automation` servers across different repositories.
-
-- Prefer enabling a single MCP server for the repository you are working on.
-- Verify the active process points to this repository path:
-  - `.../ast-intelligence-hooks/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js`
-- If you detect multiple processes, stop the duplicates and restart your IDE/MCP servers.
-
----
-
-## API Reference
-
-### Main Functions
-
-#### `runASTIntelligence(options)`
-
-Analyzes code using AST Intelligence.
-
-```javascript
-const { runASTIntelligence } = require('@pumuki/ast-intelligence-hooks');
-
-const result = await runASTIntelligence({
-  files: ['src/**/*.ts'],
-  platforms: ['backend', 'frontend'],
-  strict: false
-});
-```
-
-**Options:**
-- `files` (string[]): File patterns to analyze
-- `platforms` (string[]): Platforms to analyze (`ios`, `android`, `backend`, `frontend`)
-- `strict` (boolean): If true, blocks on any violation
-
-**Returns:** `AuditResult`
-
----
-
-#### `AnalyzeCodebaseUseCase`
-
-Use Case for full codebase analysis.
-
-```javascript
-const { AnalyzeCodebaseUseCase } = require('@pumuki/ast-intelligence-hooks');
-
-const useCase = new AnalyzeCodebaseUseCase(/* dependencies */);
-const result = await useCase.execute('/path/to/codebase');
-```
-
----
-
-#### `AnalyzeStagedFilesUseCase`
-
-Use Case for analyzing only staged files.
-
-```javascript
-const { AnalyzeStagedFilesUseCase } = require('@pumuki/ast-intelligence-hooks');
-
-const useCase = new AnalyzeStagedFilesUseCase(/* dependencies */);
-const result = await useCase.execute();
-```
-
----
-
-### Domain Entities
-
-#### `AuditResult`
-
-Aggregated result of an analysis.
-
-```javascript
-const { AuditResult } = require('@pumuki/ast-intelligence-hooks');
-
-result.getFindings();              // All violations
-result.getCriticalFindings();      // Only CRITICAL
-result.hasCriticalViolations();    // Boolean
-result.getTechnicalDebtHours();    // Estimated hours
-```
-
-#### `Finding`
-
-Individual violation found.
-
-```javascript
-const { Finding } = require('@pumuki/ast-intelligence-hooks');
-
-finding.getSeverity();     // 'critical' | 'high' | 'medium' | 'low'
-finding.getRule();         // Rule ID
-finding.getMessage();      // Descriptive message
-finding.getFile();         // File where it was found
-```
-
-For more details, see [API_REFERENCE.md](./docs/API_REFERENCE.md).
-
----
-
-## Configuration
-
-### Environment Variables
+If defined as scripts:
 
 ```bash
-# Repository root
-export REPO_ROOT=/path/to/project
-
-# Evidence stale threshold (milliseconds, default: 180000 = 3 minutes)
-export HOOK_GUARD_EVIDENCE_STALE_THRESHOLD=180000
-
-# Auto ai-start execution (enabled by default)
-export HOOK_GUARD_AI_START=true
-export HOOK_GUARD_AI_START_COOLDOWN=60000
-
-# Auto-refresh evidence when stale (enabled by default)
-export HOOK_GUARD_AUTO_REFRESH=true
-
-# Auto-commit in Git Flow
-export AUTO_COMMIT_ENABLED=true
-export AUTO_PUSH_ENABLED=true
-export AUTO_PR_ENABLED=false
+npm run ast:gitflow   # guided Git flow
+npm run ast:release   # guided release flow (develop → main)
+npm run ast:audit     # direct audit
 ```
-
-### Configuration Files
-
-- `config/ast-exclusions.json`: Exclude files from analysis
-- `config/language-guard.json`: Language-specific guard configuration
-- `config/doc-standards.json`: Documentation standards
-- `.cursor/mcp.json` or client-specific config: MCP Servers configuration (see [MCP_SERVERS.md](./docs/MCP_SERVERS.md))
-
-### Customize Rules
-
-Rules are in `skills/` by platform:
-- `skills/backend-guidelines/`
-- `skills/frontend-guidelines/`
-- `skills/ios-guidelines/`
-- `skills/android-guidelines/`
-
-For more details, see [USAGE.md](./docs/USAGE.md).
 
 ---
 
-## Best Practices
+## Git Governance & Flow Automation
 
-### 1. Install Hooks in All Projects
+Pumuki includes first-class Git governance commands to enforce a consistent workflow across teams and repositories.
+
+### Daily Development Flow
 
 ```bash
-# on each new project
-npm install --save-dev pumuki-ast-hooks
-npm run install-hooks
+npm run ast:gitflow
 ```
 
-### 2. Use in CI/CD
-
-```yaml
-# .github/workflows/ci.yml
-- name: AST Analysis
-  run: bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-```
-
-### 3. Review Violations Regularly
+With optional auto-merge:
 
 ```bash
-# Weekly
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
+npm run ast:gitflow -- --auto-merge
 ```
 
-### 4. Configure Appropriate Exclusions
-
-```json
-// config/ast-exclusions.json
-{
-  "patterns": [
-    "node_modules/**",
-    "dist/**",
-    "build/**"
-  ]
-}
-```
-
-### 5. Use MCP Servers with Agentic IDEs
-
-Configure MCP Servers in your IDE's MCP configuration file (e.g., `.cursor/mcp.json` for Cursor, or client-specific location) for complete automation.
-
----
-
-## FAQ
-
-### Can I use this in existing projects?
-
-Yes, it's backward compatible. Hooks only validate new code you commit.
-
-### How to temporarily disable hooks?
+### Release Flow (develop → main)
 
 ```bash
-# For a specific commit
-GIT_BYPASS_HOOK=1 git commit -m "emergency fix"
+npm run ast:release
 ```
 
-### Does it work with monorepos?
-
-Yes, automatically detects monorepo structure and analyzes each module.
-
-### Can I add custom rules?
-
-Yes, you can extend rules in `skills/` or create your own analyzers.
-
-### Does it work on Windows?
-
-Works with WSL2 or Git Bash. Not tested on native Windows.
-
-### What if I have many violations?
-
-Start by fixing CRITICAL and HIGH. MEDIUM and LOW are warnings and don't block commits.
-
-### How to update evidence?
+With optional auto-merge:
 
 ```bash
-# Automatically via MCP
-# Or manually
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
+npm run ast:release -- --auto-merge
 ```
 
-For more questions, check the issues on GitHub.
+### Git Flow Cycle (ast:gitflow)
 
----
+Pumuki runs a complete Git Flow cycle:
 
-## Available Commands
+* Step 1: Validate Branch (must be feature/, fix/, etc.)
+* Step 2: Commit Changes (if uncommitted)
+* Step 3: Push to Origin
+* Step 4: Create Pull Request
+* Step 5: Merge Pull Request (optional)
+* Step 6: Cleanup Merged Branches
+* Step 7: Sync Branches
+* Git Flow Cycle Complete
 
-### CLI Commands
+### Options
 
 ```bash
-# Analysis
-ast-hooks analyze              # Full analysis
-ast-hooks analyze --staged     # Only staged files
-
-# Violations
-ast-violations list            # List all
-ast-violations summary         # Summary
-ast-violations top             # Top violations
-ast-violations show <id>       # Show specific violation
-
-# Hooks
-hook-status                    # System status
-hook-watch                     # Watch mode
-hook-predict                   # Violation prediction
-hook-playbook                  # Execute playbook
-
-# Git Flow
-npm run ast:gitflow              # Complete Git Flow cycle
-npm run ast:gitflow -- -m "msg" # With commit message
-npm run ast:gitflow -- --auto-merge  # Auto-merge PR
-gitflow check                  # Verify Git Flow
-gitflow status                 # Current status
-gitflow workflow               # View full workflow
+npm run ast:gitflow
+npm run ast:gitflow -- -m "feat: new feature"
+npm run ast:gitflow -- --auto-merge
+npm run ast:gitflow -- --skip-cleanup
+npm run ast:gitflow -- --skip-sync
 ```
 
-### npm Scripts
+---
+
+## Evidence Guard (Daemon)
+
+The evidence guard ensures AI evidence freshness during long work sessions.
 
 ```bash
-npm run audit                  # Full analysis
-npm run install-hooks          # Install hooks
-npm run ast:gitflow            # Complete Git Flow cycle
-npm test                       # Run tests
-npm run lint                   # Linter
-npm run typecheck              # Type checking
-npm run violations             # List violations
-npm run violations:top         # Top violations
+npm run ast:guard:start
+npm run ast:guard:stop
+npm run ast:guard:restart
+npm run ast:guard:status
+npm run ast:guard:logs
 ```
 
 ---
 
-## Contributing
+## Developer Experience: Notifications & Guardrails
 
-Contributions are welcome. Please:
+Pumuki includes a built-in notification and guardrail layer to keep long work sessions safe and predictable.
 
-1. Fork the repository
-2. Create a branch for your feature (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+### macOS Notifications
 
-### Contribution Guidelines
+On macOS, notifications are delivered using:
 
-- Follow the code of conduct
-- Ensure tests pass (`npm test`)
-- Add tests for new features
-- Update documentation if necessary
+* `terminal-notifier` (preferred, if installed)
+* `osascript` fallback (built-in)
 
-For coding standards, see [CODE_STANDARDS.md](./docs/CODE_STANDARDS.md).
+The notification system includes deduplication, cooldowns, and retry logic to avoid spam during long sessions.
 
----
+### Evidence Freshness Alerts (SLA)
 
-## 📝 Recent Changes
+When `.AI_EVIDENCE.json` becomes stale beyond the configured threshold, the guard will:
 
-### Version 5.5.35 (2026-01-04)
+* Notify that evidence is stale (including how many seconds)
+* Optionally attempt an auto-refresh depending on guard configuration
 
-**✨ New Features:**
-- **Git Flow Release Cycle**: New `npm run ast:release` command for creating release PRs (develop → main)
-- **Release Automation**: Automatic PR creation from develop to main with optional auto-merge
-- **Git Tag Support**: Optional git tag creation with `--tag` flag
+When evidence returns to a fresh state (back within SLA), the guard can notify that evidence is healthy again.
 
-**Technical Details:**
-- Separation of concerns: `ast:gitflow` for features, `ast:release` for releases
-- Release cycle steps:
-  1. Validates branch (must be develop)
-  2. Syncs develop with origin
-  3. Syncs main with origin
-  4. Creates PR: develop → main
-  5. Optionally auto-merges PR
-  6. Optionally creates git tag
-- Follows Git Flow best practices with clear separation between development and release workflows
+### AI Evidence Refresh Notifications
 
----
+When evidence is refreshed, the orchestration layer updates `.AI_EVIDENCE.json` and sends a macOS notification:
 
-### Version 5.5.34 (2026-01-04)
+* If gate is **ALLOWED**: `AI Evidence has been refreshed automatically`
+* If gate is **BLOCKED**: `AI Gate BLOCKED - <N> violations need fixing`
 
-**✨ New Features:**
-- **Git Flow Auto-Create Branch**: Automatically creates feature branch when on `develop`/`main` based on changes
-- **Smart Branch Naming**: Generates branch names based on file types (feature/, fix/, chore/, docs/, etc.)
+### Git Tree Guardrails (Atomic Commits)
 
-**Technical Details:**
-- When running `npm run ast:gitflow` on protected branch, script now:
-  - Analyzes changed files to infer branch type
-  - Generates descriptive branch name with timestamp
-  - Creates and switches to new feature branch automatically
-  - Continues with complete Git Flow cycle
-- Branch naming logic:
-  - `fix/` - Files containing "fix", "bug", "error"
-  - `test/` - Test files or "spec" files
-  - `docs/` - Documentation files (README, CHANGELOG)
-  - `refactor/` - Files containing "refactor", "cleanup"
-  - `ci/` - CI/CD files (workflow, github actions)
-  - `chore/` - Config files, package.json
-  - `feature/` - Default for other changes
+Pumuki monitors the working tree and staging area and can notify when there are too many changes at once.
+
+Typical behavior:
+
+* Warn/error when the git tree exceeds configured limits (total/staged/unstaged)
+* Suggest splitting work into smaller, atomic commits
+* Provide grouped commit suggestions when it can infer feature-based groupings
+
+Configuration (environment variables):
+
+* `HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT` (default: 10)
+* `HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT` (default: 15)
+* `HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT` (default: 20)
+* `HOOK_GUARD_DIRTY_TREE_INTERVAL` (default: 60000 ms)
+* `HOOK_GUARD_DIRTY_TREE_REMINDER` (default: 300000 ms)
+
+### Failure Modes (Visibility)
+
+If the framework cannot read or parse `.AI_EVIDENCE.json`, evidence reads will safely fail (returning `null`) and the guard will record debug entries to help diagnose the issue.
 
 ---
 
-### Version 5.5.33 (2026-01-04)
+## Evidence Maintenance
 
-**🐛 Bug Fixes:**
-- **iOS Security Analyzer**: Fixed false positive in `ios.security.missing_ssl_pinning` rule
-- Now recognizes SSL pinning implementations using `URLSessionDelegate` + `URLAuthenticationChallenge`
-- **iOS Enterprise Analyzer**: Fixed same false positive in `ios.networking.missing_ssl_pinning` rule
+Manually refresh AI evidence:
 
-**Technical Details:**
-- Previous implementation only checked for `ServerTrustPolicy` or `pinning` keywords
-- Files implementing SSL pinning with `URLSessionDelegate` were incorrectly flagged
-- Added detection for `URLSessionDelegate` + `URLAuthenticationChallenge` pattern
-- This fixes false positives on files like `SSLPinningDelegate.swift` that properly implement SSL pinning
+```bash
+npm run ast:refresh
+```
 
 ---
 
-### Version 5.5.32 (2026-01-04)
+## Daily Workflow (High Level)
 
-**✨ New Features:**
-- **Git Flow Automation**: Complete Git Flow cycle with `npm run ast:gitflow`
-- **Protected Branch Blocking**: Pre-commit hook now blocks commits on `main`, `master`, and `develop`
-- **Pre-Push Hook**: Automatically installed, blocks push to protected branches and validates naming conventions
-- **Auto PR Creation**: Creates Pull Requests using GitHub CLI (`gh`)
-- **Auto-Merge Support**: Optional auto-merge with `--auto-merge` flag
-- **Branch Cleanup**: Automatically deletes merged branches (local + remote)
-- **Branch Synchronization**: Syncs `develop` and `main` with remote
+## Maturity & Stability
 
-**🔧 Improvements:**
-- Added `ast-gitflow` binary to package.json
-- Added `ast:gitflow` npm script
-- Updated GitEnvironmentService to install pre-push hook
-- Updated pre-commit hook to validate protected branches
+* Production usage
+* CI/CD integration
+* Changelog-driven evolution
+* Designed for long-lived codebases
+
+Frequent updates are expected and encouraged at this stage.
 
 ---
 
-### Version 5.5.25 (2026-01-04)
+## Intended Audience
 
-**⚡ Performance Fix:**
-- Removed slow full AST analysis (35 minutes) from evidence guard refresh loop
-- Evidence guard now uses fast `update-evidence.sh` (seconds) instead of `intelligent-audit.js`
-- Evidence refreshes every 3 minutes as intended, notifications work correctly
+Pumuki is intentionally opinionated and designed for:
 
----
+* Senior engineers
+* Tech leads
+* Software architects
+* Platform and infrastructure teams
 
-### Version 5.5.24 (2026-01-04)
-
-**🔔 Notifications Fix:**
-- Replaced empty catch blocks with proper error handling via `MacNotificationSender`
-- macOS notifications now sent on every evidence update with proper error management
-- Notifications show "AI Evidence has been refreshed automatically" or "AI Gate BLOCKED"
-
----
-
-### Version 5.5.22 (2026-01-04)
-
-**🔴 CRITICAL Fix:**
-- Replaced self-referential wrapper with complete session-loader implementation
-- Root cause: wrapper called itself causing infinite recursion
-- Session loader now works correctly in all consuming projects
-
----
-
-### Version 5.5.21 (2026-01-04)
-
-**🐛 Bug Fixes:**
-- Fixed fork bomb caused by wrapper scripts being copied to incorrect location
-- Excluded wrapper scripts from bin/ copy to prevent recursive calls
-- Session loader now works correctly without causing resource exhaustion
-
----
-
-### Version 5.5.20 (2026-01-04)
-
-**🐛 Bug Fixes:**
-- Restored comprehensive session context report on IDE startup
-- Fixed evidence age calculation for ISO 8601 timestamps with timezone offsets
-- Removed `exec "$SHELL"` that caused infinite loop on macOS
-- Added Python-based timestamp parsing for reliable timezone conversion
-
-**🔧 Improvements:**
-- Session loader now displays branch, recent commits, session context, violations summary, and evidence freshness
-- Added quick commands section for user convenience
-- Violations summary now reads from `ast-summary.json` with severity breakdown
-
----
-
-### Version 5.5.16 (2026-01-04)
-
-**✨ New Features:**
-- Restored evidence fields: `protocol_3_questions`, `rules_read`, `current_context`, `platforms`, `session_id`
-- Added macOS notifications when AI Gate status=BLOCKED
-- Comprehensive notification types documentation in MCP_SERVERS.md
-- E2E tests for notification system
-
-**🔧 Improvements:**
-- Reorganized README with Table of Contents at the beginning
-- Consolidated duplicate Features sections
-- Removed duplicate architectural diagrams
-- Enhanced documentation structure for better navigation
-
-**🐛 Bug Fixes:**
-- Fixed evidence staleness detection in RealtimeGuardService
-- Improved notification error handling with graceful fallbacks
-
----
-
-## ⚠️ Known Issues
-
-### Current Limitations
-
-1. **macOS Notifications Only**
-   - Notifications currently use osascript (macOS-only)
-   - Other platforms fall back gracefully without errors
-   - Future versions will add cross-platform notification support
-
-2. **Evidence Staleness Threshold**
-   - Default threshold is 180 seconds (3 minutes)
-   - May need adjustment for slower systems
-   - Configure via `HOOK_GUARD_EVIDENCE_STALE_THRESHOLD` environment variable
-
-3. **Token Monitor Integration**
-   - Token monitor requires explicit environment variable `HOOK_GUARD_EMBEDDED_TOKEN_MONITOR=true`
-   - Not enabled by default to avoid overhead
-
-### Workarounds
-
-- For non-macOS systems: Disable notifications via `HOOK_GUARD_MACOS_NOTIFICATIONS=false`
-- For slower systems: Increase staleness threshold via environment variable
-- For token monitoring: Enable explicitly if needed for your workflow
+It is not optimized for casual or experimental AI usage.
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License** - see [LICENSE](./LICENSE) for more details.
-
----
-
-## Credits
-
-Developed by **Pumuki Team®**
-
-- **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development)
-- **Contact**: freelancemerlos@gmail.com
-- **Version**: 5.5.35
-- **Repository**: [GitHub](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks)
-
----
-
-## Useful Links
-
-- 📚 [Complete Documentation](./docs/)
-- 🏗️ [Detailed Architecture](./docs/ARCHITECTURE.md) | [Architecture Detailed](./docs/ARCHITECTURE_DETAILED.md)
-- 🔌 [MCP Servers](./docs/MCP_SERVERS.md)
-- 📖 [API Reference](./docs/API_REFERENCE.md)
-- 📦 [Installation Guide](./docs/INSTALLATION.md)
-- 💡 [Usage Guide](./docs/USAGE.md)
-- 🔍 [Dependencies Analysis](./docs/DEPENDENCIES.md)
-- 🧪 [Testing Guide](./docs/TESTING.md)
-- 📋 [Code Standards](./docs/CODE_STANDARDS.md)
-
----
-
-**⭐ If this project is useful to you, please consider giving it a star on GitHub.**
-
-### Run the Audit
-
-To start the interactive audit menu, run:
-
-```bash
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-```
-
-This will present a menu with options for different audit modes.
-
-For non-interactive use, specify the mode directly:
-
-```bash
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh analyze  # Full repository analysis
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh staged    # Analyze only staged files (pre-commit mode)
+© Pumuki 2025. All rights reserved.
