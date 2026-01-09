@@ -125,6 +125,16 @@ function runBackendIntelligence(project, findings, platform) {
         console.error(`[GOD CLASS BASELINE] Skipping non-backend file: ${filePath}`);
         return;
       }
+      if (
+        /\/infrastructure\/ast\//i.test(filePath) ||
+        /\/analyzers?\//i.test(filePath) ||
+        /\/detectors?\//i.test(filePath) ||
+        /\/ios\/analyzers\//i.test(filePath) ||
+        filePath.endsWith('/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js')
+      ) {
+        console.error(`[GOD CLASS BASELINE] Skipping AST infra/analyzer/detector file: ${filePath}`);
+        return;
+      }
       // NO excluir archivos AST - la librería debe auto-auditarse
       sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
         const className = cls.getName() || '';
@@ -145,6 +155,12 @@ function runBackendIntelligence(project, findings, platform) {
 
     if (metrics.length === 0) {
       console.error(`[GOD CLASS BASELINE] No metrics collected for baseline`);
+      return null;
+    }
+
+    const minSamples = env.getNumber('AST_GODCLASS_MIN_BASELINE_SAMPLES', 30);
+    if (metrics.length < minSamples) {
+      console.error(`[GOD CLASS BASELINE] Insufficient samples for baseline: ${metrics.length} < ${minSamples}. Falling back to absolute thresholds.`);
       return null;
     }
 

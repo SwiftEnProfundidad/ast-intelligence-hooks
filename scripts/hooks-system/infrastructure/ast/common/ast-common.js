@@ -2,6 +2,98 @@ const path = require('path');
 const { pushFinding, SyntaxKind, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
 const { BDDTDDWorkflowRules } = require(path.join(__dirname, 'BDDTDDWorkflowRules'));
 
+function normalizePath(filePath) {
+  return String(filePath || '').replace(/\\/g, '/');
+}
+
+function isTestFilePath(filePath) {
+  const p = normalizePath(filePath).toLowerCase();
+  const isInTestFolder = /\/(tests?|__tests__|test|spec|e2e|uitests)\//i.test(p);
+  const hasTestName = /(\.spec\.|\.test\.|tests\.swift$|test\.swift$|tests\.kt$|test\.kt$|tests\.kts$|test\.kts$)/i.test(p);
+  const isSwiftTests = p.endsWith('tests.swift') || (p.includes('/tests/') && p.endsWith('tests.swift'));
+  const isXcTest = p.includes('xctest') || p.includes('uitests');
+
+  const isSwiftFile = p.endsWith('.swift');
+  if (isSwiftFile) {
+    return hasTestName || isSwiftTests || isXcTest;
+  }
+
+  return isInTestFolder || hasTestName || isSwiftTests || isXcTest;
+}
+
+function matchesAnyGlob(filePath, rawGlobs) {
+  const globs = String(rawGlobs || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(Boolean);
+  if (globs.length === 0) return false;
+
+  const p = normalizePath(filePath);
+
+  for (const pattern of globs) {
+    const escaped = pattern
+      .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*\*/g, '.*')
+      .replace(/\*/g, '[^/]*');
+    try {
+      const re = new RegExp(`^${escaped}$`, 'i');
+      if (re.test(p)) return true;
+    } catch {
+      continue;
+    }
+  }
+
+  return false;
+}
+
+function shouldSkipSpyOverMockRule(filePath) {
+  return matchesAnyGlob(filePath, process.env.AST_TESTING_SPY_OVER_MOCK_EXCEPTIONS);
+}
+
+function shouldSkipMakeSUTRule(filePath) {
+  return matchesAnyGlob(filePath, process.env.AST_TESTING_MAKESUT_EXCEPTIONS);
+}
+
+function shouldSkipTrackForMemoryLeaksRule(filePath) {
+  return matchesAnyGlob(filePath, process.env.AST_TESTING_TRACK_FOR_MEMORY_LEAKS_EXCEPTIONS);
+}
+
+function hasMakeSUT(content) {
+  return /\bmakeSUT\s*\(/.test(content) || /\bmakeSut\s*\(/.test(content);
+}
+
+function hasTrackForMemoryLeaks(content) {
+  return /\btrackForMemoryLeaks\s*\(/.test(content);
+}
+
+function hasTrackForMemoryLeaksEvidence(content) {
+  return hasTrackForMemoryLeaks(content) || hasMakeSUT(content);
+}
+
+function detectMockSignals(content) {
+  const signals = [
+    /\bjest\.mock\s*\(/,
+    /\bvi\.mock\s*\(/,
+    /\bmockk\b/i,
+    /\bMockito\b/,
+    /\bmock\s*\(/i,
+    /\bclass\s+Mock[A-Za-z0-9_]*/,
+    /\bstruct\s+Mock[A-Za-z0-9_]*/,
+    /\binterface\s+Mock[A-Za-z0-9_]*/,
+  ];
+  return signals.some((re) => re.test(content));
+}
+
+function detectSpySignals(content) {
+  const signals = [
+    /\bjest\.spyOn\s*\(/,
+    /\bvi\.spyOn\s*\(/,
+    /\bspy\s*\(/i,
+    /\bSpy[A-Za-z0-9_]*\b/,
+  ];
+  return signals.some((re) => re.test(content));
+}
+
 function getTypeContext(node) {
   const parent = node.getParent();
   if (!parent) return 'unknown';
@@ -114,6 +206,47 @@ function runCommonIntelligence(project, findings) {
 
     if (/\/hooks-system\/infrastructure\/ast\//i.test(filePath)) return;
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
+
+    if (isTestFilePath(filePath)) {
+      const content = sf.getFullText();
+
+      if (!shouldSkipMakeSUTRule(filePath) && !hasMakeSUT(content)) {
+        pushFinding(
+          'common.testing.missing_makesut',
+          'high',
+          sf,
+          sf,
+          'Test file without makeSUT factory - use makeSUT pattern for consistent DI and teardown',
+          findings
+        );
+      }
+
+      if (!shouldSkipTrackForMemoryLeaksRule(filePath) && !hasTrackForMemoryLeaksEvidence(content)) {
+        pushFinding(
+          'common.testing.missing_track_for_memory_leaks',
+          'critical',
+          sf,
+          sf,
+          'Test file without trackForMemoryLeaks - add memory leak tracking to prevent leaks and cross-test interference',
+          findings
+        );
+      }
+
+      if (!shouldSkipSpyOverMockRule(filePath)) {
+        const hasMocks = detectMockSignals(content);
+        const hasSpies = detectSpySignals(content);
+        if (hasMocks && !hasSpies) {
+          pushFinding(
+            'common.testing.prefer_spy_over_mock',
+            'high',
+            sf,
+            sf,
+            'Mocks detected in tests - prefer spies when possible to keep behavior closer to real implementations',
+            findings
+          );
+        }
+      }
+    }
 
 
     sf.getDescendantsOfKind(SyntaxKind.TypeReference).forEach((tref) => {

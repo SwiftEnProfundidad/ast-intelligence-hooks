@@ -10,6 +10,7 @@ const {
   finalizeGodClassDetection,
 } = require('../detectors/ios-ast-intelligent-strategies');
 
+
 class iOSASTIntelligentAnalyzer {
   constructor(findings) {
     this.findings = findings;
@@ -122,7 +123,7 @@ class iOSASTIntelligentAnalyzer {
     }
   }
 
-  analyzeFile(filePath, options = {}) {
+  async analyzeFile(filePath, options = {}) {
     if (!filePath || !String(filePath).endsWith('.swift')) return;
 
     const repoRoot = options.repoRoot || require('../ast-core').getRepoRoot();
@@ -175,7 +176,7 @@ class iOSASTIntelligentAnalyzer {
     const substructure = ast['key.substructure'] || [];
 
     collectAllNodes(this, substructure, null);
-    analyzeCollectedNodes(this, displayPath);
+    await analyzeCollectedNodes(this, displayPath);
   }
 
   safeStringify(obj) {

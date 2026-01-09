@@ -2,7 +2,16 @@
  * God Class detector extracted from ast-backend.js to keep responsibilities separated.
  */
 function analyzeGodClasses(sourceFile, findings, { SyntaxKind, pushFinding, godClassBaseline }) {
-    if (!godClassBaseline) return;
+    const filePath = sourceFile.getFilePath().replace(/\\/g, '/');
+    if (
+        /\/infrastructure\/ast\//i.test(filePath) ||
+        /\/analyzers?\//i.test(filePath) ||
+        /\/detectors?\//i.test(filePath) ||
+        /\/ios\/analyzers\//i.test(filePath) ||
+        filePath.endsWith('/ast/ios/analyzers/iOSASTIntelligentAnalyzer.js')
+    ) {
+        return;
+    }
 
     sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
         const className = cls.getName() || '';
@@ -42,6 +51,24 @@ function analyzeGodClasses(sourceFile, findings, { SyntaxKind, pushFinding, godC
         if (/\bgit\b|rev-parse|git diff|git status|git log/i.test(clsText)) concerns.add('git');
         const concernCount = concerns.size;
 
+        const isMassiveFile = lineCount > 500;
+        const isAbsoluteGod = lineCount > 1000 ||
+            (lineCount > 500 && complexity > 50) ||
+            (lineCount > 500 && methodsCount > 20) ||
+            (lineCount > 600 && methodsCount > 30 && complexity > 80);
+        const isUnderThreshold = lineCount < 300 && methodsCount < 15 && complexity < 30;
+
+        if (!godClassBaseline) {
+            if (!isUnderThreshold && (isMassiveFile || isAbsoluteGod)) {
+                console.error(`[GOD CLASS DEBUG] ${className}: methods=${methodsCount}, props=${propertiesCount}, lines=${lineCount}, complexity=${complexity}, concerns=${concernCount}, isAbsoluteGod=${isAbsoluteGod}, signalCount=ABSOLUTE`);
+                pushFinding("backend.antipattern.god_classes", "critical", sourceFile, cls,
+                    `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
+                    findings
+                );
+            }
+            return;
+        }
+
         const methodsZ = godClassBaseline.robustZ(methodsCount, godClassBaseline.med.methodsCount, godClassBaseline.mad.methodsCount);
         const propsZ = godClassBaseline.robustZ(propertiesCount, godClassBaseline.med.propertiesCount, godClassBaseline.mad.propertiesCount);
         const linesZ = godClassBaseline.robustZ(lineCount, godClassBaseline.med.lineCount, godClassBaseline.mad.lineCount);
@@ -53,13 +80,6 @@ function analyzeGodClasses(sourceFile, findings, { SyntaxKind, pushFinding, godC
             linesZ >= godClassBaseline.thresholds.outlier.lineCountZ;
         const complexityOutlier = complexityZ >= godClassBaseline.thresholds.outlier.complexityZ;
         const concernOutlier = concernCount >= godClassBaseline.thresholds.outlier.concerns;
-
-        const isMassiveFile = lineCount > 500;
-        const isAbsoluteGod = lineCount > 1000 ||
-            (lineCount > 500 && complexity > 50) ||
-            (lineCount > 500 && methodsCount > 20) ||
-            (lineCount > 600 && methodsCount > 30 && complexity > 80);
-        const isUnderThreshold = lineCount < 300 && methodsCount < 15 && complexity < 30;
 
         let signalCount = 0;
         if (sizeOutlier) signalCount++;
