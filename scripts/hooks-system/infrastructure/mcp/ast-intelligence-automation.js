@@ -67,6 +67,7 @@ function getResilience() {
 
 // =============================================================================
 // RULES ENFORCEMENT: Force AI to actually APPLY rules, not just read them
+// Revolutionary Pre-Flight Validation System inspired by tdd-guard
 // =============================================================================
 const rulesEnforcement = {
     TOP_CRITICAL_RULES: [
@@ -77,9 +78,24 @@ const rulesEnforcement = {
         '🔴 Verificar que compila ANTES de sugerir código'
     ],
 
-    acknowledgedRules: false,
-    lastAcknowledgment: null,
-    implementationCount: 0,
+    sessionState: {
+        testsCreatedThisSession: [],
+        implementationsThisSession: [],
+        lastTestTimestamp: null,
+        tddCycleActive: false
+    },
+
+    CODE_PATTERNS_TO_BLOCK: [
+        { pattern: /catch\s*\([^)]*\)\s*\{\s*\}/g, rule: 'empty_catch', message: '❌ Empty catch block detected' },
+        { pattern: /\.shared\s*[,\);\n]/g, rule: 'singleton', message: '❌ Singleton pattern (.shared) detected' },
+        { pattern: /static\s+let\s+shared/g, rule: 'singleton', message: '❌ Singleton declaration detected' },
+        { pattern: /\/\/[^\n]+/g, rule: 'comments', message: '⚠️ Code comments detected (prefer self-documenting names)' },
+        { pattern: /\/\*[\s\S]*?\*\//g, rule: 'comments', message: '⚠️ Block comments detected' },
+        { pattern: /DispatchQueue\.(main|global)/g, rule: 'gcd_ios', message: '❌ [iOS] GCD detected - use async/await' },
+        { pattern: /@escaping\s+\([^)]*\)\s*->/g, rule: 'completion_handler', message: '❌ [iOS] Completion handler detected - use async/await' },
+        { pattern: /ObservableObject/g, rule: 'observable_object', message: '❌ [iOS] ObservableObject detected - use @Observable (iOS 17+)' },
+        { pattern: /AnyView/g, rule: 'any_view', message: '❌ [iOS] AnyView detected - affects performance' }
+    ],
 
     getPreImplementationChecklist() {
         return {
@@ -103,46 +119,119 @@ const rulesEnforcement = {
     },
 
     generateRulesReminder() {
+        const tddStatus = this.sessionState.tddCycleActive
+            ? '✅ TDD CYCLE ACTIVE'
+            : '❌ NO TEST CREATED YET';
         return `
 ╔══════════════════════════════════════════════════════════════════╗
 ║  🚨 REGLAS CRÍTICAS - DEBES APLICAR EN CADA IMPLEMENTACIÓN 🚨   ║
 ╠══════════════════════════════════════════════════════════════════╣
 ║ ${this.TOP_CRITICAL_RULES.join('\n║ ')}
 ╠══════════════════════════════════════════════════════════════════╣
+║ TDD Status: ${tddStatus}                                         
+║ Tests this session: ${this.sessionState.testsCreatedThisSession.length}
+╠══════════════════════════════════════════════════════════════════╣
 ║ ⚠️  Si implementas sin test primero = VIOLACIÓN CRÍTICA         ║
-║ ⚠️  El pre-commit te bloqueará, pero YA ES TARDE                ║
 ║ ✅  Crea el test AHORA, antes de cualquier implementación        ║
 ╚══════════════════════════════════════════════════════════════════╝`;
     },
 
-    validateProposedAction(actionType, targetFile) {
+    validateProposedCode(code, targetFile, platform) {
         const violations = [];
 
-        if (actionType === 'create_file' || actionType === 'edit') {
-            const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/.test(targetFile);
-            const isImplementationFile = !isTestFile && /\.(js|ts|swift|kt)$/.test(targetFile);
+        for (const patternDef of this.CODE_PATTERNS_TO_BLOCK) {
+            if (patternDef.rule.includes('ios') && platform !== 'ios') continue;
 
-            if (isImplementationFile && this.implementationCount === 0) {
+            const matches = code.match(patternDef.pattern);
+            if (matches && matches.length > 0) {
                 violations.push({
-                    rule: 'BDD→TDD',
-                    message: `⚠️ Estás creando/editando ${targetFile} sin haber creado un test primero en esta sesión.`,
-                    suggestion: 'Crea primero el test .spec.js/.test.ts para esta funcionalidad'
+                    rule: patternDef.rule,
+                    severity: patternDef.message.startsWith('❌') ? 'CRITICAL' : 'WARNING',
+                    message: patternDef.message,
+                    occurrences: matches.length,
+                    samples: matches.slice(0, 3).map(m => m.substring(0, 50))
                 });
             }
         }
 
+        return violations;
+    },
+
+    validateProposedAction(actionType, targetFile, proposedCode = null) {
+        const violations = [];
+        const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/.test(targetFile || '');
+        const isImplementationFile = !isTestFile && /\.(js|ts|tsx|jsx|swift|kt)$/.test(targetFile || '');
+
+        if ((actionType === 'create_file' || actionType === 'edit') && isImplementationFile) {
+            if (!this.sessionState.tddCycleActive && this.sessionState.testsCreatedThisSession.length === 0) {
+                violations.push({
+                    rule: 'BDD→TDD',
+                    severity: 'CRITICAL',
+                    message: `🚨 BLOQUEADO: Intentas crear/editar ${targetFile} sin haber creado un test primero.`,
+                    suggestion: 'Crea primero el archivo .spec.js/.test.ts con el test que debe fallar (RED phase)',
+                    action_required: 'CREATE_TEST_FIRST'
+                });
+            }
+        }
+
+        if (proposedCode) {
+            const platform = this.detectPlatformFromFile(targetFile);
+            const codeViolations = this.validateProposedCode(proposedCode, targetFile, platform);
+            violations.push(...codeViolations);
+        }
+
+        const hasCriticalViolations = violations.some(v => v.severity === 'CRITICAL');
+
         return {
+            allowed: !hasCriticalViolations,
             hasViolations: violations.length > 0,
             violations,
-            reminder: this.generateRulesReminder()
+            tddStatus: {
+                active: this.sessionState.tddCycleActive,
+                testsCreated: this.sessionState.testsCreatedThisSession.length,
+                implementationsCount: this.sessionState.implementationsThisSession.length
+            },
+            reminder: this.generateRulesReminder(),
+            enforcement_message: hasCriticalViolations
+                ? '🚫 ACTION BLOCKED: Fix critical violations before proceeding'
+                : violations.length > 0
+                    ? '⚠️ Warnings detected - review before proceeding'
+                    : '✅ Pre-flight check passed'
         };
     },
 
-    recordImplementation(isTest) {
-        if (isTest) {
-            this.implementationCount = 0;
-        }
-        this.implementationCount++;
+    detectPlatformFromFile(filePath) {
+        if (!filePath) return 'unknown';
+        if (filePath.endsWith('.swift')) return 'ios';
+        if (filePath.endsWith('.kt') || filePath.endsWith('.kts')) return 'android';
+        if (filePath.includes('/backend/') || filePath.includes('nestjs')) return 'backend';
+        if (filePath.endsWith('.tsx') || filePath.endsWith('.jsx')) return 'frontend';
+        return 'backend';
+    },
+
+    recordTestCreated(testFile) {
+        this.sessionState.testsCreatedThisSession.push({
+            file: testFile,
+            timestamp: Date.now()
+        });
+        this.sessionState.lastTestTimestamp = Date.now();
+        this.sessionState.tddCycleActive = true;
+    },
+
+    recordImplementation(implFile) {
+        this.sessionState.implementationsThisSession.push({
+            file: implFile,
+            timestamp: Date.now()
+        });
+    },
+
+    resetSession() {
+        this.sessionState = {
+            testsCreatedThisSession: [],
+            implementationsThisSession: [],
+            lastTestTimestamp: null,
+            tddCycleActive: false
+        };
     }
 };
 
@@ -757,44 +846,63 @@ function checkBranchChangesCoherence(branchName, uncommittedChanges) {
 }
 
 /**
- * Load platform rules from .cursor/rules or .windsurf/rules
- * Returns the content of the rules file for the detected platform
+ * Load ALL platform rules from .cursor/rules or .windsurf/rules
+ * ALWAYS loads: gold (base) + ios + android + backend + frontend
+ * Returns the complete content of ALL rules files
  */
 async function loadPlatformRules(platforms) {
     const DynamicRulesLoader = require('../../application/services/DynamicRulesLoader');
     const loader = new DynamicRulesLoader();
     const rules = {};
     const criticalRules = [];
+    const fullRulesContent = {};
 
-    for (const platform of platforms) {
+    const ALL_RULE_FILES = [
+        { key: 'gold', file: 'rulesgold.mdc', priority: 0 },
+        { key: 'ios', file: 'rulesios.mdc', priority: 1 },
+        { key: 'android', file: 'rulesandroid.mdc', priority: 1 },
+        { key: 'backend', file: 'rulesbackend.mdc', priority: 1 },
+        { key: 'frontend', file: 'rulesfront.mdc', priority: 1 }
+    ];
+
+    for (const ruleFile of ALL_RULE_FILES) {
         try {
-            const content = await loader.loadRule(`rules${platform}.mdc`);
+            const content = await loader.loadRule(ruleFile.file);
             if (content) {
-                rules[platform] = content;
-                const criticalPatterns = extractCriticalPatterns(content, platform);
+                rules[ruleFile.key] = true;
+                fullRulesContent[ruleFile.key] = content;
+                const criticalPatterns = extractCriticalPatterns(content, ruleFile.key);
                 criticalRules.push(...criticalPatterns);
             }
         } catch (error) {
             if (process.env.DEBUG) {
-                process.stderr.write(`[MCP] Failed to load rules for ${platform}: ${error.message}\n`);
+                process.stderr.write(`[MCP] Failed to load ${ruleFile.file}: ${error.message}\n`);
             }
         }
     }
 
-    try {
-        const goldContent = await loader.loadRule('rulesgold.mdc');
-        if (goldContent) {
-            rules.gold = goldContent;
-            const goldPatterns = extractCriticalPatterns(goldContent, 'gold');
-            criticalRules.push(...goldPatterns);
-        }
-    } catch (error) {
-        if (process.env.DEBUG) {
-            process.stderr.write(`[MCP] Failed to load gold rules: ${error.message}\n`);
-        }
-    }
+    const topCriticalRules = criticalRules
+        .filter(r => r.severity === 'CRITICAL')
+        .slice(0, 20)
+        .map(r => `[${r.platform.toUpperCase()}] ${r.rule}`);
 
-    return { rules, criticalRules };
+    const topMandatoryRules = criticalRules
+        .filter(r => r.severity === 'MANDATORY')
+        .slice(0, 20)
+        .map(r => `[${r.platform.toUpperCase()}] ${r.rule}`);
+
+    return {
+        rules,
+        criticalRules,
+        fullRulesContent,
+        summary: {
+            filesLoaded: Object.keys(rules),
+            totalCriticalRules: criticalRules.filter(r => r.severity === 'CRITICAL').length,
+            totalMandatoryRules: criticalRules.filter(r => r.severity === 'MANDATORY').length,
+            topCriticalRules,
+            topMandatoryRules
+        }
+    };
 }
 
 /**
@@ -1461,6 +1569,120 @@ function clearHumanIntent() {
 }
 
 /**
+ * 🚀 REVOLUTIONARY: Pre-Flight Check - Validates code BEFORE writing it
+ * Inspired by tdd-guard: https://www.brgr.one/blog/ai-coding-agents-tdd-enforcement
+ * 
+ * This tool MUST be called before any edit/write operation to ensure:
+ * 1. TDD cycle is active (test created first)
+ * 2. Proposed code doesn't violate critical rules
+ * 3. Code patterns are compliant with platform rules
+ */
+function preFlightCheck(params) {
+    const { action_type, target_file, proposed_code, bypass_tdd } = params;
+
+    if (!action_type || !target_file) {
+        return {
+            success: false,
+            error: 'action_type and target_file are required',
+            hint: 'Call with: { action_type: "edit"|"create_file", target_file: "/path/to/file.ts", proposed_code: "..." }'
+        };
+    }
+
+    const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/.test(target_file);
+
+    if (isTestFile) {
+        rulesEnforcement.recordTestCreated(target_file);
+        return {
+            success: true,
+            allowed: true,
+            message: '✅ TEST FILE DETECTED - TDD cycle activated!',
+            tdd_status: {
+                active: true,
+                phase: 'RED',
+                instruction: 'Write the failing test first, then implement the code to make it pass (GREEN)'
+            },
+            session_state: rulesEnforcement.sessionState
+        };
+    }
+
+    const validation = rulesEnforcement.validateProposedAction(action_type, target_file, proposed_code);
+
+    if (!validation.allowed && !bypass_tdd) {
+        return {
+            success: false,
+            allowed: false,
+            blocked: true,
+            reason: validation.enforcement_message,
+            violations: validation.violations,
+            tdd_status: validation.tddStatus,
+            action_required: 'CREATE_TEST_FIRST',
+            suggestion: `Before editing ${target_file}, create a test file first:
+1️⃣ Create ${target_file.replace(/\.(js|ts|swift|kt)$/, '.spec.$1')} or similar
+2️⃣ Write the failing test (RED phase)
+3️⃣ Then come back and implement the code (GREEN phase)`,
+            reminder: validation.reminder
+        };
+    }
+
+    if (validation.hasViolations) {
+        return {
+            success: true,
+            allowed: true,
+            has_warnings: true,
+            warnings: validation.violations.filter(v => v.severity === 'WARNING'),
+            message: '⚠️ Proceed with caution - review warnings',
+            tdd_status: validation.tddStatus
+        };
+    }
+
+    rulesEnforcement.recordImplementation(target_file);
+
+    return {
+        success: true,
+        allowed: true,
+        message: '✅ Pre-flight check PASSED - proceed with implementation',
+        tdd_status: validation.tddStatus,
+        phase: 'GREEN',
+        instruction: 'Implement the minimum code to make the test pass'
+    };
+}
+
+/**
+ * Record that a test was created - activates TDD cycle
+ */
+function recordTestCreated(params) {
+    const { test_file } = params;
+    if (!test_file) {
+        return { success: false, error: 'test_file is required' };
+    }
+
+    rulesEnforcement.recordTestCreated(test_file);
+
+    return {
+        success: true,
+        message: `✅ Test recorded: ${test_file}`,
+        tdd_status: {
+            active: true,
+            phase: 'RED→GREEN',
+            tests_this_session: rulesEnforcement.sessionState.testsCreatedThisSession.length
+        },
+        instruction: 'Now implement the code to make this test pass'
+    };
+}
+
+/**
+ * Reset TDD session state (use when starting fresh)
+ */
+function resetTddSession() {
+    rulesEnforcement.resetSession();
+    return {
+        success: true,
+        message: '🔄 TDD session reset - start fresh with a new test',
+        session_state: rulesEnforcement.sessionState
+    };
+}
+
+/**
  * Validate and fix common issues
  */
 async function validateAndFix(params) {
@@ -1794,6 +2016,36 @@ async function handleMcpMessage(message) {
                             name: 'clear_human_intent',
                             description: '🎯 Clear/reset the human intent to empty state.',
                             inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
+                            name: 'pre_flight_check',
+                            description: '🚀 REVOLUTIONARY: Validate code BEFORE writing it. Enforces TDD cycle and checks for rule violations. Call this BEFORE any edit/create_file operation.',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    action_type: { type: 'string', enum: ['edit', 'create_file'], description: 'Type of action to perform' },
+                                    target_file: { type: 'string', description: 'File path to edit/create' },
+                                    proposed_code: { type: 'string', description: 'Optional: code to validate for rule violations' },
+                                    bypass_tdd: { type: 'boolean', description: 'Emergency bypass for TDD check (not recommended)' }
+                                },
+                                required: ['action_type', 'target_file']
+                            }
+                        },
+                        {
+                            name: 'record_test_created',
+                            description: '✅ Record that a test file was created - activates TDD cycle allowing implementation',
+                            inputSchema: {
+                                type: 'object',
+                                properties: {
+                                    test_file: { type: 'string', description: 'Path to the test file created' }
+                                },
+                                required: ['test_file']
+                            }
+                        },
+                        {
+                            name: 'reset_tdd_session',
+                            description: '🔄 Reset TDD session state - use when starting fresh on a new feature',
+                            inputSchema: { type: 'object', properties: {} }
                         }
                     ]
                 }
@@ -1870,6 +2122,15 @@ async function handleMcpMessage(message) {
                     break;
                 case 'clear_human_intent':
                     result = clearHumanIntent();
+                    break;
+                case 'pre_flight_check':
+                    result = preFlightCheck(toolParams);
+                    break;
+                case 'record_test_created':
+                    result = recordTestCreated(toolParams);
+                    break;
+                case 'reset_tdd_session':
+                    result = resetTddSession();
                     break;
                 default:
                     return {
