@@ -88,12 +88,35 @@ Pumuki addresses these issues by **removing trust from the AI** and replacing it
 
 ## Features
 
-* AST intelligence multi-plataforma (iOS, Android, Backend, Frontend)
-* Evidence file `.AI_EVIDENCE.json` como fuente de verdad
-* AI Gate (block/allow) con métricas
-* Git-native (pre-commit / pre-push / CI)
-* Notificaciones macOS + guardrails de árbol Git
-* Automatización Git Flow (`ast:gitflow`, `ast:release`)
+### Core
+
+* **AST Intelligence** multi-platform (iOS, Android, Backend, Frontend)
+* **Evidence file** `.AI_EVIDENCE.json` as single source of truth
+* **AI Gate** (block/allow) with metrics and enforcement
+
+### NEW: Pre-Write Enforcement
+
+* **Pre-Flight Validation**: Analyze code BEFORE writing to files
+* **In-Memory AST Analysis**: `analyzeCodeInMemory()` for proposed code validation
+* **IDE Hooks**: Real-time blocking in Windsurf, Claude Code, OpenCode
+
+### NEW: MCP Integration
+
+* **MCP Server**: Full Model Context Protocol integration
+* **ai_gate_check**: Mandatory gate before AI operations
+* **pre_flight_check**: Validate proposed code before writing
+* **set_human_intent**: Track user goals across sessions
+
+### NEW: Cognitive Layers
+
+* **Human Intent**: Persistent user goal tracking with confidence levels
+* **Semantic Snapshot**: Project state awareness for AI context
+
+### Automation
+
+* **Git-native**: pre-commit / pre-push / CI integration
+* **Git Flow**: `ast:gitflow` for features, `ast:release` for releases
+* **macOS Notifications**: Real-time alerts and guardrails
 
 ---
 
@@ -203,6 +226,83 @@ Governance happens **before** code reaches production.
 
 ---
 
+### 5. Pre-Flight Validation (NEW)
+
+The Pre-Flight Validation system analyzes code **BEFORE** it is written to disk:
+
+```javascript
+const { analyzeCodeInMemory } = require('./ast-core');
+
+// Analyze proposed code without writing to file
+const result = analyzeCodeInMemory(proposedCode, virtualFilePath);
+
+if (result.hasCritical) {
+    // BLOCK the write - violations detected
+    console.log('❌ BLOCKED:', result.violations);
+} else {
+    // ALLOW the write
+    console.log('✅ ALLOWED');
+}
+```
+
+**Key capabilities:**
+
+* Analyze code strings without file I/O
+* Detect critical violations before code is written
+* Platform-aware analysis (iOS, Android, Backend, Frontend)
+* Integration with IDE hooks for real-time blocking
+
+---
+
+### 6. MCP Server Integration (NEW)
+
+Pumuki exposes a full **Model Context Protocol (MCP)** server for AI agent integration:
+
+| Tool | Purpose | Blocking |
+|------|---------|----------|
+| `ai_gate_check` | Mandatory gate before any AI operation | ✅ Yes |
+| `pre_flight_check` | Validate proposed code before writing | ✅ Yes |
+| `read_platform_rules` | Load platform-specific rules | No |
+| `set_human_intent` | Track user goals across sessions | No |
+| `get_human_intent` | Retrieve current user intent | No |
+| `auto_complete_gitflow` | Automate Git Flow cycle | No |
+
+**Usage:**
+
+```bash
+# Start MCP server
+node scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js
+```
+
+---
+
+### 7. Cognitive Layers (NEW)
+
+Pumuki introduces **Cognitive Layers** to maintain AI context across sessions:
+
+**Human Intent:**
+
+```json
+{
+  "human_intent": {
+    "primary_goal": "Implement user authentication with OAuth2",
+    "secondary_goals": ["Add unit tests", "Update documentation"],
+    "constraints": ["Must use existing User model", "No breaking changes"],
+    "non_goals": ["UI redesign"],
+    "confidence_level": "high",
+    "expires_at": "2026-01-10T12:00:00Z"
+  }
+}
+```
+
+**Semantic Snapshot:**
+
+* Current project state awareness
+* Active platforms and detected patterns
+* Architectural context for AI decisions
+
+---
+
 ## Supported Platforms
 
 Pumuki is multi-platform by default:
@@ -231,7 +331,7 @@ Pumuki supports **real-time code blocking** in IDEs with pre-write hooks:
 
 ### How It Works
 
-```
+```text
 AI generates code → IDE Hook intercepts → AST Intelligence analyzes → 
   ├─ Critical violations? → ❌ BLOCKED (code not written)
   └─ No violations? → ✅ ALLOWED (code written)
