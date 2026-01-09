@@ -1574,7 +1574,7 @@ function clearHumanIntent() {
  * 
  * This tool MUST be called before any edit/write operation to ensure:
  * 1. TDD cycle is active (test created first)
- * 2. Proposed code doesn't violate critical rules
+ * 2. Proposed code doesn't violate critical rules (using AST Intelligence!)
  * 3. Code patterns are compliant with platform rules
  */
 function preFlightCheck(params) {
@@ -1624,12 +1624,44 @@ function preFlightCheck(params) {
         };
     }
 
+    let astAnalysis = null;
+    if (proposed_code && proposed_code.length > 0) {
+        try {
+            const { analyzeCodeInMemory } = require('../ast/ast-core');
+            astAnalysis = analyzeCodeInMemory(proposed_code, target_file);
+
+            if (astAnalysis.hasCritical) {
+                return {
+                    success: false,
+                    allowed: false,
+                    blocked: true,
+                    reason: '🚫 AST INTELLIGENCE BLOCKED: Critical violations detected in proposed code',
+                    ast_violations: astAnalysis.violations,
+                    ast_summary: astAnalysis.summary,
+                    tdd_status: validation.tddStatus,
+                    action_required: 'FIX_AST_VIOLATIONS',
+                    suggestion: 'Fix the following AST violations before proceeding:\n' +
+                        astAnalysis.violations
+                            .filter(v => v.severity === 'CRITICAL')
+                            .map(v => `  ❌ ${v.ruleId}: ${v.message}`)
+                            .join('\n'),
+                    reminder: validation.reminder
+                };
+            }
+        } catch (astError) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] AST in-memory analysis failed: ${astError.message}\n`);
+            }
+        }
+    }
+
     if (validation.hasViolations) {
         return {
             success: true,
             allowed: true,
             has_warnings: true,
             warnings: validation.violations.filter(v => v.severity === 'WARNING'),
+            ast_analysis: astAnalysis,
             message: '⚠️ Proceed with caution - review warnings',
             tdd_status: validation.tddStatus
         };
@@ -1641,6 +1673,7 @@ function preFlightCheck(params) {
         success: true,
         allowed: true,
         message: '✅ Pre-flight check PASSED - proceed with implementation',
+        ast_analysis: astAnalysis,
         tdd_status: validation.tddStatus,
         phase: 'GREEN',
         instruction: 'Implement the minimum code to make the test pass'

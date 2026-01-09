@@ -604,6 +604,129 @@ function getArrowFunctions(sf) {
   return sf.getDescendantsOfKind(SyntaxKind.ArrowFunction);
 }
 
+/**
+ * 🚀 REVOLUTIONARY: Analyze code IN MEMORY without writing to file
+ * This enables pre-flight validation of proposed code before writing
+ * @param {string} code - The code to analyze
+ * @param {string} virtualPath - Virtual file path (determines platform detection)
+ * @param {Object} options - Analysis options
+ * @returns {Object} Analysis result with violations
+ */
+function analyzeCodeInMemory(code, virtualPath, options = {}) {
+  const findings = [];
+  const platform = platformOf(virtualPath);
+
+  try {
+    const project = new Project({
+      skipAddingFilesFromTsConfig: true,
+      useInMemoryFileSystem: true,
+      compilerOptions: {
+        target: ScriptTarget.ES2020,
+        module: ModuleKind.CommonJS,
+        strict: true,
+      },
+    });
+
+    const sf = project.createSourceFile(virtualPath, code);
+
+    const criticalPatterns = [
+      { pattern: /catch\s*\([^)]*\)\s*\{\s*\}/g, ruleId: 'common.error.empty_catch', message: 'Empty catch block - always log or propagate errors' },
+      { pattern: /\.shared\b/g, ruleId: 'common.singleton', message: 'Singleton pattern detected - use dependency injection' },
+      { pattern: /static\s+let\s+shared/g, ruleId: 'ios.singleton', message: '[iOS] Singleton declaration - use DI' },
+      { pattern: /DispatchQueue\.(main|global)/g, ruleId: 'ios.concurrency.gcd', message: '[iOS] GCD detected - use async/await' },
+      { pattern: /@escaping\s+\([^)]*\)\s*->/g, ruleId: 'ios.concurrency.completion_handler', message: '[iOS] Completion handler - use async/await' },
+      { pattern: /ObservableObject/g, ruleId: 'ios.swiftui.observable_object', message: '[iOS] ObservableObject - use @Observable (iOS 17+)' },
+      { pattern: /AnyView/g, ruleId: 'ios.swiftui.any_view', message: '[iOS] AnyView affects performance' },
+      { pattern: /JSONSerialization/g, ruleId: 'ios.codable.json_serialization', message: '[iOS] JSONSerialization - use Codable' },
+      { pattern: /force_cast|as!/g, ruleId: 'ios.force_cast', message: '[iOS] Force cast (as!) - use safe casting' },
+      { pattern: /!\s*[,\);\n]/g, ruleId: 'ios.force_unwrap', message: '[iOS] Force unwrap (!) - use optional binding' },
+    ];
+
+    for (const patternDef of criticalPatterns) {
+      if (patternDef.ruleId.startsWith('ios.') && platform !== 'ios') continue;
+
+      const matches = code.match(patternDef.pattern);
+      if (matches && matches.length > 0) {
+        findings.push({
+          ruleId: patternDef.ruleId,
+          severity: 'CRITICAL',
+          message: patternDef.message,
+          occurrences: matches.length,
+          samples: matches.slice(0, 3)
+        });
+      }
+    }
+
+    sf.getDescendantsOfKind(SyntaxKind.CatchClause).forEach((catchClause) => {
+      const block = catchClause.getBlock();
+      if (block && block.getStatements().length === 0) {
+        findings.push({
+          ruleId: 'common.error.empty_catch',
+          severity: 'CRITICAL',
+          line: catchClause.getStartLineNumber(),
+          message: 'Empty catch block detected - must log or propagate error'
+        });
+      }
+    });
+
+    sf.getDescendantsOfKind(SyntaxKind.PropertyAccessExpression).forEach((prop) => {
+      const text = prop.getText();
+      if (text.endsWith('.shared')) {
+        findings.push({
+          ruleId: 'common.singleton',
+          severity: 'CRITICAL',
+          line: prop.getStartLineNumber(),
+          message: 'Singleton pattern (.shared) detected - use dependency injection'
+        });
+      }
+    });
+
+    const fullText = sf.getFullText();
+    const commentPatterns = [
+      { pattern: /\/\/\s*TODO:/gi, ruleId: 'common.todo', severity: 'LOW', message: 'TODO comment found' },
+      { pattern: /\/\/\s*FIXME:/gi, ruleId: 'common.fixme', severity: 'MEDIUM', message: 'FIXME comment found' },
+      { pattern: /\/\/\s*HACK:/gi, ruleId: 'common.hack', severity: 'HIGH', message: 'HACK comment found' },
+    ];
+
+    for (const cp of commentPatterns) {
+      const matches = fullText.match(cp.pattern);
+      if (matches) {
+        findings.push({
+          ruleId: cp.ruleId,
+          severity: cp.severity,
+          message: `${cp.message} (${matches.length} occurrence${matches.length > 1 ? 's' : ''})`,
+          occurrences: matches.length
+        });
+      }
+    }
+
+    project.removeSourceFile(sf);
+
+    return {
+      success: true,
+      platform,
+      violations: findings,
+      hasCritical: findings.some(f => f.severity === 'CRITICAL'),
+      hasHigh: findings.some(f => f.severity === 'HIGH'),
+      summary: {
+        total: findings.length,
+        critical: findings.filter(f => f.severity === 'CRITICAL').length,
+        high: findings.filter(f => f.severity === 'HIGH').length,
+        medium: findings.filter(f => f.severity === 'MEDIUM').length,
+        low: findings.filter(f => f.severity === 'LOW').length
+      }
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: `AST analysis failed: ${error.message}`,
+      violations: [],
+      hasCritical: false,
+      hasHigh: false
+    };
+  }
+}
+
 module.exports = {
   getRepoRoot,
   shouldIgnore,
@@ -627,6 +750,7 @@ module.exports = {
   getClasses,
   getFunctions,
   getArrowFunctions,
+  analyzeCodeInMemory,
   Project,
   Node,
   SyntaxKind,
