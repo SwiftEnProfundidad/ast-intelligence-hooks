@@ -1374,6 +1374,19 @@ async function aiGateCheck() {
                 check_count: gateSession.checkCount,
                 valid_for_minutes: Math.round(gateSession.GATE_VALIDITY_MS / 60000)
             },
+            _mandatory_pre_write_protocol: {
+                enabled: true,
+                requirement: '🚨 MANDATORY: You MUST call pre_flight_check BEFORE any edit/write_to_file/create_file operation',
+                enforcement_level: 'BLOCKING',
+                workflow: [
+                    '1️⃣ BEFORE ANY CODE WRITE: Call pre_flight_check({ action_type, target_file, proposed_code })',
+                    '2️⃣ IF pre_flight_check returns blocked=true: DO NOT WRITE. Fix violations first.',
+                    '3️⃣ IF pre_flight_check returns allowed=true: PROCEED with the write operation.',
+                    '4️⃣ NEVER skip pre_flight_check - violations will be caught at pre-commit and block your work.'
+                ],
+                consequence_of_skipping: 'If you skip pre_flight_check, the Git pre-commit hook will BLOCK the commit with all violations accumulated. This wastes user time and breaks the development flow.',
+                ide_hooks_active: 'Windsurf/Claude Code/OpenCode have automatic blocking. For other IDEs, pre_flight_check is your ONLY way to catch violations early.'
+            },
             _rules_enforcement: {
                 top_5_critical: rulesEnforcement.TOP_CRITICAL_RULES,
                 pre_implementation_checklist: preChecklist.mandatory_checklist,
