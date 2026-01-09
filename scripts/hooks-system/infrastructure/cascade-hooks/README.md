@@ -8,7 +8,7 @@ Este sistema combina **IDE Hooks** (donde estén disponibles) con **Git Pre-Comm
 
 | IDE | Hook Pre-Write | ¿Bloquea antes? | Mecanismo | Config |
 |-----|----------------|-----------------|-----------|--------|
-| **Windsurf** | `pre_write_code` | ✅ SÍ | exit(2) | `~/.codeium/windsurf/cascade/hooks.json` |
+| **Windsurf** | `pre_write_code` | ✅ SÍ | exit(2) | `~/.codeium/windsurf/hooks.json` |
 | **Claude Code** | `PreToolUse` (Write/Edit) | ✅ SÍ | exit(2) | `~/.config/claude-code/settings.json` |
 | **OpenCode** | Plugin `tool.execute.before` | ✅ SÍ | throw Error | `opencode.json` o `~/.config/opencode/opencode.json` |
 | **Codex CLI** | ❌ Solo approval policies | ⚠️ NO (manual) | - | `~/.codex/config.toml` |
@@ -26,17 +26,32 @@ Este sistema combina **IDE Hooks** (donde estén disponibles) con **Git Pre-Comm
 
 ## Instalación
 
-### 1. Copiar configuración a Windsurf
+### 1. Configurar Windsurf Hooks
 
-Copia el contenido de `cascade-hooks-config.json` a tu configuración de Windsurf:
+Crea el archivo `~/.codeium/windsurf/hooks.json` con el siguiente contenido:
 
-```bash
-# En macOS
-mkdir -p ~/.codeium/windsurf/cascade
-cp cascade-hooks-config.json ~/.codeium/windsurf/cascade/hooks.json
+```json
+{
+  "hooks": {
+    "pre_write_code": [
+      {
+        "command": "node /RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js",
+        "show_output": true
+      }
+    ],
+    "post_write_code": [
+      {
+        "command": "node /RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js",
+        "show_output": true
+      }
+    ]
+  }
+}
 ```
 
-O abre Windsurf Settings y busca "Cascade Hooks".
+**Importante**: Reemplaza `/RUTA/A/TU/PROYECTO` con la ruta absoluta a tu proyecto.
+
+**Reinicia Windsurf** después de crear el archivo.
 
 ### 2. Hacer ejecutable el hook
 
