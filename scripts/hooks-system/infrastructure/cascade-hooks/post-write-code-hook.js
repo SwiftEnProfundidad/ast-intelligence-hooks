@@ -61,7 +61,9 @@ async function main() {
         fs.mkdirSync(path.dirname(LOG_FILE), { recursive: true });
         fs.appendFileSync(LOG_FILE, JSON.stringify(logEntry) + '\n');
     } catch (error) {
-        // Silently ignore
+        if (process.env.DEBUG) {
+            process.stderr.write(`[post-write-hook] Log write failed: ${error.message}\n`);
+        }
     }
 
     process.exit(0);

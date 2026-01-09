@@ -1,14 +1,26 @@
-# 🚀 Cascade Hooks - 100% AST Intelligence Enforcement
+# 🚀 IDE Hooks + Git Pre-Commit - AST Intelligence Enforcement
 
 ## ¿Qué es esto?
 
-Este sistema usa **Windsurf Cascade Hooks** para interceptar TODAS las escrituras de código y validarlas con AST Intelligence **ANTES** de que se escriban.
+Este sistema combina **IDE Hooks** (donde estén disponibles) con **Git Pre-Commit** para garantizar enforcement en CUALQUIER IDE.
 
-**Es la única solución que garantiza 100% de enforcement** porque:
+### Soporte por IDE (Actualizado: Enero 2026)
 
-1. Intercepta a nivel de Windsurf (no depende del AI)
-2. Exit code 2 = BLOQUEO REAL del código
-3. El AI no puede bypassear los hooks
+| IDE | Hook Pre-Write | ¿Bloquea antes? | Exit Code | Config |
+|-----|----------------|-----------------|-----------|--------|
+| **Windsurf** | `pre_write_code` | ✅ SÍ | exit(2) | `~/.codeium/windsurf/cascade/hooks.json` |
+| **Claude Code** | `PreToolUse` (matcher: `Write`, `Edit`) | ✅ SÍ | exit(2) | `~/.config/claude-code/settings.json` |
+| **Cursor** | ❌ Solo `afterFileEdit` | ⚠️ NO (post-write) | - | `.cursor/hooks.json` |
+| **Kilo Code** | ❌ No documentado | ⚠️ NO | - | - |
+| **OpenCode** | ❌ No documentado | ⚠️ NO | - | - |
+
+### Resumen de Enforcement
+
+- ✅ **Windsurf + Claude Code**: Bloqueo REAL antes de escribir
+- ⚠️ **Cursor**: Solo logging post-escritura (requiere Git pre-commit)
+- ⚠️ **Otros IDEs**: Solo Git pre-commit
+
+**El Git pre-commit es el fallback 100% garantizado para TODOS los IDEs.**
 
 ## Instalación
 
