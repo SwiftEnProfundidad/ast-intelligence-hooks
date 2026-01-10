@@ -351,7 +351,7 @@ AI generates code → IDE Hook intercepts → AST Intelligence analyzes →
 
 > **Note**: For IDEs without pre-write hooks, the Git pre-commit hook provides 100% enforcement at commit time.
 
-See [`scripts/hooks-system/infrastructure/cascade-hooks/README.md`](./scripts/hooks-system/infrastructure/cascade-hooks/README.md) for installation instructions.
+See [https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/scripts/hooks-system/infrastructure/cascade-hooks/README.md](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/scripts/hooks-system/infrastructure/cascade-hooks/README.md) for installation instructions.
 
 ---
 
