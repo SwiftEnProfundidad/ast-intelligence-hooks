@@ -100,6 +100,10 @@ Pumuki addresses these issues by **removing trust from the AI** and replacing it
 * **In-Memory AST Analysis**: `analyzeCodeInMemory()` for proposed code validation
 * **IDE Hooks**: Real-time blocking in Windsurf, Claude Code, OpenCode
 
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/Hook_01.png" alt="Windsurf post-write hook output" width="100%" />
+
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/Hook_02.png" alt="Windsurf pre-write hook output" width="100%" />
+
 ### NEW: MCP Integration
 
 * **MCP Server**: Full Model Context Protocol integration
@@ -122,15 +126,15 @@ Pumuki addresses these issues by **removing trust from the AI** and replacing it
 
 ## Visual Overview
 
-<img src="./docs/images/ast_intelligence_01.svg" alt="AST Intelligence System Overview" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_01.svg" alt="AST Intelligence System Overview" width="100%" />
 
-<img src="./docs/images/ast_intelligence_02.svg" alt="AST Intelligence Workflow" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_02.svg" alt="AST Intelligence Workflow" width="100%" />
 
-<img src="./docs/images/ast_intelligence_03.svg" alt="AST Intelligence Audit - Part 1" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_03.svg" alt="AST Intelligence Audit - Part 1" width="100%" />
 
-<img src="./docs/images/ast_intelligence_04.svg" alt="AST Intelligence Audit - Part 2" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_04.svg" alt="AST Intelligence Audit - Part 2" width="100%" />
 
-<img src="./docs/images/ast_intelligence_05.svg" alt="AST Intelligence Audit - Part 3" width="100%" />
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ast_intelligence_05.svg" alt="AST Intelligence Audit - Part 3" width="100%" />
 
 ---
 
