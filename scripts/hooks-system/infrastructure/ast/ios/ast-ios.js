@@ -18,6 +18,48 @@ const { iOSForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analyzers
 const { iOSASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/iOSASTIntelligentAnalyzer'));
 const { iOSModernPracticesRules } = require(path.join(__dirname, 'analyzers/iOSModernPracticesRules'));
 
+function detectForbiddenTestableImport({ filePath, content }) {
+  if (!filePath || !content) return null;
+  if (!filePath.includes('Tests')) return null;
+  if (!content.includes('XCTest')) return null;
+  if (!/@testable\s+import\b/.test(content)) return null;
+  return {
+    ruleId: 'ios.imports.forbidden_testable',
+    severity: 'high',
+    message: 'Forbidden @testable import in tests - expose required production APIs as public/open (or via a dedicated TestUtilities module) instead of using @testable'
+  };
+}
+
+function detectMissingMakeSUT({ filePath, content }) {
+  if (!filePath || !content) return null;
+  if (!filePath.includes('Test')) return null;
+  if (!content.includes('XCTest')) return null;
+  const hasTests = /func\s+test\w*\s*\(/.test(content);
+  if (!hasTests) return null;
+  const hasMakeSUT = /func\s+makeSUT\b/.test(content);
+  if (hasMakeSUT) return null;
+  return {
+    ruleId: 'ios.testing.missing_make_sut',
+    severity: 'high',
+    message: 'Test file missing makeSUT() factory - extract SUT creation for reuse and to enable consistent leak tracking.'
+  };
+}
+
+function detectMissingLeakTracking({ filePath, content }) {
+  if (!filePath || !content) return null;
+  if (!filePath.includes('Test')) return null;
+  if (!content.includes('XCTest')) return null;
+  const hasTests = /func\s+test\w*\s*\(/.test(content);
+  if (!hasTests) return null;
+  const hasLeakTracking = content.includes('trackForMemoryLeaks') || content.includes('addTeardownBlock');
+  if (hasLeakTracking) return null;
+  return {
+    ruleId: 'ios.testing.missing_leak_tracking',
+    severity: 'high',
+    message: 'Test file missing memory leak tracking (trackForMemoryLeaks/addTeardownBlock). Template:\n\nfunc makeSUT() -> SUT {\n    let sut = SUT()\n    trackForMemoryLeaks(sut)\n    return sut\n}\n\nfunc test_example() {\n    let sut = makeSUT()\n    // ...\n}'
+  };
+}
+
 /**
  * Run iOS-specific AST intelligence analysis
  * Uses both TypeScript AST (for .ts/.tsx) and SourceKitten (for .swift)
@@ -863,28 +905,28 @@ async function runIOSIntelligence(project, findings, platform) {
     }
 
 
-    if (filePath.includes('Test') && content.includes('XCTest')) {
-      if (!content.includes('makeSUT') && !content.includes('func make')) {
-        pushFinding(
-          "ios.testing.missing_make_sut",
-          "medium",
-          sf,
-          sf,
-          'Test file without makeSUT factory - extract SUT creation for reusability',
-          findings
-        );
-      }
+    const missingMakeSUT = detectMissingMakeSUT({ filePath, content });
+    if (missingMakeSUT) {
+      pushFinding(
+        missingMakeSUT.ruleId,
+        missingMakeSUT.severity,
+        sf,
+        sf,
+        missingMakeSUT.message,
+        findings
+      );
+    }
 
-      if (!content.includes('trackForMemoryLeaks') && !content.includes('addTeardownBlock')) {
-        pushFinding(
-          "ios.testing.missing_leak_tracking",
-          "medium",
-          sf,
-          sf,
-          'Test file without memory leak tracking - add trackForMemoryLeaks helper',
-          findings
-        );
-      }
+    const missingLeakTracking = detectMissingLeakTracking({ filePath, content });
+    if (missingLeakTracking) {
+      pushFinding(
+        missingLeakTracking.ruleId,
+        missingLeakTracking.severity,
+        sf,
+        sf,
+        missingLeakTracking.message,
+        findings
+      );
     }
 
     if (!filePath.includes('Test') && (content.includes('Mock') || content.includes('Spy') || content.includes('Stub'))) {
@@ -1704,17 +1746,16 @@ async function runIOSIntelligence(project, findings, platform) {
       }
     }
 
-    if (filePath.includes('Tests') && content.includes('import ') && !content.includes('@testable')) {
-      if (content.includes('XCTest')) {
-        pushFinding(
-          "ios.testing.missing_testable",
-          "low",
-          sf,
-          sf,
-          'Test file without @testable import - use @testable for accessing internal types',
-          findings
-        );
-      }
+    const forbiddenTestable = detectForbiddenTestableImport({ filePath, content });
+    if (forbiddenTestable) {
+      pushFinding(
+        forbiddenTestable.ruleId,
+        forbiddenTestable.severity,
+        sf,
+        sf,
+        forbiddenTestable.message,
+        findings
+      );
     }
 
     if (content.includes('protocol') && !content.includes('extension') && (content.match(/func\s+\w+/g) || []).length > 3) {
@@ -2224,4 +2265,4 @@ async function runIOSIntelligence(project, findings, platform) {
   });
 }
 
-module.exports = { runIOSIntelligence };
+module.exports = { runIOSIntelligence, detectForbiddenTestableImport, detectMissingMakeSUT, detectMissingLeakTracking };

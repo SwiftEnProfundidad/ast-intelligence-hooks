@@ -858,20 +858,20 @@ async function loadPlatformRules(platforms) {
     const fullRulesContent = {};
 
     const ALL_RULE_FILES = [
-        { key: 'gold', file: 'rulesgold.mdc', priority: 0 },
-        { key: 'ios', file: 'rulesios.mdc', priority: 1 },
-        { key: 'android', file: 'rulesandroid.mdc', priority: 1 },
-        { key: 'backend', file: 'rulesbackend.mdc', priority: 1 },
-        { key: 'frontend', file: 'rulesfront.mdc', priority: 1 }
+        { platform: 'gold', file: 'rulesgold.mdc', priority: 0 },
+        { platform: 'ios', file: 'rulesios.mdc', priority: 1 },
+        { platform: 'android', file: 'rulesandroid.mdc', priority: 1 },
+        { platform: 'backend', file: 'rulesbackend.mdc', priority: 1 },
+        { platform: 'frontend', file: 'rulesfront.mdc', priority: 1 }
     ];
 
     for (const ruleFile of ALL_RULE_FILES) {
         try {
             const content = await loader.loadRule(ruleFile.file);
             if (content) {
-                rules[ruleFile.key] = true;
-                fullRulesContent[ruleFile.key] = content;
-                const criticalPatterns = extractCriticalPatterns(content, ruleFile.key);
+                rules[ruleFile.platform] = true;
+                fullRulesContent[ruleFile.platform] = content;
+                const criticalPatterns = extractCriticalPatterns(content, ruleFile.platform);
                 criticalRules.push(...criticalPatterns);
             }
         } catch (error) {
@@ -1605,17 +1605,6 @@ function preFlightCheck(params) {
 
     if (isTestFile) {
         rulesEnforcement.recordTestCreated(target_file);
-        return {
-            success: true,
-            allowed: true,
-            message: '✅ TEST FILE DETECTED - TDD cycle activated!',
-            tdd_status: {
-                active: true,
-                phase: 'RED',
-                instruction: 'Write the failing test first, then implement the code to make it pass (GREEN)'
-            },
-            session_state: rulesEnforcement.sessionState
-        };
     }
 
     const validation = rulesEnforcement.validateProposedAction(action_type, target_file, proposed_code);
@@ -1643,19 +1632,20 @@ function preFlightCheck(params) {
             const { analyzeCodeInMemory } = require('../ast/ast-core');
             astAnalysis = analyzeCodeInMemory(proposed_code, target_file);
 
-            if (astAnalysis.hasCritical) {
+            if (astAnalysis.hasCritical || astAnalysis.hasHigh) {
+                const blocking = astAnalysis.violations
+                    .filter(v => v.severity === 'CRITICAL' || v.severity === 'HIGH');
                 return {
                     success: false,
                     allowed: false,
                     blocked: true,
-                    reason: '🚫 AST INTELLIGENCE BLOCKED: Critical violations detected in proposed code',
-                    ast_violations: astAnalysis.violations,
+                    reason: '🚫 AST INTELLIGENCE BLOCKED: Critical/High violations detected in proposed code',
+                    ast_violations: blocking,
                     ast_summary: astAnalysis.summary,
                     tdd_status: validation.tddStatus,
                     action_required: 'FIX_AST_VIOLATIONS',
                     suggestion: 'Fix the following AST violations before proceeding:\n' +
-                        astAnalysis.violations
-                            .filter(v => v.severity === 'CRITICAL')
+                        blocking
                             .map(v => `  ❌ ${v.ruleId}: ${v.message}`)
                             .join('\n'),
                     reminder: validation.reminder
@@ -2213,24 +2203,28 @@ async function handleMcpMessage(message) {
 // Flag to track if MCP has been initialized
 let mcpInitialized = false;
 
-// Start protocol handler
-protocolHandler.start(async (message) => {
-    const response = await handleMcpMessage(message);
+if (require.main === module) {
+    // Start protocol handler
+    protocolHandler.start(async (message) => {
+        const response = await handleMcpMessage(message);
 
-    // Start polling loops ONLY after receiving 'initialized' notification from Windsurf
-    if (!mcpInitialized && message.includes('"method":"initialized"')) {
-        mcpInitialized = true;
-        if (process.env.DEBUG) {
-            process.stderr.write(`[MCP] Received 'initialized' - starting background loops\n`);
+        // Start polling loops ONLY after receiving 'initialized' notification from Windsurf
+        if (!mcpInitialized && message.includes('"method":"initialized"')) {
+            mcpInitialized = true;
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Received 'initialized' - starting background loops\n`);
+            }
+            startPollingLoops();
         }
-        startPollingLoops();
+
+        return response;
+    });
+
+    if (process.env.DEBUG) {
+        process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
     }
-
-    return response;
-});
-
-if (process.env.DEBUG) {
-    process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
+} else {
+    module.exports = { preFlightCheck };
 }
 
 /**

@@ -136,7 +136,12 @@ function buildHealthSnapshot() {
 
 const commands = {
   audit: () => {
-    execSync(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
+    try {
+      execSync(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
+    } catch (err) {
+      const status = (err && typeof err.status === 'number') ? err.status : 1;
+      process.exit(status);
+    }
   },
 
   'evidence:update': () => {
@@ -408,9 +413,12 @@ Documentation:
   }
 };
 
-if (!command || !commands[command]) {
-  commands.help();
-  process.exit(command ? 1 : 0);
+if (require.main === module) {
+  if (!command || !commands[command]) {
+    commands.help();
+    process.exit(command ? 1 : 0);
+  }
+  commands[command]();
 }
 
-commands[command]();
+module.exports = { commands };
