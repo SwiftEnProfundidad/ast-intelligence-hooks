@@ -210,26 +210,31 @@ function runCommonIntelligence(project, findings) {
     if (isTestFilePath(filePath)) {
       const content = sf.getFullText();
 
-      if (!shouldSkipMakeSUTRule(filePath) && !hasMakeSUT(content)) {
-        pushFinding(
-          'common.testing.missing_makesut',
-          'high',
-          sf,
-          sf,
-          'Test file without makeSUT factory - use makeSUT pattern for consistent DI and teardown',
-          findings
-        );
-      }
+      const ext = path.extname(filePath).toLowerCase();
+      const isSwiftOrKotlinTest = ext === '.swift' || ext === '.kt' || ext === '.kts';
 
-      if (!shouldSkipTrackForMemoryLeaksRule(filePath) && !hasTrackForMemoryLeaksEvidence(content)) {
-        pushFinding(
-          'common.testing.missing_track_for_memory_leaks',
-          'critical',
-          sf,
-          sf,
-          'Test file without trackForMemoryLeaks - add memory leak tracking to prevent leaks and cross-test interference',
-          findings
-        );
+      if (isSwiftOrKotlinTest) {
+        if (!shouldSkipMakeSUTRule(filePath) && !hasMakeSUT(content)) {
+          pushFinding(
+            'common.testing.missing_makesut',
+            'high',
+            sf,
+            sf,
+            'Test file without makeSUT factory - use makeSUT pattern for consistent DI and teardown',
+            findings
+          );
+        }
+
+        if (!shouldSkipTrackForMemoryLeaksRule(filePath) && !hasTrackForMemoryLeaksEvidence(content)) {
+          pushFinding(
+            'common.testing.missing_track_for_memory_leaks',
+            'critical',
+            sf,
+            sf,
+            'Test file without trackForMemoryLeaks - add memory leak tracking to prevent leaks and cross-test interference',
+            findings
+          );
+        }
       }
 
       if (!shouldSkipSpyOverMockRule(filePath)) {
