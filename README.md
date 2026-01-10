@@ -111,6 +111,8 @@ Pumuki addresses these issues by **removing trust from the AI** and replacing it
 * **pre_flight_check**: Validate proposed code before writing
 * **set_human_intent**: Track user goals across sessions
 
+<img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/docs/images/ai_gate.png" alt="MCP ai_gate_check BLOCKED example" width="100%" />
+
 ### NEW: Cognitive Layers
 
 * **Human Intent**: Persistent user goal tracking with confidence levels
