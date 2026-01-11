@@ -87,6 +87,103 @@ describe('AST Common Module', () => {
       expect(findings.some(f => f.ruleId === 'common.testing.missing_makesut')).toBe(false);
       expect(findings.some(f => f.ruleId === 'common.testing.missing_track_for_memory_leaks')).toBe(false);
     });
+
+    it('does not report false positives for simple value type tests (Ruralgo case)', () => {
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        skipAddingFilesFromTsConfig: true,
+      });
+
+      const swiftPath = '/tmp/DomainAPIEndpointTests.spec.swift';
+      const simpleValueTypeTest = `import Domain
+import XCTest
+
+final class DomainAPIEndpointTests: XCTestCase {
+  func test_givenCustomInit_whenAccessingProperties_thenReturnsExpectedValues() {
+    let body = Data([0x01, 0x02])
+    let queryItems = [URLQueryItem(name: "page", value: "1")]
+
+    let endpointPatch = APIEndpoint(
+      path: "/any", method: .patch, body: body, queryItems: queryItems)
+
+    XCTAssertEqual(endpointPatch.path, "/any")
+    XCTAssertEqual(endpointPatch.method, .patch)
+    XCTAssertEqual(endpointPatch.body, body)
+    XCTAssertEqual(endpointPatch.queryItems, queryItems)
+  }
+}`;
+
+      const sf = project.createSourceFile(swiftPath, simpleValueTypeTest);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(simpleValueTypeTest);
+
+      const findings = [];
+      runCommonIntelligence(project, findings);
+
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_makesut')).toBe(false);
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_track_for_memory_leaks')).toBe(false);
+    });
+
+    it('does apply rules to complex tests with async/classes', () => {
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        skipAddingFilesFromTsConfig: true,
+      });
+
+      const swiftPath = '/tmp/NetworkClientTests.spec.swift';
+      const complexTest = `import XCTest
+
+final class NetworkClientTests: XCTestCase {
+  override func setUp() {
+    super.setUp()
+  }
+
+  func test_load_deliversErrorOnClientError() async {
+    let client = HTTPClient()
+    let result = await client.load()
+    XCTAssertNotNil(result)
+  }
+}`;
+
+      const sf = project.createSourceFile(swiftPath, complexTest);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(complexTest);
+
+      const findings = [];
+      runCommonIntelligence(project, findings);
+
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_makesut')).toBe(true);
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_track_for_memory_leaks')).toBe(true);
+    });
+
+    it('respects ast-ignore comments', () => {
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        skipAddingFilesFromTsConfig: true,
+      });
+
+      const swiftPath = '/tmp/SomeTests.spec.swift';
+      const testWithIgnore = `import XCTest
+// ast-ignore: missing_makesut, missing_track_for_memory_leaks
+
+final class SomeTests: XCTestCase {
+  override func setUp() {
+    super.setUp()
+  }
+
+  func test_something() async {
+    let result = await someAsyncCall()
+    XCTAssertNotNil(result)
+  }
+}`;
+
+      const sf = project.createSourceFile(swiftPath, testWithIgnore);
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(testWithIgnore);
+
+      const findings = [];
+      runCommonIntelligence(project, findings);
+
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_makesut')).toBe(false);
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_track_for_memory_leaks')).toBe(false);
+    });
   });
 
   describe('exports', () => {
