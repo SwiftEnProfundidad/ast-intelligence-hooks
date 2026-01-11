@@ -3,4 +3,6 @@
  * Script Wrapper
  * Redirects to the centralized implementation in scripts/hooks-system
  */
-require('../scripts/hooks-system/bin/cli.js');
+const { runCli } = require('../scripts/hooks-system/bin/cli.js');
+
+runCli(process.argv);
