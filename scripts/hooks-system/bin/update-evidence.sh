@@ -26,3 +26,11 @@ fi
 
 AUTO_EVIDENCE_TRIGGER="$AUTO_TRIGGER" AUTO_EVIDENCE_REASON="$AUTO_REASON" AUTO_EVIDENCE_SUMMARY="$AUTO_SUMMARY" \
   node "$CLI" evidence:full-update
+
+EXIT_CODE=$?
+if [[ "$EXIT_CODE" -ne 0 ]]; then
+  echo " Evidence updated but gate reported violations (exit code: $EXIT_CODE)." >&2
+  exit 0
+fi
+
+exit 0

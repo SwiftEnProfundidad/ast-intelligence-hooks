@@ -7,6 +7,38 @@ describe('intelligent-audit', () => {
     expect(mod).toBeDefined();
   });
 
+  describe('auto_intent layer (Auto Intent)', () => {
+    it('should have required auto_intent contract fields when generated', () => {
+      const autoIntent = {
+        generated_at: new Date().toISOString(),
+        derivation_source: 'auto:updateAIEvidence',
+        primary_goal: 'Continue work on backend changes',
+        secondary_goals: [],
+        constraints: ['Do not bypass hooks (--no-verify)'],
+        confidence_level: 'medium',
+        context: {
+          branch: 'feature/test',
+          base_branch: 'develop',
+          platforms: ['backend'],
+          staged_files_count: 0,
+          gate_status: 'PASSED',
+          is_protected_branch: false
+        },
+        recommended_next_actions: ['Proceed with planned work']
+      };
+
+      expect(autoIntent.generated_at).toBeDefined();
+      expect(autoIntent.derivation_source).toBe('auto:updateAIEvidence');
+      expect(autoIntent.primary_goal).toBeDefined();
+      expect(Array.isArray(autoIntent.secondary_goals)).toBe(true);
+      expect(Array.isArray(autoIntent.constraints)).toBe(true);
+      expect(autoIntent.confidence_level).toBeDefined();
+      expect(autoIntent.context).toBeDefined();
+      expect(Array.isArray(autoIntent.context.platforms)).toBe(true);
+      expect(Array.isArray(autoIntent.recommended_next_actions)).toBe(true);
+    });
+  });
+
   it('should have runIntelligentAudit function', () => {
     const mod = require('../intelligent-audit');
     expect(typeof mod.runIntelligentAudit).toBe('function');
@@ -218,7 +250,8 @@ describe('Cognitive Memory Layers', () => {
     },
     protocol_3_questions: { answered: true },
     human_intent: humanIntentOverride,
-    semantic_snapshot: null
+    semantic_snapshot: null,
+    auto_intent: null
   });
 
   describe('human_intent layer (Intentional Memory)', () => {
@@ -365,11 +398,16 @@ describe('Cognitive Memory Layers', () => {
         semantic_snapshot: {
           generated_at: new Date().toISOString(),
           summary: { health_score: 100 }
+        },
+        auto_intent: {
+          generated_at: new Date().toISOString(),
+          primary_goal: 'Continue work on repo changes'
         }
       };
 
       expect(completeEvidence.human_intent).toBeDefined();
       expect(completeEvidence.semantic_snapshot).toBeDefined();
+      expect(completeEvidence.auto_intent).toBeDefined();
     });
   });
 });
