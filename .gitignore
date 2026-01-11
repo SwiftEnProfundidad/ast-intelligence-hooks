@@ -65,3 +65,7 @@ scripts/hooks-system/.hook-system/
 **/*CORRECCIONES*.md
 ast-summary.json
 .AI_EVIDENCE_SUMMARY.md
+
+# Local hook/demo scratch files (must never be committed/published)
+hooks/__tmp_*.js
+scripts/test-*.js
