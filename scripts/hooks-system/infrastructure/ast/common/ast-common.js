@@ -71,6 +71,66 @@ function hasTrackForMemoryLeaksEvidence(content) {
   return hasTrackForMemoryLeaks(content) || hasMakeSUT(content);
 }
 
+/**
+ * Detect if a test file is a simple value type test that doesn't need makeSUT/trackForMemoryLeaks.
+ * Simple tests typically:
+ * - Have no async/await or closures capturing self
+ * - Have no class instantiation patterns (reference types)
+ * - Test only property access or simple assertions
+ * - Have no setUp/tearDown methods
+ */
+function isSimpleValueTypeTest(content) {
+  // If it has setUp/tearDown, it's not simple - needs proper patterns
+  if (/\boverride\s+func\s+(setUp|tearDown)/.test(content)) return false;
+
+  // If it has async/await, needs memory tracking
+  if (/\basync\b|\bawait\b|\bexpectation\(|\bwaitForExpectations\b/.test(content)) return false;
+
+  // If it has closures that might capture self, needs tracking
+  if (/\[\s*(weak|unowned)?\s*self\s*\]/.test(content)) return false;
+
+  // If it has completion handlers or callbacks, needs tracking
+  if (/completion\s*:|\@escaping|\bresult\s*in\b/i.test(content)) return false;
+
+  // If it creates classes (not structs), needs makeSUT pattern
+  // Look for "= ClassName(" but not "= StructName(" - heuristic: classes often have "Client", "Service", "Manager", "Repository"
+  if (/=\s*\w*(Client|Service|Manager|Repository|UseCase|Interactor|Presenter|ViewModel|Controller)\s*\(/.test(content)) return false;
+
+  // If it's a very short test (likely simple property test), skip rules
+  const lines = content.split('\n').filter(l => l.trim().length > 0);
+  if (lines.length <= 40) return true;
+
+  // If it only has XCTAssertEqual for properties, it's likely a simple value type test
+  const testMethods = content.match(/func\s+test_[^{]+\{[^}]+\}/gs) || [];
+  if (testMethods.length > 0) {
+    const allSimple = testMethods.every(method => {
+      // Simple test: mostly XCTAssert* calls, no complex setup
+      const hasOnlyAsserts = /XCTAssert(Equal|True|False|Nil|NotNil)/.test(method);
+      const hasNoComplexSetup = !/\bsut\b|makeSUT|\bawait\b|completion/.test(method);
+      return hasOnlyAsserts && hasNoComplexSetup;
+    });
+    if (allSimple && testMethods.length <= 3) return true;
+  }
+
+  return false;
+}
+
+/**
+ * Check for ast-ignore comments in content
+ * Supports: // ast-ignore: rule_name or // ast-ignore: rule1, rule2
+ */
+function hasAstIgnoreComment(content, ruleId) {
+  const ignorePattern = /\/\/\s*ast-ignore:\s*([^\n]+)/gi;
+  let match;
+  while ((match = ignorePattern.exec(content)) !== null) {
+    const rules = match[1].split(',').map(r => r.trim().toLowerCase());
+    if (rules.includes(ruleId.toLowerCase()) || rules.includes('all')) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function detectMockSignals(content) {
   const signals = [
     /\bjest\.mock\s*\(/,
@@ -228,7 +288,12 @@ function runCommonIntelligence(project, findings) {
       }
 
       if (isSwiftOrKotlinTest) {
-        if (!shouldSkipMakeSUTRule(filePath) && !hasMakeSUT(content)) {
+        const isSimple = isSimpleValueTypeTest(content);
+
+        if (!shouldSkipMakeSUTRule(filePath) &&
+          !hasMakeSUT(content) &&
+          !isSimple &&
+          !hasAstIgnoreComment(content, 'missing_makesut')) {
           pushFinding(
             'common.testing.missing_makesut',
             'high',
@@ -239,7 +304,10 @@ function runCommonIntelligence(project, findings) {
           );
         }
 
-        if (!shouldSkipTrackForMemoryLeaksRule(filePath) && !hasTrackForMemoryLeaksEvidence(content)) {
+        if (!shouldSkipTrackForMemoryLeaksRule(filePath) &&
+          !hasTrackForMemoryLeaksEvidence(content) &&
+          !isSimple &&
+          !hasAstIgnoreComment(content, 'missing_track_for_memory_leaks')) {
           pushFinding(
             'common.testing.missing_track_for_memory_leaks',
             'critical',
