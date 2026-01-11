@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const { pushFinding, SyntaxKind, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
 const { BDDTDDWorkflowRules } = require(path.join(__dirname, 'BDDTDDWorkflowRules'));
 
@@ -208,10 +209,20 @@ function runCommonIntelligence(project, findings) {
     if (/\/ast-(?:backend|frontend|android|ios|common|core|intelligence)\.js$/.test(filePath)) return;
 
     if (isTestFilePath(filePath)) {
-      const content = sf.getFullText();
+      let content = sf.getFullText();
 
       const ext = path.extname(filePath).toLowerCase();
       const isSwiftOrKotlinTest = ext === '.swift' || ext === '.kt' || ext === '.kts';
+
+      if (isSwiftOrKotlinTest && (!content || content.trim().length === 0)) {
+        try {
+          content = fs.readFileSync(filePath, 'utf8');
+        } catch (error) {
+          if (process.env.DEBUG) {
+            console.debug(`[ast-common] Failed to read test file content for ${filePath}: ${error.message}`);
+          }
+        }
+      }
 
       if (isSwiftOrKotlinTest) {
         if (!shouldSkipMakeSUTRule(filePath) && !hasMakeSUT(content)) {
