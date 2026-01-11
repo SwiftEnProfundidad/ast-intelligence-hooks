@@ -715,11 +715,19 @@ function cleanupStaleBranches(params) {
  */
 async function autoExecuteAIStart(params) {
     const useCase = getCompositionRoot().getAutoExecuteAIStartUseCase();
+    const tokenEconomyRule = 'TOKEN_ECONOMY: Prioritize token/cost efficiency. Batch related checks, avoid redundant scans, reuse cached context where possible, ask the user for missing info instead of exploring blindly, and keep responses concise.';
 
     try {
-        const result = await useCase.execute({
-            force: params.forceAnalysis || false
-        });
+        const orchestrator = getCompositionRoot().getOrchestrator();
+        const analysis = await orchestrator.analyzeContext();
+
+        const platforms = Array.isArray(analysis?.platforms)
+            ? analysis.platforms.map(p => (p && typeof p === 'object' ? (p.platform || p.name) : p)).filter(Boolean)
+            : [];
+
+        const confidence = Number.isFinite(analysis?.confidence) ? analysis.confidence : 0;
+
+        const result = await useCase.execute(platforms, confidence);
 
         if (result.action === 'auto-executed') {
             sendNotification(
@@ -731,6 +739,7 @@ async function autoExecuteAIStart(params) {
 
         return {
             success: true,
+            framework_rules: [tokenEconomyRule],
             ...result
         };
 
@@ -738,6 +747,7 @@ async function autoExecuteAIStart(params) {
         return {
             success: false,
             action: 'error',
+            framework_rules: [tokenEconomyRule],
             message: `Failed to execute AI Start: ${error.message}`
         };
     }
@@ -1144,6 +1154,9 @@ function extractCriticalPatterns(content, platform) {
         patterns.push({ platform: 'gold', rule: '✅ OBLIGATORIO composición > herencia', severity: 'MANDATORY' });
     }
 
+    /**
+     * Returns the patterns for the given platforms.
+     */
     return patterns;
 }
 
@@ -1306,6 +1319,7 @@ async function aiGateCheck() {
         const normalizedPlatforms = Array.from(new Set(platformsForRules));
 
         let mandatoryRules = null;
+        const tokenEconomyRule = 'TOKEN_ECONOMY: Prioritize token/cost efficiency. Batch related checks, avoid redundant scans, reuse cached context where possible, ask the user for missing info instead of exploring blindly, and keep responses concise.';
         try {
             const rulesData = await loadPlatformRules(normalizedPlatforms);
             const rulesSample = rulesData.criticalRules.slice(0, 5).map(r => r.rule || r);
@@ -1316,7 +1330,8 @@ async function aiGateCheck() {
                 rulesLoaded: Object.keys(rulesData.rules),
                 totalRulesCount: rulesCount,
                 rulesSample,
-                proofOfRead: `✅ VERIFIED: ${rulesCount} critical rules loaded from ${Object.keys(rulesData.rules).join(', ')}`
+                proofOfRead: `✅ VERIFIED: ${rulesCount} critical rules loaded from ${Object.keys(rulesData.rules).join(', ')}`,
+                framework_rules: [tokenEconomyRule]
             };
         } catch (error) {
             if (process.env.DEBUG) {
@@ -1328,7 +1343,8 @@ async function aiGateCheck() {
                 criticalRules: [],
                 rulesLoaded: [],
                 status: 'FAILED_TO_LOAD',
-                error: `Failed to load rules content: ${error && error.message ? error.message : String(error)}`
+                error: `Failed to load rules content: ${error && error.message ? error.message : String(error)}`,
+                framework_rules: [tokenEconomyRule]
             };
         }
 
@@ -1373,7 +1389,7 @@ async function aiGateCheck() {
                 : `✅ ALLOWED: Gate check passed with ${warnings.length} warning(s).`,
             instructions: finalBlocked
                 ? 'Fix violations before proceeding. Run ai-start if needed.'
-                : `✅ ${mandatoryRules.totalRulesCount} RULES LOADED. Sample: ${mandatoryRules.rulesSample.slice(0, 2).join(' | ')}... Review ALL rules in mandatory_rules.criticalRules before ANY code generation.`,
+                : `✅ ${mandatoryRules.totalRulesCount} RULES LOADED. Sample: ${mandatoryRules.rulesSample.slice(0, 2).join(' | ')}... Review ALL rules in mandatory_rules.criticalRules before ANY code generation. Also follow mandatory_rules.framework_rules (token economy).`,
             cognitive_context: humanIntent?.primary_goal
                 ? `🎯 USER INTENT: ${humanIntent.primary_goal} (confidence: ${humanIntent.confidence_level || 'unset'})`
                 : null,
@@ -1444,18 +1460,25 @@ async function aiGateCheck() {
             platforms: ['backend', 'frontend', 'ios', 'android'],
             criticalRules: [],
             rulesLoaded: [],
+            framework_rules: ['TOKEN_ECONOMY: Prioritize token/cost efficiency. Batch related checks, avoid redundant scans, reuse cached context where possible, ask the user for missing info instead of exploring blindly, and keep responses concise.'],
             warning: '⚠️ AI MUST read and follow these rules before ANY code generation or modification',
             error: 'Rules could not be loaded due to timeout'
         },
         summary: '🚫 BLOCKED: Gate check timed out.',
-        instructions: 'DO NOT proceed with user task. Retry the gate check.'
+        instructions: 'DO NOT proceed with user task. Retry the gate check.',
+        cognitive_context: null,
+        human_intent: null,
+        semantic_snapshot: null,
+        auto_intent: null,
+        session: {
+            id: gateSession.sessionId,
+            checkCount: gateSession.checkCount,
+            validFor: gateSession.GATE_VALIDITY_MS / 60000 + ' minutes'
+        }
     };
     gateSession.recordCheck(timeoutResult);
     return timeoutResult;
 }
-/**
- * Read platform rules handler - returns critical rules for a specific platform
- */
 async function readPlatformRulesHandler(params) {
     const platform = params.platform;
     if (!platform) {
@@ -1693,10 +1716,12 @@ function suggestHumanIntent() {
  */
 function preFlightCheck(params) {
     const { action_type, target_file, proposed_code, bypass_tdd } = params;
+    const tokenEconomyRule = 'TOKEN_ECONOMY: Prioritize token/cost efficiency. Batch related checks, avoid redundant scans, reuse cached context where possible, ask the user for missing info instead of exploring blindly, and keep responses concise.';
 
     if (!action_type || !target_file) {
         return {
             success: false,
+            framework_rules: [tokenEconomyRule],
             error: 'action_type and target_file are required',
             hint: 'Call with: { action_type: "edit"|"create_file", target_file: "/path/to/file.ts", proposed_code: "..." }'
         };
@@ -1716,6 +1741,7 @@ function preFlightCheck(params) {
             success: false,
             allowed: false,
             blocked: true,
+            framework_rules: [tokenEconomyRule],
             reason: validation.enforcement_message,
             violations: validation.violations,
             tdd_status: validation.tddStatus,
@@ -1741,6 +1767,7 @@ function preFlightCheck(params) {
                     success: false,
                     allowed: false,
                     blocked: true,
+                    framework_rules: [tokenEconomyRule],
                     reason: '🚫 AST INTELLIGENCE BLOCKED: Critical/High violations detected in proposed code',
                     ast_violations: blocking,
                     ast_summary: astAnalysis.summary,
@@ -1765,6 +1792,7 @@ function preFlightCheck(params) {
             success: true,
             allowed: true,
             has_warnings: true,
+            framework_rules: [tokenEconomyRule],
             warnings: validation.violations.filter(v => v.severity === 'WARNING'),
             ast_analysis: astAnalysis,
             message: '⚠️ Proceed with caution - review warnings',
@@ -1777,6 +1805,7 @@ function preFlightCheck(params) {
     return {
         success: true,
         allowed: true,
+        framework_rules: [tokenEconomyRule],
         message: '✅ Pre-flight check PASSED - proceed with implementation',
         ast_analysis: astAnalysis,
         tdd_status: validation.tddStatus,

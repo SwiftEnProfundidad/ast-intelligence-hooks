@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="AST Intelligence Audit - Part 2">
+  <defs>
+    <style>
+      .bg { fill: #0b0f14; }
+      .panel { fill: #0f1620; stroke: #1f2a37; stroke-width: 2; }
+      .h { fill: #a7f3d0; font: 700 24px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .t { fill: #e5e7eb; font: 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .muted { fill: #9ca3af; font: 18px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1600" height="900" />
+  <rect class="panel" x="40" y="40" width="1520" height="820" rx="18" />
+
+  <text class="h" x="80" y="120">5) TOP VIOLATIONS &amp; REMEDIATION</text>
+
+  <text class="t" x="80" y="200">• common.types.any (8 violations)</text>
+  <text class="muted" x="110" y="235">→ Review and fix violations.</text>
+
+  <text class="t" x="80" y="285">• ios.quality.long_function (3 violations)</text>
+  <text class="muted" x="110" y="320">→ Review and fix violations.</text>
+
+  <text class="t" x="80" y="370">• android.asynctask (2 violations)</text>
+  <text class="muted" x="110" y="405">→ Review and fix violations.</text>
+
+  <text class="t" x="80" y="455">• common.network.missing_timeout (2 violations)</text>
+  <text class="muted" x="110" y="490">→ Review and fix violations.</text>
+
+  <text class="t" x="80" y="540">• common.network.missing_error_handling (2 violations)</text>
+  <text class="muted" x="110" y="575">→ Review and fix violations.</text>
+
+  <text class="t" x="80" y="625">• ios.solid.isp.unused_dependency (2 violations)</text>
+  <text class="muted" x="110" y="660">→ Review and fix violations.</text>
+
+  <text class="t" x="80" y="710">• ios.concurrency.missing_actor (2 violations)</text>
+  <text class="muted" x="110" y="745">→ Review and fix violations.</text>
+
+  <text class="h" x="80" y="830">6) EXECUTIVE SUMMARY</text>
+</svg>
