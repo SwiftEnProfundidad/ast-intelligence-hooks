@@ -214,9 +214,12 @@ function runCommonIntelligence(project, findings) {
       const ext = path.extname(filePath).toLowerCase();
       const isSwiftOrKotlinTest = ext === '.swift' || ext === '.kt' || ext === '.kts';
 
-      if (isSwiftOrKotlinTest && (!content || content.trim().length === 0)) {
+      if (isSwiftOrKotlinTest) {
         try {
-          content = fs.readFileSync(filePath, 'utf8');
+          const diskContent = fs.readFileSync(filePath, 'utf8');
+          if (diskContent && diskContent.trim().length > 0) {
+            content = diskContent;
+          }
         } catch (error) {
           if (process.env.DEBUG) {
             console.debug(`[ast-common] Failed to read test file content for ${filePath}: ${error.message}`);
