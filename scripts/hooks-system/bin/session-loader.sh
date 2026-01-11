@@ -3,6 +3,8 @@
 # Runs on IDE startup to initialize AST hooks, show context and check tokens
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
 
+VERSION=$(node -p "require('${REPO_ROOT}/package.json').version" 2>/dev/null || echo "unknown")
+
 BLUE='\033[0;34m'
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -22,7 +24,7 @@ fi
 
 echo ""
 echo -e "${BLUE}╔══════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║         🤖 AST Intelligence Hooks v5.5.22                ║${NC}"
+echo -e "${BLUE}║         🤖 AST Intelligence Hooks v$VERSION                ║${NC}"
 echo -e "${BLUE}║         Workspace Opened - Loading Context...            ║${NC}"
 echo -e "${BLUE}╚══════════════════════════════════════════════════════════╝${NC}"
 echo ""
