@@ -65,6 +65,15 @@ function getStagedFilesSafe() {
   }
 }
 
+function getRecentCommitSubjects(limit = 10) {
+  try {
+    const output = execSync(`git log -n ${limit} --pretty=%s`, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return String(output || '').split('\n').map(s => s.trim()).filter(Boolean);
+  } catch (e) {
+    return [];
+  }
+}
+
 function proposeHumanIntent({ evidence, branch, stagedFiles }) {
   const safeEvidence = (evidence && typeof evidence === 'object') ? evidence : {};
   const safeBranch = branch || safeEvidence.current_context?.current_branch || 'unknown';
@@ -91,6 +100,20 @@ function proposeHumanIntent({ evidence, branch, stagedFiles }) {
   const platformLabel = platforms.length > 0 ? platforms.join('+') : (detectedPlatforms.length > 0 ? detectedPlatforms.join('+') : 'repo');
 
   let primaryGoal = `Continue work on ${platformLabel} changes`;
+  if (platformLabel === 'repo' && staged.length === 0 && detectedPlatforms.length === 0) {
+    const subjects = getRecentCommitSubjects(12).join(' | ').toLowerCase();
+    if (subjects.includes('token economy')) {
+      primaryGoal = 'Continue token economy improvements (docs + MCP outputs)';
+    } else if (subjects.includes('release') || subjects.includes('publish') || subjects.includes('version')) {
+      primaryGoal = 'Continue release/publish workflow maintenance';
+    } else if (subjects.includes('gitflow')) {
+      primaryGoal = 'Continue Git Flow automation maintenance';
+    } else if (subjects.includes('mcp')) {
+      primaryGoal = 'Continue MCP automation maintenance';
+    } else if (subjects.includes('readme') || subjects.includes('docs')) {
+      primaryGoal = 'Continue documentation improvements';
+    }
+  }
   if (gateStatus === 'BLOCKED') {
     primaryGoal = `Unblock AI gate by fixing ${platformLabel} violations`;
   }
@@ -250,7 +273,33 @@ const commands = {
       const stagedFiles = getStagedFilesSafe();
       const proposed = proposeHumanIntent({ evidence, branch, stagedFiles });
 
-      console.log('\n💡 Suggested Human Intent (proposal only):');
+      const shouldSave = !process.argv.includes('--no-save');
+      if (shouldSave) {
+        const now = new Date();
+        const expiresAt = new Date(Date.now() + 24 * 3600000).toISOString();
+        evidence.human_intent = {
+          primary_goal: proposed.primary_goal,
+          secondary_goals: proposed.secondary_goals || [],
+          non_goals: proposed.non_goals || [],
+          constraints: proposed.constraints || [],
+          confidence_level: proposed.confidence_level || 'medium',
+          set_by: 'wrap-up',
+          set_at: now.toISOString(),
+          expires_at: expiresAt,
+          preserved_at: now.toISOString(),
+          preservation_count: 0
+        };
+
+        try {
+          fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2), 'utf8');
+        } catch (e) {
+          if (process.env.DEBUG) {
+            process.stderr.write(`[wrap-up] Failed to save human_intent: ${e && e.message ? e.message : String(e)}\n`);
+          }
+        }
+      }
+
+      console.log(`\n💡 Suggested Human Intent (${shouldSave ? 'auto-saved' : 'proposal only'}):`);
       console.log(`  Primary Goal: ${proposed.primary_goal}`);
       console.log(`  Secondary:    ${(proposed.secondary_goals || []).join(', ') || '(none)'}`);
       console.log(`  Constraints:  ${(proposed.constraints || []).join(', ') || '(none)'}`);
@@ -259,9 +308,14 @@ const commands = {
       console.log(`  Gate:         ${(proposed.derived_from && proposed.derived_from.gate_status) || '(unknown)'}`);
 
       const suggestedCmd = `ast-hooks intent set --goal="${proposed.primary_goal}" --confidence=${proposed.confidence_level || 'medium'} --expires=24h`;
-      console.log('\n✅ To apply it, run:');
-      console.log(`  ${suggestedCmd}`);
-      console.log('');
+      if (shouldSave) {
+        console.log('\n✅ Saved to .AI_EVIDENCE.json');
+        console.log('');
+      } else {
+        console.log('\n✅ To apply it, run:');
+        console.log(`  ${suggestedCmd}`);
+        console.log('');
+      }
     } catch (error) {
       if (process.env.DEBUG) {
         process.stderr.write(`[wrap-up] Intent suggestion failed: ${error && error.message ? error.message : String(error)}\n`);
@@ -582,4 +636,4 @@ if (require.main === module) {
   commands[command]();
 }
 
-module.exports = { commands };
+module.exports = { commands, proposeHumanIntent };
