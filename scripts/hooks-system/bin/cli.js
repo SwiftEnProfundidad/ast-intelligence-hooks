@@ -47,6 +47,89 @@ function resolveRepoRoot() {
   return process.cwd();
 }
 
+function getCurrentBranchSafe() {
+  try {
+    const output = execSync('git branch --show-current', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return output.trim() || null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getStagedFilesSafe() {
+  try {
+    const output = execSync('git diff --cached --name-only', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    return output.trim().split('\n').filter(Boolean);
+  } catch (e) {
+    return [];
+  }
+}
+
+function proposeHumanIntent({ evidence, branch, stagedFiles }) {
+  const safeEvidence = (evidence && typeof evidence === 'object') ? evidence : {};
+  const safeBranch = branch || safeEvidence.current_context?.current_branch || 'unknown';
+  const staged = Array.isArray(stagedFiles) ? stagedFiles : [];
+
+  const detectedPlatforms = ['ios', 'android', 'backend', 'frontend']
+    .filter(p => safeEvidence.platforms && safeEvidence.platforms[p] && safeEvidence.platforms[p].detected);
+
+  const gateStatus = safeEvidence.ai_gate?.status || safeEvidence.severity_metrics?.gate_status || 'unknown';
+
+  const branchLower = String(safeBranch).toLowerCase();
+  const hasIosTouch = staged.some(f => String(f).toLowerCase().endsWith('.swift')) || detectedPlatforms.includes('ios');
+  const hasAndroidTouch = staged.some(f => /\.(kt|kts|java)$/i.test(String(f))) || detectedPlatforms.includes('android');
+  const hasBackendTouch = staged.some(f => String(f).toLowerCase().includes('backend') || String(f).toLowerCase().includes('services/')) || detectedPlatforms.includes('backend');
+  const hasFrontendTouch = staged.some(f => String(f).toLowerCase().includes('frontend') || /\.(tsx?|jsx?)$/i.test(String(f))) || detectedPlatforms.includes('frontend');
+
+  const platforms = [
+    hasIosTouch ? 'ios' : null,
+    hasAndroidTouch ? 'android' : null,
+    hasBackendTouch ? 'backend' : null,
+    hasFrontendTouch ? 'frontend' : null
+  ].filter(Boolean);
+
+  const platformLabel = platforms.length > 0 ? platforms.join('+') : (detectedPlatforms.length > 0 ? detectedPlatforms.join('+') : 'repo');
+
+  let primaryGoal = `Continue work on ${platformLabel} changes`;
+  if (gateStatus === 'BLOCKED') {
+    primaryGoal = `Unblock AI gate by fixing ${platformLabel} violations`;
+  }
+
+  if (branchLower.startsWith('fix/') || branchLower.startsWith('bugfix/') || branchLower.startsWith('hotfix/')) {
+    primaryGoal = gateStatus === 'BLOCKED'
+      ? `Unblock AI gate by fixing ${platformLabel} violations (bugfix)`
+      : `Fix ${platformLabel} issues on ${safeBranch}`;
+  }
+
+  const secondary = [];
+  if (gateStatus === 'BLOCKED') {
+    secondary.push('Fix HIGH/CRITICAL violations first');
+  }
+  if (platforms.includes('ios')) {
+    secondary.push('Keep tests compliant (makeSUT + trackForMemoryLeaks)');
+  }
+
+  const constraints = [];
+  constraints.push('Do not bypass hooks (--no-verify)');
+  constraints.push('Follow platform rules (rules*.mdc)');
+
+  const confidence = platforms.length > 0 || detectedPlatforms.length > 0 ? 'medium' : 'low';
+
+  return {
+    primary_goal: primaryGoal,
+    secondary_goals: secondary,
+    non_goals: [],
+    constraints,
+    confidence_level: confidence,
+    derived_from: {
+      branch: safeBranch,
+      staged_files_count: staged.length,
+      platforms: platforms.length > 0 ? platforms : detectedPlatforms,
+      gate_status: gateStatus
+    }
+  };
+}
+
 function buildHealthSnapshot() {
   const repoRoot = resolveRepoRoot();
   const result = {
@@ -136,7 +219,55 @@ function buildHealthSnapshot() {
 
 const commands = {
   audit: () => {
-    execSync(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
+    try {
+      execSync(`bash ${path.join(HOOKS_ROOT, 'presentation/cli/audit.sh')}`, { stdio: 'inherit' });
+    } catch (err) {
+      const status = (err && typeof err.status === 'number') ? err.status : 1;
+      process.exit(status);
+    }
+  },
+
+  'wrap-up': () => {
+    commands['evidence:full-update']();
+    try {
+      const repoRoot = resolveRepoRoot();
+      const evidencePath = path.join(repoRoot, '.AI_EVIDENCE.json');
+      if (!fs.existsSync(evidencePath)) {
+        return;
+      }
+
+      let evidence = {};
+      try {
+        evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      } catch {
+        if (process.env.DEBUG) {
+          process.stderr.write('[wrap-up] Failed to parse .AI_EVIDENCE.json\n');
+        }
+        return;
+      }
+
+      const branch = getCurrentBranchSafe();
+      const stagedFiles = getStagedFilesSafe();
+      const proposed = proposeHumanIntent({ evidence, branch, stagedFiles });
+
+      console.log('\n💡 Suggested Human Intent (proposal only):');
+      console.log(`  Primary Goal: ${proposed.primary_goal}`);
+      console.log(`  Secondary:    ${(proposed.secondary_goals || []).join(', ') || '(none)'}`);
+      console.log(`  Constraints:  ${(proposed.constraints || []).join(', ') || '(none)'}`);
+      console.log(`  Confidence:   ${proposed.confidence_level || 'unset'}`);
+      console.log(`  Branch:       ${(proposed.derived_from && proposed.derived_from.branch) || '(unknown)'}`);
+      console.log(`  Gate:         ${(proposed.derived_from && proposed.derived_from.gate_status) || '(unknown)'}`);
+
+      const suggestedCmd = `ast-hooks intent set --goal="${proposed.primary_goal}" --confidence=${proposed.confidence_level || 'medium'} --expires=24h`;
+      console.log('\n✅ To apply it, run:');
+      console.log(`  ${suggestedCmd}`);
+      console.log('');
+    } catch (error) {
+      if (process.env.DEBUG) {
+        process.stderr.write(`[wrap-up] Intent suggestion failed: ${error && error.message ? error.message : String(error)}\n`);
+      }
+      // Best-effort: wrap-up should succeed even if suggestion fails
+    }
   },
 
   'evidence:update': () => {
@@ -326,6 +457,38 @@ const commands = {
       return;
     }
 
+    if (subcommand === 'suggest') {
+      if (!fs.existsSync(evidencePath)) {
+        console.log('❌ No .AI_EVIDENCE.json found');
+        process.exit(1);
+      }
+
+      let evidence = {};
+      try {
+        evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      } catch (e) {
+        console.log(`❌ Failed to read .AI_EVIDENCE.json: ${e.message}`);
+        process.exit(1);
+      }
+
+      const branch = getCurrentBranchSafe();
+      const stagedFiles = getStagedFilesSafe();
+      const proposed = proposeHumanIntent({ evidence, branch, stagedFiles });
+
+      console.log('\n💡 Suggested Human Intent (proposal only):');
+      console.log(`  Primary Goal: ${proposed.primary_goal}`);
+      console.log(`  Secondary:    ${(proposed.secondary_goals || []).join(', ') || '(none)'}`);
+      console.log(`  Constraints:  ${(proposed.constraints || []).join(', ') || '(none)'}`);
+      console.log(`  Confidence:   ${proposed.confidence_level || 'unset'}`);
+      console.log(`  Branch:       ${(proposed.derived_from && proposed.derived_from.branch) || '(unknown)'}`);
+      console.log(`  Gate:         ${(proposed.derived_from && proposed.derived_from.gate_status) || '(unknown)'}`);
+
+      const suggestedCmd = `ast-hooks intent set --goal="${proposed.primary_goal}" --confidence=${proposed.confidence_level || 'medium'} --expires=24h`;
+      console.log('\n✅ To apply it, run:');
+      console.log(`  ${suggestedCmd}`);
+      console.log('');
+      return;
+    }
     if (subcommand === 'clear') {
       if (!fs.existsSync(evidencePath)) {
         console.log('❌ No .AI_EVIDENCE.json found');
@@ -350,7 +513,7 @@ const commands = {
       return;
     }
 
-    console.log('❌ Unknown subcommand. Use: show, set, clear');
+    console.log('❌ Unknown subcommand. Use: show, suggest, set, clear');
     process.exit(1);
   },
 
@@ -363,24 +526,27 @@ Usage:
 
 Commands:
   audit            Run interactive audit menu
+  wrap-up          End of day: refresh evidence + propose human intent (no writes)
   ast              Run AST Intelligence analysis only
   install          Install hooks in new project
   verify-policy    Verify --no-verify policy compliance
   progress         Show violation progress report
   health           Show hook-system health snapshot (JSON)
   gitflow          Check Git Flow compliance (check|reset)
-  intent           Manage human intent (show|set|clear)
+  intent           Manage human intent (show|suggest|set|clear)
   help             Show this help message
   version          Show version
 
 Examples:
   ast-hooks audit
+  ast-hooks wrap-up
   ast-hooks ast
   ast-hooks install
   ast-hooks verify-policy
   ast-hooks progress
   ast-hooks health
   ast-hooks intent show
+  ast-hooks intent suggest
   ast-hooks intent set --goal="Implement feature X" --expires=24h
   ast-hooks intent clear
 
@@ -408,9 +574,12 @@ Documentation:
   }
 };
 
-if (!command || !commands[command]) {
-  commands.help();
-  process.exit(command ? 1 : 0);
+if (require.main === module) {
+  if (!command || !commands[command]) {
+    commands.help();
+    process.exit(command ? 1 : 0);
+  }
+  commands[command]();
 }
 
-commands[command]();
+module.exports = { commands };

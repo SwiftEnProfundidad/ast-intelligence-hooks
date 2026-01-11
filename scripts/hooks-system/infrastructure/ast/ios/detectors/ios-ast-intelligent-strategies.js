@@ -84,6 +84,9 @@ function extractImports(analyzer) {
 }
 
 function analyzeImportsAST(analyzer, filePath) {
+    if (filePath.includes('Tests')) {
+        return;
+    }
     const importNames = analyzer.imports.map((i) => i.name);
 
     const hasUIKit = importNames.includes('UIKit');
@@ -112,8 +115,10 @@ function analyzeImportsAST(analyzer, filePath) {
         );
     }
 
+    const unusedImportAllowlist = new Set(['Foundation', 'SwiftUI', 'UIKit', 'Combine']);
+
     for (const imp of analyzer.imports) {
-        if (['Foundation', 'SwiftUI', 'UIKit', 'Combine'].includes(imp.name)) continue;
+        if (!unusedImportAllowlist.has(imp.name)) continue;
 
         const isUsed = analyzer.allNodes.some((n) => {
             const typename = n['key.typename'] || '';
@@ -441,7 +446,13 @@ function analyzePropertyAST(analyzer, node, filePath) {
     const isPublic = (node['key.accessibility'] || '').includes('public');
     const isInstance = kind.includes('var.instance');
 
-    if (isPublic && isInstance && !attributes.includes('setter_access')) {
+    const sub = Array.isArray(node['key.substructure']) ? node['key.substructure'] : [];
+    const hasAccessorGet = sub.some(s => (s['key.kind'] || '').includes('accessor.get'));
+    const hasAccessorSet = sub.some(s => (s['key.kind'] || '').includes('accessor.set'));
+    const isComputed = hasAccessorGet || hasAccessorSet;
+    const isMutable = isComputed ? hasAccessorSet : true;
+
+    if (isPublic && isInstance && isMutable && !attributes.includes('setter_access')) {
         analyzer.pushFinding('ios.encapsulation.public_mutable', 'medium', filePath, line, `Public mutable property '${name}' - consider private(set)`);
     }
 }
@@ -801,5 +812,7 @@ module.exports = {
     resetCollections,
     collectAllNodes,
     analyzeCollectedNodes,
+    analyzeImportsAST,
+    analyzePropertyAST,
     finalizeGodClassDetection,
 };

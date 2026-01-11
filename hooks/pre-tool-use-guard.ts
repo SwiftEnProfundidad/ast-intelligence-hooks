@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 interface ToolInput {
     tool_name: string;
@@ -9,6 +12,10 @@ interface ToolInput {
         target_file?: string;
         contents?: string;
         new_string?: string;
+        edits?: Array<{
+            old_string?: string;
+            new_string?: string;
+        }>;
     };
 }
 
@@ -58,6 +65,39 @@ function matchesPathPattern(filePath: string, patterns: string[]): boolean {
     return false;
 }
 
+function resolveFilePath(projectDir: string, filePath: string): string {
+    if (!filePath) return filePath;
+    if (filePath.startsWith('/')) return filePath;
+    return join(projectDir, filePath);
+}
+
+function applyStringEdits(baseContent: string, edits: Array<{ old_string?: string; new_string?: string }>): {
+    content: string;
+    appliedCount: number;
+} {
+    let content = baseContent;
+    let appliedCount = 0;
+
+    for (const edit of edits) {
+        const oldStr = edit?.old_string;
+        const newStr = edit?.new_string;
+        if (!newStr) continue;
+
+        if (oldStr && content.includes(oldStr)) {
+            content = content.replace(oldStr, newStr);
+            appliedCount += 1;
+            continue;
+        }
+
+        // If we can't locate old_string (or it's missing), we cannot safely place the change.
+        // Best-effort fallback: append to end so AST still sees the new code.
+        content = `${content}\n${newStr}`;
+        appliedCount += 1;
+    }
+
+    return { content, appliedCount };
+}
+
 function shouldSkip(skipConditions?: SkipConditions, filePath?: string): boolean {
     if (!skipConditions) {
         return false;
@@ -94,7 +134,71 @@ async function main() {
         }
 
         const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
-        const { getSkillRulesPath } = await import('./getSkillRulesPath.js');
+        const resolvedFilePath = resolveFilePath(projectDir, filePath);
+
+        const proposedCodeDirect = (input.tool_input?.contents || input.tool_input?.new_string || '').trim();
+        const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/i.test(resolvedFilePath);
+
+        let candidateCode = proposedCodeDirect;
+        if (!candidateCode) {
+            const edits = Array.isArray(input.tool_input?.edits) ? input.tool_input.edits : [];
+            if (edits.length > 0) {
+                let baseContent = '';
+                try {
+                    if (existsSync(resolvedFilePath)) {
+                        baseContent = readFileSync(resolvedFilePath, 'utf8');
+                    }
+                } catch {
+                    baseContent = '';
+                }
+
+                const applied = applyStringEdits(baseContent, edits);
+                candidateCode = (applied.content || '').trim();
+            }
+        }
+
+        if (!isTestFile && candidateCode.length > 0) {
+            try {
+                const { analyzeCodeInMemory } = require(join(projectDir, 'scripts', 'hooks-system', 'infrastructure', 'ast', 'ast-core'));
+                const analysis = analyzeCodeInMemory(candidateCode, resolvedFilePath);
+                if (analysis && (analysis.hasCritical || analysis.hasHigh)) {
+                    const violations = Array.isArray(analysis.violations)
+                        ? analysis.violations.filter((v: unknown) => {
+                            if (!v || typeof v !== 'object') return false;
+                            const severity = (v as { severity?: unknown }).severity;
+                            return severity === 'CRITICAL' || severity === 'HIGH';
+                        })
+                        : [];
+
+                    const message = [
+                        '',
+                        '🚫 AST INTELLIGENCE BLOCKED THIS WRITE',
+                        `File: ${resolvedFilePath}`,
+                        ...violations.map((v: unknown) => {
+                            const obj = (v && typeof v === 'object')
+                                ? (v as { ruleId?: unknown; rule?: unknown; message?: unknown })
+                                : {};
+                            const ruleId = (typeof obj.ruleId === 'string' && obj.ruleId.length > 0)
+                                ? obj.ruleId
+                                : (typeof obj.rule === 'string' && obj.rule.length > 0)
+                                    ? obj.rule
+                                    : 'unknown';
+                            const message = typeof obj.message === 'string' ? obj.message : '';
+                            return `  ❌ [${ruleId}] ${message}`;
+                        }),
+                        ''
+                    ].join('\n');
+                    process.stderr.write(message);
+                    process.exit(2);
+                }
+            } catch (error) {
+                if (process.env.DEBUG) {
+                    process.stderr.write(`PreToolUse AST check failed: ${error instanceof Error ? error.message : String(error)}\n`);
+                }
+            }
+        }
+
+        const { getSkillRulesPath } = await import('./getSkillRulesPath.ts');
         const rulesPath = getSkillRulesPath(projectDir);
 
         if (!rulesPath || !existsSync(rulesPath)) {

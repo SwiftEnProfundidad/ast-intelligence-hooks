@@ -858,20 +858,20 @@ async function loadPlatformRules(platforms) {
     const fullRulesContent = {};
 
     const ALL_RULE_FILES = [
-        { key: 'gold', file: 'rulesgold.mdc', priority: 0 },
-        { key: 'ios', file: 'rulesios.mdc', priority: 1 },
-        { key: 'android', file: 'rulesandroid.mdc', priority: 1 },
-        { key: 'backend', file: 'rulesbackend.mdc', priority: 1 },
-        { key: 'frontend', file: 'rulesfront.mdc', priority: 1 }
+        { platform: 'gold', file: 'rulesgold.mdc', priority: 0 },
+        { platform: 'ios', file: 'rulesios.mdc', priority: 1 },
+        { platform: 'android', file: 'rulesandroid.mdc', priority: 1 },
+        { platform: 'backend', file: 'rulesbackend.mdc', priority: 1 },
+        { platform: 'frontend', file: 'rulesfront.mdc', priority: 1 }
     ];
 
     for (const ruleFile of ALL_RULE_FILES) {
         try {
             const content = await loader.loadRule(ruleFile.file);
             if (content) {
-                rules[ruleFile.key] = true;
-                fullRulesContent[ruleFile.key] = content;
-                const criticalPatterns = extractCriticalPatterns(content, ruleFile.key);
+                rules[ruleFile.platform] = true;
+                fullRulesContent[ruleFile.platform] = content;
+                const criticalPatterns = extractCriticalPatterns(content, ruleFile.platform);
                 criticalRules.push(...criticalPatterns);
             }
         } catch (error) {
@@ -1157,6 +1157,7 @@ async function aiGateCheck() {
     const gateTimeoutMs = Number(process.env.MCP_GATE_TIMEOUT_MS || 1200);
     const strict = process.env.MCP_GATE_STRICT === 'true';
     const allowEvidenceAutofix = process.env.MCP_GATE_AUTOFIX_EVIDENCE === 'true';
+    const blockProtectedBranches = process.env.MCP_GATE_BLOCK_PROTECTED_BRANCHES !== 'false';
 
     const core = async () => {
         const gitFlowService = getCompositionRoot().getGitFlowService();
@@ -1173,7 +1174,22 @@ async function aiGateCheck() {
                 process.stderr.write(`[MCP] Gate gitQuery.getUncommittedChanges failed: ${msg}\n`);
             }
         }
-        const hasUncommittedChanges = Array.isArray(uncommittedChanges) && uncommittedChanges.length > 0;
+        const hasUncommittedChanges = Array.isArray(uncommittedChanges)
+            ? uncommittedChanges.length > 0
+            : typeof uncommittedChanges === 'string'
+                ? uncommittedChanges.trim().length > 0
+                : Boolean(uncommittedChanges);
+
+        let stagedFiles = [];
+        try {
+            stagedFiles = gitQuery.getStagedFiles();
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Gate gitQuery.getStagedFiles failed: ${msg}\n`);
+            }
+        }
+        const hasStagedChanges = Array.isArray(stagedFiles) && stagedFiles.length > 0;
 
         const violations = [];
         const warnings = [];
@@ -1210,11 +1226,15 @@ async function aiGateCheck() {
         }
 
         if (isProtectedBranch) {
-            if (hasUncommittedChanges) {
-                violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}' with uncommitted changes.`);
-                violations.push(`   Required: create a feature branch first.`);
+            if (blockProtectedBranches && (hasUncommittedChanges || hasStagedChanges)) {
+                const reasons = [
+                    hasUncommittedChanges ? 'uncommitted changes' : null,
+                    hasStagedChanges ? `staged changes (${stagedFiles.length} file(s))` : null
+                ].filter(Boolean).join(' + ');
+                violations.push(`❌ ON_PROTECTED_BRANCH: You are on '${currentBranch}' with ${reasons}.`);
+                violations.push('   Required: create a feature branch first (e.g., feature/<name>, fix/<name>, refactor/<name>) and move changes there.');
             } else {
-                warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Create a feature branch before making changes.`);
+                warnings.push(`⚠️ ON_PROTECTED_BRANCH: You are on '${currentBranch}'. Git Flow recommends working on a feature/fix branch.`);
             }
         }
 
@@ -1324,11 +1344,13 @@ async function aiGateCheck() {
 
         let humanIntent = null;
         let semanticSnapshot = null;
+        let autoIntent = null;
         try {
             if (fs.existsSync(EVIDENCE_FILE)) {
                 const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
                 humanIntent = evidence.human_intent || null;
                 semanticSnapshot = evidence.semantic_snapshot || null;
+                autoIntent = evidence.auto_intent || null;
             }
         } catch (evidenceReadError) {
             if (process.env.DEBUG) {
@@ -1343,20 +1365,26 @@ async function aiGateCheck() {
             violations,
             warnings,
             autoFixes,
-            human_intent: humanIntent,
-            semantic_snapshot: semanticSnapshot,
             mandatory_rules: rulesLoadedSuccessfully
                 ? { ...mandatoryRules, status: 'LOADED_OK' }
                 : mandatoryRules,
             summary: finalBlocked
-                ? `🚫 BLOCKED: ${violations.length} violation(s). Fix before proceeding.`
-                : `🚦 ALLOWED: Gate passed. ${mandatoryRules.totalRulesCount} critical rules loaded and verified.`,
+                ? `🚫 BLOCKED: ${violations.length} critical issue(s) detected.`
+                : `✅ ALLOWED: Gate check passed with ${warnings.length} warning(s).`,
             instructions: finalBlocked
-                ? 'DO NOT proceed with user task. Announce violations and fix them first.'
+                ? 'Fix violations before proceeding. Run ai-start if needed.'
                 : `✅ ${mandatoryRules.totalRulesCount} RULES LOADED. Sample: ${mandatoryRules.rulesSample.slice(0, 2).join(' | ')}... Review ALL rules in mandatory_rules.criticalRules before ANY code generation.`,
             cognitive_context: humanIntent?.primary_goal
                 ? `🎯 USER INTENT: ${humanIntent.primary_goal} (confidence: ${humanIntent.confidence_level || 'unset'})`
-                : null
+                : null,
+            human_intent: humanIntent,
+            semantic_snapshot: semanticSnapshot,
+            auto_intent: autoIntent,
+            session: {
+                id: gateSession.sessionId,
+                checkCount: gateSession.checkCount,
+                validFor: gateSession.GATE_VALIDITY_MS / 60000 + ' minutes'
+            }
         };
     };
 
@@ -1425,7 +1453,6 @@ async function aiGateCheck() {
     gateSession.recordCheck(timeoutResult);
     return timeoutResult;
 }
-
 /**
  * Read platform rules handler - returns critical rules for a specific platform
  */
@@ -1581,6 +1608,80 @@ function clearHumanIntent() {
     }
 }
 
+function proposeHumanIntentFromEvidence({ evidence, branch }) {
+    const safeEvidence = (evidence && typeof evidence === 'object') ? evidence : {};
+    const safeBranch = branch || safeEvidence.current_context?.current_branch || 'unknown';
+    const branchLower = String(safeBranch).toLowerCase();
+
+    const detectedPlatforms = ['ios', 'android', 'backend', 'frontend']
+        .filter(p => safeEvidence.platforms && safeEvidence.platforms[p] && safeEvidence.platforms[p].detected);
+
+    const gateStatus = safeEvidence.ai_gate?.status || safeEvidence.severity_metrics?.gate_status || 'unknown';
+    const platformLabel = detectedPlatforms.length > 0 ? detectedPlatforms.join('+') : 'repo';
+
+    let primaryGoal = `Continue work on ${platformLabel} changes`;
+    if (gateStatus === 'BLOCKED') {
+        primaryGoal = `Unblock AI gate by fixing ${platformLabel} violations`;
+    }
+
+    if (branchLower.startsWith('fix/') || branchLower.startsWith('bugfix/') || branchLower.startsWith('hotfix/')) {
+        primaryGoal = gateStatus === 'BLOCKED'
+            ? `Unblock AI gate by fixing ${platformLabel} violations (bugfix)`
+            : `Fix ${platformLabel} issues on ${safeBranch}`;
+    }
+
+    const secondary = [];
+    if (gateStatus === 'BLOCKED') {
+        secondary.push('Fix HIGH/CRITICAL violations first');
+    }
+    if (detectedPlatforms.includes('ios')) {
+        secondary.push('Keep tests compliant (makeSUT + trackForMemoryLeaks)');
+    }
+
+    const constraints = [];
+    constraints.push('Do not bypass hooks (--no-verify)');
+    constraints.push('Follow platform rules (rules*.mdc)');
+
+    const confidence = detectedPlatforms.length > 0 ? 'medium' : 'low';
+
+    return {
+        primary_goal: primaryGoal,
+        secondary_goals: secondary,
+        non_goals: [],
+        constraints,
+        confidence_level: confidence,
+        derived_from: {
+            branch: safeBranch,
+            platforms: detectedPlatforms,
+            gate_status: gateStatus
+        }
+    };
+}
+
+function suggestHumanIntent() {
+    try {
+        if (!fs.existsSync(EVIDENCE_FILE)) {
+            return { success: false, error: '.AI_EVIDENCE.json not found' };
+        }
+
+        const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+        const currentBranch = getCurrentGitBranch(REPO_ROOT);
+        const proposed = proposeHumanIntentFromEvidence({ evidence, branch: currentBranch });
+
+        const suggestedCommand = `ast-hooks intent set --goal="${proposed.primary_goal}" --confidence=${proposed.confidence_level || 'medium'} --expires=24h`;
+
+        return {
+            success: true,
+            proposal_only: true,
+            suggested_human_intent: proposed,
+            suggested_cli_command: suggestedCommand,
+            note: 'This does not modify .AI_EVIDENCE.json. Use set_human_intent or CLI intent set to apply.'
+        };
+    } catch (error) {
+        return { success: false, error: `Failed to suggest intent: ${error.message}` };
+    }
+}
+
 /**
  * 🚀 REVOLUTIONARY: Pre-Flight Check - Validates code BEFORE writing it
  * Inspired by tdd-guard: https://www.brgr.one/blog/ai-coding-agents-tdd-enforcement
@@ -1605,17 +1706,7 @@ function preFlightCheck(params) {
 
     if (isTestFile) {
         rulesEnforcement.recordTestCreated(target_file);
-        return {
-            success: true,
-            allowed: true,
-            message: '✅ TEST FILE DETECTED - TDD cycle activated!',
-            tdd_status: {
-                active: true,
-                phase: 'RED',
-                instruction: 'Write the failing test first, then implement the code to make it pass (GREEN)'
-            },
-            session_state: rulesEnforcement.sessionState
-        };
+        // Do not early return: allow AST analysis + severity blocking even on tests
     }
 
     const validation = rulesEnforcement.validateProposedAction(action_type, target_file, proposed_code);
@@ -1643,19 +1734,20 @@ function preFlightCheck(params) {
             const { analyzeCodeInMemory } = require('../ast/ast-core');
             astAnalysis = analyzeCodeInMemory(proposed_code, target_file);
 
-            if (astAnalysis.hasCritical) {
+            if (astAnalysis.hasCritical || astAnalysis.hasHigh) {
+                const blocking = astAnalysis.violations
+                    .filter(v => v.severity === 'CRITICAL' || v.severity === 'HIGH');
                 return {
                     success: false,
                     allowed: false,
                     blocked: true,
-                    reason: '🚫 AST INTELLIGENCE BLOCKED: Critical violations detected in proposed code',
-                    ast_violations: astAnalysis.violations,
+                    reason: '🚫 AST INTELLIGENCE BLOCKED: Critical/High violations detected in proposed code',
+                    ast_violations: blocking,
                     ast_summary: astAnalysis.summary,
                     tdd_status: validation.tddStatus,
                     action_required: 'FIX_AST_VIOLATIONS',
                     suggestion: 'Fix the following AST violations before proceeding:\n' +
-                        astAnalysis.violations
-                            .filter(v => v.severity === 'CRITICAL')
+                        blocking
                             .map(v => `  ❌ ${v.ruleId}: ${v.message}`)
                             .join('\n'),
                     reminder: validation.reminder
@@ -2064,6 +2156,11 @@ async function handleMcpMessage(message) {
                             inputSchema: { type: 'object', properties: {} }
                         },
                         {
+                            name: 'suggest_human_intent',
+                            description: '💡 Propose a human intent based on current evidence and git context (does not modify .AI_EVIDENCE.json).',
+                            inputSchema: { type: 'object', properties: {} }
+                        },
+                        {
                             name: 'pre_flight_check',
                             description: '🚀 REVOLUTIONARY: Validate code BEFORE writing it. Enforces TDD cycle and checks for rule violations. Call this BEFORE any edit/create_file operation.',
                             inputSchema: {
@@ -2169,6 +2266,9 @@ async function handleMcpMessage(message) {
                 case 'clear_human_intent':
                     result = clearHumanIntent();
                     break;
+                case 'suggest_human_intent':
+                    result = suggestHumanIntent();
+                    break;
                 case 'pre_flight_check':
                     result = preFlightCheck(toolParams);
                     break;
@@ -2213,24 +2313,28 @@ async function handleMcpMessage(message) {
 // Flag to track if MCP has been initialized
 let mcpInitialized = false;
 
-// Start protocol handler
-protocolHandler.start(async (message) => {
-    const response = await handleMcpMessage(message);
+if (require.main === module) {
+    // Start protocol handler
+    protocolHandler.start(async (message) => {
+        const response = await handleMcpMessage(message);
 
-    // Start polling loops ONLY after receiving 'initialized' notification from Windsurf
-    if (!mcpInitialized && message.includes('"method":"initialized"')) {
-        mcpInitialized = true;
-        if (process.env.DEBUG) {
-            process.stderr.write(`[MCP] Received 'initialized' - starting background loops\n`);
+        // Start polling loops ONLY after receiving 'initialized' notification from Windsurf
+        if (!mcpInitialized && message.includes('"method":"initialized"')) {
+            mcpInitialized = true;
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Received 'initialized' - starting background loops\n`);
+            }
+            startPollingLoops();
         }
-        startPollingLoops();
+
+        return response;
+    });
+
+    if (process.env.DEBUG) {
+        process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
     }
-
-    return response;
-});
-
-if (process.env.DEBUG) {
-    process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
+} else {
+    module.exports = { preFlightCheck };
 }
 
 /**

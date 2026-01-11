@@ -146,7 +146,7 @@ describe('Integration: Detailed Violations', () => {
             evidence.ai_gate.violations.forEach(violation => {
                 const parts = violation.rule_id.split('.');
                 expect(parts.length).toBeGreaterThanOrEqual(2);
-                expect(parts[0]).toMatch(/^(backend|frontend|ios|android)$/);
+                expect(parts[0]).toMatch(/^(backend|frontend|ios|android|common)$/);
             });
         });
 

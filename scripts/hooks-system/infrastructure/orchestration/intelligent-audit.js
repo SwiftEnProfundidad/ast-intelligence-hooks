@@ -72,6 +72,72 @@ function generateSemanticSnapshot(evidence, violations, gateResult) {
   };
 }
 
+function generateAutoIntent(evidence, violations, gateResult, stagedFiles) {
+  const now = new Date();
+  const activePlatforms = Object.entries(evidence.platforms || {})
+    .filter(([, v]) => v.detected)
+    .map(([k]) => k);
+
+  const stagedDetected = Array.from(detectPlatformsFromStagedFiles(stagedFiles || []));
+  const platforms = Array.from(new Set([...(activePlatforms || []), ...(stagedDetected || [])]));
+
+  const gateStatus = gateResult && typeof gateResult === 'object'
+    ? (gateResult.passed ? 'PASSED' : 'FAILED')
+    : 'unknown';
+
+  const platformLabel = platforms.length > 0 ? platforms.join('+') : 'repo';
+
+  const branch = evidence.current_context?.current_branch || 'unknown';
+  const baseBranch = evidence.current_context?.base_branch || 'unknown';
+  const isProtected = Boolean(evidence.git_flow && evidence.git_flow.is_protected);
+
+  let primaryGoal = `Continue work on ${platformLabel} changes`;
+  if (gateStatus === 'FAILED') {
+    primaryGoal = `Unblock gate by fixing ${platformLabel} violations`;
+  }
+  if (isProtected) {
+    primaryGoal = `Create a feature branch for ${platformLabel} work (Git Flow)`;
+  }
+
+  const recommendedNextActions = [];
+  if (isProtected) {
+    recommendedNextActions.push('Create a feature/fix branch and move changes there');
+  }
+  if (gateStatus === 'FAILED') {
+    recommendedNextActions.push('Fix blocking violations (CRITICAL/HIGH) before proceeding');
+  }
+  if (Array.isArray(violations) && violations.length > 0) {
+    recommendedNextActions.push('Run audit and re-check gate after fixes');
+  }
+  if (recommendedNextActions.length === 0) {
+    recommendedNextActions.push('Proceed with planned work');
+  }
+
+  const constraints = [];
+  constraints.push('Do not bypass hooks (--no-verify)');
+  constraints.push('Follow platform rules (rules*.mdc)');
+
+  const confidence = platforms.length > 0 ? 'medium' : 'low';
+
+  return {
+    generated_at: now.toISOString(),
+    derivation_source: 'auto:updateAIEvidence',
+    primary_goal: primaryGoal,
+    secondary_goals: [],
+    constraints,
+    confidence_level: confidence,
+    context: {
+      branch,
+      base_branch: baseBranch,
+      platforms,
+      staged_files_count: Array.isArray(stagedFiles) ? stagedFiles.length : 0,
+      gate_status: gateStatus,
+      is_protected_branch: isProtected
+    },
+    recommended_next_actions: recommendedNextActions
+  };
+}
+
 /**
  * Preserve or initialize human_intent layer.
  * This is the Intentional Memory Layer - set by human, preserved across updates.
@@ -755,6 +821,7 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
 
     evidence.semantic_snapshot = generateSemanticSnapshot(evidence, violations, gateResult);
 
+    evidence.auto_intent = generateAutoIntent(evidence, violations, gateResult, stagedFiles);
     fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
     console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers, human_intent, semantic_snapshot)');
 

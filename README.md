@@ -100,12 +100,17 @@ Pumuki addresses these issues by **removing trust from the AI** and replacing it
 * **In-Memory AST Analysis**: `analyzeCodeInMemory()` for proposed code validation
 * **IDE Hooks**: Real-time blocking in Windsurf, Claude Code, OpenCode
 
+<img src="./assets/Hook_02.png" alt="Windsurf pre-write hook output" width="100%" />
+
+<img src="./assets/Hook_01.png" alt="Windsurf post-write hook output" width="100%" />
 ### NEW: MCP Integration
 
 * **MCP Server**: Full Model Context Protocol integration
 * **ai_gate_check**: Mandatory gate before AI operations
 * **pre_flight_check**: Validate proposed code before writing
 * **set_human_intent**: Track user goals across sessions
+
+![MCP ai_gate_check BLOCKED example](docs/images/ai_gate.png)
 
 ### NEW: Cognitive Layers
 
@@ -122,15 +127,15 @@ Pumuki addresses these issues by **removing trust from the AI** and replacing it
 
 ## Visual Overview
 
-<img src="./docs/images/ast_intelligence_01.svg" alt="AST Intelligence System Overview" width="100%" />
+![AST Intelligence System Overview](docs/images/ast_intelligence_01.svg)
 
-<img src="./docs/images/ast_intelligence_02.svg" alt="AST Intelligence Workflow" width="100%" />
+![AST Intelligence Workflow](docs/images/ast_intelligence_02.svg)
 
-<img src="./docs/images/ast_intelligence_03.svg" alt="AST Intelligence Audit - Part 1" width="100%" />
+![AST Intelligence Audit - Part 1](docs/images/ast_intelligence_03.svg)
 
-<img src="./docs/images/ast_intelligence_04.svg" alt="AST Intelligence Audit - Part 2" width="100%" />
+![AST Intelligence Audit - Part 2](docs/images/ast_intelligence_04.svg)
 
-<img src="./docs/images/ast_intelligence_05.svg" alt="AST Intelligence Audit - Part 3" width="100%" />
+![AST Intelligence Audit - Part 3](docs/images/ast_intelligence_05.svg)
 
 ---
 
@@ -251,6 +256,7 @@ if (result.hasCritical) {
 * Detect critical violations before code is written
 * Platform-aware analysis (iOS, Android, Backend, Frontend)
 * Integration with IDE hooks for real-time blocking
+![Pre-flight check example](docs/images/pre-flight-check.png)
 
 ---
 
@@ -345,6 +351,26 @@ AI generates code → IDE Hook intercepts → AST Intelligence analyzes →
 
 > **Note**: For IDEs without pre-write hooks, the Git pre-commit hook provides 100% enforcement at commit time.
 
+### PreToolUse Guard (`hooks/pre-tool-use-guard.ts`)
+
+This repository includes a **PreToolUse guard hook** that runs *before* `Edit` / `Write` / `MultiEdit` operations (where supported by the IDE integration).
+
+When it runs:
+
+* In IDEs that support **PreToolUse** interception (e.g. Claude Code integrations)
+* Before code is written to disk
+
+What it does:
+
+* Analyzes the **proposed code** using `analyzeCodeInMemory()`.
+* If the IDE only provides **partial diffs** (`tool_input.edits`), the hook reconstructs the final candidate file content by applying `old_string → new_string` edits over the current file content, then analyzes the result.
+* **Blocks** the operation when **CRITICAL/HIGH** violations are detected (exit code `2`).
+
+Why it exists:
+
+* To ensure **enforcement happens before write**, not only at commit time.
+* To prevent silent injection of high-impact patterns (e.g. empty `catch {}`) during AI-assisted edits.
+
 See [`scripts/hooks-system/infrastructure/cascade-hooks/README.md`](./scripts/hooks-system/infrastructure/cascade-hooks/README.md) for installation instructions.
 
 ---
@@ -384,6 +410,23 @@ Initialize AI evidence:
 npx ai-start
 ```
 
+### What is `ai-start` and when should you run it?
+
+`ai-start` refreshes the project AI context and updates `.AI_EVIDENCE.json` so the system has a **fresh, auditable source of truth** before any AI-assisted work.
+
+Run it when:
+
+* **Starting a new day/session** (fresh context)
+* **After pulling a lot of changes** (context drift prevention)
+* **After fixing blocking violations** (to refresh gate + evidence)
+
+What it does:
+
+* Detects active platforms (iOS/Android/Backend/Frontend)
+* Refreshes the evidence file (`.AI_EVIDENCE.json`)
+* Helps the AI gate operate deterministically (block/allow)
+
+![ai-start execution example](docs/images/ai-start.png)
 ---
 
 ## Installation & Lifecycle Commands

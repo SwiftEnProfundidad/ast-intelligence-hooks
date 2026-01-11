@@ -20,6 +20,34 @@ class AndroidSOLIDAnalyzer {
         this.findings = [];
     }
 
+    analyzeOCP(sf, findings, pushFinding) {
+        return analyzeOCP(sf, findings, pushFinding);
+    }
+
+    analyzeDIP(sf, findings, pushFinding) {
+        return analyzeDIP(sf, findings, pushFinding);
+    }
+
+    analyzeSRP(sf, findings, pushFinding) {
+        return analyzeSRP(sf, findings, pushFinding);
+    }
+
+    analyzeISP(sf, findings, pushFinding) {
+        return analyzeISP(sf, findings, pushFinding);
+    }
+
+    detectMethodConcern(methodName) {
+        const name = String(methodName || '').toLowerCase();
+
+        if (/^(get|fetch|load|read|find|query)/.test(name)) return 'data-access';
+        if (/^(set|update|save|create|delete|remove|insert)/.test(name)) return 'data-mutation';
+        if (/^(validate|verify|check|ensure)/.test(name)) return 'validation';
+        if (/^(format|map|transform|convert|parse)/.test(name)) return 'transformation';
+        if (/^(render|draw|display|show)/.test(name)) return 'rendering';
+
+        return 'unknown';
+    }
+
     /**
      * Analyze source file for SOLID violations
      * @param {SourceFile} sf - TypeScript morph source file
@@ -33,11 +61,11 @@ class AndroidSOLIDAnalyzer {
         this.findings = findings;
         this.pushFinding = pushFinding;
 
-        analyzeOCP(sf, findings, pushFinding);
-        analyzeDIP(sf, findings, pushFinding);
-        analyzeSRP(sf, findings, pushFinding);
-        analyzeISP(sf, findings, pushFinding);
+        this.analyzeOCP(sf, findings, pushFinding);
+        this.analyzeDIP(sf, findings, pushFinding);
+        this.analyzeSRP(sf, findings, pushFinding);
+        this.analyzeISP(sf, findings, pushFinding);
     }
 }
 
-module.exports = AndroidSOLIDAnalyzer;
+module.exports = { AndroidSOLIDAnalyzer };
