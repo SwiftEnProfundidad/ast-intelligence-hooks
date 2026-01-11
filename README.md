@@ -103,7 +103,6 @@ Pumuki addresses these issues by **removing trust from the AI** and replacing it
 <img src="./assets/Hook_02.png" alt="Windsurf pre-write hook output" width="100%" />
 
 <img src="./assets/Hook_01.png" alt="Windsurf post-write hook output" width="100%" />
-
 ### NEW: MCP Integration
 
 * **MCP Server**: Full Model Context Protocol integration
@@ -257,7 +256,6 @@ if (result.hasCritical) {
 * Detect critical violations before code is written
 * Platform-aware analysis (iOS, Android, Backend, Frontend)
 * Integration with IDE hooks for real-time blocking
-
 ![Pre-flight check example](docs/images/pre-flight-check.png)
 
 ---
@@ -373,7 +371,7 @@ Why it exists:
 * To ensure **enforcement happens before write**, not only at commit time.
 * To prevent silent injection of high-impact patterns (e.g. empty `catch {}`) during AI-assisted edits.
 
-See [https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/scripts/hooks-system/infrastructure/cascade-hooks/README.md](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/scripts/hooks-system/infrastructure/cascade-hooks/README.md) for installation instructions.
+See [`scripts/hooks-system/infrastructure/cascade-hooks/README.md`](./scripts/hooks-system/infrastructure/cascade-hooks/README.md) for installation instructions.
 
 ---
 
@@ -429,7 +427,6 @@ What it does:
 * Helps the AI gate operate deterministically (block/allow)
 
 ![ai-start execution example](docs/images/ai-start.png)
-
 ---
 
 ## Installation & Lifecycle Commands

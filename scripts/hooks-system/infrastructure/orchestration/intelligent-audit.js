@@ -822,7 +822,6 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
     evidence.semantic_snapshot = generateSemanticSnapshot(evidence, violations, gateResult);
 
     evidence.auto_intent = generateAutoIntent(evidence, violations, gateResult, stagedFiles);
-
     fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
     console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers, human_intent, semantic_snapshot)');
 

@@ -1365,13 +1365,18 @@ async function aiGateCheck() {
             violations,
             warnings,
             autoFixes,
-            mandatory_rules: mandatoryRules,
+            mandatory_rules: rulesLoadedSuccessfully
+                ? { ...mandatoryRules, status: 'LOADED_OK' }
+                : mandatoryRules,
             summary: finalBlocked
                 ? `🚫 BLOCKED: ${violations.length} critical issue(s) detected.`
                 : `✅ ALLOWED: Gate check passed with ${warnings.length} warning(s).`,
             instructions: finalBlocked
                 ? 'Fix violations before proceeding. Run ai-start if needed.'
-                : 'Proceed with user task but follow mandatory rules.',
+                : `✅ ${mandatoryRules.totalRulesCount} RULES LOADED. Sample: ${mandatoryRules.rulesSample.slice(0, 2).join(' | ')}... Review ALL rules in mandatory_rules.criticalRules before ANY code generation.`,
+            cognitive_context: humanIntent?.primary_goal
+                ? `🎯 USER INTENT: ${humanIntent.primary_goal} (confidence: ${humanIntent.confidence_level || 'unset'})`
+                : null,
             human_intent: humanIntent,
             semantic_snapshot: semanticSnapshot,
             auto_intent: autoIntent,
@@ -1427,11 +1432,11 @@ async function aiGateCheck() {
         };
     }
 
-    const timeoutBranch = getCurrentGitBranch(REPO_ROOT);
+    const currentBranch = getCurrentGitBranch(REPO_ROOT);
     const timeoutResult = {
         status: 'BLOCKED',
         timestamp: new Date().toISOString(),
-        branch: timeoutBranch,
+        branch: currentBranch,
         violations: ['❌ GATE_TIMEOUT: AI gate check timed out. Retry or run ai-start manually.'],
         warnings: [],
         autoFixes: [],
@@ -1701,6 +1706,7 @@ function preFlightCheck(params) {
 
     if (isTestFile) {
         rulesEnforcement.recordTestCreated(target_file);
+        // Do not early return: allow AST analysis + severity blocking even on tests
     }
 
     const validation = rulesEnforcement.validateProposedAction(action_type, target_file, proposed_code);

@@ -236,6 +236,7 @@ function runBackendIntelligence(project, findings, platform) {
 
     for (const match of matches) {
       const fullMatch = match[0];
+      const secretField = String(match[1] || '').toLowerCase();
       const secretValue = match[2];
 
       const matchIndex = match.index || 0;
@@ -274,6 +275,11 @@ function runBackendIntelligence(project, findings, platform) {
 
       const matchesSecretEntropyPattern = secretEntropyPattern.test(secretValue);
 
+      const isGenericKeyField = secretField === 'key';
+      const isLikelyNonSecretKeyValue = isGenericKeyField &&
+        secretValue.length < 20 &&
+        !matchesSecretEntropyPattern;
+
       const isConstantKey = /(?:const|let|var)\s+\w*(?:KEY|TOKEN|STORAGE)\s*=/i.test(fullLine) &&
         secretValue.length < 30 &&
         !matchesSecretEntropyPattern;
@@ -281,7 +287,7 @@ function runBackendIntelligence(project, findings, platform) {
 
       const isTestData = isTestFilePath && secretValue.length < 50 && !matchesSecretEntropyPattern;
 
-      if (!isEnvVar && !isPlaceholder && !isKnownConfigValue && !isComment && !isRuleDefinition && !isTestContext && !isStorageKey && !isCacheKey && !isConstantKey && !isRolesDecorator && !isTestData && secretValue.length >= 8) {
+      if (!isEnvVar && !isPlaceholder && !isKnownConfigValue && !isComment && !isRuleDefinition && !isTestContext && !isStorageKey && !isCacheKey && !isLikelyNonSecretKeyValue && !isConstantKey && !isRolesDecorator && !isTestData && secretValue.length >= 8) {
         pushFinding("backend.config.secrets_in_code", "critical", sf, sf, "Hardcoded secret detected - replace with environment variable (process.env)", findings);
       }
     }

@@ -489,7 +489,6 @@ const commands = {
       console.log('');
       return;
     }
-
     if (subcommand === 'clear') {
       if (!fs.existsSync(evidencePath)) {
         console.log('❌ No .AI_EVIDENCE.json found');
