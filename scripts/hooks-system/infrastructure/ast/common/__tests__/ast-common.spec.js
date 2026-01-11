@@ -58,6 +58,35 @@ describe('AST Common Module', () => {
       expect(findings.some(f => f.ruleId === 'common.testing.missing_makesut')).toBe(false);
       expect(findings.some(f => f.ruleId === 'common.testing.missing_track_for_memory_leaks')).toBe(false);
     });
+
+    it('does not report false positives for Swift test files when getFullText is non-empty but incomplete (prefer disk)', () => {
+      const project = new Project({
+        useInMemoryFileSystem: true,
+        skipAddingFilesFromTsConfig: true,
+      });
+
+      const swiftPath = '/tmp/DomainAPIEndpointTests.spec.swift';
+      const swiftContent = [
+        'import XCTest',
+        'final class DomainAPIEndpointTests: XCTestCase {',
+        '  private func makeSUT() -> Foo { Foo() }',
+        '  func test_example() {',
+        '    let sut = makeSUT()',
+        '    trackForMemoryLeaks(sut, testCase: self, file: #file, line: #line)',
+        '  }',
+        '}',
+      ].join('\n');
+
+      const sf = project.createSourceFile(swiftPath, swiftContent);
+      jest.spyOn(sf, 'getFullText').mockReturnValue('import XCTest\nfinal class DomainAPIEndpointTests: XCTestCase {}');
+      jest.spyOn(fs, 'readFileSync').mockReturnValue(swiftContent);
+
+      const findings = [];
+      runCommonIntelligence(project, findings);
+
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_makesut')).toBe(false);
+      expect(findings.some(f => f.ruleId === 'common.testing.missing_track_for_memory_leaks')).toBe(false);
+    });
   });
 
   describe('exports', () => {
