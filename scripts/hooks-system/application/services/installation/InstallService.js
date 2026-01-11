@@ -7,6 +7,7 @@ const PlatformDetectorService = require('./PlatformDetectorService');
 const FileSystemInstallerService = require('./FileSystemInstallerService');
 const ConfigurationGeneratorService = require('./ConfigurationGeneratorService');
 const IdeIntegrationService = require('./IdeIntegrationService');
+const CriticalDependenciesService = require('./CriticalDependenciesService');
 const UnifiedLogger = require('../logging/UnifiedLogger');
 
 const COLORS = {
@@ -77,40 +78,12 @@ class InstallService {
     }
 
     checkCriticalDependencies() {
-        const packageJsonPath = path.join(this.targetRoot, 'package.json');
-
-        if (!fs.existsSync(packageJsonPath)) {
-            this.logWarning('package.json not found. Skipping dependency check.');
-            return;
-        }
-
-        try {
-            const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
-            const allDeps = {
-                ...packageJson.dependencies,
-                ...packageJson.devDependencies
-            };
-
-            const criticalDeps = ['ts-morph'];
-            const missingDeps = [];
-
-            for (const dep of criticalDeps) {
-                if (!allDeps[dep]) {
-                    missingDeps.push(dep);
-                }
-            }
-
-            if (missingDeps.length > 0) {
-                this.logWarning(`Missing critical dependencies: ${missingDeps.join(', ')}`);
-                this.logWarning('AST analysis may fail without these dependencies.');
-                this.logWarning(`Install with: npm install --save-dev ${missingDeps.join(' ')}`);
-                this.logger.warn('MISSING_CRITICAL_DEPENDENCIES', { missingDeps });
-            } else {
-                this.logSuccess('All critical dependencies present');
-            }
-        } catch (error) {
-            this.logWarning(`Failed to check dependencies: ${error.message}`);
-        }
+        CriticalDependenciesService.check({
+            targetRoot: this.targetRoot,
+            logger: this.logger,
+            logWarning: (msg) => this.logWarning(msg),
+            logSuccess: (msg) => this.logSuccess(msg)
+        });
     }
 
     async run() {

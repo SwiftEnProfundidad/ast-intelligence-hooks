@@ -92,3 +92,49 @@ describe('InstallService - cleanupDuplicateRules', () => {
     expect(fs.existsSync(path.join(windsurfRules, 'windsurf.mdc'))).toBe(true);
   });
 });
+
+describe('InstallService - checkCriticalDependencies', () => {
+  const fs = require('fs');
+  const os = require('os');
+  const path = require('path');
+  const InstallService = require('../../application/services/installation/InstallService');
+
+  let testRoot;
+  let service;
+
+  beforeEach(() => {
+    testRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ast-hooks-install-deps-'));
+    fs.writeFileSync(path.join(testRoot, 'package.json'), JSON.stringify({ name: 'test', version: '1.0.0' }, null, 2));
+
+    service = new InstallService();
+    service.targetRoot = testRoot;
+    service.logger = { warn: jest.fn(), info: jest.fn(), error: jest.fn(), debug: jest.fn() };
+    service.logWarning = jest.fn();
+    service.logSuccess = jest.fn();
+  });
+
+  afterEach(() => {
+    if (fs.existsSync(testRoot)) {
+      fs.rmSync(testRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('should not warn when ts-morph is resolvable even if not declared', () => {
+    const tsMorphDir = path.join(testRoot, 'node_modules', 'ts-morph');
+    fs.mkdirSync(tsMorphDir, { recursive: true });
+    fs.writeFileSync(path.join(tsMorphDir, 'package.json'), JSON.stringify({ name: 'ts-morph', version: '999.0.0' }, null, 2));
+    fs.writeFileSync(path.join(tsMorphDir, 'index.js'), 'module.exports = {}');
+
+    service.checkCriticalDependencies();
+
+    expect(service.logSuccess).toHaveBeenCalledWith('All critical dependencies present');
+    expect(service.logWarning).not.toHaveBeenCalledWith(expect.stringContaining('Missing critical dependencies'));
+  });
+
+  it('should warn when ts-morph is not declared and not resolvable', () => {
+    service.checkCriticalDependencies();
+
+    expect(service.logWarning).toHaveBeenCalledWith(expect.stringContaining('Missing critical dependencies'));
+    expect(service.logger.warn).toHaveBeenCalledWith('MISSING_CRITICAL_DEPENDENCIES', { missingDeps: ['ts-morph'] });
+  });
+});
