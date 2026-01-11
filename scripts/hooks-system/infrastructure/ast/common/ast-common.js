@@ -296,7 +296,7 @@ function runCommonIntelligence(project, findings) {
             'high',
             sf,
             sf,
-            'Test file without makeSUT factory - use makeSUT pattern for consistent DI and teardown',
+            'Test file without makeSUT factory - use makeSUT pattern for consistent DI and teardown. Swift template:\n\nprivate func makeSUT() -> SUT {\n  let sut = SUT(/* deps */)\n  trackForMemoryLeaks(sut, testCase: self, file: #file, line: #line)\n  return sut\n}\n\nfunc test_example() {\n  let sut = makeSUT()\n  // assertions\n}',
             findings
           );
         }
@@ -309,7 +309,7 @@ function runCommonIntelligence(project, findings) {
             'critical',
             sf,
             sf,
-            'Test file without trackForMemoryLeaks - add memory leak tracking to prevent leaks and cross-test interference',
+            'Test file without trackForMemoryLeaks - add memory leak tracking to prevent leaks and cross-test interference. Swift template (helper must exist):\n\nprivate func makeSUT() -> SUT {\n  let sut = SUT(/* deps */)\n  trackForMemoryLeaks(sut, testCase: self, file: #file, line: #line)\n  return sut\n}\n\nfunc test_example() {\n  let sut = makeSUT()\n  // assertions\n}\n\nAlternative (XCTest native):\naddTeardownBlock { [weak sut] in XCTAssertNil(sut) }',
             findings
           );
         }
