@@ -288,11 +288,8 @@ function runCommonIntelligence(project, findings) {
       }
 
       if (isSwiftOrKotlinTest) {
-        const isSimple = isSimpleValueTypeTest(content);
-
         if (!shouldSkipMakeSUTRule(filePath) &&
           !hasMakeSUT(content) &&
-          !isSimple &&
           !hasAstIgnoreComment(content, 'missing_makesut')) {
           pushFinding(
             'common.testing.missing_makesut',
@@ -306,7 +303,6 @@ function runCommonIntelligence(project, findings) {
 
         if (!shouldSkipTrackForMemoryLeaksRule(filePath) &&
           !hasTrackForMemoryLeaksEvidence(content) &&
-          !isSimple &&
           !hasAstIgnoreComment(content, 'missing_track_for_memory_leaks')) {
           pushFinding(
             'common.testing.missing_track_for_memory_leaks',
