@@ -1,442 +1,375 @@
-<p align="center">
-  <img src="./assets/logo.png" alt="PUMUKI - AST Intelligence" width="350" />
-</p>
-
-<h1 align="center">@pumuki/ast-intelligence-hooks</h1>
-
-<p align="center">
-  <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/v/pumuki-ast-hooks.svg?style=flat-square&label=npm&color=CB3837" alt="npm version" /></a>
-  <a href="https://www.npmjs.com/package/pumuki-ast-hooks"><img src="https://img.shields.io/npm/dm/pumuki-ast-hooks.svg?style=flat-square&color=CB3837" alt="npm downloads" /></a>
-  <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License: MIT" /></a>
-  <a href="https://nodejs.org/"><img src="https://img.shields.io/badge/node-20.x-brightgreen.svg?style=flat-square&logo=node.js" alt="Node.js Version" /></a>
-  <a href="https://www.npmjs.com/"><img src="https://img.shields.io/badge/npm-10%2B-red.svg?style=flat-square&logo=npm" alt="npm" /></a>
-  <img src="https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue.svg?style=flat-square" alt="Platforms" />
-  <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/releases"><img src="https://img.shields.io/github/release-date/SwiftEnProfundidad/ast-intelligence-hooks.svg?style=flat-square&label=last%20release" alt="Last Release" /></a>
-  <a href="https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues"><img src="https://img.shields.io/github/issues/SwiftEnProfundidad/ast-intelligence-hooks.svg?style=flat-square" alt="GitHub Issues" /></a>
-</p>
-
-<p align="center">
-  <strong>Enterprise-grade AST Intelligence System for multi-platform code quality enforcement</strong>
-</p>
-
-### Navigation
-
-| Section | Description |
-|---------|-------------|
-| [Quick Start](#quick-start) | Get started in 30 seconds |
-| [Features](#features) | Main capabilities |
-| [Installation](./docs/INSTALLATION.md) | Full installation guide |
-| [Architecture](./docs/ARCHITECTURE.md) | System design & contracts |
-| [API Reference](./docs/API_REFERENCE.md) | Programmatic interface |
-| [Roadmap](./docs/TODO.md) | Planned improvements |
-| [Changelog](./CHANGELOG.md) | Version history |
-| [Contributing](./docs/CONTRIBUTING.md) | How to contribute |
-
 # Pumuki AST Intelligence Framework
 
-## Enterprise AI Context Governance & Code Quality Enforcement
+ <p align="center">
+   <img src="./assets/logo.png" alt="Pumuki AST Intelligence Framework" width="800" />
+ </p>
 
-Pumuki AST Intelligence Framework is a **portable, enterprise-grade framework** designed to **govern AI-assisted software development** in large, long-lived, multi-platform projects.
+Portable, project‑agnostic, multi‑platform enterprise framework to govern AI‑assisted development through AST analysis, deterministic evidence, AI Gate controls, and operational automation.
 
-It provides a **deterministic control layer** over AI behavior by combining:
-
-* AST-based static analysis
-* Persistent AI context evidence
-* Rule-based validation
-* Hard AI gating (block / allow)
-* Native Git workflow integration
-
-The framework is **project-agnostic** by design and can be adopted by any organization seeking to use AI **safely, predictably, and at scale**.
+![npm](https://img.shields.io/npm/v/pumuki-ast-hooks.svg)
+![node](https://img.shields.io/badge/node-%3E%3D18-43853d)
+![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue)
+![license](https://img.shields.io/badge/license-MIT-black)
 
 ---
 
-## Problem Statement
+## Quick Start (30–60s)
 
-AI assistants are powerful but fundamentally unreliable when used in real-world, enterprise codebases:
-
-* Context degrades across sessions, chats, and tools
-* Architectural rules are suggested but not enforced
-* AI hallucinations introduce subtle, high-impact defects
-* There is no persistent or auditable source of truth
-* Long-running features suffer from context drift
-
-Pumuki addresses these issues by **removing trust from the AI** and replacing it with **evidence, validation, and enforcement**.
+```bash
+npm install --save-dev @pumuki/ast-intelligence-hooks
+npm run install-hooks
+npx ast-hooks
+```
 
 ---
 
-## Quick Start
+## Operational visuals (examples)
 
-1. Instala dependencias: `npm install`
-2. Usa los ganchos: `npx ast-hooks` (menú interactivo)
-3. Modo CI/CD: `bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh`
-4. Consulta la guía: [docs/INSTALLATION.md](./docs/INSTALLATION.md)
+### Pre‑write enforcement (block before writing)
 
----
+![Pre-write hook output](./assets/Hook_02.png)
 
-## Installation & Hooks CLI
+### AI Gate (blocked example)
 
-* Install (dev): `npm install --save-dev @pumuki/ast-intelligence-hooks`
-* Update to latest: `npm install --save-dev @pumuki/ast-intelligence-hooks@latest && npm run install-hooks`
-* Uninstall: `npm uninstall @pumuki/ast-intelligence-hooks`
-* Install/reinstall hooks: `npm run install-hooks` (alias `npx ast-install`)
-* Interactive menu (hook-system): `npx ast-hooks`
-* Evidence guard daemon: `npm run ast:guard:start|stop|restart|status|logs`
-* Refresh evidence: `npm run ast:refresh`
-* Check installed vs latest version: `npm run ast:check-version`
+![AI Gate blocked example](./assets/ai_gate.png)
 
----
+### ai-start (bootstrap + evidence refresh)
 
-## Features
+![ai-start output](./assets/ai-start.png)
 
-### Core
+### Pre-flight check (in-memory validation)
 
-* **AST Intelligence** multi-platform (iOS, Android, Backend, Frontend)
-* **Evidence file** `.AI_EVIDENCE.json` as single source of truth
-* **AI Gate** (block/allow) with metrics and enforcement
+![pre-flight-check output](./assets/pre-flight-check.png)
 
-### NEW: Pre-Write Enforcement
+### Interactive menu (orchestrator overview)
 
-* **Pre-Flight Validation**: Analyze code BEFORE writing to files
-* **In-Memory AST Analysis**: `analyzeCodeInMemory()` for proposed code validation
-* **IDE Hooks**: Real-time blocking in Windsurf, Claude Code, OpenCode
+The framework includes an interactive audit menu that drives the orchestrator (full audit, strict modes, pattern checks, ESLint suites, AST intelligence, export, etc.).
 
-<img src="./assets/Hook_02.png" alt="Windsurf pre-write hook output" width="100%" />
+```bash
+npx ast-hooks
+```
 
-<img src="./assets/Hook_01.png" alt="Windsurf post-write hook output" width="100%" />
-### NEW: MCP Integration
+Documentation:
 
-* **MCP Server**: Full Model Context Protocol integration
-* **ai_gate_check**: Mandatory gate before AI operations
-* **pre_flight_check**: Validate proposed code before writing
-* **set_human_intent**: Track user goals across sessions
-
-![MCP ai_gate_check BLOCKED example](docs/images/ai_gate.png)
-
-### NEW: Cognitive Layers
-
-* **Human Intent**: Persistent user goal tracking with confidence levels
-* **Semantic Snapshot**: Project state awareness for AI context
-
-### Automation
-
-* **Git-native**: pre-commit / pre-push / CI integration
-* **Git Flow**: `ast:gitflow` for features, `ast:release` for releases
-* **macOS Notifications**: Real-time alerts and guardrails
+- `docs/USAGE.md` (Interactive Menu, non‑interactive `AUDIT_OPTION`, and typical flows)
+- `CHANGELOG.md` (Release notes and changes)
 
 ---
 
 ## Visual Overview
 
-![AST Intelligence System Overview](docs/images/ast_intelligence_01.svg)
+![AST Intelligence System Overview](./assets/ast_intelligence_01.svg)
 
-![AST Intelligence Workflow](docs/images/ast_intelligence_02.svg)
+![AST Intelligence Workflow](./assets/ast_intelligence_02.svg)
 
-![AST Intelligence Audit - Part 1](docs/images/ast_intelligence_03.svg)
+![AST Intelligence Audit - Part 1](./assets/ast_intelligence_03.svg)
 
-![AST Intelligence Audit - Part 2](docs/images/ast_intelligence_04.svg)
+![AST Intelligence Audit - Part 2](./assets/ast_intelligence_04.svg)
 
-![AST Intelligence Audit - Part 3](docs/images/ast_intelligence_05.svg)
-
----
-
-## Design Philosophy
-
-Pumuki is built on a few non-negotiable principles:
-
-* **Evidence over conversation**
-  AI does not rely on chat memory. All decisions depend on a persistent evidence file.
-
-* **Gated intelligence**
-  AI actions are explicitly allowed or blocked based on project state.
-
-* **AST, not heuristics**
-  Code is analyzed structurally, not via regex or conventions.
-
-* **Fail fast, block early**
-  Unsafe or invalid AI actions are prevented before code changes occur.
-
-* **Platform-agnostic governance**
-  The same rules apply consistently across iOS, Android, backend, and frontend.
+![AST Intelligence Audit - Part 3](./assets/ast_intelligence_05.svg)
 
 ---
 
-## Core Capabilities
+## 1. Identity
 
-### 1. AI Evidence System
+### Name
 
-Pumuki introduces a mandatory, versioned **AI Evidence File** (`.AI_EVIDENCE.json`) that acts as the **single source of truth** for AI-assisted development.
+Pumuki AST Intelligence Framework
 
-It stores:
+### Enterprise positioning (one line)
 
-* Active platforms and scopes
-* Architectural and quality rules
-* Detected violations and severities
-* Session and workflow metadata
-* AI gate state
-
-The AI **cannot operate** without valid and fresh evidence.
+Enterprise governance for AI‑assisted development: persistent evidence, deterministic gate, and multi‑platform AST enforcement.
 
 ---
 
-### 2. AI Gate (Control Primitive)
+## 2. Clear definition
 
-The AI Gate is the core control mechanism of the framework.
+### 2.1 What the framework is
 
-Before any AI-assisted operation:
+Pumuki AST Intelligence Framework is a portable, project‑agnostic framework for long‑lived systems that governs AI‑assisted work by combining:
 
-* Evidence freshness is validated
+- multi‑platform AST analysis;
+- persistent evidence as the source of truth;
+- a deterministic gate (ALLOW/BLOCK);
+- enforcement before writing, before commit, and in CI/CD;
+- MCP integration for agents;
+- Git Flow automation;
+- a guard/daemon and operational signals.
 
-* Violations are evaluated
+### 2.2 What problem it solves
 
-* A deterministic decision is made:
+AI assistants are probabilistic systems: they can produce a coherent change once and a degrading change on the next run, even with the same prompt. In enterprise repositories this causes:
 
-* **ALLOWED** → operation may proceed
+- architecture drift;
+- silent introduction of anti‑patterns;
+- security degradation;
+- accumulation of technical debt;
+- loss of traceability.
 
-* **BLOCKED** → operation is rejected with actionable feedback
+Pumuki introduces control and operational reproducibility: it does not rely on “conversation”, it relies on evidence and enforcement.
 
-This transforms AI from an advisory tool into a **controlled execution actor**.
+### 2.3 Why it exists
 
----
+Without governance, AI:
 
-### 3. AST Intelligence Engine
+- does not preserve verifiable context;
+- does not apply rules deterministically;
+- can break architectural invariants;
+- can introduce high‑impact defects that are not obvious in a superficial review.
 
-The AST Intelligence Engine performs deep, language-aware analysis across platforms.
+Pumuki exists to make AI usage compatible with enterprise engineering standards.
 
-Capabilities include:
+### 2.4 Why AI cannot be trusted without governance
 
-* Architectural rule enforcement
-* Security and data safety validation
-* Performance anti-pattern detection
-* Detection of forbidden constructs and flows
+Operational reliability is not achieved with prompts. It is achieved with:
 
-The engine operates on **real ASTs**, not text approximations.
-
----
-
-### 4. Git-Native Enforcement
-
-Pumuki integrates directly with Git workflows:
-
-* Pre-commit hooks
-* Pre-push hooks
-* Branch and flow validation
-
-Violations can:
-
-* Block commits
-* Block pushes
-* Prevent unsafe changes from reaching CI/CD
-
-Governance happens **before** code reaches production.
+- persistent, auditable evidence;
+- formal rules per platform;
+- deterministic enforcement;
+- early blocking of critical violations.
 
 ---
 
-### 5. Pre-Flight Validation (NEW)
+## 3. Core principles
 
-The Pre-Flight Validation system analyzes code **BEFORE** it is written to disk:
+### 3.1 Evidence over conversation
+
+Decisions are made based on a persistent evidence file (`.AI_EVIDENCE.json`), not chat memory.
+
+### 3.2 Gated intelligence
+
+Before any AI‑assisted operation, repository state and evidence are validated. If it does not comply, the operation is blocked.
+
+### 3.3 AST, not heuristics
+
+Rules run on real ASTs and code structure, avoiding fragile approximations.
+
+### 3.4 Fail fast, block early
+
+Pumuki blocks as early as possible: pre‑write, pre‑commit, and CI.
+
+### 3.5 Platform‑agnostic governance
+
+A single enforcement model governs iOS, Android, backend, and frontend.
+
+### 3.6 Token economy (cost-aware operation)
+
+This framework treats token usage as an operational cost.
+
+- **Batch checks and avoid redundant scans**.
+- **Reuse cached context** when safe.
+- **Ask the user for missing info** instead of exploring blindly.
+- **Keep responses concise**.
+
+This principle is part of the framework contract and is surfaced to agents via:
+
+- `ai_gate_check` → `mandatory_rules.framework_rules`
+- `pre_flight_check` → `framework_rules`
+
+---
+
+## 4. Architecture and mental model
+
+### 4.1 AI Evidence File (`.AI_EVIDENCE.json`)
+
+`.AI_EVIDENCE.json` is the persistent source of truth. It represents the governance state and enables reproducible decisions.
+
+It includes:
+
+- session and branch context;
+- violations by severity;
+- gate state;
+- detected platforms;
+- operational watchers;
+- cognitive layers.
+
+### 4.2 AI Gate (ALLOW / BLOCK)
+
+The AI Gate decides:
+
+- **ALLOWED**: proceed (following rules).
+- **BLOCKED**: the operation is blocked with actionable feedback.
+
+### 4.3 Deterministic enforcement
+
+Enforcement happens in layers:
+
+1) pre‑write in IDEs that support it;
+2) Git hooks as a universal fallback;
+3) MCP gate/pre‑flight for agents;
+4) CI/CD as final enforcement.
+
+### 4.4 Cognitive layers
+
+#### Human Intent (Intentional Memory)
+
+Defines the human goal, constraints, and expiration.
+
+#### Semantic Snapshot (Semantic Memory)
+
+Summarizes project state (health, active platforms, gate state) to prevent drift.
+
+---
+
+## 5. Features (complete)
+
+### 5.1 AST Intelligence (iOS, Android, Backend, Frontend)
+
+Multi‑platform AST‑based analysis:
+
+- iOS (Swift)
+- Android (Kotlin)
+- Backend (Node.js / NestJS)
+- Frontend (React / Next.js)
+
+### 5.2 Pre‑write enforcement
+
+Block before writing when the IDE can intercept operations.
+
+### 5.3 In‑memory AST analysis
+
+Validation over proposed code as a string (without writing to disk).
+
+### 5.4 IDE hooks
+
+IDE integrations to intercept changes before writing (or fallback via Git).
+
+### 5.5 MCP server
+
+MCP server for agents with blocking and non‑blocking tools.
+
+### 5.6 Git hooks
+
+Universal Git‑level enforcement (pre‑commit / pre‑push) to prevent violations from entering history.
+
+### 5.7 Git Flow automation
+
+Automation of feature/fix cycles and releases.
+
+### 5.8 macOS notifications
+
+Operational notifications for gate, evidence, health, guard, and tokens.
+
+### 5.9 Evidence guard daemon
+
+Guard/daemon to keep evidence fresh and reduce drift during long sessions.
+
+### 5.10 CI/CD enforcement
+
+Apply the same rules in pipelines.
+
+---
+
+## 6. Pre‑Write Enforcement
+
+### 6.1 What it does
+
+Analyzes code before writing it to disk. This prevents dangerous or degrading patterns from even entering the working tree.
+
+### 6.2 IDE interception
+
+When the IDE supports pre‑write hooks, the framework intercepts edit/write operations and validates the final content.
+
+### 6.3 Content reconstruction from partial diffs
+
+If the IDE provides partial diffs, the system reconstructs the final content by applying `old_string → new_string` transformations over the current state before analyzing.
+
+### 6.4 Blocking behavior
+
+If CRITICAL/HIGH violations exist, the operation is blocked.
+
+### 6.5 Example (in‑memory pre‑flight)
 
 ```javascript
-const { analyzeCodeInMemory } = require('./ast-core');
+const { analyzeCodeInMemory } = require('./scripts/hooks-system/infrastructure/ast/ast-core');
 
-// Analyze proposed code without writing to file
+const virtualFilePath = 'apps/backend/src/users/UserService.ts';
+const proposedCode = `
+export class UserService {
+  // ...
+}
+`;
+
 const result = analyzeCodeInMemory(proposedCode, virtualFilePath);
 
-if (result.hasCritical) {
-    // BLOCK the write - violations detected
-    console.log('❌ BLOCKED:', result.violations);
-} else {
-    // ALLOW the write
-    console.log('✅ ALLOWED');
+if (result.hasCritical || result.hasHigh) {
+  throw new Error('BLOCKED: Critical/High violations detected');
 }
 ```
 
-**Key capabilities:**
+---
 
-* Analyze code strings without file I/O
-* Detect critical violations before code is written
-* Platform-aware analysis (iOS, Android, Backend, Frontend)
-* Integration with IDE hooks for real-time blocking
-![Pre-flight check example](docs/images/pre-flight-check.png)
+## 7. MCP Integration
+
+### 7.1 Purpose
+
+MCP provides a standard contract so agents can consume governance tools (gate and pre‑flight) before modifying the repository.
+
+### 7.2 Tools (blocking vs non‑blocking)
+
+#### Blocking
+
+- `ai_gate_check`
+- `pre_flight_check`
+
+#### Non‑blocking
+
+- `read_platform_rules`
+- `set_human_intent`
+- `get_human_intent`
+- `clear_human_intent`
+- `suggest_human_intent`
+- `auto_execute_ai_start`
+- `check_evidence_status`
+- `validate_and_fix`
+- `sync_branches`
+- `cleanup_stale_branches`
+- `auto_complete_gitflow`
+- `record_test_created`
+- `reset_tdd_session`
+
+### 7.3 Blocking vs non‑blocking
+
+Blocking tools return ALLOWED/BLOCKED and stop the flow if violations are detected.
 
 ---
 
-### 6. MCP Server Integration (NEW)
+## 8. Git Governance
 
-Pumuki exposes a full **Model Context Protocol (MCP)** server for AI agent integration:
+### 8.1 `ast:gitflow`
 
-| Tool | Purpose | Blocking |
-|------|---------|----------|
-| `ai_gate_check` | Mandatory gate before any AI operation | ✅ Yes |
-| `pre_flight_check` | Validate proposed code before writing | ✅ Yes |
-| `read_platform_rules` | Load platform-specific rules | No |
-| `set_human_intent` | Track user goals across sessions | No |
-| `get_human_intent` | Retrieve current user intent | No |
-| `auto_complete_gitflow` | Automate Git Flow cycle | No |
+Automates the feature/fix → develop cycle.
 
-**Usage:**
+### 8.2 `ast:release`
 
-```bash
-# Start MCP server
-node scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js
-```
+Automates the develop → main release.
+
+### 8.3 Full Git Flow cycle
+
+The Git Flow cycle includes branch validation, commits, push, PR, merge (by policy), cleanup, and sync.
 
 ---
 
-### 7. Cognitive Layers (NEW)
+## 9. Commands Section (MANDATORY – DO NOT CHANGE)
 
-Pumuki introduces **Cognitive Layers** to maintain AI context across sessions:
-
-**Human Intent:**
-
-```json
-{
-  "human_intent": {
-    "primary_goal": "Implement user authentication with OAuth2",
-    "secondary_goals": ["Add unit tests", "Update documentation"],
-    "constraints": ["Must use existing User model", "No breaking changes"],
-    "non_goals": ["UI redesign"],
-    "confidence_level": "high",
-    "expires_at": "2026-01-10T12:00:00Z"
-  }
-}
-```
-
-**Semantic Snapshot:**
-
-* Current project state awareness
-* Active platforms and detected patterns
-* Architectural context for AI decisions
-
----
-
-## Supported Platforms
-
-Pumuki is multi-platform by default:
-
-* iOS (Swift)
-* Android (Kotlin)
-* Backend (Node.js / NestJS)
-* Frontend (React / Next.js)
-
-The framework is extensible to additional platforms and languages.
-
----
-
-## AI IDE Compatibility (Pre-Write Enforcement)
-
-Pumuki supports **real-time code blocking** in IDEs with pre-write hooks:
-
-| IDE | Hook Support | Blocks Before Write? | Fallback |
-|-----|--------------|---------------------|----------|
-| **Windsurf** | `pre_write_code` | ✅ YES | Git pre-commit |
-| **Claude Code** | `PreToolUse` (Write/Edit) | ✅ YES | Git pre-commit |
-| **OpenCode** | Plugin `tool.execute.before` | ✅ YES | Git pre-commit |
-| **Codex CLI** | Approval policies only | ⚠️ Manual | Git pre-commit |
-| **Cursor** | `afterFileEdit` only | ⚠️ Post-write | Git pre-commit |
-| **Kilo Code** | Not documented | ⚠️ No | Git pre-commit |
-
-### How It Works
-
-```text
-AI generates code → IDE Hook intercepts → AST Intelligence analyzes → 
-  ├─ Critical violations? → ❌ BLOCKED (code not written)
-  └─ No violations? → ✅ ALLOWED (code written)
-```
-
-### Enforcement Layers
-
-1. **IDE Hooks** (Windsurf, Claude Code, OpenCode): Block BEFORE code is written
-2. **Git Pre-Commit**: Block commits with violations (100% fallback for all IDEs)
-3. **MCP Gate**: AI cannot proceed without passing `ai_gate_check`
-
-> **Note**: For IDEs without pre-write hooks, the Git pre-commit hook provides 100% enforcement at commit time.
-
-### PreToolUse Guard (`hooks/pre-tool-use-guard.ts`)
-
-This repository includes a **PreToolUse guard hook** that runs *before* `Edit` / `Write` / `MultiEdit` operations (where supported by the IDE integration).
-
-When it runs:
-
-* In IDEs that support **PreToolUse** interception (e.g. Claude Code integrations)
-* Before code is written to disk
-
-What it does:
-
-* Analyzes the **proposed code** using `analyzeCodeInMemory()`.
-* If the IDE only provides **partial diffs** (`tool_input.edits`), the hook reconstructs the final candidate file content by applying `old_string → new_string` edits over the current file content, then analyzes the result.
-* **Blocks** the operation when **CRITICAL/HIGH** violations are detected (exit code `2`).
-
-Why it exists:
-
-* To ensure **enforcement happens before write**, not only at commit time.
-* To prevent silent injection of high-impact patterns (e.g. empty `catch {}`) during AI-assisted edits.
-
-See [`scripts/hooks-system/infrastructure/cascade-hooks/README.md`](./scripts/hooks-system/infrastructure/cascade-hooks/README.md) for installation instructions.
-
----
-
-## Typical Enterprise Use Cases
-
-* Long-running feature development with AI assistance
-* Multi-day or multi-chat workflows
-* Large monorepos and distributed teams
-* Strict Clean Architecture enforcement
-* Regulated or compliance-sensitive environments
-
----
-
-## Installation
-
-**Requirements**
-
-* Node.js 20 (see `.nvmrc`)
-* npm 10+
-
-Install as a development dependency:
+### Install (dev)
 
 ```bash
 npm install --save-dev @pumuki/ast-intelligence-hooks
 ```
 
-Legacy (deprecated):
+### Legacy install
 
 ```bash
 npm install --save-dev pumuki-ast-hooks
 ```
 
-Initialize AI evidence:
-
-```bash
-npx ai-start
-```
-
-### What is `ai-start` and when should you run it?
-
-`ai-start` refreshes the project AI context and updates `.AI_EVIDENCE.json` so the system has a **fresh, auditable source of truth** before any AI-assisted work.
-
-Run it when:
-
-* **Starting a new day/session** (fresh context)
-* **After pulling a lot of changes** (context drift prevention)
-* **After fixing blocking violations** (to refresh gate + evidence)
-
-What it does:
-
-* Detects active platforms (iOS/Android/Backend/Frontend)
-* Refreshes the evidence file (`.AI_EVIDENCE.json`)
-* Helps the AI gate operate deterministically (block/allow)
-
-![ai-start execution example](docs/images/ai-start.png)
----
-
-## Installation & Lifecycle Commands
-
-### Update to latest version
+### Update
 
 ```bash
 npm install --save-dev @pumuki/ast-intelligence-hooks@latest
 npm run install-hooks
-````
+```
 
 ### Uninstall
 
@@ -444,209 +377,52 @@ npm run install-hooks
 npm uninstall @pumuki/ast-intelligence-hooks
 ```
 
-Legacy:
-
-```bash
-npm uninstall pumuki-ast-hooks
-```
-
----
-
-## Hook Installation & Management
-
-Install or update Git hooks (wizard-driven):
+### Install hooks
 
 ```bash
 npm run install-hooks
 ```
 
-(Equivalent to `npx ast-install`)
+### Run interactive menu
 
----
+```bash
+npx ast-hooks
+```
 
-## Operational Commands
-
-### Check installed version vs. latest published
+### Version check
 
 ```bash
 npm run ast:check-version
 ```
 
-### Run hook system with interactive menu
+### Audit
 
 ```bash
-npx ast-hooks
+npm run audit
 ```
 
----
-
-## Manual Hook-System (Interactive Menu)
-
-Pumuki can be used fully manually (without waiting for Git hooks) via the interactive audit menu.
-
-### Recommended
-
-```bash
-npx ast-hooks
-```
-
-### Direct CLI (explicit)
-
-```bash
-ast-hooks audit
-```
-
-### Run the orchestrator directly (local repository)
-
-```bash
-bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-```
-
-### Non-interactive mode
-
-You can run specific audit modes without the menu:
-
-```bash
-# Example: run AST Intelligence directly
-AUDIT_OPTION=7 bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-
-# Example: analyze staged files only (pre-commit equivalent)
-AUDIT_OPTION=3 bash scripts/hooks-system/infrastructure/shell/orchestrators/audit-orchestrator.sh
-```
-
-If defined as scripts:
-
-```bash
-npm run ast:gitflow   # guided Git flow
-npm run ast:release   # guided release flow (develop → main)
-npm run ast:audit     # direct audit
-```
-
----
-
-## Git Governance & Flow Automation
-
-Pumuki includes first-class Git governance commands to enforce a consistent workflow across teams and repositories.
-
-### Daily Development Flow
+### Git flow
 
 ```bash
 npm run ast:gitflow
 ```
 
-With optional auto-merge:
-
-```bash
-npm run ast:gitflow -- --auto-merge
-```
-
-### Release Flow (develop → main)
+### Release
 
 ```bash
 npm run ast:release
 ```
 
-With optional auto-merge:
-
-```bash
-npm run ast:release -- --auto-merge
-```
-
-### Git Flow Cycle (ast:gitflow)
-
-Pumuki runs a complete Git Flow cycle:
-
-* Step 1: Validate Branch (must be feature/, fix/, etc.)
-* Step 2: Commit Changes (if uncommitted)
-* Step 3: Push to Origin
-* Step 4: Create Pull Request
-* Step 5: Merge Pull Request (optional)
-* Step 6: Cleanup Merged Branches
-* Step 7: Sync Branches
-* Git Flow Cycle Complete
-
-### Options
-
-```bash
-npm run ast:gitflow
-npm run ast:gitflow -- -m "feat: new feature"
-npm run ast:gitflow -- --auto-merge
-npm run ast:gitflow -- --skip-cleanup
-npm run ast:gitflow -- --skip-sync
-```
-
----
-
-## Evidence Guard (Daemon)
-
-The evidence guard ensures AI evidence freshness during long work sessions.
+### Guard start/stop/status/logs
 
 ```bash
 npm run ast:guard:start
 npm run ast:guard:stop
-npm run ast:guard:restart
 npm run ast:guard:status
 npm run ast:guard:logs
 ```
 
----
-
-## Developer Experience: Notifications & Guardrails
-
-Pumuki includes a built-in notification and guardrail layer to keep long work sessions safe and predictable.
-
-### macOS Notifications
-
-On macOS, notifications are delivered using:
-
-* `terminal-notifier` (preferred, if installed)
-* `osascript` fallback (built-in)
-
-The notification system includes deduplication, cooldowns, and retry logic to avoid spam during long sessions.
-
-### Evidence Freshness Alerts (SLA)
-
-When `.AI_EVIDENCE.json` becomes stale beyond the configured threshold, the guard will:
-
-* Notify that evidence is stale (including how many seconds)
-* Optionally attempt an auto-refresh depending on guard configuration
-
-When evidence returns to a fresh state (back within SLA), the guard can notify that evidence is healthy again.
-
-### AI Evidence Refresh Notifications
-
-When evidence is refreshed, the orchestration layer updates `.AI_EVIDENCE.json` and sends a macOS notification:
-
-* If gate is **ALLOWED**: `AI Evidence has been refreshed automatically`
-* If gate is **BLOCKED**: `AI Gate BLOCKED - <N> violations need fixing`
-
-### Git Tree Guardrails (Atomic Commits)
-
-Pumuki monitors the working tree and staging area and can notify when there are too many changes at once.
-
-Typical behavior:
-
-* Warn/error when the git tree exceeds configured limits (total/staged/unstaged)
-* Suggest splitting work into smaller, atomic commits
-* Provide grouped commit suggestions when it can infer feature-based groupings
-
-Configuration (environment variables):
-
-* `HOOK_GUARD_DIRTY_TREE_STAGED_LIMIT` (default: 10)
-* `HOOK_GUARD_DIRTY_TREE_UNSTAGED_LIMIT` (default: 15)
-* `HOOK_GUARD_DIRTY_TREE_TOTAL_LIMIT` (default: 20)
-* `HOOK_GUARD_DIRTY_TREE_INTERVAL` (default: 60000 ms)
-* `HOOK_GUARD_DIRTY_TREE_REMINDER` (default: 300000 ms)
-
-### Failure Modes (Visibility)
-
-If the framework cannot read or parse `.AI_EVIDENCE.json`, evidence reads will safely fail (returning `null`) and the guard will record debug entries to help diagnose the issue.
-
----
-
-## Evidence Maintenance
-
-Manually refresh AI evidence:
+### Evidence refresh
 
 ```bash
 npm run ast:refresh
@@ -654,32 +430,45 @@ npm run ast:refresh
 
 ---
 
-## Daily Workflow (High Level)
+## 10. IDE Compatibility Matrix
 
-## Maturity & Stability
-
-* Production usage
-* CI/CD integration
-* Changelog-driven evolution
-* Designed for long-lived codebases
-
-Frequent updates are expected and encouraged at this stage.
-
----
-
-## Intended Audience
-
-Pumuki is intentionally opinionated and designed for:
-
-* Senior engineers
-* Tech leads
-* Software architects
-* Platform and infrastructure teams
-
-It is not optimized for casual or experimental AI usage.
+| IDE | Hook Support | Blocks Before Write? | Fallback |
+| --- | --- | --- | --- |
+| Windsurf | `pre_write_code` | Yes | Git pre-commit |
+| Claude Code | `PreToolUse` (Write/Edit/MultiEdit) | Yes | Git pre-commit |
+| OpenCode | `tool.execute.before` | Yes | Git pre-commit |
+| Cursor | Post-write (`afterFileEdit`) | No | Git pre-commit |
+| Codex CLI | Approval policies only | Manual | Git pre-commit |
+| Kilo Code | Not documented | No | Git pre-commit |
 
 ---
 
-## License
+## 11. Typical Enterprise Use Cases
 
-© Pumuki 2025. All rights reserved.
+- Long‑running feature development with AI assistance.
+- Regulated systems where traceability and control are mandatory.
+- Platform teams governing multiple repositories.
+- Monorepos and multi‑team repositories with architecture drift risk.
+
+---
+
+## 12. Intended Audience
+
+Designed for:
+
+- senior engineers;
+- software architects;
+- platform teams;
+- teams responsible for SDLC quality, security, and governance.
+
+---
+
+## 13. Maturity & Stability
+
+Production‑ready, version‑evolving, and designed for CI/CD integration.
+
+---
+
+## 14. License
+
+MIT

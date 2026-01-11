@@ -29,11 +29,13 @@
 ### Step 0: Git Repository Check ⚠️
 
 **What happens:**
+
 - The installer checks if you're in a Git repository (automatically at Step 0)
 - Verifies that `.git` directory exists
 - Tests that `git rev-parse --show-toplevel` works correctly
 
 **Why it matters:**
+
 - **Required for**: Git hooks, Git Flow automation, commit-time analysis
 - **Without Git**: The library cannot function properly
 
@@ -41,6 +43,7 @@
 The installer now automatically detects if Git is missing and shows a clear warning before proceeding. This prevents incomplete installations.
 
 **If Git is missing:**
+
 ```
 ❌ CRITICAL: Git repository not found!
    This library REQUIRES a Git repository to function properly.
@@ -53,6 +56,7 @@ The installer now automatically detects if Git is missing and shows a clear warn
 ```
 
 **Action required:**
+
 ```bash
 git init
 git add .
@@ -64,6 +68,7 @@ git commit -m "Initial commit"
 ### Step 1: Platform Detection
 
 **What happens:**
+
 - Scans project files for platform indicators
 - Detects iOS (`.swift`, `.xcodeproj`, `Podfile`)
 - Detects Android (`.kt`, `.gradle.kts`, `AndroidManifest.xml`)
@@ -71,11 +76,13 @@ git commit -m "Initial commit"
 - Detects Frontend (`next.config.js`, `app/**/page.tsx`)
 
 **Output:**
+
 ```
 ✓ Detected: backend, frontend
 ```
 
 **Impact:**
+
 - Only relevant rules are loaded for detected platforms
 - Platform-specific analysis is enabled
 
@@ -84,11 +91,13 @@ git commit -m "Initial commit"
 ### Step 2: ESLint Configuration
 
 **What happens:**
+
 - Installs ESLint configs for detected platforms
 - Creates `.eslintrc.js` files with appropriate rules
 - Configures TypeScript/JavaScript linting
 
 **Files created:**
+
 - `.eslintrc.js` (project root)
 - Platform-specific configs in `scripts/hooks-system/`
 
@@ -97,10 +106,12 @@ git commit -m "Initial commit"
 ### Step 3: Directory Structure
 
 **What happens:**
+
 - Creates `scripts/hooks-system/` directory structure
 - Sets up folders for: `domain/`, `application/`, `infrastructure/`, `presentation/`
 
 **Structure created:**
+
 ```
 scripts/hooks-system/
 ├── domain/
@@ -117,11 +128,13 @@ scripts/hooks-system/
 ### Step 4: Copy System Files
 
 **What happens:**
+
 - Copies all AST analysis engines from the library
 - Installs MCP server scripts
 - Copies rule definitions and validators
 
 **Files copied:**
+
 - `infrastructure/ast/ast-intelligence.js` - Main analysis engine
 - `infrastructure/mcp/ast-intelligence-automation.js` - MCP server
 - Platform-specific analyzers (iOS, Android, Backend, Frontend)
@@ -131,11 +144,13 @@ scripts/hooks-system/
 ### Step 5: Project Configuration
 
 **What happens:**
+
 - Creates `.ast-intelligence.config.js` in project root
 - Configures platform settings
 - Sets up ignore patterns
 
 **Configuration file:**
+
 ```javascript
 module.exports = {
   platforms: ['backend', 'frontend'],
@@ -149,11 +164,13 @@ module.exports = {
 ### Step 6: IDE Configuration and MCP Servers
 
 **What happens:**
+
 - Creates `.cursor/` directory (or `.windsurf/`, `.vscode/`, etc. for other agentic IDEs)
 - Creates `.cursor/mcp.json` with MCP server configuration
 - Creates `.cursor/settings.json` with IDE-specific settings
 
 **Note on Rules:** The library automatically searches for agentic IDE rules (`.mdc` files) in:
+
 - Project-level: `.cursor/rules/`, `.windsurf/rules/`, `.vscode/rules/` (highest priority)
 - Global locations: `~/.cursor/rules/`, `~/Library/Application Support/Cursor/User/rules/`
 - Other IDE project caches
@@ -161,6 +178,7 @@ module.exports = {
 Rules are used by `ai-start` when generating `.AI_EVIDENCE.json` to provide context to AI assistants. See [Usage Guide - Adding Your Own IDE Rules](../docs/USAGE.md#adding-your-own-ide-rules-mdc-files) for details.
 
 **MCP Configuration (`.cursor/mcp.json`):**
+
 ```json
 {
   "mcpServers": {
@@ -180,7 +198,15 @@ Rules are used by `ai-start` when generating `.AI_EVIDENCE.json` to provide cont
 }
 ```
 
+**Token economy (contract):**
+
+- The MCP tools expose a cost-aware guidance rule to agents.
+- `ai_gate_check` returns it under `mandatory_rules.framework_rules`.
+- `pre_flight_check` returns it under `framework_rules`.
+- Agents should batch checks, avoid redundant scans, reuse cached context where safe, and ask the user for missing info to reduce token cost.
+
 **What this enables:**
+
 - Cursor AI can read project state (evidence status, gitflow state, context)
 - Cursor AI can execute tools (gate checks, gitflow automation, validation)
 
@@ -189,11 +215,13 @@ Rules are used by `ai-start` when generating `.AI_EVIDENCE.json` to provide cont
 ### Step 7: Git Hooks Installation
 
 **What happens:**
+
 - Creates `.git/hooks/pre-commit` script
 - Makes it executable (`chmod +x`)
 - Hook analyzes staged files before commit
 
 **Pre-commit hook script:**
+
 ```bash
 #!/bin/bash
 # AST Intelligence Hooks - Pre-commit
@@ -249,10 +277,12 @@ Check your `package.json` for these scripts:
 **Status:** Always ready, executes automatically
 
 **When it runs:**
+
 - Every time you execute `git commit`
 - Only analyzes staged files (`.ts`, `.tsx`, `.js`, `.jsx`, `.swift`, `.kt`)
 
 **What it does:**
+
 1. Checks for bypass flag (`GIT_BYPASS_HOOK=1`)
 2. Changes to project root directory
 3. Filters staged files by extension
@@ -263,6 +293,7 @@ Check your `package.json` for these scripts:
 8. If no violations → allows commit to proceed
 
 **Example output (blocked):**
+
 ```
 🚨 CRITICAL: backend.service.singleton_pattern
    File: src/users/users.service.ts:12
@@ -273,12 +304,14 @@ Check your `package.json` for these scripts:
 ```
 
 **Example output (allowed):**
+
 ```
 ✅ No violations detected
 [commit proceeds normally]
 ```
 
 **Important:**
+
 - Only CRITICAL and HIGH violations block commits
 - MEDIUM and LOW violations are reported but don't block
 - You can bypass temporarily with `GIT_BYPASS_HOOK=1 git commit`
@@ -294,17 +327,20 @@ Check your `package.json` for these scripts:
 #### 📚 Resources (Cursor can READ these)
 
 **`evidence://status`**
+
 - Status of `.AI_EVIDENCE.json` file
 - Returns: `fresh`, `stale`, `missing`, or `error`
 - Age in seconds, timestamp, current branch
 - Cursor uses this to know if project context is up-to-date
 
 **`gitflow://state`**
+
 - Current Git Flow workflow state
 - Returns: branch name, last commit, PR URL, status
 - Cursor uses this to understand Git state
 
 **`context://active`**
+
 - Automatically detected project context
 - Returns: platforms detected, files changed, confidence level
 - Cursor uses this to understand what you're working on
@@ -312,31 +348,37 @@ Check your `package.json` for these scripts:
 #### 🛠️ Tools (Cursor can EXECUTE these)
 
 **`check_evidence_status`**
+
 - Checks if `.AI_EVIDENCE.json` is stale
 - Cursor calls this to verify evidence freshness
 
 **`ai_gate_check` ⚠️ MANDATORY**
+
 - **Must be called at START of EVERY AI response**
 - Checks if there are blocking violations
 - Returns: `ALLOWED` or `BLOCKED`
 - If `BLOCKED`: AI should NOT proceed with task
 
 **`auto_complete_gitflow`**
+
 - Automates complete Git Flow cycle
 - Commit → Push → Create PR → Merge (optional)
 - Cursor can call this when you ask for Git Flow automation
 
 **`sync_branches`**
+
 - Synchronizes `develop` and `main` branches
 - Fetches, pulls, updates local branches
 - Cursor can call this to ensure branches are in sync
 
 **`validate_and_fix`**
+
 - Validates common problems
 - Fixes automatically when possible
 - Cursor can call this to check/fix issues
 
 **`auto_execute_ai_start`**
+
 - Analyzes context and executes `ai-start` if needed
 - Detects if code files were modified (≥30% confidence)
 - Updates `.AI_EVIDENCE.json` automatically
@@ -349,6 +391,7 @@ Check your `package.json` for these scripts:
 **Status:** Executed on-demand (by hooks or manual commands)
 
 **What it does:**
+
 - Parses code files into Abstract Syntax Trees (AST)
 - Applies rule checkers for each platform
 - Detects violations of:
@@ -359,6 +402,7 @@ Check your `package.json` for these scripts:
 - Generates detailed violation reports
 
 **Rule categories:**
+
 - **Architecture violations**: Dependency direction, layer violations
 - **SOLID violations**: Singleton, God classes, tight coupling
 - **Platform-specific**: iOS patterns, Android patterns, NestJS patterns, React patterns
@@ -370,6 +414,7 @@ Check your `package.json` for these scripts:
 The library automatically detects architecture patterns for **all platforms** (iOS, Android, Backend, Frontend) without any configuration needed.
 
 **iOS - Detected Patterns:**
+
 - Feature-First + Clean + DDD
 - MVVM-C (MVVM + Coordinator)
 - MVVM
@@ -379,6 +424,7 @@ The library automatically detects architecture patterns for **all platforms** (i
 - Clean Swift
 
 **Android - Detected Patterns:**
+
 - Feature-First + Clean + DDD
 - MVVM (Model-View-ViewModel)
 - MVI (Model-View-Intent)
@@ -386,6 +432,7 @@ The library automatically detects architecture patterns for **all platforms** (i
 - Clean Architecture (Domain-Data-Presentation)
 
 **Backend - Detected Patterns:**
+
 - Feature-First + Clean + DDD
 - Clean Architecture (Hexagonal/Ports & Adapters)
 - Onion Architecture
@@ -393,12 +440,14 @@ The library automatically detects architecture patterns for **all platforms** (i
 - CQRS (Command Query Responsibility Segregation)
 
 **Frontend - Detected Patterns:**
+
 - Feature-First + Clean + DDD
 - Component-Based Architecture
 - Atomic Design Pattern
 - State Management patterns (Zustand, Redux, Context)
 
 **Automatic Detection:**
+
 - The library analyzes your project structure, imports, and code patterns
 - No configuration file needed - detection happens automatically
 - Works with any architecture pattern you use
@@ -532,6 +581,7 @@ Run audit again to verify fixes
 **Scenario:** You create a service with Singleton pattern
 
 **Code:**
+
 ```typescript
 class UserService {
   private static instance: UserService;
@@ -546,6 +596,7 @@ class UserService {
 ```
 
 **When you commit:**
+
 ```
 $ git commit -m "feat: add user service"
 
@@ -558,6 +609,7 @@ $ git commit -m "feat: add user service"
 ```
 
 **Fix:**
+
 ```typescript
 @Injectable()
 export class UserService {
@@ -566,6 +618,7 @@ export class UserService {
 ```
 
 **Commit again:**
+
 ```
 $ git commit -m "feat: add user service"
 
@@ -581,6 +634,7 @@ $ git commit -m "feat: add user service"
 **Scenario:** You modify code, evidence is 5 minutes old
 
 **Cursor AI workflow:**
+
 1. You ask: "Add authentication to this endpoint"
 2. Cursor calls `ai_gate_check` → `ALLOWED`
 3. Cursor reads `evidence://status` → `stale` (age: 350s)
@@ -599,13 +653,14 @@ $ git commit -m "feat: add user service"
 **You ask Cursor:** "Commit, push and create PR"
 
 **Cursor workflow:**
+
 1. Cursor calls `auto_complete_gitflow` with your message
 2. MCP verifies you're on feature branch ✅
 3. MCP commits changes (if any) ✅
 4. MCP pushes to origin ✅
 5. MCP creates PR to `develop` ✅
 6. MCP returns PR URL
-7. Cursor shows you: "✅ PR created: https://github.com/user/repo/pull/42"
+7. Cursor shows you: "✅ PR created: <https://github.com/user/repo/pull/42>"
 
 ---
 
@@ -616,6 +671,7 @@ $ git commit -m "feat: add user service"
 **Cause:** You're not in a Git repository
 
 **Solution:**
+
 ```bash
 git init
 git add .
@@ -623,6 +679,7 @@ git commit -m "Initial commit"
 ```
 
 Then re-run the installer:
+
 ```bash
 npm run install-hooks
 ```
@@ -632,6 +689,7 @@ npm run install-hooks
 ### Problem: Commit blocked but I need to commit now
 
 **Temporary bypass:**
+
 ```bash
 GIT_BYPASS_HOOK=1 git commit -m "emergency fix"
 ```
@@ -643,11 +701,13 @@ GIT_BYPASS_HOOK=1 git commit -m "emergency fix"
 ### Problem: MCP server not showing in Cursor
 
 **Check 1:** Verify `.cursor/mcp.json` exists
+
 ```bash
 cat .cursor/mcp.json
 ```
 
 **Check 2:** Verify Node path is correct
+
 ```bash
 which node
 # Update .cursor/mcp.json with correct path
@@ -656,6 +716,7 @@ which node
 **Check 3:** Restart Cursor completely
 
 **Check 4:** Check Cursor logs
+
 - View → Output → MCP
 
 ---
@@ -663,17 +724,20 @@ which node
 ### Problem: Hook not running
 
 **Check 1:** Verify hook exists and is executable
+
 ```bash
 ls -la .git/hooks/pre-commit
 # Should show: -rwxr-xr-x
 ```
 
 **Check 2:** Make executable if needed
+
 ```bash
 chmod +x .git/hooks/pre-commit
 ```
 
 **Check 3:** Test hook manually
+
 ```bash
 .git/hooks/pre-commit
 ```
@@ -683,16 +747,19 @@ chmod +x .git/hooks/pre-commit
 ### Problem: Evidence always stale
 
 **Check 1:** Verify `.AI_EVIDENCE.json` exists
+
 ```bash
 ls -la .AI_EVIDENCE.json
 ```
 
 **Check 2:** Update evidence manually
+
 ```bash
 npm run ai-start develop
 ```
 
 **Check 3:** Check file permissions
+
 ```bash
 chmod 644 .AI_EVIDENCE.json
 ```
@@ -713,4 +780,3 @@ Now that you understand how it works:
 **Last updated**: 2025-01-13  
 **Version**: 5.3.1  
 **Author**: Juan Carlos Merlos Albarracín (Senior Software Architect - AI-Driven Development) <freelancemerlos@gmail.com>
-
