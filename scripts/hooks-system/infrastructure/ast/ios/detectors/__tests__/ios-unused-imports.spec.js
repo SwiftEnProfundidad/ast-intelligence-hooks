@@ -31,4 +31,18 @@ describe('ios.imports.unused', () => {
 
         expect(analyzer.findings.find(f => f.ruleId === 'ios.imports.unused')).toBeUndefined();
     });
+
+    it('does not report unused Foundation when Foundation types are used in file content', () => {
+        const filePath = '/tmp/Bar.swift';
+        const analyzer = makeAnalyzer({
+            fileContent: 'import Foundation\n\nstruct Bar { let createdAt: Date }',
+            allNodes: []
+        });
+
+        analyzer.imports = [{ name: 'Foundation', line: 1 }];
+
+        analyzeImportsAST(analyzer, filePath);
+
+        expect(analyzer.findings.find(f => f.ruleId === 'ios.imports.unused')).toBeUndefined();
+    });
 });

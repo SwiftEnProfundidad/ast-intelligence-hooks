@@ -149,7 +149,8 @@ function checkConnectionPooling(sf, content, findings) {
   const filePath = sf.getFilePath();
   const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(filePath);
   const isTestFile = /\.(spec|test)\.(js|ts)$/i.test(filePath);
-  if (isAnalyzer || isTestFile) {
+  const isSupportedSource = /\.(jsx?|tsx?)$/i.test(filePath);
+  if (isAnalyzer || isTestFile || !isSupportedSource) {
     return;
   }
 

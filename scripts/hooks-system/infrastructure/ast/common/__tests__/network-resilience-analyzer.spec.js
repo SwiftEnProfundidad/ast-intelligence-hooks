@@ -176,5 +176,17 @@ describe('network-resilience-analyzer', () => {
 
       expect(findings.filter(f => f.ruleId === 'common.network.missing_connection_pooling')).toHaveLength(0);
     });
+
+    it('should ignore non-js sources', () => {
+      const project = createMockProject([{
+        path: '/app/services/KeychainHelper.swift',
+        content: 'struct KeychainHelper { }'
+      }]);
+      const findings = [];
+
+      analyzeNetworkResilience(project, findings);
+
+      expect(findings.filter(f => f.ruleId === 'common.network.missing_connection_pooling')).toHaveLength(0);
+    });
   });
 });

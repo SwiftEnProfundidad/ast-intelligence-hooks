@@ -87,6 +87,7 @@ function analyzeImportsAST(analyzer, filePath) {
     if (filePath.includes('Tests')) {
         return;
     }
+    const content = analyzer.fileContent || '';
     const importNames = analyzer.imports.map((i) => i.name);
 
     const hasUIKit = importNames.includes('UIKit');
@@ -117,14 +118,18 @@ function analyzeImportsAST(analyzer, filePath) {
 
     const unusedImportAllowlist = new Set(['Foundation', 'SwiftUI', 'UIKit', 'Combine']);
 
+    const foundationTypeUsage = /\b(Data|Date|URL|UUID|Decimal|NSNumber|NSDecimalNumber|NSSet|NSDictionary|NSArray|IndexPath|Notification|FileManager|Bundle|Locale|TimeZone|Calendar|DateComponents|URLRequest|URLSession)\b/;
     for (const imp of analyzer.imports) {
         if (!unusedImportAllowlist.has(imp.name)) continue;
 
-        const isUsed = analyzer.allNodes.some((n) => {
+        let isUsed = analyzer.allNodes.some((n) => {
             const typename = n['key.typename'] || '';
             const name = n['key.name'] || '';
             return typename.includes(imp.name) || name.includes(imp.name);
         });
+        if (!isUsed && imp.name === 'Foundation') {
+            isUsed = foundationTypeUsage.test(content);
+        }
 
         if (!isUsed) {
             analyzer.pushFinding('ios.imports.unused', 'low', filePath, imp.line, `Unused import: ${imp.name}`);

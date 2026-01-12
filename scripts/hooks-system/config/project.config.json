@@ -5,7 +5,7 @@
     "platforms": [
       "backend"
     ],
-    "created": "2026-01-06T11:37:47.558Z"
+    "created": "2026-01-12T08:54:59.529Z"
   },
   "architecture": {
     "pattern": "FEATURE_FIRST_CLEAN_DDD",
