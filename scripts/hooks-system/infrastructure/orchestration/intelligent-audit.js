@@ -10,6 +10,8 @@ const { toErrorMessage } = require('../utils/error-utils');
 const fs = require('fs');
 const path = require('path');
 const DynamicRulesLoader = require('../../application/services/DynamicRulesLoader');
+const RulesDigestService = require('../../application/services/RulesDigestService');
+const PolicyBundleService = require('../../application/services/PolicyBundleService');
 
 function deriveCategoryFromRuleId(ruleId) {
   if (!ruleId || typeof ruleId !== 'string') return 'unknown';
@@ -307,6 +309,7 @@ async function writeAutoContextFiles(platformsEvidence) {
 
 async function buildRulesReadEvidence(platformsEvidence) {
   const loader = new DynamicRulesLoader();
+  const digestService = new RulesDigestService();
   const entries = [];
 
   const detectedPlatforms = ['backend', 'frontend', 'ios', 'android']
@@ -315,26 +318,24 @@ async function buildRulesReadEvidence(platformsEvidence) {
   const uniqueFiles = ['rulesgold.mdc', ...detectedPlatforms.map(p => loader.rulesMap[p]).filter(Boolean)];
 
   for (const file of uniqueFiles) {
-    let verified = false;
-    let summary = 'not found';
+    let content = null;
     let resolvedPath = null;
 
     try {
-      const content = await loader.loadRule(file);
-      verified = Boolean(content);
-      summary = summarizeRulesContent(content);
+      content = await loader.loadRule(file);
       const cached = loader.cache && loader.cache.rules ? loader.cache.rules.get(file) : null;
       resolvedPath = cached && cached.fullPath ? cached.fullPath : null;
     } catch (error) {
-      summary = `error: ${toErrorMessage(error)}`;
+      content = null;
     }
 
-    entries.push({
+    const entry = digestService.buildEntry({
       file,
-      verified,
-      summary,
+      content,
       path: resolvedPath
     });
+
+    entries.push(entry);
   }
 
   return {
@@ -738,6 +739,19 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
 
     evidence.rules_read = rulesRead.entries;
     evidence.rules_read_flags = rulesRead.legacyFlags;
+
+    const policyBundleService = new PolicyBundleService();
+    const detectedPlatforms = Object.keys(platformsEvidence).filter(p => platformsEvidence[p] && platformsEvidence[p].detected);
+    const rulesSources = rulesRead.entries
+      .filter(e => e.verified && e.sha256)
+      .map(e => ({ file: e.file, sha256: e.sha256, path: e.path }));
+
+    evidence.policy_bundle = policyBundleService.createBundle({
+      platforms: detectedPlatforms,
+      mandatory: true,
+      enforcedAt: 'pre-commit',
+      rulesSources
+    });
 
     evidence.current_context = {
       working_on: env.get('AUTO_EVIDENCE_SUMMARY', 'AST Intelligence Analysis'),

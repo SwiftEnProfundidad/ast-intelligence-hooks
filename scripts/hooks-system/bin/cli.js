@@ -11,8 +11,8 @@ const fs = require('fs');
 const path = require('path');
 const env = require('../config/env');
 
-const command = process.argv[2];
-const args = process.argv.slice(3);
+let command = process.argv[2];
+let args = process.argv.slice(3);
 
 const HOOKS_ROOT = path.join(__dirname, '..');
 
@@ -623,12 +623,15 @@ Documentation:
   },
 
   version: () => {
-    const pkg = require('../package.json');
+    const pkg = require(path.join(__dirname, '../../../package.json'));
     console.log(`v${pkg.version}`);
   }
 };
 
-if (require.main === module) {
+function runCli(argv = process.argv) {
+  command = argv[2];
+  args = argv.slice(3);
+
   if (!command || !commands[command]) {
     commands.help();
     process.exit(command ? 1 : 0);
@@ -636,4 +639,8 @@ if (require.main === module) {
   commands[command]();
 }
 
-module.exports = { commands, proposeHumanIntent };
+if (require.main === module) {
+  runCli(process.argv);
+}
+
+module.exports = { commands, proposeHumanIntent, runCli };
