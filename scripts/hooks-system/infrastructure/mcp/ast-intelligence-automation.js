@@ -1208,6 +1208,25 @@ async function aiGateCheck() {
         const warnings = [];
         const autoFixes = [];
 
+        let policyBundle = null;
+        try {
+            if (fs.existsSync(EVIDENCE_FILE)) {
+                const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+                policyBundle = evidence.policy_bundle || null;
+            }
+        } catch (error) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Failed to read policy_bundle: ${error.message}\n`);
+            }
+        }
+
+        const PolicyBundleService = require('../../application/services/PolicyBundleService');
+        const policyBundleService = new PolicyBundleService();
+
+        if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
+            violations.push('❌ POLICY_BUNDLE_INVALID: No valid policy bundle. Run evidence:full-update to refresh.');
+        }
+
         const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
         if (evidenceMonitor.isStale()) {
             if (!allowEvidenceAutofix) {
@@ -1727,6 +1746,36 @@ function preFlightCheck(params) {
         };
     }
 
+    let policyBundle = null;
+    try {
+        if (fs.existsSync(EVIDENCE_FILE)) {
+            const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+            policyBundle = evidence.policy_bundle || null;
+        }
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] Failed to read policy_bundle from evidence: ${error.message}\n`);
+        }
+    }
+
+    const PolicyBundleService = require('../../application/services/PolicyBundleService');
+    const policyBundleService = new PolicyBundleService();
+
+    if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
+        return {
+            success: false,
+            allowed: false,
+            blocked: true,
+            framework_rules: [tokenEconomyRule],
+            reason: '🚫 POLICY_BUNDLE_MISSING_OR_EXPIRED: No valid policy bundle found',
+            action_required: 'REFRESH_EVIDENCE',
+            suggestion: 'Run evidence:full-update to generate a valid policy bundle before making changes',
+            policy_bundle_status: policyBundle ?
+                (policyBundleService.isExpired(policyBundle) ? 'EXPIRED' : 'INVALID') :
+                'MISSING'
+        };
+    }
+
     const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/.test(target_file);
 
     if (isTestFile) {
@@ -1810,7 +1859,8 @@ function preFlightCheck(params) {
         ast_analysis: astAnalysis,
         tdd_status: validation.tddStatus,
         phase: 'GREEN',
-        instruction: 'Implement the minimum code to make the test pass'
+        instruction: 'Implement the minimum code to make the test pass',
+        policy_bundle_id: policyBundle.policy_bundle_id
     };
 }
 
