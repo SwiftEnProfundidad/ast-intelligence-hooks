@@ -8,8 +8,9 @@ describe('PolicyBundleService', () => {
     it('creates a bundle with mandatory flag and persists to evidence structure', () => {
         const sut = makeSUT();
 
+        const allPlatforms = ['backend', 'frontend', 'ios', 'android'];
         const bundle = sut.createBundle({
-            platforms: ['ios', 'backend'],
+            platforms: allPlatforms,
             mandatory: true,
             enforcedAt: 'pre-commit'
         });
@@ -23,7 +24,8 @@ describe('PolicyBundleService', () => {
             ttl_minutes: 10
         });
 
-        expect(bundle.platforms).toEqual(expect.arrayContaining(['ios', 'backend']));
+        expect(bundle.platforms).toEqual(expect.arrayContaining(allPlatforms));
+        expect(bundle.platforms.length).toBe(4);
         expect(new Date(bundle.createdAt).getTime()).toBeGreaterThan(0);
         expect(new Date(bundle.expiresAt).getTime()).toBeGreaterThan(Date.now());
     });
