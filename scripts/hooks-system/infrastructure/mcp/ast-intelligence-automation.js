@@ -1786,19 +1786,41 @@ async function preFlightCheck(params) {
     const PolicyBundleService = require('../../application/services/PolicyBundleService');
     const policyBundleService = new PolicyBundleService();
 
-    if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
+    let rulesDigest = null;
+    try {
+        if (fs.existsSync(EVIDENCE_FILE)) {
+            const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+            rulesDigest = evidence.rules_digest || null;
+        }
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] Failed to read rules_digest from evidence: ${error.message}\n`);
+        }
+    }
+
+    const isRulesDigestValid = (digest) => {
+        if (!digest || !digest.expires_at) return false;
+        const expiresAt = new Date(digest.expires_at);
+        return Date.now() < expiresAt.getTime();
+    };
+
+    if (!policyBundle || !policyBundleService.isValid(policyBundle) || !isRulesDigestValid(rulesDigest)) {
         const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
         try {
-            process.stderr.write('[MCP] Policy bundle invalid/expired - triggering auto-refresh...\n');
+            const reason = !policyBundle || !policyBundleService.isValid(policyBundle)
+                ? 'Policy bundle invalid/expired'
+                : 'Rules digest missing/expired';
+            process.stderr.write(`[MCP] ${reason} - triggering auto-refresh...\n`);
             await evidenceMonitor.refresh();
 
             if (fs.existsSync(EVIDENCE_FILE)) {
                 const updatedEvidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
                 policyBundle = updatedEvidence.policy_bundle || null;
+                rulesDigest = updatedEvidence.rules_digest || null;
 
-                if (policyBundle && policyBundleService.isValid(policyBundle)) {
-                    process.stderr.write('[MCP] Policy bundle refreshed successfully - proceeding\n');
-                } else {
+                if (policyBundle && policyBundleService.isValid(policyBundle) && isRulesDigestValid(rulesDigest)) {
+                    process.stderr.write('[MCP] Policy bundle and rules digest refreshed successfully - proceeding\n');
+                } else if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
                     return {
                         success: false,
                         allowed: false,
@@ -1809,6 +1831,17 @@ async function preFlightCheck(params) {
                         suggestion: 'Evidence was refreshed but policy bundle is still invalid. Check .AI_EVIDENCE.json',
                         policy_bundle_status: 'INVALID_AFTER_REFRESH'
                     };
+                } else {
+                    return {
+                        success: false,
+                        allowed: false,
+                        blocked: true,
+                        framework_rules: [tokenEconomyRule],
+                        reason: '🚫 RULES_DIGEST_STILL_INVALID: Auto-refresh completed but rules digest still invalid/expired',
+                        action_required: 'CHECK_EVIDENCE',
+                        suggestion: 'Evidence was refreshed but rules digest is still invalid. Check .AI_EVIDENCE.json',
+                        rules_digest_status: 'INVALID_AFTER_REFRESH'
+                    };
                 }
             }
         } catch (error) {
@@ -1817,7 +1850,7 @@ async function preFlightCheck(params) {
                 allowed: false,
                 blocked: true,
                 framework_rules: [tokenEconomyRule],
-                reason: '🚫 POLICY_BUNDLE_AUTO_REFRESH_FAILED: Failed to auto-refresh evidence',
+                reason: '🚫 AUTO_REFRESH_FAILED: Failed to auto-refresh evidence',
                 action_required: 'MANUAL_REFRESH',
                 suggestion: `Auto-refresh failed: ${error.message}. Run evidence:full-update manually`,
                 policy_bundle_status: 'AUTO_REFRESH_FAILED',
