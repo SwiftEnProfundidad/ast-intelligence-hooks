@@ -1,6 +1,6 @@
 {
   "name": "pumuki-ast-hooks",
-  "version": "6.0.2",
+  "version": "6.0.3",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
@@ -80,12 +80,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/carlos/ast-intelligence-hooks.git"
+    "url": "https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git"
   },
   "bugs": {
-    "url": "https://github.com/carlos/ast-intelligence-hooks/issues"
+    "url": "https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues"
   },
-  "homepage": "https://github.com/carlos/ast-intelligence-hooks#readme",
+  "homepage": "https://github.com/SwiftEnProfundidad/ast-intelligence-hooks#readme",
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
