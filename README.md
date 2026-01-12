@@ -27,19 +27,19 @@ npx ast-hooks
 
 ### Pre‑write enforcement (block before writing)
 
-![Pre-write hook output](./assets/Hook_02.png)
+![Pre-write hook output](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/Hook_02.png)
 
 ### AI Gate (blocked example)
 
-![AI Gate blocked example](./assets/ai_gate.png)
+![AI Gate blocked example](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ai_gate.png)
 
 ### ai-start (bootstrap + evidence refresh)
 
-![ai-start output](./assets/ai-start.png)
+![ai-start output](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ai-start.png)
 
 ### Pre-flight check (in-memory validation)
 
-![pre-flight-check output](./assets/pre-flight-check.png)
+![pre-flight-check output](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/pre-flight-check.png)
 
 ### Interactive menu (orchestrator overview)
 
@@ -58,15 +58,15 @@ Documentation:
 
 ## Visual Overview
 
-![AST Intelligence System Overview](./assets/ast_intelligence_01.svg)
+![AST Intelligence System Overview](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_01.svg)
 
-![AST Intelligence Workflow](./assets/ast_intelligence_02.svg)
+![AST Intelligence Workflow](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_02.svg)
 
-![AST Intelligence Audit - Part 1](./assets/ast_intelligence_03.svg)
+![AST Intelligence Audit - Part 1](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_03.svg)
 
-![AST Intelligence Audit - Part 2](./assets/ast_intelligence_04.svg)
+![AST Intelligence Audit - Part 2](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_04.svg)
 
-![AST Intelligence Audit - Part 3](./assets/ast_intelligence_05.svg)
+![AST Intelligence Audit - Part 3](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_05.svg)
 
 ---
 
