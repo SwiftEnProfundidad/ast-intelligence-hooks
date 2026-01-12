@@ -561,7 +561,8 @@ function runTextScanner(root, findings) {
         if (targetCount < 2) {
           pushFileFinding('ios.spm.modular_architecture', 'low', file, 1, 1, 'Package.swift without multiple targets (weak modular architecture)', findings);
         }
-        if (!/Swinject|Needle|Resolver|Factory\b/.test(content)) {
+        const hasEmptyDependencies = /dependencies\s*:\s*\[\s*\]/.test(content);
+        if (!hasEmptyDependencies && !/Swinject|Needle|Resolver|Factory\b/.test(content)) {
           pushFileFinding('ios.spm.dependency_injection', 'low', file, 1, 1, 'No DI library hint found in Package.swift', findings);
         }
       }
@@ -601,7 +602,10 @@ function runTextScanner(root, findings) {
         pushFileFinding('ios.optionals.optional_binding', 'medium', file, 1, 1, 'Optional check != nil (prefer optional binding)', findings);
       }
       if (/:\s*Any\b|\bas\s*Any\b/.test(content)) {
-        pushFileFinding('ios.optionals.type_safety', 'medium', file, 1, 1, 'Usage of Any reduces type safety', findings);
+        const hasSecurityContext = /import\s+Security\b/.test(content) || /\bkSec[A-Za-z0-9_]+\b/.test(content);
+        if (!hasSecurityContext) {
+          pushFileFinding('ios.optionals.type_safety', 'medium', file, 1, 1, 'Usage of Any reduces type safety', findings);
+        }
       }
       if (/\.sink\s*\(/.test(content) && !/receiveCompletion\s*:\s*/.test(content)) {
         pushFileFinding('ios.combine.error_handling', 'medium', file, 1, 1, 'Combine sink without receiveCompletion handler', findings);
