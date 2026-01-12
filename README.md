@@ -1,7 +1,7 @@
 # Pumuki AST Intelligence Framework
 
  <p align="center">
-   <img src="./assets/logo.png" alt="Pumuki AST Intelligence Framework" width="800" />
+  <img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/logo.png" alt="Pumuki AST Intelligence Framework" width="800" />
  </p>
 
 Portable, project‑agnostic, multi‑platform enterprise framework to govern AI‑assisted development through AST analysis, deterministic evidence, AI Gate controls, and operational automation.
