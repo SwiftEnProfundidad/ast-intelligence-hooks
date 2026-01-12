@@ -1,9 +1,10 @@
-const fs = require('fs');
 const path = require('path');
-const glob = require('glob');
 
 jest.mock('fs');
 jest.mock('glob');
+
+const fs = require('fs');
+const glob = require('glob');
 
 jest.mock('../detectors/FeatureFirstCleanDetector', () => ({
   FeatureFirstCleanDetector: jest.fn()

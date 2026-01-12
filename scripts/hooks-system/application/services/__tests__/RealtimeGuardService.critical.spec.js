@@ -1,6 +1,5 @@
 const path = require('path');
 const fs = require('fs');
-const { getGitTreeState, isTreeBeyondLimit } = require('../GitTreeState');
 
 jest.mock('../GitTreeState');
 jest.mock('../IntelligentGitTreeMonitor');
@@ -8,6 +7,8 @@ jest.mock('../ContextDetectionEngine');
 jest.mock('../PlatformDetectionService');
 jest.mock('../AutonomousOrchestrator');
 jest.mock('../../use-cases/AutoExecuteAIStartUseCase');
+
+const { getGitTreeState, isTreeBeyondLimit } = require('../GitTreeState');
 
 const RealtimeGuardService = require('../RealtimeGuardService');
 
@@ -21,10 +22,10 @@ function makeSUT(options = {}) {
   };
   const service = new RealtimeGuardService(defaultOptions);
   jest.spyOn(fs, 'existsSync').mockReturnValue(true);
-  jest.spyOn(fs, 'mkdirSync').mockImplementation(() => {});
+  jest.spyOn(fs, 'mkdirSync').mockImplementation(() => { });
   jest.spyOn(fs, 'readFileSync').mockReturnValue('{}');
-  jest.spyOn(fs, 'writeFileSync').mockImplementation(() => {});
-  jest.spyOn(fs, 'appendFileSync').mockImplementation(() => {});
+  jest.spyOn(fs, 'writeFileSync').mockImplementation(() => { });
+  jest.spyOn(fs, 'appendFileSync').mockImplementation(() => { });
   jest.spyOn(fs, 'watch').mockReturnValue({ close: jest.fn() });
   return service;
 }
@@ -391,7 +392,7 @@ describe('RealtimeGuardService - Critical Methods', () => {
     it('should clear existing timer before starting new one', () => {
       const service = makeSUT();
       service.pollIntervalMs = 30000;
-      service.pollTimer = setInterval(() => {}, 1000);
+      service.pollTimer = setInterval(() => { }, 1000);
       const clearSpy = jest.spyOn(global, 'clearInterval');
       service.startEvidencePolling();
       expect(clearSpy).toHaveBeenCalled();
