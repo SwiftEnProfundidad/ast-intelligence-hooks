@@ -1,9 +1,6 @@
 const IntelligentGitTreeMonitor = require('../IntelligentGitTreeMonitor');
 const IntelligentCommitAnalyzer = require('../IntelligentCommitAnalyzer');
-const { getGitTreeState } = require('../GitTreeState');
-
-jest.mock('../IntelligentCommitAnalyzer');
-jest.mock('../GitTreeState');
+const GitTreeState = require('../GitTreeState');
 
 function makeSUT(options = {}) {
   const defaultOptions = {
@@ -17,7 +14,23 @@ function makeSUT(options = {}) {
 }
 
 describe('IntelligentGitTreeMonitor', () => {
+  let gitTreeStateSpy;
+  let analyzeSpy;
+  let readySpy;
+  let needsSpy;
+
   beforeEach(() => {
+    gitTreeStateSpy = jest.spyOn(GitTreeState, 'getGitTreeState').mockReset();
+    analyzeSpy = jest.spyOn(IntelligentCommitAnalyzer.prototype, 'analyzeAndSuggestCommits').mockReset();
+    readySpy = jest.spyOn(IntelligentCommitAnalyzer.prototype, 'getReadyCommits').mockReset();
+    needsSpy = jest.spyOn(IntelligentCommitAnalyzer.prototype, 'getNeedsAttention').mockReset();
+  });
+
+  afterEach(() => {
+    gitTreeStateSpy.mockRestore();
+    analyzeSpy.mockRestore();
+    readySpy.mockRestore();
+    needsSpy.mockRestore();
     jest.clearAllMocks();
   });
 
@@ -45,11 +58,14 @@ describe('IntelligentGitTreeMonitor', () => {
 
   describe('analyze', () => {
     it('should return clean action when git tree is clean', async () => {
-      getGitTreeState.mockReturnValue({
+      gitTreeStateSpy.mockReturnValue({
         uniqueCount: 0,
         stagedFiles: [],
         workingFiles: [],
       });
+      analyzeSpy.mockResolvedValue([]);
+      readySpy.mockReturnValue([]);
+      needsSpy.mockReturnValue([]);
       const monitor = makeSUT();
       const result = await monitor.analyze();
       expect(result.action).toBe('clean');
@@ -66,14 +82,11 @@ describe('IntelligentGitTreeMonitor', () => {
           platform: 'backend',
         },
       ];
-      const mockAnalyzer = {
-        analyzeAndSuggestCommits: jest.fn().mockResolvedValue([]),
-        getReadyCommits: jest.fn().mockReturnValue(mockReadyCommits),
-        getNeedsAttention: jest.fn().mockReturnValue([]),
-      };
-      IntelligentCommitAnalyzer.mockImplementation(() => mockAnalyzer);
+      analyzeSpy.mockResolvedValue([]);
+      readySpy.mockReturnValue(mockReadyCommits);
+      needsSpy.mockReturnValue([]);
 
-      getGitTreeState.mockReturnValue({
+      gitTreeStateSpy.mockReturnValue({
         uniqueCount: 2,
         stagedFiles: ['file1.ts'],
         workingFiles: ['file2.ts'],
@@ -93,14 +106,11 @@ describe('IntelligentGitTreeMonitor', () => {
         files: [`file${i}.ts`],
         fileCount: 1,
       }));
-      const mockAnalyzer = {
-        analyzeAndSuggestCommits: jest.fn().mockResolvedValue(manySuggestions),
-        getReadyCommits: jest.fn().mockReturnValue([]),
-        getNeedsAttention: jest.fn().mockReturnValue([]),
-      };
-      IntelligentCommitAnalyzer.mockImplementation(() => mockAnalyzer);
+      analyzeSpy.mockResolvedValue(manySuggestions);
+      readySpy.mockReturnValue([]);
+      needsSpy.mockReturnValue([]);
 
-      getGitTreeState.mockReturnValue({
+      gitTreeStateSpy.mockReturnValue({
         uniqueCount: 15,
         stagedFiles: [],
         workingFiles: Array.from({ length: 15 }, (_, i) => `file${i}.ts`),
@@ -118,14 +128,11 @@ describe('IntelligentGitTreeMonitor', () => {
         { feature: 'feature-a', files: ['file1.ts'], fileCount: 1 },
         { feature: 'feature-b', files: ['file2.ts'], fileCount: 1 },
       ];
-      const mockAnalyzer = {
-        analyzeAndSuggestCommits: jest.fn().mockResolvedValue(suggestions),
-        getReadyCommits: jest.fn().mockReturnValue([]),
-        getNeedsAttention: jest.fn().mockReturnValue([]),
-      };
-      IntelligentCommitAnalyzer.mockImplementation(() => mockAnalyzer);
+      analyzeSpy.mockResolvedValue(suggestions);
+      readySpy.mockReturnValue([]);
+      needsSpy.mockReturnValue([]);
 
-      getGitTreeState.mockReturnValue({
+      gitTreeStateSpy.mockReturnValue({
         uniqueCount: 2,
         stagedFiles: ['file1.ts'],
         workingFiles: ['file2.ts'],
@@ -141,11 +148,14 @@ describe('IntelligentGitTreeMonitor', () => {
 
   describe('notify', () => {
     it('should not notify when git tree is clean', async () => {
-      getGitTreeState.mockReturnValue({
+      gitTreeStateSpy.mockReturnValue({
         uniqueCount: 0,
         stagedFiles: [],
         workingFiles: [],
       });
+      analyzeSpy.mockResolvedValue([]);
+      readySpy.mockReturnValue([]);
+      needsSpy.mockReturnValue([]);
       const notifier = jest.fn();
       const monitor = makeSUT({ notifier });
       await monitor.notify();
@@ -161,14 +171,11 @@ describe('IntelligentGitTreeMonitor', () => {
           fileCount: 1,
         },
       ];
-      const mockAnalyzer = {
-        analyzeAndSuggestCommits: jest.fn().mockResolvedValue([]),
-        getReadyCommits: jest.fn().mockReturnValue(mockReadyCommits),
-        getNeedsAttention: jest.fn().mockReturnValue([]),
-      };
-      IntelligentCommitAnalyzer.mockImplementation(() => mockAnalyzer);
+      analyzeSpy.mockResolvedValue([]);
+      readySpy.mockReturnValue(mockReadyCommits);
+      needsSpy.mockReturnValue([]);
 
-      getGitTreeState.mockReturnValue({
+      gitTreeStateSpy.mockReturnValue({
         uniqueCount: 1,
         stagedFiles: ['file1.ts'],
         workingFiles: [],
