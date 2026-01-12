@@ -59,6 +59,25 @@ describe('intelligent-audit', () => {
     expect(mod.isViolationInStagedFiles('some/dir/.audit_tmp/AppCoordinator.123.staged.swift', stagedSet)).toBe(false);
     expect(mod.isViolationInStagedFiles('apps/ios/Application/AppCoordinator', stagedSet)).toBe(false);
   });
+
+  it('should refresh root timestamp when updating .AI_EVIDENCE.json', async () => {
+    const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
+    const previous = {
+      timestamp: '2026-01-12T08:47:48.064+01:00',
+      severity_metrics: { last_updated: '2026-01-12T08:47:48.064+01:00', total_violations: 0, by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 } },
+      ai_gate: { status: 'ALLOWED', scope: 'staging', last_check: '2026-01-12T08:47:48.064+01:00', violations: [], instruction: 'x', mandatory: true }
+    };
+    fs.writeFileSync(evidencePath, JSON.stringify(previous, null, 2));
+
+    const mod = require('../intelligent-audit');
+    expect(typeof mod.updateAIEvidence).toBe('function');
+
+    await mod.updateAIEvidence([], { passed: true, blockedBy: null }, { estimated: 1, percentUsed: 0, remaining: 1 });
+
+    const updated = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+    expect(updated.timestamp).toBeDefined();
+    expect(updated.timestamp).not.toBe(previous.timestamp);
+  });
 });
 
 describe('AI_EVIDENCE.json structure validation', () => {

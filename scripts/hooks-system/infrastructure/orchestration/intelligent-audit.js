@@ -623,6 +623,8 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
   try {
     const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
 
+    evidence.timestamp = formatLocalTimestamp();
+
     evidence.severity_metrics = {
       last_updated: formatLocalTimestamp(),
       total_violations: violations.length,
@@ -744,7 +746,7 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
     const detectedPlatforms = Object.keys(platformsEvidence).filter(p => platformsEvidence[p] && platformsEvidence[p].detected);
     const rulesSources = rulesRead.entries
       .filter(e => e.verified && e.sha256)
-      .map(e => ({ file: e.file, sha256: e.sha256, path: e.path }));
+      .map(e => ({ file: e.file, sha256: e.sha256, path: e.path, content: e.content || '' }));
 
     evidence.policy_bundle = policyBundleService.createBundle({
       platforms: detectedPlatforms,
@@ -836,6 +838,19 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
     evidence.semantic_snapshot = generateSemanticSnapshot(evidence, violations, gateResult);
 
     evidence.auto_intent = generateAutoIntent(evidence, violations, gateResult, stagedFiles);
+
+    const rulesDigestService = new RulesDigestService();
+    const allRulesContent = rulesSources.map(src => src.content || '').join('\n');
+    const compactDigest = rulesDigestService.generateCompactDigest(rulesSources, allRulesContent);
+    const ttlMinutes = 10;
+    const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000).toISOString();
+
+    evidence.rules_digest = {
+      ...compactDigest,
+      ttl_minutes: ttlMinutes,
+      expires_at: expiresAt
+    };
+
     fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
     console.log('[Intelligent Audit] ✅ .AI_EVIDENCE.json updated with complete format (ai_gate, severity_metrics, token_usage, git_flow, watchers, human_intent, semantic_snapshot)');
 
@@ -861,4 +876,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runIntelligentAudit, isViolationInStagedFiles, toRepoRelativePath };
+module.exports = { runIntelligentAudit, isViolationInStagedFiles, toRepoRelativePath, updateAIEvidence, formatLocalTimestamp };

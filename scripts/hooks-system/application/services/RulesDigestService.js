@@ -23,7 +23,8 @@ class RulesDigestService {
             verified: true,
             summary,
             sha256,
-            linesRead
+            linesRead,
+            content
         };
     }
 
@@ -47,6 +48,46 @@ class RulesDigestService {
         }
 
         return firstMeaningfulLine.trim().substring(0, 100);
+    }
+
+    generateCompactDigest(rulesSources, rulesContent) {
+        if (!rulesContent || typeof rulesContent !== 'string') {
+            return {
+                never_do: [],
+                must_do: [],
+                sources: rulesSources || [],
+                digest_sha256: null,
+                generated_at: new Date().toISOString()
+            };
+        }
+
+        const lines = rulesContent.split('\n');
+        const neverRules = [];
+        const mustRules = [];
+
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (trimmed.startsWith('❌') || /nunca|never|prohibido|forbidden/i.test(trimmed.toLowerCase())) {
+                if (trimmed.startsWith('❌') || trimmed.toLowerCase().includes('nunca') || trimmed.toLowerCase().includes('never')) {
+                    neverRules.push(trimmed.substring(0, 150));
+                }
+            } else if (trimmed.startsWith('✅')) {
+                mustRules.push(trimmed.substring(0, 150));
+            }
+        }
+
+        const digest = {
+            never_do: neverRules.slice(0, 20),
+            must_do: mustRules.slice(0, 20),
+            sources: rulesSources || [],
+            generated_at: new Date().toISOString()
+        };
+
+        const digestContent = JSON.stringify(digest);
+        const sha256 = crypto.createHash('sha256').update(digestContent, 'utf8').digest('hex');
+        digest.digest_sha256 = sha256;
+
+        return digest;
     }
 }
 

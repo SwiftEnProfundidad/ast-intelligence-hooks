@@ -44,4 +44,40 @@ describe('RulesDigestService', () => {
         expect(entry.verified).toBe(false);
         expect(entry.summary).toBe('not found');
     });
+
+    it('generates compact digest with never_do and must_do lists from rules sources', () => {
+        const rulesContent = [
+            '# Gold Rules',
+            '❌ NUNCA usar Singleton - usar Inyección de Dependencias',
+            '❌ NUNCA dejar catch vacíos - siempre loggear o propagar',
+            '✅ OBLIGATORIO seguir flujo BDD → TDD',
+            '✅ OBLIGATORIO verificar SOLID (SRP, OCP, LSP, ISP, DIP)',
+            'Some other text that is not a rule'
+        ].join('\n');
+
+        const rulesSources = [
+            {
+                file: 'rulesgold.mdc',
+                sha256: crypto.createHash('sha256').update(rulesContent, 'utf8').digest('hex'),
+                path: '/tmp/rulesgold.mdc'
+            }
+        ];
+
+        const sut = makeSUT();
+        const digest = sut.generateCompactDigest(rulesSources, rulesContent);
+
+        expect(digest).toBeDefined();
+        expect(digest.never_do).toBeDefined();
+        expect(Array.isArray(digest.never_do)).toBe(true);
+        expect(digest.never_do.length).toBeGreaterThan(0);
+        expect(digest.must_do).toBeDefined();
+        expect(Array.isArray(digest.must_do)).toBe(true);
+        expect(digest.must_do.length).toBeGreaterThan(0);
+        expect(digest.digest_sha256).toBeDefined();
+        expect(typeof digest.digest_sha256).toBe('string');
+        expect(digest.digest_sha256.length).toBe(64);
+
+        const digestSize = JSON.stringify(digest).length;
+        expect(digestSize).toBeLessThanOrEqual(4096);
+    });
 });
