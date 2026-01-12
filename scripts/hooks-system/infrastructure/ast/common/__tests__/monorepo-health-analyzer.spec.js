@@ -1,3 +1,6 @@
+jest.mock('fs');
+jest.mock('glob');
+
 const {
   buildDependencyGraph,
   detectCircularDependencies,
@@ -5,9 +8,6 @@ const {
   calculateHealthScore
 } = require('../monorepo-health-analyzer');
 const fs = require('fs');
-
-jest.mock('fs');
-jest.mock('glob');
 
 describe('monorepo-health-analyzer', () => {
   beforeEach(() => {

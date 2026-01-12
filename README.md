@@ -1,7 +1,7 @@
 # Pumuki AST Intelligence Framework
 
  <p align="center">
-  <img src="https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/logo.png" alt="Pumuki AST Intelligence Framework" width="800" />
+  <img src="https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/logo.png" alt="Pumuki AST Intelligence Framework" width="800" />
  </p>
 
 Portable, project‑agnostic, multi‑platform enterprise framework to govern AI‑assisted development through AST analysis, deterministic evidence, AI Gate controls, and operational automation.
@@ -27,19 +27,19 @@ npx ast-hooks
 
 ### Pre‑write enforcement (block before writing)
 
-![Pre-write hook output](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/Hook_02.png)
+![Pre-write hook output](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/Hook_02.png)
 
 ### AI Gate (blocked example)
 
-![AI Gate blocked example](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ai_gate.png)
+![AI Gate blocked example](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ai_gate.png)
 
 ### ai-start (bootstrap + evidence refresh)
 
-![ai-start output](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ai-start.png)
+![ai-start output](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ai-start.png)
 
 ### Pre-flight check (in-memory validation)
 
-![pre-flight-check output](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/pre-flight-check.png)
+![pre-flight-check output](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/pre-flight-check.png)
 
 ### Interactive menu (orchestrator overview)
 
@@ -58,15 +58,15 @@ Documentation:
 
 ## Visual Overview
 
-![AST Intelligence System Overview](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_01.svg)
+![AST Intelligence System Overview](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_01.svg)
 
-![AST Intelligence Workflow](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_02.svg)
+![AST Intelligence Workflow](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_02.svg)
 
-![AST Intelligence Audit - Part 1](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_03.svg)
+![AST Intelligence Audit - Part 1](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_03.svg)
 
-![AST Intelligence Audit - Part 2](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_04.svg)
+![AST Intelligence Audit - Part 2](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_04.svg)
 
-![AST Intelligence Audit - Part 3](https://raw.githubusercontent.com/SwiftEnProfundidad/ast-intelligence-hooks/main/assets/ast_intelligence_05.svg)
+![AST Intelligence Audit - Part 3](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_05.svg)
 
 ---
 

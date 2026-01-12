@@ -1,9 +1,13 @@
+jest.mock('child_process', () => ({
+  spawnSync: jest.fn(),
+}));
+
+const childProcess = require('child_process');
 const PlaybookRunner = require('../PlaybookRunner');
 const fs = require('fs');
 const path = require('path');
-const { spawnSync } = require('child_process');
 
-jest.mock('child_process');
+const { spawnSync } = childProcess;
 
 function makeSUT(options = {}) {
   return new PlaybookRunner(options);

@@ -1,9 +1,9 @@
+jest.mock('fs');
+jest.mock('child_process');
+
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-
-jest.mock('fs');
-jest.mock('child_process');
 
 const AUDIT_FILE = path.join(process.cwd(), '.audit_tmp', 'ast-summary.json');
 
@@ -34,7 +34,7 @@ describe('auto-fix-violations', () => {
     });
 
     it('should exit when audit file does not exist', () => {
-      const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => {});
+      const exitSpy = jest.spyOn(process, 'exit').mockImplementation(() => { });
       const stderrWriteSpy = jest.spyOn(process.stderr, 'write').mockImplementation(() => true);
       fs.existsSync.mockReturnValue(false);
       const loadAuditData = () => {
@@ -64,7 +64,7 @@ describe('auto-fix-violations', () => {
       const contentWithoutTodo = 'const x = 1;\nconst y = 2;';
       fs.existsSync.mockReturnValue(true);
       fs.readFileSync.mockReturnValue(contentWithTodo);
-      fs.writeFileSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => { });
       const fixComments = require('../auto-fix-violations').fixComments || (() => {
         const absPath = path.join(process.cwd(), filePath);
         if (!fs.existsSync(absPath)) return { fixed: 0, skipped: 1 };
@@ -98,7 +98,7 @@ describe('auto-fix-violations', () => {
       const contentWithoutLog = 'const x = 1;\nconst y = 2;';
       fs.existsSync.mockReturnValue(true);
       fs.readFileSync.mockReturnValue(contentWithLog);
-      fs.writeFileSync.mockImplementation(() => {});
+      fs.writeFileSync.mockImplementation(() => { });
       const fixConsoleLog = require('../auto-fix-violations').fixConsoleLog || (() => {
         const absPath = path.join(process.cwd(), filePath);
         if (!fs.existsSync(absPath)) return { fixed: 0, skipped: 1 };
