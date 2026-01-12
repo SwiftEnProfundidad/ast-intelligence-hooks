@@ -1,9 +1,9 @@
+jest.mock('../../state/HookSystemStateMachine');
+jest.mock('../../../infrastructure/telemetry/metrics-logger');
+
 const HookSystemScheduler = require('../HookSystemScheduler');
 const HookSystemStateMachine = require('../../state/HookSystemStateMachine');
 const { recordMetric } = require('../../../infrastructure/telemetry/metrics-logger');
-
-jest.mock('../../state/HookSystemStateMachine');
-jest.mock('../../../infrastructure/telemetry/metrics-logger');
 
 function makeSUT(options = {}) {
   const mockOrchestrator = {

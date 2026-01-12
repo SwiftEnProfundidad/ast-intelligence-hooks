@@ -1,8 +1,8 @@
+jest.mock('fs');
+
 const { findDuplicateContent, findBrokenLinks } = require('../documentation-analyzer');
 const fs = require('fs');
 const path = require('path');
-
-jest.mock('fs');
 
 describe('documentation-analyzer', () => {
   beforeEach(() => {

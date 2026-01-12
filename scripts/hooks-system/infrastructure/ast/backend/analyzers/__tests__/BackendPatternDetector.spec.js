@@ -1,8 +1,8 @@
+jest.mock('fs');
+
 const { BackendPatternDetector } = require('../BackendPatternDetector');
 const fs = require('fs');
 const path = require('path');
-
-jest.mock('fs');
 
 function makeSUT(projectRoot = '/test/project') {
   return new BackendPatternDetector(projectRoot);

@@ -1,7 +1,11 @@
-const { GitOperations } = require('../GitOperations');
-const { execSync } = require('child_process');
+jest.mock('child_process', () => ({
+  execSync: jest.fn(),
+}));
 
-jest.mock('child_process');
+const childProcess = require('child_process');
+const { GitOperations } = require('../GitOperations');
+
+const { execSync } = childProcess;
 
 function makeMockGitOutput(files) {
   return files.join('\n') + (files.length > 0 ? '\n' : '');
