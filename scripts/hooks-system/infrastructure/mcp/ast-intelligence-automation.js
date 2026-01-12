@@ -1208,6 +1208,50 @@ async function aiGateCheck() {
         const warnings = [];
         const autoFixes = [];
 
+        let policyBundle = null;
+        try {
+            if (fs.existsSync(EVIDENCE_FILE)) {
+                const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+                policyBundle = evidence.policy_bundle || null;
+            }
+        } catch (error) {
+            if (process.env.DEBUG) {
+                process.stderr.write(`[MCP] Failed to read policy_bundle: ${error.message}\n`);
+            }
+        }
+
+        const PolicyBundleService = require('../../application/services/PolicyBundleService');
+        const policyBundleService = new PolicyBundleService();
+
+        if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
+            if (!allowEvidenceAutofix) {
+                violations.push('❌ POLICY_BUNDLE_INVALID: No valid policy bundle. Run evidence:full-update to refresh.');
+            } else {
+                const elapsed = Date.now() - startedAt;
+                const remaining = Math.max(150, gateTimeoutMs - elapsed);
+                const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+                const refreshResult = await runWithTimeout(() => evidenceMonitor.refresh(), remaining);
+                if (refreshResult.ok) {
+                    autoFixes.push('✅ Policy bundle was invalid/expired - AUTO-FIXED by refreshing evidence');
+                    try {
+                        if (fs.existsSync(EVIDENCE_FILE)) {
+                            const updatedEvidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+                            policyBundle = updatedEvidence.policy_bundle || null;
+                        }
+                    } catch (error) {
+                        if (process.env.DEBUG) {
+                            process.stderr.write(`[MCP] Failed to re-read policy_bundle after refresh: ${error.message}\n`);
+                        }
+                    }
+                } else if (refreshResult.timedOut) {
+                    violations.push('❌ POLICY_BUNDLE_INVALID: Auto-fix timed out. Run evidence:full-update to refresh.');
+                } else {
+                    const msg = refreshResult.error && refreshResult.error.message ? refreshResult.error.message : String(refreshResult.error);
+                    violations.push(`❌ POLICY_BUNDLE_INVALID: Auto-fix failed: ${msg}`);
+                }
+            }
+        }
+
         const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
         if (evidenceMonitor.isStale()) {
             if (!allowEvidenceAutofix) {
@@ -1714,7 +1758,7 @@ function suggestHumanIntent() {
  * 2. Proposed code doesn't violate critical rules (using AST Intelligence!)
  * 3. Code patterns are compliant with platform rules
  */
-function preFlightCheck(params) {
+async function preFlightCheck(params) {
     const { action_type, target_file, proposed_code, bypass_tdd } = params;
     const tokenEconomyRule = 'TOKEN_ECONOMY: Prioritize token/cost efficiency. Batch related checks, avoid redundant scans, reuse cached context where possible, ask the user for missing info instead of exploring blindly, and keep responses concise.';
 
@@ -1725,6 +1769,94 @@ function preFlightCheck(params) {
             error: 'action_type and target_file are required',
             hint: 'Call with: { action_type: "edit"|"create_file", target_file: "/path/to/file.ts", proposed_code: "..." }'
         };
+    }
+
+    let policyBundle = null;
+    try {
+        if (fs.existsSync(EVIDENCE_FILE)) {
+            const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+            policyBundle = evidence.policy_bundle || null;
+        }
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] Failed to read policy_bundle from evidence: ${error.message}\n`);
+        }
+    }
+
+    const PolicyBundleService = require('../../application/services/PolicyBundleService');
+    const policyBundleService = new PolicyBundleService();
+
+    let rulesDigest = null;
+    try {
+        if (fs.existsSync(EVIDENCE_FILE)) {
+            const evidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+            rulesDigest = evidence.rules_digest || null;
+        }
+    } catch (error) {
+        if (process.env.DEBUG) {
+            process.stderr.write(`[MCP] Failed to read rules_digest from evidence: ${error.message}\n`);
+        }
+    }
+
+    const isRulesDigestValid = (digest) => {
+        if (!digest || !digest.expires_at) return false;
+        const expiresAt = new Date(digest.expires_at);
+        return Date.now() < expiresAt.getTime();
+    };
+
+    if (!policyBundle || !policyBundleService.isValid(policyBundle) || !isRulesDigestValid(rulesDigest)) {
+        const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+        try {
+            const reason = !policyBundle || !policyBundleService.isValid(policyBundle)
+                ? 'Policy bundle invalid/expired'
+                : 'Rules digest missing/expired';
+            process.stderr.write(`[MCP] ${reason} - triggering auto-refresh...\n`);
+            await evidenceMonitor.refresh();
+
+            if (fs.existsSync(EVIDENCE_FILE)) {
+                const updatedEvidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+                policyBundle = updatedEvidence.policy_bundle || null;
+                rulesDigest = updatedEvidence.rules_digest || null;
+
+                if (policyBundle && policyBundleService.isValid(policyBundle) && isRulesDigestValid(rulesDigest)) {
+                    process.stderr.write('[MCP] Policy bundle and rules digest refreshed successfully - proceeding\n');
+                } else if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
+                    return {
+                        success: false,
+                        allowed: false,
+                        blocked: true,
+                        framework_rules: [tokenEconomyRule],
+                        reason: '🚫 POLICY_BUNDLE_STILL_INVALID: Auto-refresh completed but policy bundle still invalid',
+                        action_required: 'CHECK_EVIDENCE',
+                        suggestion: 'Evidence was refreshed but policy bundle is still invalid. Check .AI_EVIDENCE.json',
+                        policy_bundle_status: 'INVALID_AFTER_REFRESH'
+                    };
+                } else {
+                    return {
+                        success: false,
+                        allowed: false,
+                        blocked: true,
+                        framework_rules: [tokenEconomyRule],
+                        reason: '🚫 RULES_DIGEST_STILL_INVALID: Auto-refresh completed but rules digest still invalid/expired',
+                        action_required: 'CHECK_EVIDENCE',
+                        suggestion: 'Evidence was refreshed but rules digest is still invalid. Check .AI_EVIDENCE.json',
+                        rules_digest_status: 'INVALID_AFTER_REFRESH'
+                    };
+                }
+            }
+        } catch (error) {
+            return {
+                success: false,
+                allowed: false,
+                blocked: true,
+                framework_rules: [tokenEconomyRule],
+                reason: '🚫 AUTO_REFRESH_FAILED: Failed to auto-refresh evidence',
+                action_required: 'MANUAL_REFRESH',
+                suggestion: `Auto-refresh failed: ${error.message}. Run evidence:full-update manually`,
+                policy_bundle_status: 'AUTO_REFRESH_FAILED',
+                error: error.message
+            };
+        }
     }
 
     const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/.test(target_file);
@@ -1810,7 +1942,8 @@ function preFlightCheck(params) {
         ast_analysis: astAnalysis,
         tdd_status: validation.tddStatus,
         phase: 'GREEN',
-        instruction: 'Implement the minimum code to make the test pass'
+        instruction: 'Implement the minimum code to make the test pass',
+        policy_bundle_id: policyBundle.policy_bundle_id
     };
 }
 
