@@ -5,6 +5,15 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.1] - 2026-01-12
+
+### Fixed
+- **Connection pooling rule scope**: `common.network.missing_connection_pooling` ahora solo aplica a archivos JS/TS.
+- **SPM DI detection**: `ios.spm.dependency_injection` no se reporta cuando `Package.swift` declara `dependencies: []`.
+- **Swift Any + Security**: `ios.optionals.type_safety` ignora usos de `Any` cuando hay contexto `Security` (Keychain).
+- **Unused Foundation import**: se reconoce el uso de tipos Foundation desde contenido de archivo para evitar falsos positivos.
+- **Package metadata**: se elimina dependencia autorreferente `pumuki-ast-hooks` en `package.json`.
+
 ## [5.5.60] - 2026-01-08
 
 ### Fixed
