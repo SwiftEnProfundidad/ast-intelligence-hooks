@@ -1,5 +1,9 @@
-const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('../GitTreeState');
+jest.mock('child_process', () => ({
+  execSync: jest.fn(),
+}));
+
 const childProcess = require('child_process');
+const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('../GitTreeState');
 
 function makeMockGitStatus(stagedFiles = [], workingFiles = [], untrackedFiles = []) {
   const lines = [];
@@ -16,21 +20,17 @@ function makeMockGitStatus(stagedFiles = [], workingFiles = [], untrackedFiles =
 }
 
 describe('GitTreeState', () => {
-  let execSyncSpy;
-
   beforeEach(() => {
-    execSyncSpy = jest.spyOn(childProcess, 'execSync');
-    execSyncSpy.mockReset();
+    childProcess.execSync.mockReset();
   });
 
   afterEach(() => {
-    execSyncSpy.mockRestore();
     jest.clearAllMocks();
   });
 
   describe('getGitTreeState', () => {
     it('should return state with empty arrays when git tree is clean', () => {
-      execSyncSpy.mockReturnValue('');
+      childProcess.execSync.mockReturnValue('');
       const state = getGitTreeState();
       expect(state.stagedFiles).toEqual([]);
       expect(state.workingFiles).toEqual([]);
@@ -39,7 +39,7 @@ describe('GitTreeState', () => {
 
     it('should detect staged files', () => {
       const statusOutput = makeMockGitStatus(['file1.ts', 'file2.ts'], [], []);
-      execSyncSpy.mockReturnValue(statusOutput);
+      childProcess.execSync.mockReturnValue(statusOutput);
       const state = getGitTreeState();
       expect(state.stagedFiles).toHaveLength(2);
       expect(state.stagedCount).toBe(2);
@@ -47,7 +47,7 @@ describe('GitTreeState', () => {
 
     it('should detect working directory files', () => {
       const statusOutput = makeMockGitStatus([], ['file1.ts', 'file2.ts'], []);
-      execSyncSpy.mockReturnValue(statusOutput);
+      childProcess.execSync.mockReturnValue(statusOutput);
       const state = getGitTreeState();
       expect(state.workingFiles).toHaveLength(2);
       expect(state.workingCount).toBe(2);
@@ -55,21 +55,21 @@ describe('GitTreeState', () => {
 
     it('should detect untracked files', () => {
       const statusOutput = makeMockGitStatus([], [], ['new-file.ts']);
-      execSyncSpy.mockReturnValue(statusOutput);
+      childProcess.execSync.mockReturnValue(statusOutput);
       const state = getGitTreeState();
       expect(state.workingFiles).toContain('new-file.ts');
     });
 
     it('should calculate unique count correctly', () => {
       const statusOutput = makeMockGitStatus(['file1.ts'], ['file2.ts'], ['file3.ts']);
-      execSyncSpy.mockReturnValue(statusOutput);
+      childProcess.execSync.mockReturnValue(statusOutput);
       const state = getGitTreeState();
       expect(state.uniqueCount).toBe(3);
     });
 
     it('should handle files in both staged and working', () => {
       const statusOutput = 'M  file1.ts\n M file1.ts';
-      execSyncSpy.mockReturnValue(statusOutput);
+      childProcess.execSync.mockReturnValue(statusOutput);
       const state = getGitTreeState();
       expect(state.stagedFiles).toContain('file1.ts');
       expect(state.workingFiles).toContain('file1.ts');
@@ -77,17 +77,17 @@ describe('GitTreeState', () => {
     });
 
     it('should use custom repo root', () => {
-      execSyncSpy.mockReturnValue('');
+      childProcess.execSync.mockReturnValue('');
       const customRoot = '/custom/repo';
       getGitTreeState({ repoRoot: customRoot });
-      expect(execSync).toHaveBeenCalledWith(
+      expect(childProcess.execSync).toHaveBeenCalledWith(
         'git status --porcelain',
         expect.objectContaining({ cwd: customRoot })
       );
     });
 
     it('should handle git errors gracefully', () => {
-      execSyncSpy.mockImplementation(() => {
+      childProcess.execSync.mockImplementation(() => {
         throw new Error('Not a git repository');
       });
       const state = getGitTreeState();
