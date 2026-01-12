@@ -1,14 +1,15 @@
-const { BDDTDDWorkflowRules } = require('../BDDTDDWorkflowRules');
-const glob = require('glob');
-const fs = require('fs');
-
-jest.mock('glob');
+jest.mock('glob', () => ({
+  sync: jest.fn(),
+}));
 jest.mock('fs');
 jest.mock('../../ast-core', () => ({
   pushFinding: jest.fn(),
   pushFileFinding: jest.fn()
 }));
 
+const glob = require('glob');
+const fs = require('fs');
+const { BDDTDDWorkflowRules } = require('../BDDTDDWorkflowRules');
 const { pushFileFinding } = require('../../ast-core');
 
 describe('BDDTDDWorkflowRules', () => {
