@@ -1224,7 +1224,32 @@ async function aiGateCheck() {
         const policyBundleService = new PolicyBundleService();
 
         if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
-            violations.push('❌ POLICY_BUNDLE_INVALID: No valid policy bundle. Run evidence:full-update to refresh.');
+            if (!allowEvidenceAutofix) {
+                violations.push('❌ POLICY_BUNDLE_INVALID: No valid policy bundle. Run evidence:full-update to refresh.');
+            } else {
+                const elapsed = Date.now() - startedAt;
+                const remaining = Math.max(150, gateTimeoutMs - elapsed);
+                const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+                const refreshResult = await runWithTimeout(() => evidenceMonitor.refresh(), remaining);
+                if (refreshResult.ok) {
+                    autoFixes.push('✅ Policy bundle was invalid/expired - AUTO-FIXED by refreshing evidence');
+                    try {
+                        if (fs.existsSync(EVIDENCE_FILE)) {
+                            const updatedEvidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+                            policyBundle = updatedEvidence.policy_bundle || null;
+                        }
+                    } catch (error) {
+                        if (process.env.DEBUG) {
+                            process.stderr.write(`[MCP] Failed to re-read policy_bundle after refresh: ${error.message}\n`);
+                        }
+                    }
+                } else if (refreshResult.timedOut) {
+                    violations.push('❌ POLICY_BUNDLE_INVALID: Auto-fix timed out. Run evidence:full-update to refresh.');
+                } else {
+                    const msg = refreshResult.error && refreshResult.error.message ? refreshResult.error.message : String(refreshResult.error);
+                    violations.push(`❌ POLICY_BUNDLE_INVALID: Auto-fix failed: ${msg}`);
+                }
+            }
         }
 
         const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
@@ -1733,7 +1758,7 @@ function suggestHumanIntent() {
  * 2. Proposed code doesn't violate critical rules (using AST Intelligence!)
  * 3. Code patterns are compliant with platform rules
  */
-function preFlightCheck(params) {
+async function preFlightCheck(params) {
     const { action_type, target_file, proposed_code, bypass_tdd } = params;
     const tokenEconomyRule = 'TOKEN_ECONOMY: Prioritize token/cost efficiency. Batch related checks, avoid redundant scans, reuse cached context where possible, ask the user for missing info instead of exploring blindly, and keep responses concise.';
 
@@ -1762,18 +1787,43 @@ function preFlightCheck(params) {
     const policyBundleService = new PolicyBundleService();
 
     if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
-        return {
-            success: false,
-            allowed: false,
-            blocked: true,
-            framework_rules: [tokenEconomyRule],
-            reason: '🚫 POLICY_BUNDLE_MISSING_OR_EXPIRED: No valid policy bundle found',
-            action_required: 'REFRESH_EVIDENCE',
-            suggestion: 'Run evidence:full-update to generate a valid policy bundle before making changes',
-            policy_bundle_status: policyBundle ?
-                (policyBundleService.isExpired(policyBundle) ? 'EXPIRED' : 'INVALID') :
-                'MISSING'
-        };
+        const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+        try {
+            process.stderr.write('[MCP] Policy bundle invalid/expired - triggering auto-refresh...\n');
+            await evidenceMonitor.refresh();
+
+            if (fs.existsSync(EVIDENCE_FILE)) {
+                const updatedEvidence = JSON.parse(fs.readFileSync(EVIDENCE_FILE, 'utf8'));
+                policyBundle = updatedEvidence.policy_bundle || null;
+
+                if (policyBundle && policyBundleService.isValid(policyBundle)) {
+                    process.stderr.write('[MCP] Policy bundle refreshed successfully - proceeding\n');
+                } else {
+                    return {
+                        success: false,
+                        allowed: false,
+                        blocked: true,
+                        framework_rules: [tokenEconomyRule],
+                        reason: '🚫 POLICY_BUNDLE_STILL_INVALID: Auto-refresh completed but policy bundle still invalid',
+                        action_required: 'CHECK_EVIDENCE',
+                        suggestion: 'Evidence was refreshed but policy bundle is still invalid. Check .AI_EVIDENCE.json',
+                        policy_bundle_status: 'INVALID_AFTER_REFRESH'
+                    };
+                }
+            }
+        } catch (error) {
+            return {
+                success: false,
+                allowed: false,
+                blocked: true,
+                framework_rules: [tokenEconomyRule],
+                reason: '🚫 POLICY_BUNDLE_AUTO_REFRESH_FAILED: Failed to auto-refresh evidence',
+                action_required: 'MANUAL_REFRESH',
+                suggestion: `Auto-refresh failed: ${error.message}. Run evidence:full-update manually`,
+                policy_bundle_status: 'AUTO_REFRESH_FAILED',
+                error: error.message
+            };
+        }
     }
 
     const isTestFile = /\.(spec|test)\.(js|ts|swift|kt)$/.test(target_file);
