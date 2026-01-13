@@ -88,19 +88,31 @@ class ConcreteDependencyStrategy extends DIStrategy {
     }
 
     _isConcreteService(typename) {
+        const normalized = this._normalizeTypeName(typename);
         const hasConcretePattern = this.config.concretePatterns.some(pattern =>
-            new RegExp(pattern).test(typename)
+            new RegExp(pattern).test(normalized)
         );
 
         const hasProtocolIndicator = this.config.protocolIndicators.some(indicator =>
-            typename.includes(indicator)
+            normalized.includes(indicator)
         );
 
-        return hasConcretePattern && !hasProtocolIndicator;
+        const isLikelyProtocol = /UseCase$|Repository$/.test(normalized) && !/Impl$/.test(normalized);
+
+        return hasConcretePattern && !hasProtocolIndicator && !isLikelyProtocol;
     }
 
     _isLikelyProtocolType(typename) {
-        const normalized = typename
+        const normalized = this._normalizeTypeName(typename);
+
+        if (/Impl$/.test(normalized)) {
+            return false;
+        }
+        return /UseCase$|Repository$/.test(normalized);
+    }
+
+    _normalizeTypeName(typename) {
+        return typename
             .replace(/^(any|some)\s+/, '')
             .replace(/[!?]/g, '')
             .replace(/<.*>/g, '')
@@ -109,11 +121,6 @@ class ConcreteDependencyStrategy extends DIStrategy {
             .pop()
             ?.trim()
             .replace(/[^A-Za-z0-9_].*$/, '') || typename;
-
-        if (/Impl$/.test(normalized)) {
-            return false;
-        }
-        return /UseCase$|Repository$/.test(normalized);
     }
 }
 

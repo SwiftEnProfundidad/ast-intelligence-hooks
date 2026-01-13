@@ -1,3 +1,17 @@
+# Release Notes - v6.0.14
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **iOS DIP detector**: `UseCase`/`Repository` protocol-like types are never treated as concrete.
+
+---
+
 # Release Notes - v6.0.13
 
 **Release Date**: January 13, 2026  
