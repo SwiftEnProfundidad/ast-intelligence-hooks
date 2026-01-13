@@ -94,7 +94,8 @@ describe('DIValidationService', () => {
                 { 'key.name': 'loginUseCase', 'key.typename': 'LoginUseCase' },
                 { 'key.name': 'logoutUseCase', 'key.typename': 'LogoutUseCase & Sendable' },
                 { 'key.name': 'currentUserUseCase', 'key.typename': 'Domain.UserRetrievalUseCase?' },
-                { 'key.name': 'registerUseCase', 'key.typename': 'RegisterUseCase<Auth>' }
+                { 'key.name': 'registerUseCase', 'key.typename': 'RegisterUseCase<Auth>' },
+                { 'key.name': 'loginUseCase2', 'key.typename': 'LoginUseCase,' }
             ];
 
             await diValidationService.validateDependencyInjection(
