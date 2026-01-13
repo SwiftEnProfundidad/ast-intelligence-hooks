@@ -107,7 +107,8 @@ class ConcreteDependencyStrategy extends DIStrategy {
             .split('&')[0]
             .split('.')
             .pop()
-            ?.trim() || typename;
+            ?.trim()
+            .replace(/[^A-Za-z0-9_].*$/, '') || typename;
 
         if (/Impl$/.test(normalized)) {
             return false;
