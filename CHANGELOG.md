@@ -5,6 +5,11 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.8] - 2026-01-13
+
+### Fixed
+- **DIP detector for iOS**: generic type parameters constrained by protocols (e.g. `<Client: APIClientProtocol>`) are no longer flagged as concrete dependencies.
+
 ## [6.0.7] - 2026-01-13
 
 ### Fixed

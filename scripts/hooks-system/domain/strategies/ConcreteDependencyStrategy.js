@@ -18,7 +18,7 @@ class ConcreteDependencyStrategy extends DIStrategy {
             const typename = prop['key.typename'] || '';
             const propName = prop['key.name'] || '';
 
-            if (this._shouldSkipType(typename, propName, className)) {
+            if (this._shouldSkipType(typename, propName, className, context)) {
                 continue;
             }
 
@@ -34,12 +34,16 @@ class ConcreteDependencyStrategy extends DIStrategy {
         return violations;
     }
 
-    _shouldSkipType(typename, propName, className) {
+    _shouldSkipType(typename, propName, className, context) {
         if (this.config.allowedTypes.includes(typename)) {
             return true;
         }
 
         if (this._isGenericTypeParameter(typename, propName, className)) {
+            return true;
+        }
+
+        if (this._isGenericConstraintType(typename, className, context)) {
             return true;
         }
 
@@ -60,6 +64,23 @@ class ConcreteDependencyStrategy extends DIStrategy {
         );
 
         return isSingleLetter || (isCamelCase && hasContextHint);
+    }
+
+    _isGenericConstraintType(typename, className, context) {
+        const content = context?.analyzer?.fileContent || '';
+        if (!content) return false;
+
+        const classPattern = new RegExp(`\\b(class|struct)\\s+${className}\\s*<([^>]+)>`);
+        const match = content.match(classPattern);
+        if (!match) return false;
+
+        const genericClause = match[2];
+        const constraints = genericClause.split(',').map((part) => part.trim());
+
+        return constraints.some((constraint) => {
+            const [name, bound] = constraint.split(':').map((value) => value.trim());
+            return name === typename && bound;
+        });
     }
 
     _isConcreteService(typename) {
