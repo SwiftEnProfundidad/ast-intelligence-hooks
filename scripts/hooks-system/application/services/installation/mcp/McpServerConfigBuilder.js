@@ -22,7 +22,9 @@ class McpServerConfigBuilder {
 
     build() {
         const serverId = this.computeServerIdForRepo(this.targetRoot);
+        const evidenceWatcherServerId = this.computeEvidenceWatcherServerIdForRepo(this.targetRoot);
         const entrypoint = this.resolveAutomationEntrypoint();
+        const evidenceEntrypoint = this.resolveEvidenceWatcherEntrypoint();
         const nodePath = this.resolveNodeBinary();
 
         const mcpConfig = {
@@ -35,6 +37,14 @@ class McpServerConfigBuilder {
                         AUTO_COMMIT_ENABLED: 'false',
                         AUTO_PUSH_ENABLED: 'false',
                         AUTO_PR_ENABLED: 'false'
+                    }
+                },
+                [evidenceWatcherServerId]: {
+                    command: nodePath,
+                    args: [evidenceEntrypoint],
+                    env: {
+                        REPO_ROOT: this.targetRoot,
+                        MCP_MAC_NOTIFICATIONS: 'true'
                     }
                 }
             }
@@ -62,6 +72,25 @@ class McpServerConfigBuilder {
         return path.join(this.targetRoot, 'scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js');
     }
 
+    resolveEvidenceWatcherEntrypoint() {
+        const candidates = [
+            this.hookSystemRoot
+                ? path.join(this.hookSystemRoot, 'infrastructure', 'mcp', 'evidence-watcher.js')
+                : null,
+            path.join(this.targetRoot, 'scripts', 'hooks-system', 'infrastructure', 'mcp', 'evidence-watcher.js')
+        ].filter(Boolean);
+
+        for (const candidate of candidates) {
+            try {
+                if (fs.existsSync(candidate)) return candidate;
+            } catch (error) {
+                this.logger?.warn?.('MCP_EVIDENCE_ENTRYPOINT_CHECK_FAILED', { candidate, error: error.message });
+            }
+        }
+
+        return path.join(this.targetRoot, 'scripts/hooks-system/infrastructure/mcp/evidence-watcher.js');
+    }
+
     resolveNodeBinary() {
         let nodePath = process.execPath;
         if (nodePath && fs.existsSync(nodePath)) return nodePath;
@@ -79,6 +108,17 @@ class McpServerConfigBuilder {
     computeServerIdForRepo(repoRoot) {
         const legacyServerId = 'ast-intelligence-automation';
         const forced = (env.get('MCP_SERVER_ID', '') || '').trim();
+        if (forced.length > 0) return forced;
+
+        const repoName = path.basename(repoRoot || process.cwd());
+        const slug = slugifyId(repoName) || 'repo';
+        const fp = this.computeRepoFingerprint(repoRoot);
+        return `${legacyServerId}-${slug}-${fp}`;
+    }
+
+    computeEvidenceWatcherServerIdForRepo(repoRoot) {
+        const legacyServerId = 'ai-evidence-watcher';
+        const forced = (env.get('MCP_EVIDENCE_SERVER_ID', '') || '').trim();
         if (forced.length > 0) return forced;
 
         const repoName = path.basename(repoRoot || process.cwd());
