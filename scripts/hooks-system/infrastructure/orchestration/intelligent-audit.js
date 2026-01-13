@@ -414,6 +414,41 @@ function resolveAuditTmpDir() {
   return path.join(process.cwd(), '.audit_tmp');
 }
 
+function loadExclusions() {
+  const configPath = path.join(process.cwd(), 'config', 'ast-exclusions.json');
+  try {
+    if (!fs.existsSync(configPath)) {
+      return {};
+    }
+    const payload = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    return payload.exclusions || {};
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.debug(`[Intelligent Audit] Failed to load exclusions: ${error.message}`);
+    }
+    return {};
+  }
+}
+
+function isViolationExcluded(violation, exclusions) {
+  const ruleId = violation.ruleId || violation.rule || '';
+  if (!ruleId) return false;
+
+  const rules = exclusions.rules || {};
+  const rule = rules[ruleId];
+  if (!rule) return false;
+
+  const patterns = []
+    .concat(rule.files || [])
+    .concat(rule.paths || [])
+    .concat(rule.globs || []);
+
+  if (patterns.length === 0) return true;
+
+  const filePath = toRepoRelativePath(violation.filePath || violation.file || '');
+  return patterns.some((pattern) => filePath.includes(pattern));
+}
+
 /**
  * Main orchestration function
  * Called by audit.sh after AST analysis completes
@@ -424,6 +459,11 @@ async function runIntelligentAudit() {
 
     const rawViolations = loadRawViolations();
     console.log(`[Intelligent Audit] Loaded ${rawViolations.length} violations from AST`);
+    const exclusions = loadExclusions();
+    const filteredViolations = rawViolations.filter(v => !isViolationExcluded(v, exclusions));
+    if (filteredViolations.length !== rawViolations.length) {
+      console.log(`[Intelligent Audit] Excluded ${rawViolations.length - filteredViolations.length} violations via config`);
+    }
 
     const autoEvidenceTrigger = String(env.get('AUTO_EVIDENCE_TRIGGER', process.env.AUTO_EVIDENCE_TRIGGER || '') || '').trim().toLowerCase();
     const isAutoEvidenceRefresh = autoEvidenceTrigger === 'auto';
@@ -436,13 +476,13 @@ async function runIntelligentAudit() {
 
     if (isRepoScope) {
       console.log('[Intelligent Audit] Gate scope: REPOSITORY');
-      violationsForGate = rawViolations;
-      violationsForEvidence = rawViolations;
+      violationsForGate = filteredViolations;
+      violationsForEvidence = filteredViolations;
     } else {
       const stagedFiles = getStagedFiles();
       const stagedSet = new Set((Array.isArray(stagedFiles) ? stagedFiles : []).map(toRepoRelativePath));
 
-      const stagedViolations = rawViolations.filter(v => {
+      const stagedViolations = filteredViolations.filter(v => {
         const violationPath = toRepoRelativePath(v.filePath || v.file || '');
         return isViolationInStagedFiles(violationPath, stagedSet);
       });
@@ -876,4 +916,12 @@ if (require.main === module) {
   });
 }
 
-module.exports = { runIntelligentAudit, isViolationInStagedFiles, toRepoRelativePath, updateAIEvidence, formatLocalTimestamp };
+module.exports = {
+  runIntelligentAudit,
+  isViolationInStagedFiles,
+  toRepoRelativePath,
+  updateAIEvidence,
+  formatLocalTimestamp,
+  loadExclusions,
+  isViolationExcluded
+};

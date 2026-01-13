@@ -47,6 +47,10 @@ class ConcreteDependencyStrategy extends DIStrategy {
             return true;
         }
 
+        if (this._isUseCaseProtocolBound(typename, className, context)) {
+            return true;
+        }
+
         if (this._isGenericConstraintType(typename, className, context)) {
             return true;
         }
@@ -80,11 +84,39 @@ class ConcreteDependencyStrategy extends DIStrategy {
 
         const genericClause = match[2];
         const constraints = genericClause.split(',').map((part) => part.trim());
+        const normalizedTypename = this._normalizeTypeName(typename);
 
         return constraints.some((constraint) => {
             const [name, bound] = constraint.split(':').map((value) => value.trim());
-            return name === typename && bound;
+            return this._normalizeTypeName(name) === normalizedTypename && bound;
         });
+    }
+
+    _isUseCaseProtocolBound(typename, className, context) {
+        const content = context?.analyzer?.fileContent || '';
+        if (!content) return false;
+
+        const classPattern = new RegExp(`\\b(class|struct)\\s+${className}\\s*<([^>]+)>`);
+        const match = content.match(classPattern);
+        if (!match) return false;
+
+        const genericClause = match[2];
+        const constraints = genericClause.split(',').map((part) => part.trim());
+        const normalizedTypename = this._normalizeTypeName(typename);
+
+        for (const constraint of constraints) {
+            const [name, bound] = constraint.split(':').map((value) => value.trim());
+            if (this._normalizeTypeName(name) !== normalizedTypename || !bound) {
+                continue;
+            }
+
+            const normalizedBound = this._normalizeTypeName(bound);
+            if (/UseCaseProtocol$/.test(normalizedBound)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     _isConcreteService(typename) {

@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const os = require('os');
 
 describe('intelligent-audit', () => {
   it('should export module', () => {
@@ -58,6 +59,43 @@ describe('intelligent-audit', () => {
     expect(mod.isViolationInStagedFiles('.audit_tmp/AppCoordinator.123.staged.swift', stagedSet)).toBe(false);
     expect(mod.isViolationInStagedFiles('some/dir/.audit_tmp/AppCoordinator.123.staged.swift', stagedSet)).toBe(false);
     expect(mod.isViolationInStagedFiles('apps/ios/Application/AppCoordinator', stagedSet)).toBe(false);
+  });
+
+  it('should exclude violations based on ast-exclusions config', () => {
+    const mod = require('../intelligent-audit');
+
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ast-audit-'));
+    const previousCwd = process.cwd();
+    try {
+      process.chdir(tmpDir);
+
+      const configDir = path.join(tmpDir, 'config');
+      fs.mkdirSync(configDir, { recursive: true });
+      fs.writeFileSync(path.join(configDir, 'ast-exclusions.json'), JSON.stringify({
+        exclusions: {
+          rules: {
+            'ios.solid.dip.concrete_dependency': {
+              files: ['apps/ios/Infrastructure/Repositories/Auth/AuthLoginRepositoryImpl.swift']
+            }
+          }
+        }
+      }));
+
+      const exclusions = mod.loadExclusions();
+      const violation = {
+        ruleId: 'ios.solid.dip.concrete_dependency',
+        filePath: 'apps/ios/Infrastructure/Repositories/Auth/AuthLoginRepositoryImpl.swift'
+      };
+      const otherViolation = {
+        ruleId: 'ios.solid.dip.concrete_dependency',
+        filePath: 'apps/ios/Infrastructure/Repositories/Auth/AuthLogoutRepositoryImpl.swift'
+      };
+
+      expect(mod.isViolationExcluded(violation, exclusions)).toBe(true);
+      expect(mod.isViolationExcluded(otherViolation, exclusions)).toBe(false);
+    } finally {
+      process.chdir(previousCwd);
+    }
   });
 
   it('should refresh root timestamp when updating .AI_EVIDENCE.json', async () => {
