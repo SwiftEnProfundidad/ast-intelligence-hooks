@@ -154,14 +154,18 @@ class iOSForbiddenLiteralsAnalyzer {
 
     analyzeTypeCasts(asExpressions, sf, findings, pushFinding) {
         if (!sf || typeof sf.getFilePath !== 'function') return;
+        const fullText = sf.getFullText();
+        const filePath = sf.getFilePath();
+        const hasSecurityImport = /import\s+Security\b/.test(fullText);
+        const isKeychainHelper = /KeychainHelper\.swift$/i.test(filePath);
+        if (hasSecurityImport || isKeychainHelper) return;
         asExpressions.forEach((expr) => {
-            const fullText = sf.getFullText();
             const exprIndex = expr.getStart();
             const lineStart = fullText.lastIndexOf('\n', exprIndex) + 1;
             const lineEnd = fullText.indexOf('\n', exprIndex);
             const fullLine = fullText.substring(lineStart, lineEnd === -1 ? undefined : lineEnd);
 
-            const isInTestFile = /\.(spec|test)\.(swift)$/i.test(sf.getFilePath());
+            const isInTestFile = /\.(spec|test)\.(swift)$/i.test(filePath);
             const isTypeAssertion = /as\s+(UserRole|OrderStatus|UserStatus|AlertStatus)/i.test(fullLine);
 
             if (isInTestFile || isTypeAssertion) return;
