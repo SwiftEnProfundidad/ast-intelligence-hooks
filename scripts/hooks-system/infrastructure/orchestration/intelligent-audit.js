@@ -578,7 +578,7 @@ function getStagedFiles() {
   const { execSync } = require('child_process');
 
   try {
-    const result = execSync('git diff --cached --name-only', { encoding: 'utf8' });
+    const result = execSync('git diff --cached --name-only --diff-filter=ACMRT', { encoding: 'utf8' });
     return result.trim().split('\n').filter(f => f);
   } catch (error) {
     process.stderr.write(`[Intelligent Audit] ⚠️  Failed to read staged files: ${toErrorMessage(error)}\n`);
