@@ -451,6 +451,30 @@ npm run ast:refresh
 
 ---
 
+## 10. Rule Exclusions (`ast-exclusions.json`)
+
+Use `config/ast-exclusions.json` to suppress specific rules for specific files.
+
+Example:
+
+```json
+{
+  "exclusions": {
+    "rules": {
+      "ios.solid.dip.concrete_dependency": {
+        "files": [
+          "apps/ios/Infrastructure/Repositories/Auth/AuthLoginRepositoryImpl.swift"
+        ]
+      }
+    }
+  }
+}
+```
+
+Rules without `files`/`paths`/`globs` are treated as global exclusions.
+
+---
+
 ## 11. Typical Enterprise Use Cases
 
 - Long‑running feature development with AI assistance.
