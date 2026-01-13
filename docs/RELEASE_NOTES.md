@@ -1,3 +1,17 @@
+# Release Notes - v6.0.8
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **iOS DIP detector**: protocol-constrained generics (e.g. `<Client: APIClientProtocol>`) are treated as abstract dependencies.
+
+---
+
 # Release Notes - v6.0.7
 
 **Release Date**: January 13, 2026  

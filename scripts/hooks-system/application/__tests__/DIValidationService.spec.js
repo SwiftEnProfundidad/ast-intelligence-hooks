@@ -77,5 +77,22 @@ describe('DIValidationService', () => {
 
             expect(mockAnalyzer.pushFinding).not.toHaveBeenCalled();
         });
+
+        it('should skip generic constraints that bind to protocols', async () => {
+            mockAnalyzer.fileContent = 'final class TestViewModel<Client: APIClientProtocol> { }';
+            const properties = [
+                { 'key.name': 'apiClient', 'key.typename': 'Client' }
+            ];
+
+            await diValidationService.validateDependencyInjection(
+                mockAnalyzer,
+                properties,
+                'TestViewModel.swift',
+                'TestViewModel',
+                10
+            );
+
+            expect(mockAnalyzer.pushFinding).not.toHaveBeenCalled();
+        });
     });
 });
