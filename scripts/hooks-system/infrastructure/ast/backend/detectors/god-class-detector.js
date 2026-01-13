@@ -21,7 +21,9 @@ function analyzeGodClasses(sourceFile, findings, {
         return;
     }
 
-    for (const cls of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
+    const classes = sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration);
+
+    for (const cls of classes) {
         const className = cls.getName() || '';
         const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
         if (isValueObject) continue;
@@ -110,7 +112,7 @@ function analyzeGodClasses(sourceFile, findings, {
         if (isMassiveFile) signalCount++;
 
         if (!isUnderThreshold && (signalCount >= 2 || isAbsoluteGod)) {
-            console.error(`[GOD CLASS DEBUG] ${className}: methods=${methodsCount}, props=${propertiesCount}, lines=${lineCount}, complexity=${complexity}, concerns=${concernCount}, isAbsoluteGod=${isAbsoluteGod}, signalCount=${signalCount}`);
+            console.error(`[GOD CLASS DEBUG] ${className}: methods=${methodsCount}, props=${propertiesCount}, lines=${lineCount}, complexity ${complexity}, concerns ${concernCount}, isAbsoluteGod=${isAbsoluteGod}, signalCount=${signalCount}`);
             pushFinding("backend.antipattern.god_classes", "critical", sourceFile, cls,
                 `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
                 findings
