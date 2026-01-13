@@ -28,6 +28,40 @@ class iOSASTIntelligentAnalyzer {
     this.functions = [];
     this.properties = [];
     this.closures = [];
+    this.exclusions = this.loadExclusions();
+  }
+
+  loadExclusions() {
+    const { getRepoRoot } = require(path.join(__dirname, '../../ast-core'));
+    const repoRoot = getRepoRoot();
+    const exclusionPath = path.join(repoRoot, 'config', 'ast-exclusions.json');
+    try {
+      if (!fs.existsSync(exclusionPath)) {
+        return {};
+      }
+      const payload = JSON.parse(fs.readFileSync(exclusionPath, 'utf8'));
+      return payload.exclusions || {};
+    } catch (error) {
+      if (process.env.DEBUG) {
+        console.debug(`[iOSASTIntelligentAnalyzer] Failed to load exclusions: ${error.message}`);
+      }
+      return {};
+    }
+  }
+
+  isExcluded(ruleId, filePath) {
+    const rules = this.exclusions.rules || {};
+    const rule = rules[ruleId];
+    if (!rule) return false;
+
+    const patterns = []
+      .concat(rule.files || [])
+      .concat(rule.paths || [])
+      .concat(rule.globs || []);
+
+    if (patterns.length === 0) return true;
+
+    return patterns.some((pattern) => filePath.includes(pattern));
   }
 
   resolveAuditTmpDir(repoRoot) {
@@ -212,6 +246,9 @@ class iOSASTIntelligentAnalyzer {
 
 
   pushFinding(ruleId, severity, filePath, line, message) {
+    if (this.isExcluded(ruleId, filePath)) {
+      return;
+    }
     this.findings.push({
       ruleId,
       severity: severity.toUpperCase(),

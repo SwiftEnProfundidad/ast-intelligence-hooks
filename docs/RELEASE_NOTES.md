@@ -1,3 +1,33 @@
+# Release Notes - v6.0.16
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **Exclude patterns**: `excludePatterns` now prevent unintended global exclusions in intelligent-audit.
+
+---
+
+# Release Notes - v6.0.15
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **Exclusions-aware gate**: `ast-exclusions.json` filters violations for gate/evidence in intelligent-audit.
+- **iOS DIP generics**: `any` generic constraint names now match normalized bounds.
+- **iOS AST exclusions**: rule exclusions are applied per file in the iOS analyzer.
+
+---
+
 # Release Notes - v6.0.14
 
 **Release Date**: January 13, 2026  
