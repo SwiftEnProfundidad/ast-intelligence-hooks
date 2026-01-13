@@ -5,6 +5,18 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.0.16] - 2026-01-13
+
+### Fixed
+- **Exclude patterns**: `excludePatterns` now prevent unintended global exclusions in intelligent-audit.
+
+## [6.0.15] - 2026-01-13
+
+### Fixed
+- **Exclusions-aware gate**: `ast-exclusions.json` now filters violations for gate/evidence in intelligent-audit.
+- **iOS DIP generics**: `any` generic constraint names now match their normalized bounds to avoid false positives.
+- **iOS AST exclusions**: iOS AST analyzer now respects rule exclusions per file.
+
 ## [6.0.14] - 2026-01-13
 
 ### Fixed
