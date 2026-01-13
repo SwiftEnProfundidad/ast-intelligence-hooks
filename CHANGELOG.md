@@ -5,6 +5,14 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.0] - 2026-01-13
+
+### Added
+
+- **MCP evidence watcher auto-config**: `ast-install` now configures `ai-evidence-watcher` alongside the automation MCP server in `.cursor/mcp.json` and `.windsurf/mcp.json`.
+- **Idempotent MCP merge**: installer preserves user MCP servers, removes only legacy framework IDs, and avoids duplicated entries across re-installs.
+- **macOS notifications**: `MCP_MAC_NOTIFICATIONS` is enabled by default for `ai-evidence-watcher`.
+
 ## [6.0.16] - 2026-01-13
 
 ### Fixed

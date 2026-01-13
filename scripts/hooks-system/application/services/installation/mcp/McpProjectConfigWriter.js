@@ -37,12 +37,24 @@ class McpProjectConfigWriter {
             if (fs.existsSync(filePath)) {
                 const existing = JSON.parse(fs.readFileSync(filePath, 'utf8'));
                 if (!existing.mcpServers) existing.mcpServers = {};
+
+                const newServerIds = Object.keys(mcpConfig.mcpServers || {});
+                const prefixesToDedupe = ['ast-intelligence-automation-', 'ai-evidence-watcher-'];
+
                 Object.keys(existing.mcpServers).forEach(id => {
-                    if (id.startsWith('ast-intelligence-automation-') && id !== serverId) {
+                    const shouldDedupe = prefixesToDedupe.some(prefix => id.startsWith(prefix));
+                    if (!shouldDedupe) {
+                        return;
+                    }
+
+                    if (!newServerIds.includes(id)) {
                         delete existing.mcpServers[id];
                     }
                 });
-                existing.mcpServers[serverId] = mcpConfig.mcpServers[serverId];
+
+                newServerIds.forEach(id => {
+                    existing.mcpServers[id] = mcpConfig.mcpServers[id];
+                });
                 finalConfig = existing;
             }
 
