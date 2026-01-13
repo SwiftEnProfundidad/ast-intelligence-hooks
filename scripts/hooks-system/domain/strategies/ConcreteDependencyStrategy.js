@@ -104,8 +104,10 @@ class ConcreteDependencyStrategy extends DIStrategy {
             .replace(/^(any|some)\s+/, '')
             .replace(/[!?]/g, '')
             .replace(/<.*>/g, '')
+            .split('&')[0]
             .split('.')
-            .pop() || typename;
+            .pop()
+            ?.trim() || typename;
 
         if (/Impl$/.test(normalized)) {
             return false;
