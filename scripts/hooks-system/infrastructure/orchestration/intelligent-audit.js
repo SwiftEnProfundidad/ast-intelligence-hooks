@@ -438,15 +438,30 @@ function isViolationExcluded(violation, exclusions) {
   const rule = rules[ruleId];
   if (!rule) return false;
 
-  const patterns = []
-    .concat(rule.files || [])
-    .concat(rule.paths || [])
-    .concat(rule.globs || []);
+  const files = rule.files || [];
+  const paths = rule.paths || [];
+  const globs = rule.globs || [];
+  const excludeFiles = rule.excludeFiles || [];
+  const excludePaths = rule.excludePaths || [];
+  const excludePatterns = rule.excludePatterns || [];
 
-  if (patterns.length === 0) return true;
+  const hasSelectors = files.length || paths.length || globs.length || excludeFiles.length || excludePaths.length || excludePatterns.length;
+  if (!hasSelectors) return true;
 
   const filePath = toRepoRelativePath(violation.filePath || violation.file || '');
-  return patterns.some((pattern) => filePath.includes(pattern));
+
+  if (files.some((pattern) => filePath.includes(pattern))) return true;
+  if (paths.some((pattern) => filePath.includes(pattern))) return true;
+  if (globs.some((pattern) => filePath.includes(pattern))) return true;
+  if (excludeFiles.some((pattern) => filePath.includes(pattern))) return true;
+  if (excludePaths.some((pattern) => filePath.includes(pattern))) return true;
+
+  for (const pattern of excludePatterns) {
+    const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+    if (regex.test(filePath)) return true;
+  }
+
+  return false;
 }
 
 /**

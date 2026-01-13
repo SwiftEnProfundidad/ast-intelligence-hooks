@@ -76,6 +76,9 @@ describe('intelligent-audit', () => {
           rules: {
             'ios.solid.dip.concrete_dependency': {
               files: ['apps/ios/Infrastructure/Repositories/Auth/AuthLoginRepositoryImpl.swift']
+            },
+            'ios.solid.dip.exclude_patterns': {
+              excludePatterns: ['**/*Auth*Repository*.swift']
             }
           }
         }
@@ -90,9 +93,19 @@ describe('intelligent-audit', () => {
         ruleId: 'ios.solid.dip.concrete_dependency',
         filePath: 'apps/ios/Infrastructure/Repositories/Auth/AuthLogoutRepositoryImpl.swift'
       };
+      const patternViolation = {
+        ruleId: 'ios.solid.dip.exclude_patterns',
+        filePath: 'apps/ios/Infrastructure/Repositories/Auth/AuthLoginRepositoryImpl.swift'
+      };
+      const patternOther = {
+        ruleId: 'ios.solid.dip.exclude_patterns',
+        filePath: 'apps/ios/Infrastructure/Repositories/User/UserRepositoryImpl.swift'
+      };
 
       expect(mod.isViolationExcluded(violation, exclusions)).toBe(true);
       expect(mod.isViolationExcluded(otherViolation, exclusions)).toBe(false);
+      expect(mod.isViolationExcluded(patternViolation, exclusions)).toBe(true);
+      expect(mod.isViolationExcluded(patternOther, exclusions)).toBe(false);
     } finally {
       process.chdir(previousCwd);
     }
