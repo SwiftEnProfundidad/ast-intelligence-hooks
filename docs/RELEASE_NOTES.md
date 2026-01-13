@@ -1,3 +1,17 @@
+# Release Notes - v6.0.16
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **Exclude patterns**: `excludePatterns` now prevent unintended global exclusions in intelligent-audit.
+
+---
+
 # Release Notes - v6.0.15
 
 **Release Date**: January 13, 2026  

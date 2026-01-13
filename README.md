@@ -464,6 +464,9 @@ Example:
       "ios.solid.dip.concrete_dependency": {
         "files": [
           "apps/ios/Infrastructure/Repositories/Auth/AuthLoginRepositoryImpl.swift"
+        ],
+        "excludePatterns": [
+          "**/*Auth*Repository*.swift"
         ]
       }
     }
