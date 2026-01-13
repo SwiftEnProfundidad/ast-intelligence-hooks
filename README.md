@@ -55,6 +55,10 @@ Documentation:
 - `CHANGELOG.md` (Release notes and changes)
 - Keychain/Security casts are exempted from `ios.types.forbidden_type_cast` to avoid false positives in secure storage implementations.
 
+Release 6.0.6:
+- Keychain/Security casts are exempted from `ios.types.forbidden_type_cast` to avoid false positives in secure storage implementations.
+- Staging-only detection now ignores deleted files when building the file list.
+
 ---
 
 ## Visual Overview

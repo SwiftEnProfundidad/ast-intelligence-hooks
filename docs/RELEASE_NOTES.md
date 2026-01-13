@@ -1,3 +1,18 @@
+# Release Notes - v6.0.6
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **Keychain/Security casts**: `ios.types.forbidden_type_cast` ignores `Security` contexts to avoid false positives.
+- **Staging gate**: deleted files are excluded from the staged file list for gate evaluation.
+
+---
+
 # Release Notes - v5.5.25
 
 **Release Date**: January 4, 2026

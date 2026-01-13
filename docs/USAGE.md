@@ -12,6 +12,13 @@
 
 ---
 
+## Recent Changes (v6.0.6)
+
+- Keychain/Security casts are exempted from `ios.types.forbidden_type_cast` to avoid false positives.
+- Staging gate evaluation ignores deleted files when assembling the staged file list.
+
+---
+
 ## Minimal Example (5 minutes)
 
 ### Step 1: Install
