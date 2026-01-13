@@ -58,7 +58,7 @@ function getCurrentBranchSafe() {
 
 function getStagedFilesSafe() {
   try {
-    const output = execSync('git diff --cached --name-only', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const output = execSync('git diff --cached --name-only --diff-filter=ACMRT', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
     return output.trim().split('\n').filter(Boolean);
   } catch (e) {
     return [];

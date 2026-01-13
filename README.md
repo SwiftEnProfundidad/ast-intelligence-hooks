@@ -53,6 +53,7 @@ Documentation:
 
 - `docs/USAGE.md` (Interactive Menu, non‑interactive `AUDIT_OPTION`, and typical flows)
 - `CHANGELOG.md` (Release notes and changes)
+- Keychain/Security casts are exempted from `ios.types.forbidden_type_cast` to avoid false positives in secure storage implementations.
 
 ---
 
