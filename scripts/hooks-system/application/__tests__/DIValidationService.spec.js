@@ -92,7 +92,8 @@ describe('DIValidationService', () => {
         it('should skip protocol-named concrete-like types', async () => {
             const properties = [
                 { 'key.name': 'loginUseCase', 'key.typename': 'LoginUseCase' },
-                { 'key.name': 'logoutUseCase', 'key.typename': 'LogoutUseCase' }
+                { 'key.name': 'logoutUseCase', 'key.typename': 'LogoutUseCase' },
+                { 'key.name': 'currentUserUseCase', 'key.typename': 'Domain.UserRetrievalUseCase?' }
             ];
 
             await diValidationService.validateDependencyInjection(
