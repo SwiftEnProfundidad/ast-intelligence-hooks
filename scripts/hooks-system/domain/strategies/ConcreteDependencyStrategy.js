@@ -103,6 +103,7 @@ class ConcreteDependencyStrategy extends DIStrategy {
         const normalized = typename
             .replace(/^(any|some)\s+/, '')
             .replace(/[!?]/g, '')
+            .replace(/<.*>/g, '')
             .split('.')
             .pop() || typename;
 
