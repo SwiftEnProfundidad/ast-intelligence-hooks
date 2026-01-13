@@ -12,6 +12,23 @@ class McpProtocolHandler {
         this.buffer = Buffer.alloc(0);
     }
 
+    sendNotificationMessage(level, message) {
+        const payload = {
+            jsonrpc: '2.0',
+            method: 'notifications/message',
+            params: {
+                level,
+                message
+            }
+        };
+
+        this.outputStream.write(JSON.stringify(payload) + '\n');
+
+        if (typeof this.outputStream.flush === 'function') {
+            this.outputStream.flush();
+        }
+    }
+
     start(messageHandler) {
         if (process.env.DEBUG) {
             process.stderr.write('[MCP] Protocol handler starting...\n');

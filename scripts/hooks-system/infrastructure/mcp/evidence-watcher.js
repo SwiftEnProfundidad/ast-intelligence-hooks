@@ -7,13 +7,18 @@
  */
 
 const env = require('../../config/env');
+const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process');
 const McpProtocolHandler = require('./services/McpProtocolHandler');
 const EvidenceService = require('./services/EvidenceService');
 const UnifiedLogger = require('../../application/services/logging/UnifiedLogger');
 
 const MCP_VERSION = '1.0.0';
 const MAX_EVIDENCE_AGE = 3 * 60 * 1000;
+
+const NOTIFICATION_COOLDOWN_MS = 3000;
+let lastNotificationAt = 0;
 
 // Initialize Logger
 const repoRoot = process.env.REPO_ROOT || process.cwd();
@@ -29,6 +34,45 @@ const logger = new UnifiedLogger({
 
 const evidenceService = new EvidenceService(repoRoot, logger);
 const protocolHandler = new McpProtocolHandler(process.stdin, process.stdout, logger);
+
+const evidenceFilePath = path.join(repoRoot, '.AI_EVIDENCE.json');
+
+const enableMacNotifications = String(process.env.MCP_MAC_NOTIFICATIONS || '').trim().toLowerCase() === 'true';
+const sendMacNotification = (title, message) => {
+    if (!enableMacNotifications) {
+        return;
+    }
+
+    const safeTitle = String(title).replace(/"/g, '\\"');
+    const safeMessage = String(message).replace(/"/g, '\\"');
+    exec(`osascript -e "display notification \"${safeMessage}\" with title \"${safeTitle}\""`, {
+        env: process.env
+    }, () => {
+    });
+};
+
+const notifyEvidenceChanged = () => {
+    const now = Date.now();
+    if (now - lastNotificationAt < NOTIFICATION_COOLDOWN_MS) {
+        return;
+    }
+
+    lastNotificationAt = now;
+    const status = evidenceService.checkStatus();
+    const message = `🤖 AI Evidence Updated: ${status.status}`;
+    protocolHandler.sendNotificationMessage('info', message);
+    sendMacNotification('AI Evidence Updated', message);
+};
+
+try {
+    fs.watch(evidenceFilePath, { persistent: true }, (eventType) => {
+        if (eventType === 'change' || eventType === 'rename') {
+            notifyEvidenceChanged();
+        }
+    });
+} catch (err) {
+    if (logger) logger.warn('EVIDENCE_WATCHER_ERROR', { error: err.message });
+}
 
 if (logger) logger.info('MCP_SERVER_STARTED');
 

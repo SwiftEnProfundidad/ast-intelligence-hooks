@@ -51,6 +51,7 @@ scripts/hooks-system/.hook-system/
 
 # IDE-specific configurations (user-specific)
 .windsurf/
+!.windsurf/skills/
 .cursor/mcp.json
 .cursor/settings.json
 
