@@ -5,6 +5,12 @@ All notable changes to `@pumuki-ast-intelligence-hooks` will be documented in th
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.1] - 2026-01-13
+
+### Fixed
+
+- **God class detector loop**: Fixed premature exit when encountering ValueObject/DTO/Entity classes. The detector now correctly continues analyzing all classes in a file instead of stopping after the first skipped class.
+
 ## [6.1.0] - 2026-01-13
 
 ### Added
