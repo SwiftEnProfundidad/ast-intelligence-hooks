@@ -21,10 +21,10 @@ function analyzeGodClasses(sourceFile, findings, {
         return;
     }
 
-    sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
+    for (const cls of sourceFile.getDescendantsOfKind(SyntaxKind.ClassDeclaration)) {
         const className = cls.getName() || '';
         const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
-        if (isValueObject) return;
+        if (isValueObject) continue;
 
         const methodsCount = cls.getMethods().length;
         const propertiesCount = cls.getProperties().length;
@@ -70,7 +70,7 @@ function analyzeGodClasses(sourceFile, findings, {
                 `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
                 findings
             );
-            return;
+            continue;
         }
 
         const isMassiveFile = lineCount > softMax;
@@ -88,7 +88,7 @@ function analyzeGodClasses(sourceFile, findings, {
                     findings
                 );
             }
-            return;
+            continue;
         }
 
         const methodsZ = godClassBaseline.robustZ(methodsCount, godClassBaseline.med.methodsCount, godClassBaseline.mad.methodsCount);
@@ -116,7 +116,7 @@ function analyzeGodClasses(sourceFile, findings, {
                 findings
             );
         }
-    });
+    }
 }
 
 module.exports = {
