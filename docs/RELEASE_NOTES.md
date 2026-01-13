@@ -1,3 +1,17 @@
+# Release Notes - v6.0.7
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **God Class detection (backend)**: baseline-first by default; optional hard cap via env; detector always runs (with or without baseline).
+
+---
+
 # Release Notes - v5.5.25
 
 **Release Date**: January 4, 2026
