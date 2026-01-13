@@ -1,3 +1,17 @@
+# Release Notes - v6.0.10
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **iOS DIP detector**: protocol-like types are detected even with module prefixes or optional markers (e.g. `Domain.LoginUseCase?`).
+
+---
+
 # Release Notes - v6.0.9
 
 **Release Date**: January 13, 2026  

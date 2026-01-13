@@ -100,10 +100,16 @@ class ConcreteDependencyStrategy extends DIStrategy {
     }
 
     _isLikelyProtocolType(typename) {
-        if (/Impl$/.test(typename)) {
+        const normalized = typename
+            .replace(/^(any|some)\s+/, '')
+            .replace(/[!?]/g, '')
+            .split('.')
+            .pop() || typename;
+
+        if (/Impl$/.test(normalized)) {
             return false;
         }
-        return /UseCase$|Repository$/.test(typename);
+        return /UseCase$|Repository$/.test(normalized);
     }
 }
 
