@@ -1,3 +1,17 @@
+# Release Notes - v6.0.13
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **iOS DIP detector**: protocol-like types are detected even with trailing punctuation (e.g. `LoginUseCase,`).
+
+---
+
 # Release Notes - v6.0.12
 
 **Release Date**: January 13, 2026  
