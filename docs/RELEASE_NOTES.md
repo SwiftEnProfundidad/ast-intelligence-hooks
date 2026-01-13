@@ -1,4 +1,4 @@
-# Release Notes - v6.0.6
+# Release Notes - v6.0.7
 
 **Release Date**: January 13, 2026  
 **Type**: Patch Release  
@@ -8,8 +8,7 @@
 
 ## ✅ Fixes
 
-- **Keychain/Security casts**: `ios.types.forbidden_type_cast` ignores `Security` contexts to avoid false positives.
-- **Staging gate**: deleted files are excluded from the staged file list for gate evaluation.
+- **God Class detection (backend)**: baseline-first by default; optional hard cap via env; detector always runs (with or without baseline).
 
 ---
 

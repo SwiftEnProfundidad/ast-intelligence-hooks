@@ -59,6 +59,9 @@ Release 6.0.6:
 - Keychain/Security casts are exempted from `ios.types.forbidden_type_cast` to avoid false positives in secure storage implementations.
 - Staging-only detection now ignores deleted files when building the file list.
 
+Release 6.0.7:
+- God Class detection (backend): baseline-first by default; optional hard cap via env; detector always runs (with or without baseline).
+
 ---
 
 ## Visual Overview

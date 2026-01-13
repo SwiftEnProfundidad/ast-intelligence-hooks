@@ -310,9 +310,19 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.config.missing_validation", "warning", sf, sf, "Environment variables without validation - consider Joi or class-validator", findings);
     }
 
-    if (godClassBaseline) {
-      analyzeGodClasses(sf, findings, { SyntaxKind, pushFinding, godClassBaseline });
-    }
+    const hardMaxLines = env.getNumber('AST_GODCLASS_HARD_MAX_LINES', 0);
+    const softMaxLines = env.getNumber('AST_GODCLASS_SOFT_MAX_LINES', 500);
+    const absoluteGodLines = env.getNumber('AST_GODCLASS_ABSOLUTE_LINES', 1000);
+    const underThresholdLines = env.getNumber('AST_GODCLASS_UNDER_THRESHOLD_LINES', 300);
+    analyzeGodClasses(sf, findings, {
+      SyntaxKind,
+      pushFinding,
+      godClassBaseline,
+      hardMaxLines,
+      softMaxLines,
+      absoluteGodLines,
+      underThresholdLines
+    });
 
     if (!isRealBackendAppFile) {
       return;

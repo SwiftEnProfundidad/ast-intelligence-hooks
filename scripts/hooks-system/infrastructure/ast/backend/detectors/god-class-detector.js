@@ -1,7 +1,15 @@
 /**
  * God Class detector extracted from ast-backend.js to keep responsibilities separated.
  */
-function analyzeGodClasses(sourceFile, findings, { SyntaxKind, pushFinding, godClassBaseline }) {
+function analyzeGodClasses(sourceFile, findings, {
+    SyntaxKind,
+    pushFinding,
+    godClassBaseline,
+    hardMaxLines,
+    softMaxLines,
+    absoluteGodLines,
+    underThresholdLines
+}) {
     const filePath = sourceFile.getFilePath().replace(/\\/g, '/');
     if (
         /\/infrastructure\/ast\//i.test(filePath) ||
@@ -23,6 +31,12 @@ function analyzeGodClasses(sourceFile, findings, { SyntaxKind, pushFinding, godC
         const startLine = cls.getStartLineNumber();
         const endLine = cls.getEndLineNumber();
         const lineCount = Math.max(0, endLine - startLine);
+
+        const hardMax = Number.isFinite(hardMaxLines) && hardMaxLines > 0 ? hardMaxLines : 0;
+        const softMax = Number.isFinite(softMaxLines) && softMaxLines > 0 ? softMaxLines : 500;
+        const absoluteLines = Number.isFinite(absoluteGodLines) && absoluteGodLines > 0 ? absoluteGodLines : 1000;
+        const underLines = Number.isFinite(underThresholdLines) && underThresholdLines > 0 ? underThresholdLines : 300;
+        const isHardMaxViolation = hardMax > 0 && lineCount > hardMax;
 
         const decisionKinds = [
             SyntaxKind.IfStatement,
@@ -51,12 +65,20 @@ function analyzeGodClasses(sourceFile, findings, { SyntaxKind, pushFinding, godC
         if (/\bgit\b|rev-parse|git diff|git status|git log/i.test(clsText)) concerns.add('git');
         const concernCount = concerns.size;
 
-        const isMassiveFile = lineCount > 500;
-        const isAbsoluteGod = lineCount > 1000 ||
-            (lineCount > 500 && complexity > 50) ||
-            (lineCount > 500 && methodsCount > 20) ||
-            (lineCount > 600 && methodsCount > 30 && complexity > 80);
-        const isUnderThreshold = lineCount < 300 && methodsCount < 15 && complexity < 30;
+        if (isHardMaxViolation) {
+            pushFinding("backend.antipattern.god_classes", "critical", sourceFile, cls,
+                `God class detected: ${methodsCount} methods, ${propertiesCount} properties, ${lineCount} lines, complexity ${complexity}, concerns ${concernCount} - VIOLATES SRP`,
+                findings
+            );
+            return;
+        }
+
+        const isMassiveFile = lineCount > softMax;
+        const isAbsoluteGod = lineCount > absoluteLines ||
+            (lineCount > softMax && complexity > 50) ||
+            (lineCount > softMax && methodsCount > 20) ||
+            (lineCount > (softMax + 100) && methodsCount > 30 && complexity > 80);
+        const isUnderThreshold = lineCount < underLines && methodsCount < 15 && complexity < 30;
 
         if (!godClassBaseline) {
             if (!isUnderThreshold && (isMassiveFile || isAbsoluteGod)) {
