@@ -93,7 +93,8 @@ describe('DIValidationService', () => {
             const properties = [
                 { 'key.name': 'loginUseCase', 'key.typename': 'LoginUseCase' },
                 { 'key.name': 'logoutUseCase', 'key.typename': 'LogoutUseCase' },
-                { 'key.name': 'currentUserUseCase', 'key.typename': 'Domain.UserRetrievalUseCase?' }
+                { 'key.name': 'currentUserUseCase', 'key.typename': 'Domain.UserRetrievalUseCase?' },
+                { 'key.name': 'registerUseCase', 'key.typename': 'RegisterUseCase<Auth>' }
             ];
 
             await diValidationService.validateDependencyInjection(

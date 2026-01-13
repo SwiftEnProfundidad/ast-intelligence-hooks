@@ -1,3 +1,17 @@
+# Release Notes - v6.0.11
+
+**Release Date**: January 13, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.0.x
+
+---
+
+## ✅ Fixes
+
+- **iOS DIP detector**: protocol-like types are detected even with generics (e.g. `RegisterUseCase<Auth>`).
+
+---
+
 # Release Notes - v6.0.10
 
 **Release Date**: January 13, 2026  
