@@ -39,6 +39,10 @@ class ConcreteDependencyStrategy extends DIStrategy {
             return true;
         }
 
+        if (this._isLikelyProtocolType(typename)) {
+            return true;
+        }
+
         if (this._isGenericTypeParameter(typename, propName, className)) {
             return true;
         }
@@ -93,6 +97,13 @@ class ConcreteDependencyStrategy extends DIStrategy {
         );
 
         return hasConcretePattern && !hasProtocolIndicator;
+    }
+
+    _isLikelyProtocolType(typename) {
+        if (/Impl$/.test(typename)) {
+            return false;
+        }
+        return /UseCase$|Repository$/.test(typename);
     }
 }
 

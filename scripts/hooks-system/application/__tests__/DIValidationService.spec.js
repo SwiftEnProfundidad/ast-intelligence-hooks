@@ -35,13 +35,7 @@ describe('DIValidationService', () => {
                 "'TestViewModel' depends on concrete 'APIClient' - use protocol"
             );
 
-            expect(mockAnalyzer.pushFinding).toHaveBeenCalledWith(
-                'ios.solid.dip.concrete_dependency',
-                'high',
-                'TestViewModel.swift',
-                10,
-                "'TestViewModel' depends on concrete 'UserRepository' - use protocol"
-            );
+            expect(mockAnalyzer.pushFinding).toHaveBeenCalledTimes(1);
         });
 
         it('should skip allowed types', async () => {
@@ -90,6 +84,23 @@ describe('DIValidationService', () => {
                 'TestViewModel.swift',
                 'TestViewModel',
                 10
+            );
+
+            expect(mockAnalyzer.pushFinding).not.toHaveBeenCalled();
+        });
+
+        it('should skip protocol-named concrete-like types', async () => {
+            const properties = [
+                { 'key.name': 'loginUseCase', 'key.typename': 'LoginUseCase' },
+                { 'key.name': 'logoutUseCase', 'key.typename': 'LogoutUseCase' }
+            ];
+
+            await diValidationService.validateDependencyInjection(
+                mockAnalyzer,
+                properties,
+                'AuthLoginRepositoryImpl.swift',
+                'AuthLoginRepositoryImpl',
+                1
             );
 
             expect(mockAnalyzer.pushFinding).not.toHaveBeenCalled();
