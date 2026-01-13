@@ -26,7 +26,7 @@ function analyzeGodClasses(sourceFile, findings, {
     for (const cls of classes) {
         const className = cls.getName() || '';
         const isValueObject = /Metrics|ValueObject|VO$|Dto$|Entity$/.test(className);
-        if (isValueObject) return;
+        if (isValueObject) continue;
 
         const methodsCount = cls.getMethods().length;
         const propertiesCount = cls.getProperties().length;
