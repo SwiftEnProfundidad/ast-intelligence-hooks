@@ -1,7 +1,14 @@
 #!/usr/bin/env node
 
-const env = require('../config/env');
 const InstallService = require('../application/services/installation/InstallService');
+
+const args = process.argv.slice(2);
+if (args.includes('--vendored') || args.includes('--embedded')) {
+  process.env.HOOK_INSTALL_MODE = 'vendored';
+}
+if (args.includes('--npm-runtime') || args.includes('--npm')) {
+  process.env.HOOK_INSTALL_MODE = 'npm';
+}
 
 // Run installation
 const installer = new InstallService();
