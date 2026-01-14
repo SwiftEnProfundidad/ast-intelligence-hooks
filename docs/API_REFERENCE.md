@@ -83,7 +83,7 @@ Located in `infrastructure/guards/`:
 ## Architecture
 
 ```
-node_modules/@pumuki/ast-intelligence-hooks/
+node_modules/pumuki-ast-hooks/
 ├── application/          # Business logic (Use Cases, Services)
 ├── domain/               # Core entities (SeverityConfig, etc.)
 ├── infrastructure/       # Technical implementations

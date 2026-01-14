@@ -63,7 +63,6 @@ class VSCodeTaskConfigurator {
                     [
                         'bash "${workspaceFolder}/scripts/hooks-system/bin/session-loader.sh"',
                         '|| bash "${workspaceFolder}/node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/session-loader.sh"',
-                        '|| bash "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/bin/session-loader.sh"',
                         '|| (echo "AST Session Loader not found." >&2; exit 127)'
                     ].join(' ')
                 ],

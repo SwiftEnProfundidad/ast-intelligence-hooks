@@ -9,7 +9,7 @@ This example shows how to add custom rules to `ast-intelligence-hooks`.
 Create `custom-analyzers/my-backend-analyzer.js`:
 
 ```javascript
-const { pushFinding, mapToLevel } = require('@pumuki/ast-intelligence-hooks/infrastructure/ast/ast-core');
+const { pushFinding, mapToLevel } = require('pumuki-ast-hooks/infrastructure/ast/ast-core');
 
 function analyzeCustomPattern(sourceFile) {
   const findings = [];
@@ -41,7 +41,7 @@ module.exports = { analyzeCustomPattern };
 Create `custom-analyzers/my-frontend-analyzer.js`:
 
 ```javascript
-const { pushFinding } = require('@pumuki/ast-intelligence-hooks/infrastructure/ast/ast-core');
+const { pushFinding } = require('pumuki-ast-hooks/infrastructure/ast/ast-core');
 
 function analyzeReactComponent(sourceFile) {
   const findings = [];
@@ -76,7 +76,7 @@ Create `custom-analyzers/my-custom-platform-analyzer.js`:
 ```javascript
 const fs = require('fs');
 const path = require('path');
-const { pushFinding } = require('@pumuki/ast-intelligence-hooks/infrastructure/ast/ast-core');
+const { pushFinding } = require('pumuki-ast-hooks/infrastructure/ast/ast-core');
 
 function runMyCustomPlatformIntelligence(files, config = {}) {
   const findings = [];
@@ -110,7 +110,7 @@ module.exports = { runMyCustomPlatformIntelligence };
 Create `custom-rules/CustomCommitBlockingRules.js`:
 
 ```javascript
-const { CommitBlockingRules } = require('@pumuki/ast-intelligence-hooks');
+const { CommitBlockingRules } = require('pumuki-ast-hooks');
 
 class CustomCommitBlockingRules extends CommitBlockingRules {
   shouldBlockCommit(auditResult) {
@@ -152,7 +152,7 @@ module.exports = CustomCommitBlockingRules;
 ### In your analysis code
 
 ```javascript
-const { runASTIntelligence } = require('@pumuki/ast-intelligence-hooks');
+const { runASTIntelligence } = require('pumuki-ast-hooks');
 const { analyzeCustomPattern } = require('./custom-analyzers/my-backend-analyzer');
 
 async function runCustomAnalysis() {

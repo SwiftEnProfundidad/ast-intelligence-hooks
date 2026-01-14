@@ -4,11 +4,11 @@
   "description": "Basic usage example for ast-intelligence-hooks",
   "main": "src/app.ts",
   "scripts": {
-    "install-hooks": "node node_modules/@pumuki/ast-intelligence-hooks/bin/install.js",
-    "audit": "npm run audit --prefix node_modules/@pumuki/ast-intelligence-hooks"
+    "install-hooks": "node node_modules/pumuki-ast-hooks/bin/install.js",
+    "audit": "npm run audit --prefix node_modules/pumuki-ast-hooks"
   },
   "devDependencies": {
-    "@pumuki/ast-intelligence-hooks": "^5.3.0",
+    "pumuki-ast-hooks": "^6.1.1",
     "typescript": "^5.3.0"
   }
 }

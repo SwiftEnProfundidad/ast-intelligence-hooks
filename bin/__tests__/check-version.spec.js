@@ -9,7 +9,7 @@ let originalResolve;
 
 function makeMockPackageJson(version) {
   return JSON.stringify({
-    name: '@pumuki/ast-intelligence-hooks',
+    name: 'pumuki-ast-hooks',
     version,
   });
 }
@@ -44,7 +44,6 @@ describe('check-version', () => {
       fsReadSpy.mockReturnValue(makeMockPackageJson(mockVersion));
       require.resolve = (request) => {
         if (
-          request === '@pumuki/ast-intelligence-hooks/package.json' ||
           request === 'pumuki-ast-hooks/package.json'
         ) {
           return '/tmp/mock/pkg.json';

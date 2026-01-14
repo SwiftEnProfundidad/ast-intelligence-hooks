@@ -3,7 +3,7 @@
     "ai-evidence-watcher": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/evidence-watcher.js"
+        "${workspaceFolder}/node_modules/pumuki-ast-hooks/infrastructure/mcp/evidence-watcher.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}"
@@ -12,7 +12,7 @@
     "ast-intelligence-automation": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/ast-intelligence-automation.js"
+        "${workspaceFolder}/node_modules/pumuki-ast-hooks/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",

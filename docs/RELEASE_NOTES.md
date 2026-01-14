@@ -503,7 +503,7 @@ Version 5.3.9 refines installer version resolution and removes silent `catch` bl
 - **Impact**: Wizard and pre-commit now show the correct version.
 
 ### Fixed: Hooks showing old version
-- **Issue**: Pre-commit displayed `@pumuki/ast-intelligence-hooks v5.3.1`.
+- **Issue**: Pre-commit displayed `pumuki-ast-hooks v5.3.1`.
 - **Resolution**: `GitEnvironmentService` receives the resolved version and uses it in the hook.
 - **Impact**: Hook reflects the actual installed version (`pumuki-ast-hooks`).
 

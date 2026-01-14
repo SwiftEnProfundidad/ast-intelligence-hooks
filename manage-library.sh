@@ -53,15 +53,15 @@ update_library() {
     echo -e "${BLUE}🔄 Updating library...${NC}"
     echo ""
     
-    if ! grep -q "@pumuki/ast-intelligence-hooks" package.json; then
+    if ! grep -q "pumuki-ast-hooks" package.json; then
         echo -e "${YELLOW}⚠️  Library not found in package.json${NC}"
         echo -e "${BLUE}💡 Run 'install' option first${NC}"
         return 1
     fi
     
-    if [ -d "node_modules/@pumuki/ast-intelligence-hooks" ]; then
+    if [ -d "node_modules/pumuki-ast-hooks" ]; then
         echo -e "${YELLOW}🧹 Cleaning previous installation...${NC}"
-        rm -rf node_modules/@pumuki/ast-intelligence-hooks
+        rm -rf node_modules/pumuki-ast-hooks
     fi
     
     if [ -d "node_modules/.bin" ]; then
@@ -79,7 +79,7 @@ update_library() {
     npm install
     
     echo -e "${YELLOW}📋 Syncing bin/ scripts...${NC}"
-    LIBRARY_BIN="node_modules/@pumuki/ast-intelligence-hooks/bin"
+    LIBRARY_BIN="node_modules/pumuki-ast-hooks/bin"
     TARGET_BIN="scripts/hooks-system/bin"
     if [ -d "$LIBRARY_BIN" ] && [ -d "$TARGET_BIN" ]; then
         for script in guard-env.sh start-guards.sh guard-supervisor.js session-loader.sh update-evidence.sh; do
@@ -107,13 +107,13 @@ remove_library() {
     [ -d ".claude" ] && rm -rf .claude && echo -e "${GREEN}✅ Removed .claude/${NC}"
     [ -f ".ast-architecture.json" ] && rm -f .ast-architecture.json && echo -e "${GREEN}✅ Removed .ast-architecture.json${NC}"
     
-    if [ -f "package.json" ] && grep -q "@pumuki/ast-intelligence-hooks" package.json; then
+    if [ -f "package.json" ] && grep -q "pumuki-ast-hooks" package.json; then
         cp package.json package.json.backup
         node -e "
         const fs = require('fs');
         const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-        if (pkg.devDependencies) delete pkg.devDependencies['@pumuki/ast-intelligence-hooks'];
-        if (pkg.dependencies) delete pkg.dependencies['@pumuki/ast-intelligence-hooks'];
+        if (pkg.devDependencies) delete pkg.devDependencies['pumuki-ast-hooks'];
+        if (pkg.dependencies) delete pkg.dependencies['pumuki-ast-hooks'];
         fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
         "
         echo -e "${GREEN}✅ Removed library from package.json${NC}"
@@ -155,13 +155,13 @@ reset_project() {
     [ -d ".claude" ] && rm -rf .claude && echo -e "${GREEN}✅ Removed .claude/${NC}"
     [ -f ".ast-architecture.json" ] && rm -f .ast-architecture.json && echo -e "${GREEN}✅ Removed .ast-architecture.json${NC}"
     
-    if [ -f "package.json" ] && grep -q "@pumuki/ast-intelligence-hooks" package.json; then
+    if [ -f "package.json" ] && grep -q "pumuki-ast-hooks" package.json; then
         cp package.json package.json.backup
         node -e "
         const fs = require('fs');
         const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-        if (pkg.devDependencies) delete pkg.devDependencies['@pumuki/ast-intelligence-hooks'];
-        if (pkg.dependencies) delete pkg.dependencies['@pumuki/ast-intelligence-hooks'];
+        if (pkg.devDependencies) delete pkg.devDependencies['pumuki-ast-hooks'];
+        if (pkg.dependencies) delete pkg.dependencies['pumuki-ast-hooks'];
         fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
         "
         echo -e "${GREEN}✅ Removed library from package.json${NC}"

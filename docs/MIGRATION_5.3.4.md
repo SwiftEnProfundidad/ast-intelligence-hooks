@@ -30,7 +30,7 @@ Version 5.3.4 is a **patch release** that fixes critical bugs in the audit orche
 ### Step 1: Update the Package
 
 ```bash
-npm install @pumuki/ast-intelligence-hooks@5.3.4
+npm install pumuki-ast-hooks@5.3.4
 ```
 
 ### Step 2: Reinstall Hooks (Recommended)
@@ -98,7 +98,7 @@ None reported for 5.3.4.
 If you need to rollback to 5.3.3:
 
 ```bash
-npm install @pumuki/ast-intelligence-hooks@5.3.3
+npm install pumuki-ast-hooks@5.3.3
 npm run install-hooks
 ```
 
@@ -118,4 +118,4 @@ After upgrading, we recommend:
 
 ---
 
-**Thank you for using @pumuki/ast-intelligence-hooks!** 🚀
+**Thank you for using pumuki-ast-hooks!** 🚀
