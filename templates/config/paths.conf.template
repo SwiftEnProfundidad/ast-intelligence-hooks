@@ -7,10 +7,10 @@
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 
 # Hook system directories
-# If installed via npm, hook system is in node_modules/@pumuki/ast-intelligence-hooks
+# If installed via npm, hook system is in node_modules/pumuki-ast-hooks
 # If installed in scripts/hooks-system, adjust path accordingly
-if [ -d "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks" ]; then
-  HOOKS_SYSTEM_DIR="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks"
+if [ -d "$REPO_ROOT/node_modules/pumuki-ast-hooks" ]; then
+  HOOKS_SYSTEM_DIR="$REPO_ROOT/node_modules/pumuki-ast-hooks"
 elif [ -d "$REPO_ROOT/scripts/hooks-system" ]; then
   HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
 else

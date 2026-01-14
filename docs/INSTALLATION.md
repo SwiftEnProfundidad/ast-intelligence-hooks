@@ -85,7 +85,7 @@ The installer will detect if Git is missing and show a clear warning:
 
 ```bash
 # Install as development dependency
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 
 # Configure hooks
 npm run install-hooks
@@ -95,7 +95,7 @@ npm run install-hooks
 
 ```bash
 # Install globally
-npm install -g @pumuki/ast-intelligence-hooks
+npm install -g pumuki-ast-hooks
 
 # In each project, install hooks
 cd /path/to/project
@@ -123,7 +123,7 @@ npm link
 
 # In your project
 cd /path/to/your-project
-npm link @pumuki/ast-intelligence-hooks
+npm link pumuki-ast-hooks
 npm run install-hooks
 ```
 
@@ -141,7 +141,7 @@ npm install
 npm link
 
 # In the root project
-npm link @pumuki/ast-intelligence-hooks
+npm link pumuki-ast-hooks
 npm run install-hooks
 ```
 
@@ -231,7 +231,7 @@ cat > .cursor/mcp.json << 'EOF'
     "ai-evidence-watcher": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/node_modules/@pumuki/ast-intelligence-hooks/infrastructure/mcp/evidence-watcher.js"
+        "${workspaceFolder}/node_modules/pumuki-ast-hooks/infrastructure/mcp/evidence-watcher.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}"
@@ -349,10 +349,10 @@ The library provides templates for project-specific configurations in `templates
 
 ```bash
 # Copy templates to your project's config directory
-cp node_modules/@pumuki/ast-intelligence-hooks/templates/config/paths.conf.template \
+cp node_modules/pumuki-ast-hooks/templates/config/paths.conf.template \
    scripts/hooks-system/config/paths.conf
 
-cp node_modules/@pumuki/ast-intelligence-hooks/templates/config/rules.json.template \
+cp node_modules/pumuki-ast-hooks/templates/config/rules.json.template \
    scripts/hooks-system/config/rules.json
 
 # Then customize as needed
@@ -385,7 +385,7 @@ Create or edit `config/ast-exclusions.json`:
 
 ```bash
 # Verify it's installed
-npm list @pumuki/ast-intelligence-hooks
+npm list pumuki-ast-hooks
 
 # View version
 ast-hooks --version
@@ -442,11 +442,11 @@ git commit -m "test: verify hooks installation"
 
 ```bash
 # Give execution permissions
-chmod +x node_modules/@pumuki/ast-intelligence-hooks/bin/*
+chmod +x node_modules/pumuki-ast-hooks/bin/*
 
 # Or reinstall
-npm uninstall @pumuki/ast-intelligence-hooks
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm uninstall pumuki-ast-hooks
+npm install --save-dev pumuki-ast-hooks
 ```
 
 #### Problem: SourceKitten Not Found
@@ -566,7 +566,7 @@ monorepo/
 
 ```bash
 # At monorepo root
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 
 # Configure hooks (will run on entire root)
 npm run install-hooks
@@ -619,7 +619,7 @@ Checking latest version on npm...
 
 To update:
   1. Update package:
-     npm install --save-dev @pumuki/ast-intelligence-hooks@latest
+     npm install --save-dev pumuki-ast-hooks@latest
 
   2. Re-install hooks (to get latest features):
      npm run install-hooks
@@ -636,10 +636,10 @@ When a new version is available:
 
 ```bash
 # Update to latest version
-npm install --save-dev @pumuki/ast-intelligence-hooks@latest
+npm install --save-dev pumuki-ast-hooks@latest
 
 # Or update to specific version
-npm install --save-dev @pumuki/ast-intelligence-hooks@5.3.1
+npm install --save-dev pumuki-ast-hooks@5.3.1
 ```
 
 #### Step 2: Re-install Hooks
@@ -727,10 +727,10 @@ If you prefer manual checking:
 
 ```bash
 # View installed version
-npm list @pumuki/ast-intelligence-hooks
+npm list pumuki-ast-hooks
 
 # View latest available version
-npm view @pumuki/ast-intelligence-hooks version
+npm view pumuki-ast-hooks version
 ```
 
 ---
@@ -741,7 +741,7 @@ npm view @pumuki/ast-intelligence-hooks version
 
 ```bash
 # Uninstall
-npm uninstall @pumuki/ast-intelligence-hooks
+npm uninstall pumuki-ast-hooks
 
 # Remove hooks (optional)
 rm .git/hooks/pre-commit

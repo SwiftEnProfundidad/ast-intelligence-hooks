@@ -135,7 +135,7 @@ class EvidenceManager {
 
         const updateScriptCandidates = [
             path.join(process.cwd(), 'scripts/hooks-system/bin/update-evidence.sh'),
-            path.join(process.cwd(), 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+            path.join(process.cwd(), 'node_modules/pumuki-ast-hooks/bin/update-evidence.sh'),
             path.join(process.cwd(), 'bin/update-evidence.sh')
         ];
 
@@ -171,7 +171,6 @@ class EvidenceManager {
     async runDirectEvidenceRefresh(_reason) {
         const updateScriptCandidates = [
             path.join(process.cwd(), 'scripts/hooks-system/bin/update-evidence.sh'),
-            path.join(process.cwd(), 'node_modules/@pumuki/ast-intelligence-hooks/scripts/hooks-system/bin/update-evidence.sh'),
             path.join(process.cwd(), 'node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/update-evidence.sh')
         ];
 

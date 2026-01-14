@@ -33,7 +33,7 @@ ast_analysis:
   
   before_script:
     - npm ci
-    - npm install --save-dev @pumuki/ast-intelligence-hooks
+    - npm install --save-dev pumuki-ast-hooks
   
   script:
     - npm run audit || true
@@ -64,7 +64,7 @@ pipeline {
     stage('AST Analysis') {
       steps {
         sh 'npm ci'
-        sh 'npm install --save-dev @pumuki/ast-intelligence-hooks'
+        sh 'npm install --save-dev pumuki-ast-hooks'
         sh 'npm run audit || true'
         sh 'npm run violations:summary > violations-summary.txt || true'
       }
@@ -116,7 +116,7 @@ jobs:
           command: npm ci
       - run:
           name: Install AST Intelligence Hooks
-          command: npm install --save-dev @pumuki/ast-intelligence-hooks
+          command: npm install --save-dev pumuki-ast-hooks
       - run:
           name: Run AST Analysis
           command: npm run audit || true
@@ -159,7 +159,7 @@ steps:
   - script: npm ci
     displayName: 'Install dependencies'
   
-  - script: npm install --save-dev @pumuki/ast-intelligence-hooks
+  - script: npm install --save-dev pumuki-ast-hooks
     displayName: 'Install AST Intelligence Hooks'
   
   - script: npm run audit || true

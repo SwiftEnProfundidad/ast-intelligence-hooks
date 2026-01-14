@@ -265,7 +265,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.5.36] - 2026-01-04
 
 ### Fixed
-- **check-version.js**: Fixed blocking issue when checking npm version (incorrect package name: `@pumuki/ast-intelligence-hooks` → `pumuki-ast-hooks`)
+- **check-version.js**: Fixed blocking issue when checking npm version (incorrect package name: `pumuki-ast-hooks`)
 - **gitflow-release.js**: Fixed main sync to checkout main before pulling (avoids pulling main into develop)
 
 ### Added
@@ -701,7 +701,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 npm install /Users/juancarlosmerlosalbarracin/Libraries/ast-intelligence-hooks
 
 # After publish (future)
-npm install @pumuki/ast-intelligence-hooks
+npm install pumuki-ast-hooks
 ```
 
 ### Usage

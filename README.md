@@ -16,7 +16,7 @@ Portable, project‑agnostic, multi‑platform enterprise framework to govern AI
 ## Quick Start (30–60s)
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 npm run install-hooks
 npx ast-hooks
 ```
@@ -363,7 +363,7 @@ The Git Flow cycle includes branch validation, commits, push, PR, merge (by poli
 ### Install (dev)
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 ```
 
 ### Legacy install
@@ -375,14 +375,14 @@ npm install --save-dev pumuki-ast-hooks
 ### Update
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks@latest
+npm install --save-dev pumuki-ast-hooks@latest
 npm run install-hooks
 ```
 
 ### Uninstall
 
 ```bash
-npm uninstall @pumuki/ast-intelligence-hooks
+npm uninstall pumuki-ast-hooks
 ```
 
 ### Install hooks

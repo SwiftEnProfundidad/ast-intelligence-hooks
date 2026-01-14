@@ -1026,7 +1026,7 @@ async refreshEvidence() {
         // CAMBIO: Ejecutar análisis AST completo en lugar de solo update
         const astScript = path.join(
             this.projectRoot, 
-            'node_modules/@pumuki/ast-intelligence-hooks/scripts/hooks-system/infrastructure/orchestration/intelligent-audit.js'
+            'node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/orchestration/intelligent-audit.js'
         );
         
         if (fs.existsSync(astScript)) {

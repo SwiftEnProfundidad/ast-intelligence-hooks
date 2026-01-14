@@ -7,7 +7,7 @@ const AuditLogger = require('../logging/AuditLogger');
 function resolveUpdateEvidenceScript(repoRoot) {
     const candidates = [
         path.join(repoRoot, 'scripts/hooks-system/bin/update-evidence.sh'),
-        path.join(repoRoot, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+        path.join(repoRoot, 'node_modules/pumuki-ast-hooks/bin/update-evidence.sh'),
         path.join(repoRoot, 'bin/update-evidence.sh')
     ];
 

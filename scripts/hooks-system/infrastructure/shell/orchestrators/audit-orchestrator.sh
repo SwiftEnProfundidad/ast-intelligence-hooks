@@ -8,10 +8,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Detect if running from node_modules or scripts/hooks-system
-if [[ "$SCRIPT_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
+if [[ "$SCRIPT_DIR" == *"node_modules/pumuki-ast-hooks"* ]]; then
   # Running from installed npm package
-  # SCRIPT_DIR is: node_modules/@pumuki/ast-intelligence-hooks/infrastructure/shell/orchestrators
-  # Need to go up 3 levels: ../../.. = node_modules/@pumuki/ast-intelligence-hooks
+  # SCRIPT_DIR is: node_modules/pumuki-ast-hooks/infrastructure/shell/orchestrators
+  # Need to go up 3 levels: ../../.. = node_modules/pumuki-ast-hooks
   HOOKS_SYSTEM_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 elif [[ "$SCRIPT_DIR" == *"scripts/hooks-system"* ]]; then
   # Running from local scripts/hooks-system
@@ -32,8 +32,8 @@ elif [[ "$SCRIPT_DIR" == *"scripts/hooks-system"* ]]; then
 else
   # Fallback: try to find it relative to current directory
   REPO_ROOT="$(pwd)"
-  if [[ -d "$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks" ]]; then
-    HOOKS_SYSTEM_DIR="$REPO_ROOT/node_modules/@pumuki/ast-intelligence-hooks"
+  if [[ -d "$REPO_ROOT/node_modules/pumuki-ast-hooks" ]]; then
+    HOOKS_SYSTEM_DIR="$REPO_ROOT/node_modules/pumuki-ast-hooks"
   elif [[ -d "$REPO_ROOT/scripts/hooks-system" ]]; then
     HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"
   else
@@ -1046,12 +1046,12 @@ run_ast_intelligence() {
     node_path_parts+=("$HOOKS_SYSTEM_DIR/node_modules")
   fi
   
-  # Also check if we're in a project with node_modules/@pumuki/ast-intelligence-hooks
+  # Also check if we're in a project with node_modules/pumuki-ast-hooks
   local repo_root=""
   if [[ "$HOOKS_SYSTEM_DIR" == *"scripts/hooks-system"* ]]; then
     # Running from scripts/hooks-system, go to repo root
     repo_root="$(cd "$HOOKS_SYSTEM_DIR/../.." && pwd)"
-  elif [[ "$HOOKS_SYSTEM_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
+  elif [[ "$HOOKS_SYSTEM_DIR" == *"node_modules/pumuki-ast-hooks"* ]]; then
     # Running from node_modules, go to repo root
     repo_root="$(cd "$HOOKS_SYSTEM_DIR/../../.." && pwd)"
   else
@@ -1059,8 +1059,8 @@ run_ast_intelligence() {
     repo_root="$(pwd)"
   fi
   
-  if [[ -n "$repo_root" ]] && [[ -d "$repo_root/node_modules/@pumuki/ast-intelligence-hooks/node_modules" ]]; then
-    node_path_parts+=("$repo_root/node_modules/@pumuki/ast-intelligence-hooks/node_modules")
+  if [[ -n "$repo_root" ]] && [[ -d "$repo_root/node_modules/pumuki-ast-hooks/node_modules" ]]; then
+    node_path_parts+=("$repo_root/node_modules/pumuki-ast-hooks/node_modules")
   fi
   
   if [[ -n "$repo_root" ]] && [[ -d "$repo_root/node_modules" ]]; then
