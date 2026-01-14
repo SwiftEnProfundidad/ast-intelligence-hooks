@@ -25,7 +25,7 @@ monorepo/
 ### 1. Install at monorepo root
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 npm run install-hooks
 ```
 

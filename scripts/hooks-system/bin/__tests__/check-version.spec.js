@@ -9,7 +9,7 @@ let originalResolve;
 
 function makeMockPackageJson(version) {
   return JSON.stringify({
-    name: '@pumuki/ast-intelligence-hooks',
+    name: 'pumuki-ast-hooks',
     version,
   });
 }
@@ -31,10 +31,7 @@ describe('check-version', () => {
       if (request === 'babel.config.js' || request === 'babel.config.cjs') {
         return path.join(process.cwd(), 'babel.config.js');
       }
-      if (
-        request === '@pumuki/ast-intelligence-hooks/package.json' ||
-        request === 'pumuki-ast-hooks/package.json'
-      ) {
+      if (request === 'pumuki-ast-hooks/package.json') {
         return path.join(process.cwd(), request);
       }
       return originalResolve(request);
@@ -55,10 +52,7 @@ describe('check-version', () => {
       fsExistsSpy.mockReturnValue(true);
       fsReadSpy.mockReturnValue(makeMockPackageJson(mockVersion));
       require.resolve = (request) => {
-        if (
-          request === '@pumuki/ast-intelligence-hooks/package.json' ||
-          request === 'pumuki-ast-hooks/package.json'
-        ) {
+        if (request === 'pumuki-ast-hooks/package.json') {
           return '/tmp/mock/pkg.json';
         }
         return originalResolve(request);
@@ -77,10 +71,7 @@ describe('check-version', () => {
       });
       fsReadSpy.mockReturnValue(makeMockPackageJson('5.3.1'));
       require.resolve = (request) => {
-        if (
-          request === '@pumuki/ast-intelligence-hooks/package.json' ||
-          request === 'pumuki-ast-hooks/package.json'
-        ) {
+        if (request === 'pumuki-ast-hooks/package.json') {
           return '/tmp/mock/pkg.json';
         }
         return originalResolve(request);
@@ -194,7 +185,7 @@ describe('check-version', () => {
   describe('getInstalledVersion - additional cases', () => {
     it('should return npm version when package is in node_modules', () => {
       const mockVersion = '5.3.1';
-      const nodeModulesPath = path.join(process.cwd(), 'node_modules', '@pumuki', 'ast-intelligence-hooks', 'package.json');
+      const nodeModulesPath = path.join(process.cwd(), 'node_modules', 'pumuki-ast-hooks', 'package.json');
       fsExistsSpy.mockImplementation((filePath) => {
         if (filePath === nodeModulesPath) return true;
         return false;

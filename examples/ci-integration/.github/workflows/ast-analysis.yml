@@ -30,7 +30,7 @@ jobs:
         run: npm ci
       
       - name: Install AST Intelligence Hooks
-        run: npm install --save-dev @pumuki/ast-intelligence-hooks
+        run: npm install --save-dev pumuki-ast-hooks
       
       - name: Run AST Analysis
         id: ast-analysis

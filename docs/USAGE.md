@@ -24,7 +24,7 @@
 ### Step 1: Install
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 npm run install-hooks
 ```
 
@@ -105,7 +105,7 @@ The library includes an **interactive menu** for selecting audit options:
 ```bash
 # Run interactive menu (recommended for manual audits)
 # From node_modules (when installed via npm):
-bash node_modules/@pumuki/ast-intelligence-hooks/presentation/cli/audit.sh
+bash node_modules/pumuki-ast-hooks/presentation/cli/audit.sh
 
 # Or from scripts/hooks-system (local development):
 bash scripts/hooks-system/presentation/cli/audit.sh
@@ -128,8 +128,8 @@ npx audit
 **Non-interactive mode:**
 ```bash
 # Execute specific option directly (from node_modules):
-AUDIT_OPTION=7 bash node_modules/@pumuki/ast-intelligence-hooks/presentation/cli/audit.sh  # AST Intelligence
-AUDIT_OPTION=3 bash node_modules/@pumuki/ast-intelligence-hooks/presentation/cli/audit.sh  # Staged files only
+AUDIT_OPTION=7 bash node_modules/pumuki-ast-hooks/presentation/cli/audit.sh  # AST Intelligence
+AUDIT_OPTION=3 bash node_modules/pumuki-ast-hooks/presentation/cli/audit.sh  # Staged files only
 
 # Or from scripts/hooks-system:
 AUDIT_OPTION=7 bash scripts/hooks-system/presentation/cli/audit.sh  # AST Intelligence
@@ -372,7 +372,7 @@ chmod +x .git/hooks/post-commit
 ### Basic Example
 
 ```javascript
-const { runASTIntelligence } = require('@pumuki/ast-intelligence-hooks');
+const { runASTIntelligence } = require('pumuki-ast-hooks');
 
 async function analyzeCode() {
   const result = await runASTIntelligence({
@@ -401,9 +401,9 @@ analyzeCode().catch(console.error);
 ### Use Use Cases Directly
 
 ```javascript
-const { AnalyzeStagedFilesUseCase } = require('@pumuki/ast-intelligence-hooks');
-const { FileFindingsRepository } = require('@pumuki/ast-intelligence-hooks/infrastructure/repositories');
-const { PlatformDetectionService } = require('@pumuki/ast-intelligence-hooks/application/services');
+const { AnalyzeStagedFilesUseCase } = require('pumuki-ast-hooks');
+const { FileFindingsRepository } = require('pumuki-ast-hooks/infrastructure/repositories');
+const { PlatformDetectionService } = require('pumuki-ast-hooks/application/services');
 
 // Create use case instance
 const repository = new FileFindingsRepository();
@@ -426,7 +426,7 @@ async function analyzeStaged() {
 ### Custom Analysis
 
 ```javascript
-const { runBackendIntelligence } = require('@pumuki/ast-intelligence-hooks');
+const { runBackendIntelligence } = require('pumuki-ast-hooks');
 const glob = require('glob');
 
 // Analyze only specific files
@@ -448,7 +448,7 @@ findings.forEach(finding => {
 ### Filter Violations
 
 ```javascript
-const { AuditResult } = require('@pumuki/ast-intelligence-hooks');
+const { AuditResult } = require('pumuki-ast-hooks');
 
 // Get only HIGH and CRITICAL violations
 const criticalAndHigh = result.getFindings().filter(f => {
@@ -474,7 +474,7 @@ result.getFindings().forEach(finding => {
 ### Example 1: Webhook Integration
 
 ```javascript
-const { runASTIntelligence } = require('@pumuki/ast-intelligence-hooks');
+const { runASTIntelligence } = require('pumuki-ast-hooks');
 const express = require('express');
 
 const app = express();
@@ -506,7 +506,7 @@ app.listen(3000);
 ### Example 2: Custom Report
 
 ```javascript
-const { runASTIntelligence } = require('@pumuki/ast-intelligence-hooks');
+const { runASTIntelligence } = require('pumuki-ast-hooks');
 const fs = require('fs');
 
 async function generateCustomReport() {
@@ -563,7 +563,7 @@ generateCustomReport();
 ### Example 3: Incremental Analysis
 
 ```javascript
-const { AnalyzeStagedFilesUseCase } = require('@pumuki/ast-intelligence-hooks');
+const { AnalyzeStagedFilesUseCase } = require('pumuki-ast-hooks');
 const { execSync } = require('child_process');
 
 // Get only staged files
@@ -601,7 +601,7 @@ async function analyzeStagedOnly() {
 ### Example 4: Notification Integration
 
 ```javascript
-const { runASTIntelligence } = require('@pumuki/ast-intelligence-hooks');
+const { runASTIntelligence } = require('pumuki-ast-hooks');
 const { NotificationAdapter } = require('./notification-adapter');
 
 async function analyzeAndNotify() {
@@ -653,7 +653,7 @@ jobs:
         run: npm ci
       
       - name: Install AST Intelligence Hooks
-        run: npm install --save-dev @pumuki/ast-intelligence-hooks
+        run: npm install --save-dev pumuki-ast-hooks
       
       - name: Run AST Analysis
         run: npm run audit
@@ -676,7 +676,7 @@ ast_analysis:
   
   script:
     - npm ci
-    - npm install --save-dev @pumuki/ast-intelligence-hooks
+    - npm install --save-dev pumuki-ast-hooks
     - npm run audit || true
     - npm run violations:summary > violations-summary.txt
   
@@ -698,7 +698,7 @@ pipeline {
     stage('AST Analysis') {
       steps {
         sh 'npm ci'
-        sh 'npm install --save-dev @pumuki/ast-intelligence-hooks'
+        sh 'npm install --save-dev pumuki-ast-hooks'
         sh 'npm run audit || true'
         archiveArtifacts artifacts: '.audit-reports/**', fingerprint: true
       }
@@ -729,7 +729,7 @@ jobs:
     steps:
       - checkout
       - run: npm ci
-      - run: npm install --save-dev @pumuki/ast-intelligence-hooks
+      - run: npm install --save-dev pumuki-ast-hooks
       - run: npm run audit || true
       - store_artifacts:
           path: .audit-reports
@@ -857,7 +857,7 @@ Edit `config/language-guard.json`:
 
 ```javascript
 // In your custom code
-const { CommitBlockingRules } = require('@pumuki/ast-intelligence-hooks');
+const { CommitBlockingRules } = require('pumuki-ast-hooks');
 
 // Extend blocking rules
 class CustomCommitBlockingRules extends CommitBlockingRules {

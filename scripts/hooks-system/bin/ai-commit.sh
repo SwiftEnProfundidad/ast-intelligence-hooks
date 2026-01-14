@@ -15,7 +15,7 @@ echo "🤖 AI-COMMIT: Preparando commit..."
 
 # Detect if running from node_modules (installed package) or from scripts/hooks-system (local dev)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if [[ "$SCRIPT_DIR" == *"node_modules/@pumuki/ast-intelligence-hooks"* ]]; then
+if [[ "$SCRIPT_DIR" == *"node_modules/pumuki-ast-hooks"* ]]; then
   HOOKS_SYSTEM_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
   if [[ -d "$REPO_ROOT/scripts/hooks-system" ]]; then
     HOOKS_SYSTEM_DIR="$REPO_ROOT/scripts/hooks-system"

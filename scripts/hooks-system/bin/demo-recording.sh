@@ -54,4 +54,4 @@ sleep 2
 echo ""
 echo "🎉 Demo complete!"
 echo ""
-echo "Install: npm install @pumuki/ast-intelligence-hooks"
+echo "Install: npm install pumuki-ast-hooks"

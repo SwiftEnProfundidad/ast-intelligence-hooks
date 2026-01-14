@@ -13,7 +13,7 @@ This example shows how to use `ast-intelligence-hooks` in a simple project.
 ### 1. Install the library
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks
+npm install --save-dev pumuki-ast-hooks
 ```
 
 ### 2. Configure hooks

@@ -89,14 +89,14 @@ npm run audit  # Option 2 → All files, correct violation count
 ### New Installation
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks@5.3.4
+npm install --save-dev pumuki-ast-hooks@5.3.4
 npm run install-hooks
 ```
 
 ### Upgrade from 5.3.3
 
 ```bash
-npm install --save-dev @pumuki/ast-intelligence-hooks@5.3.4
+npm install --save-dev pumuki-ast-hooks@5.3.4
 npm run install-hooks  # Recommended to update orchestrator scripts
 ```
 

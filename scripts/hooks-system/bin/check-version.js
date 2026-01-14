@@ -21,7 +21,7 @@ const COLORS = {
 
 function getInstalledVersion() {
   const projectRoot = process.cwd();
-  const packageNames = ['@pumuki/ast-intelligence-hooks', 'pumuki-ast-hooks'];
+  const packageNames = ['pumuki-ast-hooks'];
 
   for (const packageName of packageNames) {
     try {
@@ -69,9 +69,7 @@ function getInstalledVersion() {
           return { version: 'unknown (local)', type: 'local', path: libPath, packageName };
         }
 
-        const nodeModulesPath = packageName.startsWith('@')
-          ? path.join(projectRoot, 'node_modules', packageName.replace('/', path.sep), 'package.json')
-          : path.join(projectRoot, 'node_modules', packageName, 'package.json');
+        const nodeModulesPath = path.join(projectRoot, 'node_modules', packageName, 'package.json');
 
         if (fs.existsSync(nodeModulesPath)) {
           const installedPkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
@@ -84,9 +82,7 @@ function getInstalledVersion() {
   }
 
   for (const packageName of packageNames) {
-    const nodeModulesPath = packageName.startsWith('@')
-      ? path.join(projectRoot, 'node_modules', packageName.replace('/', path.sep), 'package.json')
-      : path.join(projectRoot, 'node_modules', packageName, 'package.json');
+    const nodeModulesPath = path.join(projectRoot, 'node_modules', packageName, 'package.json');
 
     if (fs.existsSync(nodeModulesPath)) {
       const pkg = JSON.parse(fs.readFileSync(nodeModulesPath, 'utf-8'));
@@ -139,7 +135,7 @@ function main() {
   if (!installed) {
     console.log(`${COLORS.red}❌ ast-intelligence-hooks not found in this project${COLORS.reset}`);
     console.log(`\n${COLORS.cyan}Install it with:${COLORS.reset}`);
-    console.log(`  npm install --save-dev @pumuki/ast-intelligence-hooks`);
+    console.log('  npm install --save-dev pumuki-ast-hooks');
     console.log(`  npm run install-hooks\n`);
     process.exit(1);
   }
@@ -167,7 +163,7 @@ function main() {
     console.log(`${COLORS.yellow}⚠️  Partial installation detected${COLORS.reset}`);
     console.log(`  It seems hooks are installed but the package is missing.\n`);
     console.log(`${COLORS.cyan}Try reinstalling:${COLORS.reset}`);
-    console.log(`  npm install --save-dev @pumuki/ast-intelligence-hooks`);
+    console.log('  npm install --save-dev pumuki-ast-hooks');
     console.log(`  npm run install-hooks\n`);
     process.exit(0);
   }
@@ -193,7 +189,7 @@ function main() {
     console.log(`${COLORS.yellow}⚠️  UPDATE AVAILABLE${COLORS.reset}`);
     console.log(`\n${COLORS.cyan}To update:${COLORS.reset}`);
     console.log(`  1. Update package:${COLORS.reset}`);
-    console.log(`     npm install --save-dev @pumuki/ast-intelligence-hooks@latest`);
+    console.log('     npm install --save-dev pumuki-ast-hooks@latest');
     console.log(`\n  2. Re-install hooks (to get latest features):${COLORS.reset}`);
     console.log(`     npm run install-hooks`);
     console.log(`\n${COLORS.cyan}What's new in ${latest}:${COLORS.reset}`);

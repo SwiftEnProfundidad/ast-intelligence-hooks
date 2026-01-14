@@ -1,5 +1,5 @@
 /**
- * @pumuki/ast-intelligence-hooks
+ * pumuki-ast-hooks
  *
  * Enterprise-grade AST Intelligence System
  * Multi-platform support: iOS, Android, Backend, Frontend

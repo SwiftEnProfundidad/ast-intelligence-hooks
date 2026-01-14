@@ -359,8 +359,8 @@ function getLibraryInstallPath() {
     const repoRoot = REPO_ROOT;
 
     // Try to find library path relative to repo root
-    if (scriptPath.includes('node_modules/@pumuki/ast-intelligence-hooks')) {
-        return 'node_modules/@pumuki/ast-intelligence-hooks';
+    if (scriptPath.includes('node_modules/pumuki-ast-hooks')) {
+        return 'node_modules/pumuki-ast-hooks';
     }
     if (scriptPath.includes('scripts/hooks-system')) {
         return 'scripts/hooks-system';
@@ -368,8 +368,8 @@ function getLibraryInstallPath() {
     // If script is in repo root, try to detect from package.json
     try {
         const packageJson = JSON.parse(fs.readFileSync(path.join(repoRoot, 'package.json'), 'utf8'));
-        const libPath = packageJson.devDependencies?.['@pumuki/ast-intelligence-hooks'] ||
-            packageJson.dependencies?.['@pumuki/ast-intelligence-hooks'];
+        const libPath = packageJson.devDependencies?.['pumuki-ast-hooks'] ||
+            packageJson.dependencies?.['pumuki-ast-hooks'];
         if (libPath && libPath.startsWith('file:')) {
             // Local file path, extract relative path
             const relativePath = libPath.replace('file:', '').replace(/^\.\.\//, '');
@@ -454,8 +454,8 @@ function resolveUpdateEvidenceScript() {
     const candidates = [
         path.join(REPO_ROOT, 'scripts/hooks-system/bin/update-evidence.sh'),
         path.join(process.cwd(), 'scripts/hooks-system/bin/update-evidence.sh'),
-        path.join(REPO_ROOT, 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
-        path.join(process.cwd(), 'node_modules/@pumuki/ast-intelligence-hooks/bin/update-evidence.sh'),
+        path.join(REPO_ROOT, 'node_modules/pumuki-ast-hooks/bin/update-evidence.sh'),
+        path.join(process.cwd(), 'node_modules/pumuki-ast-hooks/bin/update-evidence.sh'),
         path.join(REPO_ROOT, 'bin/update-evidence.sh'),
         path.join(process.cwd(), 'bin/update-evidence.sh'),
         path.join(scriptDir, '../../bin/update-evidence.sh'),
