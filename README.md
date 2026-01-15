@@ -21,6 +21,14 @@ npm run install-hooks
 npx ast-hooks
 ```
 
+Default installation mode is `npm-runtime`.
+
+To opt into an embedded runtime copy (`vendored` mode):
+
+```bash
+HOOK_INSTALL_MODE=vendored npm run install-hooks
+```
+
 ---
 
 ## Operational visuals (examples)
@@ -53,14 +61,7 @@ Documentation:
 
 - `docs/USAGE.md` (Interactive Menu, non‑interactive `AUDIT_OPTION`, and typical flows)
 - `CHANGELOG.md` (Release notes and changes)
-- Keychain/Security casts are exempted from `ios.types.forbidden_type_cast` to avoid false positives in secure storage implementations.
-
-Release 6.0.6:
-- Keychain/Security casts are exempted from `ios.types.forbidden_type_cast` to avoid false positives in secure storage implementations.
-- Staging-only detection now ignores deleted files when building the file list.
-
-Release 6.0.7:
-- God Class detection (backend): baseline-first by default; optional hard cap via env; detector always runs (with or without baseline).
+- `docs/RELEASE_NOTES.md` (Historical release notes)
 
 ---
 
