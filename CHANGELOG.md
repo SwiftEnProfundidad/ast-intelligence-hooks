@@ -11,6 +11,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Package name alignment**: Replaced remaining references to `@pumuki/ast-intelligence-hooks` with `pumuki-ast-hooks` across docs, examples, templates, scripts, and tests.
 
+## [6.1.4] - 2026-01-14
+
+### Changed
+
+- **Installer default mode**: The installer now defaults to npm-runtime mode (no embedded copy of `scripts/hooks-system` into the consuming project).
+- **Vendored mode opt-in**: Embedded runtime is opt-in via `HOOK_INSTALL_MODE=vendored` (or installer flags).
+
+### Fixed
+
+- **Runtime path resolution**: Scripts and hooks now resolve runtime files from `node_modules/pumuki-ast-hooks/scripts/hooks-system` when vendored paths are not present.
+
 ## [6.1.1] - 2026-01-13
 
 ### Fixed

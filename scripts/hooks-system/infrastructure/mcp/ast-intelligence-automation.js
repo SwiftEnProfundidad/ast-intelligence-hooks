@@ -2432,7 +2432,7 @@ async function handleMcpMessage(message) {
                     result = suggestHumanIntent();
                     break;
                 case 'pre_flight_check':
-                    result = preFlightCheck(toolParams);
+                    result = await preFlightCheck(toolParams);
                     break;
                 case 'record_test_created':
                     result = recordTestCreated(toolParams);

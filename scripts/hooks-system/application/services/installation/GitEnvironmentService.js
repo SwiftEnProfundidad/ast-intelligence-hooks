@@ -130,6 +130,10 @@ fi
 
 # Enforce Git Flow checks (strict) before allowing commit
 ENFORCER_SCRIPT="scripts/hooks-system/infrastructure/shell/gitflow/gitflow-enforcer.sh"
+if [[ ! -f "$ENFORCER_SCRIPT" ]]; then
+  ENFORCER_SCRIPT="node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/shell/gitflow/gitflow-enforcer.sh"
+fi
+
 if [[ -f "$ENFORCER_SCRIPT" ]]; then
   echo ""
   echo "🔍 Running Git Flow checks (strict)..."
@@ -276,6 +280,10 @@ fi
 
 # Run gitflow-enforcer if available (optional validation)
 ENFORCER_SCRIPT="scripts/hooks-system/infrastructure/shell/gitflow/gitflow-enforcer.sh"
+if [[ ! -f "$ENFORCER_SCRIPT" ]]; then
+  ENFORCER_SCRIPT="node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/shell/gitflow/gitflow-enforcer.sh"
+fi
+
 if [[ -f "$ENFORCER_SCRIPT" ]]; then
   echo ""
   echo "🔍 Running Git Flow checks (strict)..."

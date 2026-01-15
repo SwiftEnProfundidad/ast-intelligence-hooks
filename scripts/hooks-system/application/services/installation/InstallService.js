@@ -77,6 +77,14 @@ class InstallService {
         this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot, this.logger);
     }
 
+    getInstallMode() {
+        const mode = String(env.get('HOOK_INSTALL_MODE', 'npm')).trim().toLowerCase();
+        if (mode === 'vendored' || mode === 'embedded') {
+            return 'vendored';
+        }
+        return 'npm';
+    }
+
     checkCriticalDependencies() {
         CriticalDependenciesService.check({
             targetRoot: this.targetRoot,
@@ -113,12 +121,18 @@ class InstallService {
         this.logStep('2/8', 'Installing ESLint configurations...');
         this.configGenerator.installESLintConfigs();
 
-        this.logStep('3/8', 'Creating hooks-system directory structure...');
-        this.fsInstaller.createDirectoryStructure();
+        const installMode = this.getInstallMode();
+        if (installMode === 'vendored') {
+            this.logStep('3/8', 'Creating hooks-system directory structure...');
+            this.fsInstaller.createDirectoryStructure();
 
-        this.logStep('4/8', 'Copying AST Intelligence system files...');
-        this.fsInstaller.copySystemFiles();
-        this.fsInstaller.copyManageLibraryScript();
+            this.logStep('4/8', 'Copying AST Intelligence system files...');
+            this.fsInstaller.copySystemFiles();
+            this.fsInstaller.copyManageLibraryScript();
+        } else {
+            this.logStep('3/8', 'Skipping embedded runtime copy (npm-runtime mode)...');
+            this.logStep('4/8', 'Skipping embedded system files (npm-runtime mode)...');
+        }
 
         this.logStep('5/8', 'Creating project configuration...');
         this.configGenerator.createProjectConfig(platforms);
@@ -148,9 +162,14 @@ class InstallService {
 
     startEvidenceGuard() {
         const { spawn } = require('child_process');
-        const guardScript = path.join(this.targetRoot, 'scripts/hooks-system/bin/evidence-guard');
+        const candidates = [
+            path.join(this.targetRoot, 'scripts/hooks-system/bin/evidence-guard'),
+            path.join(this.targetRoot, 'node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/evidence-guard')
+        ];
 
-        if (!fs.existsSync(guardScript)) {
+        const guardScript = candidates.find(p => fs.existsSync(p)) || null;
+
+        if (!guardScript) {
             this.logWarning('Evidence guard script not found, skipping daemon start');
             return;
         }
@@ -241,6 +260,11 @@ ${COLORS.reset}\n`);
     }
 
     printFooter() {
+        const installMode = this.getInstallMode();
+        const configHint = installMode === 'vendored'
+            ? 'scripts/hooks-system/config/project.config.json'
+            : '.ast-intelligence/project.config.json';
+
         process.stdout.write(`
 ${COLORS.green}✨ Installation Complete! ✨${COLORS.reset}
 
@@ -249,13 +273,8 @@ ${COLORS.cyan}Evidence Guard Daemon:${COLORS.reset}
 - Manage with: ${COLORS.yellow}npm run ast:guard:{start|stop|status|logs}${COLORS.reset}
 
 ${COLORS.cyan}Next Steps:${COLORS.reset}
-1. Review generated configuration in ${COLORS.yellow}scripts/hooks-system/config/project.config.json${COLORS.reset}
-2. Run ${COLORS.yellow}./manage-library.sh verify${COLORS.reset} to check installation
-3. Commit the changes: ${COLORS.yellow}git add . && git commit -m "chore: install ast-intelligence-hooks"${COLORS.reset}
-
-${COLORS.blue}Documentation:${COLORS.reset}
-- scripts/hooks-system/docs/guides/getting-started.md
-- scripts/hooks-system/docs/architecture.md
+1. Review generated configuration in ${COLORS.yellow}${configHint}${COLORS.reset}
+2. Commit the changes: ${COLORS.yellow}git add . && git commit -m "chore: install ast-intelligence-hooks"${COLORS.reset}
 `);
     }
 
