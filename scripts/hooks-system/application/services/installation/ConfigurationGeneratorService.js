@@ -118,15 +118,15 @@ class ConfigurationGeneratorService {
                 ? 'scripts/hooks-system'
                 : 'node_modules/pumuki-ast-hooks/scripts/hooks-system';
 
-            packageJson.scripts['ast:refresh'] = `node ${base}/bin/update-evidence.sh`;
-            packageJson.scripts['ast:audit'] = `node ${base}/infrastructure/ast/ast-intelligence.js`;
-            packageJson.scripts['ast:guard:start'] = `bash ${base}/bin/evidence-guard start`;
-            packageJson.scripts['ast:guard:stop'] = `bash ${base}/bin/evidence-guard stop`;
-            packageJson.scripts['ast:guard:restart'] = `bash ${base}/bin/evidence-guard restart`;
-            packageJson.scripts['ast:guard:status'] = `bash ${base}/bin/evidence-guard status`;
-            packageJson.scripts['ast:guard:logs'] = `bash ${base}/bin/evidence-guard logs`;
-            packageJson.scripts['ast:check-version'] = `node ${base}/bin/check-version.js`;
-            packageJson.scripts['ast:gitflow'] = `node ${base}/bin/gitflow-cycle.js`;
+            packageJson.scripts['ast:refresh'] = `node "${base}/bin/update-evidence.sh"`;
+            packageJson.scripts['ast:audit'] = `node "${base}/infrastructure/ast/ast-intelligence.js"`;
+            packageJson.scripts['ast:guard:start'] = `bash "${base}/bin/evidence-guard" start`;
+            packageJson.scripts['ast:guard:stop'] = `bash "${base}/bin/evidence-guard" stop`;
+            packageJson.scripts['ast:guard:restart'] = `bash "${base}/bin/evidence-guard" restart`;
+            packageJson.scripts['ast:guard:status'] = `bash "${base}/bin/evidence-guard" status`;
+            packageJson.scripts['ast:guard:logs'] = `bash "${base}/bin/evidence-guard" logs`;
+            packageJson.scripts['ast:check-version'] = `node "${base}/bin/check-version.js"`;
+            packageJson.scripts['ast:gitflow'] = `node "${base}/bin/gitflow-cycle.js"`;
 
             fs.writeFileSync(projectPackageJsonPath, JSON.stringify(packageJson, null, 2));
             this.logSuccess('npm scripts added');
