@@ -6,7 +6,11 @@
 # =============================================================================
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENFORCER="${SCRIPT_DIR}/../infrastructure/shell/gitflow-enforcer.sh"
+ENFORCER="${SCRIPT_DIR}/../infrastructure/shell/gitflow/gitflow-enforcer.sh"
+
+if [[ ! -f "$ENFORCER" ]]; then
+  ENFORCER="${SCRIPT_DIR}/../infrastructure/shell/gitflow-enforcer.sh"
+fi
 
 if [[ ! -f "$ENFORCER" ]]; then
   echo "❌ Error: gitflow-enforcer.sh not found"
@@ -14,4 +18,17 @@ if [[ ! -f "$ENFORCER" ]]; then
   exit 1
 fi
 
-bash "$ENFORCER" "${1:-check}"
+SUBCOMMAND="${1:-check}"
+case "$SUBCOMMAND" in
+  status)
+    SUBCOMMAND="check"
+    ;;
+  workflow)
+    SUBCOMMAND="cycle"
+    ;;
+  reset)
+    SUBCOMMAND="cleanup"
+    ;;
+esac
+
+bash "$ENFORCER" "$SUBCOMMAND"

@@ -88,10 +88,15 @@ npm run ast:guard:logs
 Gate scope:
 ```bash
 # Default is staging (only staged files)
-AI_GATE_SCOPE=staging bash ./scripts/hooks-system/bin/update-evidence.sh --auto
+AI_GATE_SCOPE=staging bash ./node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/update-evidence.sh --auto
 
 # Repository-wide gate evaluation
-AI_GATE_SCOPE=repo bash ./scripts/hooks-system/bin/update-evidence.sh --auto
+AI_GATE_SCOPE=repo bash ./node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/update-evidence.sh --auto
+```
+
+If you are using vendored mode, you can use:
+```bash
+AI_GATE_SCOPE=staging bash ./scripts/hooks-system/bin/update-evidence.sh --auto
 ```
 
 ### Interactive Menu (Recommended)

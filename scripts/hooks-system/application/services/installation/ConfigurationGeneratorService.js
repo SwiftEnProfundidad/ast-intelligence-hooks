@@ -68,8 +68,12 @@ class ConfigurationGeneratorService {
             }
         });
 
-        const configPath = path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json');
-        // Ensure dir exists just in case
+        const installMode = String(env.get('HOOK_INSTALL_MODE', 'npm')).trim().toLowerCase();
+        const useVendored = installMode === 'vendored' || installMode === 'embedded';
+        const configPath = useVendored
+            ? path.join(this.targetRoot, 'scripts/hooks-system/config/project.config.json')
+            : path.join(this.targetRoot, '.ast-intelligence/project.config.json');
+
         const configDir = path.dirname(configPath);
         if (!fs.existsSync(configDir)) fs.mkdirSync(configDir, { recursive: true });
 
@@ -107,16 +111,22 @@ class ConfigurationGeneratorService {
                 packageJson.scripts = {};
             }
 
-            // Add helper scripts
-            packageJson.scripts['ast:refresh'] = 'node scripts/hooks-system/bin/update-evidence.sh';
-            packageJson.scripts['ast:audit'] = 'node scripts/hooks-system/infrastructure/ast/ast-intelligence.js';
-            packageJson.scripts['ast:guard:start'] = 'bash scripts/hooks-system/bin/evidence-guard start';
-            packageJson.scripts['ast:guard:stop'] = 'bash scripts/hooks-system/bin/evidence-guard stop';
-            packageJson.scripts['ast:guard:restart'] = 'bash scripts/hooks-system/bin/evidence-guard restart';
-            packageJson.scripts['ast:guard:status'] = 'bash scripts/hooks-system/bin/evidence-guard status';
-            packageJson.scripts['ast:guard:logs'] = 'bash scripts/hooks-system/bin/evidence-guard logs';
-            packageJson.scripts['ast:check-version'] = 'node scripts/hooks-system/bin/check-version.js';
-            packageJson.scripts['ast:gitflow'] = 'node scripts/hooks-system/bin/gitflow-cycle.js';
+            const installMode = String(env.get('HOOK_INSTALL_MODE', 'npm')).trim().toLowerCase();
+            const useVendored = installMode === 'vendored' || installMode === 'embedded';
+
+            const base = useVendored
+                ? 'scripts/hooks-system'
+                : 'node_modules/pumuki-ast-hooks/scripts/hooks-system';
+
+            packageJson.scripts['ast:refresh'] = `node ${base}/bin/update-evidence.sh`;
+            packageJson.scripts['ast:audit'] = `node ${base}/infrastructure/ast/ast-intelligence.js`;
+            packageJson.scripts['ast:guard:start'] = `bash ${base}/bin/evidence-guard start`;
+            packageJson.scripts['ast:guard:stop'] = `bash ${base}/bin/evidence-guard stop`;
+            packageJson.scripts['ast:guard:restart'] = `bash ${base}/bin/evidence-guard restart`;
+            packageJson.scripts['ast:guard:status'] = `bash ${base}/bin/evidence-guard status`;
+            packageJson.scripts['ast:guard:logs'] = `bash ${base}/bin/evidence-guard logs`;
+            packageJson.scripts['ast:check-version'] = `node ${base}/bin/check-version.js`;
+            packageJson.scripts['ast:gitflow'] = `node ${base}/bin/gitflow-cycle.js`;
 
             fs.writeFileSync(projectPackageJsonPath, JSON.stringify(packageJson, null, 2));
             this.logSuccess('npm scripts added');
