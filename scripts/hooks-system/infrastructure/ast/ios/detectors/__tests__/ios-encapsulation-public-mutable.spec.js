@@ -12,6 +12,22 @@ describe('ios.encapsulation.public_mutable', () => {
         };
     }
 
+    it('does not flag public private(set) stored property', () => {
+        const analyzer = makeAnalyzer();
+        const node = {
+            'key.name': 'state',
+            'key.line': 10,
+            'key.kind': 'source.lang.swift.decl.var.instance',
+            'key.accessibility': 'source.lang.swift.accessibility.public'
+        };
+
+        analyzer.getAttributes = () => ['setter_access.private'];
+
+        analyzePropertyAST(analyzer, node, '/tmp/Foo.swift');
+
+        expect(analyzer.findings.find(f => f.ruleId === 'ios.encapsulation.public_mutable')).toBeUndefined();
+    });
+
     it('does not flag public computed get-only property', () => {
         const analyzer = makeAnalyzer();
         const node = {

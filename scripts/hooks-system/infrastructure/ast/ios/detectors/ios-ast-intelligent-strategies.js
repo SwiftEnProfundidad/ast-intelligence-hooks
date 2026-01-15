@@ -457,7 +457,8 @@ function analyzePropertyAST(analyzer, node, filePath) {
     const isComputed = hasAccessorGet || hasAccessorSet;
     const isMutable = isComputed ? hasAccessorSet : true;
 
-    if (isPublic && isInstance && isMutable && !attributes.includes('setter_access')) {
+    const hasSetterAccessRestriction = attributes.some(a => String(a).startsWith('setter_access'));
+    if (isPublic && isInstance && isMutable && !hasSetterAccessRestriction) {
         analyzer.pushFinding('ios.encapsulation.public_mutable', 'medium', filePath, line, `Public mutable property '${name}' - consider private(set)`);
     }
 }
