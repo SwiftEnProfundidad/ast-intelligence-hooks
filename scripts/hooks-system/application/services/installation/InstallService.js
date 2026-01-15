@@ -8,6 +8,7 @@ const FileSystemInstallerService = require('./FileSystemInstallerService');
 const ConfigurationGeneratorService = require('./ConfigurationGeneratorService');
 const IdeIntegrationService = require('./IdeIntegrationService');
 const CriticalDependenciesService = require('./CriticalDependenciesService');
+const InstallManifestService = require('./InstallManifestService');
 const UnifiedLogger = require('../logging/UnifiedLogger');
 
 const COLORS = {
@@ -75,6 +76,7 @@ class InstallService {
         this.fsInstaller = new FileSystemInstallerService(this.targetRoot, this.hookSystemRoot, this.logger);
         this.configGenerator = new ConfigurationGeneratorService(this.targetRoot, this.hookSystemRoot);
         this.ideIntegration = new IdeIntegrationService(this.targetRoot, this.hookSystemRoot, this.logger);
+        this.manifest = new InstallManifestService(this.targetRoot, this.version);
     }
 
     getInstallMode() {
@@ -156,8 +158,56 @@ class InstallService {
         this.logStep('8.5/8', 'Starting evidence guard daemon...');
         this.startEvidenceGuard();
 
+        this.logStep('8.75/8', 'Saving installation manifest...');
+        this.saveInstallManifest(installMode);
+
         this.logger.info('INSTALLATION_COMPLETED_SUCCESSFULLY');
         this.printFooter();
+    }
+
+    saveInstallManifest(installMode) {
+        this.manifest.recordCreatedDir('.ast-intelligence');
+        this.manifest.recordCreatedFile('.AI_EVIDENCE.json');
+        this.manifest.recordCreatedFile('.evidence-guard.pid');
+        this.manifest.recordCreatedFile('.evidence-guard.log');
+
+        if (installMode === 'vendored') {
+            this.manifest.recordCreatedDir('scripts/hooks-system');
+        }
+
+        const cursorMcp = path.join(this.targetRoot, '.cursor', 'mcp.json');
+        const windsurfMcp = path.join(this.targetRoot, '.windsurf', 'mcp.json');
+        if (fs.existsSync(cursorMcp)) {
+            this.manifest.recordCreatedDir('.cursor');
+            this.manifest.recordModifiedFile('.cursor/mcp.json', null);
+        }
+        if (fs.existsSync(windsurfMcp)) {
+            this.manifest.recordCreatedDir('.windsurf');
+            this.manifest.recordModifiedFile('.windsurf/mcp.json', null);
+        }
+
+        const vscodeDir = path.join(this.targetRoot, '.vscode');
+        if (fs.existsSync(vscodeDir)) {
+            this.manifest.recordCreatedDir('.vscode');
+            this.manifest.recordModifiedFile('.vscode/tasks.json', null);
+        }
+
+        const gitHooksDir = path.join(this.targetRoot, '.git', 'hooks');
+        if (fs.existsSync(path.join(gitHooksDir, 'pre-commit'))) {
+            this.manifest.recordCreatedFile('.git/hooks/pre-commit');
+        }
+        if (fs.existsSync(path.join(gitHooksDir, 'pre-push'))) {
+            this.manifest.recordCreatedFile('.git/hooks/pre-push');
+        }
+
+        this.manifest.recordModifiedFile('package.json', null);
+
+        try {
+            this.manifest.save();
+            this.logSuccess('Installation manifest saved');
+        } catch (error) {
+            this.logWarning(`Failed to save manifest: ${error.message}`);
+        }
     }
 
     startEvidenceGuard() {
