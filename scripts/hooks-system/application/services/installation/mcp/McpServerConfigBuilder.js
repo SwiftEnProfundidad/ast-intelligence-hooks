@@ -27,6 +27,9 @@ class McpServerConfigBuilder {
         const evidenceEntrypoint = this.resolveEvidenceWatcherEntrypoint();
         const nodePath = this.resolveNodeBinary();
 
+        const stableAutomationAlias = 'ast-intelligence-automation-hooks';
+        const stableEvidenceAlias = 'ai-evidence-watcher-hooks';
+
         const mcpConfig = {
             mcpServers: {
                 [serverId]: {
@@ -40,6 +43,24 @@ class McpServerConfigBuilder {
                     }
                 },
                 [evidenceWatcherServerId]: {
+                    command: nodePath,
+                    args: [evidenceEntrypoint],
+                    env: {
+                        REPO_ROOT: this.targetRoot,
+                        MCP_MAC_NOTIFICATIONS: 'true'
+                    }
+                },
+                [stableAutomationAlias]: {
+                    command: nodePath,
+                    args: [entrypoint],
+                    env: {
+                        REPO_ROOT: this.targetRoot,
+                        AUTO_COMMIT_ENABLED: 'false',
+                        AUTO_PUSH_ENABLED: 'false',
+                        AUTO_PR_ENABLED: 'false'
+                    }
+                },
+                [stableEvidenceAlias]: {
                     command: nodePath,
                     args: [evidenceEntrypoint],
                     env: {
