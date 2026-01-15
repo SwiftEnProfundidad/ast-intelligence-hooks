@@ -49,8 +49,14 @@ describe('MCP installer (project-scoped)', () => {
         expect(cursorServers.some(id => id.startsWith('ast-intelligence-automation-'))).toBe(true);
         expect(cursorServers.some(id => id.startsWith('ai-evidence-watcher-'))).toBe(true);
 
+        expect(cursorServers).toContain('ast-intelligence-automation-hooks');
+        expect(cursorServers).toContain('ai-evidence-watcher-hooks');
+
         expect(windsurfServers.some(id => id.startsWith('ast-intelligence-automation-'))).toBe(true);
         expect(windsurfServers.some(id => id.startsWith('ai-evidence-watcher-'))).toBe(true);
+
+        expect(windsurfServers).toContain('ast-intelligence-automation-hooks');
+        expect(windsurfServers).toContain('ai-evidence-watcher-hooks');
     });
 
     it('should be idempotent and not duplicate servers across runs', () => {
@@ -65,10 +71,13 @@ describe('MCP installer (project-scoped)', () => {
         const cursor = JSON.parse(fs.readFileSync(cursorPath, 'utf8'));
 
         const ids = Object.keys(cursor.mcpServers || {});
-        const automation = ids.filter(id => id.startsWith('ast-intelligence-automation-'));
-        const evidence = ids.filter(id => id.startsWith('ai-evidence-watcher-'));
+        const automation = ids.filter(id => id.startsWith('ast-intelligence-automation-') && id !== 'ast-intelligence-automation-hooks');
+        const evidence = ids.filter(id => id.startsWith('ai-evidence-watcher-') && id !== 'ai-evidence-watcher-hooks');
 
         expect(automation.length).toBe(1);
         expect(evidence.length).toBe(1);
+
+        expect(ids.filter(id => id === 'ast-intelligence-automation-hooks').length).toBe(1);
+        expect(ids.filter(id => id === 'ai-evidence-watcher-hooks').length).toBe(1);
     });
 });

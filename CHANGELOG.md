@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Installation manifest**: `ast-install` now generates `.ast-intelligence/install-manifest.json` tracking all created files and directories.
 - **Manifest-based uninstall**: `ast-uninstall` uses the manifest for precise cleanup when available, falling back to heuristic detection for older installations.
 
+## [6.1.10] - 2026-01-15
+
+### Fixed
+
+- **MCP stable server alias**: project-scoped MCP config now includes stable aliases `ast-intelligence-automation-hooks` and `ai-evidence-watcher-hooks` to avoid "unknown MCP server" in Codex/Windsurf when the client expects those IDs.
+
 ## [6.1.8] - 2026-01-15
 
 ### Fixed
