@@ -6,7 +6,7 @@
  * Unified CLI to run audits from any project
  */
 
-const { execSync } = require('child_process');
+const { execSync, execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const env = require('../config/env');
@@ -365,7 +365,7 @@ const commands = {
     console.log('🔍 Running full AST analysis and updating evidence...');
 
     try {
-      execSync(`node "${auditScript}"`, {
+      execFileSync(process.execPath, [auditScript], {
         stdio: 'inherit',
         env: {
           ...process.env,
@@ -402,22 +402,23 @@ const commands = {
       execEnv.STAGING_ONLY_MODE = '1';
     }
 
-    execSync(
-      `node ${path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js')} ${filteredArgs.join(' ')}`,
+    execFileSync(
+      process.execPath,
+      [path.join(HOOKS_ROOT, 'infrastructure/ast/ast-intelligence.js'), ...filteredArgs],
       { stdio: 'inherit', env: execEnv }
     );
   },
 
   install: () => {
-    execSync(`node ${path.join(HOOKS_ROOT, 'bin/install.js')}`, { stdio: 'inherit' });
+    execFileSync(process.execPath, [path.join(HOOKS_ROOT, 'bin/install.js')], { stdio: 'inherit' });
   },
 
   'verify-policy': () => {
-    execSync(`bash ${path.join(HOOKS_ROOT, 'bin/verify-no-verify.sh')}`, { stdio: 'inherit' });
+    execFileSync('bash', [path.join(HOOKS_ROOT, 'bin/verify-no-verify.sh')], { stdio: 'inherit' });
   },
 
   'progress': () => {
-    execSync(`bash ${path.join(HOOKS_ROOT, 'bin/generate-progress-report.sh')}`, { stdio: 'inherit' });
+    execFileSync('bash', [path.join(HOOKS_ROOT, 'bin/generate-progress-report.sh')], { stdio: 'inherit' });
   },
 
   health: () => {
@@ -426,12 +427,16 @@ const commands = {
   },
 
   watch: () => {
-    execSync(`node ${path.join(HOOKS_ROOT, 'bin/watch-hooks.js')}`, { stdio: 'inherit' });
+    execFileSync(process.execPath, [path.join(HOOKS_ROOT, 'bin/watch-hooks.js')], { stdio: 'inherit' });
   },
 
   'gitflow': () => {
     const subcommand = args[0] || 'check';
-    execSync(`bash ${path.join(HOOKS_ROOT, 'infrastructure/shell/gitflow-enforcer.sh')} ${subcommand}`, { stdio: 'inherit' });
+    let enforcerPath = path.join(HOOKS_ROOT, 'infrastructure/shell/gitflow/gitflow-enforcer.sh');
+    if (!fs.existsSync(enforcerPath)) {
+      enforcerPath = path.join(HOOKS_ROOT, 'infrastructure/shell/gitflow-enforcer.sh');
+    }
+    execFileSync('bash', [enforcerPath, subcommand], { stdio: 'inherit' });
   },
 
   'intent': () => {

@@ -91,6 +91,8 @@ npm install --save-dev pumuki-ast-hooks
 npm run install-hooks
 ```
 
+By default, the installer uses npm-runtime mode (no embedded copy of `scripts/hooks-system` into your project). To use the vendored mode (embedded runtime), run the installer with `HOOK_INSTALL_MODE=vendored`.
+
 ### Option 2: Global Installation
 
 ```bash
@@ -231,7 +233,7 @@ cat > .cursor/mcp.json << 'EOF'
     "ai-evidence-watcher": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/node_modules/pumuki-ast-hooks/infrastructure/mcp/evidence-watcher.js"
+        "${workspaceFolder}/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/mcp/evidence-watcher.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}"
@@ -240,7 +242,7 @@ cat > .cursor/mcp.json << 'EOF'
     "ast-intelligence-automation": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js"
+        "${workspaceFolder}/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/mcp/ast-intelligence-automation.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}",
@@ -357,6 +359,8 @@ cp node_modules/pumuki-ast-hooks/templates/config/rules.json.template \
 
 # Then customize as needed
 ```
+
+If you are using npm-runtime mode (default), use `HOOK_INSTALL_MODE=vendored` before re-running the installer to ensure `scripts/hooks-system/config/` exists in your project.
 
 **Note:** Templates are optional. The library works without them using default configurations. Only copy and customize if you need project-specific overrides.
 
@@ -653,7 +657,7 @@ npm run install-hooks
 This ensures:
 - ✅ Latest Git hooks are installed (with new features)
 - ✅ Latest MCP server configurations are updated
-- ✅ Latest system files are copied to `scripts/hooks-system/`
+- ✅ Latest system files are copied to `scripts/hooks-system/` when using vendored mode
 - ✅ Any new configuration options are applied
 
 **What gets updated:**

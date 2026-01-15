@@ -19,7 +19,12 @@ echo ""
 echo "🔍 Validating Git Flow compliance before push..."
 echo ""
 
-if ! bash "${HOOKS_SYSTEM_ROOT}/infrastructure/shell/gitflow-enforcer.sh" check; then
+ENFORCER_SCRIPT="${HOOKS_SYSTEM_ROOT}/infrastructure/shell/gitflow/gitflow-enforcer.sh"
+if [[ ! -f "$ENFORCER_SCRIPT" ]]; then
+  ENFORCER_SCRIPT="${HOOKS_SYSTEM_ROOT}/infrastructure/shell/gitflow-enforcer.sh"
+fi
+
+if ! bash "$ENFORCER_SCRIPT" check; then
   echo ""
   echo "🚨 PUSH BLOCKED: Complete Git Flow cycle first"
   echo ""

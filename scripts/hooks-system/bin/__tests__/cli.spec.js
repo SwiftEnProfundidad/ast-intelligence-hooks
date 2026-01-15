@@ -13,6 +13,7 @@ describe('cli', () => {
     const childProcess = require('child_process');
 
     const originalExecSync = childProcess.execSync;
+    const originalExecFileSync = childProcess.execFileSync;
     childProcess.execSync = (cmd) => {
       const command = String(cmd);
       if (command.includes('git log') && command.includes('--pretty=%s')) {
@@ -33,6 +34,7 @@ describe('cli', () => {
     expect(proposed.primary_goal.toLowerCase()).toContain('token economy');
 
     childProcess.execSync = originalExecSync;
+    childProcess.execFileSync = originalExecFileSync;
   });
 
   it('wrap-up should auto-save human_intent by default', () => {
@@ -45,6 +47,7 @@ describe('cli', () => {
 
     const originalArgv = process.argv;
     const originalExecSync = childProcess.execSync;
+    const originalExecFileSync = childProcess.execFileSync;
 
     const existsSyncSpy = jest.spyOn(fs, 'existsSync').mockImplementation(() => true);
     const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockImplementation(() => JSON.stringify({ ai_gate: { status: 'ALLOWED' }, platforms: {} }));
@@ -64,9 +67,10 @@ describe('cli', () => {
       if (command.includes('git log') && command.includes('--pretty=%s')) {
         return 'fix: token economy docs, assets and MCP outputs\n';
       }
-      if (command.includes('node') && command.includes('intelligent-audit.js')) {
-        return '';
-      }
+      return '';
+    };
+
+    childProcess.execFileSync = () => {
       return '';
     };
 
@@ -84,6 +88,7 @@ describe('cli', () => {
     console.log = originalConsoleLog;
     process.argv = originalArgv;
     childProcess.execSync = originalExecSync;
+    childProcess.execFileSync = originalExecFileSync;
     existsSyncSpy.mockRestore();
     readFileSyncSpy.mockRestore();
     writeFileSyncSpy.mockRestore();
@@ -99,6 +104,7 @@ describe('cli', () => {
 
     const originalArgv = process.argv;
     const originalExecSync = childProcess.execSync;
+    const originalExecFileSync = childProcess.execFileSync;
 
     const existsSyncSpy = jest.spyOn(fs, 'existsSync').mockImplementation(() => true);
     const readFileSyncSpy = jest.spyOn(fs, 'readFileSync').mockImplementation(() => JSON.stringify({ ai_gate: { status: 'ALLOWED' }, platforms: {} }));
@@ -118,9 +124,10 @@ describe('cli', () => {
       if (command.includes('git log') && command.includes('--pretty=%s')) {
         return 'fix: token economy docs, assets and MCP outputs\n';
       }
-      if (command.includes('node') && command.includes('intelligent-audit.js')) {
-        return '';
-      }
+      return '';
+    };
+
+    childProcess.execFileSync = () => {
       return '';
     };
 
@@ -137,8 +144,31 @@ describe('cli', () => {
     console.log = originalConsoleLog;
     process.argv = originalArgv;
     childProcess.execSync = originalExecSync;
+    childProcess.execFileSync = originalExecFileSync;
     existsSyncSpy.mockRestore();
     readFileSyncSpy.mockRestore();
     writeFileSyncSpy.mockRestore();
+  });
+
+  it('install should execute install.js using execFileSync with args', () => {
+    const path = require('path');
+    const childProcess = require('child_process');
+
+    const originalArgv = process.argv;
+    const originalExecFileSync = childProcess.execFileSync;
+
+    const execFileSyncSpy = jest.fn();
+    childProcess.execFileSync = execFileSyncSpy;
+
+    process.argv = ['node', 'cli.js', 'install'];
+    jest.resetModules();
+    const { commands } = require('../cli.js');
+    commands.install();
+
+    const expectedInstallPath = path.join(__dirname, '..', '..', 'bin', 'install.js');
+    expect(execFileSyncSpy).toHaveBeenCalledWith(process.execPath, [expectedInstallPath], { stdio: 'inherit' });
+
+    process.argv = originalArgv;
+    childProcess.execFileSync = originalExecFileSync;
   });
 });
