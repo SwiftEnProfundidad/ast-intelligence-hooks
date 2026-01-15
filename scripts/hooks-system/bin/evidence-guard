@@ -1,7 +1,15 @@
 #!/bin/bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+PROJECT_ROOT="$(pwd)"
+while [ "$PROJECT_ROOT" != "/" ] && [ ! -f "$PROJECT_ROOT/package.json" ]; do
+  PROJECT_ROOT="$(dirname "$PROJECT_ROOT")"
+done
+if [ ! -f "$PROJECT_ROOT/package.json" ]; then
+  PROJECT_ROOT="$(pwd)"
+fi
+
 GUARD_SCRIPT="$SCRIPT_DIR/../infrastructure/daemons/evidence-guard.js"
 PID_FILE="$PROJECT_ROOT/.evidence-guard.pid"
 LOG_FILE="$PROJECT_ROOT/.evidence-guard.log"

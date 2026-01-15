@@ -5,6 +5,13 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.8] - 2026-01-15
+
+### Fixed
+
+- **Paths with spaces support**: `evidence-guard` wrapper now resolves `PROJECT_ROOT` from `cwd` by searching for `package.json` upwards, fixing daemon startup in paths like `/Volumes/Backup Plus/...`.
+- **Quoted npm scripts**: `addNpmScripts` now wraps paths in quotes to prevent shell word-splitting on paths with spaces.
+
 ## [6.1.5] - 2026-01-15
 
 ### Fixed
