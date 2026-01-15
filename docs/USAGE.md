@@ -17,8 +17,9 @@
 ### Step 1: Install
 
 ```bash
+git init
 npm install --save-dev pumuki-ast-hooks
-npm run install-hooks
+npx ast-install
 ```
 
 ### Step 2: Make a commit

@@ -16,9 +16,10 @@ Portable, project‑agnostic, multi‑platform enterprise framework to govern AI
 ## Quick Start (30–60s)
 
 ```bash
+git init
 npm install --save-dev pumuki-ast-hooks
-npm run install-hooks
-npx ast-hooks
+npx ast-install
+npx ast-hooks audit
 ```
 
 Default installation mode is `npm-runtime`.
@@ -26,7 +27,7 @@ Default installation mode is `npm-runtime`.
 To opt into an embedded runtime copy (`vendored` mode):
 
 ```bash
-HOOK_INSTALL_MODE=vendored npm run install-hooks
+HOOK_INSTALL_MODE=vendored npx ast-install
 ```
 
 ---

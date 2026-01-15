@@ -84,11 +84,11 @@ The installer will detect if Git is missing and show a clear warning:
 ### Option 1: Local Installation (Recommended)
 
 ```bash
-# Install as development dependency
+# Install as dev dependency
 npm install --save-dev pumuki-ast-hooks
 
 # Configure hooks
-npm run install-hooks
+npx ast-install
 ```
 
 By default, the installer uses npm-runtime mode (no embedded copy of `scripts/hooks-system` into your project). To use the vendored mode (embedded runtime), run the installer with `HOOK_INSTALL_MODE=vendored`.
