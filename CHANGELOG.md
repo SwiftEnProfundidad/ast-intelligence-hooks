@@ -22,6 +22,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Runtime path resolution**: Scripts and hooks now resolve runtime files from `node_modules/pumuki-ast-hooks/scripts/hooks-system` when vendored paths are not present.
 
+## [6.1.5] - 2026-01-15
+
+### Fixed
+
+- **iOS public private(set) detection**: `ios.encapsulation.public_mutable` no longer flags `public private(set) var` properties by treating `setter_access.*` attributes as setter access restrictions.
+
 ## [6.1.1] - 2026-01-13
 
 ### Fixed
