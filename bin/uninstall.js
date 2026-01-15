@@ -3,6 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
+const MANIFEST_RELATIVE_PATH = '.ast-intelligence/install-manifest.json';
+
 function findProjectRoot(startDir) {
     let current = startDir;
     while (current !== '/') {
@@ -12,6 +14,45 @@ function findProjectRoot(startDir) {
         current = path.dirname(current);
     }
     return startDir;
+}
+
+function loadManifest(projectRoot) {
+    const manifestPath = path.join(projectRoot, MANIFEST_RELATIVE_PATH);
+    if (!fs.existsSync(manifestPath)) {
+        return null;
+    }
+    try {
+        return JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    } catch {
+        return null;
+    }
+}
+
+function buildUninstallPlanFromManifest(projectRoot, manifest) {
+    const paths = [];
+
+    for (const relPath of manifest.createdFiles || []) {
+        const fullPath = path.join(projectRoot, relPath);
+        if (fs.existsSync(fullPath)) {
+            paths.push(fullPath);
+        }
+    }
+
+    for (const relPath of manifest.createdDirs || []) {
+        const fullPath = path.join(projectRoot, relPath);
+        if (fs.existsSync(fullPath)) {
+            paths.push(fullPath);
+        }
+    }
+
+    paths.push(path.join(projectRoot, MANIFEST_RELATIVE_PATH));
+
+    const unique = Array.from(new Set(paths.filter(p => fs.existsSync(p))));
+    return {
+        projectRoot,
+        paths: unique.sort(),
+        fromManifest: true
+    };
 }
 
 function isPumukiHookContent(content) {
@@ -146,11 +187,18 @@ function printUsage() {
 }
 
 function planUninstall({ projectRoot }) {
+    const manifest = loadManifest(projectRoot);
+    if (manifest) {
+        return buildUninstallPlanFromManifest(projectRoot, manifest);
+    }
     return buildUninstallPlan(projectRoot);
 }
 
 function applyUninstall({ projectRoot, apply, yes }) {
-    const plan = buildUninstallPlan(projectRoot);
+    const manifest = loadManifest(projectRoot);
+    const plan = manifest
+        ? buildUninstallPlanFromManifest(projectRoot, manifest)
+        : buildUninstallPlan(projectRoot);
 
     if (!apply) {
         return { applied: false, plan };
@@ -182,10 +230,18 @@ function main() {
     const rootFromCwd = findProjectRoot(cwd);
     const projectRoot = options.projectRootArg ? path.resolve(options.projectRootArg) : rootFromCwd;
 
-    const plan = buildUninstallPlan(projectRoot);
+    const manifest = loadManifest(projectRoot);
+    const plan = manifest
+        ? buildUninstallPlanFromManifest(projectRoot, manifest)
+        : buildUninstallPlan(projectRoot);
 
     if (options.dryRun) {
         process.stdout.write(`Project root: ${projectRoot}\n`);
+        if (plan.fromManifest) {
+            process.stdout.write('Using install manifest for precise cleanup.\n');
+        } else {
+            process.stdout.write('No manifest found, using heuristic detection.\n');
+        }
         process.stdout.write('Planned removals:\n');
         for (const p of plan.paths) {
             process.stdout.write(`- ${p}\n`);
