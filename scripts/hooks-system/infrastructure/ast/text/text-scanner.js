@@ -15,6 +15,58 @@ function walk(dir, acc) {
   }
 }
 
+function hasProviderNameHint(content, filePath) {
+  const providerNamePattern = /\b(class|struct|object)\s+[A-Za-z_][A-Za-z0-9_]*(Message|Notice|Localization|Provider|Presenter|Mapper)[A-Za-z0-9_]*\b/i;
+  if (providerNamePattern.test(content)) return true;
+  const baseName = path.basename(filePath, path.extname(filePath));
+  return /Message|Notice|Localization|Provider|Presenter|Mapper/i.test(baseName);
+}
+
+function hasSwiftMappingHint(content) {
+  return /\brawValue\b/.test(content) || /\bDictionary<[^>]*String\b/.test(content) || /\[[A-Za-z_][A-Za-z0-9_]*\s*:\s*String\]/.test(content);
+}
+
+function hasKotlinMappingHint(content) {
+  return /\bmapOf\s*\(|\bmutableMapOf\s*\(|\bMap<[^>]*String\b/.test(content);
+}
+
+function hasSwiftSwitchToString(content) {
+  const switchPattern = /switch\s+[A-Za-z_][A-Za-z0-9_]*\s*\{[^}]*\}/g;
+  let match;
+  while ((match = switchPattern.exec(content)) !== null) {
+    const block = match[0];
+    if (!/\bcase\b/.test(block)) continue;
+    if (!/\"[^\"]+\"/.test(block)) continue;
+    if (!/case\s+(\.|[A-Za-z_][A-Za-z0-9_]*\.)[A-Za-z_][A-Za-z0-9_]*\s*:/.test(block)) continue;
+    if (/\breturn\b/.test(block) || /case\s+[^\n:]+:\s*\"[^\"]+\"/.test(block)) return true;
+  }
+  return false;
+}
+
+function hasKotlinWhenToString(content) {
+  const whenPattern = /when\s*\([^)]*\)\s*\{[^}]*\}/g;
+  let match;
+  while ((match = whenPattern.exec(content)) !== null) {
+    const block = match[0];
+    if (!/[A-Za-z_][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*\s*->\s*\"[^\"]+\"/.test(block)) continue;
+    return true;
+  }
+  return false;
+}
+
+function shouldFlagMessageProviderSwitch(content, filePath, language) {
+  if (!hasProviderNameHint(content, filePath)) return false;
+  if (language === 'swift') {
+    if (hasSwiftMappingHint(content)) return false;
+    return hasSwiftSwitchToString(content);
+  }
+  if (language === 'kotlin') {
+    if (hasKotlinMappingHint(content)) return false;
+    return hasKotlinWhenToString(content);
+  }
+  return false;
+}
+
 function runTextScanner(root, findings) {
   const files = [];
   let iosAnchorFile = null;
@@ -541,6 +593,11 @@ function runTextScanner(root, findings) {
       if (/Handler\(\)\.post/.test(content) && !/@SuppressLint\("HandlerLeak"\)/.test(content)) {
         pushFileFinding('android.antipattern.handler_leak', 'high', file, 1, 1, 'Handler without weak reference - potential memory leak', findings);
       }
+      const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(file);
+      const isTestFile = /\.(spec|test)\.(js|ts|kt|kts)$/i.test(file);
+      if ((ext === '.kt' || ext === '.kts') && !isAnalyzer && !isTestFile && shouldFlagMessageProviderSwitch(content, file, 'kotlin')) {
+        pushFileFinding('android.solid.ocp_switch_to_string', 'medium', file, 1, 1, 'OCP warning: switch-to-string mapping in message/localization provider - prefer injected map or enum raw values', findings);
+      }
     }
 
     if (plat === 'ios') {
@@ -635,6 +692,9 @@ function runTextScanner(root, findings) {
       }
       if (/Text\(\s*\"[^\"]+\"\s*\)/.test(content) && !/NSLocalizedString|\.localized/.test(content)) {
         pushFileFinding('ios.i18n.hardcoded_strings', 'medium', file, 1, 1, 'Hardcoded string in Text() without localization', findings);
+      }
+      if (!isAnalyzer && !isTestFile && shouldFlagMessageProviderSwitch(content, file, 'swift')) {
+        pushFileFinding('ios.solid.ocp_switch_to_string', 'medium', file, 1, 1, 'OCP warning: switch-to-string mapping in message/localization provider - prefer RawRepresentable or injected map', findings);
       }
       if (/Date\(/.test(content) && !/DateFormatter/.test(content)) {
         pushFileFinding('ios.i18n.missing_date_formatter', 'medium', file, 1, 1, 'Date rendered without DateFormatter', findings);

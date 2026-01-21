@@ -13,7 +13,7 @@ Portable, project‑agnostic, multi‑platform enterprise framework to govern AI
 
 ---
 
-## Quick Start (30–60s)
+## Quick start (30–60s)
 
 ```bash
 git init
@@ -22,9 +22,9 @@ npx ast-install
 npx ast-hooks audit
 ```
 
-Default installation mode is `npm-runtime`.
+Default installation mode: `npm-runtime`.
 
-To opt into an embedded runtime copy (`vendored` mode):
+To use the embedded runtime (`vendored` mode):
 
 ```bash
 HOOK_INSTALL_MODE=vendored npx ast-install
@@ -360,30 +360,33 @@ The Git Flow cycle includes branch validation, commits, push, PR, merge (by poli
 
 ---
 
-## 9. Commands Section (MANDATORY – DO NOT CHANGE)
+## 9. Commands (required)
 
-### Install (dev)
+### Installation (dev)
 
 ```bash
 npm install --save-dev pumuki-ast-hooks
+npx ast-install
 ```
 
-### Legacy install
+### Installation (legacy)
 
 ```bash
 npm install --save-dev pumuki-ast-hooks
+npx ast-install
 ```
 
 ### Update
 
 ```bash
 npm install --save-dev pumuki-ast-hooks@latest
-npm run install-hooks
+npx ast-install
 ```
 
 ### Uninstall
 
 ```bash
+npx ast-uninstall
 npm uninstall pumuki-ast-hooks
 ```
 
@@ -393,7 +396,7 @@ npm uninstall pumuki-ast-hooks
 npm run install-hooks
 ```
 
-### Run interactive menu
+### Interactive menu
 
 ```bash
 npx ast-hooks
@@ -411,7 +414,7 @@ npm run ast:check-version
 npm run audit
 ```
 
-### Git flow
+### Git Flow
 
 ```bash
 npm run ast:gitflow

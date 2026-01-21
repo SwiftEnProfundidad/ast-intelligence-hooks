@@ -65,5 +65,65 @@ describe('Text Scanner Module', () => {
       const typeSafety = findings.find(f => f.ruleId === 'ios.optionals.type_safety');
       expect(typeSafety).toBeUndefined();
     });
+
+    it('flags switch-based message provider mapping to string literals', () => {
+      const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ast-text-'));
+      const filePath = path.join(root, 'SupportMessageProvider.swift');
+      const content = [
+        'enum SupportStatus {',
+        '  case active',
+        '  case inactive',
+        '}',
+        '',
+        'struct SupportMessageProvider {',
+        '  func message(for status: SupportStatus) -> String {',
+        '    switch status {',
+        '    case .active:',
+        '      return "support.active"',
+        '    case .inactive:',
+        '      return "support.inactive"',
+        '    }',
+        '  }',
+        '}'
+      ].join('\n');
+
+      fs.writeFileSync(filePath, content, 'utf8');
+
+      const findings = [];
+      runTextScanner(root, findings);
+
+      const ocpFinding = findings.find(f => f.ruleId === 'ios.solid.ocp_switch_to_string');
+      expect(ocpFinding).toBeDefined();
+    });
+  });
+
+  describe('android rules', () => {
+    it('flags when-based message provider mapping to string literals', () => {
+      const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ast-text-'));
+      const filePath = path.join(root, 'SupportMessageProvider.kt');
+      const content = [
+        'enum class SupportStatus {',
+        '  ACTIVE,',
+        '  INACTIVE',
+        '}',
+        '',
+        'class SupportMessageProvider {',
+        '  fun message(status: SupportStatus): String {',
+        '    return when (status) {',
+        '      SupportStatus.ACTIVE -> "support.active"',
+        '      SupportStatus.INACTIVE -> "support.inactive"',
+        '    }',
+        '  }',
+        '}'
+      ].join('\n');
+
+      fs.writeFileSync(filePath, content, 'utf8');
+
+      const findings = [];
+      runTextScanner(root, findings);
+
+      const ocpFinding = findings.find(f => f.ruleId === 'android.solid.ocp_switch_to_string');
+      expect(ocpFinding).toBeDefined();
+    });
   });
 });

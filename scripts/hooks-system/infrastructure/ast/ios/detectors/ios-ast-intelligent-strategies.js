@@ -1,5 +1,6 @@
 const path = require('path');
 const DIValidationService = require('../../../../application/DIValidationService');
+const { resolveSrpSeverity, isThinWrapperSummary } = require('../utils/ios-srp-helpers');
 
 const diValidationService = new DIValidationService();
 
@@ -168,16 +169,22 @@ async function analyzeClassAST(analyzer, node, filePath) {
 
     if (name && !/Spec$|Test$|Mock/.test(name) && !name.includes('Coordinator')) {
         const complexity = calculateComplexityAST(substructure);
-        analyzer.godClassCandidates.push({
-            name,
-            filePath,
-            line,
-            methodsCount: methods.length,
-            significantMethodsCount: significantMethods.length,
+        const isThinWrapper = isThinWrapperSummary({
+            methodsCount: significantMethods.length,
             propertiesCount: properties.length,
-            bodyLength,
-            complexity,
         });
+        if (!isThinWrapper) {
+            analyzer.godClassCandidates.push({
+                name,
+                filePath,
+                line,
+                methodsCount: methods.length,
+                significantMethodsCount: significantMethods.length,
+                propertiesCount: properties.length,
+                bodyLength,
+                complexity,
+            });
+        }
     }
 
     if (name.includes('ViewController')) {
@@ -803,9 +810,14 @@ function finalizeGodClassDetection(analyzer) {
         const signalCount = [sizeOutlier, complexityOutlier].filter(Boolean).length;
 
         if (extremeOutlier || signalCount >= 2) {
+            const severity = resolveSrpSeverity(c.filePath, {
+                coreSeverity: 'critical',
+                defaultSeverity: 'high',
+                testSeverity: 'low',
+            });
             analyzer.pushFinding(
                 'ios.solid.srp.god_class',
-                'critical',
+                severity,
                 c.filePath,
                 c.line,
                 `God class '${c.name}': ${c.methodsCount} methods (z=${methodsZ.toFixed(2)}), ${c.propertiesCount} properties (z=${propsZ.toFixed(2)}), body ${c.bodyLength} (z=${bodyZ.toFixed(2)}), complexity ${c.complexity} (z=${complexityZ.toFixed(2)}) - VIOLATES SRP`

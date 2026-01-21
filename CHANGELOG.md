@@ -5,6 +5,31 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.13] - 2026-01-21
+
+### Fixed
+
+- **iOS SRP signal quality**: ignore thin wrappers, compute per-type SRP metrics, and flag unrelated multi-type files with layer-aware severity.
+
+## [6.1.12] - 2026-01-21
+
+### Fixed
+
+- **npm publish metadata**: normalized `bin` and `repository.url` to prevent npm from removing CLI commands at publish time.
+
+## [6.1.11] - 2026-01-21
+
+### Added
+
+- **OCP detection in message providers**: warns when Swift/Kotlin providers map enums with switch/when to string literals and recommends data-driven mappings.
+- **Regression tests**: coverage for OCP detection, evidence auto-refresh, and gitflow enforcer behavior.
+
+### Fixed
+
+- **AI_START auto-refresh**: evidence refreshes automatically when missing or stale before tool usage.
+- **Complete evidence**: evidence now includes MEDIUM/LOW violations in the gate (configurable max).
+- **Pre-commit robustness**: lint runs from repo root and atomicity ignores iOS ephemeral roots.
+
 ## [6.1.9] - 2026-01-15
 
 ### Added

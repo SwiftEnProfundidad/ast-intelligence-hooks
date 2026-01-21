@@ -1,25 +1,25 @@
 {
   "name": "pumuki-ast-hooks",
-  "version": "6.1.10",
+  "version": "6.1.13",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
-    "pumuki-ast-hooks": "./bin/pumuki-mcp-server.js",
-    "audit": "./bin/audit",
-    "ast-hooks": "./bin/cli.js",
-    "ast-install": "./bin/install.js",
-    "ast-uninstall": "./bin/uninstall.js",
-    "ast-violations": "./bin/violations-api.js",
-    "ast-check-version": "./bin/check-version.js",
-    "ast-gitflow": "./scripts/hooks-system/bin/gitflow-cycle.js",
-    "ai-commit": "./bin/ai-commit.sh",
-    "hook-run-orchestrator": "./bin/run-orchestrator.js",
-    "hook-watch": "./bin/watch-hooks.js",
-    "hook-status": "./bin/hook-status.js",
-    "hook-predict": "./bin/predictive-hooks.js",
-    "hook-playbook": "./bin/run-playbook.js",
-    "hook-doc-drift": "./bin/check-doc-drift.js",
-    "hook-plan-review": "./bin/plan-review.js"
+    "pumuki-ast-hooks": "bin/pumuki-mcp-server.js",
+    "audit": "bin/audit",
+    "ast-hooks": "bin/cli.js",
+    "ast-install": "bin/install.js",
+    "ast-uninstall": "bin/uninstall.js",
+    "ast-violations": "bin/violations-api.js",
+    "ast-check-version": "bin/check-version.js",
+    "ast-gitflow": "scripts/hooks-system/bin/gitflow-cycle.js",
+    "ai-commit": "bin/ai-commit.sh",
+    "hook-run-orchestrator": "bin/run-orchestrator.js",
+    "hook-watch": "bin/watch-hooks.js",
+    "hook-status": "bin/hook-status.js",
+    "hook-predict": "bin/predictive-hooks.js",
+    "hook-playbook": "bin/run-playbook.js",
+    "hook-doc-drift": "bin/check-doc-drift.js",
+    "hook-plan-review": "bin/plan-review.js"
   },
   "scripts": {
     "install-hooks": "node bin/install.js",
@@ -81,7 +81,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git"
+    "url": "git+https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git"
   },
   "bugs": {
     "url": "https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues"
