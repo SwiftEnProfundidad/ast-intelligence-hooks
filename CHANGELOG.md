@@ -5,6 +5,19 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.1.11] - 2026-01-21
+
+### Añadido
+
+- **Detección OCP en providers de mensajes**: advierte cuando providers Swift/Kotlin mapean enums con switch/when a literales de string y recomienda mapeo data‑driven.
+- **Tests de regresión**: cobertura para la detección OCP, auto‑refresh de evidencia y comportamiento del enforcer de gitflow.
+
+### Corregido
+
+- **AI_START auto‑refresh**: refresco automático de evidencia cuando falta o está obsoleta antes de usar herramientas.
+- **Evidencia completa**: la evidencia ahora incluye violaciones MEDIUM/LOW en el gate (máximo configurable).
+- **Robustez pre‑commit**: lint se ejecuta desde la raíz y la atomicidad ignora raíces efímeras iOS.
+
 ## [6.1.9] - 2026-01-15
 
 ### Added
