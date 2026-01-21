@@ -736,11 +736,10 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
     const mediumViolations = violations.filter(v => v.severity === 'MEDIUM');
     const lowViolations = violations.filter(v => v.severity === 'LOW');
 
-    let gateViolations = [...criticalViolations, ...highViolations];
-    if (gateViolations.length === 0) {
-      gateViolations = [...mediumViolations, ...lowViolations];
-    }
-    const blockingViolations = gateViolations.slice(0, 50);
+    const maxGateViolations = env.getNumber('AI_GATE_MAX_VIOLATIONS', 200);
+    const gateViolationsLimit = Number.isFinite(maxGateViolations) && maxGateViolations > 0 ? maxGateViolations : 200;
+    const gateViolations = [...criticalViolations, ...highViolations, ...mediumViolations, ...lowViolations];
+    const blockingViolations = gateViolations.slice(0, gateViolationsLimit);
 
     const gateScope = String(env.get('AI_GATE_SCOPE', 'staging') || 'staging').trim().toLowerCase();
 
