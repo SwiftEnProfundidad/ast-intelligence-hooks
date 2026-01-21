@@ -13,7 +13,7 @@ Portable, project‑agnostic, multi‑platform enterprise framework to govern AI
 
 ---
 
-## Inicio rápido (30–60s)
+## Quick start (30–60s)
 
 ```bash
 git init
@@ -22,9 +22,9 @@ npx ast-install
 npx ast-hooks audit
 ```
 
-Modo de instalación por defecto: `npm-runtime`.
+Default installation mode: `npm-runtime`.
 
-Para usar runtime embebido (modo `vendored`):
+To use the embedded runtime (`vendored` mode):
 
 ```bash
 HOOK_INSTALL_MODE=vendored npx ast-install
@@ -360,55 +360,55 @@ The Git Flow cycle includes branch validation, commits, push, PR, merge (by poli
 
 ---
 
-## 9. Sección de comandos (OBLIGATORIO – NO CAMBIAR)
+## 9. Commands (required)
 
-### Instalación (dev)
-
-```bash
-npm install --save-dev pumuki-ast-hooks
-npx ast-install
-```
-
-### Instalación (legacy)
+### Installation (dev)
 
 ```bash
 npm install --save-dev pumuki-ast-hooks
 npx ast-install
 ```
 
-### Actualización
+### Installation (legacy)
+
+```bash
+npm install --save-dev pumuki-ast-hooks
+npx ast-install
+```
+
+### Update
 
 ```bash
 npm install --save-dev pumuki-ast-hooks@latest
 npx ast-install
 ```
 
-### Desinstalación
+### Uninstall
 
 ```bash
 npx ast-uninstall
 npm uninstall pumuki-ast-hooks
 ```
 
-### Instalar hooks
+### Install hooks
 
 ```bash
 npm run install-hooks
 ```
 
-### Menú interactivo
+### Interactive menu
 
 ```bash
 npx ast-hooks
 ```
 
-### Verificación de versión
+### Version check
 
 ```bash
 npm run ast:check-version
 ```
 
-### Auditoría
+### Audit
 
 ```bash
 npm run audit
@@ -435,7 +435,7 @@ npm run ast:guard:status
 npm run ast:guard:logs
 ```
 
-### Refresco de evidencia
+### Evidence refresh
 
 ```bash
 npm run ast:refresh
