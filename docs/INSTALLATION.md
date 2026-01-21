@@ -626,7 +626,7 @@ To update:
      npm install --save-dev pumuki-ast-hooks@latest
 
   2. Re-install hooks (to get latest features):
-     npm run install-hooks
+     npx ast-install
 
 What's new in 5.3.1:
   Check CHANGELOG.md: https://github.com/...
@@ -651,7 +651,7 @@ npm install --save-dev pumuki-ast-hooks@5.3.1
 **⚠️ IMPORTANT:** After updating, you MUST re-run the installer to get the latest hooks and configurations:
 
 ```bash
-npm run install-hooks
+npx ast-install
 ```
 
 This ensures:
@@ -745,6 +745,7 @@ npm view pumuki-ast-hooks version
 
 ```bash
 # Uninstall
+npx ast-uninstall
 npm uninstall pumuki-ast-hooks
 
 # Remove hooks (optional)

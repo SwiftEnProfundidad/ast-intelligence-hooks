@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { execSync } from 'child_process';
 import { sendMacOSNotification } from './notify-macos.js';
 
 interface ToolInput {
@@ -34,6 +35,8 @@ interface Violation {
 
 const MAX_AGE_SECONDS = 180;
 
+type ValidationResult = { valid: boolean; code?: string; error?: string };
+
 function utcToEpoch(timestamp: string): number {
     try {
         return Math.floor(new Date(timestamp).getTime() / 1000);
@@ -42,10 +45,11 @@ function utcToEpoch(timestamp: string): number {
     }
 }
 
-function validateEvidence(evidencePath: string): { valid: boolean; error?: string } {
+function validateEvidence(evidencePath: string): ValidationResult {
     if (!existsSync(evidencePath)) {
         return {
             valid: false,
+            code: 'missing',
             error: `⚠️ BLOCKED - .AI_EVIDENCE.json Missing
 
 📋 VIOLATION:
@@ -69,6 +73,7 @@ This is enforced by pre-commit hooks and PreToolUse validation`
     } catch {
         return {
             valid: false,
+            code: 'invalid_json',
             error: `⚠️ BLOCKED - .AI_EVIDENCE.json Invalid JSON
 
 📋 VIOLATION:
@@ -86,6 +91,7 @@ This is enforced by pre-commit hooks and PreToolUse validation`
     if (!timestamp || typeof timestamp !== 'string') {
         return {
             valid: false,
+            code: 'missing_timestamp',
             error: `⚠️ BLOCKED - .AI_EVIDENCE.json Missing Timestamp
 
 📋 VIOLATION:
@@ -102,6 +108,7 @@ This is enforced by pre-commit hooks and PreToolUse validation`
     if (evidenceEpoch === 0) {
         return {
             valid: false,
+            code: 'invalid_timestamp',
             error: `⚠️ BLOCKED - .AI_EVIDENCE.json Invalid Timestamp Format
 
 📋 VIOLATION:
@@ -119,6 +126,7 @@ This is enforced by pre-commit hooks and PreToolUse validation`
     if (ageSeconds > MAX_AGE_SECONDS) {
         return {
             valid: false,
+            code: 'stale',
             error: `⚠️ BLOCKED - .AI_EVIDENCE.json Too Old
 
 📋 VIOLATION:
@@ -139,6 +147,7 @@ Evidence must be fresh to ensure rules were read and questions answered`
     if (!rulesRead || (Array.isArray(rulesRead) && rulesRead.length === 0)) {
         return {
             valid: false,
+            code: 'missing_rules',
             error: `⚠️ BLOCKED - .AI_EVIDENCE.json Missing Rules Read
 
 📋 VIOLATION:
@@ -155,6 +164,7 @@ Evidence must be fresh to ensure rules were read and questions answered`
     if (questionsAnswered !== true) {
         return {
             valid: false,
+            code: 'questions_unanswered',
             error: `⚠️ BLOCKED - .AI_EVIDENCE.json Protocol Questions Not Answered
 
 📋 VIOLATION:
@@ -181,6 +191,7 @@ Evidence must be fresh to ensure rules were read and questions answered`
 
         return {
             valid: false,
+            code: 'gate_blocked',
             error: `🚫 BLOCKED - AI Gate Status: BLOCKED
 
 📋 VIOLATION:
@@ -205,6 +216,45 @@ This ensures code quality standards are maintained`
     return { valid: true };
 }
 
+function resolveUpdateEvidenceScript(projectDir: string): string | null {
+    const candidates = [
+        join(projectDir, 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
+        join(projectDir, 'node_modules', 'pumuki-ast-hooks', 'scripts', 'hooks-system', 'bin', 'update-evidence.sh'),
+        join(projectDir, 'node_modules', 'pumuki-ast-hooks', 'bin', 'update-evidence.sh'),
+        join(projectDir, 'bin', 'update-evidence.sh')
+    ];
+
+    for (const candidate of candidates) {
+        if (existsSync(candidate)) {
+            return candidate;
+        }
+    }
+
+    return null;
+}
+
+function autoRefreshEvidence(projectDir: string): boolean {
+    const flag = String(process.env.AI_START_AUTO_REFRESH || '').trim().toLowerCase();
+    if (flag === '0' || flag === 'false' || flag === 'no') {
+        return false;
+    }
+
+    const scriptPath = resolveUpdateEvidenceScript(projectDir);
+    if (!scriptPath) {
+        return false;
+    }
+
+    try {
+        execSync(`bash "${scriptPath}" --auto`, {
+            cwd: projectDir,
+            stdio: 'ignore'
+        });
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 async function readStdin(): Promise<string> {
     return new Promise((resolve) => {
         let data = '';
@@ -225,7 +275,12 @@ async function main() {
         const projectDir = process.env.CLAUDE_PROJECT_DIR || process.cwd();
         const evidencePath = join(projectDir, '.AI_EVIDENCE.json');
 
-        const validation = validateEvidence(evidencePath);
+        let validation = validateEvidence(evidencePath);
+        if (!validation.valid && validation.code !== 'gate_blocked') {
+            if (autoRefreshEvidence(projectDir)) {
+                validation = validateEvidence(evidencePath);
+            }
+        }
         if (!validation.valid) {
             try {
                 sendMacOSNotification({

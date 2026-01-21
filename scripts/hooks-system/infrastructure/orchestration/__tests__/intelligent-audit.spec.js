@@ -129,6 +129,46 @@ describe('intelligent-audit', () => {
     expect(updated.timestamp).toBeDefined();
     expect(updated.timestamp).not.toBe(previous.timestamp);
   });
+
+  it('should include medium and low violations in ai_gate output when critical or high exist', async () => {
+    const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
+    const original = fs.existsSync(evidencePath) ? fs.readFileSync(evidencePath, 'utf8') : null;
+    const minimal = {
+      timestamp: new Date().toISOString(),
+      severity_metrics: {
+        last_updated: new Date().toISOString(),
+        total_violations: 0,
+        by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 }
+      },
+      ai_gate: { status: 'ALLOWED', scope: 'staging', last_check: new Date().toISOString(), violations: [], instruction: 'x', mandatory: true }
+    };
+
+    try {
+      fs.writeFileSync(evidencePath, JSON.stringify(minimal, null, 2));
+
+      const mod = require('../intelligent-audit');
+      const violations = [
+        { severity: 'CRITICAL', ruleId: 'rule.critical', filePath: 'apps/a.ts', line: 1, message: 'c' },
+        { severity: 'HIGH', ruleId: 'rule.high', filePath: 'apps/b.ts', line: 2, message: 'h' },
+        { severity: 'MEDIUM', ruleId: 'rule.medium', filePath: 'apps/c.ts', line: 3, message: 'm' },
+        { severity: 'LOW', ruleId: 'rule.low', filePath: 'apps/d.ts', line: 4, message: 'l' }
+      ];
+
+      await mod.updateAIEvidence(violations, { passed: false, blockedBy: 'critical' }, { estimated: 1, percentUsed: 0, remaining: 1 });
+
+      const updated = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      const severities = updated.ai_gate.violations.map(v => v.severity);
+      expect(severities).toEqual(expect.arrayContaining(['CRITICAL', 'HIGH', 'MEDIUM', 'LOW']));
+    } finally {
+      if (original === null) {
+        if (fs.existsSync(evidencePath)) {
+          fs.unlinkSync(evidencePath);
+        }
+      } else {
+        fs.writeFileSync(evidencePath, original);
+      }
+    }
+  });
 });
 
 describe('AI_EVIDENCE.json structure validation', () => {

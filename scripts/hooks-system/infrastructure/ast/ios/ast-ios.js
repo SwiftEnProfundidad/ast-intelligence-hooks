@@ -17,6 +17,7 @@ const { iOSCICDRules } = require(path.join(__dirname, 'analyzers/iOSCICDRules'))
 const { iOSForbiddenLiteralsAnalyzer } = require(path.join(__dirname, 'analyzers/iOSForbiddenLiteralsAnalyzer'));
 const { iOSASTIntelligentAnalyzer } = require(path.join(__dirname, 'analyzers/iOSASTIntelligentAnalyzer'));
 const { iOSModernPracticesRules } = require(path.join(__dirname, 'analyzers/iOSModernPracticesRules'));
+const { summarizeSwiftTypes, evaluateMultipleTypeGroups, resolveSrpSeverity, isThinWrapperSummary } = require(path.join(__dirname, 'utils/ios-srp-helpers'));
 
 function detectForbiddenTestableImport({ filePath, content }) {
   if (!filePath || !content) return null;
@@ -1134,29 +1135,42 @@ async function runIOSIntelligence(project, findings, platform) {
     // ==========================================
 
 
-    const typePattern = /\b(class|struct|enum|protocol)\s+\w+/g;
-    const classCount = (content.match(typePattern) || []).length;
-    if (classCount > 3 && !filePath.includes('Generated')) {
+    const typeSummaries = summarizeSwiftTypes(content);
+    const typeGroups = evaluateMultipleTypeGroups(typeSummaries);
+    if (typeGroups.shouldFlag && !filePath.includes('Generated')) {
+      const severity = resolveSrpSeverity(filePath, {
+        coreSeverity: 'high',
+        defaultSeverity: 'medium',
+        testSeverity: 'low'
+      });
       pushFinding(
         "ios.solid.srp_multiple_types",
-        "high",
+        severity,
         sf,
         sf,
-        `File defines ${classCount} types - split into separate files (SRP: one responsibility per file)`,
+        `File defines ${typeGroups.totalTypes} types across ${typeGroups.distinctGroups} domains - split by responsibility (SRP)`,
         findings
       );
     }
 
-    if (content.includes('class') || content.includes('struct')) {
-      const funcPattern = /func\s+\w+/g;
-      const funcCount = (content.match(funcPattern) || []).length;
-      if (funcCount > 20) {
+    const godClassSeverityConfig = {
+      coreSeverity: 'critical',
+      defaultSeverity: 'high',
+      testSeverity: 'low'
+    };
+    const godClassThreshold = 20;
+    for (const summary of typeSummaries) {
+      if (isThinWrapperSummary(summary)) {
+        continue;
+      }
+      if (summary.methodsCount > godClassThreshold) {
+        const severity = resolveSrpSeverity(filePath, godClassSeverityConfig);
         pushFinding(
           "ios.solid.srp_god_class",
-          "critical",
+          severity,
           sf,
           sf,
-          `Type has ${funcCount} methods - split responsibilities (SRP: classes should have one reason to change)`,
+          `Type '${summary.name}' has ${summary.methodsCount} methods - split responsibilities (SRP: one reason to change)`,
           findings
         );
       }

@@ -93,11 +93,24 @@ refresh_evidence() {
   printf "${GREEN}✅ Evidencia renovada (${reason}).${NC}\n"
 }
 
+has_lint_hooks_script() {
+  local pkg="$1"
+  if [[ ! -f "$pkg" ]]; then
+    return 1
+  fi
+  if node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync(process.argv[1],'utf8'));process.exit(p&&p.scripts&&p.scripts['lint:hooks']?0:1);" "$pkg" >/dev/null 2>&1; then
+    return 0
+  fi
+  return 1
+}
+
 lint_hooks_system() {
   local repo_pkg="${REPO_ROOT}/package.json"
   local hooks_pkg="${REPO_ROOT}/scripts/hooks-system/package.json"
+  local ran=0
 
-  if [[ -f "${repo_pkg}" ]]; then
+  if has_lint_hooks_script "${repo_pkg}"; then
+    ran=1
     printf "${CYAN}🔎 Ejecutando lint (repo root)...${NC}\n"
     if npm --prefix "${REPO_ROOT}" run lint:hooks; then
       printf "${GREEN}✅ Lint hooks-system OK.${NC}\n"
@@ -105,12 +118,18 @@ lint_hooks_system() {
     fi
   fi
 
-  if [[ -f "${hooks_pkg}" ]]; then
+  if has_lint_hooks_script "${hooks_pkg}"; then
+    ran=1
     printf "${CYAN}🔎 Ejecutando lint (scripts/hooks-system)...${NC}\n"
     if npm --prefix "${REPO_ROOT}/scripts/hooks-system" run lint:hooks; then
       printf "${GREEN}✅ Lint hooks-system OK.${NC}\n"
       return 0
     fi
+  fi
+
+  if [[ "$ran" -eq 0 ]]; then
+    printf "${YELLOW}ℹ️  lint:hooks no configurado; se omite.${NC}\n"
+    return 0
   fi
 
   printf "${RED}❌ Lint hooks-system falló.${NC}\n"
@@ -178,12 +197,17 @@ verify_atomic_commit() {
   local roots_list=""
   local root_count=0
   for file in "${files[@]}"; do
+    case "$file" in
+      */xcuserdata/*|*/xcuserdatad/*)
+        continue
+        ;;
+    esac
     local root="${file%%/*}"
     if [[ "$root" == "$file" ]]; then
       root="(root)"
     fi
     case "$root" in
-      .AI_EVIDENCE.json|README.md|CHANGELOG.md|docs )
+      .AI_EVIDENCE.json|README.md|CHANGELOG.md|docs|.audit_tmp|.audit-reports|.cursor|.windsurf|xcuserdata|xcuserdatad )
         continue
         ;;
       "" )
