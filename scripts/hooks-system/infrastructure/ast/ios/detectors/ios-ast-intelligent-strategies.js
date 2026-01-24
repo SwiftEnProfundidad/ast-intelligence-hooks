@@ -511,10 +511,9 @@ function analyzeClosuresAST(analyzer, filePath) {
             const closureCode = (analyzer.fileContent || '').substring(offset, offset + length);
 
             const hasExplicitSelfInCode = /\bself\b/.test(closureCode);
-            const hasWeakCapture = /\[.*weak.*\]/.test(closureCode) || /\[.*unowned.*\]/.test(closureCode);
-            const hasCaptureListWithoutSelf = /\[[^\]]+\]/.test(closureCode) && !/\[.*self.*\]/.test(closureCode);
+            const hasWeakCapture = /\[.*weak.*self.*\]/.test(closureCode) || /\[.*unowned.*self.*\]/.test(closureCode);
 
-            if (hasExplicitSelfInCode && !hasWeakCapture && !hasCaptureListWithoutSelf) {
+            if (hasExplicitSelfInCode && !hasWeakCapture) {
                 const line = closure['key.line'] || 1;
                 analyzer.pushFinding('ios.memory.missing_weak_self', 'high', filePath, line, 'Escaping closure captures self without [weak self]');
             }
