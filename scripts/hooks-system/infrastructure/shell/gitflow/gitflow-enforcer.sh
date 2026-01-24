@@ -62,6 +62,15 @@ evidence_age() {
 ensure_evidence_fresh() {
   local age
   age=$(evidence_age)
+  
+  # En modo check (pre-commit), SIEMPRE refrescar para analizar staged files
+  if [[ "${GITFLOW_STRICT_CHECK:-false}" == "true" ]]; then
+    printf "${CYAN}🔄 Refrescando evidencia para staged files...${NC}\n"
+    refresh_evidence "pre-commit"
+    return
+  fi
+  
+  # En otros modos, usar umbral de tiempo
   if [[ "$age" == "-1" ]]; then
     printf "${YELLOW}⚠️  Evidencia ausente o inválida. Refrescando...${NC}\n"
     refresh_evidence "missing"

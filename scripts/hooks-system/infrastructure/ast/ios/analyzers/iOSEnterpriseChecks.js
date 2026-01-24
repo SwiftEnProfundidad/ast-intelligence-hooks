@@ -287,9 +287,16 @@ function analyzeConcurrency({ content, filePath, addFinding }) {
             'Manual main thread dispatch - use @MainActor annotation');
     }
 
-    if (content.includes('Task {') && !content.includes('.cancel()') && !content.includes('Task.isCancelled')) {
-        addFinding('ios.concurrency.task_cancellation', 'low', filePath, 1,
-            'Task without cancellation handling');
+    if (content.includes('Task {')) {
+        const hasCancelCheck = content.includes('Task.isCancelled') ||
+            content.includes('Task.checkCancellation') ||
+            content.includes('withTaskCancellationHandler') ||
+            content.includes('.cancel()');
+
+        if (!hasCancelCheck) {
+            addFinding('ios.concurrency.task_cancellation', 'low', filePath, 1,
+                'Task without cancellation handling - consider guard !Task.isCancelled or try Task.checkCancellation()');
+        }
     }
 
     if (content.includes('var ') && content.includes('queue') && !content.includes('actor')) {
@@ -304,9 +311,16 @@ function analyzeTesting({ content, filePath, addFinding }) {
             'Test file without XCTest or Quick import');
     }
 
-    if (filePath.includes('Test') && !content.includes('makeSUT') && content.includes('func test')) {
-        addFinding('ios.testing.missing_makesut', 'medium', filePath, 1,
-            'Test without makeSUT pattern - centralize system under test creation');
+    if (filePath.includes('Test') && content.includes('func test')) {
+        const hasMakeSUT = /func\s+(private\s+)?make[Ss][Uu][Tt]\b/.test(content) ||
+            /func\s+(private\s+)?make_sut\b/.test(content) ||
+            /func\s+(private\s+)?sut\b/.test(content);
+        const testCount = (content.match(/func\s+test/g) || []).length;
+
+        if (!hasMakeSUT && testCount >= 3) {
+            addFinding('ios.testing.missing_makesut', 'medium', filePath, 1,
+                'Test without makeSUT pattern - centralize system under test creation');
+        }
     }
 
     if (filePath.includes('Test') && !content.includes('trackForMemoryLeaks') && content.includes('class')) {

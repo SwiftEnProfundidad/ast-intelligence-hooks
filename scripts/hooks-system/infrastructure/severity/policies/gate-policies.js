@@ -27,8 +27,11 @@ class GatePolicies {
       LOW: this.checkLevel('LOW', grouped.LOW || [], effectivePolicies.LOW || effectivePolicies['LOW'])
     };
 
-    const passed = !results.CRITICAL.failed && !results.HIGH.failed;
-    const blockedBy = results.CRITICAL.failed ? 'CRITICAL' : (results.HIGH.failed ? 'HIGH' : null);
+    const passed = !results.CRITICAL.failed && !results.HIGH.failed && !results.MEDIUM.failed && !results.LOW.failed;
+    const blockedBy = results.CRITICAL.failed ? 'CRITICAL' :
+      (results.HIGH.failed ? 'HIGH' :
+        (results.MEDIUM.failed ? 'MEDIUM' :
+          (results.LOW.failed ? 'LOW' : null)));
 
     return {
       passed,
