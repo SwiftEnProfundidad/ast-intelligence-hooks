@@ -119,14 +119,19 @@ class SourceKittenExtractor {
         const forceUnwraps = [];
         const lines = (fileContent || '').split('\n');
         lines.forEach((line, index) => {
-            const matches = [...line.matchAll(/(\w+)\s*!/g)];
+            const matches = [...line.matchAll(/(\w+)!/g)];
             matches.forEach(match => {
-                forceUnwraps.push({
-                    line: index + 1,
-                    column: match.index + 1,
-                    variable: match[1],
-                    context: line.trim(),
-                });
+                const charBefore = match.index > 0 ? line[match.index - 1] : '';
+                const isLogicalNegation = charBefore === '!' || /[&|=<>]/.test(charBefore);
+
+                if (!isLogicalNegation) {
+                    forceUnwraps.push({
+                        line: index + 1,
+                        column: match.index + 1,
+                        variable: match[1],
+                        context: line.trim(),
+                    });
+                }
             });
         });
         return forceUnwraps;
