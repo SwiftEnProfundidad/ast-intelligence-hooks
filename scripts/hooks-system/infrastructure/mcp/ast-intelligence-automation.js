@@ -2511,6 +2511,9 @@ function startPollingLoops() {
         process.stderr.write('[MCP] EvidenceMonitorService started with 3-min auto-refresh\n');
     }
 
+    // Always log that auto-refresh is active
+    process.stderr.write('[MCP] ✅ Auto-refresh active: Evidence will refresh every 3 minutes\n');
+
     setInterval(async () => {
         try {
             const now = Date.now();
@@ -2540,11 +2543,14 @@ function startPollingLoops() {
 
             // 2. Evidence Freshness Guard
             if (evidenceMonitor.isStale() && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
+                process.stderr.write('[MCP] 🔄 Evidence is stale, attempting auto-refresh...\n');
                 try {
                     await evidenceMonitor.refresh();
                     sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence has been refreshed automatically', 'Purr');
+                    process.stderr.write('[MCP] ✅ Evidence refreshed successfully\n');
                 } catch (err) {
                     sendNotification('⚠️ Evidence Stale', `Failed to auto-refresh evidence: ${err.message}`, 'Basso');
+                    process.stderr.write(`[MCP] ❌ Auto-refresh failed: ${err.message}\n`);
                 }
                 lastEvidenceNotification = now;
             }
