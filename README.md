@@ -262,7 +262,7 @@ Operational notifications for gate, evidence, health, guard, and tokens.
 
 ### 5.9 Evidence guard daemon
 
-Guard/daemon to keep evidence fresh and reduce drift during long sessions.
+Guard/daemon to keep evidence fresh and reduce drift during long sessions. Automatically refreshes evidence every 3 minutes during active development sessions, independent of commits or manual triggers.
 
 ### 5.10 CI/CD enforcement
 

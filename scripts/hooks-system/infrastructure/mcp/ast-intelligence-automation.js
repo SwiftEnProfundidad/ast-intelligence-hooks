@@ -2496,7 +2496,7 @@ if (require.main === module) {
         process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
     }
 } else {
-    module.exports = { preFlightCheck };
+    module.exports = { preFlightCheck, startPollingLoops };
 }
 
 /**
@@ -2565,7 +2565,7 @@ function startPollingLoops() {
         } catch (error) {
             if (process.env.DEBUG) console.error('[MCP] Polling loop error:', error);
         }
-    }, 30000);
+    }, 180000); // Changed from 30000 to 180000 (3 minutes) to match expected auto-refresh interval
 
     // AUTO-COMMIT: Only for project code changes (no node_modules, no library)
     setInterval(async () => {

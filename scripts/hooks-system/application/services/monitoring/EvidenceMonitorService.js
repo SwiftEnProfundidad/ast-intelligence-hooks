@@ -29,7 +29,7 @@ class EvidenceMonitorService {
         logger = console,
         autoRefreshEnabled = env.getBool('HOOK_GUARD_AUTO_REFRESH', true),
         autoRefreshCooldownMs = env.getNumber('HOOK_GUARD_AUTO_REFRESH_COOLDOWN', 180000),
-        staleThresholdMs = env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 10 * 60 * 1000),
+        staleThresholdMs = env.getNumber('HOOK_GUARD_EVIDENCE_STALE_THRESHOLD', 180000), // Changed from 10min to 3min
         fsModule = fs,
         execFn = execSync
     } = {}) {
@@ -50,6 +50,7 @@ class EvidenceMonitorService {
     start() {
         this.performInitialChecks();
         this.watchEvidenceFreshness();
+        this.startPeriodicRefresh();
     }
 
     stop() {
@@ -61,6 +62,10 @@ class EvidenceMonitorService {
             }
         });
         this.watchers = [];
+        if (this.periodicRefreshTimer) {
+            clearInterval(this.periodicRefreshTimer);
+            this.periodicRefreshTimer = null;
+        }
     }
 
     performInitialChecks() {
@@ -83,6 +88,16 @@ class EvidenceMonitorService {
         } catch (error) {
             this.logger.error?.('EVIDENCE_MONITOR_WATCH_FAILED', { error: error.message });
         }
+    }
+
+    startPeriodicRefresh() {
+        // Force refresh every 3 minutes regardless of staleness or cooldown
+        this.periodicRefreshTimer = setInterval(() => {
+            // Skip cooldown check for periodic refresh
+            const now = Date.now();
+            this.lastAutoRefresh = 0; // Reset cooldown
+            this.attemptAutoRefresh('periodic-timer');
+        }, this.autoRefreshCooldownMs);
     }
 
     evaluateEvidence(reason) {

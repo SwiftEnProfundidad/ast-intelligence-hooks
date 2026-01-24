@@ -76,7 +76,7 @@ class WorkflowRules {
             const featureName = this.extractFeatureName(content);
 
             if (featureName) {
-                const testFiles = glob.sync(`**/*${featureName}*.{test,spec}.{ts,tsx,swift,kt}`, {
+                let testFiles = glob.sync(`**/*${featureName}*.{test,spec}.{ts,tsx,swift,kt}`, {
                     cwd: this.projectRoot,
                     absolute: true,
                     nocase: true
@@ -88,6 +88,17 @@ class WorkflowRules {
                     absolute: true,
                     nocase: true
                 });
+
+                if (testFiles.length === 0) {
+                    const tokens = this.splitFeatureName(featureName);
+                    if (tokens.length > 1) {
+                        testFiles = tokens.flatMap(token => glob.sync(`**/*${token}*.{test,spec}.{ts,tsx,swift,kt}`, {
+                            cwd: this.projectRoot,
+                            absolute: true,
+                            nocase: true
+                        }));
+                    }
+                }
 
                 if (testFiles.length === 0) {
                     pushFileFinding(
@@ -126,6 +137,15 @@ class WorkflowRules {
                 }
             }
         });
+    }
+
+    splitFeatureName(name) {
+        const parts = String(name).split(/And|&|_/).map(part => part.trim()).filter(Boolean);
+        if (parts.length > 1) {
+            return parts;
+        }
+        const camelParts = String(name).match(/[A-Z][a-z0-9]+/g) || [name];
+        return camelParts.length > 0 ? camelParts : [name];
     }
 
     extractFeatureName(content) {
