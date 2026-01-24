@@ -311,9 +311,16 @@ function analyzeTesting({ content, filePath, addFinding }) {
             'Test file without XCTest or Quick import');
     }
 
-    if (filePath.includes('Test') && !content.includes('makeSUT') && content.includes('func test')) {
-        addFinding('ios.testing.missing_makesut', 'medium', filePath, 1,
-            'Test without makeSUT pattern - centralize system under test creation');
+    if (filePath.includes('Test') && content.includes('func test')) {
+        const hasMakeSUT = /func\s+(private\s+)?make[Ss][Uu][Tt]\b/.test(content) ||
+            /func\s+(private\s+)?make_sut\b/.test(content) ||
+            /func\s+(private\s+)?sut\b/.test(content);
+        const testCount = (content.match(/func\s+test/g) || []).length;
+
+        if (!hasMakeSUT && testCount >= 3) {
+            addFinding('ios.testing.missing_makesut', 'medium', filePath, 1,
+                'Test without makeSUT pattern - centralize system under test creation');
+        }
     }
 
     if (filePath.includes('Test') && !content.includes('trackForMemoryLeaks') && content.includes('class')) {

@@ -314,8 +314,12 @@ async function analyzeClassAST(analyzer, node, filePath) {
     }
 
     if (filePath.includes('Test') && name.includes('Test')) {
-        const hasMakeSUT = methods.some((m) => (m['key.name'] || '').includes('makeSUT'));
-        if (!hasMakeSUT && methods.length > 2) {
+        const hasMakeSUT = methods.some((m) => {
+            const methodName = (m['key.name'] || '').toLowerCase();
+            return methodName.includes('makesut') || methodName.includes('make_sut') || methodName === 'sut';
+        });
+        const testMethods = methods.filter(m => (m['key.name'] || '').startsWith('test'));
+        if (!hasMakeSUT && testMethods.length >= 3) {
             analyzer.pushFinding('ios.testing.missing_makesut', 'medium', filePath, line, `Test class '${name}' missing makeSUT() factory`);
         }
     }

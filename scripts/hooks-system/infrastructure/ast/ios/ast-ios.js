@@ -37,8 +37,16 @@ function detectMissingMakeSUT({ filePath, content }) {
   if (!content.includes('XCTest')) return null;
   const hasTests = /func\s+test\w*\s*\(/.test(content);
   if (!hasTests) return null;
-  const hasMakeSUT = /func\s+makeSUT\b/.test(content);
+
+  const hasMakeSUT = /func\s+(private\s+)?make[Ss][Uu][Tt]\b/.test(content) ||
+    /func\s+(private\s+)?make_sut\b/.test(content) ||
+    /func\s+(private\s+)?sut\b/.test(content);
+
   if (hasMakeSUT) return null;
+
+  const testCount = (content.match(/func\s+test/g) || []).length;
+  if (testCount < 3) return null;
+
   return {
     ruleId: 'ios.testing.missing_make_sut',
     severity: 'high',
