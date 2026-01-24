@@ -595,9 +595,15 @@ function analyzeAdditionalRules(analyzer, filePath) {
         }
     });
 
-    if ((analyzer.fileContent || '').includes('UserDefaults') && /password|token|secret|key/i.test(analyzer.fileContent || '')) {
-        const line = analyzer.findLineNumber('UserDefaults');
-        analyzer.pushFinding('ios.security.sensitive_userdefaults', 'critical', filePath, line, 'Sensitive data in UserDefaults - use Keychain');
+    if ((analyzer.fileContent || '').includes('UserDefaults')) {
+        const content = analyzer.fileContent || '';
+        const hasSensitiveData = /UserDefaults.*\.set.*\b(password|token|secret|apiKey|authToken|accessToken|refreshToken)\b/i.test(content) ||
+            /\.set.*\b(password|token|secret|apiKey|authToken|accessToken|refreshToken)\b.*UserDefaults/i.test(content);
+
+        if (hasSensitiveData) {
+            const line = analyzer.findLineNumber('UserDefaults');
+            analyzer.pushFinding('ios.security.sensitive_userdefaults', 'critical', filePath, line, 'Sensitive credentials in UserDefaults - use Keychain for passwords/tokens');
+        }
     }
 
     const hardcodedStrings = (analyzer.fileContent || '').match(/Text\s*\(\s*"[^"]{10,}"\s*\)/g) || [];
@@ -869,7 +875,10 @@ function finalizeGodClassDetection(analyzer) {
 
         const signalCount = [sizeOutlier, complexityOutlier].filter(Boolean).length;
 
-        if (extremeOutlier || signalCount >= 2) {
+        const isTestDouble = /Spy$|Mock$|Stub$|Fake$|Dummy$/i.test(c.name) ||
+            c.filePath.includes('Test') && /Double|Spy|Mock|Stub/i.test(c.name);
+
+        if ((extremeOutlier || signalCount >= 2) && !isTestDouble) {
             const severity = resolveSrpSeverity(c.filePath, {
                 coreSeverity: 'critical',
                 defaultSeverity: 'high',
