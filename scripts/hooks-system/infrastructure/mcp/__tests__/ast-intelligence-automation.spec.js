@@ -95,7 +95,7 @@ describe('AST Intelligence Automation MCP', () => {
       const subject = buildSubject();
       subject.startPollingLoops();
 
-      const hasEvidenceInterval = intervalCalls.some(call => call.time === 30000);
+      const hasEvidenceInterval = intervalCalls.some(call => call.time === 180000);
 
       expect(subject.evidenceMonitor.start).toHaveBeenCalled();
       expect(intervalSpy).toHaveBeenCalled();
@@ -112,7 +112,7 @@ describe('AST Intelligence Automation MCP', () => {
       const subject = buildSubject();
       subject.startPollingLoops();
 
-      const evidenceInterval = intervalCalls.find(call => call.time === 30000);
+      const evidenceInterval = intervalCalls.find(call => call.time === 180000);
       expect(evidenceInterval).toBeDefined();
 
       await evidenceInterval.callback();
@@ -139,7 +139,7 @@ describe('AST Intelligence Automation MCP', () => {
       const subject = buildSubject({ evidenceMonitor });
       subject.startPollingLoops();
 
-      const evidenceInterval = intervalCalls.find(call => call.time === 30000);
+      const evidenceInterval = intervalCalls.find(call => call.time === 180000);
       expect(evidenceInterval).toBeDefined();
 
       await evidenceInterval.callback();
