@@ -120,16 +120,32 @@ function analyzeImportsAST(analyzer, filePath) {
     const unusedImportAllowlist = new Set(['Foundation', 'SwiftUI', 'UIKit', 'Combine']);
 
     const foundationTypeUsage = /\b(Data|Date|URL|UUID|Decimal|NSNumber|NSDecimalNumber|NSSet|NSDictionary|NSArray|IndexPath|Notification|FileManager|Bundle|Locale|TimeZone|Calendar|DateComponents|URLRequest|URLSession)\b/;
+    const swiftUIUsage = /\b(View|some View|Text|VStack|HStack|ZStack|Button|Image|List|NavigationView|NavigationStack|\.font|\.padding|\.frame|\.background|\.foregroundColor|@State|@Binding|@ObservedObject|@StateObject|@Environment)\b/;
+    const uiKitUsage = /\b(UIViewController|UIView|UITableView|UICollectionView|UIButton|UILabel|UIImageView|UINavigationController|viewDidLoad|viewWillAppear)\b/;
+    const combineUsage = /\b(Publisher|AnyPublisher|PassthroughSubject|CurrentValueSubject|@Published|sink|subscribe|eraseToAnyPublisher)\b/;
+
     for (const imp of analyzer.imports) {
         if (!unusedImportAllowlist.has(imp.name)) continue;
 
         let isUsed = analyzer.allNodes.some((n) => {
             const typename = n['key.typename'] || '';
             const name = n['key.name'] || '';
-            return typename.includes(imp.name) || name.includes(imp.name);
+            const inheritedTypes = n['key.inheritedtypes'] || [];
+            const conformsToView = inheritedTypes.some(t => (t['key.name'] || '') === 'View');
+            return typename.includes(imp.name) || name.includes(imp.name) || (imp.name === 'SwiftUI' && conformsToView);
         });
+
         if (!isUsed && imp.name === 'Foundation') {
             isUsed = foundationTypeUsage.test(content);
+        }
+        if (!isUsed && imp.name === 'SwiftUI') {
+            isUsed = swiftUIUsage.test(content);
+        }
+        if (!isUsed && imp.name === 'UIKit') {
+            isUsed = uiKitUsage.test(content);
+        }
+        if (!isUsed && imp.name === 'Combine') {
+            isUsed = combineUsage.test(content);
         }
 
         if (!isUsed) {
@@ -431,8 +447,11 @@ function analyzeFunctionAST(analyzer, node, filePath) {
     const ifStatements = countStatementsOfType(substructure, 'stmt.if');
     const guardStatements = countStatementsOfType(substructure, 'stmt.guard');
 
-    if (ifStatements > 3 && guardStatements === 0) {
-        analyzer.pushFinding('ios.quality.pyramid_of_doom', 'medium', filePath, line, `Function '${name}' has ${ifStatements} nested ifs - use guard clauses`);
+    const hasEarlyReturns = (analyzer.fileContent || '').includes('return') && guardStatements > 0;
+    const nestingLevel = calculateNestingDepth(substructure);
+
+    if (nestingLevel >= 3 && !hasEarlyReturns) {
+        analyzer.pushFinding('ios.quality.pyramid_of_doom', 'medium', filePath, line, `Function '${name}' has ${nestingLevel} levels of nesting - use guard clauses for early returns`);
     }
 
     const isAsync = attributes.includes('async');
@@ -465,12 +484,16 @@ function analyzePropertyAST(analyzer, node, filePath) {
     const isMutable = isComputed ? hasAccessorSet : true;
 
     const hasSetterAccessRestriction = attributes.some(a => String(a).startsWith('setter_access'));
-    if (isPublic && isInstance && isMutable && !hasSetterAccessRestriction) {
+    const isProtocolRequirement = name === 'body' || attributes.some(a => String(a).includes('protocol'));
+
+    if (isPublic && isInstance && isMutable && !hasSetterAccessRestriction && !isProtocolRequirement) {
         analyzer.pushFinding('ios.encapsulation.public_mutable', 'medium', filePath, line, `Public mutable property '${name}' - consider private(set)`);
     }
 }
 
 function analyzeClosuresAST(analyzer, filePath) {
+    const isStruct = analyzer.structs.length > 0;
+
     for (const closure of analyzer.closures) {
         const closureText = analyzer.safeStringify(closure);
         const hasSelfReference = closureText.includes('"self"') || closureText.includes('key.name":"self');
@@ -478,10 +501,16 @@ function analyzeClosuresAST(analyzer, filePath) {
         const parentFunc = closure._parent;
         const isEscaping = parentFunc && (parentFunc['key.typename'] || '').includes('@escaping');
 
-        if (hasSelfReference && isEscaping) {
-            const hasWeakCapture = closureText.includes('weak') || closureText.includes('unowned');
+        if (hasSelfReference && isEscaping && !isStruct) {
+            const offset = closure['key.offset'] || 0;
+            const length = closure['key.length'] || 100;
+            const closureCode = (analyzer.fileContent || '').substring(offset, offset + length);
 
-            if (!hasWeakCapture) {
+            const hasExplicitSelfInCode = /\bself\b/.test(closureCode);
+            const hasWeakCapture = /\[.*weak.*\]/.test(closureCode) || /\[.*unowned.*\]/.test(closureCode);
+            const hasCaptureListWithoutSelf = /\[[^\]]+\]/.test(closureCode) && !/\[.*self.*\]/.test(closureCode);
+
+            if (hasExplicitSelfInCode && !hasWeakCapture && !hasCaptureListWithoutSelf) {
                 const line = closure['key.line'] || 1;
                 analyzer.pushFinding('ios.memory.missing_weak_self', 'high', filePath, line, 'Escaping closure captures self without [weak self]');
             }
@@ -550,10 +579,17 @@ function analyzeAdditionalRules(analyzer, filePath) {
         analyzer.pushFinding('ios.concurrency.dispatch_queue', 'medium', filePath, line, 'DispatchQueue detected - use async/await in new code');
     }
 
-    if (/Task\s*\{/.test(analyzer.fileContent || '') && !/Task\s*\{[^}]*do\s*\{/.test(analyzer.fileContent || '')) {
-        const line = analyzer.findLineNumber('Task {');
-        analyzer.pushFinding('ios.concurrency.task_no_error_handling', 'high', filePath, line, 'Task without do-catch - handle errors');
-    }
+    const taskMatches = [...(analyzer.fileContent || '').matchAll(/Task\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/gs)];
+    taskMatches.forEach(match => {
+        const taskBody = match[1] || '';
+        const hasTryCall = /\btry\s+/.test(taskBody);
+        const hasDoBlock = /\bdo\s*\{/.test(taskBody);
+
+        if (hasTryCall && !hasDoBlock) {
+            const line = analyzer.findLineNumber(match[0].substring(0, 20));
+            analyzer.pushFinding('ios.concurrency.task_no_error_handling', 'high', filePath, line, 'Task with throwing calls (try) without do-catch - handle errors');
+        }
+    });
 
     if ((analyzer.fileContent || '').includes('UserDefaults') && /password|token|secret|key/i.test(analyzer.fileContent || '')) {
         const line = analyzer.findLineNumber('UserDefaults');
@@ -693,13 +729,33 @@ function countStatementsOfType(substructure, stmtType) {
     let count = 0;
     const traverse = (nodes) => {
         if (!Array.isArray(nodes)) return;
-        for (const node of nodes) {
-            if ((node['key.kind'] || '').includes(stmtType)) count++;
-            traverse(node['key.substructure'] || []);
+        for (const n of nodes) {
+            if ((n['key.kind'] || '').includes(stmtType)) count++;
+            traverse(n['key.substructure']);
         }
     };
     traverse(substructure);
     return count;
+}
+
+function calculateNestingDepth(substructure) {
+    let maxDepth = 0;
+    const traverse = (nodes, currentDepth) => {
+        if (!Array.isArray(nodes)) return;
+        for (const n of nodes) {
+            const kind = n['key.kind'] || '';
+            let depth = currentDepth;
+
+            if (kind.includes('stmt.if') || kind.includes('stmt.guard') || kind.includes('stmt.for') || kind.includes('stmt.while')) {
+                depth++;
+                maxDepth = Math.max(maxDepth, depth);
+            }
+
+            traverse(n['key.substructure'], depth);
+        }
+    };
+    traverse(substructure, 0);
+    return maxDepth;
 }
 
 async function checkDependencyInjectionAST(analyzer, properties, filePath, className, line) {

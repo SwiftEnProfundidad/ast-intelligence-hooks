@@ -129,10 +129,6 @@ async function runIOSIntelligence(project, findings, platform) {
 
     if (platformOf(filePath) !== "ios") return;
 
-    sf.getDescendantsOfKind(SyntaxKind.NonNullExpression).forEach((expr) => {
-      pushFinding("ios.force_unwrapping", "high", sf, expr, "Force unwrapping (!) detected - use if let or guard let instead", findings);
-    });
-
     const completionHandlerFilePath = sf.getFilePath();
     const isAnalyzer = /infrastructure\/ast\/|analyzers\/|detectors\/|scanner|analyzer|detector/i.test(completionHandlerFilePath);
     const isCompletionTestFile = /\.(spec|test)\.(js|ts|swift)$/i.test(completionHandlerFilePath);

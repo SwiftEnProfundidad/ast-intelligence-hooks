@@ -287,9 +287,16 @@ function analyzeConcurrency({ content, filePath, addFinding }) {
             'Manual main thread dispatch - use @MainActor annotation');
     }
 
-    if (content.includes('Task {') && !content.includes('.cancel()') && !content.includes('Task.isCancelled')) {
-        addFinding('ios.concurrency.task_cancellation', 'low', filePath, 1,
-            'Task without cancellation handling');
+    if (content.includes('Task {')) {
+        const hasCancelCheck = content.includes('Task.isCancelled') ||
+            content.includes('Task.checkCancellation') ||
+            content.includes('withTaskCancellationHandler') ||
+            content.includes('.cancel()');
+
+        if (!hasCancelCheck) {
+            addFinding('ios.concurrency.task_cancellation', 'low', filePath, 1,
+                'Task without cancellation handling - consider guard !Task.isCancelled or try Task.checkCancellation()');
+        }
     }
 
     if (content.includes('var ') && content.includes('queue') && !content.includes('actor')) {

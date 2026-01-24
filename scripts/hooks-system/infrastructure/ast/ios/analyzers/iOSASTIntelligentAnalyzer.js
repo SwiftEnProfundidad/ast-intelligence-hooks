@@ -211,6 +211,29 @@ class iOSASTIntelligentAnalyzer {
 
     collectAllNodes(this, substructure, null);
     await analyzeCollectedNodes(this, displayPath);
+
+    this.detectForceUnwrapping(displayPath);
+  }
+
+  detectForceUnwrapping(filePath) {
+    const lines = this.fileContent.split('\n');
+    lines.forEach((line, index) => {
+      const matches = [...line.matchAll(/(\w+)!/g)];
+      matches.forEach(match => {
+        const charBefore = match.index > 0 ? line[match.index - 1] : '';
+        const isLogicalNegation = charBefore === '!' || /[&|=<>]/.test(charBefore);
+
+        if (!isLogicalNegation) {
+          this.pushFinding(
+            'ios.force_unwrapping',
+            'high',
+            filePath,
+            index + 1,
+            `Force unwrapping (!) detected on '${match[1]}' - use if let or guard let instead`
+          );
+        }
+      });
+    });
   }
 
   safeStringify(obj) {
