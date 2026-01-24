@@ -451,7 +451,7 @@ function analyzeFunctionAST(analyzer, node, filePath) {
     const ifStatements = countStatementsOfType(substructure, 'stmt.if');
     const guardStatements = countStatementsOfType(substructure, 'stmt.guard');
 
-    const hasEarlyReturns = (analyzer.fileContent || '').includes('return') && guardStatements > 0;
+    const hasEarlyReturns = guardStatements > 0;
     const nestingLevel = calculateNestingDepth(substructure);
 
     if (nestingLevel >= 3 && !hasEarlyReturns) {
@@ -496,8 +496,6 @@ function analyzePropertyAST(analyzer, node, filePath) {
 }
 
 function analyzeClosuresAST(analyzer, filePath) {
-    const isStruct = analyzer.structs.length > 0;
-
     for (const closure of analyzer.closures) {
         const closureText = analyzer.safeStringify(closure);
         const hasSelfReference = closureText.includes('"self"') || closureText.includes('key.name":"self');
@@ -505,7 +503,13 @@ function analyzeClosuresAST(analyzer, filePath) {
         const parentFunc = closure._parent;
         const isEscaping = parentFunc && (parentFunc['key.typename'] || '').includes('@escaping');
 
-        if (hasSelfReference && isEscaping && !isStruct) {
+        let container = closure._parent;
+        while (container && !['source.lang.swift.decl.class', 'source.lang.swift.decl.struct'].includes(container['key.kind'])) {
+            container = container._parent;
+        }
+        const isContainerStruct = container && container['key.kind'] === 'source.lang.swift.decl.struct';
+
+        if (hasSelfReference && isEscaping && !isContainerStruct) {
             const offset = closure['key.offset'] || 0;
             const length = closure['key.length'] || 100;
             const closureCode = (analyzer.fileContent || '').substring(offset, offset + length);

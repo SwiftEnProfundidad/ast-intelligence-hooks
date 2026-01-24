@@ -146,7 +146,7 @@ function analyzeMemoryManagement({ content, filePath, addFinding }) {
 }
 
 function analyzeOptionals({ content, filePath, addFinding }) {
-    const forceUnwraps = content.match(/(\w+)\s*!/g);
+    const forceUnwraps = content.match(/\b\w+!/g);
     if (forceUnwraps && forceUnwraps.length > 0) {
         const nonIBOutlets = forceUnwraps.filter(match => !content.includes(`@IBOutlet`));
         if (nonIBOutlets.length > 0) {

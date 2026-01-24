@@ -5,6 +5,35 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.4] - 2026-01-24
+
+### Fixed
+
+- **Auto-refresh logging**: Added comprehensive logging to verify auto-refresh is working during MCP sessions
+- **Debug visibility**: EvidenceMonitorService now logs when auto-refresh starts and when refresh attempts occur
+
+## [6.2.3] - 2026-01-24
+
+### Fixed
+
+- **Auto-refresh cooldown bug**: Fixed periodic refresh being blocked by cooldown check in EvidenceMonitorService
+- **MCP polling interval**: Reduced from 30 seconds to 3 minutes to match expected refresh frequency
+- **Evidence stale threshold**: Reduced from 10 minutes to 3 minutes for consistency with refresh interval
+
+## [6.2.2] - 2026-01-24
+
+### Fixed
+
+- **EvidenceMonitorService initialization**: Fixed service not starting properly on MCP server launch
+- **Background refresh daemon**: Evidence now refreshes automatically every 3 minutes during active sessions
+
+## [6.2.1] - 2026-01-24
+
+### Fixed
+
+- **EvidenceMonitorService auto-refresh**: Now properly starts when MCP server initializes, enabling automatic evidence refresh every 3 minutes without requiring commits
+- **Bug #8 (REAL FIX)**: Evidence auto-refresh daemon now runs continuously in background, preventing stale evidence blocking during active development sessions
+
 ## [6.2.0] - 2026-01-24
 
 ### Added

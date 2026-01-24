@@ -1,5 +1,6 @@
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 const { pushFinding, SyntaxKind, platformOf, getRepoRoot } = require(path.join(__dirname, '../ast-core'));
 const { BDDTDDWorkflowRules } = require(path.join(__dirname, 'BDDTDDWorkflowRules'));
 
@@ -69,6 +70,56 @@ function hasTrackForMemoryLeaks(content) {
 
 function hasTrackForMemoryLeaksEvidence(content) {
   return hasTrackForMemoryLeaks(content) || hasMakeSUT(content);
+}
+
+function loadTestFileContent(filePath) {
+  try {
+    const diskContent = fs.readFileSync(filePath, 'utf8');
+    if (diskContent && diskContent.trim().length > 0) {
+      return diskContent;
+    }
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.debug(`[ast-common] Failed to read test file content for ${filePath}: ${error.message}`);
+    }
+  }
+  return null;
+}
+
+function resolveTestFileContent(filePath, currentContent) {
+  const diskContent = loadTestFileContent(filePath);
+  if (diskContent) {
+    return diskContent;
+  }
+
+  const repoRoot = getRepoRoot();
+  const resolvedPath = path.isAbsolute(filePath) ? filePath : path.join(repoRoot, filePath);
+  if (resolvedPath !== filePath) {
+    const resolvedContent = loadTestFileContent(resolvedPath);
+    if (resolvedContent) {
+      return resolvedContent;
+    }
+  }
+
+  try {
+    const relPath = path.relative(repoRoot, resolvedPath).replace(/\\/g, '/');
+    if (relPath && !relPath.startsWith('..')) {
+      const stagedContent = execSync(`git show :${relPath}`, {
+        encoding: 'utf8',
+        cwd: repoRoot,
+        stdio: ['ignore', 'pipe', 'ignore']
+      });
+      if (stagedContent && stagedContent.trim().length > 0) {
+        return stagedContent;
+      }
+    }
+  } catch (error) {
+    if (process.env.DEBUG) {
+      console.debug(`[ast-common] Failed to read staged content for ${filePath}: ${error.message}`);
+    }
+  }
+
+  return currentContent;
 }
 
 /**
@@ -275,16 +326,7 @@ function runCommonIntelligence(project, findings) {
       const isSwiftOrKotlinTest = ext === '.swift' || ext === '.kt' || ext === '.kts';
 
       if (isSwiftOrKotlinTest) {
-        try {
-          const diskContent = fs.readFileSync(filePath, 'utf8');
-          if (diskContent && diskContent.trim().length > 0) {
-            content = diskContent;
-          }
-        } catch (error) {
-          if (process.env.DEBUG) {
-            console.debug(`[ast-common] Failed to read test file content for ${filePath}: ${error.message}`);
-          }
-        }
+        content = resolveTestFileContent(filePath, content);
       }
 
       if (isSwiftOrKotlinTest) {

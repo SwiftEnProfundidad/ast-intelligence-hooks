@@ -2496,7 +2496,7 @@ if (require.main === module) {
         process.stderr.write(`[MCP] Server ready for ${REPO_ROOT}\n`);
     }
 } else {
-    module.exports = { preFlightCheck };
+    module.exports = { preFlightCheck, startPollingLoops };
 }
 
 /**
@@ -2504,12 +2504,21 @@ if (require.main === module) {
  * Called ONLY after MCP handshake is complete
  */
 function startPollingLoops() {
+    const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+    evidenceMonitor.start();
+
+    if (process.env.DEBUG) {
+        process.stderr.write('[MCP] EvidenceMonitorService started with 3-min auto-refresh\n');
+    }
+
+    // Always log that auto-refresh is active
+    process.stderr.write('[MCP] ✅ Auto-refresh active: Evidence will refresh every 3 minutes\n');
+
     setInterval(async () => {
         try {
             const now = Date.now();
             const gitFlowService = getCompositionRoot().getGitFlowService();
             const gitQuery = getCompositionRoot().getGitQueryAdapter();
-            const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
             const orchestrator = getCompositionRoot().getOrchestrator();
 
             const currentBranch = gitFlowService.getCurrentBranch();
@@ -2534,11 +2543,14 @@ function startPollingLoops() {
 
             // 2. Evidence Freshness Guard
             if (evidenceMonitor.isStale() && (now - lastEvidenceNotification > NOTIFICATION_COOLDOWN)) {
+                process.stderr.write('[MCP] 🔄 Evidence is stale, attempting auto-refresh...\n');
                 try {
                     await evidenceMonitor.refresh();
                     sendNotification('🔄 Evidence Auto-Updated', 'AI Evidence has been refreshed automatically', 'Purr');
+                    process.stderr.write('[MCP] ✅ Evidence refreshed successfully\n');
                 } catch (err) {
                     sendNotification('⚠️ Evidence Stale', `Failed to auto-refresh evidence: ${err.message}`, 'Basso');
+                    process.stderr.write(`[MCP] ❌ Auto-refresh failed: ${err.message}\n`);
                 }
                 lastEvidenceNotification = now;
             }
@@ -2559,7 +2571,7 @@ function startPollingLoops() {
         } catch (error) {
             if (process.env.DEBUG) console.error('[MCP] Polling loop error:', error);
         }
-    }, 30000);
+    }, 180000); // Changed from 30000 to 180000 (3 minutes) to match expected auto-refresh interval
 
     // AUTO-COMMIT: Only for project code changes (no node_modules, no library)
     setInterval(async () => {
