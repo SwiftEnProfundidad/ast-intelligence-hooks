@@ -2504,12 +2504,18 @@ if (require.main === module) {
  * Called ONLY after MCP handshake is complete
  */
 function startPollingLoops() {
+    const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
+    evidenceMonitor.start();
+
+    if (process.env.DEBUG) {
+        process.stderr.write('[MCP] EvidenceMonitorService started with 3-min auto-refresh\n');
+    }
+
     setInterval(async () => {
         try {
             const now = Date.now();
             const gitFlowService = getCompositionRoot().getGitFlowService();
             const gitQuery = getCompositionRoot().getGitQueryAdapter();
-            const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
             const orchestrator = getCompositionRoot().getOrchestrator();
 
             const currentBranch = gitFlowService.getCurrentBranch();
