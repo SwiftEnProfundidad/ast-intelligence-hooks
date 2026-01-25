@@ -146,13 +146,27 @@ function analyzeMemoryManagement({ content, filePath, addFinding }) {
 }
 
 function analyzeOptionals({ content, filePath, addFinding }) {
-    const forceUnwraps = content.match(/(\w+)\s*!/g);
-    if (forceUnwraps && forceUnwraps.length > 0) {
-        const nonIBOutlets = forceUnwraps.filter(match => !content.includes(`@IBOutlet`));
-        if (nonIBOutlets.length > 0) {
-            addFinding('ios.force_unwrapping', 'high', filePath, 1,
-                `Force unwrapping (!) detected ${nonIBOutlets.length}x - use if let or guard let`);
-        }
+    const forceUnwrapPattern = /(\w+)!\s*(?:\.|,|\)|\]|\s|$)/g;
+    const negationPattern = /[^\w]!(\w+)/g;
+
+    const allExclamations = content.match(/(\w+)!/g) || [];
+    const negations = content.match(negationPattern) || [];
+
+    const forceUnwraps = allExclamations.filter(match => {
+        const identifier = match.replace('!', '');
+        const isNegation = negations.some(neg => neg.includes(identifier));
+        const isAsForcecast = content.includes(`as! ${identifier}`) || content.includes(`as!${identifier}`);
+        return !isNegation || isAsForcecast;
+    });
+
+    const legitimateExclusions = ['try!', 'as!', '@IBOutlet'];
+    const filteredForceUnwraps = forceUnwraps.filter(match => {
+        return !legitimateExclusions.some(excl => content.includes(excl));
+    });
+
+    if (filteredForceUnwraps.length > 0 && !content.includes('@IBOutlet')) {
+        addFinding('ios.force_unwrapping', 'high', filePath, 1,
+            `Force unwrapping (!) detected ${filteredForceUnwraps.length}x - use if let or guard let`);
     }
 
     const ifLetCount = (content.match(/if\s+let\s+/g) || []).length;
