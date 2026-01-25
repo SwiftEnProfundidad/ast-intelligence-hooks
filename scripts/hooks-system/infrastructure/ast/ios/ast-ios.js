@@ -539,7 +539,7 @@ async function runIOSIntelligence(project, findings, platform) {
             "medium",
             sf,
             sf,
-            `Line ${lineNumber}: Hardcoded string - use String(localized:)`,
+            `Line ${lineNumber}: Hardcoded string - use String(localized:) or NSLocalizedString`,
             findings
           );
           hardcodedCount++;
@@ -1678,11 +1678,11 @@ async function runIOSIntelligence(project, findings, platform) {
       let stringMatches = content.match(swiftUIStringPattern) || [];
       if (stringMatches.length > 5 && !filePath.includes('Test') && !filePath.includes('Preview')) {
         pushFinding(
-          "ios.localization.hardcoded_strings",
+          "ios.i18n.hardcoded_string",
           "medium",
           sf,
           sf,
-          `${stringMatches.length} hardcoded strings - use String(localized:)`,
+          `${stringMatches.length} hardcoded strings - use String(localized:) for i18n`,
           findings
         );
       }
