@@ -522,21 +522,28 @@ async function runIOSIntelligence(project, findings, platform) {
 
     // 6. LOCALIZATION
 
-    const hardcodedStringPattern = /Text\s*\(\s*"[^"]+"\s*\)|\.title\s*=\s*"[^"]+"|\.text\s*=\s*"[^"]+"/g;
-    let hardcodedCount = 0;
-    while ((match = hardcodedStringPattern.exec(content)) !== null && hardcodedCount < 5) {
-      const lineNumber = content.substring(0, match.index).split('\n').length;
-      const stringContent = match[0];
-      if (!stringContent.includes('NSLocalizedString') && !stringContent.match(/"(OK|Cancel|Yes|No|Error)"/)) {
-        pushFinding(
-          "ios.i18n.hardcoded_string",
-          "medium",
-          sf,
-          sf,
-          `Line ${lineNumber}: Hardcoded string - use NSLocalizedString for i18n`,
-          findings
-        );
-        hardcodedCount++;
+    const usesModernLocalization = content.includes('String(localized:') ||
+      content.includes('LocalizedStringKey') ||
+      content.includes('bundle: .module') ||
+      content.includes('bundle: .presentation');
+
+    if (!usesModernLocalization) {
+      const hardcodedStringPattern = /Text\s*\(\s*"[^"]+"\s*\)|\.title\s*=\s*"[^"]+"|\.text\s*=\s*"[^"]+"/g;
+      let hardcodedCount = 0;
+      while ((match = hardcodedStringPattern.exec(content)) !== null && hardcodedCount < 5) {
+        const lineNumber = content.substring(0, match.index).split('\n').length;
+        const stringContent = match[0];
+        if (!stringContent.includes('NSLocalizedString') && !stringContent.match(/"(OK|Cancel|Yes|No|Error)"/)) {
+          pushFinding(
+            "ios.i18n.hardcoded_string",
+            "medium",
+            sf,
+            sf,
+            `Line ${lineNumber}: Hardcoded string - use String(localized:) or NSLocalizedString`,
+            findings
+          );
+          hardcodedCount++;
+        }
       }
     }
 
@@ -1661,17 +1668,24 @@ async function runIOSIntelligence(project, findings, platform) {
       );
     }
 
-    const swiftUIStringPattern = /Text\("(?!.*NSLocalizedString)[^"]{10,}"\)/g;
-    let stringMatches = content.match(swiftUIStringPattern) || [];
-    if (stringMatches.length > 5 && !filePath.includes('Test') && !filePath.includes('Preview')) {
-      pushFinding(
-        "ios.localization.hardcoded_strings",
-        "medium",
-        sf,
-        sf,
-        `${stringMatches.length} hardcoded strings - use NSLocalizedString for i18n support`,
-        findings
-      );
+    const usesModernL10n = content.includes('String(localized:') ||
+      content.includes('LocalizedStringKey') ||
+      content.includes('bundle: .module') ||
+      content.includes('bundle: .presentation');
+
+    if (!usesModernL10n) {
+      const swiftUIStringPattern = /Text\("(?!.*NSLocalizedString)[^"]{10,}"\)/g;
+      let stringMatches = content.match(swiftUIStringPattern) || [];
+      if (stringMatches.length > 5 && !filePath.includes('Test') && !filePath.includes('Preview')) {
+        pushFinding(
+          "ios.localization.hardcoded_strings",
+          "medium",
+          sf,
+          sf,
+          `${stringMatches.length} hardcoded strings - use String(localized:) for i18n`,
+          findings
+        );
+      }
     }
 
     if (content.includes('NavigationLink') && content.includes('destination:') && !content.includes('Coordinator') && !content.includes('Router')) {

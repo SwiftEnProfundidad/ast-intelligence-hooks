@@ -640,7 +640,9 @@ function runTextScanner(root, findings) {
       if (/class\s+[A-Za-z0-9_]+ViewController\b/.test(content) && /(URLSession|Alamofire|NSPersistentContainer|NSManagedObjectContext)/.test(content)) {
         pushFileFinding('ios.uikit.viewmodel_delegation', 'medium', file, 1, 1, 'ViewController contains data/network logic (delegate to ViewModel)', findings);
       }
-      if (/[A-Za-z0-9_]\s*!\b/.test(content) && !/@IBOutlet\b/.test(content)) {
+      const hasForceUnwrap = /\w+!\s*[.\[\(\),;\s]/.test(content) || /\bas!\s/.test(content);
+      const hasLogicalNegation = /[^\w]!\w/.test(content);
+      if (hasForceUnwrap && !hasLogicalNegation && !/@IBOutlet\b/.test(content) && !/String\(localized:/.test(content)) {
         pushFileFinding('ios.force_unwrapping', 'high', file, 1, 1, 'Force unwrapping detected', findings);
       }
       if (/\[[ ]*(weak|unowned)[ ]+self[ ]*\]/.test(content) === false && /self\./.test(content) && /\{[^\n]*in/.test(content)) {
