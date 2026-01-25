@@ -5,6 +5,17 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.6] - 2026-01-25
+
+### Fixed
+
+- **ios.force_unwrapping**: Fixed false positive detection of logical negation (`!variable`) as force unwrap
+- **ios.i18n.hardcoded_strings**: Exclude files using `String(localized:)`, `LocalizedStringKey`, or `bundle: .presentation` from hardcoded string detection
+- **protocol_3_questions**: Now provides dynamic answers based on actual analysis (files analyzed, platforms detected, architecture violations)
+- **ai_gate.severity_summary**: Added explicit counts for all 4 severity levels (CRITICAL, HIGH, MEDIUM, LOW)
+
+---
+
 ## [6.2.5] - 2026-01-25
 
 ### Fixed

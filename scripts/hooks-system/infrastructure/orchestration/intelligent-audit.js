@@ -641,6 +641,27 @@ function getStagedFiles() {
   }
 }
 
+function detectPlatformsFromFiles(files) {
+  const platforms = new Set();
+
+  for (const file of files) {
+    if (file.endsWith('.swift') || file.includes('/ios/') || file.includes('.xcodeproj') || file.includes('.xcworkspace')) {
+      platforms.add('ios');
+    }
+    if (file.endsWith('.kt') || file.endsWith('.java') || file.includes('/android/') || file.includes('build.gradle')) {
+      platforms.add('android');
+    }
+    if (file.includes('/backend/') || file.includes('.nestjs') || file.endsWith('.controller.ts') || file.endsWith('.service.ts')) {
+      platforms.add('backend');
+    }
+    if (file.endsWith('.tsx') || file.endsWith('.jsx') || file.includes('/frontend/') || file.includes('/web/')) {
+      platforms.add('frontend');
+    }
+  }
+
+  return Array.from(platforms);
+}
+
 function saveEnhancedViolations(violations) {
   const outputPath = path.join(resolveAuditTmpDir(), 'ast-summary-enhanced.json');
 
@@ -760,6 +781,13 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
       status: gateResult.passed ? 'ALLOWED' : 'BLOCKED',
       scope: gateScope === 'repo' || gateScope === 'repository' ? 'repo' : 'staging',
       last_check: formatLocalTimestamp(),
+      severity_summary: {
+        CRITICAL: criticalViolations.length,
+        HIGH: highViolations.length,
+        MEDIUM: mediumViolations.length,
+        LOW: lowViolations.length,
+        total: violations.length
+      },
       violations: blockingViolations.map(v => {
         const ruleId = v.ruleId || v.rule || 'unknown';
         return {
@@ -779,11 +807,37 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
 
     evidence.ai_gate = preserveExistingRepoGate ? existingGate : nextGate;
 
+    const stagedFilesList = getStagedFiles();
+    const detectedPlatformsForQuestions = detectPlatformsFromFiles(stagedFilesList);
+    const architectureViolations = violations.filter(v =>
+      (v.ruleId || '').includes('solid') ||
+      (v.ruleId || '').includes('clean') ||
+      (v.ruleId || '').includes('architecture')
+    );
+
     evidence.protocol_3_questions = {
       answered: true,
-      question_1_file_type: 'Determine the file type and its purpose in the architecture',
-      question_2_similar_exists: 'Search for similar files or existing patterns in the codebase',
-      question_3_clean_architecture: 'Verify that the code follows Clean Architecture and SOLID principles',
+      question_1_file_type: {
+        question: '¿Qué tipo de archivo es y cuál es su propósito en la arquitectura?',
+        answer: stagedFilesList.length > 0
+          ? `Analizados ${stagedFilesList.length} archivos staged. Plataformas detectadas: ${detectedPlatformsForQuestions.join(', ') || 'ninguna'}.`
+          : 'No hay archivos staged para analizar.',
+        status: stagedFilesList.length > 0 ? 'answered' : 'pending'
+      },
+      question_2_similar_exists: {
+        question: '¿Existen patrones similares o archivos existentes en el codebase?',
+        answer: violations.length > 0
+          ? `Se encontraron ${violations.length} violaciones de patrones. Revisar reglas aplicadas.`
+          : 'No se detectaron violaciones de patrones existentes.',
+        status: 'answered'
+      },
+      question_3_clean_architecture: {
+        question: '¿El código sigue Clean Architecture y principios SOLID?',
+        answer: architectureViolations.length > 0
+          ? `⚠️ ${architectureViolations.length} violaciones de arquitectura/SOLID detectadas.`
+          : '✅ No se detectaron violaciones de Clean Architecture/SOLID.',
+        status: architectureViolations.length > 0 ? 'needs_review' : 'passed'
+      },
       last_answered: formatLocalTimestamp()
     };
 

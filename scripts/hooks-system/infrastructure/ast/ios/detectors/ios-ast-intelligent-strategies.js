@@ -605,9 +605,17 @@ function analyzeAdditionalRules(analyzer, filePath) {
         }
     }
 
-    const hardcodedStrings = (analyzer.fileContent || '').match(/Text\s*\(\s*"[^"]{10,}"\s*\)/g) || [];
-    if (hardcodedStrings.length > 3) {
-        analyzer.pushFinding('ios.i18n.hardcoded_strings', 'medium', filePath, 1, `${hardcodedStrings.length} hardcoded strings - use NSLocalizedString`);
+    const fileContent = analyzer.fileContent || '';
+    const usesModernLocalization = fileContent.includes('String(localized:') ||
+        fileContent.includes('LocalizedStringKey') ||
+        fileContent.includes('bundle: .module') ||
+        fileContent.includes('bundle: .presentation');
+
+    if (!usesModernLocalization) {
+        const hardcodedStrings = fileContent.match(/Text\s*\(\s*"[^"]{10,}"\s*\)/g) || [];
+        if (hardcodedStrings.length > 3) {
+            analyzer.pushFinding('ios.i18n.hardcoded_strings', 'medium', filePath, 1, `${hardcodedStrings.length} hardcoded strings - use String(localized:)`);
+        }
     }
 
     if ((analyzer.fileContent || '').includes('Image(') && !(analyzer.fileContent || '').includes('.accessibilityLabel')) {
