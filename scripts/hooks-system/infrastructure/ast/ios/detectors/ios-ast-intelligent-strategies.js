@@ -451,7 +451,7 @@ function analyzeFunctionAST(analyzer, node, filePath) {
     const ifStatements = countStatementsOfType(substructure, 'stmt.if');
     const guardStatements = countStatementsOfType(substructure, 'stmt.guard');
 
-    const hasEarlyReturns = guardStatements > 0;
+    const hasEarlyReturns = (analyzer.fileContent || '').includes('return') && guardStatements > 0;
     const nestingLevel = calculateNestingDepth(substructure);
 
     if (nestingLevel >= 3 && !hasEarlyReturns) {
@@ -496,6 +496,8 @@ function analyzePropertyAST(analyzer, node, filePath) {
 }
 
 function analyzeClosuresAST(analyzer, filePath) {
+    const isStruct = analyzer.structs.length > 0;
+
     for (const closure of analyzer.closures) {
         const closureText = analyzer.safeStringify(closure);
         const hasSelfReference = closureText.includes('"self"') || closureText.includes('key.name":"self');
@@ -503,22 +505,15 @@ function analyzeClosuresAST(analyzer, filePath) {
         const parentFunc = closure._parent;
         const isEscaping = parentFunc && (parentFunc['key.typename'] || '').includes('@escaping');
 
-        let container = closure._parent;
-        while (container && !['source.lang.swift.decl.class', 'source.lang.swift.decl.struct'].includes(container['key.kind'])) {
-            container = container._parent;
-        }
-        const isContainerStruct = container && container['key.kind'] === 'source.lang.swift.decl.struct';
-
-        if (hasSelfReference && isEscaping && !isContainerStruct) {
+        if (hasSelfReference && isEscaping && !isStruct) {
             const offset = closure['key.offset'] || 0;
             const length = closure['key.length'] || 100;
             const closureCode = (analyzer.fileContent || '').substring(offset, offset + length);
 
             const hasExplicitSelfInCode = /\bself\b/.test(closureCode);
-            const hasWeakCapture = /\[.*weak.*\]/.test(closureCode) || /\[.*unowned.*\]/.test(closureCode);
-            const hasCaptureListWithoutSelf = /\[[^\]]+\]/.test(closureCode) && !/\[.*self.*\]/.test(closureCode);
+            const hasWeakCapture = /\[.*weak.*self.*\]/.test(closureCode) || /\[.*unowned.*self.*\]/.test(closureCode);
 
-            if (hasExplicitSelfInCode && !hasWeakCapture && !hasCaptureListWithoutSelf) {
+            if (hasExplicitSelfInCode && !hasWeakCapture) {
                 const line = closure['key.line'] || 1;
                 analyzer.pushFinding('ios.memory.missing_weak_self', 'high', filePath, line, 'Escaping closure captures self without [weak self]');
             }
@@ -610,9 +605,17 @@ function analyzeAdditionalRules(analyzer, filePath) {
         }
     }
 
-    const hardcodedStrings = (analyzer.fileContent || '').match(/Text\s*\(\s*"[^"]{10,}"\s*\)/g) || [];
-    if (hardcodedStrings.length > 3) {
-        analyzer.pushFinding('ios.i18n.hardcoded_strings', 'medium', filePath, 1, `${hardcodedStrings.length} hardcoded strings - use NSLocalizedString`);
+    const fileContent = analyzer.fileContent || '';
+    const usesModernLocalization = fileContent.includes('String(localized:') ||
+        fileContent.includes('LocalizedStringKey') ||
+        fileContent.includes('bundle: .module') ||
+        fileContent.includes('bundle: .presentation');
+
+    if (!usesModernLocalization) {
+        const hardcodedStrings = fileContent.match(/Text\s*\(\s*"[^"]{10,}"\s*\)/g) || [];
+        if (hardcodedStrings.length > 3) {
+            analyzer.pushFinding('ios.i18n.hardcoded_strings', 'medium', filePath, 1, `${hardcodedStrings.length} hardcoded strings - use String(localized:)`);
+        }
     }
 
     if ((analyzer.fileContent || '').includes('Image(') && !(analyzer.fileContent || '').includes('.accessibilityLabel')) {

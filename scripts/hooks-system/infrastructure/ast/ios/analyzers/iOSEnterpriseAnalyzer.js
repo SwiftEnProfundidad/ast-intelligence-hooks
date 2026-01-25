@@ -114,10 +114,16 @@ class iOSEnterpriseAnalyzer {
   }
 
   async analyzeLocalization(content, filePath) {
+    const usesModernLocalization = content.includes('String(localized:') ||
+      content.includes('LocalizedStringKey') ||
+      content.includes('bundle: .module') ||
+      content.includes('bundle: .presentation') ||
+      content.includes('.xcstrings');
+
     const textMatches = content.match(/(Text|UILabel)\(["\'][^"\']+["\']\)/g);
-    if (textMatches && textMatches.length > 0 && !content.includes('NSLocalizedString')) {
+    if (textMatches && textMatches.length > 0 && !content.includes('NSLocalizedString') && !usesModernLocalization) {
       this.addFinding('ios.i18n.hardcoded_strings', 'medium', filePath, 1,
-        `Hardcoded UI strings (${textMatches.length}x) - use NSLocalizedString`);
+        `Hardcoded UI strings (${textMatches.length}x) - use String(localized:) or NSLocalizedString`);
     }
 
     if (content.includes('NSLocalizedString') && !filePath.includes('Localizable.strings')) {

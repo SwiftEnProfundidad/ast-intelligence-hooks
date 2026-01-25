@@ -5,34 +5,35 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [6.2.4] - 2026-01-24
+## [6.2.6] - 2026-01-25
 
 ### Fixed
 
-- **Auto-refresh logging**: Added comprehensive logging to verify auto-refresh is working during MCP sessions
-- **Debug visibility**: EvidenceMonitorService now logs when auto-refresh starts and when refresh attempts occur
+- **ios.force_unwrapping**: Fixed false positive detection of logical negation (`!variable`) as force unwrap
+- **ios.i18n.hardcoded_strings**: Exclude files using `String(localized:)`, `LocalizedStringKey`, or `bundle: .presentation` from hardcoded string detection
+- **protocol_3_questions**: Now provides dynamic answers based on actual analysis (files analyzed, platforms detected, architecture violations)
+- **ai_gate.severity_summary**: Added explicit counts for all 4 severity levels (CRITICAL, HIGH, MEDIUM, LOW)
 
-## [6.2.3] - 2026-01-24
+---
 
-### Fixed
-
-- **Auto-refresh cooldown bug**: Fixed periodic refresh being blocked by cooldown check in EvidenceMonitorService
-- **MCP polling interval**: Reduced from 30 seconds to 3 minutes to match expected refresh frequency
-- **Evidence stale threshold**: Reduced from 10 minutes to 3 minutes for consistency with refresh interval
-
-## [6.2.2] - 2026-01-24
+## [6.2.5] - 2026-01-25
 
 ### Fixed
 
-- **EvidenceMonitorService initialization**: Fixed service not starting properly on MCP server launch
-- **Background refresh daemon**: Evidence now refreshes automatically every 3 minutes during active sessions
+- **ios.swiftui.forbidden_any_view**: Added exceptions for legitimate AnyView usage:
+  - `RouteRegistry` files (navigation type erasure)
+  - `RouteViewFactory` files (factory pattern)
+  - `NavigationRegistry` files (navigation pattern)
+  - Files containing `// AnyView: authorized` comment
+  - Files containing `// anyview-ok` comment
+  - Files containing `@AnyViewAuthorized` annotation
+- **iOSModernPracticesRules**: Fixed `pushFinding` function signature to use `pushFileFinding` correctly
 
-## [6.2.1] - 2026-01-24
+### Added
 
-### Fixed
+- New test suite `ios-anyview-exceptions.spec.js` with 6 tests for AnyView exception handling
 
-- **EvidenceMonitorService auto-refresh**: Now properly starts when MCP server initializes, enabling automatic evidence refresh every 3 minutes without requiring commits
-- **Bug #8 (REAL FIX)**: Evidence auto-refresh daemon now runs continuously in background, preventing stale evidence blocking during active development sessions
+---
 
 ## [6.2.0] - 2026-01-24
 

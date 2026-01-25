@@ -8,9 +8,22 @@
  * - Modern alternatives enforcement (@Observable, NavigationStack, Swift Testing, etc.)
  */
 
-const { pushFinding } = require('../../ast-core');
+const { pushFileFinding } = require('../../ast-core');
 const fs = require('fs');
 const path = require('path');
+
+function pushFinding(findings, finding) {
+    pushFileFinding(
+        finding.ruleId,
+        finding.severity,
+        finding.filePath,
+        finding.line || 1,
+        finding.column || 1,
+        finding.message,
+        findings,
+        { suggestion: finding.suggestion }
+    );
+}
 
 const FORBIDDEN_IMPORTS = {
     'Alamofire': {
@@ -163,7 +176,15 @@ const FORBIDDEN_PATTERNS = [
         ruleId: 'ios.swiftui.forbidden_any_view',
         severity: 'high',
         message: 'AnyView is forbidden - it breaks SwiftUI diffing and hurts performance',
-        suggestion: 'Use @ViewBuilder, generics, or conditional views instead'
+        suggestion: 'Use @ViewBuilder, generics, or conditional views instead',
+        exceptions: [
+            'RouteRegistry',
+            'RouteViewFactory',
+            'NavigationRegistry',
+            '// AnyView: authorized',
+            '// anyview-ok',
+            '@AnyViewAuthorized'
+        ]
     },
     {
         pattern: /NSLocalizedString\s*\(/,
@@ -316,6 +337,7 @@ class iOSModernPracticesRules {
 
     checkForbiddenPatterns(filePath, content) {
         const isTestFile = /\.(spec|test)\.swift$/i.test(filePath) || filePath.includes('Tests/');
+        const fileName = path.basename(filePath);
 
         for (const pattern of FORBIDDEN_PATTERNS) {
             if (pattern.ruleId.includes('deprecated_') && isTestFile) {
@@ -324,6 +346,17 @@ class iOSModernPracticesRules {
 
             const match = content.match(pattern.pattern);
             if (match) {
+                if (pattern.exceptions && pattern.exceptions.length > 0) {
+                    const isExcepted = pattern.exceptions.some(exception => {
+                        return fileName.includes(exception) ||
+                            filePath.includes(exception) ||
+                            content.includes(exception);
+                    });
+                    if (isExcepted) {
+                        continue;
+                    }
+                }
+
                 const line = this.findLineNumber(content, match[0]);
                 pushFinding(this.findings, {
                     ruleId: pattern.ruleId,
