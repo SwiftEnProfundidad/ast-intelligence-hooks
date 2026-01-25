@@ -5,6 +5,25 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.5] - 2026-01-25
+
+### Fixed
+
+- **ios.swiftui.forbidden_any_view**: Added exceptions for legitimate AnyView usage:
+  - `RouteRegistry` files (navigation type erasure)
+  - `RouteViewFactory` files (factory pattern)
+  - `NavigationRegistry` files (navigation pattern)
+  - Files containing `// AnyView: authorized` comment
+  - Files containing `// anyview-ok` comment
+  - Files containing `@AnyViewAuthorized` annotation
+- **iOSModernPracticesRules**: Fixed `pushFinding` function signature to use `pushFileFinding` correctly
+
+### Added
+
+- New test suite `ios-anyview-exceptions.spec.js` with 6 tests for AnyView exception handling
+
+---
+
 ## [6.2.0] - 2026-01-24
 
 ### Added

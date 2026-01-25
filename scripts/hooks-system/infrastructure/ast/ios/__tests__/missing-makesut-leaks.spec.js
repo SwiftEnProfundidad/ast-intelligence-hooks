@@ -1,12 +1,14 @@
 const { detectMissingMakeSUT, detectMissingLeakTracking } = require('../ast-ios');
 
 describe('iOS testing rules - makeSUT / leak tracking', () => {
-    it('flags missing makeSUT as HIGH when tests exist', () => {
+    it('flags missing makeSUT as HIGH when 3+ tests exist', () => {
         const filePath = '/SomeModule/Tests/FooTests.swift';
         const content = [
             'import XCTest',
             'final class FooTests: XCTestCase {',
             '  func test_one() { XCTAssertTrue(true) }',
+            '  func test_two() { XCTAssertTrue(true) }',
+            '  func test_three() { XCTAssertTrue(true) }',
             '}'
         ].join('\n');
 
