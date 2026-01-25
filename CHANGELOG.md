@@ -45,13 +45,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **ios.i18n.hardcoded_strings**: Fixed LAST remaining false positive in text-scanner.js:697 - now checks for `String(localized:)`, `LocalizedStringKey`, `bundle: .module/.presentation`
 
 ---
-
 ## [6.2.7] - 2026-01-25
 
 ### Fixed
 
-- **ios.force_unwrapping**: Fixed ALL false positives in text-scanner.js - improved regex to exclude logical negations (`!Task.isCancelled`)
-- **ios.i18n.hardcoded_strings**: Fixed ALL false positives in ast-ios.js - both detectors now check for `String(localized:)`, `LocalizedStringKey`, `bundle: .module/.presentation`
+- **ios.force_unwrapping**: Fixed ALL remaining false positives across text-scanner.js, iOSEnterpriseChecks.js
+- **ios.i18n.hardcoded_strings**: Fixed ALL remaining false positives across ast-ios.js, ios-ast-intelligent-strategies.js, iOSEnterpriseAnalyzer.js
+- **text-scanner.js**: Improved regex to exclude logical negations (`!Task.isCancelled`) from force unwrap detection
+- **ast-ios.js**: Both hardcoded_string detectors now check for `String(localized:)`, `LocalizedStringKey`, `bundle: .module/.presentation`
 
 ---
 
