@@ -33,7 +33,18 @@ const SEVERITY_LABELS = {
     LOW: 'Low'
 };
 
+const BLOCKING_MODES = {
+    STRICT: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+    DEFAULT: ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW'],
+    LEGACY: ['CRITICAL', 'HIGH']
+};
+
 class SeverityConfig {
+    static getBlockingMode() {
+        const mode = (process.env.AST_BLOCKING_MODE || 'DEFAULT').toUpperCase();
+        return BLOCKING_MODES[mode] || BLOCKING_MODES.DEFAULT;
+    }
+
     static getSeverityValue(severity) {
         return SEVERITY_MAP[severity] || 'MEDIUM';
     }
@@ -48,7 +59,8 @@ class SeverityConfig {
 
     static isBlocking(severity) {
         const level = this.getSeverityValue(severity);
-        return level === 'CRITICAL' || level === 'HIGH';
+        const blockingSeverities = this.getBlockingMode();
+        return blockingSeverities.includes(level);
     }
 
     static filterBySeverity(violations, severity) {
@@ -69,5 +81,6 @@ module.exports = {
     SEVERITY_MAP,
     SEVERITY_ICONS,
     SEVERITY_LABELS,
+    BLOCKING_MODES,
     SeverityConfig
 };

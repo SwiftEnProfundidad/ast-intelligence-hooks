@@ -5,6 +5,39 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.9] - 2026-01-25
+
+### Changed
+
+- **BREAKING**: El bloqueo ahora incluye las **4 severidades** por defecto (CRITICAL, HIGH, MEDIUM, LOW)
+- Para mantener el comportamiento anterior (solo CRITICAL/HIGH), configurar `AST_BLOCKING_MODE=LEGACY`
+- **Accesibilidad**: Todos los detectores de accesibilidad iOS ahora son **HIGH** severity (obligatorio por ley)
+  - `ios.accessibility.missing_label` → HIGH
+  - `ios.accessibility.dynamic_type` → HIGH
+  - `ios.accessibility.missing_traits` → HIGH
+  - `ios.accessibility.reduce_motion` → HIGH
+  - `ios.accessibility.missing_labels` → HIGH
+  - `ios.accessibility.voiceover_support` → HIGH
+  - `ios.accessibility.missing_dynamic_type` → HIGH
+
+### Added
+
+- **SeverityConfig.getBlockingMode()**: Nueva función para obtener las severidades bloqueantes según configuración
+- **CommitBlockingRules.getBlockingMode()**: Coherente con SeverityConfig
+- **Severity.isBlocking()**: Ahora respeta `AST_BLOCKING_MODE` env var
+- **Reglas universales para IDEs/CLIs**: Archivos de configuración para Windsurf, Cursor, Claude Code, Codex CLI
+  - `.windsurf/skills/mandatory-gate-check.md`
+  - `.cursor/rules/mandatory-gate-check.mdc`
+  - `.claude/rules/mandatory-gate-check.md`
+  - `.codex/AGENTS.md`
+
+### Technical
+
+- Archivos modificados: `SeverityConfig.js`, `Severity.js`, `CommitBlockingRules.js`, `ast-ios.js`
+- Nuevo export: `BLOCKING_MODES` en SeverityConfig
+
+---
+
 ## [6.2.8] - 2026-01-25
 
 ### Fixed

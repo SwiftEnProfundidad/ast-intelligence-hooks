@@ -774,7 +774,7 @@ async function runIOSIntelligence(project, findings, platform) {
         const lineNumber = content.substring(0, match.index).split('\n').length;
         pushFinding(
           "ios.accessibility.missing_label",
-          "medium",
+          "high",
           sf,
           sf,
           `Line ${lineNumber}: ${match[1]} without accessibility label - add .accessibilityLabel()`,
@@ -994,7 +994,7 @@ async function runIOSIntelligence(project, findings, platform) {
       if (!content.includes('adjustsFontForContentSizeCategory') && !content.includes('.font = .preferredFont')) {
         pushFinding(
           "ios.accessibility.dynamic_type",
-          "medium",
+          "high",
           sf,
           sf,
           'UI text elements without Dynamic Type support - use .preferredFont(forTextStyle:)',
@@ -1008,7 +1008,7 @@ async function runIOSIntelligence(project, findings, platform) {
       if (lineNumber > -1) {
         pushFinding(
           "ios.accessibility.missing_traits",
-          "medium",
+          "high",
           sf,
           sf,
           'Accessibility element without traits - add .accessibilityTraits for better VoiceOver experience',
@@ -1021,7 +1021,7 @@ async function runIOSIntelligence(project, findings, platform) {
       if (!content.includes('UIAccessibility.isReduceMotionEnabled') && !content.includes('@Environment(\\.accessibilityReduceMotion)')) {
         pushFinding(
           "ios.accessibility.reduce_motion",
-          "medium",
+          "high",
           sf,
           sf,
           'Animation without Reduce Motion check - respect user preference with UIAccessibility.isReduceMotionEnabled',
@@ -1660,7 +1660,7 @@ async function runIOSIntelligence(project, findings, platform) {
       content.includes('View') && !content.includes('accessibility') && !filePath.includes('Preview')) {
       pushFinding(
         "ios.accessibility.missing_labels",
-        "medium",
+        "high",
         sf,
         sf,
         'SwiftUI views without accessibility modifiers - add .accessibilityLabel() for VoiceOver support',
@@ -2179,7 +2179,7 @@ async function runIOSIntelligence(project, findings, platform) {
     if ((content.includes('View:') || content.includes('UIView')) && !content.includes('accessibility') && lineCount > 50) {
       pushFinding(
         "ios.accessibility.voiceover_support",
-        "low",
+        "high",
         sf,
         sf,
         'Complex view without accessibility modifiers - test with VoiceOver and add labels/traits',
@@ -2190,7 +2190,7 @@ async function runIOSIntelligence(project, findings, platform) {
     if (content.includes('UIFont') && content.includes('systemFont') && !content.includes('preferredFont')) {
       pushFinding(
         "ios.accessibility.missing_dynamic_type",
-        "medium",
+        "high",
         sf,
         sf,
         'Using systemFont instead of preferredFont - use preferredFont for Dynamic Type support',
