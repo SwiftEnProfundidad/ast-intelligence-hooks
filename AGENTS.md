@@ -1,97 +1,96 @@
-# Pumuki AST Intelligence - Guía de Agentes IA
+# Pumuki AST Intelligence - AI Agents Guide
 
-## Flujo Operativo (OBLIGATORIO)
+## Operational Flow (MANDATORY)
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│  1. INICIO SESIÓN                                               │
-│     npx ast-hooks audit  →  Refresca .AI_EVIDENCE.json          │
-│     npm run ast:guard:status  →  Verifica que guard esté activo │
+│  1. SESSION START                                               │
+│     npx ast-hooks audit  →  Refresh .AI_EVIDENCE.json           │
+│     npm run ast:guard:status  →  Verify guard is active         │
 ├─────────────────────────────────────────────────────────────────┤
-│  2. GATE CHECK (antes de cualquier acción)                      │
+│  2. GATE CHECK (before any action)                              │
 │     MCP: ai_gate_check()                                        │
-│     Si BLOCKED → NO editar, arreglar violaciones primero        │
+│     If BLOCKED → DO NOT edit, fix violations first              │
 ├─────────────────────────────────────────────────────────────────┤
-│  3. PRE-FLIGHT (antes de cada escritura)                        │
+│  3. PRE-FLIGHT (before each write)                              │
 │     MCP: pre_flight_check({ action_type, target_file })         │
-│     Si blocked=true → NO escribir                               │
+│     If blocked=true → DO NOT write                              │
 ├─────────────────────────────────────────────────────────────────┤
-│  4. CAMBIOS                                                     │
-│     Editar ficheros (solo si gate/pre-flight = ALLOWED)         │
+│  4. CHANGES                                                     │
+│     Edit files (only if gate/pre-flight = ALLOWED)              │
 ├─────────────────────────────────────────────────────────────────┤
-│  5. VALIDACIÓN                                                  │
-│     npm test  →  Tests pasan                                    │
-│     npm run lint  →  Sin errores                                │
-│     npx ast-hooks audit  →  Actualiza evidence                  │
+│  5. VALIDATION                                                  │
+│     npm test  →  Tests pass                                     │
+│     npm run lint  →  No errors                                  │
+│     npx ast-hooks audit  →  Update evidence                     │
 ├─────────────────────────────────────────────────────────────────┤
 │  6. DEFINITION OF DONE                                          │
 │     ✅ Gate status = ALLOWED                                    │
-│     ✅ Tests pasan                                               │
-│     ✅ Lint sin errores                                          │
-│     ✅ .AI_EVIDENCE.json actualizado                            │
+│     ✅ Tests pass                                                │
+│     ✅ Lint passes                                               │
+│     ✅ .AI_EVIDENCE.json updated                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-## Si BLOCKED
+## If BLOCKED
 
-1. Leer `.AI_EVIDENCE.json` → sección `ai_gate.violations`
-2. Ordenar por severidad: CRITICAL > HIGH > MEDIUM > LOW
-3. Arreglar violaciones una por una
-4. Re-ejecutar `npx ast-hooks audit`
-5. Verificar gate con MCP `ai_gate_check()`
+1. Read `.AI_EVIDENCE.json` → section `ai_gate.violations`
+2. Sort by severity: CRITICAL > HIGH > MEDIUM > LOW
+3. Fix violations one by one
+4. Re-run `npx ast-hooks audit`
+5. Verify gate with MCP `ai_gate_check()`
 
-## Comandos Reales Disponibles
+## Available Commands
 
-| Comando | Descripción |
+| Command | Description |
 |---------|-------------|
-| `npx ast-hooks audit` | Auditoría completa + actualiza evidence |
-| `npm run ast` | Alias de audit |
-| `npm test` | Ejecuta tests Jest |
-| `npm run lint` | Linter ESLint |
-| `npm run ast:guard:status` | Estado del guard daemon |
-| `npm run gitflow` | Verificar Git Flow compliance |
+| `npx ast-hooks audit` | Full audit + update evidence |
+| `npm run ast` | Alias for audit |
+| `npm test` | Run Jest tests |
+| `npm run lint` | ESLint linter |
+| `npm run ast:guard:status` | Guard daemon status |
+| `npm run gitflow` | Verify Git Flow compliance |
 
-## Reglas Humanas vs Enforzables
+## Human vs Enforceable Rules
 
-### Reglas Humanas (guía, no bloquean)
-- Preferir composición sobre herencia
-- Nombres autodescriptivos en inglés
-- Documentación mínima necesaria
+### Human Rules (guidance, non-blocking)
+- Prefer composition over inheritance
+- Self-descriptive names in English
+- Minimal documentation
 - KISS / YAGNI
 
-### Reglas Enforzables (bloquean si se violan)
+### Enforceable Rules (block if violated)
 - `backend.antipattern.god_classes` → CRITICAL
 - `common.error.empty_catch` → CRITICAL
 - `ios.solid.dip.concrete_dependency` → HIGH
 - `common.testing.prefer_spy_over_mock` → HIGH
 
-Ver `skills/skill-rules.json` para lista completa de reglas enforzables.
+See `skills/skill-rules.json` for complete list of enforceable rules.
 
-## Estructura del Repo
+## Repository Structure
 
 ```
 ast-intelligence-hooks/
-├── bin/                    # CLIs ejecutables
-├── scripts/hooks-system/   # Core del sistema
-│   ├── application/        # Use cases, servicios
-│   ├── domain/             # Entidades, puertos
-│   ├── infrastructure/     # Adaptadores, AST
+├── bin/                    # Executable CLIs
+├── scripts/hooks-system/   # System core
+│   ├── application/        # Use cases, services
+│   ├── domain/             # Entities, ports
+│   ├── infrastructure/     # Adapters, AST
 │   └── presentation/       # MCP server, CLI
-├── skills/                 # Guidelines por plataforma
-├── docs/                   # Documentación
-├── packs/                  # Packs portables por plataforma
-└── .windsurf/skills/       # Skills Windsurf
+├── skills/                 # Platform guidelines
+├── docs/                   # Documentation
+├── packs/                  # Portable packs by platform
+└── .windsurf/skills/       # Windsurf skills
 ```
 
-## Principios No Negociables
+## Non-Negotiable Principles
 
-- **Todo en español** (respuestas, docs operacionales)
-- **No inventar comandos** (usar solo los de package.json)
-- **Cambios pequeños y verificables**
-- **BDD → TDD** (feature files → specs → implementación)
-- **Sin comentarios en código** (nombres autodescriptivos)
-- **SOLID estricto** (SRP, OCP, LSP, ISP, DIP)
-- **Sin Singletons** (usar Inyección de Dependencias)
+- **Do not invent commands** (use only those in package.json)
+- **Small and verifiable changes**
+- **BDD → TDD** (feature files → specs → implementation)
+- **No code comments** (self-descriptive names)
+- **Strict SOLID** (SRP, OCP, LSP, ISP, DIP)
+- **No Singletons** (use Dependency Injection)
 
 ---
 🐈💚 Pumuki Team® - AST Intelligence Framework

@@ -149,6 +149,9 @@ class InstallService {
         this.logStep('7.5/8', 'Cleaning up duplicate rule files...');
         this.cleanupDuplicateRules();
 
+        this.logStep('7.6/8', 'Installing AI agent skill files (CLAUDE.md, AGENTS.md)...');
+        this.installAgentSkillFiles();
+
         this.logStep('7.75/8', 'Configuring VS Code/Cursor tasks for auto-start...');
         this.ideIntegration.configureVSCodeTasks();
 
@@ -248,6 +251,76 @@ class InstallService {
         } catch (error) {
             this.logWarning(`Failed to start evidence guard: ${error.message}`);
         }
+    }
+
+    installAgentSkillFiles() {
+        const skillFiles = [
+            { name: 'CLAUDE.md', desc: 'Claude Code CLI' },
+            { name: 'AGENTS.md', desc: 'Codex CLI / Cursor' }
+        ];
+
+        const packageRoot = this.findPackageRoot();
+        if (!packageRoot) {
+            this.logWarning('Package root not found, skipping skill files installation');
+            return;
+        }
+
+        let installedCount = 0;
+
+        for (const { name, desc } of skillFiles) {
+            const sourcePath = path.join(packageRoot, name);
+            const targetPath = path.join(this.targetRoot, name);
+
+            if (!fs.existsSync(sourcePath)) {
+                this.logger.warn('SKILL_FILE_NOT_FOUND', { file: name, sourcePath });
+                continue;
+            }
+
+            if (fs.existsSync(targetPath)) {
+                this.logger.info('SKILL_FILE_EXISTS', { file: name, targetPath });
+                continue;
+            }
+
+            try {
+                fs.copyFileSync(sourcePath, targetPath);
+                this.manifest.recordCreatedFile(name);
+                installedCount++;
+                this.logger.info('SKILL_FILE_INSTALLED', { file: name, desc });
+            } catch (error) {
+                this.logWarning(`Failed to install ${name}: ${error.message}`);
+            }
+        }
+
+        if (installedCount > 0) {
+            this.logSuccess(`Installed ${installedCount} AI agent skill file(s)`);
+        } else {
+            this.logSuccess('AI agent skill files already present or not needed');
+        }
+    }
+
+    findPackageRoot() {
+        const candidates = [
+            path.resolve(__dirname, '../../../../..'),
+            path.resolve(__dirname, '../../../../../..'),
+            (() => {
+                try {
+                    const pkgPath = require.resolve('pumuki-ast-hooks/package.json');
+                    return path.dirname(pkgPath);
+                } catch {
+                    return null;
+                }
+            })()
+        ].filter(Boolean);
+
+        for (const candidate of candidates) {
+            const claudeMd = path.join(candidate, 'CLAUDE.md');
+            const agentsMd = path.join(candidate, 'AGENTS.md');
+            if (fs.existsSync(claudeMd) || fs.existsSync(agentsMd)) {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     cleanupDuplicateRules() {
