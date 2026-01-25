@@ -642,8 +642,8 @@ function runTextScanner(root, findings) {
       }
       const hasForceUnwrap = /\w+!\s*[.\[\(\),;\s]/.test(content) || /\bas!\s/.test(content);
       const hasLogicalNegation = /[^\w]!\w/.test(content);
-      const usesLocalization = /String\(localized:/.test(content);
-      if (hasForceUnwrap && !hasLogicalNegation && !/@IBOutlet\b/.test(content) && !usesLocalization) {
+      const usesModernLocalization = /String\(localized:/.test(content) || /bundle:\s*\.module/.test(content) || /bundle:\s*\.presentation/.test(content);
+      if (hasForceUnwrap && !hasLogicalNegation && !/@IBOutlet\b/.test(content) && !usesModernLocalization) {
         pushFileFinding('ios.force_unwrapping', 'high', file, 1, 1, 'Force unwrapping detected', findings);
       }
       if (/\[[ ]*(weak|unowned)[ ]+self[ ]*\]/.test(content) === false && /self\./.test(content) && /\{[^\n]*in/.test(content)) {
