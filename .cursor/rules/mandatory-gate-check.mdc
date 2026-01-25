@@ -1,38 +1,56 @@
-# 🚨 MANDATORY GATE CHECK - AUTOMATED ENFORCEMENT
+# 🚨 MANDATORY GATE CHECK - AUTOMATED ENFORCEMENT (ALL IDEs/CLIs)
 
 ---
-description: Forces AI to call ai_gate_check MCP tool at the START of EVERY response
+description: Forces AI to call ai_gate_check at the START of EVERY response
 globs: ["**/*"]
 alwaysApply: true
+platforms: [cursor, windsurf, claude-code, codex-cli, opencode, aider, continue, cody]
 ---
 
-## 🛑 ABSOLUTE REQUIREMENT
+## 🛑 ABSOLUTE REQUIREMENT - NON-NEGOTIABLE
+
+**This rule applies to ALL AI coding assistants.**
 
 **BEFORE doing ANYTHING else in your response, you MUST call:**
 
-```
-mcp_ast-intelligence-automation_ai_gate_check
-```
+| IDE/CLI | Command |
+|---------|---------|
+| Cursor | `mcp_ast-intelligence-automation_ai_gate_check` |
+| Windsurf | `mcp2_ai_gate_check` |
+| Claude Code | `mcp__ast-intelligence-automation__ai_gate_check` |
+| Codex CLI | `npx ast-hooks audit` (then check `.AI_EVIDENCE.json`) |
+| Others | Check MCP tool list for `ai_gate_check` |
 
 ## Rules
 
 1. **FIRST action** of EVERY response = `ai_gate_check`
-2. If result is `BLOCKED` → Fix violations BEFORE proceeding
-3. If evidence is stale → Call `auto_execute_ai_start` 
-4. Only AFTER gate passes → Work on user task
+2. If result is `BLOCKED` → Fix violations BEFORE proceeding with ANY task
+3. If evidence is stale → Call `auto_execute_ai_start` first
+4. Only AFTER gate passes (status = ALLOWED) → Work on user task
+5. **ALL severities block by default** (CRITICAL, HIGH, MEDIUM, LOW) - v6.2.9+
+
+## Blocking Severities (v6.2.9+)
+
+| Mode | Blocked Severities | Env Var |
+|------|-------------------|---------|
+| DEFAULT | CRITICAL, HIGH, MEDIUM, LOW | (none) |
+| LEGACY | CRITICAL, HIGH only | `AST_BLOCKING_MODE=LEGACY` |
 
 ## Why This Exists
 
-- You forget to check evidence
-- You skip the gate check
-- The hook-system warns you but you ignore it
+- AI tends to forget evidence checks
+- AI skips gate check entirely
+- Hook-system warnings get ignored
 - This rule makes it MANDATORY, not optional
 
 ## Enforcement
 
 If you respond WITHOUT calling `ai_gate_check` first:
 - You are violating this rule
-- The user will reject your response
-- You must start over with the gate check
+- Pre-commit hook will block anyway
+- User time is wasted
+- You must restart with gate check
 
-**NO EXCEPTIONS. NO EXCUSES.**
+**NO EXCEPTIONS. NO EXCUSES. GATE CHECK FIRST.**
+
+🐈💚 Pumuki Team® - AST Intelligence Framework
