@@ -5,6 +5,15 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.2.7] - 2026-01-25
+
+### Fixed
+
+- **ios.force_unwrapping**: Fixed ALL false positives in text-scanner.js - improved regex to exclude logical negations (`!Task.isCancelled`)
+- **ios.i18n.hardcoded_strings**: Fixed ALL false positives in ast-ios.js - both detectors now check for `String(localized:)`, `LocalizedStringKey`, `bundle: .module/.presentation`
+
+---
+
 ## [6.2.6] - 2026-01-25
 
 ### Fixed
