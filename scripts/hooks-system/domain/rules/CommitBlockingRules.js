@@ -1,8 +1,15 @@
 
 class CommitBlockingRules {
   constructor() {
-    this.DEFAULT_BLOCKING_SEVERITIES = ['critical', 'high'];
+    this.LEGACY_BLOCKING_SEVERITIES = ['critical', 'high'];
+    this.DEFAULT_BLOCKING_SEVERITIES = ['critical', 'high', 'medium', 'low'];
     this.STRICT_BLOCKING_SEVERITIES = ['critical', 'high', 'medium', 'low'];
+  }
+
+  getBlockingMode() {
+    const mode = (process.env.AST_BLOCKING_MODE || 'DEFAULT').toUpperCase();
+    if (mode === 'LEGACY') return this.LEGACY_BLOCKING_SEVERITIES;
+    return this.DEFAULT_BLOCKING_SEVERITIES;
   }
 
   shouldBlockCommit(auditResult, strictMode = false, blockOnlyCriticalHigh = false) {
@@ -46,6 +53,8 @@ class CommitBlockingRules {
       const bySeverity = {
         critical: blockingFindings.filter(f => f.isCritical()).length,
         high: blockingFindings.filter(f => f.isHigh()).length,
+        medium: blockingFindings.filter(f => f.isMedium()).length,
+        low: blockingFindings.filter(f => f.isLow()).length,
       };
 
       return {
@@ -96,23 +105,22 @@ class CommitBlockingRules {
   }
 
   blockOnBlockingLevels(auditResult) {
-    if (auditResult.hasBlockingViolations()) {
-      const bySeverity = auditResult.getViolationsBySeverity();
+    const bySeverity = auditResult.getViolationsBySeverity();
+    const blockingMode = this.getBlockingMode();
+    const totalBlocking = blockingMode.reduce((sum, sev) => sum + (bySeverity[sev] || 0), 0);
 
+    if (totalBlocking > 0) {
       return {
         shouldBlock: true,
-        reason: `Found blocking violations (CRITICAL: ${bySeverity.critical}, HIGH: ${bySeverity.high})`,
-        violations: {
-          critical: bySeverity.critical,
-          high: bySeverity.high,
-        },
+        reason: `Found ${totalBlocking} blocking violation(s) (CRITICAL: ${bySeverity.critical}, HIGH: ${bySeverity.high}, MEDIUM: ${bySeverity.medium}, LOW: ${bySeverity.low})`,
+        violations: bySeverity,
       };
     }
 
     return {
       shouldBlock: false,
       reason: 'No blocking violations found',
-      technicalDebt: auditResult.getTotalViolations(),
+      technicalDebt: 0,
     };
   }
 

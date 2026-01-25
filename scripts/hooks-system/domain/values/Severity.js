@@ -64,7 +64,11 @@ class Severity {
     }
 
     isBlocking() {
-        return this.isCritical() || this.isHigh();
+        const mode = (process.env.AST_BLOCKING_MODE || 'DEFAULT').toUpperCase();
+        if (mode === 'LEGACY') {
+            return this.isCritical() || this.isHigh();
+        }
+        return this.isCritical() || this.isHigh() || this.isMedium() || this.isLow();
     }
 
     getWeight() {
