@@ -693,7 +693,8 @@ function runTextScanner(root, findings) {
       if (/([A-Za-z_]\w*)\s*!=\s*nil\s*\?\s*\1!\s*:\s*[^\n;]+/.test(content)) {
         pushFileFinding('ios.optionals.missing_nil_coalescing', 'medium', file, 1, 1, 'Prefer ?? over ternary with force unwrap', findings);
       }
-      if (/Text\(\s*\"[^\"]+\"\s*\)/.test(content) && !/NSLocalizedString|\.localized/.test(content)) {
+      const hasL10nSupport = /String\(localized:|LocalizedStringKey|bundle:\s*\.module|bundle:\s*\.presentation|NSLocalizedString|\.localized/.test(content);
+      if (/Text\(\s*\"[^\"]+\"\s*\)/.test(content) && !hasL10nSupport) {
         pushFileFinding('ios.i18n.hardcoded_strings', 'medium', file, 1, 1, 'Hardcoded string in Text() without localization', findings);
       }
       if (!isAnalyzer && !isTestFile && shouldFlagMessageProviderSwitch(content, file, 'swift')) {
