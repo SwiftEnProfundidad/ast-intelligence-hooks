@@ -727,12 +727,7 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
 
     const autoEvidenceTrigger = String(env.get('AUTO_EVIDENCE_TRIGGER', process.env.AUTO_EVIDENCE_TRIGGER || '') || '').trim().toLowerCase();
     const isAutoEvidenceRefresh = autoEvidenceTrigger === 'auto';
-    if (isAutoEvidenceRefresh && isEvidenceCompleteForAutoRefresh(evidence)) {
-      evidence.timestamp = formatLocalTimestamp();
-      fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
-      console.log('[Intelligent Audit] ✅ Auto refresh skipped full rewrite (evidence already complete)');
-      return;
-    }
+    const preserveAutoEvidence = isAutoEvidenceRefresh && isEvidenceCompleteForAutoRefresh(evidence);
 
     evidence.timestamp = formatLocalTimestamp();
 
@@ -858,6 +853,10 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
       mandatory: true
     };
 
+    if (preserveAutoEvidence && existingGate && Array.isArray(existingGate.violations)) {
+      nextGate.violations = existingGate.violations;
+    }
+
     evidence.ai_gate = preserveExistingRepoGate ? existingGate : nextGate;
 
     const stagedFilesList = getStagedFiles();
@@ -868,19 +867,21 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
       (v.ruleId || '').includes('architecture')
     );
 
-    evidence.protocol_3_questions = {
-      answered: true,
-      question_1_file_type: stagedFilesList.length > 0
-        ? `Staged files analyzed: ${stagedFilesList.length}. Platforms detected: ${detectedPlatformsForQuestions.join(', ') || 'none'}.`
-        : 'No staged files detected for analysis.',
-      question_2_similar_exists: violations.length > 0
-        ? `Detected ${violations.length} rule violations; review existing patterns and rule matches.`
-        : 'No rule violations detected; no similar patterns flagged.',
-      question_3_clean_architecture: architectureViolations.length > 0
-        ? `Found ${architectureViolations.length} Clean Architecture/SOLID-related violations that require review.`
-        : 'No Clean Architecture or SOLID violations detected.',
-      last_answered: formatLocalTimestamp()
-    };
+    if (!preserveAutoEvidence) {
+      evidence.protocol_3_questions = {
+        answered: true,
+        question_1_file_type: stagedFilesList.length > 0
+          ? `Staged files analyzed: ${stagedFilesList.length}. Platforms detected: ${detectedPlatformsForQuestions.join(', ') || 'none'}.`
+          : 'No staged files detected for analysis.',
+        question_2_similar_exists: violations.length > 0
+          ? `Detected ${violations.length} rule violations; review existing patterns and rule matches.`
+          : 'No rule violations detected; no similar patterns flagged.',
+        question_3_clean_architecture: architectureViolations.length > 0
+          ? `Found ${architectureViolations.length} Clean Architecture/SOLID-related violations that require review.`
+          : 'No Clean Architecture or SOLID violations detected.',
+        last_answered: formatLocalTimestamp()
+      };
+    }
 
     const stagedFiles = getStagedFiles();
     const platformsEvidence = buildPlatformsEvidence(stagedFiles, violations);

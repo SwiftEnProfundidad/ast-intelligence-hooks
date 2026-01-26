@@ -200,7 +200,7 @@ describe('intelligent-audit', () => {
     }
   });
 
-  it('should preserve protocol_3_questions and ai_gate violations on auto refresh when evidence is complete', async () => {
+  it('should preserve protocol_3_questions and ai_gate violations while updating gate status on auto refresh when evidence is complete', async () => {
     const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
     const original = fs.existsSync(evidencePath) ? fs.readFileSync(evidencePath, 'utf8') : null;
     const previousTrigger = process.env.AUTO_EVIDENCE_TRIGGER;
@@ -270,6 +270,8 @@ describe('intelligent-audit', () => {
 
       expect(updated.protocol_3_questions).toEqual(preservedQuestions);
       expect(updated.ai_gate.violations).toEqual(preservedViolations);
+      expect(updated.ai_gate.status).toBe('BLOCKED');
+      expect(updated.severity_metrics.total_violations).toBe(1);
       expect(updated.timestamp).not.toBe(completeEvidence.timestamp);
     } finally {
       if (previousTrigger === undefined) {
