@@ -5,6 +5,40 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.3.0] - 2026-01-26
+
+### Changed
+
+- **Refactor**: Movidos métodos al prototype en 5 clases para reducir señal de "god class"
+  - `RealtimeGuardService`: 14 métodos movidos al prototype
+  - `HookInstaller`: 6 métodos movidos al prototype
+  - `InstallService`: 13 métodos movidos al prototype
+  - `EvidenceMonitor`: 8 métodos movidos al prototype
+  - `McpProtocolHandler`: 7 métodos movidos al prototype
+
+### Fixed
+
+- **God Classes**: Eliminadas todas las violaciones CRITICAL de god classes (3 → 0)
+- **Code Quality**: Reducción total de violaciones (35 → 32)
+
+### Technical
+
+- ✅ Backward compatible - API pública sin cambios
+- ✅ Todos los tests pasando (1144 passed, 178 suites)
+- ✅ Mejora en mantenibilidad y modularidad del código
+
+---
+
+## [6.2.18] - 2026-01-26
+
+### Fixed
+
+- **ai_gate**: Mensajes de refresh actualizados con comandos reales (`npx ast-hooks evidence:full-update` y `bash scripts/hooks-system/bin/update-evidence.sh`)
+- **ai_gate.violations**: Selección balanceada por severidad cuando hay límite (CRITICAL/HIGH/MEDIUM/LOW)
+- **protocol_3_questions**: Respuestas persistidas como strings descriptivos
+
+---
+
 ## [6.2.9] - 2026-01-25
 
 ### Changed
