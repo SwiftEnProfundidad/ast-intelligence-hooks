@@ -79,23 +79,6 @@ class InstallService {
         this.manifest = new InstallManifestService(this.targetRoot, this.version);
     }
 
-    getInstallMode() {
-        const mode = String(env.get('HOOK_INSTALL_MODE', 'npm')).trim().toLowerCase();
-        if (mode === 'vendored' || mode === 'embedded') {
-            return 'vendored';
-        }
-        return 'npm';
-    }
-
-    checkCriticalDependencies() {
-        CriticalDependenciesService.check({
-            targetRoot: this.targetRoot,
-            logger: this.logger,
-            logWarning: (msg) => this.logWarning(msg),
-            logSuccess: (msg) => this.logSuccess(msg)
-        });
-    }
-
     async run() {
         this.logger.info('INSTALLATION_STARTED', { targetRoot: this.targetRoot });
         this.printHeader();
@@ -168,227 +151,262 @@ class InstallService {
         this.printFooter();
     }
 
-    saveInstallManifest(installMode) {
-        this.manifest.recordCreatedDir('.ast-intelligence');
-        this.manifest.recordCreatedFile('.AI_EVIDENCE.json');
-        this.manifest.recordCreatedFile('.evidence-guard.pid');
-        this.manifest.recordCreatedFile('.evidence-guard.log');
+}
 
-        if (installMode === 'vendored') {
-            this.manifest.recordCreatedDir('scripts/hooks-system');
-        }
+InstallService.prototype.installAgentSkillFiles = function installAgentSkillFiles() {
+    const skillFiles = [
+        { name: 'CLAUDE.md', desc: 'Claude Code CLI' },
+        { name: 'AGENTS.md', desc: 'Codex CLI / Cursor' }
+    ];
 
-        const cursorMcp = path.join(this.targetRoot, '.cursor', 'mcp.json');
-        const windsurfMcp = path.join(this.targetRoot, '.windsurf', 'mcp.json');
-        if (fs.existsSync(cursorMcp)) {
-            this.manifest.recordCreatedDir('.cursor');
-            this.manifest.recordModifiedFile('.cursor/mcp.json', null);
-        }
-        if (fs.existsSync(windsurfMcp)) {
-            this.manifest.recordCreatedDir('.windsurf');
-            this.manifest.recordModifiedFile('.windsurf/mcp.json', null);
-        }
-
-        const vscodeDir = path.join(this.targetRoot, '.vscode');
-        if (fs.existsSync(vscodeDir)) {
-            this.manifest.recordCreatedDir('.vscode');
-            this.manifest.recordModifiedFile('.vscode/tasks.json', null);
-        }
-
-        const gitHooksDir = path.join(this.targetRoot, '.git', 'hooks');
-        if (fs.existsSync(path.join(gitHooksDir, 'pre-commit'))) {
-            this.manifest.recordCreatedFile('.git/hooks/pre-commit');
-        }
-        if (fs.existsSync(path.join(gitHooksDir, 'pre-push'))) {
-            this.manifest.recordCreatedFile('.git/hooks/pre-push');
-        }
-
-        this.manifest.recordModifiedFile('package.json', null);
-
-        try {
-            this.manifest.save();
-            this.logSuccess('Installation manifest saved');
-        } catch (error) {
-            this.logWarning(`Failed to save manifest: ${error.message}`);
-        }
+    const packageRoot = this.findPackageRoot();
+    if (!packageRoot) {
+        this.logWarning('Package root not found, skipping skill files installation');
+        return;
     }
 
-    startEvidenceGuard() {
-        const { spawn } = require('child_process');
-        const candidates = [
-            path.join(this.targetRoot, 'scripts/hooks-system/bin/evidence-guard'),
-            path.join(this.targetRoot, 'node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/evidence-guard')
-        ];
+    let installedCount = 0;
 
-        const guardScript = candidates.find(p => fs.existsSync(p)) || null;
+    for (const { name, desc } of skillFiles) {
+        const sourcePath = path.join(packageRoot, name);
+        const targetPath = path.join(this.targetRoot, name);
 
-        if (!guardScript) {
-            this.logWarning('Evidence guard script not found, skipping daemon start');
-            return;
+        if (!fs.existsSync(sourcePath)) {
+            this.logger.warn('SKILL_FILE_NOT_FOUND', { file: name, sourcePath });
+            continue;
+        }
+
+        if (fs.existsSync(targetPath)) {
+            this.logger.info('SKILL_FILE_EXISTS', { file: name, targetPath });
+            continue;
         }
 
         try {
-            const child = spawn('bash', [guardScript, 'start'], {
-                cwd: this.targetRoot,
-                stdio: 'pipe',
-                detached: false
-            });
-
-            let output = '';
-            child.stdout.on('data', (data) => { output += data.toString(); });
-            child.stderr.on('data', (data) => { output += data.toString(); });
-
-            child.on('close', (code) => {
-                if (code === 0) {
-                    this.logSuccess('Evidence guard daemon started');
-                } else {
-                    this.logWarning('Failed to start evidence guard daemon');
-                    if (output) {
-                        console.log(output);
-                    }
-                }
-            });
+            fs.copyFileSync(sourcePath, targetPath);
+            this.manifest.recordCreatedFile(name);
+            installedCount++;
+            this.logger.info('SKILL_FILE_INSTALLED', { file: name, desc });
         } catch (error) {
-            this.logWarning(`Failed to start evidence guard: ${error.message}`);
+            this.logWarning(`Failed to install ${name}: ${error.message}`);
         }
     }
 
-    installAgentSkillFiles() {
-        const skillFiles = [
-            { name: 'CLAUDE.md', desc: 'Claude Code CLI' },
-            { name: 'AGENTS.md', desc: 'Codex CLI / Cursor' }
-        ];
+    if (installedCount > 0) {
+        this.logSuccess(`Installed ${installedCount} AI agent skill file(s)`);
+    } else {
+        this.logSuccess('AI agent skill files already present or not needed');
+    }
+};
 
-        const packageRoot = this.findPackageRoot();
-        if (!packageRoot) {
-            this.logWarning('Package root not found, skipping skill files installation');
-            return;
-        }
-
-        let installedCount = 0;
-
-        for (const { name, desc } of skillFiles) {
-            const sourcePath = path.join(packageRoot, name);
-            const targetPath = path.join(this.targetRoot, name);
-
-            if (!fs.existsSync(sourcePath)) {
-                this.logger.warn('SKILL_FILE_NOT_FOUND', { file: name, sourcePath });
-                continue;
-            }
-
-            if (fs.existsSync(targetPath)) {
-                this.logger.info('SKILL_FILE_EXISTS', { file: name, targetPath });
-                continue;
-            }
-
+InstallService.prototype.findPackageRoot = function findPackageRoot() {
+    const candidates = [
+        path.resolve(__dirname, '../../../../..'),
+        path.resolve(__dirname, '../../../../../..'),
+        (() => {
             try {
-                fs.copyFileSync(sourcePath, targetPath);
-                this.manifest.recordCreatedFile(name);
-                installedCount++;
-                this.logger.info('SKILL_FILE_INSTALLED', { file: name, desc });
-            } catch (error) {
-                this.logWarning(`Failed to install ${name}: ${error.message}`);
+                const pkgPath = require.resolve('pumuki-ast-hooks/package.json');
+                return path.dirname(pkgPath);
+            } catch {
+                return null;
             }
-        }
+        })()
+    ].filter(Boolean);
 
-        if (installedCount > 0) {
-            this.logSuccess(`Installed ${installedCount} AI agent skill file(s)`);
-        } else {
-            this.logSuccess('AI agent skill files already present or not needed');
+    for (const candidate of candidates) {
+        const claudeMd = path.join(candidate, 'CLAUDE.md');
+        const agentsMd = path.join(candidate, 'AGENTS.md');
+        if (fs.existsSync(claudeMd) || fs.existsSync(agentsMd)) {
+            return candidate;
         }
     }
 
-    findPackageRoot() {
-        const candidates = [
-            path.resolve(__dirname, '../../../../..'),
-            path.resolve(__dirname, '../../../../../..'),
-            (() => {
-                try {
-                    const pkgPath = require.resolve('pumuki-ast-hooks/package.json');
-                    return path.dirname(pkgPath);
-                } catch {
-                    return null;
+    return null;
+};
+
+InstallService.prototype.getInstallMode = function getInstallMode() {
+    const mode = String(env.get('HOOK_INSTALL_MODE', 'npm')).trim().toLowerCase();
+    if (mode === 'vendored' || mode === 'embedded') {
+        return 'vendored';
+    }
+    return 'npm';
+};
+
+InstallService.prototype.checkCriticalDependencies = function checkCriticalDependencies() {
+    CriticalDependenciesService.check({
+        targetRoot: this.targetRoot,
+        logger: this.logger,
+        logWarning: (msg) => this.logWarning(msg),
+        logSuccess: (msg) => this.logSuccess(msg)
+    });
+};
+
+InstallService.prototype.logStep = function logStep(step, msg) {
+    process.stdout.write(`\n${COLORS.cyan}[${step}] ${msg}${COLORS.reset}\n`);
+};
+
+InstallService.prototype.logSuccess = function logSuccess(msg) {
+    process.stdout.write(`${COLORS.green}✓ ${msg}${COLORS.reset}\n`);
+};
+
+InstallService.prototype.logError = function logError(msg) {
+    process.stdout.write(`${COLORS.red}✗ ${msg}${COLORS.reset}\n`);
+};
+
+InstallService.prototype.logWarning = function logWarning(msg) {
+    process.stdout.write(`${COLORS.yellow}${msg}${COLORS.reset}\n`);
+};
+
+InstallService.prototype.saveInstallManifest = function saveInstallManifest(installMode) {
+    this.manifest.recordCreatedDir('.ast-intelligence');
+    this.manifest.recordCreatedFile('.AI_EVIDENCE.json');
+    this.manifest.recordCreatedFile('.evidence-guard.pid');
+    this.manifest.recordCreatedFile('.evidence-guard.log');
+
+    if (installMode === 'vendored') {
+        this.manifest.recordCreatedDir('scripts/hooks-system');
+    }
+
+    const cursorMcp = path.join(this.targetRoot, '.cursor', 'mcp.json');
+    const windsurfMcp = path.join(this.targetRoot, '.windsurf', 'mcp.json');
+    if (fs.existsSync(cursorMcp)) {
+        this.manifest.recordCreatedDir('.cursor');
+        this.manifest.recordModifiedFile('.cursor/mcp.json', null);
+    }
+    if (fs.existsSync(windsurfMcp)) {
+        this.manifest.recordCreatedDir('.windsurf');
+        this.manifest.recordModifiedFile('.windsurf/mcp.json', null);
+    }
+
+    const vscodeDir = path.join(this.targetRoot, '.vscode');
+    if (fs.existsSync(vscodeDir)) {
+        this.manifest.recordCreatedDir('.vscode');
+        this.manifest.recordModifiedFile('.vscode/tasks.json', null);
+    }
+
+    const gitHooksDir = path.join(this.targetRoot, '.git', 'hooks');
+    if (fs.existsSync(path.join(gitHooksDir, 'pre-commit'))) {
+        this.manifest.recordCreatedFile('.git/hooks/pre-commit');
+    }
+    if (fs.existsSync(path.join(gitHooksDir, 'pre-push'))) {
+        this.manifest.recordCreatedFile('.git/hooks/pre-push');
+    }
+
+    this.manifest.recordModifiedFile('package.json', null);
+
+    try {
+        this.manifest.save();
+        this.logSuccess('Installation manifest saved');
+    } catch (error) {
+        this.logWarning(`Failed to save manifest: ${error.message}`);
+    }
+};
+
+InstallService.prototype.startEvidenceGuard = function startEvidenceGuard() {
+    const { spawn } = require('child_process');
+    const candidates = [
+        path.join(this.targetRoot, 'scripts/hooks-system/bin/evidence-guard'),
+        path.join(this.targetRoot, 'node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/evidence-guard')
+    ];
+
+    const guardScript = candidates.find(p => fs.existsSync(p)) || null;
+
+    if (!guardScript) {
+        this.logWarning('Evidence guard script not found, skipping daemon start');
+        return;
+    }
+
+    try {
+        const child = spawn('bash', [guardScript, 'start'], {
+            cwd: this.targetRoot,
+            stdio: 'pipe',
+            detached: false
+        });
+
+        let output = '';
+        child.stdout.on('data', (data) => { output += data.toString(); });
+        child.stderr.on('data', (data) => { output += data.toString(); });
+
+        child.on('close', (code) => {
+            if (code === 0) {
+                this.logSuccess('Evidence guard daemon started');
+            } else {
+                this.logWarning('Failed to start evidence guard daemon');
+                if (output) {
+                    console.log(output);
                 }
-            })()
-        ].filter(Boolean);
-
-        for (const candidate of candidates) {
-            const claudeMd = path.join(candidate, 'CLAUDE.md');
-            const agentsMd = path.join(candidate, 'AGENTS.md');
-            if (fs.existsSync(claudeMd) || fs.existsSync(agentsMd)) {
-                return candidate;
             }
-        }
+        });
+    } catch (error) {
+        this.logWarning(`Failed to start evidence guard: ${error.message}`);
+    }
+};
 
-        return null;
+InstallService.prototype.cleanupDuplicateRules = function cleanupDuplicateRules() {
+    const cleanupEnabled = env.getBool('HOOK_CLEANUP_DUPLICATES', false);
+    if (!cleanupEnabled) {
+        this.logStep('7.75/8', 'Skipping duplicate cleanup (disabled via HOOK_CLEANUP_DUPLICATES)');
+        return;
     }
 
-    cleanupDuplicateRules() {
-        const cleanupEnabled = env.getBool('HOOK_CLEANUP_DUPLICATES', false);
-        if (!cleanupEnabled) {
-            this.logStep('7.75/8', 'Skipping duplicate cleanup (disabled via HOOK_CLEANUP_DUPLICATES)');
-            return;
+    this.logStep('7.75/8', 'Cleaning up duplicate rule files (.md when .mdc exists)...');
+
+    const rulesDirs = [
+        path.join(this.targetRoot, '.cursor', 'rules'),
+        path.join(this.targetRoot, '.windsurf', 'rules')
+    ];
+
+    let deletedCount = 0;
+
+    for (const rulesDir of rulesDirs) {
+        if (!fs.existsSync(rulesDir)) {
+            continue;
         }
 
-        this.logStep('7.75/8', 'Cleaning up duplicate rule files (.md when .mdc exists)...');
-
-        const rulesDirs = [
-            path.join(this.targetRoot, '.cursor', 'rules'),
-            path.join(this.targetRoot, '.windsurf', 'rules')
-        ];
-
-        let deletedCount = 0;
-
-        for (const rulesDir of rulesDirs) {
-            if (!fs.existsSync(rulesDir)) {
-                continue;
-            }
-
-            try {
-                const files = fs.readdirSync(rulesDir);
-                for (const file of files) {
-                    if (!file.endsWith('.md')) {
-                        continue;
-                    }
-
-                    const mdPath = path.join(rulesDir, file);
-                    const mdcPath = path.join(rulesDir, file + 'c');
-
-                    if (fs.existsSync(mdcPath)) {
-                        fs.unlinkSync(mdPath);
-                        deletedCount++;
-                        this.logger.info('DUPLICATE_RULE_DELETED', { file: mdPath });
-                    }
+        try {
+            const files = fs.readdirSync(rulesDir);
+            for (const file of files) {
+                if (!file.endsWith('.md')) {
+                    continue;
                 }
-            } catch (error) {
-                this.logWarning(`Failed to cleanup duplicates in ${rulesDir}: ${error.message}`);
-            }
-        }
 
-        if (deletedCount > 0) {
-            this.logSuccess(`Cleaned up ${deletedCount} duplicate .md files`);
-        } else {
-            this.logSuccess('No duplicate .md files found');
+                const mdPath = path.join(rulesDir, file);
+                const mdcPath = path.join(rulesDir, file + 'c');
+
+                if (fs.existsSync(mdcPath)) {
+                    fs.unlinkSync(mdPath);
+                    deletedCount++;
+                    this.logger.info('DUPLICATE_RULE_DELETED', { file: mdPath });
+                }
+            }
+        } catch (error) {
+            this.logWarning(`Failed to cleanup duplicates in ${rulesDir}: ${error.message}`);
         }
     }
 
-    printHeader() {
-        const versionPadded = `v${this.version}`.padStart(24).padEnd(48);
-        process.stdout.write(`${COLORS.blue}
+    if (deletedCount > 0) {
+        this.logSuccess(`Cleaned up ${deletedCount} duplicate .md files`);
+    } else {
+        this.logSuccess('No duplicate .md files found');
+    }
+};
+
+InstallService.prototype.printHeader = function printHeader() {
+    const versionPadded = `v${this.version}`.padStart(24).padEnd(48);
+    process.stdout.write(`${COLORS.blue}
 ╔════════════════════════════════════════════════════════════════╗
 ║          AST Intelligence Hooks - Installation Wizard          ║
 ║${versionPadded}                                                ║
 ╚════════════════════════════════════════════════════════════════╝
 ${COLORS.reset}\n`);
-    }
+};
 
-    printFooter() {
-        const installMode = this.getInstallMode();
-        const configHint = installMode === 'vendored'
-            ? 'scripts/hooks-system/config/project.config.json'
-            : '.ast-intelligence/project.config.json';
+InstallService.prototype.printFooter = function printFooter() {
+    const installMode = this.getInstallMode();
+    const configHint = installMode === 'vendored'
+        ? 'scripts/hooks-system/config/project.config.json'
+        : '.ast-intelligence/project.config.json';
 
-        process.stdout.write(`
+    process.stdout.write(`
 ${COLORS.green}✨ Installation Complete! ✨${COLORS.reset}
 
 ${COLORS.cyan}Evidence Guard Daemon:${COLORS.reset}
@@ -399,12 +417,6 @@ ${COLORS.cyan}Next Steps:${COLORS.reset}
 1. Review generated configuration in ${COLORS.yellow}${configHint}${COLORS.reset}
 2. Commit the changes: ${COLORS.yellow}git add . && git commit -m "chore: install ast-intelligence-hooks"${COLORS.reset}
 `);
-    }
-
-    logStep(step, msg) { process.stdout.write(`\n${COLORS.cyan}[${step}] ${msg}${COLORS.reset}\n`); }
-    logSuccess(msg) { process.stdout.write(`${COLORS.green}✓ ${msg}${COLORS.reset}\n`); }
-    logError(msg) { process.stdout.write(`${COLORS.red}✗ ${msg}${COLORS.reset}\n`); }
-    logWarning(msg) { process.stdout.write(`${COLORS.yellow}${msg}${COLORS.reset}\n`); }
-}
+};
 
 module.exports = InstallService;

@@ -18,50 +18,6 @@ class HookInstaller {
         };
     }
 
-    getPackageRoot() {
-        let dir = this.hookSystemRoot;
-        for (let i = 0; i < 8; i++) {
-            const pkgJson = path.join(dir, 'package.json');
-            try {
-                if (fs.existsSync(pkgJson) && fs.statSync(pkgJson).isFile()) {
-                    return dir;
-                }
-            } catch (error) {
-                const msg = error && error.message ? error.message : String(error);
-                this.logger?.debug?.('HOOK_INSTALLER_PACKAGE_ROOT_PROBE_ERROR', {
-                    pkgJson,
-                    error: msg
-                });
-            }
-
-            const parent = path.dirname(dir);
-            if (parent === dir) {
-                break;
-            }
-            dir = parent;
-        }
-
-        return path.resolve(this.hookSystemRoot, '..', '..', '..');
-    }
-
-    resolveFirstExistingDir(candidates) {
-        for (const candidate of candidates) {
-            if (!candidate) continue;
-            try {
-                if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
-                    return candidate;
-                }
-            } catch (error) {
-                const msg = error && error.message ? error.message : String(error);
-                this.logger?.debug?.('HOOK_INSTALLER_DIR_PROBE_ERROR', {
-                    candidate,
-                    error: msg
-                });
-            }
-        }
-        return null;
-    }
-
     install(platforms) {
         const claudeDir = path.join(this.targetRoot, '.ast-intelligence');
         const claudeSkillsDir = path.join(claudeDir, 'skills');
@@ -188,18 +144,6 @@ class HookInstaller {
         });
     }
 
-    getRelevantSkills(platforms) {
-        const allSkills = ['backend-guidelines', 'frontend-guidelines', 'ios-guidelines', 'android-guidelines'];
-        const relevantSkills = [];
-
-        if (platforms.includes('backend')) relevantSkills.push('backend-guidelines');
-        if (platforms.includes('frontend')) relevantSkills.push('frontend-guidelines');
-        if (platforms.includes('ios')) relevantSkills.push('ios-guidelines');
-        if (platforms.includes('android')) relevantSkills.push('android-guidelines');
-
-        return relevantSkills.length > 0 ? relevantSkills : allSkills;
-    }
-
     configureCursorSettings(cursorSettingsPath, hooksDir) {
         const hooksDirRelative = path.relative(this.targetRoot, hooksDir);
 
@@ -238,21 +182,83 @@ class HookInstaller {
         this.logSuccess('Configured .cursor/settings.json');
     }
 
-    copyRecursive(source, dest) {
-        if (fs.statSync(source).isDirectory()) {
-            if (!fs.existsSync(dest)) {
-                fs.mkdirSync(dest, { recursive: true });
+}
+
+HookInstaller.prototype.getPackageRoot = function getPackageRoot() {
+    let dir = this.hookSystemRoot;
+    for (let i = 0; i < 8; i++) {
+        const pkgJson = path.join(dir, 'package.json');
+        try {
+            if (fs.existsSync(pkgJson) && fs.statSync(pkgJson).isFile()) {
+                return dir;
             }
-            fs.readdirSync(source).forEach(file => {
-                this.copyRecursive(path.join(source, file), path.join(dest, file));
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            this.logger?.debug?.('HOOK_INSTALLER_PACKAGE_ROOT_PROBE_ERROR', {
+                pkgJson,
+                error: msg
             });
-        } else {
-            fs.copyFileSync(source, dest);
         }
+
+        const parent = path.dirname(dir);
+        if (parent === dir) {
+            break;
+        }
+        dir = parent;
     }
 
-    logSuccess(msg) { process.stdout.write(`${this.COLORS.green}✓ ${msg}${this.COLORS.reset}\n`); }
-    logWarning(msg) { process.stdout.write(`${this.COLORS.yellow}⚠️  ${msg}${this.COLORS.reset}\n`); }
-}
+    return path.resolve(this.hookSystemRoot, '..', '..', '..');
+};
+
+HookInstaller.prototype.resolveFirstExistingDir = function resolveFirstExistingDir(candidates) {
+    for (const candidate of candidates) {
+        if (!candidate) continue;
+        try {
+            if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+                return candidate;
+            }
+        } catch (error) {
+            const msg = error && error.message ? error.message : String(error);
+            this.logger?.debug?.('HOOK_INSTALLER_DIR_PROBE_ERROR', {
+                candidate,
+                error: msg
+            });
+        }
+    }
+    return null;
+};
+
+HookInstaller.prototype.getRelevantSkills = function getRelevantSkills(platforms) {
+    const allSkills = ['backend-guidelines', 'frontend-guidelines', 'ios-guidelines', 'android-guidelines'];
+    const relevantSkills = [];
+
+    if (platforms.includes('backend')) relevantSkills.push('backend-guidelines');
+    if (platforms.includes('frontend')) relevantSkills.push('frontend-guidelines');
+    if (platforms.includes('ios')) relevantSkills.push('ios-guidelines');
+    if (platforms.includes('android')) relevantSkills.push('android-guidelines');
+
+    return relevantSkills.length > 0 ? relevantSkills : allSkills;
+};
+
+HookInstaller.prototype.copyRecursive = function copyRecursive(source, dest) {
+    if (fs.statSync(source).isDirectory()) {
+        if (!fs.existsSync(dest)) {
+            fs.mkdirSync(dest, { recursive: true });
+        }
+        fs.readdirSync(source).forEach(file => {
+            this.copyRecursive(path.join(source, file), path.join(dest, file));
+        });
+    } else {
+        fs.copyFileSync(source, dest);
+    }
+};
+
+HookInstaller.prototype.logSuccess = function logSuccess(msg) {
+    process.stdout.write(`${this.COLORS.green}✓ ${msg}${this.COLORS.reset}\n`);
+};
+
+HookInstaller.prototype.logWarning = function logWarning(msg) {
+    process.stdout.write(`${this.COLORS.yellow}⚠️  ${msg}${this.COLORS.reset}\n`);
+};
 
 module.exports = HookInstaller;
