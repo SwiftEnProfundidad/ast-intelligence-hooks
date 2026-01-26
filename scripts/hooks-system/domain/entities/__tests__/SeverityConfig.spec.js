@@ -94,6 +94,16 @@ describe('SeverityConfig', () => {
   });
 
   describe('isBlocking', () => {
+    const previousMode = process.env.AST_BLOCKING_MODE;
+
+    afterEach(() => {
+      if (previousMode === undefined) {
+        delete process.env.AST_BLOCKING_MODE;
+      } else {
+        process.env.AST_BLOCKING_MODE = previousMode;
+      }
+    });
+
     it('should return true for CRITICAL severity', () => {
       expect(SeverityConfig.isBlocking('critical')).toBe(true);
       expect(SeverityConfig.isBlocking('CRITICAL')).toBe(true);
@@ -104,21 +114,28 @@ describe('SeverityConfig', () => {
       expect(SeverityConfig.isBlocking('HIGH')).toBe(true);
     });
 
-    it('should return false for MEDIUM severity', () => {
-      expect(SeverityConfig.isBlocking('medium')).toBe(false);
-      expect(SeverityConfig.isBlocking('MEDIUM')).toBe(false);
+    it('should return true for MEDIUM severity', () => {
+      expect(SeverityConfig.isBlocking('medium')).toBe(true);
+      expect(SeverityConfig.isBlocking('MEDIUM')).toBe(true);
     });
 
-    it('should return false for LOW severity', () => {
-      expect(SeverityConfig.isBlocking('low')).toBe(false);
-      expect(SeverityConfig.isBlocking('LOW')).toBe(false);
+    it('should return true for LOW severity', () => {
+      expect(SeverityConfig.isBlocking('low')).toBe(true);
+      expect(SeverityConfig.isBlocking('LOW')).toBe(true);
     });
 
     it('should return true for error (mapped to HIGH)', () => {
       expect(SeverityConfig.isBlocking('error')).toBe(true);
     });
 
-    it('should return false for warning (mapped to MEDIUM)', () => {
+    it('should return true for warning (mapped to MEDIUM)', () => {
+      expect(SeverityConfig.isBlocking('warning')).toBe(true);
+    });
+
+    it('should return false for MEDIUM/LOW in LEGACY mode', () => {
+      process.env.AST_BLOCKING_MODE = 'LEGACY';
+      expect(SeverityConfig.isBlocking('medium')).toBe(false);
+      expect(SeverityConfig.isBlocking('low')).toBe(false);
       expect(SeverityConfig.isBlocking('warning')).toBe(false);
     });
   });

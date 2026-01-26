@@ -170,14 +170,14 @@ describe('Finding', () => {
       expect(finding.isBlockingLevel()).toBe(true);
     });
 
-    it('should return false for medium severity', () => {
+    it('should return true for medium severity', () => {
       const finding = new Finding('test.rule', 'medium', 'Message', 'test.ts', 1, 'backend');
-      expect(finding.isBlockingLevel()).toBe(false);
+      expect(finding.isBlockingLevel()).toBe(true);
     });
 
-    it('should return false for low severity', () => {
+    it('should return true for low severity', () => {
       const finding = new Finding('test.rule', 'low', 'Message', 'test.ts', 1, 'backend');
-      expect(finding.isBlockingLevel()).toBe(false);
+      expect(finding.isBlockingLevel()).toBe(true);
     });
 
     it('should return false for info severity', () => {

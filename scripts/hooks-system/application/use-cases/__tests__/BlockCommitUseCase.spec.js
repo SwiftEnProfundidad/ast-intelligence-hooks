@@ -30,12 +30,12 @@ describe('BlockCommitUseCase', () => {
       expect(decision.shouldBlock).toBe(true);
     });
 
-    it('should allow commit when only medium violations exist', async () => {
+    it('should block commit when only medium violations exist', async () => {
       const useCase = makeSUT();
       const mediumFinding = new Finding('test.rule', 'medium', 'Medium violation', 'test.ts', 1, 'backend');
       const auditResult = createAuditResultWithFindings([mediumFinding]);
       const decision = await useCase.execute(auditResult, { strictMode: false });
-      expect(decision.shouldBlock).toBe(false);
+      expect(decision.shouldBlock).toBe(true);
     });
 
     it('should use staged files only when useStagedOnly is true', async () => {
