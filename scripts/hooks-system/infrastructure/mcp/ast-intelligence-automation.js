@@ -1225,7 +1225,7 @@ async function aiGateCheck() {
 
         if (!policyBundle || !policyBundleService.isValid(policyBundle)) {
             if (!allowEvidenceAutofix) {
-                violations.push('❌ POLICY_BUNDLE_INVALID: No valid policy bundle. Run evidence:full-update to refresh.');
+                violations.push('❌ POLICY_BUNDLE_INVALID: No valid policy bundle. Run: npx ast-hooks evidence:full-update (or bash scripts/hooks-system/bin/update-evidence.sh).');
             } else {
                 const elapsed = Date.now() - startedAt;
                 const remaining = Math.max(150, gateTimeoutMs - elapsed);
@@ -1244,7 +1244,7 @@ async function aiGateCheck() {
                         }
                     }
                 } else if (refreshResult.timedOut) {
-                    violations.push('❌ POLICY_BUNDLE_INVALID: Auto-fix timed out. Run evidence:full-update to refresh.');
+                    violations.push('❌ POLICY_BUNDLE_INVALID: Auto-fix timed out. Run: npx ast-hooks evidence:full-update (or bash scripts/hooks-system/bin/update-evidence.sh).');
                 } else {
                     const msg = refreshResult.error && refreshResult.error.message ? refreshResult.error.message : String(refreshResult.error);
                     violations.push(`❌ POLICY_BUNDLE_INVALID: Auto-fix failed: ${msg}`);
@@ -1255,7 +1255,7 @@ async function aiGateCheck() {
         const evidenceMonitor = getCompositionRoot().getEvidenceMonitor();
         if (evidenceMonitor.isStale()) {
             if (!allowEvidenceAutofix) {
-                violations.push('❌ EVIDENCE_STALE: Evidence is stale. Run ai-start to refresh.');
+                violations.push('❌ EVIDENCE_STALE: Evidence is stale. Run: npx ast-hooks evidence:full-update (or bash scripts/hooks-system/bin/update-evidence.sh).');
             } else {
                 const elapsed = Date.now() - startedAt;
                 const remaining = Math.max(150, gateTimeoutMs - elapsed);
@@ -1263,7 +1263,7 @@ async function aiGateCheck() {
                 if (refreshResult.ok) {
                     autoFixes.push('✅ Evidence was stale - AUTO-FIXED');
                 } else if (refreshResult.timedOut) {
-                    violations.push('❌ EVIDENCE_STALE: Auto-fix timed out. Run ai-start to refresh.');
+                    violations.push('❌ EVIDENCE_STALE: Auto-fix timed out. Run: npx ast-hooks evidence:full-update (or bash scripts/hooks-system/bin/update-evidence.sh).');
                 } else {
                     const msg = refreshResult.error && refreshResult.error.message ? refreshResult.error.message : String(refreshResult.error);
                     violations.push(`❌ EVIDENCE_STALE: Auto-fix failed: ${msg}`);

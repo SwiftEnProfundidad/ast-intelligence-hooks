@@ -665,6 +665,7 @@ function detectPlatformsFromFiles(files) {
 function saveEnhancedViolations(violations) {
   const outputPath = path.join(resolveAuditTmpDir(), 'ast-summary-enhanced.json');
 
+  const normalizeSeverity = (s) => String(s || '').toUpperCase().trim();
   const enhanced = {
     timestamp: formatLocalTimestamp(),
     generator: 'AST Intelligence v2.0 with Severity Evaluation',
@@ -673,10 +674,10 @@ function saveEnhancedViolations(violations) {
     findings: violations,
     summary: {
       total: violations.length,
-      CRITICAL: violations.filter(v => v.severity === 'CRITICAL').length,
-      HIGH: violations.filter(v => v.severity === 'HIGH').length,
-      MEDIUM: violations.filter(v => v.severity === 'MEDIUM').length,
-      LOW: violations.filter(v => v.severity === 'LOW').length
+      CRITICAL: violations.filter(v => normalizeSeverity(v.severity) === 'CRITICAL').length,
+      HIGH: violations.filter(v => normalizeSeverity(v.severity) === 'HIGH').length,
+      MEDIUM: violations.filter(v => normalizeSeverity(v.severity) === 'MEDIUM').length,
+      LOW: violations.filter(v => normalizeSeverity(v.severity) === 'LOW').length
     }
   };
 
@@ -701,14 +702,15 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
 
     evidence.timestamp = formatLocalTimestamp();
 
+    const normSev = (s) => String(s || '').toUpperCase().trim();
     evidence.severity_metrics = {
       last_updated: formatLocalTimestamp(),
       total_violations: violations.length,
       by_severity: {
-        CRITICAL: violations.filter(v => v.severity === 'CRITICAL').length,
-        HIGH: violations.filter(v => v.severity === 'HIGH').length,
-        MEDIUM: violations.filter(v => v.severity === 'MEDIUM').length,
-        LOW: violations.filter(v => v.severity === 'LOW').length
+        CRITICAL: violations.filter(v => normSev(v.severity) === 'CRITICAL').length,
+        HIGH: violations.filter(v => normSev(v.severity) === 'HIGH').length,
+        MEDIUM: violations.filter(v => normSev(v.severity) === 'MEDIUM').length,
+        LOW: violations.filter(v => normSev(v.severity) === 'LOW').length
       },
       average_severity_score: Math.round(
         violations.filter(v => v.severityScore).reduce((sum, v) => sum + v.severityScore, 0) /
@@ -752,15 +754,32 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
     };
     const baseBranch = resolveBaseBranch();
     const isProtected = ['main', 'master', baseBranch].includes(currentBranch);
-    const criticalViolations = violations.filter(v => v.severity === 'CRITICAL');
-    const highViolations = violations.filter(v => v.severity === 'HIGH');
-    const mediumViolations = violations.filter(v => v.severity === 'MEDIUM');
-    const lowViolations = violations.filter(v => v.severity === 'LOW');
+    const normalizeSeverity = (s) => String(s || '').toUpperCase().trim();
+    const criticalViolations = violations.filter(v => normalizeSeverity(v.severity) === 'CRITICAL');
+    const highViolations = violations.filter(v => normalizeSeverity(v.severity) === 'HIGH');
+    const mediumViolations = violations.filter(v => normalizeSeverity(v.severity) === 'MEDIUM');
+    const lowViolations = violations.filter(v => normalizeSeverity(v.severity) === 'LOW');
 
     const maxGateViolations = env.getNumber('AI_GATE_MAX_VIOLATIONS', 200);
     const gateViolationsLimit = Number.isFinite(maxGateViolations) && maxGateViolations > 0 ? maxGateViolations : 200;
-    const gateViolations = [...criticalViolations, ...highViolations, ...mediumViolations, ...lowViolations];
-    const blockingViolations = gateViolations.slice(0, gateViolationsLimit);
+    const severityBuckets = [
+      [...criticalViolations],
+      [...highViolations],
+      [...mediumViolations],
+      [...lowViolations]
+    ];
+    const gateViolations = [];
+    let keepFilling = true;
+    while (keepFilling && gateViolations.length < gateViolationsLimit) {
+      keepFilling = false;
+      for (const bucket of severityBuckets) {
+        if (bucket.length === 0) continue;
+        gateViolations.push(bucket.shift());
+        keepFilling = true;
+        if (gateViolations.length >= gateViolationsLimit) break;
+      }
+    }
+    const blockingViolations = gateViolations;
 
     const gateScope = String(env.get('AI_GATE_SCOPE', 'staging') || 'staging').trim().toLowerCase();
 
@@ -817,27 +836,15 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
 
     evidence.protocol_3_questions = {
       answered: true,
-      question_1_file_type: {
-        question: '¿Qué tipo de archivo es y cuál es su propósito en la arquitectura?',
-        answer: stagedFilesList.length > 0
-          ? `Analizados ${stagedFilesList.length} archivos staged. Plataformas detectadas: ${detectedPlatformsForQuestions.join(', ') || 'ninguna'}.`
-          : 'No hay archivos staged para analizar.',
-        status: stagedFilesList.length > 0 ? 'answered' : 'pending'
-      },
-      question_2_similar_exists: {
-        question: '¿Existen patrones similares o archivos existentes en el codebase?',
-        answer: violations.length > 0
-          ? `Se encontraron ${violations.length} violaciones de patrones. Revisar reglas aplicadas.`
-          : 'No se detectaron violaciones de patrones existentes.',
-        status: 'answered'
-      },
-      question_3_clean_architecture: {
-        question: '¿El código sigue Clean Architecture y principios SOLID?',
-        answer: architectureViolations.length > 0
-          ? `⚠️ ${architectureViolations.length} violaciones de arquitectura/SOLID detectadas.`
-          : '✅ No se detectaron violaciones de Clean Architecture/SOLID.',
-        status: architectureViolations.length > 0 ? 'needs_review' : 'passed'
-      },
+      question_1_file_type: stagedFilesList.length > 0
+        ? `Staged files analyzed: ${stagedFilesList.length}. Platforms detected: ${detectedPlatformsForQuestions.join(', ') || 'none'}.`
+        : 'No staged files detected for analysis.',
+      question_2_similar_exists: violations.length > 0
+        ? `Detected ${violations.length} rule violations; review existing patterns and rule matches.`
+        : 'No rule violations detected; no similar patterns flagged.',
+      question_3_clean_architecture: architectureViolations.length > 0
+        ? `Found ${architectureViolations.length} Clean Architecture/SOLID-related violations that require review.`
+        : 'No Clean Architecture or SOLID violations detected.',
       last_answered: formatLocalTimestamp()
     };
 

@@ -111,6 +111,95 @@ describe('intelligent-audit', () => {
     }
   });
 
+  it('should include medium and low in ai_gate when limit is small', async () => {
+    const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
+    const original = fs.existsSync(evidencePath) ? fs.readFileSync(evidencePath, 'utf8') : null;
+    const minimal = {
+      timestamp: new Date().toISOString(),
+      severity_metrics: {
+        last_updated: new Date().toISOString(),
+        total_violations: 0,
+        by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 }
+      },
+      ai_gate: { status: 'ALLOWED', scope: 'staging', last_check: new Date().toISOString(), violations: [], instruction: 'x', mandatory: true }
+    };
+
+    const previousLimit = process.env.AI_GATE_MAX_VIOLATIONS;
+    process.env.AI_GATE_MAX_VIOLATIONS = '6';
+
+    try {
+      fs.writeFileSync(evidencePath, JSON.stringify(minimal, null, 2));
+
+      const mod = require('../intelligent-audit');
+      const violations = [
+        ...Array.from({ length: 5 }).map((_, i) => ({ severity: 'CRITICAL', ruleId: `rule.critical.${i}`, filePath: `apps/c${i}.ts`, line: 1, message: 'c' })),
+        ...Array.from({ length: 5 }).map((_, i) => ({ severity: 'HIGH', ruleId: `rule.high.${i}`, filePath: `apps/h${i}.ts`, line: 2, message: 'h' })),
+        { severity: 'MEDIUM', ruleId: 'rule.medium.0', filePath: 'apps/m0.ts', line: 3, message: 'm' },
+        { severity: 'LOW', ruleId: 'rule.low.0', filePath: 'apps/l0.ts', line: 4, message: 'l' }
+      ];
+
+      await mod.updateAIEvidence(violations, { passed: false, blockedBy: 'critical' }, { estimated: 1, percentUsed: 0, remaining: 1 });
+
+      const updated = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      const severities = updated.ai_gate.violations.map(v => v.severity);
+      expect(severities).toEqual(expect.arrayContaining(['MEDIUM', 'LOW']));
+    } finally {
+      if (previousLimit === undefined) {
+        delete process.env.AI_GATE_MAX_VIOLATIONS;
+      } else {
+        process.env.AI_GATE_MAX_VIOLATIONS = previousLimit;
+      }
+      if (original === null) {
+        if (fs.existsSync(evidencePath)) {
+          fs.unlinkSync(evidencePath);
+        }
+      } else {
+        fs.writeFileSync(evidencePath, original);
+      }
+    }
+  });
+
+  it('should write protocol_3_questions as descriptive strings', async () => {
+    const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
+    const original = fs.existsSync(evidencePath) ? fs.readFileSync(evidencePath, 'utf8') : null;
+    const minimal = {
+      timestamp: new Date().toISOString(),
+      severity_metrics: {
+        last_updated: new Date().toISOString(),
+        total_violations: 0,
+        by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 }
+      },
+      ai_gate: { status: 'ALLOWED', scope: 'staging', last_check: new Date().toISOString(), violations: [], instruction: 'x', mandatory: true }
+    };
+
+    try {
+      fs.writeFileSync(evidencePath, JSON.stringify(minimal, null, 2));
+
+      const mod = require('../intelligent-audit');
+      await mod.updateAIEvidence([], { passed: true, blockedBy: null }, { estimated: 1, percentUsed: 0, remaining: 1 });
+
+      const updated = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+      const q1 = updated.protocol_3_questions?.question_1_file_type;
+      const q2 = updated.protocol_3_questions?.question_2_similar_exists;
+      const q3 = updated.protocol_3_questions?.question_3_clean_architecture;
+
+      expect(typeof q1).toBe('string');
+      expect(typeof q2).toBe('string');
+      expect(typeof q3).toBe('string');
+      expect(q1.length).toBeGreaterThan(10);
+      expect(q2.length).toBeGreaterThan(10);
+      expect(q3.length).toBeGreaterThan(10);
+    } finally {
+      if (original === null) {
+        if (fs.existsSync(evidencePath)) {
+          fs.unlinkSync(evidencePath);
+        }
+      } else {
+        fs.writeFileSync(evidencePath, original);
+      }
+    }
+  });
+
   it('should refresh root timestamp when updating .AI_EVIDENCE.json', async () => {
     const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
     const previous = {

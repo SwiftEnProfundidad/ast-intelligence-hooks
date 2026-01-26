@@ -5,8 +5,28 @@ const path = require('path');
 const fs = require('fs');
 
 const REFRESH_INTERVAL_MS = 180000;
+const WATCHDOG_INTERVAL_MS = 30000;
 const EVIDENCE_FILE = '.AI_EVIDENCE.json';
 const PID_FILE = '.evidence-guard.pid';
+const WATCHDOG_ARG = '--watchdog';
+const WATCHDOG_PID_ARG = '--pid';
+const WATCHDOG_ROOT_ARG = '--root';
+
+function getArgValue(args, name) {
+    const index = args.indexOf(name);
+    if (index === -1) return null;
+    return args[index + 1] || null;
+}
+
+function isPidAlive(pid) {
+    if (!pid || Number.isNaN(pid)) return false;
+    try {
+        process.kill(pid, 0);
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
 
 class EvidenceGuard {
     constructor() {
@@ -103,6 +123,17 @@ class EvidenceGuard {
         });
     }
 
+    startWatchdog() {
+        if (process.env.HOOK_GUARD_SELF_HEAL === 'false') return;
+        const args = [__filename, WATCHDOG_ARG, WATCHDOG_PID_ARG, String(process.pid), WATCHDOG_ROOT_ARG, this.projectRoot];
+        const child = spawn(process.execPath, args, {
+            cwd: this.projectRoot,
+            detached: true,
+            stdio: 'ignore'
+        });
+        child.unref();
+    }
+
     async start() {
         if (this.isAlreadyRunning()) {
             console.log('[EvidenceGuard] Already running');
@@ -111,6 +142,7 @@ class EvidenceGuard {
 
         this.writePidFile();
         this.isRunning = true;
+        this.startWatchdog();
 
         console.log('[EvidenceGuard] Started');
         console.log(`[EvidenceGuard] Project root: ${this.projectRoot}`);
@@ -145,12 +177,37 @@ class EvidenceGuard {
     }
 }
 
-if (require.main === module) {
-    const guard = new EvidenceGuard();
-    guard.start().catch((error) => {
-        console.error('[EvidenceGuard] Fatal error:', error);
+function runWatchdog(pidValue, rootPath) {
+    const pid = Number(pidValue);
+    const root = rootPath || process.cwd();
+    if (!pid || Number.isNaN(pid)) {
         process.exit(1);
-    });
+    }
+    const tick = () => {
+        if (isPidAlive(pid)) return;
+        const args = [__filename];
+        spawn(process.execPath, args, {
+            cwd: root,
+            detached: true,
+            stdio: 'ignore',
+            env: { ...process.env, HOOK_GUARD_SELF_HEAL: 'false' }
+        }).unref();
+        process.exit(0);
+    };
+    setInterval(tick, WATCHDOG_INTERVAL_MS).unref();
+}
+
+if (require.main === module) {
+    const args = process.argv.slice(2);
+    if (args.includes(WATCHDOG_ARG)) {
+        runWatchdog(getArgValue(args, WATCHDOG_PID_ARG), getArgValue(args, WATCHDOG_ROOT_ARG));
+    } else {
+        const guard = new EvidenceGuard();
+        guard.start().catch((error) => {
+            console.error('[EvidenceGuard] Fatal error:', error);
+            process.exit(1);
+        });
+    }
 }
 
 module.exports = EvidenceGuard;
