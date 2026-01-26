@@ -200,6 +200,106 @@ describe('intelligent-audit', () => {
     }
   });
 
+  it('should preserve protocol_3_questions and ai_gate violations while updating gate status on auto refresh when evidence is complete', async () => {
+    const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
+    const original = fs.existsSync(evidencePath) ? fs.readFileSync(evidencePath, 'utf8') : null;
+    const previousTrigger = process.env.AUTO_EVIDENCE_TRIGGER;
+    const previousReason = process.env.AUTO_EVIDENCE_REASON;
+    const previousSummary = process.env.AUTO_EVIDENCE_SUMMARY;
+
+    const preservedQuestions = {
+      answered: true,
+      question_1_file_type: 'Preserved question 1',
+      question_2_similar_exists: 'Preserved question 2',
+      question_3_clean_architecture: 'Preserved question 3',
+      last_answered: '2026-01-01T00:00:00.000Z'
+    };
+
+    const preservedViolations = [
+      {
+        file: 'apps/backend/index.js',
+        line: 10,
+        severity: 'HIGH',
+        rule_id: 'backend.sample.rule',
+        message: 'Preserved violation',
+        category: 'backend.sample',
+        intelligent_evaluation: false,
+        severity_score: 10
+      }
+    ];
+
+    const completeEvidence = {
+      timestamp: '2026-01-01T00:00:00.000Z',
+      rules_read: [{ file: 'rulesgold.mdc', sha256: 'abc', verified: true }],
+      protocol_3_questions: preservedQuestions,
+      ai_gate: {
+        status: 'ALLOWED',
+        scope: 'staging',
+        last_check: '2026-01-01T00:00:00.000Z',
+        violations: preservedViolations,
+        instruction: 'x',
+        mandatory: true
+      },
+      severity_metrics: {
+        last_updated: '2026-01-01T00:00:00.000Z',
+        total_violations: 1,
+        by_severity: { CRITICAL: 0, HIGH: 1, MEDIUM: 0, LOW: 0 }
+      },
+      token_usage: {
+        estimated: 100,
+        percent_used: 1,
+        remaining: 999
+      }
+    };
+
+    try {
+      process.env.AUTO_EVIDENCE_TRIGGER = 'auto';
+      process.env.AUTO_EVIDENCE_REASON = 'auto_refresh';
+      process.env.AUTO_EVIDENCE_SUMMARY = 'Automatic evidence refresh';
+
+      fs.writeFileSync(evidencePath, JSON.stringify(completeEvidence, null, 2));
+
+      const mod = require('../intelligent-audit');
+      const incomingViolations = [
+        { severity: 'CRITICAL', ruleId: 'rule.critical', filePath: 'apps/a.ts', line: 1, message: 'c' }
+      ];
+
+      await mod.updateAIEvidence(incomingViolations, { passed: false, blockedBy: 'critical' }, { estimated: 10, percentUsed: 10, remaining: 90 });
+
+      const updated = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+
+      expect(updated.protocol_3_questions).toEqual(preservedQuestions);
+      expect(updated.ai_gate.violations).toEqual(preservedViolations);
+      expect(updated.ai_gate.status).toBe('BLOCKED');
+      expect(updated.severity_metrics.total_violations).toBe(1);
+      expect(updated.timestamp).not.toBe(completeEvidence.timestamp);
+    } finally {
+      if (previousTrigger === undefined) {
+        delete process.env.AUTO_EVIDENCE_TRIGGER;
+      } else {
+        process.env.AUTO_EVIDENCE_TRIGGER = previousTrigger;
+      }
+      if (previousReason === undefined) {
+        delete process.env.AUTO_EVIDENCE_REASON;
+      } else {
+        process.env.AUTO_EVIDENCE_REASON = previousReason;
+      }
+      if (previousSummary === undefined) {
+        delete process.env.AUTO_EVIDENCE_SUMMARY;
+      } else {
+        process.env.AUTO_EVIDENCE_SUMMARY = previousSummary;
+      }
+
+      if (original === null) {
+        if (fs.existsSync(evidencePath)) {
+          fs.unlinkSync(evidencePath);
+        }
+      } else {
+        fs.writeFileSync(evidencePath, original);
+      }
+    }
+  });
+
   it('should refresh root timestamp when updating .AI_EVIDENCE.json', async () => {
     const evidencePath = path.join(process.cwd(), '.AI_EVIDENCE.json');
     const previous = {

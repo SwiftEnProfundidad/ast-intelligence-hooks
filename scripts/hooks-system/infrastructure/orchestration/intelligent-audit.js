@@ -175,6 +175,31 @@ function preserveOrInitHumanIntent(existingEvidence) {
   };
 }
 
+function hasNonEmptyText(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isProtocolQuestionsComplete(protocol) {
+  if (!protocol || typeof protocol !== 'object') return false;
+  if (protocol.answered !== true) return false;
+  return hasNonEmptyText(protocol.question_1_file_type)
+    && hasNonEmptyText(protocol.question_2_similar_exists)
+    && hasNonEmptyText(protocol.question_3_clean_architecture);
+}
+
+function isEvidenceCompleteForAutoRefresh(evidence) {
+  if (!evidence || typeof evidence !== 'object') return false;
+  const rulesRead = evidence.rules_read;
+  const gate = evidence.ai_gate;
+  return isProtocolQuestionsComplete(evidence.protocol_3_questions)
+    && Array.isArray(rulesRead)
+    && rulesRead.length > 0
+    && gate
+    && typeof gate === 'object'
+    && typeof gate.status === 'string'
+    && Array.isArray(gate.violations);
+}
+
 function detectPlatformsFromStagedFiles(stagedFiles) {
   const platforms = new Set();
   const files = Array.isArray(stagedFiles) ? stagedFiles : [];
@@ -700,6 +725,10 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
   try {
     const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
 
+    const autoEvidenceTrigger = String(env.get('AUTO_EVIDENCE_TRIGGER', process.env.AUTO_EVIDENCE_TRIGGER || '') || '').trim().toLowerCase();
+    const isAutoEvidenceRefresh = autoEvidenceTrigger === 'auto';
+    const preserveAutoEvidence = isAutoEvidenceRefresh && isEvidenceCompleteForAutoRefresh(evidence);
+
     evidence.timestamp = formatLocalTimestamp();
 
     const normSev = (s) => String(s || '').toUpperCase().trim();
@@ -824,6 +853,10 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
       mandatory: true
     };
 
+    if (preserveAutoEvidence && existingGate && Array.isArray(existingGate.violations)) {
+      nextGate.violations = existingGate.violations;
+    }
+
     evidence.ai_gate = preserveExistingRepoGate ? existingGate : nextGate;
 
     const stagedFilesList = getStagedFiles();
@@ -834,19 +867,21 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
       (v.ruleId || '').includes('architecture')
     );
 
-    evidence.protocol_3_questions = {
-      answered: true,
-      question_1_file_type: stagedFilesList.length > 0
-        ? `Staged files analyzed: ${stagedFilesList.length}. Platforms detected: ${detectedPlatformsForQuestions.join(', ') || 'none'}.`
-        : 'No staged files detected for analysis.',
-      question_2_similar_exists: violations.length > 0
-        ? `Detected ${violations.length} rule violations; review existing patterns and rule matches.`
-        : 'No rule violations detected; no similar patterns flagged.',
-      question_3_clean_architecture: architectureViolations.length > 0
-        ? `Found ${architectureViolations.length} Clean Architecture/SOLID-related violations that require review.`
-        : 'No Clean Architecture or SOLID violations detected.',
-      last_answered: formatLocalTimestamp()
-    };
+    if (!preserveAutoEvidence) {
+      evidence.protocol_3_questions = {
+        answered: true,
+        question_1_file_type: stagedFilesList.length > 0
+          ? `Staged files analyzed: ${stagedFilesList.length}. Platforms detected: ${detectedPlatformsForQuestions.join(', ') || 'none'}.`
+          : 'No staged files detected for analysis.',
+        question_2_similar_exists: violations.length > 0
+          ? `Detected ${violations.length} rule violations; review existing patterns and rule matches.`
+          : 'No rule violations detected; no similar patterns flagged.',
+        question_3_clean_architecture: architectureViolations.length > 0
+          ? `Found ${architectureViolations.length} Clean Architecture/SOLID-related violations that require review.`
+          : 'No Clean Architecture or SOLID violations detected.',
+        last_answered: formatLocalTimestamp()
+      };
+    }
 
     const stagedFiles = getStagedFiles();
     const platformsEvidence = buildPlatformsEvidence(stagedFiles, violations);
