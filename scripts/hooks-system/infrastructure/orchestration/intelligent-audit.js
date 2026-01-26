@@ -175,6 +175,31 @@ function preserveOrInitHumanIntent(existingEvidence) {
   };
 }
 
+function hasNonEmptyText(value) {
+  return typeof value === 'string' && value.trim().length > 0;
+}
+
+function isProtocolQuestionsComplete(protocol) {
+  if (!protocol || typeof protocol !== 'object') return false;
+  if (protocol.answered !== true) return false;
+  return hasNonEmptyText(protocol.question_1_file_type)
+    && hasNonEmptyText(protocol.question_2_similar_exists)
+    && hasNonEmptyText(protocol.question_3_clean_architecture);
+}
+
+function isEvidenceCompleteForAutoRefresh(evidence) {
+  if (!evidence || typeof evidence !== 'object') return false;
+  const rulesRead = evidence.rules_read;
+  const gate = evidence.ai_gate;
+  return isProtocolQuestionsComplete(evidence.protocol_3_questions)
+    && Array.isArray(rulesRead)
+    && rulesRead.length > 0
+    && gate
+    && typeof gate === 'object'
+    && typeof gate.status === 'string'
+    && Array.isArray(gate.violations);
+}
+
 function detectPlatformsFromStagedFiles(stagedFiles) {
   const platforms = new Set();
   const files = Array.isArray(stagedFiles) ? stagedFiles : [];
@@ -699,6 +724,15 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
 
   try {
     const evidence = JSON.parse(fs.readFileSync(evidencePath, 'utf8'));
+
+    const autoEvidenceTrigger = String(env.get('AUTO_EVIDENCE_TRIGGER', process.env.AUTO_EVIDENCE_TRIGGER || '') || '').trim().toLowerCase();
+    const isAutoEvidenceRefresh = autoEvidenceTrigger === 'auto';
+    if (isAutoEvidenceRefresh && isEvidenceCompleteForAutoRefresh(evidence)) {
+      evidence.timestamp = formatLocalTimestamp();
+      fs.writeFileSync(evidencePath, JSON.stringify(evidence, null, 2));
+      console.log('[Intelligent Audit] ✅ Auto refresh skipped full rewrite (evidence already complete)');
+      return;
+    }
 
     evidence.timestamp = formatLocalTimestamp();
 
