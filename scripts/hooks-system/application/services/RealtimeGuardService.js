@@ -56,324 +56,252 @@ class RealtimeGuardService {
         this.watchers = [];
     }
 
-    get staleThresholdMs() {
-        return this.evidenceManager.staleThresholdMs;
-    }
-
-    set staleThresholdMs(value) {
-        this.evidenceManager.staleThresholdMs = value;
-    }
-
-    get reminderIntervalMs() {
-        return this.evidenceManager.reminderIntervalMs;
-    }
-
-    set reminderIntervalMs(value) {
-        this.evidenceManager.reminderIntervalMs = value;
-    }
-
-    get pollIntervalMs() {
-        return this.evidenceManager.pollIntervalMs;
-    }
-
-    set pollIntervalMs(value) {
-        this.evidenceManager.pollIntervalMs = value;
-    }
-
-    get pollTimer() {
-        return this.evidenceManager.pollTimer;
-    }
-
-    set pollTimer(value) {
-        this.evidenceManager.pollTimer = value;
-    }
-
-    get lastStaleNotification() {
-        return this.evidenceManager.lastStaleNotification;
-    }
-
-    set lastStaleNotification(value) {
-        this.evidenceManager.lastStaleNotification = value;
-    }
-
-    get lastUserActivityAt() {
-        return this.evidenceManager.lastUserActivityAt;
-    }
-
-    set lastUserActivityAt(value) {
-        this.evidenceManager.lastUserActivityAt = value;
-    }
-
-    get inactivityGraceMs() {
-        return this.evidenceManager.inactivityGraceMs;
-    }
-
-    set inactivityGraceMs(value) {
-        this.evidenceManager.inactivityGraceMs = value;
-    }
-
-    get autoRefreshCooldownMs() {
-        return this.evidenceManager.autoRefreshCooldownMs;
-    }
-
-    set autoRefreshCooldownMs(value) {
-        this.evidenceManager.autoRefreshCooldownMs = value;
-    }
-
-    get lastAutoRefresh() {
-        return this.evidenceManager.lastAutoRefresh;
-    }
-
-    set lastAutoRefresh(value) {
-        this.evidenceManager.lastAutoRefresh = value;
-    }
-
-    get autoRefreshInFlight() {
-        return this.evidenceManager.autoRefreshInFlight;
-    }
-
-    set autoRefreshInFlight(value) {
-        this.evidenceManager.autoRefreshInFlight = value;
-    }
-
-    get gitTreeStagedThreshold() {
-        return this.gitTreeManager.gitTreeStagedThreshold;
-    }
-
-    set gitTreeStagedThreshold(value) {
-        this.gitTreeManager.gitTreeStagedThreshold = value;
-    }
-
-    get gitTreeUnstagedThreshold() {
-        return this.gitTreeManager.gitTreeUnstagedThreshold;
-    }
-
-    set gitTreeUnstagedThreshold(value) {
-        this.gitTreeManager.gitTreeUnstagedThreshold = value;
-    }
-
-    get gitTreeTotalThreshold() {
-        return this.gitTreeManager.gitTreeTotalThreshold;
-    }
-
-    set gitTreeTotalThreshold(value) {
-        this.gitTreeManager.gitTreeTotalThreshold = value;
-    }
-
-    get gitTreeCheckIntervalMs() {
-        return this.gitTreeManager.gitTreeCheckIntervalMs;
-    }
-
-    set gitTreeCheckIntervalMs(value) {
-        this.gitTreeManager.gitTreeCheckIntervalMs = value;
-    }
-
-    get gitTreeReminderMs() {
-        return this.gitTreeManager.gitTreeReminderMs;
-    }
-
-    set gitTreeReminderMs(value) {
-        this.gitTreeManager.gitTreeReminderMs = value;
-    }
-
-    get gitTreeTimer() {
-        return this.gitTreeManager.gitTreeTimer;
-    }
-
-    set gitTreeTimer(value) {
-        this.gitTreeManager.gitTreeTimer = value;
-    }
-
-    get lastDirtyTreeNotification() {
-        return this.gitTreeManager.lastDirtyTreeNotification;
-    }
-
-    set lastDirtyTreeNotification(value) {
-        this.gitTreeManager.lastDirtyTreeNotification = value;
-    }
-
-    get dirtyTreeActive() {
-        return this.gitTreeManager.dirtyTreeActive;
-    }
-
-    set dirtyTreeActive(value) {
-        this.gitTreeManager.dirtyTreeActive = value;
-    }
-
-    start() {
-        this.logger.info('Starting RealtimeGuardService...');
-        this.auditLogger.record({ action: 'guard.realtime.start', resource: 'realtime_guard', status: 'success' });
-        recordMetric({ hook: 'realtime_guard', status: 'start' });
-
-        // Start all monitors via specialized managers
-        this._startEvidenceMonitoring();
-        this._startGitTreeMonitoring();
-        this._startActivityMonitoring();
-        this._startDevDocsMonitoring();
-        this._startAstMonitoring();
-
-        if (this.embedTokenMonitor) {
-            this._startTokenMonitoring();
-        }
-
-        this._startGitFlowSync();
-
-        this.logger.info('[RealtimeGuardService] All services started');
-    }
-
-    stop() {
-        this.logger.info('Stopping RealtimeGuardService...');
-        this.auditLogger.record({ action: 'guard.realtime.stop', resource: 'realtime_guard', status: 'success' });
-        recordMetric({ hook: 'realtime_guard', status: 'stop' });
-
-        this.watchers.forEach(w => w.close());
-        this.watchers = [];
-
-        Object.values(this.monitors).forEach(monitor => {
-            if (typeof monitor.stop === 'function') {
-                monitor.stop();
-            }
-        });
-
-        // Stop specialized managers
-        this.evidenceManager.stopPolling();
-        this.gitTreeManager.stopMonitoring();
-
-        this.logger.info('[RealtimeGuardService] All services stopped');
-    }
-
-    _startEvidenceMonitoring() {
-        this.evidenceManager.startPolling(
-            () => this.notifier.notify('Evidence is stale - Auto-refreshing...', 'warning'),
-            () => this.notifier.notify('Evidence refreshed successfully', 'success')
-        );
-    }
-
-    _startGitTreeMonitoring() {
-        this.gitTreeManager.startMonitoring();
-    }
-
-    _startTokenMonitoring() {
-        if (!this.monitors.token.isAvailable()) {
-            this.logger.warn('[RealtimeGuardService] Token monitor script not found');
-            return;
-        }
-
-        try {
-            this.monitors.token.start();
-            this.notifier.notify('🔋 Token monitor started', 'info');
-            this.auditLogger.record({
-                action: 'guard.token_monitor.start',
-                resource: 'token_monitor',
-                status: 'success'
-            });
-            recordMetric({ hook: 'token_monitor', status: 'start' });
-        } catch (error) {
-            this.notifier.notify(`Failed to start token monitor: ${error.message}`, 'error');
-            this.auditLogger.record({
-                action: 'guard.token_monitor.start',
-                resource: 'token_monitor',
-                status: 'fail',
-                meta: { message: error.message }
-            });
-            recordMetric({ hook: 'token_monitor', status: 'fail' });
-        }
-    }
-
-    _startGitFlowSync() {
-        if (!this.monitors || !this.monitors.gitFlow) return;
-        if (!this.monitors.gitFlow.autoSyncEnabled) return;
-
-        this.auditLogger.record({
-            action: 'guard.gitflow.autosync.enabled',
-            resource: 'gitflow',
-            status: 'success',
-            meta: { intervalMs: env.getNumber('HOOK_GUARD_GITFLOW_AUTOSYNC_INTERVAL', 300000) }
-        });
-        recordMetric({ hook: 'gitflow_autosync', status: 'enabled' });
-
-        const syncInterval = setInterval(() => {
-            if (this.monitors.gitFlow.isClean()) {
-                const result = this.monitors.gitFlow.syncBranches();
-                if (result.success) {
-                    this.notifier.notify('🔄 Branches synchronized', 'info');
-                    recordMetric({ hook: 'gitflow_autosync', status: 'sync_success' });
-                }
-            }
-        }, env.getNumber('HOOK_GUARD_GITFLOW_AUTOSYNC_INTERVAL', 300000));
-
-        syncInterval.unref();
-    }
-
-    _startActivityMonitoring() {
-        if (this.monitors.activity) this.monitors.activity.start();
-    }
-
-    _startDevDocsMonitoring() {
-        if (this.monitors.devDocs) this.monitors.devDocs.start();
-    }
-
-    _startAstMonitoring() {
-        if (this.monitors.ast) this.monitors.ast.start();
-    }
-
-    // --- Delegation to specialized components ---
-
-    notify(message, level = 'info', options = {}) {
-        return this.notifier.notify(message, level, options);
-    }
-
-    appendDebugLog(entry) {
-        return this.notifier.appendDebugLog(entry);
-    }
-
-    readEvidenceTimestamp() {
-        return this.evidenceManager.readEvidenceTimestamp();
-    }
-
-    evaluateEvidenceAge(source = 'manual', notifyFresh = false) {
-        return this.evidenceManager.evaluateEvidenceAge(source, notifyFresh);
-    }
-
-    triggerStaleAlert(source, ageMs) {
-        return this.evidenceManager.triggerStaleAlert(source, ageMs);
-    }
-
-    async attemptAutoRefresh(reason = 'manual') {
-        return this.evidenceManager.attemptAutoRefresh(reason);
-    }
-
-    async runDirectEvidenceRefresh(reason) {
-        return this.evidenceManager.runDirectEvidenceRefresh(reason);
-    }
-
-    async evaluateGitTree() {
-        return this.gitTreeManager.evaluateGitTree();
-    }
-
-    resolveDirtyTree(state, limits) {
-        return this.gitTreeManager.resolveDirtyTree(state, limits);
-    }
-
-    handleDirtyTree(state, limits) {
-        return this.gitTreeManager.handleDirtyTree(state, limits);
-    }
-
-    persistDirtyTreeState() {
-        return this.gitTreeManager.persistDirtyTreeState();
-    }
-
-    startGitTreeMonitoring() {
-        return this.gitTreeManager.startMonitoring();
-    }
-
-    startEvidencePolling() {
-        return this.evidenceManager.startPolling();
-    }
-
-    updateUserActivity() {
-        return this.evidenceManager.updateUserActivity();
-    }
 }
+
+RealtimeGuardService.prototype.notify = function notify(message, level = 'info', options = {}) {
+    return this.notifier.notify(message, level, options);
+};
+
+RealtimeGuardService.prototype.appendDebugLog = function appendDebugLog(entry) {
+    return this.notifier.appendDebugLog(entry);
+};
+
+RealtimeGuardService.prototype.readEvidenceTimestamp = function readEvidenceTimestamp() {
+    return this.evidenceManager.readEvidenceTimestamp();
+};
+
+RealtimeGuardService.prototype.evaluateEvidenceAge = function evaluateEvidenceAge(source = 'manual', notifyFresh = false) {
+    return this.evidenceManager.evaluateEvidenceAge(source, notifyFresh);
+};
+
+RealtimeGuardService.prototype.triggerStaleAlert = function triggerStaleAlert(source, ageMs) {
+    return this.evidenceManager.triggerStaleAlert(source, ageMs);
+};
+
+RealtimeGuardService.prototype.attemptAutoRefresh = async function attemptAutoRefresh(reason = 'manual') {
+    return this.evidenceManager.attemptAutoRefresh(reason);
+};
+
+RealtimeGuardService.prototype.runDirectEvidenceRefresh = async function runDirectEvidenceRefresh(reason) {
+    return this.evidenceManager.runDirectEvidenceRefresh(reason);
+};
+
+RealtimeGuardService.prototype.evaluateGitTree = async function evaluateGitTree() {
+    return this.gitTreeManager.evaluateGitTree();
+};
+
+RealtimeGuardService.prototype.resolveDirtyTree = function resolveDirtyTree(state, limits) {
+    return this.gitTreeManager.resolveDirtyTree(state, limits);
+};
+
+RealtimeGuardService.prototype.handleDirtyTree = function handleDirtyTree(state, limits) {
+    return this.gitTreeManager.handleDirtyTree(state, limits);
+};
+
+RealtimeGuardService.prototype.persistDirtyTreeState = function persistDirtyTreeState() {
+    return this.gitTreeManager.persistDirtyTreeState();
+};
+
+RealtimeGuardService.prototype.startGitTreeMonitoring = function startGitTreeMonitoring() {
+    return this.gitTreeManager.startMonitoring();
+};
+
+RealtimeGuardService.prototype.startEvidencePolling = function startEvidencePolling() {
+    return this.evidenceManager.startPolling();
+};
+
+RealtimeGuardService.prototype.updateUserActivity = function updateUserActivity() {
+    return this.evidenceManager.updateUserActivity();
+};
+
+RealtimeGuardService.prototype.start = function start() {
+    this.logger.info('Starting RealtimeGuardService...');
+    this.auditLogger.record({ action: 'guard.realtime.start', resource: 'realtime_guard', status: 'success' });
+    recordMetric({ hook: 'realtime_guard', status: 'start' });
+
+    this._startEvidenceMonitoring();
+    this._startGitTreeMonitoring();
+    this._startActivityMonitoring();
+    this._startDevDocsMonitoring();
+    this._startAstMonitoring();
+
+    if (this.embedTokenMonitor) {
+        this._startTokenMonitoring();
+    }
+
+    this._startGitFlowSync();
+
+    this.logger.info('[RealtimeGuardService] All services started');
+};
+
+RealtimeGuardService.prototype.stop = function stop() {
+    this.logger.info('Stopping RealtimeGuardService...');
+    this.auditLogger.record({ action: 'guard.realtime.stop', resource: 'realtime_guard', status: 'success' });
+    recordMetric({ hook: 'realtime_guard', status: 'stop' });
+
+    this.watchers.forEach(w => w.close());
+    this.watchers = [];
+
+    Object.values(this.monitors).forEach(monitor => {
+        if (typeof monitor.stop === 'function') {
+            monitor.stop();
+        }
+    });
+
+    this.evidenceManager.stopPolling();
+    this.gitTreeManager.stopMonitoring();
+
+    this.logger.info('[RealtimeGuardService] All services stopped');
+};
+
+RealtimeGuardService.prototype._startEvidenceMonitoring = function startEvidenceMonitoring() {
+    this.evidenceManager.startPolling(
+        () => this.notifier.notify('Evidence is stale - Auto-refreshing...', 'warning'),
+        () => this.notifier.notify('Evidence refreshed successfully', 'success')
+    );
+};
+
+RealtimeGuardService.prototype._startGitTreeMonitoring = function startGitTreeMonitoring() {
+    this.gitTreeManager.startMonitoring();
+};
+
+RealtimeGuardService.prototype._startTokenMonitoring = function startTokenMonitoring() {
+    if (!this.monitors.token.isAvailable()) {
+        this.logger.warn('[RealtimeGuardService] Token monitor script not found');
+        return;
+    }
+
+    try {
+        this.monitors.token.start();
+        this.notifier.notify('🔋 Token monitor started', 'info');
+        this.auditLogger.record({
+            action: 'guard.token_monitor.start',
+            resource: 'token_monitor',
+            status: 'success'
+        });
+        recordMetric({ hook: 'token_monitor', status: 'start' });
+    } catch (error) {
+        this.notifier.notify(`Failed to start token monitor: ${error.message}`, 'error');
+        this.auditLogger.record({
+            action: 'guard.token_monitor.start',
+            resource: 'token_monitor',
+            status: 'fail',
+            meta: { message: error.message }
+        });
+        recordMetric({ hook: 'token_monitor', status: 'fail' });
+    }
+};
+
+RealtimeGuardService.prototype._startGitFlowSync = function startGitFlowSync() {
+    if (!this.monitors || !this.monitors.gitFlow) return;
+    if (!this.monitors.gitFlow.autoSyncEnabled) return;
+
+    this.auditLogger.record({
+        action: 'guard.gitflow.autosync.enabled',
+        resource: 'gitflow',
+        status: 'success',
+        meta: { intervalMs: env.getNumber('HOOK_GUARD_GITFLOW_AUTOSYNC_INTERVAL', 300000) }
+    });
+    recordMetric({ hook: 'gitflow_autosync', status: 'enabled' });
+
+    const syncInterval = setInterval(() => {
+        if (this.monitors.gitFlow.isClean()) {
+            const result = this.monitors.gitFlow.syncBranches();
+            if (result.success) {
+                this.notifier.notify('🔄 Branches synchronized', 'info');
+                recordMetric({ hook: 'gitflow_autosync', status: 'sync_success' });
+            }
+        }
+    }, env.getNumber('HOOK_GUARD_GITFLOW_AUTOSYNC_INTERVAL', 300000));
+
+    syncInterval.unref();
+};
+
+RealtimeGuardService.prototype._startActivityMonitoring = function startActivityMonitoring() {
+    if (this.monitors.activity) this.monitors.activity.start();
+};
+
+RealtimeGuardService.prototype._startDevDocsMonitoring = function startDevDocsMonitoring() {
+    if (this.monitors.devDocs) this.monitors.devDocs.start();
+};
+
+RealtimeGuardService.prototype._startAstMonitoring = function startAstMonitoring() {
+    if (this.monitors.ast) this.monitors.ast.start();
+};
+
+Object.defineProperties(RealtimeGuardService.prototype, {
+    staleThresholdMs: {
+        get() { return this.evidenceManager.staleThresholdMs; },
+        set(value) { this.evidenceManager.staleThresholdMs = value; }
+    },
+    reminderIntervalMs: {
+        get() { return this.evidenceManager.reminderIntervalMs; },
+        set(value) { this.evidenceManager.reminderIntervalMs = value; }
+    },
+    pollIntervalMs: {
+        get() { return this.evidenceManager.pollIntervalMs; },
+        set(value) { this.evidenceManager.pollIntervalMs = value; }
+    },
+    pollTimer: {
+        get() { return this.evidenceManager.pollTimer; },
+        set(value) { this.evidenceManager.pollTimer = value; }
+    },
+    lastStaleNotification: {
+        get() { return this.evidenceManager.lastStaleNotification; },
+        set(value) { this.evidenceManager.lastStaleNotification = value; }
+    },
+    lastUserActivityAt: {
+        get() { return this.evidenceManager.lastUserActivityAt; },
+        set(value) { this.evidenceManager.lastUserActivityAt = value; }
+    },
+    inactivityGraceMs: {
+        get() { return this.evidenceManager.inactivityGraceMs; },
+        set(value) { this.evidenceManager.inactivityGraceMs = value; }
+    },
+    autoRefreshCooldownMs: {
+        get() { return this.evidenceManager.autoRefreshCooldownMs; },
+        set(value) { this.evidenceManager.autoRefreshCooldownMs = value; }
+    },
+    lastAutoRefresh: {
+        get() { return this.evidenceManager.lastAutoRefresh; },
+        set(value) { this.evidenceManager.lastAutoRefresh = value; }
+    },
+    autoRefreshInFlight: {
+        get() { return this.evidenceManager.autoRefreshInFlight; },
+        set(value) { this.evidenceManager.autoRefreshInFlight = value; }
+    },
+    gitTreeStagedThreshold: {
+        get() { return this.gitTreeManager.gitTreeStagedThreshold; },
+        set(value) { this.gitTreeManager.gitTreeStagedThreshold = value; }
+    },
+    gitTreeUnstagedThreshold: {
+        get() { return this.gitTreeManager.gitTreeUnstagedThreshold; },
+        set(value) { this.gitTreeManager.gitTreeUnstagedThreshold = value; }
+    },
+    gitTreeTotalThreshold: {
+        get() { return this.gitTreeManager.gitTreeTotalThreshold; },
+        set(value) { this.gitTreeManager.gitTreeTotalThreshold = value; }
+    },
+    gitTreeCheckIntervalMs: {
+        get() { return this.gitTreeManager.gitTreeCheckIntervalMs; },
+        set(value) { this.gitTreeManager.gitTreeCheckIntervalMs = value; }
+    },
+    gitTreeReminderMs: {
+        get() { return this.gitTreeManager.gitTreeReminderMs; },
+        set(value) { this.gitTreeManager.gitTreeReminderMs = value; }
+    },
+    gitTreeTimer: {
+        get() { return this.gitTreeManager.gitTreeTimer; },
+        set(value) { this.gitTreeManager.gitTreeTimer = value; }
+    },
+    lastDirtyTreeNotification: {
+        get() { return this.gitTreeManager.lastDirtyTreeNotification; },
+        set(value) { this.gitTreeManager.lastDirtyTreeNotification = value; }
+    },
+    dirtyTreeActive: {
+        get() { return this.gitTreeManager.dirtyTreeActive; },
+        set(value) { this.gitTreeManager.dirtyTreeActive = value; }
+    }
+});
 
 module.exports = RealtimeGuardService;

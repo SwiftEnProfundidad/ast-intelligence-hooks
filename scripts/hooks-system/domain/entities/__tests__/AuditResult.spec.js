@@ -123,6 +123,16 @@ describe('AuditResult', () => {
   });
 
   describe('hasBlockingViolations', () => {
+    const previousMode = process.env.AST_BLOCKING_MODE;
+
+    afterEach(() => {
+      if (previousMode === undefined) {
+        delete process.env.AST_BLOCKING_MODE;
+      } else {
+        process.env.AST_BLOCKING_MODE = previousMode;
+      }
+    });
+
     it('should return true when critical violations exist', () => {
       expect(auditResult.hasBlockingViolations()).toBe(true);
     });
@@ -134,12 +144,21 @@ describe('AuditResult', () => {
       expect(highOnlyResult.hasBlockingViolations()).toBe(true);
     });
 
-    it('should return false when only non-blocking violations exist', () => {
+    it('should return true when only medium/low violations exist', () => {
       const nonBlockingResult = new AuditResult([
         new Finding('test.rule', 'medium', 'Medium violation', 'test.ts', 1, 'backend'),
         new Finding('test.rule2', 'low', 'Low violation', 'test2.ts', 2, 'frontend'),
       ]);
-      expect(nonBlockingResult.hasBlockingViolations()).toBe(false);
+      expect(nonBlockingResult.hasBlockingViolations()).toBe(true);
+    });
+
+    it('should return false for medium/low in LEGACY mode', () => {
+      process.env.AST_BLOCKING_MODE = 'LEGACY';
+      const legacyResult = new AuditResult([
+        new Finding('test.rule', 'medium', 'Medium violation', 'test.ts', 1, 'backend'),
+        new Finding('test.rule2', 'low', 'Low violation', 'test2.ts', 2, 'frontend'),
+      ]);
+      expect(legacyResult.hasBlockingViolations()).toBe(false);
     });
   });
 
