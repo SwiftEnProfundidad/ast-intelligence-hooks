@@ -439,6 +439,8 @@ npm run ast:guard:logs
 
 ```bash
 npm run ast:refresh
+npx ast-hooks evidence:full-update
+bash scripts/hooks-system/bin/update-evidence.sh
 ```
 
 ---

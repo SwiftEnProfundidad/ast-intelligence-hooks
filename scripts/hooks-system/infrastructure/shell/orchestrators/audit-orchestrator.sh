@@ -298,6 +298,7 @@ full_audit_strict_staging_only() {
   printf "Staged files: %s\n\n" "$staged_count"
 
   run_ast_intelligence
+  run_intelligent_audit
   compute_staged_summary
 
   local gate_crit=${STAGED_CRIT:-0}
@@ -355,6 +356,7 @@ full_audit_standard() {
   printf "Staged files: %s\n\n" "$staged_count"
 
   run_ast_intelligence
+  run_intelligent_audit
   compute_staged_summary
 
   local gate_crit=${STAGED_CRIT:-0}
