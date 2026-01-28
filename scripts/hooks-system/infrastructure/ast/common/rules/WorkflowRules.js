@@ -1,5 +1,6 @@
 const fs = require('fs');
 const glob = require('glob');
+const env = require('../../../../config/env');
 const { pushFileFinding } = require('../../ast-core');
 
 class WorkflowRules {
@@ -21,7 +22,7 @@ class WorkflowRules {
             absolute: true
         });
 
-        const isLibrarySelfAudit = process.env.AUDIT_LIBRARY_SELF === 'true' ||
+        const isLibrarySelfAudit = env.getBool('AUDIT_LIBRARY_SELF', false) ||
             this.projectRoot.includes('ast-intelligence-hooks');
         if (isLibrarySelfAudit) {
             return;
@@ -74,6 +75,7 @@ class WorkflowRules {
         featureFiles.forEach(featureFile => {
             const content = fs.readFileSync(featureFile, 'utf-8');
             const featureName = this.extractFeatureName(content);
+            const hasImplementationHint = /^\s*Implementation\s*:/m.test(content);
 
             if (featureName) {
                 let testFiles = glob.sync(`**/*${featureName}*.{test,spec}.{ts,tsx,swift,kt}`, {
@@ -112,7 +114,7 @@ class WorkflowRules {
                     );
                 }
 
-                if (implFiles.length === 0 && testFiles.length > 0) {
+                if (implFiles.length === 0 && testFiles.length > 0 && !hasImplementationHint) {
                     pushFileFinding(
                         'workflow.triad.tests_without_implementation',
                         'low',

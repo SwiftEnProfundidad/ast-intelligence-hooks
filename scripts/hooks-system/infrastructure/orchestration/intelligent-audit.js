@@ -825,8 +825,10 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
       }
     }
 
+    const hasBlockingSeverities = criticalViolations.length > 0 || highViolations.length > 0;
+    const evidenceGateStatus = gateResult.passed || !hasBlockingSeverities ? 'ALLOWED' : 'BLOCKED';
     const nextGate = {
-      status: gateResult.passed ? 'ALLOWED' : 'BLOCKED',
+      status: evidenceGateStatus,
       scope: gateScope === 'repo' || gateScope === 'repository' ? 'repo' : 'staging',
       last_check: formatLocalTimestamp(),
       severity_summary: {
@@ -874,8 +876,8 @@ async function updateAIEvidence(violations, gateResult, tokenUsage) {
           ? `Staged files analyzed: ${stagedFilesList.length}. Platforms detected: ${detectedPlatformsForQuestions.join(', ') || 'none'}.`
           : 'No staged files detected for analysis.',
         question_2_similar_exists: violations.length > 0
-          ? `Detected ${violations.length} rule violations; review existing patterns and rule matches.`
-          : 'No rule violations detected; no similar patterns flagged.',
+          ? `Detected ${violations.length} rule violations; review recent commits and similar patterns flagged by rules.`
+          : 'No rule violations detected; no similar patterns flagged in recent commits.',
         question_3_clean_architecture: architectureViolations.length > 0
           ? `Found ${architectureViolations.length} Clean Architecture/SOLID-related violations that require review.`
           : 'No Clean Architecture or SOLID violations detected.',

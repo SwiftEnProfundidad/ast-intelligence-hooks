@@ -1,13 +1,8 @@
-jest.mock('child_process', () => ({
-  spawnSync: jest.fn(),
-}));
-
 const childProcess = require('child_process');
-const PlaybookRunner = require('../PlaybookRunner');
 const fs = require('fs');
 const path = require('path');
-
-const { spawnSync } = childProcess;
+let PlaybookRunner;
+let spawnSyncSpy;
 
 function makeSUT(options = {}) {
   return new PlaybookRunner(options);
@@ -32,11 +27,15 @@ function cleanupPlaybooksFile() {
 describe('PlaybookRunner', () => {
   beforeEach(() => {
     cleanupPlaybooksFile();
-    jest.clearAllMocks();
+    jest.resetModules();
+    spawnSyncSpy = jest.spyOn(childProcess, 'spawnSync');
+    spawnSyncSpy.mockReset();
+    PlaybookRunner = require('../PlaybookRunner');
   });
 
   afterEach(() => {
     cleanupPlaybooksFile();
+    spawnSyncSpy.mockRestore();
   });
 
   describe('constructor', () => {
@@ -98,10 +97,10 @@ describe('PlaybookRunner', () => {
         },
       };
       createMockPlaybooksFile(playbooks);
-      spawnSync.mockReturnValue({ status: 0 });
+      spawnSyncSpy.mockReturnValue({ status: 0 });
       const runner = makeSUT();
       runner.run('test');
-      expect(spawnSync).toHaveBeenCalledTimes(2);
+      expect(spawnSyncSpy).toHaveBeenCalledTimes(2);
     });
 
     it('should throw error when playbook not found', () => {
@@ -119,7 +118,7 @@ describe('PlaybookRunner', () => {
         },
       };
       createMockPlaybooksFile(playbooks);
-      spawnSync.mockReturnValue({ status: 1 });
+      spawnSyncSpy.mockReturnValue({ status: 1 });
       const runner = makeSUT();
       expect(() => {
         runner.run('test');
@@ -134,14 +133,13 @@ describe('PlaybookRunner', () => {
         },
       };
       createMockPlaybooksFile(playbooks);
-      spawnSync.mockReturnValue({ status: 0 });
+      spawnSyncSpy.mockReturnValue({ status: 0 });
       const runner = makeSUT({ cwd: customCwd });
       runner.run('test');
-      expect(spawnSync).toHaveBeenCalledWith(
+      expect(spawnSyncSpy).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({ cwd: customCwd })
       );
     });
   });
 });
-

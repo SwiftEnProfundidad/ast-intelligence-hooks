@@ -1,12 +1,3 @@
-jest.mock('../../infrastructure/adapters/MacOSNotificationAdapter');
-jest.mock('../../infrastructure/adapters/FileEvidenceAdapter');
-jest.mock('../../infrastructure/adapters/GitQueryAdapter');
-jest.mock('../../infrastructure/adapters/GitCommandAdapter');
-jest.mock('../../infrastructure/adapters/GitHubCliAdapter');
-jest.mock('../../infrastructure/adapters/AstAnalyzerAdapter');
-jest.mock('../services/AutonomousOrchestrator');
-jest.mock('../services/ContextDetectionEngine');
-
 const CompositionRoot = require('../CompositionRoot');
 
 describe('CompositionRoot', () => {
