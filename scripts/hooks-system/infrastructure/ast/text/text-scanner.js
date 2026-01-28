@@ -646,7 +646,8 @@ function runTextScanner(root, findings) {
       if (hasForceUnwrap && !hasLogicalNegation && !/@IBOutlet\b/.test(content) && !usesModernLocalization) {
         pushFileFinding('ios.force_unwrapping', 'high', file, 1, 1, 'Force unwrapping detected', findings);
       }
-      if (/\[[ ]*(weak|unowned)[ ]+self[ ]*\]/.test(content) === false && /self\./.test(content) && /\{[^\n]*in/.test(content)) {
+      const hasWeakSelfCapture = /\[[^\]]*\b(weak|unowned)\s+self\b[^\]]*\]/.test(content);
+      if (!hasWeakSelfCapture && /self\./.test(content) && /\{[^\n]*in/.test(content)) {
         pushFileFinding('ios.weak_self', 'medium', file, 1, 1, 'Closure referencing self without [weak self]', findings);
       }
       if (/\[\s*unowned\s+self\s*\]/.test(content)) {
@@ -673,7 +674,8 @@ function runTextScanner(root, findings) {
       if (/\.sink\s*\(|\.assign\s*\(/.test(content) && !/store\s*\(in\s*:\s*/.test(content)) {
         pushFileFinding('ios.combine.memory_management', 'medium', file, 1, 1, 'Combine subscription without store(in:)', findings);
       }
-      if (/\bTask\s*\{/.test(content) && !/withTaskCancellationHandler\s*\(/.test(content)) {
+      const hasTaskCancellationHandling = /withTaskCancellationHandler\s*\(|\bTask\.isCancelled\b|\bTask\.checkCancellation\s*\(/.test(content);
+      if (/\bTask\s*\{/.test(content) && !hasTaskCancellationHandling) {
         pushFileFinding('ios.concurrency.task_cancellation', 'low', file, 1, 1, 'Task without cancellation handling', findings);
       }
       iosTaskCount += (content.match(/\bTask\s*\{/g) || []).length;

@@ -303,13 +303,6 @@ function runBackendIntelligence(project, findings, platform) {
       pushFinding("backend.config.missing_env_separation", "info", sf, sf, "Missing environment-specific configuration - consider NODE_ENV or ConfigService", findings);
     }
 
-    const hasConfigValidation = sf.getFullText().includes("joi") ||
-      sf.getFullText().includes("class-validator") ||
-      sf.getFullText().includes("@nestjs/config");
-    if (!hasConfigValidation && sf.getFullText().includes("process.env")) {
-      pushFinding("backend.config.missing_validation", "warning", sf, sf, "Environment variables without validation - consider Joi or class-validator", findings);
-    }
-
     const hardMaxLines = env.getNumber('AST_GODCLASS_HARD_MAX_LINES', 0);
     const softMaxLines = env.getNumber('AST_GODCLASS_SOFT_MAX_LINES', 500);
     const absoluteGodLines = env.getNumber('AST_GODCLASS_ABSOLUTE_LINES', 1000);
@@ -326,6 +319,13 @@ function runBackendIntelligence(project, findings, platform) {
 
     if (!isRealBackendAppFile) {
       return;
+    }
+
+    const hasConfigValidation = sf.getFullText().includes("joi") ||
+      sf.getFullText().includes("class-validator") ||
+      sf.getFullText().includes("@nestjs/config");
+    if (!hasConfigValidation && sf.getFullText().includes("process.env")) {
+      pushFinding("backend.config.missing_validation", "warning", sf, sf, "Environment variables without validation - consider Joi or class-validator", findings);
     }
 
     sf.getDescendantsOfKind(SyntaxKind.ClassDeclaration).forEach((cls) => {
