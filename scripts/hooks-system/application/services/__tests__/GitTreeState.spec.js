@@ -1,9 +1,8 @@
-jest.mock('child_process', () => ({
-  execSync: jest.fn(),
-}));
-
 const childProcess = require('child_process');
-const { getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('../GitTreeState');
+let getGitTreeState;
+let isTreeBeyondLimit;
+let summarizeTreeState;
+let execSyncSpy;
 
 function makeMockGitStatus(stagedFiles = [], workingFiles = [], untrackedFiles = []) {
   const lines = [];
@@ -21,11 +20,14 @@ function makeMockGitStatus(stagedFiles = [], workingFiles = [], untrackedFiles =
 
 describe('GitTreeState', () => {
   beforeEach(() => {
-    childProcess.execSync.mockReset();
+    jest.resetModules();
+    execSyncSpy = jest.spyOn(childProcess, 'execSync');
+    execSyncSpy.mockReset();
+    ({ getGitTreeState, isTreeBeyondLimit, summarizeTreeState } = require('../GitTreeState'));
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    execSyncSpy.mockRestore();
   });
 
   describe('getGitTreeState', () => {
@@ -166,4 +168,3 @@ describe('GitTreeState', () => {
     });
   });
 });
-

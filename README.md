@@ -11,6 +11,8 @@ Portable, project‑agnostic, multi‑platform enterprise framework to govern AI
 ![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue)
 ![license](https://img.shields.io/badge/license-MIT-black)
 
+Latest release: 6.3.3 (2026-01-28)
+
 ---
 
 ## Quick start (30–60s)

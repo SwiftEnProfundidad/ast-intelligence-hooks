@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
@@ -25,6 +25,21 @@ function isPidAlive(pid) {
         return true;
     } catch (error) {
         return false;
+    }
+}
+
+function getStagedFiles(projectRoot) {
+    try {
+        const result = spawnSync('git', ['diff', '--cached', '--name-only'], {
+            cwd: projectRoot,
+            encoding: 'utf8'
+        });
+        if (result.status !== 0) {
+            return [];
+        }
+        return result.stdout.split('\n').map((line) => line.trim()).filter(Boolean);
+    } catch (error) {
+        return [];
     }
 }
 
@@ -100,8 +115,19 @@ class EvidenceGuard {
 
     async refreshEvidence() {
         return new Promise((resolve) => {
+            const skipWhenNoStaged = process.env.EVIDENCE_GUARD_SKIP_NO_STAGED !== 'false';
+            const stagedOnly = process.env.EVIDENCE_GUARD_STAGED_ONLY !== 'false';
+            const stagedFiles = (skipWhenNoStaged || stagedOnly) ? getStagedFiles(this.projectRoot) : [];
+            if (skipWhenNoStaged && stagedFiles.length === 0) {
+                console.log('[EvidenceGuard] Skipping refresh (no staged files)');
+                resolve();
+                return;
+            }
             console.log('[EvidenceGuard] Running evidence update...');
-            const child = spawn('bash', [this.updateScript, '--auto'], {
+            const args = ['--auto'];
+            if (stagedOnly) args.push('--staged');
+            if (skipWhenNoStaged) args.push('--if-staged');
+            const child = spawn('bash', [this.updateScript, ...args], {
                 cwd: this.projectRoot,
                 stdio: 'ignore',
                 detached: false

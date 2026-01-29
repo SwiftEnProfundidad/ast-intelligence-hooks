@@ -1,3 +1,23 @@
+# Release Notes - v6.3.3
+
+**Release Date**: January 28, 2026  
+**Type**: Patch Release  
+**Compatibility**: Fully backward compatible with 6.3.x
+
+---
+
+## ✅ Fixes
+
+- **iOS false positives**: `ios.weak_self` ahora detecta capture lists con `weak/unowned self`.
+- **Task cancellation**: `ios.concurrency.task_cancellation` reconoce `Task.isCancelled` y `Task.checkCancellation` (incl. `try?`).
+- **BDD triad**: `workflow.triad.tests_without_implementation` respeta la cabecera `Implementation:` en `.feature`.
+- **Gate evidence**: `ai_gate` no bloquea por violaciones solo MEDIUM/LOW en la evidencia.
+- **Protocol Q2**: la respuesta incluye referencia a commits recientes.
+- **Backend config**: `backend.config.missing_validation` se aplica solo a apps backend reales.
+- **WorkflowRules**: `AUDIT_LIBRARY_SELF` se valida con `env.getBool`.
+
+---
+
 # Release Notes - v6.0.16
 
 **Release Date**: January 13, 2026  

@@ -301,11 +301,13 @@ class SwiftAnalyzer {
   checkWeakSelf(ast, filePath, content) {
     const lines = content.split('\n');
     let inClosure = false;
+    let closureHasWeakSelf = false;
     lines.forEach((line, index) => {
       if (line.includes('{') && (line.includes('->') || line.includes('in'))) {
         inClosure = true;
+        closureHasWeakSelf = /\b(weak|unowned)\s+self\b/.test(line);
       }
-      if (inClosure && line.includes('self.') && !line.includes('[weak self]') && !line.includes('[unowned self]')) {
+      if (inClosure && line.includes('self.') && !closureHasWeakSelf) {
         this.addFinding({
           rule: 'ios.weak_self',
           severity: 'medium',
@@ -316,6 +318,7 @@ class SwiftAnalyzer {
       }
       if (line.includes('}')) {
         inClosure = false;
+        closureHasWeakSelf = false;
       }
     });
   }

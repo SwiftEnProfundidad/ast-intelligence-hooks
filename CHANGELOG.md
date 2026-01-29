@@ -5,6 +5,19 @@ All notable changes to `pumuki-ast-hooks` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [6.3.3] - 2026-01-28
+### Fixed
+- ios.weak_self ahora reconoce capture lists con weak/unowned self y evita falsos positivos.
+- ios.concurrency.task_cancellation detecta Task.isCancelled y Task.checkCancellation (incl. try?).
+- workflow.triad.tests_without_implementation respeta la cabecera Implementation: en .feature.
+- ai_gate en evidencia ya no bloquea por violaciones solo MEDIUM/LOW.
+- protocol_3_questions incluye referencia a commits recientes en la pregunta 2.
+- backend.config.missing_validation se limita a archivos reales de apps backend.
+- WorkflowRules usa env.getBool para AUDIT_LIBRARY_SELF y evita falsos positivos.
+
+### Tests
+- Tests internos migrados de jest.mock a spies para evitar falsos positivos y dependencias fantasma.
+
 ## [6.3.2] - 2026-01-26
 ### Fixed
 - Auto-refresh ahora actualiza el gate/métricas más recientes sin sobrescribir `protocol_3_questions` ni `ai_gate.violations` cuando la evidencia está completa.
