@@ -54,8 +54,20 @@ async function runASTIntelligence() {
 
     const stagingOnlyMode = env.get('STAGING_ONLY_MODE', '0') === '1';
     const stagedRelFiles = stagingOnlyMode ? getStagedFilesRel(root) : [];
+    const stagedAbsFiles = stagingOnlyMode
+      ? stagedRelFiles
+        .map((file) => path.join(root, file))
+        .filter((file) => fs.existsSync(file))
+      : [];
 
-    const allFiles = listSourceFiles(root);
+    const isSourceFile = (file) => {
+      const ext = path.extname(file);
+      return ext === ".ts" || ext === ".tsx" || ext === ".js" || ext === ".jsx" || ext === ".mjs" || ext === ".cjs";
+    };
+
+    const allFiles = stagingOnlyMode && stagedAbsFiles.length > 0
+      ? stagedAbsFiles.filter(isSourceFile)
+      : listSourceFiles(root);
     debugLog(`source files: ${allFiles.length}`);
 
     const project = createProject(allFiles);
@@ -73,12 +85,14 @@ async function runASTIntelligence() {
 
     runCommonIntelligence(project, findings);
     debugLog(`after common: ${findings.length}`);
-    runTextScanner(root, findings);
-    debugLog(`after text: ${findings.length}`);
-    analyzeDocumentation(root, findings);
-    debugLog(`after docs: ${findings.length}`);
-    analyzeMonorepoHealth(root, findings);
-    debugLog(`after monorepo: ${findings.length}`);
+    if (!stagingOnlyMode) {
+      runTextScanner(root, findings);
+      debugLog(`after text: ${findings.length}`);
+      analyzeDocumentation(root, findings);
+      debugLog(`after docs: ${findings.length}`);
+      analyzeMonorepoHealth(root, findings);
+      debugLog(`after monorepo: ${findings.length}`);
+    }
     analyzeNetworkResilience(project, findings);
     debugLog(`after resilience: ${findings.length}`);
     analyzeOfflineBackend(project, findings);
