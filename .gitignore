@@ -70,3 +70,15 @@ ast-summary.json
 # Local hook/demo scratch files (must never be committed/published)
 hooks/__tmp_*.js
 scripts/test-*.js
+*summary*.json
+*patterns*.txt
+*eslint*.txt
+*metrics*.json
+latest_*.json
+baseline_*.json
+legacy/artifacts/
+.AI_EVIDENCE*.json
+pumuki-*.tgz
+legacy/tooling/
+.cursor/
+.claude/
