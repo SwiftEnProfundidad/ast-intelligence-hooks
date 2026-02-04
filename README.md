@@ -264,7 +264,7 @@ Operational notifications for gate, evidence, health, guard, and tokens.
 
 ### 5.9 Evidence guard daemon
 
-Guard/daemon to keep evidence fresh and reduce drift during long sessions. Automatically refreshes evidence every 3 minutes during active development sessions, independent of commits or manual triggers.
+Guard to keep `.AI_EVIDENCE.json` fresh during long agentic sessions **without overwriting context**. The auto-refresh is a **lightweight refresh** (timestamp + metadata) so agents can retain a stable, persistent context between sessions; a full evidence regeneration (AST + gate) remains an explicit action.
 
 ### 5.10 CI/CD enforcement
 
@@ -440,9 +440,14 @@ npm run ast:guard:logs
 ### Evidence refresh
 
 ```bash
+# Full regeneration (AST + gate)
 npm run ast:refresh
 npx ast-hooks evidence:full-update
-bash scripts/hooks-system/bin/update-evidence.sh
+bash scripts/hooks-system/bin/update-evidence.sh --auto
+
+# Lightweight refresh (keeps context, avoids overwrite)
+npx ast-hooks evidence:update
+bash scripts/hooks-system/bin/update-evidence.sh --auto --refresh-only
 ```
 
 ---

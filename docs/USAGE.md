@@ -64,10 +64,11 @@ Done! You now have AST Intelligence working in your project.
 
 ### Evidence Guard (auto-refresh)
 
-The Evidence Guard daemon refreshes `.AI_EVIDENCE.json` periodically (default: every 180s).
+Evidence freshness is refreshed during agentic sessions (e.g., per AI iteration / tool calls) to keep `.AI_EVIDENCE.json` **fresh without regenerating it**. An optional daemon can run the same lightweight refresh in the background (default interval: 180s).
 
 Notes:
-- The refresh updates evidence and records the current quality gate status.
+- By default, auto-refresh performs a **lightweight refresh** (`--refresh-only`): it updates timestamp/metadata to prevent context loss between sessions.
+- Full evidence regeneration (AST + gate) is an explicit action (`evidence:full-update` / `update-evidence.sh --auto`).
 - In auto-refresh mode, a failing quality gate does not break the daemon.
 
 Useful commands:
@@ -91,6 +92,11 @@ AI_GATE_SCOPE=repo bash ./node_modules/pumuki-ast-hooks/scripts/hooks-system/bin
 If you are using vendored mode, you can use:
 ```bash
 AI_GATE_SCOPE=staging bash ./scripts/hooks-system/bin/update-evidence.sh --auto
+```
+
+Lightweight refresh only:
+```bash
+bash ./scripts/hooks-system/bin/update-evidence.sh --auto --refresh-only
 ```
 
 ### Interactive Menu (Recommended)

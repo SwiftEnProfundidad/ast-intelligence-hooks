@@ -7,6 +7,7 @@ AUTO_REASON="${AUTO_EVIDENCE_REASON:-user_invoked}"
 AUTO_SUMMARY="${AUTO_EVIDENCE_SUMMARY:-Manual evidence update}"
 STAGED_ONLY=0
 IF_STAGED=0
+REFRESH_ONLY=0
 
 for arg in "$@"; do
   if [[ "$arg" == "--auto" ]]; then
@@ -19,6 +20,9 @@ for arg in "$@"; do
   fi
   if [[ "$arg" == "--if-staged" ]]; then
     IF_STAGED=1
+  fi
+  if [[ "$arg" == "--refresh-only" ]]; then
+    REFRESH_ONLY=1
   fi
 done
 
@@ -38,6 +42,12 @@ if [[ "$IF_STAGED" -eq 1 ]]; then
     echo "No staged files. Skipping evidence refresh."
     exit 0
   fi
+fi
+
+if [[ "$REFRESH_ONLY" -eq 1 ]]; then
+  AUTO_EVIDENCE_TRIGGER="$AUTO_TRIGGER" AUTO_EVIDENCE_REASON="$AUTO_REASON" AUTO_EVIDENCE_SUMMARY="$AUTO_SUMMARY" \
+    node "$CLI" evidence:update
+  exit 0
 fi
 
 if [[ "$STAGED_ONLY" -eq 1 ]]; then

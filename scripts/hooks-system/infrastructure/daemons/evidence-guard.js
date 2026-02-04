@@ -117,6 +117,7 @@ class EvidenceGuard {
         return new Promise((resolve) => {
             const skipWhenNoStaged = process.env.EVIDENCE_GUARD_SKIP_NO_STAGED !== 'false';
             const stagedOnly = process.env.EVIDENCE_GUARD_STAGED_ONLY !== 'false';
+            const refreshOnly = process.env.EVIDENCE_GUARD_REFRESH_ONLY !== 'false';
             const stagedFiles = (skipWhenNoStaged || stagedOnly) ? getStagedFiles(this.projectRoot) : [];
             if (skipWhenNoStaged && stagedFiles.length === 0) {
                 console.log('[EvidenceGuard] Skipping refresh (no staged files)');
@@ -125,6 +126,7 @@ class EvidenceGuard {
             }
             console.log('[EvidenceGuard] Running evidence update...');
             const args = ['--auto'];
+            if (refreshOnly) args.push('--refresh-only');
             if (stagedOnly) args.push('--staged');
             if (skipWhenNoStaged) args.push('--if-staged');
             const child = spawn('bash', [this.updateScript, ...args], {
