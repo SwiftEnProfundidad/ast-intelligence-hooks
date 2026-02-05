@@ -1,7 +1,11 @@
+import type { Condition } from './Condition';
+import type { Consequence } from './Consequence';
+import type { Severity } from './Severity';
+
 export interface RuleDefinition {
   id: string;
   description: string;
-  severity: 'INFO' | 'WARN' | 'BLOCK';
-  when: object;
-  then: object;
+  severity: Severity;
+  when: Condition;
+  then: Consequence;
 }
