@@ -8,4 +8,6 @@ export interface RuleDefinition {
   severity: Severity;
   when: Condition;
   then: Consequence;
+  locked?: boolean;
+  platform?: 'ios' | 'android' | 'frontend' | 'backend' | 'common';
 }
