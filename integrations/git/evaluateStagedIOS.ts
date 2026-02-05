@@ -9,6 +9,8 @@ import type { GateStage } from '../../core/gate/GateStage';
 import { evaluateGate } from '../../core/gate/evaluateGate';
 import { evaluateRules } from '../../core/gate/evaluateRules';
 import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
+import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
+import { loadProjectRules } from '../config/loadProjectRules';
 
 type ChangeFact = FileChangeFact & { source: string };
 type ContentFact = FileContentFact & { source: string };
@@ -113,7 +115,12 @@ export function evaluateStagedIOS(params?: {
     };
 
   const facts = createFacts(changes);
-  const findings = evaluateRules(iosEnterpriseRuleSet, facts);
+  const projectConfig = loadProjectRules();
+  const projectRules = projectConfig?.rules ?? [];
+  const mergedRules = mergeRuleSets(iosEnterpriseRuleSet, projectRules, {
+    allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
+  });
+  const findings = evaluateRules(mergedRules, facts);
   const decision = evaluateGate(findings, policy);
 
   return { outcome: decision.outcome, findings };
