@@ -7,6 +7,11 @@ export type Condition =
       };
     }
   | {
+      kind: 'FileContent';
+      contains?: ReadonlyArray<string>;
+      regex?: ReadonlyArray<string>;
+    }
+  | {
       kind: 'Dependency';
       where?: {
         from?: string;
