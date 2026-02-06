@@ -4,6 +4,7 @@
 
 - `rulesgold.mdc@1.0.0`
 - `rulesbackend.mdc@1.0.0`
+- `backendRuleSet@1.0.0`
 - Platform: `backend`
 
 ## Sources
@@ -11,6 +12,7 @@
 - `legacy/tooling/.cursor/rules/rulesgold.mdc`
 - `legacy/tooling/.cursor/rules/rulesbackend.mdc`
 - Fallback: `.windsurf` equivalents when present
+- `core/rules/presets/backendRuleSet.ts`
 
 ## Scope
 

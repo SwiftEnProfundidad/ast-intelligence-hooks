@@ -12,6 +12,7 @@ import { evaluateRules } from '../../core/gate/evaluateRules';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
 import { androidRuleSet } from '../../core/rules/presets/androidRuleSet';
+import { backendRuleSet } from '../../core/rules/presets/backendRuleSet';
 import { frontendRuleSet } from '../../core/rules/presets/frontendRuleSet';
 import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
@@ -213,21 +214,6 @@ const hashRulesetFile = (filePath: string | undefined): string => {
   return createHash('sha256').update(readFileSync(filePath, 'utf8')).digest('hex');
 };
 
-const resolveOptionalRuleSet = (modulePath: string, exportName: string): RuleSet => {
-  try {
-    const loaded: unknown = require(modulePath);
-    if (isRecord(loaded) && exportName in loaded) {
-      const maybeRuleSet = loaded[exportName];
-      if (Array.isArray(maybeRuleSet)) {
-        return maybeRuleSet as RuleSet;
-      }
-    }
-    return [];
-  } catch {
-    return [];
-  }
-};
-
 const toDetectedPlatformsRecord = (
   detected: ReturnType<typeof detectPlatformsFromFacts>
 ): Record<string, PlatformState> => {
@@ -249,10 +235,6 @@ const buildCombinedBaselineRules = (
     rules.push(...iosEnterpriseRuleSet);
   }
   if (detected.backend) {
-    const backendRuleSet = resolveOptionalRuleSet(
-      '../../core/rules/presets/backendRuleSet',
-      'backendRuleSet'
-    );
     rules.push(...backendRuleSet);
   }
   if (detected.frontend) {
@@ -281,6 +263,12 @@ const buildRulesetState = (params: {
   }
 
   if (params.detected.backend) {
+    states.push({
+      platform: 'backend',
+      bundle: `backendRuleSet@${rulePackVersions.backendRuleSet}`,
+      hash: createHash('sha256').update(stableStringify(backendRuleSet)).digest('hex'),
+    });
+
     const goldRulesetFile = resolveRulesetFile('rulesgold.mdc');
     const backendRulesetFile = resolveRulesetFile('rulesbackend.mdc');
     states.push({
