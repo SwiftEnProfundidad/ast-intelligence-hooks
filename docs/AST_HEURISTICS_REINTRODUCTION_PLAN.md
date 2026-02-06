@@ -59,9 +59,13 @@ Current pilot implemented:
 - `heuristics.ts.empty-catch.ast`
 - `heuristics.ts.explicit-any.ast`
 - `heuristics.ts.console-log.ast`
+- `heuristics.ios.force-unwrap.ast`
 - Scope: `apps/frontend/**` and `apps/web/**` TypeScript files (`.ts`, `.tsx`)
 - Scope exclusions: test paths (`__tests__`, `tests`, `*.spec.*`, `*.test.*`)
 - Detection: semantic AST parse of `catch {}` with empty block
 - Detection: semantic AST parse of explicit `any` type usage (TS/TSX)
 - Detection: semantic AST parse of `console.log(...)` invocation nodes
+- Scope: `apps/ios/**` Swift files (`.swift`)
+- Scope exclusions: iOS test paths (`/Tests/`, `/tests/`, `*Test.swift`, `*Tests.swift`)
+- Detection: token-aware scan for force unwrap operator usage (`value!`) outside comments/strings
 - Severity: `WARN`

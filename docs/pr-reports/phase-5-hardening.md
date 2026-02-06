@@ -37,7 +37,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)
   - `heuristics.ts.explicit-any.ast` (TS/TSX explicit `any` via AST parser)
   - `heuristics.ts.console-log.ast` (semantic detection of `console.log(...)` calls)
-  - Scope hardening: frontend/web files only, excluding test paths
+  - `heuristics.ios.force-unwrap.ast` (token-aware Swift force unwrap detection)
+  - Scope hardening: frontend/web and iOS production paths, excluding test paths
 - Type safety hardening:
   - `core/facts/DependencyFact.ts` now includes `source`
   - `integrations/git/evaluateStagedIOS.ts` handles readonly findings safely

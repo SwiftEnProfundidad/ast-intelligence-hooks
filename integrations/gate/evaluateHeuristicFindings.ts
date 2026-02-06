@@ -6,6 +6,7 @@ import type { Finding } from '../../core/gate/Finding';
 type HeuristicParams = {
   facts: ReadonlyArray<Fact>;
   detectedPlatforms: {
+    ios?: { detected: boolean };
     frontend?: { detected: boolean };
   };
 };
@@ -82,17 +83,15 @@ const hasConsoleLogCall = (node: unknown): boolean => {
   });
 };
 
-const isSemanticTargetPath = (path: string): boolean => {
-  const supportedExtension = path.endsWith('.ts') || path.endsWith('.tsx');
-  if (!supportedExtension) {
-    return false;
-  }
-
-  return path.startsWith('apps/frontend/') || path.startsWith('apps/web/');
+const isFrontendTargetPath = (path: string): boolean => {
+  return (
+    (path.endsWith('.ts') || path.endsWith('.tsx')) &&
+    (path.startsWith('apps/frontend/') || path.startsWith('apps/web/'))
+  );
 };
 
-const isTypeScriptPath = (path: string): boolean => {
-  return path.endsWith('.ts') || path.endsWith('.tsx');
+const isIOSSwiftPath = (path: string): boolean => {
+  return path.endsWith('.swift') && path.startsWith('apps/ios/');
 };
 
 const isTestPath = (path: string): boolean => {
@@ -110,6 +109,191 @@ const isTestPath = (path: string): boolean => {
   );
 };
 
+const isSwiftTestPath = (path: string): boolean => {
+  return (
+    path.includes('/Tests/') ||
+    path.includes('/tests/') ||
+    path.endsWith('Tests.swift') ||
+    path.endsWith('Test.swift')
+  );
+};
+
+const isIdentifierCharacter = (value: string): boolean => {
+  return /^[A-Za-z0-9_]$/.test(value);
+};
+
+const prevNonWhitespaceIndex = (source: string, start: number): number => {
+  for (let index = start; index >= 0; index -= 1) {
+    if (!/\s/.test(source[index])) {
+      return index;
+    }
+  }
+  return -1;
+};
+
+const nextNonWhitespaceIndex = (source: string, start: number): number => {
+  for (let index = start; index < source.length; index += 1) {
+    if (!/\s/.test(source[index])) {
+      return index;
+    }
+  }
+  return -1;
+};
+
+const readIdentifierBackward = (
+  source: string,
+  endIndex: number
+): { value: string; start: number } => {
+  if (!isIdentifierCharacter(source[endIndex])) {
+    return { value: '', start: -1 };
+  }
+
+  let start = endIndex;
+  while (start > 0 && isIdentifierCharacter(source[start - 1])) {
+    start -= 1;
+  }
+
+  return {
+    value: source.slice(start, endIndex + 1),
+    start,
+  };
+};
+
+const isLikelySwiftTypeAnnotation = (source: string, identifierStart: number): boolean => {
+  if (identifierStart <= 0) {
+    return false;
+  }
+
+  const before = prevNonWhitespaceIndex(source, identifierStart - 1);
+  return before >= 0 && source[before] === ':';
+};
+
+const isForceUnwrapAt = (source: string, index: number): boolean => {
+  const previousIndex = prevNonWhitespaceIndex(source, index - 1);
+  if (previousIndex < 0) {
+    return false;
+  }
+
+  const nextIndex = nextNonWhitespaceIndex(source, index + 1);
+  if (nextIndex >= 0 && (source[nextIndex] === '=' || source[nextIndex] === '!')) {
+    return false;
+  }
+
+  const previousChar = source[previousIndex];
+  const previousIdentifier = readIdentifierBackward(source, previousIndex);
+  if (previousIdentifier.value === 'as') {
+    return false;
+  }
+  if (
+    previousIdentifier.start >= 0 &&
+    isLikelySwiftTypeAnnotation(source, previousIdentifier.start)
+  ) {
+    return false;
+  }
+
+  const isPostfixToken =
+    isIdentifierCharacter(previousChar) ||
+    previousChar === ')' ||
+    previousChar === ']' ||
+    previousChar === '}';
+  if (!isPostfixToken) {
+    return false;
+  }
+
+  return true;
+};
+
+const hasSwiftForceUnwrap = (source: string): boolean => {
+  let index = 0;
+  let inLineComment = false;
+  let blockCommentDepth = 0;
+  let inString = false;
+  let inMultilineString = false;
+
+  while (index < source.length) {
+    const current = source[index];
+    const next = source[index + 1];
+    const nextTwo = source[index + 2];
+
+    if (inLineComment) {
+      if (current === '\n') {
+        inLineComment = false;
+      }
+      index += 1;
+      continue;
+    }
+
+    if (blockCommentDepth > 0) {
+      if (current === '/' && next === '*') {
+        blockCommentDepth += 1;
+        index += 2;
+        continue;
+      }
+      if (current === '*' && next === '/') {
+        blockCommentDepth -= 1;
+        index += 2;
+        continue;
+      }
+      index += 1;
+      continue;
+    }
+
+    if (inMultilineString) {
+      if (current === '"' && next === '"' && nextTwo === '"') {
+        inMultilineString = false;
+        index += 3;
+        continue;
+      }
+      index += 1;
+      continue;
+    }
+
+    if (inString) {
+      if (current === '\\') {
+        index += 2;
+        continue;
+      }
+      if (current === '"') {
+        inString = false;
+      }
+      index += 1;
+      continue;
+    }
+
+    if (current === '/' && next === '/') {
+      inLineComment = true;
+      index += 2;
+      continue;
+    }
+
+    if (current === '/' && next === '*') {
+      blockCommentDepth = 1;
+      index += 2;
+      continue;
+    }
+
+    if (current === '"' && next === '"' && nextTwo === '"') {
+      inMultilineString = true;
+      index += 3;
+      continue;
+    }
+
+    if (current === '"') {
+      inString = true;
+      index += 1;
+      continue;
+    }
+
+    if (current === '!' && isForceUnwrapAt(source, index)) {
+      return true;
+    }
+
+    index += 1;
+  }
+
+  return false;
+};
+
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   if (fact.kind !== 'FileContent') {
     return undefined;
@@ -117,12 +301,12 @@ const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   return fact;
 };
 
-const hasFrontend = (params: HeuristicParams): boolean => {
-  return Boolean(params.detectedPlatforms.frontend?.detected);
+const hasDetectedHeuristicPlatform = (params: HeuristicParams): boolean => {
+  return Boolean(params.detectedPlatforms.frontend?.detected || params.detectedPlatforms.ios?.detected);
 };
 
 export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] => {
-  if (!hasFrontend(params)) {
+  if (!hasDetectedHeuristicPlatform(params)) {
     return [];
   }
 
@@ -130,7 +314,30 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
 
   for (const fact of params.facts) {
     const fileFact = asFileContentFact(fact);
-    if (!fileFact || !isSemanticTargetPath(fileFact.path) || isTestPath(fileFact.path)) {
+    if (!fileFact) {
+      continue;
+    }
+
+    if (
+      params.detectedPlatforms.ios?.detected &&
+      isIOSSwiftPath(fileFact.path) &&
+      !isSwiftTestPath(fileFact.path) &&
+      hasSwiftForceUnwrap(fileFact.content)
+    ) {
+      findings.push({
+        ruleId: 'heuristics.ios.force-unwrap.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST',
+        message: 'AST heuristic detected force unwrap usage.',
+        filePath: fileFact.path,
+      });
+    }
+
+    if (
+      !params.detectedPlatforms.frontend?.detected ||
+      !isFrontendTargetPath(fileFact.path) ||
+      isTestPath(fileFact.path)
+    ) {
       continue;
     }
 
@@ -150,7 +357,7 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
         });
       }
 
-      if (isTypeScriptPath(fileFact.path) && hasExplicitAnyType(ast)) {
+      if (hasExplicitAnyType(ast)) {
         findings.push({
           ruleId: 'heuristics.ts.explicit-any.ast',
           severity: 'WARN',
