@@ -4,12 +4,15 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Finding } from '../../core/gate/Finding';
 import { evaluateGate } from '../../core/gate/evaluateGate';
+import { evaluateRules } from '../../core/gate/evaluateRules';
 import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
+import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
 import { buildEvidence } from '../evidence/buildEvidence';
+import { loadProjectRules } from '../config/loadProjectRules';
 import type { AiEvidenceV2_1 } from '../evidence/schema';
 import { writeEvidence } from '../evidence/writeEvidence';
 import { policyForPrePush } from '../gate/stagePolicies';
-import { evaluateStagedIOS } from './evaluateStagedIOS';
+import { getFactsForCommitRange } from './getCommitRangeFacts';
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
 
@@ -58,6 +61,16 @@ const resolveRepoRoot = (): string => {
   }
 };
 
+const resolveUpstream = (): string => {
+  try {
+    return execFileSync('git', ['rev-parse', '@{u}'], {
+      encoding: 'utf8',
+    }).trim();
+  } catch {
+    return 'HEAD';
+  }
+};
+
 const loadPreviousEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
   try {
     const evidencePath = join(repoRoot, EVIDENCE_FILE_NAME);
@@ -76,11 +89,19 @@ const loadPreviousEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
 
 export async function runPrePushIOS(): Promise<number> {
   const policy = policyForPrePush();
-  const { findings } = evaluateStagedIOS({
-    stage: policy.stage,
-    policy,
+  const upstream = resolveUpstream();
+  const facts = await getFactsForCommitRange({
+    fromRef: upstream,
+    toRef: 'HEAD',
+    extensions: ['.swift'],
   });
-  const decision = evaluateGate(findings, policy);
+  const projectConfig = loadProjectRules();
+  const projectRules = projectConfig?.rules ?? [];
+  const mergedRules = mergeRuleSets(iosEnterpriseRuleSet, projectRules, {
+    allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
+  });
+  const findings = evaluateRules(mergedRules, facts);
+  const decision = evaluateGate([...findings], policy);
 
   const evidence = buildEvidence({
     stage: policy.stage,
