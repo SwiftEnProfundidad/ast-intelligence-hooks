@@ -1,21 +1,26 @@
----
-# Architecture
+# Conceptual Architecture
 
-This repository follows a two-level architecture documentation model.
+This file is the conceptual entry point for the framework.
 
-## Source of Truth
-The authoritative and evolving architecture is documented in:
+## Core model
 
-- `docs/ARCH.md`
+Pumuki v2.x follows a deterministic governance pipeline:
 
-This document defines:
-- Legacy vs Enterprise core separation
-- Core responsibilities
-- Integration boundaries
+1. `Facts` extraction from Git scope (staged or commit range)
+2. Declarative `Rules` evaluation (baseline + project overrides)
+3. `Gate` decision by stage policy (`PRE_COMMIT`, `PRE_PUSH`, `CI`)
+4. Deterministic `ai_evidence v2.1` write (`snapshot` + `ledger`)
 
-## Purpose of this file
-This file exists as a stable, high-level entry point for readers and tooling.
-It must not duplicate or diverge from `docs/ARCH.md`.
+## Layer boundaries
 
-Always consult `docs/ARCH.md` for implementation and design decisions.
----
+- `core/*`: pure domain and rule evaluation (no IO)
+- `integrations/*`: adapters for Git, config loading, evidence persistence, CI hooks
+- `scripts/*` and workflows: operational entrypoints on top of integrations
+
+## Canonical contract
+
+The authoritative architecture contract lives in:
+
+- `docs/ARCHITECTURE.md`
+
+Use this file for high-level orientation and `docs/ARCHITECTURE.md` for normative details, invariants, and control primitives.

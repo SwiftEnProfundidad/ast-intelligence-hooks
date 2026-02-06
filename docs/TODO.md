@@ -12,20 +12,14 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Make `docs/ARCHITECTURE.md` more normative by adding invariants + control primitives.
 - Add `human_intent` to `ai_evidence v2.1` and mirror it in `ai_gate` output.
 - Enforce `human_intent.expires_at` (ignore stale intent deterministically).
+- Add README section for manual hook-system usage (interactive + `AUDIT_OPTION` + command mapping).
+- Convert root `ARCHITECTURE.md` into conceptual architecture linked to `docs/ARCHITECTURE.md`.
 
 ## In Progress
 
 - Standardize visuals in `docs/images/` to consistent, resolution-independent assets.
 
 ## Next
-
-### Documentation
-
-- Add README section explaining manual hook-system usage:
-  - interactive menu
-  - non-interactive usage via `AUDIT_OPTION`
-  - how `npx ast-hooks` maps to those flows
-- Convert root `ARCHITECTURE.md` into **Conceptual Architecture** and link to `docs/ARCHITECTURE.md` as the contract.
 
 ### Design Constraints
 

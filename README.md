@@ -66,6 +66,24 @@ For the deterministic v2.x gate flow menu:
 npm run framework:menu
 ```
 
+### Manual hook-system usage
+
+Use the hook-system directly when you need explicit control over the audit mode.
+
+```bash
+# Interactive menu (9 options)
+bash legacy/scripts/hooks-system/presentation/cli/audit.sh
+
+# Non-interactive execution by option
+AUDIT_OPTION=3 bash legacy/scripts/hooks-system/presentation/cli/audit.sh  # strict staging only
+AUDIT_OPTION=7 bash legacy/scripts/hooks-system/presentation/cli/audit.sh  # AST intelligence
+```
+
+Command mapping:
+
+- `npx ast-hooks` (when installed from npm) -> wrapper for the interactive hook-system menu.
+- `AUDIT_OPTION=<n> .../presentation/cli/audit.sh` -> deterministic non-interactive mode.
+
 Documentation:
 
 - `docs/USAGE.md` (Interactive Menu, non‑interactive `AUDIT_OPTION`, and typical flows)
