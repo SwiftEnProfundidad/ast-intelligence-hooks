@@ -6,7 +6,6 @@ import type { Finding } from '../../core/gate/Finding';
 type HeuristicParams = {
   facts: ReadonlyArray<Fact>;
   detectedPlatforms: {
-    backend?: { detected: boolean };
     frontend?: { detected: boolean };
   };
 };
@@ -69,11 +68,26 @@ const isSemanticTargetPath = (path: string): boolean => {
     return false;
   }
 
-  return path.startsWith('apps/backend/') || path.startsWith('apps/frontend/') || path.startsWith('apps/web/');
+  return path.startsWith('apps/frontend/') || path.startsWith('apps/web/');
 };
 
 const isTypeScriptPath = (path: string): boolean => {
   return path.endsWith('.ts') || path.endsWith('.tsx');
+};
+
+const isTestPath = (path: string): boolean => {
+  return (
+    path.includes('/__tests__/') ||
+    path.includes('/tests/') ||
+    path.endsWith('.spec.ts') ||
+    path.endsWith('.spec.tsx') ||
+    path.endsWith('.test.ts') ||
+    path.endsWith('.test.tsx') ||
+    path.endsWith('.spec.js') ||
+    path.endsWith('.spec.jsx') ||
+    path.endsWith('.test.js') ||
+    path.endsWith('.test.jsx')
+  );
 };
 
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
@@ -83,12 +97,12 @@ const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   return fact;
 };
 
-const hasBackendOrFrontend = (params: HeuristicParams): boolean => {
-  return Boolean(params.detectedPlatforms.backend?.detected || params.detectedPlatforms.frontend?.detected);
+const hasFrontend = (params: HeuristicParams): boolean => {
+  return Boolean(params.detectedPlatforms.frontend?.detected);
 };
 
 export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] => {
-  if (!hasBackendOrFrontend(params)) {
+  if (!hasFrontend(params)) {
     return [];
   }
 
@@ -96,7 +110,7 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
 
   for (const fact of params.facts) {
     const fileFact = asFileContentFact(fact);
-    if (!fileFact || !isSemanticTargetPath(fileFact.path)) {
+    if (!fileFact || !isSemanticTargetPath(fileFact.path) || isTestPath(fileFact.path)) {
       continue;
     }
 
