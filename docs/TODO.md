@@ -10,6 +10,8 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add Git governance section documenting `ast:gitflow` and `ast:release` with options and flow.
 - Add Developer Experience section (notifications + evidence freshness + git-tree guardrails).
 - Make `docs/ARCHITECTURE.md` more normative by adding invariants + control primitives.
+- Add `human_intent` to `ai_evidence v2.1` and mirror it in `ai_gate` output.
+- Enforce `human_intent.expires_at` (ignore stale intent deterministically).
 
 ## In Progress
 
@@ -25,16 +27,9 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
   - how `npx ast-hooks` maps to those flows
 - Convert root `ARCHITECTURE.md` into **Conceptual Architecture** and link to `docs/ARCHITECTURE.md` as the contract.
 
-### Framework Features
-
-- Add `human_intent` to both:
-  - `.AI_EVIDENCE.json` (source of truth)
-  - AI Gate output/state (must not drift)
-
 ### Design Constraints
 
 - Avoid drift: define a single canonical writer and a deterministic merge strategy.
-- Ensure `expires_at` is enforced (ignore stale intent).
 
 ## Notes
 

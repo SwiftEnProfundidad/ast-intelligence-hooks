@@ -17,8 +17,12 @@
   - active detected platforms with confidence (`HIGH` | `MEDIUM` | `LOW`)
 - `rulesets[]`:
   - loaded bundles with versioned name and hash
+- `human_intent`:
+  - preserved user goal state (or `null` when missing/expired)
+  - `expires_at` is enforced deterministically (expired intent is ignored)
 - `ai_gate`:
   - compatibility status and violation list
+  - mirrors `human_intent` to avoid state drift
 - `severity_metrics`:
   - gate status + totals by severity
 

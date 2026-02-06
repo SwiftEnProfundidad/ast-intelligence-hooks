@@ -38,6 +38,22 @@ export type RulesetState = {
   hash: string;
 };
 
+export type HumanIntentConfidence = 'high' | 'medium' | 'low' | 'unset';
+
+export type HumanIntentState = {
+  primary_goal: string | null;
+  secondary_goals: string[];
+  non_goals: string[];
+  constraints: string[];
+  confidence_level: HumanIntentConfidence;
+  set_by: string | null;
+  set_at: string | null;
+  expires_at: string | null;
+  preserved_at: string;
+  preservation_count: number;
+  _hint?: string;
+};
+
 export type CompatibilityViolation = {
   ruleId: string;
   level: Severity;
@@ -54,9 +70,11 @@ export type AiEvidenceV2_1 = {
   ledger: LedgerEntry[];
   platforms: Record<string, PlatformState>;
   rulesets: RulesetState[];
+  human_intent: HumanIntentState | null;
   ai_gate: {
     status: 'ALLOWED' | 'BLOCKED';
     violations: CompatibilityViolation[];
+    human_intent: HumanIntentState | null;
   };
   severity_metrics: {
     gate_status: 'ALLOWED' | 'BLOCKED';
