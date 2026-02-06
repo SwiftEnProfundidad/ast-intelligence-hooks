@@ -1,0 +1,31 @@
+name: Pumuki iOS Gate
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  ios-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run iOS CI gate
+        run: node integrations/git/ciIOS.cli.js
+
+      - name: Upload ai_evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-evidence
+          path: .ai_evidence.json

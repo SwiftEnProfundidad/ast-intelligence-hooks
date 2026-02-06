@@ -15,3 +15,11 @@ export const policyForPrePush = (): GatePolicy => {
     warnOnOrAbove: 'WARN',
   };
 };
+
+export const policyForCI = (): GatePolicy => {
+  return {
+    stage: 'CI',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+};
