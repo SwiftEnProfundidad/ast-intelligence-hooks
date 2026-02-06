@@ -1,10 +1,13 @@
 export { evaluateStagedIOS } from './evaluateStagedIOS';
+export { runCiAndroid } from './ciAndroid';
 export { runCiBackend } from './ciBackend';
 export { runCiFrontend } from './ciFrontend';
 export { runCiIOS } from './ciIOS';
+export { runPreCommitAndroid } from './preCommitAndroid';
 export { runPreCommitBackend } from './preCommitBackend';
 export { runPreCommitFrontend } from './preCommitFrontend';
 export { runPreCommitIOS } from './preCommitIOS';
+export { runPrePushAndroid } from './prePushAndroid';
 export { runPrePushBackend } from './prePushBackend';
 export { runPrePushFrontend } from './prePushFrontend';
 export { runPrePushIOS } from './prePushIOS';
