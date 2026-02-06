@@ -1,6 +1,7 @@
 import { parse } from '@babel/parser';
 import type { Fact } from '../../core/facts/Fact';
 import type { FileContentFact } from '../../core/facts/FileContentFact';
+import type { HeuristicFact } from '../../core/facts/HeuristicFact';
 import type { Finding } from '../../core/gate/Finding';
 
 type HeuristicParams = {
@@ -419,12 +420,44 @@ const hasDetectedHeuristicPlatform = (params: HeuristicParams): boolean => {
   );
 };
 
-export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] => {
+type HeuristicSignal = HeuristicFact & { source: string };
+
+const HEURISTIC_SOURCE = 'heuristics:ast';
+
+const toFinding = (fact: HeuristicSignal): Finding => {
+  return {
+    ruleId: fact.ruleId,
+    severity: fact.severity,
+    code: fact.code,
+    message: fact.message,
+    filePath: fact.filePath,
+  };
+};
+
+const createHeuristicFact = (params: {
+  ruleId: string;
+  code: string;
+  message: string;
+  filePath?: string;
+  severity?: HeuristicFact['severity'];
+}): HeuristicSignal => {
+  return {
+    kind: 'Heuristic',
+    source: HEURISTIC_SOURCE,
+    ruleId: params.ruleId,
+    severity: params.severity ?? 'WARN',
+    code: params.code,
+    message: params.message,
+    filePath: params.filePath,
+  };
+};
+
+export const extractHeuristicFacts = (params: HeuristicParams): ReadonlyArray<HeuristicSignal> => {
   if (!hasDetectedHeuristicPlatform(params)) {
     return [];
   }
 
-  const findings: Finding[] = [];
+  const heuristicFacts: HeuristicSignal[] = [];
 
   for (const fact of params.facts) {
     const fileFact = asFileContentFact(fact);
@@ -438,13 +471,14 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
       !isSwiftTestPath(fileFact.path) &&
       hasSwiftForceUnwrap(fileFact.content)
     ) {
-      findings.push({
-        ruleId: 'heuristics.ios.force-unwrap.ast',
-        severity: 'WARN',
-        code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST',
-        message: 'AST heuristic detected force unwrap usage.',
-        filePath: fileFact.path,
-      });
+      heuristicFacts.push(
+        createHeuristicFact({
+          ruleId: 'heuristics.ios.force-unwrap.ast',
+          code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST',
+          message: 'AST heuristic detected force unwrap usage.',
+          filePath: fileFact.path,
+        })
+      );
     }
 
     if (
@@ -453,13 +487,14 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
       !isSwiftTestPath(fileFact.path) &&
       hasSwiftAnyViewUsage(fileFact.content)
     ) {
-      findings.push({
-        ruleId: 'heuristics.ios.anyview.ast',
-        severity: 'WARN',
-        code: 'HEURISTICS_IOS_ANYVIEW_AST',
-        message: 'AST heuristic detected AnyView usage.',
-        filePath: fileFact.path,
-      });
+      heuristicFacts.push(
+        createHeuristicFact({
+          ruleId: 'heuristics.ios.anyview.ast',
+          code: 'HEURISTICS_IOS_ANYVIEW_AST',
+          message: 'AST heuristic detected AnyView usage.',
+          filePath: fileFact.path,
+        })
+      );
     }
 
     if (
@@ -469,13 +504,14 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
       !isApprovedIOSBridgePath(fileFact.path) &&
       hasSwiftCallbackStyleSignature(fileFact.content)
     ) {
-      findings.push({
-        ruleId: 'heuristics.ios.callback-style.ast',
-        severity: 'WARN',
-        code: 'HEURISTICS_IOS_CALLBACK_STYLE_AST',
-        message: 'AST heuristic detected callback-style API signature outside bridge layers.',
-        filePath: fileFact.path,
-      });
+      heuristicFacts.push(
+        createHeuristicFact({
+          ruleId: 'heuristics.ios.callback-style.ast',
+          code: 'HEURISTICS_IOS_CALLBACK_STYLE_AST',
+          message: 'AST heuristic detected callback-style API signature outside bridge layers.',
+          filePath: fileFact.path,
+        })
+      );
     }
 
     if (
@@ -484,13 +520,14 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
       !isKotlinTestPath(fileFact.path) &&
       hasKotlinThreadSleepCall(fileFact.content)
     ) {
-      findings.push({
-        ruleId: 'heuristics.android.thread-sleep.ast',
-        severity: 'WARN',
-        code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST',
-        message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.',
-        filePath: fileFact.path,
-      });
+      heuristicFacts.push(
+        createHeuristicFact({
+          ruleId: 'heuristics.android.thread-sleep.ast',
+          code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST',
+          message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.',
+          filePath: fileFact.path,
+        })
+      );
     }
 
     if (
@@ -499,13 +536,14 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
       !isKotlinTestPath(fileFact.path) &&
       hasKotlinGlobalScopeUsage(fileFact.content)
     ) {
-      findings.push({
-        ruleId: 'heuristics.android.globalscope.ast',
-        severity: 'WARN',
-        code: 'HEURISTICS_ANDROID_GLOBAL_SCOPE_AST',
-        message: 'AST heuristic detected GlobalScope coroutine usage in production Kotlin code.',
-        filePath: fileFact.path,
-      });
+      heuristicFacts.push(
+        createHeuristicFact({
+          ruleId: 'heuristics.android.globalscope.ast',
+          code: 'HEURISTICS_ANDROID_GLOBAL_SCOPE_AST',
+          message: 'AST heuristic detected GlobalScope coroutine usage in production Kotlin code.',
+          filePath: fileFact.path,
+        })
+      );
     }
 
     if (
@@ -514,13 +552,14 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
       !isKotlinTestPath(fileFact.path) &&
       hasKotlinRunBlockingUsage(fileFact.content)
     ) {
-      findings.push({
-        ruleId: 'heuristics.android.run-blocking.ast',
-        severity: 'WARN',
-        code: 'HEURISTICS_ANDROID_RUN_BLOCKING_AST',
-        message: 'AST heuristic detected runBlocking usage in production Kotlin code.',
-        filePath: fileFact.path,
-      });
+      heuristicFacts.push(
+        createHeuristicFact({
+          ruleId: 'heuristics.android.run-blocking.ast',
+          code: 'HEURISTICS_ANDROID_RUN_BLOCKING_AST',
+          message: 'AST heuristic detected runBlocking usage in production Kotlin code.',
+          filePath: fileFact.path,
+        })
+      );
     }
 
     if (
@@ -538,38 +577,52 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
       });
 
       if (hasEmptyCatchClause(ast)) {
-        findings.push({
-          ruleId: 'heuristics.ts.empty-catch.ast',
-          severity: 'WARN',
-          code: 'HEURISTICS_EMPTY_CATCH_AST',
-          message: 'AST heuristic detected an empty catch block.',
-          filePath: fileFact.path,
-        });
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.empty-catch.ast',
+            code: 'HEURISTICS_EMPTY_CATCH_AST',
+            message: 'AST heuristic detected an empty catch block.',
+            filePath: fileFact.path,
+          })
+        );
       }
 
       if (hasExplicitAnyType(ast)) {
-        findings.push({
-          ruleId: 'heuristics.ts.explicit-any.ast',
-          severity: 'WARN',
-          code: 'HEURISTICS_EXPLICIT_ANY_AST',
-          message: 'AST heuristic detected explicit any usage.',
-          filePath: fileFact.path,
-        });
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.explicit-any.ast',
+            code: 'HEURISTICS_EXPLICIT_ANY_AST',
+            message: 'AST heuristic detected explicit any usage.',
+            filePath: fileFact.path,
+          })
+        );
       }
 
       if (hasConsoleLogCall(ast)) {
-        findings.push({
-          ruleId: 'heuristics.ts.console-log.ast',
-          severity: 'WARN',
-          code: 'HEURISTICS_CONSOLE_LOG_AST',
-          message: 'AST heuristic detected console.log usage.',
-          filePath: fileFact.path,
-        });
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.console-log.ast',
+            code: 'HEURISTICS_CONSOLE_LOG_AST',
+            message: 'AST heuristic detected console.log usage.',
+            filePath: fileFact.path,
+          })
+        );
       }
     } catch {
       continue;
     }
   }
 
-  return findings;
+  return heuristicFacts;
+};
+
+export const evaluateHeuristicFindings = (params: HeuristicParams): ReadonlyArray<Finding> => {
+  const heuristicFacts = extractHeuristicFacts(params);
+  return heuristicFactsToFindings(heuristicFacts);
+};
+
+export const heuristicFactsToFindings = (
+  heuristicFacts: ReadonlyArray<HeuristicSignal>
+): ReadonlyArray<Finding> => {
+  return heuristicFacts.map((fact) => toFinding(fact));
 };

@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Fact } from '../../../core/facts/Fact';
-import { evaluateHeuristicFindings } from '../evaluateHeuristicFindings';
+import {
+  evaluateHeuristicFindings,
+  extractHeuristicFacts,
+  heuristicFactsToFindings,
+} from '../evaluateHeuristicFindings';
 
 const fileContentFact = (path: string, content: string): Fact => {
   return {
@@ -111,4 +115,27 @@ test('returns empty findings when no heuristic platform is detected', () => {
   });
 
   assert.equal(findings.length, 0);
+});
+
+test('extracts typed heuristic facts and maps them to findings', () => {
+  const params = {
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/feature/file.ts',
+        'const value: any = 1; try { work(); } catch {} console.log(value);'
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  } as const;
+
+  const heuristicFacts = extractHeuristicFacts(params);
+  assert.equal(heuristicFacts.length, 3);
+  assert.equal(heuristicFacts.every((fact) => fact.kind === 'Heuristic'), true);
+  assert.equal(heuristicFacts.every((fact) => fact.source === 'heuristics:ast'), true);
+
+  const fromFacts = heuristicFactsToFindings(heuristicFacts);
+  const fromEvaluator = evaluateHeuristicFindings(params);
+  assert.deepEqual(toRuleIds(fromFacts), toRuleIds(fromEvaluator));
 });

@@ -21,7 +21,10 @@ import { loadProjectRules } from '../config/loadProjectRules';
 import { buildEvidence } from '../evidence/buildEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
 import { writeEvidence } from '../evidence/writeEvidence';
-import { evaluateHeuristicFindings } from '../gate/evaluateHeuristicFindings';
+import {
+  extractHeuristicFacts,
+  heuristicFactsToFindings,
+} from '../gate/evaluateHeuristicFindings';
 import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
 
@@ -350,12 +353,13 @@ export async function runPlatformGate(params: {
     allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
   });
   const baselineFindings = evaluateRules(mergedRules, facts);
-  const heuristicFindings = heuristicsConfig.astSemanticEnabled
-    ? evaluateHeuristicFindings({
+  const heuristicFacts = heuristicsConfig.astSemanticEnabled
+    ? extractHeuristicFacts({
         facts,
         detectedPlatforms,
       })
     : [];
+  const heuristicFindings = heuristicFactsToFindings(heuristicFacts);
   const findings = [...baselineFindings, ...heuristicFindings];
   const decision = evaluateGate([...findings], params.policy);
 
