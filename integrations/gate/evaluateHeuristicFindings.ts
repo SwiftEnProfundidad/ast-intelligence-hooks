@@ -94,6 +94,15 @@ const isIOSSwiftPath = (path: string): boolean => {
   return path.endsWith('.swift') && path.startsWith('apps/ios/');
 };
 
+const isApprovedIOSBridgePath = (path: string): boolean => {
+  const normalized = path.toLowerCase();
+  return (
+    normalized.includes('/bridge/') ||
+    normalized.includes('/bridges/') ||
+    normalized.endsWith('bridge.swift')
+  );
+};
+
 const isTestPath = (path: string): boolean => {
   return (
     path.includes('/__tests__/') ||
@@ -325,6 +334,24 @@ const hasSwiftAnyViewUsage = (source: string): boolean => {
   });
 };
 
+const hasSwiftCallbackStyleSignature = (source: string): boolean => {
+  return scanSwiftSource(source, ({ source: swiftSource, index, current }) => {
+    if (current !== '@' || !swiftSource.startsWith('@escaping', index)) {
+      return false;
+    }
+
+    const segmentStart = Math.max(0, index - 180);
+    const segmentEnd = Math.min(swiftSource.length, index + 260);
+    const segment = swiftSource.slice(segmentStart, segmentEnd);
+
+    return (
+      /\b(?:completion|handler|callback)\s*:\s*(?:@[A-Za-z0-9_]+\s+)?@escaping\b/.test(
+        segment
+      ) || /\bfunc\b[\s\S]{0,180}@escaping[\s\S]{0,120}->\s*Void\b/.test(segment)
+    );
+  });
+};
+
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   if (fact.kind !== 'FileContent') {
     return undefined;
@@ -375,6 +402,22 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
         severity: 'WARN',
         code: 'HEURISTICS_IOS_ANYVIEW_AST',
         message: 'AST heuristic detected AnyView usage.',
+        filePath: fileFact.path,
+      });
+    }
+
+    if (
+      params.detectedPlatforms.ios?.detected &&
+      isIOSSwiftPath(fileFact.path) &&
+      !isSwiftTestPath(fileFact.path) &&
+      !isApprovedIOSBridgePath(fileFact.path) &&
+      hasSwiftCallbackStyleSignature(fileFact.content)
+    ) {
+      findings.push({
+        ruleId: 'heuristics.ios.callback-style.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_IOS_CALLBACK_STYLE_AST',
+        message: 'AST heuristic detected callback-style API signature outside bridge layers.',
         filePath: fileFact.path,
       });
     }
