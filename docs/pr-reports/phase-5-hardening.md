@@ -42,6 +42,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `heuristics.ios.callback-style.ast` (token-aware `@escaping` callback signature detection outside bridge layers)
   - `heuristics.android.thread-sleep.ast` (token-aware Kotlin `Thread.sleep(...)` detection in production paths)
   - `heuristics.android.globalscope.ast` (token-aware Kotlin `GlobalScope.launch/async/...` detection in production paths)
+  - `heuristics.android.run-blocking.ast` (token-aware Kotlin `runBlocking(...)` detection in production paths)
   - Scope hardening: frontend/web, iOS, and Android production paths, excluding test paths
 - Type safety hardening:
   - `core/facts/DependencyFact.ts` now includes `source`

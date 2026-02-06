@@ -392,6 +392,18 @@ const hasKotlinGlobalScopeUsage = (source: string): boolean => {
   });
 };
 
+const hasKotlinRunBlockingUsage = (source: string): boolean => {
+  return scanCodeLikeSource(source, ({ source: kotlinSource, index, current }) => {
+    if (current !== 'r' || !hasIdentifierAt(kotlinSource, index, 'runBlocking')) {
+      return false;
+    }
+
+    const start = index + 'runBlocking'.length;
+    const tail = kotlinSource.slice(start, start + 48);
+    return /^\s*(<[^>\n]+>\s*)?(\(|\{)/.test(tail);
+  });
+};
+
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   if (fact.kind !== 'FileContent') {
     return undefined;
@@ -492,6 +504,21 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
         severity: 'WARN',
         code: 'HEURISTICS_ANDROID_GLOBAL_SCOPE_AST',
         message: 'AST heuristic detected GlobalScope coroutine usage in production Kotlin code.',
+        filePath: fileFact.path,
+      });
+    }
+
+    if (
+      params.detectedPlatforms.android?.detected &&
+      isAndroidKotlinPath(fileFact.path) &&
+      !isKotlinTestPath(fileFact.path) &&
+      hasKotlinRunBlockingUsage(fileFact.content)
+    ) {
+      findings.push({
+        ruleId: 'heuristics.android.run-blocking.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_ANDROID_RUN_BLOCKING_AST',
+        message: 'AST heuristic detected runBlocking usage in production Kotlin code.',
         filePath: fileFact.path,
       });
     }
