@@ -60,6 +60,12 @@ The framework includes an interactive audit menu that drives the orchestrator (f
 npx ast-hooks
 ```
 
+For the deterministic v2.x gate flow menu:
+
+```bash
+npm run framework:menu
+```
+
 Documentation:
 
 - `docs/USAGE.md` (Interactive Menu, non‑interactive `AUDIT_OPTION`, and typical flows)

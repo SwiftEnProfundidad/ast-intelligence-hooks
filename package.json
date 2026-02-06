@@ -51,7 +51,8 @@
     "ast:guard:restart": "bash scripts/hooks-system/bin/evidence-guard restart",
     "ast:guard:status": "bash scripts/hooks-system/bin/evidence-guard status",
     "ast:guard:logs": "bash scripts/hooks-system/bin/evidence-guard logs",
-    "ast:check-version": "node scripts/hooks-system/bin/check-version.js"
+    "ast:check-version": "node scripts/hooks-system/bin/check-version.js",
+    "framework:menu": "npx tsx scripts/framework-menu.ts"
   },
   "keywords": [
     "ast",
