@@ -1,5 +1,4 @@
+import { runCliCommand } from './runCliCommand';
 import { runCiIOS } from './ciIOS';
 
-void runCiIOS().then((code) => {
-  process.exit(code);
-});
+runCliCommand(runCiIOS);

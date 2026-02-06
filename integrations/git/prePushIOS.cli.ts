@@ -1,5 +1,4 @@
+import { runCliCommand } from './runCliCommand';
 import { runPrePushIOS } from './prePushIOS';
 
-void runPrePushIOS().then((code) => {
-  process.exit(code);
-});
+runCliCommand(runPrePushIOS);

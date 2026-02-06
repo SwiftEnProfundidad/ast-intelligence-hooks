@@ -1,5 +1,4 @@
+import { runCliCommand } from './runCliCommand';
 import { runPreCommitIOS } from './preCommitIOS';
 
-void runPreCommitIOS().then((code) => {
-  process.exit(code);
-});
+runCliCommand(runPreCommitIOS);

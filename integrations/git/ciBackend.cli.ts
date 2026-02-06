@@ -1,5 +1,4 @@
+import { runCliCommand } from './runCliCommand';
 import { runCiBackend } from './ciBackend';
 
-void runCiBackend().then((code) => {
-  process.exit(code);
-});
+runCliCommand(runCiBackend);

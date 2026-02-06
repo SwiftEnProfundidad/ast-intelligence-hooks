@@ -1,5 +1,4 @@
+import { runCliCommand } from './runCliCommand';
 import { runPrePushFrontend } from './prePushFrontend';
 
-void runPrePushFrontend().then((code) => {
-  process.exit(code);
-});
+runCliCommand(runPrePushFrontend);
