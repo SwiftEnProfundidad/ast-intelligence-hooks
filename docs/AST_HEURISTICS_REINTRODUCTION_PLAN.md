@@ -41,3 +41,11 @@ Do not enable new semantic extractors until:
 1. Add Facts behind feature flag (default off).
 2. Add rules consuming those Facts with `WARN` severity first.
 3. Promote selected rules to `ERROR`/`CRITICAL` after project validation window.
+
+## Feature flag
+
+- Flag: `PUMUKI_ENABLE_AST_HEURISTICS`
+- Values that enable: `1`, `true`, `yes`, `on`
+- Default: disabled
+
+When enabled, the gate records `ast-semantic-pilot@0.1.0` in evidence `rulesets[]`.

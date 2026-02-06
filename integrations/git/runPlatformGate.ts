@@ -16,6 +16,7 @@ import { backendRuleSet } from '../../core/rules/presets/backendRuleSet';
 import { frontendRuleSet } from '../../core/rules/presets/frontendRuleSet';
 import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
+import { loadHeuristicsConfig } from '../config/heuristics';
 import { loadProjectRules } from '../config/loadProjectRules';
 import { buildEvidence } from '../evidence/buildEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
@@ -249,6 +250,7 @@ const buildCombinedBaselineRules = (
 const buildRulesetState = (params: {
   detected: ReturnType<typeof detectPlatformsFromFacts>;
   projectRules: RuleSet;
+  heuristicsEnabled: boolean;
 }): RulesetState[] => {
   const states: RulesetState[] = [];
 
@@ -309,6 +311,14 @@ const buildRulesetState = (params: {
     });
   }
 
+  if (params.heuristicsEnabled) {
+    states.push({
+      platform: 'heuristics',
+      bundle: 'ast-semantic-pilot@0.1.0',
+      hash: createHash('sha256').update('PUMUKI_ENABLE_AST_HEURISTICS=true').digest('hex'),
+    });
+  }
+
   return states;
 };
 
@@ -327,6 +337,7 @@ export async function runPlatformGate(params: {
         });
 
   const detectedPlatforms = detectPlatformsFromFacts(facts);
+  const heuristicsConfig = loadHeuristicsConfig();
   const baselineRules = buildCombinedBaselineRules(detectedPlatforms);
   const projectConfig = loadProjectRules();
   const projectRules = projectConfig?.rules ?? [];
@@ -344,6 +355,7 @@ export async function runPlatformGate(params: {
     loadedRulesets: buildRulesetState({
       detected: detectedPlatforms,
       projectRules,
+      heuristicsEnabled: heuristicsConfig.astSemanticEnabled,
     }),
   });
   writeEvidence(evidence);
