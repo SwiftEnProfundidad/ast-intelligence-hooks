@@ -98,15 +98,15 @@ Documentation:
 
 ## Visual Overview
 
-![AST Intelligence System Overview](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_01.svg)
+![AST Intelligence System Overview](docs/images/ast_intelligence_01.svg)
 
-![AST Intelligence Workflow](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_02.svg)
+![AST Intelligence Workflow](docs/images/ast_intelligence_02.svg)
 
-![AST Intelligence Audit - Part 1](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_03.svg)
+![AST Intelligence Audit - Part 1](docs/images/ast_intelligence_03.svg)
 
-![AST Intelligence Audit - Part 2](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_04.svg)
+![AST Intelligence Audit - Part 2](docs/images/ast_intelligence_04.svg)
 
-![AST Intelligence Audit - Part 3](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_05.svg)
+![AST Intelligence Audit - Part 3](docs/images/ast_intelligence_05.svg)
 
 ---
 
