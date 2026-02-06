@@ -52,7 +52,7 @@ MCP Servers use **JSON-RPC 2.0** over stdin/stdout to communicate with agentic I
 
 ### Description
 
-Monitors the status of `.AI_EVIDENCE.json` and allows AI to verify if the evidence is up to date (fresh) or outdated (stale).
+Monitors the status of `.ai_evidence.json` and allows AI to verify if the evidence is up to date (fresh) or outdated (stale).
 
 ### Purpose
 
@@ -62,7 +62,7 @@ Monitors the status of `.AI_EVIDENCE.json` and allows AI to verify if the eviden
 
 #### `evidence://status`
 
-Current status of `.AI_EVIDENCE.json`:
+Current status of `.ai_evidence.json`:
 
 **Format:**
 ```json
@@ -81,7 +81,7 @@ Current status of `.AI_EVIDENCE.json`:
 **States:**
 - `fresh`: Evidence up to date (< 180 seconds)
 - `stale`: Evidence outdated (≥ 180 seconds)
-- `missing`: `.AI_EVIDENCE.json` file doesn't exist
+- `missing`: `.ai_evidence.json` file doesn't exist
 - `error`: Error reading or parsing the file
 
 **Staleness Threshold:**
@@ -92,7 +92,7 @@ Current status of `.AI_EVIDENCE.json`:
 
 #### `check_evidence_status`
 
-Checks if `.AI_EVIDENCE.json` is stale.
+Checks if `.ai_evidence.json` is stale.
 
 **Input:**
 ```json
@@ -176,7 +176,7 @@ Comprehensive development automation MCP server that provides: evidence manageme
 
 #### `evidence://status`
 
-Status of `.AI_EVIDENCE.json` (same as evidence-watcher).
+Status of `.ai_evidence.json` (same as evidence-watcher).
 
 **Format:** See [evidence-watcher - Resources](#evidence-status)
 
@@ -220,7 +220,7 @@ Active project context detected automatically.
 
 #### `check_evidence_status`
 
-Checks if `.AI_EVIDENCE.json` is stale (same as evidence-watcher).
+Checks if `.ai_evidence.json` is stale (same as evidence-watcher).
 
 **Input:**
 ```json
@@ -370,7 +370,7 @@ Analyzes context and automatically executes `ai-start` if it detects modified co
 2. Calculates confidence based on percentage of code files
 3. If confidence ≥ 30% (or `forceAnalysis: true`):
    - Executes `ai-start {currentBranch}`
-   - Updates `.AI_EVIDENCE.json`
+   - Updates `.ai_evidence.json`
    - Sends macOS notification with sound
 4. If confidence < 30%: Does nothing
 
@@ -763,7 +763,7 @@ Sound: Basso
 **Symptom:** `check_evidence_status` always returns `isStale: true`.
 
 **Solution:**
-1. Verify `.AI_EVIDENCE.json` exists in project root
+1. Verify `.ai_evidence.json` exists in project root
 2. Verify file has a valid `timestamp` field
 3. Run `ai-start {branch}` to update evidence
 4. Verify file read permissions

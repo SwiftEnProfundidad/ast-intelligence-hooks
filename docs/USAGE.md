@@ -26,7 +26,7 @@ npx ast-install
 
 **For AI/Agentic IDE users (Recommended):**
 
-Use `ai-commit` to automatically update `.AI_EVIDENCE.json` before committing:
+Use `ai-commit` to automatically update `.ai_evidence.json` before committing:
 
 ```bash
 # Create a test file
@@ -64,7 +64,7 @@ Done! You now have AST Intelligence working in your project.
 
 ### Evidence Guard (auto-refresh)
 
-The Evidence Guard daemon refreshes `.AI_EVIDENCE.json` periodically (default: every 180s).
+The Evidence Guard daemon refreshes `.ai_evidence.json` periodically (default: every 180s).
 
 Notes:
 - The refresh updates evidence and records the current quality gate status.
@@ -270,11 +270,11 @@ GIT_BYPASS_HOOK=1 git commit -m "emergency fix"
 
 ### AI Commit Command
 
-The library provides an `ai-commit` command that **must be used** by agentic IDEs (Cursor, Claude Desktop, Windsurf) when making commits. This ensures `.AI_EVIDENCE.json` is properly updated before the commit.
+The library provides an `ai-commit` command that **must be used** by agentic IDEs (Cursor, Claude Desktop, Windsurf) when making commits. This ensures `.ai_evidence.json` is properly updated before the commit.
 
 **Why use `ai-commit`?**
 
-- ✅ Automatically updates `.AI_EVIDENCE.json` timestamp if stale (>2 minutes)
+- ✅ Automatically updates `.ai_evidence.json` timestamp if stale (>2 minutes)
 - ✅ Ensures evidence freshness (required by pre-commit hook validation)
 - ✅ Creates minimal evidence file if missing
 - ✅ Prevents commit failures due to stale evidence
@@ -294,9 +294,9 @@ npx ai-commit -m "docs: update README" --author="John Doe <john@example.com>"
 
 **How it works:**
 
-1. **Checks evidence freshness**: If `.AI_EVIDENCE.json` timestamp is older than 2 minutes, updates it
+1. **Checks evidence freshness**: If `.ai_evidence.json` timestamp is older than 2 minutes, updates it
 2. **Updates timestamp**: Sets timestamp to current UTC time
-3. **Stages evidence file**: Automatically adds `.AI_EVIDENCE.json` to staging
+3. **Stages evidence file**: Automatically adds `.ai_evidence.json` to staging
 4. **Executes commit**: Runs `git commit` with all provided arguments
 
 **When to use:**
@@ -322,7 +322,7 @@ npx ai-commit -m "feat: add user validation logic"
 
 # Output:
 # 🤖 AI-COMMIT: Preparando commit...
-# ✅ AI_EVIDENCE updated: 2025-12-14T12:34:56.000Z
+# ✅ .ai_evidence.json updated: 2025-12-14T12:34:56.000Z
 # 🚀 Executing commit...
 # ✅ AI-COMMIT completed
 ```

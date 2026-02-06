@@ -50,7 +50,7 @@ Located in `bin/` directory:
 
 - `run-ast-adapter.js`: AST analysis adapter for pre-commit hooks
 - `violations-api.js`: Query interface for violations data
-- `update-evidence.sh`: Updates .AI_EVIDENCE.json with metrics
+- `update-evidence.sh`: Updates .ai_evidence.json with metrics
 - `ai-commit.sh`: Intelligent commit wrapper
 - `pumuki-audit.js`: Global audit runner
 

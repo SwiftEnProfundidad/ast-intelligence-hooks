@@ -175,7 +175,7 @@ module.exports = {
 - Global locations: `~/.cursor/rules/`, `~/Library/Application Support/Cursor/User/rules/`
 - Other IDE project caches
 
-Rules are used by `ai-start` when generating `.AI_EVIDENCE.json` to provide context to AI assistants. See [Usage Guide - Adding Your Own IDE Rules](../docs/USAGE.md#adding-your-own-ide-rules-mdc-files) for details.
+Rules are used by `ai-start` when generating `.ai_evidence.json` to provide context to AI assistants. See [Usage Guide - Adding Your Own IDE Rules](../docs/USAGE.md#adding-your-own-ide-rules-mdc-files) for details.
 
 **MCP Configuration (`.cursor/mcp.json`):**
 
@@ -328,7 +328,7 @@ Check your `package.json` for these scripts:
 
 **`evidence://status`**
 
-- Status of `.AI_EVIDENCE.json` file
+- Status of `.ai_evidence.json` file
 - Returns: `fresh`, `stale`, `missing`, or `error`
 - Age in seconds, timestamp, current branch
 - Cursor uses this to know if project context is up-to-date
@@ -349,7 +349,7 @@ Check your `package.json` for these scripts:
 
 **`check_evidence_status`**
 
-- Checks if `.AI_EVIDENCE.json` is stale
+- Checks if `.ai_evidence.json` is stale
 - Cursor calls this to verify evidence freshness
 
 **`ai_gate_check` ⚠️ MANDATORY**
@@ -381,7 +381,7 @@ Check your `package.json` for these scripts:
 
 - Analyzes context and executes `ai-start` if needed
 - Detects if code files were modified (≥30% confidence)
-- Updates `.AI_EVIDENCE.json` automatically
+- Updates `.ai_evidence.json` automatically
 - Cursor can call this to update evidence when changes are detected
 
 ---
@@ -541,7 +541,7 @@ MCP analyzes changes (85% confidence - code files modified)
    ↓
 MCP executes: ai-start develop
    ↓
-Evidence updated (.AI_EVIDENCE.json refreshed)
+Evidence updated (.ai_evidence.json refreshed)
    ↓
 Cursor continues with task
    ↓
@@ -746,10 +746,10 @@ chmod +x .git/hooks/pre-commit
 
 ### Problem: Evidence always stale
 
-**Check 1:** Verify `.AI_EVIDENCE.json` exists
+**Check 1:** Verify `.ai_evidence.json` exists
 
 ```bash
-ls -la .AI_EVIDENCE.json
+ls -la .ai_evidence.json
 ```
 
 **Check 2:** Update evidence manually
@@ -761,7 +761,7 @@ npm run ai-start develop
 **Check 3:** Check file permissions
 
 ```bash
-chmod 644 .AI_EVIDENCE.json
+chmod 644 .ai_evidence.json
 ```
 
 ---

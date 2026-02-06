@@ -88,7 +88,7 @@ sequenceDiagram
     participant Domain as Domain Entities
     participant Repo as Findings Repository
     participant Report as Report Generator
-    participant Evidence as .AI_EVIDENCE.json
+    participant Evidence as .ai_evidence.json
 
     Dev->>Git: git commit
     Git->>PreCommit: Execute pre-commit hook
@@ -108,7 +108,7 @@ sequenceDiagram
         UseCase->>Git: exit code 1
     else Warnings only
         Domain->>UseCase: Allow commit
-        UseCase->>Evidence: Update .AI_EVIDENCE.json
+        UseCase->>Evidence: Update .ai_evidence.json
         UseCase->>Git: exit code 0
     end
 ```
@@ -409,7 +409,7 @@ sequenceDiagram
     participant Platform as PlatformDetectionService
     participant AST as AST Analyzers
     participant Domain as Domain Rules
-    participant Evidence as .AI_EVIDENCE.json
+    participant Evidence as .ai_evidence.json
 
     Hook->>CLI: Execute analysis
     CLI->>UseCase: AnalyzeStagedFilesUseCase.execute()
@@ -434,7 +434,7 @@ flowchart LR
     Format --> Output[Output Report]
     Output --> File[.audit-reports/]
     Output --> Console[stdout]
-    Output --> Evidence[.AI_EVIDENCE.json]
+    Output --> Evidence[.ai_evidence.json]
 ```
 
 ---
@@ -469,7 +469,7 @@ flowchart LR
 
 ### 5. Evidence-based AI Context
 
-**Decision**: `.AI_EVIDENCE.json` as source of truth for AI context.
+**Decision**: `.ai_evidence.json` as source of truth for AI context.
 
 **Reason**: Allows AI to understand project state without analyzing all code on each request.
 

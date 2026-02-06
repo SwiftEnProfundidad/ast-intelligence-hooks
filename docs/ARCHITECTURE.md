@@ -17,7 +17,7 @@
 These invariants are non-negotiable. If any of them is violated, the framework is considered misconfigured.
 
 - **Evidence is the source of truth**
-  `.AI_EVIDENCE.json` is the authoritative state for AI-assisted work. The framework treats chat history as untrusted.
+  `.ai_evidence.json` is the authoritative state for AI-assisted work. The framework treats chat history as untrusted.
 
 - **Evidence freshness is mandatory**
   Actions that rely on evidence must validate freshness (SLA) and surface stale conditions explicitly.
@@ -37,7 +37,7 @@ These invariants are non-negotiable. If any of them is violated, the framework i
 
 Pumuki is a governance framework built around two primitives:
 
-### 1) AI Evidence (`.AI_EVIDENCE.json`)
+### 1) AI Evidence (`.ai_evidence.json`)
 
 Responsibilities:
 
@@ -186,7 +186,7 @@ flowchart LR
 2. **Severity Evaluation**: Apply intelligent severity evaluation
 3. **Gate Policies**: Apply quality gates (CRITICAL/HIGH block)
 4. **Reporting**: Generate detailed reports and metrics
-5. **Evidence Update**: Update .AI_EVIDENCE.json with results
+5. **Evidence Update**: Update .ai_evidence.json with results
 
 ### Integration Points
 

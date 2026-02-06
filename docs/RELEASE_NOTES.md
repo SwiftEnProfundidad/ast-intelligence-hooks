@@ -409,7 +409,7 @@ This release restores the comprehensive session context report on IDE startup an
 ### Enhanced Session Loader Output
 - Displays current branch with color coding
 - Shows last 3 commits with one-line format
-- Reads session context from `.AI_EVIDENCE.json`
+- Reads session context from `.ai_evidence.json`
 - Shows violations summary from `ast-summary.json` with severity breakdown (CRITICAL/HIGH/MEDIUM/LOW)
 - Displays evidence freshness with correct age calculation
 - Added quick commands section for common actions

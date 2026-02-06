@@ -156,7 +156,7 @@ Operational reliability is not achieved with prompts. It is achieved with:
 
 ### 3.1 Evidence over conversation
 
-Decisions are made based on a persistent evidence file (`.AI_EVIDENCE.json`), not chat memory.
+Decisions are made based on a persistent evidence file (`.ai_evidence.json`), not chat memory.
 
 ### 3.2 Gated intelligence
 
@@ -192,9 +192,9 @@ This principle is part of the framework contract and is surfaced to agents via:
 
 ## 4. Architecture and mental model
 
-### 4.1 AI Evidence File (`.AI_EVIDENCE.json`)
+### 4.1 AI Evidence File (`.ai_evidence.json`)
 
-`.AI_EVIDENCE.json` is the persistent source of truth. It represents the governance state and enables reproducible decisions.
+`.ai_evidence.json` is the persistent source of truth. It represents the governance state and enables reproducible decisions.
 
 It includes:
 
