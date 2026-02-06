@@ -121,7 +121,7 @@ export function evaluateStagedIOS(params?: {
     allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
   });
   const findings = evaluateRules(mergedRules, facts);
-  const decision = evaluateGate(findings, policy);
+  const decision = evaluateGate([...findings], policy);
 
-  return { outcome: decision.outcome, findings };
+  return { outcome: decision.outcome, findings: [...findings] };
 }
