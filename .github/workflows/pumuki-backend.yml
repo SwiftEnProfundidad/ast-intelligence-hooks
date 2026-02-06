@@ -1,0 +1,31 @@
+name: Pumuki Backend Gate
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  backend-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Backend CI gate
+        run: node integrations/git/ciBackend.cli.js
+
+      - name: Upload backend ai_evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai-evidence-backend
+          path: .ai_evidence.json

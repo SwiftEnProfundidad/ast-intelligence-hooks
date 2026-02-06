@@ -1,4 +1,5 @@
 export { evaluateStagedIOS } from './evaluateStagedIOS';
+export { runCiBackend } from './ciBackend';
 export { runCiIOS } from './ciIOS';
 export { runPreCommitBackend } from './preCommitBackend';
 export { runPreCommitIOS } from './preCommitIOS';
