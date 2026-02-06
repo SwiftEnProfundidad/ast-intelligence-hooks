@@ -47,6 +47,7 @@ type StagedChange = {
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
 const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts'];
+const AST_SEMANTIC_PILOT_BUNDLE = 'ast-semantic-pilot@0.2.0';
 
 const runGit = (args: ReadonlyArray<string>): string => {
   return execFileSync('git', args, { encoding: 'utf8' });
@@ -315,8 +316,11 @@ const buildRulesetState = (params: {
   if (params.heuristicsEnabled) {
     states.push({
       platform: 'heuristics',
-      bundle: 'ast-semantic-pilot@0.1.0',
-      hash: createHash('sha256').update('PUMUKI_ENABLE_AST_HEURISTICS=true').digest('hex'),
+      bundle: AST_SEMANTIC_PILOT_BUNDLE,
+      hash: createHash('sha256')
+        .update('PUMUKI_ENABLE_AST_HEURISTICS=true')
+        .update(AST_SEMANTIC_PILOT_BUNDLE)
+        .digest('hex'),
     });
   }
 

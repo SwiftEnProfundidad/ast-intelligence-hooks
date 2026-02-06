@@ -32,6 +32,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Heuristics pilot flag:
   - `integrations/config/heuristics.ts`
   - `PUMUKI_ENABLE_AST_HEURISTICS`
+  - Evidence bundle version: `ast-semantic-pilot@0.2.0`
 - Pilot heuristic implementation:
   - `integrations/gate/evaluateHeuristicFindings.ts`
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)

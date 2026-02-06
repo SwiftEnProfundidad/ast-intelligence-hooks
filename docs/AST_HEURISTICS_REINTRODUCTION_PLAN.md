@@ -48,7 +48,7 @@ Do not enable new semantic extractors until:
 - Values that enable: `1`, `true`, `yes`, `on`
 - Default: disabled
 
-When enabled, the gate records `ast-semantic-pilot@0.1.0` in evidence `rulesets[]`.
+When enabled, the gate records `ast-semantic-pilot@0.2.0` in evidence `rulesets[]`.
 
 For GitHub Actions gates using the reusable workflow template:
 
