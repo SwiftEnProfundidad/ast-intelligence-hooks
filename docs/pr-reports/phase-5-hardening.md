@@ -21,6 +21,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `903c4d0` feat(evidence): add human intent state with deterministic expiry enforcement
 - `3fa5d04` refactor(evidence): centralize human intent normalization and expiry logic
 - `67b5417` docs(evidence): unify references to .ai_evidence.json
+- `254849c` refactor(heuristics): evaluate typed heuristic facts through rule packs
 - `2d25f94` fix(types): align dependency fact source and gate readonly handling
 - `71dadb6` chore(tsconfig): exclude nested test files from production typecheck
 
@@ -43,8 +44,9 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Heuristics pilot flag:
   - `integrations/config/heuristics.ts`
   - `PUMUKI_ENABLE_AST_HEURISTICS`
-  - Evidence bundle version: `ast-semantic-pilot@0.2.0`
+  - Evidence bundle version: `astHeuristicsRuleSet@0.2.0`
 - Pilot heuristic implementation:
+  - `core/rules/presets/astHeuristicsRuleSet.ts`
   - `integrations/gate/evaluateHeuristicFindings.ts`
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)
   - `heuristics.ts.explicit-any.ast` (TS/TSX explicit `any` via AST parser)
@@ -64,6 +66,6 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 ## Validation status
 
 - `npx tsc --noEmit` now passes for production sources included in tsconfig.
-- `npm run test:heuristics` passes (5/5) for cross-platform AST pilot cases.
+- `npm run test:heuristics` passes (7/7) for cross-platform AST pilot cases.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - Stage gates and CI workflows keep existing behavior by default.
