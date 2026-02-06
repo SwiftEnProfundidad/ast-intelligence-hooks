@@ -68,6 +68,7 @@ Documentation:
 - `docs/evidence-v2.1.md` (deterministic snapshot + ledger schema)
 - `docs/rule-packs/README.md` (Rule Pack versions, hashes, overrides)
 - `docs/MCP_EVIDENCE_CONTEXT_SERVER.md` (read-only API for agents)
+- `docs/AST_HEURISTICS_REINTRODUCTION_PLAN.md` (post-validation semantic AST plan)
 
 ---
 
