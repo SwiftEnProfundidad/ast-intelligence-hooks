@@ -58,8 +58,10 @@ Current pilot implemented:
 
 - `heuristics.ts.empty-catch.ast`
 - `heuristics.ts.explicit-any.ast`
+- `heuristics.ts.console-log.ast`
 - Scope: `apps/frontend/**` and `apps/web/**` TypeScript files (`.ts`, `.tsx`)
 - Scope exclusions: test paths (`__tests__`, `tests`, `*.spec.*`, `*.test.*`)
 - Detection: semantic AST parse of `catch {}` with empty block
 - Detection: semantic AST parse of explicit `any` type usage (TS/TSX)
+- Detection: semantic AST parse of `console.log(...)` invocation nodes
 - Severity: `WARN`

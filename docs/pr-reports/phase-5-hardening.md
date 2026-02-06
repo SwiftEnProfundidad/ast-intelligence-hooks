@@ -36,6 +36,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `integrations/gate/evaluateHeuristicFindings.ts`
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)
   - `heuristics.ts.explicit-any.ast` (TS/TSX explicit `any` via AST parser)
+  - `heuristics.ts.console-log.ast` (semantic detection of `console.log(...)` calls)
   - Scope hardening: frontend/web files only, excluding test paths
 - Type safety hardening:
   - `core/facts/DependencyFact.ts` now includes `source`

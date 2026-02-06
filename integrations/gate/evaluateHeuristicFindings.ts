@@ -58,12 +58,32 @@ const hasExplicitAnyType = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'TSAnyKeyword');
 };
 
+const hasConsoleLogCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'console' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'log'
+    );
+  });
+};
+
 const isSemanticTargetPath = (path: string): boolean => {
-  const supportedExtension =
-    path.endsWith('.ts') ||
-    path.endsWith('.tsx') ||
-    path.endsWith('.js') ||
-    path.endsWith('.jsx');
+  const supportedExtension = path.endsWith('.ts') || path.endsWith('.tsx');
   if (!supportedExtension) {
     return false;
   }
@@ -136,6 +156,16 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
           severity: 'WARN',
           code: 'HEURISTICS_EXPLICIT_ANY_AST',
           message: 'AST heuristic detected explicit any usage.',
+          filePath: fileFact.path,
+        });
+      }
+
+      if (hasConsoleLogCall(ast)) {
+        findings.push({
+          ruleId: 'heuristics.ts.console-log.ast',
+          severity: 'WARN',
+          code: 'HEURISTICS_CONSOLE_LOG_AST',
+          message: 'AST heuristic detected console.log usage.',
           filePath: fileFact.path,
         });
       }
