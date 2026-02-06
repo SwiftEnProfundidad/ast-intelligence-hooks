@@ -53,3 +53,10 @@ When enabled, the gate records `ast-semantic-pilot@0.1.0` in evidence `rulesets[
 For GitHub Actions gates using the reusable workflow template:
 
 - Input: `enable_ast_heuristics: true`
+
+Current pilot implemented:
+
+- `heuristics.ts.empty-catch.ast`
+- Scope: `apps/backend/**` and `apps/frontend/**` TS/JS files
+- Detection: semantic AST parse of `catch {}` with empty block
+- Severity: `WARN`
