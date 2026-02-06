@@ -16,6 +16,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `18b151a` feat(heuristics): add AST empty-catch pilot behind feature flag
 - `7207567` feat(heuristics): add explicit-any AST pilot check
 - `a4ae585` fix(heuristics): scope AST pilot to frontend and skip test files
+- `0985570` test(heuristics): add cross-platform AST pilot coverage
+- `8620ed7` ci(heuristics): add dedicated AST pilot test workflow
 - `2d25f94` fix(types): align dependency fact source and gate readonly handling
 - `71dadb6` chore(tsconfig): exclude nested test files from production typecheck
 
@@ -29,6 +31,9 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `core/rules/presets/backendRuleSet.ts`
 - Reusable gate workflow:
   - `.github/workflows/pumuki-gate-template.yml`
+- Heuristics test workflow:
+  - `.github/workflows/pumuki-heuristics-tests.yml`
+  - `package.json` script: `test:heuristics`
 - Heuristics pilot flag:
   - `integrations/config/heuristics.ts`
   - `PUMUKI_ENABLE_AST_HEURISTICS`
@@ -53,4 +58,5 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 ## Validation status
 
 - `npx tsc --noEmit` now passes for production sources included in tsconfig.
+- `npm run test:heuristics` passes (5/5) for cross-platform AST pilot cases.
 - Stage gates and CI workflows keep existing behavior by default.
