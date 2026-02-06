@@ -14,6 +14,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `d8f1220` chore(heuristics): add feature flag wiring for semantic pilot
 - `3ef5f42` chore(ci): support AST heuristics flag in reusable gate workflow
 - `18b151a` feat(heuristics): add AST empty-catch pilot behind feature flag
+- `7207567` feat(heuristics): add explicit-any AST pilot check
 - `2d25f94` fix(types): align dependency fact source and gate readonly handling
 - `71dadb6` chore(tsconfig): exclude nested test files from production typecheck
 
@@ -33,6 +34,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Pilot heuristic implementation:
   - `integrations/gate/evaluateHeuristicFindings.ts`
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)
+  - `heuristics.ts.explicit-any.ast` (TS/TSX explicit `any` via AST parser)
 - Type safety hardening:
   - `core/facts/DependencyFact.ts` now includes `source`
   - `integrations/git/evaluateStagedIOS.ts` handles readonly findings safely
