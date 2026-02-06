@@ -6,26 +6,8 @@ on:
 
 jobs:
   frontend-gate:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node LTS
-        uses: actions/setup-node@v4
-        with:
-          node-version: lts/*
-          cache: npm
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run Frontend CI gate
-        run: npx tsx integrations/git/ciFrontend.ts
-
-      - name: Upload frontend ai_evidence artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ai-evidence-frontend
-          path: .ai_evidence.json
+    uses: ./.github/workflows/pumuki-gate-template.yml
+    with:
+      gate_name: Frontend Gate
+      runner_path: integrations/git/ciFrontend.ts
+      artifact_name: ai-evidence-frontend

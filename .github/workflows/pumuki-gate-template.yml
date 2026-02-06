@@ -1,0 +1,44 @@
+name: Pumuki Gate Template
+
+on:
+  workflow_call:
+    inputs:
+      gate_name:
+        description: Human-readable gate name.
+        required: true
+        type: string
+      runner_path:
+        description: TypeScript runner path to execute with tsx.
+        required: true
+        type: string
+      artifact_name:
+        description: Artifact name for generated .ai_evidence.json.
+        required: true
+        type: string
+
+jobs:
+  gate:
+    name: ${{ inputs.gate_name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run gate runner
+        run: npx tsx ${{ inputs.runner_path }}
+
+      - name: Upload ai_evidence artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: .ai_evidence.json
