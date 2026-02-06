@@ -14,6 +14,7 @@ import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
 import { androidRuleSet } from '../../core/rules/presets/androidRuleSet';
 import { frontendRuleSet } from '../../core/rules/presets/frontendRuleSet';
 import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
+import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import { loadProjectRules } from '../config/loadProjectRules';
 import { buildEvidence } from '../evidence/buildEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
@@ -272,7 +273,7 @@ const buildRulesetState = (params: {
   if (params.detected.ios) {
     states.push({
       platform: 'ios',
-      bundle: 'iosEnterpriseRuleSet',
+      bundle: `iosEnterpriseRuleSet@${rulePackVersions.iosEnterpriseRuleSet}`,
       hash: createHash('sha256')
         .update(stableStringify(iosEnterpriseRuleSet))
         .digest('hex'),
@@ -284,12 +285,12 @@ const buildRulesetState = (params: {
     const backendRulesetFile = resolveRulesetFile('rulesbackend.mdc');
     states.push({
       platform: 'gold',
-      bundle: 'rulesgold.mdc',
+      bundle: `rulesgold.mdc@${rulePackVersions.rulesgold}`,
       hash: hashRulesetFile(goldRulesetFile),
     });
     states.push({
       platform: 'backend',
-      bundle: 'rulesbackend.mdc',
+      bundle: `rulesbackend.mdc@${rulePackVersions.rulesbackend}`,
       hash: hashRulesetFile(backendRulesetFile),
     });
   }
@@ -297,7 +298,7 @@ const buildRulesetState = (params: {
   if (params.detected.frontend) {
     states.push({
       platform: 'frontend',
-      bundle: 'frontendRuleSet',
+      bundle: `frontendRuleSet@${rulePackVersions.frontendRuleSet}`,
       hash: createHash('sha256').update(stableStringify(frontendRuleSet)).digest('hex'),
     });
   }
@@ -305,7 +306,7 @@ const buildRulesetState = (params: {
   if (params.detected.android) {
     states.push({
       platform: 'android',
-      bundle: 'androidRuleSet',
+      bundle: `androidRuleSet@${rulePackVersions.androidRuleSet}`,
       hash: createHash('sha256').update(stableStringify(androidRuleSet)).digest('hex'),
     });
   }

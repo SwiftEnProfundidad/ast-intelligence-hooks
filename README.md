@@ -65,6 +65,8 @@ Documentation:
 - `docs/USAGE.md` (Interactive Menu, non‑interactive `AUDIT_OPTION`, and typical flows)
 - `CHANGELOG.md` (Release notes and changes)
 - `docs/RELEASE_NOTES.md` (Historical release notes)
+- `docs/evidence-v2.1.md` (deterministic snapshot + ledger schema)
+- `docs/rule-packs/README.md` (Rule Pack versions, hashes, overrides)
 
 ---
 
