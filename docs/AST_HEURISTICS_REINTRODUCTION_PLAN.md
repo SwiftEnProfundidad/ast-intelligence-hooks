@@ -63,6 +63,7 @@ Current pilot implemented:
 - `heuristics.ios.anyview.ast`
 - `heuristics.ios.callback-style.ast`
 - `heuristics.android.thread-sleep.ast`
+- `heuristics.android.globalscope.ast`
 - Scope: `apps/frontend/**` and `apps/web/**` TypeScript files (`.ts`, `.tsx`)
 - Scope exclusions: test paths (`__tests__`, `tests`, `*.spec.*`, `*.test.*`)
 - Detection: semantic AST parse of `catch {}` with empty block
@@ -77,4 +78,5 @@ Current pilot implemented:
 - Scope: `apps/android/**` Kotlin files (`.kt`, `.kts`)
 - Scope exclusions: Android test paths (`/test/`, `/androidTest/`, `*Test.kt`, `*Tests.kt`)
 - Detection: token-aware scan for `Thread.sleep(...)` usage in production Kotlin code
+- Detection: token-aware scan for `GlobalScope.launch/async/...` usage in production Kotlin code
 - Severity: `WARN`

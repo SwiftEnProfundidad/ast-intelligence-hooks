@@ -380,6 +380,18 @@ const hasKotlinThreadSleepCall = (source: string): boolean => {
   });
 };
 
+const hasKotlinGlobalScopeUsage = (source: string): boolean => {
+  return scanCodeLikeSource(source, ({ source: kotlinSource, index, current }) => {
+    if (current !== 'G' || !hasIdentifierAt(kotlinSource, index, 'GlobalScope')) {
+      return false;
+    }
+
+    const start = index + 'GlobalScope'.length;
+    const tail = kotlinSource.slice(start, start + 32);
+    return /^\s*\.(launch|async|produce|actor)\b/.test(tail);
+  });
+};
+
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   if (fact.kind !== 'FileContent') {
     return undefined;
@@ -465,6 +477,21 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
         severity: 'WARN',
         code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST',
         message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.',
+        filePath: fileFact.path,
+      });
+    }
+
+    if (
+      params.detectedPlatforms.android?.detected &&
+      isAndroidKotlinPath(fileFact.path) &&
+      !isKotlinTestPath(fileFact.path) &&
+      hasKotlinGlobalScopeUsage(fileFact.content)
+    ) {
+      findings.push({
+        ruleId: 'heuristics.android.globalscope.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_ANDROID_GLOBAL_SCOPE_AST',
+        message: 'AST heuristic detected GlobalScope coroutine usage in production Kotlin code.',
         filePath: fileFact.path,
       });
     }
