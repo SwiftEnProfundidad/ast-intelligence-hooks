@@ -11,6 +11,8 @@ import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { evaluateRules } from '../../core/gate/evaluateRules';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
+import { androidRuleSet } from '../../core/rules/presets/androidRuleSet';
+import { frontendRuleSet } from '../../core/rules/presets/frontendRuleSet';
 import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
 import { loadProjectRules } from '../config/loadProjectRules';
 import { buildEvidence } from '../evidence/buildEvidence';
@@ -40,7 +42,7 @@ type StagedChange = {
 };
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
-const DEFAULT_EXTENSIONS = ['.swift', '.ts'];
+const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts'];
 
 const runGit = (args: ReadonlyArray<string>): string => {
   return execFileSync('git', args, { encoding: 'utf8' });
@@ -253,17 +255,9 @@ const buildCombinedBaselineRules = (
     rules.push(...backendRuleSet);
   }
   if (detected.frontend) {
-    const frontendRuleSet = resolveOptionalRuleSet(
-      '../../core/rules/presets/frontendRuleSet',
-      'frontendRuleSet'
-    );
     rules.push(...frontendRuleSet);
   }
   if (detected.android) {
-    const androidRuleSet = resolveOptionalRuleSet(
-      '../../core/rules/presets/androidRuleSet',
-      'androidRuleSet'
-    );
     rules.push(...androidRuleSet);
   }
   return rules;
@@ -297,6 +291,22 @@ const buildRulesetState = (params: {
       platform: 'backend',
       bundle: 'rulesbackend.mdc',
       hash: hashRulesetFile(backendRulesetFile),
+    });
+  }
+
+  if (params.detected.frontend) {
+    states.push({
+      platform: 'frontend',
+      bundle: 'frontendRuleSet',
+      hash: createHash('sha256').update(stableStringify(frontendRuleSet)).digest('hex'),
+    });
+  }
+
+  if (params.detected.android) {
+    states.push({
+      platform: 'android',
+      bundle: 'androidRuleSet',
+      hash: createHash('sha256').update(stableStringify(androidRuleSet)).digest('hex'),
     });
   }
 

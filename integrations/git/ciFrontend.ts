@@ -26,7 +26,7 @@ const resolveBaseRef = (): string => {
   }
 };
 
-export async function runCiIOS(): Promise<number> {
+export async function runCiFrontend(): Promise<number> {
   return runPlatformGate({
     policy: policyForCI(),
     scope: {

@@ -1,6 +1,8 @@
 import type { Fact } from '../../core/facts/Fact';
 import type { PlatformState } from '../evidence/schema';
+import { detectAndroidFromFacts } from './detectAndroid';
 import { detectBackendFromFacts } from './detectBackend';
+import { detectFrontendFromFacts } from './detectFrontend';
 
 export type DetectedPlatforms = {
   ios?: PlatformState;
@@ -53,26 +55,13 @@ export const detectPlatformsFromFacts = (
     result.backend = backend;
   }
 
-  const frontend = detectPlatformByPath(
-    facts,
-    (path) =>
-      path.startsWith('apps/frontend/') &&
-      (path.endsWith('.ts') ||
-        path.endsWith('.tsx') ||
-        path.endsWith('.js') ||
-        path.endsWith('.jsx'))
-  );
-  if (frontend) {
+  const frontend = detectFrontendFromFacts(facts);
+  if (frontend.detected) {
     result.frontend = frontend;
   }
 
-  const android = detectPlatformByPath(
-    facts,
-    (path) =>
-      path.startsWith('apps/android/') &&
-      (path.endsWith('.kt') || path.endsWith('.kts'))
-  );
-  if (android) {
+  const android = detectAndroidFromFacts(facts);
+  if (android.detected) {
     result.android = android;
   }
 

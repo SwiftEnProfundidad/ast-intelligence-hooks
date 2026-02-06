@@ -12,7 +12,7 @@ const resolveUpstream = (): string => {
   }
 };
 
-export async function runPrePushBackend(): Promise<number> {
+export async function runPrePushFrontend(): Promise<number> {
   return runPlatformGate({
     policy: policyForPrePush(),
     scope: {

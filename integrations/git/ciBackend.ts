@@ -33,7 +33,6 @@ export async function runCiBackend(): Promise<number> {
       kind: 'range',
       fromRef: resolveBaseRef(),
       toRef: 'HEAD',
-      extensions: ['.swift', '.ts'],
     },
   });
 }

@@ -19,7 +19,6 @@ export async function runPrePushIOS(): Promise<number> {
       kind: 'range',
       fromRef: resolveUpstream(),
       toRef: 'HEAD',
-      extensions: ['.swift', '.ts'],
     },
   });
 }

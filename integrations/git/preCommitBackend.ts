@@ -6,7 +6,6 @@ export async function runPreCommitBackend(): Promise<number> {
     policy: policyForPreCommit(),
     scope: {
       kind: 'staged',
-      extensions: ['.swift', '.ts'],
     },
   });
 }

@@ -1,7 +1,10 @@
 export { evaluateStagedIOS } from './evaluateStagedIOS';
 export { runCiBackend } from './ciBackend';
+export { runCiFrontend } from './ciFrontend';
 export { runCiIOS } from './ciIOS';
 export { runPreCommitBackend } from './preCommitBackend';
+export { runPreCommitFrontend } from './preCommitFrontend';
 export { runPreCommitIOS } from './preCommitIOS';
 export { runPrePushBackend } from './prePushBackend';
+export { runPrePushFrontend } from './prePushFrontend';
 export { runPrePushIOS } from './prePushIOS';
