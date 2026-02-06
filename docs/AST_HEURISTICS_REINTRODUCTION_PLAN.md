@@ -49,3 +49,7 @@ Do not enable new semantic extractors until:
 - Default: disabled
 
 When enabled, the gate records `ast-semantic-pilot@0.1.0` in evidence `rulesets[]`.
+
+For GitHub Actions gates using the reusable workflow template:
+
+- Input: `enable_ast_heuristics: true`

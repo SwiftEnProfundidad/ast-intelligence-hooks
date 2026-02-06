@@ -15,11 +15,18 @@ on:
         description: Artifact name for generated .ai_evidence.json.
         required: true
         type: string
+      enable_ast_heuristics:
+        description: Enable semantic AST pilot heuristics for this gate run.
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   gate:
     name: ${{ inputs.gate_name }}
     runs-on: ubuntu-latest
+    env:
+      PUMUKI_ENABLE_AST_HEURISTICS: ${{ inputs.enable_ast_heuristics && 'true' || 'false' }}
 
     steps:
       - name: Checkout
