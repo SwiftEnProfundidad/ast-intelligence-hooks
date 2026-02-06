@@ -40,7 +40,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `heuristics.ios.force-unwrap.ast` (token-aware Swift force unwrap detection)
   - `heuristics.ios.anyview.ast` (token-aware Swift `AnyView` usage detection)
   - `heuristics.ios.callback-style.ast` (token-aware `@escaping` callback signature detection outside bridge layers)
-  - Scope hardening: frontend/web and iOS production paths, excluding test paths
+  - `heuristics.android.thread-sleep.ast` (token-aware Kotlin `Thread.sleep(...)` detection in production paths)
+  - Scope hardening: frontend/web, iOS, and Android production paths, excluding test paths
 - Type safety hardening:
   - `core/facts/DependencyFact.ts` now includes `source`
   - `integrations/git/evaluateStagedIOS.ts` handles readonly findings safely

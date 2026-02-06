@@ -62,6 +62,7 @@ Current pilot implemented:
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
 - `heuristics.ios.callback-style.ast`
+- `heuristics.android.thread-sleep.ast`
 - Scope: `apps/frontend/**` and `apps/web/**` TypeScript files (`.ts`, `.tsx`)
 - Scope exclusions: test paths (`__tests__`, `tests`, `*.spec.*`, `*.test.*`)
 - Detection: semantic AST parse of `catch {}` with empty block
@@ -73,4 +74,7 @@ Current pilot implemented:
 - Detection: token-aware scan for force unwrap operator usage (`value!`) outside comments/strings
 - Detection: token-aware scan for `AnyView` type erasure usage outside comments/strings
 - Detection: token-aware scan for callback-style signatures (`@escaping` + completion/handler) outside bridge layers
+- Scope: `apps/android/**` Kotlin files (`.kt`, `.kts`)
+- Scope exclusions: Android test paths (`/test/`, `/androidTest/`, `*Test.kt`, `*Tests.kt`)
+- Detection: token-aware scan for `Thread.sleep(...)` usage in production Kotlin code
 - Severity: `WARN`

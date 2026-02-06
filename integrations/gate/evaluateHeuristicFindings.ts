@@ -7,6 +7,7 @@ type HeuristicParams = {
   facts: ReadonlyArray<Fact>;
   detectedPlatforms: {
     ios?: { detected: boolean };
+    android?: { detected: boolean };
     frontend?: { detected: boolean };
   };
 };
@@ -94,6 +95,10 @@ const isIOSSwiftPath = (path: string): boolean => {
   return path.endsWith('.swift') && path.startsWith('apps/ios/');
 };
 
+const isAndroidKotlinPath = (path: string): boolean => {
+  return (path.endsWith('.kt') || path.endsWith('.kts')) && path.startsWith('apps/android/');
+};
+
 const isApprovedIOSBridgePath = (path: string): boolean => {
   const normalized = path.toLowerCase();
   return (
@@ -124,6 +129,16 @@ const isSwiftTestPath = (path: string): boolean => {
     path.includes('/tests/') ||
     path.endsWith('Tests.swift') ||
     path.endsWith('Test.swift')
+  );
+};
+
+const isKotlinTestPath = (path: string): boolean => {
+  const normalized = path.toLowerCase();
+  return (
+    normalized.includes('/test/') ||
+    normalized.includes('/androidtest/') ||
+    normalized.endsWith('test.kt') ||
+    normalized.endsWith('tests.kt')
   );
 };
 
@@ -224,7 +239,7 @@ const hasIdentifierAt = (source: string, index: number, identifier: string): boo
   return validBefore && validAfter;
 };
 
-const scanSwiftSource = (
+const scanCodeLikeSource = (
   source: string,
   matcher: (params: { source: string; index: number; current: string }) => boolean
 ): boolean => {
@@ -319,13 +334,13 @@ const scanSwiftSource = (
 };
 
 const hasSwiftForceUnwrap = (source: string): boolean => {
-  return scanSwiftSource(source, ({ source: swiftSource, index, current }) => {
+  return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     return current === '!' && isForceUnwrapAt(swiftSource, index);
   });
 };
 
 const hasSwiftAnyViewUsage = (source: string): boolean => {
-  return scanSwiftSource(source, ({ source: swiftSource, index, current }) => {
+  return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== 'A') {
       return false;
     }
@@ -335,7 +350,7 @@ const hasSwiftAnyViewUsage = (source: string): boolean => {
 };
 
 const hasSwiftCallbackStyleSignature = (source: string): boolean => {
-  return scanSwiftSource(source, ({ source: swiftSource, index, current }) => {
+  return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@escaping', index)) {
       return false;
     }
@@ -352,6 +367,19 @@ const hasSwiftCallbackStyleSignature = (source: string): boolean => {
   });
 };
 
+const hasKotlinThreadSleepCall = (source: string): boolean => {
+  return scanCodeLikeSource(source, ({ source: kotlinSource, index, current }) => {
+    if (current !== 'T') {
+      return false;
+    }
+
+    return (
+      hasIdentifierAt(kotlinSource, index, 'Thread') &&
+      kotlinSource.startsWith('.sleep', index + 'Thread'.length)
+    );
+  });
+};
+
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   if (fact.kind !== 'FileContent') {
     return undefined;
@@ -360,7 +388,11 @@ const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
 };
 
 const hasDetectedHeuristicPlatform = (params: HeuristicParams): boolean => {
-  return Boolean(params.detectedPlatforms.frontend?.detected || params.detectedPlatforms.ios?.detected);
+  return Boolean(
+    params.detectedPlatforms.frontend?.detected ||
+      params.detectedPlatforms.ios?.detected ||
+      params.detectedPlatforms.android?.detected
+  );
 };
 
 export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] => {
@@ -418,6 +450,21 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
         severity: 'WARN',
         code: 'HEURISTICS_IOS_CALLBACK_STYLE_AST',
         message: 'AST heuristic detected callback-style API signature outside bridge layers.',
+        filePath: fileFact.path,
+      });
+    }
+
+    if (
+      params.detectedPlatforms.android?.detected &&
+      isAndroidKotlinPath(fileFact.path) &&
+      !isKotlinTestPath(fileFact.path) &&
+      hasKotlinThreadSleepCall(fileFact.content)
+    ) {
+      findings.push({
+        ruleId: 'heuristics.android.thread-sleep.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST',
+        message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.',
         filePath: fileFact.path,
       });
     }
