@@ -21,7 +21,11 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `903c4d0` feat(evidence): add human intent state with deterministic expiry enforcement
 - `3fa5d04` refactor(evidence): centralize human intent normalization and expiry logic
 - `67b5417` docs(evidence): unify references to .ai_evidence.json
+- `573c65f` feat(ast): introduce typed heuristic facts in extraction flow
 - `254849c` refactor(heuristics): evaluate typed heuristic facts through rule packs
+- `7395c42` refactor(evidence): add canonical generateEvidence writer path
+- `04f9a01` docs(heuristics): document declarative AST rule pack and evidence bundle
+- `54c55a2` docs(architecture): add conceptual entrypoint and manual hook-system usage
 - `2d25f94` fix(types): align dependency fact source and gate readonly handling
 - `71dadb6` chore(tsconfig): exclude nested test files from production typecheck
 
@@ -46,8 +50,12 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `PUMUKI_ENABLE_AST_HEURISTICS`
   - Evidence bundle version: `astHeuristicsRuleSet@0.2.0`
 - Pilot heuristic implementation:
+  - `core/facts/HeuristicFact.ts`
+  - `core/rules/Condition.ts` (`kind: Heuristic`)
+  - `core/gate/conditionMatches.ts` (heuristic matcher)
   - `core/rules/presets/astHeuristicsRuleSet.ts`
   - `integrations/gate/evaluateHeuristicFindings.ts`
+  - `integrations/git/runPlatformGate.ts` (single evaluator path for baseline + heuristic rules)
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)
   - `heuristics.ts.explicit-any.ast` (TS/TSX explicit `any` via AST parser)
   - `heuristics.ts.console-log.ast` (semantic detection of `console.log(...)` calls)
@@ -62,6 +70,10 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `core/facts/DependencyFact.ts` now includes `source`
   - `integrations/git/evaluateStagedIOS.ts` handles readonly findings safely
   - `tsconfig.json` excludes nested test files from production compile target
+- Canonical evidence writer path:
+  - `integrations/evidence/generateEvidence.ts` as single build+write facade
+  - `integrations/evidence/buildEvidence.ts` deterministic snapshot + ledger merge
+  - `integrations/evidence/writeEvidence.ts` stable serialization and relative paths
 
 ## Validation status
 
