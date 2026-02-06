@@ -12,6 +12,7 @@ import { evaluateRules } from '../../core/gate/evaluateRules';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
 import { androidRuleSet } from '../../core/rules/presets/androidRuleSet';
+import { astHeuristicsRuleSet } from '../../core/rules/presets/astHeuristicsRuleSet';
 import { backendRuleSet } from '../../core/rules/presets/backendRuleSet';
 import { frontendRuleSet } from '../../core/rules/presets/frontendRuleSet';
 import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
@@ -21,10 +22,7 @@ import { loadProjectRules } from '../config/loadProjectRules';
 import { buildEvidence } from '../evidence/buildEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
 import { writeEvidence } from '../evidence/writeEvidence';
-import {
-  extractHeuristicFacts,
-  heuristicFactsToFindings,
-} from '../gate/evaluateHeuristicFindings';
+import { extractHeuristicFacts } from '../gate/evaluateHeuristicFindings';
 import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
 
@@ -50,8 +48,6 @@ type StagedChange = {
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
 const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts'];
-const AST_SEMANTIC_PILOT_BUNDLE = 'ast-semantic-pilot@0.2.0';
-
 const runGit = (args: ReadonlyArray<string>): string => {
   return execFileSync('git', args, { encoding: 'utf8' });
 };
@@ -319,10 +315,10 @@ const buildRulesetState = (params: {
   if (params.heuristicsEnabled) {
     states.push({
       platform: 'heuristics',
-      bundle: AST_SEMANTIC_PILOT_BUNDLE,
+      bundle: `astHeuristicsRuleSet@${rulePackVersions.astHeuristicsRuleSet}`,
       hash: createHash('sha256')
         .update('PUMUKI_ENABLE_AST_HEURISTICS=true')
-        .update(AST_SEMANTIC_PILOT_BUNDLE)
+        .update(stableStringify(astHeuristicsRuleSet))
         .digest('hex'),
     });
   }
@@ -347,20 +343,22 @@ export async function runPlatformGate(params: {
   const detectedPlatforms = detectPlatformsFromFacts(facts);
   const heuristicsConfig = loadHeuristicsConfig();
   const baselineRules = buildCombinedBaselineRules(detectedPlatforms);
-  const projectConfig = loadProjectRules();
-  const projectRules = projectConfig?.rules ?? [];
-  const mergedRules = mergeRuleSets(baselineRules, projectRules, {
-    allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
-  });
-  const baselineFindings = evaluateRules(mergedRules, facts);
   const heuristicFacts = heuristicsConfig.astSemanticEnabled
     ? extractHeuristicFacts({
         facts,
         detectedPlatforms,
       })
     : [];
-  const heuristicFindings = heuristicFactsToFindings(heuristicFacts);
-  const findings = [...baselineFindings, ...heuristicFindings];
+  const evaluationFacts: ReadonlyArray<Fact> =
+    heuristicFacts.length > 0 ? [...facts, ...heuristicFacts] : facts;
+  const heuristicRules = heuristicsConfig.astSemanticEnabled ? astHeuristicsRuleSet : [];
+  const baselineRulesWithHeuristics: RuleSet = [...baselineRules, ...heuristicRules];
+  const projectConfig = loadProjectRules();
+  const projectRules = projectConfig?.rules ?? [];
+  const mergedRules = mergeRuleSets(baselineRulesWithHeuristics, projectRules, {
+    allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
+  });
+  const findings = evaluateRules(mergedRules, evaluationFacts);
   const decision = evaluateGate([...findings], params.policy);
 
   const evidence = buildEvidence({

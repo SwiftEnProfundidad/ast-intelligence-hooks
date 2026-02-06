@@ -1,4 +1,5 @@
 export const rulePackVersions = {
+  astHeuristicsRuleSet: '0.2.0',
   iosEnterpriseRuleSet: '1.0.0',
   backendRuleSet: '1.0.0',
   frontendRuleSet: '1.0.0',

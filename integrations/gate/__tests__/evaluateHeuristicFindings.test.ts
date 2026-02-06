@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { Fact } from '../../../core/facts/Fact';
+import { evaluateRules } from '../../../core/gate/evaluateRules';
+import { astHeuristicsRuleSet } from '../../../core/rules/presets/astHeuristicsRuleSet';
 import {
   evaluateHeuristicFindings,
   extractHeuristicFacts,
@@ -138,4 +140,26 @@ test('extracts typed heuristic facts and maps them to findings', () => {
   const fromFacts = heuristicFactsToFindings(heuristicFacts);
   const fromEvaluator = evaluateHeuristicFindings(params);
   assert.deepEqual(toRuleIds(fromFacts), toRuleIds(fromEvaluator));
+});
+
+test('evaluates extracted heuristic facts through declarative rule set', () => {
+  const params = {
+    facts: [
+      fileContentFact(
+        'apps/android/app/src/main/java/com/acme/Feature.kt',
+        ['Thread.sleep(10)', 'GlobalScope.launch { }', 'runBlocking { }'].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      android: { detected: true },
+    },
+  } as const;
+
+  const heuristicFacts = extractHeuristicFacts(params);
+  const findings = evaluateRules(astHeuristicsRuleSet, heuristicFacts);
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.android.globalscope.ast',
+    'heuristics.android.run-blocking.ast',
+    'heuristics.android.thread-sleep.ast',
+  ]);
 });

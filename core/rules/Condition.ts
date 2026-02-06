@@ -7,6 +7,14 @@ export type Condition =
       };
     }
   | {
+      kind: 'Heuristic';
+      where?: {
+        ruleId?: string;
+        code?: string;
+        filePathPrefix?: string;
+      };
+    }
+  | {
       kind: 'FileContent';
       contains?: ReadonlyArray<string>;
       regex?: ReadonlyArray<string>;

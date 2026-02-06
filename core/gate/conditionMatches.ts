@@ -23,6 +23,9 @@ const isFileContentFact = (fact: FactInput): fact is FileContentFact =>
 const isDependencyFact = (fact: FactInput): fact is DependencyFact =>
   fact.kind === 'Dependency';
 
+const isHeuristicFact = (fact: FactInput): fact is Extract<Fact, { kind: 'Heuristic' }> =>
+  fact.kind === 'Heuristic';
+
 const extractPrefix = (pattern: string): string => {
   const wildcardIndex = pattern.indexOf('*');
   return wildcardIndex === -1 ? pattern : pattern.slice(0, wildcardIndex);
@@ -111,6 +114,31 @@ const matchesFileContent = (
   return false;
 };
 
+const matchesHeuristic = (
+  condition: Extract<Condition, { kind: 'Heuristic' }>,
+  facts: ReadonlyArray<FactInput>
+): boolean => {
+  for (const fact of facts) {
+    if (!isHeuristicFact(fact)) {
+      continue;
+    }
+    if (condition.where?.ruleId && fact.ruleId !== condition.where.ruleId) {
+      continue;
+    }
+    if (condition.where?.code && fact.code !== condition.where.code) {
+      continue;
+    }
+    if (condition.where?.filePathPrefix) {
+      const filePath = fact.filePath ?? '';
+      if (!filePath.startsWith(condition.where.filePathPrefix)) {
+        continue;
+      }
+    }
+    return true;
+  }
+  return false;
+};
+
 export const conditionMatches = (
   condition: Condition,
   facts: ReadonlyArray<FactInput>,
@@ -128,6 +156,10 @@ export const conditionMatches = (
 
   if (condition.kind === 'Dependency') {
     return matchesDependency(condition, facts);
+  }
+
+  if (condition.kind === 'Heuristic') {
+    return matchesHeuristic(condition, facts);
   }
 
   if (condition.kind === 'All') {
