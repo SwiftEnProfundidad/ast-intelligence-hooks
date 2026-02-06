@@ -203,7 +203,22 @@ const isForceUnwrapAt = (source: string, index: number): boolean => {
   return true;
 };
 
-const hasSwiftForceUnwrap = (source: string): boolean => {
+const hasIdentifierAt = (source: string, index: number, identifier: string): boolean => {
+  if (!source.startsWith(identifier, index)) {
+    return false;
+  }
+
+  const before = source[index - 1];
+  const after = source[index + identifier.length];
+  const validBefore = typeof before === 'undefined' || !isIdentifierCharacter(before);
+  const validAfter = typeof after === 'undefined' || !isIdentifierCharacter(after);
+  return validBefore && validAfter;
+};
+
+const scanSwiftSource = (
+  source: string,
+  matcher: (params: { source: string; index: number; current: string }) => boolean
+): boolean => {
   let index = 0;
   let inLineComment = false;
   let blockCommentDepth = 0;
@@ -284,7 +299,7 @@ const hasSwiftForceUnwrap = (source: string): boolean => {
       continue;
     }
 
-    if (current === '!' && isForceUnwrapAt(source, index)) {
+    if (matcher({ source, index, current })) {
       return true;
     }
 
@@ -292,6 +307,22 @@ const hasSwiftForceUnwrap = (source: string): boolean => {
   }
 
   return false;
+};
+
+const hasSwiftForceUnwrap = (source: string): boolean => {
+  return scanSwiftSource(source, ({ source: swiftSource, index, current }) => {
+    return current === '!' && isForceUnwrapAt(swiftSource, index);
+  });
+};
+
+const hasSwiftAnyViewUsage = (source: string): boolean => {
+  return scanSwiftSource(source, ({ source: swiftSource, index, current }) => {
+    if (current !== 'A') {
+      return false;
+    }
+
+    return hasIdentifierAt(swiftSource, index, 'AnyView');
+  });
 };
 
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
@@ -329,6 +360,21 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
         severity: 'WARN',
         code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST',
         message: 'AST heuristic detected force unwrap usage.',
+        filePath: fileFact.path,
+      });
+    }
+
+    if (
+      params.detectedPlatforms.ios?.detected &&
+      isIOSSwiftPath(fileFact.path) &&
+      !isSwiftTestPath(fileFact.path) &&
+      hasSwiftAnyViewUsage(fileFact.content)
+    ) {
+      findings.push({
+        ruleId: 'heuristics.ios.anyview.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_IOS_ANYVIEW_AST',
+        message: 'AST heuristic detected AnyView usage.',
         filePath: fileFact.path,
       });
     }
