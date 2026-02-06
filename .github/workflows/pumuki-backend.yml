@@ -22,7 +22,7 @@ jobs:
         run: npm ci
 
       - name: Run Backend CI gate
-        run: node integrations/git/ciBackend.cli.js
+        run: npx tsx integrations/git/ciBackend.ts
 
       - name: Upload backend ai_evidence artifact
         uses: actions/upload-artifact@v4

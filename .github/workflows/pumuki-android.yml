@@ -1,11 +1,11 @@
-name: Pumuki iOS Gate
+name: Pumuki Android Gate
 
 on:
   pull_request:
   push:
 
 jobs:
-  ios-gate:
+  android-gate:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,11 +21,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run iOS CI gate
-        run: npx tsx integrations/git/ciIOS.ts
+      - name: Run Android CI gate
+        run: npx tsx integrations/git/ciAndroid.ts
 
-      - name: Upload ai_evidence artifact
+      - name: Upload android ai_evidence artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ai-evidence
+          name: ai-evidence-android
           path: .ai_evidence.json
