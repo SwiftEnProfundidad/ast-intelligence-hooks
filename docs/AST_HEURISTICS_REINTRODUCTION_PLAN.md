@@ -57,6 +57,8 @@ For GitHub Actions gates using the reusable workflow template:
 Current pilot implemented:
 
 - `heuristics.ts.empty-catch.ast`
+- `heuristics.ts.explicit-any.ast`
 - Scope: `apps/backend/**` and `apps/frontend/**` TS/JS files
 - Detection: semantic AST parse of `catch {}` with empty block
+- Detection: semantic AST parse of explicit `any` type usage (TS/TSX)
 - Severity: `WARN`

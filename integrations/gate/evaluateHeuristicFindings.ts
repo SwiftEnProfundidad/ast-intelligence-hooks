@@ -15,29 +15,29 @@ const isObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
 };
 
-const hasEmptyCatchClause = (node: unknown): boolean => {
+const hasNode = (
+  node: unknown,
+  predicate: (value: Record<string, unknown>) => boolean
+): boolean => {
   if (!isObject(node)) {
     return false;
   }
 
-  if (node.type === 'CatchClause') {
-    const body = node.body;
-    if (isObject(body) && Array.isArray(body.body) && body.body.length === 0) {
-      return true;
-    }
+  if (predicate(node)) {
+    return true;
   }
 
   for (const value of Object.values(node)) {
     if (Array.isArray(value)) {
       for (const item of value) {
-        if (hasEmptyCatchClause(item)) {
+        if (hasNode(item, predicate)) {
           return true;
         }
       }
       continue;
     }
 
-    if (isObject(value) && hasEmptyCatchClause(value)) {
+    if (isObject(value) && hasNode(value, predicate)) {
       return true;
     }
   }
@@ -45,7 +45,21 @@ const hasEmptyCatchClause = (node: unknown): boolean => {
   return false;
 };
 
-const isTargetPath = (path: string): boolean => {
+const hasEmptyCatchClause = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CatchClause') {
+      return false;
+    }
+    const body = value.body;
+    return isObject(body) && Array.isArray(body.body) && body.body.length === 0;
+  });
+};
+
+const hasExplicitAnyType = (node: unknown): boolean => {
+  return hasNode(node, (value) => value.type === 'TSAnyKeyword');
+};
+
+const isSemanticTargetPath = (path: string): boolean => {
   const supportedExtension =
     path.endsWith('.ts') ||
     path.endsWith('.tsx') ||
@@ -56,6 +70,10 @@ const isTargetPath = (path: string): boolean => {
   }
 
   return path.startsWith('apps/backend/') || path.startsWith('apps/frontend/') || path.startsWith('apps/web/');
+};
+
+const isTypeScriptPath = (path: string): boolean => {
+  return path.endsWith('.ts') || path.endsWith('.tsx');
 };
 
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
@@ -78,7 +96,7 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
 
   for (const fact of params.facts) {
     const fileFact = asFileContentFact(fact);
-    if (!fileFact || !isTargetPath(fileFact.path)) {
+    if (!fileFact || !isSemanticTargetPath(fileFact.path)) {
       continue;
     }
 
@@ -88,17 +106,25 @@ export const evaluateHeuristicFindings = (params: HeuristicParams): Finding[] =>
         plugins: ['typescript', 'jsx'],
       });
 
-      if (!hasEmptyCatchClause(ast)) {
-        continue;
+      if (hasEmptyCatchClause(ast)) {
+        findings.push({
+          ruleId: 'heuristics.ts.empty-catch.ast',
+          severity: 'WARN',
+          code: 'HEURISTICS_EMPTY_CATCH_AST',
+          message: 'AST heuristic detected an empty catch block.',
+          filePath: fileFact.path,
+        });
       }
 
-      findings.push({
-        ruleId: 'heuristics.ts.empty-catch.ast',
-        severity: 'WARN',
-        code: 'HEURISTICS_EMPTY_CATCH_AST',
-        message: 'AST heuristic detected an empty catch block.',
-        filePath: fileFact.path,
-      });
+      if (isTypeScriptPath(fileFact.path) && hasExplicitAnyType(ast)) {
+        findings.push({
+          ruleId: 'heuristics.ts.explicit-any.ast',
+          severity: 'WARN',
+          code: 'HEURISTICS_EXPLICIT_ANY_AST',
+          message: 'AST heuristic detected explicit any usage.',
+          filePath: fileFact.path,
+        });
+      }
     } catch {
       continue;
     }
