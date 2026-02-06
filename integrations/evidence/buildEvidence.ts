@@ -6,13 +6,13 @@ import type {
   AiEvidenceV2_1,
   CompatibilityViolation,
   EvidenceLines,
-  HumanIntentConfidence,
   HumanIntentState,
   LedgerEntry,
   PlatformState,
   RulesetState,
   SnapshotFinding,
 } from './schema';
+import { resolveHumanIntent } from './humanIntent';
 
 type BuildFindingInput = Finding & {
   file?: string;
@@ -26,117 +26,6 @@ export type BuildEvidenceParams = {
   humanIntent?: HumanIntentState | null;
   detectedPlatforms: Record<string, PlatformState>;
   loadedRulesets: ReadonlyArray<RulesetState>;
-};
-
-const normalizeText = (value: unknown): string | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
-const normalizeTextList = (value: unknown): string[] => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-  const result: string[] = [];
-  const seen = new Set<string>();
-  for (const item of value) {
-    const text = normalizeText(item);
-    if (!text || seen.has(text)) {
-      continue;
-    }
-    seen.add(text);
-    result.push(text);
-  }
-  return result;
-};
-
-const normalizeDateIso = (value: unknown): string | null => {
-  const normalized = normalizeText(value);
-  if (!normalized) {
-    return null;
-  }
-  const date = Date.parse(normalized);
-  if (!Number.isFinite(date)) {
-    return null;
-  }
-  return new Date(date).toISOString();
-};
-
-const normalizeConfidence = (value: unknown): HumanIntentConfidence => {
-  if (value === 'high' || value === 'medium' || value === 'low' || value === 'unset') {
-    return value;
-  }
-  return 'unset';
-};
-
-const normalizeHumanIntent = (input: HumanIntentState | null | undefined): HumanIntentState | null => {
-  if (!input) {
-    return null;
-  }
-
-  const preservedAt = normalizeDateIso(input.preserved_at);
-  if (!preservedAt) {
-    return null;
-  }
-
-  const hint = normalizeText(input._hint);
-
-  return {
-    primary_goal: normalizeText(input.primary_goal),
-    secondary_goals: normalizeTextList(input.secondary_goals),
-    non_goals: normalizeTextList(input.non_goals),
-    constraints: normalizeTextList(input.constraints),
-    confidence_level: normalizeConfidence(input.confidence_level),
-    set_by: normalizeText(input.set_by),
-    set_at: normalizeDateIso(input.set_at),
-    expires_at: normalizeDateIso(input.expires_at),
-    preserved_at: preservedAt,
-    preservation_count:
-      Number.isFinite(input.preservation_count) && input.preservation_count >= 0
-        ? Math.trunc(input.preservation_count)
-        : 0,
-    ...(hint ? { _hint: hint } : {}),
-  };
-};
-
-const isExpiredHumanIntent = (intent: HumanIntentState, now: string): boolean => {
-  if (!intent.expires_at) {
-    return false;
-  }
-
-  const expiresAt = Date.parse(intent.expires_at);
-  const nowTime = Date.parse(now);
-  if (!Number.isFinite(expiresAt) || !Number.isFinite(nowTime)) {
-    return true;
-  }
-  return expiresAt <= nowTime;
-};
-
-const resolveHumanIntent = (params: {
-  now: string;
-  inputIntent?: HumanIntentState | null;
-  previousEvidence?: AiEvidenceV2_1;
-}): HumanIntentState | null => {
-  const candidate = normalizeHumanIntent(
-    params.inputIntent ?? params.previousEvidence?.human_intent ?? null
-  );
-  if (!candidate || isExpiredHumanIntent(candidate, params.now)) {
-    return null;
-  }
-
-  const isExplicitInput = typeof params.inputIntent !== 'undefined';
-  const nextCount = isExplicitInput
-    ? candidate.preservation_count
-    : candidate.preservation_count + 1;
-
-  return {
-    ...candidate,
-    preserved_at: params.now,
-    preservation_count: nextCount,
-  };
 };
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {

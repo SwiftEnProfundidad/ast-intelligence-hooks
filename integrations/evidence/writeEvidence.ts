@@ -5,10 +5,10 @@ import type {
   AiEvidenceV2_1,
   CompatibilityViolation,
   EvidenceLines,
-  HumanIntentState,
   LedgerEntry,
   SnapshotFinding,
 } from './schema';
+import { normalizeHumanIntent } from './humanIntent';
 
 export type WriteEvidenceResult = {
   ok: boolean;
@@ -102,80 +102,6 @@ const toCompatibilityViolations = (
     file: finding.file,
     lines: finding.lines,
   }));
-};
-
-const normalizeText = (value: unknown): string | null => {
-  if (typeof value !== 'string') {
-    return null;
-  }
-  const trimmed = value.trim();
-  return trimmed.length > 0 ? trimmed : null;
-};
-
-const normalizeTextList = (value: unknown): string[] => {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  const result: string[] = [];
-  const seen = new Set<string>();
-  for (const item of value) {
-    const text = normalizeText(item);
-    if (!text || seen.has(text)) {
-      continue;
-    }
-    seen.add(text);
-    result.push(text);
-  }
-  return result;
-};
-
-const normalizeDateIso = (value: unknown): string | null => {
-  const normalized = normalizeText(value);
-  if (!normalized) {
-    return null;
-  }
-  const date = Date.parse(normalized);
-  if (!Number.isFinite(date)) {
-    return null;
-  }
-  return new Date(date).toISOString();
-};
-
-const normalizeHumanIntent = (value: HumanIntentState | null): HumanIntentState | null => {
-  if (!value) {
-    return null;
-  }
-
-  const confidence =
-    value.confidence_level === 'high' ||
-    value.confidence_level === 'medium' ||
-    value.confidence_level === 'low' ||
-    value.confidence_level === 'unset'
-      ? value.confidence_level
-      : 'unset';
-  const preservedAt = normalizeDateIso(value.preserved_at);
-  if (!preservedAt) {
-    return null;
-  }
-  const hint = normalizeText(value._hint);
-
-  return {
-    primary_goal: normalizeText(value.primary_goal),
-    secondary_goals: normalizeTextList(value.secondary_goals),
-    non_goals: normalizeTextList(value.non_goals),
-    constraints: normalizeTextList(value.constraints),
-    confidence_level: confidence,
-    set_by: normalizeText(value.set_by),
-    set_at: normalizeDateIso(value.set_at),
-    expires_at: normalizeDateIso(value.expires_at),
-    preserved_at: preservedAt,
-    preservation_count:
-      Number.isFinite(value.preservation_count) && value.preservation_count >= 0
-        ? Math.trunc(value.preservation_count)
-        : 0,
-    ...(hint ? { _hint: hint } : {}),
-  };
 };
 
 const toStableEvidence = (
