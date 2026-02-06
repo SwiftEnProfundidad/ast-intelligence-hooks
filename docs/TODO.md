@@ -14,16 +14,13 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Enforce `human_intent.expires_at` (ignore stale intent deterministically).
 - Add README section for manual hook-system usage (interactive + `AUDIT_OPTION` + command mapping).
 - Convert root `ARCHITECTURE.md` into conceptual architecture linked to `docs/ARCHITECTURE.md`.
+- Define canonical evidence writer path and deterministic merge strategy.
 
 ## In Progress
 
 - Standardize visuals in `docs/images/` to consistent, resolution-independent assets.
 
 ## Next
-
-### Design Constraints
-
-- Avoid drift: define a single canonical writer and a deterministic merge strategy.
 
 ## Notes
 

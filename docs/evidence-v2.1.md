@@ -32,6 +32,7 @@
 - Ledger entries are updated if a violation still exists.
 - Cleared violations are removed from ledger.
 - Output JSON is written in stable key order.
+- Canonical writer path is `integrations/evidence/generateEvidence.ts` (`buildEvidence` + `writeEvidence`).
 
 ## Overrides
 

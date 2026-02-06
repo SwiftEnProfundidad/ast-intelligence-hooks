@@ -19,9 +19,8 @@ import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRule
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import { loadHeuristicsConfig } from '../config/heuristics';
 import { loadProjectRules } from '../config/loadProjectRules';
-import { buildEvidence } from '../evidence/buildEvidence';
+import { generateEvidence } from '../evidence/generateEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
-import { writeEvidence } from '../evidence/writeEvidence';
 import { extractHeuristicFacts } from '../gate/evaluateHeuristicFindings';
 import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
@@ -361,7 +360,7 @@ export async function runPlatformGate(params: {
   const findings = evaluateRules(mergedRules, evaluationFacts);
   const decision = evaluateGate([...findings], params.policy);
 
-  const evidence = buildEvidence({
+  generateEvidence({
     stage: params.policy.stage,
     findings,
     previousEvidence: loadPreviousEvidence(resolveRepoRoot()),
@@ -372,7 +371,6 @@ export async function runPlatformGate(params: {
       heuristicsEnabled: heuristicsConfig.astSemanticEnabled,
     }),
   });
-  writeEvidence(evidence);
 
   if (decision.outcome === 'BLOCK') {
     for (const finding of findings) {
