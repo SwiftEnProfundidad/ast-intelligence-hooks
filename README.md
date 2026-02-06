@@ -67,6 +67,7 @@ Documentation:
 - `docs/RELEASE_NOTES.md` (Historical release notes)
 - `docs/evidence-v2.1.md` (deterministic snapshot + ledger schema)
 - `docs/rule-packs/README.md` (Rule Pack versions, hashes, overrides)
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md` (read-only API for agents)
 
 ---
 
