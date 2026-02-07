@@ -200,6 +200,33 @@ test('runPrePushStage uses skills policy override and writes PRE_PUSH policy tra
   });
 });
 
+test('runPrePushStage returns blocking exit code with strict WARN threshold override', async () => {
+  await withTempRepo(async (repoRoot) => {
+    writeSkillsPolicy(repoRoot, {
+      PRE_PUSH: {
+        blockOnOrAbove: 'WARN',
+        warnOnOrAbove: 'WARN',
+      },
+    });
+    setupBackendCommitRange(repoRoot);
+
+    const exitCode = await runPrePushStage();
+    assert.equal(exitCode, 1);
+
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.version, '2.1');
+    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+    assert.equal(evidence.snapshot.outcome, 'BLOCK');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
+    assertPolicyTrace(evidence, 'gate-policy.skills.policy.PRE_PUSH');
+  });
+});
+
 test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is absent', async () => {
   await withTempRepo(async (repoRoot) => {
     setupBackendCommitRange(repoRoot);
@@ -240,6 +267,35 @@ test('runCiStage uses skills policy override and writes CI policy trace', async 
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'CI');
     assert.equal(evidence.snapshot.outcome, 'PASS');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
+    assertPolicyTrace(evidence, 'gate-policy.skills.policy.CI');
+  });
+});
+
+test('runCiStage returns blocking exit code with strict WARN threshold override', async () => {
+  await withTempRepo(async (repoRoot) => {
+    writeSkillsPolicy(repoRoot, {
+      CI: {
+        blockOnOrAbove: 'WARN',
+        warnOnOrAbove: 'WARN',
+      },
+    });
+    setupBackendCommitRange(repoRoot);
+
+    await withGithubBaseRef('main', async () => {
+      const exitCode = await runCiStage();
+      assert.equal(exitCode, 1);
+    });
+
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.version, '2.1');
+    assert.equal(evidence.snapshot.stage, 'CI');
+    assert.equal(evidence.snapshot.outcome, 'BLOCK');
     assert.equal(
       evidence.snapshot.findings.some(
         (finding) => finding.ruleId === 'backend.avoid-explicit-any'
