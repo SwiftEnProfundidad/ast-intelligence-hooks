@@ -9,7 +9,7 @@ This folder documents the baseline Rule Packs used by the v2.x deterministic gat
 - `rulesbackend.mdc@1.0.0`
 - `frontendRuleSet@1.0.0`
 - `androidRuleSet@1.0.0`
-- `astHeuristicsRuleSet@0.2.0` (enabled only when `PUMUKI_ENABLE_AST_HEURISTICS` is true)
+- `astHeuristicsRuleSet@0.3.0` (enabled only when `PUMUKI_ENABLE_AST_HEURISTICS` is true)
 
 ## Evidence linkage
 

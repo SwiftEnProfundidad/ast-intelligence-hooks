@@ -2,7 +2,7 @@
 
 ## Pack
 
-- `astHeuristicsRuleSet@0.2.0`
+- `astHeuristicsRuleSet@0.3.0`
 - Platform: `frontend`, `backend`, `ios`, `android` (heuristic signals)
 
 ## Source
@@ -41,6 +41,7 @@
 - `heuristics.ts.console-log.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
+- `heuristics.ios.force-try.ast`
 - `heuristics.ios.callback-style.ast`
 - `heuristics.android.thread-sleep.ast`
 - `heuristics.android.globalscope.ast`

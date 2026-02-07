@@ -48,7 +48,7 @@ Do not enable new semantic extractors until:
 - Values that enable: `1`, `true`, `yes`, `on`
 - Default: disabled
 
-When enabled, the gate records `astHeuristicsRuleSet@0.2.0` in evidence `rulesets[]`.
+When enabled, the gate records `astHeuristicsRuleSet@0.3.0` in evidence `rulesets[]`.
 
 For GitHub Actions gates using the reusable workflow template:
 
@@ -61,6 +61,7 @@ Current pilot implemented:
 - `heuristics.ts.console-log.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
+- `heuristics.ios.force-try.ast`
 - `heuristics.ios.callback-style.ast`
 - `heuristics.android.thread-sleep.ast`
 - `heuristics.android.globalscope.ast`
@@ -75,6 +76,7 @@ Current pilot implemented:
 - Scope exclusions: bridge layers (`/Bridge/`, `/Bridges/`, `*Bridge.swift`)
 - Detection: token-aware scan for force unwrap operator usage (`value!`) outside comments/strings
 - Detection: token-aware scan for `AnyView` type erasure usage outside comments/strings
+- Detection: token-aware scan for force try usage (`try!`) outside comments/strings
 - Detection: token-aware scan for callback-style signatures (`@escaping` + completion/handler) outside bridge layers
 - Scope: `apps/android/**` Kotlin files (`.kt`, `.kts`)
 - Scope exclusions: Android test paths (`/test/`, `/androidTest/`, `*Test.kt`, `*Tests.kt`)

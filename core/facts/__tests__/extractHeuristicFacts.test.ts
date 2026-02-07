@@ -86,6 +86,7 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
         [
           'let result = value!',
           'let wrapped = AnyView(Text("hello"))',
+          'let value = try! resolver.execute()',
           'func fetch(completion: @escaping () -> Void) {}',
         ].join('\n')
       ),
@@ -103,8 +104,26 @@ test('detects iOS heuristics and skips bridge callback rule', () => {
   assert.deepEqual(toRuleIds(findings), [
     'heuristics.ios.anyview.ast',
     'heuristics.ios.callback-style.ast',
+    'heuristics.ios.force-try.ast',
     'heuristics.ios.force-unwrap.ast',
   ]);
+});
+
+test('skips iOS force-try heuristic in comments and strings', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/ios/Presentation/Feature/View.swift',
+        ['// try! commented out', 'let message = "try! not executable"'].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      ios: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  assert.equal(findings.some((finding) => finding.ruleId === 'heuristics.ios.force-try.ast'), false);
 });
 
 test('detects Android heuristics in production path and skips tests', () => {

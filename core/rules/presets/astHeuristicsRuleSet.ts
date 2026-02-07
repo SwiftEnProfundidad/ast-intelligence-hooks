@@ -92,6 +92,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.force-try.ast',
+    description: 'Detects Swift force try usage in production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.force-try.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected force try usage.',
+      code: 'HEURISTICS_IOS_FORCE_TRY_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.callback-style.ast',
     description: 'Detects callback-style signatures outside approved iOS bridge layers.',
     severity: 'WARN',
