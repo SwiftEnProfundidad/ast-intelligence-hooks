@@ -1,15 +1,7 @@
 # Release Notes (v2.x line)
 
 This file tracks the active deterministic framework line used in this repository.
-
-For implementation detail by phase, see:
-
-- `docs/pr-reports/phase-1-multi-platform.md`
-- `docs/pr-reports/phase-2-frontend-android.md`
-- `docs/pr-reports/phase-3-cli.md`
-- `docs/pr-reports/phase-4-docs.md`
-- `docs/pr-reports/phase-5-hardening.md`
-- `docs/pr-reports/phase-6-mcp-context.md`
+Detailed commit history remains available through Git history (`git log` / `git show`).
 
 ## 2026-02 (enterprise-refactor updates)
 

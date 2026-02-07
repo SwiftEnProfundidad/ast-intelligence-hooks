@@ -157,6 +157,4 @@ Platform workflows use reusable gate orchestration and upload `.ai_evidence.json
 
 - Active refactor branch: `enterprise-refactor`
 - Roadmap tracking: `docs/TODO.md`
-- Phase reports: `docs/pr-reports/*`
 - Release notes: `docs/RELEASE_NOTES.md`
-
