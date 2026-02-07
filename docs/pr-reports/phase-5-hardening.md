@@ -61,6 +61,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `c954e99` fix(hooks): resolve pre-write AST loader across scripts and legacy layouts
 - `37a2458` docs(phase-5): append pre-write loader fallback traceability
 - `d39e508` feat(hooks): add automated Windsurf session log assessment
+- `c124254` docs(phase-5): append automated session assessment traceability
+- `be9380e` feat(hooks): distinguish real vs simulated Windsurf session assessment
 
 ## Scope
 
@@ -140,7 +142,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Added `verify:windsurf-hooks-runtime` npm command to validate hooks wiring and runtime before IDE session.
 - Hardened wrapper/config tooling for mixed repo layouts by resolving both `scripts/...` and `legacy/scripts/...` paths.
 - Added `assess:windsurf-hooks-session` npm command to auto-assess real-session pre/post hook event presence from logs.
-- `assess:windsurf-hooks-session:any` validated with current local logs (`session-assessment=PASS`); strict real-session mode remains pending until IDE interaction.
+- `assess:windsurf-hooks-session:any` validated with current local logs (`session-assessment=PASS`).
+- `assess:windsurf-hooks-session` now excludes simulated + cross-repo events and correctly returns `session-assessment=FAIL` until a real Windsurf session happens in this repo.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.
