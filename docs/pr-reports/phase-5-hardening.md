@@ -39,7 +39,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `9ce666d` feat(evidence): consolidate equivalent baseline/heuristic families in snapshot output
 - `d016045` feat(evidence): add consolidation trace metadata
 - `6105862` test(evidence): add file-level consolidation fixture
-- feat(hooks): harden Windsurf cascade hook runtime resolution with deterministic Node wrapper
+- `a1ac55a` fix(hooks): harden Windsurf cascade hook runtime resolution with deterministic Node wrapper
 
 ## Scope
 
