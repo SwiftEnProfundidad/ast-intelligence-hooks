@@ -43,6 +43,7 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
 
 test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () => {
   assert.equal(findSeverity('heuristics.ts.console-log.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.explicit-any.ast', 'CI'), 'ERROR');
   assert.equal(findSeverity('heuristics.ios.force-unwrap.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ios.anyview.ast', 'CI'), 'ERROR');
   assert.equal(findSeverity('heuristics.android.globalscope.ast', 'PRE_PUSH'), 'ERROR');
@@ -51,7 +52,6 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
 
 test('keeps non-promoted heuristic severities unchanged', () => {
   assert.equal(findSeverity('heuristics.ts.empty-catch.ast', 'PRE_PUSH'), 'WARN');
-  assert.equal(findSeverity('heuristics.ts.explicit-any.ast', 'CI'), 'WARN');
   assert.equal(findSeverity('heuristics.ios.callback-style.ast', 'PRE_PUSH'), 'WARN');
 });
 
@@ -129,6 +129,38 @@ test('gate promotes ios AnyView heuristic to blocking in PRE_PUSH and CI only', 
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [anyViewFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes explicit any heuristic to blocking in PRE_PUSH and CI only', () => {
+  const explicitAnyFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.explicit-any.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_EXPLICIT_ANY_AST',
+    message: 'AST heuristic detected explicit any usage.',
+    filePath: 'apps/backend/src/runtime.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [explicitAnyFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [explicitAnyFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [explicitAnyFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');

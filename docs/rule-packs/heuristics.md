@@ -25,6 +25,7 @@
 - `PRE_COMMIT` keeps all heuristic findings at `WARN`.
 - `PRE_PUSH` and `CI` promote selected high-confidence heuristic rules to `ERROR`:
   - `heuristics.ts.console-log.ast`
+  - `heuristics.ts.explicit-any.ast`
   - `heuristics.ios.force-unwrap.ast`
   - `heuristics.ios.anyview.ast`
   - `heuristics.android.thread-sleep.ast`

@@ -34,6 +34,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `f2a35e2` test(gate): verify stage-based heuristic blocking behavior
 - `3f9948c` fix(evidence): align snapshot outcome with gate decision
 - feat(heuristics): promote ios AnyView heuristic to ERROR for PRE_PUSH and CI
+- feat(heuristics): promote explicit-any heuristic to ERROR for PRE_PUSH and CI
 
 ## Scope
 
@@ -93,6 +94,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts` passes for stage policy thresholds and severity promotion behavior.
 - Stage policy integration checks confirm promoted heuristics block in `PRE_PUSH` and `CI` while staying non-blocking in `PRE_COMMIT`.
 - Stage policy calibration now includes `heuristics.ios.anyview.ast` as promoted (`ERROR`) for `PRE_PUSH` and `CI`.
+- Stage policy calibration now includes `heuristics.ts.explicit-any.ast` as promoted (`ERROR`) for `PRE_PUSH` and `CI`.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.
