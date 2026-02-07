@@ -37,6 +37,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `05a5352` feat(heuristics): promote explicit-any heuristic to ERROR for PRE_PUSH and CI
 - `d51bb6a` feat(heuristics): promote iOS callback-style heuristic to ERROR for PRE_PUSH and CI
 - `9ce666d` feat(evidence): consolidate equivalent baseline/heuristic families in snapshot output
+- `d016045` feat(evidence): add consolidation trace metadata
 
 ## Scope
 
