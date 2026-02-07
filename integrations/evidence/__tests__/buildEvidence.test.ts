@@ -167,7 +167,7 @@ test('suppresses duplicated iOS heuristic findings shadowed by stronger baseline
   assert.equal(result.severity_metrics.by_severity.ERROR, 0);
 });
 
-test('keeps iOS heuristic finding when mapped baseline severity is lower', () => {
+test('keeps only strongest iOS finding when mapped baseline severity is lower', () => {
   const result = buildEvidence({
     stage: 'PRE_PUSH',
     gateOutcome: 'BLOCK',
@@ -194,7 +194,73 @@ test('keeps iOS heuristic finding when mapped baseline severity is lower', () =>
   });
 
   assert.deepEqual(
-    result.snapshot.findings.map((finding) => finding.ruleId).sort(),
-    ['heuristics.ios.anyview.ast', 'ios.no-anyview']
+    result.snapshot.findings.map((finding) => finding.ruleId),
+    ['heuristics.ios.anyview.ast']
+  );
+});
+
+test('keeps strongest finding in backend explicit-any family and drops weaker duplicate', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'WARN',
+        code: 'BACKEND_AVOID_EXPLICIT_ANY',
+        message: 'Avoid explicit any in backend code.',
+        filePath: 'apps/backend/src/main.ts',
+      },
+      {
+        ruleId: 'heuristics.ts.explicit-any.ast',
+        severity: 'ERROR',
+        code: 'HEURISTICS_EXPLICIT_ANY_AST',
+        message: 'AST heuristic detected explicit any usage.',
+        filePath: 'apps/backend/src/main.ts',
+      },
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(
+    result.snapshot.findings.map((finding) => finding.ruleId),
+    ['heuristics.ts.explicit-any.ast']
+  );
+  assert.equal(result.severity_metrics.by_severity.ERROR, 1);
+  assert.equal(result.severity_metrics.by_severity.WARN, 0);
+});
+
+test('prefers baseline finding on equal severity tie within same semantic family', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    gateOutcome: 'PASS',
+    findings: [
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'WARN',
+        code: 'BACKEND_AVOID_EXPLICIT_ANY',
+        message: 'Avoid explicit any in backend code.',
+        filePath: 'apps/backend/src/main.ts',
+      },
+      {
+        ruleId: 'heuristics.ts.explicit-any.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_EXPLICIT_ANY_AST',
+        message: 'AST heuristic detected explicit any usage.',
+        filePath: 'apps/backend/src/main.ts',
+      },
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(
+    result.snapshot.findings.map((finding) => finding.ruleId),
+    ['backend.avoid-explicit-any']
   );
 });

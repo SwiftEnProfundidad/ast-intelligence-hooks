@@ -29,7 +29,7 @@
 ## Deterministic behavior
 
 - Findings are deduplicated by `ruleId + file + lines`.
-- For selected iOS rule families, heuristic findings are suppressed in evidence when an equivalent baseline finding exists on the same file with equal or higher severity.
+- For selected semantic rule families, equivalent baseline/heuristic duplicates on the same file are consolidated to a single finding, keeping the highest-severity signal deterministically.
 - Ledger entries are updated if a violation still exists.
 - Cleared violations are removed from ledger.
 - Output JSON is written in stable key order.

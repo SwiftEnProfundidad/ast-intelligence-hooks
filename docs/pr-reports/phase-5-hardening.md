@@ -36,7 +36,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `610fec0` feat(heuristics): promote iOS AnyView heuristic to ERROR for PRE_PUSH and CI
 - `05a5352` feat(heuristics): promote explicit-any heuristic to ERROR for PRE_PUSH and CI
 - `d51bb6a` feat(heuristics): promote iOS callback-style heuristic to ERROR for PRE_PUSH and CI
-- feat(evidence): suppress shadowed iOS heuristic duplicates in snapshot output
+- feat(evidence): consolidate equivalent baseline/heuristic families in snapshot output
 
 ## Scope
 
@@ -88,7 +88,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `integrations/evidence/generateEvidence.ts` as single build+write facade
   - `integrations/evidence/buildEvidence.ts` deterministic snapshot + ledger merge
   - `integrations/evidence/writeEvidence.ts` stable serialization and relative paths
-  - Evidence-level consolidation suppresses mapped iOS heuristic duplicates when equivalent baseline findings on the same file have equal or higher severity
+  - Evidence-level consolidation collapses mapped iOS/backend/frontend baseline+heuristic families to the strongest per-file finding
 
 ## Validation status
 
@@ -99,7 +99,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Stage policy calibration now includes `heuristics.ios.anyview.ast` as promoted (`ERROR`) for `PRE_PUSH` and `CI`.
 - Stage policy calibration now includes `heuristics.ts.explicit-any.ast` as promoted (`ERROR`) for `PRE_PUSH` and `CI`.
 - Stage policy calibration now includes `heuristics.ios.callback-style.ast` as promoted (`ERROR`) for `PRE_PUSH` and `CI`.
-- `npm run test:evidence` covers evidence suppression of shadowed iOS heuristic duplicates and keeps stronger/wider signal.
+- `npm run test:evidence` covers evidence consolidation for iOS and backend semantic families, keeping the strongest deterministic signal.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.

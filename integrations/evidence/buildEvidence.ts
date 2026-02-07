@@ -85,37 +85,72 @@ const severityRank: Record<Severity, number> = {
   CRITICAL: 3,
 };
 
-const heuristicBaselineShadowMap = new Map<string, ReadonlyArray<string>>([
-  ['heuristics.ios.force-unwrap.ast', ['ios.no-force-unwrap']],
-  ['heuristics.ios.anyview.ast', ['ios.no-anyview']],
-  ['heuristics.ios.callback-style.ast', ['ios.no-completion-handlers-outside-bridges']],
-]);
+const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
+  ['ios.no-force-unwrap', 'heuristics.ios.force-unwrap.ast'],
+  ['ios.no-anyview', 'heuristics.ios.anyview.ast'],
+  ['ios.no-completion-handlers-outside-bridges', 'heuristics.ios.callback-style.ast'],
+  ['backend.no-console-log', 'frontend.no-console-log', 'heuristics.ts.console-log.ast'],
+  ['backend.avoid-explicit-any', 'heuristics.ts.explicit-any.ast'],
+  ['backend.no-empty-catch', 'heuristics.ts.empty-catch.ast'],
+];
 
-const suppressShadowedHeuristics = (
+const ruleFamilyIndex = new Map<string, number>();
+equivalentRuleFamilies.forEach((family, familyIndex) => {
+  family.forEach((ruleId) => {
+    ruleFamilyIndex.set(ruleId, familyIndex);
+  });
+});
+
+const isHeuristicRuleId = (ruleId: string): boolean => {
+  return ruleId.startsWith('heuristics.');
+};
+
+const preferFinding = (
+  current: SnapshotFinding,
+  candidate: SnapshotFinding
+): SnapshotFinding => {
+  const bySeverity = severityRank[candidate.severity] - severityRank[current.severity];
+  if (bySeverity > 0) {
+    return candidate;
+  }
+  if (bySeverity < 0) {
+    return current;
+  }
+
+  const currentIsHeuristic = isHeuristicRuleId(current.ruleId);
+  const candidateIsHeuristic = isHeuristicRuleId(candidate.ruleId);
+  if (currentIsHeuristic !== candidateIsHeuristic) {
+    return currentIsHeuristic ? candidate : current;
+  }
+
+  return candidate.ruleId.localeCompare(current.ruleId) < 0 ? candidate : current;
+};
+
+const consolidateEquivalentFindings = (
   findings: ReadonlyArray<SnapshotFinding>
 ): SnapshotFinding[] => {
-  const byFileAndRule = new Map<string, SnapshotFinding>();
+  const selectedByFileFamily = new Map<string, SnapshotFinding>();
   for (const finding of findings) {
-    byFileAndRule.set(`${finding.file}::${finding.ruleId}`, finding);
+    const familyIndex = ruleFamilyIndex.get(finding.ruleId);
+    if (typeof familyIndex === 'undefined') {
+      continue;
+    }
+    const key = `${finding.file}::${familyIndex}`;
+    const current = selectedByFileFamily.get(key);
+    if (!current) {
+      selectedByFileFamily.set(key, finding);
+      continue;
+    }
+    selectedByFileFamily.set(key, preferFinding(current, finding));
   }
 
   return findings.filter((finding) => {
-    const mappedBaselines = heuristicBaselineShadowMap.get(finding.ruleId);
-    if (!mappedBaselines) {
+    const familyIndex = ruleFamilyIndex.get(finding.ruleId);
+    if (typeof familyIndex === 'undefined') {
       return true;
     }
-
-    for (const baselineRuleId of mappedBaselines) {
-      const baselineFinding = byFileAndRule.get(`${finding.file}::${baselineRuleId}`);
-      if (!baselineFinding) {
-        continue;
-      }
-      if (severityRank[baselineFinding.severity] >= severityRank[finding.severity]) {
-        return false;
-      }
-    }
-
-    return true;
+    const selected = selectedByFileFamily.get(`${finding.file}::${familyIndex}`);
+    return selected?.ruleId === finding.ruleId && selected.file === finding.file;
   });
 };
 
@@ -131,7 +166,7 @@ const normalizeAndDedupeFindings = (
     }
   }
   const deduped = Array.from(unique.values());
-  const filtered = suppressShadowedHeuristics(deduped);
+  const filtered = consolidateEquivalentFindings(deduped);
   return filtered.sort((left, right) => findingKey(left).localeCompare(findingKey(right)));
 };
 
