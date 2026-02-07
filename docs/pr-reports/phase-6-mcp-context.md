@@ -10,6 +10,7 @@ Validate and operationalize the read-only evidence context server so agents can 
 - `82180dc` ci(mcp): run evidence context server tests in deterministic workflow
 - `82cb873` ci(tests): unify deterministic suite for evidence mcp and heuristics
 - `b5088af` feat(mcp): add compact/full evidence response filters for consolidation-aware payloads
+- `5c8227a` test(mcp): cover compact/full evidence query variants
 
 ## Scope
 
