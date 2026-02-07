@@ -12,6 +12,7 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - `3cf08a7` test(mcp): add evidence context server coverage and runnable CLI script
 - `82180dc` ci(mcp): run evidence context server tests in deterministic workflow
 - `d1fecb7` docs(roadmap): track markdown cleanup backlog and phase-5 progress
+- `f8baebc` chore(repo): stop tracking docs/.DS_Store
 
 ## Scope
 
@@ -54,6 +55,7 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
   - removed `docs/SEVERITY_AUDIT.md`
   - removed `docs/VIOLATIONS_RESOLUTION_PLAN.md` (untracked local residual)
   - removed `_AI_DOCS/AUDIT_REPORT_EXHAUSTIVO_2026-01-04.md`
+  - stopped tracking `docs/.DS_Store`
 - Release notes cleanup:
   - `docs/RELEASE_NOTES.md` consolidated to active v2.x line
   - removed obsolete `docs/RELEASE_NOTES_5.3.4.md`
