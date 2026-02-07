@@ -1,18 +1,17 @@
-# Archive - Archivos Históricos
+# Archive (Historical AST Files)
 
-Esta carpeta contiene implementaciones anteriores y archivos obsoletos del sistema AST Intelligence que han sido reemplazados por la arquitectura modular actual.
+This folder contains deprecated AST implementations kept only for historical traceability.
 
-## Archivos
+## Archived Files
 
-- `ast-intelligence.ts` - Versión TypeScript anterior del coordinador (reemplazado por `ast-intelligence.js`)
-- `ios-rules.js` - Implementación anterior de reglas iOS usando SourceKitten
-- `kotlin-analyzer.js` - Analizador Kotlin anterior usando Detekt
-- `kotlin-parser.js` - Parser Kotlin anterior usando Detekt
-- `swift-analyzer.js` - Analizador Swift anterior usando SourceKitten
+- `ast-intelligence.ts`: previous TypeScript coordinator implementation.
+- `ios-rules.js`: older iOS rule implementation.
+- `kotlin-analyzer.js`: older Kotlin analyzer implementation.
+- `kotlin-parser.js`: older Kotlin parser implementation.
+- `swift-analyzer.js`: older Swift analyzer implementation.
 
-## Nota
+## Policy
 
-Estos archivos se mantienen por referencia histórica y no deben usarse en el código actual. El sistema actual utiliza la arquitectura modular en:
-- `ast-core.js` - Utilidades compartidas
-- `ast-intelligence.js` - Coordinador principal
-- `{platform}/ast-{platform}.js` - Módulos específicos por plataforma
+- Do not use archive files in active runtime paths.
+- Do not add new dependencies or features here.
+- If historical behavior must be inspected, copy findings into active docs/tests rather than reactivating archived code.
