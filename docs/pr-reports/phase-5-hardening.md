@@ -53,6 +53,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `07c307a` feat(hooks): add repeatable local Windsurf runtime validation command
 - `d8b82f2` docs(phase-5): append local runtime command traceability
 - `2d8142e` feat(hooks): add Windsurf hooks config generator with absolute paths
+- `a6e6972` docs(phase-5): append Windsurf config generator traceability
+- `1c42851` feat(hooks): add Windsurf hooks config installer with backup
 
 ## Scope
 
