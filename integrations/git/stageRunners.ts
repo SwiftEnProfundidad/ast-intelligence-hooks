@@ -1,10 +1,12 @@
-import { policyForCI, policyForPreCommit, policyForPrePush } from '../gate/stagePolicies';
+import { resolvePolicyForStage } from '../gate/stagePolicies';
 import { resolveCiBaseRef, resolveUpstreamRef } from './resolveGitRefs';
 import { runPlatformGate } from './runPlatformGate';
 
 export async function runPreCommitStage(): Promise<number> {
+  const resolved = resolvePolicyForStage('PRE_COMMIT');
   return runPlatformGate({
-    policy: policyForPreCommit(),
+    policy: resolved.policy,
+    policyTrace: resolved.trace,
     scope: {
       kind: 'staged',
     },
@@ -12,8 +14,10 @@ export async function runPreCommitStage(): Promise<number> {
 }
 
 export async function runPrePushStage(): Promise<number> {
+  const resolved = resolvePolicyForStage('PRE_PUSH');
   return runPlatformGate({
-    policy: policyForPrePush(),
+    policy: resolved.policy,
+    policyTrace: resolved.trace,
     scope: {
       kind: 'range',
       fromRef: resolveUpstreamRef(),
@@ -23,8 +27,10 @@ export async function runPrePushStage(): Promise<number> {
 }
 
 export async function runCiStage(): Promise<number> {
+  const resolved = resolvePolicyForStage('CI');
   return runPlatformGate({
-    policy: policyForCI(),
+    policy: resolved.policy,
+    policyTrace: resolved.trace,
     scope: {
       kind: 'range',
       fromRef: resolveCiBaseRef(),

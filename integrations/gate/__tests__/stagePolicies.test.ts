@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import { evaluateGate } from '../../../core/gate/evaluateGate';
 import { evaluateRules } from '../../../core/gate/evaluateRules';
@@ -8,6 +11,7 @@ import {
   policyForCI,
   policyForPreCommit,
   policyForPrePush,
+  resolvePolicyForStage,
 } from '../stagePolicies';
 
 const findSeverity = (ruleId: string, stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI') => {
@@ -33,6 +37,54 @@ test('returns expected gate policy thresholds per stage', () => {
     blockOnOrAbove: 'ERROR',
     warnOnOrAbove: 'WARN',
   });
+});
+
+test('resolves stage policy defaults when skills policy file is missing', () => {
+  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-stage-policy-default-'));
+
+  try {
+    const resolved = resolvePolicyForStage('PRE_COMMIT', tempRoot);
+    assert.deepEqual(resolved.policy, policyForPreCommit());
+    assert.equal(resolved.trace.source, 'default');
+    assert.equal(resolved.trace.bundle, 'gate-policy.default.PRE_COMMIT');
+    assert.match(resolved.trace.hash, /^[A-Fa-f0-9]{64}$/);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('resolves stage policy overrides from skills.policy.json', () => {
+  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-stage-policy-skills-'));
+  const skillsPolicy = {
+    version: '1.0',
+    defaultBundleEnabled: true,
+    stages: {
+      PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+      PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+      CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+    },
+    bundles: {},
+  };
+
+  try {
+    writeFileSync(
+      join(tempRoot, 'skills.policy.json'),
+      JSON.stringify(skillsPolicy, null, 2),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_COMMIT', tempRoot);
+    assert.deepEqual(resolved.policy, {
+      stage: 'PRE_COMMIT',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    });
+    assert.equal(resolved.trace.source, 'skills.policy');
+    assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_COMMIT');
+    assert.match(resolved.trace.hash, /^[A-Fa-f0-9]{64}$/);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
 });
 
 test('keeps heuristic severities as WARN in PRE_COMMIT', () => {

@@ -24,6 +24,7 @@ import { loadProjectRules } from '../config/loadProjectRules';
 import { loadSkillsRuleSetForStage } from '../config/skillsRuleSet';
 import { generateEvidence } from '../evidence/generateEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
+import type { ResolvedStagePolicy } from '../gate/stagePolicies';
 import { applyHeuristicSeverityForStage } from '../gate/stagePolicies';
 import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
@@ -255,6 +256,7 @@ const buildRulesetState = (params: {
   projectRules: RuleSet;
   heuristicRules: RuleSet;
   skillsBundles: ReadonlyArray<{ name: string; version: string; hash: string }>;
+  policyTrace?: ResolvedStagePolicy['trace'];
   stage: GatePolicy['stage'];
 }): RulesetState[] => {
   const states: RulesetState[] = [];
@@ -335,6 +337,14 @@ const buildRulesetState = (params: {
     });
   }
 
+  if (params.policyTrace) {
+    states.push({
+      platform: 'policy',
+      bundle: params.policyTrace.bundle,
+      hash: params.policyTrace.hash,
+    });
+  }
+
   return states;
 };
 
@@ -346,6 +356,7 @@ const normalizeStageForSkills = (
 
 export async function runPlatformGate(params: {
   policy: GatePolicy;
+  policyTrace?: ResolvedStagePolicy['trace'];
   scope: GateScope;
 }): Promise<number> {
   const extensions = params.scope.extensions ?? DEFAULT_EXTENSIONS;
@@ -402,6 +413,7 @@ export async function runPlatformGate(params: {
       projectRules,
       heuristicRules,
       skillsBundles: skillsRuleSet.activeBundles,
+      policyTrace: params.policyTrace,
       stage: params.policy.stage,
     }),
   });
