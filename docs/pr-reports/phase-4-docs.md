@@ -49,6 +49,11 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
   - `docs/BRANCH_PROTECTION_GUIDE.md`
   - `docs/observability.md`
   - `docs/alerting-system.md`
+- Residual markdown cleanup:
+  - removed `docs/type-safety.md`
+  - removed `docs/SEVERITY_AUDIT.md`
+  - removed `docs/VIOLATIONS_RESOLUTION_PLAN.md` (untracked local residual)
+  - removed `_AI_DOCS/AUDIT_REPORT_EXHAUSTIVO_2026-01-04.md`
 - Release notes cleanup:
   - `docs/RELEASE_NOTES.md` consolidated to active v2.x line
   - removed obsolete `docs/RELEASE_NOTES_5.3.4.md`
@@ -65,3 +70,4 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - Installation/configuration/architecture detailed docs now align with active stage runners, policies, evidence v2.1, and CI template flow.
 - Architecture summary, MCP server docs, and testing guide now document only the active deterministic runtime and scripts.
 - Remaining operational docs now reflect active v2.x governance surface and avoid legacy runtime claims.
+- Residual non-authoritative markdown artifacts were removed from active workspace surface.

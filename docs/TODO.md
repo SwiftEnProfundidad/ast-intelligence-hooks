@@ -23,6 +23,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Rewrite `docs/INSTALLATION.md`, `docs/CONFIGURATION.md`, and `docs/ARCHITECTURE_DETAILED.md` to active v2.x model.
 - Rewrite `docs/ARCHITECTURE.md`, `docs/ARCH.md`, `docs/MCP_SERVERS.md`, and `docs/TESTING.md` to active deterministic surface.
 - Rewrite remaining operational docs (`CONTRIBUTING`, `DEPENDENCIES`, `CODE_STANDARDS`, `BRANCH_PROTECTION_GUIDE`, `observability`, `alerting-system`) to active v2.x scope.
+- Remove obsolete markdown leftovers not part of active v2.x docs surface (`type-safety`, `SEVERITY_AUDIT`, ad-hoc violations plan, legacy audit report in `_AI_DOCS`).
 
 ## Next
 
