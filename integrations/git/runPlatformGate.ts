@@ -3,6 +3,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Fact } from '../../core/facts/Fact';
+import { extractHeuristicFacts } from '../../core/facts/extractHeuristicFacts';
 import type { FileChangeFact } from '../../core/facts/FileChangeFact';
 import type { FileContentFact } from '../../core/facts/FileContentFact';
 import type { Finding } from '../../core/gate/Finding';
@@ -21,7 +22,6 @@ import { loadHeuristicsConfig } from '../config/heuristics';
 import { loadProjectRules } from '../config/loadProjectRules';
 import { generateEvidence } from '../evidence/generateEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
-import { extractHeuristicFacts } from '../gate/evaluateHeuristicFindings';
 import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
 

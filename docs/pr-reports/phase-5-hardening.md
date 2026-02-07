@@ -53,10 +53,11 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - Evidence bundle version: `astHeuristicsRuleSet@0.2.0`
 - Pilot heuristic implementation:
   - `core/facts/HeuristicFact.ts`
+  - `core/facts/extractHeuristicFacts.ts`
   - `core/rules/Condition.ts` (`kind: Heuristic`)
   - `core/gate/conditionMatches.ts` (heuristic matcher)
   - `core/rules/presets/astHeuristicsRuleSet.ts`
-  - `integrations/gate/evaluateHeuristicFindings.ts`
+  - `integrations/gate/evaluateHeuristicFindings.ts` (adapter only)
   - `integrations/git/runPlatformGate.ts` (single evaluator path for baseline + heuristic rules)
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)
   - `heuristics.ts.explicit-any.ast` (TS/TSX explicit `any` via AST parser)
@@ -80,7 +81,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 ## Validation status
 
 - `npx tsc --noEmit` now passes for production sources included in tsconfig.
-- `npm run test:heuristics` passes (8/8) for cross-platform AST pilot cases.
+- `npm run test:heuristics` passes (10/10) for cross-platform AST pilot cases.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.
