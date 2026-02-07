@@ -57,7 +57,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `core/rules/Condition.ts` (`kind: Heuristic`)
   - `core/gate/conditionMatches.ts` (heuristic matcher)
   - `core/rules/presets/astHeuristicsRuleSet.ts`
-  - `integrations/gate/evaluateHeuristicFindings.ts` (adapter only)
+  - Integration adapter removed; stage runners consume `core/facts/extractHeuristicFacts.ts` directly
   - `integrations/git/runPlatformGate.ts` (single evaluator path for baseline + heuristic rules)
   - `heuristics.ts.empty-catch.ast` (TS/JS empty `catch {}` via AST parser)
   - `heuristics.ts.explicit-any.ast` (TS/TSX explicit `any` via AST parser)

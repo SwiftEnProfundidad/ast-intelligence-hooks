@@ -44,7 +44,7 @@
     "lint:hooks": "eslint \"scripts/hooks-system/application/**/*.js\" \"bin/**/*.js\"",
     "build:ts": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
-    "test:heuristics": "npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateHeuristicFindings.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts",
+    "test:heuristics": "npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts",
     "test:evidence": "npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts integrations/evidence/__tests__/humanIntent.test.ts",
     "test:mcp": "npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/evidenceContextServer.test.ts",
     "test:deterministic": "npm run test:evidence && npm run test:mcp && npm run test:heuristics",
