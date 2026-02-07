@@ -7,52 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [6.3.3] - 2026-01-28
 ### Fixed
-- ios.weak_self ahora reconoce capture lists con weak/unowned self y evita falsos positivos.
-- ios.concurrency.task_cancellation detecta Task.isCancelled y Task.checkCancellation (incl. try?).
-- workflow.triad.tests_without_implementation respeta la cabecera Implementation: en .feature.
-- ai_gate en evidencia ya no bloquea por violaciones solo MEDIUM/LOW.
-- protocol_3_questions incluye referencia a commits recientes en la pregunta 2.
-- backend.config.missing_validation se limita a archivos reales de apps backend.
-- WorkflowRules usa env.getBool para AUDIT_LIBRARY_SELF y evita falsos positivos.
+- ios.weak_self now recognizes capture lists with weak/unowned self and avoids false positives.
+- ios.concurrency.task_cancellation now detects `Task.isCancelled` and `Task.checkCancellation` (including `try?`).
+- workflow.triad.tests_without_implementation now respects the `Implementation:` header in `.feature` files.
+- ai_gate evidence no longer blocks on MEDIUM/LOW-only violations.
+- protocol_3_questions now includes references to recent commits in question 2.
+- backend.config.missing_validation is now limited to real backend app files.
+- WorkflowRules now uses `env.getBool` for `AUDIT_LIBRARY_SELF` and avoids false positives.
 
 ### Tests
-- Tests internos migrados de jest.mock a spies para evitar falsos positivos y dependencias fantasma.
+- Internal tests migrated from `jest.mock` to spies to avoid false positives and phantom dependencies.
 
 ## [6.3.2] - 2026-01-26
 ### Fixed
-- Auto-refresh ahora actualiza el gate/métricas más recientes sin sobrescribir `protocol_3_questions` ni `ai_gate.violations` cuando la evidencia está completa.
+- Auto-refresh now updates the latest gate/metrics without overwriting `protocol_3_questions` or `ai_gate.violations` when evidence is already complete.
 
 ### Tests
-- Se ajustó el test para validar la preservación de preguntas/violaciones con gate actualizado.
+- Tests were updated to validate preservation of questions/violations with refreshed gate state.
 
 ## [6.3.1] - 2026-01-26
 ### Fixed
-- Auto-refresh ahora preserva `protocol_3_questions` y `ai_gate.violations` cuando la evidencia ya está completa; solo refresca el timestamp para mantenerla vigente.
+- Auto-refresh now preserves `protocol_3_questions` and `ai_gate.violations` when evidence is complete; only the timestamp is refreshed to keep evidence current.
 
 ### Tests
-- Se agregó un test para asegurar que el auto-refresh no sobreescribe la evidencia completa.
+- Added a regression test to ensure auto-refresh does not overwrite complete evidence.
 
 ## [6.3.0] - 2026-01-26
 
 ### Changed
 
-- **Refactor**: Movidos métodos al prototype en 5 clases para reducir señal de "god class"
-  - `RealtimeGuardService`: 14 métodos movidos al prototype
-  - `HookInstaller`: 6 métodos movidos al prototype
-  - `InstallService`: 13 métodos movidos al prototype
-  - `EvidenceMonitor`: 8 métodos movidos al prototype
-  - `McpProtocolHandler`: 7 métodos movidos al prototype
+- **Refactor**: Methods were moved to prototypes across 5 classes to reduce "god class" signals.
+  - `RealtimeGuardService`: 14 methods moved to prototype
+  - `HookInstaller`: 6 methods moved to prototype
+  - `InstallService`: 13 methods moved to prototype
+  - `EvidenceMonitor`: 8 methods moved to prototype
+  - `McpProtocolHandler`: 7 methods moved to prototype
 
 ### Fixed
 
-- **God Classes**: Eliminadas todas las violaciones CRITICAL de god classes (3 → 0)
-- **Code Quality**: Reducción total de violaciones (35 → 32)
+- **God Classes**: Removed all CRITICAL god class violations (3 → 0)
+- **Code Quality**: Reduced total violations (35 → 32)
 
 ### Technical
 
-- ✅ Backward compatible - API pública sin cambios
-- ✅ Todos los tests pasando (1144 passed, 178 suites)
-- ✅ Mejora en mantenibilidad y modularidad del código
+- ✅ Backward compatible - public API unchanged
+- ✅ All tests passing (1144 passed, 178 suites)
+- ✅ Improved maintainability and code modularity
 
 ---
 
@@ -60,9 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **ai_gate**: Mensajes de refresh actualizados con comandos reales (`npx ast-hooks evidence:full-update` y `bash scripts/hooks-system/bin/update-evidence.sh`)
-- **ai_gate.violations**: Selección balanceada por severidad cuando hay límite (CRITICAL/HIGH/MEDIUM/LOW)
-- **protocol_3_questions**: Respuestas persistidas como strings descriptivos
+- **ai_gate**: Refresh messages now use real commands (`npx ast-hooks evidence:full-update` and `bash scripts/hooks-system/bin/update-evidence.sh`)
+- **ai_gate.violations**: Balanced severity selection when result limits apply (CRITICAL/HIGH/MEDIUM/LOW)
+- **protocol_3_questions**: Responses are now persisted as descriptive strings
 
 ---
 
@@ -70,9 +70,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING**: El bloqueo ahora incluye las **4 severidades** por defecto (CRITICAL, HIGH, MEDIUM, LOW)
-- Para mantener el comportamiento anterior (solo CRITICAL/HIGH), configurar `AST_BLOCKING_MODE=LEGACY`
-- **Accesibilidad**: Todos los detectores de accesibilidad iOS ahora son **HIGH** severity (obligatorio por ley)
+- **BREAKING**: Blocking now includes all **4 severities** by default (CRITICAL, HIGH, MEDIUM, LOW)
+- To keep previous behavior (CRITICAL/HIGH only), set `AST_BLOCKING_MODE=LEGACY`
+- **Accessibility**: All iOS accessibility detectors are now **HIGH** severity (legal compliance requirement)
   - `ios.accessibility.missing_label` → HIGH
   - `ios.accessibility.dynamic_type` → HIGH
   - `ios.accessibility.missing_traits` → HIGH
@@ -83,10 +83,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- **SeverityConfig.getBlockingMode()**: Nueva función para obtener las severidades bloqueantes según configuración
-- **CommitBlockingRules.getBlockingMode()**: Coherente con SeverityConfig
-- **Severity.isBlocking()**: Ahora respeta `AST_BLOCKING_MODE` env var
-- **Reglas universales para IDEs/CLIs**: Archivos de configuración para Windsurf, Cursor, Claude Code, Codex CLI
+- **SeverityConfig.getBlockingMode()**: New function to resolve blocking severities from configuration
+- **CommitBlockingRules.getBlockingMode()**: Aligned with `SeverityConfig`
+- **Severity.isBlocking()**: Now respects the `AST_BLOCKING_MODE` env var
+- **Universal IDE/CLI rules**: Configuration files for Windsurf, Cursor, Claude Code, and Codex CLI
   - `.windsurf/skills/mandatory-gate-check.md`
   - `.cursor/rules/mandatory-gate-check.mdc`
   - `.claude/rules/mandatory-gate-check.md`
@@ -94,8 +94,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Technical
 
-- Archivos modificados: `SeverityConfig.js`, `Severity.js`, `CommitBlockingRules.js`, `ast-ios.js`
-- Nuevo export: `BLOCKING_MODES` en SeverityConfig
+- Modified files: `SeverityConfig.js`, `Severity.js`, `CommitBlockingRules.js`, `ast-ios.js`
+- New export: `BLOCKING_MODES` in `SeverityConfig`
 
 ---
 
