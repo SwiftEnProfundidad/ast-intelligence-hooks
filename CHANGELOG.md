@@ -326,21 +326,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [6.0.3] - 2026-01-12
 
 ### Fixed
-- **npm README images**: URLs absolutas y metadata del repo corregidas para evitar redirecciones 404.
+- **npm README images**: Absolute image URLs and repository metadata were corrected to prevent 404 redirects.
 
 ## [6.0.2] - 2026-01-12
 
 ### Fixed
-- **README npm images**: enlaces de imágenes actualizados a URLs absolutas para render correcto en npm.
+- **README npm images**: Image links were updated to absolute URLs for correct rendering on npm.
 
 ## [6.0.1] - 2026-01-12
 
 ### Fixed
-- **Connection pooling rule scope**: `common.network.missing_connection_pooling` ahora solo aplica a archivos JS/TS.
-- **SPM DI detection**: `ios.spm.dependency_injection` no se reporta cuando `Package.swift` declara `dependencies: []`.
-- **Swift Any + Security**: `ios.optionals.type_safety` ignora usos de `Any` cuando hay contexto `Security` (Keychain).
-- **Unused Foundation import**: se reconoce el uso de tipos Foundation desde contenido de archivo para evitar falsos positivos.
-- **Package metadata**: se elimina dependencia autorreferente `pumuki-ast-hooks` en `package.json`.
+- **Connection pooling rule scope**: `common.network.missing_connection_pooling` now applies only to JS/TS files.
+- **SPM DI detection**: `ios.spm.dependency_injection` is no longer reported when `Package.swift` declares `dependencies: []`.
+- **Swift Any + Security**: `ios.optionals.type_safety` now ignores `Any` usage in `Security` (Keychain) context.
+- **Unused Foundation import**: Foundation type usage is now recognized from file content to avoid false positives.
+- **Package metadata**: Removed self-referential `pumuki-ast-hooks` dependency from `package.json`.
 
 ## [5.5.60] - 2026-01-08
 
@@ -401,44 +401,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.5.48] - 2026-01-06
 
 ### Fixed
-- **iOS SRP / God Class false positives**: Swift navigation handlers (clases pequeñas sin estado) ya no se reportan incorrectamente como `ios.solid.srp.god_class`.
-  - `bodyLength` ahora se calcula por nodo con `bodyoffset/bodylength` sobre el contenido real del fichero (líneas), evitando métricas incoherentes.
-  - Se alinea el criterio con cohesión: se omiten candidatos sin propiedades o con <2 métodos significativos (excluyendo `init*` y `deinit`).
+- **iOS SRP / God Class false positives**: Swift navigation handlers (small stateless classes) are no longer incorrectly reported as `ios.solid.srp.god_class`.
+  - `bodyLength` is now calculated per node using `bodyoffset/bodylength` over real file content (lines), avoiding inconsistent metrics.
+  - Cohesion criteria were aligned: candidates with no properties or with fewer than 2 significant methods (excluding `init*` and `deinit`) are skipped.
 
 ### Added
-- **AST rule**: `common.error.empty_catch` (CRITICAL) para detectar `catch` vacíos.
+- **AST rule**: `common.error.empty_catch` (CRITICAL) to detect empty `catch` blocks.
 
 ## [5.5.52] - 2026-01-08
 
 ### Fixed
-- **MCP ai_gate_check**: `mandatory_rules` ya no puede ser `null`.
-  - Si `analyzeContext()` falla o no detecta plataformas, se usa fallback con `PlatformDetectionService`.
-  - Si aun así no se detecta nada, se fuerza fallback determinista: `backend`, `frontend`, `ios`, `android`.
-  - Si la carga de reglas falla, se devuelve un objeto `mandatory_rules` con `criticalRules: []` y `error`.
+- **MCP ai_gate_check**: `mandatory_rules` can no longer be `null`.
+  - If `analyzeContext()` fails or detects no platforms, fallback uses `PlatformDetectionService`.
+  - If no platform is still detected, deterministic fallback is forced: `backend`, `frontend`, `ios`, `android`.
+  - If rule loading fails, a `mandatory_rules` object is returned with `criticalRules: []` and `error`.
 
 ## [5.5.45] - 2026-01-05
 
 ### Added
-- **iOSModernPracticesRules**: Nuevo analizador para Swift 6.2 / iOS 17+ que detecta:
-  - **Librerías prohibidas**: Alamofire, Swinject, Quick/Nimble, RxSwift, SwiftyJSON, Realm, etc.
-  - **Gestores de dependencias prohibidos**: CocoaPods (Podfile), Carthage (Cartfile)
-  - **Patrones GCD obsoletos**: DispatchQueue.main.async, DispatchGroup, DispatchSemaphore
-  - **SwiftUI deprecado**: ObservableObject, @Published, @StateObject, @ObservedObject, NavigationView, AnyView
-  - **APIs legacy**: NSLocalizedString, JSONSerialization, NSAttributedString
-  - **Anti-patterns**: .onAppear { Task { } } en vez de .task, completion handlers
+- **iOSModernPracticesRules**: New analyzer for Swift 6.2 / iOS 17+ that detects:
+  - **Forbidden libraries**: Alamofire, Swinject, Quick/Nimble, RxSwift, SwiftyJSON, Realm, etc.
+  - **Forbidden dependency managers**: CocoaPods (`Podfile`), Carthage (`Cartfile`)
+  - **Obsolete GCD patterns**: `DispatchQueue.main.async`, `DispatchGroup`, `DispatchSemaphore`
+  - **Deprecated SwiftUI**: `ObservableObject`, `@Published`, `@StateObject`, `@ObservedObject`, `NavigationView`, `AnyView`
+  - **Legacy APIs**: `NSLocalizedString`, `JSONSerialization`, `NSAttributedString`
+  - **Anti-patterns**: `.onAppear { Task { } }` instead of `.task`, and completion handlers
 
 ### Changed
-- **rulesios.mdc**: Actualizado con directrices completas para iOS 26, Swift 6.2, Liquid Glass design
+- **rulesios.mdc**: Updated with full guidance for iOS 26, Swift 6.2, and Liquid Glass design
 
 ## [5.5.44] - 2026-01-05
 
 ### Fixed
-- **gitflow-enforcer**: Lint hooks-system se ejecuta contra el `package.json` del repo (y muestra output en caso de fallo) para evitar falsos negativos en pre-push
+- **gitflow-enforcer**: hooks-system lint now runs against the repository `package.json` (and prints output on failure) to avoid false negatives in pre-push
 
 ## [5.5.43] - 2026-01-05
 
 ### Fixed
-- **evidence-guard**: Auto-refresh no falla cuando el quality gate bloquea (mantiene el estado del gate en evidencia, pero no rompe el daemon por `exit code 1`)
+- **evidence-guard**: Auto-refresh no longer fails when the quality gate blocks (gate state is preserved in evidence without breaking the daemon with `exit code 1`)
 
 ## [5.5.42] - 2026-01-05
 
@@ -788,11 +788,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.3.17] - 2025-12-30
 
 ### Added
-- CLI `ast-hooks ast --staged` activa `STAGING_ONLY_MODE=1` para auditorías solo sobre staged files.
+- CLI `ast-hooks ast --staged` enables `STAGING_ONLY_MODE=1` for staged-only audits.
 
 ### Changed
-- Pre-commit hook usa `ast-hooks ast --staged` cuando hay archivos staged (análisis incremental); sin staged, sale limpio.
-- No se altera el modo repo completo: las opciones de menú/CI siguen analizando todo el repositorio cuando corresponde.
+- Pre-commit hook uses `ast-hooks ast --staged` when staged files exist (incremental analysis); without staged files it exits cleanly.
+- Full-repo mode is unchanged: menu/CI options continue analyzing the full repository when applicable.
 
 ## [5.3.14] - 2025-12-29
 
