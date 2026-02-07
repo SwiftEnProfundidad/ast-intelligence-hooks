@@ -117,6 +117,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Windsurf cascade hook template now invokes `run-hook-with-node.sh`, validated in minimal shell PATH contexts.
 - Windsurf cascade-hook docs now include phased rollout guidance (compatibility -> diagnostics -> strict mode) for runtime hardening.
 - Added `collect-runtime-diagnostics.sh` helper to capture wrapper diagnostics and local smoke logs under `.audit_tmp/`.
+- Added `docs/validation/windsurf-hook-runtime-validation.md` as the canonical checklist for real-session Windsurf validation.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.

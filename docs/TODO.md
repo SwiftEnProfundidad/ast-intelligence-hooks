@@ -47,9 +47,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 ## Next
 
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
-  - Validate the new wrapper against a real Windsurf session (`pre_write_code` + `post_write_code`) and capture before/after logs.
-  - Validate optional strict mode (`PUMUKI_HOOK_STRICT_NODE=1`) in a real editor session before enabling by default.
-  - Validate diagnostic mode (`--diagnose` / `PUMUKI_HOOK_DIAGNOSTIC=1`) in a real editor session and capture support logs.
+  - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
