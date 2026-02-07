@@ -66,5 +66,6 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
   - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session and compare against `docs/validation/windsurf-hook-runtime-local-report.md`.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
+- Normalize `legacy/skills/**/*.md` content to enterprise English or archive non-active guides to reduce documentation drift.
 
 ## Notes
