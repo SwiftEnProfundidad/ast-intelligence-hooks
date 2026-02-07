@@ -37,6 +37,11 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
   - `docs/INSTALLATION.md`
   - `docs/CONFIGURATION.md`
   - `docs/ARCHITECTURE_DETAILED.md`
+- Architecture/MCP/testing cleanup:
+  - `docs/ARCHITECTURE.md`
+  - `docs/ARCH.md`
+  - `docs/MCP_SERVERS.md`
+  - `docs/TESTING.md`
 - Release notes cleanup:
   - `docs/RELEASE_NOTES.md` consolidated to active v2.x line
   - removed obsolete `docs/RELEASE_NOTES_5.3.4.md`
@@ -51,3 +56,4 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - Secondary core docs now reflect the active v2.x TypeScript API and deterministic stage pipeline.
 - Legacy 5.3.4 release/migration docs are no longer part of active documentation surface.
 - Installation/configuration/architecture detailed docs now align with active stage runners, policies, evidence v2.1, and CI template flow.
+- Architecture summary, MCP server docs, and testing guide now document only the active deterministic runtime and scripts.

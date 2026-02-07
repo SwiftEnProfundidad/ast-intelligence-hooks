@@ -1,17 +1,24 @@
----
-# Architecture Overview
+# Architecture Contract (Short)
 
-## Legacy
-All code under `/legacy` belongs to the pre-enterprise design (v0).
-This code is frozen and must not be refactored.
-It may only receive minimal maintenance fixes.
+## Current model
 
-## Enterprise Core
-All new development happens under `/core`.
-The enterprise core must not depend on `/legacy`.
-Legacy code may call the core, never the other way around.
+- Domain core: `core/*`
+- Runtime adapters: `integrations/*`
+- Legacy tree: `legacy/*` (historical, non-authoritative for v2.x runtime)
 
-## Integrations
-All hooks, CI, MCP, and external adapters live under `/integrations`.
-Integrations delegate all decision-making to the core.
----
+## Dependency rule
+
+- `core/*` must not depend on `integrations/*` or `legacy/*`.
+- `integrations/*` may depend on `core/*`.
+- `legacy/*` may reference core for compatibility, but does not define v2.x behavior.
+
+## Decision path
+
+All stage decisions must flow through:
+
+`Facts -> Rules -> Gate -> ai_evidence v2.1`
+
+Reference:
+
+- `docs/ARCHITECTURE.md`
+- `docs/ARCHITECTURE_DETAILED.md`
