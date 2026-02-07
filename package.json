@@ -46,6 +46,7 @@
     "typecheck": "tsc --noEmit",
     "test:heuristics": "npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateHeuristicFindings.test.ts",
     "test:evidence": "npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts integrations/evidence/__tests__/humanIntent.test.ts",
+    "test:mcp": "npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/evidenceContextServer.test.ts",
     "ast:refresh": "bash scripts/hooks-system/bin/update-evidence.sh",
     "ast:audit": "node scripts/hooks-system/infrastructure/ast/ast-intelligence.js",
     "ast:guard:start": "bash scripts/hooks-system/bin/evidence-guard start",
@@ -54,7 +55,8 @@
     "ast:guard:status": "bash scripts/hooks-system/bin/evidence-guard status",
     "ast:guard:logs": "bash scripts/hooks-system/bin/evidence-guard logs",
     "ast:check-version": "node scripts/hooks-system/bin/check-version.js",
-    "framework:menu": "npx tsx scripts/framework-menu.ts"
+    "framework:menu": "npx tsx scripts/framework-menu.ts",
+    "mcp:evidence": "npx --yes tsx@4.21.0 integrations/mcp/evidenceContextServer.cli.ts"
   },
   "keywords": [
     "ast",

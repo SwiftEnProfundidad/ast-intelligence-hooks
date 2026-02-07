@@ -16,7 +16,9 @@ Read-only server to expose deterministic evidence before agent actions.
 ## CLI
 
 ```bash
-node integrations/mcp/evidenceContextServer.cli.js
+npm run mcp:evidence
+# or:
+npx --yes tsx@4.21.0 integrations/mcp/evidenceContextServer.cli.ts
 ```
 
 Environment variables:
