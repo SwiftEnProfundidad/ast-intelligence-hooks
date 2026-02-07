@@ -1,205 +1,160 @@
-# 🚀 IDE Hooks + Git Pre-Commit - AST Intelligence Enforcement
+# IDE Hooks + Git Pre-Commit Enforcement
 
-## ¿Qué es esto?
+Deterministic runtime hardening for AI code-writing workflows.
 
-Este sistema combina **IDE Hooks** (donde estén disponibles) con **Git Pre-Commit** para garantizar enforcement en CUALQUIER IDE.
+This module combines IDE-level hooks (when supported) with Git pre-commit as the universal fallback.
 
-### Soporte por IDE (Actualizado: Enero 2026)
+## Purpose
 
-| IDE | Hook Pre-Write | ¿Bloquea antes? | Mecanismo | Config |
-|-----|----------------|-----------------|-----------|--------|
-| **Windsurf** | `pre_write_code` | ✅ SÍ | exit(2) | `~/.codeium/windsurf/hooks.json` |
-| **Claude Code** | `PreToolUse` (Write/Edit) | ✅ SÍ | exit(2) | `~/.config/claude-code/settings.json` |
-| **OpenCode** | Plugin `tool.execute.before` | ✅ SÍ | throw Error | `opencode.json` o `~/.config/opencode/opencode.json` |
-| **Codex CLI** | ❌ Solo approval policies | ⚠️ NO (manual) | - | `~/.codex/config.toml` |
-| **Cursor** | ❌ Solo `afterFileEdit` | ⚠️ NO (post-write) | - | `.cursor/hooks.json` |
-| **Kilo Code** | ❌ No documentado | ⚠️ NO | - | - |
+- Block high-risk code patterns before write when the IDE supports pre-write hooks.
+- Keep a deterministic audit trail for pre-write and post-write activity.
+- Ensure there is always a fallback enforcement layer through Git hooks.
 
-### Resumen de Enforcement
+## IDE Coverage
 
-- ✅ **Windsurf + Claude Code + OpenCode**: Bloqueo REAL antes de escribir
-- ⚠️ **Codex CLI**: Requiere aprobación manual (no automatizable)
-- ⚠️ **Cursor**: Solo logging post-escritura (requiere Git pre-commit)
-- ⚠️ **Otros IDEs**: Solo Git pre-commit
+| IDE | Pre-Write Hook | Blocks Before Write | Mechanism | Config |
+|---|---|---|---|---|
+| Windsurf | `pre_write_code` | Yes | `exit(2)` | `~/.codeium/windsurf/hooks.json` |
+| Claude Code | `PreToolUse` (Write/Edit) | Yes | `exit(2)` | `~/.config/claude-code/settings.json` |
+| OpenCode | `tool.execute.before` plugin | Yes | throw error | `opencode.json` or `~/.config/opencode/opencode.json` |
+| Codex CLI | Approval policies only | No (manual) | N/A | `~/.codex/config.toml` |
+| Cursor | `afterFileEdit` only | No (post-write) | N/A | `.cursor/hooks.json` |
+| Kilo Code | Not documented | No | N/A | N/A |
 
-**El Git pre-commit es el fallback 100% garantizado para TODOS los IDEs.**
+Git pre-commit remains the guaranteed enforcement fallback across IDEs.
 
-## Instalación
+## Windsurf Setup
 
-### 1. Configurar Windsurf Hooks
+### Recommended install flow
 
-Crea el archivo `~/.codeium/windsurf/hooks.json` con el siguiente contenido:
-
-```json
-{
-  "hooks": {
-    "pre_write_code": [
-      {
-        "command": "bash \"/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh\" pre-write-code-hook.js",
-        "show_output": true
-      }
-    ],
-    "post_write_code": [
-      {
-        "command": "bash \"/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh\" post-write-code-hook.js",
-        "show_output": true
-      }
-    ]
-  }
-}
+```bash
+npm run install:windsurf-hooks-config
+npm run verify:windsurf-hooks-runtime
 ```
 
-**Importante**: Reemplaza `/RUTA/A/TU/PROYECTO` con la ruta absoluta a tu proyecto.
+This installs `~/.codeium/windsurf/hooks.json` with an automatic backup of any previous file.
 
-Para evitar rutas obsoletas, puedes generar el JSON directamente desde este repo:
+### Generate config only (no write)
 
 ```bash
 npm run print:windsurf-hooks-config > ~/.codeium/windsurf/hooks.json
 ```
 
-O instalarlo automáticamente (con backup del `hooks.json` previo):
+### Installer dry run
 
 ```bash
-npm run install:windsurf-hooks-config
+bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh --dry-run
 ```
 
-Verificar wiring + runtime antes de abrir Windsurf:
+### Restart Windsurf
+
+Restart the IDE after updating hook configuration.
+
+## Runtime Resolution Model
+
+`run-hook-with-node.sh` resolves Node runtime in this order:
+
+1. `NODE_BINARY` (explicit)
+2. `node` in `PATH`
+3. common runtime managers (`nvm`, `volta`, `asdf`, `fnm`, Homebrew)
+
+If Node is not found:
+
+- Compatibility mode (default): non-blocking fallback
+- Strict mode (`PUMUKI_HOOK_STRICT_NODE=1`): fail with `exit(2)`
+
+## Diagnostics
+
+### Wrapper diagnostics
 
 ```bash
-npm run verify:windsurf-hooks-runtime
+bash "/ABSOLUTE/PATH/TO/legacy/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh" --diagnose
 ```
 
-Evaluar automáticamente si una sesión real reciente registró `pre_write_code` + `post_write_code`:
-
-```bash
-npm run assess:windsurf-hooks-session
-```
-
-Notas:
-
-- Por defecto excluye eventos simulados locales (`__pumuki_simulated__`).
-- Para evaluar cualquier evento (incluyendo simulados):
-
-```bash
-npm run assess:windsurf-hooks-session:any
-```
-
-Para previsualizar sin escribir:
-
-```bash
-bash scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh --dry-run
-```
-
-El wrapper `run-hook-with-node.sh` intenta resolver Node en este orden:
-
-- `NODE_BINARY` explícito
-- `node` en `PATH`
-- runtimes comunes (`nvm`, `volta`, `asdf`, `fnm`, Homebrew)
-
-Si no encuentra Node, muestra diagnóstico y sale en modo compatibilidad (no bloquea la escritura).
-
-Modo estricto opcional:
-
-- `PUMUKI_HOOK_STRICT_NODE=1` cambia el fallback de compatibilidad a bloqueo (`exit 2`) cuando no hay runtime Node.
-- Recomendado habilitarlo solo cuando el entorno ya está estabilizado.
-
-Diagnóstico explícito:
-
-```bash
-bash "/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh" --diagnose
-```
-
-También puedes activar diagnóstico en cada ejecución de hook con:
+Or enable diagnostics for normal hook executions:
 
 - `PUMUKI_HOOK_DIAGNOSTIC=1`
 
-El diagnóstico imprime `node_bin`, `node_version`, `PATH` efectivo y flags de strict/diagnostic.
-
-Para capturar un paquete de diagnóstico local (wrapper + smoke test `post_write_code`):
+### Runtime collector
 
 ```bash
-bash "/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh"
+bash "/ABSOLUTE/PATH/TO/legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh"
 ```
 
-El script genera logs en `.audit_tmp/` listos para adjuntar en soporte.
+Generates support logs under `.audit_tmp/`.
 
-Para ejecutar validación local completa (`pre_write_code` + `post_write_code` simulados):
+## Local Validation and Session Assessment
+
+### Local simulation
 
 ```bash
 npm run validate:windsurf-hooks-local
 ```
 
-Genera artefactos en `docs/validation/windsurf/artifacts/`.
+Expected local result:
 
-**Reinicia Windsurf** después de crear el archivo.
+- `PRE_EXIT=2`
+- `POST_EXIT=0`
 
-### Estrategia de rollout recomendada
+Artifacts are written to `docs/validation/windsurf/artifacts/`.
 
-1. **Fase 1 (compatibilidad por defecto)**  
-   Mantén `PUMUKI_HOOK_STRICT_NODE` desactivado para evitar bloqueos mientras estabilizas entorno.
-2. **Fase 2 (diagnóstico activo)**  
-   Activa `PUMUKI_HOOK_DIAGNOSTIC=1` temporalmente y recoge logs para confirmar resolución estable de Node.
-3. **Fase 3 (enforcement estricto)**  
-   Activa `PUMUKI_HOOK_STRICT_NODE=1` cuando los diagnósticos sean estables en tu equipo/CI.
+### Session assessment
 
-### 2. Hacer ejecutable el hook
+Strict real-session assessment (default, excludes simulated markers):
 
 ```bash
-chmod +x pre-write-code-hook.js
-chmod +x post-write-code-hook.js
-chmod +x run-hook-with-node.sh
+npm run assess:windsurf-hooks-session
 ```
 
-### 3. Verificar instalación
+Include simulated entries:
 
-Intenta escribir código con un `catch {}` vacío - debería ser bloqueado.
-
-## Cómo funciona
-
-```
-┌─────────────────────────────────────────────────────────────────┐
-│  AI genera código                                                │
-│                          ↓                                       │
-│  Windsurf ejecuta pre_write_code hook                           │
-│                          ↓                                       │
-│  Hook recibe: { file_path, edits: [{ old_string, new_string }] }│
-│                          ↓                                       │
-│  analyzeCodeInMemory(new_string, file_path)                     │
-│                          ↓                                       │
-│  ¿Violaciones críticas? ──YES──→ exit(2) ─→ ❌ BLOQUEADO        │
-│          │                                                       │
-│          NO                                                      │
-│          ↓                                                       │
-│  exit(0) ─→ ✅ Código se escribe                                │
-└─────────────────────────────────────────────────────────────────┘
+```bash
+npm run assess:windsurf-hooks-session:any
 ```
 
-## Reglas bloqueadas
+## Recommended Rollout
 
-El hook bloquea código que contenga:
+1. Compatibility mode
+   - Keep strict mode disabled.
+2. Diagnostic stabilization
+   - Enable runtime diagnostics and validate resolution consistency.
+3. Strict enforcement
+   - Enable `PUMUKI_HOOK_STRICT_NODE=1` once runtime stability is confirmed.
 
-| Patrón | Regla | Mensaje |
-|--------|-------|---------|
-| `catch {}` | common.error.empty_catch | Empty catch block - always log or propagate |
-| `.shared` | common.singleton | Singleton pattern - use DI |
-| `DispatchQueue.main` | ios.concurrency.gcd | GCD detected - use async/await |
-| `@escaping` | ios.concurrency.completion_handler | Completion handler - use async/await |
-| `ObservableObject` | ios.swiftui.observable_object | Use @Observable (iOS 17+) |
-| `AnyView` | ios.swiftui.any_view | AnyView affects performance |
+## Execution Model
+
+1. IDE triggers `pre_write_code`.
+2. Hook receives `{ file_path, edits }`.
+3. Proposed code is analyzed in memory.
+4. If critical violations are found, hook exits with `2` and blocks write.
+5. `post_write_code` logs telemetry for allowed writes.
+
+## Typical Blocked Patterns
+
+| Pattern | Rule | Message |
+|---|---|---|
+| `catch {}` | `common.error.empty_catch` | Empty catch block detected |
+| `.shared` | `common.singleton` | Singleton pattern detected |
+| `DispatchQueue.main` | `ios.concurrency.gcd` | Use async/await |
+| `@escaping` | `ios.concurrency.completion_handler` | Avoid completion handlers |
+| `ObservableObject` | `ios.swiftui.observable_object` | Prefer `@Observable` |
+| `AnyView` | `ios.swiftui.any_view` | Avoid type erasure for performance |
 
 ## Logs
 
-Los logs se guardan en:
+- `.audit_tmp/cascade-hook.log`: pre-write decision log
+- `.audit_tmp/cascade-writes.log`: post-write activity log
 
-- `.audit_tmp/cascade-hook.log` - Logs del hook
-- `.audit_tmp/cascade-writes.log` - Historial de escrituras
+## Key Files
 
-## Archivos
-
-- `pre-write-code-hook.js` - Hook principal que BLOQUEA violaciones
-- `post-write-code-hook.js` - Hook de logging post-escritura
-- `run-hook-with-node.sh` - Wrapper que resuelve runtime Node de forma robusta
-- `cascade-hooks-config.json` - Configuración para copiar a Windsurf
+- `pre-write-code-hook.js`: pre-write blocking logic
+- `post-write-code-hook.js`: post-write logging
+- `run-hook-with-node.sh`: resilient runtime wrapper
+- `cascade-hooks-config.json`: Windsurf config template
+- `collect-runtime-diagnostics.sh`: runtime diagnostics bundle
+- `validate-local-runtime.sh`: local simulation runner
+- `verify-windsurf-hooks-runtime.sh`: config/runtime preflight check
+- `assess-windsurf-session.sh`: strict/any session assessor
 
 ---
-Pumuki Team® - AST Intelligence
+Pumuki Team - AST Intelligence
