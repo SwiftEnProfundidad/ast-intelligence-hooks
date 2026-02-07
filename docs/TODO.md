@@ -20,6 +20,10 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 
 ## Next
 
+## Questions For Review
+
+- Confirm if root README should keep `npx ast-hooks` as npm-installed wrapper wording, given this source checkout relies on `legacy/scripts/hooks-system/presentation/cli/audit.sh` for direct manual menu execution.
+
 ## Notes
 
 - README uses inline HTML (`<img>`) for GitHub-friendly full-width rendering.
