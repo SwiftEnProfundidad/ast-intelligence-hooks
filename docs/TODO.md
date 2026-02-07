@@ -55,6 +55,9 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Split session assessment modes:
   - strict real-session mode (default, excludes simulated markers)
   - optional include-simulated mode (`assess:windsurf-hooks-session:any`)
+- Enforce documentation language/tone policy:
+  - all repository documentation must be English-only
+  - rewrite any Spanish sections (including `README.md`) to enterprise-grade English
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 
 ## Next
