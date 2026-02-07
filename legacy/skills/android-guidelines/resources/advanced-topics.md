@@ -2,28 +2,28 @@
 
 ## Gradle (Build)
 
-✅ **Kotlin DSL** - build.gradle.kts (preferido sobre Groovy)
-✅ **Version catalogs** - libs.versions.toml para dependencias
-✅ **buildSrc** - Para lógica compartida de build
+✅ **Kotlin DSL** - `build.gradle.kts` (preferred over Groovy)
+✅ **Version catalogs** - `libs.versions.toml` for dependencies
+✅ **buildSrc** - For shared build logic
 ✅ **Build types** - debug, release, staging
-✅ **Product flavors** - Para variantes de app
-✅ **Build variants** - Combinación de build type + flavor
-✅ **Dependency management** - Versiones consistentes
+✅ **Product flavors** - For app variants
+✅ **Build variants** - Combination of build type + flavor
+✅ **Dependency management** - Consistent versions
 
 ## Multi-module
 
 ✅ **Feature modules** - :feature:orders, :feature:users
 ✅ **Core modules** - :core:network, :core:database, :core:ui
-✅ **App module** - Composición final
+✅ **App module** - Final composition
 ✅ **Clear dependencies** - Feature → Core, NO Feature → Feature
-✅ **Dynamic features** - Para app bundles grandes (opcional)
+✅ **Dynamic features** - For large app bundles (optional)
 
 ## CI/CD
 
 ✅ **GitHub Actions / GitLab CI** - Pipelines
 ✅ **Gradle tasks** - ./gradlew assembleDebug, test
-✅ **Lint** - ./gradlew lint (warnings = errores)
-✅ **Detekt** - Static analysis para Kotlin
+✅ **Lint** - `./gradlew lint` (`warnings = errors`)
+✅ **Detekt** - Static analysis for Kotlin
 ✅ **Firebase App Distribution** - Beta testing
 ✅ **Play Console** - Production deployment
 
@@ -31,14 +31,14 @@
 
 ✅ **Timber** - Logging library
 ✅ **Log levels** - e (error), w (warn), i (info), d (debug)
-✅ **NO logs en producción** - if (BuildConfig.DEBUG) Timber.d()
-✅ **Crashlytics** - Firebase para crash reporting
+✅ **No logs in production** - `if (BuildConfig.DEBUG) Timber.d()`
+✅ **Crashlytics** - Firebase for crash reporting
 ✅ **Analytics** - Firebase Analytics o custom
 
 ## Configuration
 
-✅ **BuildConfig** - Constantes en tiempo de compilación
-✅ **gradle.properties** - Configuración de build
+✅ **BuildConfig** - Compile-time constants
+✅ **gradle.properties** - Build configuration
 ✅ **local.properties** - API keys (NO subir a git)
-✅ **secrets-gradle-plugin** - Para API keys seguras
-✅ **Environment variables** - Para CI/CD
+✅ **secrets-gradle-plugin** - For secure API keys
+✅ **Environment variables** - For CI/CD

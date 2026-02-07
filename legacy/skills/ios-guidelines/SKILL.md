@@ -34,7 +34,7 @@ Automatically activates when working on:
 - [ ] **ViewModel**: Application/ViewModels/ (if needed)
 - [ ] **Tests**: Unit + integration tests
 - [ ] **Error Handling**: Custom Error enum
-- [ ] **No empty catch**: Prohibido `catch` vacío (AST: common.error.empty_catch)
+- [ ] **No empty catch**: Empty `catch` blocks are forbidden (AST: common.error.empty_catch)
 
 ### New Module Checklist
 
@@ -117,7 +117,7 @@ struct OrdersListView: View {
     }
 }
 
-// ✅ UIKit (Legacy/Necesario - solo cuando sea estrictamente necesario)
+// ✅ UIKit (legacy/required - only when strictly necessary)
 class OrdersViewController: UIViewController {
     // Programmatic UI, no Storyboards
 }
@@ -283,20 +283,20 @@ import Infrastructure
 
 ✅ **Keychain** - Passwords, tokens (NO UserDefaults)
 ✅ **SSL pinning** - Prevenir man-in-the-middle
-✅ **Jailbreak detection** - Opcional para apps críticas
+✅ **Jailbreak detection** - Optional for critical applications
 ✅ **App Transport Security (ATS)** - HTTPS por defecto
 ✅ **Biometric auth** - Face ID, Touch ID (LocalAuthentication)
-✅ **Secure enclave** - Para keys criptográficas
-✅ **Obfuscation** - Strings sensibles en código
+✅ **Secure enclave** - For cryptographic keys
+✅ **Obfuscation** - Sensitive strings in code
 
 ## Accessibility
 
-✅ **VoiceOver** - Testear con screen reader
-✅ **Dynamic Type** - Font scaling automático
+✅ **VoiceOver** - Test with a screen reader
+✅ **Dynamic Type** - Automatic font scaling
 ✅ **Accessibility labels** - .accessibilityLabel()
 ✅ **Traits** - .accessibilityAddTraits(.isButton)
 ✅ **Reduce motion** - Respetar preferencias del usuario
-✅ **Color contrast** - WCAG AA mínimo
+✅ **Color contrast** - WCAG AA minimum
 
 ## Localization (i18n)
 
@@ -304,8 +304,8 @@ import Infrastructure
 ✅ **Localizable.strings** - Archivos por idioma
 ✅ **Stringsdict** - Para plurales
 ✅ **Base internationalization** - Base.lproj
-✅ **RTL support** - Right-to-left para árabe, hebreo
-✅ **NumberFormatter** - Formateo de números, monedas
+✅ **RTL support** - Right-to-left support for Arabic/Hebrew
+✅ **NumberFormatter** - Localized number/currency formatting
 ✅ **DateFormatter** - Fechas localizadas
 
 ## Performance
@@ -313,24 +313,24 @@ import Infrastructure
 ✅ **Instruments** - Time Profiler, Allocations, Leaks
 ✅ **Lazy loading** - LazyVStack, on-demand data
 ✅ **Image optimization** - Resize, compress, cache
-✅ **Background threads** - No bloquear main thread
-✅ **Main thread blocking detection** - Detecta operaciones síncronas bloqueantes
+✅ **Background threads** - Do not block the main thread
+✅ **Main thread blocking detection** - Detects blocking synchronous operations
 ✅ **Watchdog prevention** - Previene app kill por watchdog (>5s freeze)
 ✅ **Reuse cells** - UITableView/UICollectionView
-✅ **Memoization** - Cachear cálculos costosos
+✅ **Memoization** - Cache expensive computations
 
 ## Code Organization
 
-✅ **SPM (Swift Package Manager)** - Modularización
-✅ **Feature modules** - Orders, Users, Auth como packages
-✅ **Extensions** - Agrupar por funcionalidad, archivos separados
-✅ **MARK: -** - Organizar código dentro de archivos
-✅ **File naming** - PascalCase para tipos, camelCase para archivos
+✅ **SPM (Swift Package Manager)** - Modularization
+✅ **Feature modules** - Orders, Users, Auth as packages
+✅ **Extensions** - Group by functionality, separate files
+✅ **MARK: -** - Organize code inside files
+✅ **File naming** - PascalCase for types, camelCase for files
 
 ## CI/CD
 
-✅ **Fastlane** - Automatización de builds, tests, deployments
-✅ **xcodebuild** - CLI para builds
+✅ **Fastlane** - Build, test, and deployment automation
+✅ **xcodebuild** - CLI for builds
 ✅ **TestFlight** - Beta distribution
 ✅ **GitHub Actions / Bitrise** - CI/CD pipelines
 
@@ -343,10 +343,10 @@ import Infrastructure
 ❌ Direct API calls in views
 ❌ Missing error handling
 ❌ Retain cycles
-❌ Massive View Controllers (>300 líneas)
-❌ Storyboards grandes (merge conflicts, lentitud)
-❌ Magic numbers (usar constantes con nombres)
-❌ Ignoring warnings (warnings = errores futuros)
+❌ Massive View Controllers (>300 lines)
+❌ Large storyboards (merge conflicts, slowness)
+❌ Magic numbers (use named constants)
+❌ Ignoring warnings (`warnings = future errors`)
 
 ---
 

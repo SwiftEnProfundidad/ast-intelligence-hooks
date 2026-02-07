@@ -33,7 +33,7 @@ Automatically activates when working on:
 - [ ] **Entity**: Domain model in domain/entities/
 - [ ] **Tests**: Unit + integration tests
 - [ ] **Error Handling**: Custom exceptions
-- [ ] **No empty catch**: Prohibido `catch` vacío (AST: common.error.empty_catch)
+- [ ] **No empty catch**: Empty `catch` blocks are forbidden (AST: common.error.empty_catch)
 
 ### New Module Checklist
 

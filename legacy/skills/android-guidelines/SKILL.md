@@ -34,7 +34,7 @@ Automatically activates when working on:
 - [ ] **ViewModel**: Presentation/ui/{feature}/ViewModel
 - [ ] **Tests**: Unit + integration tests
 - [ ] **Error Handling**: Sealed class Result<T>
-- [ ] **No empty catch**: Prohibido silenciar errores en tooling (AST: common.error.empty_catch)
+- [ ] **No empty catch**: Silencing errors in tooling is forbidden (AST: common.error.empty_catch)
 
 ### New Module Checklist
 
@@ -346,20 +346,20 @@ import retrofit2.http.*
 ## Security
 
 ✅ **EncryptedSharedPreferences** - Para datos sensibles
-✅ **Keystore** - Claves criptográficas
+✅ **Keystore** - Cryptographic keys
 ✅ **SafetyNet/Play Integrity** - Verificar integridad del dispositivo
 ✅ **Root detection** - Prevenir uso en dispositivos rooted
-✅ **ProGuard/R8** - Ofuscación de código en release
+✅ **ProGuard/R8** - Code obfuscation in release
 ✅ **Network Security Config** - Certificate pinning
 ✅ **Biometric auth** - BiometricPrompt API
 
 ## Accessibility
 
 ✅ **TalkBack** - Screen reader de Android
-✅ **contentDescription** - Para imágenes y botones
-✅ **semantics** - En Compose para accesibilidad
-✅ **Touch targets** - Mínimo 48dp
-✅ **Color contrast** - WCAG AA mínimo
+✅ **contentDescription** - For images and buttons
+✅ **semantics** - In Compose for accessibility
+✅ **Touch targets** - Minimum 48dp
+✅ **Color contrast** - WCAG AA minimum
 ✅ **Text scaling** - Soportar font scaling del sistema
 
 ## Localization (i18n)
@@ -367,28 +367,28 @@ import retrofit2.http.*
 ✅ **strings.xml** - Por idioma (values-es, values-en)
 ✅ **Plurals** - values/plurals.xml
 ✅ **RTL support** - start/end en lugar de left/right
-✅ **String formatting** - %1$s, %2$d para argumentos
+✅ **String formatting** - `%1$s`, `%2$d` for arguments
 ✅ **DateFormat** - Fechas localizadas
-✅ **NumberFormat** - Números, monedas localizados
+✅ **NumberFormat** - Localized numbers and currencies
 
 ## Performance
 
-✅ **LazyColumn/LazyRow** - Virtualización de listas
-✅ **Paging 3** - Paginación de datos grandes
+✅ **LazyColumn/LazyRow** - List virtualization
+✅ **Paging 3** - Pagination for large datasets
 ✅ **WorkManager** - Background tasks
-✅ **Baseline Profiles** - Optimización de startup
-✅ **App startup** - androidx.startup para lazy init
-✅ **LeakCanary** - Detección de memory leaks
+✅ **Baseline Profiles** - Startup optimization
+✅ **App startup** - `androidx.startup` for lazy initialization
+✅ **LeakCanary** - Memory leak detection
 ✅ **Android Profiler** - CPU, Memory, Network profiling
 
 ## Compose Performance
 
 ✅ **Stability** - Composables estables recomponen menos
 ✅ **remember** - Evitar recrear objetos
-✅ **derivedStateOf** - Cálculos caros solo cuando cambia input
-✅ **LaunchedEffect keys** - Controlar cuándo se relanza effect
+✅ **derivedStateOf** - Expensive calculations only when input changes
+✅ **LaunchedEffect keys** - Control when effects relaunch
 ✅ **Immutable collections** - kotlinx.collections.immutable
-✅ **Skip recomposition** - Parámetros inmutables o estables
+✅ **Skip recomposition** - Immutable or stable parameters
 
 ## Advanced Topics
 
@@ -409,9 +409,9 @@ See [advanced-topics.md](resources/advanced-topics.md) for:
 ❌ AsyncTask - deprecated, use Coroutines
 ❌ RxJava in new code - use Flow
 ❌ Singletons everywhere - use Hilt DI
-❌ Java en código nuevo - Solo Kotlin
+❌ Java in new code - Kotlin only
 ❌ findViewById - View Binding o Compose
-❌ Magic numbers - Usar constantes con nombres
+❌ Magic numbers - Use named constants
 
 ---
 
