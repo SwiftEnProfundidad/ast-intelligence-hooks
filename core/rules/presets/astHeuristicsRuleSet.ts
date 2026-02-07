@@ -5,7 +5,7 @@ export const astHeuristicsRuleSet: RuleSet = [
     id: 'heuristics.ts.empty-catch.ast',
     description: 'Detects empty catch blocks in TypeScript/TSX production files.',
     severity: 'WARN',
-    platform: 'frontend',
+    platform: 'generic',
     locked: true,
     when: {
       kind: 'Heuristic',
@@ -23,7 +23,7 @@ export const astHeuristicsRuleSet: RuleSet = [
     id: 'heuristics.ts.explicit-any.ast',
     description: 'Detects explicit any usage in TypeScript/TSX production files.',
     severity: 'WARN',
-    platform: 'frontend',
+    platform: 'generic',
     locked: true,
     when: {
       kind: 'Heuristic',
@@ -39,9 +39,9 @@ export const astHeuristicsRuleSet: RuleSet = [
   },
   {
     id: 'heuristics.ts.console-log.ast',
-    description: 'Detects console.log invocations in frontend production files.',
+    description: 'Detects console.log invocations in TypeScript production files.',
     severity: 'WARN',
-    platform: 'frontend',
+    platform: 'generic',
     locked: true,
     when: {
       kind: 'Heuristic',

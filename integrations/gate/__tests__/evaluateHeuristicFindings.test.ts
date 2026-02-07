@@ -42,6 +42,26 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
   ]);
 });
 
+test('detects backend TypeScript heuristic findings in production path', () => {
+  const findings = evaluateHeuristicFindings({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/feature/file.ts',
+        'const value: any = 1; try { work(); } catch {} console.log(value);'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  assert.deepEqual(toRuleIds(findings), [
+    'heuristics.ts.console-log.ast',
+    'heuristics.ts.empty-catch.ast',
+    'heuristics.ts.explicit-any.ast',
+  ]);
+});
+
 test('skips frontend heuristics for test files', () => {
   const findings = evaluateHeuristicFindings({
     facts: [

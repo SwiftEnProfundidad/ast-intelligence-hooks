@@ -10,6 +10,7 @@ type HeuristicParams = {
     ios?: { detected: boolean };
     android?: { detected: boolean };
     frontend?: { detected: boolean };
+    backend?: { detected: boolean };
   };
 };
 
@@ -85,10 +86,12 @@ const hasConsoleLogCall = (node: unknown): boolean => {
   });
 };
 
-const isFrontendTargetPath = (path: string): boolean => {
+const isTypeScriptHeuristicTargetPath = (path: string): boolean => {
   return (
     (path.endsWith('.ts') || path.endsWith('.tsx')) &&
-    (path.startsWith('apps/frontend/') || path.startsWith('apps/web/'))
+    (path.startsWith('apps/frontend/') ||
+      path.startsWith('apps/web/') ||
+      path.startsWith('apps/backend/'))
   );
 };
 
@@ -415,6 +418,7 @@ const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
 const hasDetectedHeuristicPlatform = (params: HeuristicParams): boolean => {
   return Boolean(
     params.detectedPlatforms.frontend?.detected ||
+      params.detectedPlatforms.backend?.detected ||
       params.detectedPlatforms.ios?.detected ||
       params.detectedPlatforms.android?.detected
   );
@@ -562,11 +566,9 @@ export const extractHeuristicFacts = (params: HeuristicParams): ReadonlyArray<He
       );
     }
 
-    if (
-      !params.detectedPlatforms.frontend?.detected ||
-      !isFrontendTargetPath(fileFact.path) ||
-      isTestPath(fileFact.path)
-    ) {
+    const hasTypeScriptPlatform =
+      params.detectedPlatforms.frontend?.detected || params.detectedPlatforms.backend?.detected;
+    if (!hasTypeScriptPlatform || !isTypeScriptHeuristicTargetPath(fileFact.path) || isTestPath(fileFact.path)) {
       continue;
     }
 

@@ -65,7 +65,7 @@ Current pilot implemented:
 - `heuristics.android.thread-sleep.ast`
 - `heuristics.android.globalscope.ast`
 - `heuristics.android.run-blocking.ast`
-- Scope: `apps/frontend/**` and `apps/web/**` TypeScript files (`.ts`, `.tsx`)
+- Scope: `apps/frontend/**`, `apps/web/**`, and `apps/backend/**` TypeScript files (`.ts`, `.tsx`)
 - Scope exclusions: test paths (`__tests__`, `tests`, `*.spec.*`, `*.test.*`)
 - Detection: semantic AST parse of `catch {}` with empty block
 - Detection: semantic AST parse of explicit `any` type usage (TS/TSX)

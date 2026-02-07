@@ -3,7 +3,7 @@
 ## Pack
 
 - `astHeuristicsRuleSet@0.2.0`
-- Platform: `frontend`, `ios`, `android` (heuristic signals)
+- Platform: `frontend`, `backend`, `ios`, `android` (heuristic signals)
 
 ## Source
 
