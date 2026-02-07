@@ -44,3 +44,8 @@ Validate PRE_COMMIT / PRE_PUSH / CI stage runners against temporary consumer rep
   - `empty-catch` scenario (non-promoted heuristic): `PRE_COMMIT` non-blocking (`PASS`, exit `0`), `PRE_PUSH/CI` non-blocking warnings (`WARN`, exit `0`)
 - Rule pack/evaluator consistency:
   - heuristics bundle is always recorded as `heuristics:astHeuristicsRuleSet@0.2.0` when flag is enabled.
+- Post-consolidation matrix (`9ce666d`) confirms evidence noise reduction without gate drift:
+  - backend `explicit-any`: `PRE_COMMIT` keeps baseline `WARN`; `PRE_PUSH/CI` keep only promoted heuristic `ERROR` (blocking preserved)
+  - backend `empty-catch`: only baseline `backend.no-empty-catch:CRITICAL` remains (heuristic duplicate removed)
+  - frontend `explicit-any`: heuristic-only path unchanged (`WARN` in `PRE_COMMIT`, `ERROR` in `PRE_PUSH/CI`)
+  - frontend `empty-catch`: non-promoted heuristic remains non-blocking (`PASS/WARN` with exit `0`)

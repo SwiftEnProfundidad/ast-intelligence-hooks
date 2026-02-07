@@ -34,6 +34,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Validate heuristic maturity matrix with `PUMUKI_ENABLE_AST_HEURISTICS=on` in backend/frontend sample consumer repositories.
 - Consolidate evidence signal by suppressing mapped iOS heuristic duplicates when stronger/equal baseline findings exist on the same file.
 - Consolidate evidence signal for mapped iOS/backend/frontend semantic families by keeping highest-severity finding per file-family pair.
+- Validate post-consolidation matrix to ensure duplicate removal does not change stage gate decisions.
 
 ## Next
 
