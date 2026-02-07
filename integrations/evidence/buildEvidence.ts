@@ -160,8 +160,11 @@ const consolidateEquivalentFindings = (
       return true;
     }
     const selected = selectedByFileFamily.get(`${finding.file}::${familyIndex}`);
-    const keep = Boolean(selected) && findingKey(selected) === findingKey(finding);
-    if (!keep && selected) {
+    if (!selected) {
+      return true;
+    }
+    const keep = findingKey(selected) === findingKey(finding);
+    if (!keep) {
       suppressed.push({
         ruleId: finding.ruleId,
         file: finding.file,

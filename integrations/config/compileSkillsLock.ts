@@ -12,6 +12,7 @@ import {
 import {
   SKILLS_LOCK_COMPILER_VERSION,
   skillsCompilerTemplates,
+  type SkillsRuleTemplate,
 } from './skillsCompilerTemplates';
 import { loadSkillsSources, type SkillsSourceBundleV1 } from './skillsSources';
 
@@ -54,7 +55,7 @@ const stableStringify = (value: unknown): string => {
 };
 
 const toCompiledRule = (
-  rule: SkillsCompiledRule,
+  rule: SkillsRuleTemplate,
   sourceBundle: SkillsSourceBundleV1
 ): SkillsCompiledRule => {
   return {
