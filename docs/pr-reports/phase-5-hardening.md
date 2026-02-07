@@ -33,9 +33,9 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `89f8bd0` feat(heuristics): add stage-based severity maturity across gates
 - `f2a35e2` test(gate): verify stage-based heuristic blocking behavior
 - `3f9948c` fix(evidence): align snapshot outcome with gate decision
-- feat(heuristics): promote ios AnyView heuristic to ERROR for PRE_PUSH and CI
-- feat(heuristics): promote explicit-any heuristic to ERROR for PRE_PUSH and CI
-- feat(heuristics): promote iOS callback-style heuristic to ERROR for PRE_PUSH and CI
+- `610fec0` feat(heuristics): promote iOS AnyView heuristic to ERROR for PRE_PUSH and CI
+- `05a5352` feat(heuristics): promote explicit-any heuristic to ERROR for PRE_PUSH and CI
+- `d51bb6a` feat(heuristics): promote iOS callback-style heuristic to ERROR for PRE_PUSH and CI
 
 ## Scope
 

@@ -27,12 +27,18 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Complete documentation hygiene pass across `README.md` + `docs/**/*.md` (final consistency + local link validation).
 - Run end-to-end validation in sample consumer repositories for multi-platform PRE_COMMIT/PRE_PUSH/CI and capture deterministic evidence behavior.
 - Fix evidence/gate mismatch so `snapshot.outcome` mirrors evaluated gate decision across stages.
+- Calibrate heuristic maturity by promoting high-confidence rules to `ERROR` in `PRE_PUSH/CI`:
+  - `heuristics.ios.anyview.ast`
+  - `heuristics.ts.explicit-any.ast`
+  - `heuristics.ios.callback-style.ast`
+- Validate heuristic maturity matrix with `PUMUKI_ENABLE_AST_HEURISTICS=on` in backend/frontend sample consumer repositories.
 
 ## Next
 
-- Heuristic maturity calibration:
-  - Define promotion candidates from `WARN` to `ERROR` based on stage signal quality from sample validations.
-  - Add deterministic tests for promotion matrix changes before enabling in default policy.
+- Heuristic policy consolidation:
+  - Review overlap between promoted iOS heuristics and existing baseline CRITICAL iOS rules to avoid duplicate signals.
+  - Decide whether to keep both baseline + heuristic findings visible or suppress duplicated rule families in evidence output.
+  - If deduplication is approved, implement deterministic evidence-level grouping without changing core rule evaluation semantics.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
