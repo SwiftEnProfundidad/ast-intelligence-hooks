@@ -28,9 +28,13 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
   - `integrations/mcp/__tests__/evidenceContextServer.test.ts`
 - AST heuristics post-validation strategy:
   - `docs/AST_HEURISTICS_REINTRODUCTION_PLAN.md`
+- V2 usage and onboarding cleanup:
+  - `README.md`
+  - `docs/USAGE.md`
 
 ## Validation status
 
 - MCP server TypeScript compilation path validated.
 - `npm run test:mcp` validates health, missing evidence, invalid version, and valid `v2.1` read path.
 - Docs aligned with deterministic evidence contract `version: "2.1"`.
+- Primary user docs now avoid legacy severity model and obsolete hook-system menu options.
