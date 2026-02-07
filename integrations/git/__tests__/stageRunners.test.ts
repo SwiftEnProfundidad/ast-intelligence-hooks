@@ -96,3 +96,38 @@ test('runPreCommitStage uses skills stage policy override and writes policy trac
     assert.match(policyRuleset.hash, /^[A-Fa-f0-9]{64}$/);
   });
 });
+
+test('runPreCommitStage keeps default policy thresholds when skills policy is absent', async () => {
+  await withTempRepo(async (repoRoot) => {
+    const backendDir = join(repoRoot, 'apps', 'backend', 'src');
+    mkdirSync(backendDir, { recursive: true });
+
+    writeFileSync(
+      join(backendDir, 'service.ts'),
+      'export const value: any = 1;\n',
+      'utf8'
+    );
+    runGit(repoRoot, ['add', 'apps/backend/src/service.ts']);
+
+    const exitCode = await runPreCommitStage();
+    assert.equal(exitCode, 0);
+
+    const evidence = JSON.parse(
+      readFileSync(join(repoRoot, '.ai_evidence.json'), 'utf8')
+    ) as EvidenceShape;
+    assert.equal(evidence.version, '2.1');
+    assert.equal(evidence.snapshot.stage, 'PRE_COMMIT');
+    assert.equal(evidence.snapshot.outcome, 'PASS');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
+
+    const policyRuleset = evidence.rulesets.find((ruleset) => ruleset.platform === 'policy');
+    assert.ok(policyRuleset);
+    assert.equal(policyRuleset.bundle, 'gate-policy.default.PRE_COMMIT');
+    assert.match(policyRuleset.hash, /^[A-Fa-f0-9]{64}$/);
+  });
+});
