@@ -7,6 +7,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.explicit-any.ast',
   'heuristics.ios.force-unwrap.ast',
   'heuristics.ios.anyview.ast',
+  'heuristics.ios.callback-style.ast',
   'heuristics.android.thread-sleep.ast',
   'heuristics.android.globalscope.ast',
   'heuristics.android.run-blocking.ast',
