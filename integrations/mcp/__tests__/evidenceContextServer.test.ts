@@ -175,6 +175,48 @@ test('returns compact payload without consolidation when includeSuppressed=false
   assert.equal(payload.consolidation, undefined);
 });
 
+test('supports view=compact and view=full aliases for consolidation payload', async (t) => {
+  const repoRoot = createRepoRoot();
+  writeFileSync(
+    join(repoRoot, '.ai_evidence.json'),
+    `${JSON.stringify(createEvidencePayload(), null, 2)}\n`,
+    'utf8'
+  );
+
+  t.after(() => {
+    rmSync(repoRoot, { recursive: true, force: true });
+  });
+
+  const started = startEvidenceContextServer({
+    host: '127.0.0.1',
+    port: 0,
+    repoRoot,
+  });
+
+  t.after(() => {
+    started.server.close();
+  });
+
+  await once(started.server, 'listening');
+  const address = started.server.address();
+  assert.ok(address && typeof address === 'object');
+  const port = address.port;
+
+  const compactResponse = await fetch(
+    `http://127.0.0.1:${port}/ai-evidence?view=compact`
+  );
+  assert.equal(compactResponse.status, 200);
+  const compactPayload = (await compactResponse.json()) as { consolidation?: unknown };
+  assert.equal(compactPayload.consolidation, undefined);
+
+  const fullResponse = await fetch(`http://127.0.0.1:${port}/ai-evidence?view=full`);
+  assert.equal(fullResponse.status, 200);
+  const fullPayload = (await fullResponse.json()) as {
+    consolidation?: { suppressed?: unknown[] };
+  };
+  assert.equal(fullPayload.consolidation?.suppressed?.length, 1);
+});
+
 test('returns 404 when evidence file version is not v2.1', async (t) => {
   const repoRoot = createRepoRoot();
   writeFileSync(

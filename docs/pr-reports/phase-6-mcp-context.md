@@ -30,3 +30,4 @@ Validate and operationalize the read-only evidence context server so agents can 
 - `npm run test:deterministic` passes (evidence + mcp + heuristics).
 - Server keeps read-only contract and returns `404` for missing/invalid evidence.
 - Server now supports compact evidence responses without `consolidation.suppressed[]` when requested.
+- MCP tests cover both query forms: `includeSuppressed=false` and `view=compact|full`.
