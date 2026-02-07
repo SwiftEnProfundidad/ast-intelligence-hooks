@@ -71,3 +71,4 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - Architecture summary, MCP server docs, and testing guide now document only the active deterministic runtime and scripts.
 - Remaining operational docs now reflect active v2.x governance surface and avoid legacy runtime claims.
 - Residual non-authoritative markdown artifacts were removed from active workspace surface.
+- Final markdown link consistency check passed for `README.md` and `docs/**/*.md` (no broken local links).

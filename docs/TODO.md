@@ -24,13 +24,14 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Rewrite `docs/ARCHITECTURE.md`, `docs/ARCH.md`, `docs/MCP_SERVERS.md`, and `docs/TESTING.md` to active deterministic surface.
 - Rewrite remaining operational docs (`CONTRIBUTING`, `DEPENDENCIES`, `CODE_STANDARDS`, `BRANCH_PROTECTION_GUIDE`, `observability`, `alerting-system`) to active v2.x scope.
 - Remove obsolete markdown leftovers not part of active v2.x docs surface (`type-safety`, `SEVERITY_AUDIT`, ad-hoc violations plan, legacy audit report in `_AI_DOCS`).
+- Complete documentation hygiene pass across `README.md` + `docs/**/*.md` (final consistency + local link validation).
 
 ## Next
 
-- Documentation hygiene pass:
-  - Audit all `*.md` files for stale legacy references (old hooks, daemons, removed workflows, obsolete commands).
-  - Mark each document as keep/update/archive/delete and execute cleanup incrementally by phase.
-  - Continue with final consistency pass across docs and remove redundant overlaps.
-  - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
+- Run end-to-end validation in a sample consumer repo:
+  - Execute PRE_COMMIT, PRE_PUSH, and CI runners for multi-platform scenarios.
+  - Validate deterministic `ai_evidence v2.1` outputs per stage.
+  - Capture findings and promotion candidates for heuristic severities.
+- Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
