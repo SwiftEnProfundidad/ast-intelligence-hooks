@@ -14,6 +14,7 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - `d1fecb7` docs(roadmap): track markdown cleanup backlog and phase-5 progress
 - `f8baebc` chore(repo): stop tracking docs/.DS_Store
 - `42cc408` docs(release): add latest hardening and Windsurf validation updates
+- `47cfdbe` docs(readme): rewrite to enterprise-grade english documentation standard
 
 ## Scope
 
@@ -68,6 +69,7 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - `npm run test:mcp` validates health, missing evidence, invalid version, and valid `v2.1` read path.
 - Docs aligned with deterministic evidence contract `version: "2.1"`.
 - Primary user docs now avoid legacy severity model and obsolete hook-system menu options.
+- `README.md` now follows English-only enterprise documentation standards and explicit runtime contracts.
 - Secondary core docs now reflect the active v2.x TypeScript API and deterministic stage pipeline.
 - Legacy 5.3.4 release/migration docs are no longer part of active documentation surface.
 - Installation/configuration/architecture detailed docs now align with active stage runners, policies, evidence v2.1, and CI template flow.
