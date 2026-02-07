@@ -82,10 +82,10 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 
 ### Phase 1: Contract and Lockfile
 
-- [ ] Define `skills.lock.json` schema (bundle, version, hash, compiled rules, generated_at).
-- [ ] Define `skills.policy.json` schema (stage severity policy and enabled/disabled rule sets).
-- [ ] Add schema validation tests and deterministic hash tests.
-- [ ] Document repository ownership model for both files.
+- [x] Define `skills.lock.json` schema (bundle, version, hash, compiled rules, generated_at).
+- [x] Define `skills.policy.json` schema (stage severity policy and enabled/disabled rule sets).
+- [x] Add schema validation tests and deterministic hash tests.
+- [x] Document repository ownership model for both files.
 
 ### Phase 2: Compilation Flow (Local Authoring)
 
@@ -118,7 +118,7 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 
 ### Current Status
 
-- [ ] Not started (planning committed in TODO).
-- [ ] Next implementation milestone: Phase 1 schema draft + tests.
+- [x] Phase 1 completed (contracts + validators + deterministic hash tests).
+- [ ] Next implementation milestone: Phase 2 local compilation flow (`skills.lock.json` generator).
 
 ## Notes

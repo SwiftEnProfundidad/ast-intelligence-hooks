@@ -47,6 +47,33 @@ You cannot (unless `allowOverrideLocked: true`):
 - Remove locked baseline rules.
 - Replace locked baseline conditions/consequences.
 
+## Skills contracts (Phase 1)
+
+Repository-level contracts for future skills enforcement:
+
+- `skills.lock.json`
+- `skills.policy.json`
+
+Typed contract and loader/validator modules:
+
+- `integrations/config/skillsLock.ts`
+- `integrations/config/skillsPolicy.ts`
+
+Current scope in this phase:
+
+- schema/contract validation
+- deterministic contract hashing
+- file loading with safe fallback (`undefined` when missing/invalid)
+
+The Gate still uses baseline packs + project overrides as active enforcement source.
+Skills contracts are additive preparatory inputs for next phases.
+
+Ownership model:
+
+- Contracts are repository artifacts and must be committed.
+- CI and team members must evaluate the same committed contract files.
+- User-home skill sources (`~/.codex/**`) are not runtime inputs for CI gate decisions.
+
 ## Stage policies
 
 Defined in `integrations/gate/stagePolicies.ts`:
