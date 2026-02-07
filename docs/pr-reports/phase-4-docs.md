@@ -33,6 +33,10 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
   - `docs/USAGE.md`
   - `docs/HOW_IT_WORKS.md`
   - `docs/API_REFERENCE.md`
+- Release notes cleanup:
+  - `docs/RELEASE_NOTES.md` consolidated to active v2.x line
+  - removed obsolete `docs/RELEASE_NOTES_5.3.4.md`
+  - removed obsolete `docs/MIGRATION_5.3.4.md`
 
 ## Validation status
 
@@ -41,3 +45,4 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - Docs aligned with deterministic evidence contract `version: "2.1"`.
 - Primary user docs now avoid legacy severity model and obsolete hook-system menu options.
 - Secondary core docs now reflect the active v2.x TypeScript API and deterministic stage pipeline.
+- Legacy 5.3.4 release/migration docs are no longer part of active documentation surface.
