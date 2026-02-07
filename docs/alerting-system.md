@@ -1,51 +1,27 @@
-# Alerting system (hook-system)
+# Alerting System (v2.x)
 
-This repo does not expose its own HTTP server; metrics are published via `/metrics` in `metrics-server.js`, reading `.audit_tmp/hook-metrics.jsonl`. Alerts rely on `recordMetric` events from critical services (guards, scheduler).
+There is no dedicated built-in alerting service in the active deterministic runtime.
 
-## Key metrics
-- `hook_events_total{hook="guard_auto_manager",status="lock_fail|start|stop"}`
-- `hook_events_total{hook="realtime_guard",status="start|stop"}`
-- `hook_events_total{hook="git_tree",status="dirty|clean"}`
-- `hook_events_total{hook="token_monitor",status="start|fail"}`
-- `hook_events_total{hook="gitflow_autosync",status="enabled|sync_success"}`
-- `hook_events_total{hook="evidence",status="stale|auto_refresh_success"}`
+## Practical alerting model
 
-## Alert examples (Prometheus)
-```yaml
-- alert: GuardLockFailure
-  expr: increase(hook_events_total{hook="guard_auto_manager",status="lock_fail"}[5m]) > 0
-  for: 5m
-  labels: { severity: critical }
-  annotations:
-    summary: "Guard auto manager could not acquire lock"
-    description: "Check duplicate instance or orphan PID file"
+Use external systems driven by CI and evidence outputs:
 
-- alert: GitTreeDirtyPersistent
-  expr: increase(hook_events_total{hook="git_tree",status="dirty"}[15m]) >= 3
-  for: 0m
-  labels: { severity: warning }
-  annotations:
-    summary: "Repo dirty repeatedly"
-    description: "More than 3 dirty detections in 15m"
+- GitHub required checks (gate/test workflows)
+- Workflow failure notifications (GitHub / Slack / Teams integrations)
+- Evidence artifact inspection for stage outcome and findings
 
-- alert: EvidenceStale
-  expr: increase(hook_events_total{hook="evidence",status="stale"}[30m]) > 0
-  for: 0m
-  labels: { severity: warning }
-  annotations:
-    summary: "Evidence is stale"
-    description: "Guard detected evidence outside SLA"
+## Recommended alert conditions
 
-- alert: TokenMonitorFail
-  expr: increase(hook_events_total{hook="token_monitor",status="fail"}[10m]) > 0
-  for: 0m
-  labels: { severity: warning }
-  annotations:
-    summary: "Token monitor failed to start"
-    description: "Check script/token monitor availability"
-```
+- Any gate workflow failure (`iOS`, `Backend`, `Frontend`, `Android`)
+- Deterministic suite failure (`test:deterministic`)
+- Heuristics suite failure (`test:heuristics`)
+- Evidence missing or invalid (`version != 2.1`) in CI artifact checks
 
-## Operations
-- Run `metrics-server.js` (port `HOOK_METRICS_PORT`, default 9464) to expose `/metrics`.
-- Scrape Prometheus apuntando a `http://<host>:<port>/metrics`.
-- Ajustar umbrales/ventanas según ruido y frecuencia de uso.
+## Example operational policy
+
+- `CRITICAL`/`ERROR` blocks in `PRE_PUSH` or `CI` -> page maintainers
+- repeated `WARN` trends across runs -> create backlog issue
+
+## Note
+
+Document concrete alert rules only when a first-class alerting implementation exists in active runtime code.

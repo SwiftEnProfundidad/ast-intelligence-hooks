@@ -22,13 +22,14 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Consolidate release notes to active v2.x line and remove legacy 5.3.4 migration/release docs.
 - Rewrite `docs/INSTALLATION.md`, `docs/CONFIGURATION.md`, and `docs/ARCHITECTURE_DETAILED.md` to active v2.x model.
 - Rewrite `docs/ARCHITECTURE.md`, `docs/ARCH.md`, `docs/MCP_SERVERS.md`, and `docs/TESTING.md` to active deterministic surface.
+- Rewrite remaining operational docs (`CONTRIBUTING`, `DEPENDENCIES`, `CODE_STANDARDS`, `BRANCH_PROTECTION_GUIDE`, `observability`, `alerting-system`) to active v2.x scope.
 
 ## Next
 
 - Documentation hygiene pass:
   - Audit all `*.md` files for stale legacy references (old hooks, daemons, removed workflows, obsolete commands).
   - Mark each document as keep/update/archive/delete and execute cleanup incrementally by phase.
-  - Continue with remaining docs after core cleanup (`CONTRIBUTING`, `DEPENDENCIES`, `CODE_STANDARDS`, `BRANCH_PROTECTION_GUIDE`, `observability`, `alerting-system`).
+  - Continue with final consistency pass across docs and remove redundant overlaps.
   - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
