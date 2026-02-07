@@ -112,6 +112,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `npm run test:evidence` covers evidence consolidation for iOS and backend semantic families, keeping the strongest deterministic signal.
 - Evidence tests now include explicit file-level consolidation fixture with differing line metadata to document current precedence behavior.
 - Evidence tests now include repeated same-rule multi-line fixture to enforce deterministic file-level collapse behavior.
+- Evidence v2.1 docs now explicitly state file-level consolidation scope for semantic families (including same-rule multi-line occurrences).
 - Windsurf cascade hook template now invokes `run-hook-with-node.sh`, validated in minimal shell PATH contexts.
 - Windsurf cascade-hook docs now include phased rollout guidance (compatibility -> diagnostics -> strict mode) for runtime hardening.
 - Added `collect-runtime-diagnostics.sh` helper to capture wrapper diagnostics and local smoke logs under `.audit_tmp/`.

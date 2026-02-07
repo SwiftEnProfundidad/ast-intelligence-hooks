@@ -32,6 +32,7 @@
 
 - Findings are deduplicated by `ruleId + file + lines`.
 - For selected semantic rule families, equivalent baseline/heuristic duplicates on the same file are consolidated to a single finding, keeping the highest-severity signal deterministically.
+- Consolidation scope is file-level in v2.1: repeated same-family findings (including same rule on different lines) collapse to one deterministic representative.
 - When consolidation removes findings, `consolidation.suppressed[]` keeps the trace (`ruleId`, `replacedByRuleId`, `reason`) for auditability.
 - Ledger entries are updated if a violation still exists.
 - Cleared violations are removed from ledger.

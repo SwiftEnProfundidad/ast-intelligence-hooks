@@ -39,14 +39,13 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add MCP evidence response filters (`includeSuppressed`, `view=compact|full`) for human/agent-oriented payloads.
 - Add targeted evidence fixtures confirming current file-level consolidation behavior when same-family findings appear on different lines.
 - Enforce deterministic file-level consolidation when same rule repeats on different lines in one file, with dedicated evidence test coverage.
+- Confirm file-level consolidation scope for v2.1 (single representative finding per file-family, including repeated same-rule line occurrences).
 - Harden Windsurf cascade hook command with runtime resolver wrapper (`run-hook-with-node.sh`) to reduce `node: command not found` failures in non-interactive shells.
 - Document staged rollout strategy for Windsurf hook runtime hardening (compatibility, diagnostics, strict mode).
 - Add local runtime diagnostics collector script for Windsurf hooks (`collect-runtime-diagnostics.sh`) with `.audit_tmp` output.
 
 ## Next
 
-- Heuristic policy consolidation:
-  - Validate whether file-level family consolidation is enough or should evolve to line-aware grouping for multi-occurrence files.
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
   - Validate the new wrapper against a real Windsurf session (`pre_write_code` + `post_write_code`) and capture before/after logs.
   - Validate optional strict mode (`PUMUKI_HOOK_STRICT_NODE=1`) in a real editor session before enabling by default.
