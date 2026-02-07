@@ -76,6 +76,14 @@ También puedes activar diagnóstico en cada ejecución de hook con:
 
 El diagnóstico imprime `node_bin`, `node_version`, `PATH` efectivo y flags de strict/diagnostic.
 
+Para capturar un paquete de diagnóstico local (wrapper + smoke test `post_write_code`):
+
+```bash
+bash "/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh"
+```
+
+El script genera logs en `.audit_tmp/` listos para adjuntar en soporte.
+
 **Reinicia Windsurf** después de crear el archivo.
 
 ### Estrategia de rollout recomendada

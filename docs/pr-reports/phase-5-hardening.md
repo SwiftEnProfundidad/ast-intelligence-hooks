@@ -111,6 +111,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Evidence tests now include repeated same-rule multi-line fixture to enforce deterministic file-level collapse behavior.
 - Windsurf cascade hook template now invokes `run-hook-with-node.sh`, validated in minimal shell PATH contexts.
 - Windsurf cascade-hook docs now include phased rollout guidance (compatibility -> diagnostics -> strict mode) for runtime hardening.
+- Added `collect-runtime-diagnostics.sh` helper to capture wrapper diagnostics and local smoke logs under `.audit_tmp/`.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.

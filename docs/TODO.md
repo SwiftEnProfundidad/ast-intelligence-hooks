@@ -41,6 +41,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Enforce deterministic file-level consolidation when same rule repeats on different lines in one file, with dedicated evidence test coverage.
 - Harden Windsurf cascade hook command with runtime resolver wrapper (`run-hook-with-node.sh`) to reduce `node: command not found` failures in non-interactive shells.
 - Document staged rollout strategy for Windsurf hook runtime hardening (compatibility, diagnostics, strict mode).
+- Add local runtime diagnostics collector script for Windsurf hooks (`collect-runtime-diagnostics.sh`) with `.audit_tmp` output.
 
 ## Next
 
