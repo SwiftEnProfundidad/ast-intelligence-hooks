@@ -5,6 +5,8 @@ Objective: validate `pre_write_code` and `post_write_code` runtime behavior in a
 ## Preconditions
 
 - Repo checked out with latest `enterprise-refactor`.
+- Windsurf config refreshed from current repo path:
+  - `npm run print:windsurf-hooks-config > ~/.codeium/windsurf/hooks.json`
 - Windsurf hook config uses:
   - `run-hook-with-node.sh pre-write-code-hook.js`
   - `run-hook-with-node.sh post-write-code-hook.js`

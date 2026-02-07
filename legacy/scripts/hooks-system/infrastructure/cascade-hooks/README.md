@@ -51,6 +51,12 @@ Crea el archivo `~/.codeium/windsurf/hooks.json` con el siguiente contenido:
 
 **Importante**: Reemplaza `/RUTA/A/TU/PROYECTO` con la ruta absoluta a tu proyecto.
 
+Para evitar rutas obsoletas, puedes generar el JSON directamente desde este repo:
+
+```bash
+npm run print:windsurf-hooks-config > ~/.codeium/windsurf/hooks.json
+```
+
 El wrapper `run-hook-with-node.sh` intenta resolver Node en este orden:
 
 - `NODE_BINARY` explícito
