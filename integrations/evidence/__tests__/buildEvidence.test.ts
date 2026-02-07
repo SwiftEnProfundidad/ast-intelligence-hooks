@@ -109,3 +109,26 @@ test('uses explicit human intent input as source of truth without incrementing c
   assert.equal(result.human_intent.preserved_at, result.timestamp);
   assert.deepEqual(result.ai_gate.human_intent, result.human_intent);
 });
+
+test('respects explicit gate outcome for stage-aware blocking decisions', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'ios.no-print',
+        severity: 'ERROR',
+        code: 'IOS_NO_PRINT',
+        message: 'print() usage is not allowed in iOS code.',
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.outcome, 'BLOCK');
+  assert.equal(result.ai_gate.status, 'BLOCKED');
+  assert.equal(result.severity_metrics.gate_status, 'BLOCKED');
+});

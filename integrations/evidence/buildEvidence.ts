@@ -22,6 +22,7 @@ type BuildFindingInput = Finding & {
 export type BuildEvidenceParams = {
   stage: GateStage;
   findings: ReadonlyArray<BuildFindingInput>;
+  gateOutcome?: GateOutcome;
   previousEvidence?: AiEvidenceV2_1;
   humanIntent?: HumanIntentState | null;
   detectedPlatforms: Record<string, PlatformState>;
@@ -186,7 +187,7 @@ const normalizeRulesets = (rulesets: ReadonlyArray<RulesetState>): RulesetState[
 export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const now = new Date().toISOString();
   const normalizedFindings = dedupeFindings(params.findings);
-  const outcome = toGateOutcome(normalizedFindings);
+  const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';
   const severity = bySeverity(normalizedFindings);
   const humanIntent = resolveHumanIntent({

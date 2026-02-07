@@ -367,6 +367,7 @@ export async function runPlatformGate(params: {
   generateEvidence({
     stage: params.policy.stage,
     findings,
+    gateOutcome: decision.outcome,
     previousEvidence: loadPreviousEvidence(resolveRepoRoot()),
     detectedPlatforms: toDetectedPlatformsRecord(detectedPlatforms),
     loadedRulesets: buildRulesetState({
