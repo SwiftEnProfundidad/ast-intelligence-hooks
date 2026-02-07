@@ -45,6 +45,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `637f114` docs(phase-5): append latest hardening commit traceability
 - `d9d2057` docs(hooks): define staged rollout for Windsurf node runtime hardening
 - `2407748` feat(hooks): add runtime diagnostics collector for Windsurf cascade hooks
+- `af5f97c` docs(evidence): clarify file-level consolidation scope in v2.1
 
 ## Scope
 
