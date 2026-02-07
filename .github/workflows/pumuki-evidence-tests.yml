@@ -1,11 +1,11 @@
-name: Pumuki Evidence Tests
+name: Pumuki Deterministic Tests
 
 on:
   pull_request:
   push:
 
 jobs:
-  evidence-tests:
+  deterministic-tests:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,3 +23,6 @@ jobs:
 
       - name: Run evidence tests
         run: npm run test:evidence
+
+      - name: Run MCP evidence server tests
+        run: npm run test:mcp
