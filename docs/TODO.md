@@ -59,12 +59,12 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Enforce documentation language/tone policy:
   - all repository documentation must be English-only
   - rewrite any Spanish sections (including `README.md`) to enterprise-grade English
+- Normalize legacy skills documentation language to enterprise English (`legacy/skills/**/*.md`).
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 
 ## Next
 
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
   - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session and compare against `docs/validation/windsurf-hook-runtime-local-report.md`.
-- Normalize `legacy/skills/**/*.md` content to enterprise English or archive non-active guides to reduce documentation drift.
 
 ## Notes
