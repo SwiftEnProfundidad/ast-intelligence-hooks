@@ -281,3 +281,39 @@ test('prefers baseline finding on equal severity tie within same semantic family
     'heuristics.ts.explicit-any.ast'
   );
 });
+
+test('applies semantic-family consolidation at file level even when lines differ', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'heuristics.ts.explicit-any.ast',
+        severity: 'ERROR',
+        code: 'HEURISTICS_EXPLICIT_ANY_AST',
+        message: 'AST heuristic detected explicit any usage.',
+        filePath: 'apps/backend/src/main.ts',
+        lines: [10],
+      },
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'WARN',
+        code: 'BACKEND_AVOID_EXPLICIT_ANY',
+        message: 'Avoid explicit any in backend code.',
+        filePath: 'apps/backend/src/main.ts',
+        lines: [42],
+      },
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(
+    result.snapshot.findings.map((finding) => finding.ruleId),
+    ['heuristics.ts.explicit-any.ast']
+  );
+  assert.ok(result.consolidation);
+  assert.deepEqual(result.consolidation.suppressed[0]?.lines, [42]);
+});
