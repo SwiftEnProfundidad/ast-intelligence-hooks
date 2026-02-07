@@ -14,7 +14,21 @@ else
 fi
 
 REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || pwd)"
-WRAPPER_PATH="${REPO_ROOT}/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh"
+WRAPPER_PATH=""
+for candidate in \
+  "${REPO_ROOT}/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh" \
+  "${REPO_ROOT}/legacy/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh"
+do
+  if [ -x "${candidate}" ]; then
+    WRAPPER_PATH="${candidate}"
+    break
+  fi
+done
+
+if [ -z "${WRAPPER_PATH}" ]; then
+  echo "[pumuki:cascade-hooks] unable to resolve executable run-hook-with-node.sh path" >&2
+  exit 1
+fi
 
 cat <<JSON
 {
@@ -36,4 +50,3 @@ cat <<JSON
   }
 }
 JSON
-

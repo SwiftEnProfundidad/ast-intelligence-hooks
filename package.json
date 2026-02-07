@@ -60,7 +60,8 @@
     "mcp:evidence": "npx --yes tsx@4.21.0 integrations/mcp/evidenceContextServer.cli.ts",
     "validate:windsurf-hooks-local": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh",
     "print:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/print-windsurf-hooks-config.sh",
-    "install:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh"
+    "install:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh",
+    "verify:windsurf-hooks-runtime": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-windsurf-hooks-runtime.sh"
   },
   "keywords": [
     "ast",

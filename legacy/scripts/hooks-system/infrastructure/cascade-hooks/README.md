@@ -63,6 +63,12 @@ O instalarlo automáticamente (con backup del `hooks.json` previo):
 npm run install:windsurf-hooks-config
 ```
 
+Verificar wiring + runtime antes de abrir Windsurf:
+
+```bash
+npm run verify:windsurf-hooks-runtime
+```
+
 Para previsualizar sin escribir:
 
 ```bash
