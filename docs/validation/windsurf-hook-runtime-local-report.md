@@ -11,11 +11,13 @@ This report validates technical behavior in terminal mode (not a full IDE intera
 
 ## Commands executed
 
-0. `npm run validate:windsurf-hooks-local`
-1. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
-2. Simulated `pre_write_code` payload via:
+0. `npm run install:windsurf-hooks-config`
+1. `npm run verify:windsurf-hooks-runtime`
+2. `npm run validate:windsurf-hooks-local`
+3. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
+4. Simulated `pre_write_code` payload via:
    - `run-hook-with-node.sh pre-write-code-hook.js`
-3. Simulated `post_write_code` payload via:
+5. Simulated `post_write_code` payload via:
    - `run-hook-with-node.sh post-write-code-hook.js`
 
 ## Results
@@ -27,6 +29,9 @@ This report validates technical behavior in terminal mode (not a full IDE intera
 - Runtime diagnostics resolved Node correctly:
   - `node_bin=/Users/juancarlosmerlosalbarracin/.nvm/versions/node/v20.20.0/bin/node`
   - `node_version=v20.20.0`
+- Hooks config verification passed:
+  - `verify:windsurf-hooks-runtime` returned `verify OK`
+  - Wrapper path resolved from active repo layout (`legacy/scripts/...`) via fallback logic.
 
 ## Artifacts
 

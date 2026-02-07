@@ -48,6 +48,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add `npm run print:windsurf-hooks-config` to generate non-stale absolute Windsurf hook config paths.
 - Add `npm run install:windsurf-hooks-config` to install refreshed Windsurf config with backup.
 - Add `npm run verify:windsurf-hooks-runtime` as preflight guard for Windsurf hooks wiring/runtime.
+- Add wrapper-path fallback (`scripts/...` or `legacy/scripts/...`) in Windsurf config tooling + pre-write AST loader.
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 
 ## Next

@@ -19,26 +19,63 @@
 
 const path = require('path');
 const fs = require('fs');
+const { execSync } = require('child_process');
+
+const DEFAULT_REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..', '..');
+
+function resolveRepoRootFromCwd(cwd) {
+    try {
+        return execSync('git rev-parse --show-toplevel', {
+            encoding: 'utf-8',
+            cwd
+        }).trim();
+    } catch {
+        return null;
+    }
+}
 
 function getRepoRoot(filePath) {
     if (filePath) {
-        const { execSync } = require('child_process');
+        const resolvedFilePath = path.isAbsolute(filePath)
+            ? filePath
+            : path.resolve(process.cwd(), filePath);
+        const fileDir = path.dirname(resolvedFilePath);
         try {
-            return execSync('git rev-parse --show-toplevel', {
-                encoding: 'utf-8',
-                cwd: path.dirname(filePath)
-            }).trim();
+            if (fs.existsSync(fileDir)) {
+                const rootedFromFile = resolveRepoRootFromCwd(fileDir);
+                if (rootedFromFile) {
+                    return rootedFromFile;
+                }
+            }
         } catch (e) {
             if (process.env.DEBUG) {
                 process.stderr.write(`[pre-write-hook] Git root lookup failed: ${e.message}\n`);
             }
         }
     }
-    // Fallback: this script is in scripts/hooks-system/infrastructure/cascade-hooks/
-    return path.resolve(__dirname, '..', '..', '..', '..');
+    return resolveRepoRootFromCwd(process.cwd()) || DEFAULT_REPO_ROOT;
 }
 
-let REPO_ROOT = path.resolve(__dirname, '..', '..', '..', '..');
+function resolveAstCoreModule(repoRoot) {
+    const candidates = [
+        path.join(repoRoot, 'scripts/hooks-system/infrastructure/ast/ast-core'),
+        path.join(repoRoot, 'legacy/scripts/hooks-system/infrastructure/ast/ast-core'),
+        path.resolve(__dirname, '..', 'ast', 'ast-core')
+    ];
+
+    for (const candidate of candidates) {
+        try {
+            require.resolve(candidate);
+            return candidate;
+        } catch {
+            // Continue to next candidate
+        }
+    }
+
+    throw new Error(`ast-core module not found for repo root ${repoRoot}`);
+}
+
+let REPO_ROOT = resolveRepoRootFromCwd(process.cwd()) || DEFAULT_REPO_ROOT;
 
 const LOG_FILE = path.join(REPO_ROOT, '.audit_tmp', 'cascade-hook.log');
 
@@ -105,7 +142,7 @@ async function main() {
     // Load AST analyzer
     let analyzeCodeInMemory;
     try {
-        const astCore = require(path.join(REPO_ROOT, 'scripts/hooks-system/infrastructure/ast/ast-core'));
+        const astCore = require(resolveAstCoreModule(REPO_ROOT));
         analyzeCodeInMemory = astCore.analyzeCodeInMemory;
     } catch (error) {
         log(`ERROR: Failed to load AST analyzer: ${error.message}`);
