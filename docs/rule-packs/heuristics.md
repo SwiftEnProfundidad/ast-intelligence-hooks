@@ -20,6 +20,17 @@
 - The shared evaluator matches those facts through declarative `Heuristic` conditions.
 - Findings are emitted by standard rule evaluation flow and included in `.ai_evidence.json`.
 
+## Stage severity maturity
+
+- `PRE_COMMIT` keeps all heuristic findings at `WARN`.
+- `PRE_PUSH` and `CI` promote selected high-confidence heuristic rules to `ERROR`:
+  - `heuristics.ts.console-log.ast`
+  - `heuristics.ios.force-unwrap.ast`
+  - `heuristics.android.thread-sleep.ast`
+  - `heuristics.android.globalscope.ast`
+  - `heuristics.android.run-blocking.ast`
+- Remaining heuristic rules stay at `WARN` across all stages.
+
 ## Current pilot rules
 
 - `heuristics.ts.empty-catch.ast`

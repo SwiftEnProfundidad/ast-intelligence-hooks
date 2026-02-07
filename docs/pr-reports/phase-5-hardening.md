@@ -73,6 +73,10 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `core/facts/DependencyFact.ts` now includes `source`
   - `integrations/git/evaluateStagedIOS.ts` handles readonly findings safely
   - `tsconfig.json` excludes nested test files from production compile target
+- Stage-aware heuristic severity maturity:
+  - `integrations/gate/stagePolicies.ts` promotes selected heuristic rules to `ERROR` for `PRE_PUSH` and `CI`
+  - `integrations/git/runPlatformGate.ts` applies stage-aware heuristic severities before merged rule evaluation and evidence hashing
+  - `integrations/gate/__tests__/stagePolicies.test.ts` covers policy thresholds and heuristic promotion matrix
 - Canonical evidence writer path:
   - `integrations/evidence/generateEvidence.ts` as single build+write facade
   - `integrations/evidence/buildEvidence.ts` deterministic snapshot + ledger merge
@@ -82,6 +86,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 
 - `npx tsc --noEmit` now passes for production sources included in tsconfig.
 - `npm run test:heuristics` passes (10/10) for cross-platform AST pilot cases.
+- `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts` passes for stage policy thresholds and severity promotion behavior.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.

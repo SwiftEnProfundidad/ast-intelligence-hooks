@@ -22,6 +22,7 @@ import { loadHeuristicsConfig } from '../config/heuristics';
 import { loadProjectRules } from '../config/loadProjectRules';
 import { generateEvidence } from '../evidence/generateEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
+import { applyHeuristicSeverityForStage } from '../gate/stagePolicies';
 import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
 
@@ -250,7 +251,8 @@ const buildCombinedBaselineRules = (
 const buildRulesetState = (params: {
   detected: ReturnType<typeof detectPlatformsFromFacts>;
   projectRules: RuleSet;
-  heuristicsEnabled: boolean;
+  heuristicRules: RuleSet;
+  stage: GatePolicy['stage'];
 }): RulesetState[] => {
   const states: RulesetState[] = [];
 
@@ -311,13 +313,13 @@ const buildRulesetState = (params: {
     });
   }
 
-  if (params.heuristicsEnabled) {
+  if (params.heuristicRules.length > 0) {
     states.push({
       platform: 'heuristics',
       bundle: `astHeuristicsRuleSet@${rulePackVersions.astHeuristicsRuleSet}`,
       hash: createHash('sha256')
-        .update('PUMUKI_ENABLE_AST_HEURISTICS=true')
-        .update(stableStringify(astHeuristicsRuleSet))
+        .update(`stage:${params.stage}`)
+        .update(stableStringify(params.heuristicRules))
         .digest('hex'),
     });
   }
@@ -350,7 +352,9 @@ export async function runPlatformGate(params: {
     : [];
   const evaluationFacts: ReadonlyArray<Fact> =
     heuristicFacts.length > 0 ? [...facts, ...heuristicFacts] : facts;
-  const heuristicRules = heuristicsConfig.astSemanticEnabled ? astHeuristicsRuleSet : [];
+  const heuristicRules = heuristicsConfig.astSemanticEnabled
+    ? applyHeuristicSeverityForStage(astHeuristicsRuleSet, params.policy.stage)
+    : [];
   const baselineRulesWithHeuristics: RuleSet = [...baselineRules, ...heuristicRules];
   const projectConfig = loadProjectRules();
   const projectRules = projectConfig?.rules ?? [];
@@ -368,7 +372,8 @@ export async function runPlatformGate(params: {
     loadedRulesets: buildRulesetState({
       detected: detectedPlatforms,
       projectRules,
-      heuristicsEnabled: heuristicsConfig.astSemanticEnabled,
+      heuristicRules,
+      stage: params.policy.stage,
     }),
   });
 
