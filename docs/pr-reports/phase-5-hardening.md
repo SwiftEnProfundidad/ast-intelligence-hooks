@@ -27,6 +27,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `04f9a01` docs(heuristics): document declarative AST rule pack and evidence bundle
 - `54c55a2` docs(architecture): add conceptual entrypoint and manual hook-system usage
 - `82cb873` ci(tests): unify deterministic suite for evidence mcp and heuristics
+- `08b3930` feat(heuristics): extend TypeScript AST pilot coverage to backend paths
 - `2d25f94` fix(types): align dependency fact source and gate readonly handling
 - `71dadb6` chore(tsconfig): exclude nested test files from production typecheck
 
@@ -79,7 +80,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 ## Validation status
 
 - `npx tsc --noEmit` now passes for production sources included in tsconfig.
-- `npm run test:heuristics` passes (7/7) for cross-platform AST pilot cases.
+- `npm run test:heuristics` passes (8/8) for cross-platform AST pilot cases.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.
