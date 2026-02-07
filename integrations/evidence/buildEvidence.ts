@@ -78,7 +78,48 @@ const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
   };
 };
 
-const dedupeFindings = (
+const severityRank: Record<Severity, number> = {
+  INFO: 0,
+  WARN: 1,
+  ERROR: 2,
+  CRITICAL: 3,
+};
+
+const heuristicBaselineShadowMap = new Map<string, ReadonlyArray<string>>([
+  ['heuristics.ios.force-unwrap.ast', ['ios.no-force-unwrap']],
+  ['heuristics.ios.anyview.ast', ['ios.no-anyview']],
+  ['heuristics.ios.callback-style.ast', ['ios.no-completion-handlers-outside-bridges']],
+]);
+
+const suppressShadowedHeuristics = (
+  findings: ReadonlyArray<SnapshotFinding>
+): SnapshotFinding[] => {
+  const byFileAndRule = new Map<string, SnapshotFinding>();
+  for (const finding of findings) {
+    byFileAndRule.set(`${finding.file}::${finding.ruleId}`, finding);
+  }
+
+  return findings.filter((finding) => {
+    const mappedBaselines = heuristicBaselineShadowMap.get(finding.ruleId);
+    if (!mappedBaselines) {
+      return true;
+    }
+
+    for (const baselineRuleId of mappedBaselines) {
+      const baselineFinding = byFileAndRule.get(`${finding.file}::${baselineRuleId}`);
+      if (!baselineFinding) {
+        continue;
+      }
+      if (severityRank[baselineFinding.severity] >= severityRank[finding.severity]) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+};
+
+const normalizeAndDedupeFindings = (
   findings: ReadonlyArray<BuildFindingInput>
 ): SnapshotFinding[] => {
   const unique = new Map<string, SnapshotFinding>();
@@ -89,9 +130,9 @@ const dedupeFindings = (
       unique.set(key, normalized);
     }
   }
-  return Array.from(unique.values()).sort((left, right) =>
-    findingKey(left).localeCompare(findingKey(right))
-  );
+  const deduped = Array.from(unique.values());
+  const filtered = suppressShadowedHeuristics(deduped);
+  return filtered.sort((left, right) => findingKey(left).localeCompare(findingKey(right)));
 };
 
 const toGateOutcome = (findings: ReadonlyArray<SnapshotFinding>): GateOutcome => {
@@ -186,7 +227,7 @@ const normalizeRulesets = (rulesets: ReadonlyArray<RulesetState>): RulesetState[
 
 export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const now = new Date().toISOString();
-  const normalizedFindings = dedupeFindings(params.findings);
+  const normalizedFindings = normalizeAndDedupeFindings(params.findings);
   const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';
   const severity = bySeverity(normalizedFindings);

@@ -132,3 +132,69 @@ test('respects explicit gate outcome for stage-aware blocking decisions', () => 
   assert.equal(result.ai_gate.status, 'BLOCKED');
   assert.equal(result.severity_metrics.gate_status, 'BLOCKED');
 });
+
+test('suppresses duplicated iOS heuristic findings shadowed by stronger baseline findings', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'heuristics.ios.anyview.ast',
+        severity: 'ERROR',
+        code: 'HEURISTICS_IOS_ANYVIEW_AST',
+        message: 'AST heuristic detected AnyView usage.',
+        filePath: 'apps/ios/Sources/ProfileView.swift',
+      },
+      {
+        ruleId: 'ios.no-anyview',
+        severity: 'CRITICAL',
+        code: 'IOS_NO_ANYVIEW',
+        message: 'AnyView usage is not allowed in iOS code.',
+        filePath: 'apps/ios/Sources/ProfileView.swift',
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(
+    result.snapshot.findings.map((finding) => finding.ruleId),
+    ['ios.no-anyview']
+  );
+  assert.equal(result.severity_metrics.by_severity.CRITICAL, 1);
+  assert.equal(result.severity_metrics.by_severity.ERROR, 0);
+});
+
+test('keeps iOS heuristic finding when mapped baseline severity is lower', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'heuristics.ios.anyview.ast',
+        severity: 'ERROR',
+        code: 'HEURISTICS_IOS_ANYVIEW_AST',
+        message: 'AST heuristic detected AnyView usage.',
+        filePath: 'apps/ios/Sources/ProfileView.swift',
+      },
+      {
+        ruleId: 'ios.no-anyview',
+        severity: 'WARN',
+        code: 'IOS_NO_ANYVIEW',
+        message: 'AnyView usage is not allowed in iOS code.',
+        filePath: 'apps/ios/Sources/ProfileView.swift',
+      },
+    ],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(
+    result.snapshot.findings.map((finding) => finding.ruleId).sort(),
+    ['heuristics.ios.anyview.ast', 'ios.no-anyview']
+  );
+});

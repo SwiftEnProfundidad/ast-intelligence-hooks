@@ -32,13 +32,14 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ios.callback-style.ast`
 - Validate heuristic maturity matrix with `PUMUKI_ENABLE_AST_HEURISTICS=on` in backend/frontend sample consumer repositories.
+- Consolidate evidence signal by suppressing mapped iOS heuristic duplicates when stronger/equal baseline findings exist on the same file.
 
 ## Next
 
 - Heuristic policy consolidation:
-  - Review overlap between promoted iOS heuristics and existing baseline CRITICAL iOS rules to avoid duplicate signals.
-  - Decide whether to keep both baseline + heuristic findings visible or suppress duplicated rule families in evidence output.
-  - If deduplication is approved, implement deterministic evidence-level grouping without changing core rule evaluation semantics.
+  - Review backend/frontend overlap candidates (`explicit-any`, `console-log`) where baseline and heuristic findings coexist with different severities.
+  - Decide if evidence should keep both signals for auditability or collapse to highest-severity finding per semantic family.
+  - If approved, implement deterministic, explicit mapping in `integrations/evidence/buildEvidence.ts` without altering gate evaluation semantics.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
