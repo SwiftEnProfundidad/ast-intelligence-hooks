@@ -43,11 +43,12 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Harden Windsurf cascade hook command with runtime resolver wrapper (`run-hook-with-node.sh`) to reduce `node: command not found` failures in non-interactive shells.
 - Document staged rollout strategy for Windsurf hook runtime hardening (compatibility, diagnostics, strict mode).
 - Add local runtime diagnostics collector script for Windsurf hooks (`collect-runtime-diagnostics.sh`) with `.audit_tmp` output.
+- Run local simulated Windsurf hook validation (pre_write blocks with exit 2, post_write allows with exit 0) and capture artifacts under `docs/validation/windsurf/artifacts/`.
 
 ## Next
 
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
-  - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session.
+  - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session and compare against `docs/validation/windsurf-hook-runtime-local-report.md`.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
