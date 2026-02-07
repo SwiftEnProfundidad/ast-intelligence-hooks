@@ -55,6 +55,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `2d8142e` feat(hooks): add Windsurf hooks config generator with absolute paths
 - `a6e6972` docs(phase-5): append Windsurf config generator traceability
 - `1c42851` feat(hooks): add Windsurf hooks config installer with backup
+- `02fccf9` docs(phase-5): append Windsurf installer traceability
+- `1fcf8e6` feat(hooks): add Windsurf runtime verifier and path fallback
 
 ## Scope
 
