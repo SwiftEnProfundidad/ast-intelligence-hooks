@@ -63,6 +63,13 @@ const findingKey = (finding: Pick<SnapshotFinding, 'ruleId' | 'file' | 'lines'>)
   return `${finding.ruleId}::${finding.file}::${linesKey(finding.lines)}`;
 };
 
+const compareFindingEntries = (
+  left: Pick<SnapshotFinding, 'ruleId' | 'file' | 'lines'>,
+  right: Pick<SnapshotFinding, 'ruleId' | 'file' | 'lines'>
+): number => {
+  return findingKey(left).localeCompare(findingKey(right), undefined, { numeric: true });
+};
+
 const ledgerKey = (entry: Pick<LedgerEntry, 'ruleId' | 'file' | 'lines'>): string => {
   return `${entry.ruleId}::${entry.file}::${linesKey(entry.lines)}`;
 };
@@ -153,7 +160,7 @@ const consolidateEquivalentFindings = (
       return true;
     }
     const selected = selectedByFileFamily.get(`${finding.file}::${familyIndex}`);
-    const keep = selected?.ruleId === finding.ruleId && selected.file === finding.file;
+    const keep = Boolean(selected) && findingKey(selected) === findingKey(finding);
     if (!keep && selected) {
       suppressed.push({
         ruleId: finding.ruleId,
@@ -195,12 +202,10 @@ const normalizeAndDedupeFindings = (
       unique.set(key, normalized);
     }
   }
-  const deduped = Array.from(unique.values());
+  const deduped = Array.from(unique.values()).sort(compareFindingEntries);
   const consolidated = consolidateEquivalentFindings(deduped);
   return {
-    findings: consolidated.findings.sort((left, right) =>
-      findingKey(left).localeCompare(findingKey(right))
-    ),
+    findings: consolidated.findings.sort(compareFindingEntries),
     suppressed: consolidated.suppressed,
   };
 };

@@ -317,3 +317,43 @@ test('applies semantic-family consolidation at file level even when lines differ
   assert.ok(result.consolidation);
   assert.deepEqual(result.consolidation.suppressed[0]?.lines, [42]);
 });
+
+test('keeps one deterministic finding when same rule repeats on multiple lines in one file', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'heuristics.ts.explicit-any.ast',
+        severity: 'ERROR',
+        code: 'HEURISTICS_EXPLICIT_ANY_AST',
+        message: 'AST heuristic detected explicit any usage.',
+        filePath: 'apps/backend/src/main.ts',
+        lines: [40],
+      },
+      {
+        ruleId: 'heuristics.ts.explicit-any.ast',
+        severity: 'ERROR',
+        code: 'HEURISTICS_EXPLICIT_ANY_AST',
+        message: 'AST heuristic detected explicit any usage.',
+        filePath: 'apps/backend/src/main.ts',
+        lines: [5],
+      },
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.findings.length, 1);
+  assert.equal(result.snapshot.findings[0]?.ruleId, 'heuristics.ts.explicit-any.ast');
+  assert.deepEqual(result.snapshot.findings[0]?.lines, [5]);
+  assert.ok(result.consolidation);
+  assert.equal(result.consolidation.suppressed.length, 1);
+  assert.deepEqual(result.consolidation.suppressed[0]?.lines, [40]);
+  assert.equal(
+    result.consolidation.suppressed[0]?.replacedByRuleId,
+    'heuristics.ts.explicit-any.ast'
+  );
+});

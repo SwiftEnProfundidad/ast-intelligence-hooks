@@ -92,6 +92,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `integrations/evidence/buildEvidence.ts` deterministic snapshot + ledger merge
   - `integrations/evidence/writeEvidence.ts` stable serialization and relative paths
   - Evidence-level consolidation collapses mapped iOS/backend/frontend baseline+heuristic families to the strongest per-file finding
+  - File-level consolidation now also collapses repeated same-rule findings across multiple lines deterministically
   - Optional `consolidation.suppressed[]` trace records removed duplicates for deterministic auditability
 
 ## Validation status
@@ -105,6 +106,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Stage policy calibration now includes `heuristics.ios.callback-style.ast` as promoted (`ERROR`) for `PRE_PUSH` and `CI`.
 - `npm run test:evidence` covers evidence consolidation for iOS and backend semantic families, keeping the strongest deterministic signal.
 - Evidence tests now include explicit file-level consolidation fixture with differing line metadata to document current precedence behavior.
+- Evidence tests now include repeated same-rule multi-line fixture to enforce deterministic file-level collapse behavior.
 - Windsurf cascade hook template now invokes `run-hook-with-node.sh`, validated in minimal shell PATH contexts.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
