@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { evaluateGate } from '../../../core/gate/evaluateGate';
+import { evaluateRules } from '../../../core/gate/evaluateRules';
 import { astHeuristicsRuleSet } from '../../../core/rules/presets/astHeuristicsRuleSet';
 import {
   applyHeuristicSeverityForStage,
@@ -66,4 +68,56 @@ test('does not mutate the source heuristic ruleset', () => {
 
   assert.equal(original.severity, 'WARN');
   assert.equal(promoted.severity, 'ERROR');
+});
+
+test('gate blocks promoted heuristic rules only in PRE_PUSH and CI', () => {
+  const consoleLogFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.console-log.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_CONSOLE_LOG_AST',
+    message: 'AST heuristic detected console.log usage.',
+    filePath: 'apps/backend/src/main.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [consoleLogFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [consoleLogFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [consoleLogFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate keeps non-promoted heuristic rules as non-blocking warnings', () => {
+  const emptyCatchFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.empty-catch.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_EMPTY_CATCH_AST',
+    message: 'AST heuristic detected an empty catch block.',
+    filePath: 'apps/frontend/src/lib/runtime.ts',
+  };
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [emptyCatchFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'WARN');
+  assert.equal(prePushDecision.blocking.length, 0);
+  assert.equal(prePushDecision.warnings.length, 1);
 });
