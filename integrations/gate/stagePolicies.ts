@@ -5,6 +5,7 @@ import type { RuleSet } from '../../core/rules/RuleSet';
 const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.console-log.ast',
   'heuristics.ios.force-unwrap.ast',
+  'heuristics.ios.anyview.ast',
   'heuristics.android.thread-sleep.ast',
   'heuristics.android.globalscope.ast',
   'heuristics.android.run-blocking.ast',

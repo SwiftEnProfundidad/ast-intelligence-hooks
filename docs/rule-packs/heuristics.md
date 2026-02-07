@@ -26,6 +26,7 @@
 - `PRE_PUSH` and `CI` promote selected high-confidence heuristic rules to `ERROR`:
   - `heuristics.ts.console-log.ast`
   - `heuristics.ios.force-unwrap.ast`
+  - `heuristics.ios.anyview.ast`
   - `heuristics.android.thread-sleep.ast`
   - `heuristics.android.globalscope.ast`
   - `heuristics.android.run-blocking.ast`
