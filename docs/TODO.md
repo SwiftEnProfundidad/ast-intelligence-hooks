@@ -44,6 +44,11 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Heuristic policy consolidation:
   - Validate whether file-level family consolidation is enough or should evolve to line-aware grouping for multi-occurrence files.
   - Add targeted fixtures with repeated same-family findings on different lines to confirm file-level precedence tradeoffs.
+- Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
+  - Reproduce issue in controlled shell contexts (interactive vs non-interactive) to capture PATH differences.
+  - Harden hook commands to resolve Node runtime deterministically (`/usr/bin/env node` fallback + absolute runtime detection when available).
+  - Add explicit preflight diagnostics for hook runtime (node binary path, version, effective PATH) and actionable error messages.
+  - Define rollout strategy: compatibility mode first, then stricter validation once runtime checks are stable.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
