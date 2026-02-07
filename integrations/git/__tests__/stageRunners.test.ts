@@ -27,6 +27,17 @@ const runGit = (cwd: string, args: ReadonlyArray<string>): string => {
   return execFileSync('git', args, { cwd, encoding: 'utf8' });
 };
 
+const withSilencedConsoleLog = async (callback: () => Promise<void>): Promise<void> => {
+  const originalConsoleLog = console.log;
+  console.log = () => {};
+
+  try {
+    await callback();
+  } finally {
+    console.log = originalConsoleLog;
+  }
+};
+
 const withTempRepo = async (callback: (repoRoot: string) => Promise<void>) => {
   const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-stage-runner-'));
   const previousCwd = process.cwd();
@@ -100,8 +111,8 @@ const setupBackendCommitRange = (repoRoot: string): void => {
   runGit(repoRoot, ['add', 'README.md']);
   runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
 
-  runGit(repoRoot, ['checkout', '-b', 'feature/stage-runners']);
-  runGit(repoRoot, ['branch', '--set-upstream-to=main']);
+  runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/stage-runners']);
+  runGit(repoRoot, ['branch', '--quiet', '--set-upstream-to=main']);
 
   stageBackendFile(repoRoot);
   runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
@@ -210,8 +221,10 @@ test('runPrePushStage returns blocking exit code with strict WARN threshold over
     });
     setupBackendCommitRange(repoRoot);
 
-    const exitCode = await runPrePushStage();
-    assert.equal(exitCode, 1);
+    await withSilencedConsoleLog(async () => {
+      const exitCode = await runPrePushStage();
+      assert.equal(exitCode, 1);
+    });
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
@@ -287,9 +300,11 @@ test('runCiStage returns blocking exit code with strict WARN threshold override'
     });
     setupBackendCommitRange(repoRoot);
 
-    await withGithubBaseRef('main', async () => {
-      const exitCode = await runCiStage();
-      assert.equal(exitCode, 1);
+    await withSilencedConsoleLog(async () => {
+      await withGithubBaseRef('main', async () => {
+        const exitCode = await runCiStage();
+        assert.equal(exitCode, 1);
+      });
     });
 
     const evidence = readEvidence(repoRoot);
