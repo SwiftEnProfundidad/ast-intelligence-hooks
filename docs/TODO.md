@@ -20,6 +20,12 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 
 ## Next
 
+- Documentation hygiene pass:
+  - Audit all `*.md` files for stale legacy references (old hooks, daemons, removed workflows, obsolete commands).
+  - Mark each document as keep/update/archive/delete and execute cleanup incrementally by phase.
+  - Prioritize user-facing docs first (`README.md`, `docs/USAGE.md`, `docs/HOW_IT_WORKS.md`, `docs/API_REFERENCE.md`).
+  - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
+
 ## Notes
 
 - README uses inline HTML (`<img>`) for GitHub-friendly full-width rendering.
