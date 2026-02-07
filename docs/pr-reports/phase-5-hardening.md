@@ -57,6 +57,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `1c42851` feat(hooks): add Windsurf hooks config installer with backup
 - `02fccf9` docs(phase-5): append Windsurf installer traceability
 - `1fcf8e6` feat(hooks): add Windsurf runtime verifier and path fallback
+- `5f7b03d` docs(phase-5): append Windsurf verifier traceability
+- `c954e99` fix(hooks): resolve pre-write AST loader across scripts and legacy layouts
 
 ## Scope
 
