@@ -50,6 +50,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `dbfb637` docs(validation): add Windsurf hook runtime execution checklist
 - `09eca70` docs(phase-5): append validation checklist traceability
 - `e088407` docs(validation): capture local Windsurf hook runtime simulation
+- `07c307a` feat(hooks): add repeatable local Windsurf runtime validation command
 
 ## Scope
 
