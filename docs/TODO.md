@@ -40,6 +40,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add targeted evidence fixtures confirming current file-level consolidation behavior when same-family findings appear on different lines.
 - Enforce deterministic file-level consolidation when same rule repeats on different lines in one file, with dedicated evidence test coverage.
 - Harden Windsurf cascade hook command with runtime resolver wrapper (`run-hook-with-node.sh`) to reduce `node: command not found` failures in non-interactive shells.
+- Document staged rollout strategy for Windsurf hook runtime hardening (compatibility, diagnostics, strict mode).
 
 ## Next
 
@@ -49,7 +50,6 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
   - Validate the new wrapper against a real Windsurf session (`pre_write_code` + `post_write_code`) and capture before/after logs.
   - Validate optional strict mode (`PUMUKI_HOOK_STRICT_NODE=1`) in a real editor session before enabling by default.
   - Validate diagnostic mode (`--diagnose` / `PUMUKI_HOOK_DIAGNOSTIC=1`) in a real editor session and capture support logs.
-  - Define rollout strategy: compatibility mode first, then stricter validation once runtime checks are stable.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes

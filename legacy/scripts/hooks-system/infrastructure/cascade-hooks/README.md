@@ -78,6 +78,15 @@ El diagnóstico imprime `node_bin`, `node_version`, `PATH` efectivo y flags de s
 
 **Reinicia Windsurf** después de crear el archivo.
 
+### Estrategia de rollout recomendada
+
+1. **Fase 1 (compatibilidad por defecto)**  
+   Mantén `PUMUKI_HOOK_STRICT_NODE` desactivado para evitar bloqueos mientras estabilizas entorno.
+2. **Fase 2 (diagnóstico activo)**  
+   Activa `PUMUKI_HOOK_DIAGNOSTIC=1` temporalmente y recoge logs para confirmar resolución estable de Node.
+3. **Fase 3 (enforcement estricto)**  
+   Activa `PUMUKI_HOOK_STRICT_NODE=1` cuando los diagnósticos sean estables en tu equipo/CI.
+
 ### 2. Hacer ejecutable el hook
 
 ```bash
