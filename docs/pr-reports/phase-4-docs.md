@@ -34,4 +34,3 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - MCP server TypeScript compilation path validated.
 - `npm run test:mcp` validates health, missing evidence, invalid version, and valid `v2.1` read path.
 - Docs aligned with deterministic evidence contract `version: "2.1"`.
-- Markdown hygiene audit baseline created (`docs/markdown-hygiene-audit.md`) with keep/update/archive/delete matrix.
