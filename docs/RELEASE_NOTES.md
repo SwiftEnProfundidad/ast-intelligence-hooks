@@ -51,6 +51,23 @@ For implementation detail by phase, see:
   - `docs/HOW_IT_WORKS.md`
   - `docs/API_REFERENCE.md`
 
+### Hardening and validation updates (latest)
+
+- Evidence consolidation hardened:
+  - deterministic file-level collapse across same semantic family, including same-rule multi-line duplicates
+  - additive `consolidation.suppressed[]` trace for auditability
+- MCP evidence server expanded with compact/full filters:
+  - `includeSuppressed=false`
+  - `view=compact|full`
+- Windsurf cascade-hook runtime hardening:
+  - robust Node resolver wrapper
+  - optional strict mode `PUMUKI_HOOK_STRICT_NODE=1`
+  - explicit diagnostics (`--diagnose`, `PUMUKI_HOOK_DIAGNOSTIC=1`)
+  - local diagnostics collector + repeatable local simulation command:
+    - `npm run validate:windsurf-hooks-local`
+  - real-session validation checklist:
+    - `docs/validation/windsurf-hook-runtime-validation.md`
+
 ## Notes
 
 - Legacy 5.3.4 migration/release notes were removed from active docs to avoid drift.
