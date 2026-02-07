@@ -9,6 +9,7 @@ Validate and operationalize the read-only evidence context server so agents can 
 - `3cf08a7` test(mcp): add evidence context server coverage and runnable CLI script
 - `82180dc` ci(mcp): run evidence context server tests in deterministic workflow
 - `82cb873` ci(tests): unify deterministic suite for evidence mcp and heuristics
+- feat(mcp): add compact/full evidence response filters for consolidation-aware payloads
 
 ## Scope
 
@@ -21,9 +22,11 @@ Validate and operationalize the read-only evidence context server so agents can 
   - `.github/workflows/pumuki-evidence-tests.yml`
 - Documentation update:
   - `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+  - query options: `includeSuppressed`, `view=compact|full`
 
 ## Validation status
 
 - `npm run test:mcp` passes.
 - `npm run test:deterministic` passes (evidence + mcp + heuristics).
 - Server keeps read-only contract and returns `404` for missing/invalid evidence.
+- Server now supports compact evidence responses without `consolidation.suppressed[]` when requested.

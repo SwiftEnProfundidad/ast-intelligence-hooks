@@ -13,6 +13,8 @@ export type EvidenceServerOptions = {
 const DEFAULT_ROUTE = '/ai-evidence';
 
 const json = (value: unknown): string => JSON.stringify(value);
+const truthyQueryValues = new Set(['1', 'true', 'yes', 'on']);
+const falsyQueryValues = new Set(['0', 'false', 'no', 'off']);
 
 const readEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
   const evidencePath = resolve(repoRoot, '.ai_evidence.json');
@@ -36,6 +38,41 @@ const readEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
   }
 };
 
+const parseBooleanQuery = (value: string | null): boolean | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  if (truthyQueryValues.has(normalized)) {
+    return true;
+  }
+  if (falsyQueryValues.has(normalized)) {
+    return false;
+  }
+  return undefined;
+};
+
+const includeSuppressedFromQuery = (requestUrl: URL): boolean => {
+  const view = requestUrl.searchParams.get('view')?.trim().toLowerCase();
+  if (view === 'compact') {
+    return false;
+  }
+  if (view === 'full') {
+    return true;
+  }
+
+  const parsed = parseBooleanQuery(requestUrl.searchParams.get('includeSuppressed'));
+  return parsed ?? true;
+};
+
+const toResponsePayload = (evidence: AiEvidenceV2_1, requestUrl: URL): unknown => {
+  if (includeSuppressedFromQuery(requestUrl)) {
+    return evidence;
+  }
+  const { consolidation: _ignored, ...rest } = evidence;
+  return rest;
+};
+
 export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) => {
   const host = options.host ?? '127.0.0.1';
   const port = options.port ?? 7341;
@@ -44,15 +81,17 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
 
   const server = createServer((req, res) => {
     const method = req.method ?? 'GET';
-    const url = req.url ?? '/';
+    const rawUrl = req.url ?? '/';
+    const requestUrl = new URL(rawUrl, `http://${req.headers.host ?? '127.0.0.1'}`);
+    const path = requestUrl.pathname;
 
-    if (method === 'GET' && url === '/health') {
+    if (method === 'GET' && path === '/health') {
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(json({ status: 'ok' }));
       return;
     }
 
-    if (method === 'GET' && url === route) {
+    if (method === 'GET' && path === route) {
       const evidence = readEvidence(repoRoot);
       if (!evidence) {
         res.writeHead(404, { 'content-type': 'application/json' });
@@ -61,7 +100,7 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
       }
 
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(json(evidence));
+      res.end(json(toResponsePayload(evidence, requestUrl)));
       return;
     }
 

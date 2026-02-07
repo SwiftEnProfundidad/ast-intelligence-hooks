@@ -5,6 +5,9 @@ Read-only server to expose deterministic evidence before agent actions.
 ## Endpoint
 
 - `GET /ai-evidence`: returns `.ai_evidence.json` when `version === "2.1"`
+- `GET /ai-evidence?includeSuppressed=false`: compact response without `consolidation.suppressed[]`
+- `GET /ai-evidence?view=compact`: alias to hide `consolidation.suppressed[]`
+- `GET /ai-evidence?view=full`: explicit full response (default behavior)
 - `GET /health`: basic liveness probe
 
 ## Runtime

@@ -36,12 +36,13 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Consolidate evidence signal for mapped iOS/backend/frontend semantic families by keeping highest-severity finding per file-family pair.
 - Validate post-consolidation matrix to ensure duplicate removal does not change stage gate decisions.
 - Add optional `consolidation.suppressed[]` trace in evidence to preserve auditability of removed duplicates.
+- Add MCP evidence response filters (`includeSuppressed`, `view=compact|full`) for human/agent-oriented payloads.
 
 ## Next
 
 - Heuristic policy consolidation:
   - Validate whether file-level family consolidation is enough or should evolve to line-aware grouping for multi-occurrence files.
-  - Define query/reporting filters that can include/exclude `consolidation.suppressed[]` depending on consumer (human vs agent).
+  - Add targeted fixtures with repeated same-family findings on different lines to confirm file-level precedence tradeoffs.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes

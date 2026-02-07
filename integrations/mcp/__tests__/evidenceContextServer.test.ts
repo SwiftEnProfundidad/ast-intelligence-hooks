@@ -38,6 +38,16 @@ const createEvidencePayload = () => {
         INFO: 0,
       },
     },
+    consolidation: {
+      suppressed: [
+        {
+          ruleId: 'heuristics.ts.explicit-any.ast',
+          file: 'apps/backend/src/main.ts',
+          replacedByRuleId: 'backend.avoid-explicit-any',
+          reason: 'semantic-family-precedence',
+        },
+      ],
+    },
   };
 };
 
@@ -122,8 +132,47 @@ test('returns evidence payload when version is v2.1', async (t) => {
 
   const response = await fetch(`http://127.0.0.1:${port}/ai-evidence`);
   assert.equal(response.status, 200);
-  const payload = (await response.json()) as { version?: string };
+  const payload = (await response.json()) as {
+    version?: string;
+    consolidation?: { suppressed?: unknown[] };
+  };
   assert.equal(payload.version, '2.1');
+  assert.equal(payload.consolidation?.suppressed?.length, 1);
+});
+
+test('returns compact payload without consolidation when includeSuppressed=false', async (t) => {
+  const repoRoot = createRepoRoot();
+  writeFileSync(
+    join(repoRoot, '.ai_evidence.json'),
+    `${JSON.stringify(createEvidencePayload(), null, 2)}\n`,
+    'utf8'
+  );
+
+  t.after(() => {
+    rmSync(repoRoot, { recursive: true, force: true });
+  });
+
+  const started = startEvidenceContextServer({
+    host: '127.0.0.1',
+    port: 0,
+    repoRoot,
+  });
+
+  t.after(() => {
+    started.server.close();
+  });
+
+  await once(started.server, 'listening');
+  const address = started.server.address();
+  assert.ok(address && typeof address === 'object');
+  const port = address.port;
+
+  const response = await fetch(
+    `http://127.0.0.1:${port}/ai-evidence?includeSuppressed=false`
+  );
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as { consolidation?: unknown };
+  assert.equal(payload.consolidation, undefined);
 });
 
 test('returns 404 when evidence file version is not v2.1', async (t) => {
