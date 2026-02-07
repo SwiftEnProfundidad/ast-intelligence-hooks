@@ -81,7 +81,7 @@ AUDIT_OPTION=7 bash legacy/scripts/hooks-system/presentation/cli/audit.sh  # AST
 
 Command mapping:
 
-- `npx ast-hooks` (when installed from npm) -> wrapper for the interactive hook-system menu.
+- `bash legacy/scripts/hooks-system/presentation/cli/audit.sh` -> interactive hook-system menu.
 - `AUDIT_OPTION=<n> .../presentation/cli/audit.sh` -> deterministic non-interactive mode.
 
 Documentation:
