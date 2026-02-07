@@ -38,6 +38,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add optional `consolidation.suppressed[]` trace in evidence to preserve auditability of removed duplicates.
 - Add MCP evidence response filters (`includeSuppressed`, `view=compact|full`) for human/agent-oriented payloads.
 - Add targeted evidence fixtures confirming current file-level consolidation behavior when same-family findings appear on different lines.
+- Harden Windsurf cascade hook command with runtime resolver wrapper (`run-hook-with-node.sh`) to reduce `node: command not found` failures in non-interactive shells.
 
 ## Next
 
@@ -45,9 +46,9 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
   - Validate whether file-level family consolidation is enough or should evolve to line-aware grouping for multi-occurrence files.
   - Add targeted fixtures with repeated same-family findings on different lines to confirm file-level precedence tradeoffs.
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
-  - Reproduce issue in controlled shell contexts (interactive vs non-interactive) to capture PATH differences.
-  - Harden hook commands to resolve Node runtime deterministically (`/usr/bin/env node` fallback + absolute runtime detection when available).
-  - Add explicit preflight diagnostics for hook runtime (node binary path, version, effective PATH) and actionable error messages.
+  - Validate the new wrapper against a real Windsurf session (`pre_write_code` + `post_write_code`) and capture before/after logs.
+  - Add optional strict mode (`PUMUKI_HOOK_STRICT_NODE=1`) to block when runtime is missing after a stabilization period.
+  - Add explicit preflight diagnostics for hook runtime (node binary path, version, effective PATH) in installation output.
   - Define rollout strategy: compatibility mode first, then stricter validation once runtime checks are stable.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 

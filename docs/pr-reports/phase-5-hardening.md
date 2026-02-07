@@ -39,6 +39,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `9ce666d` feat(evidence): consolidate equivalent baseline/heuristic families in snapshot output
 - `d016045` feat(evidence): add consolidation trace metadata
 - `6105862` test(evidence): add file-level consolidation fixture
+- feat(hooks): harden Windsurf cascade hook runtime resolution with deterministic Node wrapper
 
 ## Scope
 
@@ -104,6 +105,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Stage policy calibration now includes `heuristics.ios.callback-style.ast` as promoted (`ERROR`) for `PRE_PUSH` and `CI`.
 - `npm run test:evidence` covers evidence consolidation for iOS and backend semantic families, keeping the strongest deterministic signal.
 - Evidence tests now include explicit file-level consolidation fixture with differing line metadata to document current precedence behavior.
+- Windsurf cascade hook template now invokes `run-hook-with-node.sh`, validated in minimal shell PATH contexts.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.

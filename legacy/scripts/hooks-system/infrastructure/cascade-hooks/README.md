@@ -35,13 +35,13 @@ Crea el archivo `~/.codeium/windsurf/hooks.json` con el siguiente contenido:
   "hooks": {
     "pre_write_code": [
       {
-        "command": "node /RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js",
+        "command": "bash \"/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh\" pre-write-code-hook.js",
         "show_output": true
       }
     ],
     "post_write_code": [
       {
-        "command": "node /RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js",
+        "command": "bash \"/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh\" post-write-code-hook.js",
         "show_output": true
       }
     ]
@@ -51,6 +51,14 @@ Crea el archivo `~/.codeium/windsurf/hooks.json` con el siguiente contenido:
 
 **Importante**: Reemplaza `/RUTA/A/TU/PROYECTO` con la ruta absoluta a tu proyecto.
 
+El wrapper `run-hook-with-node.sh` intenta resolver Node en este orden:
+
+- `NODE_BINARY` explícito
+- `node` en `PATH`
+- runtimes comunes (`nvm`, `volta`, `asdf`, `fnm`, Homebrew)
+
+Si no encuentra Node, muestra diagnóstico y sale en modo compatibilidad (no bloquea la escritura).
+
 **Reinicia Windsurf** después de crear el archivo.
 
 ### 2. Hacer ejecutable el hook
@@ -58,6 +66,7 @@ Crea el archivo `~/.codeium/windsurf/hooks.json` con el siguiente contenido:
 ```bash
 chmod +x pre-write-code-hook.js
 chmod +x post-write-code-hook.js
+chmod +x run-hook-with-node.sh
 ```
 
 ### 3. Verificar instalación
@@ -108,6 +117,7 @@ Los logs se guardan en:
 
 - `pre-write-code-hook.js` - Hook principal que BLOQUEA violaciones
 - `post-write-code-hook.js` - Hook de logging post-escritura
+- `run-hook-with-node.sh` - Wrapper que resuelve runtime Node de forma robusta
 - `cascade-hooks-config.json` - Configuración para copiar a Windsurf
 
 ---

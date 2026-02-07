@@ -4,14 +4,14 @@
     "hooks": {
         "pre_write_code": [
             {
-                "command": "node ${workspaceFolder}/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js",
+                "command": "bash \"${workspaceFolder}/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh\" pre-write-code-hook.js",
                 "show_output": true,
                 "timeout_ms": 10000
             }
         ],
         "post_write_code": [
             {
-                "command": "node ${workspaceFolder}/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js",
+                "command": "bash \"${workspaceFolder}/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh\" post-write-code-hook.js",
                 "show_output": false,
                 "timeout_ms": 5000
             }
