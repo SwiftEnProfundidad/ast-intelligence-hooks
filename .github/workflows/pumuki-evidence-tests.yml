@@ -21,8 +21,5 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run evidence tests
-        run: npm run test:evidence
-
-      - name: Run MCP evidence server tests
-        run: npm run test:mcp
+      - name: Run deterministic suite
+        run: npm run test:deterministic
