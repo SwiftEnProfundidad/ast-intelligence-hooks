@@ -18,13 +18,14 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Standardize visuals in `docs/images/` to consistent, resolution-independent assets.
 - Harden MCP evidence context server with test coverage and deterministic CI suite.
 - Rewrite `README.md` and `docs/USAGE.md` to align with deterministic v2.x stage/rules/evidence model.
+- Rewrite `docs/HOW_IT_WORKS.md` and `docs/API_REFERENCE.md` to remove legacy API/runtime references.
 
 ## Next
 
 - Documentation hygiene pass:
   - Audit all `*.md` files for stale legacy references (old hooks, daemons, removed workflows, obsolete commands).
   - Mark each document as keep/update/archive/delete and execute cleanup incrementally by phase.
-  - Continue with secondary docs after user-facing cleanup (`docs/HOW_IT_WORKS.md`, `docs/API_REFERENCE.md`, legacy migration/release docs).
+  - Continue with legacy migration/release docs and operational leftovers after core docs cleanup.
   - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes

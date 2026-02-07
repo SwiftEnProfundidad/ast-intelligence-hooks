@@ -1,161 +1,123 @@
-# Hook System API Documentation
+# API Reference (v2.x)
 
-## Overview
+This document describes the active TypeScript API surface used by the deterministic gate flow in this repository.
 
-The Hook System provides automated quality gates and intelligent AST analysis for multi-platform projects. It ensures code quality, security, and architectural compliance through pre-commit hooks and CI/CD integration.
+## Stage policies
 
-## Core Services
+File: `integrations/gate/stagePolicies.ts`
 
-### GitOperations
+- `policyForPreCommit(): GatePolicy`
+- `policyForPrePush(): GatePolicy`
+- `policyForCI(): GatePolicy`
+- `applyHeuristicSeverityForStage(rules, stage): RuleSet`
 
-Centralized Git operations for the hook system.
+## Git stage runners
 
-#### Methods
+File: `integrations/git/stageRunners.ts`
 
-- `getStagedFiles()`: Returns array of staged file paths
-- `getWorkingDirectoryFiles()`: Returns array of modified files in working directory
-- `getAllChangedFiles()`: Returns all changed files (staged + working directory)
-- `isInGitRepository()`: Boolean check for Git repository
-- `getRepositoryRoot()`: Returns absolute path to repository root
+- `runPreCommitStage(): Promise<number>`
+- `runPrePushStage(): Promise<number>`
+- `runCiStage(): Promise<number>`
 
-**Location**: `infrastructure/core/GitOperations.js`
+Exit code contract:
 
-### SeverityConfig
+- `0` on pass/warn
+- `1` on block or runner error
 
-Centralized severity mapping and utilities.
+## Platform wrappers (exports)
 
-#### Constants
+File: `integrations/git/index.ts`
 
-- `SEVERITY_LEVELS`: Numeric severity rankings (CRITICAL: 4, HIGH: 3, etc.)
-- `SEVERITY_MAP`: String mappings for different severity formats
-- `SEVERITY_ICONS`: Emoji icons for each severity level
-- `SEVERITY_LABELS`: Human-readable labels
+- `runPreCommitIOS`, `runPreCommitBackend`, `runPreCommitFrontend`, `runPreCommitAndroid`
+- `runPrePushIOS`, `runPrePushBackend`, `runPrePushFrontend`, `runPrePushAndroid`
+- `runCiIOS`, `runCiBackend`, `runCiFrontend`, `runCiAndroid`
+- `evaluateStagedIOS` (legacy compatibility entry still exported)
 
-#### Methods
+## Shared execution entry
 
-- `getSeverityValue(severity)`: Normalizes severity string
-- `getSeverityIcon(severity)`: Returns emoji icon
-- `getSeverityLabel(severity)`: Returns human-readable label
-- `isBlocking(severity)`: Checks if severity blocks commits
-- `filterBySeverity(violations, severity)`: Filters violations by severity
-- `sortBySeverity(violations)`: Sorts violations by severity (highest first)
+File: `integrations/git/runPlatformGate.ts`
 
-**Location**: `domain/entities/SeverityConfig.js`
+Primary function:
 
-## Entry Points
+- `runPlatformGate(params: { policy: GatePolicy; scope: GateScope }): Promise<number>`
 
-### Command Line Scripts
+Behavior:
 
-Located in `bin/` directory:
+- Builds facts from staged or range scope.
+- Detects platforms from facts.
+- Loads and merges baseline + project rules.
+- Applies optional heuristic rule-pack and stage-aware promotion.
+- Evaluates findings + gate decision.
+- Writes `.ai_evidence.json` via `generateEvidence`.
 
-- `run-ast-adapter.js`: AST analysis adapter for pre-commit hooks
-- `violations-api.js`: Query interface for violations data
-- `update-evidence.sh`: Updates .ai_evidence.json with metrics
-- `ai-commit.sh`: Intelligent commit wrapper
-- `pumuki-audit.js`: Global audit runner
+## Git scope helpers
 
-### Orchestrators
+Files:
 
-Located in `infrastructure/shell/orchestrators/`:
+- `integrations/git/getCommitRangeFacts.ts`
+- `integrations/git/resolveGitRefs.ts`
+- `integrations/git/runCliCommand.ts`
 
-- `audit-orchestrator.sh`: Main audit menu and pre-commit integration
-- `intelligent-audit.js`: Severity intelligence evaluator
+Key helpers:
 
-### Guards
+- `getFactsForCommitRange({ fromRef, toRef, extensions })`
+- `resolveUpstreamRef()`
+- `resolveCiBaseRef()`
+- `runCliCommand(runner)`
 
-Located in `infrastructure/guards/`:
+## Evidence API
 
-- `master-validator.sh`: Primary pre-commit validation gate
+Files:
 
-## Configuration
+- `integrations/evidence/schema.ts`
+- `integrations/evidence/buildEvidence.ts`
+- `integrations/evidence/writeEvidence.ts`
+- `integrations/evidence/generateEvidence.ts`
 
-### Files
+Key types:
 
-- `config/detect-secrets-baseline.json`: Secret detection baseline
-- `config/rules.json`: AST rule definitions
-- `config/paths.conf`: Path configurations
+- `AiEvidenceV2_1`
+- `Snapshot`
+- `LedgerEntry`
+- `PlatformState`
+- `RulesetState`
 
-### Environment Variables
+Contract:
 
-- `ENABLE_INTELLIGENT_SEVERITY`: Enable/disable intelligent severity evaluation
-- `PRE_COMMIT`: Set to 'true' during pre-commit hooks
+- Source of truth: `version: "2.1"`
+- Deterministic output order
+- Snapshot + ledger merge model
 
-## Architecture
+## Rule packs
 
-```
-node_modules/pumuki-ast-hooks/
-├── application/          # Business logic (Use Cases, Services)
-├── domain/               # Core entities (SeverityConfig, etc.)
-├── infrastructure/       # Technical implementations
-│   ├── ast/              # AST analysis engines
-│   ├── core/             # Core utilities (GitOperations)
-│   ├── guards/           # Validation gates
-│   ├── reporting/        # Report generation
-│   └── shell/            # Shell scripts
-├── bin/                  # CLI entry points
-├── config/               # Configuration files
-├── hooks/                # Git hook templates
-└── presentation/         # CLI interface
-```
+Files:
 
-## Usage Examples
+- `core/rules/presets/iosEnterpriseRuleSet.ts`
+- `core/rules/presets/backendRuleSet.ts`
+- `core/rules/presets/frontendRuleSet.ts`
+- `core/rules/presets/androidRuleSet.ts`
+- `core/rules/presets/astHeuristicsRuleSet.ts`
+- `core/rules/presets/rulePackVersions.ts`
 
-### Basic AST Analysis
+## MCP read-only evidence context
 
-```bash
-# Run AST analysis on staged files
-npm run audit
+Files:
 
-# Or using CLI directly
-npx ast-hooks analyze
+- `integrations/mcp/evidenceContextServer.ts`
+- `integrations/mcp/evidenceContextServer.cli.ts`
 
-# Query violations by severity
-npm run violations:list
-
-# Or using CLI
-npx ast-violations list
-```
-
-### Pre-commit Integration
-
-The system automatically runs during `git commit` via pre-commit hooks installed with `npm run install-hooks`.
-
-### Manual Audit
+CLI:
 
 ```bash
-# Run full audit
-npm run audit
-
-# With intelligent severity
-ENABLE_INTELLIGENT_SEVERITY=true npm run audit
-
-# Using CLI
-npx ast-hooks analyze
+npm run mcp:evidence
 ```
 
-## Testing
+Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
 
-Run integration tests:
+## Local execution quick refs
 
 ```bash
-npm test -- scripts/hooks-system/__tests__/integration.test.js
+npm run framework:menu
+npm run typecheck
+npm run test:deterministic
 ```
-
-## Development
-
-### Adding New Rules
-
-1. Add rule definition to `config/rules.json`
-2. Implement rule logic in appropriate AST analyzer
-3. Update SeverityConfig if new severity levels needed
-4. Add tests in `__tests__/` directory
-
-### Extending Git Operations
-
-1. Add new methods to `GitOperations` class
-2. Update integration tests
-3. Document in this API reference
-
----
-
-## 🐈💚 Pumuki Team® - Hook System API Reference

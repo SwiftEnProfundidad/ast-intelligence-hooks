@@ -31,6 +31,8 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - V2 usage and onboarding cleanup:
   - `README.md`
   - `docs/USAGE.md`
+  - `docs/HOW_IT_WORKS.md`
+  - `docs/API_REFERENCE.md`
 
 ## Validation status
 
@@ -38,3 +40,4 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - `npm run test:mcp` validates health, missing evidence, invalid version, and valid `v2.1` read path.
 - Docs aligned with deterministic evidence contract `version: "2.1"`.
 - Primary user docs now avoid legacy severity model and obsolete hook-system menu options.
+- Secondary core docs now reflect the active v2.x TypeScript API and deterministic stage pipeline.
