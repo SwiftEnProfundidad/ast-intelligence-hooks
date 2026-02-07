@@ -13,6 +13,7 @@ Document evidence v2.1, rule pack versioning, and read-only MCP evidence context
 - `82180dc` ci(mcp): run evidence context server tests in deterministic workflow
 - `d1fecb7` docs(roadmap): track markdown cleanup backlog and phase-5 progress
 - `f8baebc` chore(repo): stop tracking docs/.DS_Store
+- `42cc408` docs(release): add latest hardening and Windsurf validation updates
 
 ## Scope
 
