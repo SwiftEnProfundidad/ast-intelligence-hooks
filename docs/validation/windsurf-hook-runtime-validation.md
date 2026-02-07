@@ -35,6 +35,11 @@ Objective: validate `pre_write_code` and `post_write_code` runtime behavior in a
    - `PASS` if hooks execute and logs contain resolved `node_bin` and expected events.
    - `FAIL` if runtime resolution is unstable or events are missing.
 
+7. Optional automatic assessment (last 24h by default):
+   - `npm run assess:windsurf-hooks-session`
+   - custom lower bound:
+     - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh "2026-02-07T00:00:00.000Z"`
+
 ## Evidence to attach
 
 - Hook config snippet (`~/.codeium/windsurf/hooks.json`).

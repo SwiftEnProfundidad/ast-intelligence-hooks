@@ -69,6 +69,12 @@ Verificar wiring + runtime antes de abrir Windsurf:
 npm run verify:windsurf-hooks-runtime
 ```
 
+Evaluar automáticamente si una sesión real reciente registró `pre_write_code` + `post_write_code`:
+
+```bash
+npm run assess:windsurf-hooks-session
+```
+
 Para previsualizar sin escribir:
 
 ```bash

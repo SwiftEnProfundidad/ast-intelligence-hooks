@@ -14,10 +14,11 @@ This report validates technical behavior in terminal mode (not a full IDE intera
 0. `npm run install:windsurf-hooks-config`
 1. `npm run verify:windsurf-hooks-runtime`
 2. `npm run validate:windsurf-hooks-local`
-3. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
-4. Simulated `pre_write_code` payload via:
+3. `npm run assess:windsurf-hooks-session`
+4. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
+5. Simulated `pre_write_code` payload via:
    - `run-hook-with-node.sh pre-write-code-hook.js`
-5. Simulated `post_write_code` payload via:
+6. Simulated `post_write_code` payload via:
    - `run-hook-with-node.sh post-write-code-hook.js`
 
 ## Results
@@ -32,6 +33,8 @@ This report validates technical behavior in terminal mode (not a full IDE intera
 - Hooks config verification passed:
   - `verify:windsurf-hooks-runtime` returned `verify OK`
   - Wrapper path resolved from active repo layout (`legacy/scripts/...`) via fallback logic.
+- Session assessment helper passed:
+  - `assess:windsurf-hooks-session` returned `session-assessment=PASS`
 
 ## Artifacts
 
