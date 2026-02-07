@@ -63,6 +63,14 @@ export type CompatibilityViolation = {
   lines?: EvidenceLines;
 };
 
+export type ConsolidationSuppressedFinding = {
+  ruleId: string;
+  file: string;
+  lines?: EvidenceLines;
+  replacedByRuleId: string;
+  reason: 'semantic-family-precedence';
+};
+
 export type AiEvidenceV2_1 = {
   version: '2.1';
   timestamp: string;
@@ -80,5 +88,8 @@ export type AiEvidenceV2_1 = {
     gate_status: 'ALLOWED' | 'BLOCKED';
     total_violations: number;
     by_severity: Record<Severity, number>;
+  };
+  consolidation?: {
+    suppressed: ConsolidationSuppressedFinding[];
   };
 };

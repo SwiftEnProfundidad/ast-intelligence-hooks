@@ -4,6 +4,7 @@ import type { GateStage } from '../../core/gate/GateStage';
 import type { Severity } from '../../core/rules/Severity';
 import type {
   AiEvidenceV2_1,
+  ConsolidationSuppressedFinding,
   CompatibilityViolation,
   EvidenceLines,
   HumanIntentState,
@@ -128,7 +129,7 @@ const preferFinding = (
 
 const consolidateEquivalentFindings = (
   findings: ReadonlyArray<SnapshotFinding>
-): SnapshotFinding[] => {
+): { findings: SnapshotFinding[]; suppressed: ConsolidationSuppressedFinding[] } => {
   const selectedByFileFamily = new Map<string, SnapshotFinding>();
   for (const finding of findings) {
     const familyIndex = ruleFamilyIndex.get(finding.ruleId);
@@ -144,19 +145,48 @@ const consolidateEquivalentFindings = (
     selectedByFileFamily.set(key, preferFinding(current, finding));
   }
 
-  return findings.filter((finding) => {
+  const suppressed: ConsolidationSuppressedFinding[] = [];
+
+  const filtered = findings.filter((finding) => {
     const familyIndex = ruleFamilyIndex.get(finding.ruleId);
     if (typeof familyIndex === 'undefined') {
       return true;
     }
     const selected = selectedByFileFamily.get(`${finding.file}::${familyIndex}`);
-    return selected?.ruleId === finding.ruleId && selected.file === finding.file;
+    const keep = selected?.ruleId === finding.ruleId && selected.file === finding.file;
+    if (!keep && selected) {
+      suppressed.push({
+        ruleId: finding.ruleId,
+        file: finding.file,
+        lines: finding.lines,
+        replacedByRuleId: selected.ruleId,
+        reason: 'semantic-family-precedence',
+      });
+    }
+    return keep;
   });
+
+  suppressed.sort((left, right) => {
+    const byFile = left.file.localeCompare(right.file);
+    if (byFile !== 0) {
+      return byFile;
+    }
+    const byRule = left.ruleId.localeCompare(right.ruleId);
+    if (byRule !== 0) {
+      return byRule;
+    }
+    return left.replacedByRuleId.localeCompare(right.replacedByRuleId);
+  });
+
+  return {
+    findings: filtered,
+    suppressed,
+  };
 };
 
 const normalizeAndDedupeFindings = (
   findings: ReadonlyArray<BuildFindingInput>
-): SnapshotFinding[] => {
+): { findings: SnapshotFinding[]; suppressed: ConsolidationSuppressedFinding[] } => {
   const unique = new Map<string, SnapshotFinding>();
   for (const finding of findings) {
     const normalized = normalizeFinding(finding);
@@ -166,8 +196,13 @@ const normalizeAndDedupeFindings = (
     }
   }
   const deduped = Array.from(unique.values());
-  const filtered = consolidateEquivalentFindings(deduped);
-  return filtered.sort((left, right) => findingKey(left).localeCompare(findingKey(right)));
+  const consolidated = consolidateEquivalentFindings(deduped);
+  return {
+    findings: consolidated.findings.sort((left, right) =>
+      findingKey(left).localeCompare(findingKey(right))
+    ),
+    suppressed: consolidated.suppressed,
+  };
 };
 
 const toGateOutcome = (findings: ReadonlyArray<SnapshotFinding>): GateOutcome => {
@@ -262,7 +297,8 @@ const normalizeRulesets = (rulesets: ReadonlyArray<RulesetState>): RulesetState[
 
 export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const now = new Date().toISOString();
-  const normalizedFindings = normalizeAndDedupeFindings(params.findings);
+  const consolidatedFindings = normalizeAndDedupeFindings(params.findings);
+  const normalizedFindings = consolidatedFindings.findings;
   const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';
   const severity = bySeverity(normalizedFindings);
@@ -298,5 +334,9 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       total_violations: normalizedFindings.length,
       by_severity: severity,
     },
+    consolidation:
+      consolidatedFindings.suppressed.length > 0
+        ? { suppressed: consolidatedFindings.suppressed }
+        : undefined,
   };
 }

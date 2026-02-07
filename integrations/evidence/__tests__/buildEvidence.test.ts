@@ -163,6 +163,12 @@ test('suppresses duplicated iOS heuristic findings shadowed by stronger baseline
     result.snapshot.findings.map((finding) => finding.ruleId),
     ['ios.no-anyview']
   );
+  assert.ok(result.consolidation);
+  assert.deepEqual(
+    result.consolidation.suppressed.map((entry) => entry.ruleId),
+    ['heuristics.ios.anyview.ast']
+  );
+  assert.equal(result.consolidation.suppressed[0]?.replacedByRuleId, 'ios.no-anyview');
   assert.equal(result.severity_metrics.by_severity.CRITICAL, 1);
   assert.equal(result.severity_metrics.by_severity.ERROR, 0);
 });
@@ -229,6 +235,12 @@ test('keeps strongest finding in backend explicit-any family and drops weaker du
     result.snapshot.findings.map((finding) => finding.ruleId),
     ['heuristics.ts.explicit-any.ast']
   );
+  assert.ok(result.consolidation);
+  assert.equal(result.consolidation.suppressed[0]?.ruleId, 'backend.avoid-explicit-any');
+  assert.equal(
+    result.consolidation.suppressed[0]?.replacedByRuleId,
+    'heuristics.ts.explicit-any.ast'
+  );
   assert.equal(result.severity_metrics.by_severity.ERROR, 1);
   assert.equal(result.severity_metrics.by_severity.WARN, 0);
 });
@@ -262,5 +274,10 @@ test('prefers baseline finding on equal severity tie within same semantic family
   assert.deepEqual(
     result.snapshot.findings.map((finding) => finding.ruleId),
     ['backend.avoid-explicit-any']
+  );
+  assert.ok(result.consolidation);
+  assert.equal(
+    result.consolidation.suppressed[0]?.ruleId,
+    'heuristics.ts.explicit-any.ast'
   );
 });

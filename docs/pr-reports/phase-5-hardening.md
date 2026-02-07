@@ -89,6 +89,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `integrations/evidence/buildEvidence.ts` deterministic snapshot + ledger merge
   - `integrations/evidence/writeEvidence.ts` stable serialization and relative paths
   - Evidence-level consolidation collapses mapped iOS/backend/frontend baseline+heuristic families to the strongest per-file finding
+  - Optional `consolidation.suppressed[]` trace records removed duplicates for deterministic auditability
 
 ## Validation status
 

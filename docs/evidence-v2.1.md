@@ -25,11 +25,14 @@
   - mirrors `human_intent` to avoid state drift
 - `severity_metrics`:
   - gate status + totals by severity
+- `consolidation` (optional):
+  - `suppressed[]`: trace of equivalent findings removed from snapshot by deterministic semantic-family precedence
 
 ## Deterministic behavior
 
 - Findings are deduplicated by `ruleId + file + lines`.
 - For selected semantic rule families, equivalent baseline/heuristic duplicates on the same file are consolidated to a single finding, keeping the highest-severity signal deterministically.
+- When consolidation removes findings, `consolidation.suppressed[]` keeps the trace (`ruleId`, `replacedByRuleId`, `reason`) for auditability.
 - Ledger entries are updated if a violation still exists.
 - Cleared violations are removed from ledger.
 - Output JSON is written in stable key order.
