@@ -28,6 +28,7 @@
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ios.force-unwrap.ast`
   - `heuristics.ios.anyview.ast`
+  - `heuristics.ios.force-try.ast`
   - `heuristics.ios.callback-style.ast`
   - `heuristics.android.thread-sleep.ast`
   - `heuristics.android.globalscope.ast`
