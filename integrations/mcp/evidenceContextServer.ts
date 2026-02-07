@@ -16,10 +16,15 @@ const json = (value: unknown): string => JSON.stringify(value);
 const truthyQueryValues = new Set(['1', 'true', 'yes', 'on']);
 const falsyQueryValues = new Set(['0', 'false', 'no', 'off']);
 
-const readEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
+type EvidenceReadResult =
+  | { kind: 'missing' }
+  | { kind: 'invalid'; version?: string }
+  | { kind: 'valid'; evidence: AiEvidenceV2_1 };
+
+const readEvidenceResult = (repoRoot: string): EvidenceReadResult => {
   const evidencePath = resolve(repoRoot, '.ai_evidence.json');
   if (!existsSync(evidencePath)) {
-    return undefined;
+    return { kind: 'missing' };
   }
 
   try {
@@ -30,12 +35,29 @@ const readEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
       'version' in parsed &&
       (parsed as { version?: unknown }).version === '2.1'
     ) {
-      return parsed as AiEvidenceV2_1;
+      return {
+        kind: 'valid',
+        evidence: parsed as AiEvidenceV2_1,
+      };
     }
-    return undefined;
+    const versionCandidate =
+      typeof parsed === 'object' && parsed !== null && 'version' in parsed
+        ? (parsed as { version?: unknown }).version
+        : undefined;
+    return {
+      kind: 'invalid',
+      version: typeof versionCandidate === 'string' ? versionCandidate : undefined,
+    };
   } catch {
-    return undefined;
+    return {
+      kind: 'invalid',
+    };
   }
+};
+
+const readEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
+  const result = readEvidenceResult(repoRoot);
+  return result.kind === 'valid' ? result.evidence : undefined;
 };
 
 const parseBooleanQuery = (value: string | null): boolean | undefined => {
@@ -73,6 +95,53 @@ const toResponsePayload = (evidence: AiEvidenceV2_1, requestUrl: URL): unknown =
   return rest;
 };
 
+const toStatusPayload = (repoRoot: string): unknown => {
+  const readResult = readEvidenceResult(repoRoot);
+  const evidencePath = resolve(repoRoot, '.ai_evidence.json');
+
+  if (readResult.kind === 'missing') {
+    return {
+      status: 'degraded',
+      evidence: {
+        path: evidencePath,
+        present: false,
+        valid: false,
+        version: null,
+      },
+    };
+  }
+
+  if (readResult.kind === 'invalid') {
+    return {
+      status: 'degraded',
+      evidence: {
+        path: evidencePath,
+        present: true,
+        valid: false,
+        version: readResult.version ?? null,
+      },
+    };
+  }
+
+  const { evidence } = readResult;
+  return {
+    status: 'ok',
+    evidence: {
+      path: evidencePath,
+      present: true,
+      valid: true,
+      version: evidence.version,
+      timestamp: evidence.timestamp,
+      stage: evidence.snapshot.stage,
+      outcome: evidence.snapshot.outcome,
+      findings_count: evidence.snapshot.findings.length,
+      ledger_count: evidence.ledger.length,
+      rulesets_count: evidence.rulesets.length,
+      platforms: Object.keys(evidence.platforms).sort(),
+    },
+  };
+};
+
 export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) => {
   const host = options.host ?? '127.0.0.1';
   const port = options.port ?? 7341;
@@ -88,6 +157,12 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
     if (method === 'GET' && path === '/health') {
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(json({ status: 'ok' }));
+      return;
+    }
+
+    if (method === 'GET' && path === '/status') {
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(json(toStatusPayload(repoRoot)));
       return;
     }
 

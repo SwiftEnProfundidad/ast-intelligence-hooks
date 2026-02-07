@@ -103,6 +103,92 @@ test('returns 404 when evidence file is missing', async (t) => {
   assert.equal(response.status, 404);
 });
 
+test('returns degraded status when evidence file is missing', async (t) => {
+  const repoRoot = createRepoRoot();
+  t.after(() => {
+    rmSync(repoRoot, { recursive: true, force: true });
+  });
+
+  const started = startEvidenceContextServer({
+    host: '127.0.0.1',
+    port: 0,
+    repoRoot,
+  });
+
+  t.after(() => {
+    started.server.close();
+  });
+
+  await once(started.server, 'listening');
+  const address = started.server.address();
+  assert.ok(address && typeof address === 'object');
+  const port = address.port;
+
+  const response = await fetch(`http://127.0.0.1:${port}/status`);
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    status?: string;
+    evidence?: { present?: boolean; valid?: boolean; version?: string | null };
+  };
+  assert.equal(payload.status, 'degraded');
+  assert.equal(payload.evidence?.present, false);
+  assert.equal(payload.evidence?.valid, false);
+  assert.equal(payload.evidence?.version, null);
+});
+
+test('returns summary status payload when evidence file is valid v2.1', async (t) => {
+  const repoRoot = createRepoRoot();
+  writeFileSync(
+    join(repoRoot, '.ai_evidence.json'),
+    `${JSON.stringify(createEvidencePayload(), null, 2)}\n`,
+    'utf8'
+  );
+
+  t.after(() => {
+    rmSync(repoRoot, { recursive: true, force: true });
+  });
+
+  const started = startEvidenceContextServer({
+    host: '127.0.0.1',
+    port: 0,
+    repoRoot,
+  });
+
+  t.after(() => {
+    started.server.close();
+  });
+
+  await once(started.server, 'listening');
+  const address = started.server.address();
+  assert.ok(address && typeof address === 'object');
+  const port = address.port;
+
+  const response = await fetch(`http://127.0.0.1:${port}/status`);
+  assert.equal(response.status, 200);
+  const payload = (await response.json()) as {
+    status?: string;
+    evidence?: {
+      valid?: boolean;
+      version?: string;
+      stage?: string;
+      outcome?: string;
+      findings_count?: number;
+      ledger_count?: number;
+      rulesets_count?: number;
+      platforms?: string[];
+    };
+  };
+  assert.equal(payload.status, 'ok');
+  assert.equal(payload.evidence?.valid, true);
+  assert.equal(payload.evidence?.version, '2.1');
+  assert.equal(payload.evidence?.stage, 'CI');
+  assert.equal(payload.evidence?.outcome, 'PASS');
+  assert.equal(payload.evidence?.findings_count, 0);
+  assert.equal(payload.evidence?.ledger_count, 0);
+  assert.equal(payload.evidence?.rulesets_count, 0);
+  assert.deepEqual(payload.evidence?.platforms, []);
+});
+
 test('returns evidence payload when version is v2.1', async (t) => {
   const repoRoot = createRepoRoot();
   writeFileSync(

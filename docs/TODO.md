@@ -37,6 +37,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Validate post-consolidation matrix to ensure duplicate removal does not change stage gate decisions.
 - Add optional `consolidation.suppressed[]` trace in evidence to preserve auditability of removed duplicates.
 - Add MCP evidence response filters (`includeSuppressed`, `view=compact|full`) for human/agent-oriented payloads.
+- Add MCP `/status` endpoint for lightweight evidence readiness summary (`present/valid/version/stage/outcome/counts`).
 - Add targeted evidence fixtures confirming current file-level consolidation behavior when same-family findings appear on different lines.
 - Enforce deterministic file-level consolidation when same rule repeats on different lines in one file, with dedicated evidence test coverage.
 - Confirm file-level consolidation scope for v2.1 (single representative finding per file-family, including repeated same-rule line occurrences).

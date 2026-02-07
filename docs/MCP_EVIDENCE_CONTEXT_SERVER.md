@@ -9,6 +9,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence?view=compact`: alias to hide `consolidation.suppressed[]`
 - `GET /ai-evidence?view=full`: explicit full response (default behavior)
 - `GET /health`: basic liveness probe
+- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts`) without returning full evidence payload
 
 ## Runtime
 
