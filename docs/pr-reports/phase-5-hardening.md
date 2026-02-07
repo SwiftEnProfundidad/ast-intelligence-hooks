@@ -128,6 +128,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Added local simulated runtime validation report (`docs/validation/windsurf-hook-runtime-local-report.md`) and artifacts for pre/post hook behavior.
 - Added `validate:windsurf-hooks-local` npm command backed by `validate-local-runtime.sh` for repeatable local runtime validation.
 - Added `print:windsurf-hooks-config` npm command to generate non-stale absolute Windsurf hook config.
+- Added `install:windsurf-hooks-config` npm command to install refreshed Windsurf config with backup support.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.

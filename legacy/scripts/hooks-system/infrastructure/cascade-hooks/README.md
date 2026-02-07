@@ -57,6 +57,18 @@ Para evitar rutas obsoletas, puedes generar el JSON directamente desde este repo
 npm run print:windsurf-hooks-config > ~/.codeium/windsurf/hooks.json
 ```
 
+O instalarlo automáticamente (con backup del `hooks.json` previo):
+
+```bash
+npm run install:windsurf-hooks-config
+```
+
+Para previsualizar sin escribir:
+
+```bash
+bash scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh --dry-run
+```
+
 El wrapper `run-hook-with-node.sh` intenta resolver Node en este orden:
 
 - `NODE_BINARY` explícito

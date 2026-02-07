@@ -46,6 +46,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Run local simulated Windsurf hook validation (pre_write blocks with exit 2, post_write allows with exit 0) and capture artifacts under `docs/validation/windsurf/artifacts/`.
 - Add `npm run validate:windsurf-hooks-local` to standardize local Windsurf hook runtime validation.
 - Add `npm run print:windsurf-hooks-config` to generate non-stale absolute Windsurf hook config paths.
+- Add `npm run install:windsurf-hooks-config` to install refreshed Windsurf config with backup.
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 
 ## Next
