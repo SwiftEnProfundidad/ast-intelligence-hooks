@@ -25,6 +25,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
   - Mark each document as keep/update/archive/delete and execute cleanup incrementally by phase.
   - Prioritize user-facing docs first (`README.md`, `docs/USAGE.md`, `docs/HOW_IT_WORKS.md`, `docs/API_REFERENCE.md`).
   - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
+  - Source audit matrix: `docs/markdown-hygiene-audit.md`.
 
 ## Notes
 
