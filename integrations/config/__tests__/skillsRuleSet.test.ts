@@ -1,0 +1,122 @@
+import assert from 'node:assert/strict';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import test from 'node:test';
+import { loadSkillsRuleSetForStage } from '../skillsRuleSet';
+
+const sampleLock = {
+  version: '1.0',
+  compilerVersion: '1.0.0',
+  generatedAt: '2026-02-07T23:15:00.000Z',
+  bundles: [
+    {
+      name: 'ios-guidelines',
+      version: '1.0.0',
+      source: 'file:legacy/skills/ios-guidelines/SKILL.md',
+      hash: 'a'.repeat(64),
+      rules: [
+        {
+          id: 'skills.ios.no-force-try',
+          description: 'Disallow force try in production iOS code.',
+          severity: 'WARN',
+          platform: 'ios',
+          sourceSkill: 'ios-guidelines',
+          sourcePath: 'legacy/skills/ios-guidelines/SKILL.md',
+          stage: 'PRE_PUSH',
+          locked: true,
+          confidence: 'HIGH',
+        },
+      ],
+    },
+    {
+      name: 'backend-guidelines',
+      version: '1.0.0',
+      source: 'file:legacy/skills/backend-guidelines/SKILL.md',
+      hash: 'b'.repeat(64),
+      rules: [
+        {
+          id: 'skills.backend.no-empty-catch',
+          description: 'Disallow empty catch blocks in backend runtime code.',
+          severity: 'CRITICAL',
+          platform: 'backend',
+          sourceSkill: 'backend-guidelines',
+          sourcePath: 'legacy/skills/backend-guidelines/SKILL.md',
+          locked: true,
+        },
+      ],
+    },
+  ],
+} as const;
+
+const samplePolicy = {
+  version: '1.0',
+  defaultBundleEnabled: true,
+  stages: {
+    PRE_COMMIT: {
+      blockOnOrAbove: 'CRITICAL',
+      warnOnOrAbove: 'ERROR',
+    },
+    PRE_PUSH: {
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    },
+    CI: {
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    },
+  },
+  bundles: {
+    'ios-guidelines': {
+      enabled: true,
+      promoteToErrorRuleIds: ['skills.ios.no-force-try'],
+    },
+    'backend-guidelines': {
+      enabled: false,
+    },
+  },
+} as const;
+
+test('loads and transforms active bundles into heuristic-driven rules', () => {
+  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-skills-ruleset-'));
+
+  try {
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
+    writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(samplePolicy, null, 2));
+
+    const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+    assert.equal(preCommit.rules.length, 0);
+    assert.equal(preCommit.requiresHeuristicFacts, false);
+
+    const prePush = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
+    assert.equal(prePush.rules.length, 1);
+    assert.equal(prePush.activeBundles.length, 1);
+    assert.equal(prePush.activeBundles[0]?.name, 'ios-guidelines');
+
+    const firstRule = prePush.rules[0];
+    assert.ok(firstRule);
+    assert.equal(firstRule.id, 'skills.ios.no-force-try');
+    assert.equal(firstRule.severity, 'ERROR');
+    assert.equal(firstRule.when.kind, 'Heuristic');
+    assert.equal(firstRule.when.where?.ruleId, 'heuristics.ios.force-try.ast');
+    assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.force-try.ast'), true);
+    assert.equal(prePush.requiresHeuristicFacts, true);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+
+test('falls back gracefully when lock/policy files are missing', () => {
+  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-skills-ruleset-empty-'));
+
+  try {
+    const result = loadSkillsRuleSetForStage('CI', tempRoot);
+    assert.equal(result.rules.length, 0);
+    assert.equal(result.activeBundles.length, 0);
+    assert.equal(result.requiresHeuristicFacts, false);
+    assert.equal(result.mappedHeuristicRuleIds.size, 0);
+  } finally {
+    rmSync(tempRoot, { recursive: true, force: true });
+  }
+});
+

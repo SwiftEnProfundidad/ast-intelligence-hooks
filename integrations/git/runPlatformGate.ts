@@ -9,6 +9,7 @@ import type { FileContentFact } from '../../core/facts/FileContentFact';
 import type { Finding } from '../../core/gate/Finding';
 import { evaluateGate } from '../../core/gate/evaluateGate';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
+import type { GateStage } from '../../core/gate/GateStage';
 import { evaluateRules } from '../../core/gate/evaluateRules';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
@@ -20,6 +21,7 @@ import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRule
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import { loadHeuristicsConfig } from '../config/heuristics';
 import { loadProjectRules } from '../config/loadProjectRules';
+import { loadSkillsRuleSetForStage } from '../config/skillsRuleSet';
 import { generateEvidence } from '../evidence/generateEvidence';
 import type { AiEvidenceV2_1, PlatformState, RulesetState } from '../evidence/schema';
 import { applyHeuristicSeverityForStage } from '../gate/stagePolicies';
@@ -252,6 +254,7 @@ const buildRulesetState = (params: {
   detected: ReturnType<typeof detectPlatformsFromFacts>;
   projectRules: RuleSet;
   heuristicRules: RuleSet;
+  skillsBundles: ReadonlyArray<{ name: string; version: string; hash: string }>;
   stage: GatePolicy['stage'];
 }): RulesetState[] => {
   const states: RulesetState[] = [];
@@ -324,7 +327,21 @@ const buildRulesetState = (params: {
     });
   }
 
+  for (const bundle of params.skillsBundles) {
+    states.push({
+      platform: 'skills',
+      bundle: `${bundle.name}@${bundle.version}`,
+      hash: bundle.hash,
+    });
+  }
+
   return states;
+};
+
+const normalizeStageForSkills = (
+  stage: GateStage
+): Exclude<GateStage, 'STAGED'> => {
+  return stage === 'STAGED' ? 'PRE_COMMIT' : stage;
 };
 
 export async function runPlatformGate(params: {
@@ -343,8 +360,12 @@ export async function runPlatformGate(params: {
 
   const detectedPlatforms = detectPlatformsFromFacts(facts);
   const heuristicsConfig = loadHeuristicsConfig();
+  const stageForSkills = normalizeStageForSkills(params.policy.stage);
+  const skillsRuleSet = loadSkillsRuleSetForStage(stageForSkills, resolveRepoRoot());
   const baselineRules = buildCombinedBaselineRules(detectedPlatforms);
-  const heuristicFacts = heuristicsConfig.astSemanticEnabled
+  const shouldExtractHeuristicFacts =
+    heuristicsConfig.astSemanticEnabled || skillsRuleSet.requiresHeuristicFacts;
+  const heuristicFacts = shouldExtractHeuristicFacts
     ? extractHeuristicFacts({
         facts,
         detectedPlatforms,
@@ -353,12 +374,18 @@ export async function runPlatformGate(params: {
   const evaluationFacts: ReadonlyArray<Fact> =
     heuristicFacts.length > 0 ? [...facts, ...heuristicFacts] : facts;
   const heuristicRules = heuristicsConfig.astSemanticEnabled
-    ? applyHeuristicSeverityForStage(astHeuristicsRuleSet, params.policy.stage)
+    ? applyHeuristicSeverityForStage(astHeuristicsRuleSet, params.policy.stage).filter(
+        (rule) => !skillsRuleSet.mappedHeuristicRuleIds.has(rule.id)
+      )
     : [];
-  const baselineRulesWithHeuristics: RuleSet = [...baselineRules, ...heuristicRules];
+  const baselineRulesWithHeuristicsAndSkills: RuleSet = [
+    ...baselineRules,
+    ...heuristicRules,
+    ...skillsRuleSet.rules,
+  ];
   const projectConfig = loadProjectRules();
   const projectRules = projectConfig?.rules ?? [];
-  const mergedRules = mergeRuleSets(baselineRulesWithHeuristics, projectRules, {
+  const mergedRules = mergeRuleSets(baselineRulesWithHeuristicsAndSkills, projectRules, {
     allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
   });
   const findings = evaluateRules(mergedRules, evaluationFacts);
@@ -374,6 +401,7 @@ export async function runPlatformGate(params: {
       detected: detectedPlatforms,
       projectRules,
       heuristicRules,
+      skillsBundles: skillsRuleSet.activeBundles,
       stage: params.policy.stage,
     }),
   });
