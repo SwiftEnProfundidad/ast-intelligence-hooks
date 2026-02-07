@@ -1,41 +1,49 @@
-# 🚨 MANDATORY GATE CHECK - Claude Code CLI
+# Mandatory Gate Check (Claude Code CLI)
 
-> **BEFORE doing ANYTHING, call `ai_gate_check` via MCP or run:**
+Before starting any implementation task, execute a gate check:
 
 ```bash
 npx ast-hooks audit
 cat .AI_EVIDENCE.json | jq '.ai_gate.status'
 ```
 
-## Rules
+## Execution Contract
 
-1. **FIRST action** = gate check
-2. `BLOCKED` → Fix violations BEFORE proceeding
-3. `ALLOWED` → Proceed with task
-4. **ALL severities block by default** (CRITICAL, HIGH, MEDIUM, LOW) - v6.2.9+
+1. First action must be gate evaluation.
+2. If status is `BLOCKED`, resolve violations before any code change.
+3. If status is `ALLOWED`, proceed with the task.
+4. Blocking severities default to all levels (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) from v6.2.9 onward.
 
-## Blocking Severities
+## Blocking Modes
 
-| Mode | Blocked Severities | Env Var |
-|------|-------------------|---------|
-| DEFAULT | CRITICAL, HIGH, MEDIUM, LOW | (none) |
-| LEGACY | CRITICAL, HIGH only | `AST_BLOCKING_MODE=LEGACY` |
+| Mode | Blocking severities | Environment variable |
+|---|---|---|
+| `DEFAULT` | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` | none |
+| `LEGACY` | `CRITICAL`, `HIGH` | `AST_BLOCKING_MODE=LEGACY` |
 
-## If BLOCKED
+## When Status Is BLOCKED
 
-1. Read violations: `jq '.ai_gate.violations' .AI_EVIDENCE.json`
-2. Fix violations in order: CRITICAL → HIGH → MEDIUM → LOW
-3. Re-run audit: `npx ast-hooks audit`
-4. Only proceed when status = `ALLOWED`
+1. Inspect findings:
 
-## Accessibility Rules (MANDATORY by Law)
+```bash
+jq '.ai_gate.violations' .AI_EVIDENCE.json
+```
 
-All iOS views MUST have:
-- VoiceOver labels (`.accessibilityLabel()`)
-- Dynamic Type support (`.preferredFont(forTextStyle:)`)
-- Reduce Motion check (`UIAccessibility.isReduceMotionEnabled`)
-- Color Contrast WCAG 2.1 AA (4.5:1 text, 3:1 graphics)
+2. Resolve in severity order: `CRITICAL` → `HIGH` → `MEDIUM` → `LOW`.
+3. Re-run audit:
 
-**NO EXCEPTIONS.**
+```bash
+npx ast-hooks audit
+```
 
-🐈💚 Pumuki Team® - AST Intelligence Framework
+4. Continue only when `status == "ALLOWED"`.
+
+## Accessibility Baseline (Mandatory)
+
+For iOS views, enforce at minimum:
+- VoiceOver labels (`.accessibilityLabel()`).
+- Dynamic Type support (`.preferredFont(forTextStyle:)`).
+- Reduce Motion checks (`UIAccessibility.isReduceMotionEnabled`).
+- WCAG 2.1 AA contrast requirements (4.5:1 text, 3:1 graphics).
+
+Policy exceptions are not allowed unless formally approved in platform governance.
