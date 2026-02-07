@@ -25,13 +25,14 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Rewrite remaining operational docs (`CONTRIBUTING`, `DEPENDENCIES`, `CODE_STANDARDS`, `BRANCH_PROTECTION_GUIDE`, `observability`, `alerting-system`) to active v2.x scope.
 - Remove obsolete markdown leftovers not part of active v2.x docs surface (`type-safety`, `SEVERITY_AUDIT`, ad-hoc violations plan, legacy audit report in `_AI_DOCS`).
 - Complete documentation hygiene pass across `README.md` + `docs/**/*.md` (final consistency + local link validation).
+- Run end-to-end validation in sample consumer repositories for multi-platform PRE_COMMIT/PRE_PUSH/CI and capture deterministic evidence behavior.
+- Fix evidence/gate mismatch so `snapshot.outcome` mirrors evaluated gate decision across stages.
 
 ## Next
 
-- Run end-to-end validation in a sample consumer repo:
-  - Execute PRE_COMMIT, PRE_PUSH, and CI runners for multi-platform scenarios.
-  - Validate deterministic `ai_evidence v2.1` outputs per stage.
-  - Capture findings and promotion candidates for heuristic severities.
+- Heuristic maturity calibration:
+  - Define promotion candidates from `WARN` to `ERROR` based on stage signal quality from sample validations.
+  - Add deterministic tests for promotion matrix changes before enabling in default policy.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
