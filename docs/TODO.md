@@ -67,4 +67,58 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
   - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session and compare against `docs/validation/windsurf-hook-runtime-local-report.md`.
 
+## Skills Enforcement Roadmap (Enterprise)
+
+### Goal
+
+Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducible way without coupling audits to `~/.codex`.
+
+### Guardrails
+
+- Keep enforcement inputs versioned in repository scope.
+- Keep `core/*` pure; implement loading/adaptation in `integrations/*`.
+- Do not read `~/.codex/**` during CI gate execution.
+- Trace every applied skills bundle in `.ai_evidence.json` (`rulesets[]`).
+
+### Phase 1: Contract and Lockfile
+
+- [ ] Define `skills.lock.json` schema (bundle, version, hash, compiled rules, generated_at).
+- [ ] Define `skills.policy.json` schema (stage severity policy and enabled/disabled rule sets).
+- [ ] Add schema validation tests and deterministic hash tests.
+- [ ] Document repository ownership model for both files.
+
+### Phase 2: Compilation Flow (Local Authoring)
+
+- [ ] Add local command to compile skills sources into `skills.lock.json`.
+- [ ] Start with explicit mapping templates (manual curated mapping), not free-text runtime parsing.
+- [ ] Add fixture-based tests for compilation determinism.
+- [ ] Record compiler version in lock metadata.
+
+### Phase 3: Gate Integration
+
+- [ ] Load `skills.lock.json` + `skills.policy.json` via `integrations/config/*`.
+- [ ] Convert compiled entries to RuleSet and merge with baseline/project rules.
+- [ ] Enforce locked baseline semantics through existing `mergeRuleSets`.
+- [ ] Register skills bundle in evidence `rulesets[]` with stable hash.
+
+### Phase 4: Stage Calibration
+
+- [ ] Define stage behavior for skills-derived rules:
+  - PRE_COMMIT: warn-first for non-critical skill rules.
+  - PRE_PUSH/CI: block on calibrated critical/error skills-derived rules.
+- [ ] Add policy tests for stage promotion behavior.
+- [ ] Add regression tests for evidence outcomes per stage.
+
+### Phase 5: Rollout and DX
+
+- [ ] Add docs for maintainers: "how to update skills lock safely".
+- [ ] Add CI check to fail when lock is stale versus source policy inputs.
+- [ ] Add migration guide for teams moving from personal skills-only to repository-enforced skills.
+- [ ] Add minimal menu entry to display active skills bundle/version/hash.
+
+### Current Status
+
+- [ ] Not started (planning committed in TODO).
+- [ ] Next implementation milestone: Phase 1 schema draft + tests.
+
 ## Notes
