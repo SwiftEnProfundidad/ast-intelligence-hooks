@@ -48,6 +48,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `af5f97c` docs(evidence): clarify file-level consolidation scope in v2.1
 - `e5d7ca6` docs(phase-5): append evidence scope clarification commit
 - `dbfb637` docs(validation): add Windsurf hook runtime execution checklist
+- `09eca70` docs(phase-5): append validation checklist traceability
+- `e088407` docs(validation): capture local Windsurf hook runtime simulation
 
 ## Scope
 
