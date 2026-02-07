@@ -203,6 +203,7 @@ const normalizedBundleForHash = (bundle: SkillsLockBundle): Record<string, unkno
     name: bundle.name,
     version: bundle.version,
     source: bundle.source,
+    hash: bundle.hash,
     rules: sortedRules.map((rule) => normalizedRuleForHash(rule)),
   };
 };

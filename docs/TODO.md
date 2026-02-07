@@ -89,10 +89,10 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 
 ### Phase 2: Compilation Flow (Local Authoring)
 
-- [ ] Add local command to compile skills sources into `skills.lock.json`.
-- [ ] Start with explicit mapping templates (manual curated mapping), not free-text runtime parsing.
-- [ ] Add fixture-based tests for compilation determinism.
-- [ ] Record compiler version in lock metadata.
+- [x] Add local command to compile skills sources into `skills.lock.json`.
+- [x] Start with explicit mapping templates (manual curated mapping), not free-text runtime parsing.
+- [x] Add fixture-based tests for compilation determinism.
+- [x] Record compiler version in lock metadata.
 
 ### Phase 3: Gate Integration
 
@@ -119,6 +119,7 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 ### Current Status
 
 - [x] Phase 1 completed (contracts + validators + deterministic hash tests).
-- [ ] Next implementation milestone: Phase 2 local compilation flow (`skills.lock.json` generator).
+- [x] Phase 2 completed (compiler + templates + deterministic fixtures + stale check).
+- [ ] Next implementation milestone: Phase 3 Gate integration (`skills.lock.json` + `skills.policy.json` as additive ruleset input).
 
 ## Notes

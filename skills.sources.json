@@ -1,0 +1,33 @@
+{
+  "version": "1.0",
+  "bundles": [
+    {
+      "name": "ios-guidelines",
+      "version": "1.0.0",
+      "template": "ios-guidelines",
+      "sourcePath": "legacy/skills/ios-guidelines/SKILL.md",
+      "enabled": true
+    },
+    {
+      "name": "backend-guidelines",
+      "version": "1.0.0",
+      "template": "backend-guidelines",
+      "sourcePath": "legacy/skills/backend-guidelines/SKILL.md",
+      "enabled": true
+    },
+    {
+      "name": "frontend-guidelines",
+      "version": "1.0.0",
+      "template": "frontend-guidelines",
+      "sourcePath": "legacy/skills/frontend-guidelines/SKILL.md",
+      "enabled": true
+    },
+    {
+      "name": "android-guidelines",
+      "version": "1.0.0",
+      "template": "android-guidelines",
+      "sourcePath": "legacy/skills/android-guidelines/SKILL.md",
+      "enabled": true
+    }
+  ]
+}

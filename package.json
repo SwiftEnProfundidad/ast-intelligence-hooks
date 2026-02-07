@@ -57,6 +57,8 @@
     "ast:guard:logs": "bash scripts/hooks-system/bin/evidence-guard logs",
     "ast:check-version": "node scripts/hooks-system/bin/check-version.js",
     "framework:menu": "npx tsx scripts/framework-menu.ts",
+    "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",
+    "skills:lock:check": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts --check",
     "mcp:evidence": "npx --yes tsx@4.21.0 integrations/mcp/evidenceContextServer.cli.ts",
     "validate:windsurf-hooks-local": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh",
     "print:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/print-windsurf-hooks-config.sh",

@@ -51,6 +51,7 @@ You cannot (unless `allowOverrideLocked: true`):
 
 Repository-level contracts for future skills enforcement:
 
+- `skills.sources.json`
 - `skills.lock.json`
 - `skills.policy.json`
 
@@ -64,6 +65,7 @@ Current scope in this phase:
 - schema/contract validation
 - deterministic contract hashing
 - file loading with safe fallback (`undefined` when missing/invalid)
+- local compiler command for curated source templates (`skills.sources.json` -> `skills.lock.json`)
 
 The Gate still uses baseline packs + project overrides as active enforcement source.
 Skills contracts are additive preparatory inputs for next phases.
@@ -73,6 +75,13 @@ Ownership model:
 - Contracts are repository artifacts and must be committed.
 - CI and team members must evaluate the same committed contract files.
 - User-home skill sources (`~/.codex/**`) are not runtime inputs for CI gate decisions.
+
+Compile/check commands:
+
+```bash
+npm run skills:compile
+npm run skills:lock:check
+```
 
 ## Stage policies
 
