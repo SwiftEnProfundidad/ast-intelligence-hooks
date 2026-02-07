@@ -59,6 +59,8 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `1fcf8e6` feat(hooks): add Windsurf runtime verifier and path fallback
 - `5f7b03d` docs(phase-5): append Windsurf verifier traceability
 - `c954e99` fix(hooks): resolve pre-write AST loader across scripts and legacy layouts
+- `37a2458` docs(phase-5): append pre-write loader fallback traceability
+- `d39e508` feat(hooks): add automated Windsurf session log assessment
 
 ## Scope
 
