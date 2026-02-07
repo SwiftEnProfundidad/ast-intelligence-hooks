@@ -11,6 +11,8 @@ Validate PRE_COMMIT / PRE_PUSH / CI stage runners against temporary consumer rep
 - `610fec0` feat(heuristics): promote iOS AnyView heuristic to ERROR for PRE_PUSH and CI
 - `05a5352` feat(heuristics): promote explicit-any heuristic to ERROR for PRE_PUSH and CI
 - `d51bb6a` feat(heuristics): promote iOS callback-style heuristic to ERROR for PRE_PUSH and CI
+- `9ce666d` feat(evidence): consolidate semantic duplicate findings
+- `5cc082c` docs(validation): record post-consolidation heuristics matrix
 
 ## Scope
 
