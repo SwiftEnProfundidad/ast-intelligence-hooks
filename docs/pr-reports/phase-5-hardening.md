@@ -42,6 +42,9 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `a1ac55a` fix(hooks): harden Windsurf cascade hook runtime resolution with deterministic Node wrapper
 - `b336c5e` feat(hooks): add strict and diagnostic modes to Windsurf node wrapper
 - `b36dfd9` fix(evidence): enforce deterministic file-level consolidation across lines
+- `637f114` docs(phase-5): append latest hardening commit traceability
+- `d9d2057` docs(hooks): define staged rollout for Windsurf node runtime hardening
+- `2407748` feat(hooks): add runtime diagnostics collector for Windsurf cascade hooks
 
 ## Scope
 
