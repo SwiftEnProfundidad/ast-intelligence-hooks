@@ -1,40 +1,41 @@
 <p align="center">
-   <img src="../../assets/logo.png" alt="PUMUKI - AST Intelligence" width="150" />
- </p>
+  <img src="../../assets/logo.png" alt="PUMUKI - AST Intelligence" width="150" />
+</p>
 
 # MCP Server: AI Evidence Watcher
 
-## 🎯 Objetivo
+## Overview
 
-**Notificar automáticamente a la IA (no al usuario) cuando `.AI_EVIDENCE.json` está stale**, para que la IA pueda actualizar el evidence automáticamente sin intervención manual.
+This MCP server exposes deterministic evidence status to AI agents.
 
-## 🔄 Diferencia con Watchdog
+Primary goal:
+- Notify the agent when `.AI_EVIDENCE.json` is stale, missing, or invalid.
+- Keep the interaction agent-facing (not end-user notifications).
 
-| Component | Propósito | Target |
-|-----------|-----------|--------|
-| **Watchdog** (`ai-watchdog.sh`) | Notificar a Carlos vía macOS | 👤 Usuario |
-| **MCP Server** (`evidence-watcher.js`) | Notificar a la IA vía Cursor | 🤖 IA |
+## Watchdog vs MCP
 
-## 📡 Protocolo MCP (Model Context Protocol)
+| Component | Purpose | Consumer |
+|---|---|---|
+| `ai-watchdog.sh` | Local user notifications (macOS) | Human user |
+| `evidence-watcher.js` | Evidence context for agent workflows | AI agent |
 
-El MCP permite a la IA en Cursor:
-1. **Leer recursos** (como el estado del evidence)
-2. **Llamar herramientas** (como check_evidence_status)
+## MCP Contract
 
-**Sin MCP:**
-```
-Usuario → ai-start → actualiza evidence → IA puede trabajar
-```
+Through MCP, the agent can:
+1. Read resources (for example `evidence://status`).
+2. Invoke tools (for example `check_evidence_status`).
 
-**Con MCP:**
-```
-IA detecta evidence stale vía MCP → IA actualiza automáticamente → Usuario trabaja directamente
-```
+Without MCP:
+- User-triggered evidence refresh is required before agent work.
 
-## 🚀 Recursos Expuestos
+With MCP:
+- Agent reads evidence state and can drive refresh actions in the workflow.
+
+## Exposed Resource
 
 ### `evidence://status`
-Estado actual del `.AI_EVIDENCE.json`:
+
+Returns current `.AI_EVIDENCE.json` state:
 
 ```json
 {
@@ -49,17 +50,16 @@ Estado actual del `.AI_EVIDENCE.json`:
 }
 ```
 
-## 🛠️ Herramientas Expuestas
+## Exposed Tool
 
 ### `check_evidence_status`
-Chequea si el evidence está stale:
 
-**Input:** Ninguno  
-**Output:** Mismo que `evidence://status`
+- Input: none
+- Output: same payload as `evidence://status`
 
-## ⚙️ Configuración
+## Cursor Configuration
 
-El MCP server se configura en `.cursor/mcp.json`:
+Configure MCP in `.cursor/mcp.json`:
 
 ```json
 {
@@ -67,7 +67,7 @@ El MCP server se configura en `.cursor/mcp.json`:
     "ai-evidence-watcher": {
       "command": "node",
       "args": [
-        "${workspaceFolder}/scripts/hooks-system/infrastructure/mcp/evidence-watcher.js"
+        "${workspaceFolder}/legacy/scripts/hooks-system/infrastructure/mcp/evidence-watcher.js"
       ],
       "env": {
         "REPO_ROOT": "${workspaceFolder}"
@@ -77,40 +77,31 @@ El MCP server se configura en `.cursor/mcp.json`:
 }
 ```
 
-## 🧪 Testing
+## Local Testing
 
 ```bash
-# Test manual (simula lo que hace Cursor)
-echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' | \
-  node scripts/hooks-system/infrastructure/mcp/evidence-watcher.js
+# JSON-RPC initialize
+printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' \
+  | node legacy/scripts/hooks-system/infrastructure/mcp/evidence-watcher.js
 
-# Expected output: initialize response
-
-echo '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"evidence://status"}}' | \
-  REPO_ROOT=$(pwd) node scripts/hooks-system/infrastructure/mcp/evidence-watcher.js
+# Read resource
+printf '%s\n' '{"jsonrpc":"2.0","id":2,"method":"resources/read","params":{"uri":"evidence://status"}}' \
+  | REPO_ROOT="$(pwd)" node legacy/scripts/hooks-system/infrastructure/mcp/evidence-watcher.js
 ```
 
-## 📝 Cómo lo Usa la IA
+## Agent Usage Flow
 
-Cuando Cursor arranca:
-1. **Cursor inicia el MCP server** automáticamente
-2. **La IA consulta** `evidence://status` o llama `check_evidence_status`
-3. **Si está stale:** La IA puede:
-   - Avisar al usuario: "⚠️ Evidence stale, actualiza con ai-start develop"
-   - **Futuro:** Actualizar automáticamente el evidence (requiere tool de escritura)
+1. Cursor starts MCP server.
+2. Agent reads `evidence://status` or invokes `check_evidence_status`.
+3. If stale, agent follows repository refresh workflow before execution.
 
-## 🔮 Futuras Mejoras
+## Roadmap
 
-1. **Tool `update_evidence`**: Permitir a la IA actualizar el evidence directamente
-2. **Push notifications**: En lugar de polling, usar `fswatch` para notificar cambios
-3. **Integración con rules**: Sugerir qué reglas .mdc leer según archivos modificados
+- Add write-capable tooling only when governance permits controlled mutation.
+- Consider push-based updates after deterministic polling baseline is validated.
+- Expand rule-aware context hints from changed files.
 
-## 🐈 Pumuki Dice
+## Metadata
 
-> **"Ahora la IA (yo) puede saber automáticamente cuando el evidence está viejo, sin que Carlos tenga que acordarse. ¡Automatización nivel 💯!"**
-
----
-
-**Created:** 2025-11-06  
-**Version:** 1.0.0  
-**Author:** Carlos Merlos + IA 🤝
+- Created: 2025-11-06
+- Version: 1.0.0
