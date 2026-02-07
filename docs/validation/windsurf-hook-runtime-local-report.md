@@ -11,6 +11,7 @@ This report validates technical behavior in terminal mode (not a full IDE intera
 
 ## Commands executed
 
+0. `npm run validate:windsurf-hooks-local`
 1. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
 2. Simulated `pre_write_code` payload via:
    - `run-hook-with-node.sh pre-write-code-hook.js`

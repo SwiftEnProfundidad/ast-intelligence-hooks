@@ -44,6 +44,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Document staged rollout strategy for Windsurf hook runtime hardening (compatibility, diagnostics, strict mode).
 - Add local runtime diagnostics collector script for Windsurf hooks (`collect-runtime-diagnostics.sh`) with `.audit_tmp` output.
 - Run local simulated Windsurf hook validation (pre_write blocks with exit 2, post_write allows with exit 0) and capture artifacts under `docs/validation/windsurf/artifacts/`.
+- Add `npm run validate:windsurf-hooks-local` to standardize local Windsurf hook runtime validation.
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 
 ## Next

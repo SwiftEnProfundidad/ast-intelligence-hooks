@@ -84,6 +84,14 @@ bash "/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/coll
 
 El script genera logs en `.audit_tmp/` listos para adjuntar en soporte.
 
+Para ejecutar validación local completa (`pre_write_code` + `post_write_code` simulados):
+
+```bash
+npm run validate:windsurf-hooks-local
+```
+
+Genera artefactos en `docs/validation/windsurf/artifacts/`.
+
 **Reinicia Windsurf** después de crear el archivo.
 
 ### Estrategia de rollout recomendada

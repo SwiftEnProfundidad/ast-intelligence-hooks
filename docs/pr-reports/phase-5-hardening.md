@@ -123,6 +123,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Added `collect-runtime-diagnostics.sh` helper to capture wrapper diagnostics and local smoke logs under `.audit_tmp/`.
 - Added `docs/validation/windsurf-hook-runtime-validation.md` as the canonical checklist for real-session Windsurf validation.
 - Added local simulated runtime validation report (`docs/validation/windsurf-hook-runtime-local-report.md`) and artifacts for pre/post hook behavior.
+- Added `validate:windsurf-hooks-local` npm command backed by `validate-local-runtime.sh` for repeatable local runtime validation.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.
