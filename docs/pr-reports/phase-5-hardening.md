@@ -26,6 +26,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `7395c42` refactor(evidence): add canonical generateEvidence writer path
 - `04f9a01` docs(heuristics): document declarative AST rule pack and evidence bundle
 - `54c55a2` docs(architecture): add conceptual entrypoint and manual hook-system usage
+- `82cb873` ci(tests): unify deterministic suite for evidence mcp and heuristics
 - `2d25f94` fix(types): align dependency fact source and gate readonly handling
 - `71dadb6` chore(tsconfig): exclude nested test files from production typecheck
 
@@ -44,7 +45,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
   - `package.json` script: `test:heuristics`
 - Evidence test workflow:
   - `.github/workflows/pumuki-evidence-tests.yml`
-  - `package.json` script: `test:evidence`
+  - `package.json` scripts: `test:evidence`, `test:mcp`, `test:deterministic`
 - Heuristics pilot flag:
   - `integrations/config/heuristics.ts`
   - `PUMUKI_ENABLE_AST_HEURISTICS`
@@ -80,4 +81,5 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - `npx tsc --noEmit` now passes for production sources included in tsconfig.
 - `npm run test:heuristics` passes (7/7) for cross-platform AST pilot cases.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
+- `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.
