@@ -16,6 +16,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Convert root `ARCHITECTURE.md` into conceptual architecture linked to `docs/ARCHITECTURE.md`.
 - Define canonical evidence writer path and deterministic merge strategy.
 - Standardize visuals in `docs/images/` to consistent, resolution-independent assets.
+- Harden MCP evidence context server with test coverage and deterministic CI suite.
 
 ## Next
 
