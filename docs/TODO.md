@@ -20,13 +20,14 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Rewrite `README.md` and `docs/USAGE.md` to align with deterministic v2.x stage/rules/evidence model.
 - Rewrite `docs/HOW_IT_WORKS.md` and `docs/API_REFERENCE.md` to remove legacy API/runtime references.
 - Consolidate release notes to active v2.x line and remove legacy 5.3.4 migration/release docs.
+- Rewrite `docs/INSTALLATION.md`, `docs/CONFIGURATION.md`, and `docs/ARCHITECTURE_DETAILED.md` to active v2.x model.
 
 ## Next
 
 - Documentation hygiene pass:
   - Audit all `*.md` files for stale legacy references (old hooks, daemons, removed workflows, obsolete commands).
   - Mark each document as keep/update/archive/delete and execute cleanup incrementally by phase.
-  - Continue with operational leftovers after core docs cleanup (`INSTALLATION`, `CONFIGURATION`, `ARCHITECTURE` family).
+  - Continue with remaining operational docs after core cleanup (`ARCHITECTURE.md`, `ARCH.md`, `MCP_SERVERS.md`, `TESTING.md`).
   - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
 ## Notes
