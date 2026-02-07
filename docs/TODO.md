@@ -50,7 +50,10 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add `npm run verify:windsurf-hooks-runtime` as preflight guard for Windsurf hooks wiring/runtime.
 - Add wrapper-path fallback (`scripts/...` or `legacy/scripts/...`) in Windsurf config tooling + pre-write AST loader.
 - Add `npm run assess:windsurf-hooks-session` to auto-evaluate presence of real pre/post hook events from logs.
-- Run `assess:windsurf-hooks-session` and confirm current local logs produce `session-assessment=PASS`.
+- Run `assess:windsurf-hooks-session:any` and confirm current local logs produce `session-assessment=PASS`.
+- Split session assessment modes:
+  - strict real-session mode (default, excludes simulated markers)
+  - optional include-simulated mode (`assess:windsurf-hooks-session:any`)
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 
 ## Next

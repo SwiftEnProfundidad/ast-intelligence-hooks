@@ -62,7 +62,8 @@
     "print:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/print-windsurf-hooks-config.sh",
     "install:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh",
     "verify:windsurf-hooks-runtime": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-windsurf-hooks-runtime.sh",
-    "assess:windsurf-hooks-session": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh"
+    "assess:windsurf-hooks-session": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh",
+    "assess:windsurf-hooks-session:any": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh --include-simulated"
   },
   "keywords": [
     "ast",

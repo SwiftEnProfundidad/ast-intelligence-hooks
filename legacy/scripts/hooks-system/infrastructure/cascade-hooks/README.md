@@ -75,6 +75,15 @@ Evaluar automáticamente si una sesión real reciente registró `pre_write_code`
 npm run assess:windsurf-hooks-session
 ```
 
+Notas:
+
+- Por defecto excluye eventos simulados locales (`__pumuki_simulated__`).
+- Para evaluar cualquier evento (incluyendo simulados):
+
+```bash
+npm run assess:windsurf-hooks-session:any
+```
+
 Para previsualizar sin escribir:
 
 ```bash

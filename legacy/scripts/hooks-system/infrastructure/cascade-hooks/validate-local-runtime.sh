@@ -16,18 +16,20 @@ REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || pwd
 ARTIFACTS_DIR="${REPO_ROOT}/docs/validation/windsurf/artifacts"
 WRAPPER_SCRIPT="${SCRIPT_DIR}/run-hook-with-node.sh"
 COLLECT_SCRIPT="${SCRIPT_DIR}/collect-runtime-diagnostics.sh"
+SIMULATED_FILE="__pumuki_simulated__/hooks-smoke.ts"
+SIMULATED_TRAJECTORY="pumuki-local-simulated"
 
 mkdir -p "${ARTIFACTS_DIR}"
 
 bash "${COLLECT_SCRIPT}" > "${ARTIFACTS_DIR}/collector-run.txt" 2>&1
 
 set +e
-printf '%s' '{"agent_action_name":"pre_write_code","tool_info":{"file_path":"apps/backend/src/example.ts","edits":[{"old_string":"","new_string":"function t(){ try { return 1; } catch {} }"}]}}' \
+printf '%s' "{\"agent_action_name\":\"pre_write_code\",\"trajectory_id\":\"${SIMULATED_TRAJECTORY}\",\"tool_info\":{\"file_path\":\"${SIMULATED_FILE}\",\"edits\":[{\"old_string\":\"\",\"new_string\":\"function t(){ try { return 1; } catch {} }\"}]}}" \
   | PUMUKI_HOOK_DIAGNOSTIC=1 bash "${WRAPPER_SCRIPT}" pre-write-code-hook.js \
   > "${ARTIFACTS_DIR}/pre-write-simulated.txt" 2>&1
 PRE_EXIT=$?
 
-printf '%s' '{"agent_action_name":"post_write_code","tool_info":{"file_path":"apps/backend/src/example.ts","edits":[{"old_string":"","new_string":"const ok = true;"}]}}' \
+printf '%s' "{\"agent_action_name\":\"post_write_code\",\"trajectory_id\":\"${SIMULATED_TRAJECTORY}\",\"tool_info\":{\"file_path\":\"${SIMULATED_FILE}\",\"edits\":[{\"old_string\":\"\",\"new_string\":\"const ok = true;\"}]}}" \
   | PUMUKI_HOOK_DIAGNOSTIC=1 bash "${WRAPPER_SCRIPT}" post-write-code-hook.js \
   > "${ARTIFACTS_DIR}/post-write-simulated.txt" 2>&1
 POST_EXIT=$?
@@ -58,4 +60,3 @@ fi
 echo "PRE_EXIT=${PRE_EXIT}"
 echo "POST_EXIT=${POST_EXIT}"
 echo "Artifacts directory: ${ARTIFACTS_DIR}"
-

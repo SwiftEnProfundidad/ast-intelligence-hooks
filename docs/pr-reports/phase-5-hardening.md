@@ -140,7 +140,7 @@ Reduce integration duplication, wire AST heuristic pilot flag safely, and stabil
 - Added `verify:windsurf-hooks-runtime` npm command to validate hooks wiring and runtime before IDE session.
 - Hardened wrapper/config tooling for mixed repo layouts by resolving both `scripts/...` and `legacy/scripts/...` paths.
 - Added `assess:windsurf-hooks-session` npm command to auto-assess real-session pre/post hook event presence from logs.
-- `assess:windsurf-hooks-session` validated with current local logs (`session-assessment=PASS`).
+- `assess:windsurf-hooks-session:any` validated with current local logs (`session-assessment=PASS`); strict real-session mode remains pending until IDE interaction.
 - `npm run test:evidence` passes for evidence/human-intent deterministic behavior.
 - `npm run test:deterministic` passes (evidence + MCP + heuristics).
 - Stage gates and CI workflows keep existing behavior by default.

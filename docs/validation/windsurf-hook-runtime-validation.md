@@ -37,6 +37,9 @@ Objective: validate `pre_write_code` and `post_write_code` runtime behavior in a
 
 7. Optional automatic assessment (last 24h by default):
    - `npm run assess:windsurf-hooks-session`
+   - default mode excludes simulated local events (`__pumuki_simulated__`)
+   - include simulated events:
+     - `npm run assess:windsurf-hooks-session:any`
    - custom lower bound:
      - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh "2026-02-07T00:00:00.000Z"`
 
