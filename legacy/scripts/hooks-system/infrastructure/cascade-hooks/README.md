@@ -59,6 +59,23 @@ El wrapper `run-hook-with-node.sh` intenta resolver Node en este orden:
 
 Si no encuentra Node, muestra diagnóstico y sale en modo compatibilidad (no bloquea la escritura).
 
+Modo estricto opcional:
+
+- `PUMUKI_HOOK_STRICT_NODE=1` cambia el fallback de compatibilidad a bloqueo (`exit 2`) cuando no hay runtime Node.
+- Recomendado habilitarlo solo cuando el entorno ya está estabilizado.
+
+Diagnóstico explícito:
+
+```bash
+bash "/RUTA/A/TU/PROYECTO/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh" --diagnose
+```
+
+También puedes activar diagnóstico en cada ejecución de hook con:
+
+- `PUMUKI_HOOK_DIAGNOSTIC=1`
+
+El diagnóstico imprime `node_bin`, `node_version`, `PATH` efectivo y flags de strict/diagnostic.
+
 **Reinicia Windsurf** después de crear el archivo.
 
 ### 2. Hacer ejecutable el hook

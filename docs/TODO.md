@@ -47,8 +47,8 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
   - Add targeted fixtures with repeated same-family findings on different lines to confirm file-level precedence tradeoffs.
 - Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
   - Validate the new wrapper against a real Windsurf session (`pre_write_code` + `post_write_code`) and capture before/after logs.
-  - Add optional strict mode (`PUMUKI_HOOK_STRICT_NODE=1`) to block when runtime is missing after a stabilization period.
-  - Add explicit preflight diagnostics for hook runtime (node binary path, version, effective PATH) in installation output.
+  - Validate optional strict mode (`PUMUKI_HOOK_STRICT_NODE=1`) in a real editor session before enabling by default.
+  - Validate diagnostic mode (`--diagnose` / `PUMUKI_HOOK_DIAGNOSTIC=1`) in a real editor session and capture support logs.
   - Define rollout strategy: compatibility mode first, then stricter validation once runtime checks are stable.
 - Keep `docs/pr-reports/*` aligned with real commit history after each implementation step.
 
