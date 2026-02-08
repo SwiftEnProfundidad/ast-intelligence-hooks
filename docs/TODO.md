@@ -10,13 +10,13 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Multi-platform stage runners are implemented (iOS, backend, frontend, android).
 - Skills lock/policy enforcement is integrated with stage-aware gate calibration.
 - Evidence/mcp deterministic validation suites are in place and green.
-- Windsurf hook-runtime hardening and diagnostics commands are implemented.
+- IDE adapter hook-runtime hardening and diagnostics commands are implemented (current baseline: Windsurf).
 - Consumer CI diagnostic tooling is implemented (artifact scan, auth check, support bundle, ticket draft).
 - Consumer startup-failure unblock status helper is implemented (`validation:consumer-startup-unblock-status`).
 - Consumer startup triage orchestrator is implemented (`validation:consumer-startup-triage`).
 - Phase 5 blockers readiness helper is implemented (`validation:phase5-blockers-readiness`).
 - Adapter readiness helper is implemented (`validation:adapter-readiness`).
-- Windsurf real-session report generator is implemented (`validation:windsurf-real-session-report`).
+- Adapter real-session report generator is implemented (`validation:windsurf-real-session-report`, current baseline naming).
 - Framework menu operational checks include docs hygiene and skills lock freshness (`skills:lock:check`).
 - IDE-agnostic boundary guardrail test is implemented for `core/*` and `integrations/*`.
 - Rule-pack version-to-doc sync guardrail test is implemented (`scripts/__tests__/rule-pack-docs-sync.test.ts`).
@@ -38,8 +38,8 @@ For full historical execution details, see:
 
 ## Deferred Adapter Validation
 
-- [ ] Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
-  - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session.
+- [ ] Adapter pre/post tool hooks reliability (`bash: node: command not found`) on current baseline adapter:
+  - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real adapter session.
   - Compare outcome with `docs/validation/windsurf-hook-runtime-local-report.md`.
   - Record final evidence using `docs/validation/windsurf-real-session-report-template.md` or generate it with `validation:windsurf-real-session-report`.
   - Regenerate adapter diagnostics summary with `validation:adapter-readiness`.
