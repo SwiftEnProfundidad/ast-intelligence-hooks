@@ -107,3 +107,4 @@ This runbook is prepared and versioned. Execution in external consumer repositor
 
 - `docs/validation/skills-rollout-r_go-report.md` (initial real-consumer checkpoint)
 - `docs/validation/skills-rollout-r_go-multi-platform-report.md` (positive multi-platform detection across `PRE_COMMIT`, `PRE_PUSH`, and `CI`)
+- `docs/validation/skills-rollout-consumer-ci-artifacts.md` (consumer GitHub Actions artifact availability status)
