@@ -143,6 +143,20 @@ Validation docs:
 - `docs/validation/windsurf-hook-runtime-validation.md`
 - `docs/validation/windsurf-hook-runtime-local-report.md`
 
+## Consumer CI Diagnostics
+
+Generate a consumer-repository CI run/artifact report (for rollout validation and startup-failure triage):
+
+```bash
+npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/R_GO --limit 20 \
+  --out docs/validation/skills-rollout-r_go-ci-artifacts-scan.md
+```
+
+Related docs:
+
+- `docs/validation/skills-rollout-consumer-ci-artifacts.md`
+- `docs/validation/consumer-ci-startup-failure-playbook.md`
+
 ## CI Model
 
 Platform workflows use reusable gate orchestration and upload `.ai_evidence.json` as artifact:
