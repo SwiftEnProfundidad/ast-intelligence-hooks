@@ -51,6 +51,8 @@ npm run validation:adapter-readiness -- \
   --out docs/validation/adapter-readiness.md
 ```
 
+Note: the current adapter implementation uses `--windsurf-report` as the adapter input flag.
+
 ### Direct stage runners
 
 ```bash

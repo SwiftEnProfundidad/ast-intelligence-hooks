@@ -124,6 +124,8 @@ npm run validation:phase5-blockers-readiness -- \
   --out docs/validation/phase5-blockers-readiness.md
 ```
 
+Note: current adapter readiness command uses `--windsurf-report` as the adapter input file flag.
+
 ### CI workflows
 
 - `.github/workflows/pumuki-gate-template.yml`

@@ -58,7 +58,7 @@ Policy source: `integrations/gate/stagePolicies.ts`
 ## IDE adapter boundary
 
 - `core/*` and `integrations/*` are IDE-agnostic; they must not depend on editor-specific runtime hooks.
-- IDE diagnostics adapters (for example Windsurf runtime checks and reports) live in `scripts/*` and `docs/validation/*`.
+- IDE diagnostics adapters (provider-specific runtime checks/reports) live in `scripts/*` and `docs/validation/*`.
 - PRE_COMMIT, PRE_PUSH, and CI gate outcomes depend only on facts/rules/gate/evidence contracts.
 
 ## Platform and rule-pack model

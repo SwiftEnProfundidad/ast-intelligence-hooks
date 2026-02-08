@@ -61,7 +61,7 @@ Interactive:
 npm run framework:menu
 ```
 
-The interactive menu includes stage evaluation plus optional diagnostics/adapters (Windsurf reports, consumer diagnostics), and operational checks (`docs/validation` hygiene and `skills:lock:check`).
+The interactive menu includes stage evaluation plus optional diagnostics/adapters (provider-specific adapter reports and consumer diagnostics), and operational checks (`docs/validation` hygiene and `skills:lock:check`).
 
 Direct stage wrappers:
 
@@ -146,7 +146,7 @@ Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
 Pumuki gate execution is IDE-agnostic by design.
 
 - The deterministic gate flow (`Facts -> Rules -> Gate -> ai_evidence`) runs through `core/*` and `integrations/*`.
-- IDE/editor adapter diagnostics (Windsurf today, additional IDEs/CLIs/extensions in future) are isolated under `scripts/*` and `docs/validation/*`.
+- IDE/editor adapter diagnostics are isolated under `scripts/*` and `docs/validation/*`.
 - PRE_COMMIT / PRE_PUSH / CI do not require any IDE adapter command to pass.
 - Adapter diagnostics are operational and optional:
   - `docs/validation/README.md`
@@ -201,19 +201,20 @@ npm run validation:consumer-startup-unblock-status -- \
   --workflow-lint-report docs/validation/consumer-workflow-lint-report.md \
   --out docs/validation/consumer-startup-unblock-status.md
 
-# Build consolidated readiness report for pending Phase 5 diagnostics blockers (Windsurf optional)
+# Build consolidated readiness report for pending Phase 5 diagnostics blockers (adapter report optional)
 npm run validation:phase5-blockers-readiness -- \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
 
-# Optional strict mode: require Windsurf report in readiness verdict
+# Optional strict mode: require adapter report in readiness verdict
 npm run validation:phase5-blockers-readiness -- \
   --require-windsurf-report \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
 
-# Optional: generate adapter-only readiness report (Windsurf diagnostics)
+# Optional: generate adapter-only readiness report
+# (current adapter implementation consumes --windsurf-report as input path)
 npm run validation:adapter-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --out docs/validation/adapter-readiness.md

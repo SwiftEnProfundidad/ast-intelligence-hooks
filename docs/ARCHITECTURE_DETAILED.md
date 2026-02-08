@@ -46,7 +46,7 @@ Responsibilities:
 
 Boundary rule:
 
-- IDE/editor-specific diagnostics (for example Windsurf runtime validation) stay in `scripts/*` and `docs/validation/*`; they must not participate in core gate decisions.
+- IDE/editor-specific diagnostics (provider-specific runtime validation) stay in `scripts/*` and `docs/validation/*`; they must not participate in core gate decisions.
 
 ## Stage execution architecture
 

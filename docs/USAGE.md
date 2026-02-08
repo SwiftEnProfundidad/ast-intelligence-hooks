@@ -34,7 +34,7 @@ npm run framework:menu
 
 Menu supports staged evaluation, commit-range evaluation, evidence reading, and CI runner entrypoints.
 
-Optional diagnostics adapters (for example Windsurf runtime and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
+Optional diagnostics adapters (provider-specific runtime diagnostics and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
 
 Adapter readiness diagnostics are available from the interactive menu as:
 
@@ -61,12 +61,13 @@ Notes:
 ### 3) Diagnostics reports (optional adapters)
 
 ```bash
-# Windsurf adapter-only readiness
+# Adapter-only readiness
+# (current adapter implementation consumes --windsurf-report as input path)
 npm run validation:adapter-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --out docs/validation/adapter-readiness.md
 
-# Phase 5 consolidated readiness (consumer triage required, Windsurf optional by default)
+# Phase 5 consolidated readiness (consumer triage required, adapter report optional by default)
 npm run validation:phase5-blockers-readiness -- \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
