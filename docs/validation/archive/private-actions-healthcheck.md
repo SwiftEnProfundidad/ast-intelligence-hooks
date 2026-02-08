@@ -34,5 +34,5 @@ jobs:
 
 ## Cleanup Status
 
-- Temporary repository could not be deleted automatically due missing `delete_repo` token scope.
+- Temporary repository could not be deleted automatically due to missing `delete_repo` token scope.
 - Repository was archived and labeled as temporary pending manual deletion after scope refresh.

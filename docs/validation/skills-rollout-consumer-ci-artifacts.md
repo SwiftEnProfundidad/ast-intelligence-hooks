@@ -80,7 +80,7 @@ Automated scan output:
 - `docs/validation/archive/skills-rollout-r_go-workflow-lint.md`
 - `docs/validation/consumer-workflow-lint-report.md`
 - `docs/validation/archive/skills-rollout-r_go-startup-fix-experiment.md`
-- `docs/validation/archive/private-actions-healthcheck-temp.md`
+- `docs/validation/archive/private-actions-healthcheck.md`
 - `docs/validation/consumer-startup-failure-support-bundle.md`
 
 Tracking issue in consumer repository:

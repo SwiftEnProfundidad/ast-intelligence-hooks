@@ -160,5 +160,5 @@ If unresolved after workflow and access-level checks:
 - `docs/validation/consumer-ci-auth-check.md`
 - `docs/validation/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/archive/skills-rollout-r_go-multi-platform-report.md`
-- `docs/validation/archive/private-actions-healthcheck-temp.md`
+- `docs/validation/archive/private-actions-healthcheck.md`
 - `docs/validation/consumer-startup-failure-support-bundle.md`

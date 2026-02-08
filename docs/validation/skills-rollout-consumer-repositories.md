@@ -111,7 +111,7 @@ This runbook is prepared and versioned. Execution in external consumer repositor
 - `docs/validation/archive/skills-rollout-r_go-multi-platform-report.md` (positive multi-platform detection across `PRE_COMMIT`, `PRE_PUSH`, and `CI`)
 - `docs/validation/archive/skills-rollout-r_go-workflow-lint.md` (semantic workflow lint findings linked to startup-failure triage)
 - `docs/validation/archive/skills-rollout-r_go-startup-fix-experiment.md` (branch-only remediation test outcome)
-- `docs/validation/archive/private-actions-healthcheck-temp.md` (account-level private Actions reproduction evidence)
+- `docs/validation/archive/private-actions-healthcheck.md` (account-level private Actions reproduction evidence)
 - Generated diagnostic outputs (not versioned by default):
 - `docs/validation/consumer-ci-artifacts-report.md`
 - `docs/validation/consumer-workflow-lint-report.md`

@@ -1,56 +1,45 @@
-# Windsurf Hook Runtime - Local Validation Report
+# Windsurf Hook Runtime - Local Validation Baseline
 
-Date: 2026-02-07
-Branch: `enterprise-refactor`
+## Purpose
 
-## Scope
+Define the expected local validation flow for Windsurf hook runtime behavior before requesting a real IDE session replay.
 
-Local execution of cascade-hook runtime checks using wrapper + simulated hook payloads.
+This document is a stable operational baseline and must not store machine-specific paths or one-off execution timestamps.
 
-This report validates technical behavior in terminal mode (not a full IDE interaction replay).
+## Required Commands
 
-## Commands executed
+1. `npm run install:windsurf-hooks-config`
+2. `npm run verify:windsurf-hooks-runtime`
+3. `npm run validate:windsurf-hooks-local`
+4. `npm run assess:windsurf-hooks-session:any`
+5. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
 
-0. `npm run install:windsurf-hooks-config`
-1. `npm run verify:windsurf-hooks-runtime`
-2. `npm run validate:windsurf-hooks-local`
-3. `npm run assess:windsurf-hooks-session:any`
-4. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
-5. Simulated `pre_write_code` payload via:
-   - `run-hook-with-node.sh pre-write-code-hook.js`
-6. Simulated `post_write_code` payload via:
-   - `run-hook-with-node.sh post-write-code-hook.js`
+Optional simulated payload checks:
 
-## Results
+- `run-hook-with-node.sh pre-write-code-hook.js`
+- `run-hook-with-node.sh post-write-code-hook.js`
 
-- `pre_write_code` simulated run: `exit 2` (blocked as expected)
-  - Trigger sample: empty catch (`catch {}`) in backend TS file path.
-  - Blocked rule observed: `common.error.empty_catch`.
-- `post_write_code` simulated run: `exit 0` (allowed as expected)
-- Runtime diagnostics resolved Node correctly:
-  - `node_bin=/Users/juancarlosmerlosalbarracin/.nvm/versions/node/v20.20.0/bin/node`
-  - `node_version=v20.20.0`
-- Hooks config verification passed:
-  - `verify:windsurf-hooks-runtime` returned `verify OK`
-  - Wrapper path resolved from active repo layout (`legacy/scripts/...`) via fallback logic.
-- Session assessment helper passed:
-  - `assess:windsurf-hooks-session:any` returned `session-assessment=PASS`
-  - strict real-session mode currently returns `session-assessment=FAIL` (expected without real IDE events in this repo):
-    - `assess:windsurf-hooks-session`
+## Expected Outcomes
 
-## Artifacts
+- Hooks config verification returns `verify OK`.
+- Simulated `pre_write_code` can block on known violations (for example, `common.error.empty_catch`).
+- Simulated `post_write_code` returns success when no violations are introduced.
+- Runtime diagnostics resolve a valid Node binary and version.
+- Session helper `assess:windsurf-hooks-session:any` reports `PASS`.
 
-- `docs/validation/windsurf/artifacts/collector-run.txt`
-- `docs/validation/windsurf/artifacts/pre-write-simulated.txt`
-- `docs/validation/windsurf/artifacts/post-write-simulated.txt`
-- `docs/validation/windsurf/artifacts/exit-codes.txt`
-- `docs/validation/windsurf/artifacts/latest-runtime-tail.txt`
-- `.audit_tmp/cascade-hook-runtime-*.log`
-- `.audit_tmp/cascade-hook-smoke-*.log`
+## Artifact Targets
 
-## Pending
+Capture local diagnostics under:
 
-Real Windsurf IDE session validation remains required:
+- `docs/validation/windsurf/artifacts/`
+- `.audit_tmp/`
 
-- Execute `docs/validation/windsurf-hook-runtime-validation.md`
-- Attach event logs from real `pre_write_code` and `post_write_code` execution paths.
+Store timestamped outputs there, not in this runbook.
+
+## Follow-Up
+
+After local baseline is green, execute the real IDE validation flow:
+
+- `docs/validation/windsurf-hook-runtime-validation.md`
+
+If real-session checks fail, attach diagnostics in `docs/validation/windsurf/artifacts/` and update the support status report.
