@@ -33,6 +33,7 @@ npm run verify:adapter-hooks-runtime
 ```
 
 This installs `~/.codeium/adapter/hooks.json` with an automatic backup of any previous file.
+It also writes `~/.codeium/windsurf/hooks.json` for backward compatibility with existing clients.
 
 ### Generate config only (no write)
 

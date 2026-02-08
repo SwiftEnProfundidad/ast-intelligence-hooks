@@ -139,3 +139,28 @@ test('verify-adapter-hooks-runtime falls back to legacy windsurf hooks.json when
     assert.match(result.stdout, /config=.*\.codeium\/windsurf\/hooks\.json/);
   });
 });
+
+test('verify-adapter-hooks-runtime fails when one active config is stale even if another is valid', async () => {
+  await withTempDir('pumuki-adapter-verify-dual-stale-', async (tempRoot) => {
+    writeHooksConfig({
+      homeRoot: tempRoot,
+      adapterName: 'adapter',
+      preCommand: `bash "${WRAPPER_PATH}" pre-write-code-hook.js`,
+      postCommand: `bash "${WRAPPER_PATH}" post-write-code-hook.js`,
+    });
+    writeHooksConfig({
+      homeRoot: tempRoot,
+      adapterName: 'windsurf',
+      preCommand:
+        'node /tmp/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js',
+      postCommand:
+        'node /tmp/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js',
+    });
+
+    const result = runVerify(tempRoot);
+
+    assert.equal(result.exitCode, 1);
+    assert.match(result.stderr, /detected stale direct-node hook command/);
+    assert.match(result.stderr, /\.codeium\/windsurf\/hooks\.json/);
+  });
+});
