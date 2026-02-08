@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
+  buildSkillsLockCheckCommandArgs,
   buildValidationDocsHygieneCommandArgs,
   buildMenuGateParams,
   buildWindsurfRealSessionReportCommandArgs,
@@ -127,5 +128,14 @@ test('builds deterministic command args for validation docs hygiene check', () =
     '--yes',
     'tsx@4.21.0',
     '/repo/scripts/check-validation-docs-hygiene.ts',
+  ]);
+});
+
+test('builds deterministic command args for skills lock freshness check', () => {
+  const args = buildSkillsLockCheckCommandArgs();
+
+  assert.deepEqual(args, [
+    'run',
+    'skills:lock:check',
   ]);
 });

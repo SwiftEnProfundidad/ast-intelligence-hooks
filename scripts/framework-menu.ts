@@ -135,6 +135,13 @@ export const buildValidationDocsHygieneCommandArgs = (params: {
   ];
 };
 
+export const buildSkillsLockCheckCommandArgs = (): string[] => {
+  return [
+    'run',
+    'skills:lock:check',
+  ];
+};
+
 const runWindsurfRealSessionReport = async (params: {
   statusReportFile: string;
   outFile: string;
@@ -178,6 +185,25 @@ const runValidationDocsHygiene = async (): Promise<number> => {
     execFileSync(
       'npx',
       buildValidationDocsHygieneCommandArgs({ scriptPath }),
+      {
+        stdio: 'inherit',
+      }
+    );
+    return 0;
+  } catch (error) {
+    if (error && typeof error === 'object' && 'status' in error) {
+      const status = Number((error as { status?: number }).status ?? 1);
+      return Number.isFinite(status) ? status : 1;
+    }
+    return 1;
+  }
+};
+
+const runSkillsLockCheck = async (): Promise<number> => {
+  try {
+    execFileSync(
+      'npm',
+      buildSkillsLockCheckCommandArgs(),
       {
         stdio: 'inherit',
       }
@@ -780,6 +806,11 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '18',
+        label: 'Run skills lock freshness check',
+        execute: async () => runAndPrintExitCode(runSkillsLockCheck),
+      },
+      {
+        id: '19',
         label: 'Exit',
         execute: async () => {},
       },
@@ -799,7 +830,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '18') {
+      if (selected.id === '19') {
         break;
       }
 
