@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { loadSkillsLock, type SkillsLockBundle } from '../integrations/config/skillsLock';
-import { policyForCI, policyForPreCommit, policyForPrePush } from '../integrations/gate/stagePolicies';
+import { resolvePolicyForStage } from '../integrations/gate/stagePolicies';
 import { runCiBackend } from '../integrations/git/ciBackend';
 import { runCiFrontend } from '../integrations/git/ciFrontend';
 import { runCiIOS } from '../integrations/git/ciIOS';
@@ -15,6 +15,16 @@ type MenuAction = {
   label: string;
   execute: () => Promise<void>;
 };
+
+type MenuStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+
+type MenuScope =
+  | { kind: 'staged' }
+  | {
+      kind: 'range';
+      fromRef: string;
+      toRef: string;
+    };
 
 const runGit = (args: ReadonlyArray<string>): string => {
   return execFileSync('git', args, { encoding: 'utf8' }).trim();
@@ -33,12 +43,26 @@ const runAndPrintExitCode = async (run: () => Promise<number>): Promise<void> =>
   output.write(`\nExit code: ${code}\n`);
 };
 
+export const buildMenuGateParams = (params: {
+  stage: MenuStage;
+  scope: MenuScope;
+  repoRoot?: string;
+}) => {
+  const resolved = resolvePolicyForStage(params.stage, params.repoRoot);
+  return {
+    policy: resolved.policy,
+    policyTrace: resolved.trace,
+    scope: params.scope,
+  };
+};
+
 const runStaged = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'staged' },
+  });
   await runAndPrintExitCode(() =>
-    runPlatformGate({
-      policy: policyForPreCommit(),
-      scope: { kind: 'staged' },
-    })
+    runPlatformGate(gateParams)
   );
 };
 
@@ -47,16 +71,17 @@ const runRange = async (params: {
   toRef: string;
   stage: 'PRE_PUSH' | 'CI';
 }): Promise<void> => {
-  const policy = params.stage === 'CI' ? policyForCI() : policyForPrePush();
+  const gateParams = buildMenuGateParams({
+    stage: params.stage,
+    scope: {
+      kind: 'range',
+      fromRef: params.fromRef,
+      toRef: params.toRef,
+    },
+  });
+
   await runAndPrintExitCode(() =>
-    runPlatformGate({
-      policy,
-      scope: {
-        kind: 'range',
-        fromRef: params.fromRef,
-        toRef: params.toRef,
-      },
-    })
+    runPlatformGate(gateParams)
   );
 };
 
