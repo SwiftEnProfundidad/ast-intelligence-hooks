@@ -55,3 +55,7 @@ Restore consumer workflow startup health first, then rerun and capture artifact 
 
 - `PRE_COMMIT`/`PRE_PUSH`/`CI` evidence artifacts
 - corresponding run URL + artifact URL pairs for rollout traceability
+
+Reference playbook:
+
+- `docs/validation/consumer-ci-startup-failure-playbook.md`
