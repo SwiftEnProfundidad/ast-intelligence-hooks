@@ -84,6 +84,10 @@ Detailed commit history remains available through Git history (`git log` / `git 
     - `scripts/__tests__/enterprise-docs-agnostic.test.ts`
   - docs index coverage guardrail test:
     - `scripts/__tests__/docs-index-coverage.test.ts`
+- Compatibility command hardening:
+  - legacy provider-named hook scripts now delegate to adapter-native scripts in `package.json`
+  - regression guardrail:
+    - `scripts/__tests__/adapter-script-aliases.test.ts`
 - Phase 5 execution closure runbook:
   - `docs/validation/phase5-execution-closure.md`
 - Rule-pack docs drift prevention:

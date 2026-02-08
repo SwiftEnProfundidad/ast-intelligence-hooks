@@ -47,7 +47,7 @@
     "test:heuristics": "npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts",
     "test:evidence": "npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts integrations/evidence/__tests__/humanIntent.test.ts",
     "test:mcp": "npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/evidenceContextServer.test.ts",
-    "test:stage-gates": "npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsRuleSet.test.ts integrations/config/__tests__/skillsContracts.test.ts integrations/config/__tests__/compileSkillsLock.test.ts integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/resolveGitRefs.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/git/__tests__/ideAgnosticBoundary.test.ts scripts/__tests__/framework-menu.test.ts scripts/__tests__/build-consumer-startup-failure-support-bundle.test.ts scripts/__tests__/check-consumer-ci-auth.test.ts scripts/__tests__/verify-adapter-hooks-runtime.test.ts scripts/__tests__/build-adapter-session-status.test.ts scripts/__tests__/build-adapter-real-session-report.test.ts scripts/__tests__/consumer-support-ticket-lib.test.ts scripts/__tests__/validation-docs-hygiene-lib.test.ts scripts/__tests__/consumer-startup-unblock-status-lib.test.ts scripts/__tests__/consumer-startup-triage-lib.test.ts scripts/__tests__/build-consumer-startup-triage.test.ts scripts/__tests__/phase5-blockers-readiness-lib.test.ts scripts/__tests__/build-phase5-blockers-readiness.test.ts scripts/__tests__/phase5-execution-closure-status-lib.test.ts scripts/__tests__/build-phase5-execution-closure-status.test.ts scripts/__tests__/rule-pack-docs-sync.test.ts scripts/__tests__/enterprise-docs-agnostic.test.ts scripts/__tests__/docs-index-coverage.test.ts scripts/__tests__/adapter-readiness-lib.test.ts scripts/__tests__/build-adapter-readiness.test.ts",
+    "test:stage-gates": "npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsRuleSet.test.ts integrations/config/__tests__/skillsContracts.test.ts integrations/config/__tests__/compileSkillsLock.test.ts integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/resolveGitRefs.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/git/__tests__/ideAgnosticBoundary.test.ts scripts/__tests__/framework-menu.test.ts scripts/__tests__/build-consumer-startup-failure-support-bundle.test.ts scripts/__tests__/check-consumer-ci-auth.test.ts scripts/__tests__/verify-adapter-hooks-runtime.test.ts scripts/__tests__/build-adapter-session-status.test.ts scripts/__tests__/build-adapter-real-session-report.test.ts scripts/__tests__/consumer-support-ticket-lib.test.ts scripts/__tests__/validation-docs-hygiene-lib.test.ts scripts/__tests__/consumer-startup-unblock-status-lib.test.ts scripts/__tests__/consumer-startup-triage-lib.test.ts scripts/__tests__/build-consumer-startup-triage.test.ts scripts/__tests__/phase5-blockers-readiness-lib.test.ts scripts/__tests__/build-phase5-blockers-readiness.test.ts scripts/__tests__/phase5-execution-closure-status-lib.test.ts scripts/__tests__/build-phase5-execution-closure-status.test.ts scripts/__tests__/rule-pack-docs-sync.test.ts scripts/__tests__/enterprise-docs-agnostic.test.ts scripts/__tests__/docs-index-coverage.test.ts scripts/__tests__/adapter-script-aliases.test.ts scripts/__tests__/adapter-readiness-lib.test.ts scripts/__tests__/build-adapter-readiness.test.ts",
     "test:deterministic": "npm run test:evidence && npm run test:mcp && npm run test:heuristics",
     "ast:refresh": "bash scripts/hooks-system/bin/update-evidence.sh",
     "ast:audit": "node scripts/hooks-system/infrastructure/ast/ast-intelligence.js",
@@ -80,12 +80,12 @@
     "verify:adapter-hooks-runtime": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-adapter-hooks-runtime.sh",
     "assess:adapter-hooks-session": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh",
     "assess:adapter-hooks-session:any": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh --include-simulated",
-    "validate:windsurf-hooks-local": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh",
-    "print:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/print-windsurf-hooks-config.sh",
-    "install:windsurf-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh",
-    "verify:windsurf-hooks-runtime": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-windsurf-hooks-runtime.sh",
-    "assess:windsurf-hooks-session": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh",
-    "assess:windsurf-hooks-session:any": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh --include-simulated"
+    "validate:windsurf-hooks-local": "npm run validate:adapter-hooks-local",
+    "print:windsurf-hooks-config": "npm run print:adapter-hooks-config",
+    "install:windsurf-hooks-config": "npm run install:adapter-hooks-config",
+    "verify:windsurf-hooks-runtime": "npm run verify:adapter-hooks-runtime",
+    "assess:windsurf-hooks-session": "npm run assess:adapter-hooks-session",
+    "assess:windsurf-hooks-session:any": "npm run assess:adapter-hooks-session:any"
   },
   "keywords": [
     "ast",
