@@ -115,6 +115,42 @@ const runConsumerWorkflowLintScan = async (params: {
   );
 };
 
+const runConsumerSupportBundle = async (params: {
+  repo: string;
+  limit: number;
+  outFile: string;
+}): Promise<void> => {
+  const bundleScriptPath = resolve(
+    process.cwd(),
+    'scripts/build-consumer-startup-failure-support-bundle.ts'
+  );
+
+  if (!existsSync(bundleScriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-consumer-startup-failure-support-bundle.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    [
+      '--yes',
+      'tsx@4.21.0',
+      bundleScriptPath,
+      '--repo',
+      params.repo,
+      '--limit',
+      String(params.limit),
+      '--out',
+      params.outFile,
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 export const buildMenuGateParams = (params: {
   stage: MenuStage;
   scope: MenuScope;
@@ -257,6 +293,31 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askConsumerSupportBundle = async (): Promise<{
+      repo: string;
+      limit: number;
+      outFile: string;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+      );
+      const limitPrompt = await rl.question('runs to inspect [20]: ');
+      const outPrompt = await rl.question(
+        'output path [docs/validation/consumer-support-bundle.md]: '
+      );
+
+      const repo = repoPrompt.trim() || 'SwiftEnProfundidad/R_GO';
+      const limit = Number.parseInt(limitPrompt.trim() || '20', 10);
+      const outFile =
+        outPrompt.trim() || 'docs/validation/consumer-support-bundle.md';
+
+      return {
+        repo,
+        limit: Number.isFinite(limit) && limit > 0 ? limit : 20,
+        outFile,
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -326,6 +387,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '11',
+        label: 'Build consumer startup-failure support bundle',
+        execute: async () => {
+          const bundle = await askConsumerSupportBundle();
+          await runConsumerSupportBundle(bundle);
+        },
+      },
+      {
+        id: '12',
         label: 'Exit',
         execute: async () => {},
       },
@@ -345,7 +414,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '11') {
+      if (selected.id === '12') {
         break;
       }
 

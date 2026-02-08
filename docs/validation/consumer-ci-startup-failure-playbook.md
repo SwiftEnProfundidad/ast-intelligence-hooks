@@ -37,6 +37,13 @@ npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
   --out docs/validation/<repo>-consumer-ci-artifacts-scan.md
 ```
 
+Generate support payload bundle:
+
+```bash
+npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 \
+  --out docs/validation/<repo>-consumer-support-bundle.md
+```
+
 3. Inspect failing run metadata:
 
 ```bash
@@ -137,3 +144,4 @@ If unresolved after workflow and access-level checks:
 - `docs/validation/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/skills-rollout-r_go-multi-platform-report.md`
 - `docs/validation/private-actions-healthcheck-temp.md`
+- `docs/validation/skills-rollout-r_go-support-bundle.md`

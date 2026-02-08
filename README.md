@@ -156,6 +156,10 @@ npm run validation:consumer-workflow-lint -- \
   --repo-path /Users/you/Projects/consumer-repo \
   --actionlint-bin /tmp/actionlint-bin/actionlint \
   --out docs/validation/consumer-workflow-lint-report.md
+
+# Build support bundle (ready-to-paste payload for GitHub Support)
+npm run validation:consumer-support-bundle -- --repo SwiftEnProfundidad/R_GO --limit 20 \
+  --out docs/validation/skills-rollout-r_go-support-bundle.md
 ```
 
 Related docs:

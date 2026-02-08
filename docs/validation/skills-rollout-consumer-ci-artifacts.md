@@ -77,6 +77,7 @@ Automated scan output:
 - `docs/validation/skills-rollout-r_go-workflow-lint-auto.md`
 - `docs/validation/skills-rollout-r_go-startup-fix-experiment.md`
 - `docs/validation/private-actions-healthcheck-temp.md`
+- `docs/validation/skills-rollout-r_go-support-bundle.md`
 
 Tracking issue in consumer repository:
 
