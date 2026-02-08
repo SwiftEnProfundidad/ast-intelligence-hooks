@@ -172,6 +172,14 @@ npm run validation:consumer-support-ticket-draft -- \
   --support-bundle docs/validation/consumer-startup-failure-support-bundle.md \
   --auth-report docs/validation/consumer-ci-auth-check.md \
   --out docs/validation/consumer-support-ticket-draft.md
+
+# Build consolidated unblock status for startup_failure incident
+npm run validation:consumer-startup-unblock-status -- \
+  --repo <owner>/<repo> \
+  --support-bundle docs/validation/consumer-startup-failure-support-bundle.md \
+  --auth-report docs/validation/consumer-ci-auth-check.md \
+  --workflow-lint-report docs/validation/consumer-workflow-lint-report.md \
+  --out docs/validation/consumer-startup-unblock-status.md
 ```
 
 Related docs:

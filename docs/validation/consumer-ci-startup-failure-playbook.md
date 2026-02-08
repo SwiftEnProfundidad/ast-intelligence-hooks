@@ -51,6 +51,13 @@ npm run validation:consumer-support-ticket-draft -- \
   --support-bundle docs/validation/<repo>-consumer-support-bundle.md \
   --auth-report docs/validation/<repo>-consumer-ci-auth-check.md \
   --out docs/validation/<repo>-consumer-support-ticket-draft.md
+
+npm run validation:consumer-startup-unblock-status -- \
+  --repo <owner>/<repo> \
+  --support-bundle docs/validation/<repo>-consumer-support-bundle.md \
+  --auth-report docs/validation/<repo>-consumer-ci-auth-check.md \
+  --workflow-lint-report docs/validation/consumer-workflow-lint-report.md \
+  --out docs/validation/<repo>-consumer-startup-unblock-status.md
 ```
 
 3. Inspect failing run metadata:

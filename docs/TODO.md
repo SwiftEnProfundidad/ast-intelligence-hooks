@@ -12,6 +12,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Evidence/mcp deterministic validation suites are in place and green.
 - Windsurf hook-runtime hardening and diagnostics commands are implemented.
 - Consumer CI diagnostic tooling is implemented (artifact scan, auth check, support bundle, ticket draft).
+- Consumer startup-failure unblock status helper is implemented (`validation:consumer-startup-unblock-status`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
 
 For full historical execution details, see:

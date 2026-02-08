@@ -253,6 +253,48 @@ const runConsumerSupportTicketDraft = async (params: {
   );
 };
 
+const runConsumerStartupUnblockStatus = async (params: {
+  repo: string;
+  supportBundleFile: string;
+  authReportFile: string;
+  workflowLintReportFile: string;
+  outFile: string;
+}): Promise<void> => {
+  const statusScriptPath = resolve(
+    process.cwd(),
+    'scripts/build-consumer-startup-unblock-status.ts'
+  );
+
+  if (!existsSync(statusScriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-consumer-startup-unblock-status.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    [
+      '--yes',
+      'tsx@4.21.0',
+      statusScriptPath,
+      '--repo',
+      params.repo,
+      '--support-bundle',
+      params.supportBundleFile,
+      '--auth-report',
+      params.authReportFile,
+      '--workflow-lint-report',
+      params.workflowLintReportFile,
+      '--out',
+      params.outFile,
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 export const buildMenuGateParams = (params: {
   stage: MenuStage;
   scope: MenuScope;
@@ -479,6 +521,42 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askConsumerStartupUnblockStatus = async (): Promise<{
+      repo: string;
+      supportBundleFile: string;
+      authReportFile: string;
+      workflowLintReportFile: string;
+      outFile: string;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [owner/repo]: '
+      );
+      const supportBundlePrompt = await rl.question(
+        'support bundle path [docs/validation/consumer-startup-failure-support-bundle.md]: '
+      );
+      const authReportPrompt = await rl.question(
+        'auth report path [docs/validation/consumer-ci-auth-check.md]: '
+      );
+      const workflowLintPrompt = await rl.question(
+        'workflow lint report path [docs/validation/consumer-workflow-lint-report.md]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/consumer-startup-unblock-status.md]: '
+      );
+
+      return {
+        repo: repoPrompt.trim() || 'owner/repo',
+        supportBundleFile:
+          supportBundlePrompt.trim() ||
+          'docs/validation/consumer-startup-failure-support-bundle.md',
+        authReportFile:
+          authReportPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
+        workflowLintReportFile:
+          workflowLintPrompt.trim() || 'docs/validation/consumer-workflow-lint-report.md',
+        outFile: outPrompt.trim() || 'docs/validation/consumer-startup-unblock-status.md',
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -580,6 +658,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '15',
+        label: 'Build consumer startup-unblock status report',
+        execute: async () => {
+          const status = await askConsumerStartupUnblockStatus();
+          await runConsumerStartupUnblockStatus(status);
+        },
+      },
+      {
+        id: '16',
         label: 'Exit',
         execute: async () => {},
       },
@@ -599,7 +685,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '15') {
+      if (selected.id === '16') {
         break;
       }
 
