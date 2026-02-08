@@ -7,7 +7,7 @@ import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
 const VERIFY_SCRIPT = resolve(
   process.cwd(),
-  'legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-windsurf-hooks-runtime.sh'
+  'legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-adapter-hooks-runtime.sh'
 );
 const WRAPPER_PATH = resolve(
   process.cwd(),
