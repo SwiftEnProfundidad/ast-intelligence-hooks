@@ -6,6 +6,7 @@ const ALLOWED_ROOT_DOCS = new Set<string>([
   'docs/validation/README.md',
   'docs/validation/consumer-ci-startup-failure-playbook.md',
   'docs/validation/github-support-ticket-template-startup-failure.md',
+  'docs/validation/phase5-execution-closure.md',
   'docs/validation/skills-rollout-consumer-ci-artifacts.md',
   'docs/validation/skills-rollout-consumer-repositories.md',
   'docs/validation/windsurf-hook-runtime-local-report.md',

@@ -67,6 +67,8 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - IDE-agnostic gate boundary hardening:
   - runtime boundary test in `integrations/git/__tests__/ideAgnosticBoundary.test.ts`
   - explicit architecture/docs contract that IDE diagnostics remain optional adapters
+- Phase 5 execution closure runbook:
+  - `docs/validation/phase5-execution-closure.md`
 
 ## Notes
 

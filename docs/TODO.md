@@ -59,3 +59,4 @@ Ensure user/team skills are enforced deterministically in repository scope, with
 - [x] Phase 4: stage calibration + promotion policy tests + regressions.
 - [x] Phase 5 docs: maintainers guide + migration + CI lock freshness check.
 - [ ] Phase 5 execution closure: resolve consumer private Actions blocker and attach artifact URLs to rollout status.
+  - Runbook: `docs/validation/phase5-execution-closure.md`

@@ -38,6 +38,7 @@ This index is the canonical entry point for framework documentation in this repo
 
 - `validation/README.md`: validation docs policy.
 - `validation/consumer-ci-startup-failure-playbook.md`
+- `validation/phase5-execution-closure.md`
 - `validation/windsurf-hook-runtime-validation.md`
 - `validation/archive/README.md`: historical validation reports.
 
