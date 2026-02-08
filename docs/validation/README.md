@@ -46,3 +46,11 @@ Generate them on demand with:
 - `npm run validation:consumer-startup-unblock-status -- --repo <owner>/<repo>`
 - `npm run validation:windsurf-session-status`
 - `npm run validation:windsurf-real-session-report`
+
+## Hygiene Check
+
+Run documentation hygiene validation with:
+
+- `npm run validation:docs-hygiene`
+
+The same check is available in `npm run framework:menu` under the docs hygiene action.
