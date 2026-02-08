@@ -105,7 +105,7 @@ This runbook is prepared and versioned. Execution in external consumer repositor
 
 ## Execution Reports
 
-- `docs/validation/skills-rollout-consumer-ci-artifacts.md` (consumer GitHub Actions artifact availability status)
+- `docs/validation/archive/skills-rollout-consumer-ci-artifacts.md` (consumer GitHub Actions artifact availability status)
 
 Archived historical reports:
 

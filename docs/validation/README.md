@@ -15,7 +15,6 @@ Keep these as source-of-truth operational references:
 - `github-support-ticket-template-startup-failure.md`
 - `phase5-execution-closure.md`
 - `skills-rollout-consumer-repositories.md`
-- `skills-rollout-consumer-ci-artifacts.md`
 - `windsurf-hook-runtime-validation.md`
 - `windsurf-hook-runtime-local-report.md`
 - `windsurf-real-session-report-template.md`
