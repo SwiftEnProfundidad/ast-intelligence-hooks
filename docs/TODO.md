@@ -114,13 +114,13 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 
 - [x] Add docs for maintainers: "how to update skills lock safely".
 - [x] Add CI check to fail when lock is stale versus source policy inputs.
-- [ ] Add migration guide for teams moving from personal skills-only to repository-enforced skills.
-- [ ] Add minimal menu entry to display active skills bundle/version/hash.
+- [x] Add migration guide for teams moving from personal skills-only to repository-enforced skills.
+- [x] Add minimal menu entry to display active skills bundle/version/hash.
 
 ### Current Status
 
 - [x] Phase 1 completed (contracts + validators + deterministic hash tests).
 - [x] Phase 2 completed (compiler + templates + deterministic fixtures + stale check).
-- [ ] Next implementation milestone: Phase 5 completion (migration guide + menu visibility for active skills bundles).
+- [ ] Next implementation milestone: document and validate Phase 5 rollout in sample consumer repositories.
 
 ## Notes

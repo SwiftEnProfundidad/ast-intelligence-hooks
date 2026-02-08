@@ -85,6 +85,10 @@ CI guardrail:
 
 - `.github/workflows/ci.yml` includes `Skills Lock Freshness` and fails when committed lock is stale.
 
+Migration guide:
+
+- `docs/skills-repo-enforcement-migration.md`
+
 ## Stage policies
 
 Defined in `integrations/gate/stagePolicies.ts`:
