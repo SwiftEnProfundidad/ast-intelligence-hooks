@@ -11,6 +11,7 @@ type CliOptions = {
   windsurfReportFile: string;
   consumerTriageReportFile: string;
   outFile: string;
+  requireWindsurfReport: boolean;
 };
 
 const DEFAULT_WINDSURF_REPORT_FILE = 'docs/validation/windsurf-real-session-report.md';
@@ -22,6 +23,7 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
     windsurfReportFile: DEFAULT_WINDSURF_REPORT_FILE,
     consumerTriageReportFile: DEFAULT_CONSUMER_TRIAGE_FILE,
     outFile: DEFAULT_OUT_FILE,
+    requireWindsurfReport: false,
   };
 
   for (let index = 0; index < args.length; index += 1) {
@@ -54,6 +56,11 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
       }
       options.outFile = value;
       index += 1;
+      continue;
+    }
+
+    if (arg === '--require-windsurf-report') {
+      options.requireWindsurfReport = true;
       continue;
     }
 
@@ -95,6 +102,7 @@ const main = (): number => {
     hasConsumerTriageReport: consumerTriageReport.exists,
     windsurf: parsedWindsurf,
     consumer: parsedConsumer,
+    requireWindsurfReport: options.requireWindsurfReport,
   });
 
   const markdown = buildPhase5BlockersReadinessMarkdown({
@@ -103,6 +111,7 @@ const main = (): number => {
     consumerTriageReportPath: options.consumerTriageReportFile,
     hasWindsurfReport: windsurfReport.exists,
     hasConsumerTriageReport: consumerTriageReport.exists,
+    requireWindsurfReport: options.requireWindsurfReport,
     summary,
   });
 

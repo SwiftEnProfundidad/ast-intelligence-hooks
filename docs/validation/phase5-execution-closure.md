@@ -10,10 +10,13 @@ This runbook is operational. It validates rollout readiness and incident closure
 
 ## Required Inputs
 
-- Windsurf real-session runtime report (optional adapter diagnostics):
-  - `docs/validation/windsurf-real-session-report.md`
 - Consumer startup triage report (external consumer repository diagnostics):
   - `docs/validation/consumer-startup-triage-report.md`
+
+Optional adapter diagnostics input:
+
+- Windsurf real-session runtime report:
+  - `docs/validation/windsurf-real-session-report.md`
 
 ## Step 1: Generate/refresh Windsurf report
 
@@ -56,6 +59,15 @@ npm run validation:consumer-startup-triage -- \
 
 ```bash
 npm run validation:phase5-blockers-readiness -- \
+  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
+  --out docs/validation/phase5-blockers-readiness.md
+```
+
+Optional strict adapter mode:
+
+```bash
+npm run validation:phase5-blockers-readiness -- \
+  --require-windsurf-report \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md

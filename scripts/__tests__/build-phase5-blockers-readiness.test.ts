@@ -15,6 +15,7 @@ const runGenerator = (params: {
   windsurfReportFile?: string;
   consumerTriageReportFile?: string;
   outFile?: string;
+  requireWindsurfReport?: boolean;
 }): { status: number; stdout: string; stderr: string } => {
   const args = [
     '--yes',
@@ -30,6 +31,9 @@ const runGenerator = (params: {
   }
   if (params.outFile) {
     args.push('--out', params.outFile);
+  }
+  if (params.requireWindsurfReport) {
+    args.push('--require-windsurf-report');
   }
 
   try {
@@ -78,8 +82,76 @@ test('build-phase5-blockers-readiness reports missing inputs with non-zero exit 
       'utf8'
     );
     assert.match(report, /- verdict: MISSING_INPUTS/);
-    assert.match(report, /Missing Windsurf real-session report/);
     assert.match(report, /Missing consumer startup triage report/);
+  });
+});
+
+test('build-phase5-blockers-readiness reports READY without windsurf report by default', async () => {
+  await withTempDir('pumuki-phase5-readiness-optional-windsurf-', (tempRoot) => {
+    const docsValidation = join(tempRoot, 'docs/validation');
+    mkdirSync(docsValidation, { recursive: true });
+
+    writeFileSync(
+      join(docsValidation, 'consumer-startup-triage-report.md'),
+      [
+        '# Consumer Startup Triage Report',
+        '',
+        '- verdict: READY',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = runGenerator({
+      cwd: tempRoot,
+      consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
+      outFile: 'docs/validation/phase5-blockers-readiness.md',
+    });
+
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /verdict=READY/);
+
+    const report = readFileSync(
+      join(docsValidation, 'phase5-blockers-readiness.md'),
+      'utf8'
+    );
+    assert.match(report, /- verdict: READY/);
+    assert.match(report, /- windsurf_required: NO/);
+    assert.match(report, /Optional: generate Windsurf report for adapter diagnostics traceability/);
+  });
+});
+
+test('build-phase5-blockers-readiness reports MISSING_INPUTS when windsurf report is explicitly required', async () => {
+  await withTempDir('pumuki-phase5-readiness-required-windsurf-', (tempRoot) => {
+    const docsValidation = join(tempRoot, 'docs/validation');
+    mkdirSync(docsValidation, { recursive: true });
+
+    writeFileSync(
+      join(docsValidation, 'consumer-startup-triage-report.md'),
+      [
+        '# Consumer Startup Triage Report',
+        '',
+        '- verdict: READY',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = runGenerator({
+      cwd: tempRoot,
+      consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
+      outFile: 'docs/validation/phase5-blockers-readiness.md',
+      requireWindsurfReport: true,
+    });
+
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /verdict=MISSING_INPUTS/);
+
+    const report = readFileSync(
+      join(docsValidation, 'phase5-blockers-readiness.md'),
+      'utf8'
+    );
+    assert.match(report, /- verdict: MISSING_INPUTS/);
+    assert.match(report, /- windsurf_required: YES/);
+    assert.match(report, /Missing Windsurf real-session report/);
   });
 });
 
@@ -125,6 +197,7 @@ test('build-phase5-blockers-readiness reports READY with zero exit code', async 
       'utf8'
     );
     assert.match(report, /- verdict: READY/);
+    assert.match(report, /- windsurf_required: NO/);
     assert.match(report, /- none/);
     assert.match(report, /Phase 5 blockers are clear for execution closure\./);
   });

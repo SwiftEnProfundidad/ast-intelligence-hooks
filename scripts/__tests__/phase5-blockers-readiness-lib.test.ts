@@ -68,16 +68,38 @@ test('summarizePhase5Blockers returns READY when both blockers are clear', () =>
 
   assert.equal(summary.verdict, 'READY');
   assert.equal(summary.blockers.length, 0);
+  assert.equal(summary.windsurfRequired, false);
 });
 
-test('summarizePhase5Blockers returns MISSING_INPUTS when reports are missing', () => {
+test('summarizePhase5Blockers returns READY when windsurf report is missing by default', () => {
   const summary = summarizePhase5Blockers({
     hasWindsurfReport: false,
     hasConsumerTriageReport: true,
+    consumer: {
+      verdict: 'READY',
+      requiredFailedSteps: [],
+    },
+  });
+
+  assert.equal(summary.verdict, 'READY');
+  assert.deepEqual(summary.missingInputs, []);
+  assert.equal(summary.windsurfRequired, false);
+});
+
+test('summarizePhase5Blockers returns MISSING_INPUTS when windsurf report is explicitly required', () => {
+  const summary = summarizePhase5Blockers({
+    hasWindsurfReport: false,
+    hasConsumerTriageReport: true,
+    consumer: {
+      verdict: 'READY',
+      requiredFailedSteps: [],
+    },
+    requireWindsurfReport: true,
   });
 
   assert.equal(summary.verdict, 'MISSING_INPUTS');
   assert.match(summary.blockers.join('\n'), /Missing Windsurf real-session report/);
+  assert.equal(summary.windsurfRequired, true);
 });
 
 test('summarizePhase5Blockers returns BLOCKED when windsurf or consumer blockers remain', () => {
@@ -112,12 +134,15 @@ test('buildPhase5BlockersReadinessMarkdown renders verdict and next actions', ()
       blockers: ['Consumer startup triage verdict is BLOCKED'],
       windsurfValidationResult: 'PASS',
       consumerTriageVerdict: 'BLOCKED',
+      windsurfRequired: false,
       missingInputs: [],
     },
+    requireWindsurfReport: false,
   });
 
   assert.match(markdown, /# Phase 5 Blockers Readiness/);
   assert.match(markdown, /- verdict: BLOCKED/);
+  assert.match(markdown, /- windsurf_required: NO/);
   assert.match(markdown, /- consumer_triage_verdict: BLOCKED/);
   assert.match(markdown, /Resolve failed consumer triage steps and rerun `validation:consumer-startup-triage`/);
 });

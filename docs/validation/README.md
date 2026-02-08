@@ -51,6 +51,8 @@ Generate them on demand with:
 - `npm run validation:consumer-startup-unblock-status -- --repo <owner>/<repo>`
 - `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --skip-workflow-lint`
 - `npm run validation:phase5-blockers-readiness`
+- optional strict mode:
+  - `npm run validation:phase5-blockers-readiness -- --require-windsurf-report --windsurf-report docs/validation/windsurf-real-session-report.md --consumer-triage-report docs/validation/consumer-startup-triage-report.md`
 - `npm run validation:windsurf-session-status`
 - `npm run validation:windsurf-real-session-report`
 

@@ -14,6 +14,7 @@ export type Phase5BlockersSummary = {
   blockers: ReadonlyArray<string>;
   windsurfValidationResult?: 'PASS' | 'FAIL';
   consumerTriageVerdict?: 'READY' | 'BLOCKED';
+  windsurfRequired: boolean;
   missingInputs: ReadonlyArray<string>;
 };
 
@@ -102,11 +103,13 @@ export const summarizePhase5Blockers = (params: {
   hasConsumerTriageReport: boolean;
   windsurf?: ParsedWindsurfRealSessionReport;
   consumer?: ParsedConsumerStartupTriageReport;
+  requireWindsurfReport?: boolean;
 }): Phase5BlockersSummary => {
   const blockers: string[] = [];
   const missingInputs: string[] = [];
+  const windsurfRequired = params.requireWindsurfReport ?? false;
 
-  if (!params.hasWindsurfReport) {
+  if (windsurfRequired && !params.hasWindsurfReport) {
     missingInputs.push('Missing Windsurf real-session report');
   }
   if (!params.hasConsumerTriageReport) {
@@ -119,17 +122,18 @@ export const summarizePhase5Blockers = (params: {
       blockers: missingInputs,
       windsurfValidationResult: params.windsurf?.validationResult,
       consumerTriageVerdict: params.consumer?.verdict,
+      windsurfRequired,
       missingInputs,
     };
   }
 
-  if (params.windsurf?.validationResult !== 'PASS') {
+  if (params.hasWindsurfReport && params.windsurf?.validationResult !== 'PASS') {
     blockers.push(
       `Windsurf real-session validation is ${params.windsurf?.validationResult ?? 'unknown'}`
     );
   }
 
-  if (params.windsurf?.nodeCommandNotFound) {
+  if (params.hasWindsurfReport && params.windsurf?.nodeCommandNotFound) {
     blockers.push('Windsurf runtime still reports node command resolution failures');
   }
 
@@ -148,6 +152,7 @@ export const summarizePhase5Blockers = (params: {
     blockers: dedupe(blockers),
     windsurfValidationResult: params.windsurf?.validationResult,
     consumerTriageVerdict: params.consumer?.verdict,
+    windsurfRequired,
     missingInputs,
   };
 };
@@ -158,6 +163,7 @@ export const buildPhase5BlockersReadinessMarkdown = (params: {
   consumerTriageReportPath: string;
   hasWindsurfReport: boolean;
   hasConsumerTriageReport: boolean;
+  requireWindsurfReport: boolean;
   summary: Phase5BlockersSummary;
 }): string => {
   const lines: string[] = [];
@@ -173,6 +179,7 @@ export const buildPhase5BlockersReadinessMarkdown = (params: {
   lines.push(
     `- windsurf_report: \`${params.windsurfReportPath}\` (${params.hasWindsurfReport ? 'found' : 'missing'})`
   );
+  lines.push(`- windsurf_required: ${params.requireWindsurfReport ? 'YES' : 'NO'}`);
   lines.push(
     `- consumer_triage_report: \`${params.consumerTriageReportPath}\` (${params.hasConsumerTriageReport ? 'found' : 'missing'})`
   );
@@ -204,8 +211,13 @@ export const buildPhase5BlockersReadinessMarkdown = (params: {
   if (params.summary.verdict === 'READY') {
     lines.push('- Phase 5 blockers are clear for execution closure.');
     lines.push('- Attach this report to release/rollout notes.');
-  } else {
     if (!params.hasWindsurfReport) {
+      lines.push(
+        '- Optional: generate Windsurf report for adapter diagnostics traceability (`npm run validation:windsurf-real-session-report -- --status-report docs/validation/windsurf-session-status.md --out docs/validation/windsurf-real-session-report.md`).'
+      );
+    }
+  } else {
+    if (!params.hasWindsurfReport && params.requireWindsurfReport) {
       lines.push(
         '- Generate Windsurf report: `npm run validation:windsurf-real-session-report -- --status-report docs/validation/windsurf-session-status.md --out docs/validation/windsurf-real-session-report.md`'
       );
@@ -227,6 +239,11 @@ export const buildPhase5BlockersReadinessMarkdown = (params: {
     ) {
       lines.push(
         '- Resolve failed consumer triage steps and rerun `validation:consumer-startup-triage` to refresh status.'
+      );
+    }
+    if (!params.hasWindsurfReport && !params.requireWindsurfReport) {
+      lines.push(
+        '- Optional: attach Windsurf adapter diagnostics when validating IDE-specific integrations.'
       );
     }
   }
