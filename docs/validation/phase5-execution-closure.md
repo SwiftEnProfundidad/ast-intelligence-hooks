@@ -93,11 +93,32 @@ Expected verdict to close Phase 5 execution:
 
 If verdict is `BLOCKED` or `MISSING_INPUTS`, follow the next-actions section in generated report and rerun.
 
+## Step 5: Generate execution-closure status snapshot
+
+```bash
+npm run validation:phase5-execution-closure-status -- \
+  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
+  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
+  --out docs/validation/phase5-execution-closure-status.md
+```
+
+Optional strict adapter mode:
+
+```bash
+npm run validation:phase5-execution-closure-status -- \
+  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
+  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
+  --adapter-readiness-report docs/validation/adapter-readiness.md \
+  --require-adapter-readiness \
+  --out docs/validation/phase5-execution-closure-status.md
+```
+
 ## Exit Criteria
 
 Phase 5 execution closure is complete when all are true:
 
 - `docs/validation/phase5-blockers-readiness.md` exists with `- verdict: READY`
+- `docs/validation/phase5-execution-closure-status.md` exists with `- verdict: READY`
 - `docs/TODO.md` Phase 5 execution closure item is marked complete
 - Relevant rollout/report docs include links to final generated artifacts
 
@@ -107,6 +128,7 @@ Phase 5 execution closure is complete when all are true:
 - [ ] `validation:adapter-readiness` generated and reviewed
 - [ ] `validation:consumer-startup-triage` generated against target repo
 - [ ] `validation:phase5-blockers-readiness` returns `verdict=READY`
+- [ ] `validation:phase5-execution-closure-status` returns `verdict=READY`
 - [ ] `docs/TODO.md` execution-closure item updated
 
 ## Related References

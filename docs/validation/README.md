@@ -37,6 +37,7 @@ These files are command outputs and should be generated per execution context:
 - `consumer-startup-unblock-status.md`
 - `consumer-startup-triage-report.md`
 - `phase5-blockers-readiness.md`
+- `phase5-execution-closure-status.md`
 - `adapter-readiness.md`
 - `adapter-session-status.md`
 - `adapter-real-session-report.md`
@@ -53,9 +54,10 @@ Generate them on demand with:
 - `npm run validation:phase5-blockers-readiness`
 - optional strict mode:
   - `npm run validation:phase5-blockers-readiness -- --require-adapter-report --adapter-report docs/validation/adapter-real-session-report.md --consumer-triage-report docs/validation/consumer-startup-triage-report.md`
+- `npm run validation:phase5-execution-closure-status`
+- optional strict adapter mode:
+  - `npm run validation:phase5-execution-closure-status -- --require-adapter-readiness --phase5-blockers-report docs/validation/phase5-blockers-readiness.md --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md --adapter-readiness-report docs/validation/adapter-readiness.md`
 - `npm run validation:adapter-readiness`
-- `npm run validation:adapter-session-status`
-- `npm run validation:adapter-real-session-report`
 - `npm run validation:adapter-session-status`
 - `npm run validation:adapter-real-session-report`
 
