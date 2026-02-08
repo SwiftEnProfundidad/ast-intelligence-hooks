@@ -61,6 +61,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
   - rewrite any Spanish sections (including `README.md`) to enterprise-grade English
 - Normalize legacy skills documentation language to enterprise English (`legacy/skills/**/*.md`).
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
+- Enforce `skills.lock.json` freshness in CI (`npm run skills:lock:check` in workflow).
 
 ## Next
 
@@ -96,23 +97,23 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 
 ### Phase 3: Gate Integration
 
-- [ ] Load `skills.lock.json` + `skills.policy.json` via `integrations/config/*`.
-- [ ] Convert compiled entries to RuleSet and merge with baseline/project rules.
-- [ ] Enforce locked baseline semantics through existing `mergeRuleSets`.
-- [ ] Register skills bundle in evidence `rulesets[]` with stable hash.
+- [x] Load `skills.lock.json` + `skills.policy.json` via `integrations/config/*`.
+- [x] Convert compiled entries to RuleSet and merge with baseline/project rules.
+- [x] Enforce locked baseline semantics through existing `mergeRuleSets`.
+- [x] Register skills bundle in evidence `rulesets[]` with stable hash.
 
 ### Phase 4: Stage Calibration
 
-- [ ] Define stage behavior for skills-derived rules:
+- [x] Define stage behavior for skills-derived rules:
   - PRE_COMMIT: warn-first for non-critical skill rules.
   - PRE_PUSH/CI: block on calibrated critical/error skills-derived rules.
-- [ ] Add policy tests for stage promotion behavior.
-- [ ] Add regression tests for evidence outcomes per stage.
+- [x] Add policy tests for stage promotion behavior.
+- [x] Add regression tests for evidence outcomes per stage.
 
 ### Phase 5: Rollout and DX
 
-- [ ] Add docs for maintainers: "how to update skills lock safely".
-- [ ] Add CI check to fail when lock is stale versus source policy inputs.
+- [x] Add docs for maintainers: "how to update skills lock safely".
+- [x] Add CI check to fail when lock is stale versus source policy inputs.
 - [ ] Add migration guide for teams moving from personal skills-only to repository-enforced skills.
 - [ ] Add minimal menu entry to display active skills bundle/version/hash.
 
@@ -120,6 +121,6 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 
 - [x] Phase 1 completed (contracts + validators + deterministic hash tests).
 - [x] Phase 2 completed (compiler + templates + deterministic fixtures + stale check).
-- [ ] Next implementation milestone: Phase 3 Gate integration (`skills.lock.json` + `skills.policy.json` as additive ruleset input).
+- [ ] Next implementation milestone: Phase 5 completion (migration guide + menu visibility for active skills bundles).
 
 ## Notes

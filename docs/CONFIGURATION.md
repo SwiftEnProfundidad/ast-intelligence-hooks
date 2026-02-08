@@ -47,28 +47,26 @@ You cannot (unless `allowOverrideLocked: true`):
 - Remove locked baseline rules.
 - Replace locked baseline conditions/consequences.
 
-## Skills contracts (Phase 1)
+## Skills Contracts and Enforcement Inputs
 
-Repository-level contracts for future skills enforcement:
+Repository-level contracts for deterministic skills enforcement:
 
 - `skills.sources.json`
 - `skills.lock.json`
 - `skills.policy.json`
 
-Typed contract and loader/validator modules:
+Typed contract, compiler, and loader/validator modules:
 
 - `integrations/config/skillsLock.ts`
 - `integrations/config/skillsPolicy.ts`
 
-Current scope in this phase:
+Current enforcement scope:
 
-- schema/contract validation
-- deterministic contract hashing
-- file loading with safe fallback (`undefined` when missing/invalid)
-- local compiler command for curated source templates (`skills.sources.json` -> `skills.lock.json`)
-
-The Gate still uses baseline packs + project overrides as active enforcement source.
-Skills contracts are additive preparatory inputs for next phases.
+- deterministic schema validation + hashing for lock/policy contracts
+- curated template compilation (`skills.sources.json` -> `skills.lock.json`)
+- stage-aware policy resolution via `resolvePolicyForStage`
+- additive skills-derived rules merged through the shared gate runner
+- evidence traceability for active skills bundles and policy source/hash in `.ai_evidence.json`
 
 Ownership model:
 
@@ -82,6 +80,10 @@ Compile/check commands:
 npm run skills:compile
 npm run skills:lock:check
 ```
+
+CI guardrail:
+
+- `.github/workflows/ci.yml` includes `Skills Lock Freshness` and fails when committed lock is stale.
 
 ## Stage policies
 
