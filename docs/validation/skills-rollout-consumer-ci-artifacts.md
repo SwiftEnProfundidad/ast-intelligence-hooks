@@ -54,6 +54,18 @@ Comparative signal (inference):
 - `SwiftEnProfundidad/ast-intelligence-hooks` is `public` and does not show `startup_failure` in recent runs.
 - This strongly suggests a repository/account policy or billing constraint specific to private-repo Actions execution in `R_GO`.
 
+Controlled setting test:
+
+- Initial `GET /repos/SwiftEnProfundidad/R_GO/actions/permissions/access`: `access_level = none`
+- Temporary update to `access_level = user`, then `workflow_dispatch` run:
+  - run: `https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21790840030`
+  - result: `startup_failure` (unchanged)
+- Setting reverted to original (`access_level = none`) after the check.
+
+Interpretation:
+
+- Workflow-access level is not the primary cause of the startup failure in this repository.
+
 Automated scan output:
 
 - `docs/validation/skills-rollout-r_go-ci-artifacts-scan.md`

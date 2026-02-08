@@ -69,6 +69,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add startup-failure troubleshooting playbook for consumer CI (`docs/validation/consumer-ci-startup-failure-playbook.md`).
 - Add CLI helper to collect consumer CI run/artifact status into deterministic Markdown reports (`scripts/collect-consumer-ci-artifacts.ts`).
 - Record comparative public/private CI signal for startup-failure root-cause triage (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
+- Execute controlled Actions access-level check (`none -> user -> none`) and record outcome for startup-failure triage (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
 
 ## Next
 

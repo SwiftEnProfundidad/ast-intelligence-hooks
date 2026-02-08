@@ -20,6 +20,7 @@ Use this playbook before expecting CI artifact URLs for rollout validation repor
 ```bash
 gh api repos/<owner>/<repo>/actions/permissions
 gh api repos/<owner>/<repo>/actions/permissions/workflow
+gh api repos/<owner>/<repo>/actions/permissions/access
 ```
 
 2. Inspect latest failed runs:
@@ -87,6 +88,11 @@ If workflows are listed as `active` but runs still fail at startup, continue wit
 - workflow name is present
 - job graph is created
 - artifact API returns non-zero artifacts when upload steps exist
+
+Optional controlled check:
+
+- Temporarily change `actions/permissions/access` and trigger one `workflow_dispatch` run.
+- If startup failure is unchanged, revert to original value and continue policy/billing investigation.
 
 ## Exit Criteria
 
