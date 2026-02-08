@@ -118,6 +118,17 @@ const setupBackendCommitRange = (repoRoot: string): void => {
   runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
 };
 
+const setupBackendCommitRangeWithoutUpstream = (repoRoot: string): void => {
+  writeFileSync(join(repoRoot, 'README.md'), '# temp repo\n', 'utf8');
+  runGit(repoRoot, ['add', 'README.md']);
+  runGit(repoRoot, ['commit', '-m', 'chore: initial commit']);
+
+  runGit(repoRoot, ['checkout', '--quiet', '-b', 'feature/no-upstream']);
+
+  stageBackendFile(repoRoot);
+  runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
+};
+
 const withGithubBaseRef = async (
   ref: string,
   callback: () => Promise<void>
@@ -261,6 +272,22 @@ test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is ab
   });
 });
 
+test('runPrePushStage falls back gracefully when branch has no upstream', async () => {
+  await withTempRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+
+    const exitCode = await runPrePushStage();
+    assert.equal(exitCode, 0);
+
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.version, '2.1');
+    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+    assert.equal(evidence.snapshot.outcome, 'PASS');
+    assert.equal(evidence.snapshot.findings.length, 0);
+    assertPolicyTrace(evidence, 'gate-policy.default.PRE_PUSH');
+  });
+});
+
 test('runCiStage uses skills policy override and writes CI policy trace', async () => {
   await withTempRepo(async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
@@ -326,6 +353,29 @@ test('runCiStage keeps default CI thresholds when skills policy is absent', asyn
     setupBackendCommitRange(repoRoot);
 
     await withGithubBaseRef('main', async () => {
+      const exitCode = await runCiStage();
+      assert.equal(exitCode, 0);
+    });
+
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.version, '2.1');
+    assert.equal(evidence.snapshot.stage, 'CI');
+    assert.equal(evidence.snapshot.outcome, 'WARN');
+    assert.equal(
+      evidence.snapshot.findings.some(
+        (finding) => finding.ruleId === 'backend.avoid-explicit-any'
+      ),
+      true
+    );
+    assertPolicyTrace(evidence, 'gate-policy.default.CI');
+  });
+});
+
+test('runCiStage falls back gracefully when GITHUB_BASE_REF is invalid', async () => {
+  await withTempRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+
+    await withGithubBaseRef('invalid/non-existent-ref', async () => {
       const exitCode = await runCiStage();
       assert.equal(exitCode, 0);
     });
