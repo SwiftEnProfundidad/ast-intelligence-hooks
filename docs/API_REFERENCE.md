@@ -118,6 +118,31 @@ Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
 
 ```bash
 npm run framework:menu
+npm run validation:adapter-readiness
 npm run typecheck
 npm run test:deterministic
 ```
+
+## Optional diagnostics adapters
+
+Files:
+
+- `scripts/build-adapter-readiness.ts`
+- `scripts/adapter-readiness-lib.ts`
+- `scripts/build-phase5-blockers-readiness.ts`
+- `scripts/phase5-blockers-readiness-lib.ts`
+- `scripts/framework-menu.ts`
+
+Commands:
+
+- `npm run validation:adapter-readiness`
+- `npm run validation:phase5-blockers-readiness`
+
+Framework menu action:
+
+- `Build adapter readiness report`
+
+Deterministic argument builders exported from menu module:
+
+- `buildAdapterReadinessCommandArgs({ scriptPath, windsurfReportFile, outFile })`
+- `buildPhase5BlockersReadinessCommandArgs({ scriptPath, windsurfReportFile, consumerTriageReportFile, outFile })`

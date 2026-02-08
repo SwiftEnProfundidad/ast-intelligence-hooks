@@ -36,6 +36,10 @@ Menu supports staged evaluation, commit-range evaluation, evidence reading, and 
 
 Optional diagnostics adapters (for example Windsurf runtime and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
 
+Adapter readiness diagnostics are available from the interactive menu as:
+
+- `Build adapter readiness report`
+
 ### 2) Direct stage CLI execution
 
 ```bash
@@ -53,6 +57,20 @@ Notes:
 - CLI wrappers call shared stage runners via `integrations/git/runCliCommand.ts`.
 - Execution path is centralized in `integrations/git/runPlatformGate.ts`.
 - Platform detection is multi-platform and combined per run.
+
+### 3) Diagnostics reports (optional adapters)
+
+```bash
+# Windsurf adapter-only readiness
+npm run validation:adapter-readiness -- \
+  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --out docs/validation/adapter-readiness.md
+
+# Phase 5 consolidated readiness (consumer triage required, Windsurf optional by default)
+npm run validation:phase5-blockers-readiness -- \
+  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
+  --out docs/validation/phase5-blockers-readiness.md
+```
 
 ## Scope behavior
 
