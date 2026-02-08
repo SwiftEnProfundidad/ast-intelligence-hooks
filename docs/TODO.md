@@ -39,6 +39,10 @@ For full historical execution details, see:
 ## Deferred Adapter Validation
 
 - [ ] Adapter pre/post tool hooks reliability (`bash: node: command not found`) on current baseline adapter:
+  - Incident context (captured): pre-write and post-write hooks failed with direct `node .../pre-write-code-hook.js` / `post-write-code-hook.js` execution in an external adapter session.
+  - Enforce wrapper-based remediation before manual re-check:
+    - `npm run install:adapter-hooks-config`
+    - `npm run verify:adapter-hooks-runtime`
   - Execute `docs/validation/adapter-hook-runtime-validation.md` in a real adapter session.
   - Compare outcome with `docs/validation/adapter-hook-runtime-local-report.md`.
   - Record final evidence using `docs/validation/adapter-real-session-report-template.md` or generate it with `validation:adapter-real-session-report`.
