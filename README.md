@@ -136,6 +136,7 @@ npm run verify:windsurf-hooks-runtime
 npm run validate:windsurf-hooks-local
 npm run assess:windsurf-hooks-session
 npm run assess:windsurf-hooks-session:any
+npm run validation:windsurf-session-status -- --out docs/validation/windsurf-session-status.md
 ```
 
 Validation docs:

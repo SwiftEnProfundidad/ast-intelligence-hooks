@@ -42,6 +42,8 @@ Objective: validate `pre_write_code` and `post_write_code` runtime behavior in a
      - `npm run assess:windsurf-hooks-session:any`
    - custom lower bound:
      - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh "2026-02-07T00:00:00.000Z"`
+   - consolidated report:
+     - `npm run validation:windsurf-session-status -- --out docs/validation/windsurf-session-status.md`
 
 ## Known Failure Signature and Remediation
 

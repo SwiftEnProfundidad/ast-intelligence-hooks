@@ -79,6 +79,36 @@ const runConsumerCiArtifactsScan = async (params: {
   );
 };
 
+const runWindsurfSessionStatusReport = async (params: {
+  outFile: string;
+}): Promise<void> => {
+  const reportScriptPath = resolve(
+    process.cwd(),
+    'scripts/build-windsurf-session-status.ts'
+  );
+
+  if (!existsSync(reportScriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-windsurf-session-status.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    [
+      '--yes',
+      'tsx@4.21.0',
+      reportScriptPath,
+      '--out',
+      params.outFile,
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 const runConsumerCiAuthCheck = async (params: {
   repo: string;
   outFile: string;
@@ -302,6 +332,18 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askWindsurfSessionStatusReport = async (): Promise<{
+      outFile: string;
+    }> => {
+      const outPrompt = await rl.question(
+        'output path [docs/validation/windsurf-session-status.md]: '
+      );
+
+      return {
+        outFile: outPrompt.trim() || 'docs/validation/windsurf-session-status.md',
+      };
+    };
+
     const askConsumerWorkflowLint = async (): Promise<{
       repoPath: string;
       actionlintBin: string;
@@ -421,6 +463,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '9',
+        label: 'Build Windsurf session status report',
+        execute: async () => {
+          const report = await askWindsurfSessionStatusReport();
+          await runWindsurfSessionStatusReport(report);
+        },
+      },
+      {
+        id: '10',
         label: 'Collect consumer CI artifacts report',
         execute: async () => {
           const scan = await askConsumerCiScan();
@@ -428,7 +478,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '10',
+        id: '11',
         label: 'Run consumer CI auth check report',
         execute: async () => {
           const check = await askConsumerCiAuthCheck();
@@ -436,7 +486,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '11',
+        id: '12',
         label: 'Run consumer workflow lint report',
         execute: async () => {
           const lint = await askConsumerWorkflowLint();
@@ -444,7 +494,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '12',
+        id: '13',
         label: 'Build consumer startup-failure support bundle',
         execute: async () => {
           const bundle = await askConsumerSupportBundle();
@@ -452,7 +502,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '13',
+        id: '14',
         label: 'Exit',
         execute: async () => {},
       },
@@ -472,7 +522,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '13') {
+      if (selected.id === '14') {
         break;
       }
 
