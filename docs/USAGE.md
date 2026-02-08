@@ -39,6 +39,7 @@ Optional diagnostics adapters (provider-specific runtime diagnostics and consume
 Adapter readiness diagnostics are available from the interactive menu as:
 
 - `Build adapter readiness report`
+- `Build phase5 execution closure status report`
 
 ### 2) Direct stage CLI execution
 

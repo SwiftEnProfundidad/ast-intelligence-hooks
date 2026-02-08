@@ -146,11 +146,13 @@ Commands:
 Framework menu action:
 
 - `Build adapter readiness report`
+- `Build phase5 execution closure status report`
 
 Deterministic argument builders exported from menu module:
 
 - `buildAdapterReadinessCommandArgs({ scriptPath, adapterReportFile, outFile })`
 - `buildPhase5BlockersReadinessCommandArgs({ scriptPath, adapterReportFile, consumerTriageReportFile, outFile })`
+- `buildPhase5ExecutionClosureStatusCommandArgs({ scriptPath, phase5BlockersReportFile, consumerUnblockReportFile, adapterReadinessReportFile, outFile, requireAdapterReadiness })`
 
 Current adapter implementation note:
 

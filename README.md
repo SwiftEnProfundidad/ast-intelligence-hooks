@@ -61,7 +61,7 @@ Interactive:
 npm run framework:menu
 ```
 
-The interactive menu includes stage evaluation plus optional diagnostics/adapters (provider-specific adapter reports and consumer diagnostics), and operational checks (`docs/validation` hygiene and `skills:lock:check`).
+The interactive menu includes stage evaluation plus optional diagnostics/adapters (provider-specific adapter reports, consumer diagnostics, and Phase 5 execution-closure status snapshots), and operational checks (`docs/validation` hygiene and `skills:lock:check`).
 
 Direct stage wrappers:
 
