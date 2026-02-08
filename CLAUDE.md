@@ -1,49 +1,38 @@
-# Mandatory Gate Check (Claude Code CLI)
+# Claude CLI Profile (v2.x)
 
-Before starting any implementation task, execute a gate check:
+This repository uses the deterministic v2.x governance model:
 
-```bash
-npx ast-hooks audit
-cat .AI_EVIDENCE.json | jq '.ai_gate.status'
-```
+`Facts -> Rules -> Gate -> ai_evidence v2.1`
 
-## Execution Contract
+Primary conventions are defined in:
 
-1. First action must be gate evaluation.
-2. If status is `BLOCKED`, resolve violations before any code change.
-3. If status is `ALLOWED`, proceed with the task.
-4. Blocking severities default to all levels (`CRITICAL`, `HIGH`, `MEDIUM`, `LOW`) from v6.2.9 onward.
+- `AGENTS.md` (execution rules and constraints)
+- `README.md` (operational commands)
+- `docs/ARCHITECTURE.md` (canonical architecture contract)
 
-## Blocking Modes
+## Minimal Working Contract
 
-| Mode | Blocking severities | Environment variable |
-|---|---|---|
-| `DEFAULT` | `CRITICAL`, `HIGH`, `MEDIUM`, `LOW` | none |
-| `LEGACY` | `CRITICAL`, `HIGH` | `AST_BLOCKING_MODE=LEGACY` |
+1. Respect `AGENTS.md` as the highest repository-level execution policy.
+2. Keep `core/*` pure; implement adapters and orchestration under `integrations/*`.
+3. Use stage runners (not ad-hoc shell logic) for gate execution:
+   - `PRE_COMMIT`: staged scope
+   - `PRE_PUSH`: `upstream..HEAD`
+   - `CI`: `baseRef..HEAD`
+4. Treat `.ai_evidence.json` with `version: "2.1"` as the evidence source of truth.
+5. Do not introduce legacy evidence formats or undocumented side channels.
 
-## When Status Is BLOCKED
-
-1. Inspect findings:
+## Recommended Validation Baseline
 
 ```bash
-jq '.ai_gate.violations' .AI_EVIDENCE.json
+npm run typecheck
+npm run test:deterministic
+npm run test:stage-gates
 ```
 
-2. Resolve in severity order: `CRITICAL` → `HIGH` → `MEDIUM` → `LOW`.
-3. Re-run audit:
+## Stage Entrypoints
+
+Use the stage CLIs under `integrations/git/*.cli.ts` or the interactive wrapper:
 
 ```bash
-npx ast-hooks audit
+npm run framework:menu
 ```
-
-4. Continue only when `status == "ALLOWED"`.
-
-## Accessibility Baseline (Mandatory)
-
-For iOS views, enforce at minimum:
-- VoiceOver labels (`.accessibilityLabel()`).
-- Dynamic Type support (`.preferredFont(forTextStyle:)`).
-- Reduce Motion checks (`UIAccessibility.isReduceMotionEnabled`).
-- WCAG 2.1 AA contrast requirements (4.5:1 text, 3:1 graphics).
-
-Policy exceptions are not allowed unless formally approved in platform governance.
