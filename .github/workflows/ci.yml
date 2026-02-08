@@ -130,3 +130,23 @@ jobs:
 
       - name: Verify skills lock freshness
         run: npm run skills:lock:check
+
+  stage-gate-tests:
+    name: Stage Gate Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run stage gate suites
+        run: npm run test:stage-gates
