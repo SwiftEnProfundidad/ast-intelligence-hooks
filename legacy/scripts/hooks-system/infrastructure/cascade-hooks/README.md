@@ -14,7 +14,7 @@ This module combines IDE-level hooks (when supported) with Git pre-commit as the
 
 | IDE | Pre-Write Hook | Blocks Before Write | Mechanism | Config |
 |---|---|---|---|---|
-| Windsurf | `pre_write_code` | Yes | `exit(2)` | `~/.codeium/windsurf/hooks.json` |
+| Adapter (Codeium-compatible) | `pre_write_code` | Yes | `exit(2)` | `~/.codeium/adapter/hooks.json` |
 | Claude Code | `PreToolUse` (Write/Edit) | Yes | `exit(2)` | `~/.config/claude-code/settings.json` |
 | OpenCode | `tool.execute.before` plugin | Yes | throw error | `opencode.json` or `~/.config/opencode/opencode.json` |
 | Codex CLI | Approval policies only | No (manual) | N/A | `~/.codex/config.toml` |
@@ -23,43 +23,48 @@ This module combines IDE-level hooks (when supported) with Git pre-commit as the
 
 Git pre-commit remains the guaranteed enforcement fallback across IDEs.
 
-## Windsurf Setup
+## Adapter Setup
 
 ### Recommended install flow
 
 ```bash
-npm run install:windsurf-hooks-config
-npm run verify:windsurf-hooks-runtime
+npm run install:adapter-hooks-config
+npm run verify:adapter-hooks-runtime
 ```
 
-This installs `~/.codeium/windsurf/hooks.json` with an automatic backup of any previous file.
+This installs `~/.codeium/adapter/hooks.json` with an automatic backup of any previous file.
 
 ### Generate config only (no write)
 
 ```bash
-npm run print:windsurf-hooks-config > ~/.codeium/windsurf/hooks.json
+npm run print:adapter-hooks-config > ~/.codeium/adapter/hooks.json
 ```
 
 ### Installer dry run
 
 ```bash
-bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-hooks-config.sh --dry-run
+bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-adapter-hooks-config.sh --dry-run
 ```
 
-### Restart Windsurf
+### Restart Adapter
 
 Restart the IDE after updating hook configuration.
 
 ### Troubleshooting stale direct-node config
 
-If Windsurf shows hook errors similar to `bash: node: command not found` and command paths under `.../node_modules/pumuki-ast-hooks/...`, the active `~/.codeium/windsurf/hooks.json` is likely stale and still invoking `node` directly.
+If Adapter shows hook errors similar to `bash: node: command not found` and command paths under `.../node_modules/pumuki-ast-hooks/...`, the active `~/.codeium/adapter/hooks.json` is likely stale and still invoking `node` directly.
 
 Run:
 
 ```bash
-npm run install:windsurf-hooks-config
-npm run verify:windsurf-hooks-runtime
+npm run install:adapter-hooks-config
+npm run verify:adapter-hooks-runtime
 ```
+
+Legacy aliases still available for compatibility:
+- `install:windsurf-hooks-config`
+- `verify:windsurf-hooks-runtime`
+- `print:windsurf-hooks-config`
 
 ## Runtime Resolution Model
 
@@ -99,7 +104,7 @@ Generates support logs under `.audit_tmp/`.
 ### Local simulation
 
 ```bash
-npm run validate:windsurf-hooks-local
+npm run validate:adapter-hooks-local
 ```
 
 Expected local result:
@@ -114,13 +119,13 @@ Artifacts are written to `docs/validation/adapter/artifacts/`.
 Strict real-session assessment (default, excludes simulated markers):
 
 ```bash
-npm run assess:windsurf-hooks-session
+npm run assess:adapter-hooks-session
 ```
 
 Include simulated entries:
 
 ```bash
-npm run assess:windsurf-hooks-session:any
+npm run assess:adapter-hooks-session:any
 ```
 
 ## Recommended Rollout
@@ -161,11 +166,11 @@ npm run assess:windsurf-hooks-session:any
 - `pre-write-code-hook.js`: pre-write blocking logic
 - `post-write-code-hook.js`: post-write logging
 - `run-hook-with-node.sh`: resilient runtime wrapper
-- `cascade-hooks-config.json`: Windsurf config template
+- `cascade-hooks-config.json`: adapter config template
 - `collect-runtime-diagnostics.sh`: runtime diagnostics bundle
 - `validate-local-runtime.sh`: local simulation runner
-- `verify-windsurf-hooks-runtime.sh`: config/runtime preflight check
-- `assess-windsurf-session.sh`: strict/any session assessor
+- `verify-adapter-hooks-runtime.sh`: config/runtime preflight check
+- `assess-adapter-session.sh`: strict/any session assessor
 
 ---
 Pumuki Team - AST Intelligence

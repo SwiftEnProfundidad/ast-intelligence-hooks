@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# Prints an adapter hooks.json template with absolute paths for this repository.
+# Usage:
+#   print-adapter-hooks-config.sh > ~/.codeium/adapter/hooks.json
+
 set -eu
 
 SCRIPT_SOURCE="${BASH_SOURCE[0]}"
@@ -9,4 +13,40 @@ else
   SCRIPT_DIR="$(pwd)"
 fi
 
-exec bash "${SCRIPT_DIR}/print-windsurf-hooks-config.sh" "$@"
+REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || pwd)"
+WRAPPER_PATH=""
+for candidate in \
+  "${REPO_ROOT}/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh" \
+  "${REPO_ROOT}/legacy/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh"
+do
+  if [ -x "${candidate}" ]; then
+    WRAPPER_PATH="${candidate}"
+    break
+  fi
+done
+
+if [ -z "${WRAPPER_PATH}" ]; then
+  echo "[pumuki:cascade-hooks] unable to resolve executable run-hook-with-node.sh path" >&2
+  exit 1
+fi
+
+cat <<JSON
+{
+  "hooks": {
+    "pre_write_code": [
+      {
+        "command": "bash \"${WRAPPER_PATH}\" pre-write-code-hook.js",
+        "show_output": true,
+        "timeout_ms": 10000
+      }
+    ],
+    "post_write_code": [
+      {
+        "command": "bash \"${WRAPPER_PATH}\" post-write-code-hook.js",
+        "show_output": false,
+        "timeout_ms": 5000
+      }
+    ]
+  }
+}
+JSON

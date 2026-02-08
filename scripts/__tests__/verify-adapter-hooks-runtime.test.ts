@@ -22,10 +22,11 @@ type CommandResult = {
 
 const writeHooksConfig = (params: {
   homeRoot: string;
+  adapterName?: 'adapter' | 'windsurf';
   preCommand: string;
   postCommand: string;
 }): void => {
-  const targetDir = join(params.homeRoot, '.codeium', 'windsurf');
+  const targetDir = join(params.homeRoot, '.codeium', params.adapterName ?? 'adapter');
   mkdirSync(targetDir, { recursive: true });
   writeFileSync(
     join(targetDir, 'hooks.json'),
@@ -118,7 +119,23 @@ test('verify-adapter-hooks-runtime fails with actionable message on stale direct
 
     assert.equal(result.exitCode, 1);
     assert.match(result.stderr, /detected stale direct-node hook command/);
-    assert.match(result.stderr, /npm run install:windsurf-hooks-config/);
-    assert.match(result.stderr, /npm run verify:windsurf-hooks-runtime/);
+    assert.match(result.stderr, /npm run install:adapter-hooks-config/);
+    assert.match(result.stderr, /npm run verify:adapter-hooks-runtime/);
+  });
+});
+
+test('verify-adapter-hooks-runtime falls back to legacy windsurf hooks.json when adapter config is absent', async () => {
+  await withTempDir('pumuki-adapter-verify-fallback-', async (tempRoot) => {
+    writeHooksConfig({
+      homeRoot: tempRoot,
+      adapterName: 'windsurf',
+      preCommand: `bash "${WRAPPER_PATH}" pre-write-code-hook.js`,
+      postCommand: `bash "${WRAPPER_PATH}" post-write-code-hook.js`,
+    });
+
+    const result = runVerify(tempRoot);
+
+    assert.equal(result.exitCode, 0);
+    assert.match(result.stdout, /config=.*\.codeium\/windsurf\/hooks\.json/);
   });
 });
