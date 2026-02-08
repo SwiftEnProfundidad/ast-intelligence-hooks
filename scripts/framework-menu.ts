@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
+import { loadSkillsLock, type SkillsLockBundle } from '../integrations/config/skillsLock';
 import { policyForCI, policyForPreCommit, policyForPrePush } from '../integrations/gate/stagePolicies';
 import { runCiBackend } from '../integrations/git/ciBackend';
 import { runCiFrontend } from '../integrations/git/ciFrontend';
@@ -70,6 +71,32 @@ const printEvidence = (): void => {
   output.write('\n');
 };
 
+export const formatActiveSkillsBundles = (
+  bundles: ReadonlyArray<Pick<SkillsLockBundle, 'name' | 'version' | 'hash'>>
+): string => {
+  if (bundles.length === 0) {
+    return 'No active skills bundles found. Run `npm run skills:compile` to generate skills.lock.json.';
+  }
+
+  const lines = [...bundles]
+    .sort((left, right) => {
+      const byName = left.name.localeCompare(right.name);
+      if (byName !== 0) {
+        return byName;
+      }
+      return left.version.localeCompare(right.version);
+    })
+    .map((bundle) => `- ${bundle.name}@${bundle.version} hash=${bundle.hash}`);
+
+  return ['Active skills bundles:', ...lines].join('\n');
+};
+
+const printActiveSkillsBundles = (): void => {
+  const lock = loadSkillsLock(process.cwd());
+  const rendered = formatActiveSkillsBundles(lock?.bundles ?? []);
+  output.write(`\n${rendered}\n`);
+};
+
 const menu = async (): Promise<void> => {
   const rl = createInterface({ input, output });
 
@@ -123,8 +150,10 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '7',
-        label: 'Generate evidence from staged changes',
-        execute: runStaged,
+        label: 'Show active skills bundles (version + hash)',
+        execute: async () => {
+          printActiveSkillsBundles();
+        },
       },
       {
         id: '8',
