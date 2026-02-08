@@ -7,6 +7,7 @@ import {
   buildAdapterReadinessCommandArgs,
   buildConsumerStartupTriageCommandArgs,
   buildPhase5BlockersReadinessCommandArgs,
+  buildPhase5ExecutionClosureStatusCommandArgs,
   buildSkillsLockCheckCommandArgs,
   buildValidationDocsHygieneCommandArgs,
   buildMenuGateParams,
@@ -230,5 +231,56 @@ test('builds deterministic command args for adapter readiness report', () => {
     'docs/validation/adapter-real-session-report.md',
     '--out',
     'docs/validation/adapter-readiness.md',
+  ]);
+});
+
+test('builds deterministic command args for phase5 execution closure status report', () => {
+  const args = buildPhase5ExecutionClosureStatusCommandArgs({
+    scriptPath: '/repo/scripts/build-phase5-execution-closure-status.ts',
+    phase5BlockersReportFile: 'docs/validation/phase5-blockers-readiness.md',
+    consumerUnblockReportFile: 'docs/validation/consumer-startup-unblock-status.md',
+    adapterReadinessReportFile: 'docs/validation/adapter-readiness.md',
+    outFile: 'docs/validation/phase5-execution-closure-status.md',
+    requireAdapterReadiness: false,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-phase5-execution-closure-status.ts',
+    '--phase5-blockers-report',
+    'docs/validation/phase5-blockers-readiness.md',
+    '--consumer-unblock-report',
+    'docs/validation/consumer-startup-unblock-status.md',
+    '--adapter-readiness-report',
+    'docs/validation/adapter-readiness.md',
+    '--out',
+    'docs/validation/phase5-execution-closure-status.md',
+  ]);
+});
+
+test('builds deterministic strict command args for phase5 execution closure status report', () => {
+  const args = buildPhase5ExecutionClosureStatusCommandArgs({
+    scriptPath: '/repo/scripts/build-phase5-execution-closure-status.ts',
+    phase5BlockersReportFile: 'docs/validation/phase5-blockers-readiness.md',
+    consumerUnblockReportFile: 'docs/validation/consumer-startup-unblock-status.md',
+    adapterReadinessReportFile: 'docs/validation/adapter-readiness.md',
+    outFile: 'docs/validation/phase5-execution-closure-status.md',
+    requireAdapterReadiness: true,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-phase5-execution-closure-status.ts',
+    '--phase5-blockers-report',
+    'docs/validation/phase5-blockers-readiness.md',
+    '--consumer-unblock-report',
+    'docs/validation/consumer-startup-unblock-status.md',
+    '--adapter-readiness-report',
+    'docs/validation/adapter-readiness.md',
+    '--out',
+    'docs/validation/phase5-execution-closure-status.md',
+    '--require-adapter-readiness',
   ]);
 });

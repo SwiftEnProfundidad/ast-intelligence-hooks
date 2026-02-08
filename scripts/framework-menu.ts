@@ -190,6 +190,35 @@ export const buildPhase5BlockersReadinessCommandArgs = (params: {
   ];
 };
 
+export const buildPhase5ExecutionClosureStatusCommandArgs = (params: {
+  scriptPath: string;
+  phase5BlockersReportFile: string;
+  consumerUnblockReportFile: string;
+  adapterReadinessReportFile: string;
+  outFile: string;
+  requireAdapterReadiness: boolean;
+}): string[] => {
+  const args = [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+    '--phase5-blockers-report',
+    params.phase5BlockersReportFile,
+    '--consumer-unblock-report',
+    params.consumerUnblockReportFile,
+    '--adapter-readiness-report',
+    params.adapterReadinessReportFile,
+    '--out',
+    params.outFile,
+  ];
+
+  if (params.requireAdapterReadiness) {
+    args.push('--require-adapter-readiness');
+  }
+
+  return args;
+};
+
 export const buildAdapterReadinessCommandArgs = (params: {
   scriptPath: string;
   adapterReportFile: string;
@@ -347,6 +376,41 @@ const runPhase5BlockersReadiness = async (params: {
       adapterReportFile: params.adapterReportFile,
       consumerTriageReportFile: params.consumerTriageReportFile,
       outFile: params.outFile,
+    }),
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
+const runPhase5ExecutionClosureStatus = async (params: {
+  phase5BlockersReportFile: string;
+  consumerUnblockReportFile: string;
+  adapterReadinessReportFile: string;
+  outFile: string;
+  requireAdapterReadiness: boolean;
+}): Promise<void> => {
+  const scriptPath = resolve(
+    process.cwd(),
+    'scripts/build-phase5-execution-closure-status.ts'
+  );
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-phase5-execution-closure-status.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    buildPhase5ExecutionClosureStatusCommandArgs({
+      scriptPath,
+      phase5BlockersReportFile: params.phase5BlockersReportFile,
+      consumerUnblockReportFile: params.consumerUnblockReportFile,
+      adapterReadinessReportFile: params.adapterReadinessReportFile,
+      outFile: params.outFile,
+      requireAdapterReadiness: params.requireAdapterReadiness,
     }),
     {
       stdio: 'inherit',
@@ -940,6 +1004,43 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askPhase5ExecutionClosureStatus = async (): Promise<{
+      phase5BlockersReportFile: string;
+      consumerUnblockReportFile: string;
+      adapterReadinessReportFile: string;
+      outFile: string;
+      requireAdapterReadiness: boolean;
+    }> => {
+      const blockersPrompt = await rl.question(
+        'phase5 blockers report path [docs/validation/phase5-blockers-readiness.md]: '
+      );
+      const consumerPrompt = await rl.question(
+        'consumer unblock report path [docs/validation/consumer-startup-unblock-status.md]: '
+      );
+      const adapterPrompt = await rl.question(
+        'adapter readiness report path [docs/validation/adapter-readiness.md]: '
+      );
+      const requireAdapterPrompt = await rl.question(
+        'require adapter readiness verdict READY? [no]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/phase5-execution-closure-status.md]: '
+      );
+
+      return {
+        phase5BlockersReportFile:
+          blockersPrompt.trim() || 'docs/validation/phase5-blockers-readiness.md',
+        consumerUnblockReportFile:
+          consumerPrompt.trim() || 'docs/validation/consumer-startup-unblock-status.md',
+        adapterReadinessReportFile:
+          adapterPrompt.trim() || 'docs/validation/adapter-readiness.md',
+        outFile:
+          outPrompt.trim() || 'docs/validation/phase5-execution-closure-status.md',
+        requireAdapterReadiness:
+          requireAdapterPrompt.trim().toLowerCase().startsWith('y'),
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -1091,6 +1192,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '22',
+        label: 'Build phase5 execution closure status report',
+        execute: async () => {
+          const report = await askPhase5ExecutionClosureStatus();
+          await runPhase5ExecutionClosureStatus(report);
+        },
+      },
+      {
+        id: '23',
         label: 'Exit',
         execute: async () => {},
       },
@@ -1110,7 +1219,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '22') {
+      if (selected.id === '23') {
         break;
       }
 
