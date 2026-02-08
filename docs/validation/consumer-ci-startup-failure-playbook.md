@@ -82,6 +82,13 @@ If workflows are listed as `active` but runs still fail at startup, continue wit
 - Billing/quota limits for Actions
 - Public/private visibility constraints in current GitHub plan
 
+If billing visibility is blocked by token scopes:
+
+- refresh auth with `gh auth refresh -h github.com -s user`
+- complete device/browser authorization
+- query billing endpoint again:
+  - `gh api users/<username>/settings/billing/actions`
+
 8. Re-trigger a minimal workflow and verify:
 
 - run no longer exits at startup
