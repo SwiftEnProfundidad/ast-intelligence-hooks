@@ -110,6 +110,8 @@ Optional controlled check:
 
 - Temporarily change `actions/permissions/access` and trigger one `workflow_dispatch` run.
 - If startup failure is unchanged, revert to original value and continue policy/billing investigation.
+- Optionally apply a temporary branch-only workflow lint fix set and re-test:
+  - if startup failure is unchanged, treat repository/account-level constraints as primary suspects.
 
 Known example of semantic lint findings correlated with startup failures:
 
@@ -123,6 +125,11 @@ Startup-failure incident is considered resolved when:
 - new runs have valid workflow names and job graph
 - no startup-failure conclusions for target pipeline
 - artifact endpoints return expected evidence artifacts
+
+If unresolved after workflow and access-level checks:
+
+- escalate to repository owner account settings/billing review
+- open GitHub Support ticket with run URLs and check-suite metadata
 
 ## Related Reports
 

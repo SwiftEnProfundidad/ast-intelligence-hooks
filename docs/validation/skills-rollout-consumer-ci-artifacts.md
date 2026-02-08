@@ -68,12 +68,14 @@ Interpretation:
 - Billing confirmation via `GET /users/{username}/settings/billing/actions` remains pending because current token scopes do not include `user`.
 - Non-interactive attempt to add `user` scope requires browser/device authorization and cannot be completed automatically in this execution context.
 - Semantic workflow lint in `R_GO` reports invalid definitions likely contributing to startup failures (see workflow lint report below).
+- Controlled branch experiment with lint fixes still resulted in `startup_failure` for both push and workflow-dispatch runs.
 
 Automated scan output:
 
 - `docs/validation/skills-rollout-r_go-ci-artifacts-scan.md`
 - `docs/validation/skills-rollout-r_go-workflow-lint.md`
 - `docs/validation/skills-rollout-r_go-workflow-lint-auto.md`
+- `docs/validation/skills-rollout-r_go-startup-fix-experiment.md`
 
 ## Conclusion
 

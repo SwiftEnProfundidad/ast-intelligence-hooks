@@ -73,6 +73,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Record manual requirement for billing-scope verification (`gh auth refresh -s user`) when non-interactive automation cannot complete authorization.
 - Capture semantic workflow lint findings from consumer repository as startup-failure candidates (`docs/validation/skills-rollout-r_go-workflow-lint.md`).
 - Add helper command to generate consumer workflow lint reports from `actionlint` (`scripts/lint-consumer-workflows.ts`).
+- Run branch-only remediation experiment in consumer repo and record negative result when startup failure persists (`docs/validation/skills-rollout-r_go-startup-fix-experiment.md`).
 
 ## Next
 
