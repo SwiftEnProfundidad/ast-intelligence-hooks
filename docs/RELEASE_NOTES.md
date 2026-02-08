@@ -31,6 +31,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 - Typed heuristic facts extracted in core domain.
 - Declarative heuristic rule-pack with optional feature flag.
+- iOS force-cast (`as!`) heuristic added to coverage.
 - Stage-aware heuristic maturity:
   - `PRE_COMMIT`: heuristic findings remain `WARN`
   - `PRE_PUSH` / `CI`: selected heuristics promoted to `ERROR`

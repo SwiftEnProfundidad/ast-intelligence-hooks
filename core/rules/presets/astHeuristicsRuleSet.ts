@@ -110,6 +110,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ios.force-cast.ast',
+    description: 'Detects Swift force cast usage in production code.',
+    severity: 'WARN',
+    platform: 'ios',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ios.force-cast.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected force cast usage.',
+      code: 'HEURISTICS_IOS_FORCE_CAST_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.callback-style.ast',
     description: 'Detects callback-style signatures outside approved iOS bridge layers.',
     severity: 'WARN',

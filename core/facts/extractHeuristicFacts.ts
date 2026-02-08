@@ -367,6 +367,17 @@ const hasSwiftForceTryUsage = (source: string): boolean => {
   });
 };
 
+const hasSwiftForceCastUsage = (source: string): boolean => {
+  return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
+    if (current !== 'a' || !hasIdentifierAt(swiftSource, index, 'as')) {
+      return false;
+    }
+
+    const bangIndex = nextNonWhitespaceIndex(swiftSource, index + 'as'.length);
+    return bangIndex >= 0 && swiftSource[bangIndex] === '!';
+  });
+};
+
 const hasSwiftCallbackStyleSignature = (source: string): boolean => {
   return scanCodeLikeSource(source, ({ source: swiftSource, index, current }) => {
     if (current !== '@' || !swiftSource.startsWith('@escaping', index)) {
@@ -514,6 +525,22 @@ export const extractHeuristicFacts = (
           ruleId: 'heuristics.ios.force-try.ast',
           code: 'HEURISTICS_IOS_FORCE_TRY_AST',
           message: 'AST heuristic detected force try usage.',
+          filePath: fileFact.path,
+        })
+      );
+    }
+
+    if (
+      params.detectedPlatforms.ios?.detected &&
+      isIOSSwiftPath(fileFact.path) &&
+      !isSwiftTestPath(fileFact.path) &&
+      hasSwiftForceCastUsage(fileFact.content)
+    ) {
+      heuristicFacts.push(
+        createHeuristicFact({
+          ruleId: 'heuristics.ios.force-cast.ast',
+          code: 'HEURISTICS_IOS_FORCE_CAST_AST',
+          message: 'AST heuristic detected force cast usage.',
           filePath: fileFact.path,
         })
       );

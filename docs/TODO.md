@@ -18,6 +18,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Phase 5 execution closure status helper is implemented (`validation:phase5-execution-closure-status`).
 - Adapter readiness helper is implemented (`validation:adapter-readiness`).
 - Adapter real-session report generator is implemented (`validation:adapter-real-session-report`, current baseline naming).
+- iOS AST heuristic coverage includes force-cast (`as!`) detection with stage-aware severity promotion.
 - Framework menu operational checks include docs hygiene and skills lock freshness (`skills:lock:check`).
 - IDE-agnostic boundary guardrail test is implemented for `core/*` and `integrations/*`.
 - Rule-pack version-to-doc sync guardrail test is implemented (`scripts/__tests__/rule-pack-docs-sync.test.ts`).
