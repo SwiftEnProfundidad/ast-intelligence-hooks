@@ -15,6 +15,7 @@ Keep these as source-of-truth operational references:
 - `skills-rollout-consumer-ci-artifacts.md`
 - `windsurf-hook-runtime-validation.md`
 - `windsurf-hook-runtime-local-report.md`
+- `windsurf-real-session-report-template.md`
 
 ## Archived Historical Reports
 

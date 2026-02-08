@@ -24,6 +24,7 @@ For full historical execution details, see:
 - [ ] Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
   - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session.
   - Compare outcome with `docs/validation/windsurf-hook-runtime-local-report.md`.
+  - Record final evidence using `docs/validation/windsurf-real-session-report-template.md`.
 - [ ] Consumer private-repo Actions startup-failure unblock:
   - Confirm billing/policy state after token refresh with `user` scope.
   - Re-run consumer CI diagnostics and attach fresh generated outputs.

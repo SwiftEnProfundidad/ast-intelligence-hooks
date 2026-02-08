@@ -72,3 +72,5 @@ Remediation:
 - Hook config snippet (`~/.codeium/windsurf/hooks.json`).
 - Tail output from relevant `.audit_tmp` files.
 - Any console output showing runtime resolution failures.
+- Completed report based on:
+  - `docs/validation/windsurf-real-session-report-template.md`
