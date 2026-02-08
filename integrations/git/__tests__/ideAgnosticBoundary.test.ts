@@ -48,6 +48,8 @@ test('core and integrations remain IDE-agnostic (no Windsurf runtime command cou
     'assess:windsurf-hooks-session',
     '~/.codeium/windsurf',
     '.codeium/windsurf',
+    '~/.codex/',
+    '/.codex/',
   ];
 
   const roots = ['core', 'integrations'];

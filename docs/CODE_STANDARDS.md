@@ -7,6 +7,7 @@
 - Do not couple `core/*` to shell, filesystem, or network concerns.
 - Do not duplicate stage logic across platform wrappers when shared runner exists.
 - Keep IDE/editor diagnostics adapters in `scripts/*`; do not couple them into `core/*` or `integrations/*` gate logic.
+- Do not read `~/.codex/**` in gate runtime execution; use repository-scoped contracts only.
 
 ## Deterministic standards
 
