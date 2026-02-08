@@ -41,7 +41,7 @@
     "violations:demo": "bash bin/demo-violations",
     "test": "jest --runInBand",
     "lint": "npm run lint:hooks",
-    "lint:hooks": "eslint \"scripts/hooks-system/application/**/*.js\" \"bin/**/*.js\"",
+    "lint:hooks": "eslint \"legacy/scripts/hooks-system/application/**/*.js\" \"legacy/scripts/hooks-system/bin/**/*.js\" \"legacy/bin/**/*.js\"",
     "build:ts": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test:heuristics": "npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts",

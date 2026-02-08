@@ -24,6 +24,10 @@ done
 
 CLI="$REPO_ROOT/scripts/hooks-system/bin/cli.js"
 if [[ ! -f "$CLI" ]]; then
+  CLI="$REPO_ROOT/legacy/scripts/hooks-system/bin/cli.js"
+fi
+
+if [[ ! -f "$CLI" ]]; then
   CLI="$REPO_ROOT/node_modules/pumuki-ast-hooks/scripts/hooks-system/bin/cli.js"
 fi
 

@@ -3,11 +3,15 @@ const path = require('path');
 const { execSync } = require('child_process');
 
 describe('Integration: .AI_EVIDENCE.json Structure', () => {
-    const REPO_ROOT = path.resolve(__dirname, '../..');
+    const REPO_ROOT = path.resolve(__dirname, '../../..');
     const EVIDENCE_FILE = path.join(REPO_ROOT, '.AI_EVIDENCE.json');
+    const UPDATE_EVIDENCE_SCRIPT = path.join(
+        REPO_ROOT,
+        'legacy/scripts/hooks-system/bin/update-evidence.sh'
+    );
 
     beforeAll(() => {
-        execSync('bash scripts/hooks-system/bin/update-evidence.sh', {
+        execSync(`bash "${UPDATE_EVIDENCE_SCRIPT}"`, {
             cwd: REPO_ROOT,
             stdio: 'pipe'
         });
