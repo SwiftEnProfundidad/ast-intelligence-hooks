@@ -930,7 +930,7 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '9',
-        label: 'Build Windsurf session status report',
+        label: 'Build Windsurf session status report (optional diagnostics)',
         execute: async () => {
           const report = await askWindsurfSessionStatusReport();
           await runWindsurfSessionStatusReport(report);
@@ -986,7 +986,7 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '16',
-        label: 'Build Windsurf real-session report',
+        label: 'Build Windsurf real-session report (optional diagnostics)',
         execute: async () => {
           const report = await askWindsurfRealSessionReport();
           await runWindsurfRealSessionReport(report);

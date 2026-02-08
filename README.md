@@ -61,7 +61,7 @@ Interactive:
 npm run framework:menu
 ```
 
-The interactive menu includes stage evaluation, Windsurf report generation, consumer diagnostics, the `docs/validation` hygiene check, and `skills:lock:check`.
+The interactive menu includes stage evaluation plus optional diagnostics/adapters (Windsurf reports, consumer diagnostics), and operational checks (`docs/validation` hygiene and `skills:lock:check`).
 
 Direct stage wrappers:
 
@@ -141,7 +141,15 @@ Endpoints:
 
 Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
 
-## Windsurf Hook Runtime Hardening
+## IDE Adapters (Optional)
+
+Pumuki gate execution is IDE-agnostic by design.
+
+- The deterministic gate flow (`Facts -> Rules -> Gate -> ai_evidence`) runs through `core/*` and `integrations/*`.
+- IDE-specific tooling (Windsurf diagnostics, reports, local runtime checks) is implemented under `scripts/*` and `docs/validation/*`.
+- PRE_COMMIT / PRE_PUSH / CI do not require Windsurf commands to pass.
+
+## Windsurf Hook Runtime Hardening (Optional Diagnostics)
 
 Runtime and configuration commands:
 
