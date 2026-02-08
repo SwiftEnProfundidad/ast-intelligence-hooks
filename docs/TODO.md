@@ -76,6 +76,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Run branch-only remediation experiment in consumer repo and record negative result when startup failure persists (`docs/validation/skills-rollout-r_go-startup-fix-experiment.md`).
 - Add GitHub Support ticket template for startup-failure escalation in private consumer repos (`docs/validation/github-support-ticket-template-startup-failure.md`).
 - Open consumer-tracking issue for startup-failure unblock plan (`SwiftEnProfundidad/R_GO#582`).
+- Reproduce startup failure in a brand-new private temp repo to confirm account-level scope (`docs/validation/private-actions-healthcheck-temp.md`).
 
 ## Next
 

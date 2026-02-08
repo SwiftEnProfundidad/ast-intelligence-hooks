@@ -76,11 +76,17 @@ Automated scan output:
 - `docs/validation/skills-rollout-r_go-workflow-lint.md`
 - `docs/validation/skills-rollout-r_go-workflow-lint-auto.md`
 - `docs/validation/skills-rollout-r_go-startup-fix-experiment.md`
+- `docs/validation/private-actions-healthcheck-temp.md`
 
 Tracking issue in consumer repository:
 
 - `SwiftEnProfundidad/R_GO#582`  
   `https://github.com/SwiftEnProfundidad/R_GO/issues/582`
+
+Additional external confirmation:
+
+- private temp repo minimal workflow also fails with `startup_failure`:  
+  `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21797682919`
 
 ## Conclusion
 
