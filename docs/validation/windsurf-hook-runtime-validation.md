@@ -2,6 +2,8 @@
 
 Objective: validate `pre_write_code` and `post_write_code` runtime behavior in a real Windsurf session after Node wrapper hardening.
 
+Scope note: this is an optional adapter-validation runbook and does not alter PRE_COMMIT/PRE_PUSH/CI gate decisions.
+
 ## Preconditions
 
 - Repo checked out with latest `enterprise-refactor`.

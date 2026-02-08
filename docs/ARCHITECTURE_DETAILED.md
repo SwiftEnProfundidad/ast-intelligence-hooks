@@ -44,6 +44,10 @@ Responsibilities:
 - Build/write deterministic evidence.
 - Expose read-only evidence context via MCP endpoint.
 
+Boundary rule:
+
+- IDE/editor-specific diagnostics (for example Windsurf runtime validation) stay in `scripts/*` and `docs/validation/*`; they must not participate in core gate decisions.
+
 ## Stage execution architecture
 
 ### Shared runtime entry

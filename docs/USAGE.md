@@ -34,6 +34,8 @@ npm run framework:menu
 
 Menu supports staged evaluation, commit-range evaluation, evidence reading, and CI runner entrypoints.
 
+Optional diagnostics adapters (for example Windsurf runtime and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
+
 ### 2) Direct stage CLI execution
 
 ```bash

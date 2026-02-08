@@ -13,6 +13,8 @@ Provide a deterministic troubleshooting sequence when consumer repository GitHub
 
 Use this playbook before expecting CI artifact URLs for rollout validation reports.
 
+This playbook is an operational diagnostics flow for external consumer repositories. It does not participate in deterministic PRE_COMMIT/PRE_PUSH/CI gate decisions inside this framework repository.
+
 ## Diagnostic Steps
 
 1. Confirm Actions status and permissions:

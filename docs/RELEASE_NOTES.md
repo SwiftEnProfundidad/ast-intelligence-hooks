@@ -59,6 +59,14 @@ Detailed commit history remains available through Git history (`git log` / `git 
     - `npm run validate:windsurf-hooks-local`
   - real-session validation checklist:
     - `docs/validation/windsurf-hook-runtime-validation.md`
+- Consumer startup diagnostics one-shot orchestrator:
+  - `npm run validation:consumer-startup-triage`
+- Phase 5 blockers readiness report:
+  - `npm run validation:phase5-blockers-readiness`
+  - deterministic verdicts: `READY | BLOCKED | MISSING_INPUTS`
+- IDE-agnostic gate boundary hardening:
+  - runtime boundary test in `integrations/git/__tests__/ideAgnosticBoundary.test.ts`
+  - explicit architecture/docs contract that IDE diagnostics remain optional adapters
 
 ## Notes
 

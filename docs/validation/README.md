@@ -5,6 +5,8 @@ This folder mixes two categories:
 1. Versioned runbooks/playbooks (kept in git).
 2. Generated execution reports (local outputs, not baseline documentation).
 
+Validation runbooks in this folder are operational adapters. They support rollout diagnostics and incident handling, but they are not required inputs for deterministic PRE_COMMIT/PRE_PUSH/CI gate decisions.
+
 ## Versioned Documents
 
 Keep these as source-of-truth operational references:
