@@ -9,8 +9,8 @@
 
 ## Sources
 
-- `legacy/tooling/.cursor/rules/rulesgold.mdc`
-- `legacy/tooling/.cursor/rules/rulesbackend.mdc`
+- `legacy/tooling/*/rules/rulesgold.mdc` (legacy source material)
+- `legacy/tooling/*/rules/rulesbackend.mdc` (legacy source material)
 - Legacy editor-export equivalents when present
 - `core/rules/presets/backendRuleSet.ts`
 
