@@ -1,0 +1,37 @@
+# Validation Docs Policy
+
+This folder mixes two categories:
+
+1. Versioned runbooks/playbooks (kept in git).
+2. Generated execution reports (local outputs, not baseline documentation).
+
+## Versioned Documents
+
+Keep these as source-of-truth operational references:
+
+- `consumer-ci-startup-failure-playbook.md`
+- `github-support-ticket-template-startup-failure.md`
+- `skills-rollout-consumer-repositories.md`
+- `skills-rollout-consumer-ci-artifacts.md`
+- `windsurf-hook-runtime-validation.md`
+- `windsurf-hook-runtime-local-report.md`
+
+## Generated Outputs (Do Not Keep as Baseline Docs)
+
+These files are command outputs and should be generated per execution context:
+
+- `consumer-ci-auth-check.md`
+- `consumer-ci-artifacts-report.md`
+- `consumer-workflow-lint-report.md`
+- `consumer-startup-failure-support-bundle.md`
+- `consumer-support-ticket-draft.md`
+- `windsurf-session-status.md`
+
+Generate them on demand with:
+
+- `npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo>`
+- `npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo>`
+- `npm run validation:consumer-workflow-lint -- --repo-path <path>`
+- `npm run validation:consumer-support-bundle -- --repo <owner>/<repo>`
+- `npm run validation:consumer-support-ticket-draft -- --repo <owner>/<repo>`
+- `npm run validation:windsurf-session-status`

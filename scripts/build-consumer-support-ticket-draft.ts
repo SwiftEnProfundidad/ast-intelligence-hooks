@@ -13,8 +13,9 @@ type CliOptions = {
   outFile: string;
 };
 
-const DEFAULT_REPO = 'SwiftEnProfundidad/R_GO';
-const DEFAULT_SUPPORT_BUNDLE_FILE = 'docs/validation/skills-rollout-r_go-support-bundle.md';
+const DEFAULT_REPO = 'owner/repo';
+const DEFAULT_SUPPORT_BUNDLE_FILE =
+  'docs/validation/consumer-startup-failure-support-bundle.md';
 const DEFAULT_AUTH_REPORT_FILE = 'docs/validation/consumer-ci-auth-check.md';
 const DEFAULT_OUT_FILE = 'docs/validation/consumer-support-ticket-draft.md';
 

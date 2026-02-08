@@ -14,7 +14,7 @@ npm run validation:consumer-ci-auth-check -- --repo SwiftEnProfundidad/R_GO \
   --out docs/validation/consumer-ci-auth-check.md
 
 npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/R_GO --limit 20 \
-  --out docs/validation/skills-rollout-r_go-ci-artifacts-scan.md
+  --out docs/validation/consumer-ci-artifacts-report.md
 
 gh run list --repo SwiftEnProfundidad/R_GO --limit 20 \
   --json databaseId,displayTitle,headBranch,workflowName,status,conclusion,url,createdAt,event
@@ -76,12 +76,12 @@ Interpretation:
 Automated scan output:
 
 - `docs/validation/consumer-ci-auth-check.md`
-- `docs/validation/skills-rollout-r_go-ci-artifacts-scan.md`
+- `docs/validation/consumer-ci-artifacts-report.md`
 - `docs/validation/skills-rollout-r_go-workflow-lint.md`
-- `docs/validation/skills-rollout-r_go-workflow-lint-auto.md`
+- `docs/validation/consumer-workflow-lint-report.md`
 - `docs/validation/skills-rollout-r_go-startup-fix-experiment.md`
 - `docs/validation/private-actions-healthcheck-temp.md`
-- `docs/validation/skills-rollout-r_go-support-bundle.md`
+- `docs/validation/consumer-startup-failure-support-bundle.md`
 
 Tracking issue in consumer repository:
 

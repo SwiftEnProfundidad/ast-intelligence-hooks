@@ -149,8 +149,8 @@ Validation docs:
 Generate a consumer-repository CI run/artifact report (for rollout validation and startup-failure triage):
 
 ```bash
-npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/R_GO --limit 20 \
-  --out docs/validation/skills-rollout-r_go-ci-artifacts-scan.md
+npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
+  --out docs/validation/consumer-ci-artifacts-report.md
 
 # Optional: run semantic workflow lint on consumer repo (requires actionlint binary)
 npm run validation:consumer-workflow-lint -- \
@@ -159,23 +159,24 @@ npm run validation:consumer-workflow-lint -- \
   --out docs/validation/consumer-workflow-lint-report.md
 
 # Build support bundle (ready-to-paste payload for GitHub Support)
-npm run validation:consumer-support-bundle -- --repo SwiftEnProfundidad/R_GO --limit 20 \
-  --out docs/validation/skills-rollout-r_go-support-bundle.md
+npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 \
+  --out docs/validation/consumer-startup-failure-support-bundle.md
 
 # Auth/scopes precheck for private-repo Actions diagnostics
-npm run validation:consumer-ci-auth-check -- --repo SwiftEnProfundidad/R_GO \
+npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo> \
   --out docs/validation/consumer-ci-auth-check.md
 
 # Build GitHub Support ticket draft from support bundle + auth report
 npm run validation:consumer-support-ticket-draft -- \
-  --repo SwiftEnProfundidad/R_GO \
-  --support-bundle docs/validation/skills-rollout-r_go-support-bundle.md \
+  --repo <owner>/<repo> \
+  --support-bundle docs/validation/consumer-startup-failure-support-bundle.md \
   --auth-report docs/validation/consumer-ci-auth-check.md \
   --out docs/validation/consumer-support-ticket-draft.md
 ```
 
 Related docs:
 
+- `docs/validation/README.md`
 - `docs/validation/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/consumer-ci-startup-failure-playbook.md`
 

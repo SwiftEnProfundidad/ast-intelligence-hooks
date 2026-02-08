@@ -129,9 +129,9 @@ export const buildSupportTicketDraft = (params: {
   lines.push('');
   lines.push(`- ${params.supportBundlePath}`);
   lines.push(`- ${params.authReportPath}`);
-  lines.push('- docs/validation/skills-rollout-r_go-ci-artifacts-scan.md');
-  lines.push('- docs/validation/skills-rollout-r_go-workflow-lint-auto.md');
-  lines.push('- docs/validation/skills-rollout-r_go-startup-fix-experiment.md');
+  lines.push('- docs/validation/consumer-ci-artifacts-report.md');
+  lines.push('- docs/validation/consumer-workflow-lint-report.md');
+  lines.push('- docs/validation/consumer-startup-fix-experiment.md');
   lines.push('- docs/validation/private-actions-healthcheck-temp.md');
   lines.push('');
 

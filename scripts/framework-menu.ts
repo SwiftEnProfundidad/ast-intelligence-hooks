@@ -352,14 +352,14 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const repoPrompt = await rl.question(
-        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+        'consumer repo (owner/repo) [owner/repo]: '
       );
       const limitPrompt = await rl.question('runs to inspect [20]: ');
       const outPrompt = await rl.question(
         'output path [docs/validation/consumer-ci-artifacts-report.md]: '
       );
 
-      const repo = repoPrompt.trim() || 'SwiftEnProfundidad/R_GO';
+      const repo = repoPrompt.trim() || 'owner/repo';
       const limit = Number.parseInt(limitPrompt.trim() || '20', 10);
       const outFile =
         outPrompt.trim() || 'docs/validation/consumer-ci-artifacts-report.md';
@@ -412,14 +412,14 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const repoPrompt = await rl.question(
-        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+        'consumer repo (owner/repo) [owner/repo]: '
       );
       const outPrompt = await rl.question(
         'output path [docs/validation/consumer-ci-auth-check.md]: '
       );
 
       return {
-        repo: repoPrompt.trim() || 'SwiftEnProfundidad/R_GO',
+        repo: repoPrompt.trim() || 'owner/repo',
         outFile: outPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
       };
     };
@@ -430,17 +430,17 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const repoPrompt = await rl.question(
-        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+        'consumer repo (owner/repo) [owner/repo]: '
       );
       const limitPrompt = await rl.question('runs to inspect [20]: ');
       const outPrompt = await rl.question(
-        'output path [docs/validation/consumer-support-bundle.md]: '
+        'output path [docs/validation/consumer-startup-failure-support-bundle.md]: '
       );
 
-      const repo = repoPrompt.trim() || 'SwiftEnProfundidad/R_GO';
+      const repo = repoPrompt.trim() || 'owner/repo';
       const limit = Number.parseInt(limitPrompt.trim() || '20', 10);
       const outFile =
-        outPrompt.trim() || 'docs/validation/consumer-support-bundle.md';
+        outPrompt.trim() || 'docs/validation/consumer-startup-failure-support-bundle.md';
 
       return {
         repo,
@@ -456,10 +456,10 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const repoPrompt = await rl.question(
-        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+        'consumer repo (owner/repo) [owner/repo]: '
       );
       const supportBundlePrompt = await rl.question(
-        'support bundle path [docs/validation/skills-rollout-r_go-support-bundle.md]: '
+        'support bundle path [docs/validation/consumer-startup-failure-support-bundle.md]: '
       );
       const authReportPrompt = await rl.question(
         'auth report path [docs/validation/consumer-ci-auth-check.md]: '
@@ -469,10 +469,10 @@ const menu = async (): Promise<void> => {
       );
 
       return {
-        repo: repoPrompt.trim() || 'SwiftEnProfundidad/R_GO',
+        repo: repoPrompt.trim() || 'owner/repo',
         supportBundleFile:
           supportBundlePrompt.trim() ||
-          'docs/validation/skills-rollout-r_go-support-bundle.md',
+          'docs/validation/consumer-startup-failure-support-bundle.md',
         authReportFile:
           authReportPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
         outFile: outPrompt.trim() || 'docs/validation/consumer-support-ticket-draft.md',

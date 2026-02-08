@@ -154,4 +154,4 @@ If unresolved after workflow and access-level checks:
 - `docs/validation/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/skills-rollout-r_go-multi-platform-report.md`
 - `docs/validation/private-actions-healthcheck-temp.md`
-- `docs/validation/skills-rollout-r_go-support-bundle.md`
+- `docs/validation/consumer-startup-failure-support-bundle.md`
