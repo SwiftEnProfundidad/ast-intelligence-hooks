@@ -104,6 +104,26 @@ npx tsx integrations/git/prePushBackend.cli.ts
 npx tsx integrations/git/ciFrontend.cli.ts
 ```
 
+## Operational adapters (optional)
+
+Adapter diagnostics are intentionally outside the deterministic gate runtime.
+
+- They live under `scripts/*` and `docs/validation/*`.
+- They do not change PRE_COMMIT/PRE_PUSH/CI outcomes.
+- They support rollout diagnostics and incident triage.
+
+Typical commands:
+
+```bash
+npm run validation:adapter-readiness -- \
+  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --out docs/validation/adapter-readiness.md
+
+npm run validation:phase5-blockers-readiness -- \
+  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
+  --out docs/validation/phase5-blockers-readiness.md
+```
+
 ### CI workflows
 
 - `.github/workflows/pumuki-gate-template.yml`

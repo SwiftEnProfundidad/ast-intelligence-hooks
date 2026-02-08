@@ -41,6 +41,16 @@ If both commands pass, the workspace is ready.
 npm run framework:menu
 ```
 
+Menu includes deterministic gate actions and optional operational diagnostics adapters.
+
+Optional adapter readiness check:
+
+```bash
+npm run validation:adapter-readiness -- \
+  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --out docs/validation/adapter-readiness.md
+```
+
 ### Direct stage runners
 
 ```bash

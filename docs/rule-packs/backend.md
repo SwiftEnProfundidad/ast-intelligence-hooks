@@ -11,7 +11,7 @@
 
 - `legacy/tooling/.cursor/rules/rulesgold.mdc`
 - `legacy/tooling/.cursor/rules/rulesbackend.mdc`
-- Fallback: `.windsurf` equivalents when present
+- Legacy editor-export equivalents when present
 - `core/rules/presets/backendRuleSet.ts`
 
 ## Scope
