@@ -212,6 +212,11 @@ npm run validation:phase5-blockers-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
+
+# Optional: generate adapter-only readiness report (Windsurf diagnostics)
+npm run validation:adapter-readiness -- \
+  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --out docs/validation/adapter-readiness.md
 ```
 
 Related docs:

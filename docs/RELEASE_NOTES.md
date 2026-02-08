@@ -65,6 +65,9 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - `npm run validation:phase5-blockers-readiness`
   - Windsurf report is optional by default; use `--require-windsurf-report` for strict adapter-mode gating.
   - deterministic verdicts: `READY | BLOCKED | MISSING_INPUTS`
+- Adapter-only readiness report:
+  - `npm run validation:adapter-readiness`
+  - deterministic verdicts: `READY | BLOCKED | PENDING`
 - IDE-agnostic gate boundary hardening:
   - runtime boundary test in `integrations/git/__tests__/ideAgnosticBoundary.test.ts`
   - explicit architecture/docs contract that IDE diagnostics remain optional adapters

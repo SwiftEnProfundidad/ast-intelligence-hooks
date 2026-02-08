@@ -38,6 +38,7 @@ These files are command outputs and should be generated per execution context:
 - `consumer-startup-unblock-status.md`
 - `consumer-startup-triage-report.md`
 - `phase5-blockers-readiness.md`
+- `adapter-readiness.md`
 - `windsurf-session-status.md`
 - `windsurf-real-session-report.md`
 
@@ -53,6 +54,7 @@ Generate them on demand with:
 - `npm run validation:phase5-blockers-readiness`
 - optional strict mode:
   - `npm run validation:phase5-blockers-readiness -- --require-windsurf-report --windsurf-report docs/validation/windsurf-real-session-report.md --consumer-triage-report docs/validation/consumer-startup-triage-report.md`
+- `npm run validation:adapter-readiness`
 - `npm run validation:windsurf-session-status`
 - `npm run validation:windsurf-real-session-report`
 

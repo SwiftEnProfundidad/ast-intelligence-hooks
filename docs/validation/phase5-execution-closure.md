@@ -35,7 +35,21 @@ If strict runtime checks fail with `node: command not found`, execute:
 
 and regenerate both reports.
 
-## Step 2: Generate/refresh consumer startup triage
+## Step 2: Generate adapter readiness report (optional but recommended)
+
+```bash
+npm run validation:adapter-readiness -- \
+  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --out docs/validation/adapter-readiness.md
+```
+
+Expected adapter verdict when runtime is healthy:
+
+- `READY`
+
+If verdict is `BLOCKED` or `PENDING`, resolve the next-actions section in that report and regenerate it.
+
+## Step 3: Generate/refresh consumer startup triage
 
 Run against consumer repository context:
 
@@ -55,7 +69,7 @@ npm run validation:consumer-startup-triage -- \
   --actionlint-bin /tmp/actionlint-bin/actionlint
 ```
 
-## Step 3: Consolidate Phase 5 blockers readiness
+## Step 4: Consolidate Phase 5 blockers readiness
 
 ```bash
 npm run validation:phase5-blockers-readiness -- \
@@ -90,6 +104,7 @@ Phase 5 execution closure is complete when all are true:
 ## Quick Checklist
 
 - [ ] `validation:windsurf-real-session-report` generated and reviewed
+- [ ] `validation:adapter-readiness` generated and reviewed
 - [ ] `validation:consumer-startup-triage` generated against target repo
 - [ ] `validation:phase5-blockers-readiness` returns `verdict=READY`
 - [ ] `docs/TODO.md` execution-closure item updated

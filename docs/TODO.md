@@ -15,6 +15,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Consumer startup-failure unblock status helper is implemented (`validation:consumer-startup-unblock-status`).
 - Consumer startup triage orchestrator is implemented (`validation:consumer-startup-triage`).
 - Phase 5 blockers readiness helper is implemented (`validation:phase5-blockers-readiness`).
+- Adapter readiness helper is implemented (`validation:adapter-readiness`).
 - Windsurf real-session report generator is implemented (`validation:windsurf-real-session-report`).
 - Framework menu operational checks include docs hygiene and skills lock freshness (`skills:lock:check`).
 - IDE-agnostic boundary guardrail test is implemented for `core/*` and `integrations/*`.
@@ -41,6 +42,7 @@ For full historical execution details, see:
   - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session.
   - Compare outcome with `docs/validation/windsurf-hook-runtime-local-report.md`.
   - Record final evidence using `docs/validation/windsurf-real-session-report-template.md` or generate it with `validation:windsurf-real-session-report`.
+  - Regenerate adapter diagnostics summary with `validation:adapter-readiness`.
 
 ## Skills Enforcement Roadmap (Status)
 
