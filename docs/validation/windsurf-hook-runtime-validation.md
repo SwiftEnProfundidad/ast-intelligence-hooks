@@ -44,6 +44,8 @@ Objective: validate `pre_write_code` and `post_write_code` runtime behavior in a
      - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh "2026-02-07T00:00:00.000Z"`
    - consolidated report:
      - `npm run validation:windsurf-session-status -- --out docs/validation/windsurf-session-status.md`
+   - pre-filled real-session report:
+     - `npm run validation:windsurf-real-session-report -- --status-report docs/validation/windsurf-session-status.md --out docs/validation/windsurf-real-session-report.md`
 
 ## Known Failure Signature and Remediation
 
@@ -74,3 +76,5 @@ Remediation:
 - Any console output showing runtime resolution failures.
 - Completed report based on:
   - `docs/validation/windsurf-real-session-report-template.md`
+  - or generated with:
+    - `npm run validation:windsurf-real-session-report -- --status-report docs/validation/windsurf-session-status.md --out docs/validation/windsurf-real-session-report.md`

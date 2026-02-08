@@ -65,6 +65,7 @@
     "validation:consumer-support-ticket-draft": "npx --yes tsx@4.21.0 scripts/build-consumer-support-ticket-draft.ts",
     "validation:consumer-startup-unblock-status": "npx --yes tsx@4.21.0 scripts/build-consumer-startup-unblock-status.ts",
     "validation:docs-hygiene": "npx --yes tsx@4.21.0 scripts/check-validation-docs-hygiene.ts",
+    "validation:windsurf-real-session-report": "npx --yes tsx@4.21.0 scripts/build-windsurf-real-session-report.ts",
     "validation:windsurf-session-status": "npx --yes tsx@4.21.0 scripts/build-windsurf-session-status.ts",
     "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",
     "skills:lock:check": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts --check",

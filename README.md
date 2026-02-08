@@ -139,6 +139,9 @@ npm run validate:windsurf-hooks-local
 npm run assess:windsurf-hooks-session
 npm run assess:windsurf-hooks-session:any
 npm run validation:windsurf-session-status -- --out docs/validation/windsurf-session-status.md
+npm run validation:windsurf-real-session-report -- \
+  --status-report docs/validation/windsurf-session-status.md \
+  --out docs/validation/windsurf-real-session-report.md
 ```
 
 Validation docs:

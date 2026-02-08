@@ -2,6 +2,14 @@
 
 Use this template after executing `docs/validation/windsurf-hook-runtime-validation.md`.
 
+You can generate a pre-filled report from available logs with:
+
+```bash
+npm run validation:windsurf-real-session-report -- \
+  --status-report docs/validation/windsurf-session-status.md \
+  --out docs/validation/windsurf-real-session-report.md
+```
+
 ## Metadata
 
 - Date:
