@@ -77,6 +77,11 @@ Automated scan output:
 - `docs/validation/skills-rollout-r_go-workflow-lint-auto.md`
 - `docs/validation/skills-rollout-r_go-startup-fix-experiment.md`
 
+Tracking issue in consumer repository:
+
+- `SwiftEnProfundidad/R_GO#582`  
+  `https://github.com/SwiftEnProfundidad/R_GO/issues/582`
+
 ## Conclusion
 
 Consumer CI artifact URLs cannot be attached yet because runs are failing at startup and do not emit artifacts.

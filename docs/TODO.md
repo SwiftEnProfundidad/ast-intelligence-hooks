@@ -75,6 +75,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add helper command to generate consumer workflow lint reports from `actionlint` (`scripts/lint-consumer-workflows.ts`).
 - Run branch-only remediation experiment in consumer repo and record negative result when startup failure persists (`docs/validation/skills-rollout-r_go-startup-fix-experiment.md`).
 - Add GitHub Support ticket template for startup-failure escalation in private consumer repos (`docs/validation/github-support-ticket-template-startup-failure.md`).
+- Open consumer-tracking issue for startup-failure unblock plan (`SwiftEnProfundidad/R_GO#582`).
 
 ## Next
 
