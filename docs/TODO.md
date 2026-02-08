@@ -67,6 +67,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Complete positive multi-platform rollout validation in consumer context and publish report (`docs/validation/skills-rollout-r_go-multi-platform-report.md`).
 - Assess consumer GitHub Actions artifact availability and document rollout blocker when workflows are in startup failure (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
 - Add startup-failure troubleshooting playbook for consumer CI (`docs/validation/consumer-ci-startup-failure-playbook.md`).
+- Add CLI helper to collect consumer CI run/artifact status into deterministic Markdown reports (`scripts/collect-consumer-ci-artifacts.ts`).
 
 ## Next
 

@@ -29,6 +29,13 @@ gh run list --repo <owner>/<repo> --limit 20 \
   --json databaseId,workflowName,status,conclusion,url,createdAt,event
 ```
 
+Alternative (framework helper, generates Markdown report):
+
+```bash
+npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
+  --out docs/validation/<repo>-consumer-ci-artifacts-scan.md
+```
+
 3. Inspect failing run metadata:
 
 ```bash

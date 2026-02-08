@@ -10,6 +10,9 @@ Collect CI artifact URLs from consumer-repository GitHub Actions runs to complem
 ## Commands Executed
 
 ```bash
+npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/R_GO --limit 20 \
+  --out docs/validation/skills-rollout-r_go-ci-artifacts-scan.md
+
 gh run list --repo SwiftEnProfundidad/R_GO --limit 20 \
   --json databaseId,displayTitle,headBranch,workflowName,status,conclusion,url,createdAt,event
 
@@ -44,6 +47,10 @@ Additional API probe summary:
 - `GET /repos/SwiftEnProfundidad/R_GO/check-suites/56738342712`
   - `conclusion: "startup_failure"`
   - `latest_check_runs_count: 0`
+
+Automated scan output:
+
+- `docs/validation/skills-rollout-r_go-ci-artifacts-scan.md`
 
 ## Conclusion
 
