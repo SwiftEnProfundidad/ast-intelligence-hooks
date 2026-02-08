@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
+  buildValidationDocsHygieneCommandArgs,
   buildMenuGateParams,
   buildWindsurfRealSessionReportCommandArgs,
   formatActiveSkillsBundles,
@@ -114,5 +115,17 @@ test('builds deterministic command args for windsurf real-session report', () =>
     'docs/validation/windsurf-session-status.md',
     '--out',
     'docs/validation/windsurf-real-session-report.md',
+  ]);
+});
+
+test('builds deterministic command args for validation docs hygiene check', () => {
+  const args = buildValidationDocsHygieneCommandArgs({
+    scriptPath: '/repo/scripts/check-validation-docs-hygiene.ts',
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/check-validation-docs-hygiene.ts',
   ]);
 });

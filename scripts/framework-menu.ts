@@ -125,6 +125,16 @@ export const buildWindsurfRealSessionReportCommandArgs = (params: {
   ];
 };
 
+export const buildValidationDocsHygieneCommandArgs = (params: {
+  scriptPath: string;
+}): string[] => {
+  return [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+  ];
+};
+
 const runWindsurfRealSessionReport = async (params: {
   statusReportFile: string;
   outFile: string;
@@ -152,6 +162,34 @@ const runWindsurfRealSessionReport = async (params: {
       stdio: 'inherit',
     }
   );
+};
+
+const runValidationDocsHygiene = async (): Promise<number> => {
+  const scriptPath = resolve(process.cwd(), 'scripts/check-validation-docs-hygiene.ts');
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/check-validation-docs-hygiene.ts in current repository.\n'
+    );
+    return 1;
+  }
+
+  try {
+    execFileSync(
+      'npx',
+      buildValidationDocsHygieneCommandArgs({ scriptPath }),
+      {
+        stdio: 'inherit',
+      }
+    );
+    return 0;
+  } catch (error) {
+    if (error && typeof error === 'object' && 'status' in error) {
+      const status = Number((error as { status?: number }).status ?? 1);
+      return Number.isFinite(status) ? status : 1;
+    }
+    return 1;
+  }
 };
 
 const runConsumerCiAuthCheck = async (params: {
@@ -737,6 +775,11 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '17',
+        label: 'Run docs/validation hygiene check',
+        execute: async () => runAndPrintExitCode(runValidationDocsHygiene),
+      },
+      {
+        id: '18',
         label: 'Exit',
         execute: async () => {},
       },
@@ -756,7 +799,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '17') {
+      if (selected.id === '18') {
         break;
       }
 
