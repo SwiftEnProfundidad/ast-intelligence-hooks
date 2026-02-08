@@ -79,6 +79,42 @@ const runConsumerCiArtifactsScan = async (params: {
   );
 };
 
+const runConsumerWorkflowLintScan = async (params: {
+  repoPath: string;
+  actionlintBin: string;
+  outFile: string;
+}): Promise<void> => {
+  const lintScriptPath = resolve(
+    process.cwd(),
+    'scripts/lint-consumer-workflows.ts'
+  );
+
+  if (!existsSync(lintScriptPath)) {
+    output.write(
+      '\nCould not find scripts/lint-consumer-workflows.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    [
+      '--yes',
+      'tsx@4.21.0',
+      lintScriptPath,
+      '--repo-path',
+      params.repoPath,
+      '--actionlint-bin',
+      params.actionlintBin,
+      '--out',
+      params.outFile,
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 export const buildMenuGateParams = (params: {
   stage: MenuStage;
   scope: MenuScope;
@@ -197,6 +233,30 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askConsumerWorkflowLint = async (): Promise<{
+      repoPath: string;
+      actionlintBin: string;
+      outFile: string;
+    }> => {
+      const repoPathPrompt = await rl.question(
+        'consumer repo path [/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO]: '
+      );
+      const actionlintBinPrompt = await rl.question(
+        'actionlint binary [/tmp/actionlint-bin/actionlint]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/consumer-workflow-lint-report.md]: '
+      );
+
+      return {
+        repoPath:
+          repoPathPrompt.trim() ||
+          '/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO',
+        actionlintBin: actionlintBinPrompt.trim() || '/tmp/actionlint-bin/actionlint',
+        outFile: outPrompt.trim() || 'docs/validation/consumer-workflow-lint-report.md',
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -258,6 +318,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '10',
+        label: 'Run consumer workflow lint report',
+        execute: async () => {
+          const lint = await askConsumerWorkflowLint();
+          await runConsumerWorkflowLintScan(lint);
+        },
+      },
+      {
+        id: '11',
         label: 'Exit',
         execute: async () => {},
       },
@@ -277,7 +345,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '10') {
+      if (selected.id === '11') {
         break;
       }
 
