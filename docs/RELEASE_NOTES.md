@@ -71,12 +71,19 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Phase 5 execution closure status snapshot:
   - `npm run validation:phase5-execution-closure-status`
   - deterministic verdicts: `READY | BLOCKED | MISSING_INPUTS`
+  - framework menu action:
+    - `Build phase5 execution closure status report`
 - Adapter-only readiness report:
   - `npm run validation:adapter-readiness`
   - deterministic verdicts: `READY | BLOCKED | PENDING`
 - IDE-agnostic gate boundary hardening:
   - runtime boundary test in `integrations/git/__tests__/ideAgnosticBoundary.test.ts`
   - explicit architecture/docs contract that IDE diagnostics remain optional adapters
+- Active docs governance hardening:
+  - provider-agnostic docs guardrail test:
+    - `scripts/__tests__/enterprise-docs-agnostic.test.ts`
+  - docs index coverage guardrail test:
+    - `scripts/__tests__/docs-index-coverage.test.ts`
 - Phase 5 execution closure runbook:
   - `docs/validation/phase5-execution-closure.md`
 - Rule-pack docs drift prevention:
