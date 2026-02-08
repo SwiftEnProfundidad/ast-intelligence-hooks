@@ -43,6 +43,28 @@ Objective: validate `pre_write_code` and `post_write_code` runtime behavior in a
    - custom lower bound:
      - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-windsurf-session.sh "2026-02-07T00:00:00.000Z"`
 
+## Known Failure Signature and Remediation
+
+If Windsurf shows hook failures with:
+
+- `bash: node: command not found`
+- command path similar to:
+  - `.../node_modules/pumuki-ast-hooks/.../pre-write-code-hook.js`
+  - `.../node_modules/pumuki-ast-hooks/.../post-write-code-hook.js`
+
+then the active `~/.codeium/windsurf/hooks.json` is using a stale direct `node` invocation.
+
+Remediation:
+
+1. Reinstall hook config from the active framework repository:
+   - `npm run install:windsurf-hooks-config`
+2. Verify wrapper wiring and runtime resolution:
+   - `npm run verify:windsurf-hooks-runtime`
+3. Re-run a real Windsurf write event and confirm hooks execute via:
+   - `run-hook-with-node.sh pre-write-code-hook.js`
+   - `run-hook-with-node.sh post-write-code-hook.js`
+4. Attach the updated `hooks.json` snippet and `.audit_tmp/cascade-hook-runtime-*.log` tail to validation evidence.
+
 ## Evidence to attach
 
 - Hook config snippet (`~/.codeium/windsurf/hooks.json`).
