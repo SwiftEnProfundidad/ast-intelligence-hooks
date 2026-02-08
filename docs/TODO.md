@@ -63,6 +63,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 - Enforce `skills.lock.json` freshness in CI (`npm run skills:lock:check` in workflow).
 - Add consumer-repository rollout validation runbook for skills enforcement (`docs/validation/skills-rollout-consumer-repositories.md`).
+- Execute first real consumer-repository rollout validation checkpoint and publish artifacts/report (`docs/validation/skills-rollout-r_go-report.md`).
 
 ## Next
 
@@ -123,6 +124,6 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 - [x] Phase 1 completed (contracts + validators + deterministic hash tests).
 - [x] Phase 2 completed (compiler + templates + deterministic fixtures + stale check).
 - [x] Documentation milestone: define Phase 5 rollout validation procedure for sample consumer repositories.
-- [ ] Next execution milestone: run the Phase 5 checklist in real consumer repositories and attach stage artifacts/logs.
+- [ ] Next execution milestone: complete the Phase 5 matrix with consumer runs that produce positive platform detection for iOS/backend/frontend/android and attach stage artifacts/logs.
 
 ## Notes

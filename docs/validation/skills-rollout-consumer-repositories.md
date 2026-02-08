@@ -70,14 +70,25 @@ Expected:
 Run the same stage twice without code changes:
 
 1. Execute stage command.
-2. Save `sha256` of `.ai_evidence.json`.
+2. Save `sha256` of `.ai_evidence.json` (raw).
 3. Execute stage command again.
-4. Confirm hash is unchanged.
+4. Compare normalized payloads with `timestamp` removed.
+
+Why normalized compare:
+
+- `timestamp` is expected to change between executions.
+- Determinism target is stable semantic content (snapshot/findings/platforms/rulesets), not byte-identical wall-clock metadata.
 
 Example:
 
 ```bash
-shasum -a 256 .ai_evidence.json
+cp .ai_evidence.json /tmp/evidence-1.json
+# re-run the same stage command
+cp .ai_evidence.json /tmp/evidence-2.json
+
+jq -S 'del(.timestamp)' /tmp/evidence-1.json > /tmp/evidence-1.normalized.json
+jq -S 'del(.timestamp)' /tmp/evidence-2.json > /tmp/evidence-2.normalized.json
+cmp -s /tmp/evidence-1.normalized.json /tmp/evidence-2.normalized.json
 ```
 
 ## Artifact Checklist (Per Consumer Repo)
