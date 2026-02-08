@@ -150,6 +150,12 @@ Generate a consumer-repository CI run/artifact report (for rollout validation an
 ```bash
 npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/R_GO --limit 20 \
   --out docs/validation/skills-rollout-r_go-ci-artifacts-scan.md
+
+# Optional: run semantic workflow lint on consumer repo (requires actionlint binary)
+npm run validation:consumer-workflow-lint -- \
+  --repo-path /Users/you/Projects/consumer-repo \
+  --actionlint-bin /tmp/actionlint-bin/actionlint \
+  --out docs/validation/consumer-workflow-lint-report.md
 ```
 
 Related docs:

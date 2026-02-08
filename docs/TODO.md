@@ -72,6 +72,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Execute controlled Actions access-level check (`none -> user -> none`) and record outcome for startup-failure triage (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
 - Record manual requirement for billing-scope verification (`gh auth refresh -s user`) when non-interactive automation cannot complete authorization.
 - Capture semantic workflow lint findings from consumer repository as startup-failure candidates (`docs/validation/skills-rollout-r_go-workflow-lint.md`).
+- Add helper command to generate consumer workflow lint reports from `actionlint` (`scripts/lint-consumer-workflows.ts`).
 
 ## Next
 

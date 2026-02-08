@@ -59,6 +59,7 @@
     "ast:check-version": "node scripts/hooks-system/bin/check-version.js",
     "framework:menu": "npx tsx scripts/framework-menu.ts",
     "validation:consumer-ci-artifacts": "npx --yes tsx@4.21.0 scripts/collect-consumer-ci-artifacts.ts",
+    "validation:consumer-workflow-lint": "npx --yes tsx@4.21.0 scripts/lint-consumer-workflows.ts",
     "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",
     "skills:lock:check": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts --check",
     "mcp:evidence": "npx --yes tsx@4.21.0 integrations/mcp/evidenceContextServer.cli.ts",

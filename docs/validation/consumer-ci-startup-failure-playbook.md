@@ -75,6 +75,15 @@ If workflows are listed as `active` but runs still fail at startup, continue wit
 - Verify reusable workflow references resolve and are accessible.
 - Run semantic lint checks (recommended `actionlint`) to catch invalid runner labels and unsupported action inputs.
 
+Framework helper (optional):
+
+```bash
+npm run validation:consumer-workflow-lint -- \
+  --repo-path /absolute/path/to/consumer-repo \
+  --actionlint-bin /tmp/actionlint-bin/actionlint \
+  --out docs/validation/consumer-workflow-lint-report.md
+```
+
 7. Validate repository/org policy constraints:
 
 - Required workflow policies

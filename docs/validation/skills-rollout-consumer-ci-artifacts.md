@@ -73,6 +73,7 @@ Automated scan output:
 
 - `docs/validation/skills-rollout-r_go-ci-artifacts-scan.md`
 - `docs/validation/skills-rollout-r_go-workflow-lint.md`
+- `docs/validation/skills-rollout-r_go-workflow-lint-auto.md`
 
 ## Conclusion
 
