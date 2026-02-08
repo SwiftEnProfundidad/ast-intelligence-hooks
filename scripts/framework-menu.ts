@@ -79,6 +79,39 @@ const runConsumerCiArtifactsScan = async (params: {
   );
 };
 
+const runConsumerCiAuthCheck = async (params: {
+  repo: string;
+  outFile: string;
+}): Promise<void> => {
+  const authCheckScriptPath = resolve(
+    process.cwd(),
+    'scripts/check-consumer-ci-auth.ts'
+  );
+
+  if (!existsSync(authCheckScriptPath)) {
+    output.write(
+      '\nCould not find scripts/check-consumer-ci-auth.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    [
+      '--yes',
+      'tsx@4.21.0',
+      authCheckScriptPath,
+      '--repo',
+      params.repo,
+      '--out',
+      params.outFile,
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 const runConsumerWorkflowLintScan = async (params: {
   repoPath: string;
   actionlintBin: string;
@@ -293,6 +326,23 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askConsumerCiAuthCheck = async (): Promise<{
+      repo: string;
+      outFile: string;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/consumer-ci-auth-check.md]: '
+      );
+
+      return {
+        repo: repoPrompt.trim() || 'SwiftEnProfundidad/R_GO',
+        outFile: outPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
+      };
+    };
+
     const askConsumerSupportBundle = async (): Promise<{
       repo: string;
       limit: number;
@@ -379,6 +429,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '10',
+        label: 'Run consumer CI auth check report',
+        execute: async () => {
+          const check = await askConsumerCiAuthCheck();
+          await runConsumerCiAuthCheck(check);
+        },
+      },
+      {
+        id: '11',
         label: 'Run consumer workflow lint report',
         execute: async () => {
           const lint = await askConsumerWorkflowLint();
@@ -386,7 +444,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '11',
+        id: '12',
         label: 'Build consumer startup-failure support bundle',
         execute: async () => {
           const bundle = await askConsumerSupportBundle();
@@ -394,7 +452,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '12',
+        id: '13',
         label: 'Exit',
         execute: async () => {},
       },
@@ -414,7 +472,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '12') {
+      if (selected.id === '13') {
         break;
       }
 

@@ -10,6 +10,9 @@ Collect CI artifact URLs from consumer-repository GitHub Actions runs to complem
 ## Commands Executed
 
 ```bash
+npm run validation:consumer-ci-auth-check -- --repo SwiftEnProfundidad/R_GO \
+  --out docs/validation/consumer-ci-auth-check.md
+
 npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/R_GO --limit 20 \
   --out docs/validation/skills-rollout-r_go-ci-artifacts-scan.md
 
@@ -72,6 +75,7 @@ Interpretation:
 
 Automated scan output:
 
+- `docs/validation/consumer-ci-auth-check.md`
 - `docs/validation/skills-rollout-r_go-ci-artifacts-scan.md`
 - `docs/validation/skills-rollout-r_go-workflow-lint.md`
 - `docs/validation/skills-rollout-r_go-workflow-lint-auto.md`

@@ -33,6 +33,9 @@ gh run list --repo <owner>/<repo> --limit 20 \
 Alternative (framework helper, generates Markdown report):
 
 ```bash
+npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo> \
+  --out docs/validation/<repo>-consumer-ci-auth-check.md
+
 npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
   --out docs/validation/<repo>-consumer-ci-artifacts-scan.md
 ```
@@ -141,6 +144,7 @@ If unresolved after workflow and access-level checks:
 
 ## Related Reports
 
+- `docs/validation/consumer-ci-auth-check.md`
 - `docs/validation/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/skills-rollout-r_go-multi-platform-report.md`
 - `docs/validation/private-actions-healthcheck-temp.md`

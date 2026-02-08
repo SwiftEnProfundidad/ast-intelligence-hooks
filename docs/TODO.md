@@ -80,6 +80,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Add helper command to build support-ready startup-failure bundles (`scripts/build-consumer-startup-failure-support-bundle.ts`).
 - Extend startup-failure support bundle output with repository Actions policy and billing-scope probe diagnostics.
 - Document Windsurf stale direct-`node` hook failure signature and remediation workflow in runtime validation playbook.
+- Add helper command to generate consumer CI auth/scope readiness report (`scripts/check-consumer-ci-auth.ts`).
 
 ## Next
 

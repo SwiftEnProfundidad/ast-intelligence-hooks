@@ -160,6 +160,10 @@ npm run validation:consumer-workflow-lint -- \
 # Build support bundle (ready-to-paste payload for GitHub Support)
 npm run validation:consumer-support-bundle -- --repo SwiftEnProfundidad/R_GO --limit 20 \
   --out docs/validation/skills-rollout-r_go-support-bundle.md
+
+# Auth/scopes precheck for private-repo Actions diagnostics
+npm run validation:consumer-ci-auth-check -- --repo SwiftEnProfundidad/R_GO \
+  --out docs/validation/consumer-ci-auth-check.md
 ```
 
 Related docs:
