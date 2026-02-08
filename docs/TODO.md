@@ -71,6 +71,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Record comparative public/private CI signal for startup-failure root-cause triage (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
 - Execute controlled Actions access-level check (`none -> user -> none`) and record outcome for startup-failure triage (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
 - Record manual requirement for billing-scope verification (`gh auth refresh -s user`) when non-interactive automation cannot complete authorization.
+- Capture semantic workflow lint findings from consumer repository as startup-failure candidates (`docs/validation/skills-rollout-r_go-workflow-lint.md`).
 
 ## Next
 

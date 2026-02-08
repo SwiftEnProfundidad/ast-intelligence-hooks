@@ -73,6 +73,7 @@ If workflows are listed as `active` but runs still fail at startup, continue wit
 - Ensure every `.github/workflows/*.yml` parses cleanly.
 - Check for invalid keys, indentation issues, or disallowed expressions.
 - Verify reusable workflow references resolve and are accessible.
+- Run semantic lint checks (recommended `actionlint`) to catch invalid runner labels and unsupported action inputs.
 
 7. Validate repository/org policy constraints:
 
@@ -100,6 +101,11 @@ Optional controlled check:
 
 - Temporarily change `actions/permissions/access` and trigger one `workflow_dispatch` run.
 - If startup failure is unchanged, revert to original value and continue policy/billing investigation.
+
+Known example of semantic lint findings correlated with startup failures:
+
+- `runs-on: macos-13` unknown label (in affected consumer repo context)
+- unsupported input key (`assertions`) for `treosh/lighthouse-ci-action@v12`
 
 ## Exit Criteria
 
