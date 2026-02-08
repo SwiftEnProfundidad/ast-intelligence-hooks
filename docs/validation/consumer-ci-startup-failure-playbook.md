@@ -130,6 +130,7 @@ If unresolved after workflow and access-level checks:
 
 - escalate to repository owner account settings/billing review
 - open GitHub Support ticket with run URLs and check-suite metadata
+- use template: `docs/validation/github-support-ticket-template-startup-failure.md`
 
 ## Related Reports
 
