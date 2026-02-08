@@ -171,6 +171,25 @@ export const buildValidationDocsHygieneCommandArgs = (params: {
   ];
 };
 
+export const buildPhase5BlockersReadinessCommandArgs = (params: {
+  scriptPath: string;
+  windsurfReportFile: string;
+  consumerTriageReportFile: string;
+  outFile: string;
+}): string[] => {
+  return [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+    '--windsurf-report',
+    params.windsurfReportFile,
+    '--consumer-triage-report',
+    params.consumerTriageReportFile,
+    '--out',
+    params.outFile,
+  ];
+};
+
 export const buildSkillsLockCheckCommandArgs = (): string[] => {
   return [
     'run',
@@ -281,6 +300,37 @@ const runConsumerStartupTriage = async (params: {
       runWorkflowLint: params.runWorkflowLint,
       repoPath: params.repoPath,
       actionlintBin: params.actionlintBin,
+    }),
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
+const runPhase5BlockersReadiness = async (params: {
+  windsurfReportFile: string;
+  consumerTriageReportFile: string;
+  outFile: string;
+}): Promise<void> => {
+  const scriptPath = resolve(
+    process.cwd(),
+    'scripts/build-phase5-blockers-readiness.ts'
+  );
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-phase5-blockers-readiness.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    buildPhase5BlockersReadinessCommandArgs({
+      scriptPath,
+      windsurfReportFile: params.windsurfReportFile,
+      consumerTriageReportFile: params.consumerTriageReportFile,
+      outFile: params.outFile,
     }),
     {
       stdio: 'inherit',
@@ -803,6 +853,30 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askPhase5BlockersReadiness = async (): Promise<{
+      windsurfReportFile: string;
+      consumerTriageReportFile: string;
+      outFile: string;
+    }> => {
+      const windsurfPrompt = await rl.question(
+        'windsurf report path [docs/validation/windsurf-real-session-report.md]: '
+      );
+      const consumerPrompt = await rl.question(
+        'consumer triage report path [docs/validation/consumer-startup-triage-report.md]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/phase5-blockers-readiness.md]: '
+      );
+
+      return {
+        windsurfReportFile:
+          windsurfPrompt.trim() || 'docs/validation/windsurf-real-session-report.md',
+        consumerTriageReportFile:
+          consumerPrompt.trim() || 'docs/validation/consumer-startup-triage-report.md',
+        outFile: outPrompt.trim() || 'docs/validation/phase5-blockers-readiness.md',
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -938,6 +1012,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '20',
+        label: 'Build phase5 blockers readiness report',
+        execute: async () => {
+          const report = await askPhase5BlockersReadiness();
+          await runPhase5BlockersReadiness(report);
+        },
+      },
+      {
+        id: '21',
         label: 'Exit',
         execute: async () => {},
       },
@@ -957,7 +1039,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '20') {
+      if (selected.id === '21') {
         break;
       }
 

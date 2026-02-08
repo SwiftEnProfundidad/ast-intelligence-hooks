@@ -5,6 +5,7 @@ import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
   buildConsumerStartupTriageCommandArgs,
+  buildPhase5BlockersReadinessCommandArgs,
   buildSkillsLockCheckCommandArgs,
   buildValidationDocsHygieneCommandArgs,
   buildMenuGateParams,
@@ -189,5 +190,26 @@ test('builds deterministic command args for consumer startup triage with workflo
     '/tmp/consumer',
     '--actionlint-bin',
     '/tmp/actionlint',
+  ]);
+});
+
+test('builds deterministic command args for phase5 blockers readiness report', () => {
+  const args = buildPhase5BlockersReadinessCommandArgs({
+    scriptPath: '/repo/scripts/build-phase5-blockers-readiness.ts',
+    windsurfReportFile: 'docs/validation/windsurf-real-session-report.md',
+    consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
+    outFile: 'docs/validation/phase5-blockers-readiness.md',
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-phase5-blockers-readiness.ts',
+    '--windsurf-report',
+    'docs/validation/windsurf-real-session-report.md',
+    '--consumer-triage-report',
+    'docs/validation/consumer-startup-triage-report.md',
+    '--out',
+    'docs/validation/phase5-blockers-readiness.md',
   ]);
 });

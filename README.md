@@ -211,6 +211,12 @@ npm run validation:consumer-startup-unblock-status -- \
   --auth-report docs/validation/consumer-ci-auth-check.md \
   --workflow-lint-report docs/validation/consumer-workflow-lint-report.md \
   --out docs/validation/consumer-startup-unblock-status.md
+
+# Build consolidated readiness report for pending Phase 5 blockers
+npm run validation:phase5-blockers-readiness -- \
+  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
+  --out docs/validation/phase5-blockers-readiness.md
 ```
 
 Related docs:
