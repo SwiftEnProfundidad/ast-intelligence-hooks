@@ -33,6 +33,7 @@ These files are command outputs and should be generated per execution context:
 - `consumer-startup-failure-support-bundle.md`
 - `consumer-support-ticket-draft.md`
 - `consumer-startup-unblock-status.md`
+- `consumer-startup-triage-report.md`
 - `windsurf-session-status.md`
 - `windsurf-real-session-report.md`
 
@@ -44,6 +45,7 @@ Generate them on demand with:
 - `npm run validation:consumer-support-bundle -- --repo <owner>/<repo>`
 - `npm run validation:consumer-support-ticket-draft -- --repo <owner>/<repo>`
 - `npm run validation:consumer-startup-unblock-status -- --repo <owner>/<repo>`
+- `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --skip-workflow-lint`
 - `npm run validation:windsurf-session-status`
 - `npm run validation:windsurf-real-session-report`
 

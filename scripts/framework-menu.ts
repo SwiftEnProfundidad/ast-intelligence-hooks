@@ -125,6 +125,42 @@ export const buildWindsurfRealSessionReportCommandArgs = (params: {
   ];
 };
 
+export const buildConsumerStartupTriageCommandArgs = (params: {
+  scriptPath: string;
+  repo: string;
+  limit: number;
+  outDir: string;
+  runWorkflowLint: boolean;
+  repoPath?: string;
+  actionlintBin?: string;
+}): string[] => {
+  const args = [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+    '--repo',
+    params.repo,
+    '--limit',
+    String(params.limit),
+    '--out-dir',
+    params.outDir,
+  ];
+
+  if (!params.runWorkflowLint) {
+    args.push('--skip-workflow-lint');
+    return args;
+  }
+
+  if (params.repoPath) {
+    args.push('--repo-path', params.repoPath);
+  }
+  if (params.actionlintBin) {
+    args.push('--actionlint-bin', params.actionlintBin);
+  }
+
+  return args;
+};
+
 export const buildValidationDocsHygieneCommandArgs = (params: {
   scriptPath: string;
 }): string[] => {
@@ -216,6 +252,40 @@ const runSkillsLockCheck = async (): Promise<number> => {
     }
     return 1;
   }
+};
+
+const runConsumerStartupTriage = async (params: {
+  repo: string;
+  limit: number;
+  outDir: string;
+  runWorkflowLint: boolean;
+  repoPath?: string;
+  actionlintBin?: string;
+}): Promise<void> => {
+  const scriptPath = resolve(process.cwd(), 'scripts/build-consumer-startup-triage.ts');
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-consumer-startup-triage.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    buildConsumerStartupTriageCommandArgs({
+      scriptPath,
+      repo: params.repo,
+      limit: params.limit,
+      outDir: params.outDir,
+      runWorkflowLint: params.runWorkflowLint,
+      repoPath: params.repoPath,
+      actionlintBin: params.actionlintBin,
+    }),
+    {
+      stdio: 'inherit',
+    }
+  );
 };
 
 const runConsumerCiAuthCheck = async (params: {
@@ -684,6 +754,55 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askConsumerStartupTriage = async (): Promise<{
+      repo: string;
+      limit: number;
+      outDir: string;
+      runWorkflowLint: boolean;
+      repoPath?: string;
+      actionlintBin?: string;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [owner/repo]: '
+      );
+      const limitPrompt = await rl.question('runs to inspect [20]: ');
+      const outDirPrompt = await rl.question(
+        'output directory [docs/validation]: '
+      );
+      const workflowLintPrompt = await rl.question(
+        'include workflow lint? [no]: '
+      );
+
+      const runWorkflowLint = workflowLintPrompt.trim().toLowerCase().startsWith('y');
+
+      if (!runWorkflowLint) {
+        return {
+          repo: repoPrompt.trim() || 'owner/repo',
+          limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
+          outDir: outDirPrompt.trim() || 'docs/validation',
+          runWorkflowLint: false,
+        };
+      }
+
+      const repoPathPrompt = await rl.question(
+        'consumer repo path [/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO]: '
+      );
+      const actionlintBinPrompt = await rl.question(
+        'actionlint binary [/tmp/actionlint-bin/actionlint]: '
+      );
+
+      return {
+        repo: repoPrompt.trim() || 'owner/repo',
+        limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
+        outDir: outDirPrompt.trim() || 'docs/validation',
+        runWorkflowLint: true,
+        repoPath:
+          repoPathPrompt.trim() ||
+          '/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO',
+        actionlintBin: actionlintBinPrompt.trim() || '/tmp/actionlint-bin/actionlint',
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -811,6 +930,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '19',
+        label: 'Run consumer startup triage bundle',
+        execute: async () => {
+          const triage = await askConsumerStartupTriage();
+          await runConsumerStartupTriage(triage);
+        },
+      },
+      {
+        id: '20',
         label: 'Exit',
         execute: async () => {},
       },
@@ -830,7 +957,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '19') {
+      if (selected.id === '20') {
         break;
       }
 

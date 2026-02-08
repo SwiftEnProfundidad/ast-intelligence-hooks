@@ -13,6 +13,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Windsurf hook-runtime hardening and diagnostics commands are implemented.
 - Consumer CI diagnostic tooling is implemented (artifact scan, auth check, support bundle, ticket draft).
 - Consumer startup-failure unblock status helper is implemented (`validation:consumer-startup-unblock-status`).
+- Consumer startup triage orchestrator is implemented (`validation:consumer-startup-triage`).
 - Windsurf real-session report generator is implemented (`validation:windsurf-real-session-report`).
 - Framework menu operational checks include docs hygiene and skills lock freshness (`skills:lock:check`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.

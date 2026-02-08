@@ -168,6 +168,18 @@ Validation docs:
 Generate a consumer-repository CI run/artifact report (for rollout validation and startup-failure triage):
 
 ```bash
+# One-shot triage bundle (auth + artifacts + support bundle + ticket draft + unblock status)
+npm run validation:consumer-startup-triage -- \
+  --repo <owner>/<repo> \
+  --out-dir docs/validation \
+  --skip-workflow-lint
+
+# Optional: include semantic workflow lint in the one-shot triage run
+npm run validation:consumer-startup-triage -- \
+  --repo <owner>/<repo> \
+  --repo-path /Users/you/Projects/consumer-repo \
+  --actionlint-bin /tmp/actionlint-bin/actionlint
+
 npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
   --out docs/validation/consumer-ci-artifacts-report.md
 

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
+  buildConsumerStartupTriageCommandArgs,
   buildSkillsLockCheckCommandArgs,
   buildValidationDocsHygieneCommandArgs,
   buildMenuGateParams,
@@ -137,5 +138,56 @@ test('builds deterministic command args for skills lock freshness check', () => 
   assert.deepEqual(args, [
     'run',
     'skills:lock:check',
+  ]);
+});
+
+test('builds deterministic command args for consumer startup triage without workflow lint', () => {
+  const args = buildConsumerStartupTriageCommandArgs({
+    scriptPath: '/repo/scripts/build-consumer-startup-triage.ts',
+    repo: 'owner/repo',
+    limit: 20,
+    outDir: 'docs/validation',
+    runWorkflowLint: false,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-consumer-startup-triage.ts',
+    '--repo',
+    'owner/repo',
+    '--limit',
+    '20',
+    '--out-dir',
+    'docs/validation',
+    '--skip-workflow-lint',
+  ]);
+});
+
+test('builds deterministic command args for consumer startup triage with workflow lint', () => {
+  const args = buildConsumerStartupTriageCommandArgs({
+    scriptPath: '/repo/scripts/build-consumer-startup-triage.ts',
+    repo: 'owner/repo',
+    limit: 25,
+    outDir: 'docs/validation',
+    runWorkflowLint: true,
+    repoPath: '/tmp/consumer',
+    actionlintBin: '/tmp/actionlint',
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-consumer-startup-triage.ts',
+    '--repo',
+    'owner/repo',
+    '--limit',
+    '25',
+    '--out-dir',
+    'docs/validation',
+    '--repo-path',
+    '/tmp/consumer',
+    '--actionlint-bin',
+    '/tmp/actionlint',
   ]);
 });
