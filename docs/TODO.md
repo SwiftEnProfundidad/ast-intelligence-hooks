@@ -28,16 +28,19 @@ For full historical execution details, see:
 
 ## Active Work
 
-- [ ] Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
-  - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session.
-  - Compare outcome with `docs/validation/windsurf-hook-runtime-local-report.md`.
-  - Record final evidence using `docs/validation/windsurf-real-session-report-template.md` or generate it with `validation:windsurf-real-session-report`.
 - [ ] Consumer private-repo Actions startup-failure unblock:
   - Confirm billing/policy state after token refresh with `user` scope.
   - Re-run consumer CI diagnostics and attach fresh generated outputs.
 - [ ] Documentation hygiene maintenance:
   - Keep only runbooks/guides versioned under `docs/validation/` root.
   - Keep generated reports out of baseline docs and regenerate on demand.
+
+## Deferred Adapter Validation
+
+- [ ] Windsurf pre/post tool hooks reliability (`bash: node: command not found`):
+  - Execute `docs/validation/windsurf-hook-runtime-validation.md` in a real Windsurf session.
+  - Compare outcome with `docs/validation/windsurf-hook-runtime-local-report.md`.
+  - Record final evidence using `docs/validation/windsurf-real-session-report-template.md` or generate it with `validation:windsurf-real-session-report`.
 
 ## Skills Enforcement Roadmap (Status)
 

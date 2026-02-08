@@ -146,30 +146,11 @@ Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
 Pumuki gate execution is IDE-agnostic by design.
 
 - The deterministic gate flow (`Facts -> Rules -> Gate -> ai_evidence`) runs through `core/*` and `integrations/*`.
-- IDE-specific tooling (Windsurf diagnostics, reports, local runtime checks) is implemented under `scripts/*` and `docs/validation/*`.
-- PRE_COMMIT / PRE_PUSH / CI do not require Windsurf commands to pass.
-
-## Windsurf Hook Runtime Hardening (Optional Diagnostics)
-
-Runtime and configuration commands:
-
-```bash
-npm run print:windsurf-hooks-config
-npm run install:windsurf-hooks-config
-npm run verify:windsurf-hooks-runtime
-npm run validate:windsurf-hooks-local
-npm run assess:windsurf-hooks-session
-npm run assess:windsurf-hooks-session:any
-npm run validation:windsurf-session-status -- --out docs/validation/windsurf-session-status.md
-npm run validation:windsurf-real-session-report -- \
-  --status-report docs/validation/windsurf-session-status.md \
-  --out docs/validation/windsurf-real-session-report.md
-```
-
-Validation docs:
-
-- `docs/validation/windsurf-hook-runtime-validation.md`
-- `docs/validation/windsurf-hook-runtime-local-report.md`
+- IDE/editor adapter diagnostics (Windsurf today, additional IDEs/CLIs/extensions in future) are isolated under `scripts/*` and `docs/validation/*`.
+- PRE_COMMIT / PRE_PUSH / CI do not require any IDE adapter command to pass.
+- Adapter diagnostics are operational and optional:
+  - `docs/validation/README.md`
+  - `docs/validation/phase5-execution-closure.md`
 
 ## Consumer CI Diagnostics
 
@@ -220,7 +201,7 @@ npm run validation:consumer-startup-unblock-status -- \
   --workflow-lint-report docs/validation/consumer-workflow-lint-report.md \
   --out docs/validation/consumer-startup-unblock-status.md
 
-# Build consolidated readiness report for pending Phase 5 blockers
+# Build consolidated readiness report for pending Phase 5 diagnostics blockers (optional)
 npm run validation:phase5-blockers-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
