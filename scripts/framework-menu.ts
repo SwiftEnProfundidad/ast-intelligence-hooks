@@ -43,6 +43,42 @@ const runAndPrintExitCode = async (run: () => Promise<number>): Promise<void> =>
   output.write(`\nExit code: ${code}\n`);
 };
 
+const runConsumerCiArtifactsScan = async (params: {
+  repo: string;
+  limit: number;
+  outFile: string;
+}): Promise<void> => {
+  const scanScriptPath = resolve(
+    process.cwd(),
+    'scripts/collect-consumer-ci-artifacts.ts'
+  );
+
+  if (!existsSync(scanScriptPath)) {
+    output.write(
+      '\nCould not find scripts/collect-consumer-ci-artifacts.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    [
+      '--yes',
+      'tsx@4.21.0',
+      scanScriptPath,
+      '--repo',
+      params.repo,
+      '--limit',
+      String(params.limit),
+      '--out',
+      params.outFile,
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 export const buildMenuGateParams = (params: {
   stage: MenuStage;
   scope: MenuScope;
@@ -136,6 +172,31 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askConsumerCiScan = async (): Promise<{
+      repo: string;
+      limit: number;
+      outFile: string;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+      );
+      const limitPrompt = await rl.question('runs to inspect [20]: ');
+      const outPrompt = await rl.question(
+        'output path [docs/validation/consumer-ci-artifacts-report.md]: '
+      );
+
+      const repo = repoPrompt.trim() || 'SwiftEnProfundidad/R_GO';
+      const limit = Number.parseInt(limitPrompt.trim() || '20', 10);
+      const outFile =
+        outPrompt.trim() || 'docs/validation/consumer-ci-artifacts-report.md';
+
+      return {
+        repo,
+        limit: Number.isFinite(limit) && limit > 0 ? limit : 20,
+        outFile,
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -189,6 +250,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '9',
+        label: 'Collect consumer CI artifacts report',
+        execute: async () => {
+          const scan = await askConsumerCiScan();
+          await runConsumerCiArtifactsScan(scan);
+        },
+      },
+      {
+        id: '10',
         label: 'Exit',
         execute: async () => {},
       },
@@ -208,7 +277,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '9') {
+      if (selected.id === '10') {
         break;
       }
 
