@@ -23,8 +23,8 @@ Optional adapter diagnostics input:
 Run in this repository:
 
 ```bash
-npm run validation:windsurf-session-status -- --out docs/validation/windsurf-session-status.md
-npm run validation:windsurf-real-session-report -- \
+npm run validation:adapter-session-status -- --out docs/validation/windsurf-session-status.md
+npm run validation:adapter-real-session-report -- \
   --status-report docs/validation/windsurf-session-status.md \
   --out docs/validation/windsurf-real-session-report.md
 ```
@@ -103,7 +103,7 @@ Phase 5 execution closure is complete when all are true:
 
 ## Quick Checklist
 
-- [ ] `validation:windsurf-real-session-report` generated and reviewed
+- [ ] `validation:adapter-real-session-report` generated and reviewed
 - [ ] `validation:adapter-readiness` generated and reviewed
 - [ ] `validation:consumer-startup-triage` generated against target repo
 - [ ] `validation:phase5-blockers-readiness` returns `verdict=READY`

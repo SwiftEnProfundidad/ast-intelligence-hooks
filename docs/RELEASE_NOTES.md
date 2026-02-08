@@ -57,6 +57,9 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - explicit diagnostics (`--diagnose`, `PUMUKI_HOOK_DIAGNOSTIC=1`)
   - local diagnostics collector + repeatable local simulation command:
     - `npm run validate:windsurf-hooks-local`
+  - provider-agnostic alias commands:
+    - `npm run validation:adapter-session-status`
+    - `npm run validation:adapter-real-session-report`
   - real-session validation checklist:
     - `docs/validation/windsurf-hook-runtime-validation.md`
 - Consumer startup diagnostics one-shot orchestrator:

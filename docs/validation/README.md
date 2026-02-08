@@ -54,6 +54,8 @@ Generate them on demand with:
 - optional strict mode:
   - `npm run validation:phase5-blockers-readiness -- --require-windsurf-report --windsurf-report docs/validation/windsurf-real-session-report.md --consumer-triage-report docs/validation/consumer-startup-triage-report.md`
 - `npm run validation:adapter-readiness`
+- `npm run validation:adapter-session-status`
+- `npm run validation:adapter-real-session-report`
 - `npm run validation:windsurf-session-status`
 - `npm run validation:windsurf-real-session-report`
 
