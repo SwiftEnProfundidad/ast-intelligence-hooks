@@ -43,6 +43,19 @@ npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
 Generate support payload bundle:
 
 ```bash
+# One-shot triage orchestration (recommended)
+npm run validation:consumer-startup-triage -- \
+  --repo <owner>/<repo> \
+  --out-dir docs/validation \
+  --skip-workflow-lint
+
+# Optional: include workflow lint in the orchestration
+npm run validation:consumer-startup-triage -- \
+  --repo <owner>/<repo> \
+  --repo-path /absolute/path/to/consumer-repo \
+  --actionlint-bin /tmp/actionlint-bin/actionlint
+
+# Equivalent individual commands:
 npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 \
   --out docs/validation/<repo>-consumer-support-bundle.md
 
@@ -162,3 +175,4 @@ If unresolved after workflow and access-level checks:
 - `docs/validation/archive/skills-rollout-r_go-multi-platform-report.md`
 - `docs/validation/archive/private-actions-healthcheck.md`
 - `docs/validation/consumer-startup-failure-support-bundle.md`
+- `docs/validation/consumer-startup-triage-report.md`
