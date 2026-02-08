@@ -67,6 +67,14 @@ npm run validation:adapter-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --out docs/validation/adapter-readiness.md
 
+# Adapter runtime status/report aliases (provider-agnostic command naming)
+npm run validation:adapter-session-status -- \
+  --out docs/validation/windsurf-session-status.md
+
+npm run validation:adapter-real-session-report -- \
+  --status-report docs/validation/windsurf-session-status.md \
+  --out docs/validation/windsurf-real-session-report.md
+
 # Phase 5 consolidated readiness (consumer triage required, adapter report optional by default)
 npm run validation:phase5-blockers-readiness -- \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \

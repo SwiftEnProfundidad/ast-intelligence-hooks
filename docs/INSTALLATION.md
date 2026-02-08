@@ -49,6 +49,13 @@ Optional adapter readiness check:
 npm run validation:adapter-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --out docs/validation/adapter-readiness.md
+
+npm run validation:adapter-session-status -- \
+  --out docs/validation/windsurf-session-status.md
+
+npm run validation:adapter-real-session-report -- \
+  --status-report docs/validation/windsurf-session-status.md \
+  --out docs/validation/windsurf-real-session-report.md
 ```
 
 Note: the current adapter implementation uses `--windsurf-report` as the adapter input flag.

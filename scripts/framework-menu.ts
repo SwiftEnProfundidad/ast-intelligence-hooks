@@ -904,7 +904,7 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const windsurfPrompt = await rl.question(
-        'windsurf report path [docs/validation/windsurf-real-session-report.md]: '
+        'adapter report path [docs/validation/windsurf-real-session-report.md]: '
       );
       const consumerPrompt = await rl.question(
         'consumer triage report path [docs/validation/consumer-startup-triage-report.md]: '
@@ -927,7 +927,7 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const windsurfPrompt = await rl.question(
-        'windsurf report path [docs/validation/windsurf-real-session-report.md]: '
+        'adapter report path [docs/validation/windsurf-real-session-report.md]: '
       );
       const outPrompt = await rl.question(
         'output path [docs/validation/adapter-readiness.md]: '
@@ -993,7 +993,7 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '9',
-        label: 'Build Windsurf session status report (optional diagnostics)',
+        label: 'Build adapter session status report (optional diagnostics)',
         execute: async () => {
           const report = await askWindsurfSessionStatusReport();
           await runWindsurfSessionStatusReport(report);
@@ -1049,7 +1049,7 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '16',
-        label: 'Build Windsurf real-session report (optional diagnostics)',
+        label: 'Build adapter real-session report (optional diagnostics)',
         execute: async () => {
           const report = await askWindsurfRealSessionReport();
           await runWindsurfRealSessionReport(report);

@@ -66,6 +66,8 @@
     "validation:consumer-startup-unblock-status": "npx --yes tsx@4.21.0 scripts/build-consumer-startup-unblock-status.ts",
     "validation:consumer-startup-triage": "npx --yes tsx@4.21.0 scripts/build-consumer-startup-triage.ts",
     "validation:adapter-readiness": "npx --yes tsx@4.21.0 scripts/build-adapter-readiness.ts",
+    "validation:adapter-real-session-report": "npx --yes tsx@4.21.0 scripts/build-windsurf-real-session-report.ts",
+    "validation:adapter-session-status": "npx --yes tsx@4.21.0 scripts/build-windsurf-session-status.ts",
     "validation:phase5-blockers-readiness": "npx --yes tsx@4.21.0 scripts/build-phase5-blockers-readiness.ts",
     "validation:docs-hygiene": "npx --yes tsx@4.21.0 scripts/check-validation-docs-hygiene.ts",
     "validation:windsurf-real-session-report": "npx --yes tsx@4.21.0 scripts/build-windsurf-real-session-report.ts",

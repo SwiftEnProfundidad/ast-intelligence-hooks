@@ -119,6 +119,13 @@ npm run validation:adapter-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --out docs/validation/adapter-readiness.md
 
+npm run validation:adapter-session-status -- \
+  --out docs/validation/windsurf-session-status.md
+
+npm run validation:adapter-real-session-report -- \
+  --status-report docs/validation/windsurf-session-status.md \
+  --out docs/validation/windsurf-real-session-report.md
+
 npm run validation:phase5-blockers-readiness -- \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md

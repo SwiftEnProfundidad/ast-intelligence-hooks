@@ -218,6 +218,14 @@ npm run validation:phase5-blockers-readiness -- \
 npm run validation:adapter-readiness -- \
   --windsurf-report docs/validation/windsurf-real-session-report.md \
   --out docs/validation/adapter-readiness.md
+
+# Optional adapter status/report aliases (provider-agnostic command naming)
+npm run validation:adapter-session-status -- \
+  --out docs/validation/windsurf-session-status.md
+
+npm run validation:adapter-real-session-report -- \
+  --status-report docs/validation/windsurf-session-status.md \
+  --out docs/validation/windsurf-real-session-report.md
 ```
 
 Related docs:

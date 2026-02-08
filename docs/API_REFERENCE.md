@@ -136,6 +136,8 @@ Files:
 Commands:
 
 - `npm run validation:adapter-readiness`
+- `npm run validation:adapter-session-status`
+- `npm run validation:adapter-real-session-report`
 - `npm run validation:phase5-blockers-readiness`
 
 Framework menu action:
