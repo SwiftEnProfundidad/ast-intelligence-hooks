@@ -22,6 +22,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - IDE-agnostic boundary guardrail test is implemented for `core/*` and `integrations/*`.
 - Rule-pack version-to-doc sync guardrail test is implemented (`scripts/__tests__/rule-pack-docs-sync.test.ts`).
 - Active enterprise docs IDE/provider-agnostic guardrail test is implemented (`scripts/__tests__/enterprise-docs-agnostic.test.ts`).
+- Active docs index coverage guardrail test is implemented (`scripts/__tests__/docs-index-coverage.test.ts`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
 
 For full historical execution details, see:

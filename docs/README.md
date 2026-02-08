@@ -8,6 +8,7 @@ This index is the canonical entry point for framework documentation in this repo
 - `ARCHITECTURE_DETAILED.md`: deeper implementation-level architecture details.
 - `HOW_IT_WORKS.md`: operational flow from facts to evidence.
 - `API_REFERENCE.md`: exported APIs and integration entrypoints.
+- `AST_HEURISTICS_REINTRODUCTION_PLAN.md`: staged plan for semantic heuristics.
 
 ## Configuration and Operations
 
@@ -18,6 +19,10 @@ This index is the canonical entry point for framework documentation in this repo
 - `CODE_STANDARDS.md`: coding conventions for v2.x work.
 - `DEPENDENCIES.md`: dependency policy and maintenance notes.
 - `TESTING.md`: validation strategy and test command matrix.
+- `BRANCH_PROTECTION_GUIDE.md`: branch protection policy and setup.
+- `alerting-system.md`: operational alerting implementation notes.
+- `observability.md`: observability reference.
+- `skills-repo-enforcement-migration.md`: migration path for skills enforcement.
 
 ## Evidence and Integrations
 
@@ -41,7 +46,14 @@ This index is the canonical entry point for framework documentation in this repo
 - `validation/phase5-execution-closure.md`
 - `validation/adapter-hook-runtime-validation.md`
 - `validation/adapter-hook-runtime-local-report.md`
+- `validation/adapter-real-session-report-template.md`
+- `validation/github-support-ticket-template-startup-failure.md`
+- `validation/skills-rollout-consumer-repositories.md`
 - `validation/archive/README.md`: historical validation reports.
+
+## Assets
+
+- `images/README.md`: visual asset inventory and usage notes.
 
 ## Change Tracking
 
