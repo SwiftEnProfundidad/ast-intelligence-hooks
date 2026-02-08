@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { cpSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
+import { createTempDir, removeTempDir } from '../../__tests__/helpers/tempDir';
 import {
   checkSkillsLockStatus,
   compileSkillsLock,
@@ -17,7 +17,7 @@ import {
 const FIXTURE_ROOT = resolve(__dirname, 'fixtures', 'skills-compiler');
 
 const prepareFixtureRepo = (): string => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-skills-compiler-'));
+  const tempRoot = createTempDir('pumuki-skills-compiler-');
   cpSync(FIXTURE_ROOT, tempRoot, { recursive: true });
   return tempRoot;
 };
@@ -43,7 +43,7 @@ test('compiles lock from curated templates and validates schema', () => {
     assert.ok(iosBundle);
     assert.equal(iosBundle.rules.some((rule) => rule.id === 'skills.ios.no-force-try'), true);
   } finally {
-    rmSync(repoRoot, { recursive: true, force: true });
+    removeTempDir(repoRoot);
   }
 });
 
@@ -69,7 +69,7 @@ test('produces deterministic lock hash regardless of bundle order in manifest', 
     const hashB = createSkillsLockDeterministicHash(lockB);
     assert.equal(hashA, hashB);
   } finally {
-    rmSync(repoRoot, { recursive: true, force: true });
+    removeTempDir(repoRoot);
   }
 });
 
@@ -100,7 +100,7 @@ test('writes lock file and reports fresh status when up to date', () => {
 
     assert.equal(status.status, 'fresh');
   } finally {
-    rmSync(repoRoot, { recursive: true, force: true });
+    removeTempDir(repoRoot);
   }
 });
 
@@ -134,7 +134,7 @@ test('reports stale status when source skills change', () => {
 
     assert.equal(status.status, 'stale');
   } finally {
-    rmSync(repoRoot, { recursive: true, force: true });
+    removeTempDir(repoRoot);
   }
 });
 
@@ -158,6 +158,6 @@ test('reports missing and invalid states for lock check', () => {
     });
     assert.equal(invalid.status, 'invalid');
   } finally {
-    rmSync(repoRoot, { recursive: true, force: true });
+    removeTempDir(repoRoot);
   }
 });

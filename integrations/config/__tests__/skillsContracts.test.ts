@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { withTempDir } from '../../__tests__/helpers/tempDir';
 import {
   createSkillsLockDeterministicHash,
   isSkillsLockV1,
@@ -216,10 +216,8 @@ test('creates deterministic policy hash independent from key and list order', ()
   assert.notEqual(hashA, changedHash);
 });
 
-test('loads lock and policy from repository files when valid', () => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-skills-contracts-'));
-
-  try {
+test('loads lock and policy from repository files when valid', async () => {
+  await withTempDir('pumuki-skills-contracts-', async (tempRoot) => {
     writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock(), null, 2));
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(samplePolicy(), null, 2));
 
@@ -228,15 +226,11 @@ test('loads lock and policy from repository files when valid', () => {
 
     assert.deepEqual(loadedLock, sampleLock());
     assert.deepEqual(loadedPolicy, samplePolicy());
-  } finally {
-    rmSync(tempRoot, { recursive: true, force: true });
-  }
+  });
 });
 
-test('returns undefined for missing or invalid contract files', () => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-skills-contracts-missing-'));
-
-  try {
+test('returns undefined for missing or invalid contract files', async () => {
+  await withTempDir('pumuki-skills-contracts-missing-', async (tempRoot) => {
     assert.equal(loadSkillsLock(tempRoot), undefined);
     assert.equal(loadSkillsPolicy(tempRoot), undefined);
 
@@ -245,7 +239,5 @@ test('returns undefined for missing or invalid contract files', () => {
 
     assert.equal(loadSkillsLock(tempRoot), undefined);
     assert.equal(loadSkillsPolicy(tempRoot), undefined);
-  } finally {
-    rmSync(tempRoot, { recursive: true, force: true });
-  }
+  });
 });

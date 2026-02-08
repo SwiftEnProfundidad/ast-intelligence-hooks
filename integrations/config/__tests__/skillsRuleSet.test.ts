@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { loadSkillsRuleSetForStage } from '../skillsRuleSet';
 
 const sampleLock = {
@@ -77,10 +77,8 @@ const samplePolicy = {
   },
 } as const;
 
-test('loads and transforms active bundles into heuristic-driven rules', () => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-skills-ruleset-'));
-
-  try {
+test('loads and transforms active bundles into heuristic-driven rules', async () => {
+  await withTempDir('pumuki-skills-ruleset-', async (tempRoot) => {
     writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(samplePolicy, null, 2));
 
@@ -101,22 +99,15 @@ test('loads and transforms active bundles into heuristic-driven rules', () => {
     assert.equal(firstRule.when.where?.ruleId, 'heuristics.ios.force-try.ast');
     assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.force-try.ast'), true);
     assert.equal(prePush.requiresHeuristicFacts, true);
-  } finally {
-    rmSync(tempRoot, { recursive: true, force: true });
-  }
+  });
 });
 
-test('falls back gracefully when lock/policy files are missing', () => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-skills-ruleset-empty-'));
-
-  try {
+test('falls back gracefully when lock/policy files are missing', async () => {
+  await withTempDir('pumuki-skills-ruleset-empty-', async (tempRoot) => {
     const result = loadSkillsRuleSetForStage('CI', tempRoot);
     assert.equal(result.rules.length, 0);
     assert.equal(result.activeBundles.length, 0);
     assert.equal(result.requiresHeuristicFacts, false);
     assert.equal(result.mappedHeuristicRuleIds.size, 0);
-  } finally {
-    rmSync(tempRoot, { recursive: true, force: true });
-  }
+  });
 });
-

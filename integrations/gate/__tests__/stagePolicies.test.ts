@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { evaluateGate } from '../../../core/gate/evaluateGate';
 import { evaluateRules } from '../../../core/gate/evaluateRules';
 import { astHeuristicsRuleSet } from '../../../core/rules/presets/astHeuristicsRuleSet';
+import { withTempDir } from '../../__tests__/helpers/tempDir';
 import {
   applyHeuristicSeverityForStage,
   policyForCI,
@@ -39,22 +39,17 @@ test('returns expected gate policy thresholds per stage', () => {
   });
 });
 
-test('resolves stage policy defaults when skills policy file is missing', () => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-stage-policy-default-'));
-
-  try {
+test('resolves stage policy defaults when skills policy file is missing', async () => {
+  await withTempDir('pumuki-stage-policy-default-', async (tempRoot) => {
     const resolved = resolvePolicyForStage('PRE_COMMIT', tempRoot);
     assert.deepEqual(resolved.policy, policyForPreCommit());
     assert.equal(resolved.trace.source, 'default');
     assert.equal(resolved.trace.bundle, 'gate-policy.default.PRE_COMMIT');
     assert.match(resolved.trace.hash, /^[A-Fa-f0-9]{64}$/);
-  } finally {
-    rmSync(tempRoot, { recursive: true, force: true });
-  }
+  });
 });
 
-test('resolves stage policy overrides from skills.policy.json', () => {
-  const tempRoot = mkdtempSync(join(tmpdir(), 'pumuki-stage-policy-skills-'));
+test('resolves stage policy overrides from skills.policy.json', async () => {
   const skillsPolicy = {
     version: '1.0',
     defaultBundleEnabled: true,
@@ -66,7 +61,7 @@ test('resolves stage policy overrides from skills.policy.json', () => {
     bundles: {},
   };
 
-  try {
+  await withTempDir('pumuki-stage-policy-skills-', async (tempRoot) => {
     writeFileSync(
       join(tempRoot, 'skills.policy.json'),
       JSON.stringify(skillsPolicy, null, 2),
@@ -82,9 +77,7 @@ test('resolves stage policy overrides from skills.policy.json', () => {
     assert.equal(resolved.trace.source, 'skills.policy');
     assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_COMMIT');
     assert.match(resolved.trace.hash, /^[A-Fa-f0-9]{64}$/);
-  } finally {
-    rmSync(tempRoot, { recursive: true, force: true });
-  }
+  });
 });
 
 test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
