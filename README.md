@@ -61,6 +61,8 @@ Interactive:
 npm run framework:menu
 ```
 
+The interactive menu includes stage evaluation, Windsurf report generation, consumer diagnostics, and the `docs/validation` hygiene check.
+
 Direct stage wrappers:
 
 ```bash
@@ -81,6 +83,12 @@ npm run test:evidence
 npm run test:mcp
 npm run test:heuristics
 npm run test:deterministic
+```
+
+### Validation docs hygiene
+
+```bash
+npm run validation:docs-hygiene
 ```
 
 ## Rule Packs and Overrides
