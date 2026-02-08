@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { runCiStage, runPreCommitStage, runPrePushStage } from '../stageRunners';
+import {
+  runGit,
+  withGithubBaseRef,
+  withSilencedConsoleLog,
+  withTempRepo,
+} from './helpers/gitTestUtils';
 
 type StageName = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
@@ -21,38 +25,6 @@ type EvidenceShape = {
     findings: Array<{ ruleId: string }>;
   };
   rulesets: Array<{ platform: string; bundle: string; hash: string }>;
-};
-
-const runGit = (cwd: string, args: ReadonlyArray<string>): string => {
-  return execFileSync('git', args, { cwd, encoding: 'utf8' });
-};
-
-const withSilencedConsoleLog = async (callback: () => Promise<void>): Promise<void> => {
-  const originalConsoleLog = console.log;
-  console.log = () => {};
-
-  try {
-    await callback();
-  } finally {
-    console.log = originalConsoleLog;
-  }
-};
-
-const withTempRepo = async (callback: (repoRoot: string) => Promise<void>) => {
-  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-stage-runner-'));
-  const previousCwd = process.cwd();
-
-  try {
-    runGit(repoRoot, ['init']);
-    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
-    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
-    runGit(repoRoot, ['branch', '-M', 'main']);
-    process.chdir(repoRoot);
-    await callback(repoRoot);
-  } finally {
-    process.chdir(previousCwd);
-    rmSync(repoRoot, { recursive: true, force: true });
-  }
 };
 
 const readEvidence = (repoRoot: string): EvidenceShape => {
@@ -129,26 +101,9 @@ const setupBackendCommitRangeWithoutUpstream = (repoRoot: string): void => {
   runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
 };
 
-const withGithubBaseRef = async (
-  ref: string,
-  callback: () => Promise<void>
-): Promise<void> => {
-  const previous = process.env.GITHUB_BASE_REF;
-  process.env.GITHUB_BASE_REF = ref;
-
-  try {
-    await callback();
-  } finally {
-    if (typeof previous === 'undefined') {
-      delete process.env.GITHUB_BASE_REF;
-    } else {
-      process.env.GITHUB_BASE_REF = previous;
-    }
-  }
-};
-
 test('runPreCommitStage uses skills stage policy override and writes policy trace into evidence', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
       PRE_COMMIT: {
         blockOnOrAbove: 'CRITICAL',
@@ -171,11 +126,14 @@ test('runPreCommitStage uses skills stage policy override and writes policy trac
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.PRE_COMMIT');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runPreCommitStage keeps default policy thresholds when skills policy is absent', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     stageBackendFile(repoRoot);
 
     const exitCode = await runPreCommitStage();
@@ -192,11 +150,14 @@ test('runPreCommitStage keeps default policy thresholds when skills policy is ab
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.default.PRE_COMMIT');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runPrePushStage uses skills policy override and writes PRE_PUSH policy trace', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
       PRE_PUSH: {
         blockOnOrAbove: 'ERROR',
@@ -219,11 +180,14 @@ test('runPrePushStage uses skills policy override and writes PRE_PUSH policy tra
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.PRE_PUSH');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runPrePushStage returns blocking exit code with strict WARN threshold override', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
       PRE_PUSH: {
         blockOnOrAbove: 'WARN',
@@ -248,11 +212,14 @@ test('runPrePushStage returns blocking exit code with strict WARN threshold over
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.PRE_PUSH');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is absent', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     setupBackendCommitRange(repoRoot);
 
     const exitCode = await runPrePushStage();
@@ -269,11 +236,14 @@ test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is ab
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.default.PRE_PUSH');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runPrePushStage falls back gracefully when branch has no upstream', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);
 
     const exitCode = await runPrePushStage();
@@ -285,11 +255,14 @@ test('runPrePushStage falls back gracefully when branch has no upstream', async 
     assert.equal(evidence.snapshot.outcome, 'PASS');
     assert.equal(evidence.snapshot.findings.length, 0);
     assertPolicyTrace(evidence, 'gate-policy.default.PRE_PUSH');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runCiStage uses skills policy override and writes CI policy trace', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
       CI: {
         blockOnOrAbove: 'ERROR',
@@ -298,10 +271,10 @@ test('runCiStage uses skills policy override and writes CI policy trace', async 
     });
     setupBackendCommitRange(repoRoot);
 
-    await withGithubBaseRef('main', async () => {
-      const exitCode = await runCiStage();
-      assert.equal(exitCode, 0);
-    });
+      await withGithubBaseRef('main', async () => {
+        const exitCode = await runCiStage();
+        assert.equal(exitCode, 0);
+      });
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
@@ -314,11 +287,14 @@ test('runCiStage uses skills policy override and writes CI policy trace', async 
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.CI');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runCiStage returns blocking exit code with strict WARN threshold override', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
       CI: {
         blockOnOrAbove: 'WARN',
@@ -345,17 +321,20 @@ test('runCiStage returns blocking exit code with strict WARN threshold override'
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.skills.policy.CI');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runCiStage keeps default CI thresholds when skills policy is absent', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     setupBackendCommitRange(repoRoot);
 
-    await withGithubBaseRef('main', async () => {
-      const exitCode = await runCiStage();
-      assert.equal(exitCode, 0);
-    });
+      await withGithubBaseRef('main', async () => {
+        const exitCode = await runCiStage();
+        assert.equal(exitCode, 0);
+      });
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
@@ -368,17 +347,20 @@ test('runCiStage keeps default CI thresholds when skills policy is absent', asyn
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.default.CI');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
 
 test('runCiStage falls back gracefully when GITHUB_BASE_REF is invalid', async () => {
-  await withTempRepo(async (repoRoot) => {
+  await withTempRepo(
+    async (repoRoot) => {
     setupBackendCommitRange(repoRoot);
 
-    await withGithubBaseRef('invalid/non-existent-ref', async () => {
-      const exitCode = await runCiStage();
-      assert.equal(exitCode, 0);
-    });
+      await withGithubBaseRef('invalid/non-existent-ref', async () => {
+        const exitCode = await runCiStage();
+        assert.equal(exitCode, 0);
+      });
 
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
@@ -391,5 +373,7 @@ test('runCiStage falls back gracefully when GITHUB_BASE_REF is invalid', async (
       true
     );
     assertPolicyTrace(evidence, 'gate-policy.default.CI');
-  });
+    },
+    { tempPrefix: 'pumuki-stage-runner-' }
+  );
 });
