@@ -208,24 +208,24 @@ npm run validation:phase5-blockers-readiness -- \
 
 # Optional strict mode: require adapter report in readiness verdict
 npm run validation:phase5-blockers-readiness -- \
-  --require-windsurf-report \
-  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --require-adapter-report \
+  --adapter-report docs/validation/adapter-real-session-report.md \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
 
 # Optional: generate adapter-only readiness report
-# (current adapter implementation consumes --windsurf-report as input path)
+# (current adapter implementation consumes --adapter-report as input path)
 npm run validation:adapter-readiness -- \
-  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --adapter-report docs/validation/adapter-real-session-report.md \
   --out docs/validation/adapter-readiness.md
 
 # Optional adapter status/report aliases (provider-agnostic command naming)
 npm run validation:adapter-session-status -- \
-  --out docs/validation/windsurf-session-status.md
+  --out docs/validation/adapter-session-status.md
 
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/windsurf-session-status.md \
-  --out docs/validation/windsurf-real-session-report.md
+  --status-report docs/validation/adapter-session-status.md \
+  --out docs/validation/adapter-real-session-report.md
 ```
 
 Related docs:

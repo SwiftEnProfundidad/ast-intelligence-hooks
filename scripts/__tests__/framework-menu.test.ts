@@ -10,7 +10,7 @@ import {
   buildSkillsLockCheckCommandArgs,
   buildValidationDocsHygieneCommandArgs,
   buildMenuGateParams,
-  buildWindsurfRealSessionReportCommandArgs,
+  buildAdapterRealSessionReportCommandArgs,
   formatActiveSkillsBundles,
 } from '../framework-menu';
 
@@ -104,21 +104,21 @@ test('builds menu gate params with default policy trace when skills policy is mi
   });
 });
 
-test('builds deterministic command args for windsurf real-session report', () => {
-  const args = buildWindsurfRealSessionReportCommandArgs({
-    scriptPath: '/repo/scripts/build-windsurf-real-session-report.ts',
-    statusReportFile: 'docs/validation/windsurf-session-status.md',
-    outFile: 'docs/validation/windsurf-real-session-report.md',
+test('builds deterministic command args for adapter real-session report', () => {
+  const args = buildAdapterRealSessionReportCommandArgs({
+    scriptPath: '/repo/scripts/build-adapter-real-session-report.ts',
+    statusReportFile: 'docs/validation/adapter-session-status.md',
+    outFile: 'docs/validation/adapter-real-session-report.md',
   });
 
   assert.deepEqual(args, [
     '--yes',
     'tsx@4.21.0',
-    '/repo/scripts/build-windsurf-real-session-report.ts',
+    '/repo/scripts/build-adapter-real-session-report.ts',
     '--status-report',
-    'docs/validation/windsurf-session-status.md',
+    'docs/validation/adapter-session-status.md',
     '--out',
-    'docs/validation/windsurf-real-session-report.md',
+    'docs/validation/adapter-real-session-report.md',
   ]);
 });
 
@@ -197,7 +197,7 @@ test('builds deterministic command args for consumer startup triage with workflo
 test('builds deterministic command args for phase5 blockers readiness report', () => {
   const args = buildPhase5BlockersReadinessCommandArgs({
     scriptPath: '/repo/scripts/build-phase5-blockers-readiness.ts',
-    windsurfReportFile: 'docs/validation/windsurf-real-session-report.md',
+    adapterReportFile: 'docs/validation/adapter-real-session-report.md',
     consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
     outFile: 'docs/validation/phase5-blockers-readiness.md',
   });
@@ -206,8 +206,8 @@ test('builds deterministic command args for phase5 blockers readiness report', (
     '--yes',
     'tsx@4.21.0',
     '/repo/scripts/build-phase5-blockers-readiness.ts',
-    '--windsurf-report',
-    'docs/validation/windsurf-real-session-report.md',
+    '--adapter-report',
+    'docs/validation/adapter-real-session-report.md',
     '--consumer-triage-report',
     'docs/validation/consumer-startup-triage-report.md',
     '--out',
@@ -218,7 +218,7 @@ test('builds deterministic command args for phase5 blockers readiness report', (
 test('builds deterministic command args for adapter readiness report', () => {
   const args = buildAdapterReadinessCommandArgs({
     scriptPath: '/repo/scripts/build-adapter-readiness.ts',
-    windsurfReportFile: 'docs/validation/windsurf-real-session-report.md',
+    adapterReportFile: 'docs/validation/adapter-real-session-report.md',
     outFile: 'docs/validation/adapter-readiness.md',
   });
 
@@ -226,8 +226,8 @@ test('builds deterministic command args for adapter readiness report', () => {
     '--yes',
     'tsx@4.21.0',
     '/repo/scripts/build-adapter-readiness.ts',
-    '--windsurf-report',
-    'docs/validation/windsurf-real-session-report.md',
+    '--adapter-report',
+    'docs/validation/adapter-real-session-report.md',
     '--out',
     'docs/validation/adapter-readiness.md',
   ]);

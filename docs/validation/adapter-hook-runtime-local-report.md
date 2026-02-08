@@ -1,17 +1,17 @@
-# Windsurf Hook Runtime - Local Validation Baseline
+# Adapter Hook Runtime - Local Validation Baseline
 
 ## Purpose
 
-Define the expected local validation flow for Windsurf hook runtime behavior before requesting a real IDE session replay.
+Define the expected local validation flow for Adapter hook runtime behavior before requesting a real IDE session replay.
 
 This document is a stable operational baseline and must not store machine-specific paths or one-off execution timestamps.
 
 ## Required Commands
 
-1. `npm run install:windsurf-hooks-config`
-2. `npm run verify:windsurf-hooks-runtime`
-3. `npm run validate:windsurf-hooks-local`
-4. `npm run assess:windsurf-hooks-session:any`
+1. `npm run install:adapter-hooks-config`
+2. `npm run verify:adapter-hooks-runtime`
+3. `npm run validate:adapter-hooks-local`
+4. `npm run assess:adapter-hooks-session:any`
 5. `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh`
 
 Optional simulated payload checks:
@@ -25,13 +25,13 @@ Optional simulated payload checks:
 - Simulated `pre_write_code` can block on known violations (for example, `common.error.empty_catch`).
 - Simulated `post_write_code` returns success when no violations are introduced.
 - Runtime diagnostics resolve a valid Node binary and version.
-- Session helper `assess:windsurf-hooks-session:any` reports `PASS`.
+- Session helper `assess:adapter-hooks-session:any` reports `PASS`.
 
 ## Artifact Targets
 
 Capture local diagnostics under:
 
-- `docs/validation/windsurf/artifacts/`
+- `docs/validation/adapter/artifacts/`
 - `.audit_tmp/`
 
 Store timestamped outputs there, not in this runbook.
@@ -40,6 +40,6 @@ Store timestamped outputs there, not in this runbook.
 
 After local baseline is green, execute the real IDE validation flow:
 
-- `docs/validation/windsurf-hook-runtime-validation.md`
+- `docs/validation/adapter-hook-runtime-validation.md`
 
-If real-session checks fail, attach diagnostics in `docs/validation/windsurf/artifacts/` and update the support status report.
+If real-session checks fail, attach diagnostics in `docs/validation/adapter/artifacts/` and update the support status report.

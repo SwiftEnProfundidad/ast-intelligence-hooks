@@ -7,7 +7,7 @@ import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
 const generatorScriptPath = resolve(
   process.cwd(),
-  'scripts/build-windsurf-real-session-report.ts'
+  'scripts/build-adapter-real-session-report.ts'
 );
 
 const runGenerator = (params: {
@@ -39,12 +39,12 @@ const runGenerator = (params: {
   );
 };
 
-test('build-windsurf-real-session-report renders PASS when status and runtime signals are healthy', async () => {
-  await withTempDir('pumuki-windsurf-real-pass-', (tempRoot) => {
+test('build-adapter-real-session-report renders PASS when status and runtime signals are healthy', async () => {
+  await withTempDir('pumuki-adapter-real-pass-', (tempRoot) => {
     const docsValidation = join(tempRoot, 'docs/validation');
     const auditTmp = join(tempRoot, '.audit_tmp');
     const homeDir = join(tempRoot, 'home');
-    const hookConfigDir = join(homeDir, '.codeium/windsurf');
+    const hookConfigDir = join(homeDir, '.codeium/adapter');
 
     mkdirSync(docsValidation, { recursive: true });
     mkdirSync(auditTmp, { recursive: true });
@@ -66,9 +66,9 @@ test('build-windsurf-real-session-report renders PASS when status and runtime si
     );
 
     writeFileSync(
-      join(docsValidation, 'windsurf-session-status.md'),
+      join(docsValidation, 'adapter-session-status.md'),
       [
-        '# Windsurf Session Status Report',
+        '# Adapter Session Status Report',
         '',
         '- verdict: PASS',
         '',
@@ -76,13 +76,13 @@ test('build-windsurf-real-session-report renders PASS when status and runtime si
         '',
         '| step | command | exit_code |',
         '| --- | --- | --- |',
-        '| verify-windsurf-hooks-runtime | `npm run verify:windsurf-hooks-runtime` | 0 |',
-        '| assess-windsurf-hooks-session | `npm run assess:windsurf-hooks-session` | 0 |',
-        '| assess-windsurf-hooks-session:any | `npm run assess:windsurf-hooks-session:any` | 0 |',
+        '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | 0 |',
+        '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | 0 |',
+        '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | 0 |',
         '',
         '## Command Output',
         '',
-        '### assess-windsurf-hooks-session',
+        '### assess-adapter-hooks-session',
         '',
         '```text',
         'session-assessment=PASS',
@@ -131,12 +131,12 @@ test('build-windsurf-real-session-report renders PASS when status and runtime si
     runGenerator({
       cwd: tempRoot,
       homeDir,
-      statusReportFile: 'docs/validation/windsurf-session-status.md',
-      outFile: 'docs/validation/windsurf-real-session-report.md',
+      statusReportFile: 'docs/validation/adapter-session-status.md',
+      outFile: 'docs/validation/adapter-real-session-report.md',
     });
 
     const report = readFileSync(
-      join(docsValidation, 'windsurf-real-session-report.md'),
+      join(docsValidation, 'adapter-real-session-report.md'),
       'utf8'
     );
 
@@ -144,19 +144,19 @@ test('build-windsurf-real-session-report renders PASS when status and runtime si
     assert.match(report, /- Re-test required: NO/);
     assert.match(report, /- `pre_write_code` event observed: YES/);
     assert.match(report, /- `post_write_code` event observed: YES/);
-    assert.match(report, /- `npm run verify:windsurf-hooks-runtime`: PASS/);
+    assert.match(report, /- `npm run verify:adapter-hooks-runtime`: PASS/);
     assert.match(report, /- Any `bash: node: command not found`: NO/);
-    assert.match(report, /1\. Normal write action triggered in Windsurf: PASS/);
-    assert.match(report, /2\. Blocked candidate write action triggered in Windsurf: PASS/);
+    assert.match(report, /1\. Normal write action triggered in Adapter: PASS/);
+    assert.match(report, /2\. Blocked candidate write action triggered in Adapter: PASS/);
   });
 });
 
-test('build-windsurf-real-session-report renders FAIL with node runtime root cause', async () => {
-  await withTempDir('pumuki-windsurf-real-fail-', (tempRoot) => {
+test('build-adapter-real-session-report renders FAIL with node runtime root cause', async () => {
+  await withTempDir('pumuki-adapter-real-fail-', (tempRoot) => {
     const docsValidation = join(tempRoot, 'docs/validation');
     const auditTmp = join(tempRoot, '.audit_tmp');
     const homeDir = join(tempRoot, 'home');
-    const hookConfigDir = join(homeDir, '.codeium/windsurf');
+    const hookConfigDir = join(homeDir, '.codeium/adapter');
 
     mkdirSync(docsValidation, { recursive: true });
     mkdirSync(auditTmp, { recursive: true });
@@ -169,9 +169,9 @@ test('build-windsurf-real-session-report renders FAIL with node runtime root cau
     );
 
     writeFileSync(
-      join(docsValidation, 'windsurf-session-status.md'),
+      join(docsValidation, 'adapter-session-status.md'),
       [
-        '# Windsurf Session Status Report',
+        '# Adapter Session Status Report',
         '',
         '- verdict: BLOCKED',
         '',
@@ -179,9 +179,9 @@ test('build-windsurf-real-session-report renders FAIL with node runtime root cau
         '',
         '| step | command | exit_code |',
         '| --- | --- | --- |',
-        '| verify-windsurf-hooks-runtime | `npm run verify:windsurf-hooks-runtime` | 1 |',
-        '| assess-windsurf-hooks-session | `npm run assess:windsurf-hooks-session` | 1 |',
-        '| assess-windsurf-hooks-session:any | `npm run assess:windsurf-hooks-session:any` | 1 |',
+        '| verify-adapter-hooks-runtime | `npm run verify:adapter-hooks-runtime` | 1 |',
+        '| assess-adapter-hooks-session | `npm run assess:adapter-hooks-session` | 1 |',
+        '| assess-adapter-hooks-session:any | `npm run assess:adapter-hooks-session:any` | 1 |',
       ].join('\n'),
       'utf8'
     );
@@ -204,18 +204,18 @@ test('build-windsurf-real-session-report renders FAIL with node runtime root cau
     runGenerator({
       cwd: tempRoot,
       homeDir,
-      statusReportFile: 'docs/validation/windsurf-session-status.md',
-      outFile: 'docs/validation/windsurf-real-session-report.md',
+      statusReportFile: 'docs/validation/adapter-session-status.md',
+      outFile: 'docs/validation/adapter-real-session-report.md',
     });
 
     const report = readFileSync(
-      join(docsValidation, 'windsurf-real-session-report.md'),
+      join(docsValidation, 'adapter-real-session-report.md'),
       'utf8'
     );
 
     assert.match(report, /- Validation result: FAIL/);
     assert.match(report, /- Re-test required: YES/);
-    assert.match(report, /- `npm run verify:windsurf-hooks-runtime`: FAIL/);
+    assert.match(report, /- `npm run verify:adapter-hooks-runtime`: FAIL/);
     assert.match(report, /- Any `bash: node: command not found`: YES/);
     assert.match(
       report,

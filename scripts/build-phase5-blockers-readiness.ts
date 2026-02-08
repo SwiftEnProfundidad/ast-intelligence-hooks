@@ -3,38 +3,38 @@ import { dirname, resolve } from 'node:path';
 import {
   buildPhase5BlockersReadinessMarkdown,
   parseConsumerStartupTriageReport,
-  parseWindsurfRealSessionReport,
+  parseAdapterRealSessionReport,
   summarizePhase5Blockers,
 } from './phase5-blockers-readiness-lib';
 
 type CliOptions = {
-  windsurfReportFile: string;
+  adapterReportFile: string;
   consumerTriageReportFile: string;
   outFile: string;
-  requireWindsurfReport: boolean;
+  requireAdapterReport: boolean;
 };
 
-const DEFAULT_WINDSURF_REPORT_FILE = 'docs/validation/windsurf-real-session-report.md';
+const DEFAULT_ADAPTER_REPORT_FILE = 'docs/validation/adapter-real-session-report.md';
 const DEFAULT_CONSUMER_TRIAGE_FILE = 'docs/validation/consumer-startup-triage-report.md';
 const DEFAULT_OUT_FILE = 'docs/validation/phase5-blockers-readiness.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {
-    windsurfReportFile: DEFAULT_WINDSURF_REPORT_FILE,
+    adapterReportFile: DEFAULT_ADAPTER_REPORT_FILE,
     consumerTriageReportFile: DEFAULT_CONSUMER_TRIAGE_FILE,
     outFile: DEFAULT_OUT_FILE,
-    requireWindsurfReport: false,
+    requireAdapterReport: false,
   };
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
 
-    if (arg === '--windsurf-report') {
+    if (arg === '--adapter-report') {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --windsurf-report');
+        throw new Error('Missing value for --adapter-report');
       }
-      options.windsurfReportFile = value;
+      options.adapterReportFile = value;
       index += 1;
       continue;
     }
@@ -59,8 +59,8 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
       continue;
     }
 
-    if (arg === '--require-windsurf-report') {
-      options.requireWindsurfReport = true;
+    if (arg === '--require-adapter-report') {
+      options.requireAdapterReport = true;
       continue;
     }
 
@@ -87,31 +87,31 @@ const readMarkdownIfExists = (
 const main = (): number => {
   const options = parseArgs(process.argv.slice(2));
 
-  const windsurfReport = readMarkdownIfExists(options.windsurfReportFile);
+  const adapterReport = readMarkdownIfExists(options.adapterReportFile);
   const consumerTriageReport = readMarkdownIfExists(options.consumerTriageReportFile);
 
-  const parsedWindsurf = windsurfReport.content
-    ? parseWindsurfRealSessionReport(windsurfReport.content)
+  const parsedAdapter = adapterReport.content
+    ? parseAdapterRealSessionReport(adapterReport.content)
     : undefined;
   const parsedConsumer = consumerTriageReport.content
     ? parseConsumerStartupTriageReport(consumerTriageReport.content)
     : undefined;
 
   const summary = summarizePhase5Blockers({
-    hasWindsurfReport: windsurfReport.exists,
+    hasAdapterReport: adapterReport.exists,
     hasConsumerTriageReport: consumerTriageReport.exists,
-    windsurf: parsedWindsurf,
+    adapter: parsedAdapter,
     consumer: parsedConsumer,
-    requireWindsurfReport: options.requireWindsurfReport,
+    requireAdapterReport: options.requireAdapterReport,
   });
 
   const markdown = buildPhase5BlockersReadinessMarkdown({
     generatedAt: new Date().toISOString(),
-    windsurfReportPath: options.windsurfReportFile,
+    adapterReportPath: options.adapterReportFile,
     consumerTriageReportPath: options.consumerTriageReportFile,
-    hasWindsurfReport: windsurfReport.exists,
+    hasAdapterReport: adapterReport.exists,
     hasConsumerTriageReport: consumerTriageReport.exists,
-    requireWindsurfReport: options.requireWindsurfReport,
+    requireAdapterReport: options.requireAdapterReport,
     summary,
   });
 

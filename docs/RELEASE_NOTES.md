@@ -51,22 +51,22 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - MCP evidence server expanded with compact/full filters:
   - `includeSuppressed=false`
   - `view=compact|full`
-- IDE adapter cascade-hook runtime hardening (Windsurf baseline):
+- IDE adapter cascade-hook runtime hardening (Adapter baseline):
   - robust Node resolver wrapper
   - optional strict mode `PUMUKI_HOOK_STRICT_NODE=1`
   - explicit diagnostics (`--diagnose`, `PUMUKI_HOOK_DIAGNOSTIC=1`)
   - local diagnostics collector + repeatable local simulation command:
-    - `npm run validate:windsurf-hooks-local`
+    - `npm run validate:adapter-hooks-local`
   - provider-agnostic alias commands:
     - `npm run validation:adapter-session-status`
     - `npm run validation:adapter-real-session-report`
   - real-session validation checklist:
-    - `docs/validation/windsurf-hook-runtime-validation.md`
+    - `docs/validation/adapter-hook-runtime-validation.md`
 - Consumer startup diagnostics one-shot orchestrator:
   - `npm run validation:consumer-startup-triage`
 - Phase 5 blockers readiness report:
   - `npm run validation:phase5-blockers-readiness`
-  - Adapter report is optional by default; use `--require-windsurf-report` for strict adapter-mode gating.
+  - Adapter report is optional by default; use `--require-adapter-report` for strict adapter-mode gating.
   - deterministic verdicts: `READY | BLOCKED | MISSING_INPUTS`
 - Adapter-only readiness report:
   - `npm run validation:adapter-readiness`

@@ -6,7 +6,7 @@ type CliOptions = {
   outFile: string;
   statusReportFile: string;
   operator: string;
-  windsurfVersion: string;
+  adapterVersion: string;
   tailLines: number;
 };
 
@@ -23,10 +23,10 @@ type PassFailUnknown = 'PASS' | 'FAIL' | 'UNKNOWN';
 
 type YesNo = 'YES' | 'NO';
 
-const DEFAULT_OUT_FILE = 'docs/validation/windsurf-real-session-report.md';
-const DEFAULT_STATUS_REPORT_FILE = 'docs/validation/windsurf-session-status.md';
+const DEFAULT_OUT_FILE = 'docs/validation/adapter-real-session-report.md';
+const DEFAULT_STATUS_REPORT_FILE = 'docs/validation/adapter-session-status.md';
 const DEFAULT_OPERATOR = 'unknown';
-const DEFAULT_WINDSURF_VERSION = 'unknown';
+const DEFAULT_ADAPTER_VERSION = 'unknown';
 const DEFAULT_TAIL_LINES = 120;
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
@@ -34,7 +34,7 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
     outFile: DEFAULT_OUT_FILE,
     statusReportFile: DEFAULT_STATUS_REPORT_FILE,
     operator: DEFAULT_OPERATOR,
-    windsurfVersion: DEFAULT_WINDSURF_VERSION,
+    adapterVersion: DEFAULT_ADAPTER_VERSION,
     tailLines: DEFAULT_TAIL_LINES,
   };
 
@@ -71,12 +71,12 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
       continue;
     }
 
-    if (arg === '--windsurf-version') {
+    if (arg === '--adapter-version') {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --windsurf-version');
+        throw new Error('Missing value for --adapter-version');
       }
-      options.windsurfVersion = value;
+      options.adapterVersion = value;
       index += 1;
       continue;
     }
@@ -187,13 +187,13 @@ const parseStatusReport = (markdown?: string): ParsedStatusReport => {
 
   return {
     verdict,
-    verifyExitCode: parseCommandExitCode(markdown, 'verify-windsurf-hooks-runtime'),
-    strictExitCode: parseCommandExitCode(markdown, 'assess-windsurf-hooks-session'),
-    anyExitCode: parseCommandExitCode(markdown, 'assess-windsurf-hooks-session:any'),
-    strictAssessmentPass: /assess-windsurf-hooks-session[\s\S]*?session-assessment=PASS/.test(
+    verifyExitCode: parseCommandExitCode(markdown, 'verify-adapter-hooks-runtime'),
+    strictExitCode: parseCommandExitCode(markdown, 'assess-adapter-hooks-session'),
+    anyExitCode: parseCommandExitCode(markdown, 'assess-adapter-hooks-session:any'),
+    strictAssessmentPass: /assess-adapter-hooks-session[\s\S]*?session-assessment=PASS/.test(
       markdown
     ),
-    anyAssessmentPass: /assess-windsurf-hooks-session:any[\s\S]*?session-assessment=PASS/.test(
+    anyAssessmentPass: /assess-adapter-hooks-session:any[\s\S]*?session-assessment=PASS/.test(
       markdown
     ),
   };
@@ -272,7 +272,7 @@ const buildReport = (params: {
     params.parsedStatus.strictAssessmentPass;
 
   const summary = validationPass
-    ? 'Real Windsurf session signals look healthy, with strict session assessment passing.'
+    ? 'Real Adapter session signals look healthy, with strict session assessment passing.'
     : nodeCommandMissing
       ? 'Runtime still reports missing Node in hook shell environment.'
       : !preWriteObserved || !postWriteObserved
@@ -292,14 +292,14 @@ const buildReport = (params: {
   const correctiveAction = validationPass
     ? 'No corrective action required. Keep monitoring in regular validation runs.'
     : nodeCommandMissing
-      ? 'Fix shell PATH/runtime setup for Windsurf hooks and rerun the validation playbook.'
+      ? 'Fix shell PATH/runtime setup for Adapter hooks and rerun the validation playbook.'
       : !preWriteObserved || !postWriteObserved
         ? 'Execute full real-session validation steps and capture fresh `.audit_tmp` logs.'
         : 'Repeat strict real-session run and verify both pre/post events are captured.';
 
   const lines: string[] = [];
 
-  lines.push('# Windsurf Hook Runtime - Real Session Report');
+  lines.push('# Adapter Hook Runtime - Real Session Report');
   lines.push('');
   lines.push('_Generated automatically from local status report and runtime logs._');
   lines.push('');
@@ -310,23 +310,23 @@ const buildReport = (params: {
   lines.push(`- Operator: ${params.options.operator}`);
   lines.push(`- Branch: ${params.branch}`);
   lines.push(`- Repository: ${params.repository}`);
-  lines.push(`- Windsurf version: ${params.options.windsurfVersion}`);
+  lines.push(`- Adapter version: ${params.options.adapterVersion}`);
   lines.push(`- Node runtime: ${params.nodeRuntime}`);
   lines.push(`- Hook config path: ${params.hookConfigPath}`);
   lines.push('');
 
   lines.push('## Preconditions Check');
   lines.push('');
-  lines.push(`- \`npm run install:windsurf-hooks-config\`: ${installStatus}`);
-  lines.push(`- \`npm run verify:windsurf-hooks-runtime\`: ${verifyStatus}`);
+  lines.push(`- \`npm run install:adapter-hooks-config\`: ${installStatus}`);
+  lines.push(`- \`npm run verify:adapter-hooks-runtime\`: ${verifyStatus}`);
   lines.push(`- \`PUMUKI_HOOK_DIAGNOSTIC=1\`: ${process.env.PUMUKI_HOOK_DIAGNOSTIC === '1' ? 'ON' : 'OFF'}`);
   lines.push(`- \`PUMUKI_HOOK_STRICT_NODE=1\`: ${process.env.PUMUKI_HOOK_STRICT_NODE === '1' ? 'ON' : 'OFF'}`);
   lines.push('');
 
   lines.push('## Real Session Steps');
   lines.push('');
-  lines.push(`1. Normal write action triggered in Windsurf: ${toPassFail(normalWriteTriggered)}`);
-  lines.push(`2. Blocked candidate write action triggered in Windsurf: ${toPassFail(blockedWriteTriggered)}`);
+  lines.push(`1. Normal write action triggered in Adapter: ${toPassFail(normalWriteTriggered)}`);
+  lines.push(`2. Blocked candidate write action triggered in Adapter: ${toPassFail(blockedWriteTriggered)}`);
   lines.push(`3. Strict-node validation write action triggered: ${toPassFail(strictNodeTriggered)}`);
   lines.push('');
 
@@ -341,7 +341,7 @@ const buildReport = (params: {
 
   lines.push('## Captured Evidence');
   lines.push('');
-  lines.push(`- \`~/.codeium/windsurf/hooks.json\` snippet attached: ${toYesNo(Boolean(params.hookConfigContent))}`);
+  lines.push(`- \`~/.codeium/adapter/hooks.json\` snippet attached: ${toYesNo(Boolean(params.hookConfigContent))}`);
   lines.push(`- \`.audit_tmp/cascade-hook-runtime-*.log\` tail attached: ${toYesNo(hasRuntimeLog)}`);
   lines.push(`- \`.audit_tmp/cascade-hook-smoke-*.log\` tail attached: ${toYesNo(hasSmokeLog)}`);
   lines.push(`- \`.audit_tmp/cascade-hook.log\` tail attached: ${toYesNo(hasHookLog)}`);
@@ -412,10 +412,10 @@ const main = (): number => {
   const statusReport = readIfExists(options.statusReportFile);
   const parsedStatus = parseStatusReport(statusReport);
 
-  const hookConfigPath = '~/.codeium/windsurf/hooks.json';
+  const hookConfigPath = '~/.codeium/adapter/hooks.json';
   const absoluteHookConfigPath = resolve(
     process.env.HOME ?? process.cwd(),
-    '.codeium/windsurf/hooks.json'
+    '.codeium/adapter/hooks.json'
   );
   const hookConfigContent = existsSync(absoluteHookConfigPath)
     ? readFileSync(absoluteHookConfigPath, 'utf8')
@@ -464,7 +464,7 @@ const main = (): number => {
   mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, markdown, 'utf8');
 
-  process.stdout.write(`windsurf real-session report generated at ${outputPath}\n`);
+  process.stdout.write(`adapter real-session report generated at ${outputPath}\n`);
   return 0;
 };
 
@@ -472,6 +472,6 @@ try {
   process.exit(main());
 } catch (error) {
   const message = error instanceof Error ? error.message : 'unknown error';
-  process.stderr.write(`windsurf real-session report generation failed: ${message}\n`);
+  process.stderr.write(`adapter real-session report generation failed: ${message}\n`);
   process.exit(1);
 }

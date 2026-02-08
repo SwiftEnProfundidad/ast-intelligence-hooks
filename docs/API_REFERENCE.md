@@ -146,9 +146,9 @@ Framework menu action:
 
 Deterministic argument builders exported from menu module:
 
-- `buildAdapterReadinessCommandArgs({ scriptPath, windsurfReportFile, outFile })`
-- `buildPhase5BlockersReadinessCommandArgs({ scriptPath, windsurfReportFile, consumerTriageReportFile, outFile })`
+- `buildAdapterReadinessCommandArgs({ scriptPath, adapterReportFile, outFile })`
+- `buildPhase5BlockersReadinessCommandArgs({ scriptPath, adapterReportFile, consumerTriageReportFile, outFile })`
 
 Current adapter implementation note:
 
-- The adapter report input flag is named `windsurfReportFile` / `--windsurf-report` for compatibility with existing runbooks.
+- The adapter report input flag is named `adapterReportFile` / `--adapter-report` for compatibility with existing runbooks.

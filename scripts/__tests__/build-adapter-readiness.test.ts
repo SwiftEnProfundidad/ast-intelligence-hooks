@@ -9,13 +9,13 @@ const scriptPath = resolve(process.cwd(), 'scripts/build-adapter-readiness.ts');
 
 const runGenerator = (params: {
   cwd: string;
-  windsurfReportFile?: string;
+  adapterReportFile?: string;
   outFile?: string;
 }): { status: number; stdout: string; stderr: string } => {
   const args = ['--yes', 'tsx@4.21.0', scriptPath];
 
-  if (params.windsurfReportFile) {
-    args.push('--windsurf-report', params.windsurfReportFile);
+  if (params.adapterReportFile) {
+    args.push('--adapter-report', params.adapterReportFile);
   }
   if (params.outFile) {
     args.push('--out', params.outFile);
@@ -50,7 +50,7 @@ const runGenerator = (params: {
   }
 };
 
-test('build-adapter-readiness returns PENDING when windsurf report is missing', async () => {
+test('build-adapter-readiness returns PENDING when adapter report is missing', async () => {
   await withTempDir('pumuki-adapter-readiness-missing-', (tempRoot) => {
     mkdirSync(join(tempRoot, 'docs/validation'), { recursive: true });
 
@@ -67,19 +67,19 @@ test('build-adapter-readiness returns PENDING when windsurf report is missing', 
       'utf8'
     );
     assert.match(report, /- verdict: PENDING/);
-    assert.match(report, /Missing Windsurf adapter report/);
+    assert.match(report, /Missing Adapter adapter report/);
   });
 });
 
-test('build-adapter-readiness returns READY when windsurf report passes', async () => {
+test('build-adapter-readiness returns READY when adapter report passes', async () => {
   await withTempDir('pumuki-adapter-readiness-ready-', (tempRoot) => {
     const docsValidation = join(tempRoot, 'docs/validation');
     mkdirSync(docsValidation, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'windsurf-real-session-report.md'),
+      join(docsValidation, 'adapter-real-session-report.md'),
       [
-        '# Windsurf Hook Runtime - Real Session Report',
+        '# Adapter Hook Runtime - Real Session Report',
         '',
         '- Validation result: PASS',
         '- Any `bash: node: command not found`: NO',
@@ -89,7 +89,7 @@ test('build-adapter-readiness returns READY when windsurf report passes', async 
 
     const result = runGenerator({
       cwd: tempRoot,
-      windsurfReportFile: 'docs/validation/windsurf-real-session-report.md',
+      adapterReportFile: 'docs/validation/adapter-real-session-report.md',
       outFile: 'docs/validation/adapter-readiness.md',
     });
 
@@ -101,19 +101,19 @@ test('build-adapter-readiness returns READY when windsurf report passes', async 
       'utf8'
     );
     assert.match(report, /- verdict: READY/);
-    assert.match(report, /- windsurf: PASS/);
+    assert.match(report, /- adapter: PASS/);
   });
 });
 
-test('build-adapter-readiness returns BLOCKED when windsurf report fails', async () => {
+test('build-adapter-readiness returns BLOCKED when adapter report fails', async () => {
   await withTempDir('pumuki-adapter-readiness-blocked-', (tempRoot) => {
     const docsValidation = join(tempRoot, 'docs/validation');
     mkdirSync(docsValidation, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'windsurf-real-session-report.md'),
+      join(docsValidation, 'adapter-real-session-report.md'),
       [
-        '# Windsurf Hook Runtime - Real Session Report',
+        '# Adapter Hook Runtime - Real Session Report',
         '',
         '- Validation result: FAIL',
         '- Any `bash: node: command not found`: YES',
@@ -123,7 +123,7 @@ test('build-adapter-readiness returns BLOCKED when windsurf report fails', async
 
     const result = runGenerator({
       cwd: tempRoot,
-      windsurfReportFile: 'docs/validation/windsurf-real-session-report.md',
+      adapterReportFile: 'docs/validation/adapter-real-session-report.md',
       outFile: 'docs/validation/adapter-readiness.md',
     });
 
@@ -135,6 +135,6 @@ test('build-adapter-readiness returns BLOCKED when windsurf report fails', async
       'utf8'
     );
     assert.match(report, /- verdict: BLOCKED/);
-    assert.match(report, /Windsurf adapter validation is FAIL/);
+    assert.match(report, /Adapter adapter validation is FAIL/);
   });
 });

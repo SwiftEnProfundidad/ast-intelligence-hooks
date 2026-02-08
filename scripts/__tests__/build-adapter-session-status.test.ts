@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { determineWindsurfSessionVerdict } from '../windsurf-session-status-lib';
+import { determineAdapterSessionVerdict } from '../adapter-session-status-lib';
 
 test('returns BLOCKED when runtime verify command fails', () => {
-  const verdict = determineWindsurfSessionVerdict({
+  const verdict = determineAdapterSessionVerdict({
     verifyExitCode: 1,
     strictOutput: '[pumuki:cascade-hooks] session-assessment=PASS',
     anyOutput: '[pumuki:cascade-hooks] session-assessment=PASS',
@@ -13,7 +13,7 @@ test('returns BLOCKED when runtime verify command fails', () => {
 });
 
 test('returns PASS when strict session assessment passes', () => {
-  const verdict = determineWindsurfSessionVerdict({
+  const verdict = determineAdapterSessionVerdict({
     verifyExitCode: 0,
     strictOutput: '[pumuki:cascade-hooks] session-assessment=PASS',
     anyOutput: '[pumuki:cascade-hooks] session-assessment=FAIL',
@@ -23,7 +23,7 @@ test('returns PASS when strict session assessment passes', () => {
 });
 
 test('returns NEEDS_REAL_SESSION when strict fails but include-simulated mode passes', () => {
-  const verdict = determineWindsurfSessionVerdict({
+  const verdict = determineAdapterSessionVerdict({
     verifyExitCode: 0,
     strictOutput: '[pumuki:cascade-hooks] session-assessment=FAIL',
     anyOutput: '[pumuki:cascade-hooks] session-assessment=PASS',
@@ -33,7 +33,7 @@ test('returns NEEDS_REAL_SESSION when strict fails but include-simulated mode pa
 });
 
 test('returns BLOCKED when both strict and include-simulated assessments fail', () => {
-  const verdict = determineWindsurfSessionVerdict({
+  const verdict = determineAdapterSessionVerdict({
     verifyExitCode: 0,
     strictOutput: '[pumuki:cascade-hooks] session-assessment=FAIL',
     anyOutput: '[pumuki:cascade-hooks] session-assessment=FAIL',

@@ -88,8 +88,8 @@ const runVerify = (homeRoot: string): CommandResult => {
   }
 };
 
-test('verify-windsurf-hooks-runtime passes when hooks.json points to wrapper script', async () => {
-  await withTempDir('pumuki-windsurf-verify-ok-', async (tempRoot) => {
+test('verify-adapter-hooks-runtime passes when hooks.json points to wrapper script', async () => {
+  await withTempDir('pumuki-adapter-verify-ok-', async (tempRoot) => {
     writeHooksConfig({
       homeRoot: tempRoot,
       preCommand: `bash "${WRAPPER_PATH}" pre-write-code-hook.js`,
@@ -104,8 +104,8 @@ test('verify-windsurf-hooks-runtime passes when hooks.json points to wrapper scr
   });
 });
 
-test('verify-windsurf-hooks-runtime fails with actionable message on stale direct-node commands', async () => {
-  await withTempDir('pumuki-windsurf-verify-stale-', async (tempRoot) => {
+test('verify-adapter-hooks-runtime fails with actionable message on stale direct-node commands', async () => {
+  await withTempDir('pumuki-adapter-verify-stale-', async (tempRoot) => {
     writeHooksConfig({
       homeRoot: tempRoot,
       preCommand:

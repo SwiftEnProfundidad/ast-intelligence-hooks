@@ -1,14 +1,14 @@
-export type WindsurfSessionVerdict = 'PASS' | 'NEEDS_REAL_SESSION' | 'BLOCKED';
+export type AdapterSessionVerdict = 'PASS' | 'NEEDS_REAL_SESSION' | 'BLOCKED';
 
 const hasSessionPass = (output: string): boolean => {
   return /session-assessment=PASS/.test(output);
 };
 
-export const determineWindsurfSessionVerdict = (params: {
+export const determineAdapterSessionVerdict = (params: {
   verifyExitCode: number;
   strictOutput: string;
   anyOutput: string;
-}): WindsurfSessionVerdict => {
+}): AdapterSessionVerdict => {
   if (params.verifyExitCode !== 0) {
     return 'BLOCKED';
   }

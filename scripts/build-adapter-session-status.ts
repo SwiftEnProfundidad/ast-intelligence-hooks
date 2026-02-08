@@ -2,9 +2,9 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import {
-  determineWindsurfSessionVerdict,
-  type WindsurfSessionVerdict,
-} from './windsurf-session-status-lib';
+  determineAdapterSessionVerdict,
+  type AdapterSessionVerdict,
+} from './adapter-session-status-lib';
 
 type CliOptions = {
   outFile: string;
@@ -18,7 +18,7 @@ type CommandExecution = {
   output: string;
 };
 
-const DEFAULT_OUT_FILE = 'docs/validation/windsurf-session-status.md';
+const DEFAULT_OUT_FILE = 'docs/validation/adapter-session-status.md';
 const DEFAULT_TAIL_LINES = 80;
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
@@ -232,13 +232,13 @@ const markdownEscapeFence = (value: string): string => {
 const buildMarkdown = (params: {
   options: CliOptions;
   commands: ReadonlyArray<CommandExecution>;
-  verdict: WindsurfSessionVerdict;
+  verdict: AdapterSessionVerdict;
   tails: ReadonlyArray<{ title: string; path: string; content: string }>;
 }): string => {
   const lines: string[] = [];
   const now = new Date().toISOString();
 
-  lines.push('# Windsurf Session Status Report');
+  lines.push('# Adapter Session Status Report');
   lines.push('');
   lines.push(`- generated_at: ${now}`);
   lines.push(`- verdict: ${params.verdict}`);
@@ -280,13 +280,13 @@ const buildMarkdown = (params: {
   lines.push('## Interpretation');
   lines.push('');
   if (params.verdict === 'PASS') {
-    lines.push('- Real Windsurf pre/post events are present in strict session assessment.');
+    lines.push('- Real Adapter pre/post events are present in strict session assessment.');
   } else if (params.verdict === 'NEEDS_REAL_SESSION') {
     lines.push('- Runtime wiring appears healthy, but strict assessment did not observe real IDE events yet.');
-    lines.push('- Next: execute a real Windsurf write session and regenerate this report.');
+    lines.push('- Next: execute a real Adapter write session and regenerate this report.');
   } else {
     lines.push('- Runtime verification and/or session assessments are failing.');
-    lines.push('- Next: run `npm run install:windsurf-hooks-config` and `npm run verify:windsurf-hooks-runtime`, then retry.');
+    lines.push('- Next: run `npm run install:adapter-hooks-config` and `npm run verify:adapter-hooks-runtime`, then retry.');
   }
   lines.push('');
 
@@ -301,26 +301,26 @@ const main = (): number => {
       'collect-runtime-diagnostics',
       'bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh'
     ),
-    runCommand('verify-windsurf-hooks-runtime', 'npm run verify:windsurf-hooks-runtime'),
-    runCommand('assess-windsurf-hooks-session', 'npm run assess:windsurf-hooks-session'),
-    runCommand('assess-windsurf-hooks-session:any', 'npm run assess:windsurf-hooks-session:any'),
+    runCommand('verify-adapter-hooks-runtime', 'npm run verify:adapter-hooks-runtime'),
+    runCommand('assess-adapter-hooks-session', 'npm run assess:adapter-hooks-session'),
+    runCommand('assess-adapter-hooks-session:any', 'npm run assess:adapter-hooks-session:any'),
   ];
 
   const verifyResult = commands.find(
-    (item) => item.label === 'verify-windsurf-hooks-runtime'
+    (item) => item.label === 'verify-adapter-hooks-runtime'
   );
   const strictResult = commands.find(
-    (item) => item.label === 'assess-windsurf-hooks-session'
+    (item) => item.label === 'assess-adapter-hooks-session'
   );
   const anyResult = commands.find(
-    (item) => item.label === 'assess-windsurf-hooks-session:any'
+    (item) => item.label === 'assess-adapter-hooks-session:any'
   );
 
   if (!verifyResult || !strictResult || !anyResult) {
     throw new Error('Missing required command execution results.');
   }
 
-  const verdict = determineWindsurfSessionVerdict({
+  const verdict = determineAdapterSessionVerdict({
     verifyExitCode: verifyResult.exitCode,
     strictOutput: strictResult.output,
     anyOutput: anyResult.output,
@@ -384,7 +384,7 @@ const main = (): number => {
   writeFileSync(outputPath, markdown, 'utf8');
 
   process.stdout.write(
-    `windsurf session status report generated at ${outputPath} (verdict=${verdict})\n`
+    `adapter session status report generated at ${outputPath} (verdict=${verdict})\n`
   );
 
   if (verdict === 'PASS') {

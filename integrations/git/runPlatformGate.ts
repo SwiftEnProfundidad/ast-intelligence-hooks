@@ -200,6 +200,7 @@ const resolveRulesetFile = (
 ): string | undefined => {
   const candidates = [
     join(process.cwd(), 'legacy', 'tooling', '.cursor', 'rules', fileName),
+    join(process.cwd(), 'legacy', 'tooling', '.adapter', 'rules', fileName),
     join(process.cwd(), 'legacy', 'tooling', '.windsurf', 'rules', fileName),
   ];
 

@@ -47,18 +47,18 @@ Optional adapter readiness check:
 
 ```bash
 npm run validation:adapter-readiness -- \
-  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --adapter-report docs/validation/adapter-real-session-report.md \
   --out docs/validation/adapter-readiness.md
 
 npm run validation:adapter-session-status -- \
-  --out docs/validation/windsurf-session-status.md
+  --out docs/validation/adapter-session-status.md
 
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/windsurf-session-status.md \
-  --out docs/validation/windsurf-real-session-report.md
+  --status-report docs/validation/adapter-session-status.md \
+  --out docs/validation/adapter-real-session-report.md
 ```
 
-Note: the current adapter implementation uses `--windsurf-report` as the adapter input flag.
+Note: the current adapter implementation uses `--adapter-report` as the adapter input flag.
 
 ### Direct stage runners
 

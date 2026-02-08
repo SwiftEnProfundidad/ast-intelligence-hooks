@@ -1,10 +1,10 @@
-export type ParsedWindsurfAdapterReport = {
+export type ParsedAdapterReport = {
   validationResult?: 'PASS' | 'FAIL';
   nodeCommandNotFound: boolean;
 };
 
 export type AdapterReadinessEntry = {
-  name: 'windsurf';
+  name: 'adapter';
   status: 'PASS' | 'FAIL' | 'MISSING';
   notes: ReadonlyArray<string>;
 };
@@ -31,9 +31,9 @@ const dedupe = (values: ReadonlyArray<string>): string[] => {
   return result;
 };
 
-export const parseWindsurfAdapterReport = (
+export const parseAdapterReport = (
   markdown: string
-): ParsedWindsurfAdapterReport => {
+): ParsedAdapterReport => {
   const validationRaw = markdown
     .match(/- Validation result:\s*([^\n]+)/)?.[1]
     ?.trim()
@@ -63,46 +63,46 @@ export const parseWindsurfAdapterReport = (
 };
 
 export const summarizeAdapterReadiness = (params: {
-  hasWindsurfReport: boolean;
-  windsurf?: ParsedWindsurfAdapterReport;
+  hasAdapterReport: boolean;
+  adapter?: ParsedAdapterReport;
 }): AdapterReadinessSummary => {
   const blockers: string[] = [];
   const missingInputs: string[] = [];
   const adapters: AdapterReadinessEntry[] = [];
 
-  if (!params.hasWindsurfReport) {
-    missingInputs.push('Missing Windsurf adapter report');
+  if (!params.hasAdapterReport) {
+    missingInputs.push('Missing Adapter adapter report');
     adapters.push({
-      name: 'windsurf',
+      name: 'adapter',
       status: 'MISSING',
-      notes: ['No Windsurf diagnostics report was provided.'],
+      notes: ['No Adapter diagnostics report was provided.'],
     });
   } else {
     const notes: string[] = [];
     let status: AdapterReadinessEntry['status'] = 'PASS';
 
-    if (params.windsurf?.validationResult !== 'PASS') {
+    if (params.adapter?.validationResult !== 'PASS') {
       status = 'FAIL';
       notes.push(
-        `Windsurf validation result is ${params.windsurf?.validationResult ?? 'unknown'}`
+        `Adapter validation result is ${params.adapter?.validationResult ?? 'unknown'}`
       );
       blockers.push(
-        `Windsurf adapter validation is ${params.windsurf?.validationResult ?? 'unknown'}`
+        `Adapter adapter validation is ${params.adapter?.validationResult ?? 'unknown'}`
       );
     }
 
-    if (params.windsurf?.nodeCommandNotFound) {
+    if (params.adapter?.nodeCommandNotFound) {
       status = 'FAIL';
-      notes.push('Windsurf runtime reports node command resolution failures.');
-      blockers.push('Windsurf adapter runtime reports `node: command not found`.');
+      notes.push('Adapter runtime reports node command resolution failures.');
+      blockers.push('Adapter adapter runtime reports `node: command not found`.');
     }
 
     if (notes.length === 0) {
-      notes.push('Windsurf adapter diagnostics are healthy.');
+      notes.push('Adapter adapter diagnostics are healthy.');
     }
 
     adapters.push({
-      name: 'windsurf',
+      name: 'adapter',
       status,
       notes,
     });
@@ -121,8 +121,8 @@ export const summarizeAdapterReadiness = (params: {
 
 export const buildAdapterReadinessMarkdown = (params: {
   generatedAt: string;
-  windsurfReportPath: string;
-  hasWindsurfReport: boolean;
+  adapterReportPath: string;
+  hasAdapterReport: boolean;
   summary: AdapterReadinessSummary;
 }): string => {
   const lines: string[] = [];
@@ -136,7 +136,7 @@ export const buildAdapterReadinessMarkdown = (params: {
   lines.push('## Inputs');
   lines.push('');
   lines.push(
-    `- windsurf_report: \`${params.windsurfReportPath}\` (${params.hasWindsurfReport ? 'found' : 'missing'})`
+    `- adapter_report: \`${params.adapterReportPath}\` (${params.hasAdapterReport ? 'found' : 'missing'})`
   );
   lines.push('');
 
@@ -178,18 +178,18 @@ export const buildAdapterReadinessMarkdown = (params: {
     lines.push('- Adapter diagnostics are healthy.');
     lines.push('- Keep this report attached to rollout validation evidence.');
   } else {
-    if (!params.hasWindsurfReport) {
+    if (!params.hasAdapterReport) {
       lines.push(
-        '- Generate Windsurf report: `npm run validation:windsurf-real-session-report -- --status-report docs/validation/windsurf-session-status.md --out docs/validation/windsurf-real-session-report.md`'
+        '- Generate Adapter report: `npm run validation:adapter-real-session-report -- --status-report docs/validation/adapter-session-status.md --out docs/validation/adapter-real-session-report.md`'
       );
     }
     if (
       params.summary.blockers.some(
-        (item) => item.includes('Windsurf adapter validation') || item.includes('node: command not found')
+        (item) => item.includes('Adapter adapter validation') || item.includes('node: command not found')
       )
     ) {
       lines.push(
-        '- Execute `docs/validation/windsurf-hook-runtime-validation.md`, then regenerate adapter readiness report.'
+        '- Execute `docs/validation/adapter-hook-runtime-validation.md`, then regenerate adapter readiness report.'
       );
     }
   }

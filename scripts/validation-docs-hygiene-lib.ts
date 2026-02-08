@@ -8,9 +8,9 @@ const ALLOWED_ROOT_DOCS = new Set<string>([
   'docs/validation/github-support-ticket-template-startup-failure.md',
   'docs/validation/phase5-execution-closure.md',
   'docs/validation/skills-rollout-consumer-repositories.md',
-  'docs/validation/windsurf-hook-runtime-local-report.md',
-  'docs/validation/windsurf-hook-runtime-validation.md',
-  'docs/validation/windsurf-real-session-report-template.md',
+  'docs/validation/adapter-hook-runtime-local-report.md',
+  'docs/validation/adapter-hook-runtime-validation.md',
+  'docs/validation/adapter-real-session-report-template.md',
 ]);
 
 const ARCHIVE_PREFIX = 'docs/validation/archive/';

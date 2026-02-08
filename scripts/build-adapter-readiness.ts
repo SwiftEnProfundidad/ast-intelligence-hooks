@@ -2,33 +2,33 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import {
   buildAdapterReadinessMarkdown,
-  parseWindsurfAdapterReport,
+  parseAdapterReport,
   summarizeAdapterReadiness,
 } from './adapter-readiness-lib';
 
 type CliOptions = {
-  windsurfReportFile: string;
+  adapterReportFile: string;
   outFile: string;
 };
 
-const DEFAULT_WINDSURF_REPORT_FILE = 'docs/validation/windsurf-real-session-report.md';
+const DEFAULT_ADAPTER_REPORT_FILE = 'docs/validation/adapter-real-session-report.md';
 const DEFAULT_OUT_FILE = 'docs/validation/adapter-readiness.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {
-    windsurfReportFile: DEFAULT_WINDSURF_REPORT_FILE,
+    adapterReportFile: DEFAULT_ADAPTER_REPORT_FILE,
     outFile: DEFAULT_OUT_FILE,
   };
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
 
-    if (arg === '--windsurf-report') {
+    if (arg === '--adapter-report') {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --windsurf-report');
+        throw new Error('Missing value for --adapter-report');
       }
-      options.windsurfReportFile = value;
+      options.adapterReportFile = value;
       index += 1;
       continue;
     }
@@ -65,21 +65,21 @@ const readMarkdownIfExists = (
 
 const main = (): number => {
   const options = parseArgs(process.argv.slice(2));
-  const windsurfReport = readMarkdownIfExists(options.windsurfReportFile);
+  const adapterReport = readMarkdownIfExists(options.adapterReportFile);
 
-  const parsedWindsurf = windsurfReport.content
-    ? parseWindsurfAdapterReport(windsurfReport.content)
+  const parsedAdapter = adapterReport.content
+    ? parseAdapterReport(adapterReport.content)
     : undefined;
 
   const summary = summarizeAdapterReadiness({
-    hasWindsurfReport: windsurfReport.exists,
-    windsurf: parsedWindsurf,
+    hasAdapterReport: adapterReport.exists,
+    adapter: parsedAdapter,
   });
 
   const markdown = buildAdapterReadinessMarkdown({
     generatedAt: new Date().toISOString(),
-    windsurfReportPath: options.windsurfReportFile,
-    hasWindsurfReport: windsurfReport.exists,
+    adapterReportPath: options.adapterReportFile,
+    hasAdapterReport: adapterReport.exists,
     summary,
   });
 

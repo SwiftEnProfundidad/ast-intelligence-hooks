@@ -79,17 +79,17 @@ const runConsumerCiArtifactsScan = async (params: {
   );
 };
 
-const runWindsurfSessionStatusReport = async (params: {
+const runAdapterSessionStatusReport = async (params: {
   outFile: string;
 }): Promise<void> => {
   const reportScriptPath = resolve(
     process.cwd(),
-    'scripts/build-windsurf-session-status.ts'
+    'scripts/build-adapter-session-status.ts'
   );
 
   if (!existsSync(reportScriptPath)) {
     output.write(
-      '\nCould not find scripts/build-windsurf-session-status.ts in current repository.\n'
+      '\nCould not find scripts/build-adapter-session-status.ts in current repository.\n'
     );
     return;
   }
@@ -109,7 +109,7 @@ const runWindsurfSessionStatusReport = async (params: {
   );
 };
 
-export const buildWindsurfRealSessionReportCommandArgs = (params: {
+export const buildAdapterRealSessionReportCommandArgs = (params: {
   scriptPath: string;
   statusReportFile: string;
   outFile: string;
@@ -173,7 +173,7 @@ export const buildValidationDocsHygieneCommandArgs = (params: {
 
 export const buildPhase5BlockersReadinessCommandArgs = (params: {
   scriptPath: string;
-  windsurfReportFile: string;
+  adapterReportFile: string;
   consumerTriageReportFile: string;
   outFile: string;
 }): string[] => {
@@ -181,8 +181,8 @@ export const buildPhase5BlockersReadinessCommandArgs = (params: {
     '--yes',
     'tsx@4.21.0',
     params.scriptPath,
-    '--windsurf-report',
-    params.windsurfReportFile,
+    '--adapter-report',
+    params.adapterReportFile,
     '--consumer-triage-report',
     params.consumerTriageReportFile,
     '--out',
@@ -192,15 +192,15 @@ export const buildPhase5BlockersReadinessCommandArgs = (params: {
 
 export const buildAdapterReadinessCommandArgs = (params: {
   scriptPath: string;
-  windsurfReportFile: string;
+  adapterReportFile: string;
   outFile: string;
 }): string[] => {
   return [
     '--yes',
     'tsx@4.21.0',
     params.scriptPath,
-    '--windsurf-report',
-    params.windsurfReportFile,
+    '--adapter-report',
+    params.adapterReportFile,
     '--out',
     params.outFile,
   ];
@@ -213,25 +213,25 @@ export const buildSkillsLockCheckCommandArgs = (): string[] => {
   ];
 };
 
-const runWindsurfRealSessionReport = async (params: {
+const runAdapterRealSessionReport = async (params: {
   statusReportFile: string;
   outFile: string;
 }): Promise<void> => {
   const reportScriptPath = resolve(
     process.cwd(),
-    'scripts/build-windsurf-real-session-report.ts'
+    'scripts/build-adapter-real-session-report.ts'
   );
 
   if (!existsSync(reportScriptPath)) {
     output.write(
-      '\nCould not find scripts/build-windsurf-real-session-report.ts in current repository.\n'
+      '\nCould not find scripts/build-adapter-real-session-report.ts in current repository.\n'
     );
     return;
   }
 
   execFileSync(
     'npx',
-    buildWindsurfRealSessionReportCommandArgs({
+    buildAdapterRealSessionReportCommandArgs({
       scriptPath: reportScriptPath,
       statusReportFile: params.statusReportFile,
       outFile: params.outFile,
@@ -324,7 +324,7 @@ const runConsumerStartupTriage = async (params: {
 };
 
 const runPhase5BlockersReadiness = async (params: {
-  windsurfReportFile: string;
+  adapterReportFile: string;
   consumerTriageReportFile: string;
   outFile: string;
 }): Promise<void> => {
@@ -344,7 +344,7 @@ const runPhase5BlockersReadiness = async (params: {
     'npx',
     buildPhase5BlockersReadinessCommandArgs({
       scriptPath,
-      windsurfReportFile: params.windsurfReportFile,
+      adapterReportFile: params.adapterReportFile,
       consumerTriageReportFile: params.consumerTriageReportFile,
       outFile: params.outFile,
     }),
@@ -355,7 +355,7 @@ const runPhase5BlockersReadiness = async (params: {
 };
 
 const runAdapterReadiness = async (params: {
-  windsurfReportFile: string;
+  adapterReportFile: string;
   outFile: string;
 }): Promise<void> => {
   const scriptPath = resolve(
@@ -374,7 +374,7 @@ const runAdapterReadiness = async (params: {
     'npx',
     buildAdapterReadinessCommandArgs({
       scriptPath,
-      windsurfReportFile: params.windsurfReportFile,
+      adapterReportFile: params.adapterReportFile,
       outFile: params.outFile,
     }),
     {
@@ -687,33 +687,33 @@ const menu = async (): Promise<void> => {
       };
     };
 
-    const askWindsurfSessionStatusReport = async (): Promise<{
+    const askAdapterSessionStatusReport = async (): Promise<{
       outFile: string;
     }> => {
       const outPrompt = await rl.question(
-        'output path [docs/validation/windsurf-session-status.md]: '
+        'output path [docs/validation/adapter-session-status.md]: '
       );
 
       return {
-        outFile: outPrompt.trim() || 'docs/validation/windsurf-session-status.md',
+        outFile: outPrompt.trim() || 'docs/validation/adapter-session-status.md',
       };
     };
 
-    const askWindsurfRealSessionReport = async (): Promise<{
+    const askAdapterRealSessionReport = async (): Promise<{
       statusReportFile: string;
       outFile: string;
     }> => {
       const statusPrompt = await rl.question(
-        'status report path [docs/validation/windsurf-session-status.md]: '
+        'status report path [docs/validation/adapter-session-status.md]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/windsurf-real-session-report.md]: '
+        'output path [docs/validation/adapter-real-session-report.md]: '
       );
 
       return {
         statusReportFile:
-          statusPrompt.trim() || 'docs/validation/windsurf-session-status.md',
-        outFile: outPrompt.trim() || 'docs/validation/windsurf-real-session-report.md',
+          statusPrompt.trim() || 'docs/validation/adapter-session-status.md',
+        outFile: outPrompt.trim() || 'docs/validation/adapter-real-session-report.md',
       };
     };
 
@@ -899,12 +899,12 @@ const menu = async (): Promise<void> => {
     };
 
     const askPhase5BlockersReadiness = async (): Promise<{
-      windsurfReportFile: string;
+      adapterReportFile: string;
       consumerTriageReportFile: string;
       outFile: string;
     }> => {
-      const windsurfPrompt = await rl.question(
-        'adapter report path [docs/validation/windsurf-real-session-report.md]: '
+      const adapterPrompt = await rl.question(
+        'adapter report path [docs/validation/adapter-real-session-report.md]: '
       );
       const consumerPrompt = await rl.question(
         'consumer triage report path [docs/validation/consumer-startup-triage-report.md]: '
@@ -914,8 +914,8 @@ const menu = async (): Promise<void> => {
       );
 
       return {
-        windsurfReportFile:
-          windsurfPrompt.trim() || 'docs/validation/windsurf-real-session-report.md',
+        adapterReportFile:
+          adapterPrompt.trim() || 'docs/validation/adapter-real-session-report.md',
         consumerTriageReportFile:
           consumerPrompt.trim() || 'docs/validation/consumer-startup-triage-report.md',
         outFile: outPrompt.trim() || 'docs/validation/phase5-blockers-readiness.md',
@@ -923,19 +923,19 @@ const menu = async (): Promise<void> => {
     };
 
     const askAdapterReadiness = async (): Promise<{
-      windsurfReportFile: string;
+      adapterReportFile: string;
       outFile: string;
     }> => {
-      const windsurfPrompt = await rl.question(
-        'adapter report path [docs/validation/windsurf-real-session-report.md]: '
+      const adapterPrompt = await rl.question(
+        'adapter report path [docs/validation/adapter-real-session-report.md]: '
       );
       const outPrompt = await rl.question(
         'output path [docs/validation/adapter-readiness.md]: '
       );
 
       return {
-        windsurfReportFile:
-          windsurfPrompt.trim() || 'docs/validation/windsurf-real-session-report.md',
+        adapterReportFile:
+          adapterPrompt.trim() || 'docs/validation/adapter-real-session-report.md',
         outFile: outPrompt.trim() || 'docs/validation/adapter-readiness.md',
       };
     };
@@ -995,8 +995,8 @@ const menu = async (): Promise<void> => {
         id: '9',
         label: 'Build adapter session status report (optional diagnostics)',
         execute: async () => {
-          const report = await askWindsurfSessionStatusReport();
-          await runWindsurfSessionStatusReport(report);
+          const report = await askAdapterSessionStatusReport();
+          await runAdapterSessionStatusReport(report);
         },
       },
       {
@@ -1051,8 +1051,8 @@ const menu = async (): Promise<void> => {
         id: '16',
         label: 'Build adapter real-session report (optional diagnostics)',
         execute: async () => {
-          const report = await askWindsurfRealSessionReport();
-          await runWindsurfRealSessionReport(report);
+          const report = await askAdapterRealSessionReport();
+          await runAdapterRealSessionReport(report);
         },
       },
       {

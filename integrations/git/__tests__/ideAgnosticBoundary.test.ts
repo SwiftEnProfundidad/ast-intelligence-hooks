@@ -39,15 +39,15 @@ const walkTsFiles = (rootDir: string): string[] => {
   return files;
 };
 
-test('core and integrations remain IDE-agnostic (no Windsurf runtime command coupling)', () => {
+test('core and integrations remain IDE-agnostic (no Adapter runtime command coupling)', () => {
   const bannedSignals = [
-    'build-windsurf-real-session-report',
-    'build-windsurf-session-status',
-    'install:windsurf-hooks-config',
-    'verify:windsurf-hooks-runtime',
-    'assess:windsurf-hooks-session',
-    '~/.codeium/windsurf',
-    '.codeium/windsurf',
+    'build-adapter-real-session-report',
+    'build-adapter-session-status',
+    'install:adapter-hooks-config',
+    'verify:adapter-hooks-runtime',
+    'assess:adapter-hooks-session',
+    '~/.codeium/adapter',
+    '.codeium/adapter',
     '~/.codex/',
     '/.codex/',
   ];

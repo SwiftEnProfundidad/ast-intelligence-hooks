@@ -15,9 +15,9 @@ Keep these as source-of-truth operational references:
 - `github-support-ticket-template-startup-failure.md`
 - `phase5-execution-closure.md`
 - `skills-rollout-consumer-repositories.md`
-- `windsurf-hook-runtime-validation.md`
-- `windsurf-hook-runtime-local-report.md`
-- `windsurf-real-session-report-template.md`
+- `adapter-hook-runtime-validation.md`
+- `adapter-hook-runtime-local-report.md`
+- `adapter-real-session-report-template.md`
 
 ## Archived Historical Reports
 
@@ -38,8 +38,8 @@ These files are command outputs and should be generated per execution context:
 - `consumer-startup-triage-report.md`
 - `phase5-blockers-readiness.md`
 - `adapter-readiness.md`
-- `windsurf-session-status.md`
-- `windsurf-real-session-report.md`
+- `adapter-session-status.md`
+- `adapter-real-session-report.md`
 
 Generate them on demand with:
 
@@ -52,12 +52,12 @@ Generate them on demand with:
 - `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --skip-workflow-lint`
 - `npm run validation:phase5-blockers-readiness`
 - optional strict mode:
-  - `npm run validation:phase5-blockers-readiness -- --require-windsurf-report --windsurf-report docs/validation/windsurf-real-session-report.md --consumer-triage-report docs/validation/consumer-startup-triage-report.md`
+  - `npm run validation:phase5-blockers-readiness -- --require-adapter-report --adapter-report docs/validation/adapter-real-session-report.md --consumer-triage-report docs/validation/consumer-startup-triage-report.md`
 - `npm run validation:adapter-readiness`
 - `npm run validation:adapter-session-status`
 - `npm run validation:adapter-real-session-report`
-- `npm run validation:windsurf-session-status`
-- `npm run validation:windsurf-real-session-report`
+- `npm run validation:adapter-session-status`
+- `npm run validation:adapter-real-session-report`
 
 ## Hygiene Check
 

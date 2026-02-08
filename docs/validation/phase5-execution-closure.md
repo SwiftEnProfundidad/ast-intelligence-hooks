@@ -15,23 +15,23 @@ This runbook is operational. It validates rollout readiness and incident closure
 
 Optional adapter diagnostics input:
 
-- Windsurf real-session runtime report:
-  - `docs/validation/windsurf-real-session-report.md`
+- Adapter real-session runtime report:
+  - `docs/validation/adapter-real-session-report.md`
 
-## Step 1: Generate/refresh Windsurf report
+## Step 1: Generate/refresh Adapter report
 
 Run in this repository:
 
 ```bash
-npm run validation:adapter-session-status -- --out docs/validation/windsurf-session-status.md
+npm run validation:adapter-session-status -- --out docs/validation/adapter-session-status.md
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/windsurf-session-status.md \
-  --out docs/validation/windsurf-real-session-report.md
+  --status-report docs/validation/adapter-session-status.md \
+  --out docs/validation/adapter-real-session-report.md
 ```
 
 If strict runtime checks fail with `node: command not found`, execute:
 
-- `docs/validation/windsurf-hook-runtime-validation.md`
+- `docs/validation/adapter-hook-runtime-validation.md`
 
 and regenerate both reports.
 
@@ -39,7 +39,7 @@ and regenerate both reports.
 
 ```bash
 npm run validation:adapter-readiness -- \
-  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --adapter-report docs/validation/adapter-real-session-report.md \
   --out docs/validation/adapter-readiness.md
 ```
 
@@ -81,8 +81,8 @@ Optional strict adapter mode:
 
 ```bash
 npm run validation:phase5-blockers-readiness -- \
-  --require-windsurf-report \
-  --windsurf-report docs/validation/windsurf-real-session-report.md \
+  --require-adapter-report \
+  --adapter-report docs/validation/adapter-real-session-report.md \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
 ```
@@ -111,7 +111,7 @@ Phase 5 execution closure is complete when all are true:
 
 ## Related References
 
-- `docs/validation/windsurf-hook-runtime-validation.md`
+- `docs/validation/adapter-hook-runtime-validation.md`
 - `docs/validation/consumer-ci-startup-failure-playbook.md`
 - `docs/validation/skills-rollout-consumer-repositories.md`
 - `docs/TODO.md`
