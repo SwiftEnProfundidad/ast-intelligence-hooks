@@ -20,6 +20,8 @@ gh api repos/SwiftEnProfundidad/R_GO/actions/runs/<run_id>/artifacts
 
 - Recent runs are consistently `startup_failure`.
 - `workflowName` is empty in listed runs.
+- Run metadata shows `path: "BuildFailed"` and no referenced workflows.
+- GitHub Actions check-suite for those commits is completed with `startup_failure` and `latest_check_runs_count: 0`.
 - Artifact API returns `total_count: 0` for inspected run IDs.
 
 Sample run URLs:
@@ -32,6 +34,16 @@ Sample artifact query result:
 
 - `GET /repos/SwiftEnProfundidad/R_GO/actions/runs/21790671740/artifacts`
 - response: `{ "total_count": 0, "artifacts": [] }`
+
+Additional API probe summary:
+
+- `GET /repos/SwiftEnProfundidad/R_GO/actions/runs/21790671740`
+  - `name: ""`
+  - `path: "BuildFailed"`
+  - `conclusion: "startup_failure"`
+- `GET /repos/SwiftEnProfundidad/R_GO/check-suites/56738342712`
+  - `conclusion: "startup_failure"`
+  - `latest_check_runs_count: 0`
 
 ## Conclusion
 
