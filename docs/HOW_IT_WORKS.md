@@ -129,6 +129,11 @@ npm run validation:adapter-real-session-report -- \
 npm run validation:phase5-blockers-readiness -- \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
+
+npm run validation:phase5-execution-closure-status -- \
+  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
+  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
+  --out docs/validation/phase5-execution-closure-status.md
 ```
 
 Note: current adapter readiness command uses `--adapter-report` as the adapter input file flag.

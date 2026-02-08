@@ -79,6 +79,12 @@ npm run validation:adapter-real-session-report -- \
 npm run validation:phase5-blockers-readiness -- \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
+
+# Phase 5 execution-closure status snapshot
+npm run validation:phase5-execution-closure-status -- \
+  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
+  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
+  --out docs/validation/phase5-execution-closure-status.md
 ```
 
 ## Scope behavior

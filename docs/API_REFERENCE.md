@@ -131,6 +131,8 @@ Files:
 - `scripts/adapter-readiness-lib.ts`
 - `scripts/build-phase5-blockers-readiness.ts`
 - `scripts/phase5-blockers-readiness-lib.ts`
+- `scripts/build-phase5-execution-closure-status.ts`
+- `scripts/phase5-execution-closure-status-lib.ts`
 - `scripts/framework-menu.ts`
 
 Commands:
@@ -139,6 +141,7 @@ Commands:
 - `npm run validation:adapter-session-status`
 - `npm run validation:adapter-real-session-report`
 - `npm run validation:phase5-blockers-readiness`
+- `npm run validation:phase5-execution-closure-status`
 
 Framework menu action:
 

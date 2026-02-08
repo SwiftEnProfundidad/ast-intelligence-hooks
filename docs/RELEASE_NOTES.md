@@ -68,6 +68,9 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - `npm run validation:phase5-blockers-readiness`
   - Adapter report is optional by default; use `--require-adapter-report` for strict adapter-mode gating.
   - deterministic verdicts: `READY | BLOCKED | MISSING_INPUTS`
+- Phase 5 execution closure status snapshot:
+  - `npm run validation:phase5-execution-closure-status`
+  - deterministic verdicts: `READY | BLOCKED | MISSING_INPUTS`
 - Adapter-only readiness report:
   - `npm run validation:adapter-readiness`
   - deterministic verdicts: `READY | BLOCKED | PENDING`

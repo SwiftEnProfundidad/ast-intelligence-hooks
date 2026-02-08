@@ -15,6 +15,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Consumer startup-failure unblock status helper is implemented (`validation:consumer-startup-unblock-status`).
 - Consumer startup triage orchestrator is implemented (`validation:consumer-startup-triage`).
 - Phase 5 blockers readiness helper is implemented (`validation:phase5-blockers-readiness`).
+- Phase 5 execution closure status helper is implemented (`validation:phase5-execution-closure-status`).
 - Adapter readiness helper is implemented (`validation:adapter-readiness`).
 - Adapter real-session report generator is implemented (`validation:adapter-real-session-report`, current baseline naming).
 - Framework menu operational checks include docs hygiene and skills lock freshness (`skills:lock:check`).

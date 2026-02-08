@@ -213,6 +213,12 @@ npm run validation:phase5-blockers-readiness -- \
   --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
   --out docs/validation/phase5-blockers-readiness.md
 
+# Build Phase 5 execution-closure status snapshot
+npm run validation:phase5-execution-closure-status -- \
+  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
+  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
+  --out docs/validation/phase5-execution-closure-status.md
+
 # Optional: generate adapter-only readiness report
 # (current adapter implementation consumes --adapter-report as input path)
 npm run validation:adapter-readiness -- \
