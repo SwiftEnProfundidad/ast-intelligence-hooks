@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Runs a local (terminal) simulation of Windsurf pre/post hook runtime behavior.
-# Produces artifacts under docs/validation/windsurf/artifacts.
+# Runs a local (terminal) simulation of adapter pre/post hook runtime behavior.
+# Produces artifacts under docs/validation/adapter/artifacts.
 
 set -eu
 
@@ -13,7 +13,7 @@ else
 fi
 
 REPO_ROOT="$(git -C "${SCRIPT_DIR}" rev-parse --show-toplevel 2>/dev/null || pwd)"
-ARTIFACTS_DIR="${REPO_ROOT}/docs/validation/windsurf/artifacts"
+ARTIFACTS_DIR="${REPO_ROOT}/docs/validation/adapter/artifacts"
 WRAPPER_SCRIPT="${SCRIPT_DIR}/run-hook-with-node.sh"
 COLLECT_SCRIPT="${SCRIPT_DIR}/collect-runtime-diagnostics.sh"
 SIMULATED_FILE="__pumuki_simulated__/hooks-smoke.ts"

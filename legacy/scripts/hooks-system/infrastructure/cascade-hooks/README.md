@@ -107,7 +107,7 @@ Expected local result:
 - `PRE_EXIT=2`
 - `POST_EXIT=0`
 
-Artifacts are written to `docs/validation/windsurf/artifacts/`.
+Artifacts are written to `docs/validation/adapter/artifacts/`.
 
 ### Session assessment
 
