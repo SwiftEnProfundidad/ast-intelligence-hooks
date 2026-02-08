@@ -69,6 +69,8 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - explicit architecture/docs contract that IDE diagnostics remain optional adapters
 - Phase 5 execution closure runbook:
   - `docs/validation/phase5-execution-closure.md`
+- Rule-pack docs drift prevention:
+  - automated version sync test `scripts/__tests__/rule-pack-docs-sync.test.ts`
 
 ## Notes
 

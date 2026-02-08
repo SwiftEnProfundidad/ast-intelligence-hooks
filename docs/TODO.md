@@ -18,6 +18,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Windsurf real-session report generator is implemented (`validation:windsurf-real-session-report`).
 - Framework menu operational checks include docs hygiene and skills lock freshness (`skills:lock:check`).
 - IDE-agnostic boundary guardrail test is implemented for `core/*` and `integrations/*`.
+- Rule-pack version-to-doc sync guardrail test is implemented (`scripts/__tests__/rule-pack-docs-sync.test.ts`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
 
 For full historical execution details, see:
