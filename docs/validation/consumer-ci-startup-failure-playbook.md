@@ -45,6 +45,12 @@ Generate support payload bundle:
 ```bash
 npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 \
   --out docs/validation/<repo>-consumer-support-bundle.md
+
+npm run validation:consumer-support-ticket-draft -- \
+  --repo <owner>/<repo> \
+  --support-bundle docs/validation/<repo>-consumer-support-bundle.md \
+  --auth-report docs/validation/<repo>-consumer-ci-auth-check.md \
+  --out docs/validation/<repo>-consumer-support-ticket-draft.md
 ```
 
 3. Inspect failing run metadata:

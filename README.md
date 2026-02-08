@@ -165,6 +165,13 @@ npm run validation:consumer-support-bundle -- --repo SwiftEnProfundidad/R_GO --l
 # Auth/scopes precheck for private-repo Actions diagnostics
 npm run validation:consumer-ci-auth-check -- --repo SwiftEnProfundidad/R_GO \
   --out docs/validation/consumer-ci-auth-check.md
+
+# Build GitHub Support ticket draft from support bundle + auth report
+npm run validation:consumer-support-ticket-draft -- \
+  --repo SwiftEnProfundidad/R_GO \
+  --support-bundle docs/validation/skills-rollout-r_go-support-bundle.md \
+  --auth-report docs/validation/consumer-ci-auth-check.md \
+  --out docs/validation/consumer-support-ticket-draft.md
 ```
 
 Related docs:

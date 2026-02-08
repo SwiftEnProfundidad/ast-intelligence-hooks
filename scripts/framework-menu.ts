@@ -214,6 +214,45 @@ const runConsumerSupportBundle = async (params: {
   );
 };
 
+const runConsumerSupportTicketDraft = async (params: {
+  repo: string;
+  supportBundleFile: string;
+  authReportFile: string;
+  outFile: string;
+}): Promise<void> => {
+  const draftScriptPath = resolve(
+    process.cwd(),
+    'scripts/build-consumer-support-ticket-draft.ts'
+  );
+
+  if (!existsSync(draftScriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-consumer-support-ticket-draft.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    [
+      '--yes',
+      'tsx@4.21.0',
+      draftScriptPath,
+      '--repo',
+      params.repo,
+      '--support-bundle',
+      params.supportBundleFile,
+      '--auth-report',
+      params.authReportFile,
+      '--out',
+      params.outFile,
+    ],
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 export const buildMenuGateParams = (params: {
   stage: MenuStage;
   scope: MenuScope;
@@ -410,6 +449,36 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askConsumerSupportTicketDraft = async (): Promise<{
+      repo: string;
+      supportBundleFile: string;
+      authReportFile: string;
+      outFile: string;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [SwiftEnProfundidad/R_GO]: '
+      );
+      const supportBundlePrompt = await rl.question(
+        'support bundle path [docs/validation/skills-rollout-r_go-support-bundle.md]: '
+      );
+      const authReportPrompt = await rl.question(
+        'auth report path [docs/validation/consumer-ci-auth-check.md]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/consumer-support-ticket-draft.md]: '
+      );
+
+      return {
+        repo: repoPrompt.trim() || 'SwiftEnProfundidad/R_GO',
+        supportBundleFile:
+          supportBundlePrompt.trim() ||
+          'docs/validation/skills-rollout-r_go-support-bundle.md',
+        authReportFile:
+          authReportPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
+        outFile: outPrompt.trim() || 'docs/validation/consumer-support-ticket-draft.md',
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -503,6 +572,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '14',
+        label: 'Build consumer support ticket draft',
+        execute: async () => {
+          const draft = await askConsumerSupportTicketDraft();
+          await runConsumerSupportTicketDraft(draft);
+        },
+      },
+      {
+        id: '15',
         label: 'Exit',
         execute: async () => {},
       },
@@ -522,7 +599,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '14') {
+      if (selected.id === '15') {
         break;
       }
 

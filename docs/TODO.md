@@ -84,6 +84,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Harden Windsurf runtime verifier to detect stale direct-`node` hook commands and emit actionable remediation.
 - Add automated test coverage for Windsurf runtime verifier stale-config detection (`scripts/__tests__/verify-windsurf-hooks-runtime.test.ts`).
 - Add consolidated Windsurf session status report helper (`scripts/build-windsurf-session-status.ts`).
+- Add helper command to generate support ticket drafts from consumer support bundle + auth check reports (`scripts/build-consumer-support-ticket-draft.ts`).
 
 ## Next
 
