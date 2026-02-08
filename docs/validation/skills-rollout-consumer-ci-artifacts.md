@@ -48,6 +48,12 @@ Additional API probe summary:
   - `conclusion: "startup_failure"`
   - `latest_check_runs_count: 0`
 
+Comparative signal (inference):
+
+- `SwiftEnProfundidad/R_GO` is `private` and shows persistent `startup_failure`.
+- `SwiftEnProfundidad/ast-intelligence-hooks` is `public` and does not show `startup_failure` in recent runs.
+- This strongly suggests a repository/account policy or billing constraint specific to private-repo Actions execution in `R_GO`.
+
 Automated scan output:
 
 - `docs/validation/skills-rollout-r_go-ci-artifacts-scan.md`

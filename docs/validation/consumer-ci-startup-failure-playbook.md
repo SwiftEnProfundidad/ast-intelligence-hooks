@@ -79,6 +79,7 @@ If workflows are listed as `active` but runs still fail at startup, continue wit
 - Organization restrictions on external actions
 - Required SHA pinning settings
 - Billing/quota limits for Actions
+- Public/private visibility constraints in current GitHub plan
 
 8. Re-trigger a minimal workflow and verify:
 

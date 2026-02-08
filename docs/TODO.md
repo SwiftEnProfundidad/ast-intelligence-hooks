@@ -68,6 +68,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Assess consumer GitHub Actions artifact availability and document rollout blocker when workflows are in startup failure (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
 - Add startup-failure troubleshooting playbook for consumer CI (`docs/validation/consumer-ci-startup-failure-playbook.md`).
 - Add CLI helper to collect consumer CI run/artifact status into deterministic Markdown reports (`scripts/collect-consumer-ci-artifacts.ts`).
+- Record comparative public/private CI signal for startup-failure root-cause triage (`docs/validation/skills-rollout-consumer-ci-artifacts.md`).
 
 ## Next
 
@@ -129,6 +130,6 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 - [x] Phase 2 completed (compiler + templates + deterministic fixtures + stale check).
 - [x] Documentation milestone: define Phase 5 rollout validation procedure for sample consumer repositories.
 - [x] Execution milestone: complete the Phase 5 matrix with consumer runs that produce positive platform detection for iOS/backend/frontend/android and attach stage artifacts/logs.
-- [ ] Next execution milestone: restore consumer workflow startup health and attach CI artifact URLs to rollout reports.
+- [ ] Next execution milestone: confirm and resolve private-repo Actions policy/billing constraint in consumer repo, then attach CI artifact URLs to rollout reports.
 
 ## Notes
