@@ -3,7 +3,11 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
-import { buildMenuGateParams, formatActiveSkillsBundles } from '../framework-menu';
+import {
+  buildMenuGateParams,
+  buildWindsurfRealSessionReportCommandArgs,
+  formatActiveSkillsBundles,
+} from '../framework-menu';
 
 test('returns guidance when no active skills bundles are available', () => {
   const rendered = formatActiveSkillsBundles([]);
@@ -93,4 +97,22 @@ test('builds menu gate params with default policy trace when skills policy is mi
     assert.equal(params.policyTrace.bundle, 'gate-policy.default.CI');
     assert.equal(params.scope.kind, 'staged');
   });
+});
+
+test('builds deterministic command args for windsurf real-session report', () => {
+  const args = buildWindsurfRealSessionReportCommandArgs({
+    scriptPath: '/repo/scripts/build-windsurf-real-session-report.ts',
+    statusReportFile: 'docs/validation/windsurf-session-status.md',
+    outFile: 'docs/validation/windsurf-real-session-report.md',
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-windsurf-real-session-report.ts',
+    '--status-report',
+    'docs/validation/windsurf-session-status.md',
+    '--out',
+    'docs/validation/windsurf-real-session-report.md',
+  ]);
 });

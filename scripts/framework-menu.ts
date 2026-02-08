@@ -109,6 +109,51 @@ const runWindsurfSessionStatusReport = async (params: {
   );
 };
 
+export const buildWindsurfRealSessionReportCommandArgs = (params: {
+  scriptPath: string;
+  statusReportFile: string;
+  outFile: string;
+}): string[] => {
+  return [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+    '--status-report',
+    params.statusReportFile,
+    '--out',
+    params.outFile,
+  ];
+};
+
+const runWindsurfRealSessionReport = async (params: {
+  statusReportFile: string;
+  outFile: string;
+}): Promise<void> => {
+  const reportScriptPath = resolve(
+    process.cwd(),
+    'scripts/build-windsurf-real-session-report.ts'
+  );
+
+  if (!existsSync(reportScriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-windsurf-real-session-report.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    buildWindsurfRealSessionReportCommandArgs({
+      scriptPath: reportScriptPath,
+      statusReportFile: params.statusReportFile,
+      outFile: params.outFile,
+    }),
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
 const runConsumerCiAuthCheck = async (params: {
   repo: string;
   outFile: string;
@@ -425,6 +470,24 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askWindsurfRealSessionReport = async (): Promise<{
+      statusReportFile: string;
+      outFile: string;
+    }> => {
+      const statusPrompt = await rl.question(
+        'status report path [docs/validation/windsurf-session-status.md]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/windsurf-real-session-report.md]: '
+      );
+
+      return {
+        statusReportFile:
+          statusPrompt.trim() || 'docs/validation/windsurf-session-status.md',
+        outFile: outPrompt.trim() || 'docs/validation/windsurf-real-session-report.md',
+      };
+    };
+
     const askConsumerWorkflowLint = async (): Promise<{
       repoPath: string;
       actionlintBin: string;
@@ -666,6 +729,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '16',
+        label: 'Build Windsurf real-session report',
+        execute: async () => {
+          const report = await askWindsurfRealSessionReport();
+          await runWindsurfRealSessionReport(report);
+        },
+      },
+      {
+        id: '17',
         label: 'Exit',
         execute: async () => {},
       },
@@ -685,7 +756,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '16') {
+      if (selected.id === '17') {
         break;
       }
 
