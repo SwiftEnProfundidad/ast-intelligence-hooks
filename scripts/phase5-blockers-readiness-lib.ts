@@ -53,10 +53,22 @@ export const parseWindsurfRealSessionReport = (
   const reTestRequired =
     reTestRaw === 'YES' ? true : reTestRaw === 'NO' ? false : undefined;
 
+  const runtimeNodeRaw = markdown
+    .match(/- Any `bash: node: command not found`:\s*([^\n]+)/)?.[1]
+    ?.trim()
+    .toUpperCase();
+
+  const nodeCommandNotFound =
+    runtimeNodeRaw === 'YES'
+      ? true
+      : runtimeNodeRaw === 'NO'
+        ? false
+        : /node:\s*command not found/i.test(markdown);
+
   return {
     validationResult,
     reTestRequired,
-    nodeCommandNotFound: /node:\s*command not found/i.test(markdown),
+    nodeCommandNotFound,
   };
 };
 

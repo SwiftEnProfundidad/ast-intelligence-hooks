@@ -21,6 +21,20 @@ test('parseWindsurfRealSessionReport extracts validation result and node runtime
   assert.equal(parsed.nodeCommandNotFound, true);
 });
 
+test('parseWindsurfRealSessionReport respects explicit NO runtime-node signal', () => {
+  const parsed = parseWindsurfRealSessionReport(`
+# Windsurf Hook Runtime - Real Session Report
+
+- Validation result: PASS
+- Re-test required: NO
+- Any \`bash: node: command not found\`: NO
+`);
+
+  assert.equal(parsed.validationResult, 'PASS');
+  assert.equal(parsed.reTestRequired, false);
+  assert.equal(parsed.nodeCommandNotFound, false);
+});
+
 test('parseConsumerStartupTriageReport extracts verdict and failed required steps', () => {
   const parsed = parseConsumerStartupTriageReport(`
 # Consumer Startup Triage Report
