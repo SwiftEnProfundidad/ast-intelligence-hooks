@@ -44,6 +44,14 @@ type RepoResponse = {
   visibility: string;
 };
 
+type RepoActionsPermissionsResponse = {
+  enabled: boolean;
+  allowed_actions: string;
+  sha_pinning_required: boolean;
+};
+
+type UserActionsBillingResponse = Record<string, unknown>;
+
 type RunDiagnostic = {
   run: WorkflowRun;
   metadata?: RunMetadata;
@@ -175,6 +183,10 @@ const buildMarkdown = (params: {
   options: CliOptions;
   authStatus: string;
   repoInfo?: RepoResponse;
+  actionsPermissions?: RepoActionsPermissionsResponse;
+  actionsPermissionsError?: string;
+  billingInfo?: UserActionsBillingResponse;
+  billingError?: string;
   runs: ReadonlyArray<WorkflowRun>;
   diagnostics: ReadonlyArray<RunDiagnostic>;
 }): string => {
@@ -202,6 +214,37 @@ const buildMarkdown = (params: {
   lines.push('```text');
   lines.push(params.authStatus.trimEnd());
   lines.push('```');
+  lines.push('');
+
+  lines.push('## Repository Actions Policy');
+  lines.push('');
+  if (params.actionsPermissions) {
+    lines.push(`- enabled: ${String(params.actionsPermissions.enabled)}`);
+    lines.push(`- allowed_actions: ${params.actionsPermissions.allowed_actions}`);
+    lines.push(
+      `- sha_pinning_required: ${String(params.actionsPermissions.sha_pinning_required)}`
+    );
+  } else if (params.actionsPermissionsError) {
+    lines.push(`- error: ${params.actionsPermissionsError}`);
+  } else {
+    lines.push('- not available');
+  }
+  lines.push('');
+
+  lines.push('## Billing Scope Probe');
+  lines.push('');
+  if (params.billingInfo) {
+    lines.push('```json');
+    lines.push(JSON.stringify(params.billingInfo, null, 2));
+    lines.push('```');
+  } else if (params.billingError) {
+    lines.push(`- error: ${params.billingError}`);
+    lines.push(
+      '- remediation: `gh auth refresh -h github.com -s user` and rerun this command.'
+    );
+  } else {
+    lines.push('- not available');
+  }
   lines.push('');
 
   lines.push('## Run Summary');
@@ -251,6 +294,16 @@ const buildMarkdown = (params: {
   if (params.repoInfo) {
     lines.push(`Visibility: ${params.repoInfo.visibility}`);
   }
+  if (params.actionsPermissions) {
+    lines.push(
+      `Repo Actions policy: enabled=${String(params.actionsPermissions.enabled)}, allowed_actions=${params.actionsPermissions.allowed_actions}, sha_pinning_required=${String(params.actionsPermissions.sha_pinning_required)}`
+    );
+  }
+  if (params.billingInfo) {
+    lines.push('Billing probe: available (see JSON payload in report).');
+  } else if (params.billingError) {
+    lines.push(`Billing probe: unavailable (${params.billingError}).`);
+  }
   lines.push(`Runs checked: ${params.runs.length}`);
   lines.push(`startup_failure runs: ${startupFailures.length}`);
   lines.push('');
@@ -283,6 +336,22 @@ const main = (): number => {
     'api',
     `repos/${options.repo}`,
   ]);
+  const actionsPermissionsResult =
+    tryRunGhJson<RepoActionsPermissionsResponse>([
+      'api',
+      `repos/${options.repo}/actions/permissions`,
+    ]);
+  const owner = options.repo.split('/')[0]?.trim();
+  const billingResult = owner
+    ? tryRunGhJson<UserActionsBillingResponse>([
+        'api',
+        `users/${owner}/settings/billing/actions`,
+      ])
+    : {
+        ok: false,
+        error:
+          'Unable to detect repository owner for billing probe (expected owner/repo).',
+      };
 
   const runs = runGhJson<WorkflowRun[]>([
     'run',
@@ -338,6 +407,14 @@ const main = (): number => {
     options,
     authStatus: auth.output ?? '',
     repoInfo: repoInfoResult.ok ? repoInfoResult.data : undefined,
+    actionsPermissions: actionsPermissionsResult.ok
+      ? actionsPermissionsResult.data
+      : undefined,
+    actionsPermissionsError: actionsPermissionsResult.ok
+      ? undefined
+      : actionsPermissionsResult.error,
+    billingInfo: billingResult.ok ? billingResult.data : undefined,
+    billingError: billingResult.ok ? undefined : billingResult.error,
     runs,
     diagnostics,
   });

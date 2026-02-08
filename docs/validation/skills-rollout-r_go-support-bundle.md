@@ -1,6 +1,6 @@
 # Consumer Startup Failure Support Bundle
 
-- generated_at: 2026-02-08T12:14:35.737Z
+- generated_at: 2026-02-08T12:19:15.225Z
 - target_repo: `SwiftEnProfundidad/R_GO`
 - repo_visibility: `private` (private=true)
 - runs_checked: 20
@@ -17,10 +17,25 @@ github.com
   - Token scopes: 'gist', 'read:org', 'repo', 'workflow'
 ```
 
+## Repository Actions Policy
+
+- enabled: true
+- allowed_actions: all
+- sha_pinning_required: false
+
+## Billing Scope Probe
+
+- error: Command failed: gh api users/SwiftEnProfundidad/settings/billing/actions gh: Not Found (HTTP 404) gh: This API operation needs the "user" scope. To request it, run: gh auth refresh -h github.com -s user
+- remediation: `gh auth refresh -h github.com -s user` and rerun this command.
+
 ## Run Summary
 
 | run_id | workflow | event | branch | status | conclusion | url |
 | --- | --- | --- | --- | --- | --- | --- |
+| 21798009269 | (empty) | pull_request | fix/pilot0-post-merge-report-update | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798009269 |
+| 21798009251 | (empty) | push | develop | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798009251 |
+| 21798008059 | (empty) | pull_request | fix/pilot0-post-merge-report-update | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798008059 |
+| 21798006143 | (empty) | push | fix/pilot0-post-merge-report-update | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798006143 |
 | 21797965465 | (empty) | push | develop | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797965465 |
 | 21797965431 | (empty) | pull_request | fix/admin-tenant-scope-hardening | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797965431 |
 | 21797647486 | (empty) | schedule | main | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797647486 |
@@ -37,16 +52,23 @@ github.com
 | 21797451099 | (empty) | push | main | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797451099 |
 | 21797451068 | (empty) | pull_request | fix/filters-region-normalization | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797451068 |
 | 21797449978 | (empty) | pull_request | fix/filters-region-normalization | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797449978 |
-| 21797448313 | (empty) | push | fix/filters-region-normalization | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797448313 |
-| 21797396563 | (empty) | schedule | main | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797396563 |
-| 21796731599 | (empty) | schedule | main | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21796731599 |
-| 21795995947 | (empty) | schedule | main | completed | startup_failure | https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21795995947 |
 
 ## Run Diagnostics
 
-### Run 21797965465
+### Run 21798009269
 
-- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797965465
+- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798009269
+- workflowName: (empty)
+- event: pull_request
+- conclusion: startup_failure
+- path: BuildFailed
+- referenced_workflows: 0
+- jobs.total_count: 0
+- artifacts.total_count: 0
+
+### Run 21798009251
+
+- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798009251
 - workflowName: (empty)
 - event: push
 - conclusion: startup_failure
@@ -55,9 +77,9 @@ github.com
 - jobs.total_count: 0
 - artifacts.total_count: 0
 
-### Run 21797965431
+### Run 21798008059
 
-- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797965431
+- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798008059
 - workflowName: (empty)
 - event: pull_request
 - conclusion: startup_failure
@@ -66,31 +88,20 @@ github.com
 - jobs.total_count: 0
 - artifacts.total_count: 0
 
-### Run 21797647486
+### Run 21798006143
 
-- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797647486
+- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798006143
 - workflowName: (empty)
-- event: schedule
+- event: push
 - conclusion: startup_failure
 - path: BuildFailed
 - referenced_workflows: 0
 - jobs.total_count: 0
 - artifacts.total_count: 0
 
-### Run 21797644994
+### Run 21797965465
 
-- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797644994
-- workflowName: (empty)
-- event: pull_request
-- conclusion: startup_failure
-- path: BuildFailed
-- referenced_workflows: 0
-- jobs.total_count: 0
-- artifacts.total_count: 0
-
-### Run 21797635751
-
-- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797635751
+- url: https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797965465
 - workflowName: (empty)
 - event: push
 - conclusion: startup_failure
@@ -106,13 +117,15 @@ Persistent GitHub Actions startup_failure in private repository.
 
 Repository: SwiftEnProfundidad/R_GO
 Visibility: private
+Repo Actions policy: enabled=true, allowed_actions=all, sha_pinning_required=false
+Billing probe: unavailable (Command failed: gh api users/SwiftEnProfundidad/settings/billing/actions gh: Not Found (HTTP 404) gh: This API operation needs the "user" scope. To request it, run: gh auth refresh -h github.com -s user).
 Runs checked: 20
 startup_failure runs: 20
 
 Sample run URLs:
-- https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797965465
-- https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797965431
-- https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797647486
+- https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798009269
+- https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798009251
+- https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21798008059
 
 Observed pattern: workflow startup fails before jobs are created (jobs.total_count=0) and artifacts are absent (artifacts.total_count=0).
 Please verify account/repo-level restrictions for private Actions execution (policy, billing, quotas, or platform controls).
