@@ -50,6 +50,17 @@ bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-windsurf-h
 
 Restart the IDE after updating hook configuration.
 
+### Troubleshooting stale direct-node config
+
+If Windsurf shows hook errors similar to `bash: node: command not found` and command paths under `.../node_modules/pumuki-ast-hooks/...`, the active `~/.codeium/windsurf/hooks.json` is likely stale and still invoking `node` directly.
+
+Run:
+
+```bash
+npm run install:windsurf-hooks-config
+npm run verify:windsurf-hooks-runtime
+```
+
 ## Runtime Resolution Model
 
 `run-hook-with-node.sh` resolves Node runtime in this order:

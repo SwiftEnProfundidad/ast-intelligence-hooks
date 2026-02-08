@@ -81,6 +81,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Extend startup-failure support bundle output with repository Actions policy and billing-scope probe diagnostics.
 - Document Windsurf stale direct-`node` hook failure signature and remediation workflow in runtime validation playbook.
 - Add helper command to generate consumer CI auth/scope readiness report (`scripts/check-consumer-ci-auth.ts`).
+- Harden Windsurf runtime verifier to detect stale direct-`node` hook commands and emit actionable remediation.
 
 ## Next
 

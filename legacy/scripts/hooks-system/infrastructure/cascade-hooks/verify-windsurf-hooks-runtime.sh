@@ -45,9 +45,31 @@ if ! grep -q '"post_write_code"' "${HOOKS_CONFIG}"; then
   exit 1
 fi
 
+if grep -E -q '"command"[[:space:]]*:[[:space:]]*"node[[:space:]]+[^"]*(pre-write-code-hook|post-write-code-hook)\.js' "${HOOKS_CONFIG}"; then
+  echo "[pumuki:cascade-hooks] detected stale direct-node hook command in ${HOOKS_CONFIG}" >&2
+  echo "[pumuki:cascade-hooks] this configuration is prone to: bash: node: command not found" >&2
+  echo "[pumuki:cascade-hooks] remediation:" >&2
+  echo "  1) npm run install:windsurf-hooks-config" >&2
+  echo "  2) npm run verify:windsurf-hooks-runtime" >&2
+  exit 1
+fi
+
 if ! grep -q "${WRAPPER_PATH//\//\\/}" "${HOOKS_CONFIG}"; then
   echo "[pumuki:cascade-hooks] hooks.json does not point to expected wrapper path" >&2
   echo "[pumuki:cascade-hooks] expected: ${WRAPPER_PATH}" >&2
+  echo "[pumuki:cascade-hooks] remediation: npm run install:windsurf-hooks-config" >&2
+  exit 1
+fi
+
+if ! grep -q 'pre-write-code-hook.js' "${HOOKS_CONFIG}"; then
+  echo "[pumuki:cascade-hooks] hooks.json missing pre-write command target: pre-write-code-hook.js" >&2
+  echo "[pumuki:cascade-hooks] remediation: npm run install:windsurf-hooks-config" >&2
+  exit 1
+fi
+
+if ! grep -q 'post-write-code-hook.js' "${HOOKS_CONFIG}"; then
+  echo "[pumuki:cascade-hooks] hooks.json missing post-write command target: post-write-code-hook.js" >&2
+  echo "[pumuki:cascade-hooks] remediation: npm run install:windsurf-hooks-config" >&2
   exit 1
 fi
 
