@@ -62,6 +62,7 @@ This document tracks the agreed improvements for **Pumuki AST Intelligence Frame
 - Normalize legacy skills documentation language to enterprise English (`legacy/skills/**/*.md`).
 - Remove residual tracked system file `docs/.DS_Store` from repository history moving forward.
 - Enforce `skills.lock.json` freshness in CI (`npm run skills:lock:check` in workflow).
+- Add consumer-repository rollout validation runbook for skills enforcement (`docs/validation/skills-rollout-consumer-repositories.md`).
 
 ## Next
 
@@ -121,6 +122,7 @@ Ensure user/team skills are enforced by Pumuki in a deterministic, CI-reproducib
 
 - [x] Phase 1 completed (contracts + validators + deterministic hash tests).
 - [x] Phase 2 completed (compiler + templates + deterministic fixtures + stale check).
-- [ ] Next implementation milestone: document and validate Phase 5 rollout in sample consumer repositories.
+- [x] Documentation milestone: define Phase 5 rollout validation procedure for sample consumer repositories.
+- [ ] Next execution milestone: run the Phase 5 checklist in real consumer repositories and attach stage artifacts/logs.
 
 ## Notes

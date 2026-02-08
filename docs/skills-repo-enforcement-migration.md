@@ -67,3 +67,7 @@ Migration is complete when all conditions hold:
 - CI lock freshness check is green
 - stage outcomes are deterministic across local/CI
 - evidence includes active skills bundles and policy trace for each stage
+
+Execution runbook for consumer-repository rollout validation:
+
+- `docs/validation/skills-rollout-consumer-repositories.md`
