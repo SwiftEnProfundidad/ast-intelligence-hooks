@@ -190,6 +190,22 @@ export const buildPhase5BlockersReadinessCommandArgs = (params: {
   ];
 };
 
+export const buildAdapterReadinessCommandArgs = (params: {
+  scriptPath: string;
+  windsurfReportFile: string;
+  outFile: string;
+}): string[] => {
+  return [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+    '--windsurf-report',
+    params.windsurfReportFile,
+    '--out',
+    params.outFile,
+  ];
+};
+
 export const buildSkillsLockCheckCommandArgs = (): string[] => {
   return [
     'run',
@@ -330,6 +346,35 @@ const runPhase5BlockersReadiness = async (params: {
       scriptPath,
       windsurfReportFile: params.windsurfReportFile,
       consumerTriageReportFile: params.consumerTriageReportFile,
+      outFile: params.outFile,
+    }),
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
+const runAdapterReadiness = async (params: {
+  windsurfReportFile: string;
+  outFile: string;
+}): Promise<void> => {
+  const scriptPath = resolve(
+    process.cwd(),
+    'scripts/build-adapter-readiness.ts'
+  );
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-adapter-readiness.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    buildAdapterReadinessCommandArgs({
+      scriptPath,
+      windsurfReportFile: params.windsurfReportFile,
       outFile: params.outFile,
     }),
     {
@@ -877,6 +922,24 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askAdapterReadiness = async (): Promise<{
+      windsurfReportFile: string;
+      outFile: string;
+    }> => {
+      const windsurfPrompt = await rl.question(
+        'windsurf report path [docs/validation/windsurf-real-session-report.md]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [docs/validation/adapter-readiness.md]: '
+      );
+
+      return {
+        windsurfReportFile:
+          windsurfPrompt.trim() || 'docs/validation/windsurf-real-session-report.md',
+        outFile: outPrompt.trim() || 'docs/validation/adapter-readiness.md',
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -1020,6 +1083,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '21',
+        label: 'Build adapter readiness report',
+        execute: async () => {
+          const report = await askAdapterReadiness();
+          await runAdapterReadiness(report);
+        },
+      },
+      {
+        id: '22',
         label: 'Exit',
         execute: async () => {},
       },
@@ -1039,7 +1110,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '21') {
+      if (selected.id === '22') {
         break;
       }
 

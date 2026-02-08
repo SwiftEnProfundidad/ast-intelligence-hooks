@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
+  buildAdapterReadinessCommandArgs,
   buildConsumerStartupTriageCommandArgs,
   buildPhase5BlockersReadinessCommandArgs,
   buildSkillsLockCheckCommandArgs,
@@ -211,5 +212,23 @@ test('builds deterministic command args for phase5 blockers readiness report', (
     'docs/validation/consumer-startup-triage-report.md',
     '--out',
     'docs/validation/phase5-blockers-readiness.md',
+  ]);
+});
+
+test('builds deterministic command args for adapter readiness report', () => {
+  const args = buildAdapterReadinessCommandArgs({
+    scriptPath: '/repo/scripts/build-adapter-readiness.ts',
+    windsurfReportFile: 'docs/validation/windsurf-real-session-report.md',
+    outFile: 'docs/validation/adapter-readiness.md',
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-adapter-readiness.ts',
+    '--windsurf-report',
+    'docs/validation/windsurf-real-session-report.md',
+    '--out',
+    'docs/validation/adapter-readiness.md',
   ]);
 });
