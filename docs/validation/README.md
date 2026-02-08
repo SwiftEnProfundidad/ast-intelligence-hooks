@@ -54,3 +54,9 @@ Run documentation hygiene validation with:
 - `npm run validation:docs-hygiene`
 
 The same check is available in `npm run framework:menu` under the docs hygiene action.
+
+For repository skills drift protection, run:
+
+- `npm run skills:lock:check`
+
+That lock-freshness check is also available in `npm run framework:menu`.
