@@ -178,3 +178,4 @@ If unresolved after workflow and access-level checks:
 - `docs/validation/archive/private-actions-healthcheck.md`
 - `docs/validation/consumer-startup-failure-support-bundle.md`
 - `docs/validation/consumer-startup-triage-report.md`
+- `docs/validation/phase5-execution-closure.md`

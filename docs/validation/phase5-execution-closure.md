@@ -75,6 +75,13 @@ Phase 5 execution closure is complete when all are true:
 - `docs/TODO.md` Phase 5 execution closure item is marked complete
 - Relevant rollout/report docs include links to final generated artifacts
 
+## Quick Checklist
+
+- [ ] `validation:windsurf-real-session-report` generated and reviewed
+- [ ] `validation:consumer-startup-triage` generated against target repo
+- [ ] `validation:phase5-blockers-readiness` returns `verdict=READY`
+- [ ] `docs/TODO.md` execution-closure item updated
+
 ## Related References
 
 - `docs/validation/windsurf-hook-runtime-validation.md`

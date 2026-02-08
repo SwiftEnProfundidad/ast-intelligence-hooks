@@ -232,6 +232,7 @@ Related docs:
 - `docs/validation/README.md`
 - `docs/validation/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/consumer-ci-startup-failure-playbook.md`
+- `docs/validation/phase5-execution-closure.md`
 
 ## CI Model
 
