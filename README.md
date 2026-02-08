@@ -12,6 +12,8 @@ Pumuki enforces consistent engineering standards across platforms and delivery s
 
 The framework is designed for reproducibility, CI parity, and auditability.
 
+Documentation index: `docs/README.md`
+
 ## Core Guarantees
 
 - Deterministic evidence in `.ai_evidence.json` with `version: "2.1"`.
