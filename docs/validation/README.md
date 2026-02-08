@@ -16,6 +16,12 @@ Keep these as source-of-truth operational references:
 - `windsurf-hook-runtime-validation.md`
 - `windsurf-hook-runtime-local-report.md`
 
+## Archived Historical Reports
+
+Historical execution reports are isolated under:
+
+- `archive/`
+
 ## Generated Outputs (Do Not Keep as Baseline Docs)
 
 These files are command outputs and should be generated per execution context:

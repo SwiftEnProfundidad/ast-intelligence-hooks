@@ -77,10 +77,10 @@ Automated scan output:
 
 - `docs/validation/consumer-ci-auth-check.md`
 - `docs/validation/consumer-ci-artifacts-report.md`
-- `docs/validation/skills-rollout-r_go-workflow-lint.md`
+- `docs/validation/archive/skills-rollout-r_go-workflow-lint.md`
 - `docs/validation/consumer-workflow-lint-report.md`
-- `docs/validation/skills-rollout-r_go-startup-fix-experiment.md`
-- `docs/validation/private-actions-healthcheck-temp.md`
+- `docs/validation/archive/skills-rollout-r_go-startup-fix-experiment.md`
+- `docs/validation/archive/private-actions-healthcheck-temp.md`
 - `docs/validation/consumer-startup-failure-support-bundle.md`
 
 Tracking issue in consumer repository:
