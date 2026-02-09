@@ -1,53 +1,15 @@
-import { execFileSync } from 'node:child_process';
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import {
+  findLatestAuditFileRelativePath,
+  readFileIfExists,
+} from './adapter-real-session-fs-lib';
 import { tailFromContent } from './adapter-real-session-markdown-lib';
-
-export const runGitOrUnknown = (cwd: string, args: ReadonlyArray<string>): string => {
-  try {
-    return execFileSync('git', [...args], {
-      cwd,
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-    }).trim();
-  } catch {
-    return 'unknown';
-  }
-};
-
-export const readFileIfExists = (
-  cwd: string,
-  pathLike: string
-): string | undefined => {
-  const absolute = resolve(cwd, pathLike);
-  if (!existsSync(absolute)) {
-    return undefined;
-  }
-
-  return readFileSync(absolute, 'utf8');
-};
-
-export const findLatestAuditFileRelativePath = (params: {
-  cwd: string;
-  directory: string;
-  prefix: string;
-  suffix: string;
-}): string | undefined => {
-  const absoluteDirectory = resolve(params.cwd, params.directory);
-  if (!existsSync(absoluteDirectory)) {
-    return undefined;
-  }
-
-  const matches = readdirSync(absoluteDirectory)
-    .filter((entry) => entry.startsWith(params.prefix) && entry.endsWith(params.suffix))
-    .sort((left, right) => right.localeCompare(left));
-
-  if (matches.length === 0) {
-    return undefined;
-  }
-
-  return join(params.directory, matches[0]);
-};
+export { runGitOrUnknown } from './adapter-real-session-git-lib';
+export {
+  findLatestAuditFileRelativePath,
+  readFileIfExists,
+} from './adapter-real-session-fs-lib';
 
 export const loadAdapterHookConfigSnapshot = (params: {
   cwd: string;
