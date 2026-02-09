@@ -26,6 +26,10 @@ type MenuScope =
       toRef: string;
     };
 
+const DEFAULT_ACTIONLINT_BIN = '/tmp/actionlint-bin/actionlint';
+const DEFAULT_CONSUMER_REPO_PATH =
+  process.env.PUMUKI_CONSUMER_REPO_PATH?.trim() || '/path/to/consumer-repo';
+
 const runGit = (args: ReadonlyArray<string>): string => {
   return execFileSync('git', args, { encoding: 'utf8' }).trim();
 };
@@ -930,20 +934,18 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const repoPathPrompt = await rl.question(
-        'consumer repo path [/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO]: '
+        `consumer repo path [${DEFAULT_CONSUMER_REPO_PATH}]: `
       );
       const actionlintBinPrompt = await rl.question(
-        'actionlint binary [/tmp/actionlint-bin/actionlint]: '
+        `actionlint binary [${DEFAULT_ACTIONLINT_BIN}]: `
       );
       const outPrompt = await rl.question(
         'output path [.audit-reports/consumer-triage/consumer-workflow-lint-report.md]: '
       );
 
       return {
-        repoPath:
-          repoPathPrompt.trim() ||
-          '/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO',
-        actionlintBin: actionlintBinPrompt.trim() || '/tmp/actionlint-bin/actionlint',
+        repoPath: repoPathPrompt.trim() || DEFAULT_CONSUMER_REPO_PATH,
+        actionlintBin: actionlintBinPrompt.trim() || DEFAULT_ACTIONLINT_BIN,
         outFile: outPrompt.trim() || '.audit-reports/consumer-triage/consumer-workflow-lint-report.md',
       };
     };
@@ -1087,10 +1089,10 @@ const menu = async (): Promise<void> => {
       }
 
       const repoPathPrompt = await rl.question(
-        'consumer repo path [/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO]: '
+        `consumer repo path [${DEFAULT_CONSUMER_REPO_PATH}]: `
       );
       const actionlintBinPrompt = await rl.question(
-        'actionlint binary [/tmp/actionlint-bin/actionlint]: '
+        `actionlint binary [${DEFAULT_ACTIONLINT_BIN}]: `
       );
 
       return {
@@ -1098,10 +1100,8 @@ const menu = async (): Promise<void> => {
         limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
         outDir: outDirPrompt.trim() || '.audit-reports/consumer-triage',
         runWorkflowLint: true,
-        repoPath:
-          repoPathPrompt.trim() ||
-          '/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO',
-        actionlintBin: actionlintBinPrompt.trim() || '/tmp/actionlint-bin/actionlint',
+        repoPath: repoPathPrompt.trim() || DEFAULT_CONSUMER_REPO_PATH,
+        actionlintBin: actionlintBinPrompt.trim() || DEFAULT_ACTIONLINT_BIN,
       };
     };
 
@@ -1233,16 +1233,14 @@ const menu = async (): Promise<void> => {
 
       if (runWorkflowLint) {
         const repoPathPrompt = await rl.question(
-          'consumer repo path [/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO]: '
+          `consumer repo path [${DEFAULT_CONSUMER_REPO_PATH}]: `
         );
         const actionlintBinPrompt = await rl.question(
-          'actionlint binary [/tmp/actionlint-bin/actionlint]: '
+          `actionlint binary [${DEFAULT_ACTIONLINT_BIN}]: `
         );
 
-        repoPath =
-          repoPathPrompt.trim() ||
-          '/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO';
-        actionlintBin = actionlintBinPrompt.trim() || '/tmp/actionlint-bin/actionlint';
+        repoPath = repoPathPrompt.trim() || DEFAULT_CONSUMER_REPO_PATH;
+        actionlintBin = actionlintBinPrompt.trim() || DEFAULT_ACTIONLINT_BIN;
       }
 
       return {
