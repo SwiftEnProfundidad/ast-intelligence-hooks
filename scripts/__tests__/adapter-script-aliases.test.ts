@@ -15,31 +15,11 @@ const loadScripts = (): Record<string, string> => {
   return parsed.scripts ?? {};
 };
 
-test('legacy windsurf script names remain compatibility aliases to adapter scripts', () => {
+test('package scripts remain provider-agnostic', () => {
   const scripts = loadScripts();
+  const providerScopedKeys = Object.keys(scripts).filter((key) =>
+    key.toLowerCase().includes('windsurf')
+  );
 
-  assert.equal(
-    scripts['validate:windsurf-hooks-local'],
-    'npm run validate:adapter-hooks-local'
-  );
-  assert.equal(
-    scripts['print:windsurf-hooks-config'],
-    'npm run print:adapter-hooks-config'
-  );
-  assert.equal(
-    scripts['install:windsurf-hooks-config'],
-    'npm run install:adapter-hooks-config'
-  );
-  assert.equal(
-    scripts['verify:windsurf-hooks-runtime'],
-    'npm run verify:adapter-hooks-runtime'
-  );
-  assert.equal(
-    scripts['assess:windsurf-hooks-session'],
-    'npm run assess:adapter-hooks-session'
-  );
-  assert.equal(
-    scripts['assess:windsurf-hooks-session:any'],
-    'npm run assess:adapter-hooks-session:any'
-  );
+  assert.deepEqual(providerScopedKeys, []);
 });

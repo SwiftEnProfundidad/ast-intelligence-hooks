@@ -77,13 +77,7 @@
     "install:adapter-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-adapter-hooks-config.sh",
     "verify:adapter-hooks-runtime": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-adapter-hooks-runtime.sh",
     "assess:adapter-hooks-session": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh",
-    "assess:adapter-hooks-session:any": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh --include-simulated",
-    "validate:windsurf-hooks-local": "npm run validate:adapter-hooks-local",
-    "print:windsurf-hooks-config": "npm run print:adapter-hooks-config",
-    "install:windsurf-hooks-config": "npm run install:adapter-hooks-config",
-    "verify:windsurf-hooks-runtime": "npm run verify:adapter-hooks-runtime",
-    "assess:windsurf-hooks-session": "npm run assess:adapter-hooks-session",
-    "assess:windsurf-hooks-session:any": "npm run assess:adapter-hooks-session:any"
+    "assess:adapter-hooks-session:any": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh --include-simulated"
   },
   "keywords": [
     "ast",

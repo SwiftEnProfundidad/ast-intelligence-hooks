@@ -62,10 +62,10 @@ npm run install:adapter-hooks-config
 npm run verify:adapter-hooks-runtime
 ```
 
-Legacy aliases still available for compatibility:
-- `install:windsurf-hooks-config`
-- `verify:windsurf-hooks-runtime`
-- `print:windsurf-hooks-config`
+Legacy provider-specific npm aliases were removed; use adapter-native commands:
+- `install:adapter-hooks-config`
+- `verify:adapter-hooks-runtime`
+- `print:adapter-hooks-config`
 
 ## Runtime Resolution Model
 
