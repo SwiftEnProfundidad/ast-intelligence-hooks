@@ -6,6 +6,7 @@ import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
   buildAdapterReadinessCommandArgs,
   buildConsumerStartupTriageCommandArgs,
+  buildMockConsumerAbReportCommandArgs,
   buildCleanValidationArtifactsCommandArgs,
   buildPhase5BlockersReadinessCommandArgs,
   buildPhase5ExecutionClosureCommandArgs,
@@ -194,6 +195,33 @@ test('builds deterministic command args for consumer startup triage with workflo
     '/tmp/consumer',
     '--actionlint-bin',
     '/tmp/actionlint',
+  ]);
+});
+
+test('builds deterministic command args for mock consumer A/B report', () => {
+  const args = buildMockConsumerAbReportCommandArgs({
+    scriptPath: '/repo/scripts/build-mock-consumer-ab-report.ts',
+    repo: 'mock/consumer',
+    outFile: '.audit-reports/mock-consumer/mock-consumer-ab-report.md',
+    blockSummaryFile: '.audit-reports/package-smoke/block/summary.md',
+    minimalSummaryFile: '.audit-reports/package-smoke/minimal/summary.md',
+    evidenceFile: '.ai_evidence.json',
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-mock-consumer-ab-report.ts',
+    '--repo',
+    'mock/consumer',
+    '--out',
+    '.audit-reports/mock-consumer/mock-consumer-ab-report.md',
+    '--block-summary',
+    '.audit-reports/package-smoke/block/summary.md',
+    '--minimal-summary',
+    '.audit-reports/package-smoke/minimal/summary.md',
+    '--evidence',
+    '.ai_evidence.json',
   ]);
 });
 

@@ -56,6 +56,8 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - `scripts/build-mock-consumer-ab-report.ts` validates block/minimal smoke outcomes plus evidence v2.1 contract
   - command: `npm run validation:mock-consumer-ab-report -- --repo <owner>/<repo>`
   - output: `.audit-reports/mock-consumer/mock-consumer-ab-report.md`
+  - framework menu action:
+    - `Build mock consumer A/B validation report`
 
 ### AST heuristics pilot
 

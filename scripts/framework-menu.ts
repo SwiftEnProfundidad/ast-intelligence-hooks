@@ -165,6 +165,31 @@ export const buildConsumerStartupTriageCommandArgs = (params: {
   return args;
 };
 
+export const buildMockConsumerAbReportCommandArgs = (params: {
+  scriptPath: string;
+  repo: string;
+  outFile: string;
+  blockSummaryFile: string;
+  minimalSummaryFile: string;
+  evidenceFile: string;
+}): string[] => {
+  return [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+    '--repo',
+    params.repo,
+    '--out',
+    params.outFile,
+    '--block-summary',
+    params.blockSummaryFile,
+    '--minimal-summary',
+    params.minimalSummaryFile,
+    '--evidence',
+    params.evidenceFile,
+  ];
+};
+
 export const buildValidationDocsHygieneCommandArgs = (params: {
   scriptPath: string;
 }): string[] => {
@@ -454,6 +479,38 @@ const runConsumerStartupTriage = async (params: {
       runWorkflowLint: params.runWorkflowLint,
       repoPath: params.repoPath,
       actionlintBin: params.actionlintBin,
+    }),
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
+const runMockConsumerAbReport = async (params: {
+  repo: string;
+  outFile: string;
+  blockSummaryFile: string;
+  minimalSummaryFile: string;
+  evidenceFile: string;
+}): Promise<void> => {
+  const scriptPath = resolve(process.cwd(), 'scripts/build-mock-consumer-ab-report.ts');
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/build-mock-consumer-ab-report.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    buildMockConsumerAbReportCommandArgs({
+      scriptPath,
+      repo: params.repo,
+      outFile: params.outFile,
+      blockSummaryFile: params.blockSummaryFile,
+      minimalSummaryFile: params.minimalSummaryFile,
+      evidenceFile: params.evidenceFile,
     }),
     {
       stdio: 'inherit',
@@ -1136,6 +1193,41 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askMockConsumerAbReport = async (): Promise<{
+      repo: string;
+      outFile: string;
+      blockSummaryFile: string;
+      minimalSummaryFile: string;
+      evidenceFile: string;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [owner/repo]: '
+      );
+      const outPrompt = await rl.question(
+        'output path [.audit-reports/mock-consumer/mock-consumer-ab-report.md]: '
+      );
+      const blockPrompt = await rl.question(
+        'block summary path [.audit-reports/package-smoke/block/summary.md]: '
+      );
+      const minimalPrompt = await rl.question(
+        'minimal summary path [.audit-reports/package-smoke/minimal/summary.md]: '
+      );
+      const evidencePrompt = await rl.question(
+        'evidence path [.ai_evidence.json]: '
+      );
+
+      return {
+        repo: repoPrompt.trim() || 'owner/repo',
+        outFile:
+          outPrompt.trim() || '.audit-reports/mock-consumer/mock-consumer-ab-report.md',
+        blockSummaryFile:
+          blockPrompt.trim() || '.audit-reports/package-smoke/block/summary.md',
+        minimalSummaryFile:
+          minimalPrompt.trim() || '.audit-reports/package-smoke/minimal/summary.md',
+        evidenceFile: evidencePrompt.trim() || '.ai_evidence.json',
+      };
+    };
+
     const askAdapterReadiness = async (): Promise<{
       adapterReportFile: string;
       outFile: string;
@@ -1443,6 +1535,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '20',
+        label: 'Build mock consumer A/B validation report',
+        execute: async () => {
+          const report = await askMockConsumerAbReport();
+          await runMockConsumerAbReport(report);
+        },
+      },
+      {
+        id: '21',
         label: 'Build phase5 blockers readiness report',
         execute: async () => {
           const report = await askPhase5BlockersReadiness();
@@ -1450,7 +1550,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '21',
+        id: '22',
         label: 'Build adapter readiness report',
         execute: async () => {
           const report = await askAdapterReadiness();
@@ -1458,7 +1558,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '22',
+        id: '23',
         label: 'Build phase5 execution closure status report',
         execute: async () => {
           const report = await askPhase5ExecutionClosureStatus();
@@ -1466,7 +1566,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '23',
+        id: '24',
         label: 'Run phase5 execution closure (one-shot orchestration)',
         execute: async () => {
           const params = await askPhase5ExecutionClosure();
@@ -1474,7 +1574,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '24',
+        id: '25',
         label: 'Clean local validation artifacts',
         execute: async () => {
           const params = await askValidationArtifactsCleanup();
@@ -1482,7 +1582,7 @@ const menu = async (): Promise<void> => {
         },
       },
       {
-        id: '25',
+        id: '26',
         label: 'Exit',
         execute: async () => {},
       },
@@ -1502,7 +1602,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '25') {
+      if (selected.id === '26') {
         break;
       }
 
