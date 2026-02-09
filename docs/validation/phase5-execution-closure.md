@@ -59,6 +59,12 @@ This mode consumes local package-smoke summaries:
 
 - `.audit-reports/package-smoke/block/summary.md`
 - `.audit-reports/package-smoke/minimal/summary.md`
+- `.audit-reports/package-smoke/block/ci.ai_evidence.json`
+- `.audit-reports/package-smoke/minimal/ci.ai_evidence.json`
+
+and emits local A/B readiness evidence:
+
+- `.audit-reports/phase5/mock-consumer-ab-report.md`
 
 ## Required Inputs
 
@@ -183,6 +189,7 @@ Phase 5 execution closure is complete when all are true:
 - [ ] `validation:consumer-startup-triage` generated against target repo
 - [ ] `validation:phase5-blockers-readiness` returns `verdict=READY`
 - [ ] `validation:phase5-execution-closure-status` returns `verdict=READY`
+- [ ] mock-consumer A/B report exists with `verdict=READY` when using `--mock-consumer`
 - [ ] `docs/TODO.md` execution-closure item updated
 
 ## Related References

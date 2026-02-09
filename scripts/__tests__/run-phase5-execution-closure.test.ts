@@ -81,6 +81,7 @@ test('run-phase5-execution-closure supports mock-consumer mode in dry-run', () =
   assert.doesNotMatch(result.stdout, /build-adapter-session-status\.ts/);
   assert.doesNotMatch(result.stdout, /build-adapter-real-session-report\.ts/);
   assert.doesNotMatch(result.stdout, /build-adapter-readiness\.ts/);
+  assert.match(result.stdout, /build-mock-consumer-ab-report\.ts/);
   assert.match(result.stdout, /build-mock-consumer-startup-triage\.ts/);
   assert.doesNotMatch(result.stdout, /--repo-path|--actionlint-bin|--skip-auth-check/);
 });

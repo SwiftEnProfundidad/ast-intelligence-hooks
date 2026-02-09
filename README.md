@@ -248,6 +248,9 @@ npm run validation:phase5-execution-closure -- \
   --out-dir .audit-reports/phase5 \
   --mock-consumer
 
+# Includes deterministic mock A/B report in:
+# .audit-reports/phase5/mock-consumer-ab-report.md
+
 # Optional: bypass auth preflight fail-fast
 npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \

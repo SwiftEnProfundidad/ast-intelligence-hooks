@@ -39,7 +39,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
   - optional environment default via `PUMUKI_CONSUMER_REPO_PATH`
 - Adapter validation runbooks are provider-neutral (no provider-specific hooks path assumptions).
 - Mock consumer integration runbook is versioned and indexed (`docs/validation/mock-consumer-integration-runbook.md`).
-- Phase 5 one-shot closure supports local mock-consumer mode (`--mock-consumer`) with deterministic triage/unblock generation from package-smoke summaries.
+- Phase 5 one-shot closure supports local mock-consumer mode (`--mock-consumer`) with deterministic A/B + triage/unblock generation from package-smoke summaries.
 - Mock consumer A/B deterministic report is implemented (`validation:mock-consumer-ab-report`).
 - Framework menu exposes mock consumer A/B report generation as a first-class action.
 - Phase 5 mock-consumer closure execution is validated with READY outputs:

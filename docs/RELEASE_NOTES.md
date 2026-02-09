@@ -48,6 +48,8 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Phase 5 mock-closure automation:
   - `scripts/build-mock-consumer-startup-triage.ts` generates triage + unblock reports from local package-smoke summaries
   - `validation:phase5-execution-closure` supports `--mock-consumer`
+  - mock mode now includes a deterministic mock consumer A/B report step:
+    - output: `.audit-reports/phase5/mock-consumer-ab-report.md`
   - mock mode disables external GH preflight/workflow-lint by default and keeps closure flow deterministic
   - local mock execution now reaches:
     - `phase5-blockers-readiness` => `verdict=READY`

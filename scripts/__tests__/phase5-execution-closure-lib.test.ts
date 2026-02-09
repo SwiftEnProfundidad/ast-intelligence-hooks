@@ -13,6 +13,7 @@ test('resolvePhase5ExecutionClosureOutputs uses deterministic output names', () 
     adapterRealSessionReport: '.audit-reports/phase5/adapter-real-session-report.md',
     adapterReadiness: '.audit-reports/phase5/adapter-readiness.md',
     consumerCiAuthCheck: '.audit-reports/phase5/consumer-ci-auth-check.md',
+    mockConsumerAbReport: '.audit-reports/phase5/mock-consumer-ab-report.md',
     consumerStartupTriageReport: '.audit-reports/phase5/consumer-startup-triage-report.md',
     consumerStartupUnblockStatus: '.audit-reports/phase5/consumer-startup-unblock-status.md',
     phase5BlockersReadiness: '.audit-reports/phase5/phase5-blockers-readiness.md',
@@ -139,6 +140,13 @@ test('buildPhase5ExecutionClosureCommands supports mock consumer triage without 
     false
   );
   const triage = commands.find((command) => command.id === 'consumer-startup-triage');
+  const abReport = commands.find((command) => command.id === 'mock-consumer-ab-report');
+  assert.ok(abReport);
+  assert.equal(abReport.script, 'scripts/build-mock-consumer-ab-report.ts');
+  assert.match(abReport.args.join(' '), /--block-summary/);
+  assert.match(abReport.args.join(' '), /--minimal-summary/);
+  assert.match(abReport.args.join(' '), /--block-evidence/);
+  assert.match(abReport.args.join(' '), /--minimal-evidence/);
   assert.ok(triage);
   assert.equal(triage.script, 'scripts/build-mock-consumer-startup-triage.ts');
   assert.doesNotMatch(triage.args.join(' '), /--repo-path|--actionlint-bin|--skip-auth-check/);

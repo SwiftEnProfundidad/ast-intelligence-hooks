@@ -16,6 +16,7 @@ export type Phase5ExecutionClosureOutputs = {
   adapterRealSessionReport: string;
   adapterReadiness: string;
   consumerCiAuthCheck: string;
+  mockConsumerAbReport: string;
   consumerStartupTriageReport: string;
   consumerStartupUnblockStatus: string;
   phase5BlockersReadiness: string;
@@ -29,6 +30,7 @@ export type Phase5ExecutionClosureCommand = {
     | 'adapter-real-session-report'
     | 'adapter-readiness'
     | 'consumer-auth-preflight'
+    | 'mock-consumer-ab-report'
     | 'consumer-startup-triage'
     | 'phase5-blockers-readiness'
     | 'phase5-execution-closure-status';
@@ -58,6 +60,7 @@ export const resolvePhase5ExecutionClosureOutputs = (
     adapterRealSessionReport: joinPath(outDir, 'adapter-real-session-report.md'),
     adapterReadiness: joinPath(outDir, 'adapter-readiness.md'),
     consumerCiAuthCheck: joinPath(outDir, 'consumer-ci-auth-check.md'),
+    mockConsumerAbReport: joinPath(outDir, 'mock-consumer-ab-report.md'),
     consumerStartupTriageReport: joinPath(outDir, 'consumer-startup-triage-report.md'),
     consumerStartupUnblockStatus: joinPath(outDir, 'consumer-startup-unblock-status.md'),
     phase5BlockersReadiness: joinPath(outDir, 'phase5-blockers-readiness.md'),
@@ -132,6 +135,30 @@ export const buildPhase5ExecutionClosureCommands = (
       args: ['--repo', options.repo, '--out', outputs.consumerCiAuthCheck],
       required: true,
       outputFiles: [outputs.consumerCiAuthCheck],
+    });
+  }
+
+  if (options.useMockConsumerTriage) {
+    commands.push({
+      id: 'mock-consumer-ab-report',
+      description: 'Generate mock consumer A/B validation report',
+      script: 'scripts/build-mock-consumer-ab-report.ts',
+      args: [
+        '--repo',
+        options.repo,
+        '--out',
+        outputs.mockConsumerAbReport,
+        '--block-summary',
+        '.audit-reports/package-smoke/block/summary.md',
+        '--minimal-summary',
+        '.audit-reports/package-smoke/minimal/summary.md',
+        '--block-evidence',
+        '.audit-reports/package-smoke/block/ci.ai_evidence.json',
+        '--minimal-evidence',
+        '.audit-reports/package-smoke/minimal/ci.ai_evidence.json',
+      ],
+      required: true,
+      outputFiles: [outputs.mockConsumerAbReport],
     });
   }
 
