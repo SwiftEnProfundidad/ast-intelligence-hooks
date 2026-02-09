@@ -33,6 +33,11 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Phase 5 one-shot flow includes auth preflight fail-fast with optional bypass (`--skip-auth-preflight`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
 - Package manifest guardrail logic is reusable and regression-tested in stage gates (`scripts/package-manifest-lib.ts`, `scripts/__tests__/package-manifest-lib.test.ts`).
+- Package smoke CI matrix (`block` + `minimal`) is active and green with evidence v2.1 assertions.
+- Framework menu consumer diagnostics defaults are host-agnostic:
+  - no hardcoded local repository paths
+  - optional environment default via `PUMUKI_CONSUMER_REPO_PATH`
+- Adapter validation runbooks are provider-neutral (no provider-specific hooks path assumptions).
 
 For full historical execution details, see:
 
@@ -44,6 +49,10 @@ For full historical execution details, see:
 - [ ] Consumer private-repo Actions startup-failure unblock:
   - Confirm billing/policy state after token refresh with `user` scope.
   - Re-run consumer CI diagnostics and attach fresh generated outputs.
+- [ ] Phase 5 execution closure (external dependency):
+  - Run one-shot closure against approved consumer context.
+  - Ensure readiness/status reports end in `verdict: READY`.
+  - Attach generated artifact URLs to rollout status notes.
 - [ ] Documentation hygiene maintenance:
   - Keep only runbooks/guides versioned under `docs/validation/` root.
   - Keep generated reports out of baseline docs and regenerate on demand.
