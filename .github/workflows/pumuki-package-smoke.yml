@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate package manifest (dry-run)
+        run: node --import tsx scripts/check-package-manifest.ts
+
       - name: Run package install smoke
         run: node --import tsx scripts/package-install-smoke.ts --mode=${{ matrix.mode }}
 

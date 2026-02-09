@@ -10,6 +10,7 @@ npm run test:evidence
 npm run test:mcp
 npm run test:heuristics
 npm run test:deterministic
+npm run validation:package-manifest
 npm run validation:package-smoke
 npm run validation:package-smoke:minimal
 ```
@@ -30,6 +31,10 @@ npm run validation:package-smoke:minimal
 
 - `npm run test:deterministic`
   - Aggregated deterministic suite (`evidence + mcp + heuristics`).
+
+- `npm run validation:package-manifest`
+  - Dry-run package manifest guardrail.
+  - Fails if required runtime files are missing or forbidden paths are bundled (`legacy/`, tests, archive docs, local audit artifacts).
 
 - `npm run validation:package-smoke`
   - Package-install smoke (`BLOCK` scenario): `npm pack` + temporary consumer install + intentional multi-platform violations.
