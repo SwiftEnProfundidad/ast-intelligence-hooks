@@ -1,0 +1,32 @@
+name: Pumuki Package Smoke
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  package-smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run package install smoke
+        run: node --import tsx scripts/package-install-smoke.ts
+
+      - name: Upload package smoke artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-smoke-report
+          path: .audit-reports/package-smoke

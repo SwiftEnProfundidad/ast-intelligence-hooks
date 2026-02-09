@@ -83,6 +83,7 @@ npm run test:evidence
 npm run test:mcp
 npm run test:heuristics
 npm run test:deterministic
+npm run validation:package-smoke
 ```
 
 ### Validation docs hygiene

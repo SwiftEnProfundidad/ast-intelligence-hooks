@@ -10,6 +10,7 @@ npm run test:evidence
 npm run test:mcp
 npm run test:heuristics
 npm run test:deterministic
+npm run validation:package-smoke
 ```
 
 ## What each suite validates
@@ -28,6 +29,10 @@ npm run test:deterministic
 
 - `npm run test:deterministic`
   - Aggregated deterministic suite (`evidence + mcp + heuristics`).
+
+- `npm run validation:package-smoke`
+  - Package-install smoke run (`npm pack` + temporary consumer install + `pumuki-pre-commit` / `pumuki-pre-push` / `pumuki-ci`).
+  - Writes artifacts to `.audit-reports/package-smoke/`.
 
 ## Test locations
 
@@ -51,6 +56,7 @@ Workflows rely on the same deterministic model and should remain consistent with
 - `.github/workflows/pumuki-evidence-tests.yml`
 - `.github/workflows/pumuki-heuristics-tests.yml`
 - `.github/workflows/pumuki-gate-template.yml`
+- `.github/workflows/pumuki-package-smoke.yml`
 
 ## Adding tests
 

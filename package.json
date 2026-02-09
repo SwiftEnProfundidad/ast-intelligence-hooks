@@ -62,6 +62,7 @@
     "validation:phase5-blockers-readiness": "npx --yes tsx@4.21.0 scripts/build-phase5-blockers-readiness.ts",
     "validation:phase5-execution-closure-status": "npx --yes tsx@4.21.0 scripts/build-phase5-execution-closure-status.ts",
     "validation:phase5-execution-closure": "npx --yes tsx@4.21.0 scripts/run-phase5-execution-closure.ts",
+    "validation:package-smoke": "node --import tsx scripts/package-install-smoke.ts",
     "validation:clean-artifacts": "npx --yes tsx@4.21.0 scripts/clean-validation-artifacts.ts",
     "validation:docs-hygiene": "npx --yes tsx@4.21.0 scripts/check-validation-docs-hygiene.ts",
     "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",
