@@ -102,6 +102,9 @@ Detailed commit history remains available through Git history (`git log` / `git 
     - `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`
 - Phase 5 execution closure runbook:
   - `docs/validation/phase5-execution-closure.md`
+- Validation artifact hygiene helper:
+  - `npm run validation:clean-artifacts` (`--dry-run` supported)
+  - cleans local generated `docs/validation/**/artifacts` directories and `.audit_tmp`
 - Rule-pack docs drift prevention:
   - automated version sync test `scripts/__tests__/rule-pack-docs-sync.test.ts`
 

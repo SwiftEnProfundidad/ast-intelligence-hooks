@@ -135,6 +135,8 @@ Files:
 - `scripts/phase5-execution-closure-status-lib.ts`
 - `scripts/run-phase5-execution-closure.ts`
 - `scripts/phase5-execution-closure-lib.ts`
+- `scripts/clean-validation-artifacts.ts`
+- `scripts/clean-validation-artifacts-lib.ts`
 - `scripts/framework-menu.ts`
 
 Commands:
@@ -145,6 +147,7 @@ Commands:
 - `npm run validation:phase5-blockers-readiness`
 - `npm run validation:phase5-execution-closure-status`
 - `npm run validation:phase5-execution-closure`
+- `npm run validation:clean-artifacts`
 
 Framework menu action:
 

@@ -93,6 +93,10 @@ npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \
   --out-dir docs/validation \
   --skip-workflow-lint
+
+# Optional: clean local generated validation artifacts
+npm run validation:clean-artifacts
+npm run validation:clean-artifacts -- --dry-run
 ```
 
 ## Scope behavior

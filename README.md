@@ -89,6 +89,7 @@ npm run test:deterministic
 
 ```bash
 npm run validation:docs-hygiene
+npm run validation:clean-artifacts -- --dry-run
 ```
 
 ### Skills lock freshness

@@ -28,6 +28,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Active docs index coverage guardrail test is implemented (`scripts/__tests__/docs-index-coverage.test.ts`).
 - Legacy provider-named hook scripts are preserved as compatibility aliases mapped to adapter-native scripts (`scripts/__tests__/adapter-script-aliases.test.ts`).
 - Legacy ruleset lookup is provider-agnostic and covered by regression tests (`integrations/git/resolveLegacyRulesetFile.ts`, `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`).
+- Validation artifact cleanup command is available (`validation:clean-artifacts`, dry-run supported).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
 
 For full historical execution details, see:
