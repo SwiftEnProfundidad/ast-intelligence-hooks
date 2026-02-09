@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { parseMockConsumerStartupTriageArgs } from '../mock-consumer-startup-triage-cli-lib';
 import {
   buildMockConsumerTriageMarkdown,
   buildMockConsumerUnblockMarkdown,
-  parseMockConsumerStartupTriageArgs,
 } from '../mock-consumer-startup-triage-lib';
 
 test('parseMockConsumerStartupTriageArgs provides deterministic defaults', () => {

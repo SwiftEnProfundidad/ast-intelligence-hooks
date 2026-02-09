@@ -5,10 +5,10 @@ import {
   assessSmokeSummary,
   type SmokeAssessment,
 } from './mock-consumer-smoke-lib';
+import { parseMockConsumerStartupTriageArgs } from './mock-consumer-startup-triage-cli-lib';
 import {
   buildMockConsumerTriageMarkdown,
   buildMockConsumerUnblockMarkdown,
-  parseMockConsumerStartupTriageArgs,
 } from './mock-consumer-startup-triage-lib';
 
 const main = (): number => {
