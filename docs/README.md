@@ -20,8 +20,6 @@ This index is the canonical entry point for framework documentation in this repo
 - `DEPENDENCIES.md`: dependency policy and maintenance notes.
 - `TESTING.md`: validation strategy and test command matrix.
 - `BRANCH_PROTECTION_GUIDE.md`: branch protection policy and setup.
-- `alerting-system.md`: operational alerting implementation notes.
-- `observability.md`: observability reference.
 - `skills-repo-enforcement-migration.md`: migration path for skills enforcement.
 
 ## Evidence and Integrations
