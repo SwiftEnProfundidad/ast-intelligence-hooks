@@ -1,21 +1,6 @@
 import type { Phase5ExternalHandoffSummary } from './phase5-external-handoff-contract';
-
-const appendListSection = (params: {
-  lines: string[];
-  title: string;
-  values: ReadonlyArray<string>;
-}): void => {
-  params.lines.push(params.title);
-  params.lines.push('');
-  if (params.values.length === 0) {
-    params.lines.push('- none');
-  } else {
-    for (const value of params.values) {
-      params.lines.push(`- ${value}`);
-    }
-  }
-  params.lines.push('');
-};
+import { appendPhase5ExternalHandoffListSection } from './phase5-external-handoff-markdown-list-lib';
+import { appendPhase5ExternalHandoffNextActions } from './phase5-external-handoff-markdown-next-actions-lib';
 
 export const appendInputsSection = (params: {
   lines: string[];
@@ -75,7 +60,7 @@ export const appendArtifactUrlsSection = (params: {
   lines: string[];
   summary: Phase5ExternalHandoffSummary;
 }): void => {
-  appendListSection({
+  appendPhase5ExternalHandoffListSection({
     lines: params.lines,
     title: '## Artifact URLs',
     values: params.summary.artifactUrls,
@@ -86,7 +71,7 @@ export const appendMissingInputsSection = (params: {
   lines: string[];
   summary: Phase5ExternalHandoffSummary;
 }): void => {
-  appendListSection({
+  appendPhase5ExternalHandoffListSection({
     lines: params.lines,
     title: '## Missing Inputs',
     values: params.summary.missingInputs,
@@ -97,7 +82,7 @@ export const appendBlockersSection = (params: {
   lines: string[];
   summary: Phase5ExternalHandoffSummary;
 }): void => {
-  appendListSection({
+  appendPhase5ExternalHandoffListSection({
     lines: params.lines,
     title: '## Blockers',
     values: params.summary.blockers,
@@ -108,7 +93,7 @@ export const appendWarningsSection = (params: {
   lines: string[];
   summary: Phase5ExternalHandoffSummary;
 }): void => {
-  appendListSection({
+  appendPhase5ExternalHandoffListSection({
     lines: params.lines,
     title: '## Warnings',
     values: params.summary.warnings,
@@ -119,22 +104,5 @@ export const appendNextActionsSection = (params: {
   lines: string[];
   summary: Phase5ExternalHandoffSummary;
 }): void => {
-  params.lines.push('## Next Actions');
-  params.lines.push('');
-  if (params.summary.verdict === 'READY') {
-    params.lines.push('- External handoff packet is ready to attach to rollout tracker.');
-    params.lines.push('- Share this report and referenced artifact URLs with consumer owners.');
-  } else {
-    if (params.summary.verdict === 'MISSING_INPUTS') {
-      params.lines.push('- Generate missing reports and re-run this command.');
-    }
-    if (params.summary.verdict === 'BLOCKED') {
-      params.lines.push('- Resolve blocking verdicts before external handoff.');
-    }
-    if (params.summary.artifactUrls.length === 0) {
-      params.lines.push('- Attach artifact URLs from CI/workflow runs to complete handoff context.');
-    }
-    params.lines.push('- Re-run: `npm run validation:phase5-external-handoff`.');
-  }
-  params.lines.push('');
+  appendPhase5ExternalHandoffNextActions(params);
 };

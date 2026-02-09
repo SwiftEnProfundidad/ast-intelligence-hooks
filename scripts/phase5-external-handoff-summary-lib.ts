@@ -1,84 +1,31 @@
-import type { Phase5ExternalHandoffSummary } from './phase5-external-handoff-contract';
-import { dedupePhase5ExternalHandoffValues } from './phase5-external-handoff-contract';
+import {
+  dedupePhase5ExternalHandoffValues,
+  type Phase5ExternalHandoffSummary,
+  type SummarizePhase5ExternalHandoffParams,
+} from './phase5-external-handoff-contract';
+import {
+  collectPhase5ExternalHandoffArtifactFindings,
+  collectPhase5ExternalHandoffMissingInputs,
+  collectPhase5ExternalHandoffVerdictBlockers,
+  collectPhase5ExternalHandoffVerdictWarnings,
+  resolvePhase5ExternalHandoffSummaryVerdict,
+} from './phase5-external-handoff-summary-helpers-lib';
 
-export const summarizePhase5ExternalHandoff = (params: {
-  hasPhase5StatusReport: boolean;
-  hasPhase5BlockersReport: boolean;
-  hasConsumerUnblockReport: boolean;
-  hasMockAbReport: boolean;
-  hasRunReport: boolean;
-  phase5StatusVerdict?: string;
-  phase5BlockersVerdict?: string;
-  consumerUnblockVerdict?: string;
-  mockAbVerdict?: string;
-  runReportVerdict?: string;
-  artifactUrls: ReadonlyArray<string>;
-  requireArtifactUrls: boolean;
-  requireMockAbReport: boolean;
-}): Phase5ExternalHandoffSummary => {
-  const missingInputs: string[] = [];
-  const blockers: string[] = [];
-  const warnings: string[] = [];
-
-  if (!params.hasPhase5StatusReport) {
-    missingInputs.push('Missing Phase 5 execution closure status report');
-  }
-  if (!params.hasPhase5BlockersReport) {
-    missingInputs.push('Missing Phase 5 blockers readiness report');
-  }
-  if (!params.hasConsumerUnblockReport) {
-    missingInputs.push('Missing consumer startup unblock status report');
-  }
-  if (params.requireMockAbReport && !params.hasMockAbReport) {
-    missingInputs.push('Missing mock consumer A/B report');
-  }
-
-  if (missingInputs.length === 0) {
-    if ((params.phase5StatusVerdict ?? '').toUpperCase() !== 'READY') {
-      blockers.push(
-        `Phase 5 execution closure status verdict is ${params.phase5StatusVerdict ?? 'unknown'}`
-      );
-    }
-    if ((params.phase5BlockersVerdict ?? '').toUpperCase() !== 'READY') {
-      blockers.push(
-        `Phase 5 blockers readiness verdict is ${params.phase5BlockersVerdict ?? 'unknown'}`
-      );
-    }
-    if ((params.consumerUnblockVerdict ?? '').toUpperCase() !== 'READY_FOR_RETEST') {
-      blockers.push(
-        `Consumer startup unblock verdict is ${params.consumerUnblockVerdict ?? 'unknown'}`
-      );
-    }
-
-    if (params.requireMockAbReport) {
-      if ((params.mockAbVerdict ?? '').toUpperCase() !== 'READY') {
-        blockers.push(
-          `Mock consumer A/B verdict is ${params.mockAbVerdict ?? 'unknown'}`
-        );
-      }
-    } else if (params.hasMockAbReport && (params.mockAbVerdict ?? '').toUpperCase() !== 'READY') {
-      warnings.push(
-        `Mock consumer A/B verdict is ${params.mockAbVerdict ?? 'unknown'} (not required in current mode)`
-      );
-    }
-
-    if (params.hasRunReport && (params.runReportVerdict ?? '').toUpperCase() !== 'READY') {
-      warnings.push(
-        `Phase 5 closure run report verdict is ${params.runReportVerdict ?? 'unknown'}`
-      );
-    }
-  }
-
-  if (params.requireArtifactUrls && params.artifactUrls.length === 0) {
-    blockers.push('No artifact URLs were provided');
-  } else if (!params.requireArtifactUrls && params.artifactUrls.length === 0) {
-    warnings.push(
-      'No artifact URLs were provided (recommended before external handoff)'
-    );
-  }
-
-  const verdict: Phase5ExternalHandoffSummary['verdict'] =
-    missingInputs.length > 0 ? 'MISSING_INPUTS' : blockers.length > 0 ? 'BLOCKED' : 'READY';
+export const summarizePhase5ExternalHandoff = (
+  params: SummarizePhase5ExternalHandoffParams
+): Phase5ExternalHandoffSummary => {
+  const missingInputs = collectPhase5ExternalHandoffMissingInputs(params);
+  const blockers =
+    missingInputs.length === 0 ? collectPhase5ExternalHandoffVerdictBlockers(params) : [];
+  const warnings =
+    missingInputs.length === 0 ? collectPhase5ExternalHandoffVerdictWarnings(params) : [];
+  const artifactFindings = collectPhase5ExternalHandoffArtifactFindings(params);
+  blockers.push(...artifactFindings.blockers);
+  warnings.push(...artifactFindings.warnings);
+  const verdict = resolvePhase5ExternalHandoffSummaryVerdict({
+    missingInputs,
+    blockers,
+  });
 
   return {
     verdict,

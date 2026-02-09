@@ -13,6 +13,22 @@ export type Phase5ExternalHandoffSummary = {
   requireMockAbReport: boolean;
 };
 
+export type SummarizePhase5ExternalHandoffParams = {
+  hasPhase5StatusReport: boolean;
+  hasPhase5BlockersReport: boolean;
+  hasConsumerUnblockReport: boolean;
+  hasMockAbReport: boolean;
+  hasRunReport: boolean;
+  phase5StatusVerdict?: string;
+  phase5BlockersVerdict?: string;
+  consumerUnblockVerdict?: string;
+  mockAbVerdict?: string;
+  runReportVerdict?: string;
+  artifactUrls: ReadonlyArray<string>;
+  requireArtifactUrls: boolean;
+  requireMockAbReport: boolean;
+};
+
 export const dedupePhase5ExternalHandoffValues = (
   values: ReadonlyArray<string>
 ): string[] => {
