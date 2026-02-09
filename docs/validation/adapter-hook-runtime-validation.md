@@ -9,7 +9,7 @@ Scope note: this is an optional adapter-validation runbook and does not alter PR
 - Repo checked out with latest `enterprise-refactor`.
 - Adapter config refreshed from current repo path:
   - `npm run install:adapter-hooks-config`
-  - (alternative) `npm run print:adapter-hooks-config > ~/.codeium/adapter/hooks.json`
+  - (alternative) `npm run print:adapter-hooks-config` and manually apply to your adapter hooks config file
 - Runtime/config wiring pre-check:
   - `npm run verify:adapter-hooks-runtime`
 - Adapter hook config uses:
@@ -58,7 +58,7 @@ If Adapter shows hook failures with:
   - `.../node_modules/pumuki-ast-hooks/.../pre-write-code-hook.js`
   - `.../node_modules/pumuki-ast-hooks/.../post-write-code-hook.js`
 
-then the active `~/.codeium/adapter/hooks.json` is using a stale direct `node` invocation.
+then the active adapter hooks config is using a stale direct `node` invocation.
 
 Remediation:
 
@@ -69,11 +69,11 @@ Remediation:
 3. Re-run a real Adapter write event and confirm hooks execute via:
    - `run-hook-with-node.sh pre-write-code-hook.js`
    - `run-hook-with-node.sh post-write-code-hook.js`
-4. Attach the updated `hooks.json` snippet and `.audit_tmp/cascade-hook-runtime-*.log` tail to validation evidence.
+4. Attach the updated adapter hooks config snippet and `.audit_tmp/cascade-hook-runtime-*.log` tail to validation evidence.
 
 ## Evidence to attach
 
-- Hook config snippet (`~/.codeium/adapter/hooks.json`).
+- Hook config snippet (active adapter hooks config file).
 - Tail output from relevant `.audit_tmp` files.
 - Any console output showing runtime resolution failures.
 - Completed report based on:

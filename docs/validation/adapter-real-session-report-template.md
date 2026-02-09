@@ -43,7 +43,7 @@ npm run validation:adapter-real-session-report -- \
 
 ## Captured Evidence
 
-- `~/.codeium/adapter/hooks.json` snippet attached: YES/NO
+- Active adapter hooks config snippet attached: YES/NO
 - `.audit_tmp/cascade-hook-runtime-*.log` tail attached: YES/NO
 - `.audit_tmp/cascade-hook-smoke-*.log` tail attached: YES/NO
 - `.audit_tmp/cascade-hook.log` tail attached: YES/NO
