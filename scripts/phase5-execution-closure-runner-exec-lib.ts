@@ -1,9 +1,13 @@
-import { execFileSync } from 'node:child_process';
-import { resolve } from 'node:path';
 import type {
   Phase5ExecutionClosureCommand,
   Phase5ExecutionClosureExecution,
 } from './phase5-execution-closure-lib';
+import { executePhase5ExecutionClosureCommand } from './phase5-execution-closure-runner-exec-command-lib';
+import {
+  printPhase5ExecutionClosureFailureNotice,
+  resolvePhase5ExecutionClosureCommandFailure,
+  shouldStopPhase5ExecutionClosureAfterFailure,
+} from './phase5-execution-closure-runner-exec-error-lib';
 
 export const executePhase5ExecutionClosureCommands = (
   commands: ReadonlyArray<Phase5ExecutionClosureCommand>
@@ -11,32 +15,17 @@ export const executePhase5ExecutionClosureCommands = (
   const executions: Phase5ExecutionClosureExecution[] = [];
 
   for (const command of commands) {
-    const scriptPath = resolve(process.cwd(), command.script);
     try {
-      execFileSync('npx', ['--yes', 'tsx@4.21.0', scriptPath, ...command.args], {
-        stdio: 'inherit',
-      });
-      executions.push({
-        command,
-        exitCode: 0,
-        ok: true,
-      });
+      executions.push(executePhase5ExecutionClosureCommand(command));
     } catch (error) {
-      const status =
-        error && typeof error === 'object' && 'status' in error
-          ? Number((error as { status?: number }).status ?? 1)
-          : 1;
-      executions.push({
-        command,
-        exitCode: Number.isFinite(status) ? status : 1,
-        ok: false,
-        error: error instanceof Error ? error.message : 'unknown command failure',
-      });
-
-      if (command.id === 'consumer-auth-preflight') {
-        process.stdout.write(
-          'phase5 execution closure halted: consumer auth preflight failed\n'
-        );
+      executions.push(
+        resolvePhase5ExecutionClosureCommandFailure({
+          command,
+          error,
+        })
+      );
+      printPhase5ExecutionClosureFailureNotice(command);
+      if (shouldStopPhase5ExecutionClosureAfterFailure(command)) {
         break;
       }
     }
