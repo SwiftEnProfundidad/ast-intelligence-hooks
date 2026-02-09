@@ -1,5 +1,3 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
 import {
   buildPhase5ExecutionClosureCommands,
   buildPhase5ExecutionClosureRunReportMarkdown,
@@ -10,22 +8,18 @@ import {
   executePhase5ExecutionClosureCommands,
   parsePhase5ExecutionClosureArgs,
 } from './phase5-execution-closure-runner-lib';
+import {
+  toPhase5ExecutionClosureCommandOptions,
+  toPhase5ExecutionClosureRunReportOptions,
+} from './phase5-execution-closure-runner-mappers-lib';
+import { writePhase5ExecutionClosureRunReport } from './phase5-execution-closure-runner-report-writer-lib';
 
 const main = (): number => {
   const options = parsePhase5ExecutionClosureArgs(process.argv.slice(2));
 
-  const commands = buildPhase5ExecutionClosureCommands({
-    repo: options.repo,
-    limit: options.limit,
-    outDir: options.outDir,
-    runWorkflowLint: options.runWorkflowLint,
-    includeAuthPreflight: options.includeAuthPreflight,
-    repoPath: options.repoPath,
-    actionlintBin: options.actionlintBin,
-    includeAdapter: options.includeAdapter,
-    requireAdapterReadiness: options.requireAdapterReadiness,
-    useMockConsumerTriage: options.useMockConsumerTriage,
-  });
+  const commands = buildPhase5ExecutionClosureCommands(
+    toPhase5ExecutionClosureCommandOptions(options)
+  );
 
   if (options.dryRun) {
     process.stdout.write(buildPhase5ExecutionClosureDryRunPlan(commands));
@@ -38,24 +32,15 @@ const main = (): number => {
   const report = buildPhase5ExecutionClosureRunReportMarkdown({
     generatedAt: new Date().toISOString(),
     repo: options.repo,
-    options: {
-      outDir: options.outDir,
-      limit: options.limit,
-      runWorkflowLint: options.runWorkflowLint,
-      includeAuthPreflight: options.includeAuthPreflight,
-      includeAdapter: options.includeAdapter,
-      requireAdapterReadiness: options.requireAdapterReadiness,
-      useMockConsumerTriage: options.useMockConsumerTriage,
-      repoPathProvided: Boolean(options.repoPath?.trim()),
-      actionlintBinProvided: Boolean(options.actionlintBin?.trim()),
-    },
+    options: toPhase5ExecutionClosureRunReportOptions(options),
     commands,
     executions,
   });
 
-  const reportPath = resolve(process.cwd(), outputs.closureRunReport);
-  mkdirSync(dirname(reportPath), { recursive: true });
-  writeFileSync(reportPath, report, 'utf8');
+  const reportPath = writePhase5ExecutionClosureRunReport({
+    outputPath: outputs.closureRunReport,
+    reportMarkdown: report,
+  });
   process.stdout.write(`phase5 execution closure run report generated at ${reportPath}\n`);
 
   const requiredFailures = executions.filter(
