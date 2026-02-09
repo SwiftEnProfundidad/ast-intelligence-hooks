@@ -171,7 +171,8 @@ export const buildMockConsumerAbReportCommandArgs = (params: {
   outFile: string;
   blockSummaryFile: string;
   minimalSummaryFile: string;
-  evidenceFile: string;
+  blockEvidenceFile: string;
+  minimalEvidenceFile: string;
 }): string[] => {
   return [
     '--yes',
@@ -185,8 +186,10 @@ export const buildMockConsumerAbReportCommandArgs = (params: {
     params.blockSummaryFile,
     '--minimal-summary',
     params.minimalSummaryFile,
-    '--evidence',
-    params.evidenceFile,
+    '--block-evidence',
+    params.blockEvidenceFile,
+    '--minimal-evidence',
+    params.minimalEvidenceFile,
   ];
 };
 
@@ -491,7 +494,8 @@ const runMockConsumerAbReport = async (params: {
   outFile: string;
   blockSummaryFile: string;
   minimalSummaryFile: string;
-  evidenceFile: string;
+  blockEvidenceFile: string;
+  minimalEvidenceFile: string;
 }): Promise<void> => {
   const scriptPath = resolve(process.cwd(), 'scripts/build-mock-consumer-ab-report.ts');
 
@@ -510,7 +514,8 @@ const runMockConsumerAbReport = async (params: {
       outFile: params.outFile,
       blockSummaryFile: params.blockSummaryFile,
       minimalSummaryFile: params.minimalSummaryFile,
-      evidenceFile: params.evidenceFile,
+      blockEvidenceFile: params.blockEvidenceFile,
+      minimalEvidenceFile: params.minimalEvidenceFile,
     }),
     {
       stdio: 'inherit',
@@ -1198,7 +1203,8 @@ const menu = async (): Promise<void> => {
       outFile: string;
       blockSummaryFile: string;
       minimalSummaryFile: string;
-      evidenceFile: string;
+      blockEvidenceFile: string;
+      minimalEvidenceFile: string;
     }> => {
       const repoPrompt = await rl.question(
         'consumer repo (owner/repo) [owner/repo]: '
@@ -1212,8 +1218,11 @@ const menu = async (): Promise<void> => {
       const minimalPrompt = await rl.question(
         'minimal summary path [.audit-reports/package-smoke/minimal/summary.md]: '
       );
-      const evidencePrompt = await rl.question(
-        'evidence path [.ai_evidence.json]: '
+      const blockEvidencePrompt = await rl.question(
+        'block CI evidence path [.audit-reports/package-smoke/block/ci.ai_evidence.json]: '
+      );
+      const minimalEvidencePrompt = await rl.question(
+        'minimal CI evidence path [.audit-reports/package-smoke/minimal/ci.ai_evidence.json]: '
       );
 
       return {
@@ -1224,7 +1233,12 @@ const menu = async (): Promise<void> => {
           blockPrompt.trim() || '.audit-reports/package-smoke/block/summary.md',
         minimalSummaryFile:
           minimalPrompt.trim() || '.audit-reports/package-smoke/minimal/summary.md',
-        evidenceFile: evidencePrompt.trim() || '.ai_evidence.json',
+        blockEvidenceFile:
+          blockEvidencePrompt.trim() ||
+          '.audit-reports/package-smoke/block/ci.ai_evidence.json',
+        minimalEvidenceFile:
+          minimalEvidencePrompt.trim() ||
+          '.audit-reports/package-smoke/minimal/ci.ai_evidence.json',
       };
     };
 

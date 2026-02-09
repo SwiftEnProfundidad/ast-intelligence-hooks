@@ -7,7 +7,8 @@ type CliOptions = {
   outFile: string;
   blockSummaryFile: string;
   minimalSummaryFile: string;
-  evidenceFile: string;
+  blockEvidenceFile: string;
+  minimalEvidenceFile: string;
   dryRun: boolean;
 };
 
@@ -24,7 +25,9 @@ const DEFAULT_REPO = 'owner/repo';
 const DEFAULT_OUT_FILE = '.audit-reports/mock-consumer/mock-consumer-ab-report.md';
 const DEFAULT_BLOCK_SUMMARY = '.audit-reports/package-smoke/block/summary.md';
 const DEFAULT_MINIMAL_SUMMARY = '.audit-reports/package-smoke/minimal/summary.md';
-const DEFAULT_EVIDENCE_FILE = '.ai_evidence.json';
+const DEFAULT_BLOCK_EVIDENCE_FILE = '.audit-reports/package-smoke/block/ci.ai_evidence.json';
+const DEFAULT_MINIMAL_EVIDENCE_FILE =
+  '.audit-reports/package-smoke/minimal/ci.ai_evidence.json';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {
@@ -32,7 +35,8 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
     outFile: DEFAULT_OUT_FILE,
     blockSummaryFile: DEFAULT_BLOCK_SUMMARY,
     minimalSummaryFile: DEFAULT_MINIMAL_SUMMARY,
-    evidenceFile: DEFAULT_EVIDENCE_FILE,
+    blockEvidenceFile: DEFAULT_BLOCK_EVIDENCE_FILE,
+    minimalEvidenceFile: DEFAULT_MINIMAL_EVIDENCE_FILE,
     dryRun: false,
   };
 
@@ -75,12 +79,21 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
       index += 1;
       continue;
     }
-    if (arg === '--evidence') {
+    if (arg === '--block-evidence') {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --evidence');
+        throw new Error('Missing value for --block-evidence');
       }
-      options.evidenceFile = value;
+      options.blockEvidenceFile = value;
+      index += 1;
+      continue;
+    }
+    if (arg === '--minimal-evidence') {
+      const value = args[index + 1];
+      if (!value) {
+        throw new Error('Missing value for --minimal-evidence');
+      }
+      options.minimalEvidenceFile = value;
       index += 1;
       continue;
     }
@@ -132,24 +145,27 @@ const assessEvidence = (pathLike: string): EvidenceAssessment => {
   }
 };
 
-const isEvidenceHealthy = (assessment: EvidenceAssessment): boolean =>
+const isEvidenceHealthy = (
+  assessment: EvidenceAssessment,
+  expectedOutcome: 'PASS' | 'BLOCK'
+): boolean =>
   assessment.exists &&
   !assessment.parseError &&
   assessment.version === '2.1' &&
-  typeof assessment.stage === 'string' &&
-  assessment.stage.length > 0 &&
-  typeof assessment.outcome === 'string' &&
-  assessment.outcome.length > 0;
+  assessment.stage === 'CI' &&
+  assessment.outcome === expectedOutcome;
 
 const buildMarkdown = (params: {
   generatedAt: string;
   repo: string;
   blockSummaryFile: string;
   minimalSummaryFile: string;
-  evidenceFile: string;
+  blockEvidenceFile: string;
+  minimalEvidenceFile: string;
   blockReady: boolean;
   minimalReady: boolean;
-  evidence: EvidenceAssessment;
+  blockEvidence: EvidenceAssessment;
+  minimalEvidence: EvidenceAssessment;
 }): { markdown: string; verdict: 'READY' | 'BLOCKED'; blockers: ReadonlyArray<string> } => {
   const blockers: string[] = [];
 
@@ -159,13 +175,23 @@ const buildMarkdown = (params: {
   if (!params.minimalReady) {
     blockers.push('Package smoke minimal mode summary is not in expected pass state');
   }
-  if (!isEvidenceHealthy(params.evidence)) {
-    if (!params.evidence.exists) {
-      blockers.push('ai_evidence file is missing');
-    } else if (params.evidence.parseError) {
-      blockers.push('ai_evidence file is not valid JSON');
+  if (!isEvidenceHealthy(params.blockEvidence, 'BLOCK')) {
+    if (!params.blockEvidence.exists) {
+      blockers.push('block evidence file is missing');
+    } else if (params.blockEvidence.parseError) {
+      blockers.push('block evidence file is not valid JSON');
     } else {
-      blockers.push('ai_evidence does not expose expected v2.1 snapshot metadata');
+      blockers.push('block evidence does not expose expected v2.1 CI BLOCK snapshot');
+    }
+  }
+
+  if (!isEvidenceHealthy(params.minimalEvidence, 'PASS')) {
+    if (!params.minimalEvidence.exists) {
+      blockers.push('minimal evidence file is missing');
+    } else if (params.minimalEvidence.parseError) {
+      blockers.push('minimal evidence file is not valid JSON');
+    } else {
+      blockers.push('minimal evidence does not expose expected v2.1 CI PASS snapshot');
     }
   }
 
@@ -183,16 +209,31 @@ const buildMarkdown = (params: {
   lines.push('');
   lines.push(`- block_summary: \`${params.blockSummaryFile}\``);
   lines.push(`- minimal_summary: \`${params.minimalSummaryFile}\``);
-  lines.push(`- evidence: \`${params.evidenceFile}\``);
+  lines.push(`- block_evidence: \`${params.blockEvidenceFile}\``);
+  lines.push(`- minimal_evidence: \`${params.minimalEvidenceFile}\``);
   lines.push('');
   lines.push('## Assertions');
   lines.push('');
   lines.push(`- smoke_block_expected: ${params.blockReady ? 'PASS' : 'FAIL'}`);
   lines.push(`- smoke_minimal_expected: ${params.minimalReady ? 'PASS' : 'FAIL'}`);
-  lines.push(`- evidence_schema_v2_1: ${isEvidenceHealthy(params.evidence) ? 'PASS' : 'FAIL'}`);
-  lines.push(`- evidence_version: ${params.evidence.version ?? 'missing'}`);
-  lines.push(`- evidence_snapshot_stage: ${params.evidence.stage ?? 'missing'}`);
-  lines.push(`- evidence_snapshot_outcome: ${params.evidence.outcome ?? 'missing'}`);
+  lines.push(
+    `- block_evidence_schema_v2_1: ${isEvidenceHealthy(params.blockEvidence, 'BLOCK') ? 'PASS' : 'FAIL'}`
+  );
+  lines.push(
+    `- minimal_evidence_schema_v2_1: ${isEvidenceHealthy(params.minimalEvidence, 'PASS') ? 'PASS' : 'FAIL'}`
+  );
+  lines.push(`- block_evidence_version: ${params.blockEvidence.version ?? 'missing'}`);
+  lines.push(`- block_evidence_snapshot_stage: ${params.blockEvidence.stage ?? 'missing'}`);
+  lines.push(
+    `- block_evidence_snapshot_outcome: ${params.blockEvidence.outcome ?? 'missing'}`
+  );
+  lines.push(`- minimal_evidence_version: ${params.minimalEvidence.version ?? 'missing'}`);
+  lines.push(
+    `- minimal_evidence_snapshot_stage: ${params.minimalEvidence.stage ?? 'missing'}`
+  );
+  lines.push(
+    `- minimal_evidence_snapshot_outcome: ${params.minimalEvidence.outcome ?? 'missing'}`
+  );
   lines.push('');
   lines.push('## Blockers');
   lines.push('');
@@ -210,7 +251,7 @@ const buildMarkdown = (params: {
     lines.push('- Mock consumer A/B validation is stable and ready for rollout evidence.');
   } else {
     lines.push('- Regenerate package smoke summaries and rerun this report.');
-    lines.push('- Ensure `.ai_evidence.json` exists and follows v2.1 schema.');
+    lines.push('- Ensure block/minimal CI evidence files exist and follow v2.1 schema.');
   }
   lines.push('');
 
@@ -228,7 +269,8 @@ const main = (): number => {
 
     const blockAssessment = assessSmokeSummary('block', options.blockSummaryFile);
     const minimalAssessment = assessSmokeSummary('minimal', options.minimalSummaryFile);
-    const evidenceAssessment = assessEvidence(options.evidenceFile);
+    const blockEvidenceAssessment = assessEvidence(options.blockEvidenceFile);
+    const minimalEvidenceAssessment = assessEvidence(options.minimalEvidenceFile);
 
     const blockReady = isExpectedModeResult(blockAssessment);
     const minimalReady = isExpectedModeResult(minimalAssessment);
@@ -238,10 +280,12 @@ const main = (): number => {
       repo: options.repo,
       blockSummaryFile: options.blockSummaryFile,
       minimalSummaryFile: options.minimalSummaryFile,
-      evidenceFile: options.evidenceFile,
+      blockEvidenceFile: options.blockEvidenceFile,
+      minimalEvidenceFile: options.minimalEvidenceFile,
       blockReady,
       minimalReady,
-      evidence: evidenceAssessment,
+      blockEvidence: blockEvidenceAssessment,
+      minimalEvidence: minimalEvidenceAssessment,
     });
 
     const outPath = resolve(process.cwd(), options.outFile);

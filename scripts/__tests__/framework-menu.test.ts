@@ -205,7 +205,8 @@ test('builds deterministic command args for mock consumer A/B report', () => {
     outFile: '.audit-reports/mock-consumer/mock-consumer-ab-report.md',
     blockSummaryFile: '.audit-reports/package-smoke/block/summary.md',
     minimalSummaryFile: '.audit-reports/package-smoke/minimal/summary.md',
-    evidenceFile: '.ai_evidence.json',
+    blockEvidenceFile: '.audit-reports/package-smoke/block/ci.ai_evidence.json',
+    minimalEvidenceFile: '.audit-reports/package-smoke/minimal/ci.ai_evidence.json',
   });
 
   assert.deepEqual(args, [
@@ -220,8 +221,10 @@ test('builds deterministic command args for mock consumer A/B report', () => {
     '.audit-reports/package-smoke/block/summary.md',
     '--minimal-summary',
     '.audit-reports/package-smoke/minimal/summary.md',
-    '--evidence',
-    '.ai_evidence.json',
+    '--block-evidence',
+    '.audit-reports/package-smoke/block/ci.ai_evidence.json',
+    '--minimal-evidence',
+    '.audit-reports/package-smoke/minimal/ci.ai_evidence.json',
   ]);
 });
 

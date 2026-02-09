@@ -41,7 +41,8 @@ npm run validation:mock-consumer-ab-report -- \
   --out .audit-reports/mock-consumer/mock-consumer-ab-report.md \
   --block-summary .audit-reports/package-smoke/block/summary.md \
   --minimal-summary .audit-reports/package-smoke/minimal/summary.md \
-  --evidence .ai_evidence.json
+  --block-evidence .audit-reports/package-smoke/block/ci.ai_evidence.json \
+  --minimal-evidence .audit-reports/package-smoke/minimal/ci.ai_evidence.json
 ```
 
 ## Path B: Manual local integration in mock consumer

@@ -13,7 +13,8 @@ const runReport = (params: {
   out?: string;
   blockSummaryFile?: string;
   minimalSummaryFile?: string;
-  evidenceFile?: string;
+  blockEvidenceFile?: string;
+  minimalEvidenceFile?: string;
 }): { status: number; stdout: string; stderr: string } => {
   const args = ['--yes', 'tsx@4.21.0', scriptPath];
 
@@ -29,8 +30,11 @@ const runReport = (params: {
   if (params.minimalSummaryFile) {
     args.push('--minimal-summary', params.minimalSummaryFile);
   }
-  if (params.evidenceFile) {
-    args.push('--evidence', params.evidenceFile);
+  if (params.blockEvidenceFile) {
+    args.push('--block-evidence', params.blockEvidenceFile);
+  }
+  if (params.minimalEvidenceFile) {
+    args.push('--minimal-evidence', params.minimalEvidenceFile);
   }
 
   try {
@@ -95,7 +99,23 @@ test('build-mock-consumer-ab-report returns READY for healthy smoke summaries an
     );
 
     writeFileSync(
-      join(tempRoot, '.ai_evidence.json'),
+      join(smokeRoot, 'block', 'ci.ai_evidence.json'),
+      JSON.stringify(
+        {
+          version: '2.1',
+          snapshot: {
+            stage: 'CI',
+            outcome: 'BLOCK',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(smokeRoot, 'minimal', 'ci.ai_evidence.json'),
       JSON.stringify(
         {
           version: '2.1',
@@ -124,7 +144,8 @@ test('build-mock-consumer-ab-report returns READY for healthy smoke summaries an
       'utf8'
     );
     assert.match(report, /- verdict: READY/);
-    assert.match(report, /- evidence_schema_v2_1: PASS/);
+    assert.match(report, /- block_evidence_schema_v2_1: PASS/);
+    assert.match(report, /- minimal_evidence_schema_v2_1: PASS/);
   });
 });
 
@@ -148,7 +169,7 @@ test('build-mock-consumer-ab-report returns BLOCKED when smoke/evidence assertio
     );
 
     writeFileSync(
-      join(tempRoot, '.ai_evidence.json'),
+      join(smokeRoot, 'block', 'ci.ai_evidence.json'),
       JSON.stringify(
         {
           version: '2.0',
@@ -177,6 +198,7 @@ test('build-mock-consumer-ab-report returns BLOCKED when smoke/evidence assertio
       report,
       /Package smoke minimal mode summary is not in expected pass state/
     );
-    assert.match(report, /ai_evidence does not expose expected v2\.1 snapshot metadata/);
+    assert.match(report, /block evidence does not expose expected v2\.1 CI BLOCK snapshot/);
+    assert.match(report, /minimal evidence file is missing/);
   });
 });
