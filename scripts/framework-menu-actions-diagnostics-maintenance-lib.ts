@@ -1,0 +1,22 @@
+import { runAndPrintExitCode, runSkillsLockCheck, runValidationDocsHygiene } from './framework-menu-runners';
+import type {
+  FrameworkMenuActionContext,
+  MenuAction,
+} from './framework-menu-action-contract';
+
+export const createFrameworkMenuDiagnosticsMaintenanceActions = (
+  _params: FrameworkMenuActionContext
+): ReadonlyArray<MenuAction> => {
+  return [
+    {
+      id: '17',
+      label: 'Run docs/validation hygiene check',
+      execute: async () => runAndPrintExitCode(runValidationDocsHygiene),
+    },
+    {
+      id: '18',
+      label: 'Run skills lock freshness check',
+      execute: async () => runAndPrintExitCode(runSkillsLockCheck),
+    },
+  ];
+};

@@ -1,91 +1,21 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import { loadSkillsLock, type SkillsLockBundle } from '../integrations/config/skillsLock';
-import { resolvePolicyForStage } from '../integrations/gate/stagePolicies';
-import { runPlatformGate } from '../integrations/git/runPlatformGate';
 import { createFrameworkMenuActions, type MenuAction } from './framework-menu-actions';
+import { runRangeGate, runStagedGate } from './framework-menu-gate-lib';
 import { createFrameworkMenuPrompts } from './framework-menu-prompts';
+import { resolveDefaultRangeFrom } from './framework-menu-runners';
 import {
-  resolveDefaultRangeFrom,
-  runAndPrintExitCode,
-} from './framework-menu-runners';
+  formatActiveSkillsBundles,
+  loadAndFormatActiveSkillsBundles,
+} from './framework-menu-skills-lib';
 
 export * from './framework-menu-builders';
-
-type MenuStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
-
-type MenuScope =
-  | { kind: 'staged' }
-  | {
-      kind: 'range';
-      fromRef: string;
-      toRef: string;
-    };
-
-export const buildMenuGateParams = (params: {
-  stage: MenuStage;
-  scope: MenuScope;
-  repoRoot?: string;
-}) => {
-  const resolved = resolvePolicyForStage(params.stage, params.repoRoot);
-
-  return {
-    policy: resolved.policy,
-    policyTrace: resolved.trace,
-    scope: params.scope,
-  };
-};
-
-export const formatActiveSkillsBundles = (
-  bundles: ReadonlyArray<Pick<SkillsLockBundle, 'name' | 'version' | 'hash'>>
-): string => {
-  if (bundles.length === 0) {
-    return 'No active skills bundles found. Run `npm run skills:compile` to generate skills.lock.json.';
-  }
-
-  const lines = [...bundles]
-    .sort((left, right) => {
-      const byName = left.name.localeCompare(right.name);
-      if (byName !== 0) {
-        return byName;
-      }
-      return left.version.localeCompare(right.version);
-    })
-    .map((bundle) => `- ${bundle.name}@${bundle.version} hash=${bundle.hash}`);
-
-  return ['Active skills bundles:', ...lines].join('\n');
-};
+export { buildMenuGateParams } from './framework-menu-gate-lib';
+export { formatActiveSkillsBundles } from './framework-menu-skills-lib';
 
 const printActiveSkillsBundles = (): void => {
-  const lock = loadSkillsLock(process.cwd());
-  const rendered = formatActiveSkillsBundles(lock?.bundles ?? []);
+  const rendered = loadAndFormatActiveSkillsBundles(process.cwd());
   output.write(`\n${rendered}\n`);
-};
-
-const runStaged = async (): Promise<void> => {
-  const gateParams = buildMenuGateParams({
-    stage: 'PRE_COMMIT',
-    scope: { kind: 'staged' },
-  });
-
-  await runAndPrintExitCode(() => runPlatformGate(gateParams));
-};
-
-const runRange = async (params: {
-  fromRef: string;
-  toRef: string;
-  stage: 'PRE_PUSH' | 'CI';
-}): Promise<void> => {
-  const gateParams = buildMenuGateParams({
-    stage: params.stage,
-    scope: {
-      kind: 'range',
-      fromRef: params.fromRef,
-      toRef: params.toRef,
-    },
-  });
-
-  await runAndPrintExitCode(() => runPlatformGate(gateParams));
 };
 
 const menu = async (): Promise<void> => {
@@ -95,8 +25,8 @@ const menu = async (): Promise<void> => {
     const prompts = createFrameworkMenuPrompts(rl);
     const actions: ReadonlyArray<MenuAction> = createFrameworkMenuActions({
       prompts,
-      runStaged,
-      runRange,
+      runStaged: runStagedGate,
+      runRange: runRangeGate,
       resolveDefaultRangeFrom,
       printActiveSkillsBundles,
     });
