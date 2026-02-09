@@ -4,22 +4,13 @@
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
-    "pumuki-ast-hooks": "bin/pumuki-mcp-server.js",
-    "audit": "bin/audit",
-    "ast-hooks": "bin/cli.js",
-    "ast-install": "bin/install.js",
-    "ast-uninstall": "bin/uninstall.js",
-    "ast-violations": "bin/violations-api.js",
-    "ast-check-version": "bin/check-version.js",
-    "ast-gitflow": "scripts/hooks-system/bin/gitflow-cycle.js",
-    "ai-commit": "bin/ai-commit.sh",
-    "hook-run-orchestrator": "bin/run-orchestrator.js",
-    "hook-watch": "bin/watch-hooks.js",
-    "hook-status": "bin/hook-status.js",
-    "hook-predict": "bin/predictive-hooks.js",
-    "hook-playbook": "bin/run-playbook.js",
-    "hook-doc-drift": "bin/check-doc-drift.js",
-    "hook-plan-review": "bin/plan-review.js"
+    "pumuki-ast-hooks": "bin/pumuki-framework.js",
+    "ast-hooks": "bin/pumuki-framework.js",
+    "pumuki-framework": "bin/pumuki-framework.js",
+    "pumuki-pre-commit": "bin/pumuki-pre-commit.js",
+    "pumuki-pre-push": "bin/pumuki-pre-push.js",
+    "pumuki-ci": "bin/pumuki-ci.js",
+    "pumuki-mcp-evidence": "bin/pumuki-mcp-evidence.js"
   },
   "scripts": {
     "install-hooks": "node bin/install.js",
@@ -57,7 +48,7 @@
     "ast:guard:status": "bash scripts/hooks-system/bin/evidence-guard status",
     "ast:guard:logs": "bash scripts/hooks-system/bin/evidence-guard logs",
     "ast:check-version": "node scripts/hooks-system/bin/check-version.js",
-    "framework:menu": "npx tsx scripts/framework-menu.ts",
+    "framework:menu": "node bin/pumuki-framework.js",
     "validation:consumer-ci-artifacts": "npx --yes tsx@4.21.0 scripts/collect-consumer-ci-artifacts.ts",
     "validation:consumer-ci-auth-check": "npx --yes tsx@4.21.0 scripts/check-consumer-ci-auth.ts",
     "validation:consumer-workflow-lint": "npx --yes tsx@4.21.0 scripts/lint-consumer-workflows.ts",
@@ -75,7 +66,7 @@
     "validation:docs-hygiene": "npx --yes tsx@4.21.0 scripts/check-validation-docs-hygiene.ts",
     "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",
     "skills:lock:check": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts --check",
-    "mcp:evidence": "npx --yes tsx@4.21.0 integrations/mcp/evidenceContextServer.cli.ts",
+    "mcp:evidence": "node bin/pumuki-mcp-evidence.js",
     "validate:adapter-hooks-local": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh",
     "print:adapter-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/print-adapter-hooks-config.sh",
     "install:adapter-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-adapter-hooks-config.sh",
@@ -129,14 +120,15 @@
   },
   "dependencies": {
     "glob": "^10.5.0",
-    "ts-morph": ">=21.0.0"
+    "ts-morph": ">=21.0.0",
+    "tsx": "^4.21.0",
+    "@babel/parser": "^7.28.5"
   },
   "peerDependencies": {
     "ts-morph": ">=21.0.0"
   },
   "devDependencies": {
     "@babel/generator": "^7.28.5",
-    "@babel/parser": "^7.28.5",
     "@babel/traverse": "^7.28.5",
     "@types/node": "^20.10.0",
     "eslint": "^9.12.0",
@@ -146,17 +138,30 @@
     "typescript": "^5.3.0"
   },
   "files": [
-    "bin/",
-    "scripts/hooks-system/",
-    "scripts/hooks-system/config/",
-    "presentation/",
-    "skills/",
-    "hooks/",
-    "docs/",
-    "assets/",
+    "bin/*.js",
+    "core/facts/*.ts",
+    "core/gate/*.ts",
+    "core/rules/*.ts",
+    "core/rules/presets/*.ts",
+    "integrations/config/*.ts",
+    "integrations/evidence/*.ts",
+    "integrations/gate/*.ts",
+    "integrations/git/*.ts",
+    "integrations/mcp/*.ts",
+    "integrations/platform/*.ts",
+    "scripts/*.ts",
+    "docs/*.md",
+    "docs/rule-packs/*.md",
+    "docs/validation/*.md",
+    "docs/images/README.md",
+    "assets/*",
     "index.js",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "VERSION",
+    "tsconfig.json",
+    "skills.lock.json",
+    "skills.sources.json"
   ],
   "publishConfig": {
     "access": "public",
@@ -165,11 +170,9 @@
   "exports": {
     ".": "./index.js",
     "./package.json": "./package.json",
-    "./ast": "./scripts/hooks-system/infrastructure/ast/ast-intelligence.js",
-    "./domain": "./scripts/hooks-system/domain/index.js",
-    "./application": "./scripts/hooks-system/application/index.js",
-    "./config": "./config/index.js",
-    "./skills": "./skills/skill-rules.json",
-    "./hooks": "./hooks/index.js"
+    "./integrations/git": "./integrations/git/index.ts",
+    "./integrations/mcp": "./integrations/mcp/index.ts",
+    "./core/gate/evaluateGate": "./core/gate/evaluateGate.ts",
+    "./core/gate/evaluateRules": "./core/gate/evaluateRules.ts"
   }
 }
