@@ -11,6 +11,7 @@ npm run test:mcp
 npm run test:heuristics
 npm run test:deterministic
 npm run validation:package-smoke
+npm run validation:package-smoke:minimal
 ```
 
 ## What each suite validates
@@ -31,8 +32,14 @@ npm run validation:package-smoke
   - Aggregated deterministic suite (`evidence + mcp + heuristics`).
 
 - `npm run validation:package-smoke`
-  - Package-install smoke run (`npm pack` + temporary consumer install + `pumuki-pre-commit` / `pumuki-pre-push` / `pumuki-ci`).
-  - Writes artifacts to `.audit-reports/package-smoke/`.
+  - Package-install smoke (`BLOCK` scenario): `npm pack` + temporary consumer install + intentional multi-platform violations.
+  - Validates `pumuki-pre-commit` / `pumuki-pre-push` / `pumuki-ci` blocking path and evidence v2.1 metadata.
+  - Writes artifacts to `.audit-reports/package-smoke/block/`.
+
+- `npm run validation:package-smoke:minimal`
+  - Package-install smoke (`PASS` scenario): `npm pack` + temporary consumer install + clean minimal staged/range path.
+  - Validates allow path (exit `0`) with evidence v2.1 metadata.
+  - Writes artifacts to `.audit-reports/package-smoke/minimal/`.
 
 ## Test locations
 

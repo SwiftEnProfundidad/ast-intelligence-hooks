@@ -19,13 +19,15 @@ type RunCommandResult = {
   combined: string;
 };
 
+type SmokeMode = 'block' | 'minimal';
+
 const FATAL_OUTPUT_PATTERNS = [
   'Cannot find module',
   'ERR_MODULE_NOT_FOUND',
   'failed to resolve tsx runtime',
 ];
 
-const REPORTS_DIR = join('.audit-reports', 'package-smoke');
+const REPORTS_DIR_ROOT = join('.audit-reports', 'package-smoke');
 
 const ensureDirectory = (path: string): void => {
   mkdirSync(path, { recursive: true });
@@ -148,6 +150,18 @@ const writeStagedOnlyFile = (consumerRepo: string): string => {
   ensureDirectory(join(filePath, '..'));
   writeFileSync(
     filePath,
+    ['export const stagedSmoke = (): string => "ok";', ''].join('\n'),
+    'utf8'
+  );
+  return relativePath;
+};
+
+const writeStagedOnlyViolationFile = (consumerRepo: string): string => {
+  const relativePath = 'apps/backend/src/staged-smoke.ts';
+  const filePath = join(consumerRepo, relativePath);
+  ensureDirectory(join(filePath, '..'));
+  writeFileSync(
+    filePath,
     [
       'export const stagedSmoke = (): string => {',
       "  console.log('backend-staged-smoke');",
@@ -172,9 +186,27 @@ const parseEvidence = (filePath: string): { version: string; stage: string; outc
   };
 };
 
+const parseMode = (): SmokeMode => {
+  const modeArg = process.argv.find((argument) => argument.startsWith('--mode='));
+  if (!modeArg) {
+    return 'block';
+  }
+
+  const value = modeArg.slice('--mode='.length).trim();
+  if (value === 'block' || value === 'minimal') {
+    return value;
+  }
+
+  throw new Error(`Unsupported --mode value "${value}". Allowed values: block, minimal`);
+};
+
 const main = (): void => {
+  const mode = parseMode();
+  const expectedExitCode = mode === 'block' ? 1 : 0;
+  const expectedOutcome = mode === 'block' ? 'BLOCK' : 'PASS';
   const repoRoot = resolve(process.cwd());
-  const reportRoot = join(repoRoot, REPORTS_DIR);
+  const reportsDir = join(REPORTS_DIR_ROOT, mode);
+  const reportRoot = join(repoRoot, reportsDir);
   ensureDirectory(reportRoot);
 
   const commandLog: string[] = [];
@@ -207,6 +239,7 @@ const main = (): void => {
       throw new Error(`Packed tarball not found at ${tarballPath}`);
     }
 
+    summary.push(`- Smoke mode: \`${mode}\``);
     summary.push(`- Packed tarball: \`${packInfo[0].id}\``);
 
     ensureDirectory(consumerRepo);
@@ -292,22 +325,26 @@ const main = (): void => {
       'git branch --set-upstream-to'
     );
 
-    writeRangePayloadFiles(consumerRepo);
+    if (mode === 'block') {
+      writeRangePayloadFiles(consumerRepo);
+      assertSuccess(
+        runCommand({ cwd: consumerRepo, executable: 'git', args: ['add', '.'] }),
+        'git add range payload'
+      );
+      assertSuccess(
+        runCommand({
+          cwd: consumerRepo,
+          executable: 'git',
+          args: ['commit', '-m', 'test: range payload for package smoke'],
+        }),
+        'git commit range payload'
+      );
+    }
 
-    assertSuccess(
-      runCommand({ cwd: consumerRepo, executable: 'git', args: ['add', '.'] }),
-      'git add range payload'
-    );
-    assertSuccess(
-      runCommand({
-        cwd: consumerRepo,
-        executable: 'git',
-        args: ['commit', '-m', 'test: range payload for package smoke'],
-      }),
-      'git commit range payload'
-    );
-
-    const stagedFile = writeStagedOnlyFile(consumerRepo);
+    const stagedFile =
+      mode === 'block'
+        ? writeStagedOnlyViolationFile(consumerRepo)
+        : writeStagedOnlyFile(consumerRepo);
     assertSuccess(
       runCommand({ cwd: consumerRepo, executable: 'git', args: ['add', stagedFile] }),
       'git add staged-only payload'
@@ -320,8 +357,10 @@ const main = (): void => {
     });
     commandLog.push(`$ ${preCommit.command}\n${preCommit.combined}`.trim());
     assertNoFatalOutput(preCommit, 'pumuki-pre-commit');
-    if (preCommit.exitCode !== 1) {
-      throw new Error(`pumuki-pre-commit expected exit code 1, got ${preCommit.exitCode}`);
+    if (preCommit.exitCode !== expectedExitCode) {
+      throw new Error(
+        `pumuki-pre-commit expected exit code ${expectedExitCode}, got ${preCommit.exitCode}`
+      );
     }
     copyFileSync(
       join(consumerRepo, '.ai_evidence.json'),
@@ -335,8 +374,10 @@ const main = (): void => {
     });
     commandLog.push(`$ ${prePush.command}\n${prePush.combined}`.trim());
     assertNoFatalOutput(prePush, 'pumuki-pre-push');
-    if (prePush.exitCode !== 1) {
-      throw new Error(`pumuki-pre-push expected exit code 1, got ${prePush.exitCode}`);
+    if (prePush.exitCode !== expectedExitCode) {
+      throw new Error(
+        `pumuki-pre-push expected exit code ${expectedExitCode}, got ${prePush.exitCode}`
+      );
     }
     copyFileSync(
       join(consumerRepo, '.ai_evidence.json'),
@@ -351,8 +392,8 @@ const main = (): void => {
     });
     commandLog.push(`$ ${ci.command}\n${ci.combined}`.trim());
     assertNoFatalOutput(ci, 'pumuki-ci');
-    if (ci.exitCode !== 1) {
-      throw new Error(`pumuki-ci expected exit code 1, got ${ci.exitCode}`);
+    if (ci.exitCode !== expectedExitCode) {
+      throw new Error(`pumuki-ci expected exit code ${expectedExitCode}, got ${ci.exitCode}`);
     }
     copyFileSync(join(consumerRepo, '.ai_evidence.json'), join(reportRoot, 'ci.ai_evidence.json'));
 
@@ -375,17 +416,26 @@ const main = (): void => {
         `Invalid CI evidence metadata: version=${ciEvidence.version} stage=${ciEvidence.stage}`
       );
     }
+    if (
+      preCommitEvidence.outcome !== expectedOutcome ||
+      prePushEvidence.outcome !== expectedOutcome ||
+      ciEvidence.outcome !== expectedOutcome
+    ) {
+      throw new Error(
+        `Unexpected evidence outcomes for mode=${mode}: preCommit=${preCommitEvidence.outcome}, prePush=${prePushEvidence.outcome}, ci=${ciEvidence.outcome}`
+      );
+    }
 
     summary.push('- Status: PASS');
     summary.push(`- pre-commit exit: \`${preCommit.exitCode}\` (${preCommitEvidence.outcome})`);
     summary.push(`- pre-push exit: \`${prePush.exitCode}\` (${prePushEvidence.outcome})`);
     summary.push(`- ci exit: \`${ci.exitCode}\` (${ciEvidence.outcome})`);
-    summary.push(`- Artifact root: \`${REPORTS_DIR}\``);
+    summary.push(`- Artifact root: \`${reportsDir}\``);
   } catch (error) {
     summary.push('- Status: FAIL');
     summary.push(`- Error: ${(error as Error).message}`);
-    writeReportFile(repoRoot, join(REPORTS_DIR, 'command.log'), commandLog.join('\n\n'));
-    writeReportFile(repoRoot, join(REPORTS_DIR, 'summary.md'), summary.join('\n'));
+    writeReportFile(repoRoot, join(reportsDir, 'command.log'), commandLog.join('\n\n'));
+    writeReportFile(repoRoot, join(reportsDir, 'summary.md'), summary.join('\n'));
     throw error;
   } finally {
     if (tarballPath) {
@@ -394,8 +444,8 @@ const main = (): void => {
     rmSync(tmpRoot, { recursive: true, force: true });
   }
 
-  writeReportFile(repoRoot, join(REPORTS_DIR, 'command.log'), commandLog.join('\n\n'));
-  writeReportFile(repoRoot, join(REPORTS_DIR, 'summary.md'), summary.join('\n'));
+  writeReportFile(repoRoot, join(reportsDir, 'command.log'), commandLog.join('\n\n'));
+  writeReportFile(repoRoot, join(reportsDir, 'summary.md'), summary.join('\n'));
 };
 
 main();

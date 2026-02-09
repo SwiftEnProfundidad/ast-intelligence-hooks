@@ -7,6 +7,10 @@ on:
 jobs:
   package-smoke:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [block, minimal]
 
     steps:
       - name: Checkout
@@ -22,11 +26,11 @@ jobs:
         run: npm ci
 
       - name: Run package install smoke
-        run: node --import tsx scripts/package-install-smoke.ts
+        run: node --import tsx scripts/package-install-smoke.ts --mode=${{ matrix.mode }}
 
       - name: Upload package smoke artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: package-smoke-report
-          path: .audit-reports/package-smoke
+          name: package-smoke-report-${{ matrix.mode }}
+          path: .audit-reports/package-smoke/${{ matrix.mode }}
