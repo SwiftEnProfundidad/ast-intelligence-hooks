@@ -1,11 +1,11 @@
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync } from 'node:fs';
 import { basename, join, resolve } from 'node:path';
 import type { AdapterSessionStatusTail } from './adapter-session-status-contract';
 import {
-  filterHookLogLinesForRepo,
-  filterWritesLogLinesForRepo,
-  toTailFromText,
-} from './adapter-session-status-log-filter-lib';
+  readTailFile,
+  readTailForHookLog,
+  readTailForWritesLog,
+} from './adapter-session-status-tail-readers-lib';
 
 export const findLatestAuditFile = (params: {
   directory: string;
@@ -25,56 +25,6 @@ export const findLatestAuditFile = (params: {
   }
 
   return join(params.directory, matches[0]);
-};
-
-export const readTailFile = (filePath: string, lines: number): string => {
-  if (!existsSync(filePath)) {
-    return `[missing] ${filePath}`;
-  }
-
-  return toTailFromText(readFileSync(filePath, 'utf8'), lines);
-};
-
-export const readTailForHookLog = (params: {
-  filePath: string;
-  lines: number;
-  repoRoot: string;
-}): string => {
-  if (!existsSync(params.filePath)) {
-    return `[missing] ${params.filePath}`;
-  }
-
-  const filtered = filterHookLogLinesForRepo({
-    content: readFileSync(params.filePath, 'utf8'),
-    repoRoot: params.repoRoot,
-  });
-
-  if (filtered.length === 0) {
-    return `[no entries matched repoRoot=${params.repoRoot}]`;
-  }
-
-  return filtered.slice(Math.max(filtered.length - params.lines, 0)).join('\n').trimEnd();
-};
-
-export const readTailForWritesLog = (params: {
-  filePath: string;
-  lines: number;
-  repoRoot: string;
-}): string => {
-  if (!existsSync(params.filePath)) {
-    return `[missing] ${params.filePath}`;
-  }
-
-  const filtered = filterWritesLogLinesForRepo({
-    content: readFileSync(params.filePath, 'utf8'),
-    repoRoot: params.repoRoot,
-  });
-
-  if (filtered.length === 0) {
-    return `[no entries matched repoRoot=${params.repoRoot}]`;
-  }
-
-  return filtered.slice(Math.max(filtered.length - params.lines, 0)).join('\n').trimEnd();
 };
 
 export const collectAdapterSessionStatusTails = (params: {
