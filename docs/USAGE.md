@@ -34,6 +34,12 @@ npm run framework:menu
 
 Menu supports staged evaluation, commit-range evaluation, evidence reading, and CI runner entrypoints.
 
+To avoid host-specific defaults for consumer diagnostics prompts, set:
+
+```bash
+export PUMUKI_CONSUMER_REPO_PATH=/absolute/path/to/consumer-repo
+```
+
 Optional diagnostics adapters (runtime diagnostics and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
 
 Adapter readiness diagnostics are available from the interactive menu as:

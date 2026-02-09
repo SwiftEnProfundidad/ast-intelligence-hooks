@@ -38,6 +38,9 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - reusable inspection library: `scripts/package-manifest-lib.ts`
   - regression test coverage in stage-gates:
     - `scripts/__tests__/package-manifest-lib.test.ts`
+- Framework menu portability hardening:
+  - removed host-specific consumer repo path defaults from `scripts/framework-menu.ts`
+  - added `PUMUKI_CONSUMER_REPO_PATH` support for environment-specific menu defaults
 
 ### AST heuristics pilot
 

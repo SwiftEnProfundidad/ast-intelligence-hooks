@@ -63,6 +63,12 @@ npm run framework:menu
 
 The interactive menu includes stage evaluation plus optional adapter diagnostics (adapter reports, consumer diagnostics, and Phase 5 execution-closure snapshots/orchestration), and operational checks (`docs/validation` hygiene and `skills:lock:check`).
 
+For menu-driven consumer diagnostics on your environment, you can set:
+
+```bash
+export PUMUKI_CONSUMER_REPO_PATH=/absolute/path/to/consumer-repo
+```
+
 Direct stage wrappers:
 
 ```bash
