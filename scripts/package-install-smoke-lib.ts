@@ -1,190 +1,23 @@
-import { spawnSync } from 'node:child_process';
-import {
-  copyFileSync,
-  existsSync,
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { copyFileSync, existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-
-type RunCommandResult = {
-  command: string;
-  exitCode: number;
-  stdout: string;
-  stderr: string;
-  combined: string;
-};
+import {
+  writeBaselineFile,
+  writeRangePayloadFiles,
+  writeStagedOnlyFile,
+  writeStagedOnlyViolationFile,
+} from './package-install-smoke-fixtures-lib';
+import {
+  REPORTS_DIR_ROOT,
+  assertNoFatalOutput,
+  assertSuccess,
+  ensureDirectory,
+  parseEvidence,
+  runCommand,
+  writeReportFile,
+} from './package-install-smoke-runner-common';
 
 export type SmokeMode = 'block' | 'minimal';
-
-const FATAL_OUTPUT_PATTERNS = [
-  'Cannot find module',
-  'ERR_MODULE_NOT_FOUND',
-  'failed to resolve tsx runtime',
-];
-
-const REPORTS_DIR_ROOT = join('.audit-reports', 'package-smoke');
-
-const ensureDirectory = (path: string): void => {
-  mkdirSync(path, { recursive: true });
-};
-
-const writeReportFile = (repoRoot: string, relativePath: string, content: string): void => {
-  const filePath = join(repoRoot, relativePath);
-  ensureDirectory(join(filePath, '..'));
-  writeFileSync(filePath, content, 'utf8');
-};
-
-const runCommand = (params: {
-  cwd: string;
-  executable: string;
-  args: string[];
-  env?: NodeJS.ProcessEnv;
-}): RunCommandResult => {
-  const { cwd, executable, args, env } = params;
-  const command = `${executable} ${args.join(' ')}`.trim();
-  const result = spawnSync(executable, args, {
-    cwd,
-    env: {
-      ...process.env,
-      ...env,
-    },
-    encoding: 'utf8',
-  });
-
-  const stdout = result.stdout ?? '';
-  const stderr = result.stderr ?? '';
-  const combined = `${stdout}${stderr}`;
-  const exitCode =
-    typeof result.status === 'number'
-      ? result.status
-      : result.error
-        ? 1
-        : 0;
-
-  return { command, exitCode, stdout, stderr, combined };
-};
-
-const assertSuccess = (result: RunCommandResult, context: string): void => {
-  if (result.exitCode !== 0) {
-    throw new Error(
-      `${context} failed (${result.command}) with exit code ${result.exitCode}\n${result.combined}`
-    );
-  }
-};
-
-const assertNoFatalOutput = (result: RunCommandResult, context: string): void => {
-  const failingPattern = FATAL_OUTPUT_PATTERNS.find((pattern) =>
-    result.combined.includes(pattern)
-  );
-  if (failingPattern) {
-    throw new Error(
-      `${context} output contains fatal pattern "${failingPattern}"\n${result.combined}`
-    );
-  }
-};
-
-const writeBaselineFile = (consumerRepo: string): void => {
-  const relativePath = 'apps/backend/src/baseline.ts';
-  const filePath = join(consumerRepo, relativePath);
-  ensureDirectory(join(filePath, '..'));
-  writeFileSync(
-    filePath,
-    ["export const baseline = (): string => 'ok';", ''].join('\n'),
-    'utf8'
-  );
-};
-
-const writeRangePayloadFiles = (consumerRepo: string): void => {
-  const files: Record<string, string> = {
-    'apps/backend/src/range-smoke.ts': [
-      'export const backendRangeSmoke = (): string => {',
-      "  console.log('backend-range-smoke');",
-      "  return 'ok';",
-      '};',
-      '',
-    ].join('\n'),
-    'apps/web/src/range-smoke.tsx': [
-      'export function FrontendRangeSmoke(): string {',
-      "  console.log('frontend-range-smoke');",
-      "  return 'ok';",
-      '}',
-      '',
-    ].join('\n'),
-    'apps/android/app/src/main/java/com/example/RangeSmoke.kt': [
-      'package com.example',
-      '',
-      'class RangeSmoke {',
-      '  fun block(): String {',
-      '    Thread.sleep(1000)',
-      '    return "ok"',
-      '  }',
-      '}',
-      '',
-    ].join('\n'),
-    'apps/ios/RangeSmoke.swift': [
-      'import Foundation',
-      '',
-      'func rangeSmoke() -> String {',
-      '  let value: String? = "ok"',
-      '  return value!',
-      '}',
-      '',
-    ].join('\n'),
-  };
-
-  for (const [relativePath, content] of Object.entries(files)) {
-    const filePath = join(consumerRepo, relativePath);
-    ensureDirectory(join(filePath, '..'));
-    writeFileSync(filePath, content, 'utf8');
-  }
-};
-
-const writeStagedOnlyFile = (consumerRepo: string): string => {
-  const relativePath = 'apps/backend/src/staged-smoke.ts';
-  const filePath = join(consumerRepo, relativePath);
-  ensureDirectory(join(filePath, '..'));
-  writeFileSync(
-    filePath,
-    ['export const stagedSmoke = (): string => "ok";', ''].join('\n'),
-    'utf8'
-  );
-  return relativePath;
-};
-
-const writeStagedOnlyViolationFile = (consumerRepo: string): string => {
-  const relativePath = 'apps/backend/src/staged-smoke.ts';
-  const filePath = join(consumerRepo, relativePath);
-  ensureDirectory(join(filePath, '..'));
-  writeFileSync(
-    filePath,
-    [
-      'export const stagedSmoke = (): string => {',
-      "  console.log('backend-staged-smoke');",
-      "  return 'ok';",
-      '};',
-      '',
-    ].join('\n'),
-    'utf8'
-  );
-  return relativePath;
-};
-
-const parseEvidence = (filePath: string): { version: string; stage: string; outcome: string } => {
-  const parsed = JSON.parse(readFileSync(filePath, 'utf8')) as {
-    version?: string;
-    snapshot?: { stage?: string; outcome?: string };
-  };
-  return {
-    version: parsed.version ?? 'missing',
-    stage: parsed.snapshot?.stage ?? 'missing',
-    outcome: parsed.snapshot?.outcome ?? 'missing',
-  };
-};
 
 export const parsePackageInstallSmokeMode = (
   args: ReadonlyArray<string>
