@@ -32,6 +32,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Framework menu includes artifact cleanup action (`Clean local validation artifacts`).
 - Phase 5 one-shot flow includes auth preflight fail-fast with optional bypass (`--skip-auth-preflight`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
+- Package manifest guardrail logic is reusable and regression-tested in stage gates (`scripts/package-manifest-lib.ts`, `scripts/__tests__/package-manifest-lib.test.ts`).
 
 For full historical execution details, see:
 

@@ -34,6 +34,10 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Package manifest guardrail added:
   - command: `npm run validation:package-manifest`
   - enforces required runtime paths in tarball and forbids legacy/tests/archive diagnostics content
+- Package manifest guardrail internal hardening:
+  - reusable inspection library: `scripts/package-manifest-lib.ts`
+  - regression test coverage in stage-gates:
+    - `scripts/__tests__/package-manifest-lib.test.ts`
 
 ### AST heuristics pilot
 
