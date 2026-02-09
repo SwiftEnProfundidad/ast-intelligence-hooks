@@ -3,52 +3,23 @@ import {
   type Phase5ExecutionClosureSummary,
   type SummarizePhase5ExecutionClosureParams,
 } from './phase5-execution-closure-status-contract';
+import {
+  collectPhase5ExecutionClosureBlockers,
+  collectPhase5ExecutionClosureMissingInputs,
+  collectPhase5ExecutionClosureWarnings,
+  resolvePhase5ExecutionClosureSummaryVerdict,
+} from './phase5-execution-closure-status-summary-helpers-lib';
 
 export const summarizePhase5ExecutionClosure = (
   params: SummarizePhase5ExecutionClosureParams
 ): Phase5ExecutionClosureSummary => {
-  const missingInputs: string[] = [];
-  const blockers: string[] = [];
-  const warnings: string[] = [];
-
-  if (!params.hasPhase5BlockersReport) {
-    missingInputs.push('Missing Phase 5 blockers readiness report');
-  }
-  if (!params.hasConsumerUnblockReport) {
-    missingInputs.push('Missing consumer startup unblock status report');
-  }
-  if (params.requireAdapterReadiness && !params.hasAdapterReadinessReport) {
-    missingInputs.push('Missing adapter readiness report');
-  }
-
-  if (missingInputs.length === 0) {
-    if ((params.phase5BlockersVerdict ?? '').toUpperCase() !== 'READY') {
-      blockers.push(
-        `Phase 5 blockers readiness verdict is ${params.phase5BlockersVerdict ?? 'unknown'}`
-      );
-    }
-    if ((params.consumerUnblockVerdict ?? '').toUpperCase() !== 'READY_FOR_RETEST') {
-      blockers.push(
-        `Consumer startup unblock verdict is ${params.consumerUnblockVerdict ?? 'unknown'}`
-      );
-    }
-
-    const adapterVerdict = (params.adapterReadinessVerdict ?? '').toUpperCase();
-    if (params.requireAdapterReadiness) {
-      if (adapterVerdict !== 'READY') {
-        blockers.push(
-          `Adapter readiness verdict is ${params.adapterReadinessVerdict ?? 'unknown'}`
-        );
-      }
-    } else if (params.hasAdapterReadinessReport && adapterVerdict !== 'READY') {
-      warnings.push(
-        `Adapter readiness is ${params.adapterReadinessVerdict ?? 'unknown'} (not required in current mode)`
-      );
-    }
-  }
-
-  const verdict: Phase5ExecutionClosureSummary['verdict'] =
-    missingInputs.length > 0 ? 'MISSING_INPUTS' : blockers.length > 0 ? 'BLOCKED' : 'READY';
+  const missingInputs = collectPhase5ExecutionClosureMissingInputs(params);
+  const blockers = missingInputs.length === 0 ? collectPhase5ExecutionClosureBlockers(params) : [];
+  const warnings = missingInputs.length === 0 ? collectPhase5ExecutionClosureWarnings(params) : [];
+  const verdict = resolvePhase5ExecutionClosureSummaryVerdict({
+    missingInputs,
+    blockers,
+  });
 
   return {
     verdict,
