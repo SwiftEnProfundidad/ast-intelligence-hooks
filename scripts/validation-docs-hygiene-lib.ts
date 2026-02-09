@@ -11,6 +11,7 @@ const ALLOWED_ROOT_DOCS = new Set<string>([
   'docs/validation/adapter-hook-runtime-local-report.md',
   'docs/validation/adapter-hook-runtime-validation.md',
   'docs/validation/adapter-real-session-report-template.md',
+  'docs/validation/enterprise-consumer-isolation-policy.md',
 ]);
 
 const ARCHIVE_PREFIX = 'docs/validation/archive/';

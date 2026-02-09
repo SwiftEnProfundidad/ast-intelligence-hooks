@@ -26,6 +26,14 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 - Reusable gate workflow template plus platform-specific workflows.
 - Evidence artifact upload standardized across runs.
+- Package-install smoke gate added for published/runtime behavior:
+  - workflow: `.github/workflows/pumuki-package-smoke.yml`
+  - `block` matrix mode validates expected blocking path (`exit 1`, `outcome=BLOCK`)
+  - `minimal` matrix mode validates expected pass path (`exit 0`, `outcome=PASS`)
+  - both modes validate evidence v2.1 stage metadata and upload artifacts
+- Package manifest guardrail added:
+  - command: `npm run validation:package-manifest`
+  - enforces required runtime paths in tarball and forbids legacy/tests/archive diagnostics content
 
 ### AST heuristics pilot
 
