@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { inspectPackageManifestPaths } from './package-manifest-lib';
 
 type PackFile = {
   path: string;
@@ -8,25 +9,6 @@ type PackPayload = {
   id: string;
   files: PackFile[];
 };
-
-const REQUIRED_PATHS = [
-  'bin/pumuki-framework.js',
-  'bin/pumuki-pre-commit.js',
-  'bin/pumuki-pre-push.js',
-  'bin/pumuki-ci.js',
-  'bin/pumuki-mcp-evidence.js',
-  'scripts/package-install-smoke.ts',
-  'integrations/git/runPlatformGate.ts',
-  'integrations/evidence/buildEvidence.ts',
-];
-
-const FORBIDDEN_PATTERNS: RegExp[] = [
-  /^legacy\//,
-  /\/__tests__\//,
-  /^docs\/validation\/archive\//,
-  /^\.audit-reports\//,
-  /^\.audit_tmp\//,
-];
 
 const runPackDryRun = (): PackPayload => {
   const result = spawnSync('npm', ['pack', '--json', '--dry-run'], {
@@ -51,17 +33,18 @@ const runPackDryRun = (): PackPayload => {
 const main = (): void => {
   const payload = runPackDryRun();
   const filePaths = payload.files.map((file) => file.path);
+  const report = inspectPackageManifestPaths(filePaths);
 
-  const missingRequired = REQUIRED_PATHS.filter((requiredPath) => !filePaths.includes(requiredPath));
-  if (missingRequired.length > 0) {
-    throw new Error(`Package manifest is missing required paths:\n- ${missingRequired.join('\n- ')}`);
+  if (report.missingRequired.length > 0) {
+    throw new Error(
+      `Package manifest is missing required paths:\n- ${report.missingRequired.join('\n- ')}`
+    );
   }
 
-  const forbiddenMatches = filePaths.filter((path) =>
-    FORBIDDEN_PATTERNS.some((pattern) => pattern.test(path))
-  );
-  if (forbiddenMatches.length > 0) {
-    throw new Error(`Package manifest includes forbidden paths:\n- ${forbiddenMatches.join('\n- ')}`);
+  if (report.forbiddenMatches.length > 0) {
+    throw new Error(
+      `Package manifest includes forbidden paths:\n- ${report.forbiddenMatches.join('\n- ')}`
+    );
   }
 
   console.log(`package manifest check passed for ${payload.id}`);
