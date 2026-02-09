@@ -34,12 +34,13 @@ npm run framework:menu
 
 Menu supports staged evaluation, commit-range evaluation, evidence reading, and CI runner entrypoints.
 
-Optional diagnostics adapters (provider-specific runtime diagnostics and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
+Optional diagnostics adapters (runtime diagnostics and consumer startup triage) are also exposed from the menu, but they are not required for PRE_COMMIT/PRE_PUSH/CI gate outcomes.
 
 Adapter readiness diagnostics are available from the interactive menu as:
 
 - `Build adapter readiness report`
 - `Build phase5 execution closure status report`
+- `Run phase5 execution closure (one-shot orchestration)`
 
 ### 2) Direct stage CLI execution
 
