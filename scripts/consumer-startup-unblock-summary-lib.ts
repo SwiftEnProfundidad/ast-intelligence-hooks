@@ -1,4 +1,4 @@
-import type { ParsedAuthReport, ParsedSupportBundle } from './consumer-support-ticket-lib';
+import type { ParsedAuthReport, ParsedSupportBundle } from './consumer-support-ticket-parser-lib';
 import type {
   ConsumerStartupUnblockSummary,
   ParsedWorkflowLintReport,

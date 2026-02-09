@@ -4,11 +4,8 @@ import {
   parseConsumerSupportTicketArgs,
   resolveRequiredConsumerSupportTicketFile,
 } from './consumer-support-ticket-cli-lib';
-import {
-  buildSupportTicketDraft,
-  parseAuthReport,
-  parseSupportBundle,
-} from './consumer-support-ticket-lib';
+import { buildSupportTicketDraft } from './consumer-support-ticket-draft-lib';
+import { parseAuthReport, parseSupportBundle } from './consumer-support-ticket-parser-lib';
 
 const main = (): number => {
   const cwd = process.cwd();

@@ -7,8 +7,8 @@ import {
 import {
   assessEvidenceFile,
   buildMockConsumerAbMarkdown,
-  parseMockConsumerAbArgs,
 } from './mock-consumer-ab-report-lib';
+import { parseMockConsumerAbArgs } from './mock-consumer-ab-cli-lib';
 
 const main = (): number => {
   try {

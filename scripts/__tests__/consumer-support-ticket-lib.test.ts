@@ -1,10 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import {
-  buildSupportTicketDraft,
-  parseAuthReport,
-  parseSupportBundle,
-} from '../consumer-support-ticket-lib';
+import { buildSupportTicketDraft } from '../consumer-support-ticket-draft-lib';
+import { parseAuthReport, parseSupportBundle } from '../consumer-support-ticket-parser-lib';
 
 test('parseSupportBundle extracts startup diagnostics and deduplicates run urls', () => {
   const markdown = `

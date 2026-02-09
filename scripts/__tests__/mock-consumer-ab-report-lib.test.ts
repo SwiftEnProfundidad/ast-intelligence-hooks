@@ -3,10 +3,10 @@ import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
+import { parseMockConsumerAbArgs } from '../mock-consumer-ab-cli-lib';
 import {
   assessEvidenceFile,
   buildMockConsumerAbMarkdown,
-  parseMockConsumerAbArgs,
 } from '../mock-consumer-ab-report-lib';
 
 test('parseMockConsumerAbArgs provides deterministic defaults', () => {
