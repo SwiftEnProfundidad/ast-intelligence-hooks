@@ -10,24 +10,24 @@ import {
 
 test('resolveValidationArtifactTargets returns deterministic artifact and audit targets', async () => {
   await withTempDir('pumuki-clean-artifacts-targets-', async (tempRoot) => {
-    const windsurfArtifacts = join(tempRoot, 'docs', 'validation', 'windsurf', 'artifacts');
+    const adapterArtifacts = join(tempRoot, 'docs', 'validation', 'adapter', 'artifacts');
     const pilotArtifacts = join(tempRoot, 'docs', 'validation', 'pilot0', 'artifacts');
     const archiveDir = join(tempRoot, 'docs', 'validation', 'archive');
     const auditTmp = join(tempRoot, '.audit_tmp');
 
-    mkdirSync(windsurfArtifacts, { recursive: true });
+    mkdirSync(adapterArtifacts, { recursive: true });
     mkdirSync(pilotArtifacts, { recursive: true });
     mkdirSync(archiveDir, { recursive: true });
     mkdirSync(auditTmp, { recursive: true });
 
     const targets = resolveValidationArtifactTargets(tempRoot);
-    assert.deepEqual(targets, [auditTmp, pilotArtifacts, windsurfArtifacts]);
+    assert.deepEqual(targets, [auditTmp, adapterArtifacts, pilotArtifacts]);
   });
 });
 
 test('cleanValidationArtifacts supports dry-run mode', async () => {
   await withTempDir('pumuki-clean-artifacts-dry-run-', async (tempRoot) => {
-    const artifactsDir = join(tempRoot, 'docs', 'validation', 'windsurf', 'artifacts');
+    const artifactsDir = join(tempRoot, 'docs', 'validation', 'adapter', 'artifacts');
     mkdirSync(artifactsDir, { recursive: true });
     writeFileSync(join(artifactsDir, 'sample.log'), 'artifact', 'utf8');
 
@@ -44,7 +44,7 @@ test('cleanValidationArtifacts supports dry-run mode', async () => {
 
 test('cleanValidationArtifacts removes artifact directories and keeps archive docs', async () => {
   await withTempDir('pumuki-clean-artifacts-remove-', async (tempRoot) => {
-    const artifactsDir = join(tempRoot, 'docs', 'validation', 'windsurf', 'artifacts');
+    const artifactsDir = join(tempRoot, 'docs', 'validation', 'adapter', 'artifacts');
     const archiveDoc = join(tempRoot, 'docs', 'validation', 'archive', 'README.md');
     const auditTmp = join(tempRoot, '.audit_tmp');
 
