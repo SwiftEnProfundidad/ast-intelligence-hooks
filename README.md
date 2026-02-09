@@ -269,6 +269,7 @@ Related docs:
 - `docs/validation/archive/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/consumer-ci-startup-failure-playbook.md`
 - `docs/validation/phase5-execution-closure.md`
+- `docs/validation/mock-consumer-integration-runbook.md`
 
 ## CI Model
 

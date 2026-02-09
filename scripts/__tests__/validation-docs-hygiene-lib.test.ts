@@ -8,6 +8,7 @@ test('accepts allowed runbooks and archive reports', () => {
     'docs/validation/consumer-ci-startup-failure-playbook.md',
     'docs/validation/phase5-execution-closure.md',
     'docs/validation/enterprise-consumer-isolation-policy.md',
+    'docs/validation/mock-consumer-integration-runbook.md',
     'docs/validation/archive/skills-rollout-r_go-report.md',
   ]);
 

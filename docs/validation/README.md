@@ -19,6 +19,7 @@ Keep these as source-of-truth operational references:
 - `adapter-hook-runtime-local-report.md`
 - `adapter-real-session-report-template.md`
 - `enterprise-consumer-isolation-policy.md`
+- `mock-consumer-integration-runbook.md`
 
 ## Archived Historical Reports
 
