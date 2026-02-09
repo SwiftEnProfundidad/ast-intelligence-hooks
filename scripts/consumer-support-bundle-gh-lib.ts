@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import type {
   ConsumerSupportBundleArtifactResponse,
   ConsumerSupportBundleCliOptions,
@@ -10,67 +9,13 @@ import type {
   ConsumerSupportBundleUserActionsBillingResponse,
   ConsumerSupportBundleWorkflowRun,
 } from './consumer-support-bundle-contract';
+import type { ConsumerSupportBundleGhResult } from './consumer-support-bundle-gh-command-lib';
+import {
+  runGhJson,
+  tryRunGh,
+  tryRunGhJson,
+} from './consumer-support-bundle-gh-command-lib';
 import { extractRepoOwner } from './consumer-startup-failure-support-bundle-lib';
-
-type ConsumerSupportBundleGhResult<T> = {
-  ok: boolean;
-  data?: T;
-  error?: string;
-};
-
-const runGh = (args: ReadonlyArray<string>): string => {
-  return execFileSync('gh', args, {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'pipe'],
-  });
-};
-
-const normalizeGhError = (error: unknown, fallback: string): string => {
-  if (error instanceof Error) {
-    return error.message.replace(/\s+/g, ' ').trim();
-  }
-  return fallback;
-};
-
-const tryRunGh = (args: ReadonlyArray<string>): { ok: boolean; output?: string; error?: string } => {
-  try {
-    return {
-      ok: true,
-      output: runGh(args),
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: normalizeGhError(error, 'unknown gh command error'),
-    };
-  }
-};
-
-const tryRunGhJson = <T>(args: ReadonlyArray<string>): ConsumerSupportBundleGhResult<T> => {
-  const result = tryRunGh(args);
-  if (!result.ok) {
-    return {
-      ok: false,
-      error: result.error,
-    };
-  }
-
-  try {
-    return {
-      ok: true,
-      data: JSON.parse(result.output ?? '') as T,
-    };
-  } catch (error) {
-    return {
-      ok: false,
-      error: normalizeGhError(error, 'failed to parse JSON output'),
-    };
-  }
-};
-
-const runGhJson = <T>(args: ReadonlyArray<string>): T => {
-  return JSON.parse(runGh(args)) as T;
-};
 
 export const ensureConsumerSupportBundleAuth = (): string => {
   const auth = tryRunGh(['auth', 'status']);
