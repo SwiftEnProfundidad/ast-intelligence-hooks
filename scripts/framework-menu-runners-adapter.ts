@@ -1,58 +1,9 @@
-import {
-  buildAdapterReadinessCommandArgs,
-  buildAdapterRealSessionReportCommandArgs,
-} from './framework-menu-builders';
-import { resolveScriptOrReportMissing, runNpx } from './framework-menu-runner-common';
+export type {
+  AdapterReadinessRunnerParams,
+  AdapterRealSessionRunnerParams,
+  AdapterSessionStatusRunnerParams,
+} from './framework-menu-runners-adapter-contract';
 
-export const runAdapterSessionStatusReport = async (params: {
-  outFile: string;
-}): Promise<void> => {
-  const scriptPath = resolveScriptOrReportMissing('scripts/build-adapter-session-status.ts');
-  if (!scriptPath) {
-    return;
-  }
-
-  runNpx([
-    '--yes',
-    'tsx@4.21.0',
-    scriptPath,
-    '--out',
-    params.outFile,
-  ]);
-};
-
-export const runAdapterRealSessionReport = async (params: {
-  statusReportFile: string;
-  outFile: string;
-}): Promise<void> => {
-  const scriptPath = resolveScriptOrReportMissing('scripts/build-adapter-real-session-report.ts');
-  if (!scriptPath) {
-    return;
-  }
-
-  runNpx(
-    buildAdapterRealSessionReportCommandArgs({
-      scriptPath,
-      statusReportFile: params.statusReportFile,
-      outFile: params.outFile,
-    })
-  );
-};
-
-export const runAdapterReadiness = async (params: {
-  adapterReportFile: string;
-  outFile: string;
-}): Promise<void> => {
-  const scriptPath = resolveScriptOrReportMissing('scripts/build-adapter-readiness.ts');
-  if (!scriptPath) {
-    return;
-  }
-
-  runNpx(
-    buildAdapterReadinessCommandArgs({
-      scriptPath,
-      adapterReportFile: params.adapterReportFile,
-      outFile: params.outFile,
-    })
-  );
-};
+export { runAdapterSessionStatusReport } from './framework-menu-runners-adapter-session-lib';
+export { runAdapterRealSessionReport } from './framework-menu-runners-adapter-real-session-lib';
+export { runAdapterReadiness } from './framework-menu-runners-adapter-readiness-lib';
