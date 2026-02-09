@@ -219,6 +219,51 @@ export const buildPhase5ExecutionClosureStatusCommandArgs = (params: {
   return args;
 };
 
+export const buildPhase5ExecutionClosureCommandArgs = (params: {
+  scriptPath: string;
+  repo: string;
+  limit: number;
+  outDir: string;
+  runWorkflowLint: boolean;
+  repoPath?: string;
+  actionlintBin?: string;
+  includeAdapter: boolean;
+  requireAdapterReadiness: boolean;
+}): string[] => {
+  const args = [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+    '--repo',
+    params.repo,
+    '--limit',
+    String(params.limit),
+    '--out-dir',
+    params.outDir,
+  ];
+
+  if (!params.runWorkflowLint) {
+    args.push('--skip-workflow-lint');
+  } else {
+    if (params.repoPath) {
+      args.push('--repo-path', params.repoPath);
+    }
+    if (params.actionlintBin) {
+      args.push('--actionlint-bin', params.actionlintBin);
+    }
+  }
+
+  if (!params.includeAdapter) {
+    args.push('--skip-adapter');
+  }
+
+  if (params.requireAdapterReadiness) {
+    args.push('--require-adapter-readiness');
+  }
+
+  return args;
+};
+
 export const buildAdapterReadinessCommandArgs = (params: {
   scriptPath: string;
   adapterReportFile: string;
@@ -440,6 +485,47 @@ const runAdapterReadiness = async (params: {
       scriptPath,
       adapterReportFile: params.adapterReportFile,
       outFile: params.outFile,
+    }),
+    {
+      stdio: 'inherit',
+    }
+  );
+};
+
+const runPhase5ExecutionClosure = async (params: {
+  repo: string;
+  limit: number;
+  outDir: string;
+  runWorkflowLint: boolean;
+  repoPath?: string;
+  actionlintBin?: string;
+  includeAdapter: boolean;
+  requireAdapterReadiness: boolean;
+}): Promise<void> => {
+  const scriptPath = resolve(
+    process.cwd(),
+    'scripts/run-phase5-execution-closure.ts'
+  );
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/run-phase5-execution-closure.ts in current repository.\n'
+    );
+    return;
+  }
+
+  execFileSync(
+    'npx',
+    buildPhase5ExecutionClosureCommandArgs({
+      scriptPath,
+      repo: params.repo,
+      limit: params.limit,
+      outDir: params.outDir,
+      runWorkflowLint: params.runWorkflowLint,
+      repoPath: params.repoPath,
+      actionlintBin: params.actionlintBin,
+      includeAdapter: params.includeAdapter,
+      requireAdapterReadiness: params.requireAdapterReadiness,
     }),
     {
       stdio: 'inherit',
@@ -1041,6 +1127,72 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askPhase5ExecutionClosure = async (): Promise<{
+      repo: string;
+      limit: number;
+      outDir: string;
+      runWorkflowLint: boolean;
+      repoPath?: string;
+      actionlintBin?: string;
+      includeAdapter: boolean;
+      requireAdapterReadiness: boolean;
+    }> => {
+      const repoPrompt = await rl.question(
+        'consumer repo (owner/repo) [owner/repo]: '
+      );
+      const limitPrompt = await rl.question('runs to inspect [20]: ');
+      const outDirPrompt = await rl.question(
+        'output directory [docs/validation]: '
+      );
+      const workflowLintPrompt = await rl.question(
+        'include workflow lint? [yes]: '
+      );
+      const includeAdapterPrompt = await rl.question(
+        'include adapter diagnostics? [yes]: '
+      );
+      const requireAdapterPrompt = await rl.question(
+        'require adapter readiness verdict READY? [no]: '
+      );
+
+      const runWorkflowLint = !workflowLintPrompt.trim()
+        ? true
+        : workflowLintPrompt.trim().toLowerCase().startsWith('y');
+      const includeAdapter = !includeAdapterPrompt.trim()
+        ? true
+        : includeAdapterPrompt.trim().toLowerCase().startsWith('y');
+      const requireAdapterReadiness = includeAdapter
+        ? requireAdapterPrompt.trim().toLowerCase().startsWith('y')
+        : false;
+
+      let repoPath: string | undefined;
+      let actionlintBin: string | undefined;
+
+      if (runWorkflowLint) {
+        const repoPathPrompt = await rl.question(
+          'consumer repo path [/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO]: '
+        );
+        const actionlintBinPrompt = await rl.question(
+          'actionlint binary [/tmp/actionlint-bin/actionlint]: '
+        );
+
+        repoPath =
+          repoPathPrompt.trim() ||
+          '/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO';
+        actionlintBin = actionlintBinPrompt.trim() || '/tmp/actionlint-bin/actionlint';
+      }
+
+      return {
+        repo: repoPrompt.trim() || 'owner/repo',
+        limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
+        outDir: outDirPrompt.trim() || 'docs/validation',
+        runWorkflowLint,
+        repoPath,
+        actionlintBin,
+        includeAdapter,
+        requireAdapterReadiness,
+      };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -1200,6 +1352,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '23',
+        label: 'Run phase5 execution closure (one-shot orchestration)',
+        execute: async () => {
+          const params = await askPhase5ExecutionClosure();
+          await runPhase5ExecutionClosure(params);
+        },
+      },
+      {
+        id: '24',
         label: 'Exit',
         execute: async () => {},
       },
@@ -1219,7 +1379,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '23') {
+      if (selected.id === '24') {
         break;
       }
 
