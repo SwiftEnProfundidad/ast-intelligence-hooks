@@ -297,6 +297,7 @@ test('builds deterministic command args for phase5 execution closure without wor
     includeAuthPreflight: true,
     includeAdapter: true,
     requireAdapterReadiness: false,
+    useMockConsumerTriage: false,
   });
 
   assert.deepEqual(args, [
@@ -325,6 +326,7 @@ test('builds deterministic strict command args for phase5 execution closure', ()
     actionlintBin: '/tmp/actionlint',
     includeAdapter: true,
     requireAdapterReadiness: true,
+    useMockConsumerTriage: false,
   });
 
   assert.deepEqual(args, [
@@ -355,6 +357,7 @@ test('builds deterministic command args for phase5 execution closure without ada
     includeAuthPreflight: true,
     includeAdapter: false,
     requireAdapterReadiness: false,
+    useMockConsumerTriage: false,
   });
 
   assert.deepEqual(args, [
@@ -382,6 +385,7 @@ test('builds deterministic command args for phase5 execution closure without aut
     includeAuthPreflight: false,
     includeAdapter: true,
     requireAdapterReadiness: false,
+    useMockConsumerTriage: false,
   });
 
   assert.deepEqual(args, [
@@ -396,6 +400,36 @@ test('builds deterministic command args for phase5 execution closure without aut
     '.audit-reports/phase5',
     '--skip-workflow-lint',
     '--skip-auth-preflight',
+  ]);
+});
+
+test('builds deterministic command args for phase5 execution closure in mock-consumer mode', () => {
+  const args = buildPhase5ExecutionClosureCommandArgs({
+    scriptPath: '/repo/scripts/run-phase5-execution-closure.ts',
+    repo: 'mock/consumer',
+    limit: 20,
+    outDir: '.audit-reports/phase5',
+    runWorkflowLint: false,
+    includeAuthPreflight: false,
+    includeAdapter: false,
+    requireAdapterReadiness: false,
+    useMockConsumerTriage: true,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/run-phase5-execution-closure.ts',
+    '--repo',
+    'mock/consumer',
+    '--limit',
+    '20',
+    '--out-dir',
+    '.audit-reports/phase5',
+    '--skip-workflow-lint',
+    '--skip-auth-preflight',
+    '--skip-adapter',
+    '--mock-consumer',
   ]);
 });
 

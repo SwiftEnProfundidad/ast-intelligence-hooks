@@ -251,6 +251,7 @@ export const buildPhase5ExecutionClosureCommandArgs = (params: {
   actionlintBin?: string;
   includeAdapter: boolean;
   requireAdapterReadiness: boolean;
+  useMockConsumerTriage: boolean;
 }): string[] => {
   const args = [
     '--yes',
@@ -285,6 +286,10 @@ export const buildPhase5ExecutionClosureCommandArgs = (params: {
 
   if (params.requireAdapterReadiness) {
     args.push('--require-adapter-readiness');
+  }
+
+  if (params.useMockConsumerTriage) {
+    args.push('--mock-consumer');
   }
 
   return args;
@@ -561,6 +566,7 @@ const runPhase5ExecutionClosure = async (params: {
   actionlintBin?: string;
   includeAdapter: boolean;
   requireAdapterReadiness: boolean;
+  useMockConsumerTriage: boolean;
 }): Promise<void> => {
   const scriptPath = resolve(
     process.cwd(),
@@ -587,6 +593,7 @@ const runPhase5ExecutionClosure = async (params: {
       actionlintBin: params.actionlintBin,
       includeAdapter: params.includeAdapter,
       requireAdapterReadiness: params.requireAdapterReadiness,
+      useMockConsumerTriage: params.useMockConsumerTriage,
     }),
     {
       stdio: 'inherit',
@@ -1194,6 +1201,7 @@ const menu = async (): Promise<void> => {
       actionlintBin?: string;
       includeAdapter: boolean;
       requireAdapterReadiness: boolean;
+      useMockConsumerTriage: boolean;
     }> => {
       const repoPrompt = await rl.question(
         'consumer repo (owner/repo) [owner/repo]: '
@@ -1202,6 +1210,39 @@ const menu = async (): Promise<void> => {
       const outDirPrompt = await rl.question(
         'output directory [.audit-reports/phase5]: '
       );
+      const mockConsumerPrompt = await rl.question(
+        'use local mock-consumer package-smoke mode? [no]: '
+      );
+      const useMockConsumerTriage = mockConsumerPrompt
+        .trim()
+        .toLowerCase()
+        .startsWith('y');
+
+      if (useMockConsumerTriage) {
+        const includeAdapterPrompt = await rl.question(
+          'include adapter diagnostics? [no]: '
+        );
+        const includeAdapter = includeAdapterPrompt
+          .trim()
+          .toLowerCase()
+          .startsWith('y');
+        const requireAdapterPrompt = await rl.question(
+          'require adapter readiness verdict READY? [no]: '
+        );
+
+        return {
+          repo: repoPrompt.trim() || 'owner/repo',
+          limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
+          outDir: outDirPrompt.trim() || '.audit-reports/phase5',
+          runWorkflowLint: false,
+          includeAuthPreflight: false,
+          includeAdapter,
+          requireAdapterReadiness:
+            includeAdapter && requireAdapterPrompt.trim().toLowerCase().startsWith('y'),
+          useMockConsumerTriage: true,
+        };
+      }
+
       const workflowLintPrompt = await rl.question(
         'include workflow lint? [yes]: '
       );
@@ -1253,6 +1294,7 @@ const menu = async (): Promise<void> => {
         actionlintBin,
         includeAdapter,
         requireAdapterReadiness,
+        useMockConsumerTriage: false,
       };
     };
 
