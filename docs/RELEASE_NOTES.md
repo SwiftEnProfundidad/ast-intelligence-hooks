@@ -41,6 +41,10 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Framework menu portability hardening:
   - removed host-specific consumer repo path defaults from `scripts/framework-menu.ts`
   - added `PUMUKI_CONSUMER_REPO_PATH` support for environment-specific menu defaults
+- Mock consumer validation hardening:
+  - new runbook: `docs/validation/mock-consumer-integration-runbook.md`
+  - formalized package-smoke + manual mock-consumer A/B checklist
+  - validation docs hygiene allowlist updated accordingly
 
 ### AST heuristics pilot
 

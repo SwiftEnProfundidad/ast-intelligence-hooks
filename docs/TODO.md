@@ -38,6 +38,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
   - no hardcoded local repository paths
   - optional environment default via `PUMUKI_CONSUMER_REPO_PATH`
 - Adapter validation runbooks are provider-neutral (no provider-specific hooks path assumptions).
+- Mock consumer integration runbook is versioned and indexed (`docs/validation/mock-consumer-integration-runbook.md`).
 
 For full historical execution details, see:
 
