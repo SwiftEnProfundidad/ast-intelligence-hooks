@@ -93,6 +93,7 @@ npm run validation:package-manifest
 npm run validation:package-smoke
 npm run validation:package-smoke:minimal
 npm run validation:mock-consumer-ab-report -- --repo <owner>/<repo>
+npm run validation:phase5-execution-closure -- --repo <owner>/<repo> --out-dir .audit-reports/phase5 --mock-consumer
 ```
 
 ### Validation docs hygiene

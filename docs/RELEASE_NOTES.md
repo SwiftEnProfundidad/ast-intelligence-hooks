@@ -60,6 +60,12 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - output: `.audit-reports/mock-consumer/mock-consumer-ab-report.md`
   - framework menu action:
     - `Build mock consumer A/B validation report`
+- Phase5 mock-closure CI hardening:
+  - workflow: `.github/workflows/pumuki-phase5-mock.yml`
+  - deterministic sequence: package smoke (`block`, `minimal`) -> phase5 mock closure one-shot
+  - artifact bundle: `phase5-mock-closure`
+  - workflow contract guardrail:
+    - `scripts/__tests__/phase5-mock-workflow-contract.test.ts`
 
 ### AST heuristics pilot
 

@@ -66,6 +66,10 @@ and emits local A/B readiness evidence:
 
 - `.audit-reports/phase5/mock-consumer-ab-report.md`
 
+CI coverage:
+
+- `.github/workflows/pumuki-phase5-mock.yml`
+
 ## Required Inputs
 
 - Consumer startup triage report (external consumer repository diagnostics):
