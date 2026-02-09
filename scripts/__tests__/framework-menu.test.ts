@@ -6,6 +6,7 @@ import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import {
   buildAdapterReadinessCommandArgs,
   buildConsumerStartupTriageCommandArgs,
+  buildCleanValidationArtifactsCommandArgs,
   buildPhase5BlockersReadinessCommandArgs,
   buildPhase5ExecutionClosureCommandArgs,
   buildPhase5ExecutionClosureStatusCommandArgs,
@@ -365,5 +366,32 @@ test('builds deterministic command args for phase5 execution closure without ada
     'docs/validation',
     '--skip-workflow-lint',
     '--skip-adapter',
+  ]);
+});
+
+test('builds deterministic command args for validation artifacts cleanup dry-run', () => {
+  const args = buildCleanValidationArtifactsCommandArgs({
+    scriptPath: '/repo/scripts/clean-validation-artifacts.ts',
+    dryRun: true,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/clean-validation-artifacts.ts',
+    '--dry-run',
+  ]);
+});
+
+test('builds deterministic command args for validation artifacts cleanup execution', () => {
+  const args = buildCleanValidationArtifactsCommandArgs({
+    scriptPath: '/repo/scripts/clean-validation-artifacts.ts',
+    dryRun: false,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/clean-validation-artifacts.ts',
   ]);
 });

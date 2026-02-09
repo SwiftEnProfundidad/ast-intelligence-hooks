@@ -105,6 +105,8 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Validation artifact hygiene helper:
   - `npm run validation:clean-artifacts` (`--dry-run` supported)
   - cleans local generated `docs/validation/**/artifacts` directories and `.audit_tmp`
+  - framework menu action:
+    - `Clean local validation artifacts`
 - Rule-pack docs drift prevention:
   - automated version sync test `scripts/__tests__/rule-pack-docs-sync.test.ts`
 

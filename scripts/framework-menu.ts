@@ -171,6 +171,23 @@ export const buildValidationDocsHygieneCommandArgs = (params: {
   ];
 };
 
+export const buildCleanValidationArtifactsCommandArgs = (params: {
+  scriptPath: string;
+  dryRun: boolean;
+}): string[] => {
+  const args = [
+    '--yes',
+    'tsx@4.21.0',
+    params.scriptPath,
+  ];
+
+  if (params.dryRun) {
+    args.push('--dry-run');
+  }
+
+  return args;
+};
+
 export const buildPhase5BlockersReadinessCommandArgs = (params: {
   scriptPath: string;
   adapterReportFile: string;
@@ -330,6 +347,39 @@ const runValidationDocsHygiene = async (): Promise<number> => {
     execFileSync(
       'npx',
       buildValidationDocsHygieneCommandArgs({ scriptPath }),
+      {
+        stdio: 'inherit',
+      }
+    );
+    return 0;
+  } catch (error) {
+    if (error && typeof error === 'object' && 'status' in error) {
+      const status = Number((error as { status?: number }).status ?? 1);
+      return Number.isFinite(status) ? status : 1;
+    }
+    return 1;
+  }
+};
+
+const runValidationArtifactsCleanup = async (params: {
+  dryRun: boolean;
+}): Promise<number> => {
+  const scriptPath = resolve(process.cwd(), 'scripts/clean-validation-artifacts.ts');
+
+  if (!existsSync(scriptPath)) {
+    output.write(
+      '\nCould not find scripts/clean-validation-artifacts.ts in current repository.\n'
+    );
+    return 1;
+  }
+
+  try {
+    execFileSync(
+      'npx',
+      buildCleanValidationArtifactsCommandArgs({
+        scriptPath,
+        dryRun: params.dryRun,
+      }),
       {
         stdio: 'inherit',
       }
@@ -1193,6 +1243,16 @@ const menu = async (): Promise<void> => {
       };
     };
 
+    const askValidationArtifactsCleanup = async (): Promise<{
+      dryRun: boolean;
+    }> => {
+      const dryRunPrompt = await rl.question('dry-run only? [yes]: ');
+      const dryRun = !dryRunPrompt.trim()
+        ? true
+        : dryRunPrompt.trim().toLowerCase().startsWith('y');
+      return { dryRun };
+    };
+
     const actions: MenuAction[] = [
       {
         id: '1',
@@ -1360,6 +1420,14 @@ const menu = async (): Promise<void> => {
       },
       {
         id: '24',
+        label: 'Clean local validation artifacts',
+        execute: async () => {
+          const params = await askValidationArtifactsCleanup();
+          await runAndPrintExitCode(() => runValidationArtifactsCleanup(params));
+        },
+      },
+      {
+        id: '25',
         label: 'Exit',
         execute: async () => {},
       },
@@ -1379,7 +1447,7 @@ const menu = async (): Promise<void> => {
         continue;
       }
 
-      if (selected.id === '24') {
+      if (selected.id === '25') {
         break;
       }
 

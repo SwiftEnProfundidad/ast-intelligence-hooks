@@ -154,10 +154,12 @@ Framework menu action:
 - `Build adapter readiness report`
 - `Build phase5 execution closure status report`
 - `Run phase5 execution closure (one-shot orchestration)`
+- `Clean local validation artifacts`
 
 Deterministic argument builders exported from menu module:
 
 - `buildAdapterReadinessCommandArgs({ scriptPath, adapterReportFile, outFile })`
+- `buildCleanValidationArtifactsCommandArgs({ scriptPath, dryRun })`
 - `buildPhase5BlockersReadinessCommandArgs({ scriptPath, adapterReportFile, consumerTriageReportFile, outFile })`
 - `buildPhase5ExecutionClosureStatusCommandArgs({ scriptPath, phase5BlockersReportFile, consumerUnblockReportFile, adapterReadinessReportFile, outFile, requireAdapterReadiness })`
 - `buildPhase5ExecutionClosureCommandArgs({ scriptPath, repo, limit, outDir, runWorkflowLint, repoPath, actionlintBin, includeAdapter, requireAdapterReadiness })`

@@ -41,6 +41,7 @@ Adapter readiness diagnostics are available from the interactive menu as:
 - `Build adapter readiness report`
 - `Build phase5 execution closure status report`
 - `Run phase5 execution closure (one-shot orchestration)`
+- `Clean local validation artifacts`
 
 ### 2) Direct stage CLI execution
 
