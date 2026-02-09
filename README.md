@@ -155,6 +155,12 @@ Pumuki gate execution is IDE-agnostic by design.
 
 ## Consumer CI Diagnostics
 
+Stabilization guardrail:
+
+- Framework validation must use a dedicated mock consumer repository for active integration work.
+- Enterprise consumer repositories are diagnostics-only (read-only) unless explicitly approved as external remediation work.
+- Policy reference: `docs/validation/enterprise-consumer-isolation-policy.md`
+
 Generate a consumer-repository CI run/artifact report (for rollout validation and startup-failure triage):
 
 ```bash

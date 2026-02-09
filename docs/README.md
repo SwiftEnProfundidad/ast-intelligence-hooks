@@ -47,6 +47,7 @@ This index is the canonical entry point for framework documentation in this repo
 - `validation/adapter-hook-runtime-validation.md`
 - `validation/adapter-hook-runtime-local-report.md`
 - `validation/adapter-real-session-report-template.md`
+- `validation/enterprise-consumer-isolation-policy.md`
 - `validation/github-support-ticket-template-startup-failure.md`
 - `validation/skills-rollout-consumer-repositories.md`
 - `validation/archive/README.md`: historical validation reports.
