@@ -1,18 +1,16 @@
-const tsxCommandPrefix = (scriptPath: string): string[] => {
-  return ['--yes', 'tsx@4.21.0', scriptPath];
-};
+import { buildFrameworkMenuTsxCommandPrefix } from './framework-menu-builders-shared-lib';
 
 export const buildValidationDocsHygieneCommandArgs = (params: {
   scriptPath: string;
 }): string[] => {
-  return tsxCommandPrefix(params.scriptPath);
+  return buildFrameworkMenuTsxCommandPrefix(params.scriptPath);
 };
 
 export const buildCleanValidationArtifactsCommandArgs = (params: {
   scriptPath: string;
   dryRun: boolean;
 }): string[] => {
-  const args = tsxCommandPrefix(params.scriptPath);
+  const args = buildFrameworkMenuTsxCommandPrefix(params.scriptPath);
 
   if (params.dryRun) {
     args.push('--dry-run');

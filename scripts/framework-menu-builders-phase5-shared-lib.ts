@@ -1,3 +1,5 @@
+import { buildFrameworkMenuTsxCommandPrefix } from './framework-menu-builders-shared-lib';
+
 export const buildPhase5TsxCommandPrefix = (scriptPath: string): string[] => {
-  return ['--yes', 'tsx@4.21.0', scriptPath];
+  return buildFrameworkMenuTsxCommandPrefix(scriptPath);
 };

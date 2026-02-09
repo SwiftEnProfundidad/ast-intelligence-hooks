@@ -1,6 +1,4 @@
-const tsxCommandPrefix = (scriptPath: string): string[] => {
-  return ['--yes', 'tsx@4.21.0', scriptPath];
-};
+import { buildFrameworkMenuTsxCommandPrefix } from './framework-menu-builders-shared-lib';
 
 export const buildAdapterRealSessionReportCommandArgs = (params: {
   scriptPath: string;
@@ -8,7 +6,7 @@ export const buildAdapterRealSessionReportCommandArgs = (params: {
   outFile: string;
 }): string[] => {
   return [
-    ...tsxCommandPrefix(params.scriptPath),
+    ...buildFrameworkMenuTsxCommandPrefix(params.scriptPath),
     '--status-report',
     params.statusReportFile,
     '--out',
@@ -22,7 +20,7 @@ export const buildAdapterReadinessCommandArgs = (params: {
   outFile: string;
 }): string[] => {
   return [
-    ...tsxCommandPrefix(params.scriptPath),
+    ...buildFrameworkMenuTsxCommandPrefix(params.scriptPath),
     '--adapter-report',
     params.adapterReportFile,
     '--out',
