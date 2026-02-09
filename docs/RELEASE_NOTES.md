@@ -52,6 +52,10 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - local mock execution now reaches:
     - `phase5-blockers-readiness` => `verdict=READY`
     - `phase5-execution-closure-status` => `verdict=READY`
+- Mock consumer A/B validation automation:
+  - `scripts/build-mock-consumer-ab-report.ts` validates block/minimal smoke outcomes plus evidence v2.1 contract
+  - command: `npm run validation:mock-consumer-ab-report -- --repo <owner>/<repo>`
+  - output: `.audit-reports/mock-consumer/mock-consumer-ab-report.md`
 
 ### AST heuristics pilot
 

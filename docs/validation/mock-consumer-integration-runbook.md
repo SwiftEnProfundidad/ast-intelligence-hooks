@@ -33,6 +33,17 @@ Artifacts:
 - `.audit-reports/package-smoke/block/summary.md`
 - `.audit-reports/package-smoke/minimal/summary.md`
 
+Optional deterministic A/B report (smoke + evidence v2.1 contract):
+
+```bash
+npm run validation:mock-consumer-ab-report -- \
+  --repo <owner>/<repo> \
+  --out .audit-reports/mock-consumer/mock-consumer-ab-report.md \
+  --block-summary .audit-reports/package-smoke/block/summary.md \
+  --minimal-summary .audit-reports/package-smoke/minimal/summary.md \
+  --evidence .ai_evidence.json
+```
+
 ## Path B: Manual local integration in mock consumer
 
 1. Pack framework from current branch:
@@ -73,4 +84,5 @@ jq -r '.snapshot.outcome' .ai_evidence.json
 
 - Smoke summaries show `Status: PASS` for both modes.
 - Mock consumer evidence is `version: "2.1"`.
+- Mock consumer A/B report reaches `verdict: READY`.
 - Any enterprise-consumer follow-up is documented as external diagnostics/remediation, not applied from framework workspace.

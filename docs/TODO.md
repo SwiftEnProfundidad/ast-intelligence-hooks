@@ -40,6 +40,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Adapter validation runbooks are provider-neutral (no provider-specific hooks path assumptions).
 - Mock consumer integration runbook is versioned and indexed (`docs/validation/mock-consumer-integration-runbook.md`).
 - Phase 5 one-shot closure supports local mock-consumer mode (`--mock-consumer`) with deterministic triage/unblock generation from package-smoke summaries.
+- Mock consumer A/B deterministic report is implemented (`validation:mock-consumer-ab-report`).
 - Phase 5 mock-consumer closure execution is validated with READY outputs:
   - `.audit-reports/phase5/phase5-blockers-readiness.md`
   - `.audit-reports/phase5/phase5-execution-closure-status.md`
@@ -57,6 +58,7 @@ For full historical execution details, see:
   - Re-run consumer CI diagnostics and attach fresh generated outputs.
 - [ ] Phase 5 execution closure (external consumer diagnostics dependency):
   - Re-run one-shot closure against approved external consumer context.
+  - Attach latest mock A/B report (`.audit-reports/mock-consumer/mock-consumer-ab-report.md`) before external handoff.
   - Ensure readiness/status reports end in `verdict: READY`.
   - Attach generated artifact URLs to rollout status notes.
 - [ ] Documentation hygiene maintenance:
