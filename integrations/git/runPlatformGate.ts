@@ -28,6 +28,7 @@ import type { ResolvedStagePolicy } from '../gate/stagePolicies';
 import { applyHeuristicSeverityForStage } from '../gate/stagePolicies';
 import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
+import { resolveLegacyRulesetFile } from './resolveLegacyRulesetFile';
 
 type ChangeFact = FileChangeFact & { source: string };
 type ContentFact = FileContentFact & { source: string };
@@ -195,24 +196,6 @@ const loadPreviousEvidence = (repoRoot: string): AiEvidenceV2_1 | undefined => {
   }
 };
 
-const resolveRulesetFile = (
-  fileName: 'rulesgold.mdc' | 'rulesbackend.mdc'
-): string | undefined => {
-  const candidates = [
-    join(process.cwd(), 'legacy', 'tooling', '.cursor', 'rules', fileName),
-    join(process.cwd(), 'legacy', 'tooling', '.adapter', 'rules', fileName),
-    join(process.cwd(), 'legacy', 'tooling', '.windsurf', 'rules', fileName),
-  ];
-
-  for (const candidate of candidates) {
-    if (existsSync(candidate)) {
-      return candidate;
-    }
-  }
-
-  return undefined;
-};
-
 const hashRulesetFile = (filePath: string | undefined): string => {
   if (!filePath) {
     return 'missing';
@@ -279,8 +262,8 @@ const buildRulesetState = (params: {
       hash: createHash('sha256').update(stableStringify(backendRuleSet)).digest('hex'),
     });
 
-    const goldRulesetFile = resolveRulesetFile('rulesgold.mdc');
-    const backendRulesetFile = resolveRulesetFile('rulesbackend.mdc');
+    const goldRulesetFile = resolveLegacyRulesetFile('rulesgold.mdc');
+    const backendRulesetFile = resolveLegacyRulesetFile('rulesbackend.mdc');
     states.push({
       platform: 'gold',
       bundle: `rulesgold.mdc@${rulePackVersions.rulesgold}`,

@@ -95,6 +95,11 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - legacy provider-named hook scripts now delegate to adapter-native scripts in `package.json`
   - regression guardrail:
     - `scripts/__tests__/adapter-script-aliases.test.ts`
+- Provider-agnostic legacy ruleset resolution:
+  - `integrations/git/resolveLegacyRulesetFile.ts`
+  - discovers legacy tooling rule directories without provider-specific hardcoding
+  - regression guardrail:
+    - `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`
 - Phase 5 execution closure runbook:
   - `docs/validation/phase5-execution-closure.md`
 - Rule-pack docs drift prevention:
