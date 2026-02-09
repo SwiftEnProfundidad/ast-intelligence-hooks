@@ -1,86 +1,31 @@
 import type {
-  Phase5ExecutionClosureCommand,
-  Phase5ExecutionClosureOptions,
-} from './phase5-execution-closure-plan-lib';
+  Phase5ExecutionClosureExecution,
+  Phase5ExecutionClosureRunReportParams,
+} from './phase5-execution-closure-report-contract';
+import {
+  appendPhase5ExecutionClosureCommandPlan,
+  appendPhase5ExecutionClosureExecutionTable,
+  appendPhase5ExecutionClosureNextActions,
+  appendPhase5ExecutionClosureReportHeader,
+} from './phase5-execution-closure-report-sections-lib';
 
-export type Phase5ExecutionClosureExecution = {
-  command: Phase5ExecutionClosureCommand;
-  exitCode: number;
-  ok: boolean;
-  error?: string;
-};
+export type { Phase5ExecutionClosureExecution } from './phase5-execution-closure-report-contract';
 
-export const buildPhase5ExecutionClosureRunReportMarkdown = (params: {
-  generatedAt: string;
-  repo: string;
-  options: Omit<
-    Phase5ExecutionClosureOptions,
-    'repoPath' | 'actionlintBin'
-  > & { repoPathProvided: boolean; actionlintBinProvided: boolean };
-  commands: ReadonlyArray<Phase5ExecutionClosureCommand>;
-  executions: ReadonlyArray<Phase5ExecutionClosureExecution>;
-}): string => {
+const listRequiredFailures = (
+  executions: ReadonlyArray<Phase5ExecutionClosureExecution>
+): ReadonlyArray<Phase5ExecutionClosureExecution> =>
+  executions.filter((entry) => entry.command.required && !entry.ok);
+
+export const buildPhase5ExecutionClosureRunReportMarkdown = (
+  params: Phase5ExecutionClosureRunReportParams
+): string => {
   const lines: string[] = [];
-  const requiredFailures = params.executions.filter(
-    (entry) => entry.command.required && !entry.ok
-  );
+  const requiredFailures = listRequiredFailures(params.executions);
 
-  lines.push('# Phase 5 Execution Closure Run Report');
-  lines.push('');
-  lines.push(`- generated_at: ${params.generatedAt}`);
-  lines.push(`- target_repo: \`${params.repo}\``);
-  lines.push(`- out_dir: \`${params.options.outDir}\``);
-  lines.push(`- include_adapter: ${params.options.includeAdapter ? 'YES' : 'NO'}`);
-  lines.push(
-    `- include_auth_preflight: ${params.options.includeAuthPreflight ? 'YES' : 'NO'}`
-  );
-  lines.push(
-    `- use_mock_consumer_triage: ${params.options.useMockConsumerTriage ? 'YES' : 'NO'}`
-  );
-  lines.push(
-    `- require_adapter_readiness: ${params.options.requireAdapterReadiness ? 'YES' : 'NO'}`
-  );
-  lines.push(`- run_workflow_lint: ${params.options.runWorkflowLint ? 'YES' : 'NO'}`);
-  lines.push(`- repo_path_provided: ${params.options.repoPathProvided ? 'YES' : 'NO'}`);
-  lines.push(
-    `- actionlint_bin_provided: ${params.options.actionlintBinProvided ? 'YES' : 'NO'}`
-  );
-  lines.push(`- verdict: ${requiredFailures.length === 0 ? 'READY' : 'BLOCKED'}`);
-  lines.push('');
-
-  lines.push('## Executions');
-  lines.push('');
-  lines.push('| id | required | exit_code | status | outputs |');
-  lines.push('| --- | --- | --- | --- | --- |');
-  for (const execution of params.executions) {
-    lines.push(
-      `| ${execution.command.id} | ${execution.command.required ? 'yes' : 'no'} | ${execution.exitCode} | ${execution.ok ? 'ok' : 'failed'} | ${execution.command.outputFiles.map((file) => `\`${file}\``).join(', ')} |`
-    );
-  }
-  lines.push('');
-
-  lines.push('## Command Plan');
-  lines.push('');
-  for (const command of params.commands) {
-    lines.push(`- ${command.id}: ${command.description}`);
-    lines.push(
-      `  - run: \`npx --yes tsx@4.21.0 ${command.script} ${command.args.join(' ')}\``
-    );
-  }
-  lines.push('');
-
-  lines.push('## Next Actions');
-  lines.push('');
-  if (requiredFailures.length === 0) {
-    lines.push('- Closure run completed. Review generated reports and attach artifact links.');
-  } else {
-    for (const failure of requiredFailures) {
-      lines.push(
-        `- Resolve failed required step \`${failure.command.id}\` and rerun this command.`
-      );
-    }
-  }
-  lines.push('');
+  appendPhase5ExecutionClosureReportHeader(lines, params, requiredFailures);
+  appendPhase5ExecutionClosureExecutionTable(lines, params.executions);
+  appendPhase5ExecutionClosureCommandPlan(lines, params);
+  appendPhase5ExecutionClosureNextActions(lines, requiredFailures);
 
   return `${lines.join('\n')}\n`;
 };
