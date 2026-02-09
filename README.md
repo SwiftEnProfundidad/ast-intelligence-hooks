@@ -219,6 +219,12 @@ npm run validation:phase5-execution-closure-status -- \
   --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
   --out docs/validation/phase5-execution-closure-status.md
 
+# One-shot: run full Phase 5 execution-closure orchestration
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir docs/validation \
+  --skip-workflow-lint
+
 # Optional: generate adapter-only readiness report
 # (current adapter implementation consumes --adapter-report as input path)
 npm run validation:adapter-readiness -- \

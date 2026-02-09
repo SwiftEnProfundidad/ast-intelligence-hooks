@@ -86,6 +86,12 @@ npm run validation:phase5-execution-closure-status -- \
   --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
   --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
   --out docs/validation/phase5-execution-closure-status.md
+
+# One-shot: run full Phase 5 execution-closure orchestration
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir docs/validation \
+  --skip-workflow-lint
 ```
 
 ## Scope behavior

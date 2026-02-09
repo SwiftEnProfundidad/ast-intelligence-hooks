@@ -8,6 +8,32 @@ Close the remaining manual blockers for Phase 5 rollout validation using determi
 
 This runbook is operational. It validates rollout readiness and incident closure evidence. It does not change PRE_COMMIT, PRE_PUSH, or CI gate outcomes in this repository.
 
+## One-shot orchestration command
+
+Use this command to run the full closure flow end-to-end:
+
+```bash
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir docs/validation \
+  --skip-workflow-lint
+```
+
+Strict adapter mode:
+
+```bash
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir docs/validation \
+  --repo-path /absolute/path/to/consumer-repo \
+  --actionlint-bin /tmp/actionlint-bin/actionlint \
+  --require-adapter-readiness
+```
+
+Generated orchestration summary:
+
+- `docs/validation/phase5-execution-closure-run-report.md`
+
 ## Required Inputs
 
 - Consumer startup triage report (external consumer repository diagnostics):

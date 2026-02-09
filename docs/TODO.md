@@ -16,6 +16,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Consumer startup triage orchestrator is implemented (`validation:consumer-startup-triage`).
 - Phase 5 blockers readiness helper is implemented (`validation:phase5-blockers-readiness`).
 - Phase 5 execution closure status helper is implemented (`validation:phase5-execution-closure-status`).
+- Phase 5 execution closure one-shot orchestrator is implemented (`validation:phase5-execution-closure`).
 - Adapter readiness helper is implemented (`validation:adapter-readiness`).
 - Adapter real-session report generator is implemented (`validation:adapter-real-session-report`, current baseline naming).
 - iOS AST heuristic coverage includes force-cast (`as!`) detection with stage-aware severity promotion.
