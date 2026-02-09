@@ -122,6 +122,14 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - emits deterministic run summary (recommended out-dir): `.audit-reports/phase5/phase5-execution-closure-run-report.md`
   - framework menu action:
     - `Run phase5 execution closure (one-shot orchestration)`
+- Phase 5 external handoff report:
+  - `npm run validation:phase5-external-handoff`
+  - deterministic verdicts: `READY | BLOCKED | MISSING_INPUTS`
+  - optional strict flags:
+    - `--require-mock-ab-report`
+    - `--require-artifact-urls`
+  - framework menu action:
+    - `Build phase5 external handoff report`
 - Adapter-only readiness report:
   - `npm run validation:adapter-readiness`
   - deterministic verdicts: `READY | BLOCKED | PENDING`

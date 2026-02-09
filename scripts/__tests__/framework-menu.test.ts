@@ -8,6 +8,7 @@ import {
   buildConsumerStartupTriageCommandArgs,
   buildMockConsumerAbReportCommandArgs,
   buildCleanValidationArtifactsCommandArgs,
+  buildPhase5ExternalHandoffCommandArgs,
   buildPhase5BlockersReadinessCommandArgs,
   buildPhase5ExecutionClosureCommandArgs,
   buildPhase5ExecutionClosureStatusCommandArgs,
@@ -315,6 +316,51 @@ test('builds deterministic strict command args for phase5 execution closure stat
     '--out',
     '.audit-reports/phase5/phase5-execution-closure-status.md',
     '--require-adapter-readiness',
+  ]);
+});
+
+test('builds deterministic command args for phase5 external handoff report', () => {
+  const args = buildPhase5ExternalHandoffCommandArgs({
+    scriptPath: '/repo/scripts/build-phase5-external-handoff.ts',
+    repo: 'owner/repo',
+    phase5StatusReportFile: '.audit-reports/phase5/phase5-execution-closure-status.md',
+    phase5BlockersReportFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
+    consumerUnblockReportFile: '.audit-reports/phase5/consumer-startup-unblock-status.md',
+    mockAbReportFile: '.audit-reports/phase5/mock-consumer-ab-report.md',
+    runReportFile: '.audit-reports/phase5/phase5-execution-closure-run-report.md',
+    outFile: '.audit-reports/phase5/phase5-external-handoff.md',
+    artifactUrls: [
+      'https://github.com/org/repo/actions/runs/123',
+      'https://github.com/org/repo/actions/runs/456',
+    ],
+    requireArtifactUrls: true,
+    requireMockAbReport: true,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/build-phase5-external-handoff.ts',
+    '--repo',
+    'owner/repo',
+    '--phase5-status-report',
+    '.audit-reports/phase5/phase5-execution-closure-status.md',
+    '--phase5-blockers-report',
+    '.audit-reports/phase5/phase5-blockers-readiness.md',
+    '--consumer-unblock-report',
+    '.audit-reports/phase5/consumer-startup-unblock-status.md',
+    '--mock-ab-report',
+    '.audit-reports/phase5/mock-consumer-ab-report.md',
+    '--run-report',
+    '.audit-reports/phase5/phase5-execution-closure-run-report.md',
+    '--out',
+    '.audit-reports/phase5/phase5-external-handoff.md',
+    '--artifact-url',
+    'https://github.com/org/repo/actions/runs/123',
+    '--artifact-url',
+    'https://github.com/org/repo/actions/runs/456',
+    '--require-artifact-urls',
+    '--require-mock-ab-report',
   ]);
 });
 

@@ -177,12 +177,33 @@ npm run validation:phase5-execution-closure-status -- \
   --out .audit-reports/phase5/phase5-execution-closure-status.md
 ```
 
+## Step 6: Generate external handoff report
+
+```bash
+npm run validation:phase5-external-handoff -- \
+  --repo <owner>/<repo> \
+  --require-mock-ab-report \
+  --out .audit-reports/phase5/phase5-external-handoff.md
+```
+
+Optional strict artifact mode:
+
+```bash
+npm run validation:phase5-external-handoff -- \
+  --repo <owner>/<repo> \
+  --require-mock-ab-report \
+  --require-artifact-urls \
+  --artifact-url https://github.com/<owner>/<repo>/actions/runs/<run-id> \
+  --out .audit-reports/phase5/phase5-external-handoff.md
+```
+
 ## Exit Criteria
 
 Phase 5 execution closure is complete when all are true:
 
 - `.audit-reports/phase5/phase5-blockers-readiness.md` exists with `- verdict: READY`
 - `.audit-reports/phase5/phase5-execution-closure-status.md` exists with `- verdict: READY`
+- `.audit-reports/phase5/phase5-external-handoff.md` exists with `- verdict: READY`
 - `docs/TODO.md` Phase 5 execution closure item is marked complete
 - Relevant rollout/report docs include links to final generated artifacts
 
@@ -194,6 +215,7 @@ Phase 5 execution closure is complete when all are true:
 - [ ] `validation:phase5-blockers-readiness` returns `verdict=READY`
 - [ ] `validation:phase5-execution-closure-status` returns `verdict=READY`
 - [ ] mock-consumer A/B report exists with `verdict=READY` when using `--mock-consumer`
+- [ ] `validation:phase5-external-handoff` returns `verdict=READY`
 - [ ] `docs/TODO.md` execution-closure item updated
 
 ## Related References

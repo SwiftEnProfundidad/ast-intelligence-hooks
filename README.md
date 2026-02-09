@@ -94,6 +94,7 @@ npm run validation:package-smoke
 npm run validation:package-smoke:minimal
 npm run validation:mock-consumer-ab-report -- --repo <owner>/<repo>
 npm run validation:phase5-execution-closure -- --repo <owner>/<repo> --out-dir .audit-reports/phase5 --mock-consumer
+npm run validation:phase5-external-handoff -- --repo <owner>/<repo> --require-mock-ab-report
 ```
 
 ### Validation docs hygiene
@@ -251,6 +252,18 @@ npm run validation:phase5-execution-closure -- \
 
 # Includes deterministic mock A/B report in:
 # .audit-reports/phase5/mock-consumer-ab-report.md
+
+# Build external handoff report from phase5 outputs
+npm run validation:phase5-external-handoff -- \
+  --repo <owner>/<repo> \
+  --require-mock-ab-report
+
+# Optional strict mode (require artifact URLs)
+npm run validation:phase5-external-handoff -- \
+  --repo <owner>/<repo> \
+  --require-mock-ab-report \
+  --require-artifact-urls \
+  --artifact-url https://github.com/<owner>/<repo>/actions/runs/<run-id>
 
 # Optional: bypass auth preflight fail-fast
 npm run validation:phase5-execution-closure -- \

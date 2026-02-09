@@ -18,6 +18,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Phase 5 execution closure status helper is implemented (`validation:phase5-execution-closure-status`).
 - Phase 5 execution closure one-shot orchestrator is implemented (`validation:phase5-execution-closure`).
 - Framework menu exposes Phase 5 one-shot orchestration action (`Run phase5 execution closure (one-shot orchestration)`).
+- Framework menu exposes external handoff report generation (`Build phase5 external handoff report`).
 - Adapter readiness helper is implemented (`validation:adapter-readiness`).
 - Adapter real-session report generator is implemented (`validation:adapter-real-session-report`, current baseline naming).
 - iOS AST heuristic coverage includes force-cast (`as!`) detection with stage-aware severity promotion.
@@ -62,6 +63,7 @@ For full historical execution details, see:
   - Re-run one-shot closure against approved external consumer context.
   - Attach latest mock A/B report (`.audit-reports/mock-consumer/mock-consumer-ab-report.md`) before external handoff.
   - Ensure readiness/status reports end in `verdict: READY`.
+  - Ensure external handoff report ends in `verdict: READY`.
   - Attach generated artifact URLs to rollout status notes.
 - [ ] Documentation hygiene maintenance:
   - Keep only runbooks/guides versioned under `docs/validation/` root.

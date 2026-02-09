@@ -147,6 +147,7 @@ Commands:
 - `npm run validation:phase5-blockers-readiness`
 - `npm run validation:phase5-execution-closure-status`
 - `npm run validation:phase5-execution-closure`
+- `npm run validation:phase5-external-handoff`
 - `npm run validation:clean-artifacts`
 
 `validation:phase5-execution-closure` notes:
@@ -160,6 +161,7 @@ Framework menu action:
 - `Build adapter readiness report`
 - `Build phase5 execution closure status report`
 - `Run phase5 execution closure (one-shot orchestration)`
+- `Build phase5 external handoff report`
 - `Clean local validation artifacts`
 
 Deterministic argument builders exported from menu module:
@@ -168,6 +170,7 @@ Deterministic argument builders exported from menu module:
 - `buildCleanValidationArtifactsCommandArgs({ scriptPath, dryRun })`
 - `buildPhase5BlockersReadinessCommandArgs({ scriptPath, adapterReportFile, consumerTriageReportFile, outFile })`
 - `buildPhase5ExecutionClosureStatusCommandArgs({ scriptPath, phase5BlockersReportFile, consumerUnblockReportFile, adapterReadinessReportFile, outFile, requireAdapterReadiness })`
+- `buildPhase5ExternalHandoffCommandArgs({ scriptPath, repo, phase5StatusReportFile, phase5BlockersReportFile, consumerUnblockReportFile, mockAbReportFile, runReportFile, outFile, artifactUrls, requireArtifactUrls, requireMockAbReport })`
 - `buildPhase5ExecutionClosureCommandArgs({ scriptPath, repo, limit, outDir, runWorkflowLint, includeAuthPreflight, repoPath, actionlintBin, includeAdapter, requireAdapterReadiness })`
 
 Current adapter implementation note:
