@@ -122,6 +122,28 @@ test('buildPhase5ExecutionClosureCommands can skip auth preflight and keep triag
   );
 });
 
+test('buildPhase5ExecutionClosureCommands supports mock consumer triage without external GH preflight', () => {
+  const commands = buildPhase5ExecutionClosureCommands({
+    repo: 'owner/repo',
+    limit: 20,
+    outDir: 'docs/validation',
+    runWorkflowLint: true,
+    includeAuthPreflight: true,
+    includeAdapter: false,
+    requireAdapterReadiness: false,
+    useMockConsumerTriage: true,
+  });
+
+  assert.equal(
+    commands.some((command) => command.id === 'consumer-auth-preflight'),
+    false
+  );
+  const triage = commands.find((command) => command.id === 'consumer-startup-triage');
+  assert.ok(triage);
+  assert.equal(triage.script, 'scripts/build-mock-consumer-startup-triage.ts');
+  assert.doesNotMatch(triage.args.join(' '), /--repo-path|--actionlint-bin|--skip-auth-check/);
+});
+
 test('buildPhase5ExecutionClosureRunReportMarkdown renders deterministic run sections', () => {
   const commands = buildPhase5ExecutionClosureCommands({
     repo: 'owner/repo',

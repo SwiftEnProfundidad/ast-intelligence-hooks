@@ -241,6 +241,12 @@ npm run validation:phase5-execution-closure -- \
   --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 
+# Local mock-consumer closure (uses package-smoke summaries only)
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir .audit-reports/phase5 \
+  --mock-consumer
+
 # Optional: bypass auth preflight fail-fast
 npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \

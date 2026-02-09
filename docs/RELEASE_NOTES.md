@@ -45,6 +45,13 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - new runbook: `docs/validation/mock-consumer-integration-runbook.md`
   - formalized package-smoke + manual mock-consumer A/B checklist
   - validation docs hygiene allowlist updated accordingly
+- Phase 5 mock-closure automation:
+  - `scripts/build-mock-consumer-startup-triage.ts` generates triage + unblock reports from local package-smoke summaries
+  - `validation:phase5-execution-closure` supports `--mock-consumer`
+  - mock mode disables external GH preflight/workflow-lint by default and keeps closure flow deterministic
+  - local mock execution now reaches:
+    - `phase5-blockers-readiness` => `verdict=READY`
+    - `phase5-execution-closure-status` => `verdict=READY`
 
 ### AST heuristics pilot
 

@@ -68,6 +68,23 @@ test('run-phase5-execution-closure supports skip-auth-preflight mode in dry-run'
   assert.match(result.stdout, /build-consumer-startup-triage\.ts/);
 });
 
+test('run-phase5-execution-closure supports mock-consumer mode in dry-run', () => {
+  const result = runClosureCommand([
+    '--repo',
+    'owner/repo',
+    '--mock-consumer',
+    '--dry-run',
+  ]);
+
+  assert.equal(result.status, 0);
+  assert.doesNotMatch(result.stdout, /check-consumer-ci-auth\.ts/);
+  assert.doesNotMatch(result.stdout, /build-adapter-session-status\.ts/);
+  assert.doesNotMatch(result.stdout, /build-adapter-real-session-report\.ts/);
+  assert.doesNotMatch(result.stdout, /build-adapter-readiness\.ts/);
+  assert.match(result.stdout, /build-mock-consumer-startup-triage\.ts/);
+  assert.doesNotMatch(result.stdout, /--repo-path|--actionlint-bin|--skip-auth-check/);
+});
+
 test('run-phase5-execution-closure fails when strict adapter mode is requested with skip-adapter', () => {
   const result = runClosureCommand([
     '--repo',

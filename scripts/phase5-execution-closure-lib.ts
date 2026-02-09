@@ -8,6 +8,7 @@ export type Phase5ExecutionClosureOptions = {
   actionlintBin?: string;
   includeAdapter: boolean;
   requireAdapterReadiness: boolean;
+  useMockConsumerTriage?: boolean;
 };
 
 export type Phase5ExecutionClosureOutputs = {
@@ -123,7 +124,7 @@ export const buildPhase5ExecutionClosureCommands = (
     );
   }
 
-  if (options.includeAuthPreflight) {
+  if (options.includeAuthPreflight && !options.useMockConsumerTriage) {
     commands.push({
       id: 'consumer-auth-preflight',
       description: 'Preflight GitHub auth/scopes and billing probe',
@@ -134,36 +135,36 @@ export const buildPhase5ExecutionClosureCommands = (
     });
   }
 
-  const triageArgs = [
-    '--repo',
-    options.repo,
-    '--limit',
-    String(options.limit),
-    '--out-dir',
-    options.outDir,
-  ];
+  let triageScript = 'scripts/build-consumer-startup-triage.ts';
+  const triageArgs = ['--repo', options.repo, '--out-dir', options.outDir];
 
-  if (options.runWorkflowLint) {
-    const repoPath = options.repoPath?.trim();
-    const actionlintBin = options.actionlintBin?.trim();
-    if (!repoPath || !actionlintBin) {
-      throw new Error(
-        'Workflow lint requires --repo-path and --actionlint-bin (or use --skip-workflow-lint).'
-      );
-    }
-    triageArgs.push('--repo-path', repoPath, '--actionlint-bin', actionlintBin);
+  if (options.useMockConsumerTriage) {
+    triageScript = 'scripts/build-mock-consumer-startup-triage.ts';
   } else {
-    triageArgs.push('--skip-workflow-lint');
-  }
+    triageArgs.push('--limit', String(options.limit));
 
-  if (options.includeAuthPreflight) {
-    triageArgs.push('--skip-auth-check');
+    if (options.runWorkflowLint) {
+      const repoPath = options.repoPath?.trim();
+      const actionlintBin = options.actionlintBin?.trim();
+      if (!repoPath || !actionlintBin) {
+        throw new Error(
+          'Workflow lint requires --repo-path and --actionlint-bin (or use --skip-workflow-lint).'
+        );
+      }
+      triageArgs.push('--repo-path', repoPath, '--actionlint-bin', actionlintBin);
+    } else {
+      triageArgs.push('--skip-workflow-lint');
+    }
+
+    if (options.includeAuthPreflight) {
+      triageArgs.push('--skip-auth-check');
+    }
   }
 
   commands.push({
     id: 'consumer-startup-triage',
     description: 'Generate consumer startup triage bundle',
-    script: 'scripts/build-consumer-startup-triage.ts',
+    script: triageScript,
     args: triageArgs,
     required: true,
     outputFiles: [
@@ -250,6 +251,9 @@ export const buildPhase5ExecutionClosureRunReportMarkdown = (params: {
   lines.push(`- include_adapter: ${params.options.includeAdapter ? 'YES' : 'NO'}`);
   lines.push(
     `- include_auth_preflight: ${params.options.includeAuthPreflight ? 'YES' : 'NO'}`
+  );
+  lines.push(
+    `- use_mock_consumer_triage: ${params.options.useMockConsumerTriage ? 'YES' : 'NO'}`
   );
   lines.push(
     `- require_adapter_readiness: ${params.options.requireAdapterReadiness ? 'YES' : 'NO'}`

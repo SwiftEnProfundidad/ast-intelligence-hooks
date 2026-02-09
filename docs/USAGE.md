@@ -101,6 +101,12 @@ npm run validation:phase5-execution-closure -- \
   --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 
+# Local mock-consumer closure (no external GH dependency)
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir .audit-reports/phase5 \
+  --mock-consumer
+
 # Optional: disable auth preflight fail-fast
 npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \

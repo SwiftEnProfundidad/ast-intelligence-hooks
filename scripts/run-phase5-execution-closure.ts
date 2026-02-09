@@ -18,6 +18,7 @@ type CliOptions = {
   actionlintBin?: string;
   includeAdapter: boolean;
   requireAdapterReadiness: boolean;
+  useMockConsumerTriage: boolean;
   dryRun: boolean;
 };
 
@@ -33,6 +34,7 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
     includeAuthPreflight: true,
     includeAdapter: true,
     requireAdapterReadiness: false,
+    useMockConsumerTriage: false,
     dryRun: false,
   };
 
@@ -113,6 +115,11 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
       continue;
     }
 
+    if (arg === '--mock-consumer') {
+      options.useMockConsumerTriage = true;
+      continue;
+    }
+
     if (arg === '--dry-run') {
       options.dryRun = true;
       continue;
@@ -123,6 +130,14 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
 
   if (!options.repo) {
     throw new Error('Missing required argument --repo <owner/repo>');
+  }
+
+  if (options.useMockConsumerTriage) {
+    options.includeAuthPreflight = false;
+    options.runWorkflowLint = false;
+    if (!options.requireAdapterReadiness) {
+      options.includeAdapter = false;
+    }
   }
 
   return options;
@@ -141,6 +156,7 @@ const main = (): number => {
     actionlintBin: options.actionlintBin,
     includeAdapter: options.includeAdapter,
     requireAdapterReadiness: options.requireAdapterReadiness,
+    useMockConsumerTriage: options.useMockConsumerTriage,
   });
 
   if (options.dryRun) {
@@ -197,6 +213,7 @@ const main = (): number => {
       includeAuthPreflight: options.includeAuthPreflight,
       includeAdapter: options.includeAdapter,
       requireAdapterReadiness: options.requireAdapterReadiness,
+      useMockConsumerTriage: options.useMockConsumerTriage,
       repoPathProvided: Boolean(options.repoPath?.trim()),
       actionlintBinProvided: Boolean(options.actionlintBin?.trim()),
     },
