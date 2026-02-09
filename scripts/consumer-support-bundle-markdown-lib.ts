@@ -13,10 +13,10 @@ import {
   buildRunSummarySectionLines,
   buildSupportPayloadSectionLines,
 } from './consumer-support-bundle-markdown-sections-lib';
-
-const toMarkdownLiteral = (value: string): string => {
-  return value.length > 0 ? value : '(empty)';
-};
+import {
+  buildConsumerSupportBundleAuthSectionLines,
+  buildConsumerSupportBundleHeaderLines,
+} from './consumer-support-bundle-markdown-top-sections-lib';
 
 export const buildConsumerSupportBundleMarkdown = (params: {
   generatedAtIso: string;
@@ -36,25 +36,16 @@ export const buildConsumerSupportBundleMarkdown = (params: {
   const sampleRuns = startupFailures.slice(0, 3);
 
   const lines: string[] = [];
-  lines.push('# Consumer Startup Failure Support Bundle');
-  lines.push('');
-  lines.push(`- generated_at: ${params.generatedAtIso}`);
-  lines.push(`- target_repo: \`${params.options.repo}\``);
-  if (params.repoInfo) {
-    lines.push(
-      `- repo_visibility: \`${params.repoInfo.visibility}\` (private=${String(params.repoInfo.private)})`
-    );
-  }
-  lines.push(`- runs_checked: ${params.runs.length}`);
-  lines.push(`- startup_failure_runs: ${startupFailures.length}`);
-  lines.push('');
-
-  lines.push('## GH Auth Status');
-  lines.push('');
-  lines.push('```text');
-  lines.push(toMarkdownLiteral(params.authStatus.trimEnd()));
-  lines.push('```');
-  lines.push('');
+  lines.push(
+    ...buildConsumerSupportBundleHeaderLines({
+      generatedAtIso: params.generatedAtIso,
+      options: params.options,
+      repoInfo: params.repoInfo,
+      runs: params.runs,
+      startupFailures,
+    })
+  );
+  lines.push(...buildConsumerSupportBundleAuthSectionLines(params.authStatus));
 
   lines.push(
     ...buildRepositoryActionsPolicySectionLines({
