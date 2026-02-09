@@ -71,7 +71,7 @@ npm run validation:consumer-startup-unblock-status -- \
   --repo <owner>/<repo> \
   --support-bundle docs/validation/<repo>-consumer-support-bundle.md \
   --auth-report docs/validation/<repo>-consumer-ci-auth-check.md \
-  --workflow-lint-report docs/validation/consumer-workflow-lint-report.md \
+  --workflow-lint-report .audit-reports/consumer-triage/consumer-workflow-lint-report.md \
   --out docs/validation/<repo>-consumer-startup-unblock-status.md
 ```
 
@@ -119,7 +119,7 @@ Framework helper (optional):
 npm run validation:consumer-workflow-lint -- \
   --repo-path /absolute/path/to/consumer-repo \
   --actionlint-bin /tmp/actionlint-bin/actionlint \
-  --out docs/validation/consumer-workflow-lint-report.md
+  --out .audit-reports/consumer-triage/consumer-workflow-lint-report.md
 ```
 
 7. Validate repository/org policy constraints:
@@ -172,10 +172,10 @@ If unresolved after workflow and access-level checks:
 
 ## Related Reports
 
-- `docs/validation/consumer-ci-auth-check.md`
+- `.audit-reports/consumer-triage/consumer-ci-auth-check.md`
 - `docs/validation/archive/skills-rollout-consumer-ci-artifacts.md`
 - `docs/validation/archive/skills-rollout-r_go-multi-platform-report.md`
 - `docs/validation/archive/private-actions-healthcheck.md`
-- `docs/validation/consumer-startup-failure-support-bundle.md`
-- `docs/validation/consumer-startup-triage-report.md`
+- `.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md`
+- `.audit-reports/consumer-triage/consumer-startup-triage-report.md`
 - `docs/validation/phase5-execution-closure.md`

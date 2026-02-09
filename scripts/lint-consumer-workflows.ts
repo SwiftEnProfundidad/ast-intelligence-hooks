@@ -8,7 +8,7 @@ type CliOptions = {
   actionlintBin: string;
 };
 
-const DEFAULT_OUT_FILE = 'docs/validation/consumer-workflow-lint-report.md';
+const DEFAULT_OUT_FILE = '.audit-reports/consumer-triage/consumer-workflow-lint-report.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

@@ -171,54 +171,54 @@ npm run validation:consumer-startup-triage -- \
   --actionlint-bin /tmp/actionlint-bin/actionlint
 
 npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
-  --out docs/validation/consumer-ci-artifacts-report.md
+  --out .audit-reports/consumer-triage/consumer-ci-artifacts-report.md
 
 # Optional: run semantic workflow lint on consumer repo (requires actionlint binary)
 npm run validation:consumer-workflow-lint -- \
   --repo-path /Users/you/Projects/consumer-repo \
   --actionlint-bin /tmp/actionlint-bin/actionlint \
-  --out docs/validation/consumer-workflow-lint-report.md
+  --out .audit-reports/consumer-triage/consumer-workflow-lint-report.md
 
 # Build support bundle (ready-to-paste payload for GitHub Support)
 npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 \
-  --out docs/validation/consumer-startup-failure-support-bundle.md
+  --out .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md
 
 # Auth/scopes precheck for private-repo Actions diagnostics
 npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo> \
-  --out docs/validation/consumer-ci-auth-check.md
+  --out .audit-reports/consumer-triage/consumer-ci-auth-check.md
 
 # Build GitHub Support ticket draft from support bundle + auth report
 npm run validation:consumer-support-ticket-draft -- \
   --repo <owner>/<repo> \
-  --support-bundle docs/validation/consumer-startup-failure-support-bundle.md \
-  --auth-report docs/validation/consumer-ci-auth-check.md \
-  --out docs/validation/consumer-support-ticket-draft.md
+  --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md \
+  --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md \
+  --out .audit-reports/consumer-triage/consumer-support-ticket-draft.md
 
 # Build consolidated unblock status for startup_failure incident
 npm run validation:consumer-startup-unblock-status -- \
   --repo <owner>/<repo> \
-  --support-bundle docs/validation/consumer-startup-failure-support-bundle.md \
-  --auth-report docs/validation/consumer-ci-auth-check.md \
-  --workflow-lint-report docs/validation/consumer-workflow-lint-report.md \
-  --out docs/validation/consumer-startup-unblock-status.md
+  --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md \
+  --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md \
+  --workflow-lint-report .audit-reports/consumer-triage/consumer-workflow-lint-report.md \
+  --out .audit-reports/consumer-triage/consumer-startup-unblock-status.md
 
 # Build consolidated readiness report for pending Phase 5 diagnostics blockers (adapter report optional)
 npm run validation:phase5-blockers-readiness -- \
-  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
-  --out docs/validation/phase5-blockers-readiness.md
+  --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
+  --out .audit-reports/phase5/phase5-blockers-readiness.md
 
 # Optional strict mode: require adapter report in readiness verdict
 npm run validation:phase5-blockers-readiness -- \
   --require-adapter-report \
-  --adapter-report docs/validation/adapter-real-session-report.md \
-  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
-  --out docs/validation/phase5-blockers-readiness.md
+  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
+  --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
+  --out .audit-reports/phase5/phase5-blockers-readiness.md
 
 # Build Phase 5 execution-closure status snapshot
 npm run validation:phase5-execution-closure-status -- \
-  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
-  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
-  --out docs/validation/phase5-execution-closure-status.md
+  --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md \
+  --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md \
+  --out .audit-reports/phase5/phase5-execution-closure-status.md
 
 # One-shot: run full Phase 5 execution-closure orchestration
 npm run validation:phase5-execution-closure -- \
@@ -236,16 +236,16 @@ npm run validation:phase5-execution-closure -- \
 # Optional: generate adapter-only readiness report
 # (current adapter implementation consumes --adapter-report as input path)
 npm run validation:adapter-readiness -- \
-  --adapter-report docs/validation/adapter-real-session-report.md \
-  --out docs/validation/adapter-readiness.md
+  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
+  --out .audit-reports/adapter/adapter-readiness.md
 
 # Optional adapter status/report aliases (provider-agnostic command naming)
 npm run validation:adapter-session-status -- \
-  --out docs/validation/adapter-session-status.md
+  --out .audit-reports/adapter/adapter-session-status.md
 
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/adapter-session-status.md \
-  --out docs/validation/adapter-real-session-report.md
+  --status-report .audit-reports/adapter/adapter-session-status.md \
+  --out .audit-reports/adapter/adapter-real-session-report.md
 ```
 
 Related docs:

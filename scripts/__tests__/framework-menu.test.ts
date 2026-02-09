@@ -110,8 +110,8 @@ test('builds menu gate params with default policy trace when skills policy is mi
 test('builds deterministic command args for adapter real-session report', () => {
   const args = buildAdapterRealSessionReportCommandArgs({
     scriptPath: '/repo/scripts/build-adapter-real-session-report.ts',
-    statusReportFile: 'docs/validation/adapter-session-status.md',
-    outFile: 'docs/validation/adapter-real-session-report.md',
+    statusReportFile: '.audit-reports/adapter/adapter-session-status.md',
+    outFile: '.audit-reports/adapter/adapter-real-session-report.md',
   });
 
   assert.deepEqual(args, [
@@ -119,9 +119,9 @@ test('builds deterministic command args for adapter real-session report', () => 
     'tsx@4.21.0',
     '/repo/scripts/build-adapter-real-session-report.ts',
     '--status-report',
-    'docs/validation/adapter-session-status.md',
+    '.audit-reports/adapter/adapter-session-status.md',
     '--out',
-    'docs/validation/adapter-real-session-report.md',
+    '.audit-reports/adapter/adapter-real-session-report.md',
   ]);
 });
 
@@ -200,9 +200,9 @@ test('builds deterministic command args for consumer startup triage with workflo
 test('builds deterministic command args for phase5 blockers readiness report', () => {
   const args = buildPhase5BlockersReadinessCommandArgs({
     scriptPath: '/repo/scripts/build-phase5-blockers-readiness.ts',
-    adapterReportFile: 'docs/validation/adapter-real-session-report.md',
-    consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
-    outFile: 'docs/validation/phase5-blockers-readiness.md',
+    adapterReportFile: '.audit-reports/adapter/adapter-real-session-report.md',
+    consumerTriageReportFile: '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
+    outFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
   });
 
   assert.deepEqual(args, [
@@ -210,19 +210,19 @@ test('builds deterministic command args for phase5 blockers readiness report', (
     'tsx@4.21.0',
     '/repo/scripts/build-phase5-blockers-readiness.ts',
     '--adapter-report',
-    'docs/validation/adapter-real-session-report.md',
+    '.audit-reports/adapter/adapter-real-session-report.md',
     '--consumer-triage-report',
-    'docs/validation/consumer-startup-triage-report.md',
+    '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
     '--out',
-    'docs/validation/phase5-blockers-readiness.md',
+    '.audit-reports/phase5/phase5-blockers-readiness.md',
   ]);
 });
 
 test('builds deterministic command args for adapter readiness report', () => {
   const args = buildAdapterReadinessCommandArgs({
     scriptPath: '/repo/scripts/build-adapter-readiness.ts',
-    adapterReportFile: 'docs/validation/adapter-real-session-report.md',
-    outFile: 'docs/validation/adapter-readiness.md',
+    adapterReportFile: '.audit-reports/adapter/adapter-real-session-report.md',
+    outFile: '.audit-reports/adapter/adapter-readiness.md',
   });
 
   assert.deepEqual(args, [
@@ -230,19 +230,19 @@ test('builds deterministic command args for adapter readiness report', () => {
     'tsx@4.21.0',
     '/repo/scripts/build-adapter-readiness.ts',
     '--adapter-report',
-    'docs/validation/adapter-real-session-report.md',
+    '.audit-reports/adapter/adapter-real-session-report.md',
     '--out',
-    'docs/validation/adapter-readiness.md',
+    '.audit-reports/adapter/adapter-readiness.md',
   ]);
 });
 
 test('builds deterministic command args for phase5 execution closure status report', () => {
   const args = buildPhase5ExecutionClosureStatusCommandArgs({
     scriptPath: '/repo/scripts/build-phase5-execution-closure-status.ts',
-    phase5BlockersReportFile: 'docs/validation/phase5-blockers-readiness.md',
-    consumerUnblockReportFile: 'docs/validation/consumer-startup-unblock-status.md',
-    adapterReadinessReportFile: 'docs/validation/adapter-readiness.md',
-    outFile: 'docs/validation/phase5-execution-closure-status.md',
+    phase5BlockersReportFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
+    consumerUnblockReportFile: '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
+    adapterReadinessReportFile: '.audit-reports/adapter/adapter-readiness.md',
+    outFile: '.audit-reports/phase5/phase5-execution-closure-status.md',
     requireAdapterReadiness: false,
   });
 
@@ -251,23 +251,23 @@ test('builds deterministic command args for phase5 execution closure status repo
     'tsx@4.21.0',
     '/repo/scripts/build-phase5-execution-closure-status.ts',
     '--phase5-blockers-report',
-    'docs/validation/phase5-blockers-readiness.md',
+    '.audit-reports/phase5/phase5-blockers-readiness.md',
     '--consumer-unblock-report',
-    'docs/validation/consumer-startup-unblock-status.md',
+    '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
     '--adapter-readiness-report',
-    'docs/validation/adapter-readiness.md',
+    '.audit-reports/adapter/adapter-readiness.md',
     '--out',
-    'docs/validation/phase5-execution-closure-status.md',
+    '.audit-reports/phase5/phase5-execution-closure-status.md',
   ]);
 });
 
 test('builds deterministic strict command args for phase5 execution closure status report', () => {
   const args = buildPhase5ExecutionClosureStatusCommandArgs({
     scriptPath: '/repo/scripts/build-phase5-execution-closure-status.ts',
-    phase5BlockersReportFile: 'docs/validation/phase5-blockers-readiness.md',
-    consumerUnblockReportFile: 'docs/validation/consumer-startup-unblock-status.md',
-    adapterReadinessReportFile: 'docs/validation/adapter-readiness.md',
-    outFile: 'docs/validation/phase5-execution-closure-status.md',
+    phase5BlockersReportFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
+    consumerUnblockReportFile: '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
+    adapterReadinessReportFile: '.audit-reports/adapter/adapter-readiness.md',
+    outFile: '.audit-reports/phase5/phase5-execution-closure-status.md',
     requireAdapterReadiness: true,
   });
 
@@ -276,13 +276,13 @@ test('builds deterministic strict command args for phase5 execution closure stat
     'tsx@4.21.0',
     '/repo/scripts/build-phase5-execution-closure-status.ts',
     '--phase5-blockers-report',
-    'docs/validation/phase5-blockers-readiness.md',
+    '.audit-reports/phase5/phase5-blockers-readiness.md',
     '--consumer-unblock-report',
-    'docs/validation/consumer-startup-unblock-status.md',
+    '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
     '--adapter-readiness-report',
-    'docs/validation/adapter-readiness.md',
+    '.audit-reports/adapter/adapter-readiness.md',
     '--out',
-    'docs/validation/phase5-execution-closure-status.md',
+    '.audit-reports/phase5/phase5-execution-closure-status.md',
     '--require-adapter-readiness',
   ]);
 });

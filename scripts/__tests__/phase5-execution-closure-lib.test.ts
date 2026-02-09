@@ -7,17 +7,17 @@ import {
 } from '../phase5-execution-closure-lib';
 
 test('resolvePhase5ExecutionClosureOutputs uses deterministic output names', () => {
-  const outputs = resolvePhase5ExecutionClosureOutputs('docs/validation');
+  const outputs = resolvePhase5ExecutionClosureOutputs('.audit-reports/phase5');
   assert.deepEqual(outputs, {
-    adapterSessionStatus: 'docs/validation/adapter-session-status.md',
-    adapterRealSessionReport: 'docs/validation/adapter-real-session-report.md',
-    adapterReadiness: 'docs/validation/adapter-readiness.md',
-    consumerCiAuthCheck: 'docs/validation/consumer-ci-auth-check.md',
-    consumerStartupTriageReport: 'docs/validation/consumer-startup-triage-report.md',
-    consumerStartupUnblockStatus: 'docs/validation/consumer-startup-unblock-status.md',
-    phase5BlockersReadiness: 'docs/validation/phase5-blockers-readiness.md',
-    phase5ExecutionClosureStatus: 'docs/validation/phase5-execution-closure-status.md',
-    closureRunReport: 'docs/validation/phase5-execution-closure-run-report.md',
+    adapterSessionStatus: '.audit-reports/phase5/adapter-session-status.md',
+    adapterRealSessionReport: '.audit-reports/phase5/adapter-real-session-report.md',
+    adapterReadiness: '.audit-reports/phase5/adapter-readiness.md',
+    consumerCiAuthCheck: '.audit-reports/phase5/consumer-ci-auth-check.md',
+    consumerStartupTriageReport: '.audit-reports/phase5/consumer-startup-triage-report.md',
+    consumerStartupUnblockStatus: '.audit-reports/phase5/consumer-startup-unblock-status.md',
+    phase5BlockersReadiness: '.audit-reports/phase5/phase5-blockers-readiness.md',
+    phase5ExecutionClosureStatus: '.audit-reports/phase5/phase5-execution-closure-status.md',
+    closureRunReport: '.audit-reports/phase5/phase5-execution-closure-run-report.md',
   });
 });
 

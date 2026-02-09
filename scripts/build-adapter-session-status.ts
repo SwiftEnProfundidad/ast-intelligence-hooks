@@ -18,7 +18,7 @@ type CommandExecution = {
   output: string;
 };
 
-const DEFAULT_OUT_FILE = 'docs/validation/adapter-session-status.md';
+const DEFAULT_OUT_FILE = '.audit-reports/adapter/adapter-session-status.md';
 const DEFAULT_TAIL_LINES = 80;
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {

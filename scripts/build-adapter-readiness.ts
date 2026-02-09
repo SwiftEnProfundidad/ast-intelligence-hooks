@@ -11,8 +11,8 @@ type CliOptions = {
   outFile: string;
 };
 
-const DEFAULT_ADAPTER_REPORT_FILE = 'docs/validation/adapter-real-session-report.md';
-const DEFAULT_OUT_FILE = 'docs/validation/adapter-readiness.md';
+const DEFAULT_ADAPTER_REPORT_FILE = '.audit-reports/adapter/adapter-real-session-report.md';
+const DEFAULT_OUT_FILE = '.audit-reports/adapter/adapter-readiness.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

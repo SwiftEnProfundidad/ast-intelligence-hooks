@@ -117,8 +117,8 @@ Archived historical reports:
 
 Generated diagnostic outputs (not versioned by default):
 
-- `docs/validation/consumer-ci-artifacts-report.md`
-- `docs/validation/consumer-workflow-lint-report.md`
-- `docs/validation/consumer-startup-failure-support-bundle.md`
-- `docs/validation/consumer-ci-auth-check.md`
-- `docs/validation/consumer-support-ticket-draft.md`
+- `.audit-reports/consumer-triage/consumer-ci-artifacts-report.md`
+- `.audit-reports/consumer-triage/consumer-workflow-lint-report.md`
+- `.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md`
+- `.audit-reports/consumer-triage/consumer-ci-auth-check.md`
+- `.audit-reports/consumer-triage/consumer-support-ticket-draft.md`

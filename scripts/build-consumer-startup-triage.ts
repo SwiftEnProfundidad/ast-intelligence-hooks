@@ -20,7 +20,7 @@ type CliOptions = {
 };
 
 const DEFAULT_LIMIT = 20;
-const DEFAULT_OUT_DIR = 'docs/validation';
+const DEFAULT_OUT_DIR = '.audit-reports/consumer-triage';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

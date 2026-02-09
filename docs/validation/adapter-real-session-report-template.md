@@ -6,8 +6,8 @@ You can generate a pre-filled report from available logs with:
 
 ```bash
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/adapter-session-status.md \
-  --out docs/validation/adapter-real-session-report.md
+  --status-report .audit-reports/adapter/adapter-session-status.md \
+  --out .audit-reports/adapter/adapter-real-session-report.md
 ```
 
 ## Metadata

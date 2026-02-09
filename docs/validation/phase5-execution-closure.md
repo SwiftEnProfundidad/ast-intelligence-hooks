@@ -49,22 +49,22 @@ npm run validation:phase5-execution-closure -- \
 ## Required Inputs
 
 - Consumer startup triage report (external consumer repository diagnostics):
-  - `docs/validation/consumer-startup-triage-report.md`
+  - `.audit-reports/consumer-triage/consumer-startup-triage-report.md`
 
 Optional adapter diagnostics input:
 
 - Adapter real-session runtime report:
-  - `docs/validation/adapter-real-session-report.md`
+  - `.audit-reports/adapter/adapter-real-session-report.md`
 
 ## Step 1: Generate/refresh Adapter report
 
 Run in this repository:
 
 ```bash
-npm run validation:adapter-session-status -- --out docs/validation/adapter-session-status.md
+npm run validation:adapter-session-status -- --out .audit-reports/adapter/adapter-session-status.md
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/adapter-session-status.md \
-  --out docs/validation/adapter-real-session-report.md
+  --status-report .audit-reports/adapter/adapter-session-status.md \
+  --out .audit-reports/adapter/adapter-real-session-report.md
 ```
 
 If strict runtime checks fail with `node: command not found`, execute:
@@ -77,8 +77,8 @@ and regenerate both reports.
 
 ```bash
 npm run validation:adapter-readiness -- \
-  --adapter-report docs/validation/adapter-real-session-report.md \
-  --out docs/validation/adapter-readiness.md
+  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
+  --out .audit-reports/adapter/adapter-readiness.md
 ```
 
 Expected adapter verdict when runtime is healthy:
@@ -111,8 +111,8 @@ npm run validation:consumer-startup-triage -- \
 
 ```bash
 npm run validation:phase5-blockers-readiness -- \
-  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
-  --out docs/validation/phase5-blockers-readiness.md
+  --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
+  --out .audit-reports/phase5/phase5-blockers-readiness.md
 ```
 
 Optional strict adapter mode:
@@ -120,9 +120,9 @@ Optional strict adapter mode:
 ```bash
 npm run validation:phase5-blockers-readiness -- \
   --require-adapter-report \
-  --adapter-report docs/validation/adapter-real-session-report.md \
-  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
-  --out docs/validation/phase5-blockers-readiness.md
+  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
+  --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
+  --out .audit-reports/phase5/phase5-blockers-readiness.md
 ```
 
 Expected verdict to close Phase 5 execution:
@@ -135,28 +135,28 @@ If verdict is `BLOCKED` or `MISSING_INPUTS`, follow the next-actions section in 
 
 ```bash
 npm run validation:phase5-execution-closure-status -- \
-  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
-  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
-  --out docs/validation/phase5-execution-closure-status.md
+  --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md \
+  --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md \
+  --out .audit-reports/phase5/phase5-execution-closure-status.md
 ```
 
 Optional strict adapter mode:
 
 ```bash
 npm run validation:phase5-execution-closure-status -- \
-  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
-  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
-  --adapter-readiness-report docs/validation/adapter-readiness.md \
+  --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md \
+  --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md \
+  --adapter-readiness-report .audit-reports/adapter/adapter-readiness.md \
   --require-adapter-readiness \
-  --out docs/validation/phase5-execution-closure-status.md
+  --out .audit-reports/phase5/phase5-execution-closure-status.md
 ```
 
 ## Exit Criteria
 
 Phase 5 execution closure is complete when all are true:
 
-- `docs/validation/phase5-blockers-readiness.md` exists with `- verdict: READY`
-- `docs/validation/phase5-execution-closure-status.md` exists with `- verdict: READY`
+- `.audit-reports/phase5/phase5-blockers-readiness.md` exists with `- verdict: READY`
+- `.audit-reports/phase5/phase5-execution-closure-status.md` exists with `- verdict: READY`
 - `docs/TODO.md` Phase 5 execution closure item is marked complete
 - Relevant rollout/report docs include links to final generated artifacts
 

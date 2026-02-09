@@ -62,7 +62,7 @@ type RunDiagnostic = {
 
 const DEFAULT_LIMIT = 20;
 const DEFAULT_OUT_FILE =
-  'docs/validation/consumer-startup-failure-support-bundle.md';
+  '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

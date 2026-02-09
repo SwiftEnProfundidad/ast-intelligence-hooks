@@ -180,7 +180,7 @@ export const buildAdapterReadinessMarkdown = (params: {
   } else {
     if (!params.hasAdapterReport) {
       lines.push(
-        '- Generate Adapter report: `npm run validation:adapter-real-session-report -- --status-report docs/validation/adapter-session-status.md --out docs/validation/adapter-real-session-report.md`'
+        '- Generate Adapter report: `npm run validation:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`'
       );
     }
     if (

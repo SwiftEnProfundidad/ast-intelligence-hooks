@@ -48,7 +48,7 @@ type ArtifactResponse = {
 };
 
 const DEFAULT_LIMIT = 20;
-const DEFAULT_OUT_FILE = 'docs/validation/consumer-ci-artifacts-report.md';
+const DEFAULT_OUT_FILE = '.audit-reports/consumer-triage/consumer-ci-artifacts-report.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

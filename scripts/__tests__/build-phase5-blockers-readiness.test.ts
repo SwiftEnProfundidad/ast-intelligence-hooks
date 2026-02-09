@@ -67,18 +67,16 @@ const runGenerator = (params: {
 
 test('build-phase5-blockers-readiness reports missing inputs with non-zero exit code', async () => {
   await withTempDir('pumuki-phase5-readiness-missing-', (tempRoot) => {
-    mkdirSync(join(tempRoot, 'docs/validation'), { recursive: true });
-
     const result = runGenerator({
       cwd: tempRoot,
-      outFile: 'docs/validation/phase5-blockers-readiness.md',
+      outFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
     });
 
     assert.equal(result.status, 1);
     assert.match(result.stdout, /verdict=MISSING_INPUTS/);
 
     const report = readFileSync(
-      join(tempRoot, 'docs/validation/phase5-blockers-readiness.md'),
+      join(tempRoot, '.audit-reports/phase5/phase5-blockers-readiness.md'),
       'utf8'
     );
     assert.match(report, /- verdict: MISSING_INPUTS/);
@@ -88,11 +86,11 @@ test('build-phase5-blockers-readiness reports missing inputs with non-zero exit 
 
 test('build-phase5-blockers-readiness reports READY without adapter report by default', async () => {
   await withTempDir('pumuki-phase5-readiness-optional-adapter-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
-    mkdirSync(docsValidation, { recursive: true });
+    const consumerTriageDir = join(tempRoot, '.audit-reports/consumer-triage');
+    mkdirSync(consumerTriageDir, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'consumer-startup-triage-report.md'),
+      join(consumerTriageDir, 'consumer-startup-triage-report.md'),
       [
         '# Consumer Startup Triage Report',
         '',
@@ -103,15 +101,15 @@ test('build-phase5-blockers-readiness reports READY without adapter report by de
 
     const result = runGenerator({
       cwd: tempRoot,
-      consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
-      outFile: 'docs/validation/phase5-blockers-readiness.md',
+      consumerTriageReportFile: '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
+      outFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
     });
 
     assert.equal(result.status, 0);
     assert.match(result.stdout, /verdict=READY/);
 
     const report = readFileSync(
-      join(docsValidation, 'phase5-blockers-readiness.md'),
+      join(tempRoot, '.audit-reports/phase5/phase5-blockers-readiness.md'),
       'utf8'
     );
     assert.match(report, /- verdict: READY/);
@@ -122,11 +120,11 @@ test('build-phase5-blockers-readiness reports READY without adapter report by de
 
 test('build-phase5-blockers-readiness reports MISSING_INPUTS when adapter report is explicitly required', async () => {
   await withTempDir('pumuki-phase5-readiness-required-adapter-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
-    mkdirSync(docsValidation, { recursive: true });
+    const consumerTriageDir = join(tempRoot, '.audit-reports/consumer-triage');
+    mkdirSync(consumerTriageDir, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'consumer-startup-triage-report.md'),
+      join(consumerTriageDir, 'consumer-startup-triage-report.md'),
       [
         '# Consumer Startup Triage Report',
         '',
@@ -137,8 +135,8 @@ test('build-phase5-blockers-readiness reports MISSING_INPUTS when adapter report
 
     const result = runGenerator({
       cwd: tempRoot,
-      consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
-      outFile: 'docs/validation/phase5-blockers-readiness.md',
+      consumerTriageReportFile: '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
+      outFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
       requireAdapterReport: true,
     });
 
@@ -146,7 +144,7 @@ test('build-phase5-blockers-readiness reports MISSING_INPUTS when adapter report
     assert.match(result.stdout, /verdict=MISSING_INPUTS/);
 
     const report = readFileSync(
-      join(docsValidation, 'phase5-blockers-readiness.md'),
+      join(tempRoot, '.audit-reports/phase5/phase5-blockers-readiness.md'),
       'utf8'
     );
     assert.match(report, /- verdict: MISSING_INPUTS/);
@@ -157,11 +155,13 @@ test('build-phase5-blockers-readiness reports MISSING_INPUTS when adapter report
 
 test('build-phase5-blockers-readiness reports READY with zero exit code', async () => {
   await withTempDir('pumuki-phase5-readiness-ready-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
-    mkdirSync(docsValidation, { recursive: true });
+    const adapterDir = join(tempRoot, '.audit-reports/adapter');
+    const consumerTriageDir = join(tempRoot, '.audit-reports/consumer-triage');
+    mkdirSync(adapterDir, { recursive: true });
+    mkdirSync(consumerTriageDir, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'adapter-real-session-report.md'),
+      join(adapterDir, 'adapter-real-session-report.md'),
       [
         '# Adapter Hook Runtime - Real Session Report',
         '',
@@ -173,7 +173,7 @@ test('build-phase5-blockers-readiness reports READY with zero exit code', async 
     );
 
     writeFileSync(
-      join(docsValidation, 'consumer-startup-triage-report.md'),
+      join(consumerTriageDir, 'consumer-startup-triage-report.md'),
       [
         '# Consumer Startup Triage Report',
         '',
@@ -184,16 +184,16 @@ test('build-phase5-blockers-readiness reports READY with zero exit code', async 
 
     const result = runGenerator({
       cwd: tempRoot,
-      adapterReportFile: 'docs/validation/adapter-real-session-report.md',
-      consumerTriageReportFile: 'docs/validation/consumer-startup-triage-report.md',
-      outFile: 'docs/validation/phase5-blockers-readiness.md',
+      adapterReportFile: '.audit-reports/adapter/adapter-real-session-report.md',
+      consumerTriageReportFile: '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
+      outFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
     });
 
     assert.equal(result.status, 0);
     assert.match(result.stdout, /verdict=READY/);
 
     const report = readFileSync(
-      join(docsValidation, 'phase5-blockers-readiness.md'),
+      join(tempRoot, '.audit-reports/phase5/phase5-blockers-readiness.md'),
       'utf8'
     );
     assert.match(report, /- verdict: READY/);

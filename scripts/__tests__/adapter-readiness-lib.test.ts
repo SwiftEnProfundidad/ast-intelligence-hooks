@@ -59,7 +59,7 @@ test('summarizeAdapterReadiness returns READY when adapter report passes', () =>
 test('buildAdapterReadinessMarkdown renders deterministic readiness sections', () => {
   const markdown = buildAdapterReadinessMarkdown({
     generatedAt: '2026-02-08T00:00:00.000Z',
-    adapterReportPath: 'docs/validation/adapter-real-session-report.md',
+    adapterReportPath: '.audit-reports/adapter/adapter-real-session-report.md',
     hasAdapterReport: false,
     summary: {
       verdict: 'PENDING',

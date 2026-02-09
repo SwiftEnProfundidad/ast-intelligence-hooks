@@ -71,11 +71,9 @@ const runGenerator = (params: {
 
 test('build-phase5-execution-closure-status reports missing inputs by default', async () => {
   await withTempDir('pumuki-phase5-exec-closure-missing-', (tempRoot) => {
-    mkdirSync(join(tempRoot, 'docs/validation'), { recursive: true });
-
     const result = runGenerator({
       cwd: tempRoot,
-      outFile: 'docs/validation/phase5-execution-closure-status.md',
+      outFile: '.audit-reports/phase5/phase5-execution-closure-status.md',
       requireAdapterReadiness: true,
     });
 
@@ -83,7 +81,7 @@ test('build-phase5-execution-closure-status reports missing inputs by default', 
     assert.match(result.stdout, /verdict=MISSING_INPUTS/);
 
     const report = readFileSync(
-      join(tempRoot, 'docs/validation/phase5-execution-closure-status.md'),
+      join(tempRoot, '.audit-reports/phase5/phase5-execution-closure-status.md'),
       'utf8'
     );
     assert.match(report, /- verdict: MISSING_INPUTS/);
@@ -95,32 +93,34 @@ test('build-phase5-execution-closure-status reports missing inputs by default', 
 
 test('build-phase5-execution-closure-status reports READY when required inputs are clear', async () => {
   await withTempDir('pumuki-phase5-exec-closure-ready-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
-    mkdirSync(docsValidation, { recursive: true });
+    const phase5Dir = join(tempRoot, '.audit-reports/phase5');
+    const consumerTriageDir = join(tempRoot, '.audit-reports/consumer-triage');
+    mkdirSync(phase5Dir, { recursive: true });
+    mkdirSync(consumerTriageDir, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'phase5-blockers-readiness.md'),
+      join(phase5Dir, 'phase5-blockers-readiness.md'),
       ['# Phase 5 Blockers Readiness', '', '- verdict: READY'].join('\n'),
       'utf8'
     );
     writeFileSync(
-      join(docsValidation, 'consumer-startup-unblock-status.md'),
+      join(consumerTriageDir, 'consumer-startup-unblock-status.md'),
       ['# Consumer Startup Failure Unblock Status', '', '- verdict: READY_FOR_RETEST'].join('\n'),
       'utf8'
     );
 
     const result = runGenerator({
       cwd: tempRoot,
-      phase5BlockersReportFile: 'docs/validation/phase5-blockers-readiness.md',
-      consumerUnblockReportFile: 'docs/validation/consumer-startup-unblock-status.md',
-      outFile: 'docs/validation/phase5-execution-closure-status.md',
+      phase5BlockersReportFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
+      consumerUnblockReportFile: '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
+      outFile: '.audit-reports/phase5/phase5-execution-closure-status.md',
     });
 
     assert.equal(result.status, 0);
     assert.match(result.stdout, /verdict=READY/);
 
     const report = readFileSync(
-      join(docsValidation, 'phase5-execution-closure-status.md'),
+      join(phase5Dir, 'phase5-execution-closure-status.md'),
       'utf8'
     );
     assert.match(report, /- verdict: READY/);
@@ -131,31 +131,35 @@ test('build-phase5-execution-closure-status reports READY when required inputs a
 
 test('build-phase5-execution-closure-status blocks when adapter readiness is required and not ready', async () => {
   await withTempDir('pumuki-phase5-exec-closure-strict-adapter-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
-    mkdirSync(docsValidation, { recursive: true });
+    const phase5Dir = join(tempRoot, '.audit-reports/phase5');
+    const consumerTriageDir = join(tempRoot, '.audit-reports/consumer-triage');
+    const adapterDir = join(tempRoot, '.audit-reports/adapter');
+    mkdirSync(phase5Dir, { recursive: true });
+    mkdirSync(consumerTriageDir, { recursive: true });
+    mkdirSync(adapterDir, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'phase5-blockers-readiness.md'),
+      join(phase5Dir, 'phase5-blockers-readiness.md'),
       ['# Phase 5 Blockers Readiness', '', '- verdict: READY'].join('\n'),
       'utf8'
     );
     writeFileSync(
-      join(docsValidation, 'consumer-startup-unblock-status.md'),
+      join(consumerTriageDir, 'consumer-startup-unblock-status.md'),
       ['# Consumer Startup Failure Unblock Status', '', '- verdict: READY_FOR_RETEST'].join('\n'),
       'utf8'
     );
     writeFileSync(
-      join(docsValidation, 'adapter-readiness.md'),
+      join(adapterDir, 'adapter-readiness.md'),
       ['# Adapter Readiness', '', '- verdict: BLOCKED'].join('\n'),
       'utf8'
     );
 
     const result = runGenerator({
       cwd: tempRoot,
-      phase5BlockersReportFile: 'docs/validation/phase5-blockers-readiness.md',
-      consumerUnblockReportFile: 'docs/validation/consumer-startup-unblock-status.md',
-      adapterReadinessReportFile: 'docs/validation/adapter-readiness.md',
-      outFile: 'docs/validation/phase5-execution-closure-status.md',
+      phase5BlockersReportFile: '.audit-reports/phase5/phase5-blockers-readiness.md',
+      consumerUnblockReportFile: '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
+      adapterReadinessReportFile: '.audit-reports/adapter/adapter-readiness.md',
+      outFile: '.audit-reports/phase5/phase5-execution-closure-status.md',
       requireAdapterReadiness: true,
     });
 
@@ -163,7 +167,7 @@ test('build-phase5-execution-closure-status blocks when adapter readiness is req
     assert.match(result.stdout, /verdict=BLOCKED/);
 
     const report = readFileSync(
-      join(docsValidation, 'phase5-execution-closure-status.md'),
+      join(phase5Dir, 'phase5-execution-closure-status.md'),
       'utf8'
     );
     assert.match(report, /- verdict: BLOCKED/);

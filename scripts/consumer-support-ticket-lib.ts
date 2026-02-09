@@ -129,10 +129,10 @@ export const buildSupportTicketDraft = (params: {
   lines.push('');
   lines.push(`- ${params.supportBundlePath}`);
   lines.push(`- ${params.authReportPath}`);
-  lines.push('- docs/validation/consumer-ci-artifacts-report.md');
-  lines.push('- docs/validation/consumer-workflow-lint-report.md');
-  lines.push('- docs/validation/consumer-startup-fix-experiment.md');
-  lines.push('- docs/validation/private-actions-healthcheck-temp.md');
+  lines.push('- .audit-reports/consumer-triage/consumer-ci-artifacts-report.md');
+  lines.push('- .audit-reports/consumer-triage/consumer-workflow-lint-report.md');
+  lines.push('- docs/validation/archive/skills-rollout-r_go-startup-fix-experiment.md');
+  lines.push('- docs/validation/archive/private-actions-healthcheck.md');
   lines.push('');
 
   return `${lines.join('\n')}\n`;

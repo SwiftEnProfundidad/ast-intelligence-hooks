@@ -23,8 +23,8 @@ type PassFailUnknown = 'PASS' | 'FAIL' | 'UNKNOWN';
 
 type YesNo = 'YES' | 'NO';
 
-const DEFAULT_OUT_FILE = 'docs/validation/adapter-real-session-report.md';
-const DEFAULT_STATUS_REPORT_FILE = 'docs/validation/adapter-session-status.md';
+const DEFAULT_OUT_FILE = '.audit-reports/adapter/adapter-real-session-report.md';
+const DEFAULT_STATUS_REPORT_FILE = '.audit-reports/adapter/adapter-session-status.md';
 const DEFAULT_OPERATOR = 'unknown';
 const DEFAULT_ADAPTER_VERSION = 'unknown';
 const DEFAULT_TAIL_LINES = 120;

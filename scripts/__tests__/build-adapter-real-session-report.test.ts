@@ -41,12 +41,12 @@ const runGenerator = (params: {
 
 test('build-adapter-real-session-report renders PASS when status and runtime signals are healthy', async () => {
   await withTempDir('pumuki-adapter-real-pass-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
+    const auditAdapter = join(tempRoot, '.audit-reports/adapter');
     const auditTmp = join(tempRoot, '.audit_tmp');
     const homeDir = join(tempRoot, 'home');
     const hookConfigDir = join(homeDir, '.codeium/adapter');
 
-    mkdirSync(docsValidation, { recursive: true });
+    mkdirSync(auditAdapter, { recursive: true });
     mkdirSync(auditTmp, { recursive: true });
     mkdirSync(hookConfigDir, { recursive: true });
 
@@ -66,7 +66,7 @@ test('build-adapter-real-session-report renders PASS when status and runtime sig
     );
 
     writeFileSync(
-      join(docsValidation, 'adapter-session-status.md'),
+      join(auditAdapter, 'adapter-session-status.md'),
       [
         '# Adapter Session Status Report',
         '',
@@ -131,12 +131,12 @@ test('build-adapter-real-session-report renders PASS when status and runtime sig
     runGenerator({
       cwd: tempRoot,
       homeDir,
-      statusReportFile: 'docs/validation/adapter-session-status.md',
-      outFile: 'docs/validation/adapter-real-session-report.md',
+      statusReportFile: '.audit-reports/adapter/adapter-session-status.md',
+      outFile: '.audit-reports/adapter/adapter-real-session-report.md',
     });
 
     const report = readFileSync(
-      join(docsValidation, 'adapter-real-session-report.md'),
+      join(auditAdapter, 'adapter-real-session-report.md'),
       'utf8'
     );
 
@@ -153,12 +153,12 @@ test('build-adapter-real-session-report renders PASS when status and runtime sig
 
 test('build-adapter-real-session-report renders FAIL with node runtime root cause', async () => {
   await withTempDir('pumuki-adapter-real-fail-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
+    const auditAdapter = join(tempRoot, '.audit-reports/adapter');
     const auditTmp = join(tempRoot, '.audit_tmp');
     const homeDir = join(tempRoot, 'home');
     const hookConfigDir = join(homeDir, '.codeium/adapter');
 
-    mkdirSync(docsValidation, { recursive: true });
+    mkdirSync(auditAdapter, { recursive: true });
     mkdirSync(auditTmp, { recursive: true });
     mkdirSync(hookConfigDir, { recursive: true });
 
@@ -169,7 +169,7 @@ test('build-adapter-real-session-report renders FAIL with node runtime root caus
     );
 
     writeFileSync(
-      join(docsValidation, 'adapter-session-status.md'),
+      join(auditAdapter, 'adapter-session-status.md'),
       [
         '# Adapter Session Status Report',
         '',
@@ -204,12 +204,12 @@ test('build-adapter-real-session-report renders FAIL with node runtime root caus
     runGenerator({
       cwd: tempRoot,
       homeDir,
-      statusReportFile: 'docs/validation/adapter-session-status.md',
-      outFile: 'docs/validation/adapter-real-session-report.md',
+      statusReportFile: '.audit-reports/adapter/adapter-session-status.md',
+      outFile: '.audit-reports/adapter/adapter-real-session-report.md',
     });
 
     const report = readFileSync(
-      join(docsValidation, 'adapter-real-session-report.md'),
+      join(auditAdapter, 'adapter-real-session-report.md'),
       'utf8'
     );
 

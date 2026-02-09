@@ -7,16 +7,16 @@ import {
 } from '../consumer-startup-triage-lib';
 
 test('resolveConsumerStartupTriageOutputs uses deterministic output names', () => {
-  const outputs = resolveConsumerStartupTriageOutputs('docs/validation');
+  const outputs = resolveConsumerStartupTriageOutputs('.audit-reports/consumer-triage');
 
   assert.deepEqual(outputs, {
-    authReport: 'docs/validation/consumer-ci-auth-check.md',
-    artifactsReport: 'docs/validation/consumer-ci-artifacts-report.md',
-    workflowLintReport: 'docs/validation/consumer-workflow-lint-report.md',
-    supportBundleReport: 'docs/validation/consumer-startup-failure-support-bundle.md',
-    supportTicketDraft: 'docs/validation/consumer-support-ticket-draft.md',
-    startupUnblockStatus: 'docs/validation/consumer-startup-unblock-status.md',
-    triageReport: 'docs/validation/consumer-startup-triage-report.md',
+    authReport: '.audit-reports/consumer-triage/consumer-ci-auth-check.md',
+    artifactsReport: '.audit-reports/consumer-triage/consumer-ci-artifacts-report.md',
+    workflowLintReport: '.audit-reports/consumer-triage/consumer-workflow-lint-report.md',
+    supportBundleReport: '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md',
+    supportTicketDraft: '.audit-reports/consumer-triage/consumer-support-ticket-draft.md',
+    startupUnblockStatus: '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
+    triageReport: '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
   });
 });
 

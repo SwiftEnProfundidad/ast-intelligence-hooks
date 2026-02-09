@@ -58,9 +58,9 @@ test('buildPhase5ExecutionClosureStatusMarkdown renders deterministic sections',
 
   const markdown = buildPhase5ExecutionClosureStatusMarkdown({
     generatedAt: '2026-02-08T00:00:00.000Z',
-    phase5BlockersReportPath: 'docs/validation/phase5-blockers-readiness.md',
-    consumerUnblockReportPath: 'docs/validation/consumer-startup-unblock-status.md',
-    adapterReadinessReportPath: 'docs/validation/adapter-readiness.md',
+    phase5BlockersReportPath: '.audit-reports/phase5/phase5-blockers-readiness.md',
+    consumerUnblockReportPath: '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
+    adapterReadinessReportPath: '.audit-reports/adapter/adapter-readiness.md',
     hasPhase5BlockersReport: false,
     hasConsumerUnblockReport: false,
     hasAdapterReadinessReport: false,

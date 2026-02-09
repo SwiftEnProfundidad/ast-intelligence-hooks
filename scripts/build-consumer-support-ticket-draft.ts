@@ -15,9 +15,9 @@ type CliOptions = {
 
 const DEFAULT_REPO = 'owner/repo';
 const DEFAULT_SUPPORT_BUNDLE_FILE =
-  'docs/validation/consumer-startup-failure-support-bundle.md';
-const DEFAULT_AUTH_REPORT_FILE = 'docs/validation/consumer-ci-auth-check.md';
-const DEFAULT_OUT_FILE = 'docs/validation/consumer-support-ticket-draft.md';
+  '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md';
+const DEFAULT_AUTH_REPORT_FILE = '.audit-reports/consumer-triage/consumer-ci-auth-check.md';
+const DEFAULT_OUT_FILE = '.audit-reports/consumer-triage/consumer-support-ticket-draft.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

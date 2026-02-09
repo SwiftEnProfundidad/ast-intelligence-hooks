@@ -67,27 +67,27 @@ Notes:
 # Adapter-only readiness
 # (current adapter implementation consumes --adapter-report as input path)
 npm run validation:adapter-readiness -- \
-  --adapter-report docs/validation/adapter-real-session-report.md \
-  --out docs/validation/adapter-readiness.md
+  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
+  --out .audit-reports/adapter/adapter-readiness.md
 
 # Adapter runtime status/report aliases (provider-agnostic command naming)
 npm run validation:adapter-session-status -- \
-  --out docs/validation/adapter-session-status.md
+  --out .audit-reports/adapter/adapter-session-status.md
 
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/adapter-session-status.md \
-  --out docs/validation/adapter-real-session-report.md
+  --status-report .audit-reports/adapter/adapter-session-status.md \
+  --out .audit-reports/adapter/adapter-real-session-report.md
 
 # Phase 5 consolidated readiness (consumer triage required, adapter report optional by default)
 npm run validation:phase5-blockers-readiness -- \
-  --consumer-triage-report docs/validation/consumer-startup-triage-report.md \
-  --out docs/validation/phase5-blockers-readiness.md
+  --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
+  --out .audit-reports/phase5/phase5-blockers-readiness.md
 
 # Phase 5 execution-closure status snapshot
 npm run validation:phase5-execution-closure-status -- \
-  --phase5-blockers-report docs/validation/phase5-blockers-readiness.md \
-  --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md \
-  --out docs/validation/phase5-execution-closure-status.md
+  --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md \
+  --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md \
+  --out .audit-reports/phase5/phase5-execution-closure-status.md
 
 # One-shot: run full Phase 5 execution-closure orchestration
 npm run validation:phase5-execution-closure -- \

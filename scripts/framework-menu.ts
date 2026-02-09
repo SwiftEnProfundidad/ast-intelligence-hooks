@@ -879,13 +879,13 @@ const menu = async (): Promise<void> => {
       );
       const limitPrompt = await rl.question('runs to inspect [20]: ');
       const outPrompt = await rl.question(
-        'output path [docs/validation/consumer-ci-artifacts-report.md]: '
+        'output path [.audit-reports/consumer-triage/consumer-ci-artifacts-report.md]: '
       );
 
       const repo = repoPrompt.trim() || 'owner/repo';
       const limit = Number.parseInt(limitPrompt.trim() || '20', 10);
       const outFile =
-        outPrompt.trim() || 'docs/validation/consumer-ci-artifacts-report.md';
+        outPrompt.trim() || '.audit-reports/consumer-triage/consumer-ci-artifacts-report.md';
 
       return {
         repo,
@@ -898,11 +898,11 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const outPrompt = await rl.question(
-        'output path [docs/validation/adapter-session-status.md]: '
+        'output path [.audit-reports/adapter/adapter-session-status.md]: '
       );
 
       return {
-        outFile: outPrompt.trim() || 'docs/validation/adapter-session-status.md',
+        outFile: outPrompt.trim() || '.audit-reports/adapter/adapter-session-status.md',
       };
     };
 
@@ -911,16 +911,16 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const statusPrompt = await rl.question(
-        'status report path [docs/validation/adapter-session-status.md]: '
+        'status report path [.audit-reports/adapter/adapter-session-status.md]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/adapter-real-session-report.md]: '
+        'output path [.audit-reports/adapter/adapter-real-session-report.md]: '
       );
 
       return {
         statusReportFile:
-          statusPrompt.trim() || 'docs/validation/adapter-session-status.md',
-        outFile: outPrompt.trim() || 'docs/validation/adapter-real-session-report.md',
+          statusPrompt.trim() || '.audit-reports/adapter/adapter-session-status.md',
+        outFile: outPrompt.trim() || '.audit-reports/adapter/adapter-real-session-report.md',
       };
     };
 
@@ -936,7 +936,7 @@ const menu = async (): Promise<void> => {
         'actionlint binary [/tmp/actionlint-bin/actionlint]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/consumer-workflow-lint-report.md]: '
+        'output path [.audit-reports/consumer-triage/consumer-workflow-lint-report.md]: '
       );
 
       return {
@@ -944,7 +944,7 @@ const menu = async (): Promise<void> => {
           repoPathPrompt.trim() ||
           '/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO',
         actionlintBin: actionlintBinPrompt.trim() || '/tmp/actionlint-bin/actionlint',
-        outFile: outPrompt.trim() || 'docs/validation/consumer-workflow-lint-report.md',
+        outFile: outPrompt.trim() || '.audit-reports/consumer-triage/consumer-workflow-lint-report.md',
       };
     };
 
@@ -956,12 +956,12 @@ const menu = async (): Promise<void> => {
         'consumer repo (owner/repo) [owner/repo]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/consumer-ci-auth-check.md]: '
+        'output path [.audit-reports/consumer-triage/consumer-ci-auth-check.md]: '
       );
 
       return {
         repo: repoPrompt.trim() || 'owner/repo',
-        outFile: outPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
+        outFile: outPrompt.trim() || '.audit-reports/consumer-triage/consumer-ci-auth-check.md',
       };
     };
 
@@ -975,13 +975,13 @@ const menu = async (): Promise<void> => {
       );
       const limitPrompt = await rl.question('runs to inspect [20]: ');
       const outPrompt = await rl.question(
-        'output path [docs/validation/consumer-startup-failure-support-bundle.md]: '
+        'output path [.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md]: '
       );
 
       const repo = repoPrompt.trim() || 'owner/repo';
       const limit = Number.parseInt(limitPrompt.trim() || '20', 10);
       const outFile =
-        outPrompt.trim() || 'docs/validation/consumer-startup-failure-support-bundle.md';
+        outPrompt.trim() || '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md';
 
       return {
         repo,
@@ -1000,23 +1000,23 @@ const menu = async (): Promise<void> => {
         'consumer repo (owner/repo) [owner/repo]: '
       );
       const supportBundlePrompt = await rl.question(
-        'support bundle path [docs/validation/consumer-startup-failure-support-bundle.md]: '
+        'support bundle path [.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md]: '
       );
       const authReportPrompt = await rl.question(
-        'auth report path [docs/validation/consumer-ci-auth-check.md]: '
+        'auth report path [.audit-reports/consumer-triage/consumer-ci-auth-check.md]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/consumer-support-ticket-draft.md]: '
+        'output path [.audit-reports/consumer-triage/consumer-support-ticket-draft.md]: '
       );
 
       return {
         repo: repoPrompt.trim() || 'owner/repo',
         supportBundleFile:
           supportBundlePrompt.trim() ||
-          'docs/validation/consumer-startup-failure-support-bundle.md',
+          '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md',
         authReportFile:
-          authReportPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
-        outFile: outPrompt.trim() || 'docs/validation/consumer-support-ticket-draft.md',
+          authReportPrompt.trim() || '.audit-reports/consumer-triage/consumer-ci-auth-check.md',
+        outFile: outPrompt.trim() || '.audit-reports/consumer-triage/consumer-support-ticket-draft.md',
       };
     };
 
@@ -1031,28 +1031,28 @@ const menu = async (): Promise<void> => {
         'consumer repo (owner/repo) [owner/repo]: '
       );
       const supportBundlePrompt = await rl.question(
-        'support bundle path [docs/validation/consumer-startup-failure-support-bundle.md]: '
+        'support bundle path [.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md]: '
       );
       const authReportPrompt = await rl.question(
-        'auth report path [docs/validation/consumer-ci-auth-check.md]: '
+        'auth report path [.audit-reports/consumer-triage/consumer-ci-auth-check.md]: '
       );
       const workflowLintPrompt = await rl.question(
-        'workflow lint report path [docs/validation/consumer-workflow-lint-report.md]: '
+        'workflow lint report path [.audit-reports/consumer-triage/consumer-workflow-lint-report.md]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/consumer-startup-unblock-status.md]: '
+        'output path [.audit-reports/consumer-triage/consumer-startup-unblock-status.md]: '
       );
 
       return {
         repo: repoPrompt.trim() || 'owner/repo',
         supportBundleFile:
           supportBundlePrompt.trim() ||
-          'docs/validation/consumer-startup-failure-support-bundle.md',
+          '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md',
         authReportFile:
-          authReportPrompt.trim() || 'docs/validation/consumer-ci-auth-check.md',
+          authReportPrompt.trim() || '.audit-reports/consumer-triage/consumer-ci-auth-check.md',
         workflowLintReportFile:
-          workflowLintPrompt.trim() || 'docs/validation/consumer-workflow-lint-report.md',
-        outFile: outPrompt.trim() || 'docs/validation/consumer-startup-unblock-status.md',
+          workflowLintPrompt.trim() || '.audit-reports/consumer-triage/consumer-workflow-lint-report.md',
+        outFile: outPrompt.trim() || '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
       };
     };
 
@@ -1111,21 +1111,21 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const adapterPrompt = await rl.question(
-        'adapter report path [docs/validation/adapter-real-session-report.md]: '
+        'adapter report path [.audit-reports/adapter/adapter-real-session-report.md]: '
       );
       const consumerPrompt = await rl.question(
-        'consumer triage report path [docs/validation/consumer-startup-triage-report.md]: '
+        'consumer triage report path [.audit-reports/consumer-triage/consumer-startup-triage-report.md]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/phase5-blockers-readiness.md]: '
+        'output path [.audit-reports/phase5/phase5-blockers-readiness.md]: '
       );
 
       return {
         adapterReportFile:
-          adapterPrompt.trim() || 'docs/validation/adapter-real-session-report.md',
+          adapterPrompt.trim() || '.audit-reports/adapter/adapter-real-session-report.md',
         consumerTriageReportFile:
-          consumerPrompt.trim() || 'docs/validation/consumer-startup-triage-report.md',
-        outFile: outPrompt.trim() || 'docs/validation/phase5-blockers-readiness.md',
+          consumerPrompt.trim() || '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
+        outFile: outPrompt.trim() || '.audit-reports/phase5/phase5-blockers-readiness.md',
       };
     };
 
@@ -1134,16 +1134,16 @@ const menu = async (): Promise<void> => {
       outFile: string;
     }> => {
       const adapterPrompt = await rl.question(
-        'adapter report path [docs/validation/adapter-real-session-report.md]: '
+        'adapter report path [.audit-reports/adapter/adapter-real-session-report.md]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/adapter-readiness.md]: '
+        'output path [.audit-reports/adapter/adapter-readiness.md]: '
       );
 
       return {
         adapterReportFile:
-          adapterPrompt.trim() || 'docs/validation/adapter-real-session-report.md',
-        outFile: outPrompt.trim() || 'docs/validation/adapter-readiness.md',
+          adapterPrompt.trim() || '.audit-reports/adapter/adapter-real-session-report.md',
+        outFile: outPrompt.trim() || '.audit-reports/adapter/adapter-readiness.md',
       };
     };
 
@@ -1155,30 +1155,30 @@ const menu = async (): Promise<void> => {
       requireAdapterReadiness: boolean;
     }> => {
       const blockersPrompt = await rl.question(
-        'phase5 blockers report path [docs/validation/phase5-blockers-readiness.md]: '
+        'phase5 blockers report path [.audit-reports/phase5/phase5-blockers-readiness.md]: '
       );
       const consumerPrompt = await rl.question(
-        'consumer unblock report path [docs/validation/consumer-startup-unblock-status.md]: '
+        'consumer unblock report path [.audit-reports/consumer-triage/consumer-startup-unblock-status.md]: '
       );
       const adapterPrompt = await rl.question(
-        'adapter readiness report path [docs/validation/adapter-readiness.md]: '
+        'adapter readiness report path [.audit-reports/adapter/adapter-readiness.md]: '
       );
       const requireAdapterPrompt = await rl.question(
         'require adapter readiness verdict READY? [no]: '
       );
       const outPrompt = await rl.question(
-        'output path [docs/validation/phase5-execution-closure-status.md]: '
+        'output path [.audit-reports/phase5/phase5-execution-closure-status.md]: '
       );
 
       return {
         phase5BlockersReportFile:
-          blockersPrompt.trim() || 'docs/validation/phase5-blockers-readiness.md',
+          blockersPrompt.trim() || '.audit-reports/phase5/phase5-blockers-readiness.md',
         consumerUnblockReportFile:
-          consumerPrompt.trim() || 'docs/validation/consumer-startup-unblock-status.md',
+          consumerPrompt.trim() || '.audit-reports/consumer-triage/consumer-startup-unblock-status.md',
         adapterReadinessReportFile:
-          adapterPrompt.trim() || 'docs/validation/adapter-readiness.md',
+          adapterPrompt.trim() || '.audit-reports/adapter/adapter-readiness.md',
         outFile:
-          outPrompt.trim() || 'docs/validation/phase5-execution-closure-status.md',
+          outPrompt.trim() || '.audit-reports/phase5/phase5-execution-closure-status.md',
         requireAdapterReadiness:
           requireAdapterPrompt.trim().toLowerCase().startsWith('y'),
       };

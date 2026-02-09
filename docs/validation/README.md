@@ -53,12 +53,12 @@ Generate them on demand with:
 - `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --skip-workflow-lint`
 - `npm run validation:phase5-blockers-readiness`
 - optional strict mode:
-  - `npm run validation:phase5-blockers-readiness -- --require-adapter-report --adapter-report docs/validation/adapter-real-session-report.md --consumer-triage-report docs/validation/consumer-startup-triage-report.md`
+  - `npm run validation:phase5-blockers-readiness -- --require-adapter-report --adapter-report .audit-reports/adapter/adapter-real-session-report.md --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md`
 - `npm run validation:phase5-execution-closure-status`
 - one-shot orchestrator:
   - `npm run validation:phase5-execution-closure -- --repo <owner>/<repo> --out-dir .audit-reports/phase5 --skip-workflow-lint`
 - optional strict adapter mode:
-  - `npm run validation:phase5-execution-closure-status -- --require-adapter-readiness --phase5-blockers-report docs/validation/phase5-blockers-readiness.md --consumer-unblock-report docs/validation/consumer-startup-unblock-status.md --adapter-readiness-report docs/validation/adapter-readiness.md`
+  - `npm run validation:phase5-execution-closure-status -- --require-adapter-readiness --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md --adapter-readiness-report .audit-reports/adapter/adapter-readiness.md`
 - `npm run validation:adapter-readiness`
 - `npm run validation:adapter-session-status`
 - `npm run validation:adapter-real-session-report`

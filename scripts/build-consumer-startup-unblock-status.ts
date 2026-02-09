@@ -20,10 +20,10 @@ type CliOptions = {
 
 const DEFAULT_REPO = 'owner/repo';
 const DEFAULT_SUPPORT_BUNDLE_FILE =
-  'docs/validation/consumer-startup-failure-support-bundle.md';
-const DEFAULT_AUTH_REPORT_FILE = 'docs/validation/consumer-ci-auth-check.md';
-const DEFAULT_WORKFLOW_LINT_FILE = 'docs/validation/consumer-workflow-lint-report.md';
-const DEFAULT_OUT_FILE = 'docs/validation/consumer-startup-unblock-status.md';
+  '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md';
+const DEFAULT_AUTH_REPORT_FILE = '.audit-reports/consumer-triage/consumer-ci-auth-check.md';
+const DEFAULT_WORKFLOW_LINT_FILE = '.audit-reports/consumer-triage/consumer-workflow-lint-report.md';
+const DEFAULT_OUT_FILE = '.audit-reports/consumer-triage/consumer-startup-unblock-status.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

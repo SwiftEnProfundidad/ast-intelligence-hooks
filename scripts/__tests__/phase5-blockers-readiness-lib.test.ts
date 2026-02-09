@@ -125,8 +125,8 @@ test('summarizePhase5Blockers returns BLOCKED when adapter or consumer blockers 
 test('buildPhase5BlockersReadinessMarkdown renders verdict and next actions', () => {
   const markdown = buildPhase5BlockersReadinessMarkdown({
     generatedAt: '2026-02-08T00:00:00.000Z',
-    adapterReportPath: 'docs/validation/adapter-real-session-report.md',
-    consumerTriageReportPath: 'docs/validation/consumer-startup-triage-report.md',
+    adapterReportPath: '.audit-reports/adapter/adapter-real-session-report.md',
+    consumerTriageReportPath: '.audit-reports/consumer-triage/consumer-startup-triage-report.md',
     hasAdapterReport: true,
     hasConsumerTriageReport: true,
     summary: {

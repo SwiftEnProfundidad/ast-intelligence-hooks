@@ -27,7 +27,7 @@ type JsonResult<T> = {
   error?: string;
 };
 
-const DEFAULT_OUT_FILE = 'docs/validation/consumer-ci-auth-check.md';
+const DEFAULT_OUT_FILE = '.audit-reports/consumer-triage/consumer-ci-auth-check.md';
 const REQUIRED_SCOPES = ['repo', 'workflow', 'user'] as const;
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {

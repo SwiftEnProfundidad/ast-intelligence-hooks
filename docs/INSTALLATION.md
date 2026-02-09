@@ -47,15 +47,15 @@ Optional adapter readiness check:
 
 ```bash
 npm run validation:adapter-readiness -- \
-  --adapter-report docs/validation/adapter-real-session-report.md \
-  --out docs/validation/adapter-readiness.md
+  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
+  --out .audit-reports/adapter/adapter-readiness.md
 
 npm run validation:adapter-session-status -- \
-  --out docs/validation/adapter-session-status.md
+  --out .audit-reports/adapter/adapter-session-status.md
 
 npm run validation:adapter-real-session-report -- \
-  --status-report docs/validation/adapter-session-status.md \
-  --out docs/validation/adapter-real-session-report.md
+  --status-report .audit-reports/adapter/adapter-session-status.md \
+  --out .audit-reports/adapter/adapter-real-session-report.md
 ```
 
 Note: the current adapter implementation uses `--adapter-report` as the adapter input flag.

@@ -45,9 +45,9 @@ Scope note: this is an optional adapter-validation runbook and does not alter PR
    - custom lower bound:
      - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh "2026-02-07T00:00:00.000Z"`
    - consolidated report:
-     - `npm run validation:adapter-session-status -- --out docs/validation/adapter-session-status.md`
+     - `npm run validation:adapter-session-status -- --out .audit-reports/adapter/adapter-session-status.md`
    - pre-filled real-session report:
-     - `npm run validation:adapter-real-session-report -- --status-report docs/validation/adapter-session-status.md --out docs/validation/adapter-real-session-report.md`
+     - `npm run validation:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`
 
 ## Known Failure Signature and Remediation
 
@@ -79,4 +79,4 @@ Remediation:
 - Completed report based on:
   - `docs/validation/adapter-real-session-report-template.md`
   - or generated with:
-    - `npm run validation:adapter-real-session-report -- --status-report docs/validation/adapter-session-status.md --out docs/validation/adapter-real-session-report.md`
+    - `npm run validation:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`

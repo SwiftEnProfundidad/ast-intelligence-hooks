@@ -15,11 +15,11 @@ type CliOptions = {
 };
 
 const DEFAULT_PHASE5_BLOCKERS_REPORT_FILE =
-  'docs/validation/phase5-blockers-readiness.md';
+  '.audit-reports/phase5/phase5-blockers-readiness.md';
 const DEFAULT_CONSUMER_UNBLOCK_REPORT_FILE =
-  'docs/validation/consumer-startup-unblock-status.md';
-const DEFAULT_ADAPTER_READINESS_REPORT_FILE = 'docs/validation/adapter-readiness.md';
-const DEFAULT_OUT_FILE = 'docs/validation/phase5-execution-closure-status.md';
+  '.audit-reports/consumer-triage/consumer-startup-unblock-status.md';
+const DEFAULT_ADAPTER_READINESS_REPORT_FILE = '.audit-reports/adapter/adapter-readiness.md';
+const DEFAULT_OUT_FILE = '.audit-reports/phase5/phase5-execution-closure-status.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {

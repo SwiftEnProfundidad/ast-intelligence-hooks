@@ -52,18 +52,16 @@ const runGenerator = (params: {
 
 test('build-adapter-readiness returns PENDING when adapter report is missing', async () => {
   await withTempDir('pumuki-adapter-readiness-missing-', (tempRoot) => {
-    mkdirSync(join(tempRoot, 'docs/validation'), { recursive: true });
-
     const result = runGenerator({
       cwd: tempRoot,
-      outFile: 'docs/validation/adapter-readiness.md',
+      outFile: '.audit-reports/adapter/adapter-readiness.md',
     });
 
     assert.equal(result.status, 1);
     assert.match(result.stdout, /verdict=PENDING/);
 
     const report = readFileSync(
-      join(tempRoot, 'docs/validation/adapter-readiness.md'),
+      join(tempRoot, '.audit-reports/adapter/adapter-readiness.md'),
       'utf8'
     );
     assert.match(report, /- verdict: PENDING/);
@@ -73,11 +71,11 @@ test('build-adapter-readiness returns PENDING when adapter report is missing', a
 
 test('build-adapter-readiness returns READY when adapter report passes', async () => {
   await withTempDir('pumuki-adapter-readiness-ready-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
-    mkdirSync(docsValidation, { recursive: true });
+    const auditAdapter = join(tempRoot, '.audit-reports/adapter');
+    mkdirSync(auditAdapter, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'adapter-real-session-report.md'),
+      join(auditAdapter, 'adapter-real-session-report.md'),
       [
         '# Adapter Hook Runtime - Real Session Report',
         '',
@@ -89,15 +87,15 @@ test('build-adapter-readiness returns READY when adapter report passes', async (
 
     const result = runGenerator({
       cwd: tempRoot,
-      adapterReportFile: 'docs/validation/adapter-real-session-report.md',
-      outFile: 'docs/validation/adapter-readiness.md',
+      adapterReportFile: '.audit-reports/adapter/adapter-real-session-report.md',
+      outFile: '.audit-reports/adapter/adapter-readiness.md',
     });
 
     assert.equal(result.status, 0);
     assert.match(result.stdout, /verdict=READY/);
 
     const report = readFileSync(
-      join(docsValidation, 'adapter-readiness.md'),
+      join(auditAdapter, 'adapter-readiness.md'),
       'utf8'
     );
     assert.match(report, /- verdict: READY/);
@@ -107,11 +105,11 @@ test('build-adapter-readiness returns READY when adapter report passes', async (
 
 test('build-adapter-readiness returns BLOCKED when adapter report fails', async () => {
   await withTempDir('pumuki-adapter-readiness-blocked-', (tempRoot) => {
-    const docsValidation = join(tempRoot, 'docs/validation');
-    mkdirSync(docsValidation, { recursive: true });
+    const auditAdapter = join(tempRoot, '.audit-reports/adapter');
+    mkdirSync(auditAdapter, { recursive: true });
 
     writeFileSync(
-      join(docsValidation, 'adapter-real-session-report.md'),
+      join(auditAdapter, 'adapter-real-session-report.md'),
       [
         '# Adapter Hook Runtime - Real Session Report',
         '',
@@ -123,15 +121,15 @@ test('build-adapter-readiness returns BLOCKED when adapter report fails', async 
 
     const result = runGenerator({
       cwd: tempRoot,
-      adapterReportFile: 'docs/validation/adapter-real-session-report.md',
-      outFile: 'docs/validation/adapter-readiness.md',
+      adapterReportFile: '.audit-reports/adapter/adapter-real-session-report.md',
+      outFile: '.audit-reports/adapter/adapter-readiness.md',
     });
 
     assert.equal(result.status, 1);
     assert.match(result.stdout, /verdict=BLOCKED/);
 
     const report = readFileSync(
-      join(docsValidation, 'adapter-readiness.md'),
+      join(auditAdapter, 'adapter-readiness.md'),
       'utf8'
     );
     assert.match(report, /- verdict: BLOCKED/);

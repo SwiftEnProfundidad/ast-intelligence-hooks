@@ -213,18 +213,18 @@ export const buildPhase5BlockersReadinessMarkdown = (params: {
     lines.push('- Attach this report to release/rollout notes.');
     if (!params.hasAdapterReport) {
       lines.push(
-        '- Optional: generate Adapter report for adapter diagnostics traceability (`npm run validation:adapter-real-session-report -- --status-report docs/validation/adapter-session-status.md --out docs/validation/adapter-real-session-report.md`).'
+        '- Optional: generate Adapter report for adapter diagnostics traceability (`npm run validation:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`).'
       );
     }
   } else {
     if (!params.hasAdapterReport && params.requireAdapterReport) {
       lines.push(
-        '- Generate Adapter report: `npm run validation:adapter-real-session-report -- --status-report docs/validation/adapter-session-status.md --out docs/validation/adapter-real-session-report.md`'
+        '- Generate Adapter report: `npm run validation:adapter-real-session-report -- --status-report .audit-reports/adapter/adapter-session-status.md --out .audit-reports/adapter/adapter-real-session-report.md`'
       );
     }
     if (!params.hasConsumerTriageReport) {
       lines.push(
-        '- Generate consumer triage report: `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --out-dir docs/validation --skip-workflow-lint`'
+        '- Generate consumer triage report: `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --out-dir .audit-reports/consumer-triage --skip-workflow-lint`'
       );
     }
     if (params.summary.blockers.some((item) => item.includes('Adapter runtime'))) {

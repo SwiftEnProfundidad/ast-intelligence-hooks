@@ -14,9 +14,9 @@ type CliOptions = {
   requireAdapterReport: boolean;
 };
 
-const DEFAULT_ADAPTER_REPORT_FILE = 'docs/validation/adapter-real-session-report.md';
-const DEFAULT_CONSUMER_TRIAGE_FILE = 'docs/validation/consumer-startup-triage-report.md';
-const DEFAULT_OUT_FILE = 'docs/validation/phase5-blockers-readiness.md';
+const DEFAULT_ADAPTER_REPORT_FILE = '.audit-reports/adapter/adapter-real-session-report.md';
+const DEFAULT_CONSUMER_TRIAGE_FILE = '.audit-reports/consumer-triage/consumer-startup-triage-report.md';
+const DEFAULT_OUT_FILE = '.audit-reports/phase5/phase5-blockers-readiness.md';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {
