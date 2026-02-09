@@ -46,9 +46,26 @@ test('run-phase5-execution-closure renders deterministic dry-run command plan', 
 
   assert.equal(result.status, 0);
   assert.match(result.stdout, /phase5 execution closure dry-run plan/);
+  assert.match(result.stdout, /check-consumer-ci-auth\.ts/);
   assert.match(result.stdout, /build-consumer-startup-triage\.ts/);
+  assert.match(result.stdout, /--skip-auth-check/);
   assert.match(result.stdout, /build-phase5-blockers-readiness\.ts/);
   assert.match(result.stdout, /build-phase5-execution-closure-status\.ts/);
+});
+
+test('run-phase5-execution-closure supports skip-auth-preflight mode in dry-run', () => {
+  const result = runClosureCommand([
+    '--repo',
+    'owner/repo',
+    '--skip-workflow-lint',
+    '--skip-auth-preflight',
+    '--dry-run',
+  ]);
+
+  assert.equal(result.status, 0);
+  assert.doesNotMatch(result.stdout, /check-consumer-ci-auth\.ts/);
+  assert.doesNotMatch(result.stdout, /--skip-auth-check/);
+  assert.match(result.stdout, /build-consumer-startup-triage\.ts/);
 });
 
 test('run-phase5-execution-closure fails when strict adapter mode is requested with skip-adapter', () => {

@@ -13,6 +13,7 @@ type CliOptions = {
   limit: number;
   outDir: string;
   runWorkflowLint: boolean;
+  includeAuthCheck: boolean;
   repoPath?: string;
   actionlintBin?: string;
   dryRun: boolean;
@@ -27,6 +28,7 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
     limit: DEFAULT_LIMIT,
     outDir: DEFAULT_OUT_DIR,
     runWorkflowLint: true,
+    includeAuthCheck: true,
     dryRun: false,
   };
 
@@ -92,6 +94,11 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
       continue;
     }
 
+    if (arg === '--skip-auth-check') {
+      options.includeAuthCheck = false;
+      continue;
+    }
+
     if (arg === '--dry-run') {
       options.dryRun = true;
       continue;
@@ -115,6 +122,7 @@ const main = (): number => {
     limit: options.limit,
     outDir: options.outDir,
     runWorkflowLint: options.runWorkflowLint,
+    includeAuthCheck: options.includeAuthCheck,
     repoPath: options.repoPath,
     actionlintBin: options.actionlintBin,
   });

@@ -13,6 +13,7 @@ type CliOptions = {
   limit: number;
   outDir: string;
   runWorkflowLint: boolean;
+  includeAuthPreflight: boolean;
   repoPath?: string;
   actionlintBin?: string;
   includeAdapter: boolean;
@@ -21,7 +22,7 @@ type CliOptions = {
 };
 
 const DEFAULT_LIMIT = 20;
-const DEFAULT_OUT_DIR = 'docs/validation';
+const DEFAULT_OUT_DIR = '.audit-reports/phase5';
 
 const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
   const options: CliOptions = {
@@ -29,6 +30,7 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
     limit: DEFAULT_LIMIT,
     outDir: DEFAULT_OUT_DIR,
     runWorkflowLint: true,
+    includeAuthPreflight: true,
     includeAdapter: true,
     requireAdapterReadiness: false,
     dryRun: false,
@@ -96,6 +98,11 @@ const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
       continue;
     }
 
+    if (arg === '--skip-auth-preflight') {
+      options.includeAuthPreflight = false;
+      continue;
+    }
+
     if (arg === '--skip-adapter') {
       options.includeAdapter = false;
       continue;
@@ -129,6 +136,7 @@ const main = (): number => {
     limit: options.limit,
     outDir: options.outDir,
     runWorkflowLint: options.runWorkflowLint,
+    includeAuthPreflight: options.includeAuthPreflight,
     repoPath: options.repoPath,
     actionlintBin: options.actionlintBin,
     includeAdapter: options.includeAdapter,
@@ -168,6 +176,13 @@ const main = (): number => {
         ok: false,
         error: error instanceof Error ? error.message : 'unknown command failure',
       });
+
+      if (command.id === 'consumer-auth-preflight') {
+        process.stdout.write(
+          'phase5 execution closure halted: consumer auth preflight failed\n'
+        );
+        break;
+      }
     }
   }
 
@@ -179,6 +194,7 @@ const main = (): number => {
       outDir: options.outDir,
       limit: options.limit,
       runWorkflowLint: options.runWorkflowLint,
+      includeAuthPreflight: options.includeAuthPreflight,
       includeAdapter: options.includeAdapter,
       requireAdapterReadiness: options.requireAdapterReadiness,
       repoPathProvided: Boolean(options.repoPath?.trim()),

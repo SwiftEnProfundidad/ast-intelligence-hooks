@@ -30,6 +30,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Legacy ruleset lookup is provider-agnostic and covered by regression tests (`integrations/git/resolveLegacyRulesetFile.ts`, `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`).
 - Validation artifact cleanup command is available (`validation:clean-artifacts`, dry-run supported).
 - Framework menu includes artifact cleanup action (`Clean local validation artifacts`).
+- Phase 5 one-shot flow includes auth preflight fail-fast with optional bypass (`--skip-auth-preflight`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
 
 For full historical execution details, see:

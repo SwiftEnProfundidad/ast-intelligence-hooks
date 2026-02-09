@@ -3,6 +3,7 @@ export type Phase5ExecutionClosureOptions = {
   limit: number;
   outDir: string;
   runWorkflowLint: boolean;
+  includeAuthPreflight: boolean;
   repoPath?: string;
   actionlintBin?: string;
   includeAdapter: boolean;
@@ -13,6 +14,7 @@ export type Phase5ExecutionClosureOutputs = {
   adapterSessionStatus: string;
   adapterRealSessionReport: string;
   adapterReadiness: string;
+  consumerCiAuthCheck: string;
   consumerStartupTriageReport: string;
   consumerStartupUnblockStatus: string;
   phase5BlockersReadiness: string;
@@ -25,6 +27,7 @@ export type Phase5ExecutionClosureCommand = {
     | 'adapter-session-status'
     | 'adapter-real-session-report'
     | 'adapter-readiness'
+    | 'consumer-auth-preflight'
     | 'consumer-startup-triage'
     | 'phase5-blockers-readiness'
     | 'phase5-execution-closure-status';
@@ -53,6 +56,7 @@ export const resolvePhase5ExecutionClosureOutputs = (
     adapterSessionStatus: joinPath(outDir, 'adapter-session-status.md'),
     adapterRealSessionReport: joinPath(outDir, 'adapter-real-session-report.md'),
     adapterReadiness: joinPath(outDir, 'adapter-readiness.md'),
+    consumerCiAuthCheck: joinPath(outDir, 'consumer-ci-auth-check.md'),
     consumerStartupTriageReport: joinPath(outDir, 'consumer-startup-triage-report.md'),
     consumerStartupUnblockStatus: joinPath(outDir, 'consumer-startup-unblock-status.md'),
     phase5BlockersReadiness: joinPath(outDir, 'phase5-blockers-readiness.md'),
@@ -119,6 +123,17 @@ export const buildPhase5ExecutionClosureCommands = (
     );
   }
 
+  if (options.includeAuthPreflight) {
+    commands.push({
+      id: 'consumer-auth-preflight',
+      description: 'Preflight GitHub auth/scopes and billing probe',
+      script: 'scripts/check-consumer-ci-auth.ts',
+      args: ['--repo', options.repo, '--out', outputs.consumerCiAuthCheck],
+      required: true,
+      outputFiles: [outputs.consumerCiAuthCheck],
+    });
+  }
+
   const triageArgs = [
     '--repo',
     options.repo,
@@ -139,6 +154,10 @@ export const buildPhase5ExecutionClosureCommands = (
     triageArgs.push('--repo-path', repoPath, '--actionlint-bin', actionlintBin);
   } else {
     triageArgs.push('--skip-workflow-lint');
+  }
+
+  if (options.includeAuthPreflight) {
+    triageArgs.push('--skip-auth-check');
   }
 
   commands.push({
@@ -229,6 +248,9 @@ export const buildPhase5ExecutionClosureRunReportMarkdown = (params: {
   lines.push(`- target_repo: \`${params.repo}\``);
   lines.push(`- out_dir: \`${params.options.outDir}\``);
   lines.push(`- include_adapter: ${params.options.includeAdapter ? 'YES' : 'NO'}`);
+  lines.push(
+    `- include_auth_preflight: ${params.options.includeAuthPreflight ? 'YES' : 'NO'}`
+  );
   lines.push(
     `- require_adapter_readiness: ${params.options.requireAdapterReadiness ? 'YES' : 'NO'}`
   );

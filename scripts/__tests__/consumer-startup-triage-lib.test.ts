@@ -62,6 +62,20 @@ test('buildConsumerStartupTriageCommands omits workflow lint when skipped', () =
   assert.equal(commands.length, 5);
 });
 
+test('buildConsumerStartupTriageCommands can skip auth-check when preflight already ran', () => {
+  const commands = buildConsumerStartupTriageCommands({
+    repo: 'owner/repo',
+    limit: 20,
+    outDir: 'docs/validation',
+    runWorkflowLint: false,
+    includeAuthCheck: false,
+  });
+
+  assert.equal(commands.some((command) => command.id === 'auth-check'), false);
+  assert.equal(commands[0]?.id, 'ci-artifacts');
+  assert.equal(commands.length, 4);
+});
+
 test('buildConsumerStartupTriageReportMarkdown renders READY verdict for successful required steps', () => {
   const commands = buildConsumerStartupTriageCommands({
     repo: 'owner/repo',

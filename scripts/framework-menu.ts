@@ -242,6 +242,7 @@ export const buildPhase5ExecutionClosureCommandArgs = (params: {
   limit: number;
   outDir: string;
   runWorkflowLint: boolean;
+  includeAuthPreflight: boolean;
   repoPath?: string;
   actionlintBin?: string;
   includeAdapter: boolean;
@@ -268,6 +269,10 @@ export const buildPhase5ExecutionClosureCommandArgs = (params: {
     if (params.actionlintBin) {
       args.push('--actionlint-bin', params.actionlintBin);
     }
+  }
+
+  if (!params.includeAuthPreflight) {
+    args.push('--skip-auth-preflight');
   }
 
   if (!params.includeAdapter) {
@@ -547,6 +552,7 @@ const runPhase5ExecutionClosure = async (params: {
   limit: number;
   outDir: string;
   runWorkflowLint: boolean;
+  includeAuthPreflight: boolean;
   repoPath?: string;
   actionlintBin?: string;
   includeAdapter: boolean;
@@ -572,6 +578,7 @@ const runPhase5ExecutionClosure = async (params: {
       limit: params.limit,
       outDir: params.outDir,
       runWorkflowLint: params.runWorkflowLint,
+      includeAuthPreflight: params.includeAuthPreflight,
       repoPath: params.repoPath,
       actionlintBin: params.actionlintBin,
       includeAdapter: params.includeAdapter,
@@ -1062,7 +1069,7 @@ const menu = async (): Promise<void> => {
       );
       const limitPrompt = await rl.question('runs to inspect [20]: ');
       const outDirPrompt = await rl.question(
-        'output directory [docs/validation]: '
+        'output directory [.audit-reports/consumer-triage]: '
       );
       const workflowLintPrompt = await rl.question(
         'include workflow lint? [no]: '
@@ -1074,7 +1081,7 @@ const menu = async (): Promise<void> => {
         return {
           repo: repoPrompt.trim() || 'owner/repo',
           limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
-          outDir: outDirPrompt.trim() || 'docs/validation',
+          outDir: outDirPrompt.trim() || '.audit-reports/consumer-triage',
           runWorkflowLint: false,
         };
       }
@@ -1089,7 +1096,7 @@ const menu = async (): Promise<void> => {
       return {
         repo: repoPrompt.trim() || 'owner/repo',
         limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
-        outDir: outDirPrompt.trim() || 'docs/validation',
+        outDir: outDirPrompt.trim() || '.audit-reports/consumer-triage',
         runWorkflowLint: true,
         repoPath:
           repoPathPrompt.trim() ||
@@ -1182,6 +1189,7 @@ const menu = async (): Promise<void> => {
       limit: number;
       outDir: string;
       runWorkflowLint: boolean;
+      includeAuthPreflight: boolean;
       repoPath?: string;
       actionlintBin?: string;
       includeAdapter: boolean;
@@ -1192,10 +1200,13 @@ const menu = async (): Promise<void> => {
       );
       const limitPrompt = await rl.question('runs to inspect [20]: ');
       const outDirPrompt = await rl.question(
-        'output directory [docs/validation]: '
+        'output directory [.audit-reports/phase5]: '
       );
       const workflowLintPrompt = await rl.question(
         'include workflow lint? [yes]: '
+      );
+      const authPreflightPrompt = await rl.question(
+        'run auth preflight and fail-fast on auth block? [yes]: '
       );
       const includeAdapterPrompt = await rl.question(
         'include adapter diagnostics? [yes]: '
@@ -1207,6 +1218,9 @@ const menu = async (): Promise<void> => {
       const runWorkflowLint = !workflowLintPrompt.trim()
         ? true
         : workflowLintPrompt.trim().toLowerCase().startsWith('y');
+      const includeAuthPreflight = !authPreflightPrompt.trim()
+        ? true
+        : authPreflightPrompt.trim().toLowerCase().startsWith('y');
       const includeAdapter = !includeAdapterPrompt.trim()
         ? true
         : includeAdapterPrompt.trim().toLowerCase().startsWith('y');
@@ -1234,8 +1248,9 @@ const menu = async (): Promise<void> => {
       return {
         repo: repoPrompt.trim() || 'owner/repo',
         limit: Number.parseInt(limitPrompt.trim() || '20', 10) || 20,
-        outDir: outDirPrompt.trim() || 'docs/validation',
+        outDir: outDirPrompt.trim() || '.audit-reports/phase5',
         runWorkflowLint,
+        includeAuthPreflight,
         repoPath,
         actionlintBin,
         includeAdapter,

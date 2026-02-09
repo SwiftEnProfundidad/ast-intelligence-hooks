@@ -226,6 +226,13 @@ npm run validation:phase5-execution-closure -- \
   --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 
+# Optional: bypass auth preflight fail-fast
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir .audit-reports/phase5 \
+  --skip-workflow-lint \
+  --skip-auth-preflight
+
 # Optional: generate adapter-only readiness report
 # (current adapter implementation consumes --adapter-report as input path)
 npm run validation:adapter-readiness -- \

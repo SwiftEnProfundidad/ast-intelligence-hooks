@@ -3,6 +3,7 @@ export type ConsumerStartupTriageOptions = {
   limit: number;
   outDir: string;
   runWorkflowLint: boolean;
+  includeAuthCheck?: boolean;
   repoPath?: string;
   actionlintBin?: string;
 };
@@ -61,32 +62,36 @@ export const buildConsumerStartupTriageCommands = (
   options: ConsumerStartupTriageOptions
 ): ConsumerStartupTriageCommand[] => {
   const outputs = resolveConsumerStartupTriageOutputs(options.outDir);
+  const includeAuthCheck = options.includeAuthCheck ?? true;
 
-  const commands: ConsumerStartupTriageCommand[] = [
-    {
+  const commands: ConsumerStartupTriageCommand[] = [];
+
+  if (includeAuthCheck) {
+    commands.push({
       id: 'auth-check',
       description: 'Check GitHub auth/scopes and billing probe',
       script: 'scripts/check-consumer-ci-auth.ts',
       args: ['--repo', options.repo, '--out', outputs.authReport],
       outputFile: outputs.authReport,
       required: true,
-    },
-    {
-      id: 'ci-artifacts',
-      description: 'Collect recent CI runs and artifact status',
-      script: 'scripts/collect-consumer-ci-artifacts.ts',
-      args: [
-        '--repo',
-        options.repo,
-        '--limit',
-        String(options.limit),
-        '--out',
-        outputs.artifactsReport,
-      ],
-      outputFile: outputs.artifactsReport,
-      required: true,
-    },
-  ];
+    });
+  }
+
+  commands.push({
+    id: 'ci-artifacts',
+    description: 'Collect recent CI runs and artifact status',
+    script: 'scripts/collect-consumer-ci-artifacts.ts',
+    args: [
+      '--repo',
+      options.repo,
+      '--limit',
+      String(options.limit),
+      '--out',
+      outputs.artifactsReport,
+    ],
+    outputFile: outputs.artifactsReport,
+    required: true,
+  });
 
   if (options.runWorkflowLint) {
     const repoPath = options.repoPath?.trim();

@@ -12,6 +12,7 @@ test('resolvePhase5ExecutionClosureOutputs uses deterministic output names', () 
     adapterSessionStatus: 'docs/validation/adapter-session-status.md',
     adapterRealSessionReport: 'docs/validation/adapter-real-session-report.md',
     adapterReadiness: 'docs/validation/adapter-readiness.md',
+    consumerCiAuthCheck: 'docs/validation/consumer-ci-auth-check.md',
     consumerStartupTriageReport: 'docs/validation/consumer-startup-triage-report.md',
     consumerStartupUnblockStatus: 'docs/validation/consumer-startup-unblock-status.md',
     phase5BlockersReadiness: 'docs/validation/phase5-blockers-readiness.md',
@@ -26,6 +27,7 @@ test('buildPhase5ExecutionClosureCommands builds non-strict plan with adapter en
     limit: 25,
     outDir: 'docs/validation',
     runWorkflowLint: false,
+    includeAuthPreflight: true,
     includeAdapter: true,
     requireAdapterReadiness: false,
   });
@@ -36,6 +38,7 @@ test('buildPhase5ExecutionClosureCommands builds non-strict plan with adapter en
       'adapter-session-status',
       'adapter-real-session-report',
       'adapter-readiness',
+      'consumer-auth-preflight',
       'consumer-startup-triage',
       'phase5-blockers-readiness',
       'phase5-execution-closure-status',
@@ -44,6 +47,10 @@ test('buildPhase5ExecutionClosureCommands builds non-strict plan with adapter en
   assert.match(
     commands.find((command) => command.id === 'consumer-startup-triage')?.args.join(' ') ?? '',
     /--skip-workflow-lint/
+  );
+  assert.match(
+    commands.find((command) => command.id === 'consumer-startup-triage')?.args.join(' ') ?? '',
+    /--skip-auth-check/
   );
   assert.equal(
     commands.find((command) => command.id === 'phase5-blockers-readiness')?.args.includes(
@@ -59,6 +66,7 @@ test('buildPhase5ExecutionClosureCommands enforces strict adapter mode arguments
     limit: 20,
     outDir: 'docs/validation',
     runWorkflowLint: true,
+    includeAuthPreflight: true,
     repoPath: '/tmp/consumer',
     actionlintBin: '/tmp/actionlint',
     includeAdapter: true,
@@ -85,10 +93,32 @@ test('buildPhase5ExecutionClosureCommands rejects strict mode when adapter flow 
         limit: 20,
         outDir: 'docs/validation',
         runWorkflowLint: false,
+        includeAuthPreflight: true,
         includeAdapter: false,
         requireAdapterReadiness: true,
       }),
     /Cannot require adapter readiness/
+  );
+});
+
+test('buildPhase5ExecutionClosureCommands can skip auth preflight and keep triage auth check', () => {
+  const commands = buildPhase5ExecutionClosureCommands({
+    repo: 'owner/repo',
+    limit: 20,
+    outDir: 'docs/validation',
+    runWorkflowLint: false,
+    includeAuthPreflight: false,
+    includeAdapter: false,
+    requireAdapterReadiness: false,
+  });
+
+  assert.equal(
+    commands.some((command) => command.id === 'consumer-auth-preflight'),
+    false
+  );
+  assert.doesNotMatch(
+    commands.find((command) => command.id === 'consumer-startup-triage')?.args.join(' ') ?? '',
+    /--skip-auth-check/
   );
 });
 
@@ -98,6 +128,7 @@ test('buildPhase5ExecutionClosureRunReportMarkdown renders deterministic run sec
     limit: 20,
     outDir: 'docs/validation',
     runWorkflowLint: false,
+    includeAuthPreflight: true,
     includeAdapter: true,
     requireAdapterReadiness: false,
   });
@@ -109,6 +140,7 @@ test('buildPhase5ExecutionClosureRunReportMarkdown renders deterministic run sec
       outDir: 'docs/validation',
       limit: 20,
       runWorkflowLint: false,
+      includeAuthPreflight: true,
       includeAdapter: true,
       requireAdapterReadiness: false,
       repoPathProvided: false,
@@ -124,6 +156,8 @@ test('buildPhase5ExecutionClosureRunReportMarkdown renders deterministic run sec
 
   assert.match(report, /# Phase 5 Execution Closure Run Report/);
   assert.match(report, /- verdict: READY/);
+  assert.match(report, /include_auth_preflight: YES/);
+  assert.match(report, /consumer-auth-preflight/);
   assert.match(report, /consumer-startup-triage/);
   assert.match(report, /phase5-execution-closure-status/);
 });

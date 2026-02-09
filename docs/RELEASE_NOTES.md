@@ -77,6 +77,8 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Phase 5 execution closure one-shot orchestration:
   - `npm run validation:phase5-execution-closure`
   - executes adapter diagnostics (optional), consumer startup triage, blockers readiness, and closure status in one command
+  - includes consumer auth/scope preflight and fail-fast behavior before triage
+  - optional bypass: `--skip-auth-preflight`
   - emits deterministic run summary (recommended out-dir): `.audit-reports/phase5/phase5-execution-closure-run-report.md`
   - framework menu action:
     - `Run phase5 execution closure (one-shot orchestration)`

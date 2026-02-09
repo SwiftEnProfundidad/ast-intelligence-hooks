@@ -294,6 +294,7 @@ test('builds deterministic command args for phase5 execution closure without wor
     limit: 20,
     outDir: 'docs/validation',
     runWorkflowLint: false,
+    includeAuthPreflight: true,
     includeAdapter: true,
     requireAdapterReadiness: false,
   });
@@ -319,6 +320,7 @@ test('builds deterministic strict command args for phase5 execution closure', ()
     limit: 25,
     outDir: 'docs/validation',
     runWorkflowLint: true,
+    includeAuthPreflight: true,
     repoPath: '/tmp/consumer',
     actionlintBin: '/tmp/actionlint',
     includeAdapter: true,
@@ -350,6 +352,7 @@ test('builds deterministic command args for phase5 execution closure without ada
     limit: 10,
     outDir: 'docs/validation',
     runWorkflowLint: false,
+    includeAuthPreflight: true,
     includeAdapter: false,
     requireAdapterReadiness: false,
   });
@@ -366,6 +369,33 @@ test('builds deterministic command args for phase5 execution closure without ada
     'docs/validation',
     '--skip-workflow-lint',
     '--skip-adapter',
+  ]);
+});
+
+test('builds deterministic command args for phase5 execution closure without auth preflight', () => {
+  const args = buildPhase5ExecutionClosureCommandArgs({
+    scriptPath: '/repo/scripts/run-phase5-execution-closure.ts',
+    repo: 'owner/repo',
+    limit: 20,
+    outDir: '.audit-reports/phase5',
+    runWorkflowLint: false,
+    includeAuthPreflight: false,
+    includeAdapter: true,
+    requireAdapterReadiness: false,
+  });
+
+  assert.deepEqual(args, [
+    '--yes',
+    'tsx@4.21.0',
+    '/repo/scripts/run-phase5-execution-closure.ts',
+    '--repo',
+    'owner/repo',
+    '--limit',
+    '20',
+    '--out-dir',
+    '.audit-reports/phase5',
+    '--skip-workflow-lint',
+    '--skip-auth-preflight',
   ]);
 });
 

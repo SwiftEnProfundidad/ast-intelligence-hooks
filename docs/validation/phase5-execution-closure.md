@@ -19,6 +19,8 @@ npm run validation:phase5-execution-closure -- \
   --skip-workflow-lint
 ```
 
+Default behavior includes an auth/scope preflight (`check-consumer-ci-auth`) and stops before triage when auth is blocked.
+
 Strict adapter mode:
 
 ```bash
@@ -33,6 +35,16 @@ npm run validation:phase5-execution-closure -- \
 Generated orchestration summary:
 
 - `.audit-reports/phase5/phase5-execution-closure-run-report.md`
+
+Optional: disable auth preflight when you intentionally want triage to execute auth internally:
+
+```bash
+npm run validation:phase5-execution-closure -- \
+  --repo <owner>/<repo> \
+  --out-dir .audit-reports/phase5 \
+  --skip-workflow-lint \
+  --skip-auth-preflight
+```
 
 ## Required Inputs
 

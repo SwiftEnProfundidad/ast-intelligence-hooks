@@ -45,3 +45,15 @@ test('build-consumer-startup-triage dry-run renders workflow lint step when conf
   assert.match(output, /--actionlint-bin \/tmp\/actionlint/);
 });
 
+test('build-consumer-startup-triage dry-run can skip auth-check command', () => {
+  const output = runDry([
+    '--repo',
+    'owner/repo',
+    '--skip-workflow-lint',
+    '--skip-auth-check',
+    '--dry-run',
+  ]);
+
+  assert.doesNotMatch(output, /- auth-check:/);
+  assert.match(output, /- ci-artifacts:/);
+});

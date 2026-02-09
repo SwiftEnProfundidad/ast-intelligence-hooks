@@ -149,6 +149,12 @@ Commands:
 - `npm run validation:phase5-execution-closure`
 - `npm run validation:clean-artifacts`
 
+`validation:phase5-execution-closure` notes:
+
+- defaults to output directory `.audit-reports/phase5`
+- runs auth preflight and fails fast on auth/scope blockers
+- supports `--skip-auth-preflight` when preflight must be bypassed
+
 Framework menu action:
 
 - `Build adapter readiness report`
@@ -162,7 +168,7 @@ Deterministic argument builders exported from menu module:
 - `buildCleanValidationArtifactsCommandArgs({ scriptPath, dryRun })`
 - `buildPhase5BlockersReadinessCommandArgs({ scriptPath, adapterReportFile, consumerTriageReportFile, outFile })`
 - `buildPhase5ExecutionClosureStatusCommandArgs({ scriptPath, phase5BlockersReportFile, consumerUnblockReportFile, adapterReadinessReportFile, outFile, requireAdapterReadiness })`
-- `buildPhase5ExecutionClosureCommandArgs({ scriptPath, repo, limit, outDir, runWorkflowLint, repoPath, actionlintBin, includeAdapter, requireAdapterReadiness })`
+- `buildPhase5ExecutionClosureCommandArgs({ scriptPath, repo, limit, outDir, runWorkflowLint, includeAuthPreflight, repoPath, actionlintBin, includeAdapter, requireAdapterReadiness })`
 
 Current adapter implementation note:
 
