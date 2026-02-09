@@ -15,7 +15,7 @@ Use this command to run the full closure flow end-to-end:
 ```bash
 npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \
-  --out-dir docs/validation \
+  --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 ```
 
@@ -24,7 +24,7 @@ Strict adapter mode:
 ```bash
 npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \
-  --out-dir docs/validation \
+  --out-dir .audit-reports/phase5 \
   --repo-path /absolute/path/to/consumer-repo \
   --actionlint-bin /tmp/actionlint-bin/actionlint \
   --require-adapter-readiness
@@ -32,7 +32,7 @@ npm run validation:phase5-execution-closure -- \
 
 Generated orchestration summary:
 
-- `docs/validation/phase5-execution-closure-run-report.md`
+- `.audit-reports/phase5/phase5-execution-closure-run-report.md`
 
 ## Required Inputs
 
@@ -82,7 +82,7 @@ Run against consumer repository context:
 ```bash
 npm run validation:consumer-startup-triage -- \
   --repo <owner>/<repo> \
-  --out-dir docs/validation \
+  --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 ```
 

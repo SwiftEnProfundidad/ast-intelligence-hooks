@@ -48,7 +48,7 @@ Generate support payload bundle:
 # One-shot triage orchestration (recommended)
 npm run validation:consumer-startup-triage -- \
   --repo <owner>/<repo> \
-  --out-dir docs/validation \
+  --out-dir .audit-reports/consumer-triage \
   --skip-workflow-lint
 
 # Optional: include workflow lint in the orchestration

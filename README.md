@@ -161,7 +161,7 @@ Generate a consumer-repository CI run/artifact report (for rollout validation an
 # One-shot triage bundle (auth + artifacts + support bundle + ticket draft + unblock status)
 npm run validation:consumer-startup-triage -- \
   --repo <owner>/<repo> \
-  --out-dir docs/validation \
+  --out-dir .audit-reports/consumer-triage \
   --skip-workflow-lint
 
 # Optional: include semantic workflow lint in the one-shot triage run
@@ -223,7 +223,7 @@ npm run validation:phase5-execution-closure-status -- \
 # One-shot: run full Phase 5 execution-closure orchestration
 npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \
-  --out-dir docs/validation \
+  --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 
 # Optional: generate adapter-only readiness report

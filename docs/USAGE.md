@@ -92,7 +92,7 @@ npm run validation:phase5-execution-closure-status -- \
 # One-shot: run full Phase 5 execution-closure orchestration
 npm run validation:phase5-execution-closure -- \
   --repo <owner>/<repo> \
-  --out-dir docs/validation \
+  --out-dir .audit-reports/phase5 \
   --skip-workflow-lint
 
 # Optional: clean local generated validation artifacts
