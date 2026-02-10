@@ -100,6 +100,23 @@ Use the following template as final rollout note:
 - Handoff template is filled and shared with artifact URLs.
 - `docs/TODO.md` external rollout blocker items are updated.
 
+## Current Live Snapshot (2026-02-10)
+
+Latest regenerated external evidence (`.audit-reports/phase5-latest/*`) remains blocked:
+
+- `phase5-blockers-readiness.md`: `READY`
+- `phase5-execution-closure-status.md`: `BLOCKED`
+- `phase5-external-handoff.md`: `BLOCKED`
+- `consumer-startup-unblock-status.md`: `BLOCKED`
+- `consumer-startup-failure-support-bundle.md` signals:
+  - `startup_failure_runs: 1`
+  - `startup_stalled_runs: 3`
+  - queued runs still show `jobs.total_count: 0` and `artifacts.total_count: 0`
+
+Latest controlled probe run URL:
+
+- `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21885160081`
+
 ## Related References
 
 - `docs/validation/phase5-execution-closure.md`

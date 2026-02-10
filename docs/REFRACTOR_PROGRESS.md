@@ -121,4 +121,5 @@
 - ✅ New controlled `workflow_dispatch` probe (`21885160081`) was triggered and Phase 5 latest artifacts were regenerated; blockage persists with `startup_failure_runs=1` and `startup_stalled_runs=3`.
 - ✅ Consumer startup-unblock markdown now marks missing workflow lint input as `optional` (instead of ambiguous `missing`), with regression coverage.
 - ✅ Residual legacy external-project name references were re-audited; only progress-history mentions remained and were normalized.
+- ✅ `docs/validation/phase8-external-rollout-pack.md` now includes a live snapshot section with current blocked verdict chain and latest probe URL.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
