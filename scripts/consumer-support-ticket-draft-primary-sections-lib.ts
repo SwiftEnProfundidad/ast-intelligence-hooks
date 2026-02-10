@@ -21,17 +21,25 @@ export const buildSupportTicketHeaderLines = (params: {
 
 export const buildSupportTicketProblemSummaryLines = (
   support: ParsedSupportBundle
-): ReadonlyArray<string> => [
-  '## Problem Summary',
-  '',
-  '- Runs consistently end with `conclusion: startup_failure`.',
-  `- startup_failure_runs observed: ${support.startupFailureRuns ?? 'unknown'}.`,
-  `- run metadata path: ${support.path ?? 'unknown'}.`,
-  `- jobs.total_count: ${support.jobsCount ?? 'unknown'}.`,
-  `- artifacts.total_count: ${support.artifactsCount ?? 'unknown'}.`,
-  `- repo visibility: ${support.repoVisibility ?? 'unknown'}.`,
-  '',
-];
+): ReadonlyArray<string> => {
+  const lines: string[] = [
+    '## Problem Summary',
+    '',
+    '- Runs consistently end with `conclusion: startup_failure`.',
+    `- startup_failure_runs observed: ${support.startupFailureRuns ?? 'unknown'}.`,
+    `- run metadata path: ${support.path ?? 'unknown'}.`,
+    `- jobs.total_count: ${support.jobsCount ?? 'unknown'}.`,
+    `- artifacts.total_count: ${support.artifactsCount ?? 'unknown'}.`,
+    `- repo visibility: ${support.repoVisibility ?? 'unknown'}.`,
+  ];
+
+  if (support.jobsCount === '0' && support.artifactsCount === '0') {
+    lines.push('- Latest runs remain queued/stuck before any job is created (job graph is empty).');
+  }
+
+  lines.push('');
+  return lines;
+};
 
 export const buildSupportTicketRequestLines = (): ReadonlyArray<string> => [
   '## Request',

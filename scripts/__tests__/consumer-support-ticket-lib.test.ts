@@ -86,6 +86,7 @@ test('buildSupportTicketDraft renders deterministic support sections with attach
   assert.match(markdown, /https:\/\/github\.com\/acme\/repo\/actions\/runs\/1/);
   assert.match(markdown, /- auth verdict: BLOCKED/);
   assert.match(markdown, /- billing probe error: missing user scope/);
+  assert.match(markdown, /queued\/stuck before any job is created/);
   assert.match(markdown, /## Attachments/);
   assert.match(markdown, /docs\/validation\/auth-check\.md/);
   assert.match(markdown, /docs\/validation\/consumer-ci-artifacts-report\.md/);
