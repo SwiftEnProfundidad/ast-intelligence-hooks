@@ -6,6 +6,13 @@ import test from 'node:test';
 
 const markdownReferencePattern = /`([^`\n]+\.md(?:#[^`\n]+)?)`/g;
 
+const ROOT_ACTIVE_DOCS = new Set([
+  'README.md',
+  'ARCHITECTURE.md',
+  'CHANGELOG.md',
+  'CLAUDE.md',
+]);
+
 const loadTrackedMarkdownFiles = (repoRoot: string): string[] => {
   return execFileSync('git', ['ls-files'], {
     cwd: repoRoot,
@@ -14,7 +21,7 @@ const loadTrackedMarkdownFiles = (repoRoot: string): string[] => {
     .split('\n')
     .map((line) => line.trim())
     .filter((path) => {
-      if (path === 'README.md') {
+      if (ROOT_ACTIVE_DOCS.has(path)) {
         return true;
       }
       if (!path.startsWith('docs/') || !path.endsWith('.md')) {

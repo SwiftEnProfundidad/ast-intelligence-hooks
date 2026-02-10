@@ -14,6 +14,13 @@ const DISALLOWED_SPANISH_TOKENS = [
   'siguiente paso',
 ] as const;
 
+const ROOT_ACTIVE_DOCS = new Set([
+  'README.md',
+  'ARCHITECTURE.md',
+  'CHANGELOG.md',
+  'CLAUDE.md',
+]);
+
 const loadTrackedActiveMarkdownFiles = (repoRoot: string): string[] => {
   const tracked = execFileSync('git', ['ls-files'], {
     cwd: repoRoot,
@@ -25,7 +32,7 @@ const loadTrackedActiveMarkdownFiles = (repoRoot: string): string[] => {
 
   return tracked
     .filter((path) => {
-      if (path === 'README.md') {
+      if (ROOT_ACTIVE_DOCS.has(path)) {
         return true;
       }
       if (!path.startsWith('docs/') || !path.endsWith('.md')) {

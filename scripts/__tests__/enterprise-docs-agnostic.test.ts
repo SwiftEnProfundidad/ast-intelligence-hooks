@@ -11,6 +11,13 @@ const PROVIDER_TERMS = [
   'vscode',
 ] as const;
 
+const ROOT_ACTIVE_DOCS = new Set([
+  'README.md',
+  'ARCHITECTURE.md',
+  'CHANGELOG.md',
+  'CLAUDE.md',
+]);
+
 const loadTrackedMarkdownFiles = (repoRoot: string): string[] => {
   const tracked = execFileSync('git', ['ls-files'], {
     cwd: repoRoot,
@@ -21,7 +28,7 @@ const loadTrackedMarkdownFiles = (repoRoot: string): string[] => {
     .filter((line) => line.length > 0);
 
   const activeDocs = tracked.filter((path) => {
-    if (path === 'README.md') {
+    if (ROOT_ACTIVE_DOCS.has(path)) {
       return true;
     }
     if (!path.startsWith('docs/')) {
