@@ -29,6 +29,9 @@ Before taking any action:
 4) Decide if one or more skills apply to the current user request.
    - If a skill applies, invoke it and follow its `SKILL.md` instructions.
    - If no skill applies, proceed normally.
+5) Actaulizar /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks/docs/REFRACTOR_PROGRESS.md:
+   - con el estado actual del proyecto, siguiendo el formato de ese documento.
+   - cada vez que terminies una tarea la marcas como hecha con su emoji y marcas la siguiente que vas a hacer como en construcción, no es negociable
 
 ---
 
@@ -47,3 +50,35 @@ Before taking any action:
 ### No architectural creativity
 - Do NOT introduce new abstractions, layers, or concepts.
 - D
+
+<!-- BEGIN CODEX SKILLS -->
+## Codex Skills (local + vendorizado)
+
+- Precedencia: `AGENTS.md > codex skills > prompts de fase`
+- Regla operativa:
+  - Al inicio de cualquier fase, usar primero los archivos vendorizados en `docs/codex-skills/*.md` si existen.
+  - Si no existen, intentar leer las rutas locales.
+  - Aplicar reglas de las skills siempre que no contradigan `AGENTS.md`.
+
+- Skills sincronizadas:
+  - `windsurf-rules-android`:
+    - Local: `/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-android/SKILL.md`
+    - Vendorizada: `docs/codex-skills/windsurf-rules-android.md`
+  - `windsurf-rules-backend`:
+    - Local: `/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-backend/SKILL.md`
+    - Vendorizada: `docs/codex-skills/windsurf-rules-backend.md`
+  - `windsurf-rules-frontend`:
+    - Local: `/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-frontend/SKILL.md`
+    - Vendorizada: `docs/codex-skills/windsurf-rules-frontend.md`
+  - `windsurf-rules-ios`:
+    - Local: `/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-ios/SKILL.md`
+    - Vendorizada: `docs/codex-skills/windsurf-rules-ios.md`
+  - `swift-concurrency`:
+    - Local: `/Users/juancarlosmerlosalbarracin/.codex/skills/swift-concurrency/SKILL.md`
+    - Vendorizada: `docs/codex-skills/swift-concurrency.md`
+  - `swiftui-expert-skill`:
+    - Local: `/Users/juancarlosmerlosalbarracin/.codex/skills/swiftui-expert-skill/SKILL.md`
+    - Vendorizada: `docs/codex-skills/swiftui-expert-skill.md`
+
+- Sync: `./scripts/sync-codex-skills.sh`
+<!-- END CODEX SKILLS -->

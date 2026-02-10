@@ -312,3 +312,19 @@ Platform workflows use reusable gate orchestration and upload `.ai_evidence.json
 - Active refactor branch: `enterprise-refactor`
 - Roadmap tracking: `docs/TODO.md`
 - Release notes: `docs/RELEASE_NOTES.md`
+
+<!-- BEGIN CODEX SKILLS README -->
+## Codex Skills
+
+This repository can consume Codex Skills to enforce platform-specific engineering rules and workflows.
+
+- Preferred portable source: vendored skills under `docs/codex-skills/*.md`.
+- Fallback source: local skill paths under `~/.codex/skills/**`.
+- Sync command:
+
+```bash
+./scripts/sync-codex-skills.sh
+```
+
+The sync process copies the configured local skills into `docs/codex-skills/` for repository portability.
+<!-- END CODEX SKILLS README -->
