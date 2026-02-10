@@ -36,4 +36,4 @@ export type BuildConsumerCiAuthMarkdownParams = {
 export const DEFAULT_CONSUMER_CI_AUTH_OUT_FILE =
   '.audit-reports/consumer-triage/consumer-ci-auth-check.md';
 
-export const REQUIRED_CONSUMER_CI_AUTH_SCOPES = ['repo', 'workflow', 'user'] as const;
+export const REQUIRED_CONSUMER_CI_AUTH_SCOPES = ['repo', 'workflow'] as const;

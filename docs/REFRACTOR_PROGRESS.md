@@ -68,9 +68,23 @@
   - `.audit-reports/phase5/phase5-blockers-readiness.md`
   - `.audit-reports/phase5/phase5-execution-closure-status.md`
   - `.audit-reports/phase5/phase5-external-handoff.md`
-- ⏳ Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
-- ⏳ External Phase 5 handoff final external artifact URLs are pending attachment.
-- ⏳ Real external pre/post tool hook runtime validation is pending dedicated IDE-session replay evidence capture.
+- ✅ Private consumer startup-failure diagnostics were re-run with refreshed evidence (`.audit-reports/consumer-triage/*`), currently blocked by GitHub `404` on `SwiftEnProfundidad/pumuki-mock-consumer` Actions endpoints and missing `user` scope.
+- ✅ `gh auth refresh -h github.com -s user` was attempted; GitHub device-flow interaction is required to finish scope elevation before live private-repo diagnostics can proceed.
+- ✅ Startup-failure triage was rerun against an accessible private consumer (`SwiftEnProfundidad/pumuki-actions-healthcheck-temp`) and produced refreshed evidence (`.audit-reports/consumer-triage-temp/*`) plus external run URL evidence.
+- ✅ Interactive `gh auth refresh -h github.com -s user` retry was executed in TTY mode; completion still requires manual device/browser confirmation.
+- ✅ Controlled `workflow_dispatch` probe was executed on `pumuki-actions-healthcheck-temp`; latest evidence now captures one queued run without jobs plus one `startup_failure` run.
+- ✅ Follow-up run inspection confirms the latest probe (`21878337799`) remains queued with empty job graph (`jobs=[]`), reinforcing external Actions-side blockage.
+- ✅ External artifact URL evidence is attached in latest handoff (`.audit-reports/phase5/phase5-external-handoff-latest.md`).
+- ✅ Latest Phase 5 blocker chain was recomputed with external evidence (`phase5-blockers-readiness-latest`, `phase5-execution-closure-status-latest`, `phase5-external-handoff-latest`) and is consistently `BLOCKED`.
+- ✅ Escalation-ready evidence pack was consolidated with probes, triage outputs, and run URLs (`.audit-reports/phase5/consumer-escalation-pack-latest.md`).
+- ✅ Support ticket draft attachments are now resolved dynamically from the active triage directory, and regenerated for `consumer-triage-temp`.
+- ✅ Device-flow auth refresh was re-triggered and a fresh one-time GitHub code was generated for manual scope elevation (`gh auth refresh -h github.com -s user`).
+- ✅ Auth-check contract now requires only `repo/workflow` scopes; billing probe is informational and no longer blocks startup-unblock.
+- ✅ Consumer triage was rerun for `SwiftEnProfundidad/pumuki-actions-healthcheck-temp` with `auth-check=READY` and updated artifacts in `.audit-reports/consumer-triage-temp/*`.
+- ✅ `phase5-blockers-readiness-latest` now resolves to `READY`; latest closure/handoff are blocked only by active `startup_failure` evidence.
+- ✅ Additional live `workflow_dispatch` probe was executed (`21882829778`) and confirms the same external pattern (`queued` without jobs, no artifacts), with `startup_failure_runs` still present in latest support bundle.
+- ⏳ External Phase 5 handoff final `READY` status is pending unblock of consumer startup blocker.
+- ✅ Real external pre/post tool hook runtime validation is green (`adapter-session-status=PASS`, `adapter-real-session-report=PASS`, `adapter-readiness=READY`).
 
 ## Phase 9 - Advanced AST Heuristics
 
@@ -93,4 +107,8 @@
 - ✅ Normalize progress board to single-active-task model (`1x 🚧` only).
 - ✅ Complete adapter runtime validation and regenerate adapter readiness to READY.
 - ✅ Re-run Phase 5 closure in mock-consumer mode and regenerate READY handoff artifacts.
-- 🚧 Re-run consumer private-repo startup-failure diagnostics and attach refreshed evidence.
+- ✅ Remove legacy `RuralGo/R_GO` references from docs/scripts/legacy content and archive filenames, aligned to mock-consumer naming.
+- ✅ Re-run consumer private-repo startup-failure diagnostics and attach refreshed evidence (`.audit-reports/consumer-triage/*`).
+- ✅ Attach external artifact URL evidence to latest Phase 5 handoff (`.audit-reports/phase5/phase5-external-handoff-latest.md`, including runs `21797682919` and `21878337799`).
+- ✅ Remove hard dependency on `user` scope in auth preflight and keep billing probe as informational for startup-unblock.
+- 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY`.

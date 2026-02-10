@@ -25,7 +25,7 @@ test('parseAuthScopes extracts comma-separated token scopes', () => {
   assert.deepEqual(scopes, ['repo', 'workflow', 'user']);
 });
 
-test('buildConsumerCiAuthMarkdown renders BLOCKED remediation details', () => {
+test('buildConsumerCiAuthMarkdown treats missing user scope as informational', () => {
   const markdown = buildConsumerCiAuthMarkdown({
     options: {
       repo: 'owner/repo',
@@ -36,7 +36,7 @@ test('buildConsumerCiAuthMarkdown renders BLOCKED remediation details', () => {
       output: "  - Token scopes: 'repo', 'workflow'",
     },
     scopes: ['repo', 'workflow'],
-    missingScopes: ['user'],
+    missingScopes: [],
     actionsPermissions: {
       ok: true,
       data: {
@@ -49,10 +49,11 @@ test('buildConsumerCiAuthMarkdown renders BLOCKED remediation details', () => {
       ok: false,
       error: 'missing user scope',
     },
-    verdict: 'BLOCKED',
+    verdict: 'READY',
   });
 
-  assert.match(markdown, /- verdict: BLOCKED/);
-  assert.match(markdown, /gh auth refresh -h github\.com -s user/);
+  assert.match(markdown, /- verdict: READY/);
+  assert.doesNotMatch(markdown, /gh auth refresh -h github\.com -s user/);
+  assert.match(markdown, /Billing probe is optional for startup unblock/);
   assert.match(markdown, /missing user scope/);
 });

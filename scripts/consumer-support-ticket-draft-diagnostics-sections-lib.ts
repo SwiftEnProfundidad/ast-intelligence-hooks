@@ -1,5 +1,13 @@
 import type { ParsedAuthReport, ParsedSupportBundle } from './consumer-support-ticket-parser-lib';
 
+const buildSiblingReportPath = (basePath: string, reportName: string): string => {
+  const separatorIndex = basePath.lastIndexOf('/');
+  if (separatorIndex < 0) {
+    return reportName;
+  }
+  return `${basePath.slice(0, separatorIndex)}/${reportName}`;
+};
+
 export const buildSupportTicketEvidenceLines = (
   support: ParsedSupportBundle
 ): ReadonlyArray<string> => {
@@ -36,14 +44,24 @@ export const buildSupportTicketAuthLines = (auth: ParsedAuthReport): ReadonlyArr
 export const buildSupportTicketAttachmentLines = (params: {
   supportBundlePath: string;
   authReportPath: string;
-}): ReadonlyArray<string> => [
-  '## Attachments',
-  '',
-  `- ${params.supportBundlePath}`,
-  `- ${params.authReportPath}`,
-  '- .audit-reports/consumer-triage/consumer-ci-artifacts-report.md',
-  '- .audit-reports/consumer-triage/consumer-workflow-lint-report.md',
-  '- docs/validation/archive/skills-rollout-r_go-startup-fix-experiment.md',
-  '- docs/validation/archive/private-actions-healthcheck.md',
-  '',
-];
+}): ReadonlyArray<string> => {
+  const attachmentPaths = [
+    params.supportBundlePath,
+    params.authReportPath,
+    buildSiblingReportPath(params.supportBundlePath, 'consumer-ci-artifacts-report.md'),
+    buildSiblingReportPath(params.supportBundlePath, 'consumer-workflow-lint-report.md'),
+    'docs/validation/archive/skills-rollout-mock_consumer-startup-fix-experiment.md',
+    'docs/validation/archive/private-actions-healthcheck.md',
+  ];
+
+  const uniqueAttachmentPaths = attachmentPaths.filter(
+    (path, index) => attachmentPaths.indexOf(path) === index
+  );
+
+  return [
+    '## Attachments',
+    '',
+    ...uniqueAttachmentPaths.map((path) => `- ${path}`),
+    '',
+  ];
+};

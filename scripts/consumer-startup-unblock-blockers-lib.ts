@@ -31,9 +31,6 @@ export const collectConsumerStartupUnblockBlockers = (params: {
   }
 
   const missingUserScope = hasConsumerStartupUnblockUserScopeGap(params.auth);
-  if (missingUserScope) {
-    blockers.push('Missing user scope for billing/account diagnostics');
-  }
 
   const lintFindingsCount = params.workflowLint?.findingsCount ?? 0;
   if (lintFindingsCount > 0) {

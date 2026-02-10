@@ -16,7 +16,9 @@ export const buildConsumerStartupUnblockNextActionLines = (
   const lines: string[] = ['## Next Actions', ''];
 
   if (summary.missingUserScope) {
-    lines.push('- Refresh token scope: `gh auth refresh -h github.com -s user`.');
+    lines.push(
+      '- Optional: add `user` scope only if account-level billing diagnostics are needed.'
+    );
   }
   if ((summary.startupFailureRuns ?? 1) > 0) {
     lines.push(

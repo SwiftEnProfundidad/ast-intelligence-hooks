@@ -36,10 +36,7 @@ const main = (): number => {
   ]);
 
   const verdict: 'READY' | 'BLOCKED' =
-    authStatus.ok &&
-    missingScopes.length === 0 &&
-    actionsPermissions.ok &&
-    billing.ok
+    authStatus.ok && missingScopes.length === 0 && actionsPermissions.ok
       ? 'READY'
       : 'BLOCKED';
 

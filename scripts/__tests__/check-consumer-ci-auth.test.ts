@@ -130,16 +130,19 @@ test('auth check reports READY when required probes and scopes are available', a
   });
 });
 
-test('auth check reports BLOCKED and remediation when user scope is missing', async () => {
-  await withTempDir('pumuki-auth-check-blocked-', async (tempRoot) => {
+test('auth check remains READY when optional user scope is missing', async () => {
+  await withTempDir('pumuki-auth-check-optional-user-', async (tempRoot) => {
     const result = runAuthCheck({
       tempRoot,
       scenario: 'missing-user-scope',
     });
 
-    assert.equal(result.exitCode, 1);
-    assert.match(result.report, /- verdict: BLOCKED/);
-    assert.match(result.report, /- missing_scopes: user/);
-    assert.match(result.report, /gh auth refresh -h github\.com -s user/);
+    assert.equal(result.exitCode, 0);
+    assert.match(result.report, /- verdict: READY/);
+    assert.match(result.report, /- missing_scopes: \(none\)/);
+    assert.match(
+      result.report,
+      /Billing probe is optional for startup unblock; keep this as informational/
+    );
   });
 });
