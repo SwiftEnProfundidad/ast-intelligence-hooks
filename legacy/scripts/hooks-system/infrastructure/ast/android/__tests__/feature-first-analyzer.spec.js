@@ -23,7 +23,7 @@ describe('Android Feature-First Analyzer', () => {
 
   describe('Cross-Feature Imports', () => {
     it('should detect cross-feature import', () => {
-      const content = 'import com.ruralgo.feature.users.domain.User\nclass OrderViewModel';
+      const content = 'import com.pumuki-mock-consumer.feature.users.domain.User\nclass OrderViewModel';
       analyzeFeatureFirst('/app/feature/orders/OrderViewModel.kt', content, findings, pushFileFinding);
       expect(pushFileFinding).toHaveBeenCalledWith(
         'android.feature.cross_feature_import',
@@ -37,14 +37,14 @@ describe('Android Feature-First Analyzer', () => {
     });
 
     it('should allow core module imports', () => {
-      const content = 'import com.ruralgo.core.network.ApiClient\nclass OrderRepository';
+      const content = 'import com.pumuki-mock-consumer.core.network.ApiClient\nclass OrderRepository';
       analyzeFeatureFirst('/app/feature/orders/OrderRepository.kt', content, findings, pushFileFinding);
       const violations = findings.filter(f => f.code === 'android.feature.cross_feature_import');
       expect(violations.length).toBe(0);
     });
 
     it('should allow same-feature imports', () => {
-      const content = 'import com.ruralgo.feature.orders.domain.Order\nclass OrderViewModel';
+      const content = 'import com.pumuki-mock-consumer.feature.orders.domain.Order\nclass OrderViewModel';
       analyzeFeatureFirst('/app/feature/orders/OrderViewModel.kt', content, findings, pushFileFinding);
       const violations = findings.filter(f => f.code === 'android.feature.cross_feature_import');
       expect(violations.length).toBe(0);
@@ -65,7 +65,7 @@ describe('Android Feature-First Analyzer', () => {
     });
 
     it('should ignore non-feature files', () => {
-      const content = 'import com.ruralgo.feature.users.User\nclass AppModule';
+      const content = 'import com.pumuki-mock-consumer.feature.users.User\nclass AppModule';
       analyzeFeatureFirst('/app/di/AppModule.kt', content, findings, pushFileFinding);
       expect(pushFileFinding).not.toHaveBeenCalled();
     });

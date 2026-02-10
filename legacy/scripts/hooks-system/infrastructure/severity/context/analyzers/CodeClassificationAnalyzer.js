@@ -55,7 +55,7 @@ class CodeClassificationAnalyzer {
         return filePath.includes('/shared/') ||
             filePath.includes('/common/') ||
             filePath.includes('/core/') ||
-            filePath.includes('@ruralgo/shared');
+            filePath.includes('@pumuki-mock-consumer/shared');
     }
 
     hasBusinessLogic(filePath, layer) {

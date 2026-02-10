@@ -112,7 +112,7 @@ function analyzeMonorepoHealth(rootPath, findings) {
     const deps = { ...pkg.dependencies, ...pkg.devDependencies };
 
     const appDepsOnOtherApps = Object.keys(deps).filter(dep =>
-      apps.some(otherApp => dep.includes(otherApp.name) || dep.startsWith('@ruralgo/'))
+      apps.some(otherApp => dep.includes(otherApp.name) || dep.startsWith('@pumuki-mock-consumer/'))
     );
 
     if (appDepsOnOtherApps.length > 2) {
@@ -231,7 +231,7 @@ function buildDependencyGraph(apps) {
     graph[app.name] = apps
       .filter(otherApp => otherApp.name !== app.name)
       .filter(otherApp =>
-        Object.keys(deps).some(dep => dep.includes(otherApp.name) || dep.startsWith('@ruralgo/'))
+        Object.keys(deps).some(dep => dep.includes(otherApp.name) || dep.startsWith('@pumuki-mock-consumer/'))
       )
       .map(otherApp => otherApp.name);
   });

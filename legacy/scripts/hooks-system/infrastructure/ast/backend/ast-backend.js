@@ -261,7 +261,7 @@ function runBackendIntelligence(project, findings, platform) {
         /const\s+\w*(KEY|STORAGE|CACHE|Token|Key|Storage)\s*=/i.test(fullLine)
       );
       const hasKeyNamingPattern = /_(?:key|token|storage|cache|slots)$/i.test(secretValue);
-      const hasDescriptivePrefix = /^(?:admin|user|auth|session|cache|storage|local|temp|ruralgo)_/i.test(secretValue);
+      const hasDescriptivePrefix = /^(?:admin|user|auth|session|cache|storage|local|temp|pumuki-mock-consumer)_/i.test(secretValue);
       const isStorageKey = (hasStorageContext || hasKeyNamingPattern || hasDescriptivePrefix) &&
         !/^eyJ/.test(secretValue) && secretValue.length < 50;
 

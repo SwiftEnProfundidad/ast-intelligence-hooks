@@ -197,7 +197,7 @@ class OrdersListViewModel @Inject constructor(
 ```kotlin
 // Application class
 @HiltAndroidApp
-class RuralGoApplication : Application()
+class PumukiMockConsumerApplication : Application()
 
 // ViewModel injection
 @HiltViewModel
@@ -219,7 +219,7 @@ object AppModule {
     @Singleton
     fun provideOrdersApi(): OrdersApi {
         return Retrofit.Builder()
-            .baseUrl("https://api.ruralgo.com/")
+            .baseUrl("https://api.pumuki-mock-consumer.com/")
             .addConverterFactory(MoshiConverterFactory.create())
             .build()
             .create(OrdersApi::class.java)

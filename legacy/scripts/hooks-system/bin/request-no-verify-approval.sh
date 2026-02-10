@@ -24,14 +24,14 @@ echo -e "${BLUE}─────────────────────�
 echo ""
 
 # Obtener violations de staging del último audit
-if [ -f /tmp/r_go_local/pattern-staged.txt ]; then
+if [ -f /tmp/mock_consumer_local/pattern-staged.txt ]; then
   echo -e "${CYAN}Violations detected in STAGING AREA:${NC}"
   echo ""
 
-  CRIT=$(grep "^CRITICAL:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
-  HIGH=$(grep "^HIGH:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
-  MED=$(grep "^MEDIUM:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
-  LOW=$(grep "^LOW:" /tmp/r_go_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
+  CRIT=$(grep "^CRITICAL:" /tmp/mock_consumer_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
+  HIGH=$(grep "^HIGH:" /tmp/mock_consumer_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
+  MED=$(grep "^MEDIUM:" /tmp/mock_consumer_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
+  LOW=$(grep "^LOW:" /tmp/mock_consumer_local/pattern-staged.txt 2>/dev/null | cut -d: -f2 || echo "0")
 
   echo -e "  ${RED}🔴 CRITICAL:${NC} ${CRIT:-0}"
   echo -e "  ${YELLOW}🟠 HIGH:${NC}     ${HIGH:-0}"
