@@ -66,4 +66,3 @@ Language baseline: active repository documentation is maintained in English.
 
 - `README.md` (repository root) is the product-facing overview.
 - `ARCHITECTURE.md` (repository root) is a conceptual shortcut; use this index and `docs/ARCHITECTURE.md` for canonical references.
-- `CLAUDE.md` (repository root) is an agent profile stub and defers to repository policies.
