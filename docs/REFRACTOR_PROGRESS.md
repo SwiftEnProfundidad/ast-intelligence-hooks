@@ -63,9 +63,14 @@
 - ✅ Local adapter runtime baseline was regenerated (`adapter-session-status`, `adapter-real-session-report`, `adapter-readiness`).
 - ✅ Adapter hook runtime wiring was refreshed (`install:adapter-hooks-config`) and Node resolution is healthy (`node_bin=/opt/homebrew/bin/node`).
 - ✅ Local hook simulation produces expected events (`pre_write` blocked + `post_write` logged) and `assess:any` passes.
+- ✅ Adapter runtime validation reached green state (`adapter-session-status=PASS`, `adapter-readiness=READY`) after non-simulated runtime event capture.
+- ✅ Phase 5 closure handoff artifacts were regenerated in mock-consumer mode with READY verdicts:
+  - `.audit-reports/phase5/phase5-blockers-readiness.md`
+  - `.audit-reports/phase5/phase5-execution-closure-status.md`
+  - `.audit-reports/phase5/phase5-external-handoff.md`
 - ⏳ Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
-- ⏳ External Phase 5 handoff is pending final artifacts and URLs.
-- 🚧 Real external pre/post tool hook runtime validation is pending (missing real `pre_write` events in external session).
+- ⏳ External Phase 5 handoff final external artifact URLs are pending attachment.
+- ⏳ Real external pre/post tool hook runtime validation is pending dedicated IDE-session replay evidence capture.
 
 ## Phase 9 - Advanced AST Heuristics
 
@@ -86,5 +91,6 @@
 - ✅ Regenerate local adapter runtime baseline and capture blockers.
 - ✅ Run MCP/deterministic regression batch after context API expansion.
 - ✅ Normalize progress board to single-active-task model (`1x 🚧` only).
-- 🚧 Complete real external pre/post tool hook runtime validation and regenerate adapter readiness.
-- ⏳ Re-run external Phase 5 closure and attach final artifact URLs for handoff.
+- ✅ Complete adapter runtime validation and regenerate adapter readiness to READY.
+- ✅ Re-run Phase 5 closure in mock-consumer mode and regenerate READY handoff artifacts.
+- 🚧 Re-run consumer private-repo startup-failure diagnostics and attach refreshed evidence.

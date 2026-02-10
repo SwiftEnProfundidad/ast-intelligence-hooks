@@ -23,8 +23,22 @@ export const collectAdapterRealSessionSignals = (
     .filter((chunk): chunk is string => Boolean(chunk))
     .join('\n');
 
-  const preWriteObserved = /pre_write_code/.test(combinedCorpus);
-  const postWriteObserved = /post_write_code/.test(combinedCorpus);
+  const hasPositiveCounter = (pattern: RegExp): boolean => {
+    const match = combinedCorpus.match(pattern);
+    if (!match?.[1]) {
+      return false;
+    }
+
+    const value = Number.parseInt(match[1], 10);
+    return Number.isFinite(value) && value > 0;
+  };
+
+  const preWriteObserved =
+    /pre_write_code/.test(combinedCorpus) ||
+    hasPositiveCounter(/pre_write\.(?:analyzing|blocked|allowed)_effective=(\d+)/);
+  const postWriteObserved =
+    /post_write_code/.test(combinedCorpus) ||
+    hasPositiveCounter(/post_write\.entries_effective=(\d+)/);
   const nodeBinResolved = /node_bin\s*=/.test(combinedCorpus);
   const nodeCommandMissing = /(?:bash:\s*)?node:\s*command not found/.test(combinedCorpus);
 

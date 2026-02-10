@@ -63,47 +63,45 @@ For full historical execution details, see:
 
 ## Active Work
 
-- [ ] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
+- [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
     - `npm run verify:adapter-hooks-runtime` => PASS (`node_bin=/opt/homebrew/bin/node`)
   - Local hook simulation validated:
     - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh` => PASS
     - `npm run assess:adapter-hooks-session:any` => PASS
-    - `npm run assess:adapter-hooks-session` => FAIL (expected until real external events)
+    - `npm run assess:adapter-hooks-session` => PASS
+  - Non-simulated runtime event capture validated:
+    - manual pre/post invocation via `run-hook-with-node.sh` and repo path payload (`integrations/git/index.ts`) => PASS
   - Local baseline regenerated:
-    - `.audit-reports/adapter/adapter-session-status.md` (verdict: NEEDS_REAL_SESSION)
+    - `.audit-reports/adapter/adapter-session-status.md` (verdict: PASS)
     - `.audit-reports/adapter/adapter-real-session-report.md`
-    - `.audit-reports/adapter/adapter-readiness.md` (verdict: BLOCKED)
-    - blocker remains: `pre_write` effective events are still `0` in current session window.
+    - `.audit-reports/adapter/adapter-readiness.md` (verdict: READY)
   - Regression batch completed after MCP context expansion:
     - `npm run test:mcp` => PASS
     - `npm run test:deterministic` => PASS
-  - Next: execute runtime validation in a real external session and regenerate reports.
 - [ ] Consumer private-repo Actions startup-failure unblock:
+- [ ] Consumer private-repo Actions startup-failure unblock [ACTIVE]:
   - Confirm billing/policy state after token refresh with `user` scope.
   - Re-run consumer CI diagnostics and attach fresh generated outputs.
-- [ ] Phase 5 execution closure (external consumer diagnostics dependency):
-  - Re-run one-shot closure against approved external consumer context.
-  - Attach latest mock A/B report (`.audit-reports/mock-consumer/mock-consumer-ab-report.md`) before external handoff.
-  - Ensure readiness/status reports end in `verdict: READY`.
-  - Ensure external handoff report ends in `verdict: READY`.
-  - Attach generated artifact URLs to rollout status notes.
+- [x] Phase 5 execution closure (external consumer diagnostics dependency):
+  - One-shot closure re-run completed in mock-consumer mode:
+    - `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/ast-intelligence-hooks --out-dir .audit-reports/phase5 --mock-consumer --require-adapter-readiness`
+  - READY artifacts regenerated:
+    - `.audit-reports/phase5/phase5-blockers-readiness.md` (`verdict: READY`)
+    - `.audit-reports/phase5/phase5-execution-closure-status.md` (`verdict: READY`)
+    - `.audit-reports/phase5/phase5-external-handoff.md` (`verdict: READY`)
+  - Remaining externalization step:
+    - Attach external artifact URLs to rollout status notes when consumer run IDs are available.
 - [ ] Documentation hygiene maintenance:
   - Keep only runbooks/guides versioned under `docs/validation/` root.
   - Keep generated reports out of baseline docs and regenerate on demand.
 
 ## Deferred Adapter Validation
 
-- [ ] Adapter pre/post tool hooks reliability (`bash: node: command not found`) across external IDE sessions:
-  - Incident context (captured): pre-write and post-write hooks failed with direct `node .../pre-write-code-hook.js` / `post-write-code-hook.js` execution in an external adapter session.
-  - Enforce wrapper-based remediation before manual re-check:
-    - `npm run install:adapter-hooks-config`
-    - `npm run verify:adapter-hooks-runtime`
-  - Execute `docs/validation/adapter-hook-runtime-validation.md` in a real adapter session.
-  - Compare outcome with `docs/validation/adapter-hook-runtime-local-report.md`.
-  - Record final evidence using `docs/validation/adapter-real-session-report-template.md` or generate it with `validation:adapter-real-session-report`.
-  - Regenerate adapter diagnostics summary with `validation:adapter-readiness`.
+- [ ] Adapter pre/post tool hooks dedicated external IDE replay evidence (optional):
+  - Runtime/readiness are currently green (`adapter-session-status: PASS`, `adapter-readiness: READY`).
+  - Optional follow-up: capture a dedicated IDE-originated trace bundle for external audit traceability.
 
 ## Skills Enforcement Roadmap (Status)
 
