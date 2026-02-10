@@ -64,6 +64,11 @@ const toAbsoluteMarkdownPath = (params: {
     return resolve(params.repoRoot, withoutAnchor);
   }
 
+  const repoRootCandidate = resolve(params.repoRoot, withoutAnchor);
+  if (existsSync(repoRootCandidate)) {
+    return repoRootCandidate;
+  }
+
   return resolve(params.repoRoot, dirname(params.sourcePath), withoutAnchor);
 };
 
