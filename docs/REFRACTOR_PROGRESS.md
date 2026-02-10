@@ -60,6 +60,7 @@
 ## Phase 8 - External Validation / Rollout Closure
 
 - ✅ External rollout execution pack is published (`docs/validation/phase8-external-rollout-pack.md`).
+- ✅ Local adapter runtime baseline was regenerated (`adapter-session-status`, `adapter-real-session-report`, `adapter-readiness`).
 - 🚧 Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
 - 🚧 External Phase 5 handoff is pending final artifacts and URLs.
 - 🚧 Real external pre/post tool hook runtime validation is pending (`node: command not found`).
@@ -80,5 +81,6 @@
 
 - ✅ Publish a single external rollout execution pack (checklist + artifact contract + handoff template).
 - ✅ Document formal cross-agent MCP context consumption pattern.
+- ✅ Regenerate local adapter runtime baseline and capture blockers.
 - 🚧 Complete real external pre/post tool hook runtime validation and regenerate adapter readiness.
 - ⏳ Re-run external Phase 5 closure and attach final artifact URLs for handoff.

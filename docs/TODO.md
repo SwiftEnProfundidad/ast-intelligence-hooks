@@ -64,6 +64,11 @@ For full historical execution details, see:
 ## Active Work
 
 - [ ] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
+  - Local baseline regenerated:
+    - `.audit-reports/adapter/adapter-session-status.md` (verdict: BLOCKED)
+    - `.audit-reports/adapter/adapter-real-session-report.md`
+    - `.audit-reports/adapter/adapter-readiness.md` (verdict: BLOCKED)
+  - Next: execute runtime validation in a real external session and regenerate reports.
 - [ ] Consumer private-repo Actions startup-failure unblock:
   - Confirm billing/policy state after token refresh with `user` scope.
   - Re-run consumer CI diagnostics and attach fresh generated outputs.
