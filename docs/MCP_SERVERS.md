@@ -34,6 +34,16 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
 - `GET /ai-evidence`
   - `200` with evidence payload when valid
   - `404` when missing or invalid
+- `GET /ai-evidence/summary`
+  - `200` with compact deterministic summary
+  - `404` when missing or invalid
+- `GET /ai-evidence/rulesets`
+  - `200` with deterministic sorted rulesets
+  - `404` when missing or invalid
+- `GET /ai-evidence/platforms`
+  - `200` with detected platforms only
+  - supports `?detectedOnly=false` for full platform state
+  - `404` when missing or invalid
 
 ### Run locally
 

@@ -165,6 +165,114 @@ test('returns evidence payload when version is v2.1', async () => {
   });
 });
 
+test('returns summary payload from dedicated summary endpoint', async () => {
+  await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
+    const payload = createEvidencePayload();
+    payload.snapshot.findings.push({
+      ruleId: 'backend.avoid-explicit-any',
+      severity: 'ERROR',
+      code: 'backend.avoid-explicit-any',
+      message: 'Avoid explicit any',
+      file: 'apps/backend/src/main.ts',
+      lines: [10, 11],
+    });
+    payload.platforms = {
+      ios: { detected: true, confidence: 'HIGH' },
+      backend: { detected: true, confidence: 'HIGH' },
+      frontend: { detected: false, confidence: 'LOW' },
+    };
+    payload.rulesets = [
+      { platform: 'backend', bundle: 'backend', hash: '222' },
+      { platform: 'ios', bundle: 'ios', hash: '111' },
+    ];
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+    await withEvidenceServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/ai-evidence/summary`);
+      assert.equal(response.status, 200);
+      const summary = (await response.json()) as {
+        version?: string;
+        snapshot?: { stage?: string; outcome?: string; findings_count?: number };
+        ledger_count?: number;
+        rulesets_count?: number;
+        platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
+      };
+      assert.equal(summary.version, '2.1');
+      assert.equal(summary.snapshot?.stage, 'CI');
+      assert.equal(summary.snapshot?.outcome, 'PASS');
+      assert.equal(summary.snapshot?.findings_count, 1);
+      assert.equal(summary.ledger_count, 0);
+      assert.equal(summary.rulesets_count, 2);
+      assert.deepEqual(summary.platforms, [
+        { platform: 'backend', detected: true, confidence: 'HIGH' },
+        { platform: 'ios', detected: true, confidence: 'HIGH' },
+      ]);
+    });
+  });
+});
+
+test('returns rulesets endpoint sorted deterministically', async () => {
+  await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
+    const payload = createEvidencePayload();
+    payload.rulesets = [
+      { platform: 'ios', bundle: 'shared', hash: 'zzz' },
+      { platform: 'backend', bundle: 'backend', hash: 'bbb' },
+      { platform: 'ios', bundle: 'ios', hash: 'aaa' },
+    ];
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+    await withEvidenceServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/ai-evidence/rulesets`);
+      assert.equal(response.status, 200);
+      const body = (await response.json()) as {
+        version?: string;
+        rulesets?: Array<{ platform: string; bundle: string; hash: string }>;
+      };
+      assert.equal(body.version, '2.1');
+      assert.deepEqual(body.rulesets, [
+        { platform: 'backend', bundle: 'backend', hash: 'bbb' },
+        { platform: 'ios', bundle: 'ios', hash: 'aaa' },
+        { platform: 'ios', bundle: 'shared', hash: 'zzz' },
+      ]);
+    });
+  });
+});
+
+test('returns platforms endpoint with detectedOnly toggle', async () => {
+  await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
+    const payload = createEvidencePayload();
+    payload.platforms = {
+      android: { detected: false, confidence: 'LOW' },
+      backend: { detected: true, confidence: 'HIGH' },
+      ios: { detected: true, confidence: 'MEDIUM' },
+    };
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+    await withEvidenceServer(repoRoot, async (baseUrl) => {
+      const detectedOnlyResponse = await fetch(`${baseUrl}/ai-evidence/platforms`);
+      assert.equal(detectedOnlyResponse.status, 200);
+      const detectedOnly = (await detectedOnlyResponse.json()) as {
+        platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
+      };
+      assert.deepEqual(detectedOnly.platforms, [
+        { platform: 'backend', detected: true, confidence: 'HIGH' },
+        { platform: 'ios', detected: true, confidence: 'MEDIUM' },
+      ]);
+
+      const allPlatformsResponse = await fetch(`${baseUrl}/ai-evidence/platforms?detectedOnly=false`);
+      assert.equal(allPlatformsResponse.status, 200);
+      const allPlatforms = (await allPlatformsResponse.json()) as {
+        platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
+      };
+      assert.deepEqual(allPlatforms.platforms, [
+        { platform: 'android', detected: false, confidence: 'LOW' },
+        { platform: 'backend', detected: true, confidence: 'HIGH' },
+        { platform: 'ios', detected: true, confidence: 'MEDIUM' },
+      ]);
+    });
+  });
+});
+
 test('returns compact payload without consolidation when includeSuppressed=false', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
     writeFileSync(

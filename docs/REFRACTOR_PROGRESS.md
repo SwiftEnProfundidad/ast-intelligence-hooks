@@ -72,7 +72,7 @@
 ## Phase 10 - MCP / Context API Expansion
 
 - ✅ Servidor MCP read-only para evidencia implementado.
-- ⏳ Superficie API de contexto más amplia pendiente.
+- 🚧 Superficie API de contexto ampliada parcialmente (`summary`, `rulesets`, `platforms`) y en evolución.
 - ⏳ Patrones formales de consumo cross-agent pendientes.
 
 ## Current Focus

@@ -112,6 +112,15 @@ CLI:
 npm run mcp:evidence
 ```
 
+Read-only endpoints:
+
+- `GET /health`
+- `GET /status`
+- `GET /ai-evidence`
+- `GET /ai-evidence/summary`
+- `GET /ai-evidence/rulesets`
+- `GET /ai-evidence/platforms`
+
 Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
 
 ## Local execution quick refs

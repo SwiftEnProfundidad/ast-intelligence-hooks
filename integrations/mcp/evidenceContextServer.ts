@@ -87,6 +87,75 @@ const includeSuppressedFromQuery = (requestUrl: URL): boolean => {
   return parsed ?? true;
 };
 
+const normalizeRoute = (route: string): string => {
+  if (!route.startsWith('/')) {
+    return `/${route}`;
+  }
+  if (route.length > 1 && route.endsWith('/')) {
+    return route.slice(0, -1);
+  }
+  return route;
+};
+
+const sortRulesets = (rulesets: AiEvidenceV2_1['rulesets']): AiEvidenceV2_1['rulesets'] => {
+  return [...rulesets].sort((left, right) => {
+    const byPlatform = left.platform.localeCompare(right.platform);
+    if (byPlatform !== 0) {
+      return byPlatform;
+    }
+    const byBundle = left.bundle.localeCompare(right.bundle);
+    if (byBundle !== 0) {
+      return byBundle;
+    }
+    return left.hash.localeCompare(right.hash);
+  });
+};
+
+const sortPlatforms = (platforms: AiEvidenceV2_1['platforms']) => {
+  return Object.entries(platforms)
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([platform, state]) => ({
+      platform,
+      detected: state.detected,
+      confidence: state.confidence,
+    }));
+};
+
+const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
+  return {
+    version: evidence.version,
+    timestamp: evidence.timestamp,
+    snapshot: {
+      stage: evidence.snapshot.stage,
+      outcome: evidence.snapshot.outcome,
+      findings_count: evidence.snapshot.findings.length,
+    },
+    ledger_count: evidence.ledger.length,
+    rulesets_count: evidence.rulesets.length,
+    platforms: sortPlatforms(evidence.platforms).filter((entry) => entry.detected),
+  };
+};
+
+const toRulesetsPayload = (evidence: AiEvidenceV2_1) => {
+  return {
+    version: evidence.version,
+    timestamp: evidence.timestamp,
+    rulesets: sortRulesets(evidence.rulesets),
+  };
+};
+
+const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
+  const detectedOnly = parseBooleanQuery(requestUrl.searchParams.get('detectedOnly')) ?? true;
+  const platforms = sortPlatforms(evidence.platforms).filter((entry) =>
+    detectedOnly ? entry.detected : true
+  );
+  return {
+    version: evidence.version,
+    timestamp: evidence.timestamp,
+    platforms,
+  };
+};
+
 const toResponsePayload = (evidence: AiEvidenceV2_1, requestUrl: URL): unknown => {
   if (includeSuppressedFromQuery(requestUrl)) {
     return evidence;
@@ -145,8 +214,11 @@ const toStatusPayload = (repoRoot: string): unknown => {
 export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) => {
   const host = options.host ?? '127.0.0.1';
   const port = options.port ?? 7341;
-  const route = options.route ?? DEFAULT_ROUTE;
+  const route = normalizeRoute(options.route ?? DEFAULT_ROUTE);
   const repoRoot = options.repoRoot ?? process.cwd();
+  const summaryRoute = `${route}/summary`;
+  const rulesetsRoute = `${route}/rulesets`;
+  const platformsRoute = `${route}/platforms`;
 
   const server = createServer((req, res) => {
     const method = req.method ?? 'GET';
@@ -176,6 +248,42 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
 
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(json(toResponsePayload(evidence, requestUrl)));
+      return;
+    }
+
+    if (method === 'GET' && path === summaryRoute) {
+      const evidence = readEvidence(repoRoot);
+      if (!evidence) {
+        res.writeHead(404, { 'content-type': 'application/json' });
+        res.end(json({ error: '.ai_evidence.json not found or invalid v2.1 file' }));
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(json(toSummaryPayload(evidence)));
+      return;
+    }
+
+    if (method === 'GET' && path === rulesetsRoute) {
+      const evidence = readEvidence(repoRoot);
+      if (!evidence) {
+        res.writeHead(404, { 'content-type': 'application/json' });
+        res.end(json({ error: '.ai_evidence.json not found or invalid v2.1 file' }));
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(json(toRulesetsPayload(evidence)));
+      return;
+    }
+
+    if (method === 'GET' && path === platformsRoute) {
+      const evidence = readEvidence(repoRoot);
+      if (!evidence) {
+        res.writeHead(404, { 'content-type': 'application/json' });
+        res.end(json({ error: '.ai_evidence.json not found or invalid v2.1 file' }));
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(json(toPlatformsPayload(evidence, requestUrl)));
       return;
     }
 

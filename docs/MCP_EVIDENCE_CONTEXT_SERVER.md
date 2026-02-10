@@ -8,6 +8,10 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence?includeSuppressed=false`: compact response without `consolidation.suppressed[]`
 - `GET /ai-evidence?view=compact`: alias to hide `consolidation.suppressed[]`
 - `GET /ai-evidence?view=full`: explicit full response (default behavior)
+- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/counts/detected platforms`)
+- `GET /ai-evidence/rulesets`: deterministic sorted list of loaded rulesets (`platform/bundle/hash`)
+- `GET /ai-evidence/platforms`: detected platforms only (default)
+- `GET /ai-evidence/platforms?detectedOnly=false`: all tracked platforms with detection state
 - `GET /health`: basic liveness probe
 - `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts`) without returning full evidence payload
 
