@@ -7,7 +7,6 @@ import {
   configureRemoteAndFeatureBranch,
   initializeConsumerGitRepository,
   writeAndCommitRangePayloadForBlockMode,
-  writeStagedPayload,
 } from './package-install-smoke-consumer-git-lib';
 import {
   installTarballIntoConsumerRepo,
@@ -28,3 +27,5 @@ export const setupConsumerRepository = (
   configureRemoteAndFeatureBranch(workspace);
   writeAndCommitRangePayloadForBlockMode(workspace, mode);
 };
+
+export { writeStagedPayload } from './package-install-smoke-consumer-git-lib';
