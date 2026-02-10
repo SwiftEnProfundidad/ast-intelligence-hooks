@@ -68,6 +68,9 @@ For full historical execution details, see:
     - `.audit-reports/adapter/adapter-session-status.md` (verdict: BLOCKED)
     - `.audit-reports/adapter/adapter-real-session-report.md`
     - `.audit-reports/adapter/adapter-readiness.md` (verdict: BLOCKED)
+  - Regression batch completed after MCP context expansion:
+    - `npm run test:mcp` => PASS
+    - `npm run test:deterministic` => PASS
   - Next: execute runtime validation in a real external session and regenerate reports.
 - [ ] Consumer private-repo Actions startup-failure unblock:
   - Confirm billing/policy state after token refresh with `user` scope.

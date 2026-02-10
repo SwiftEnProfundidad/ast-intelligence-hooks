@@ -82,5 +82,6 @@
 - ✅ Publish a single external rollout execution pack (checklist + artifact contract + handoff template).
 - ✅ Document formal cross-agent MCP context consumption pattern.
 - ✅ Regenerate local adapter runtime baseline and capture blockers.
+- ✅ Run MCP/deterministic regression batch after context API expansion.
 - 🚧 Complete real external pre/post tool hook runtime validation and regenerate adapter readiness.
 - ⏳ Re-run external Phase 5 closure and attach final artifact URLs for handoff.
