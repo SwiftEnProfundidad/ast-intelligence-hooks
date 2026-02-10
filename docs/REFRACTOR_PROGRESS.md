@@ -113,4 +113,5 @@
 - ✅ Remove hard dependency on `user` scope in auth preflight and keep billing probe as informational for startup-unblock.
 - ✅ Normalize validation archive naming/references from `r_go` to `mock_consumer` in rollout docs and doc guardrail tests.
 - ✅ Align remaining `legacy/*` samples and helper references from `ruralgo/r_go` to `pumuki-mock-consumer` naming.
+- ✅ Startup-unblock diagnosis now reports explicit external queue blockage (`jobs=0, artifacts=0`) in addition to `startup_failure` counts.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY`.

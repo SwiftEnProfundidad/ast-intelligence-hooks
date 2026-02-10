@@ -15,6 +15,8 @@ export const collectConsumerStartupUnblockBlockers = (params: {
   lintFindingsCount: number;
 } => {
   const blockers: string[] = [];
+  const jobsCount = parseConsumerStartupUnblockInteger(params.support?.jobsCount);
+  const artifactsCount = parseConsumerStartupUnblockInteger(params.support?.artifactsCount);
 
   const startupFailureRuns = parseConsumerStartupUnblockInteger(
     params.support?.startupFailureRuns
@@ -23,6 +25,14 @@ export const collectConsumerStartupUnblockBlockers = (params: {
     blockers.push('Unable to determine startup_failure_runs from support bundle');
   } else if (startupFailureRuns > 0) {
     blockers.push(`Startup failures still present (${startupFailureRuns})`);
+  }
+
+  if (
+    params.support?.runUrls?.length &&
+    jobsCount === 0 &&
+    artifactsCount === 0
+  ) {
+    blockers.push('Workflow runs are stuck before job graph creation (jobs=0, artifacts=0)');
   }
 
   const authVerdict = params.auth?.verdict?.trim();

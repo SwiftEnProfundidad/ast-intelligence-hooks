@@ -38,6 +38,8 @@ test('summarizeConsumerStartupUnblock returns BLOCKED when failures and auth gap
     hasAuthReport: true,
     support: {
       startupFailureRuns: '12',
+      jobsCount: '0',
+      artifactsCount: '0',
       runUrls: [],
     },
     auth: {
@@ -56,6 +58,34 @@ test('summarizeConsumerStartupUnblock returns BLOCKED when failures and auth gap
   assert.equal(summary.startupFailureRuns, 12);
   assert.equal(summary.missingUserScope, true);
   assert.equal(summary.lintFindingsCount, 2);
+});
+
+test('summarizeConsumerStartupUnblock surfaces queued/no-jobs external blocker', () => {
+  const summary = summarizeConsumerStartupUnblock({
+    hasSupportBundle: true,
+    hasAuthReport: true,
+    support: {
+      startupFailureRuns: '0',
+      jobsCount: '0',
+      artifactsCount: '0',
+      runUrls: ['https://github.com/owner/repo/actions/runs/123'],
+    },
+    auth: {
+      verdict: 'READY',
+      missingScopes: '(none)',
+    },
+    workflowLint: {
+      findingsCount: 0,
+      findings: [],
+      exitCode: 0,
+    },
+  });
+
+  assert.equal(summary.verdict, 'BLOCKED');
+  assert.match(
+    summary.blockers.join('\n'),
+    /stuck before job graph creation \(jobs=0, artifacts=0\)/
+  );
 });
 
 test('summarizeConsumerStartupUnblock returns READY_FOR_RETEST when blockers are cleared', () => {
