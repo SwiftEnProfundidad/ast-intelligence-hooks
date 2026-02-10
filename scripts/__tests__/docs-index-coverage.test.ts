@@ -10,6 +10,14 @@ const DOC_INDEX_FILES = [
   'docs/rule-packs/README.md',
 ] as const;
 
+const ROOT_DOC_POINTERS = [
+  'README.md',
+  'ARCHITECTURE.md',
+  'CHANGELOG.md',
+  'AGENTS.md',
+  'CLAUDE.md',
+] as const;
+
 const EXCLUDED_PATH_PREFIXES = [
   'docs/validation/archive/',
 ] as const;
@@ -51,5 +59,12 @@ test('all active docs markdown files are referenced by official documentation in
   ).join('\n');
 
   const missing = docsFiles.filter((path) => !isIndexed(path, indexText));
+  assert.deepEqual(missing, []);
+});
+
+test('docs index references canonical root-level governance docs', () => {
+  const repoRoot = resolve(__dirname, '..', '..');
+  const indexText = readFileSync(join(repoRoot, 'docs/README.md'), 'utf8');
+  const missing = ROOT_DOC_POINTERS.filter((path) => !indexText.includes(`\`${path}\``));
   assert.deepEqual(missing, []);
 });

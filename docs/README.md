@@ -68,3 +68,4 @@ Language baseline: active repository documentation is maintained in English.
 - `ARCHITECTURE.md` (repository root) is a conceptual shortcut; use this index and `docs/ARCHITECTURE.md` for canonical references.
 - `CHANGELOG.md` (repository root) tracks top-level package changes for the active baseline.
 - `AGENTS.md` (repository root) defines repository execution constraints for coding agents.
+- `CLAUDE.md` (repository root) provides a concise agent profile aligned with repository policies.
