@@ -59,6 +59,7 @@
 
 ## Phase 8 - External Validation / Rollout Closure
 
+- ✅ External rollout execution pack is published (`docs/validation/phase8-external-rollout-pack.md`).
 - 🚧 Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
 - 🚧 External Phase 5 handoff is pending final artifacts and URLs.
 - 🚧 Real external pre/post tool hook runtime validation is pending (`node: command not found`).
@@ -77,6 +78,6 @@
 
 ## Current Focus
 
-- 🚧 Close external rollout blockers (private consumer + handoff).
-- 🚧 Complete real external pre/post tool hook runtime validation.
-- 🚧 Keep docs/quality guardrails green while blockers are being closed.
+- ✅ Publish a single external rollout execution pack (checklist + artifact contract + handoff template).
+- 🚧 Complete real external pre/post tool hook runtime validation and regenerate adapter readiness.
+- ⏳ Re-run external Phase 5 closure and attach final artifact URLs for handoff.

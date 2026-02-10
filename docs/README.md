@@ -44,6 +44,7 @@ Language baseline: active repository documentation is maintained in English.
 - `validation/README.md`: validation docs policy.
 - `validation/consumer-ci-startup-failure-playbook.md`
 - `validation/phase5-execution-closure.md`
+- `validation/phase8-external-rollout-pack.md`
 - `validation/adapter-hook-runtime-validation.md`
 - `validation/adapter-hook-runtime-local-report.md`
 - `validation/adapter-real-session-report-template.md`

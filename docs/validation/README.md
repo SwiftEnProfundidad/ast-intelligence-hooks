@@ -14,6 +14,7 @@ Keep these as source-of-truth operational references:
 - `consumer-ci-startup-failure-playbook.md`
 - `github-support-ticket-template-startup-failure.md`
 - `phase5-execution-closure.md`
+- `phase8-external-rollout-pack.md`
 - `skills-rollout-consumer-repositories.md`
 - `adapter-hook-runtime-validation.md`
 - `adapter-hook-runtime-local-report.md`

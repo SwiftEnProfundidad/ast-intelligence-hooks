@@ -222,5 +222,6 @@ Phase 5 execution closure is complete when all are true:
 
 - `docs/validation/adapter-hook-runtime-validation.md`
 - `docs/validation/consumer-ci-startup-failure-playbook.md`
+- `docs/validation/phase8-external-rollout-pack.md`
 - `docs/validation/skills-rollout-consumer-repositories.md`
 - `docs/TODO.md`
