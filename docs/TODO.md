@@ -67,8 +67,12 @@ For full historical execution details, see:
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
     - `npm run verify:adapter-hooks-runtime` => PASS (`node_bin=/opt/homebrew/bin/node`)
+  - Local hook simulation validated:
+    - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh` => PASS
+    - `npm run assess:adapter-hooks-session:any` => PASS
+    - `npm run assess:adapter-hooks-session` => FAIL (expected until real external events)
   - Local baseline regenerated:
-    - `.audit-reports/adapter/adapter-session-status.md` (verdict: BLOCKED)
+    - `.audit-reports/adapter/adapter-session-status.md` (verdict: NEEDS_REAL_SESSION)
     - `.audit-reports/adapter/adapter-real-session-report.md`
     - `.audit-reports/adapter/adapter-readiness.md` (verdict: BLOCKED)
     - blocker remains: `pre_write` effective events are still `0` in current session window.

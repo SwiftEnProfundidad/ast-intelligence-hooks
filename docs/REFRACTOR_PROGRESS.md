@@ -62,6 +62,7 @@
 - ✅ External rollout execution pack is published (`docs/validation/phase8-external-rollout-pack.md`).
 - ✅ Local adapter runtime baseline was regenerated (`adapter-session-status`, `adapter-real-session-report`, `adapter-readiness`).
 - ✅ Adapter hook runtime wiring was refreshed (`install:adapter-hooks-config`) and Node resolution is healthy (`node_bin=/opt/homebrew/bin/node`).
+- ✅ Local hook simulation produces expected events (`pre_write` blocked + `post_write` logged) and `assess:any` passes.
 - ⏳ Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
 - ⏳ External Phase 5 handoff is pending final artifacts and URLs.
 - 🚧 Real external pre/post tool hook runtime validation is pending (missing real `pre_write` events in external session).
