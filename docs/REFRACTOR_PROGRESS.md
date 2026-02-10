@@ -117,4 +117,5 @@
 - ✅ Support-ticket draft now includes explicit queue-stall evidence (`queued/stuck before job graph creation`) for faster external escalation.
 - ✅ Startup-failure support/unblock diagnostics now expose `startup_stalled_runs` end-to-end (bundle header, payload, parser, blockers, and tests).
 - ✅ Consumer startup-failure triage/unblock rerun confirms external blockage persists (`startup_failure_runs=1`, `startup_stalled_runs=2`) with refreshed temp artifacts in `.audit-reports/consumer-triage-temp/*`.
+- ✅ Phase 5 latest closure/handoff artifacts were regenerated (`.audit-reports/phase5-latest/*`) and consistently report `BLOCKED` due to consumer startup unblock verdict.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
