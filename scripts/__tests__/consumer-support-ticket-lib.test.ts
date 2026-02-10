@@ -65,6 +65,7 @@ test('buildSupportTicketDraft renders deterministic support sections with attach
     support: {
       repoVisibility: 'private',
       startupFailureRuns: '4',
+      startupStalledRuns: '3',
       runUrls: [
         'https://github.com/acme/repo/actions/runs/1',
         'https://github.com/acme/repo/actions/runs/2',
@@ -84,6 +85,7 @@ test('buildSupportTicketDraft renders deterministic support sections with attach
   assert.match(markdown, /# Consumer CI Support Ticket Draft/);
   assert.match(markdown, /- repository: `acme\/repo`/);
   assert.match(markdown, /startup_failure_runs observed: 4\./);
+  assert.match(markdown, /startup_stalled_runs observed: 3\./);
   assert.match(markdown, /Sample run URLs:/);
   assert.match(markdown, /https:\/\/github\.com\/acme\/repo\/actions\/runs\/1/);
   assert.match(markdown, /- auth verdict: BLOCKED/);
