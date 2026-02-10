@@ -107,12 +107,12 @@
 - ✅ Normalize progress board to single-active-task model (`1x 🚧` only).
 - ✅ Complete adapter runtime validation and regenerate adapter readiness to READY.
 - ✅ Re-run Phase 5 closure in mock-consumer mode and regenerate READY handoff artifacts.
-- ✅ Remove legacy `RuralGo/R_GO` references from docs/scripts/legacy content and archive filenames, aligned to mock-consumer naming.
+- ✅ Remove legacy external-project references from docs/scripts/legacy content and archive filenames, aligned to mock-consumer naming.
 - ✅ Re-run consumer private-repo startup-failure diagnostics and attach refreshed evidence (`.audit-reports/consumer-triage/*`).
 - ✅ Attach external artifact URL evidence to latest Phase 5 handoff (`.audit-reports/phase5/phase5-external-handoff-latest.md`, including runs `21797682919` and `21878337799`).
 - ✅ Remove hard dependency on `user` scope in auth preflight and keep billing probe as informational for startup-unblock.
-- ✅ Normalize validation archive naming/references from `r_go` to `mock_consumer` in rollout docs and doc guardrail tests.
-- ✅ Align remaining `legacy/*` samples and helper references from `ruralgo/r_go` to `pumuki-mock-consumer` naming.
+- ✅ Normalize validation archive naming/references from legacy identifiers to `mock_consumer` in rollout docs and doc guardrail tests.
+- ✅ Align remaining `legacy/*` samples and helper references to `pumuki-mock-consumer` naming.
 - ✅ Startup-unblock diagnosis now reports explicit external queue blockage (`jobs=0, artifacts=0`) in addition to `startup_failure` counts.
 - ✅ Support-ticket draft now includes explicit queue-stall evidence (`queued/stuck before job graph creation`) for faster external escalation.
 - ✅ Startup-failure support/unblock diagnostics now expose `startup_stalled_runs` end-to-end (bundle header, payload, parser, blockers, and tests).
@@ -120,4 +120,5 @@
 - ✅ Phase 5 latest closure/handoff artifacts were regenerated (`.audit-reports/phase5-latest/*`) and consistently report `BLOCKED` due to consumer startup unblock verdict.
 - ✅ New controlled `workflow_dispatch` probe (`21885160081`) was triggered and Phase 5 latest artifacts were regenerated; blockage persists with `startup_failure_runs=1` and `startup_stalled_runs=3`.
 - ✅ Consumer startup-unblock markdown now marks missing workflow lint input as `optional` (instead of ambiguous `missing`), with regression coverage.
+- ✅ Residual legacy external-project name references were re-audited; only progress-history mentions remained and were normalized.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
