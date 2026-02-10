@@ -88,6 +88,32 @@ test('summarizeConsumerStartupUnblock surfaces queued/no-jobs external blocker',
   );
 });
 
+test('summarizeConsumerStartupUnblock reports explicit startup stalled runs', () => {
+  const summary = summarizeConsumerStartupUnblock({
+    hasSupportBundle: true,
+    hasAuthReport: true,
+    support: {
+      startupFailureRuns: '0',
+      startupStalledRuns: '2',
+      jobsCount: '0',
+      artifactsCount: '0',
+      runUrls: ['https://github.com/owner/repo/actions/runs/123'],
+    },
+    auth: {
+      verdict: 'READY',
+      missingScopes: '(none)',
+    },
+    workflowLint: {
+      findingsCount: 0,
+      findings: [],
+      exitCode: 0,
+    },
+  });
+
+  assert.equal(summary.verdict, 'BLOCKED');
+  assert.match(summary.blockers.join('\n'), /Startup runs remain queued\/stalled \(2\)/);
+});
+
 test('summarizeConsumerStartupUnblock returns READY_FOR_RETEST when blockers are cleared', () => {
   const summary = summarizeConsumerStartupUnblock({
     hasSupportBundle: true,

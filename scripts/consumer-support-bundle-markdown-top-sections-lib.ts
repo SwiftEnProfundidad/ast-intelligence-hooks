@@ -14,6 +14,7 @@ export const buildConsumerSupportBundleHeaderLines = (params: {
   repoInfo?: ConsumerSupportBundleRepoResponse;
   runs: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
   startupFailures: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
+  startupStalledRuns: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
 }): string[] => {
   const lines: string[] = [];
   lines.push('# Consumer Startup Failure Support Bundle');
@@ -27,6 +28,7 @@ export const buildConsumerSupportBundleHeaderLines = (params: {
   }
   lines.push(`- runs_checked: ${params.runs.length}`);
   lines.push(`- startup_failure_runs: ${params.startupFailures.length}`);
+  lines.push(`- startup_stalled_runs: ${params.startupStalledRuns.length}`);
   lines.push('');
   return lines;
 };

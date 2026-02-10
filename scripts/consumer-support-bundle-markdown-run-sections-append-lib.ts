@@ -39,6 +39,7 @@ export const appendConsumerSupportBundleRunSections = (params: {
       billingError: params.billingError,
       runs: params.runs,
       startupFailures: params.context.startupFailures,
+      startupStalledRuns: params.context.startupStalledRuns,
       sampleRuns: params.context.sampleRuns,
     })
   );

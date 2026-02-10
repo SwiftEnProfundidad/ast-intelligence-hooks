@@ -9,6 +9,7 @@ test('parseSupportBundle extracts startup diagnostics and deduplicates run urls'
 
 - repo_visibility: \`private\` (private=true)
 - startup_failure_runs: 3
+- startup_stalled_runs: 2
 
 https://github.com/acme/repo/actions/runs/100
 https://github.com/acme/repo/actions/runs/100
@@ -25,6 +26,7 @@ https://github.com/acme/repo/actions/runs/101
 
   assert.equal(parsed.repoVisibility, 'private');
   assert.equal(parsed.startupFailureRuns, '3');
+  assert.equal(parsed.startupStalledRuns, '2');
   assert.equal(parsed.path, 'BuildFailed');
   assert.equal(parsed.jobsCount, '0');
   assert.equal(parsed.artifactsCount, '0');

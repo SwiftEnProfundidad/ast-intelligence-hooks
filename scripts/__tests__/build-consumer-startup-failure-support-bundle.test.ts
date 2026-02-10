@@ -131,6 +131,7 @@ test('support bundle includes repository policy and billing payload when availab
     assert.match(report, /## Repository Actions Policy/);
     assert.match(report, /- enabled: true/);
     assert.match(report, /- allowed_actions: all/);
+    assert.match(report, /- startup_stalled_runs: 0/);
     assert.match(report, /## Billing Scope Probe/);
     assert.match(report, /"included_minutes": 3000/);
   });

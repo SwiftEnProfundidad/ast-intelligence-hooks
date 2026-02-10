@@ -2,6 +2,7 @@ import type { ConsumerSupportBundleWorkflowRun } from './consumer-support-bundle
 
 export type ConsumerSupportBundleMarkdownContext = {
   startupFailures: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
+  startupStalledRuns: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
   sampleRuns: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
 };
 
@@ -11,9 +12,15 @@ export const createConsumerSupportBundleMarkdownContext = (params: {
   const startupFailures = params.runs.filter(
     (run) => run.conclusion === 'startup_failure'
   );
+  const startupStalledRuns = params.runs.filter(
+    (run) => run.status === 'queued' && !run.conclusion
+  );
+  const highlightedRuns =
+    startupStalledRuns.length > 0 ? startupStalledRuns : startupFailures;
 
   return {
     startupFailures,
-    sampleRuns: startupFailures.slice(0, 3),
+    startupStalledRuns,
+    sampleRuns: highlightedRuns.slice(0, 3),
   };
 };

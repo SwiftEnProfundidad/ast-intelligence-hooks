@@ -21,10 +21,16 @@ export const collectConsumerStartupUnblockBlockers = (params: {
   const startupFailureRuns = parseConsumerStartupUnblockInteger(
     params.support?.startupFailureRuns
   );
+  const startupStalledRuns = parseConsumerStartupUnblockInteger(
+    params.support?.startupStalledRuns
+  );
   if (startupFailureRuns === undefined) {
     blockers.push('Unable to determine startup_failure_runs from support bundle');
   } else if (startupFailureRuns > 0) {
     blockers.push(`Startup failures still present (${startupFailureRuns})`);
+  }
+  if (startupStalledRuns !== undefined && startupStalledRuns > 0) {
+    blockers.push(`Startup runs remain queued/stalled (${startupStalledRuns})`);
   }
 
   if (

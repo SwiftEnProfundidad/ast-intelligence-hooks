@@ -14,6 +14,7 @@ export const buildSupportPayloadSectionLines = (params: {
   billingError?: string;
   runs: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
   startupFailures: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
+  startupStalledRuns: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
   sampleRuns: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
 }): string[] => {
   const lines: string[] = [];
@@ -38,6 +39,7 @@ export const buildSupportPayloadSectionLines = (params: {
   }
   lines.push(`Runs checked: ${params.runs.length}`);
   lines.push(`startup_failure runs: ${params.startupFailures.length}`);
+  lines.push(`startup_stalled runs: ${params.startupStalledRuns.length}`);
   lines.push('');
   lines.push('Sample run URLs:');
   for (const run of params.sampleRuns) {

@@ -115,4 +115,5 @@
 - ✅ Align remaining `legacy/*` samples and helper references from `ruralgo/r_go` to `pumuki-mock-consumer` naming.
 - ✅ Startup-unblock diagnosis now reports explicit external queue blockage (`jobs=0, artifacts=0`) in addition to `startup_failure` counts.
 - ✅ Support-ticket draft now includes explicit queue-stall evidence (`queued/stuck before job graph creation`) for faster external escalation.
+- ✅ Startup-failure support/unblock diagnostics now expose `startup_stalled_runs` end-to-end (bundle header, payload, parser, blockers, and tests).
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY`.

@@ -35,6 +35,7 @@ export const appendConsumerSupportBundleTopSections = (params: {
       repoInfo: params.repoInfo,
       runs: params.runs,
       startupFailures: params.context.startupFailures,
+      startupStalledRuns: params.context.startupStalledRuns,
     })
   );
   params.lines.push(...buildConsumerSupportBundleAuthSectionLines(params.authStatus));
