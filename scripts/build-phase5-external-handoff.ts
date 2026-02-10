@@ -28,6 +28,8 @@ const main = (): number => {
     consumerUnblockVerdict: verdicts.consumerUnblockVerdict,
     mockAbVerdict: verdicts.mockAbVerdict,
     runReportVerdict: verdicts.runReportVerdict,
+    consumerStartupFailureRuns: verdicts.consumerStartupFailureRuns,
+    consumerStartupStalledRuns: verdicts.consumerStartupStalledRuns,
     artifactUrls: options.artifactUrls,
     requireArtifactUrls: options.requireArtifactUrls,
     requireMockAbReport: options.requireMockAbReport,

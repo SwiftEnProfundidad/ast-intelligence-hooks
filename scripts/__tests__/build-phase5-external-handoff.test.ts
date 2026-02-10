@@ -77,7 +77,7 @@ test('build-phase5-external-handoff returns READY when required reports and arti
     );
     writeFileSync(
       join(phase5Root, 'consumer-startup-unblock-status.md'),
-      '# unblock\n\n- verdict: READY_FOR_RETEST\n',
+      '# unblock\n\n- verdict: READY_FOR_RETEST\n- startup_failure_runs: 0\n',
       'utf8'
     );
     writeFileSync(
@@ -108,6 +108,8 @@ test('build-phase5-external-handoff returns READY when required reports and arti
     );
     assert.match(report, /- verdict: READY/);
     assert.match(report, /https:\/\/github\.com\/org\/repo\/actions\/runs\/123\/artifacts\/1/);
+    assert.match(report, /## Consumer Startup Signals/);
+    assert.match(report, /- startup_failure_runs: 0/);
   });
 });
 
@@ -128,7 +130,7 @@ test('build-phase5-external-handoff returns BLOCKED when required artifact url i
     );
     writeFileSync(
       join(phase5Root, 'consumer-startup-unblock-status.md'),
-      '# unblock\n\n- verdict: READY_FOR_RETEST\n',
+      '# unblock\n\n- verdict: READY_FOR_RETEST\n- startup_failure_runs: 0\n',
       'utf8'
     );
 
@@ -146,5 +148,53 @@ test('build-phase5-external-handoff returns BLOCKED when required artifact url i
     );
     assert.match(report, /- verdict: BLOCKED/);
     assert.match(report, /No artifact URLs were provided/);
+  });
+});
+
+test('build-phase5-external-handoff surfaces startup stalled signal from consumer unblock report', async () => {
+  await withTempDir('pumuki-phase5-handoff-signals-', (tempRoot) => {
+    const phase5Root = join(tempRoot, '.audit-reports', 'phase5');
+    mkdirSync(phase5Root, { recursive: true });
+
+    writeFileSync(
+      join(phase5Root, 'phase5-execution-closure-status.md'),
+      '# status\n\n- verdict: BLOCKED\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(phase5Root, 'phase5-blockers-readiness.md'),
+      '# blockers\n\n- verdict: READY\n',
+      'utf8'
+    );
+    writeFileSync(
+      join(phase5Root, 'consumer-startup-unblock-status.md'),
+      [
+        '# unblock',
+        '',
+        '- verdict: BLOCKED',
+        '- startup_failure_runs: 1',
+        '',
+        '## Blockers',
+        '',
+        '- Startup runs remain queued/stalled (4)',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = runGenerator({
+      cwd: tempRoot,
+    });
+
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /verdict=BLOCKED/);
+
+    const report = readFileSync(
+      join(phase5Root, 'phase5-external-handoff.md'),
+      'utf8'
+    );
+    assert.match(report, /## Consumer Startup Signals/);
+    assert.match(report, /- startup_failure_runs: 1/);
+    assert.match(report, /- startup_stalled_runs: 4/);
   });
 });

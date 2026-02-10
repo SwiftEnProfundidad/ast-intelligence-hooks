@@ -37,6 +37,8 @@ export const summarizePhase5ExternalHandoff = (
     consumerUnblockVerdict: params.consumerUnblockVerdict,
     mockAbVerdict: params.mockAbVerdict,
     runReportVerdict: params.runReportVerdict,
+    consumerStartupFailureRuns: params.consumerStartupFailureRuns,
+    consumerStartupStalledRuns: params.consumerStartupStalledRuns,
     artifactUrls: dedupePhase5ExternalHandoffValues(params.artifactUrls),
     requireArtifactUrls: params.requireArtifactUrls,
     requireMockAbReport: params.requireMockAbReport,

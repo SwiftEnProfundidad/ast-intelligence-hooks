@@ -53,3 +53,18 @@ export const appendParsedVerdictsSection = (params: {
   params.lines.push(`- phase5_run_report: ${params.summary.runReportVerdict ?? 'unknown'}`);
   params.lines.push('');
 };
+
+export const appendConsumerStartupSignalsSection = (params: {
+  lines: string[];
+  summary: Phase5ExternalHandoffSummary;
+}): void => {
+  params.lines.push('## Consumer Startup Signals');
+  params.lines.push('');
+  params.lines.push(
+    `- startup_failure_runs: ${params.summary.consumerStartupFailureRuns ?? 'unknown'}`
+  );
+  params.lines.push(
+    `- startup_stalled_runs: ${params.summary.consumerStartupStalledRuns ?? 'unknown'}`
+  );
+  params.lines.push('');
+};

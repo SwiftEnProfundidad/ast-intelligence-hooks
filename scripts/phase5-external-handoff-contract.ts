@@ -8,6 +8,8 @@ export type Phase5ExternalHandoffSummary = {
   consumerUnblockVerdict?: string;
   mockAbVerdict?: string;
   runReportVerdict?: string;
+  consumerStartupFailureRuns?: number;
+  consumerStartupStalledRuns?: number;
   artifactUrls: ReadonlyArray<string>;
   requireArtifactUrls: boolean;
   requireMockAbReport: boolean;
@@ -24,6 +26,8 @@ export type SummarizePhase5ExternalHandoffParams = {
   consumerUnblockVerdict?: string;
   mockAbVerdict?: string;
   runReportVerdict?: string;
+  consumerStartupFailureRuns?: number;
+  consumerStartupStalledRuns?: number;
   artifactUrls: ReadonlyArray<string>;
   requireArtifactUrls: boolean;
   requireMockAbReport: boolean;

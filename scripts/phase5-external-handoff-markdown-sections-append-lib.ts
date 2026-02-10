@@ -2,6 +2,7 @@ import type { Phase5ExternalHandoffSummary } from './phase5-external-handoff-con
 import {
   appendArtifactUrlsSection,
   appendBlockersSection,
+  appendConsumerStartupSignalsSection,
   appendInputsSection,
   appendMissingInputsSection,
   appendNextActionsSection,
@@ -38,6 +39,10 @@ export const appendPhase5ExternalHandoffSections = (params: {
     summary: params.summary,
   });
   appendParsedVerdictsSection({
+    lines: params.lines,
+    summary: params.summary,
+  });
+  appendConsumerStartupSignalsSection({
     lines: params.lines,
     summary: params.summary,
   });
