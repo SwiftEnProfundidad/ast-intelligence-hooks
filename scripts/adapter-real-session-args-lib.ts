@@ -6,6 +6,10 @@ import {
   DEFAULT_ADAPTER_STATUS_REPORT_FILE,
   type AdapterRealSessionCliOptions,
 } from './adapter-real-session-contract';
+import {
+  applyAdapterRealSessionValueArg,
+  isAdapterRealSessionValueArg,
+} from './adapter-real-session-arg-values-lib';
 
 export const parseAdapterRealSessionArgs = (
   args: ReadonlyArray<string>
@@ -21,58 +25,16 @@ export const parseAdapterRealSessionArgs = (
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
 
-    if (arg === '--out') {
+    if (isAdapterRealSessionValueArg(arg)) {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --out');
+        throw new Error(`Missing value for ${arg}`);
       }
-      options.outFile = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--status-report') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --status-report');
-      }
-      options.statusReportFile = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--operator') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --operator');
-      }
-      options.operator = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--adapter-version') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --adapter-version');
-      }
-      options.adapterVersion = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--tail-lines') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --tail-lines');
-      }
-
-      const parsed = Number.parseInt(value, 10);
-      if (!Number.isFinite(parsed) || parsed <= 0) {
-        throw new Error(`Invalid --tail-lines value: ${value}`);
-      }
-
-      options.tailLines = parsed;
+      applyAdapterRealSessionValueArg({
+        options,
+        arg,
+        value,
+      });
       index += 1;
       continue;
     }
