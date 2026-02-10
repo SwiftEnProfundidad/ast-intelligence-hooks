@@ -12,6 +12,7 @@ Validation runbooks in this folder are operational adapters. They support rollou
 Keep these as source-of-truth operational references:
 
 - `consumer-ci-startup-failure-playbook.md`
+- `consumer-startup-escalation-handoff-latest.md`
 - `github-support-ticket-template-startup-failure.md`
 - `phase5-execution-closure.md`
 - `phase8-external-rollout-pack.md`

@@ -44,6 +44,7 @@ Language baseline: active repository documentation is maintained in English.
 
 - `validation/README.md`: validation docs policy.
 - `validation/consumer-ci-startup-failure-playbook.md`
+- `validation/consumer-startup-escalation-handoff-latest.md`
 - `validation/phase5-execution-closure.md`
 - `validation/phase8-external-rollout-pack.md`
 - `validation/adapter-hook-runtime-validation.md`
@@ -54,6 +55,15 @@ Language baseline: active repository documentation is maintained in English.
 - `validation/github-support-ticket-template-startup-failure.md`
 - `validation/skills-rollout-consumer-repositories.md`
 - `validation/archive/README.md`: historical validation reports.
+
+## Vendored Codex Skills
+
+- `codex-skills/swift-concurrency.md`
+- `codex-skills/swiftui-expert-skill.md`
+- `codex-skills/windsurf-rules-android.md`
+- `codex-skills/windsurf-rules-backend.md`
+- `codex-skills/windsurf-rules-frontend.md`
+- `codex-skills/windsurf-rules-ios.md`
 
 ## Assets
 
