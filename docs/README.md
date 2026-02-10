@@ -2,6 +2,8 @@
 
 This index is the canonical entry point for framework documentation in this repository.
 
+Language baseline: active repository documentation is maintained in English.
+
 ## Core Architecture
 
 - `ARCHITECTURE.md`: normative architecture contract and layer boundaries.

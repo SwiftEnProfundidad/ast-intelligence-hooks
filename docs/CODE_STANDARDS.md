@@ -57,6 +57,7 @@ npm run test:heuristics
 
 - Update docs in the same change when behavior changes.
 - Keep docs aligned with active v2.x runtime.
+- Keep active repository documentation in English (enterprise baseline).
 - Do not add temporary markdown planning artifacts.
 
 ## Commit standards
