@@ -5,7 +5,7 @@ Repository: `SwiftEnProfundidad/pumuki-actions-healthcheck-temp` (temporary)
 
 ## Objective
 
-Verify whether `startup_failure` reproduces outside `R_GO` using a minimal private repository workflow.
+Verify whether `startup_failure` reproduces outside `pumuki-mock-consumer` using a minimal private repository workflow.
 
 ## Minimal Workflow
 

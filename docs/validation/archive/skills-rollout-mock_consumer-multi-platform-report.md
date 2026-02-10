@@ -1,8 +1,8 @@
-# Skills Rollout Validation Report - R_GO Multi-Platform Positive Detection
+# Skills Rollout Validation Report - pumuki-mock-consumer Multi-Platform Positive Detection
 
 Date: 2026-02-08  
 Framework branch: `enterprise-refactor`  
-Consumer repository source: `../R_GO`  
+Consumer repository source: `../pumuki-mock-consumer`  
 Execution mode: isolated Git worktree from `origin/develop`
 
 ## Objective
@@ -16,7 +16,7 @@ Complete a positive-detection rollout run where all target platforms are detecte
 
 ## Setup
 
-- Created isolated worktree to avoid touching active developer workspace in `R_GO`.
+- Created isolated worktree to avoid touching active developer workspace in `pumuki-mock-consumer`.
 - Created temporary validation branch in that worktree.
 - Added temporary fixture files for each platform path pattern:
   - `apps/backend/src/validation/pumuki_phase5_validation.ts`
@@ -64,16 +64,16 @@ All stage runs included the expected baseline bundle trace:
 
 Artifacts (ignored from git, local validation evidence only):
 
-- `docs/validation/skills-rollout/artifacts/r_go/multi_platform_positive/pre_commit.ai_evidence.json`
-- `docs/validation/skills-rollout/artifacts/r_go/multi_platform_positive/pre_push.ai_evidence.json`
-- `docs/validation/skills-rollout/artifacts/r_go/multi_platform_positive/ci.ai_evidence.json`
-- `docs/validation/skills-rollout/artifacts/r_go/multi_platform_positive/run-meta.txt`
+- `docs/validation/skills-rollout/artifacts/mock_consumer/multi_platform_positive/pre_commit.ai_evidence.json`
+- `docs/validation/skills-rollout/artifacts/mock_consumer/multi_platform_positive/pre_push.ai_evidence.json`
+- `docs/validation/skills-rollout/artifacts/mock_consumer/multi_platform_positive/ci.ai_evidence.json`
+- `docs/validation/skills-rollout/artifacts/mock_consumer/multi_platform_positive/run-meta.txt`
 
 ## Cleanup and Safety
 
 - Isolated worktree removed after execution.
 - Temporary validation branch removed with worktree.
-- Active `../R_GO` workspace left untouched.
+- Active `../pumuki-mock-consumer` workspace left untouched.
 
 ## Conclusion
 

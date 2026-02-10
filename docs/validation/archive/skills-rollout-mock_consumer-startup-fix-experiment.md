@@ -1,7 +1,7 @@
-# R_GO Startup Failure Fix Experiment (Negative Result)
+# pumuki-mock-consumer Startup Failure Fix Experiment (Negative Result)
 
 Date: 2026-02-08  
-Target repository: `SwiftEnProfundidad/R_GO`
+Target repository: `SwiftEnProfundidad/pumuki-mock-consumer`
 
 ## Objective
 
@@ -20,10 +20,10 @@ Validate whether fixing semantic workflow lint findings removes persistent GitHu
 ## Triggered Runs
 
 - Push run:
-  - `https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797634826`
+  - `https://github.com/SwiftEnProfundidad/pumuki-mock-consumer/actions/runs/21797634826`
   - conclusion: `startup_failure`
 - Manual dispatch (`branch-protection-drift`):
-  - `https://github.com/SwiftEnProfundidad/R_GO/actions/runs/21797634821`
+  - `https://github.com/SwiftEnProfundidad/pumuki-mock-consumer/actions/runs/21797634821`
   - conclusion: `startup_failure`
 
 ## Result

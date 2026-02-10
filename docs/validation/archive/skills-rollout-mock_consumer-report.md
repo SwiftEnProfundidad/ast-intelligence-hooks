@@ -1,8 +1,8 @@
-# Skills Rollout Validation Report - R_GO Consumer Repository
+# Skills Rollout Validation Report - pumuki-mock-consumer Consumer Repository
 
 Date: 2026-02-08  
 Framework branch: `enterprise-refactor`  
-Consumer repository: `../R_GO` (`develop`, upstream `origin/develop`)
+Consumer repository: `../pumuki-mock-consumer` (`develop`, upstream `origin/develop`)
 
 ## Scope
 
@@ -17,7 +17,7 @@ Executed stages:
 
 ## Commands
 
-All commands executed from `../R_GO`:
+All commands executed from `../pumuki-mock-consumer`:
 
 ```bash
 npx --yes tsx@4.21.0 /.../ast-intelligence-hooks/integrations/git/preCommitBackend.cli.ts
@@ -37,7 +37,7 @@ npx --yes tsx@4.21.0 /.../ast-intelligence-hooks/integrations/git/prePushBackend
 
 Artifacts directory:
 
-- `docs/validation/skills-rollout/artifacts/r_go/`
+- `docs/validation/skills-rollout/artifacts/mock_consumer/`
 
 Per stage evidence:
 
@@ -77,6 +77,6 @@ Supporting files:
 
 ## Notes
 
-- `../R_GO` was left clean after run (`.ai_evidence.json` removed from consumer workspace).
+- `../pumuki-mock-consumer` was left clean after run (`.ai_evidence.json` removed from consumer workspace).
 - This report is a first real-consumer execution checkpoint for Phase 5 rollout validation.
 - Full matrix completion still requires consumer runs that activate each target platform (iOS/backend/frontend/android) with non-empty facts.

@@ -111,4 +111,5 @@
 - ✅ Re-run consumer private-repo startup-failure diagnostics and attach refreshed evidence (`.audit-reports/consumer-triage/*`).
 - ✅ Attach external artifact URL evidence to latest Phase 5 handoff (`.audit-reports/phase5/phase5-external-handoff-latest.md`, including runs `21797682919` and `21878337799`).
 - ✅ Remove hard dependency on `user` scope in auth preflight and keep billing probe as informational for startup-unblock.
+- ✅ Normalize validation archive naming/references from `r_go` to `mock_consumer` in rollout docs and doc guardrail tests.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY`.

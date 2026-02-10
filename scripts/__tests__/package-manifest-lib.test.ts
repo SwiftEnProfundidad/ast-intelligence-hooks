@@ -32,7 +32,7 @@ test('inspectPackageManifestPaths reports forbidden bundle entries', () => {
     ...REQUIRED_PACKAGE_PATHS,
     'legacy/scripts/hooks-system/infrastructure/ast/ast-intelligence.js',
     'scripts/__tests__/framework-menu.test.ts',
-    'docs/validation/archive/skills-rollout-r_go-report.md',
+    'docs/validation/archive/skills-rollout-mock_consumer-report.md',
     '.audit-reports/package-smoke/summary.md',
   ];
 
@@ -40,7 +40,7 @@ test('inspectPackageManifestPaths reports forbidden bundle entries', () => {
   assert.deepEqual(report.forbiddenMatches, [
     'legacy/scripts/hooks-system/infrastructure/ast/ast-intelligence.js',
     'scripts/__tests__/framework-menu.test.ts',
-    'docs/validation/archive/skills-rollout-r_go-report.md',
+    'docs/validation/archive/skills-rollout-mock_consumer-report.md',
     '.audit-reports/package-smoke/summary.md',
   ]);
 });

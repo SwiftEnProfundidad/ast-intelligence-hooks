@@ -1,7 +1,7 @@
-# R_GO Workflow Lint Findings (Startup-Failure Triage)
+# pumuki-mock-consumer Workflow Lint Findings (Startup-Failure Triage)
 
 Date: 2026-02-08  
-Target repository: `SwiftEnProfundidad/R_GO`
+Target repository: `SwiftEnProfundidad/pumuki-mock-consumer`
 
 ## Objective
 
@@ -11,7 +11,7 @@ Run semantic workflow lint checks to detect invalid GitHub Actions workflow defi
 
 ```bash
 /tmp/actionlint-bin/actionlint -color -shellcheck= -pyflakes= \
-  /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/.github/workflows/*.yml
+  /Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/.github/workflows/*.yml
 ```
 
 ## Findings
@@ -36,14 +36,14 @@ Run semantic workflow lint checks to detect invalid GitHub Actions workflow defi
 
 ## Interpretation
 
-These semantic workflow-definition errors are strong candidates for `startup_failure` with empty job graphs in `R_GO`.
+These semantic workflow-definition errors are strong candidates for `startup_failure` with empty job graphs in `pumuki-mock-consumer`.
 
 ## Next Action
 
-Fix the invalid workflow definitions in `R_GO`, then re-run:
+Fix the invalid workflow definitions in `pumuki-mock-consumer`, then re-run:
 
 - `workflow_dispatch` smoke run
-- `npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/R_GO ...`
+- `npm run validation:consumer-ci-artifacts -- --repo SwiftEnProfundidad/pumuki-mock-consumer ...`
 
 Expected post-fix signal:
 
