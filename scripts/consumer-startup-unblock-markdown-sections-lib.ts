@@ -35,6 +35,7 @@ export const buildConsumerStartupUnblockSignalLines = (
   '## Signals',
   '',
   `- startup_failure_runs: ${summary.startupFailureRuns ?? 'unknown'}`,
+  `- startup_stalled_runs: ${summary.startupStalledRuns ?? 'unknown'}`,
   `- auth_verdict: ${summary.authVerdict ?? 'unknown'}`,
   `- missing_user_scope: ${summary.missingUserScope ? 'yes' : 'no'}`,
   `- workflow_lint_findings: ${summary.lintFindingsCount}`,

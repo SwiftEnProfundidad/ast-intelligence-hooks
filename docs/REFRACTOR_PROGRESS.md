@@ -132,4 +132,5 @@
 - ✅ Validation docs hygiene allowlist now includes `consumer-startup-escalation-handoff-latest.md`; `validation:docs-hygiene` is green again.
 - ✅ Regression mini-batch is green after latest docs/support updates (`consumer-support-ticket`, `validation-docs-hygiene`, `docs-index-coverage`).
 - ✅ Phase5 external handoff now surfaces parsed consumer startup signals (`startup_failure_runs`, `startup_stalled_runs`) with regression coverage.
+- ✅ Consumer startup-unblock status now publishes `startup_stalled_runs` as a first-class signal (not only as blocker text), with regression coverage.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.

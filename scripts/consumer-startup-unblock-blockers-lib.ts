@@ -10,6 +10,7 @@ export const collectConsumerStartupUnblockBlockers = (params: {
 }): {
   blockers: string[];
   startupFailureRuns?: number;
+  startupStalledRuns?: number;
   authVerdict?: string;
   missingUserScope: boolean;
   lintFindingsCount: number;
@@ -56,6 +57,7 @@ export const collectConsumerStartupUnblockBlockers = (params: {
   return {
     blockers,
     startupFailureRuns,
+    startupStalledRuns,
     authVerdict,
     missingUserScope,
     lintFindingsCount,

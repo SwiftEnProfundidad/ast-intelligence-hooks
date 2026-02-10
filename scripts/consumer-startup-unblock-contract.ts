@@ -8,6 +8,7 @@ export type ConsumerStartupUnblockSummary = {
   verdict: 'READY_FOR_RETEST' | 'BLOCKED' | 'MISSING_INPUTS';
   blockers: ReadonlyArray<string>;
   startupFailureRuns?: number;
+  startupStalledRuns?: number;
   authVerdict?: string;
   missingUserScope: boolean;
   lintFindingsCount: number;

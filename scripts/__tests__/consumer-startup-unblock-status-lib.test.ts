@@ -112,6 +112,7 @@ test('summarizeConsumerStartupUnblock reports explicit startup stalled runs', ()
 
   assert.equal(summary.verdict, 'BLOCKED');
   assert.match(summary.blockers.join('\n'), /Startup runs remain queued\/stalled \(2\)/);
+  assert.equal(summary.startupStalledRuns, 2);
 });
 
 test('summarizeConsumerStartupUnblock returns READY_FOR_RETEST when blockers are cleared', () => {
@@ -158,6 +159,7 @@ test('buildConsumerStartupUnblockStatus renders markdown with verdict and next a
 
   assert.match(markdown, /# Consumer Startup Failure Unblock Status/);
   assert.match(markdown, /- verdict: BLOCKED/);
+  assert.match(markdown, /- startup_stalled_runs: unknown/);
   assert.match(markdown, /- missing_user_scope: yes/);
   assert.match(markdown, /workflow_lint_report: `docs\/validation\/lint\.md` \(found\)/);
 });
@@ -175,6 +177,7 @@ test('buildConsumerStartupUnblockStatus marks missing workflow lint report as op
       verdict: 'BLOCKED',
       blockers: ['Startup failures still present (1)'],
       startupFailureRuns: 1,
+      startupStalledRuns: 3,
       authVerdict: 'READY',
       missingUserScope: false,
       lintFindingsCount: 0,
@@ -182,4 +185,5 @@ test('buildConsumerStartupUnblockStatus marks missing workflow lint report as op
   });
 
   assert.match(markdown, /workflow_lint_report: `docs\/validation\/lint\.md` \(missing, optional\)/);
+  assert.match(markdown, /- startup_stalled_runs: 3/);
 });
