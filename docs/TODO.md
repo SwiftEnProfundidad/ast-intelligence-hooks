@@ -26,7 +26,9 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - IDE-agnostic boundary guardrail test is implemented for `core/*` and `integrations/*`.
 - Rule-pack version-to-doc sync guardrail test is implemented (`scripts/__tests__/rule-pack-docs-sync.test.ts`).
 - Active enterprise docs IDE/provider-agnostic guardrail test is implemented (`scripts/__tests__/enterprise-docs-agnostic.test.ts`).
+- Active enterprise docs English-only guardrail test is implemented (`scripts/__tests__/enterprise-docs-language.test.ts`).
 - Active docs index coverage guardrail test is implemented (`scripts/__tests__/docs-index-coverage.test.ts`).
+- Active docs markdown reference-integrity guardrail test is implemented (`scripts/__tests__/docs-markdown-reference-integrity.test.ts`).
 - Legacy provider-named hook scripts are preserved as compatibility aliases mapped to adapter-native scripts (`scripts/__tests__/adapter-script-aliases.test.ts`).
 - Legacy ruleset lookup is provider-agnostic and covered by regression tests (`integrations/git/resolveLegacyRulesetFile.ts`, `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`).
 - Validation artifact cleanup command is available (`validation:clean-artifacts`, dry-run supported).
@@ -71,7 +73,7 @@ For full historical execution details, see:
 
 ## Deferred Adapter Validation
 
-- [ ] Adapter pre/post tool hooks reliability (`bash: node: command not found`) on current baseline adapter:
+- [ ] Adapter pre/post tool hooks reliability (`bash: node: command not found`) across external IDE sessions:
   - Incident context (captured): pre-write and post-write hooks failed with direct `node .../pre-write-code-hook.js` / `post-write-code-hook.js` execution in an external adapter session.
   - Enforce wrapper-based remediation before manual re-check:
     - `npm run install:adapter-hooks-config`
