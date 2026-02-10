@@ -5,6 +5,7 @@ export type ValidationDocsHygieneResult = {
 const ALLOWED_ROOT_DOCS = new Set<string>([
   'docs/validation/README.md',
   'docs/validation/consumer-ci-startup-failure-playbook.md',
+  'docs/validation/consumer-startup-escalation-handoff-latest.md',
   'docs/validation/github-support-ticket-template-startup-failure.md',
   'docs/validation/phase5-execution-closure.md',
   'docs/validation/phase8-external-rollout-pack.md',

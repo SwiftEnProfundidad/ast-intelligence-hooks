@@ -6,6 +6,7 @@ test('accepts allowed runbooks and archive reports', () => {
   const result = checkValidationDocsHygiene([
     'docs/validation/README.md',
     'docs/validation/consumer-ci-startup-failure-playbook.md',
+    'docs/validation/consumer-startup-escalation-handoff-latest.md',
     'docs/validation/phase5-execution-closure.md',
     'docs/validation/enterprise-consumer-isolation-policy.md',
     'docs/validation/mock-consumer-integration-runbook.md',
