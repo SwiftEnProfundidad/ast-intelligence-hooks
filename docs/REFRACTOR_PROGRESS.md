@@ -123,4 +123,5 @@
 - ✅ Residual legacy external-project name references were re-audited; only progress-history mentions remained and were normalized.
 - ✅ `docs/validation/phase8-external-rollout-pack.md` now includes a live snapshot section with current blocked verdict chain and latest probe URL.
 - ✅ Consumer support ticket draft was refreshed from latest evidence (`.audit-reports/phase5-latest/consumer-support-ticket-draft.md`) and is ready for external escalation handoff.
+- ✅ External escalation handoff document is now versioned in repo (`docs/validation/consumer-startup-escalation-handoff-latest.md`) with latest run URLs and artifact contract.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
