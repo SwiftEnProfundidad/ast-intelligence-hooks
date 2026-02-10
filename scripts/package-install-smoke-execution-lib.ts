@@ -1,6 +1,10 @@
 import type { SmokeMode } from './package-install-smoke-contract';
+import { runDefaultSmokeGateSteps } from './package-install-smoke-execution-steps-lib';
+import {
+  appendSmokeSuccessSummary,
+  appendSmokeWorkspaceMetadata,
+} from './package-install-smoke-execution-summary-lib';
 import { resolveSmokeExpectation } from './package-install-smoke-mode-lib';
-import { runGateStep } from './package-install-smoke-gate-lib';
 import {
   createTarball,
   setupConsumerRepository,
@@ -18,59 +22,25 @@ export const runPackageInstallSmoke = (mode: SmokeMode): void => {
   const expectation = resolveSmokeExpectation(mode);
 
   try {
-    workspace.summary.push(`- Repository root: \`${workspace.repoRoot}\``);
-    workspace.summary.push(`- Temporary workspace: \`${workspace.tmpRoot}\``);
-    workspace.summary.push('');
-
     const tarball = createTarball(workspace);
     workspace.tarballPath = tarball.tarballPath;
-    workspace.summary.push(`- Smoke mode: \`${mode}\``);
-    workspace.summary.push(`- Packed tarball: \`${tarball.id}\``);
+    appendSmokeWorkspaceMetadata({
+      workspace,
+      mode,
+      tarballId: tarball.id,
+    });
 
     setupConsumerRepository(workspace, mode);
     writeStagedPayload(workspace, mode);
 
-    const preCommit = runGateStep(
+    const results = runDefaultSmokeGateSteps({
       workspace,
-      {
-        label: 'pre-commit',
-        command: 'npx',
-        args: ['--yes', 'pumuki-pre-commit'],
-        evidenceFile: 'pre-commit.ai_evidence.json',
-        stage: 'PRE_COMMIT',
-      },
-      expectation
-    );
-
-    const prePush = runGateStep(
+      expectation,
+    });
+    appendSmokeSuccessSummary({
       workspace,
-      {
-        label: 'pre-push',
-        command: 'npx',
-        args: ['--yes', 'pumuki-pre-push'],
-        evidenceFile: 'pre-push.ai_evidence.json',
-        stage: 'PRE_PUSH',
-      },
-      expectation
-    );
-
-    const ci = runGateStep(
-      workspace,
-      {
-        label: 'ci',
-        command: 'npx',
-        args: ['--yes', 'pumuki-ci'],
-        evidenceFile: 'ci.ai_evidence.json',
-        stage: 'CI',
-      },
-      expectation
-    );
-
-    workspace.summary.push('- Status: PASS');
-    workspace.summary.push(`- pre-commit exit: \`${preCommit.exitCode}\` (${preCommit.outcome})`);
-    workspace.summary.push(`- pre-push exit: \`${prePush.exitCode}\` (${prePush.outcome})`);
-    workspace.summary.push(`- ci exit: \`${ci.exitCode}\` (${ci.outcome})`);
-    workspace.summary.push(`- Artifact root: \`${workspace.reportsDir}\``);
+      results,
+    });
 
     writeSuccessReport(workspace);
   } catch (error) {
