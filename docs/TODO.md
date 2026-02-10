@@ -29,12 +29,14 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Active enterprise docs English-only guardrail test is implemented (`scripts/__tests__/enterprise-docs-language.test.ts`).
 - Active docs index coverage guardrail test is implemented (`scripts/__tests__/docs-index-coverage.test.ts`).
 - Active docs markdown reference-integrity guardrail test is implemented (`scripts/__tests__/docs-markdown-reference-integrity.test.ts`).
+- Root markdown baseline guardrail is implemented (`scripts/__tests__/root-docs-baseline.test.ts`).
 - Legacy provider-named hook scripts are preserved as compatibility aliases mapped to adapter-native scripts (`scripts/__tests__/adapter-script-aliases.test.ts`).
 - Legacy ruleset lookup is provider-agnostic and covered by regression tests (`integrations/git/resolveLegacyRulesetFile.ts`, `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`).
 - Validation artifact cleanup command is available (`validation:clean-artifacts`, dry-run supported).
 - Framework menu includes artifact cleanup action (`Clean local validation artifacts`).
 - Phase 5 one-shot flow includes auth preflight fail-fast with optional bypass (`--skip-auth-preflight`).
 - Documentation baseline is normalized to enterprise English and active v2.x behavior.
+- Root `CHANGELOG.md` is normalized to active enterprise v2 baseline.
 - Package manifest guardrail logic is reusable and regression-tested in stage gates (`scripts/package-manifest-lib.ts`, `scripts/__tests__/package-manifest-lib.test.ts`).
 - Package smoke CI matrix (`block` + `minimal`) is active and green with evidence v2.1 assertions.
 - Framework menu consumer diagnostics defaults are host-agnostic:
