@@ -119,4 +119,5 @@
 - ✅ Consumer startup-failure triage/unblock rerun confirms external blockage persists (`startup_failure_runs=1`, `startup_stalled_runs=2`) with refreshed temp artifacts in `.audit-reports/consumer-triage-temp/*`.
 - ✅ Phase 5 latest closure/handoff artifacts were regenerated (`.audit-reports/phase5-latest/*`) and consistently report `BLOCKED` due to consumer startup unblock verdict.
 - ✅ New controlled `workflow_dispatch` probe (`21885160081`) was triggered and Phase 5 latest artifacts were regenerated; blockage persists with `startup_failure_runs=1` and `startup_stalled_runs=3`.
+- ✅ Consumer startup-unblock markdown now marks missing workflow lint input as `optional` (instead of ambiguous `missing`), with regression coverage.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.

@@ -25,7 +25,7 @@ export const buildConsumerStartupUnblockInputLines = (params: {
   '',
   `- support_bundle: \`${params.supportBundlePath}\` (${params.hasSupportBundle ? 'found' : 'missing'})`,
   `- auth_report: \`${params.authReportPath}\` (${params.hasAuthReport ? 'found' : 'missing'})`,
-  `- workflow_lint_report: \`${params.workflowLintReportPath}\` (${params.hasWorkflowLintReport ? 'found' : 'missing'})`,
+  `- workflow_lint_report: \`${params.workflowLintReportPath}\` (${params.hasWorkflowLintReport ? 'found' : 'missing, optional'})`,
   '',
 ];
 

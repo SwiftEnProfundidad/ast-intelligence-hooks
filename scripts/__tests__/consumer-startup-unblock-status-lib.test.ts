@@ -159,4 +159,27 @@ test('buildConsumerStartupUnblockStatus renders markdown with verdict and next a
   assert.match(markdown, /# Consumer Startup Failure Unblock Status/);
   assert.match(markdown, /- verdict: BLOCKED/);
   assert.match(markdown, /- missing_user_scope: yes/);
+  assert.match(markdown, /workflow_lint_report: `docs\/validation\/lint\.md` \(found\)/);
+});
+
+test('buildConsumerStartupUnblockStatus marks missing workflow lint report as optional', () => {
+  const markdown = buildConsumerStartupUnblockStatus({
+    repo: 'owner/repo',
+    supportBundlePath: 'docs/validation/support.md',
+    authReportPath: 'docs/validation/auth.md',
+    workflowLintReportPath: 'docs/validation/lint.md',
+    hasSupportBundle: true,
+    hasAuthReport: true,
+    hasWorkflowLintReport: false,
+    summary: {
+      verdict: 'BLOCKED',
+      blockers: ['Startup failures still present (1)'],
+      startupFailureRuns: 1,
+      authVerdict: 'READY',
+      missingUserScope: false,
+      lintFindingsCount: 0,
+    },
+  });
+
+  assert.match(markdown, /workflow_lint_report: `docs\/validation\/lint\.md` \(missing, optional\)/);
 });
