@@ -29,6 +29,7 @@ Language baseline: active repository documentation is maintained in English.
 - `evidence-v2.1.md`: deterministic evidence schema and behavior.
 - `MCP_EVIDENCE_CONTEXT_SERVER.md`: evidence context server contract.
 - `MCP_SERVERS.md`: MCP integration overview.
+- `MCP_AGENT_CONTEXT_CONSUMPTION.md`: deterministic pre-action context consumption pattern for agents.
 
 ## Rule Packs
 

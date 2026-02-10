@@ -7,6 +7,7 @@ const ALLOWED_ROOT_DOCS = new Set<string>([
   'docs/validation/consumer-ci-startup-failure-playbook.md',
   'docs/validation/github-support-ticket-template-startup-failure.md',
   'docs/validation/phase5-execution-closure.md',
+  'docs/validation/phase8-external-rollout-pack.md',
   'docs/validation/skills-rollout-consumer-repositories.md',
   'docs/validation/adapter-hook-runtime-local-report.md',
   'docs/validation/adapter-hook-runtime-validation.md',

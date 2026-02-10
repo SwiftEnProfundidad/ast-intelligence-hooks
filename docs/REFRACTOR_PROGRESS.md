@@ -74,10 +74,11 @@
 
 - ✅ Read-only MCP evidence server is implemented.
 - 🚧 Context API surface is partially expanded (`summary`, `rulesets`, `platforms`) and evolving.
-- ⏳ Formal cross-agent consumption patterns are pending.
+- ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
 
 - ✅ Publish a single external rollout execution pack (checklist + artifact contract + handoff template).
+- ✅ Document formal cross-agent MCP context consumption pattern.
 - 🚧 Complete real external pre/post tool hook runtime validation and regenerate adapter readiness.
 - ⏳ Re-run external Phase 5 closure and attach final artifact URLs for handoff.

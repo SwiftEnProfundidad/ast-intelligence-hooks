@@ -33,6 +33,7 @@ Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 - Legacy provider-named hook scripts are preserved as compatibility aliases mapped to adapter-native scripts (`scripts/__tests__/adapter-script-aliases.test.ts`).
 - Legacy ruleset lookup is provider-agnostic and covered by regression tests (`integrations/git/resolveLegacyRulesetFile.ts`, `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`).
 - MCP read-only evidence context API now includes deterministic `summary`, `rulesets`, and `platforms` endpoints (`integrations/mcp/evidenceContextServer.ts`).
+- Formal cross-agent MCP context consumption pattern is documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 - Validation artifact cleanup command is available (`validation:clean-artifacts`, dry-run supported).
 - Framework menu includes artifact cleanup action (`Clean local validation artifacts`).
 - Phase 5 one-shot flow includes auth preflight fail-fast with optional bypass (`--skip-auth-preflight`).

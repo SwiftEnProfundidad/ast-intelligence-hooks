@@ -122,6 +122,7 @@ Read-only endpoints:
 - `GET /ai-evidence/platforms`
 
 Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
+Consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`.
 
 ## Local execution quick refs
 

@@ -84,3 +84,7 @@ npm run test:mcp
 ## Scope note
 
 Legacy MCP references (older automation/watcher services) are not part of the active v2.x documentation surface.
+
+Consumption pattern reference:
+
+- `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`
