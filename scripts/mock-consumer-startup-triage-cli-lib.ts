@@ -1,3 +1,12 @@
+import {
+  applyMockConsumerStartupTriageFlagArg,
+  isMockConsumerStartupTriageFlagArg,
+} from './mock-consumer-startup-triage-arg-flags-lib';
+import {
+  applyMockConsumerStartupTriageValueArg,
+  isMockConsumerStartupTriageValueArg,
+} from './mock-consumer-startup-triage-arg-values-lib';
+
 export type MockConsumerStartupTriageCliOptions = {
   repo: string;
   outDir: string;
@@ -26,44 +35,24 @@ export const parseMockConsumerStartupTriageArgs = (
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
-    if (arg === '--repo') {
+    if (isMockConsumerStartupTriageValueArg(arg)) {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --repo');
+        throw new Error(`Missing value for ${arg}`);
       }
-      options.repo = value;
+      applyMockConsumerStartupTriageValueArg({
+        options,
+        arg,
+        value,
+      });
       index += 1;
       continue;
     }
-    if (arg === '--out-dir') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --out-dir');
-      }
-      options.outDir = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--block-summary') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --block-summary');
-      }
-      options.blockSummaryFile = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--minimal-summary') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --minimal-summary');
-      }
-      options.minimalSummaryFile = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--dry-run') {
-      options.dryRun = true;
+
+    if (isMockConsumerStartupTriageFlagArg(arg)) {
+      applyMockConsumerStartupTriageFlagArg({
+        options,
+      });
       continue;
     }
 
