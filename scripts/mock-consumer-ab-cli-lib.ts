@@ -1,85 +1,41 @@
 import {
-  DEFAULT_MOCK_CONSUMER_AB_BLOCK_EVIDENCE_FILE,
-  DEFAULT_MOCK_CONSUMER_AB_BLOCK_SUMMARY,
-  DEFAULT_MOCK_CONSUMER_AB_MINIMAL_EVIDENCE_FILE,
-  DEFAULT_MOCK_CONSUMER_AB_MINIMAL_SUMMARY,
-  DEFAULT_MOCK_CONSUMER_AB_OUT_FILE,
-  DEFAULT_MOCK_CONSUMER_AB_REPO,
-  type MockConsumerAbCliOptions,
-} from './mock-consumer-ab-contract';
+  MOCK_CONSUMER_AB_FLAG_ARG_SETTERS,
+  MOCK_CONSUMER_AB_VALUE_ARG_SETTERS,
+  type MockConsumerAbValueArg,
+} from './mock-consumer-ab-cli-arg-setters-lib';
+import { createMockConsumerAbDefaultCliOptions } from './mock-consumer-ab-cli-defaults-lib';
+import type { MockConsumerAbCliOptions } from './mock-consumer-ab-contract';
+
+const readRequiredArgValue = (
+  args: ReadonlyArray<string>,
+  index: number,
+  option: string
+): string => {
+  const value = args[index + 1];
+  if (!value) {
+    throw new Error(`Missing value for ${option}`);
+  }
+  return value;
+};
 
 export const parseMockConsumerAbArgs = (
   args: ReadonlyArray<string>
 ): MockConsumerAbCliOptions => {
-  const options: MockConsumerAbCliOptions = {
-    repo: DEFAULT_MOCK_CONSUMER_AB_REPO,
-    outFile: DEFAULT_MOCK_CONSUMER_AB_OUT_FILE,
-    blockSummaryFile: DEFAULT_MOCK_CONSUMER_AB_BLOCK_SUMMARY,
-    minimalSummaryFile: DEFAULT_MOCK_CONSUMER_AB_MINIMAL_SUMMARY,
-    blockEvidenceFile: DEFAULT_MOCK_CONSUMER_AB_BLOCK_EVIDENCE_FILE,
-    minimalEvidenceFile: DEFAULT_MOCK_CONSUMER_AB_MINIMAL_EVIDENCE_FILE,
-    dryRun: false,
-  };
+  const options: MockConsumerAbCliOptions = createMockConsumerAbDefaultCliOptions();
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
+    if (arg in MOCK_CONSUMER_AB_VALUE_ARG_SETTERS) {
+      const value = readRequiredArgValue(args, index, arg);
+      const setter = MOCK_CONSUMER_AB_VALUE_ARG_SETTERS[arg as MockConsumerAbValueArg];
+      setter(options, value);
+      index += 1;
+      continue;
+    }
 
-    if (arg === '--repo') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --repo');
-      }
-      options.repo = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--out') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --out');
-      }
-      options.outFile = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--block-summary') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --block-summary');
-      }
-      options.blockSummaryFile = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--minimal-summary') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --minimal-summary');
-      }
-      options.minimalSummaryFile = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--block-evidence') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --block-evidence');
-      }
-      options.blockEvidenceFile = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--minimal-evidence') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --minimal-evidence');
-      }
-      options.minimalEvidenceFile = value;
-      index += 1;
-      continue;
-    }
-    if (arg === '--dry-run') {
-      options.dryRun = true;
+    if (arg in MOCK_CONSUMER_AB_FLAG_ARG_SETTERS) {
+      const setter = MOCK_CONSUMER_AB_FLAG_ARG_SETTERS[arg as '--dry-run'];
+      setter(options);
       continue;
     }
 
