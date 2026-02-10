@@ -134,4 +134,5 @@
 - ✅ Phase5 external handoff now surfaces parsed consumer startup signals (`startup_failure_runs`, `startup_stalled_runs`) with regression coverage.
 - ✅ Consumer startup-unblock status now publishes `startup_stalled_runs` as a first-class signal (not only as blocker text), with regression coverage.
 - ✅ Phase 8 runbook now includes an explicit escalation refresh sequence for `phase5-latest` artifacts (probe -> closure -> handoff).
+- ✅ Support bundle now exposes `oldest_queued_run_age_minutes` for stalled-run age evidence (header + support payload + regression test).
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.

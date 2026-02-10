@@ -36,6 +36,7 @@ export const appendConsumerSupportBundleTopSections = (params: {
       runs: params.runs,
       startupFailures: params.context.startupFailures,
       startupStalledRuns: params.context.startupStalledRuns,
+      oldestQueuedRunAgeMinutes: params.context.oldestQueuedRunAgeMinutes,
     })
   );
   params.lines.push(...buildConsumerSupportBundleAuthSectionLines(params.authStatus));

@@ -40,6 +40,7 @@ export const appendConsumerSupportBundleRunSections = (params: {
       runs: params.runs,
       startupFailures: params.context.startupFailures,
       startupStalledRuns: params.context.startupStalledRuns,
+      oldestQueuedRunAgeMinutes: params.context.oldestQueuedRunAgeMinutes,
       sampleRuns: params.context.sampleRuns,
     })
   );
