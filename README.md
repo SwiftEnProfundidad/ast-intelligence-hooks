@@ -13,6 +13,8 @@ Pumuki enforces consistent engineering standards across platforms and delivery s
 The framework is designed for reproducibility, CI parity, and auditability.
 
 Documentation index: `docs/README.md`
+Release notes: `docs/RELEASE_NOTES.md`
+Package changelog: `CHANGELOG.md`
 
 ## Core Guarantees
 
