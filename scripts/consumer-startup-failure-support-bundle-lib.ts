@@ -1,8 +1,11 @@
 import {
-  DEFAULT_CONSUMER_SUPPORT_BUNDLE_LIMIT,
-  DEFAULT_CONSUMER_SUPPORT_BUNDLE_OUT_FILE,
   type ConsumerSupportBundleCliOptions,
 } from './consumer-support-bundle-contract';
+import { createConsumerSupportBundleDefaultOptions } from './consumer-support-bundle-args-defaults-lib';
+import {
+  applyConsumerSupportBundleValueArg,
+  isConsumerSupportBundleValueArg,
+} from './consumer-support-bundle-args-values-lib';
 export {
   DEFAULT_CONSUMER_SUPPORT_BUNDLE_LIMIT,
   DEFAULT_CONSUMER_SUPPORT_BUNDLE_OUT_FILE,
@@ -21,45 +24,20 @@ export { buildConsumerSupportBundleMarkdown } from './consumer-support-bundle-ma
 export const parseConsumerSupportBundleArgs = (
   args: ReadonlyArray<string>
 ): ConsumerSupportBundleCliOptions => {
-  const options: ConsumerSupportBundleCliOptions = {
-    repo: '',
-    limit: DEFAULT_CONSUMER_SUPPORT_BUNDLE_LIMIT,
-    outFile: DEFAULT_CONSUMER_SUPPORT_BUNDLE_OUT_FILE,
-  };
+  const options: ConsumerSupportBundleCliOptions = createConsumerSupportBundleDefaultOptions();
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
-
-    if (arg === '--repo') {
+    if (isConsumerSupportBundleValueArg(arg)) {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --repo');
+        throw new Error(`Missing value for ${arg}`);
       }
-      options.repo = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--limit') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --limit');
-      }
-      const parsed = Number.parseInt(value, 10);
-      if (!Number.isFinite(parsed) || parsed <= 0) {
-        throw new Error(`Invalid --limit value: ${value}`);
-      }
-      options.limit = parsed;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--out') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --out');
-      }
-      options.outFile = value;
+      applyConsumerSupportBundleValueArg({
+        options,
+        arg,
+        value,
+      });
       index += 1;
       continue;
     }
