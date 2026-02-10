@@ -3,22 +3,8 @@ import type {
   ConsumerStartupUnblockSummary,
   ParsedWorkflowLintReport,
 } from './consumer-startup-unblock-contract';
-import { parseConsumerStartupUnblockInteger } from './consumer-startup-unblock-contract';
-
-const hasUserScopeGap = (auth?: ParsedAuthReport): boolean => {
-  const missingScopes = (auth?.missingScopes ?? '')
-    .toLowerCase()
-    .split(',')
-    .map((scope) => scope.trim())
-    .filter((scope) => scope.length > 0);
-
-  if (missingScopes.includes('user')) {
-    return true;
-  }
-
-  const billingError = (auth?.billingError ?? '').toLowerCase();
-  return billingError.includes('user scope') || billingError.includes('"user" scope');
-};
+import { collectConsumerStartupUnblockBlockers } from './consumer-startup-unblock-blockers-lib';
+import { hasConsumerStartupUnblockUserScopeGap } from './consumer-startup-unblock-auth-lib';
 
 export const summarizeConsumerStartupUnblock = (params: {
   hasSupportBundle: boolean;
@@ -43,41 +29,24 @@ export const summarizeConsumerStartupUnblock = (params: {
       blockers: missingInputs,
       startupFailureRuns: undefined,
       authVerdict: params.auth?.verdict,
-      missingUserScope: hasUserScopeGap(params.auth),
+      missingUserScope: hasConsumerStartupUnblockUserScopeGap(params.auth),
       lintFindingsCount: params.workflowLint?.findingsCount ?? 0,
     };
   }
 
-  const startupFailureRuns = parseConsumerStartupUnblockInteger(
-    params.support?.startupFailureRuns
-  );
-  if (startupFailureRuns === undefined) {
-    blockers.push('Unable to determine startup_failure_runs from support bundle');
-  } else if (startupFailureRuns > 0) {
-    blockers.push(`Startup failures still present (${startupFailureRuns})`);
-  }
-
-  const authVerdict = params.auth?.verdict?.trim();
-  if (authVerdict && authVerdict.toUpperCase() !== 'READY') {
-    blockers.push(`Auth report verdict is ${authVerdict}`);
-  }
-
-  const missingUserScope = hasUserScopeGap(params.auth);
-  if (missingUserScope) {
-    blockers.push('Missing user scope for billing/account diagnostics');
-  }
-
-  const lintFindingsCount = params.workflowLint?.findingsCount ?? 0;
-  if (lintFindingsCount > 0) {
-    blockers.push(`Workflow lint report still has findings (${lintFindingsCount})`);
-  }
+  const summaryInputs = collectConsumerStartupUnblockBlockers({
+    support: params.support,
+    auth: params.auth,
+    workflowLint: params.workflowLint,
+  });
+  blockers.push(...summaryInputs.blockers);
 
   return {
     verdict: blockers.length === 0 ? 'READY_FOR_RETEST' : 'BLOCKED',
     blockers,
-    startupFailureRuns,
-    authVerdict,
-    missingUserScope,
-    lintFindingsCount,
+    startupFailureRuns: summaryInputs.startupFailureRuns,
+    authVerdict: summaryInputs.authVerdict,
+    missingUserScope: summaryInputs.missingUserScope,
+    lintFindingsCount: summaryInputs.lintFindingsCount,
   };
 };

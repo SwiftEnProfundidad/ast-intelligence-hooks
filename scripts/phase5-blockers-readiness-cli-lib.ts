@@ -1,5 +1,12 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import {
+  applyPhase5BlockersReadinessFlagArg,
+  isPhase5BlockersReadinessFlagArg,
+} from './phase5-blockers-readiness-arg-flags-lib';
+import {
+  applyPhase5BlockersReadinessValueArg,
+  isPhase5BlockersReadinessValueArg,
+} from './phase5-blockers-readiness-arg-values-lib';
+export { readPhase5BlockersReadinessInput } from './phase5-blockers-readiness-input-lib';
 
 export type Phase5BlockersReadinessCliOptions = {
   adapterReportFile: string;
@@ -26,39 +33,24 @@ export const parsePhase5BlockersReadinessArgs = (
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
-
-    if (arg === '--adapter-report') {
+    if (isPhase5BlockersReadinessValueArg(arg)) {
       const value = args[index + 1];
       if (!value) {
-        throw new Error('Missing value for --adapter-report');
+        throw new Error(`Missing value for ${arg}`);
       }
-      options.adapterReportFile = value;
+      applyPhase5BlockersReadinessValueArg({
+        options,
+        arg,
+        value,
+      });
       index += 1;
       continue;
     }
 
-    if (arg === '--consumer-triage-report') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --consumer-triage-report');
-      }
-      options.consumerTriageReportFile = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--out') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --out');
-      }
-      options.outFile = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--require-adapter-report') {
-      options.requireAdapterReport = true;
+    if (isPhase5BlockersReadinessFlagArg(arg)) {
+      applyPhase5BlockersReadinessFlagArg({
+        options,
+      });
       continue;
     }
 
@@ -66,19 +58,4 @@ export const parsePhase5BlockersReadinessArgs = (
   }
 
   return options;
-};
-
-export const readPhase5BlockersReadinessInput = (
-  cwd: string,
-  pathLike: string
-): { exists: boolean; content?: string } => {
-  const absolute = resolve(cwd, pathLike);
-  if (!existsSync(absolute)) {
-    return { exists: false };
-  }
-
-  return {
-    exists: true,
-    content: readFileSync(absolute, 'utf8'),
-  };
 };

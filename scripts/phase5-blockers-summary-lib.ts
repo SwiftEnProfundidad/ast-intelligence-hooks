@@ -3,7 +3,8 @@ import type {
   ParsedConsumerStartupTriageReport,
   Phase5BlockersSummary,
 } from './phase5-blockers-contract';
-import { dedupePhase5BlockersValues } from './phase5-blockers-contract';
+import { collectPhase5DetectedBlockers } from './phase5-blockers-detected-blockers-lib';
+import { collectPhase5BlockersMissingInputs } from './phase5-blockers-missing-inputs-lib';
 
 export const summarizePhase5Blockers = (params: {
   hasAdapterReport: boolean;
@@ -12,16 +13,12 @@ export const summarizePhase5Blockers = (params: {
   consumer?: ParsedConsumerStartupTriageReport;
   requireAdapterReport?: boolean;
 }): Phase5BlockersSummary => {
-  const blockers: string[] = [];
-  const missingInputs: string[] = [];
   const adapterRequired = params.requireAdapterReport ?? false;
-
-  if (adapterRequired && !params.hasAdapterReport) {
-    missingInputs.push('Missing Adapter real-session report');
-  }
-  if (!params.hasConsumerTriageReport) {
-    missingInputs.push('Missing consumer startup triage report');
-  }
+  const missingInputs = collectPhase5BlockersMissingInputs({
+    hasAdapterReport: params.hasAdapterReport,
+    hasConsumerTriageReport: params.hasConsumerTriageReport,
+    adapterRequired,
+  });
 
   if (missingInputs.length > 0) {
     return {
@@ -34,29 +31,15 @@ export const summarizePhase5Blockers = (params: {
     };
   }
 
-  if (params.hasAdapterReport && params.adapter?.validationResult !== 'PASS') {
-    blockers.push(
-      `Adapter real-session validation is ${params.adapter?.validationResult ?? 'unknown'}`
-    );
-  }
-
-  if (params.hasAdapterReport && params.adapter?.nodeCommandNotFound) {
-    blockers.push('Adapter runtime still reports node command resolution failures');
-  }
-
-  if (params.consumer?.verdict !== 'READY') {
-    blockers.push(
-      `Consumer startup triage verdict is ${params.consumer?.verdict ?? 'unknown'}`
-    );
-  }
-
-  for (const step of params.consumer?.requiredFailedSteps ?? []) {
-    blockers.push(`Consumer triage required step failed: ${step}`);
-  }
+  const blockers = collectPhase5DetectedBlockers({
+    hasAdapterReport: params.hasAdapterReport,
+    adapter: params.adapter,
+    consumer: params.consumer,
+  });
 
   return {
     verdict: blockers.length === 0 ? 'READY' : 'BLOCKED',
-    blockers: dedupePhase5BlockersValues(blockers),
+    blockers,
     adapterValidationResult: params.adapter?.validationResult,
     consumerTriageVerdict: params.consumer?.verdict,
     adapterRequired,
