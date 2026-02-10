@@ -17,6 +17,7 @@ Persistent GitHub Actions `startup_failure` with no jobs in private repository
 GitHub Actions runs consistently fail with:
 
 - `conclusion: startup_failure`
+- queued/stalled runs accumulating (`status: queued`, no conclusion)
 - no jobs created (`jobs.total_count = 0`)
 - no check runs (`latest_check_runs_count = 0`)
 - artifact endpoint empty (`total_count = 0`)
@@ -30,6 +31,11 @@ Run URLs (examples):
 - `<run_url_1>`
 - `<run_url_2>`
 - `<run_url_3>`
+
+Counters snapshot (from latest support bundle):
+
+- `startup_failure_runs: <n>`
+- `startup_stalled_runs: <n>`
 
 API metadata sample:
 
@@ -66,5 +72,7 @@ Please check account/repository-level controls for private Actions execution (bi
 ## Attachments
 
 - CI artifact scan report markdown
+- startup support bundle markdown
+- startup unblock status markdown
 - workflow lint report markdown
 - startup-fix experiment report markdown
