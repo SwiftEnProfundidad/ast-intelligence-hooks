@@ -61,6 +61,7 @@ Language baseline: active repository documentation is maintained in English.
 
 - `RELEASE_NOTES.md`: v2.x release notes and rollout checkpoints.
 - `TODO.md`: active operational work tracking.
+- `REFRACTOR_PROGRESS.md`: linear phase-by-phase status (done/in-progress/pending).
 
 ## Root-Level Pointers
 
