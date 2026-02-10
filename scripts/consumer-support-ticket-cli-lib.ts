@@ -1,70 +1,46 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import {
+  CONSUMER_SUPPORT_TICKET_VALUE_ARG_SETTERS,
+  type ConsumerSupportTicketValueArg,
+} from './consumer-support-ticket-cli-arg-setters-lib';
+import {
+  type ConsumerSupportTicketCliOptions,
+} from './consumer-support-ticket-cli-contract';
+import { createConsumerSupportTicketDefaultOptions } from './consumer-support-ticket-cli-defaults-lib';
 
-export type ConsumerSupportTicketCliOptions = {
-  repo: string;
-  supportBundleFile: string;
-  authReportFile: string;
-  outFile: string;
+export type { ConsumerSupportTicketCliOptions } from './consumer-support-ticket-cli-contract';
+export {
+  DEFAULT_CONSUMER_SUPPORT_TICKET_AUTH_REPORT_FILE,
+  DEFAULT_CONSUMER_SUPPORT_TICKET_OUT_FILE,
+  DEFAULT_CONSUMER_SUPPORT_TICKET_REPO,
+  DEFAULT_CONSUMER_SUPPORT_TICKET_SUPPORT_BUNDLE_FILE,
+} from './consumer-support-ticket-cli-contract';
+
+const readRequiredArgValue = (
+  args: ReadonlyArray<string>,
+  index: number,
+  option: string
+): string => {
+  const value = args[index + 1];
+  if (!value) {
+    throw new Error(`Missing value for ${option}`);
+  }
+  return value;
 };
-
-export const DEFAULT_CONSUMER_SUPPORT_TICKET_REPO = 'owner/repo';
-export const DEFAULT_CONSUMER_SUPPORT_TICKET_SUPPORT_BUNDLE_FILE =
-  '.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md';
-export const DEFAULT_CONSUMER_SUPPORT_TICKET_AUTH_REPORT_FILE =
-  '.audit-reports/consumer-triage/consumer-ci-auth-check.md';
-export const DEFAULT_CONSUMER_SUPPORT_TICKET_OUT_FILE =
-  '.audit-reports/consumer-triage/consumer-support-ticket-draft.md';
 
 export const parseConsumerSupportTicketArgs = (
   args: ReadonlyArray<string>
 ): ConsumerSupportTicketCliOptions => {
-  const options: ConsumerSupportTicketCliOptions = {
-    repo: DEFAULT_CONSUMER_SUPPORT_TICKET_REPO,
-    supportBundleFile: DEFAULT_CONSUMER_SUPPORT_TICKET_SUPPORT_BUNDLE_FILE,
-    authReportFile: DEFAULT_CONSUMER_SUPPORT_TICKET_AUTH_REPORT_FILE,
-    outFile: DEFAULT_CONSUMER_SUPPORT_TICKET_OUT_FILE,
-  };
+  const options: ConsumerSupportTicketCliOptions = createConsumerSupportTicketDefaultOptions();
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
-
-    if (arg === '--repo') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --repo');
-      }
-      options.repo = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--support-bundle') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --support-bundle');
-      }
-      options.supportBundleFile = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--auth-report') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --auth-report');
-      }
-      options.authReportFile = value;
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--out') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --out');
-      }
-      options.outFile = value;
+    if (arg in CONSUMER_SUPPORT_TICKET_VALUE_ARG_SETTERS) {
+      const value = readRequiredArgValue(args, index, arg);
+      const setter =
+        CONSUMER_SUPPORT_TICKET_VALUE_ARG_SETTERS[arg as ConsumerSupportTicketValueArg];
+      setter(options, value);
       index += 1;
       continue;
     }

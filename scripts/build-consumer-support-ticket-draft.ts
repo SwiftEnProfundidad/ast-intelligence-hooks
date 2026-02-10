@@ -1,39 +1,23 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { parseConsumerSupportTicketArgs } from './consumer-support-ticket-cli-lib';
 import {
-  parseConsumerSupportTicketArgs,
-  resolveRequiredConsumerSupportTicketFile,
-} from './consumer-support-ticket-cli-lib';
-import { buildSupportTicketDraft } from './consumer-support-ticket-draft-lib';
-import { parseAuthReport, parseSupportBundle } from './consumer-support-ticket-parser-lib';
+  buildConsumerSupportTicketDraftFromOptions,
+  writeConsumerSupportTicketDraft,
+} from './consumer-support-ticket-runner-lib';
 
 const main = (): number => {
   const cwd = process.cwd();
   const options = parseConsumerSupportTicketArgs(process.argv.slice(2));
 
-  const supportBundlePath = resolveRequiredConsumerSupportTicketFile(
+  const draft = buildConsumerSupportTicketDraftFromOptions({
     cwd,
-    options.supportBundleFile
-  );
-  const authReportPath = resolveRequiredConsumerSupportTicketFile(
-    cwd,
-    options.authReportFile
-  );
-
-  const supportBundle = readFileSync(supportBundlePath, 'utf8');
-  const authReport = readFileSync(authReportPath, 'utf8');
-
-  const draft = buildSupportTicketDraft({
-    repo: options.repo,
-    supportBundlePath: options.supportBundleFile,
-    authReportPath: options.authReportFile,
-    support: parseSupportBundle(supportBundle),
-    auth: parseAuthReport(authReport),
+    options,
   });
 
-  const outputPath = resolve(cwd, options.outFile);
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, draft, 'utf8');
+  const outputPath = writeConsumerSupportTicketDraft({
+    cwd,
+    outFile: options.outFile,
+    draft,
+  });
 
   process.stdout.write(`consumer support ticket draft generated at ${outputPath}\n`);
   return 0;
