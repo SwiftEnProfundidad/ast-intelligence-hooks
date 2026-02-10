@@ -117,6 +117,35 @@ Latest controlled probe run URL:
 
 - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21885160081`
 
+## Escalation Refresh Sequence (Phase5 Latest)
+
+Use this sequence to refresh the latest escalation evidence before opening/continuing a support case:
+
+```bash
+# 1) Trigger a controlled probe run (consumer private repo)
+gh workflow run health.yml --repo <owner>/<repo>
+
+# 2) Recompute phase5 latest closure chain (consumer side only)
+npx --yes tsx@4.21.0 scripts/run-phase5-execution-closure.ts \
+  --repo <owner>/<repo> \
+  --limit 5 \
+  --out-dir .audit-reports/phase5-latest \
+  --skip-adapter \
+  --skip-workflow-lint
+
+# 3) Regenerate external handoff with explicit run URLs
+npx --yes tsx@4.21.0 scripts/build-phase5-external-handoff.ts \
+  --repo <owner>/<repo> \
+  --phase5-status-report .audit-reports/phase5-latest/phase5-execution-closure-status.md \
+  --phase5-blockers-report .audit-reports/phase5-latest/phase5-blockers-readiness.md \
+  --consumer-unblock-report .audit-reports/phase5-latest/consumer-startup-unblock-status.md \
+  --mock-ab-report .audit-reports/phase5/mock-consumer-ab-report.md \
+  --run-report .audit-reports/phase5-latest/phase5-execution-closure-run-report.md \
+  --artifact-url <run_url_1> \
+  --artifact-url <run_url_2> \
+  --out .audit-reports/phase5-latest/phase5-external-handoff.md
+```
+
 ## Related References
 
 - `docs/validation/phase5-execution-closure.md`
