@@ -5,6 +5,15 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### Documentation governance hardening
+
+- Active docs quality guardrails expanded and integrated into stage-gates:
+  - English-only baseline check for active enterprise docs.
+  - Markdown reference-integrity check for active docs.
+  - Root governance docs (`README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `CLAUDE.md`) included in active-doc guardrails.
+- Stage-gates command simplified to glob-based test targets for maintainability while preserving deterministic coverage.
+- Root `CHANGELOG.md` normalized to active enterprise v2 baseline to avoid legacy drift.
+
 ### Deterministic gate foundation
 
 - Shared execution flow consolidated in `integrations/git/runPlatformGate.ts`.
