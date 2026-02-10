@@ -2,81 +2,81 @@
 
 ## Legend
 
-- ✅ Hecho
-- 🚧 En construcción
-- ⏳ Pendiente
+- ✅ Done
+- 🚧 In progress
+- ⏳ Pending
 
 ## Phase 1 - Deterministic Core + Evidence v2.1
 
-- ✅ Arquitectura determinista activa: `Facts -> Rules -> Gate -> ai_evidence v2.1`.
-- ✅ Schema `ai_evidence` v2.1 (`snapshot + ledger`) implementado como source of truth.
-- ✅ Serialización de evidencia estable (orden determinista).
-- ✅ Preservación de intent humano y expiración soportadas.
+- ✅ Deterministic architecture is active: `Facts -> Rules -> Gate -> ai_evidence v2.1`.
+- ✅ `ai_evidence` v2.1 schema (`snapshot + ledger`) is implemented as source of truth.
+- ✅ Evidence serialization is stable and deterministic.
+- ✅ Human intent preservation and expiry are supported.
 
 ## Phase 2 - Stage Policies + Shared Runners
 
-- ✅ Policies por stage consolidadas (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
-- ✅ Flujo compartido de ejecución centralizado en `integrations/git/runPlatformGate.ts`.
-- ✅ Runners unificados en `integrations/git/stageRunners.ts`.
-- ✅ Salida de gate normalizada a `0/1`.
+- ✅ Stage policies are consolidated (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
+- ✅ Shared execution flow is centralized in `integrations/git/runPlatformGate.ts`.
+- ✅ Runners are unified in `integrations/git/stageRunners.ts`.
+- ✅ Gate output is normalized to `0/1`.
 
 ## Phase 3 - Multi-platform Gate (iOS, Backend, Frontend, Android)
 
-- ✅ `PRE_COMMIT` implementado para iOS, backend, frontend y android.
-- ✅ `PRE_PUSH` implementado para iOS, backend, frontend y android.
-- ✅ `CI` implementado para iOS, backend, frontend y android.
-- ✅ Detección combinada de plataformas activa (`integrations/platform/detectPlatforms.ts`).
+- ✅ `PRE_COMMIT` is implemented for iOS, backend, frontend, and android.
+- ✅ `PRE_PUSH` is implemented for iOS, backend, frontend, and android.
+- ✅ `CI` is implemented for iOS, backend, frontend, and android.
+- ✅ Combined platform detection is active (`integrations/platform/detectPlatforms.ts`).
 
 ## Phase 4 - Rule Packs + Skills Enforcement
 
-- ✅ Rule packs baseline disponibles (ios, backend, frontend, android, heuristics).
-- ✅ Versionado de rule packs definido (`core/rules/presets/rulePackVersions.ts`).
-- ✅ Skills lock/policy compiler + validadores integrados en gate.
-- ✅ Promoción de severidad por stage para heurísticas críticas implementada.
+- ✅ Baseline rule packs are available (ios, backend, frontend, android, heuristics).
+- ✅ Rule pack versioning is defined (`core/rules/presets/rulePackVersions.ts`).
+- ✅ Skills lock/policy compiler and validators are integrated in the gate flow.
+- ✅ Stage-aware severity promotion for critical heuristics is implemented.
 
 ## Phase 5 - CI/Packaging Reliability
 
-- ✅ Workflows CI ejecutan gate stages y publican artefactos de evidencia.
-- ✅ Guardrail de manifiesto de paquete activo.
-- ✅ Smoke de paquete (`block` + `minimal`) en verde.
-- ✅ Comando stage-gates simplificado y determinista.
+- ✅ CI workflows run gate stages and publish evidence artifacts.
+- ✅ Package manifest guardrail is active.
+- ✅ Package smoke (`block` + `minimal`) is green.
+- ✅ Stage-gates command is simplified and deterministic.
 
 ## Phase 6 - CLI / Operational UX
 
-- ✅ Menú interactivo del framework implementado (`scripts/framework-menu.ts` + módulos).
-- ✅ Orquestación one-shot de cierre Phase 5 disponible (`validation:phase5-execution-closure`).
-- ✅ Scripts operativos de triage/soporte/unblock implementados.
-- ✅ Reporte A/B para mock consumer implementado.
+- ✅ Interactive framework menu is implemented (`scripts/framework-menu.ts` + modules).
+- ✅ One-shot Phase 5 closure orchestration is available (`validation:phase5-execution-closure`).
+- ✅ Operational triage/support/unblock scripts are implemented.
+- ✅ Mock consumer A/B report generation is implemented.
 
 ## Phase 7 - Documentation Governance
 
-- ✅ Guardrail de cobertura de índice de docs activo.
-- ✅ Guardrail de neutralidad proveedor/IDE activo.
-- ✅ Guardrail English-only activo.
-- ✅ Guardrail de integridad de referencias markdown activo.
-- ✅ Guardrail baseline para markdown root activo.
-- ✅ `CHANGELOG.md` normalizado al baseline enterprise v2.
+- ✅ Docs index coverage guardrail is active.
+- ✅ Provider/IDE-agnostic guardrail is active.
+- ✅ English-only guardrail is active.
+- ✅ Markdown reference integrity guardrail is active.
+- ✅ Root markdown baseline guardrail is active.
+- ✅ `CHANGELOG.md` is normalized to the enterprise v2 baseline.
 
 ## Phase 8 - External Validation / Rollout Closure
 
-- 🚧 Desbloqueo de startup-failure en consumer privado pendiente de rerun con diagnóstico fresco.
-- 🚧 Handoff externo de Phase 5 pendiente de artefactos y URLs finales.
-- 🚧 Validación real de hooks pre/post tool en sesión externa pendiente (`node: command not found`).
+- 🚧 Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
+- 🚧 External Phase 5 handoff is pending final artifacts and URLs.
+- 🚧 Real external pre/post tool hook runtime validation is pending (`node: command not found`).
 
 ## Phase 9 - Advanced AST Heuristics
 
-- ✅ Heurísticas AST tipadas iniciales activas.
-- 🚧 Expansión de heurísticas semánticas de alto valor en curso.
-- ⏳ Extensión incremental adicional tras cierre de rollout externo.
+- ✅ Initial typed AST heuristics are active.
+- 🚧 High-value semantic heuristics expansion is in progress.
+- ⏳ Additional incremental expansion is pending after external rollout closure.
 
 ## Phase 10 - MCP / Context API Expansion
 
-- ✅ Servidor MCP read-only para evidencia implementado.
-- 🚧 Superficie API de contexto ampliada parcialmente (`summary`, `rulesets`, `platforms`) y en evolución.
-- ⏳ Patrones formales de consumo cross-agent pendientes.
+- ✅ Read-only MCP evidence server is implemented.
+- 🚧 Context API surface is partially expanded (`summary`, `rulesets`, `platforms`) and evolving.
+- ⏳ Formal cross-agent consumption patterns are pending.
 
 ## Current Focus
 
-- 🚧 Cerrar bloqueadores externos de rollout (consumer privado + handoff).
-- 🚧 Completar validación real de runtime de hooks pre/post tool.
-- 🚧 Mantener guardrails de docs/quality en verde mientras se cierran bloqueadores.
+- 🚧 Close external rollout blockers (private consumer + handoff).
+- 🚧 Complete real external pre/post tool hook runtime validation.
+- 🚧 Keep docs/quality guardrails green while blockers are being closed.
