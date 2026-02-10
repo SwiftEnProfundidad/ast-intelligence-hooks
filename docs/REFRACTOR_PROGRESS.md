@@ -61,20 +61,21 @@
 
 - ✅ External rollout execution pack is published (`docs/validation/phase8-external-rollout-pack.md`).
 - ✅ Local adapter runtime baseline was regenerated (`adapter-session-status`, `adapter-real-session-report`, `adapter-readiness`).
-- 🚧 Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
-- 🚧 External Phase 5 handoff is pending final artifacts and URLs.
-- 🚧 Real external pre/post tool hook runtime validation is pending (`node: command not found`).
+- ✅ Adapter hook runtime wiring was refreshed (`install:adapter-hooks-config`) and Node resolution is healthy (`node_bin=/opt/homebrew/bin/node`).
+- ⏳ Private consumer startup-failure unblock is pending rerun with fresh diagnostics.
+- ⏳ External Phase 5 handoff is pending final artifacts and URLs.
+- 🚧 Real external pre/post tool hook runtime validation is pending (missing real `pre_write` events in external session).
 
 ## Phase 9 - Advanced AST Heuristics
 
 - ✅ Initial typed AST heuristics are active.
-- 🚧 High-value semantic heuristics expansion is in progress.
+- ⏳ High-value semantic heuristics expansion is pending after external rollout closure.
 - ⏳ Additional incremental expansion is pending after external rollout closure.
 
 ## Phase 10 - MCP / Context API Expansion
 
 - ✅ Read-only MCP evidence server is implemented.
-- 🚧 Context API surface is partially expanded (`summary`, `rulesets`, `platforms`) and evolving.
+- ⏳ Context API surface incremental expansion (`summary`, `rulesets`, `platforms`) is pending continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
@@ -83,5 +84,6 @@
 - ✅ Document formal cross-agent MCP context consumption pattern.
 - ✅ Regenerate local adapter runtime baseline and capture blockers.
 - ✅ Run MCP/deterministic regression batch after context API expansion.
+- ✅ Normalize progress board to single-active-task model (`1x 🚧` only).
 - 🚧 Complete real external pre/post tool hook runtime validation and regenerate adapter readiness.
 - ⏳ Re-run external Phase 5 closure and attach final artifact URLs for handoff.

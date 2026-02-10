@@ -64,10 +64,14 @@ For full historical execution details, see:
 ## Active Work
 
 - [ ] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
+  - Runtime wiring refreshed and validated:
+    - `npm run install:adapter-hooks-config` => PASS
+    - `npm run verify:adapter-hooks-runtime` => PASS (`node_bin=/opt/homebrew/bin/node`)
   - Local baseline regenerated:
     - `.audit-reports/adapter/adapter-session-status.md` (verdict: BLOCKED)
     - `.audit-reports/adapter/adapter-real-session-report.md`
     - `.audit-reports/adapter/adapter-readiness.md` (verdict: BLOCKED)
+    - blocker remains: `pre_write` effective events are still `0` in current session window.
   - Regression batch completed after MCP context expansion:
     - `npm run test:mcp` => PASS
     - `npm run test:deterministic` => PASS
