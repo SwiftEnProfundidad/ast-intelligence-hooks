@@ -1,47 +1,17 @@
-import { resolve } from 'node:path';
 import { cleanValidationArtifacts, resolveValidationArtifactTargets } from './clean-validation-artifacts-lib';
-
-type CliOptions = {
-  repoRoot: string;
-  dryRun: boolean;
-};
-
-const parseArgs = (args: ReadonlyArray<string>): CliOptions => {
-  const options: CliOptions = {
-    repoRoot: process.cwd(),
-    dryRun: false,
-  };
-
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-
-    if (arg === '--repo-root') {
-      const value = args[index + 1];
-      if (!value) {
-        throw new Error('Missing value for --repo-root');
-      }
-      options.repoRoot = resolve(value);
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--dry-run') {
-      options.dryRun = true;
-      continue;
-    }
-
-    throw new Error(`Unknown argument: ${arg}`);
-  }
-
-  return options;
-};
+import { parseCleanValidationArtifactsArgs } from './clean-validation-artifacts-cli-lib';
+import {
+  printCleanValidationArtifactsDryRun,
+  printCleanValidationArtifactsNoTargets,
+  printCleanValidationArtifactsRemoved,
+} from './clean-validation-artifacts-output-lib';
 
 const main = (): number => {
-  const options = parseArgs(process.argv.slice(2));
+  const options = parseCleanValidationArtifactsArgs(process.argv.slice(2));
   const targets = resolveValidationArtifactTargets(options.repoRoot);
 
   if (targets.length === 0) {
-    process.stdout.write('validation artifact cleanup: no targets found\n');
+    printCleanValidationArtifactsNoTargets();
     return 0;
   }
 
@@ -51,17 +21,15 @@ const main = (): number => {
   });
 
   if (options.dryRun) {
-    process.stdout.write('validation artifact cleanup dry-run targets:\n');
-    for (const target of result.skipped) {
-      process.stdout.write(`- ${target}\n`);
-    }
+    printCleanValidationArtifactsDryRun({
+      skipped: result.skipped,
+    });
     return 0;
   }
 
-  process.stdout.write('validation artifact cleanup removed:\n');
-  for (const target of result.removed) {
-    process.stdout.write(`- ${target}\n`);
-  }
+  printCleanValidationArtifactsRemoved({
+    removed: result.removed,
+  });
   return 0;
 };
 
