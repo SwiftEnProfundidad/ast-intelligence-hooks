@@ -1,10 +1,16 @@
 import type { Phase5ExternalHandoffSummary } from './phase5-external-handoff-contract';
-import { appendPhase5ExternalHandoffHeaderLines } from './phase5-external-handoff-markdown-header-lib';
-import { appendPhase5ExternalHandoffSections } from './phase5-external-handoff-markdown-sections-append-lib';
+import {
+  appendArtifactUrlsSection,
+  appendBlockersSection,
+  appendInputsSection,
+  appendMissingInputsSection,
+  appendNextActionsSection,
+  appendParsedVerdictsSection,
+  appendWarningsSection,
+} from './phase5-external-handoff-markdown-sections-lib';
 
-export const buildPhase5ExternalHandoffMarkdown = (params: {
-  generatedAt: string;
-  repo: string;
+export const appendPhase5ExternalHandoffSections = (params: {
+  lines: string[];
   phase5StatusReportPath: string;
   phase5BlockersReportPath: string;
   consumerUnblockReportPath: string;
@@ -16,17 +22,9 @@ export const buildPhase5ExternalHandoffMarkdown = (params: {
   hasMockAbReport: boolean;
   hasRunReport: boolean;
   summary: Phase5ExternalHandoffSummary;
-}): string => {
-  const lines: string[] = [];
-
-  appendPhase5ExternalHandoffHeaderLines({
-    lines,
-    generatedAt: params.generatedAt,
-    repo: params.repo,
-    summary: params.summary,
-  });
-  appendPhase5ExternalHandoffSections({
-    lines,
+}): void => {
+  appendInputsSection({
+    lines: params.lines,
     phase5StatusReportPath: params.phase5StatusReportPath,
     phase5BlockersReportPath: params.phase5BlockersReportPath,
     consumerUnblockReportPath: params.consumerUnblockReportPath,
@@ -39,6 +37,28 @@ export const buildPhase5ExternalHandoffMarkdown = (params: {
     hasRunReport: params.hasRunReport,
     summary: params.summary,
   });
-
-  return `${lines.join('\n')}\n`;
+  appendParsedVerdictsSection({
+    lines: params.lines,
+    summary: params.summary,
+  });
+  appendArtifactUrlsSection({
+    lines: params.lines,
+    summary: params.summary,
+  });
+  appendMissingInputsSection({
+    lines: params.lines,
+    summary: params.summary,
+  });
+  appendBlockersSection({
+    lines: params.lines,
+    summary: params.summary,
+  });
+  appendWarningsSection({
+    lines: params.lines,
+    summary: params.summary,
+  });
+  appendNextActionsSection({
+    lines: params.lines,
+    summary: params.summary,
+  });
 };

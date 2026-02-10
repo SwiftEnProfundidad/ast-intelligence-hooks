@@ -6,17 +6,8 @@ import type {
   ConsumerSupportBundleUserActionsBillingResponse,
   ConsumerSupportBundleWorkflowRun,
 } from './consumer-support-bundle-contract';
-import {
-  buildBillingScopeProbeSectionLines,
-  buildRepositoryActionsPolicySectionLines,
-  buildRunDiagnosticsSectionLines,
-  buildRunSummarySectionLines,
-  buildSupportPayloadSectionLines,
-} from './consumer-support-bundle-markdown-sections-lib';
-import {
-  buildConsumerSupportBundleAuthSectionLines,
-  buildConsumerSupportBundleHeaderLines,
-} from './consumer-support-bundle-markdown-top-sections-lib';
+import { createConsumerSupportBundleMarkdownContext } from './consumer-support-bundle-markdown-context-lib';
+import { appendConsumerSupportBundleMarkdownSections } from './consumer-support-bundle-markdown-sections-append-lib';
 
 export const buildConsumerSupportBundleMarkdown = (params: {
   generatedAtIso: string;
@@ -30,53 +21,24 @@ export const buildConsumerSupportBundleMarkdown = (params: {
   runs: ReadonlyArray<ConsumerSupportBundleWorkflowRun>;
   diagnostics: ReadonlyArray<ConsumerSupportBundleRunDiagnostic>;
 }): string => {
-  const startupFailures = params.runs.filter(
-    (run) => run.conclusion === 'startup_failure'
-  );
-  const sampleRuns = startupFailures.slice(0, 3);
-
+  const context = createConsumerSupportBundleMarkdownContext({
+    runs: params.runs,
+  });
   const lines: string[] = [];
-  lines.push(
-    ...buildConsumerSupportBundleHeaderLines({
-      generatedAtIso: params.generatedAtIso,
-      options: params.options,
-      repoInfo: params.repoInfo,
-      runs: params.runs,
-      startupFailures,
-    })
-  );
-  lines.push(...buildConsumerSupportBundleAuthSectionLines(params.authStatus));
-
-  lines.push(
-    ...buildRepositoryActionsPolicySectionLines({
-      actionsPermissions: params.actionsPermissions,
-      actionsPermissionsError: params.actionsPermissionsError,
-    })
-  );
-  lines.push(
-    ...buildBillingScopeProbeSectionLines({
-      billingInfo: params.billingInfo,
-      billingError: params.billingError,
-    })
-  );
-  lines.push(...buildRunSummarySectionLines({ runs: params.runs }));
-  lines.push(
-    ...buildRunDiagnosticsSectionLines({
-      diagnostics: params.diagnostics,
-    })
-  );
-  lines.push(
-    ...buildSupportPayloadSectionLines({
-      options: params.options,
-      repoInfo: params.repoInfo,
-      actionsPermissions: params.actionsPermissions,
-      billingInfo: params.billingInfo,
-      billingError: params.billingError,
-      runs: params.runs,
-      startupFailures,
-      sampleRuns,
-    })
-  );
+  appendConsumerSupportBundleMarkdownSections({
+    lines,
+    generatedAtIso: params.generatedAtIso,
+    options: params.options,
+    authStatus: params.authStatus,
+    repoInfo: params.repoInfo,
+    actionsPermissions: params.actionsPermissions,
+    actionsPermissionsError: params.actionsPermissionsError,
+    billingInfo: params.billingInfo,
+    billingError: params.billingError,
+    runs: params.runs,
+    diagnostics: params.diagnostics,
+    context,
+  });
 
   return `${lines.join('\n')}\n`;
 };
