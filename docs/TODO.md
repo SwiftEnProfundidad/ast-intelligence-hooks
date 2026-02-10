@@ -80,10 +80,15 @@ For full historical execution details, see:
   - Regression batch completed after MCP context expansion:
     - `npm run test:mcp` => PASS
     - `npm run test:deterministic` => PASS
-- [ ] Consumer private-repo Actions startup-failure unblock:
 - [ ] Consumer private-repo Actions startup-failure unblock [ACTIVE]:
-  - Confirm billing/policy state after token refresh with `user` scope.
-  - Re-run consumer CI diagnostics and attach fresh generated outputs.
+  - Current live signals (`.audit-reports/phase5-latest/*`):
+    - `startup_failure_runs: 1`
+    - `startup_stalled_runs: 4`
+    - latest probe: `21885514510` (`queued`, `jobs=0`, `artifacts=0`)
+  - Escalation handoff is ready in repo:
+    - `docs/validation/consumer-startup-escalation-handoff-latest.md`
+  - Pending external action:
+    - obtain platform-side root cause and unblock private Actions startup.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
     - `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/ast-intelligence-hooks --out-dir .audit-reports/phase5 --mock-consumer --require-adapter-readiness`
