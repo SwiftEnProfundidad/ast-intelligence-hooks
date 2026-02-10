@@ -2,6 +2,14 @@ import {
   createDefaultPhase5ExecutionClosureStatusCliOptions,
   type Phase5ExecutionClosureStatusCliOptions,
 } from './phase5-execution-closure-status-cli-contract';
+import {
+  applyPhase5ExecutionClosureStatusFlagArg,
+  isPhase5ExecutionClosureStatusFlagArg,
+} from './phase5-execution-closure-status-arg-flags-lib';
+import {
+  applyPhase5ExecutionClosureStatusValueArg,
+  isPhase5ExecutionClosureStatusValueArg,
+} from './phase5-execution-closure-status-arg-values-lib';
 
 const readRequiredArgValue = (params: {
   args: ReadonlyArray<string>;
@@ -23,48 +31,24 @@ export const parsePhase5ExecutionClosureStatusArgs = (
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
 
-    if (arg === '--phase5-blockers-report') {
-      options.phase5BlockersReportFile = readRequiredArgValue({
-        args,
-        index,
-        arg: '--phase5-blockers-report',
+    if (isPhase5ExecutionClosureStatusValueArg(arg)) {
+      applyPhase5ExecutionClosureStatusValueArg({
+        options,
+        arg,
+        value: readRequiredArgValue({
+          args,
+          index,
+          arg,
+        }),
       });
       index += 1;
       continue;
     }
 
-    if (arg === '--consumer-unblock-report') {
-      options.consumerUnblockReportFile = readRequiredArgValue({
-        args,
-        index,
-        arg: '--consumer-unblock-report',
+    if (isPhase5ExecutionClosureStatusFlagArg(arg)) {
+      applyPhase5ExecutionClosureStatusFlagArg({
+        options,
       });
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--adapter-readiness-report') {
-      options.adapterReadinessReportFile = readRequiredArgValue({
-        args,
-        index,
-        arg: '--adapter-readiness-report',
-      });
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--out') {
-      options.outFile = readRequiredArgValue({
-        args,
-        index,
-        arg: '--out',
-      });
-      index += 1;
-      continue;
-    }
-
-    if (arg === '--require-adapter-readiness') {
-      options.requireAdapterReadiness = true;
       continue;
     }
 
