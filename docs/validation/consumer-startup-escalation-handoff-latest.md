@@ -1,6 +1,6 @@
 # Consumer Startup Escalation Handoff (Latest)
 
-- generated_at: 2026-02-11T12:36:55Z
+- generated_at: 2026-02-11T12:38:50Z
 - target_repo: `SwiftEnProfundidad/pumuki-actions-healthcheck-temp`
 - phase5_latest_verdict_chain:
   - `phase5-blockers-readiness`: `READY`
@@ -12,7 +12,7 @@
 
 - `startup_failure_runs: 0`
 - `startup_stalled_runs: 8`
-- `oldest_queued_run_age_minutes: 523`
+- `oldest_queued_run_age_minutes: 619`
 - latest queued runs still have:
   - `jobs.total_count: 0`
   - `artifacts.total_count: 0`
@@ -49,7 +49,7 @@
 
 - archive: `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 - size: `8.0K`
-- sha256: `e21159a4fde779ea80191f42fac5da70f9ae66860162163926606da99b3ab000`
+- sha256: `fecb231e5110763ba99d51f5cf2936c45e66d61e220be09418fb89a86213aaa8`
 
 ## Escalation Message
 
