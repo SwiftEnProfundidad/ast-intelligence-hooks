@@ -188,6 +188,7 @@
 - ✅ Post-billing reactivation runbook is now versioned and indexed (`docs/validation/phase8-post-billing-reactivation-runbook.md`) for deterministic Phase 8 resume.
 - ✅ Post-billing runbook now includes a single copy/paste operator command block (resume + ready-check) for deterministic execution.
 - ✅ Phase 8 next-step status helper is available (`validation:phase8:next-step`) to print the deterministic command for `BLOCKED` vs `READY`.
+- ✅ Phase 8 doctor helper is available (`validation:phase8:doctor`) to print live signals and deterministic next command in one output.
 - ✅ Phase 8 ready-handoff summary helper is available (`validation:phase8:ready-handoff`) to publish a deterministic final checklist once chain is `READY`.
 - ✅ Phase 8 close-ready helper is available (`validation:phase8:close-ready`) to package READY reports + summary for final handoff publication.
 - ✅ Fresh `phase5-latest` refresh was executed and synced (`latest probe: 21908994603`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 282`, bundle checksum updated).

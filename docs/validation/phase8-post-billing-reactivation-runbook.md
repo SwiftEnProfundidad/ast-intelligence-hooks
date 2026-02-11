@@ -71,6 +71,16 @@ npm run validation:phase8:next-step -- \
   .audit-reports/phase5/mock-consumer-ab-report.md
 ```
 
+Optional diagnostics helper (signals + next command in one output):
+
+```bash
+npm run validation:phase8:doctor -- \
+  .audit-reports/phase5-latest \
+  SwiftEnProfundidad/pumuki-actions-healthcheck-temp \
+  8 \
+  .audit-reports/phase5/mock-consumer-ab-report.md
+```
+
 ## If Still Blocked
 
 1. Refresh latest evidence:
