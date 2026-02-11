@@ -186,6 +186,7 @@
 - ✅ Post-billing resume helper was validated in blocked mode (`latest probe: 21908546076`), confirming deterministic `BLOCKED` exit until billing is reactivated.
 - ✅ `phase5-latest` docs sync now also refreshes Support Ticket Payload counters and run URLs (including checklist URLs) from latest evidence snapshot.
 - ✅ Post-billing reactivation runbook is now versioned and indexed (`docs/validation/phase8-post-billing-reactivation-runbook.md`) for deterministic Phase 8 resume.
+- ✅ Fresh `phase5-latest` refresh was executed and synced (`latest probe: 21908994603`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 282`, bundle checksum updated).
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
