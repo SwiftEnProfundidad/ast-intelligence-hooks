@@ -143,4 +143,5 @@
 - ✅ Retry cycle confirmed external queue-stall persists after cancel attempts (`HTTP 500`), with updated escalation evidence (`startup_stalled_runs=6`).
 - ✅ Escalation templates now include queued-run cancel failure signal (`HTTP 500`) for GitHub support handoff (`consumer-ci-startup-failure-playbook`, `github-support-ticket-template-startup-failure`).
 - ✅ `phase5-latest` support ticket draft was regenerated from refreshed evidence (`startup_failure_runs=0`, `startup_stalled_runs=6`, `oldest_queued_run_age_minutes=442`).
+- ✅ Captured concrete cancel-endpoint failure fingerprint (`HTTP 500` + `x-github-request-id`) in latest escalation handoff and rollout runbook.
 - 🚧 Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.

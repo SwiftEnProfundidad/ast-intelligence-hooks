@@ -25,6 +25,13 @@
 - https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21885160081
 - https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21882829778
 
+## Cancel API Error Sample
+
+- endpoint: `POST /repos/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21890238298/cancel`
+- response: `HTTP 500`
+- message: `Failed to cancel workflow run`
+- x-github-request-id: `8737:1B5457:BB5B2EF:AE05C0B:698BE851`
+
 ## Evidence Bundle (Phase5 Latest)
 
 - `.audit-reports/phase5-latest/consumer-ci-auth-check.md`

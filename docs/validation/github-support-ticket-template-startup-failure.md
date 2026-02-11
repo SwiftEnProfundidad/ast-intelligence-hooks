@@ -51,6 +51,7 @@ API metadata sample:
   - `total_count: 0`
 - `POST /repos/<owner>/<repo>/actions/runs/<run_id>/cancel`
   - `HTTP 500`
+  - `x-github-request-id: <request_id>`
 - `GET /repos/<owner>/<repo>/check-suites/<suite_id>`
   - `conclusion: startup_failure`
   - `latest_check_runs_count: 0`

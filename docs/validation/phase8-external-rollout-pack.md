@@ -113,6 +113,7 @@ Latest regenerated external evidence (`.audit-reports/phase5-latest/*`) remains 
   - `startup_stalled_runs: 6`
   - queued runs still show `jobs.total_count: 0` and `artifacts.total_count: 0`
   - cancel attempts on queued runs return `HTTP 500`
+  - latest cancel request id sample: `8737:1B5457:BB5B2EF:AE05C0B:698BE851`
 
 Latest controlled probe run URL:
 
