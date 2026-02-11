@@ -82,9 +82,9 @@ For full historical execution details, see:
     - `npm run test:deterministic` => PASS
 - [ ] Consumer private-repo Actions startup-failure unblock [ACTIVE]:
   - Current live signals (`.audit-reports/phase5-latest/*`):
-    - `startup_failure_runs: 1`
-    - `startup_stalled_runs: 4`
-    - latest probe: `21885514510` (`queued`, `jobs=0`, `artifacts=0`)
+    - `startup_failure_runs: 0`
+    - `startup_stalled_runs: 5`
+    - latest probe: `21890133679` (`queued`, `jobs=0`, `artifacts=0`)
   - Escalation handoff is ready in repo:
     - `docs/validation/consumer-startup-escalation-handoff-latest.md`
   - Pending external action:
