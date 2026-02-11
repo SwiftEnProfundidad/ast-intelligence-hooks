@@ -76,4 +76,6 @@ When all required reports are `READY`:
 
 1. Mark `P8-3` as done in `docs/REFRACTOR_PROGRESS.md`.
 2. Mark `P8-4` as in progress.
-3. Regenerate final handoff package and publish URLs.
+3. Generate final ready-handoff summary/checklist:
+   - `npm run validation:phase8:ready-handoff -- .audit-reports/phase5-latest`
+4. Regenerate final handoff package and publish URLs.

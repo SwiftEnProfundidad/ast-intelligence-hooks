@@ -112,6 +112,7 @@ For full historical execution details, see:
     - post-submit tracking can be updated with: `npm run validation:phase5-escalation:mark-submitted -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
     - post-support fast close check (resume only after billing reactivation): `npm run validation:phase5-post-support:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
     - one-shot resume helper after billing reactivation: `npm run validation:phase8:resume-after-billing -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - ready handoff summary helper (run only when chain is READY): `npm run validation:phase8:ready-handoff -- .audit-reports/phase5-latest`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
     - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
