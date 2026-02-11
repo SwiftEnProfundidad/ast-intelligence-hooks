@@ -88,6 +88,9 @@ For full historical execution details, see:
     - cancel attempts on queued runs return `HTTP 500`
   - Escalation handoff is ready in repo:
     - `docs/validation/consumer-startup-escalation-handoff-latest.md`
+  - Packaged attachment bundle (ready to share):
+    - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+    - `sha256: c427717153fddd930a5f28f69a13f650ff7f85a89476cc0fe2acf74d4d181083`
   - Pending external action:
     - obtain platform-side root cause and unblock private Actions startup.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):

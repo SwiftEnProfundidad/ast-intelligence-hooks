@@ -147,4 +147,5 @@
 - ✅ Escalation pack artifact was refreshed to `phase5-latest` evidence contract and current blocker semantics (`.audit-reports/phase5/consumer-escalation-pack-latest.md`).
 - ✅ Escalation handoff now includes a ready-to-paste GitHub Support payload with latest counters, run URLs, and cancel error fingerprint.
 - ✅ Created packaged escalation attachment bundle with integrity hash (`.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`, SHA256 recorded in handoff).
+- ✅ Active TODO now references the packaged escalation bundle path + checksum for direct external handoff.
 - 🚧 Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
