@@ -1,6 +1,6 @@
 # Consumer Startup Escalation Handoff (Latest)
 
-- generated_at: 2026-02-11T13:00:40Z
+- generated_at: 2026-02-11T14:15:00Z
 - target_repo: `SwiftEnProfundidad/pumuki-actions-healthcheck-temp`
 - phase5_latest_verdict_chain:
   - `phase5-blockers-readiness`: `READY`
@@ -12,7 +12,7 @@
 
 - `startup_failure_runs: 0`
 - `startup_stalled_runs: 8`
-- `oldest_queued_run_age_minutes: 619`
+- `oldest_queued_run_age_minutes: 306`
 - latest queued runs still have:
   - `jobs.total_count: 0`
   - `artifacts.total_count: 0`
@@ -49,7 +49,7 @@
 
 - archive: `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 - size: `8.0K`
-- sha256: `fecb231e5110763ba99d51f5cf2936c45e66d61e220be09418fb89a86213aaa8`
+- sha256: `5e4e2fc0bbc3f977a463fa576c648969b894b25fb153aeb7223117093f3221ee`
 
 ## Escalation Message
 
@@ -149,7 +149,7 @@ shasum -a 256 .audit-reports/phase5-latest/consumer-startup-escalation-bundle-la
 
 Expected:
 
-- `fecb231e5110763ba99d51f5cf2936c45e66d61e220be09418fb89a86213aaa8  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+- `5e4e2fc0bbc3f977a463fa576c648969b894b25fb153aeb7223117093f3221ee  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 
 And verify required files are present:
 

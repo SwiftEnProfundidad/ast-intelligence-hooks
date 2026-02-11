@@ -182,6 +182,8 @@
 - ✅ Automated portal submission attempt was executed via browser automation; GitHub Support blocks at interactive web sign-in (`/session/login`) with no API/CLI bypass available.
 - ✅ New clean browser session was opened and validated; support landing still requires fresh interactive auth in-session before ticket submission can continue.
 - ✅ Root cause for external startup blockage is now confirmed as inactive/unavailable billing for GitHub Actions in the consumer account; retries are paused until billing is re-enabled.
+- ✅ One-shot resume helper was added for post-billing reactivation (`validation:phase8:resume-after-billing`) to execute refresh + chain validation in one command.
+- ✅ Post-billing resume helper was validated in blocked mode (`latest probe: 21908546076`), confirming deterministic `BLOCKED` exit until billing is reactivated.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
