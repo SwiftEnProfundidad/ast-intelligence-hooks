@@ -185,6 +185,7 @@
 - ✅ One-shot resume helper was added for post-billing reactivation (`validation:phase8:resume-after-billing`) to execute refresh + chain validation in one command.
 - ✅ Post-billing resume helper was validated in blocked mode (`latest probe: 21908546076`), confirming deterministic `BLOCKED` exit until billing is reactivated.
 - ✅ `phase5-latest` docs sync now also refreshes Support Ticket Payload counters and run URLs (including checklist URLs) from latest evidence snapshot.
+- ✅ Post-billing reactivation runbook is now versioned and indexed (`docs/validation/phase8-post-billing-reactivation-runbook.md`) for deterministic Phase 8 resume.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
@@ -193,7 +194,8 @@
 - ✅ `P8-2a` Execute pre-submission verification (bundle checksum + required evidence files) and record result in handoff.
 - ✅ `P8-2b` Submit GitHub Support escalation using packaged evidence bundle and fill `Submission Tracking` fields in handoff (submitted: `4077449` by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`).
 - ✅ `P8-2c` Automate `phase5-latest` docs sync from evidence signals/checksum (`scripts/sync-phase5-latest-docs.sh`, wired into refresh flow).
-- 🚧 `P8-3` Waiting for billing reactivation in consumer account (known external dependency). Once reactivated, re-run post-submission refresh sequence and validate run behavior.
+- ✅ `P8-3a` Publish deterministic post-billing resume runbook and index it in docs (`docs/validation/phase8-post-billing-reactivation-runbook.md`, `docs/README.md`, `docs/TODO.md`).
+- 🚧 `P8-3` Waiting for billing reactivation in consumer account (known external dependency). Once reactivated, execute `validation:phase8:resume-after-billing` and validate `READY` chain.
 - ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker (after billing reactivation + successful `P8-3`).
 - ✅ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).
 - ⏳ `P8-5` Optional adapter external IDE replay evidence capture (deferred).

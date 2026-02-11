@@ -95,6 +95,7 @@ For full historical execution details, see:
   - Pending external action:
     - root cause identified: billing for GitHub Actions is currently inactive/unavailable in consumer account.
     - unblock requires billing reactivation before any meaningful runtime retry.
+    - resume runbook after billing activation: `docs/validation/phase8-post-billing-reactivation-runbook.md`.
     - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).
     - submission sent to GitHub Support: ticket `4077449`, submitted by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`.
     - follow-up ETA registered: `2026-02-12 18:00 UTC`.
