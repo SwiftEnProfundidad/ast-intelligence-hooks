@@ -1,6 +1,6 @@
 # Consumer Startup Escalation Handoff (Latest)
 
-- generated_at: 2026-02-11T21:28:51Z
+- generated_at: 2026-02-11T21:31:18Z
 - target_repo: `SwiftEnProfundidad/pumuki-actions-healthcheck-temp`
 - phase5_latest_verdict_chain:
   - `phase5-blockers-readiness`: `READY`
@@ -12,7 +12,7 @@
 
 - `startup_failure_runs: 0`
 - `startup_stalled_runs: 8`
-- `oldest_queued_run_age_minutes: 16`
+- `oldest_queued_run_age_minutes: 17`
 - latest queued runs still have:
   - `jobs.total_count: 0`
   - `artifacts.total_count: 0`
@@ -49,7 +49,7 @@
 
 - archive: `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 - size: `8.0K`
-- sha256: `9c225e23160c131681f0937f37cf043c16bab46a4dca5999cc877374e7078433`
+- sha256: `30d57fa053187b1bd1627f7a791a5d801f1e2faf18f0b2d8f3793ce56e4b8c71`
 
 ## Escalation Message
 
@@ -74,7 +74,7 @@ Current status:
 Signals:
 - startup_failure_runs: 0
 - startup_stalled_runs: 8
-- oldest_queued_run_age_minutes: 16
+- oldest_queued_run_age_minutes: 17
 - queued runs have jobs.total_count=0 and artifacts.total_count=0
 
 Cancel endpoint sample:
@@ -83,9 +83,9 @@ Cancel endpoint sample:
 - x-github-request-id: 86BD:50C44:E9BB08D:D8B86F4:698C4FC9
 
 Latest run URLs:
+- https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21923815126
 - https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21923734540
 - https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21923657369
-- https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21923584686
 
 Please verify platform-side/account-side controls for private Actions startup (policy, quota/billing, or internal restrictions) and confirm root cause.
 ```
@@ -114,8 +114,8 @@ Use this sequence exactly when submitting in GitHub Support portal:
 2. Attach the packaged evidence archive:
    - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 3. Add latest run URLs (minimum 2) in the case body:
+   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21923815126`
    - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21923734540`
-   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21923657369`
 4. After pressing submit, update `Submission Tracking` in this file:
    - `support_ticket_id: <real id>`
    - `submitted_at_utc: <YYYY-MM-DDTHH:MM:SSZ>`
@@ -149,7 +149,7 @@ shasum -a 256 .audit-reports/phase5-latest/consumer-startup-escalation-bundle-la
 
 Expected:
 
-- `9c225e23160c131681f0937f37cf043c16bab46a4dca5999cc877374e7078433  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+- `30d57fa053187b1bd1627f7a791a5d801f1e2faf18f0b2d8f3793ce56e4b8c71  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 
 And verify required files are present:
 
