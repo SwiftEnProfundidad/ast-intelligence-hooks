@@ -28,6 +28,7 @@ export const buildSupportTicketProblemSummaryLines = (
     '- Runs consistently end with `conclusion: startup_failure`.',
     `- startup_failure_runs observed: ${support.startupFailureRuns ?? 'unknown'}.`,
     `- startup_stalled_runs observed: ${support.startupStalledRuns ?? 'unknown'}.`,
+    `- oldest_queued_run_age_minutes observed: ${support.oldestQueuedRunAgeMinutes ?? 'unknown'}.`,
     `- run metadata path: ${support.path ?? 'unknown'}.`,
     `- jobs.total_count: ${support.jobsCount ?? 'unknown'}.`,
     `- artifacts.total_count: ${support.artifactsCount ?? 'unknown'}.`,

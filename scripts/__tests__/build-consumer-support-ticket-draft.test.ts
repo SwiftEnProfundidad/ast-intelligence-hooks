@@ -48,6 +48,8 @@ test('build-consumer-support-ticket-draft generates deterministic support draft'
         '# Consumer CI Startup Failure Support Bundle',
         '',
         '- startup_failure_runs: 2',
+        '- startup_stalled_runs: 1',
+        '- oldest_queued_run_age_minutes: 90',
         '- path: BuildFailed',
         '- jobs.total_count: 0',
         '- artifacts.total_count: 0',
@@ -86,6 +88,8 @@ test('build-consumer-support-ticket-draft generates deterministic support draft'
     );
     assert.match(report, /# Consumer CI Support Ticket Draft/);
     assert.match(report, /- startup_failure_runs observed: 2\./);
+    assert.match(report, /- startup_stalled_runs observed: 1\./);
+    assert.match(report, /- oldest_queued_run_age_minutes observed: 90\./);
     assert.match(report, /- auth verdict: READY/);
     assert.match(report, /- https:\/\/github.com\/owner\/repo\/actions\/runs\/123/);
   });

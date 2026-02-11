@@ -10,6 +10,7 @@ test('parseSupportBundle extracts startup diagnostics and deduplicates run urls'
 - repo_visibility: \`private\` (private=true)
 - startup_failure_runs: 3
 - startup_stalled_runs: 2
+- oldest_queued_run_age_minutes: 257
 
 https://github.com/acme/repo/actions/runs/100
 https://github.com/acme/repo/actions/runs/100
@@ -27,6 +28,7 @@ https://github.com/acme/repo/actions/runs/101
   assert.equal(parsed.repoVisibility, 'private');
   assert.equal(parsed.startupFailureRuns, '3');
   assert.equal(parsed.startupStalledRuns, '2');
+  assert.equal(parsed.oldestQueuedRunAgeMinutes, '257');
   assert.equal(parsed.path, 'BuildFailed');
   assert.equal(parsed.jobsCount, '0');
   assert.equal(parsed.artifactsCount, '0');
@@ -66,6 +68,7 @@ test('buildSupportTicketDraft renders deterministic support sections with attach
       repoVisibility: 'private',
       startupFailureRuns: '4',
       startupStalledRuns: '3',
+      oldestQueuedRunAgeMinutes: '257',
       runUrls: [
         'https://github.com/acme/repo/actions/runs/1',
         'https://github.com/acme/repo/actions/runs/2',
@@ -86,6 +89,7 @@ test('buildSupportTicketDraft renders deterministic support sections with attach
   assert.match(markdown, /- repository: `acme\/repo`/);
   assert.match(markdown, /startup_failure_runs observed: 4\./);
   assert.match(markdown, /startup_stalled_runs observed: 3\./);
+  assert.match(markdown, /oldest_queued_run_age_minutes observed: 257\./);
   assert.match(markdown, /Sample run URLs:/);
   assert.match(markdown, /https:\/\/github\.com\/acme\/repo\/actions\/runs\/1/);
   assert.match(markdown, /- auth verdict: BLOCKED/);

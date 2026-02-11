@@ -2,6 +2,7 @@ export type ParsedSupportBundle = {
   repoVisibility?: string;
   startupFailureRuns?: string;
   startupStalledRuns?: string;
+  oldestQueuedRunAgeMinutes?: string;
   runUrls: ReadonlyArray<string>;
   path?: string;
   jobsCount?: string;
@@ -50,6 +51,10 @@ export const parseSupportBundle = (markdown: string): ParsedSupportBundle => {
     repoVisibility: extractLineValue(markdown, /- repo_visibility:\s*`([^`]+)`/),
     startupFailureRuns: extractLineValue(markdown, /- startup_failure_runs:\s*([0-9]+)/),
     startupStalledRuns: extractLineValue(markdown, /- startup_stalled_runs:\s*([0-9]+)/),
+    oldestQueuedRunAgeMinutes: extractLineValue(
+      markdown,
+      /- oldest_queued_run_age_minutes:\s*([0-9]+)/
+    ),
     runUrls,
     path: extractLineValue(markdown, /- path:\s*([^\n]+)/),
     jobsCount: extractLineValue(markdown, /- jobs\.total_count:\s*([0-9]+)/),
