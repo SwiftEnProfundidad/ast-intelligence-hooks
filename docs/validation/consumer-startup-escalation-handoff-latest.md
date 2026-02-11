@@ -124,6 +124,9 @@ Use this sequence exactly when submitting in GitHub Support portal:
 6. Optional payload/export command (portal copy/paste + attachments checklist):
    - `npm run validation:phase5-escalation:payload -- .audit-reports/phase5-latest`
    - output: `.audit-reports/phase5-latest/github-support-portal-payload.txt`
+7. Optional deterministic pre-submit gate:
+   - `npm run validation:phase5-escalation:ready-to-submit -- .audit-reports/phase5-latest`
+   - expected exit code: `0` only when readiness, checksum and attachment checklist are aligned.
 
 ## Pre-Submission Verification
 

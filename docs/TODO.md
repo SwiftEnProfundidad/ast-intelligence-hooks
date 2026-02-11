@@ -98,6 +98,7 @@ For full historical execution details, see:
     - submission readiness is `READY_TO_SUBMIT`; blocker is manual portal submission to GitHub Support.
     - follow checklist in `docs/validation/consumer-startup-escalation-handoff-latest.md` (`Manual Portal Submission Checklist`) to avoid missing fields/attachments.
     - payload export helper: `npm run validation:phase5-escalation:payload -- .audit-reports/phase5-latest`.
+    - deterministic pre-submit gate: `npm run validation:phase5-escalation:ready-to-submit -- .audit-reports/phase5-latest`.
     - post-submit tracking can be updated with: `npm run validation:phase5-escalation:mark-submitted -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
     - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
