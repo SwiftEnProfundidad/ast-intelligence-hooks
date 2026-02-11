@@ -100,6 +100,7 @@ For full historical execution details, see:
     - payload export helper: `npm run validation:phase5-escalation:payload -- .audit-reports/phase5-latest`.
     - deterministic pre-submit gate: `npm run validation:phase5-escalation:ready-to-submit -- .audit-reports/phase5-latest`.
     - one-shot pre-submit package helper: `npm run validation:phase5-escalation:prepare -- .audit-reports/phase5-latest`.
+    - latest one-shot preparation run result: `READY PACKAGE` (payload + bundle ready).
     - latest deterministic pre-submit gate run: `READY TO SUBMIT` (checksum + attachments aligned).
     - optional close helper after submission: `npm run validation:phase5-escalation:close-submission -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
     - post-submit tracking can be updated with: `npm run validation:phase5-escalation:mark-submitted -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
