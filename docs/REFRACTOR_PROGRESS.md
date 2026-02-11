@@ -187,9 +187,9 @@
 
 - ⏳ `P8-1` Unblock external consumer startup queue stall and reach `READY` chain (`consumer-startup-unblock-status` + `phase5-execution-closure-status`).
 - ✅ `P8-2a` Execute pre-submission verification (bundle checksum + required evidence files) and record result in handoff.
-- 🚧 `P8-2b` Submit GitHub Support escalation using packaged evidence bundle and fill `Submission Tracking` fields in handoff (current state: `READY_TO_SUBMIT`, awaiting manual portal submission).
+- ✅ `P8-2b` Submit GitHub Support escalation using packaged evidence bundle and fill `Submission Tracking` fields in handoff (submitted: `4077449` by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`).
 - ✅ `P8-2c` Automate `phase5-latest` docs sync from evidence signals/checksum (`scripts/sync-phase5-latest-docs.sh`, wired into refresh flow).
-- ⏳ `P8-3` Re-run post-submission refresh sequence after support feedback and validate new run behavior.
+- 🚧 `P8-3` Re-run post-submission refresh sequence after support feedback and validate new run behavior.
 - ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker.
 - ✅ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).
 - ⏳ `P8-5` Optional adapter external IDE replay evidence capture (deferred).

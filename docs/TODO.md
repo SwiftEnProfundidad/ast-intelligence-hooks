@@ -95,7 +95,8 @@ For full historical execution details, see:
   - Pending external action:
     - obtain platform-side root cause and unblock private Actions startup.
     - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).
-    - submission readiness is `READY_TO_SUBMIT`; blocker is manual portal submission to GitHub Support.
+    - submission sent to GitHub Support: ticket `4077449`, submitted by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`.
+    - follow-up ETA registered: `2026-02-12 18:00 UTC`.
     - automated CLI submission path is not available (`gh support` command does not exist).
     - direct REST submission probes also fail with `404 Not Found` (`/support/tickets`, `/user/support/tickets`).
     - follow checklist in `docs/validation/consumer-startup-escalation-handoff-latest.md` (`Manual Portal Submission Checklist`) to avoid missing fields/attachments.

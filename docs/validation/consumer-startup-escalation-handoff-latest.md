@@ -93,12 +93,12 @@ Please verify platform-side/account-side controls for private Actions startup (p
 ## Submission Tracking
 
 - submission_readiness: `READY_TO_SUBMIT`
-- submission_blocker: `MANUAL_GITHUB_SUPPORT_PORTAL_SUBMISSION`
-- support_ticket_id: `PENDING`
-- submitted_at_utc: `PENDING`
-- submitted_by: `PENDING`
+- submission_blocker: `NONE`
+- support_ticket_id: `4077449`
+- submitted_at_utc: `2026-02-11T13:54:02Z`
+- submitted_by: `SwiftEnProfundidad`
 - support_channel: `GitHub Support`
-- follow_up_eta: `PENDING`
+- follow_up_eta: `2026-02-12 18:00 UTC`
 - pre_submission_verification: `PASS`
 - pre_submission_verified_at_utc: `2026-02-11T09:54:18Z`
 
