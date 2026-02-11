@@ -83,14 +83,14 @@ For full historical execution details, see:
 - [ ] Consumer private-repo Actions startup-failure unblock [ACTIVE]:
   - Current live signals (`.audit-reports/phase5-latest/*`):
     - `startup_failure_runs: 0`
-    - `startup_stalled_runs: 6`
-    - latest probe: `21890238298` (`queued`, `jobs=0`, `artifacts=0`)
+    - `startup_stalled_runs: 7`
+    - latest probe: `21898971835` (`queued`, `jobs=0`, `artifacts=0`)
     - cancel attempts on queued runs return `HTTP 500`
   - Escalation handoff is ready in repo:
     - `docs/validation/consumer-startup-escalation-handoff-latest.md`
   - Packaged attachment bundle (ready to share):
     - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
-    - `sha256: c427717153fddd930a5f28f69a13f650ff7f85a89476cc0fe2acf74d4d181083`
+    - `sha256: f86e9db3d5ce302ea31d39d6a4f1c7e57eccc4c7b12f06222fbcb57a0fcbb213`
   - Pending external action:
     - obtain platform-side root cause and unblock private Actions startup.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
