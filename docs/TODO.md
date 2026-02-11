@@ -131,6 +131,7 @@ For full historical execution details, see:
 - [ ] Documentation hygiene maintenance:
   - Keep only runbooks/guides versioned under `docs/validation/` root.
   - Keep generated reports out of baseline docs and regenerate on demand.
+  - Guardrail command: `npm run validation:progress-single-active` (enforces exactly one `🚧` in `docs/REFRACTOR_PROGRESS.md`).
 
 ## Deferred Adapter Validation
 
