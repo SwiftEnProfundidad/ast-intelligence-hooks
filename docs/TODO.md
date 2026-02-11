@@ -93,7 +93,7 @@ For full historical execution details, see:
     - `sha256: f62cc69715424f173c8fbd67d6d4d59921ad80f19d5772b86ef1786ff5a3fb28`
   - Pending external action:
     - obtain platform-side root cause and unblock private Actions startup.
-    - run pre-submission verification commands in `docs/validation/consumer-startup-escalation-handoff-latest.md` before sending.
+    - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

@@ -97,6 +97,8 @@ Please verify platform-side/account-side controls for private Actions startup (p
 - submitted_by: `PENDING`
 - support_channel: `GitHub Support`
 - follow_up_eta: `PENDING`
+- pre_submission_verification: `PASS`
+- pre_submission_verified_at_utc: `2026-02-11T09:54:18Z`
 
 ## Pre-Submission Verification
 
