@@ -44,6 +44,12 @@
 - `.audit-reports/phase5-latest/phase5-execution-closure-run-report.md`
 - `.audit-reports/phase5-latest/phase5-external-handoff.md`
 
+### Packaged Attachment Bundle
+
+- archive: `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+- size: `6.1K`
+- sha256: `c427717153fddd930a5f28f69a13f650ff7f85a89476cc0fe2acf74d4d181083`
+
 ## Escalation Message
 
 Persistent GitHub Actions startup blockage is reproducible in a private repository using controlled workflow_dispatch probes. Latest runs remain queued/stalled before job graph creation (`jobs=0`, `artifacts=0`) without progressing to normal execution; cancel attempts on queued runs also return `HTTP 500`. Request platform-side verification of account/repository controls for private Actions execution (policy, billing/quota, or internal restrictions) and explicit root cause confirmation.
