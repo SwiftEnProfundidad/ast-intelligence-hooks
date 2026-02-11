@@ -168,6 +168,7 @@
 - ✅ Support portal payload export helper was added (`validation:phase5-escalation:payload`) with automatic attachment checklist generation.
 - ✅ Deterministic pre-submit support gate was added (`validation:phase5-escalation:ready-to-submit`) to validate readiness/checksum/attachments before manual portal submission.
 - ✅ One-shot post-support close helper was added (`validation:phase5-post-support:refresh`) to run refresh + chain-ready validation in one command.
+- ✅ Latest pre-submit gate execution is green on current snapshot (`submission_readiness=READY_TO_SUBMIT`, `pre_submission_verification=PASS`, checksum aligned).
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
