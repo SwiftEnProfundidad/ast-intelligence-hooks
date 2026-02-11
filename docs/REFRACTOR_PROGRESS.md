@@ -164,6 +164,7 @@
 - ✅ Manual GitHub Support portal execution checklist was embedded in handoff with exact payload/attachment/update steps to close `P8-2b` deterministically.
 - ✅ Submission-tracking automation command was added (`validation:phase5-escalation:mark-submitted`) to stamp ticket metadata in handoff without manual editing.
 - ✅ Fresh `phase5-latest` refresh was rerun and escalation docs were resynced (`latest probe: 21901391166`, `oldest_queued_run_age_minutes: 694`, updated bundle checksum).
+- ✅ Deterministic post-support gate check was added (`validation:phase5-latest:ready-check`) to close `P8-3/P8-4` only when the full report chain is `READY`.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)

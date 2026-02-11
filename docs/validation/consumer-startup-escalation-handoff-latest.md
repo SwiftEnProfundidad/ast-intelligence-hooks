@@ -165,3 +165,6 @@ Equivalent explicit steps:
 4. Update progress/TODO and set blocker to closed only when:
    - `consumer-startup-unblock-status`: `READY`
    - `phase5-execution-closure-status`: `READY`
+5. Run deterministic chain check:
+   - `npm run validation:phase5-latest:ready-check`
+   - expected exit code: `0` only when all required reports are `READY`.

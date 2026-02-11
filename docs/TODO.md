@@ -99,6 +99,7 @@ For full historical execution details, see:
     - follow checklist in `docs/validation/consumer-startup-escalation-handoff-latest.md` (`Manual Portal Submission Checklist`) to avoid missing fields/attachments.
     - post-submit tracking can be updated with: `npm run validation:phase5-escalation:mark-submitted -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
+    - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
     - `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/ast-intelligence-hooks --out-dir .audit-reports/phase5 --mock-consumer --require-adapter-readiness`
