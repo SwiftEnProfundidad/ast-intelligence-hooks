@@ -161,6 +161,7 @@
 - ✅ One-shot latest escalation refresh helper is implemented and validated (`validation:phase5-latest:refresh`), regenerating run URLs + handoff + bundle checksum in one deterministic pass.
 - ✅ Escalation handoff/runbook/TODO were resynced to the latest `phase5-latest` evidence snapshot (run URLs + queued-age + bundle checksum).
 - ✅ Latest validation/evidence synchronization commits were pushed to `enterprise-refactor` (`a4e2808`, `04a8abb`) to keep remote handoff state aligned.
+- ✅ Manual GitHub Support portal execution checklist was embedded in handoff with exact payload/attachment/update steps to close `P8-2b` deterministically.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)

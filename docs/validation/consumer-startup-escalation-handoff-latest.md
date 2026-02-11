@@ -102,6 +102,24 @@ Please verify platform-side/account-side controls for private Actions startup (p
 - pre_submission_verification: `PASS`
 - pre_submission_verified_at_utc: `2026-02-11T09:54:18Z`
 
+## Manual Portal Submission Checklist (Execution)
+
+Use this sequence exactly when submitting in GitHub Support portal:
+
+1. Open a new support case and paste:
+   - Subject: `Persistent GitHub Actions startup blockage with queued runs and cancel HTTP 500 (private repo)`
+   - Body: copy from `Support Ticket Payload (Ready To Paste)` above.
+2. Attach the packaged evidence archive:
+   - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+3. Add latest run URLs (minimum 2) in the case body:
+   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21900914631`
+   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21900855192`
+4. After pressing submit, update `Submission Tracking` in this file:
+   - `support_ticket_id: <real id>`
+   - `submitted_at_utc: <YYYY-MM-DDTHH:MM:SSZ>`
+   - `submitted_by: <github user>`
+   - `follow_up_eta: <date/time from support SLA>`
+
 ## Pre-Submission Verification
 
 Before sending the support ticket, run:
