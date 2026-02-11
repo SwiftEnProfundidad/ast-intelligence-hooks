@@ -129,6 +129,13 @@ ls -1 \
 
 After GitHub Support replies/applies a fix:
 
+Fast path:
+
+1. Run one-shot refresh:
+   - `npm run validation:phase5-latest:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`
+
+Equivalent explicit steps:
+
 1. Trigger a fresh probe:
    - `gh workflow run health.yml --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp`
 2. Recompute phase5 latest closure:

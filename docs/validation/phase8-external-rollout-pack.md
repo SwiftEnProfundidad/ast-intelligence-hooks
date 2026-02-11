@@ -124,6 +124,17 @@ Latest controlled probe run URL:
 Use this sequence to refresh the latest escalation evidence before opening/continuing a support case:
 
 ```bash
+# one-shot helper (probe + closure + handoff + bundle checksum)
+npm run validation:phase5-latest:refresh -- \
+  SwiftEnProfundidad/pumuki-actions-healthcheck-temp \
+  8 \
+  .audit-reports/phase5-latest \
+  .audit-reports/phase5/mock-consumer-ab-report.md
+```
+
+Equivalent explicit steps:
+
+```bash
 # 1) Trigger a controlled probe run (consumer private repo)
 gh workflow run health.yml --repo <owner>/<repo>
 
