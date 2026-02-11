@@ -159,6 +159,9 @@ Fast path:
 
 1. Run one-shot refresh:
    - `npm run validation:phase5-latest:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`
+2. Run one-shot post-support closure check:
+   - `npm run validation:phase5-post-support:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`
+   - expected exit code: `0` only when chain is fully `READY`.
 
 Equivalent explicit steps:
 

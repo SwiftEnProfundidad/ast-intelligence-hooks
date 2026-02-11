@@ -167,6 +167,7 @@
 - ✅ Deterministic post-support gate check was added (`validation:phase5-latest:ready-check`) to close `P8-3/P8-4` only when the full report chain is `READY`.
 - ✅ Support portal payload export helper was added (`validation:phase5-escalation:payload`) with automatic attachment checklist generation.
 - ✅ Deterministic pre-submit support gate was added (`validation:phase5-escalation:ready-to-submit`) to validate readiness/checksum/attachments before manual portal submission.
+- ✅ One-shot post-support close helper was added (`validation:phase5-post-support:refresh`) to run refresh + chain-ready validation in one command.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
