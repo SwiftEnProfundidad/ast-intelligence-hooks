@@ -135,6 +135,7 @@ Use this sequence exactly when submitting in GitHub Support portal:
    - applies `Submission Tracking` update and flips queue from `P8-2b` to `P8-3`.
 10. Channel constraint:
    - GitHub CLI does not provide a `support` command for case creation; submission must be done in GitHub Support portal.
+   - Direct REST probe endpoints also return `404 Not Found` (`POST /support/tickets`, `POST /user/support/tickets`).
 
 ## Pre-Submission Verification
 

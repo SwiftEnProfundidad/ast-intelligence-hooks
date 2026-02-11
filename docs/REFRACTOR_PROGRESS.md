@@ -174,6 +174,7 @@
 - ✅ Latest one-shot preparation run completed successfully (`validation:phase5-escalation:prepare` => `READY PACKAGE`) with checksum and attachment checklist aligned.
 - ✅ GitHub CLI path for Support submission was explicitly validated (`gh support` unavailable), confirming portal submission is the only supported channel.
 - ✅ Fresh `phase5-latest` evidence refresh was executed and docs were resynced (`latest probe: 21902330502`, `oldest_queued_run_age_minutes: 523`, bundle checksum updated).
+- ✅ Direct REST submission probes were executed and confirmed unavailable (`POST /support/tickets` and `POST /user/support/tickets` => `404 Not Found`), so portal remains mandatory.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
