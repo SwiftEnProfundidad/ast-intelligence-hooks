@@ -72,6 +72,10 @@ echo "[phase5-latest-refresh] run_url_1=${RUN_URL_1:-<missing>}"
 echo "[phase5-latest-refresh] run_url_2=${RUN_URL_2:-<missing>}"
 echo "[phase5-latest-refresh] bundle_checksum=${CHECKSUM_LINE}"
 
+if ! bash scripts/sync-phase5-latest-docs.sh "${OUT_DIR}"; then
+  echo "[phase5-latest-refresh] WARN: docs sync failed" >&2
+fi
+
 if [[ "${CLOSURE_EXIT}" -eq 0 && "${HANDOFF_EXIT}" -eq 0 ]]; then
   exit 0
 fi

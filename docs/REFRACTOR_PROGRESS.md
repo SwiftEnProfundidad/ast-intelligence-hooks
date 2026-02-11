@@ -175,6 +175,7 @@
 - ✅ GitHub CLI path for Support submission was explicitly validated (`gh support` unavailable), confirming portal submission is the only supported channel.
 - ✅ Fresh `phase5-latest` evidence refresh was executed and docs were resynced (`latest probe: 21902330502`, `oldest_queued_run_age_minutes: 523`, bundle checksum updated).
 - ✅ Direct REST submission probes were executed and confirmed unavailable (`POST /support/tickets` and `POST /user/support/tickets` => `404 Not Found`), so portal remains mandatory.
+- ✅ Phase5 latest documentation sync helper is implemented (`validation:phase5-latest:sync-docs`) and wired into `validation:phase5-latest:refresh` to auto-sync live startup signals/checksum into rollout docs.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
@@ -182,6 +183,7 @@
 - ⏳ `P8-1` Unblock external consumer startup queue stall and reach `READY` chain (`consumer-startup-unblock-status` + `phase5-execution-closure-status`).
 - ✅ `P8-2a` Execute pre-submission verification (bundle checksum + required evidence files) and record result in handoff.
 - 🚧 `P8-2b` Submit GitHub Support escalation using packaged evidence bundle and fill `Submission Tracking` fields in handoff (current state: `READY_TO_SUBMIT`, awaiting manual portal submission).
+- ✅ `P8-2c` Automate `phase5-latest` docs sync from evidence signals/checksum (`scripts/sync-phase5-latest-docs.sh`, wired into refresh flow).
 - ⏳ `P8-3` Re-run post-submission refresh sequence after support feedback and validate new run behavior.
 - ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker.
 - ✅ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).

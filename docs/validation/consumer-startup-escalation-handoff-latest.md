@@ -1,6 +1,6 @@
 # Consumer Startup Escalation Handoff (Latest)
 
-- generated_at: 2026-02-11T10:56:52Z
+- generated_at: 2026-02-11T12:36:55Z
 - target_repo: `SwiftEnProfundidad/pumuki-actions-healthcheck-temp`
 - phase5_latest_verdict_chain:
   - `phase5-blockers-readiness`: `READY`
@@ -48,7 +48,7 @@
 ### Packaged Attachment Bundle
 
 - archive: `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
-- size: `7.6K`
+- size: `8.0K`
 - sha256: `e21159a4fde779ea80191f42fac5da70f9ae66860162163926606da99b3ab000`
 
 ## Escalation Message
