@@ -84,14 +84,14 @@ For full historical execution details, see:
   - Current live signals (`.audit-reports/phase5-latest/*`):
     - `startup_failure_runs: 0`
     - `startup_stalled_runs: 8`
-    - `oldest_queued_run_age_minutes: 287`
-    - latest probe: `21910057879` (`queued`, `jobs=0`, `artifacts=0`)
+    - `oldest_queued_run_age_minutes: 298`
+    - latest probe: `21910530242` (`queued`, `jobs=0`, `artifacts=0`)
     - cancel attempts on queued runs return `HTTP 500`
   - Escalation handoff is ready in repo:
     - `docs/validation/consumer-startup-escalation-handoff-latest.md`
   - Packaged attachment bundle (ready to share):
     - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
-    - `sha256: 1030667b8701dfd8ee8dbe39055eaf32d8546c7176d33df345b5a733a1bad34f`
+    - `sha256: 89360cb9b9bc5e44058a28aedaff94c7f384b0c1ba107a97744f83d3a83f0674`
   - Pending external action:
     - root cause identified: billing for GitHub Actions is currently inactive/unavailable in consumer account.
     - unblock requires billing reactivation before any meaningful runtime retry.
@@ -116,6 +116,7 @@ For full historical execution details, see:
     - doctor helper (signals + next command): `npm run validation:phase8:doctor -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
     - autopilot helper (doctor + conditional close-ready): `npm run validation:phase8:autopilot -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
     - status pack helper (progress guardrail + doctor): `npm run validation:phase8:status-pack -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - tick helper (refresh + status-pack): `npm run validation:phase8:tick -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
     - ready handoff summary helper (run only when chain is READY): `npm run validation:phase8:ready-handoff -- .audit-reports/phase5-latest`.
     - close-ready package helper (run only when chain is READY): `npm run validation:phase8:close-ready -- .audit-reports/phase5-latest`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.

@@ -101,6 +101,16 @@ npm run validation:phase8:status-pack -- \
   .audit-reports/phase5/mock-consumer-ab-report.md
 ```
 
+Optional tick helper (refresh + status-pack in one command):
+
+```bash
+npm run validation:phase8:tick -- \
+  SwiftEnProfundidad/pumuki-actions-healthcheck-temp \
+  8 \
+  .audit-reports/phase5-latest \
+  .audit-reports/phase5/mock-consumer-ab-report.md
+```
+
 ## If Still Blocked
 
 1. Refresh latest evidence:

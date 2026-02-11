@@ -191,9 +191,11 @@
 - ✅ Phase 8 doctor helper is available (`validation:phase8:doctor`) to print live signals and deterministic next command in one output.
 - ✅ Phase 8 autopilot helper is available (`validation:phase8:autopilot`) to run doctor and auto-execute `close-ready` only when chain is `READY`.
 - ✅ Phase 8 status-pack helper is available (`validation:phase8:status-pack`) to run progress guardrail + doctor in one command.
+- ✅ Phase 8 tick helper is available (`validation:phase8:tick`) to execute refresh + status-pack in one deterministic command.
 - ✅ Phase 8 ready-handoff summary helper is available (`validation:phase8:ready-handoff`) to publish a deterministic final checklist once chain is `READY`.
 - ✅ Phase 8 close-ready helper is available (`validation:phase8:close-ready`) to package READY reports + summary for final handoff publication.
 - ✅ Progress guardrail helper is available (`validation:progress-single-active`) to enforce exactly one `🚧` item in this board.
+- ✅ `phase8:tick` was executed end-to-end (`refresh + status-pack`) and synced current snapshot (`latest probe: 21910530242`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 298`, bundle checksum updated).
 - ✅ Fresh `phase5-latest` refresh was re-executed and synced (`latest probe: 21910057879`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 287`, bundle checksum updated).
 - ✅ Fresh `phase5-latest` refresh was executed and synced (`latest probe: 21908994603`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 282`, bundle checksum updated).
 - ✅ Escalation submission package was revalidated on latest snapshot (`validation:phase5-escalation:prepare` => `READY PACKAGE`, checksum `ad391e9e...` aligned).
