@@ -93,10 +93,12 @@ For full historical execution details, see:
     - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
     - `sha256: fecb231e5110763ba99d51f5cf2936c45e66d61e220be09418fb89a86213aaa8`
   - Pending external action:
-    - obtain platform-side root cause and unblock private Actions startup.
+    - root cause identified: billing for GitHub Actions is currently inactive/unavailable in consumer account.
+    - unblock requires billing reactivation before any meaningful runtime retry.
     - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).
     - submission sent to GitHub Support: ticket `4077449`, submitted by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`.
     - follow-up ETA registered: `2026-02-12 18:00 UTC`.
+    - user will close support ticket manually because billing cause is known.
     - automated CLI submission path is not available (`gh support` command does not exist).
     - direct REST submission probes also fail with `404 Not Found` (`/support/tickets`, `/user/support/tickets`).
     - follow checklist in `docs/validation/consumer-startup-escalation-handoff-latest.md` (`Manual Portal Submission Checklist`) to avoid missing fields/attachments.
@@ -107,7 +109,7 @@ For full historical execution details, see:
     - latest deterministic pre-submit gate run: `READY TO SUBMIT` (checksum + attachments aligned).
     - optional close helper after submission: `npm run validation:phase5-escalation:close-submission -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
     - post-submit tracking can be updated with: `npm run validation:phase5-escalation:mark-submitted -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
-    - post-support fast close check: `npm run validation:phase5-post-support:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - post-support fast close check (resume only after billing reactivation): `npm run validation:phase5-post-support:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
     - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):

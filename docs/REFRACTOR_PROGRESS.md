@@ -181,6 +181,7 @@
 - ✅ Docs-sync helper now also updates handoff `Expected:` checksum line, keeping `validation:phase5-escalation:ready-to-submit` green after refresh churn.
 - ✅ Automated portal submission attempt was executed via browser automation; GitHub Support blocks at interactive web sign-in (`/session/login`) with no API/CLI bypass available.
 - ✅ New clean browser session was opened and validated; support landing still requires fresh interactive auth in-session before ticket submission can continue.
+- ✅ Root cause for external startup blockage is now confirmed as inactive/unavailable billing for GitHub Actions in the consumer account; retries are paused until billing is re-enabled.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
@@ -189,8 +190,8 @@
 - ✅ `P8-2a` Execute pre-submission verification (bundle checksum + required evidence files) and record result in handoff.
 - ✅ `P8-2b` Submit GitHub Support escalation using packaged evidence bundle and fill `Submission Tracking` fields in handoff (submitted: `4077449` by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`).
 - ✅ `P8-2c` Automate `phase5-latest` docs sync from evidence signals/checksum (`scripts/sync-phase5-latest-docs.sh`, wired into refresh flow).
-- 🚧 `P8-3` Re-run post-submission refresh sequence after support feedback and validate new run behavior.
-- ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker.
+- 🚧 `P8-3` Waiting for billing reactivation in consumer account (known external dependency). Once reactivated, re-run post-submission refresh sequence and validate run behavior.
+- ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker (after billing reactivation + successful `P8-3`).
 - ✅ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).
 - ⏳ `P8-5` Optional adapter external IDE replay evidence capture (deferred).
 - ⏳ `P9-1` Resume advanced AST semantic heuristics expansion after Phase 8 closure.

@@ -99,6 +99,8 @@ Please verify platform-side/account-side controls for private Actions startup (p
 - submitted_by: `SwiftEnProfundidad`
 - support_channel: `GitHub Support`
 - follow_up_eta: `2026-02-12 18:00 UTC`
+- known_external_cause: `BILLING_INACTIVE_OR_NOT_UPDATED`
+- ticket_closure_owner: `SwiftEnProfundidad (manual close planned)`
 - pre_submission_verification: `PASS`
 - pre_submission_verified_at_utc: `2026-02-11T09:54:18Z`
 
