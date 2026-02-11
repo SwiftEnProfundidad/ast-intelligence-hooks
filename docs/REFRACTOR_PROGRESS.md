@@ -179,6 +179,7 @@
 - ✅ Submission package one-shot was revalidated after docs-sync automation (`validation:phase5-escalation:prepare` => `READY TO SUBMIT`, payload regenerated).
 - ✅ Fresh one-shot `phase5-latest` refresh executed with integrated docs sync (`latest probe: 21905369927`, `oldest_queued_run_age_minutes: 619`, updated bundle checksum propagated).
 - ✅ Docs-sync helper now also updates handoff `Expected:` checksum line, keeping `validation:phase5-escalation:ready-to-submit` green after refresh churn.
+- ✅ Automated portal submission attempt was executed via browser automation; GitHub Support blocks at interactive web sign-in (`/session/login`) with no API/CLI bypass available.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
