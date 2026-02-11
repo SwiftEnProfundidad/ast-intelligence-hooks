@@ -110,14 +110,14 @@ Latest regenerated external evidence (`.audit-reports/phase5-latest/*`) remains 
 - `consumer-startup-unblock-status.md`: `BLOCKED`
 - `consumer-startup-failure-support-bundle.md` signals:
   - `startup_failure_runs: 0`
-  - `startup_stalled_runs: 7`
+  - `startup_stalled_runs: 8`
   - queued runs still show `jobs.total_count: 0` and `artifacts.total_count: 0`
   - cancel attempts on queued runs return `HTTP 500`
-  - latest cancel request id sample: `8737:1B5457:BB5B2EF:AE05C0B:698BE851`
+  - latest cancel request id sample: `86BD:50C44:E9BB08D:D8B86F4:698C4FC9`
 
 Latest controlled probe run URL:
 
-- `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21898971835`
+- `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21900096926`
 
 ## Escalation Refresh Sequence (Phase5 Latest)
 
