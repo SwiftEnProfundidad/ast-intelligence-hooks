@@ -84,13 +84,14 @@ For full historical execution details, see:
   - Current live signals (`.audit-reports/phase5-latest/*`):
     - `startup_failure_runs: 0`
     - `startup_stalled_runs: 8`
-    - latest probe: `21900096926` (`queued`, `jobs=0`, `artifacts=0`)
+    - `oldest_queued_run_age_minutes: 692`
+    - latest probe: `21900914631` (`queued`, `jobs=0`, `artifacts=0`)
     - cancel attempts on queued runs return `HTTP 500`
   - Escalation handoff is ready in repo:
     - `docs/validation/consumer-startup-escalation-handoff-latest.md`
   - Packaged attachment bundle (ready to share):
     - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
-    - `sha256: f62cc69715424f173c8fbd67d6d4d59921ad80f19d5772b86ef1786ff5a3fb28`
+    - `sha256: 2cef8af80c11cc436e915b6ff7bfd5cd7ad3f0c3fdecc04e06541013a31263a4`
   - Pending external action:
     - obtain platform-side root cause and unblock private Actions startup.
     - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).

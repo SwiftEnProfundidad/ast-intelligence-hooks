@@ -159,6 +159,7 @@
 - ✅ Documentation hygiene maintenance cycle executed (`docs-index-coverage` + `validation-docs-hygiene` green) and backlog item `P7-1` closed.
 - ✅ Escalation submission state is now explicit: `READY_TO_SUBMIT` with manual-portal dependency captured in handoff/TODO.
 - ✅ One-shot latest escalation refresh helper is implemented and validated (`validation:phase5-latest:refresh`), regenerating run URLs + handoff + bundle checksum in one deterministic pass.
+- ✅ Escalation handoff/runbook/TODO were resynced to the latest `phase5-latest` evidence snapshot (run URLs + queued-age + bundle checksum).
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
