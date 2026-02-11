@@ -145,4 +145,5 @@
 - ✅ `phase5-latest` support ticket draft was regenerated from refreshed evidence (`startup_failure_runs=0`, `startup_stalled_runs=6`, `oldest_queued_run_age_minutes=442`).
 - ✅ Captured concrete cancel-endpoint failure fingerprint (`HTTP 500` + `x-github-request-id`) in latest escalation handoff and rollout runbook.
 - ✅ Escalation pack artifact was refreshed to `phase5-latest` evidence contract and current blocker semantics (`.audit-reports/phase5/consumer-escalation-pack-latest.md`).
+- ✅ Escalation handoff now includes a ready-to-paste GitHub Support payload with latest counters, run URLs, and cancel error fingerprint.
 - 🚧 Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.

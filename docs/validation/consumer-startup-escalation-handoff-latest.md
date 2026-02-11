@@ -47,3 +47,38 @@
 ## Escalation Message
 
 Persistent GitHub Actions startup blockage is reproducible in a private repository using controlled workflow_dispatch probes. Latest runs remain queued/stalled before job graph creation (`jobs=0`, `artifacts=0`) without progressing to normal execution; cancel attempts on queued runs also return `HTTP 500`. Request platform-side verification of account/repository controls for private Actions execution (policy, billing/quota, or internal restrictions) and explicit root cause confirmation.
+
+## Support Ticket Payload (Ready To Paste)
+
+Subject:
+
+`Persistent GitHub Actions startup blockage with queued runs and cancel HTTP 500 (private repo)`
+
+Body:
+
+```text
+Repository: SwiftEnProfundidad/pumuki-actions-healthcheck-temp (private)
+
+Current status:
+- phase5-blockers-readiness: READY
+- phase5-execution-closure-status: BLOCKED
+- consumer-startup-unblock-status: BLOCKED
+
+Signals:
+- startup_failure_runs: 0
+- startup_stalled_runs: 6
+- oldest_queued_run_age_minutes: 442
+- queued runs have jobs.total_count=0 and artifacts.total_count=0
+
+Cancel endpoint sample:
+- POST /repos/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21890238298/cancel
+- HTTP 500 "Failed to cancel workflow run"
+- x-github-request-id: 8737:1B5457:BB5B2EF:AE05C0B:698BE851
+
+Latest run URLs:
+- https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21890238298
+- https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21890133679
+- https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21885514510
+
+Please verify platform-side/account-side controls for private Actions startup (policy, quota/billing, or internal restrictions) and confirm root cause.
+```
