@@ -121,6 +121,9 @@ Use this sequence exactly when submitting in GitHub Support portal:
    - `follow_up_eta: <date/time from support SLA>`
 5. Optional fast update command:
    - `npm run validation:phase5-escalation:mark-submitted -- <support_ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`
+6. Optional payload/export command (portal copy/paste + attachments checklist):
+   - `npm run validation:phase5-escalation:payload -- .audit-reports/phase5-latest`
+   - output: `.audit-reports/phase5-latest/github-support-portal-payload.txt`
 
 ## Pre-Submission Verification
 
