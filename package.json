@@ -68,6 +68,7 @@
     "validation:phase5-latest:ready-check": "bash scripts/check-phase5-latest-ready-chain.sh",
     "validation:phase5-post-support:refresh": "bash scripts/run-phase5-post-support-refresh.sh",
     "validation:phase5-escalation:ready-to-submit": "bash scripts/check-phase5-escalation-ready-to-submit.sh",
+    "validation:phase5-escalation:prepare": "bash scripts/prepare-phase5-escalation-submission.sh",
     "validation:phase5-escalation:mark-submitted": "bash scripts/mark-phase5-escalation-submitted.sh",
     "validation:phase5-escalation:payload": "bash scripts/build-phase5-support-portal-payload.sh",
     "validation:package-manifest": "node --import tsx scripts/check-package-manifest.ts",

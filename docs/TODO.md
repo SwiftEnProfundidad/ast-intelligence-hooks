@@ -99,6 +99,7 @@ For full historical execution details, see:
     - follow checklist in `docs/validation/consumer-startup-escalation-handoff-latest.md` (`Manual Portal Submission Checklist`) to avoid missing fields/attachments.
     - payload export helper: `npm run validation:phase5-escalation:payload -- .audit-reports/phase5-latest`.
     - deterministic pre-submit gate: `npm run validation:phase5-escalation:ready-to-submit -- .audit-reports/phase5-latest`.
+    - one-shot pre-submit package helper: `npm run validation:phase5-escalation:prepare -- .audit-reports/phase5-latest`.
     - latest deterministic pre-submit gate run: `READY TO SUBMIT` (checksum + attachments aligned).
     - post-submit tracking can be updated with: `npm run validation:phase5-escalation:mark-submitted -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
     - post-support fast close check: `npm run validation:phase5-post-support:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.

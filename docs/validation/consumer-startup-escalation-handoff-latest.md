@@ -112,8 +112,8 @@ Use this sequence exactly when submitting in GitHub Support portal:
 2. Attach the packaged evidence archive:
    - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 3. Add latest run URLs (minimum 2) in the case body:
+   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21901391166`
    - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21900914631`
-   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21900855192`
 4. After pressing submit, update `Submission Tracking` in this file:
    - `support_ticket_id: <real id>`
    - `submitted_at_utc: <YYYY-MM-DDTHH:MM:SSZ>`
@@ -127,6 +127,9 @@ Use this sequence exactly when submitting in GitHub Support portal:
 7. Optional deterministic pre-submit gate:
    - `npm run validation:phase5-escalation:ready-to-submit -- .audit-reports/phase5-latest`
    - expected exit code: `0` only when readiness, checksum and attachment checklist are aligned.
+8. Optional one-shot submission package helper:
+   - `npm run validation:phase5-escalation:prepare -- .audit-reports/phase5-latest`
+   - runs pre-submit gate + payload generation and prints final manual steps.
 
 ## Pre-Submission Verification
 
