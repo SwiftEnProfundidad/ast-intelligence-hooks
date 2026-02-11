@@ -138,4 +138,5 @@
 - ✅ Support ticket parser/draft now propagate queued-age evidence (`oldest_queued_run_age_minutes`) alongside failure/stalled counters.
 - ✅ `phase5-latest` escalation artifacts were refreshed and now expose consistent startup signals across handoff/unblock/ticket outputs.
 - ✅ Escalation handoff doc now includes queued-age signal (`oldest_queued_run_age_minutes`) alongside failure/stalled counters.
-- 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
+- ✅ Fresh `phase5-latest` rerun cleared startup-failure events (`startup_failure_runs=0`) and refreshed escalation evidence with new run URLs/signals.
+- 🚧 Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
