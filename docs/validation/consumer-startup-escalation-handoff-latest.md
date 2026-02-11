@@ -119,6 +119,8 @@ Use this sequence exactly when submitting in GitHub Support portal:
    - `submitted_at_utc: <YYYY-MM-DDTHH:MM:SSZ>`
    - `submitted_by: <github user>`
    - `follow_up_eta: <date/time from support SLA>`
+5. Optional fast update command:
+   - `npm run validation:phase5-escalation:mark-submitted -- <support_ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`
 
 ## Pre-Submission Verification
 

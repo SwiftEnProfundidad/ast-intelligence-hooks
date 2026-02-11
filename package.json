@@ -65,6 +65,7 @@
     "validation:phase5-execution-closure": "npx --yes tsx@4.21.0 scripts/run-phase5-execution-closure.ts",
     "validation:phase5-external-handoff": "npx --yes tsx@4.21.0 scripts/build-phase5-external-handoff.ts",
     "validation:phase5-latest:refresh": "bash scripts/refresh-phase5-latest-escalation.sh",
+    "validation:phase5-escalation:mark-submitted": "bash scripts/mark-phase5-escalation-submitted.sh",
     "validation:package-manifest": "node --import tsx scripts/check-package-manifest.ts",
     "validation:package-smoke": "node --import tsx scripts/package-install-smoke.ts --mode=block",
     "validation:package-smoke:minimal": "node --import tsx scripts/package-install-smoke.ts --mode=minimal",
