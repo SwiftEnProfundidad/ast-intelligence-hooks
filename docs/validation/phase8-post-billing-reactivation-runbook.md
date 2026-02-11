@@ -61,6 +61,16 @@ Expected:
 - Exit code `0`
 - No blocker report in `BLOCKED` state.
 
+Optional status helper (prints the next deterministic command):
+
+```bash
+npm run validation:phase8:next-step -- \
+  .audit-reports/phase5-latest \
+  SwiftEnProfundidad/pumuki-actions-healthcheck-temp \
+  8 \
+  .audit-reports/phase5/mock-consumer-ab-report.md
+```
+
 ## If Still Blocked
 
 1. Refresh latest evidence:
