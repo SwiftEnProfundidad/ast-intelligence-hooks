@@ -133,6 +133,8 @@ Use this sequence exactly when submitting in GitHub Support portal:
 9. Optional post-submit close helper (handoff + queue transition):
    - `npm run validation:phase5-escalation:close-submission -- <support_ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`
    - applies `Submission Tracking` update and flips queue from `P8-2b` to `P8-3`.
+10. Channel constraint:
+   - GitHub CLI does not provide a `support` command for case creation; submission must be done in GitHub Support portal.
 
 ## Pre-Submission Verification
 

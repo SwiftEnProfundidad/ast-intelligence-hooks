@@ -96,6 +96,7 @@ For full historical execution details, see:
     - obtain platform-side root cause and unblock private Actions startup.
     - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).
     - submission readiness is `READY_TO_SUBMIT`; blocker is manual portal submission to GitHub Support.
+    - automated CLI submission path is not available (`gh support` command does not exist).
     - follow checklist in `docs/validation/consumer-startup-escalation-handoff-latest.md` (`Manual Portal Submission Checklist`) to avoid missing fields/attachments.
     - payload export helper: `npm run validation:phase5-escalation:payload -- .audit-reports/phase5-latest`.
     - deterministic pre-submit gate: `npm run validation:phase5-escalation:ready-to-submit -- .audit-reports/phase5-latest`.
