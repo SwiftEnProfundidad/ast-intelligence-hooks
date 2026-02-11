@@ -78,4 +78,6 @@ When all required reports are `READY`:
 2. Mark `P8-4` as in progress.
 3. Generate final ready-handoff summary/checklist:
    - `npm run validation:phase8:ready-handoff -- .audit-reports/phase5-latest`
-4. Regenerate final handoff package and publish URLs.
+4. Generate close-ready package (summary + READY reports):
+   - `npm run validation:phase8:close-ready -- .audit-reports/phase5-latest`
+5. Regenerate final handoff package and publish URLs.
