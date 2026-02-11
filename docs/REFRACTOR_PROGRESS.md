@@ -136,4 +136,5 @@
 - ✅ Phase 8 runbook now includes an explicit escalation refresh sequence for `phase5-latest` artifacts (probe -> closure -> handoff).
 - ✅ Support bundle now exposes `oldest_queued_run_age_minutes` for stalled-run age evidence (header + support payload + regression test).
 - ✅ Support ticket parser/draft now propagate queued-age evidence (`oldest_queued_run_age_minutes`) alongside failure/stalled counters.
+- ✅ `phase5-latest` escalation artifacts were refreshed and now expose consistent startup signals across handoff/unblock/ticket outputs.
 - 🚧 Clear remaining consumer startup-failure blocker (`startup_failure_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
