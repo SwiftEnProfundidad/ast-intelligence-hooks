@@ -152,4 +152,16 @@
 - ✅ Escalation handoff now includes explicit submission-tracking fields (`support_ticket_id`, `submitted_at_utc`, `submitted_by`, `follow_up_eta`) to close the loop after external filing.
 - ✅ Escalation handoff now includes a deterministic post-submission refresh sequence to validate unblock after GitHub Support action.
 - ✅ Escalation handoff now includes deterministic pre-submission verification (bundle checksum + required evidence files presence).
+- ✅ Remaining tasks are now explicitly enumerated in `Remaining Task Queue (Explicit)` for full execution visibility.
 - 🚧 Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
+
+## Remaining Task Queue (Explicit)
+
+- 🚧 `P8-1` Unblock external consumer startup queue stall and reach `READY` chain (`consumer-startup-unblock-status` + `phase5-execution-closure-status`).
+- ⏳ `P8-2` Submit GitHub Support escalation using packaged evidence bundle and fill `Submission Tracking` fields in handoff.
+- ⏳ `P8-3` Re-run post-submission refresh sequence after support feedback and validate new run behavior.
+- ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker.
+- ⏳ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).
+- ⏳ `P8-5` Optional adapter external IDE replay evidence capture (deferred).
+- ⏳ `P9-1` Resume advanced AST semantic heuristics expansion after Phase 8 closure.
+- ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.
