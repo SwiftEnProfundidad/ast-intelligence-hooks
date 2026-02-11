@@ -1,6 +1,6 @@
 # Consumer Startup Escalation Handoff (Latest)
 
-- generated_at: 2026-02-11T19:45:00Z
+- generated_at: 2026-02-11T19:48:04Z
 - target_repo: `SwiftEnProfundidad/pumuki-actions-healthcheck-temp`
 - phase5_latest_verdict_chain:
   - `phase5-blockers-readiness`: `READY`
@@ -49,7 +49,7 @@
 
 - archive: `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 - size: `8.0K`
-- sha256: `ec2e2900281356c0483d2c2923a92e4e84e9c77df56b148d35dc2333fc2e0e18`
+- sha256: `1f96751afc779688f8564a6a04240e6246696b2c0d86c269f17d039488fb4249`
 
 ## Escalation Message
 
@@ -83,9 +83,9 @@ Cancel endpoint sample:
 - x-github-request-id: 86BD:50C44:E9BB08D:D8B86F4:698C4FC9
 
 Latest run URLs:
+- https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21920521950
 - https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21920419605
 - https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21920311847
-- https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21920204615
 
 Please verify platform-side/account-side controls for private Actions startup (policy, quota/billing, or internal restrictions) and confirm root cause.
 ```
@@ -114,8 +114,8 @@ Use this sequence exactly when submitting in GitHub Support portal:
 2. Attach the packaged evidence archive:
    - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 3. Add latest run URLs (minimum 2) in the case body:
+   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21920521950`
    - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21920419605`
-   - `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21920311847`
 4. After pressing submit, update `Submission Tracking` in this file:
    - `support_ticket_id: <real id>`
    - `submitted_at_utc: <YYYY-MM-DDTHH:MM:SSZ>`
@@ -149,7 +149,7 @@ shasum -a 256 .audit-reports/phase5-latest/consumer-startup-escalation-bundle-la
 
 Expected:
 
-- `ec2e2900281356c0483d2c2923a92e4e84e9c77df56b148d35dc2333fc2e0e18  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+- `1f96751afc779688f8564a6a04240e6246696b2c0d86c269f17d039488fb4249  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
 
 And verify required files are present:
 
