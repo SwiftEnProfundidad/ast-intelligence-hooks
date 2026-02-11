@@ -57,6 +57,7 @@ perl -0pi -e "s/- \`startup_stalled_runs: [0-9]+\`/- \`startup_stalled_runs: ${S
 perl -0pi -e "s/- \`oldest_queued_run_age_minutes: [0-9]+\`/- \`oldest_queued_run_age_minutes: ${OLDEST_QUEUED_AGE}\`/g" "${DOC_HANDOFF}"
 perl -0pi -e "s/- size: \`[^\`]+\`/- size: \`${BUNDLE_SIZE}\`/g" "${DOC_HANDOFF}"
 perl -0pi -e "s/- sha256: \`[0-9a-f]{64}\`/- sha256: \`${BUNDLE_SHA256}\`/g" "${DOC_HANDOFF}"
+perl -0pi -e "s#- \`[0-9a-f]{64}  \\.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest\\.tgz\`#- \`${BUNDLE_SHA256}  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz\`#g" "${DOC_HANDOFF}"
 perl -0pi -e "s#- \`https://github\\.com/[^\`]+/actions/runs/[0-9]+\`#- \`${LATEST_RUN_URL}\`#" "${DOC_ROLLOUT}"
 perl -0pi -e "s/- \`startup_failure_runs: [0-9]+\`/- \`startup_failure_runs: ${STARTUP_FAILURE_RUNS}\`/" "${DOC_ROLLOUT}"
 perl -0pi -e "s/- \`startup_stalled_runs: [0-9]+\`/- \`startup_stalled_runs: ${STARTUP_STALLED_RUNS}\`/" "${DOC_ROLLOUT}"
