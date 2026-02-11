@@ -170,6 +170,7 @@
 - ✅ One-shot post-support close helper was added (`validation:phase5-post-support:refresh`) to run refresh + chain-ready validation in one command.
 - ✅ Latest pre-submit gate execution is green on current snapshot (`submission_readiness=READY_TO_SUBMIT`, `pre_submission_verification=PASS`, checksum aligned).
 - ✅ One-shot escalation submission package helper was added (`validation:phase5-escalation:prepare`) to run pre-submit gate + payload generation in a single command.
+- ✅ Optional post-submit close helper was added (`validation:phase5-escalation:close-submission`) to update handoff metadata and transition active queue to `P8-3`.
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)

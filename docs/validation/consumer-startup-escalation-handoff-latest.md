@@ -130,6 +130,9 @@ Use this sequence exactly when submitting in GitHub Support portal:
 8. Optional one-shot submission package helper:
    - `npm run validation:phase5-escalation:prepare -- .audit-reports/phase5-latest`
    - runs pre-submit gate + payload generation and prints final manual steps.
+9. Optional post-submit close helper (handoff + queue transition):
+   - `npm run validation:phase5-escalation:close-submission -- <support_ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`
+   - applies `Submission Tracking` update and flips queue from `P8-2b` to `P8-3`.
 
 ## Pre-Submission Verification
 
