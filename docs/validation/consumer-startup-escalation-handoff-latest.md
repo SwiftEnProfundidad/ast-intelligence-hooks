@@ -97,3 +97,17 @@ Please verify platform-side/account-side controls for private Actions startup (p
 - submitted_by: `PENDING`
 - support_channel: `GitHub Support`
 - follow_up_eta: `PENDING`
+
+## Post-Submission Refresh Sequence
+
+After GitHub Support replies/applies a fix:
+
+1. Trigger a fresh probe:
+   - `gh workflow run health.yml --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp`
+2. Recompute phase5 latest closure:
+   - `npx --yes tsx@4.21.0 scripts/run-phase5-execution-closure.ts --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --limit 7 --out-dir .audit-reports/phase5-latest --skip-adapter --skip-workflow-lint`
+3. Regenerate external handoff:
+   - `npx --yes tsx@4.21.0 scripts/build-phase5-external-handoff.ts --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --phase5-status-report .audit-reports/phase5-latest/phase5-execution-closure-status.md --phase5-blockers-report .audit-reports/phase5-latest/phase5-blockers-readiness.md --consumer-unblock-report .audit-reports/phase5-latest/consumer-startup-unblock-status.md --mock-ab-report .audit-reports/phase5/mock-consumer-ab-report.md --run-report .audit-reports/phase5-latest/phase5-execution-closure-run-report.md --artifact-url <new_run_url_1> --artifact-url <new_run_url_2> --out .audit-reports/phase5-latest/phase5-external-handoff.md`
+4. Update progress/TODO and set blocker to closed only when:
+   - `consumer-startup-unblock-status`: `READY`
+   - `phase5-execution-closure-status`: `READY`
