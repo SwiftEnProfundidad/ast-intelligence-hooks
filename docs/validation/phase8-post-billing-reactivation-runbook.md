@@ -30,6 +30,24 @@ Expected outcome:
 - `phase5-external-handoff`: `READY`
 - `consumer-startup-unblock-status`: `READY`
 
+## Operator Quick Block (Copy/Paste)
+
+Use this exact sequence right after billing is reactivated:
+
+```bash
+npm run validation:phase8:resume-after-billing -- \
+  SwiftEnProfundidad/pumuki-actions-healthcheck-temp \
+  8 \
+  .audit-reports/phase5-latest \
+  .audit-reports/phase5/mock-consumer-ab-report.md \
+&& npm run validation:phase5-latest:ready-check
+```
+
+Interpretation:
+
+- exit code `0`: Phase 8 chain is `READY` and you can continue with `P8-4`.
+- exit code `1`: still blocked; follow `If Still Blocked`.
+
 ## Deterministic Verification
 
 Run the explicit gate check:
