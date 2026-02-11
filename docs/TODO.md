@@ -115,6 +115,7 @@ For full historical execution details, see:
     - next-step status helper (prints deterministic next command): `npm run validation:phase8:next-step -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
     - doctor helper (signals + next command): `npm run validation:phase8:doctor -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
     - autopilot helper (doctor + conditional close-ready): `npm run validation:phase8:autopilot -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - status pack helper (progress guardrail + doctor): `npm run validation:phase8:status-pack -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
     - ready handoff summary helper (run only when chain is READY): `npm run validation:phase8:ready-handoff -- .audit-reports/phase5-latest`.
     - close-ready package helper (run only when chain is READY): `npm run validation:phase8:close-ready -- .audit-reports/phase5-latest`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.

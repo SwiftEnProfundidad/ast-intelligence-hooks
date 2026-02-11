@@ -91,6 +91,16 @@ npm run validation:phase8:autopilot -- \
   .audit-reports/phase5/mock-consumer-ab-report.md
 ```
 
+Optional status pack helper (progress guardrail + doctor):
+
+```bash
+npm run validation:phase8:status-pack -- \
+  .audit-reports/phase5-latest \
+  SwiftEnProfundidad/pumuki-actions-healthcheck-temp \
+  8 \
+  .audit-reports/phase5/mock-consumer-ab-report.md
+```
+
 ## If Still Blocked
 
 1. Refresh latest evidence:

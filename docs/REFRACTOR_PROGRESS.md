@@ -190,6 +190,7 @@
 - ✅ Phase 8 next-step status helper is available (`validation:phase8:next-step`) to print the deterministic command for `BLOCKED` vs `READY`.
 - ✅ Phase 8 doctor helper is available (`validation:phase8:doctor`) to print live signals and deterministic next command in one output.
 - ✅ Phase 8 autopilot helper is available (`validation:phase8:autopilot`) to run doctor and auto-execute `close-ready` only when chain is `READY`.
+- ✅ Phase 8 status-pack helper is available (`validation:phase8:status-pack`) to run progress guardrail + doctor in one command.
 - ✅ Phase 8 ready-handoff summary helper is available (`validation:phase8:ready-handoff`) to publish a deterministic final checklist once chain is `READY`.
 - ✅ Phase 8 close-ready helper is available (`validation:phase8:close-ready`) to package READY reports + summary for final handoff publication.
 - ✅ Progress guardrail helper is available (`validation:progress-single-active`) to enforce exactly one `🚧` item in this board.
