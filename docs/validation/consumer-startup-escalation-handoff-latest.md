@@ -92,6 +92,8 @@ Please verify platform-side/account-side controls for private Actions startup (p
 
 ## Submission Tracking
 
+- submission_readiness: `READY_TO_SUBMIT`
+- submission_blocker: `MANUAL_GITHUB_SUPPORT_PORTAL_SUBMISSION`
 - support_ticket_id: `PENDING`
 - submitted_at_utc: `PENDING`
 - submitted_by: `PENDING`
