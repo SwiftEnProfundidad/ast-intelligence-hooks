@@ -151,4 +151,5 @@
 - ✅ Fresh `phase5-latest` rerun shows startup failure cleared but queue-stall worsened (`startup_stalled_runs=7`, `oldest_queued_run_age_minutes=852`), and docs/bundle hash were refreshed accordingly.
 - ✅ Escalation handoff now includes explicit submission-tracking fields (`support_ticket_id`, `submitted_at_utc`, `submitted_by`, `follow_up_eta`) to close the loop after external filing.
 - ✅ Escalation handoff now includes a deterministic post-submission refresh sequence to validate unblock after GitHub Support action.
+- ✅ Escalation handoff now includes deterministic pre-submission verification (bundle checksum + required evidence files presence).
 - 🚧 Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.

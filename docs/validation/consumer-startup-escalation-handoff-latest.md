@@ -98,6 +98,29 @@ Please verify platform-side/account-side controls for private Actions startup (p
 - support_channel: `GitHub Support`
 - follow_up_eta: `PENDING`
 
+## Pre-Submission Verification
+
+Before sending the support ticket, run:
+
+```bash
+shasum -a 256 .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz
+```
+
+Expected:
+
+- `f86e9db3d5ce302ea31d39d6a4f1c7e57eccc4c7b12f06222fbcb57a0fcbb213  .audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+
+And verify required files are present:
+
+```bash
+ls -1 \
+  .audit-reports/phase5-latest/consumer-ci-auth-check.md \
+  .audit-reports/phase5-latest/consumer-startup-failure-support-bundle.md \
+  .audit-reports/phase5-latest/consumer-startup-unblock-status.md \
+  .audit-reports/phase5-latest/consumer-support-ticket-draft.md \
+  .audit-reports/phase5-latest/phase5-external-handoff.md
+```
+
 ## Post-Submission Refresh Sequence
 
 After GitHub Support replies/applies a fix:
