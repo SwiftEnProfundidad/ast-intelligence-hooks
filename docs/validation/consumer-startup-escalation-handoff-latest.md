@@ -89,3 +89,11 @@ Latest run URLs:
 
 Please verify platform-side/account-side controls for private Actions startup (policy, quota/billing, or internal restrictions) and confirm root cause.
 ```
+
+## Submission Tracking
+
+- support_ticket_id: `PENDING`
+- submitted_at_utc: `PENDING`
+- submitted_by: `PENDING`
+- support_channel: `GitHub Support`
+- follow_up_eta: `PENDING`

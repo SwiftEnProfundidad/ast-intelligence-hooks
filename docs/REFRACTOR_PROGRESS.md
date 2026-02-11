@@ -149,4 +149,5 @@
 - ✅ Created packaged escalation attachment bundle with integrity hash (`.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`, SHA256 recorded in handoff).
 - ✅ Active TODO now references the packaged escalation bundle path + checksum for direct external handoff.
 - ✅ Fresh `phase5-latest` rerun shows startup failure cleared but queue-stall worsened (`startup_stalled_runs=7`, `oldest_queued_run_age_minutes=852`), and docs/bundle hash were refreshed accordingly.
+- ✅ Escalation handoff now includes explicit submission-tracking fields (`support_ticket_id`, `submitted_at_utc`, `submitted_by`, `follow_up_eta`) to close the loop after external filing.
 - 🚧 Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.

@@ -93,6 +93,7 @@ For full historical execution details, see:
     - `sha256: f86e9db3d5ce302ea31d39d6a4f1c7e57eccc4c7b12f06222fbcb57a0fcbb213`
   - Pending external action:
     - obtain platform-side root cause and unblock private Actions startup.
+    - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
     - `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/ast-intelligence-hooks --out-dir .audit-reports/phase5 --mock-consumer --require-adapter-readiness`
