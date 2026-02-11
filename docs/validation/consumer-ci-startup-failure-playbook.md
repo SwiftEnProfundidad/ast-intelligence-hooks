@@ -148,6 +148,9 @@ Optional controlled check:
 
 - Temporarily change `actions/permissions/access` and trigger one `workflow_dispatch` run.
 - If startup failure is unchanged, revert to original value and continue policy/billing investigation.
+- Attempt to cancel one queued run:
+  - `gh run cancel <run_id> --repo <owner>/<repo>`
+  - if this returns `HTTP 500`, include it as additional escalation evidence.
 - Optionally apply a temporary branch-only workflow lint fix set and re-test:
   - if startup failure is unchanged, treat repository/account-level constraints as primary suspects.
 

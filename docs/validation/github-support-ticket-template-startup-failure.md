@@ -18,6 +18,7 @@ GitHub Actions runs consistently fail with:
 
 - `conclusion: startup_failure`
 - queued/stalled runs accumulating (`status: queued`, no conclusion)
+- cancel attempts on queued runs failing (`POST /cancel -> HTTP 500`)
 - no jobs created (`jobs.total_count = 0`)
 - no check runs (`latest_check_runs_count = 0`)
 - artifact endpoint empty (`total_count = 0`)
@@ -36,6 +37,7 @@ Counters snapshot (from latest support bundle):
 
 - `startup_failure_runs: <n>`
 - `startup_stalled_runs: <n>`
+- `oldest_queued_run_age_minutes: <n>`
 
 API metadata sample:
 
@@ -47,6 +49,8 @@ API metadata sample:
   - `total_count: 0`
 - `GET /repos/<owner>/<repo>/actions/runs/<run_id>/artifacts`
   - `total_count: 0`
+- `POST /repos/<owner>/<repo>/actions/runs/<run_id>/cancel`
+  - `HTTP 500`
 - `GET /repos/<owner>/<repo>/check-suites/<suite_id>`
   - `conclusion: startup_failure`
   - `latest_check_runs_count: 0`
@@ -59,7 +63,8 @@ API metadata sample:
    - `GET /repos/<owner>/<repo>/actions/permissions/workflow`
 3. Tested access-level toggle (`actions/permissions/access`) and reverted.
 4. Ran semantic workflow lint and fixed known lint findings in a temporary branch.
-5. Re-triggered workflow_dispatch after fixes; startup failure persisted.
+5. Attempted to cancel queued runs; GitHub API returned `HTTP 500`.
+6. Re-triggered workflow_dispatch after fixes; startup failure/queue stall persisted.
 
 ## Expected Behavior
 
