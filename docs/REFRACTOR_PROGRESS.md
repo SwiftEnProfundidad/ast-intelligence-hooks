@@ -163,6 +163,7 @@
 - ✅ Latest validation/evidence synchronization commits were pushed to `enterprise-refactor` (`a4e2808`, `04a8abb`) to keep remote handoff state aligned.
 - ✅ Manual GitHub Support portal execution checklist was embedded in handoff with exact payload/attachment/update steps to close `P8-2b` deterministically.
 - ✅ Submission-tracking automation command was added (`validation:phase5-escalation:mark-submitted`) to stamp ticket metadata in handoff without manual editing.
+- ✅ Fresh `phase5-latest` refresh was rerun and escalation docs were resynced (`latest probe: 21901391166`, `oldest_queued_run_age_minutes: 694`, updated bundle checksum).
 - ⏳ Clear remaining queued/stalled startup blocker (`startup_stalled_runs > 0`) to move external handoff from `BLOCKED` to `READY` using fresh external escalation evidence.
 
 ## Remaining Task Queue (Explicit)
