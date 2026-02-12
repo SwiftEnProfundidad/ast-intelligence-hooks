@@ -499,6 +499,30 @@ const hasForkCall = (node: unknown): boolean => {
   });
 };
 
+const hasExecFileSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (isObject(callee) && callee.type === 'Identifier') {
+      return callee.name === 'execFileSync';
+    }
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+    const propertyNode = callee.property;
+    if (!isObject(propertyNode)) {
+      return false;
+    }
+    if (callee.computed === true) {
+      return propertyNode.type === 'StringLiteral' && propertyNode.value === 'execFileSync';
+    }
+    return propertyNode.type === 'Identifier' && propertyNode.name === 'execFileSync';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -1285,6 +1309,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.child-process-fork.ast',
             code: 'HEURISTICS_CHILD_PROCESS_FORK_AST',
             message: 'AST heuristic detected fork usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasExecFileSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.child-process-exec-file-sync.ast',
+            code: 'HEURISTICS_CHILD_PROCESS_EXEC_FILE_SYNC_AST',
+            message: 'AST heuristic detected execFileSync usage.',
             filePath: fileFact.path,
           })
         );

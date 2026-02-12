@@ -111,6 +111,7 @@
 - ✅ TypeScript AST `spawnSync` call heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript AST `spawn` call heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript AST `fork` call heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
+- ✅ TypeScript AST `execFileSync` call heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ⏳ High-value semantic heuristics expansion is queued in local-only mode (external billing path omitted).
 - ⏳ Additional incremental expansion is pending after external rollout closure.
 
@@ -302,6 +303,7 @@
 - ✅ Local Phase 9 batch completed: `spawnSync` call heuristic added with passing targeted suites.
 - ✅ Local Phase 9 batch completed: `spawn` call heuristic added with passing targeted suites.
 - ✅ Local Phase 9 batch completed: `fork` call heuristic added with passing targeted suites.
+- ✅ Local Phase 9 batch completed: `execFileSync` call heuristic added with passing targeted suites.
 - 🚧 Execute next local refactor batch: add one additional high-signal semantic heuristic with deterministic tests/docs.
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922741561`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 55`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922851216`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 56`, bundle checksum updated).

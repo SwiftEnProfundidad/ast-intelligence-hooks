@@ -45,6 +45,7 @@
   - `heuristics.ts.child-process-spawn-sync.ast`
   - `heuristics.ts.child-process-spawn.ast`
   - `heuristics.ts.child-process-fork.ast`
+  - `heuristics.ts.child-process-exec-file-sync.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -82,6 +83,7 @@
 - `heuristics.ts.child-process-spawn-sync.ast`
 - `heuristics.ts.child-process-spawn.ast`
 - `heuristics.ts.child-process-fork.ast`
+- `heuristics.ts.child-process-exec-file-sync.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
