@@ -122,7 +122,8 @@ For full historical execution details, see:
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
     - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
 - [ ] Local-only refactor continuation [ACTIVE]:
-  - Phase 9 semantic heuristic expansion (no external billing dependency).
+  - ✅ Added TypeScript `debugger` semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion (no external billing dependency).
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

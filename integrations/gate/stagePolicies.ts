@@ -11,6 +11,7 @@ import type { SkillsStage } from '../config/skillsLock';
 const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.console-log.ast',
   'heuristics.ts.explicit-any.ast',
+  'heuristics.ts.debugger.ast',
   'heuristics.ios.force-unwrap.ast',
   'heuristics.ios.anyview.ast',
   'heuristics.ios.force-try.ast',

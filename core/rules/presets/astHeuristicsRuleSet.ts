@@ -56,6 +56,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.debugger.ast',
+    description: 'Detects debugger statements in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.debugger.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected debugger statement usage.',
+      code: 'HEURISTICS_DEBUGGER_AST',
+    },
+  },
+  {
     id: 'heuristics.ios.force-unwrap.ast',
     description: 'Detects Swift force unwrap usage in production code.',
     severity: 'WARN',

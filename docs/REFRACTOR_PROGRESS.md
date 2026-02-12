@@ -90,6 +90,7 @@
 ## Phase 9 - Advanced AST Heuristics
 
 - ✅ Initial typed AST heuristics are active.
+- ✅ TypeScript AST `debugger` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ⏳ High-value semantic heuristics expansion is queued in local-only mode (external billing path omitted).
 - ⏳ Additional incremental expansion is pending after external rollout closure.
 
@@ -260,7 +261,7 @@
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922534566`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 57`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922615395`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 57`, bundle checksum updated).
 - ✅ External startup-unblock retry loop is intentionally paused by operator decision while GitHub billing remains inactive.
-- 🚧 Execute next local refactor batch without external dependencies: Phase 9 semantic heuristics expansion + deterministic regression.
+- ✅ Local refactor track is switched to Phase 9 semantic heuristics expansion with deterministic regressions.
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922741561`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 55`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922851216`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 56`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922930298`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 19`, bundle checksum updated).

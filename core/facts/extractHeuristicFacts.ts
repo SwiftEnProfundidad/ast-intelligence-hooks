@@ -89,6 +89,10 @@ const hasConsoleLogCall = (node: unknown): boolean => {
   });
 };
 
+const hasDebuggerStatement = (node: unknown): boolean => {
+  return hasNode(node, (value) => value.type === 'DebuggerStatement');
+};
+
 const isTypeScriptHeuristicTargetPath = (path: string): boolean => {
   return (
     (path.endsWith('.ts') || path.endsWith('.tsx')) &&
@@ -651,6 +655,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.console-log.ast',
             code: 'HEURISTICS_CONSOLE_LOG_AST',
             message: 'AST heuristic detected console.log usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasDebuggerStatement(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.debugger.ast',
+            code: 'HEURISTICS_DEBUGGER_AST',
+            message: 'AST heuristic detected debugger statement usage.',
             filePath: fileFact.path,
           })
         );
