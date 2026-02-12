@@ -203,6 +203,10 @@ const hasAsyncPromiseExecutor = (node: unknown): boolean => {
   });
 };
 
+const hasWithStatement = (node: unknown): boolean => {
+  return hasNode(node, (value) => value.type === 'WithStatement');
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -835,6 +839,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.new-promise-async.ast',
             code: 'HEURISTICS_NEW_PROMISE_ASYNC_AST',
             message: 'AST heuristic detected async Promise executor usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasWithStatement(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.with-statement.ast',
+            code: 'HEURISTICS_WITH_STATEMENT_AST',
+            message: 'AST heuristic detected with-statement usage.',
             filePath: fileFact.path,
           })
         );

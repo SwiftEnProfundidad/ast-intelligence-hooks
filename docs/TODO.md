@@ -129,6 +129,7 @@ For full historical execution details, see:
   - ✅ Added TypeScript `setTimeout(string)` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `setInterval(string)` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `new Promise(async executor)` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `with` statement semantic heuristic with stage-aware promotion and passing tests.
   - 🚧 Continue Phase 9 semantic heuristic expansion (no external billing dependency) with next high-signal rule.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):

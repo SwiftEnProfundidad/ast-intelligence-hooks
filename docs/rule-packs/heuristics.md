@@ -31,6 +31,7 @@
   - `heuristics.ts.set-timeout-string.ast`
   - `heuristics.ts.set-interval-string.ast`
   - `heuristics.ts.new-promise-async.ast`
+  - `heuristics.ts.with-statement.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -54,6 +55,7 @@
 - `heuristics.ts.set-timeout-string.ast`
 - `heuristics.ts.set-interval-string.ast`
 - `heuristics.ts.new-promise-async.ast`
+- `heuristics.ts.with-statement.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
