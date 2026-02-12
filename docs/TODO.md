@@ -166,7 +166,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript `fs.promises.link` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `fs.promises.readlink` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `fs.promises.open` semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: `fs.promises.opendir` semantic detection.
+  - ✅ Added TypeScript `fs.promises.opendir` semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: `fs.promises.cp` semantic detection.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
