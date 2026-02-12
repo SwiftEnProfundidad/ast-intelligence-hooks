@@ -231,6 +231,12 @@ const hasProcessExitCall = (node: unknown): boolean => {
   });
 };
 
+const hasDeleteOperator = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    return value.type === 'UnaryExpression' && value.operator === 'delete';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -885,6 +891,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.process-exit.ast',
             code: 'HEURISTICS_PROCESS_EXIT_AST',
             message: 'AST heuristic detected process.exit usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasDeleteOperator(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.delete-operator.ast',
+            code: 'HEURISTICS_DELETE_OPERATOR_AST',
+            message: 'AST heuristic detected delete-operator usage.',
             filePath: fileFact.path,
           })
         );
