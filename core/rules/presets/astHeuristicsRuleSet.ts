@@ -596,6 +596,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-promises-copy-file.ast',
+    description: 'Detects fs.promises.copyFile usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-promises-copy-file.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.promises.copyFile usage.',
+      code: 'HEURISTICS_FS_PROMISES_COPY_FILE_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.child-process-exec-file.ast',
     description: 'Detects execFile usage in TypeScript/TSX production files.',
     severity: 'WARN',
