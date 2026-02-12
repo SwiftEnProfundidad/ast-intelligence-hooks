@@ -1458,6 +1458,54 @@ const hasFsPromisesReadlinkCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsPromisesOpenCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const propertyNode = callee.property;
+    const isOpenProperty =
+      (callee.computed === true &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'StringLiteral' &&
+        propertyNode.value === 'open') ||
+      (callee.computed !== true &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'Identifier' &&
+        propertyNode.name === 'open');
+    if (!isOpenProperty) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    if (!isObject(objectNode) || objectNode.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const promisesProperty = objectNode.property;
+    const isPromisesProperty =
+      (objectNode.computed === true &&
+        isObject(promisesProperty) &&
+        promisesProperty.type === 'StringLiteral' &&
+        promisesProperty.value === 'promises') ||
+      (objectNode.computed !== true &&
+        isObject(promisesProperty) &&
+        promisesProperty.type === 'Identifier' &&
+        promisesProperty.name === 'promises');
+    if (!isPromisesProperty) {
+      return false;
+    }
+
+    const fsNode = objectNode.object;
+    return isObject(fsNode) && fsNode.type === 'Identifier' && fsNode.name === 'fs';
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -2499,6 +2547,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-promises-readlink.ast',
             code: 'HEURISTICS_FS_PROMISES_READLINK_AST',
             message: 'AST heuristic detected fs.promises.readlink usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsPromisesOpenCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-promises-open.ast',
+            code: 'HEURISTICS_FS_PROMISES_OPEN_AST',
+            message: 'AST heuristic detected fs.promises.open usage.',
             filePath: fileFact.path,
           })
         );

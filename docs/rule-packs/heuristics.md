@@ -67,6 +67,7 @@
   - `heuristics.ts.fs-promises-symlink.ast`
   - `heuristics.ts.fs-promises-link.ast`
   - `heuristics.ts.fs-promises-readlink.ast`
+  - `heuristics.ts.fs-promises-open.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -126,6 +127,7 @@
 - `heuristics.ts.fs-promises-symlink.ast`
 - `heuristics.ts.fs-promises-link.ast`
 - `heuristics.ts.fs-promises-readlink.ast`
+- `heuristics.ts.fs-promises-open.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
