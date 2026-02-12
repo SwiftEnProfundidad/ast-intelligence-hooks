@@ -207,6 +207,30 @@ const hasWithStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'WithStatement');
 };
 
+const hasProcessExitCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'process' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'exit'
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -850,6 +874,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.with-statement.ast',
             code: 'HEURISTICS_WITH_STATEMENT_AST',
             message: 'AST heuristic detected with-statement usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasProcessExitCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.process-exit.ast',
+            code: 'HEURISTICS_PROCESS_EXIT_AST',
+            message: 'AST heuristic detected process.exit usage.',
             filePath: fileFact.path,
           })
         );
