@@ -23,7 +23,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.ts',
-        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
+        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); fs.promises.stat("/tmp/demo.txt"); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -55,6 +55,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     'heuristics.ts.fs-promises-read-file.ast',
     'heuristics.ts.fs-promises-readdir.ast',
     'heuristics.ts.fs-promises-rm.ast',
+    'heuristics.ts.fs-promises-stat.ast',
     'heuristics.ts.fs-promises-unlink.ast',
     'heuristics.ts.fs-promises-write-file.ast',
     'heuristics.ts.fs-write-file-sync.ast',
@@ -75,7 +76,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     facts: [
       fileContentFact(
         'apps/backend/src/feature/file.ts',
-        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
+        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); fs.promises.stat("/tmp/demo.txt"); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -107,6 +108,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     'heuristics.ts.fs-promises-read-file.ast',
     'heuristics.ts.fs-promises-readdir.ast',
     'heuristics.ts.fs-promises-rm.ast',
+    'heuristics.ts.fs-promises-stat.ast',
     'heuristics.ts.fs-promises-unlink.ast',
     'heuristics.ts.fs-promises-write-file.ast',
     'heuristics.ts.fs-write-file-sync.ast',
@@ -128,7 +130,7 @@ test('skips TypeScript heuristics for test files', () => {
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.spec.ts',
-        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
+        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); fs.promises.stat("/tmp/demo.txt"); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -236,7 +238,7 @@ test('extracts typed heuristic facts with expected metadata', () => {
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.ts',
-        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
+        'const cp = require("child_process"); const fs = require("fs"); const value: any = 1; const obj: any = { secret: 1 }; const el: any = {}; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); with (Math) { max(1, 2); } process.exit(1); process.env.NODE_ENV = "production"; fs.writeFileSync("/tmp/demo.txt", value); fs.appendFileSync("/tmp/demo.txt", value); fs.promises.writeFile("/tmp/demo.txt", value); fs.promises.appendFile("/tmp/demo.txt", value); fs.promises.rm("/tmp/demo.txt", { force: true }); fs.promises.unlink("/tmp/demo.txt"); fs.promises.readFile("/tmp/demo.txt", "utf8"); fs.promises.readdir("/tmp"); fs.promises.mkdir("/tmp/demo-dir", { recursive: true }); fs.promises.stat("/tmp/demo.txt"); cp.execFileSync("echo", ["test"]); cp.execFile("echo", ["test"]); cp.execSync("echo test"); cp.exec("echo test"); cp.spawnSync("echo", ["test"]); cp.spawn("echo", ["test"]); cp.fork("./worker.js"); delete obj.secret; el.innerHTML = value; el.insertAdjacentHTML("beforeend", value); document.write(value); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -244,7 +246,7 @@ test('extracts typed heuristic facts with expected metadata', () => {
     },
   });
 
-  assert.equal(extracted.length, 34);
+  assert.equal(extracted.length, 35);
   assert.equal(extracted.every((fact) => fact.kind === 'Heuristic'), true);
   assert.equal(extracted.every((fact) => fact.source === 'heuristics:ast'), true);
 });

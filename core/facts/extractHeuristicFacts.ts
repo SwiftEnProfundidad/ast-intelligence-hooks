@@ -882,6 +882,54 @@ const hasFsPromisesMkdirCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsPromisesStatCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const propertyNode = callee.property;
+    const isStatProperty =
+      (callee.computed === true &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'StringLiteral' &&
+        propertyNode.value === 'stat') ||
+      (callee.computed !== true &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'Identifier' &&
+        propertyNode.name === 'stat');
+    if (!isStatProperty) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    if (!isObject(objectNode) || objectNode.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const promisesProperty = objectNode.property;
+    const isPromisesProperty =
+      (objectNode.computed === true &&
+        isObject(promisesProperty) &&
+        promisesProperty.type === 'StringLiteral' &&
+        promisesProperty.value === 'promises') ||
+      (objectNode.computed !== true &&
+        isObject(promisesProperty) &&
+        promisesProperty.type === 'Identifier' &&
+        promisesProperty.name === 'promises');
+    if (!isPromisesProperty) {
+      return false;
+    }
+
+    const fsNode = objectNode.object;
+    return isObject(fsNode) && fsNode.type === 'Identifier' && fsNode.name === 'fs';
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -1791,6 +1839,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-promises-mkdir.ast',
             code: 'HEURISTICS_FS_PROMISES_MKDIR_AST',
             message: 'AST heuristic detected fs.promises.mkdir usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsPromisesStatCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-promises-stat.ast',
+            code: 'HEURISTICS_FS_PROMISES_STAT_AST',
+            message: 'AST heuristic detected fs.promises.stat usage.',
             filePath: fileFact.path,
           })
         );
