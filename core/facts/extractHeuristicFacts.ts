@@ -1650,6 +1650,46 @@ const hasFsPromisesMkdtempCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsUtimesCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isUtimesProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'utimes') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'utimes');
+      if (!isUtimesProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return isObject(argument) && (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression');
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -2735,6 +2775,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-promises-mkdtemp.ast',
             code: 'HEURISTICS_FS_PROMISES_MKDTEMP_AST',
             message: 'AST heuristic detected fs.promises.mkdtemp usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsUtimesCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-utimes-callback.ast',
+            code: 'HEURISTICS_FS_UTIMES_CALLBACK_AST',
+            message: 'AST heuristic detected fs.utimes callback usage.',
             filePath: fileFact.path,
           })
         );
