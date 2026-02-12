@@ -176,7 +176,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript callback-style `fs.readFile` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript callback-style `fs.writeFile` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript callback-style `fs.appendFile` semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: callback-style `fs.readdir` semantic detection.
+  - ✅ Added TypeScript callback-style `fs.readdir` semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: callback-style `fs.mkdir` semantic detection.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
