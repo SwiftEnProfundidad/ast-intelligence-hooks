@@ -64,6 +64,7 @@
   - `heuristics.ts.fs-promises-utimes.ast`
   - `heuristics.ts.fs-promises-lstat.ast`
   - `heuristics.ts.fs-promises-realpath.ast`
+  - `heuristics.ts.fs-promises-symlink.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -120,6 +121,7 @@
 - `heuristics.ts.fs-promises-utimes.ast`
 - `heuristics.ts.fs-promises-lstat.ast`
 - `heuristics.ts.fs-promises-realpath.ast`
+- `heuristics.ts.fs-promises-symlink.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
