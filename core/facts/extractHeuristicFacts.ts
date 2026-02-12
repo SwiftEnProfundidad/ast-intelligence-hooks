@@ -89,6 +89,30 @@ const hasConsoleLogCall = (node: unknown): boolean => {
   });
 };
 
+const hasConsoleErrorCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'console' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'error'
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -655,6 +679,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.console-log.ast',
             code: 'HEURISTICS_CONSOLE_LOG_AST',
             message: 'AST heuristic detected console.log usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasConsoleErrorCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.console-error.ast',
+            code: 'HEURISTICS_CONSOLE_ERROR_AST',
+            message: 'AST heuristic detected console.error usage.',
             filePath: fileFact.path,
           })
         );
