@@ -1816,6 +1816,49 @@ const hasFsUnwatchFileCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsReadFileCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isReadFileProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'readFile') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'readFile');
+      if (!isReadFileProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -2945,6 +2988,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-unwatch-file-callback.ast',
             code: 'HEURISTICS_FS_UNWATCH_FILE_CALLBACK_AST',
             message: 'AST heuristic detected fs.unwatchFile callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsReadFileCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-read-file-callback.ast',
+            code: 'HEURISTICS_FS_READ_FILE_CALLBACK_AST',
+            message: 'AST heuristic detected fs.readFile callback usage.',
             filePath: fileFact.path,
           })
         );
