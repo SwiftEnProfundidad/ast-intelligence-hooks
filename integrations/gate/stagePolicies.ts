@@ -53,6 +53,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.fs-promises-readlink.ast',
   'heuristics.ts.fs-promises-open.ast',
   'heuristics.ts.fs-promises-opendir.ast',
+  'heuristics.ts.fs-promises-cp.ast',
   'heuristics.ts.child-process-exec-file.ast',
   'heuristics.ts.explicit-any.ast',
   'heuristics.ts.debugger.ast',
