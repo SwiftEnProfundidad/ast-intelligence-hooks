@@ -50,6 +50,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.fs-promises-realpath.ast',
   'heuristics.ts.fs-promises-symlink.ast',
   'heuristics.ts.fs-promises-link.ast',
+  'heuristics.ts.fs-promises-readlink.ast',
   'heuristics.ts.child-process-exec-file.ast',
   'heuristics.ts.explicit-any.ast',
   'heuristics.ts.debugger.ast',
