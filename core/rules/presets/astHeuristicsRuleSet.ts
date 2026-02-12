@@ -380,6 +380,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.child-process-spawn.ast',
+    description: 'Detects spawn usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.child-process-spawn.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected spawn usage.',
+      code: 'HEURISTICS_CHILD_PROCESS_SPAWN_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.debugger.ast',
     description: 'Detects debugger statements in TypeScript/TSX production files.',
     severity: 'WARN',
