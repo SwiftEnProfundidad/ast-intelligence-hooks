@@ -57,6 +57,7 @@
   - `heuristics.ts.fs-promises-mkdir.ast`
   - `heuristics.ts.fs-promises-stat.ast`
   - `heuristics.ts.fs-promises-copy-file.ast`
+  - `heuristics.ts.fs-promises-rename.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -106,6 +107,7 @@
 - `heuristics.ts.fs-promises-mkdir.ast`
 - `heuristics.ts.fs-promises-stat.ast`
 - `heuristics.ts.fs-promises-copy-file.ast`
+- `heuristics.ts.fs-promises-rename.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
