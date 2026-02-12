@@ -85,13 +85,13 @@ For full historical execution details, see:
     - `startup_failure_runs: 0`
     - `startup_stalled_runs: 8`
     - `oldest_queued_run_age_minutes: 11`
-    - latest probe: `21929797628` (`queued`, `jobs=0`, `artifacts=0`)
+    - latest probe: `21929829140` (`queued`, `jobs=0`, `artifacts=0`)
     - cancel attempts on queued runs return `HTTP 500`
   - Escalation handoff is ready in repo:
     - `docs/validation/consumer-startup-escalation-handoff-latest.md`
   - Packaged attachment bundle (ready to share):
     - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
-    - `sha256: 64d0f8eb060aecc55a2f5b7556925faa9540566d7b0b0967f63a73ae1bc4c4b9`
+    - `sha256: 9bf444bbd515837daf70ec040c06a15b82387af6213d2f8fe048de04c99676b5`
   - Pending external action:
     - root cause identified: billing for GitHub Actions is currently inactive/unavailable in consumer account.
     - unblock requires billing reactivation before any meaningful runtime retry.
