@@ -257,6 +257,30 @@ const hasInnerHtmlAssignment = (node: unknown): boolean => {
   });
 };
 
+const hasDocumentWriteCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'document' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'write'
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -933,6 +957,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.inner-html.ast',
             code: 'HEURISTICS_INNER_HTML_AST',
             message: 'AST heuristic detected innerHTML assignment.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasDocumentWriteCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.document-write.ast',
+            code: 'HEURISTICS_DOCUMENT_WRITE_AST',
+            message: 'AST heuristic detected document.write usage.',
             filePath: fileFact.path,
           })
         );

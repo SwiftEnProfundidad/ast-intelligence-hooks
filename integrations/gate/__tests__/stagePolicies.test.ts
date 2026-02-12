@@ -92,6 +92,7 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
   assert.equal(findSeverity('heuristics.ts.process-exit.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.delete-operator.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.inner-html.ast', 'PRE_COMMIT'), 'WARN');
+  assert.equal(findSeverity('heuristics.ts.document-write.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.debugger.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ios.force-unwrap.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ios.force-try.ast', 'PRE_COMMIT'), 'WARN');
@@ -111,6 +112,7 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
   assert.equal(findSeverity('heuristics.ts.process-exit.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.delete-operator.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.inner-html.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.document-write.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.explicit-any.ast', 'CI'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.debugger.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ios.force-unwrap.ast', 'PRE_PUSH'), 'ERROR');
@@ -489,6 +491,38 @@ test('gate promotes innerHTML heuristic to blocking in PRE_PUSH and CI only', ()
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [innerHtmlFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes document.write heuristic to blocking in PRE_PUSH and CI only', () => {
+  const documentWriteFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.document-write.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_DOCUMENT_WRITE_AST',
+    message: 'AST heuristic detected document.write usage.',
+    filePath: 'apps/frontend/src/main.tsx',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [documentWriteFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [documentWriteFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [documentWriteFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');

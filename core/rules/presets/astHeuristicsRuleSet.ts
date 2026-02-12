@@ -236,6 +236,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.document-write.ast',
+    description: 'Detects document.write usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.document-write.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected document.write usage.',
+      code: 'HEURISTICS_DOCUMENT_WRITE_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.debugger.ast',
     description: 'Detects debugger statements in TypeScript/TSX production files.',
     severity: 'WARN',
