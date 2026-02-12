@@ -26,6 +26,7 @@
 - `PRE_PUSH` and `CI` promote selected high-confidence heuristic rules to `ERROR`:
   - `heuristics.ts.console-log.ast`
   - `heuristics.ts.console-error.ast`
+  - `heuristics.ts.eval.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -44,6 +45,7 @@
 - `heuristics.ts.explicit-any.ast`
 - `heuristics.ts.console-log.ast`
 - `heuristics.ts.console-error.ast`
+- `heuristics.ts.eval.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`

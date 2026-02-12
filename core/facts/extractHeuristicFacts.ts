@@ -113,6 +113,16 @@ const hasConsoleErrorCall = (node: unknown): boolean => {
   });
 };
 
+const hasEvalCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    return isObject(callee) && callee.type === 'Identifier' && callee.name === 'eval';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -690,6 +700,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.console-error.ast',
             code: 'HEURISTICS_CONSOLE_ERROR_AST',
             message: 'AST heuristic detected console.error usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasEvalCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.eval.ast',
+            code: 'HEURISTICS_EVAL_AST',
+            message: 'AST heuristic detected eval usage.',
             filePath: fileFact.path,
           })
         );
