@@ -1988,6 +1988,49 @@ const hasFsReaddirCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsMkdirCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isMkdirProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'mkdir') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'mkdir');
+      if (!isMkdirProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -3161,6 +3204,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-readdir-callback.ast',
             code: 'HEURISTICS_FS_READDIR_CALLBACK_AST',
             message: 'AST heuristic detected fs.readdir callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsMkdirCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-mkdir-callback.ast',
+            code: 'HEURISTICS_FS_MKDIR_CALLBACK_AST',
+            message: 'AST heuristic detected fs.mkdir callback usage.',
             filePath: fileFact.path,
           })
         );
