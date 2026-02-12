@@ -379,6 +379,30 @@ const hasFsWriteFileSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasExecSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (isObject(callee) && callee.type === 'Identifier') {
+      return callee.name === 'execSync';
+    }
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+    const propertyNode = callee.property;
+    if (!isObject(propertyNode)) {
+      return false;
+    }
+    if (callee.computed === true) {
+      return propertyNode.type === 'StringLiteral' && propertyNode.value === 'execSync';
+    }
+    return propertyNode.type === 'Identifier' && propertyNode.name === 'execSync';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -1110,6 +1134,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-write-file-sync.ast',
             code: 'HEURISTICS_FS_WRITE_FILE_SYNC_AST',
             message: 'AST heuristic detected fs.writeFileSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasExecSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.child-process-exec-sync.ast',
+            code: 'HEURISTICS_CHILD_PROCESS_EXEC_SYNC_AST',
+            message: 'AST heuristic detected execSync usage.',
             filePath: fileFact.path,
           })
         );
