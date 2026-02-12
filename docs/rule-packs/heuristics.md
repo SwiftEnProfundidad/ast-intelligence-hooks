@@ -62,6 +62,7 @@
   - `heuristics.ts.fs-promises-chmod.ast`
   - `heuristics.ts.fs-promises-chown.ast`
   - `heuristics.ts.fs-promises-utimes.ast`
+  - `heuristics.ts.fs-promises-lstat.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -116,6 +117,7 @@
 - `heuristics.ts.fs-promises-chmod.ast`
 - `heuristics.ts.fs-promises-chown.ast`
 - `heuristics.ts.fs-promises-utimes.ast`
+- `heuristics.ts.fs-promises-lstat.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
