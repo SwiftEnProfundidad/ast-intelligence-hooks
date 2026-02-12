@@ -31,6 +31,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.child-process-spawn.ast',
   'heuristics.ts.child-process-fork.ast',
   'heuristics.ts.child-process-exec-file-sync.ast',
+  'heuristics.ts.fs-append-file-sync.ast',
   'heuristics.ts.explicit-any.ast',
   'heuristics.ts.debugger.ast',
   'heuristics.ios.force-unwrap.ast',

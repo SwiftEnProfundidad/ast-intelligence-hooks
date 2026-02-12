@@ -523,6 +523,29 @@ const hasExecFileSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsAppendFileSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'appendFileSync'
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -1320,6 +1343,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.child-process-exec-file-sync.ast',
             code: 'HEURISTICS_CHILD_PROCESS_EXEC_FILE_SYNC_AST',
             message: 'AST heuristic detected execFileSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsAppendFileSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-append-file-sync.ast',
+            code: 'HEURISTICS_FS_APPEND_FILE_SYNC_AST',
+            message: 'AST heuristic detected fs.appendFileSync usage.',
             filePath: fileFact.path,
           })
         );
