@@ -83,13 +83,14 @@
 - ✅ Consumer triage was rerun for `SwiftEnProfundidad/pumuki-actions-healthcheck-temp` with `auth-check=READY` and updated artifacts in `.audit-reports/consumer-triage-temp/*`.
 - ✅ `phase5-blockers-readiness-latest` now resolves to `READY`; latest closure/handoff are blocked only by active `startup_failure` evidence.
 - ✅ Additional live `workflow_dispatch` probe was executed (`21882829778`) and confirms the same external pattern (`queued` without jobs, no artifacts), with `startup_failure_runs` still present in latest support bundle.
-- ⏳ External Phase 5 handoff final `READY` status is pending unblock of consumer startup blocker.
+- ✅ External escalation package and ticket were finalized (`#4077449`) with deterministic evidence bundle/checksums.
+- ⏳ External Phase 5 final `READY` is deferred until billing reactivation on the consumer account.
 - ✅ Real external pre/post tool hook runtime validation is green (`adapter-session-status=PASS`, `adapter-real-session-report=PASS`, `adapter-readiness=READY`).
 
 ## Phase 9 - Advanced AST Heuristics
 
 - ✅ Initial typed AST heuristics are active.
-- ⏳ High-value semantic heuristics expansion is pending after external rollout closure.
+- ⏳ High-value semantic heuristics expansion is queued in local-only mode (external billing path omitted).
 - ⏳ Additional incremental expansion is pending after external rollout closure.
 
 ## Phase 10 - MCP / Context API Expansion
@@ -258,6 +259,8 @@
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922453687`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 57`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922534566`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 57`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922615395`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 57`, bundle checksum updated).
+- ✅ External startup-unblock retry loop is intentionally paused by operator decision while GitHub billing remains inactive.
+- 🚧 Execute next local refactor batch without external dependencies: Phase 9 semantic heuristics expansion + deterministic regression.
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922741561`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 55`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922851216`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 56`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922930298`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 19`, bundle checksum updated).
@@ -443,9 +446,9 @@
 - ✅ `P8-2b` Submit GitHub Support escalation using packaged evidence bundle and fill `Submission Tracking` fields in handoff (submitted: `4077449` by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`).
 - ✅ `P8-2c` Automate `phase5-latest` docs sync from evidence signals/checksum (`scripts/sync-phase5-latest-docs.sh`, wired into refresh flow).
 - ✅ `P8-3a` Publish deterministic post-billing resume runbook and index it in docs (`docs/validation/phase8-post-billing-reactivation-runbook.md`, `docs/README.md`, `docs/TODO.md`).
-- 🚧 `P8-3` Waiting for billing reactivation in consumer account (known external dependency). Once reactivated, execute `validation:phase8:resume-after-billing` and validate `READY` chain.
+- ⏳ `P8-3` Waiting for billing reactivation in consumer account (known external dependency). Once reactivated, execute `validation:phase8:resume-after-billing` and validate `READY` chain.
 - ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker (after billing reactivation + successful `P8-3`).
 - ✅ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).
 - ⏳ `P8-5` Optional adapter external IDE replay evidence capture (deferred).
-- ⏳ `P9-1` Resume advanced AST semantic heuristics expansion after Phase 8 closure.
+- 🚧 `P9-1` Execute advanced AST semantic heuristics expansion in local-only mode (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

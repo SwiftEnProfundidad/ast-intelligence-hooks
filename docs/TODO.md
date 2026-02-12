@@ -80,21 +80,21 @@ For full historical execution details, see:
   - Regression batch completed after MCP context expansion:
     - `npm run test:mcp` => PASS
     - `npm run test:deterministic` => PASS
-- [ ] Consumer private-repo Actions startup-failure unblock [ACTIVE]:
+- [x] Consumer private-repo Actions startup-failure unblock package and escalation prep:
   - Current live signals (`.audit-reports/phase5-latest/*`):
     - `startup_failure_runs: 0`
     - `startup_stalled_runs: 8`
-    - `oldest_queued_run_age_minutes: 19`
-    - latest probe: `21943852102` (`queued`, `jobs=0`, `artifacts=0`)
+    - `oldest_queued_run_age_minutes: 32`
+    - latest probe: `21944339604` (`queued`, `jobs=0`, `artifacts=0`)
     - cancel attempts on queued runs return `HTTP 500`
   - Escalation handoff is ready in repo:
     - `docs/validation/consumer-startup-escalation-handoff-latest.md`
   - Packaged attachment bundle (ready to share):
     - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
-    - `sha256: a56c3d822497121386e693da877dc9c8b9847b13160c585141d09f288cdedfe2`
-  - Pending external action:
+    - `sha256: 00fbaa5952e3ca32bf6f3e546b76895aa550cc99f4500fadd7e970803420cc0c`
+  - External handoff state:
     - root cause identified: billing for GitHub Actions is currently inactive/unavailable in consumer account.
-    - unblock requires billing reactivation before any meaningful runtime retry.
+    - external retries are intentionally paused; resume only after billing reactivation.
     - resume runbook after billing activation: `docs/validation/phase8-post-billing-reactivation-runbook.md`.
     - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).
     - submission sent to GitHub Support: ticket `4077449`, submitted by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`.
@@ -121,6 +121,9 @@ For full historical execution details, see:
     - close-ready package helper (run only when chain is READY): `npm run validation:phase8:close-ready -- .audit-reports/phase5-latest`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
     - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
+- [ ] Local-only refactor continuation [ACTIVE]:
+  - Phase 9 semantic heuristic expansion (no external billing dependency).
+  - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
     - `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/ast-intelligence-hooks --out-dir .audit-reports/phase5 --mock-consumer --require-adapter-readiness`
