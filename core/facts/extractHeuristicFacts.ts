@@ -157,6 +157,30 @@ const hasSetTimeoutStringCallback = (node: unknown): boolean => {
   });
 };
 
+const hasSetIntervalStringCallback = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'Identifier' || callee.name !== 'setInterval') {
+      return false;
+    }
+    const args = value.arguments;
+    if (!Array.isArray(args) || args.length === 0) {
+      return false;
+    }
+    const firstArg = args[0];
+    return (
+      (isObject(firstArg) && firstArg.type === 'StringLiteral') ||
+      (isObject(firstArg) &&
+        firstArg.type === 'TemplateLiteral' &&
+        Array.isArray(firstArg.expressions) &&
+        firstArg.expressions.length === 0)
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -767,6 +791,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.set-timeout-string.ast',
             code: 'HEURISTICS_SET_TIMEOUT_STRING_AST',
             message: 'AST heuristic detected setTimeout with a string callback.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasSetIntervalStringCallback(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.set-interval-string.ast',
+            code: 'HEURISTICS_SET_INTERVAL_STRING_AST',
+            message: 'AST heuristic detected setInterval with a string callback.',
             filePath: fileFact.path,
           })
         );

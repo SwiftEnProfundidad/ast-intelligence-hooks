@@ -29,6 +29,7 @@
   - `heuristics.ts.eval.ast`
   - `heuristics.ts.function-constructor.ast`
   - `heuristics.ts.set-timeout-string.ast`
+  - `heuristics.ts.set-interval-string.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -50,6 +51,7 @@
 - `heuristics.ts.eval.ast`
 - `heuristics.ts.function-constructor.ast`
 - `heuristics.ts.set-timeout-string.ast`
+- `heuristics.ts.set-interval-string.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
