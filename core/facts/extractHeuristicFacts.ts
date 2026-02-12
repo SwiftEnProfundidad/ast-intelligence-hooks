@@ -356,6 +356,29 @@ const hasProcessEnvMutation = (node: unknown): boolean => {
   });
 };
 
+const hasFsWriteFileSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'writeFileSync'
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -1076,6 +1099,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.process-env-mutation.ast',
             code: 'HEURISTICS_PROCESS_ENV_MUTATION_AST',
             message: 'AST heuristic detected process.env mutation.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsWriteFileSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-write-file-sync.ast',
+            code: 'HEURISTICS_FS_WRITE_FILE_SYNC_AST',
+            message: 'AST heuristic detected fs.writeFileSync usage.',
             filePath: fileFact.path,
           })
         );

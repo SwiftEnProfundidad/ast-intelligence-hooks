@@ -39,6 +39,7 @@
   - `heuristics.ts.insert-adjacent-html.ast`
   - `heuristics.ts.child-process-import.ast`
   - `heuristics.ts.process-env-mutation.ast`
+  - `heuristics.ts.fs-write-file-sync.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -70,6 +71,7 @@
 - `heuristics.ts.insert-adjacent-html.ast`
 - `heuristics.ts.child-process-import.ast`
 - `heuristics.ts.process-env-mutation.ast`
+- `heuristics.ts.fs-write-file-sync.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
