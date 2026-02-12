@@ -171,7 +171,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript `fs.promises.mkdtemp` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript callback-style `fs.utimes` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript callback-style `fs.watch` semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: callback-style `fs.watchFile` semantic detection.
+  - ✅ Added TypeScript callback-style `fs.watchFile` semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: callback-style `fs.unwatchFile` semantic detection.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
