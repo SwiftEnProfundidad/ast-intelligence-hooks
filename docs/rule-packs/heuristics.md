@@ -53,6 +53,7 @@
   - `heuristics.ts.fs-promises-rm.ast`
   - `heuristics.ts.fs-promises-unlink.ast`
   - `heuristics.ts.fs-promises-read-file.ast`
+  - `heuristics.ts.fs-promises-readdir.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -98,6 +99,7 @@
 - `heuristics.ts.fs-promises-rm.ast`
 - `heuristics.ts.fs-promises-unlink.ast`
 - `heuristics.ts.fs-promises-read-file.ast`
+- `heuristics.ts.fs-promises-readdir.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
