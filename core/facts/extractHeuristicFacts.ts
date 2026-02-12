@@ -2031,6 +2031,49 @@ const hasFsMkdirCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsRmdirCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isRmdirProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'rmdir') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'rmdir');
+      if (!isRmdirProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -3215,6 +3258,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-mkdir-callback.ast',
             code: 'HEURISTICS_FS_MKDIR_CALLBACK_AST',
             message: 'AST heuristic detected fs.mkdir callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsRmdirCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-rmdir-callback.ast',
+            code: 'HEURISTICS_FS_RMDIR_CALLBACK_AST',
+            message: 'AST heuristic detected fs.rmdir callback usage.',
             filePath: fileFact.path,
           })
         );
