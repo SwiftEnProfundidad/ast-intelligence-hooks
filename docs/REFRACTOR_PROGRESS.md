@@ -104,6 +104,7 @@
 - ✅ TypeScript AST `document.write` call heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript AST `insertAdjacentHTML` call heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript AST `child_process` import/require heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
+- ✅ TypeScript AST `process.env` mutation heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ⏳ High-value semantic heuristics expansion is queued in local-only mode (external billing path omitted).
 - ⏳ Additional incremental expansion is pending after external rollout closure.
 
@@ -288,6 +289,7 @@
 - ✅ Local Phase 9 batch completed: `document.write` call heuristic added with passing targeted suites.
 - ✅ Local Phase 9 batch completed: `insertAdjacentHTML` call heuristic added with passing targeted suites.
 - ✅ Local Phase 9 batch completed: `child_process` import/require heuristic added with passing targeted suites.
+- ✅ Local Phase 9 batch completed: `process.env` mutation heuristic added with passing targeted suites.
 - 🚧 Execute next local refactor batch: add one additional high-signal semantic heuristic with deterministic tests/docs.
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922741561`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 55`, bundle checksum updated).
 - ✅ `phase8:tick` was re-executed and synced current snapshot (`latest probe: 21922851216`, `startup_stalled_runs: 8`, `oldest_queued_run_age_minutes: 56`, bundle checksum updated).

@@ -330,6 +330,32 @@ const hasChildProcessImport = (node: unknown): boolean => {
   });
 };
 
+const hasProcessEnvMutation = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'AssignmentExpression') {
+      return false;
+    }
+    const left = value.left;
+    if (!isObject(left) || left.type !== 'MemberExpression') {
+      return false;
+    }
+    const outerObjectNode = left.object;
+    if (!isObject(outerObjectNode) || outerObjectNode.type !== 'MemberExpression') {
+      return false;
+    }
+    const processNode = outerObjectNode.object;
+    const envNode = outerObjectNode.property;
+    return (
+      isObject(processNode) &&
+      processNode.type === 'Identifier' &&
+      processNode.name === 'process' &&
+      isObject(envNode) &&
+      envNode.type === 'Identifier' &&
+      envNode.name === 'env'
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -1039,6 +1065,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.child-process-import.ast',
             code: 'HEURISTICS_CHILD_PROCESS_IMPORT_AST',
             message: 'AST heuristic detected child_process import/require usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasProcessEnvMutation(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.process-env-mutation.ast',
+            code: 'HEURISTICS_PROCESS_ENV_MUTATION_AST',
+            message: 'AST heuristic detected process.env mutation.',
             filePath: fileFact.path,
           })
         );

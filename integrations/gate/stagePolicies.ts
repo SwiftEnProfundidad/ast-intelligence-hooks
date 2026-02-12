@@ -23,6 +23,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.document-write.ast',
   'heuristics.ts.insert-adjacent-html.ast',
   'heuristics.ts.child-process-import.ast',
+  'heuristics.ts.process-env-mutation.ast',
   'heuristics.ts.explicit-any.ast',
   'heuristics.ts.debugger.ast',
   'heuristics.ios.force-unwrap.ast',
