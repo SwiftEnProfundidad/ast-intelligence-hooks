@@ -19,6 +19,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.with-statement.ast',
   'heuristics.ts.process-exit.ast',
   'heuristics.ts.delete-operator.ast',
+  'heuristics.ts.inner-html.ast',
   'heuristics.ts.explicit-any.ast',
   'heuristics.ts.debugger.ast',
   'heuristics.ios.force-unwrap.ast',

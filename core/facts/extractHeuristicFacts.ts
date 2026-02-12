@@ -237,6 +237,26 @@ const hasDeleteOperator = (node: unknown): boolean => {
   });
 };
 
+const hasInnerHtmlAssignment = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'AssignmentExpression') {
+      return false;
+    }
+    const left = value.left;
+    if (!isObject(left) || left.type !== 'MemberExpression') {
+      return false;
+    }
+    const propertyNode = left.property;
+    if (!isObject(propertyNode)) {
+      return false;
+    }
+    if (left.computed === true) {
+      return propertyNode.type === 'StringLiteral' && propertyNode.value === 'innerHTML';
+    }
+    return propertyNode.type === 'Identifier' && propertyNode.name === 'innerHTML';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -902,6 +922,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.delete-operator.ast',
             code: 'HEURISTICS_DELETE_OPERATOR_AST',
             message: 'AST heuristic detected delete-operator usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasInnerHtmlAssignment(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.inner-html.ast',
+            code: 'HEURISTICS_INNER_HTML_AST',
+            message: 'AST heuristic detected innerHTML assignment.',
             filePath: fileFact.path,
           })
         );
