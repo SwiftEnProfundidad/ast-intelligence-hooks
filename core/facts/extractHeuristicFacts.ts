@@ -475,6 +475,30 @@ const hasSpawnCall = (node: unknown): boolean => {
   });
 };
 
+const hasForkCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (isObject(callee) && callee.type === 'Identifier') {
+      return callee.name === 'fork';
+    }
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+    const propertyNode = callee.property;
+    if (!isObject(propertyNode)) {
+      return false;
+    }
+    if (callee.computed === true) {
+      return propertyNode.type === 'StringLiteral' && propertyNode.value === 'fork';
+    }
+    return propertyNode.type === 'Identifier' && propertyNode.name === 'fork';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -1250,6 +1274,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.child-process-spawn.ast',
             code: 'HEURISTICS_CHILD_PROCESS_SPAWN_AST',
             message: 'AST heuristic detected spawn usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasForkCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.child-process-fork.ast',
+            code: 'HEURISTICS_CHILD_PROCESS_FORK_AST',
+            message: 'AST heuristic detected fork usage.',
             filePath: fileFact.path,
           })
         );

@@ -398,6 +398,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.child-process-fork.ast',
+    description: 'Detects fork usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.child-process-fork.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fork usage.',
+      code: 'HEURISTICS_CHILD_PROCESS_FORK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.debugger.ast',
     description: 'Detects debugger statements in TypeScript/TSX production files.',
     severity: 'WARN',
