@@ -118,7 +118,7 @@ Latest regenerated external evidence (`.audit-reports/phase5-latest/*`) remains 
 
 Latest controlled probe run URL:
 
-- `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21942664185`
+- `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21942766098`
 
 ## Escalation Refresh Sequence (Phase5 Latest)
 
