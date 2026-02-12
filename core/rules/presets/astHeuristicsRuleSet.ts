@@ -344,6 +344,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.child-process-exec.ast',
+    description: 'Detects exec usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.child-process-exec.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected exec usage.',
+      code: 'HEURISTICS_CHILD_PROCESS_EXEC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.debugger.ast',
     description: 'Detects debugger statements in TypeScript/TSX production files.',
     severity: 'WARN',
