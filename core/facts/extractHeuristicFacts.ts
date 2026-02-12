@@ -123,6 +123,16 @@ const hasEvalCall = (node: unknown): boolean => {
   });
 };
 
+const hasFunctionConstructorUsage = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'NewExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    return isObject(callee) && callee.type === 'Identifier' && callee.name === 'Function';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -711,6 +721,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.eval.ast',
             code: 'HEURISTICS_EVAL_AST',
             message: 'AST heuristic detected eval usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFunctionConstructorUsage(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.function-constructor.ast',
+            code: 'HEURISTICS_FUNCTION_CONSTRUCTOR_AST',
+            message: 'AST heuristic detected Function constructor usage.',
             filePath: fileFact.path,
           })
         );

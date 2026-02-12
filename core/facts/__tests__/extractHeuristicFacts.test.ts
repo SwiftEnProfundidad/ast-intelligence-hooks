@@ -23,7 +23,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -39,6 +39,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     'heuristics.ts.empty-catch.ast',
     'heuristics.ts.eval.ast',
     'heuristics.ts.explicit-any.ast',
+    'heuristics.ts.function-constructor.ast',
   ]);
 });
 
@@ -47,7 +48,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     facts: [
       fileContentFact(
         'apps/backend/src/feature/file.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -63,6 +64,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     'heuristics.ts.empty-catch.ast',
     'heuristics.ts.eval.ast',
     'heuristics.ts.explicit-any.ast',
+    'heuristics.ts.function-constructor.ast',
   ]);
   assert.equal(extracted.every((finding) => finding.source === 'heuristics:ast'), true);
 });
@@ -72,7 +74,7 @@ test('skips TypeScript heuristics for test files', () => {
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.spec.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -180,7 +182,7 @@ test('extracts typed heuristic facts with expected metadata', () => {
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -188,7 +190,7 @@ test('extracts typed heuristic facts with expected metadata', () => {
     },
   });
 
-  assert.equal(extracted.length, 6);
+  assert.equal(extracted.length, 7);
   assert.equal(extracted.every((fact) => fact.kind === 'Heuristic'), true);
   assert.equal(extracted.every((fact) => fact.source === 'heuristics:ast'), true);
 });

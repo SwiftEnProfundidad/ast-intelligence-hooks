@@ -27,6 +27,7 @@
   - `heuristics.ts.console-log.ast`
   - `heuristics.ts.console-error.ast`
   - `heuristics.ts.eval.ast`
+  - `heuristics.ts.function-constructor.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -46,6 +47,7 @@
 - `heuristics.ts.console-log.ast`
 - `heuristics.ts.console-error.ast`
 - `heuristics.ts.eval.ast`
+- `heuristics.ts.function-constructor.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
