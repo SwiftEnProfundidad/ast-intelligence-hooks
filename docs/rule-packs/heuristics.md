@@ -37,6 +37,7 @@
   - `heuristics.ts.inner-html.ast`
   - `heuristics.ts.document-write.ast`
   - `heuristics.ts.insert-adjacent-html.ast`
+  - `heuristics.ts.child-process-import.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -66,6 +67,7 @@
 - `heuristics.ts.inner-html.ast`
 - `heuristics.ts.document-write.ast`
 - `heuristics.ts.insert-adjacent-html.ast`
+- `heuristics.ts.child-process-import.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`

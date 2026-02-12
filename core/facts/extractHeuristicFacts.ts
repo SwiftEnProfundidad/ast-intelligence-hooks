@@ -303,6 +303,33 @@ const hasInsertAdjacentHtmlCall = (node: unknown): boolean => {
   });
 };
 
+const hasChildProcessImport = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type === 'ImportDeclaration') {
+      const source = value.source;
+      return (
+        isObject(source) &&
+        ((source.type === 'StringLiteral' && source.value === 'child_process') ||
+          (source.type === 'Literal' && source.value === 'child_process'))
+      );
+    }
+
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'Identifier' || callee.name !== 'require') {
+      return false;
+    }
+    const firstArg = value.arguments[0];
+    return (
+      isObject(firstArg) &&
+      ((firstArg.type === 'StringLiteral' && firstArg.value === 'child_process') ||
+        (firstArg.type === 'Literal' && firstArg.value === 'child_process'))
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -1001,6 +1028,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.insert-adjacent-html.ast',
             code: 'HEURISTICS_INSERT_ADJACENT_HTML_AST',
             message: 'AST heuristic detected insertAdjacentHTML usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasChildProcessImport(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.child-process-import.ast',
+            code: 'HEURISTICS_CHILD_PROCESS_IMPORT_AST',
+            message: 'AST heuristic detected child_process import/require usage.',
             filePath: fileFact.path,
           })
         );

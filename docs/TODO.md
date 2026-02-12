@@ -135,6 +135,7 @@ For full historical execution details, see:
   - ✅ Added TypeScript `innerHTML` assignment semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `document.write` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `insertAdjacentHTML` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `child_process` import/require semantic heuristic with stage-aware promotion and passing tests.
   - 🚧 Continue Phase 9 semantic heuristic expansion (no external billing dependency) with next high-signal rule.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
