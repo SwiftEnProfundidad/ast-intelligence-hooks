@@ -72,6 +72,7 @@
   - `heuristics.ts.fs-promises-cp.ast`
   - `heuristics.ts.fs-promises-mkdtemp.ast`
   - `heuristics.ts.fs-utimes-callback.ast`
+  - `heuristics.ts.fs-watch-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -136,6 +137,7 @@
 - `heuristics.ts.fs-promises-cp.ast`
 - `heuristics.ts.fs-promises-mkdtemp.ast`
 - `heuristics.ts.fs-utimes-callback.ast`
+- `heuristics.ts.fs-watch-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
