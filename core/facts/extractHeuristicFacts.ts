@@ -181,6 +181,28 @@ const hasSetIntervalStringCallback = (node: unknown): boolean => {
   });
 };
 
+const hasAsyncPromiseExecutor = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'NewExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'Identifier' || callee.name !== 'Promise') {
+      return false;
+    }
+    const args = value.arguments;
+    if (!Array.isArray(args) || args.length === 0) {
+      return false;
+    }
+    const firstArg = args[0];
+    return (
+      isObject(firstArg) &&
+      (firstArg.type === 'ArrowFunctionExpression' || firstArg.type === 'FunctionExpression') &&
+      firstArg.async === true
+    );
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -802,6 +824,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.set-interval-string.ast',
             code: 'HEURISTICS_SET_INTERVAL_STRING_AST',
             message: 'AST heuristic detected setInterval with a string callback.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasAsyncPromiseExecutor(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.new-promise-async.ast',
+            code: 'HEURISTICS_NEW_PROMISE_ASYNC_AST',
+            message: 'AST heuristic detected async Promise executor usage.',
             filePath: fileFact.path,
           })
         );

@@ -23,7 +23,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -40,6 +40,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
     'heuristics.ts.eval.ast',
     'heuristics.ts.explicit-any.ast',
     'heuristics.ts.function-constructor.ast',
+    'heuristics.ts.new-promise-async.ast',
     'heuristics.ts.set-interval-string.ast',
     'heuristics.ts.set-timeout-string.ast',
   ]);
@@ -50,7 +51,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     facts: [
       fileContentFact(
         'apps/backend/src/feature/file.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -67,6 +68,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
     'heuristics.ts.eval.ast',
     'heuristics.ts.explicit-any.ast',
     'heuristics.ts.function-constructor.ast',
+    'heuristics.ts.new-promise-async.ast',
     'heuristics.ts.set-interval-string.ast',
     'heuristics.ts.set-timeout-string.ast',
   ]);
@@ -78,7 +80,7 @@ test('skips TypeScript heuristics for test files', () => {
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.spec.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -186,7 +188,7 @@ test('extracts typed heuristic facts with expected metadata', () => {
     facts: [
       fileContentFact(
         'apps/frontend/src/feature/file.ts',
-        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); debugger;'
+        'const value: any = 1; try { work(); } catch {} console.log(value); console.error(value); eval("x"); new Function("return 1"); setTimeout("work()", 100); setInterval("work()", 100); new Promise(async (resolve) => resolve(value)); debugger;'
       ),
     ],
     detectedPlatforms: {
@@ -194,7 +196,7 @@ test('extracts typed heuristic facts with expected metadata', () => {
     },
   });
 
-  assert.equal(extracted.length, 9);
+  assert.equal(extracted.length, 10);
   assert.equal(extracted.every((fact) => fact.kind === 'Heuristic'), true);
   assert.equal(extracted.every((fact) => fact.source === 'heuristics:ast'), true);
 });

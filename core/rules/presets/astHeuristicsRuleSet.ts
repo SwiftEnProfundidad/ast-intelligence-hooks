@@ -146,6 +146,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.new-promise-async.ast',
+    description: 'Detects async Promise executor usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.new-promise-async.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected async Promise executor usage.',
+      code: 'HEURISTICS_NEW_PROMISE_ASYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.debugger.ast',
     description: 'Detects debugger statements in TypeScript/TSX production files.',
     severity: 'WARN',
