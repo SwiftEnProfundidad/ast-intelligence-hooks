@@ -48,6 +48,7 @@
   - `heuristics.ts.child-process-exec-file-sync.ast`
   - `heuristics.ts.child-process-exec-file.ast`
   - `heuristics.ts.fs-append-file-sync.ast`
+  - `heuristics.ts.fs-promises-write-file.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -88,6 +89,7 @@
 - `heuristics.ts.child-process-exec-file-sync.ast`
 - `heuristics.ts.child-process-exec-file.ast`
 - `heuristics.ts.fs-append-file-sync.ast`
+- `heuristics.ts.fs-promises-write-file.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`

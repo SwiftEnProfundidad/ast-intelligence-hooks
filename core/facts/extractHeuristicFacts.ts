@@ -546,6 +546,54 @@ const hasFsAppendFileSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsPromisesWriteFileCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const propertyNode = callee.property;
+    const isWriteFileProperty =
+      (callee.computed === true &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'StringLiteral' &&
+        propertyNode.value === 'writeFile') ||
+      (callee.computed !== true &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'Identifier' &&
+        propertyNode.name === 'writeFile');
+    if (!isWriteFileProperty) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    if (!isObject(objectNode) || objectNode.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const promisesProperty = objectNode.property;
+    const isPromisesProperty =
+      (objectNode.computed === true &&
+        isObject(promisesProperty) &&
+        promisesProperty.type === 'StringLiteral' &&
+        promisesProperty.value === 'promises') ||
+      (objectNode.computed !== true &&
+        isObject(promisesProperty) &&
+        promisesProperty.type === 'Identifier' &&
+        promisesProperty.name === 'promises');
+    if (!isPromisesProperty) {
+      return false;
+    }
+
+    const fsNode = objectNode.object;
+    return isObject(fsNode) && fsNode.type === 'Identifier' && fsNode.name === 'fs';
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -1378,6 +1426,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-append-file-sync.ast',
             code: 'HEURISTICS_FS_APPEND_FILE_SYNC_AST',
             message: 'AST heuristic detected fs.appendFileSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsPromisesWriteFileCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-promises-write-file.ast',
+            code: 'HEURISTICS_FS_PROMISES_WRITE_FILE_AST',
+            message: 'AST heuristic detected fs.promises.writeFile usage.',
             filePath: fileFact.path,
           })
         );

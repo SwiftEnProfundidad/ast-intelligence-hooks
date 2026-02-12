@@ -452,6 +452,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-promises-write-file.ast',
+    description: 'Detects fs.promises.writeFile usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-promises-write-file.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.promises.writeFile usage.',
+      code: 'HEURISTICS_FS_PROMISES_WRITE_FILE_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.child-process-exec-file.ast',
     description: 'Detects execFile usage in TypeScript/TSX production files.',
     severity: 'WARN',
