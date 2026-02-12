@@ -76,6 +76,7 @@
   - `heuristics.ts.fs-watch-file-callback.ast`
   - `heuristics.ts.fs-unwatch-file-callback.ast`
   - `heuristics.ts.fs-read-file-callback.ast`
+  - `heuristics.ts.fs-write-file-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -144,6 +145,7 @@
 - `heuristics.ts.fs-watch-file-callback.ast`
 - `heuristics.ts.fs-unwatch-file-callback.ast`
 - `heuristics.ts.fs-read-file-callback.ast`
+- `heuristics.ts.fs-write-file-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
