@@ -81,6 +81,7 @@
   - `heuristics.ts.fs-readdir-callback.ast`
   - `heuristics.ts.fs-mkdir-callback.ast`
   - `heuristics.ts.fs-rmdir-callback.ast`
+  - `heuristics.ts.fs-rm-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -154,6 +155,7 @@
 - `heuristics.ts.fs-readdir-callback.ast`
 - `heuristics.ts.fs-mkdir-callback.ast`
 - `heuristics.ts.fs-rmdir-callback.ast`
+- `heuristics.ts.fs-rm-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
