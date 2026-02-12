@@ -281,6 +281,28 @@ const hasDocumentWriteCall = (node: unknown): boolean => {
   });
 };
 
+const hasInsertAdjacentHtmlCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const propertyNode = callee.property;
+    if (!isObject(propertyNode)) {
+      return false;
+    }
+    if (callee.computed === true) {
+      return propertyNode.type === 'StringLiteral' && propertyNode.value === 'insertAdjacentHTML';
+    }
+    return propertyNode.type === 'Identifier' && propertyNode.name === 'insertAdjacentHTML';
+  });
+};
+
 const hasDebuggerStatement = (node: unknown): boolean => {
   return hasNode(node, (value) => value.type === 'DebuggerStatement');
 };
@@ -968,6 +990,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.document-write.ast',
             code: 'HEURISTICS_DOCUMENT_WRITE_AST',
             message: 'AST heuristic detected document.write usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasInsertAdjacentHtmlCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.insert-adjacent-html.ast',
+            code: 'HEURISTICS_INSERT_ADJACENT_HTML_AST',
+            message: 'AST heuristic detected insertAdjacentHTML usage.',
             filePath: fileFact.path,
           })
         );
