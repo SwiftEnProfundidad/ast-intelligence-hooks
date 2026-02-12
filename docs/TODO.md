@@ -145,7 +145,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript `fork` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `execFileSync` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `fs.appendFileSync` semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion (no external billing dependency) with next high-signal rule.
+  - ✅ Added TypeScript `execFile` semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: `fs.promises.writeFile` semantic detection.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
