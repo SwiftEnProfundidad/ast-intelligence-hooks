@@ -586,6 +586,30 @@ const hasWeakTokenGenerationWithCryptoRandomUuid = (node: unknown): boolean => {
   });
 };
 
+const hasJwtDecodeWithoutVerifyCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      (objectNode.name === 'jwt' || objectNode.name === 'jsonwebtoken') &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'decode'
+    );
+  });
+};
+
 const hasBufferAllocUnsafeCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5530,6 +5554,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.weak-token-randomuuid.ast',
             code: 'HEURISTICS_WEAK_TOKEN_RANDOMUUID_AST',
             message: 'AST heuristic detected weak token generation via crypto.randomUUID.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasJwtDecodeWithoutVerifyCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.jwt-decode-without-verify.ast',
+            code: 'HEURISTICS_JWT_DECODE_WITHOUT_VERIFY_AST',
+            message: 'AST heuristic detected jsonwebtoken.decode usage without verify.',
             filePath: fileFact.path,
           })
         );

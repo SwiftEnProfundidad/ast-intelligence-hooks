@@ -422,6 +422,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.jwt-decode-without-verify.ast',
+    description:
+      'Detects jsonwebtoken.decode usage without signature verification in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.jwt-decode-without-verify.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected jsonwebtoken.decode usage without verify.',
+      code: 'HEURISTICS_JWT_DECODE_WITHOUT_VERIFY_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
     description:
       'Detects Buffer.allocUnsafeSlow usage in TypeScript/TSX production files.',
