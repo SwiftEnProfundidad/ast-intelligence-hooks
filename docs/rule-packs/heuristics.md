@@ -84,6 +84,7 @@
   - `heuristics.ts.fs-rm-callback.ast`
   - `heuristics.ts.fs-rename-callback.ast`
   - `heuristics.ts.fs-copy-file-callback.ast`
+  - `heuristics.ts.fs-stat-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -160,6 +161,7 @@
 - `heuristics.ts.fs-rm-callback.ast`
 - `heuristics.ts.fs-rename-callback.ast`
 - `heuristics.ts.fs-copy-file-callback.ast`
+- `heuristics.ts.fs-stat-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
