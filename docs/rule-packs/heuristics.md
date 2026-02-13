@@ -85,6 +85,8 @@
   - 
 - `heuristics.ts.fs-chmod-sync.ast`
   - 
+- `heuristics.ts.fs-chown-sync.ast`
+  - 
 - `heuristics.ts.child-process-exec-sync.ast`
   - 
 - `heuristics.ts.child-process-exec.ast`
@@ -315,6 +317,8 @@
 - `heuristics.ts.fs-exists-sync.ast`
 - 
 - `heuristics.ts.fs-chmod-sync.ast`
+- 
+- `heuristics.ts.fs-chown-sync.ast`
 - 
 - `heuristics.ts.child-process-exec-sync.ast`
 - 
