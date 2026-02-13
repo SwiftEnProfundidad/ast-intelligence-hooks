@@ -403,6 +403,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.weak-token-randomuuid.ast',
+    description:
+      'Detects token/secret generation using crypto.randomUUID in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.weak-token-randomuuid.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected weak token generation via crypto.randomUUID.',
+      code: 'HEURISTICS_WEAK_TOKEN_RANDOMUUID_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
     description:
       'Detects Buffer.allocUnsafeSlow usage in TypeScript/TSX production files.',

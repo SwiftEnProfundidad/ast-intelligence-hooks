@@ -528,6 +528,64 @@ const hasInsecureTokenGenerationWithDateNow = (node: unknown): boolean => {
   });
 };
 
+const hasWeakTokenGenerationWithCryptoRandomUuid = (node: unknown): boolean => {
+  const sensitiveIdentifierPattern = /(secret|token|password|api[_-]?key)/i;
+  const containsCryptoRandomUuidCall = (candidate: unknown): boolean => {
+    return hasNode(candidate, (value) => {
+      if (value.type !== 'CallExpression') {
+        return false;
+      }
+
+      const callee = value.callee;
+      if (!isObject(callee)) {
+        return false;
+      }
+
+      if (callee.type === 'Identifier' && callee.name === 'randomUUID') {
+        return true;
+      }
+
+      if (callee.type !== 'MemberExpression' || callee.computed === true) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const propertyNode = callee.property;
+      return (
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'crypto' &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'Identifier' &&
+        propertyNode.name === 'randomUUID'
+      );
+    });
+  };
+
+  return hasNode(node, (value) => {
+    if (value.type === 'VariableDeclarator') {
+      const idNode = value.id;
+      if (!isObject(idNode) || idNode.type !== 'Identifier') {
+        return false;
+      }
+      if (!sensitiveIdentifierPattern.test(idNode.name)) {
+        return false;
+      }
+      return containsCryptoRandomUuidCall(value.init);
+    }
+
+    if (value.type === 'AssignmentExpression') {
+      const left = value.left;
+      if (isObject(left) && left.type === 'Identifier' && sensitiveIdentifierPattern.test(left.name)) {
+        return containsCryptoRandomUuidCall(value.right);
+      }
+      return false;
+    }
+
+    return false;
+  });
+};
+
 const hasBufferAllocUnsafeCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5461,6 +5519,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.insecure-token-date-now.ast',
             code: 'HEURISTICS_INSECURE_TOKEN_DATE_NOW_AST',
             message: 'AST heuristic detected insecure token generation via Date.now.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasWeakTokenGenerationWithCryptoRandomUuid(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.weak-token-randomuuid.ast',
+            code: 'HEURISTICS_WEAK_TOKEN_RANDOMUUID_AST',
+            message: 'AST heuristic detected weak token generation via crypto.randomUUID.',
             filePath: fileFact.path,
           })
         );

@@ -100,6 +100,7 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
   assert.equal(findSeverity('heuristics.ts.weak-crypto-hash.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.insecure-token-math-random.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.insecure-token-date-now.ast', 'PRE_COMMIT'), 'WARN');
+  assert.equal(findSeverity('heuristics.ts.weak-token-randomuuid.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.buffer-alloc-unsafe.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.buffer-alloc-unsafe-slow.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-write-file-sync.ast', 'PRE_COMMIT'), 'WARN');
@@ -222,6 +223,7 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
   assert.equal(findSeverity('heuristics.ts.weak-crypto-hash.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.insecure-token-math-random.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.insecure-token-date-now.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.weak-token-randomuuid.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.buffer-alloc-unsafe.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.buffer-alloc-unsafe-slow.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-write-file-sync.ast', 'PRE_PUSH'), 'ERROR');
@@ -983,6 +985,38 @@ test('gate promotes Buffer.allocUnsafe heuristic to blocking in PRE_PUSH and CI 
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [bufferAllocUnsafeFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes crypto.randomUUID token heuristic to blocking in PRE_PUSH and CI only', () => {
+  const weakTokenRandomUuidFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.weak-token-randomuuid.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_WEAK_TOKEN_RANDOMUUID_AST',
+    message: 'AST heuristic detected weak token generation via crypto.randomUUID.',
+    filePath: 'apps/backend/src/main.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [weakTokenRandomUuidFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [weakTokenRandomUuidFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [weakTokenRandomUuidFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');
