@@ -1136,6 +1136,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-statfs-callback.ast',
+    description: 'Detects fs.statfs callback-style usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-statfs-callback.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.statfs callback usage.',
+      code: 'HEURISTICS_FS_STATFS_CALLBACK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-lstat-callback.ast',
     description: 'Detects fs.lstat callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',

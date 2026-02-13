@@ -86,6 +86,7 @@
   - `heuristics.ts.fs-rename-callback.ast`
   - `heuristics.ts.fs-copy-file-callback.ast`
   - `heuristics.ts.fs-stat-callback.ast`
+  - `heuristics.ts.fs-statfs-callback.ast`
   - `heuristics.ts.fs-lstat-callback.ast`
   - `heuristics.ts.fs-realpath-callback.ast`
   - `heuristics.ts.fs-access-callback.ast`
@@ -191,6 +192,7 @@
 - `heuristics.ts.fs-rename-callback.ast`
 - `heuristics.ts.fs-copy-file-callback.ast`
 - `heuristics.ts.fs-stat-callback.ast`
+- `heuristics.ts.fs-statfs-callback.ast`
 - `heuristics.ts.fs-lstat-callback.ast`
 - `heuristics.ts.fs-realpath-callback.ast`
 - `heuristics.ts.fs-access-callback.ast`
