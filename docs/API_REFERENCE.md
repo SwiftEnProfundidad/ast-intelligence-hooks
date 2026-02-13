@@ -126,6 +126,7 @@ Read-only endpoints:
   - snapshot metadata includes `blocking_findings_count` (count of CRITICAL+ERROR findings)
   - includes `ledger_by_platform` (deterministic platform-key order)
   - includes `rulesets_by_platform` (deterministic platform-key order)
+  - includes `rulesets_fingerprint` (deterministic ordered hash signature)
   - includes `detected_platforms_count` (deterministic count of currently detected platforms)
 - `GET /ai-evidence/snapshot`
 - `GET /ai-evidence/findings`

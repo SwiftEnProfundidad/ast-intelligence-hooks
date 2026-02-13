@@ -200,6 +200,12 @@ const toRulesetsByPlatform = (rulesets: AiEvidenceV2_1['rulesets']): Record<stri
   return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
 };
 
+const toRulesetsFingerprint = (rulesets: AiEvidenceV2_1['rulesets']): string => {
+  return sortRulesets(rulesets)
+    .map((ruleset) => ruleset.hash)
+    .join('|');
+};
+
 const inferPlatformFromFilePath = (
   filePath: string
 ): 'ios' | 'backend' | 'frontend' | 'android' | 'generic' => {
@@ -288,6 +294,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     ledger_by_platform: toLedgerByPlatform(evidence.ledger),
     rulesets_count: evidence.rulesets.length,
     rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
+    rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),
     detected_platforms_count: detectedPlatforms.length,
     platforms: detectedPlatforms,
   };
@@ -633,6 +640,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       ledger_by_platform: toLedgerByPlatform(evidence.ledger),
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
+      rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),
       detected_platforms_count: sortPlatforms(evidence.platforms).filter((entry) => entry.detected)
         .length,
       platforms: Object.keys(evidence.platforms).sort(),

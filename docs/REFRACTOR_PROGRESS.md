@@ -189,6 +189,7 @@
 - ✅ Context API summary/status expose deterministic `has_findings` facet.
 - ✅ Context API summary/status expose deterministic `detected_platforms_count` facet.
 - ✅ Context API summary/status expose deterministic `blocking_findings_count` facet.
+- ✅ Context API summary/status expose deterministic `rulesets_fingerprint` facet.
 - 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
@@ -665,4 +666,5 @@
 - ✅ `P10-7` Extend MCP summary/status contract with deterministic `has_findings` facet.
 - ✅ `P10-8` Extend MCP summary/status contract with deterministic `detected_platforms_count` facet.
 - ✅ `P10-9` Extend MCP summary/status contract with deterministic `blocking_findings_count` facet.
-- 🚧 `P10-10` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
+- ✅ `P10-10` Extend MCP summary/status contract with deterministic `rulesets_fingerprint` facet.
+- 🚧 `P10-11` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
