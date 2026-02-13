@@ -268,7 +268,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript child_process spawn/exec shell:true semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript vm dynamic code execution (runInNewContext/runInThisContext) semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript command injection risk via child_process execFile with untrusted args semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Resume MCP/context API incremental expansion after Phase 8 closure.
+  - ✅ Added MCP/context API deterministic `ledger` endpoint with test coverage and docs alignment.
+  - 🚧 Continue MCP/context API incremental expansion with deterministic snapshot endpoint + tests/docs.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

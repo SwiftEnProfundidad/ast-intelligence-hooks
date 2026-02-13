@@ -22,7 +22,9 @@ Applies to any agent runtime (CLI, IDE extension, automation worker) that can pe
    - `GET /ai-evidence/rulesets`
 5. Load active platform state:
    - `GET /ai-evidence/platforms`
-6. Load full evidence only when needed:
+6. Load active ledger continuity context:
+   - `GET /ai-evidence/ledger`
+7. Load full evidence only when needed:
    - `GET /ai-evidence` (or `?view=compact`)
 
 ## Deterministic Decision Gate (Agent Side)
@@ -47,6 +49,7 @@ Use compact endpoints first:
 - `summary` for stage/outcome/counts
 - `platforms` for targeting
 - `rulesets` for policy provenance
+- `ledger` for active recurring-violation continuity
 
 Fetch full `/ai-evidence` only when:
 
@@ -61,6 +64,7 @@ curl -s http://127.0.0.1:7341/status
 curl -s http://127.0.0.1:7341/ai-evidence/summary
 curl -s http://127.0.0.1:7341/ai-evidence/rulesets
 curl -s http://127.0.0.1:7341/ai-evidence/platforms
+curl -s http://127.0.0.1:7341/ai-evidence/ledger
 ```
 
 ## Failure Handling

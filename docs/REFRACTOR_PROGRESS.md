@@ -177,7 +177,7 @@
 ## Phase 10 - MCP / Context API Expansion
 
 - ✅ Read-only MCP evidence server is implemented.
-- ⏳ Context API surface incremental expansion (`summary`, `rulesets`, `platforms`) is pending continuation.
+- ⏳ Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is pending continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
@@ -631,4 +631,5 @@
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript child_process spawn/exec with shell:true detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript vm dynamic code execution (runInNewContext/runInThisContext) detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript command injection risk via child_process execFile with untrusted args detection (external billing path omitted).
-- 🚧 `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.
+- ✅ `P10-1` Extend MCP/context API with deterministic `ledger` endpoint (server + tests + docs).
+- 🚧 `P10-1` Continue MCP/context API incremental expansion with deterministic `snapshot` endpoint (server + tests + docs).

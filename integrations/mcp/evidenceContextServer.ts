@@ -156,6 +156,38 @@ const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   };
 };
 
+const sortLedger = (ledger: AiEvidenceV2_1['ledger']): AiEvidenceV2_1['ledger'] => {
+  return [...ledger].sort((left, right) => {
+    const byRule = left.ruleId.localeCompare(right.ruleId);
+    if (byRule !== 0) {
+      return byRule;
+    }
+    const byFile = left.file.localeCompare(right.file);
+    if (byFile !== 0) {
+      return byFile;
+    }
+    const leftLines = left.lines ? left.lines.join(',') : '';
+    const rightLines = right.lines ? right.lines.join(',') : '';
+    const byLines = leftLines.localeCompare(rightLines);
+    if (byLines !== 0) {
+      return byLines;
+    }
+    const byFirstSeen = left.firstSeen.localeCompare(right.firstSeen);
+    if (byFirstSeen !== 0) {
+      return byFirstSeen;
+    }
+    return left.lastSeen.localeCompare(right.lastSeen);
+  });
+};
+
+const toLedgerPayload = (evidence: AiEvidenceV2_1) => {
+  return {
+    version: evidence.version,
+    timestamp: evidence.timestamp,
+    ledger: sortLedger(evidence.ledger),
+  };
+};
+
 const toResponsePayload = (evidence: AiEvidenceV2_1, requestUrl: URL): unknown => {
   if (includeSuppressedFromQuery(requestUrl)) {
     return evidence;
@@ -219,6 +251,7 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
   const summaryRoute = `${route}/summary`;
   const rulesetsRoute = `${route}/rulesets`;
   const platformsRoute = `${route}/platforms`;
+  const ledgerRoute = `${route}/ledger`;
 
   const server = createServer((req, res) => {
     const method = req.method ?? 'GET';
@@ -284,6 +317,18 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
       }
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(json(toPlatformsPayload(evidence, requestUrl)));
+      return;
+    }
+
+    if (method === 'GET' && path === ledgerRoute) {
+      const evidence = readEvidence(repoRoot);
+      if (!evidence) {
+        res.writeHead(404, { 'content-type': 'application/json' });
+        res.end(json({ error: '.ai_evidence.json not found or invalid v2.1 file' }));
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(json(toLedgerPayload(evidence)));
       return;
     }
 
