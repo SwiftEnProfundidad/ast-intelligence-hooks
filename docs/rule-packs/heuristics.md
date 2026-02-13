@@ -142,6 +142,7 @@
 - `heuristics.ts.hardcoded-secret-token.ast`
 - `heuristics.ts.weak-crypto-hash.ast`
 - `heuristics.ts.insecure-token-math-random.ast`
+- `heuristics.ts.insecure-token-date-now.ast`
   - 
 - 
 - 
@@ -755,6 +756,7 @@
 - `heuristics.ts.hardcoded-secret-token.ast`
 - `heuristics.ts.weak-crypto-hash.ast`
 - `heuristics.ts.insecure-token-math-random.ast`
+- `heuristics.ts.insecure-token-date-now.ast`
 - 
 - 
 - 

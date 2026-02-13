@@ -365,6 +365,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.insecure-token-date-now.ast',
+    description:
+      'Detects insecure token/secret generation using Date.now in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.insecure-token-date-now.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected insecure token generation via Date.now.',
+      code: 'HEURISTICS_INSECURE_TOKEN_DATE_NOW_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-write-file-sync.ast',
     description: 'Detects fs.writeFileSync usage in TypeScript/TSX production files.',
     severity: 'WARN',

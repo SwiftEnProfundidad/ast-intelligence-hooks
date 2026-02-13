@@ -480,6 +480,54 @@ const hasInsecureTokenGenerationWithMathRandom = (node: unknown): boolean => {
   });
 };
 
+const hasInsecureTokenGenerationWithDateNow = (node: unknown): boolean => {
+  const sensitiveIdentifierPattern = /(secret|token|password|api[_-]?key)/i;
+  const containsDateNowCall = (candidate: unknown): boolean => {
+    return hasNode(candidate, (value) => {
+      if (value.type !== 'CallExpression') {
+        return false;
+      }
+      const callee = value.callee;
+      if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+        return false;
+      }
+      const objectNode = callee.object;
+      const propertyNode = callee.property;
+      return (
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'Date' &&
+        isObject(propertyNode) &&
+        propertyNode.type === 'Identifier' &&
+        propertyNode.name === 'now'
+      );
+    });
+  };
+
+  return hasNode(node, (value) => {
+    if (value.type === 'VariableDeclarator') {
+      const idNode = value.id;
+      if (!isObject(idNode) || idNode.type !== 'Identifier') {
+        return false;
+      }
+      if (!sensitiveIdentifierPattern.test(idNode.name)) {
+        return false;
+      }
+      return containsDateNowCall(value.init);
+    }
+
+    if (value.type === 'AssignmentExpression') {
+      const left = value.left;
+      if (isObject(left) && left.type === 'Identifier' && sensitiveIdentifierPattern.test(left.name)) {
+        return containsDateNowCall(value.right);
+      }
+      return false;
+    }
+
+    return false;
+  });
+};
+
 const hasFsWriteFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5354,6 +5402,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.insecure-token-math-random.ast',
             code: 'HEURISTICS_INSECURE_TOKEN_MATH_RANDOM_AST',
             message: 'AST heuristic detected insecure token generation via Math.random.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasInsecureTokenGenerationWithDateNow(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.insecure-token-date-now.ast',
+            code: 'HEURISTICS_INSECURE_TOKEN_DATE_NOW_AST',
+            message: 'AST heuristic detected insecure token generation via Date.now.',
             filePath: fileFact.path,
           })
         );
