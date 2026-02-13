@@ -517,6 +517,29 @@ const hasFsRealpathSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsLstatSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'lstatSync'
+    );
+  });
+};
+
 const hasExecSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4538,6 +4561,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-realpath-sync.ast',
             code: 'HEURISTICS_FS_REALPATH_SYNC_AST',
             message: 'AST heuristic detected fs.realpathSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsLstatSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-lstat-sync.ast',
+            code: 'HEURISTICS_FS_LSTAT_SYNC_AST',
+            message: 'AST heuristic detected fs.lstatSync usage.',
             filePath: fileFact.path,
           })
         );
