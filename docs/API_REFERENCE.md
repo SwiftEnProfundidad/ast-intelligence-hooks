@@ -131,6 +131,7 @@ Read-only endpoints:
   - includes `ledger_rules_count` (deterministic count of distinct rule IDs with open ledger entries)
   - includes `suppressed_replacement_rules_count` (deterministic count of distinct replacement rule IDs in suppressed findings)
   - includes `suppressed_platforms_count` (deterministic count of distinct platforms represented in suppressed findings)
+  - includes `suppressed_files_count` (deterministic count of distinct files represented in suppressed findings)
   - snapshot metadata includes `severity_counts` (deterministic key order)
   - snapshot metadata includes `findings_by_platform` (deterministic platform-key order)
   - snapshot metadata includes `highest_severity` (deterministic severity ranking)
