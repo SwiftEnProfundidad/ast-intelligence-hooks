@@ -278,6 +278,7 @@ const toBlockingFindingsCount = (findings: AiEvidenceV2_1['snapshot']['findings'
 const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   const sortedPlatforms = sortPlatforms(evidence.platforms);
   const detectedPlatforms = sortedPlatforms.filter((entry) => entry.detected);
+  const suppressedFindingsCount = evidence.consolidation?.suppressed?.length ?? 0;
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
@@ -296,6 +297,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     rulesets_count: evidence.rulesets.length,
     rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
     rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),
+    suppressed_findings_count: suppressedFindingsCount,
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -624,6 +626,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
   const { evidence } = readResult;
   const sortedPlatforms = sortPlatforms(evidence.platforms);
   const detectedPlatformsCount = sortedPlatforms.filter((entry) => entry.detected).length;
+  const suppressedFindingsCount = evidence.consolidation?.suppressed?.length ?? 0;
   return {
     status: 'ok',
     context_api: CONTEXT_API_CAPABILITIES,
@@ -646,6 +649,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
       rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),
+      suppressed_findings_count: suppressedFindingsCount,
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
