@@ -67,6 +67,7 @@ For full historical execution details, see:
 - [x] MCP `/status` now exports deterministic pagination bounds for paginated endpoints (`context_api.pagination_bounds`).
 - [x] MCP context endpoint `/ai-evidence/ledger` now supports deterministic pagination (`limit`, `offset`, `maxLimit=100`) alongside time-window filters.
 - [x] MCP paginated endpoints now expose deterministic `pagination.has_more` for stable page iteration.
+- [x] MCP context summary/status now expose deterministic `severity_counts` for pre-action prioritization.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
@@ -283,7 +284,12 @@ For full historical execution details, see:
   - ✅ Added MCP/context API deterministic pagination for `findings` endpoint (`limit`/`offset`) with test coverage and docs alignment.
   - ✅ Added MCP/context API deterministic pagination bounds (`maxLimit=100`) for `findings` with test coverage and docs alignment.
   - ✅ Added MCP/context API deterministic pagination for `rulesets` (`limit`/`offset`, `maxLimit=100`) with test coverage and docs alignment.
-  - 🚧 Continue MCP/context API incremental expansion with deterministic `platforms` pagination semantics + tests/docs.
+  - ✅ Added MCP/context API deterministic pagination for `platforms` (`limit`/`offset`, `maxLimit=100`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic pagination for `ledger` (`limit`/`offset`, `maxLimit=100`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API paginated `has_more` metadata (`findings`, `rulesets`, `platforms`, `ledger`) with test coverage and docs alignment.
+  - ✅ Finalized MCP context contract documentation snippets for agent consumption (`status.pagination_bounds` + paginated payload metadata).
+  - ✅ Added deterministic `severity_counts` to MCP summary/status contracts with test/docs alignment.
+  - 🚧 Continue MCP context incremental expansion with next deterministic summary facets.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

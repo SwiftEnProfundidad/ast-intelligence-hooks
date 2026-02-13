@@ -119,6 +119,7 @@ Read-only endpoints:
   - includes `context_api.endpoints[]`, `context_api.filters`, and `context_api.pagination_bounds` capabilities
 - `GET /ai-evidence`
 - `GET /ai-evidence/summary`
+  - snapshot metadata includes `severity_counts` (deterministic key order)
 - `GET /ai-evidence/snapshot`
 - `GET /ai-evidence/findings`
 - `GET /ai-evidence/findings?limit=...&offset=...`

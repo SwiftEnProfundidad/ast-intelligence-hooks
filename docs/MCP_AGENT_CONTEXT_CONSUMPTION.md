@@ -52,7 +52,7 @@ If any check fails, agent behavior should downgrade to:
 
 Use compact endpoints first:
 
-- `summary` for stage/outcome/counts
+- `summary` for stage/outcome/counts and severity distribution (`severity_counts`)
 - `snapshot` for deterministic findings details
 - `findings` for filtered violation slices (`severity`, `ruleId`, `platform`, `limit`, `offset`, bounded by `maxLimit=100`)
 - `platforms` for targeting (`detectedOnly`, optional `confidence`, `limit`, `offset`, bounded by `maxLimit=100`)
@@ -61,7 +61,6 @@ Use compact endpoints first:
 - `rulesets?platform=...&bundle=...` for deterministic scoped provenance slices
 - paginated endpoint responses expose `pagination.has_more` to drive deterministic page iteration
 - `rulesets?limit=...&offset=...` for deterministic pagination (`maxLimit=100`)
-- `ledger` for active recurring-violation continuity (`lastSeenAfter`/`lastSeenBefore`)
 
 Fetch full `/ai-evidence` only when:
 
@@ -86,6 +85,38 @@ curl -s "http://127.0.0.1:7341/ai-evidence/platforms?detectedOnly=false&limit=20
 curl -s http://127.0.0.1:7341/ai-evidence/ledger
 curl -s "http://127.0.0.1:7341/ai-evidence/ledger?lastSeenAfter=2026-02-01t00:00:00.000z"
 curl -s "http://127.0.0.1:7341/ai-evidence/ledger?lastSeenAfter=2026-02-01t00:00:00.000z&limit=20&offset=0"
+```
+
+## Pagination Contract Snippets
+
+Status capability contract:
+
+```json
+{
+  "context_api": {
+    "pagination_bounds": {
+      "findings": { "max_limit": 100 },
+      "rulesets": { "max_limit": 100 },
+      "platforms": { "max_limit": 100 },
+      "ledger": { "max_limit": 100 }
+    }
+  }
+}
+```
+
+Paginated endpoint metadata contract:
+
+```json
+{
+  "total_count": 3,
+  "pagination": {
+    "requested_limit": 1,
+    "max_limit": 100,
+    "limit": 1,
+    "offset": 1,
+    "has_more": true
+  }
+}
 ```
 
 ## Failure Handling

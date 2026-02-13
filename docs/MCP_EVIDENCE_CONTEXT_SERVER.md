@@ -8,7 +8,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence?includeSuppressed=false`: compact response without `consolidation.suppressed[]`
 - `GET /ai-evidence?view=compact`: alias to hide `consolidation.suppressed[]`
 - `GET /ai-evidence?view=full`: explicit full response (default behavior)
-- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/counts/detected platforms`)
+- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/counts/severity_counts/detected platforms`)
 - `GET /ai-evidence/snapshot`: deterministic snapshot payload (`stage/outcome/findings_count/findings[]`)
 - `GET /ai-evidence/findings`: deterministic findings list with optional filters (`severity`, `ruleId`, `platform`)
 - `GET /ai-evidence/findings?limit=...&offset=...`: deterministic paginated findings slice
@@ -28,7 +28,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`: deterministic filtered/paginated ledger slice (`maxLimit=100`)
   - pagination metadata includes `has_more` when `limit` is provided
 - `GET /health`: basic liveness probe
-- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
+- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts/severity_counts`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
 
 ## Runtime
 
@@ -55,3 +55,41 @@ Environment variables:
 - Read-only: no writes, no mutation endpoints.
 - Returns `404` when evidence is missing or not `v2.1`.
 - Uses repository root `.ai_evidence.json` as source.
+
+## Contract Snippets
+
+`GET /status` capability payload (excerpt):
+
+```json
+{
+  "context_api": {
+    "filters": {
+      "findings": ["severity", "ruleId", "platform", "limit", "offset", "maxLimit"],
+      "rulesets": ["platform", "bundle", "limit", "offset", "maxLimit"],
+      "platforms": ["detectedOnly", "confidence", "limit", "offset", "maxLimit"],
+      "ledger": ["lastSeenAfter", "lastSeenBefore", "limit", "offset", "maxLimit"]
+    },
+    "pagination_bounds": {
+      "findings": { "max_limit": 100 },
+      "rulesets": { "max_limit": 100 },
+      "platforms": { "max_limit": 100 },
+      "ledger": { "max_limit": 100 }
+    }
+  }
+}
+```
+
+Paginated endpoint payload (excerpt):
+
+```json
+{
+  "total_count": 3,
+  "pagination": {
+    "requested_limit": 1,
+    "max_limit": 100,
+    "limit": 1,
+    "offset": 1,
+    "has_more": true
+  }
+}
+```

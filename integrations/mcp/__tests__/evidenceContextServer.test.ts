@@ -168,6 +168,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           stage?: string;
           outcome?: string;
           findings_count?: number;
+          severity_counts?: Record<string, number>;
           ledger_count?: number;
           rulesets_count?: number;
           platforms?: string[];
@@ -192,6 +193,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.stage, 'CI');
       assert.equal(payload.evidence?.outcome, 'PASS');
       assert.equal(payload.evidence?.findings_count, 0);
+      assert.deepEqual(payload.evidence?.severity_counts, {});
       assert.equal(payload.evidence?.ledger_count, 0);
       assert.equal(payload.evidence?.rulesets_count, 0);
       assert.deepEqual(payload.evidence?.platforms, []);
@@ -247,7 +249,12 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(response.status, 200);
       const summary = (await response.json()) as {
         version?: string;
-        snapshot?: { stage?: string; outcome?: string; findings_count?: number };
+        snapshot?: {
+          stage?: string;
+          outcome?: string;
+          findings_count?: number;
+          severity_counts?: Record<string, number>;
+        };
         ledger_count?: number;
         rulesets_count?: number;
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
@@ -256,6 +263,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.snapshot?.stage, 'CI');
       assert.equal(summary.snapshot?.outcome, 'PASS');
       assert.equal(summary.snapshot?.findings_count, 1);
+      assert.deepEqual(summary.snapshot?.severity_counts, { ERROR: 1 });
       assert.equal(summary.ledger_count, 0);
       assert.equal(summary.rulesets_count, 2);
       assert.deepEqual(summary.platforms, [

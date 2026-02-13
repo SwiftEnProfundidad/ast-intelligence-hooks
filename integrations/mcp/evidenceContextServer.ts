@@ -161,6 +161,31 @@ const sortPlatforms = (platforms: AiEvidenceV2_1['platforms']) => {
     }));
 };
 
+const severityOrder = ['CRITICAL', 'ERROR', 'WARN', 'INFO'] as const;
+
+const toSeverityCounts = (
+  findings: AiEvidenceV2_1['snapshot']['findings']
+): Record<string, number> => {
+  const counts = new Map<string, number>();
+  for (const finding of findings) {
+    const key = finding.severity.toUpperCase();
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  const orderedEntries = [...counts.entries()].sort(([left], [right]) => {
+    const leftIndex = severityOrder.indexOf(left as (typeof severityOrder)[number]);
+    const rightIndex = severityOrder.indexOf(right as (typeof severityOrder)[number]);
+    const normalizedLeft = leftIndex === -1 ? Number.MAX_SAFE_INTEGER : leftIndex;
+    const normalizedRight = rightIndex === -1 ? Number.MAX_SAFE_INTEGER : rightIndex;
+    if (normalizedLeft !== normalizedRight) {
+      return normalizedLeft - normalizedRight;
+    }
+    return left.localeCompare(right);
+  });
+
+  return Object.fromEntries(orderedEntries);
+};
+
 const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   return {
     version: evidence.version,
@@ -169,6 +194,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       stage: evidence.snapshot.stage,
       outcome: evidence.snapshot.outcome,
       findings_count: evidence.snapshot.findings.length,
+      severity_counts: toSeverityCounts(evidence.snapshot.findings),
     },
     ledger_count: evidence.ledger.length,
     rulesets_count: evidence.rulesets.length,
@@ -520,6 +546,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       stage: evidence.snapshot.stage,
       outcome: evidence.snapshot.outcome,
       findings_count: evidence.snapshot.findings.length,
+      severity_counts: toSeverityCounts(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
       rulesets_count: evidence.rulesets.length,
       platforms: Object.keys(evidence.platforms).sort(),

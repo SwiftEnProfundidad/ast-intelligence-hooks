@@ -37,7 +37,7 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
   - `200` with evidence payload when valid
   - `404` when missing or invalid
 - `GET /ai-evidence/summary`
-  - `200` with compact deterministic summary
+  - `200` with compact deterministic summary (including `snapshot.severity_counts`)
   - `404` when missing or invalid
 - `GET /ai-evidence/snapshot`
   - `200` with deterministic snapshot + findings
