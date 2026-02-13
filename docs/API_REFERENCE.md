@@ -127,6 +127,7 @@ Read-only endpoints:
   - includes `ledger_by_platform` (deterministic platform-key order)
   - includes `rulesets_by_platform` (deterministic platform-key order)
   - includes `rulesets_fingerprint` (deterministic ordered hash signature)
+  - includes `tracked_platforms_count` (deterministic count of currently tracked platforms)
   - includes `detected_platforms_count` (deterministic count of currently detected platforms)
   - includes `non_detected_platforms_count` (deterministic count of currently tracked but non-detected platforms)
 - `GET /ai-evidence/snapshot`
