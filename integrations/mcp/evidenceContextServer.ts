@@ -305,6 +305,14 @@ const toLedgerFilesCount = (ledger: AiEvidenceV2_1['ledger']): number => {
   return files.size;
 };
 
+const toLedgerRulesCount = (ledger: AiEvidenceV2_1['ledger']): number => {
+  const rules = new Set<string>();
+  for (const entry of ledger) {
+    rules.add(entry.ruleId);
+  }
+  return rules.size;
+};
+
 const toHighestSeverity = (
   findings: AiEvidenceV2_1['snapshot']['findings']
 ): string | null => {
@@ -359,6 +367,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     },
     ledger_count: evidence.ledger.length,
     ledger_files_count: toLedgerFilesCount(evidence.ledger),
+    ledger_rules_count: toLedgerRulesCount(evidence.ledger),
     ledger_by_platform: toLedgerByPlatform(evidence.ledger),
     rulesets_count: evidence.rulesets.length,
     rulesets_platforms_count: toRulesetsPlatformsCount(evidence.rulesets),
@@ -720,6 +729,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       blocking_findings_count: toBlockingFindingsCount(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
       ledger_files_count: toLedgerFilesCount(evidence.ledger),
+      ledger_rules_count: toLedgerRulesCount(evidence.ledger),
       ledger_by_platform: toLedgerByPlatform(evidence.ledger),
       rulesets_count: evidence.rulesets.length,
       rulesets_platforms_count: toRulesetsPlatformsCount(evidence.rulesets),

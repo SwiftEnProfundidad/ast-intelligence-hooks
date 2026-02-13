@@ -127,6 +127,7 @@ Read-only endpoints:
   - includes `rulesets_platforms_count` (deterministic count of distinct platforms covered by loaded rulesets)
   - includes `rulesets_bundles_count` (deterministic count of distinct loaded ruleset bundles)
   - includes `ledger_files_count` (deterministic count of distinct files with open ledger entries)
+  - includes `ledger_rules_count` (deterministic count of distinct rule IDs with open ledger entries)
   - snapshot metadata includes `severity_counts` (deterministic key order)
   - snapshot metadata includes `findings_by_platform` (deterministic platform-key order)
   - snapshot metadata includes `highest_severity` (deterministic severity ranking)
