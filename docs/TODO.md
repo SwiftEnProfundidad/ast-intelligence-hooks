@@ -272,7 +272,8 @@ For full historical execution details, see:
   - ✅ Added MCP/context API deterministic `snapshot` endpoint with test coverage and docs alignment.
   - ✅ Added MCP/context API deterministic `findings` endpoint with `severity`/`ruleId`/`platform` filters, test coverage, and docs alignment.
   - ✅ Added MCP/context API deterministic `rulesets` filter semantics (`platform`/`bundle`) with test coverage and docs alignment.
-  - 🚧 Continue MCP/context API incremental expansion with deterministic `platforms` confidence filter semantics + tests/docs.
+  - ✅ Added MCP/context API deterministic `platforms` confidence filter semantics with test coverage and docs alignment.
+  - 🚧 Continue MCP/context API incremental expansion with deterministic `ledger` age filter semantics + tests/docs.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

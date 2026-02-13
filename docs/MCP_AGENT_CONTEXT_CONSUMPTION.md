@@ -24,7 +24,7 @@ Applies to any agent runtime (CLI, IDE extension, automation worker) that can pe
    - `GET /ai-evidence/findings`
 6. Load active ruleset provenance (and optional scoped filter):
    - `GET /ai-evidence/rulesets`
-7. Load active platform state:
+7. Load active platform state (and optional confidence slice):
    - `GET /ai-evidence/platforms`
 8. Load active ledger continuity context:
    - `GET /ai-evidence/ledger`
@@ -53,7 +53,7 @@ Use compact endpoints first:
 - `summary` for stage/outcome/counts
 - `snapshot` for deterministic findings details
 - `findings` for filtered violation slices (`severity`, `ruleId`, `platform`)
-- `platforms` for targeting
+- `platforms` for targeting (`detectedOnly`, optional `confidence`)
 - `rulesets` for policy provenance
 - `rulesets?platform=...&bundle=...` for deterministic scoped provenance slices
 - `ledger` for active recurring-violation continuity
@@ -74,6 +74,7 @@ curl -s "http://127.0.0.1:7341/ai-evidence/findings?severity=ERROR"
 curl -s http://127.0.0.1:7341/ai-evidence/rulesets
 curl -s "http://127.0.0.1:7341/ai-evidence/rulesets?platform=backend&bundle=backend"
 curl -s http://127.0.0.1:7341/ai-evidence/platforms
+curl -s "http://127.0.0.1:7341/ai-evidence/platforms?detectedOnly=false&confidence=LOW"
 curl -s http://127.0.0.1:7341/ai-evidence/ledger
 ```
 

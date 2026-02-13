@@ -51,6 +51,7 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
 - `GET /ai-evidence/platforms`
   - `200` with detected platforms only
   - supports `?detectedOnly=false` for full platform state
+  - supports `?confidence=HIGH|MEDIUM|LOW` for deterministic filtered slices
   - `404` when missing or invalid
 - `GET /ai-evidence/ledger`
   - `200` with deterministic sorted open-ledger entries

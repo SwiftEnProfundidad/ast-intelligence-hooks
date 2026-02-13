@@ -123,6 +123,7 @@ Read-only endpoints:
 - `GET /ai-evidence/rulesets`
 - `GET /ai-evidence/rulesets?platform=...&bundle=...`
 - `GET /ai-evidence/platforms`
+- `GET /ai-evidence/platforms?detectedOnly=false&confidence=...`
 - `GET /ai-evidence/ledger`
 
 Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.

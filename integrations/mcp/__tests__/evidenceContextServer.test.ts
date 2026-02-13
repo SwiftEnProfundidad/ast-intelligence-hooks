@@ -265,8 +265,10 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
       const detectedOnlyResponse = await fetch(`${baseUrl}/ai-evidence/platforms`);
       assert.equal(detectedOnlyResponse.status, 200);
       const detectedOnly = (await detectedOnlyResponse.json()) as {
+        filters?: { detectedOnly?: boolean; confidence?: string | null };
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
       };
+      assert.deepEqual(detectedOnly.filters, { detectedOnly: true, confidence: null });
       assert.deepEqual(detectedOnly.platforms, [
         { platform: 'backend', detected: true, confidence: 'HIGH' },
         { platform: 'ios', detected: true, confidence: 'MEDIUM' },
@@ -275,12 +277,25 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
       const allPlatformsResponse = await fetch(`${baseUrl}/ai-evidence/platforms?detectedOnly=false`);
       assert.equal(allPlatformsResponse.status, 200);
       const allPlatforms = (await allPlatformsResponse.json()) as {
+        filters?: { detectedOnly?: boolean; confidence?: string | null };
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
       };
+      assert.deepEqual(allPlatforms.filters, { detectedOnly: false, confidence: null });
       assert.deepEqual(allPlatforms.platforms, [
         { platform: 'android', detected: false, confidence: 'LOW' },
         { platform: 'backend', detected: true, confidence: 'HIGH' },
         { platform: 'ios', detected: true, confidence: 'MEDIUM' },
+      ]);
+
+      const confidenceResponse = await fetch(`${baseUrl}/ai-evidence/platforms?detectedOnly=false&confidence=LOW`);
+      assert.equal(confidenceResponse.status, 200);
+      const confidenceFiltered = (await confidenceResponse.json()) as {
+        filters?: { detectedOnly?: boolean; confidence?: string | null };
+        platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
+      };
+      assert.deepEqual(confidenceFiltered.filters, { detectedOnly: false, confidence: 'low' });
+      assert.deepEqual(confidenceFiltered.platforms, [
+        { platform: 'android', detected: false, confidence: 'LOW' },
       ]);
     });
   });

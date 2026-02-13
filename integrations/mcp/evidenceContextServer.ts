@@ -162,12 +162,23 @@ const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
 
 const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   const detectedOnly = parseBooleanQuery(requestUrl.searchParams.get('detectedOnly')) ?? true;
-  const platforms = sortPlatforms(evidence.platforms).filter((entry) =>
-    detectedOnly ? entry.detected : true
-  );
+  const confidenceFilter = normalizeQueryToken(requestUrl.searchParams.get('confidence'));
+  const platforms = sortPlatforms(evidence.platforms).filter((entry) => {
+    if (detectedOnly && !entry.detected) {
+      return false;
+    }
+    if (confidenceFilter && entry.confidence.toLowerCase() !== confidenceFilter) {
+      return false;
+    }
+    return true;
+  });
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
+    filters: {
+      detectedOnly,
+      confidence: confidenceFilter ?? null,
+    },
     platforms,
   };
 };
