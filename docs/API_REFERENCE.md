@@ -120,6 +120,7 @@ Read-only endpoints:
 - `GET /ai-evidence`
 - `GET /ai-evidence/summary`
   - snapshot metadata includes `severity_counts` (deterministic key order)
+  - includes `rulesets_by_platform` (deterministic platform-key order)
 - `GET /ai-evidence/snapshot`
 - `GET /ai-evidence/findings`
 - `GET /ai-evidence/findings?limit=...&offset=...`

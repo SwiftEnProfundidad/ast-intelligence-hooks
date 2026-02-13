@@ -8,7 +8,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence?includeSuppressed=false`: compact response without `consolidation.suppressed[]`
 - `GET /ai-evidence?view=compact`: alias to hide `consolidation.suppressed[]`
 - `GET /ai-evidence?view=full`: explicit full response (default behavior)
-- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/counts/severity_counts/detected platforms`)
+- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/counts/severity_counts/rulesets_by_platform/detected platforms`)
 - `GET /ai-evidence/snapshot`: deterministic snapshot payload (`stage/outcome/findings_count/findings[]`)
 - `GET /ai-evidence/findings`: deterministic findings list with optional filters (`severity`, `ruleId`, `platform`)
 - `GET /ai-evidence/findings?limit=...&offset=...`: deterministic paginated findings slice
@@ -28,7 +28,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`: deterministic filtered/paginated ledger slice (`maxLimit=100`)
   - pagination metadata includes `has_more` when `limit` is provided
 - `GET /health`: basic liveness probe
-- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts/severity_counts`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
+- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts/severity_counts/rulesets_by_platform`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
 
 ## Runtime
 
@@ -91,5 +91,20 @@ Paginated endpoint payload (excerpt):
     "offset": 1,
     "has_more": true
   }
+}
+```
+
+Summary payload facet (excerpt):
+
+```json
+{
+  "snapshot": {
+    "stage": "CI",
+    "outcome": "PASS",
+    "findings_count": 2,
+    "severity_counts": { "ERROR": 1, "WARN": 1 }
+  },
+  "rulesets_count": 2,
+  "rulesets_by_platform": { "backend": 1, "ios": 1 }
 }
 ```

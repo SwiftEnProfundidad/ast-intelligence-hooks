@@ -186,6 +186,14 @@ const toSeverityCounts = (
   return Object.fromEntries(orderedEntries);
 };
 
+const toRulesetsByPlatform = (rulesets: AiEvidenceV2_1['rulesets']): Record<string, number> => {
+  const counts = new Map<string, number>();
+  for (const ruleset of rulesets) {
+    counts.set(ruleset.platform, (counts.get(ruleset.platform) ?? 0) + 1);
+  }
+  return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
+};
+
 const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   return {
     version: evidence.version,
@@ -198,6 +206,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     },
     ledger_count: evidence.ledger.length,
     rulesets_count: evidence.rulesets.length,
+    rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
     platforms: sortPlatforms(evidence.platforms).filter((entry) => entry.detected),
   };
 };
@@ -549,6 +558,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
       rulesets_count: evidence.rulesets.length,
+      rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
       platforms: Object.keys(evidence.platforms).sort(),
     },
   };
