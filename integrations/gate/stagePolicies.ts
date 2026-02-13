@@ -67,6 +67,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.fs-rmdir-callback.ast',
   'heuristics.ts.fs-rm-callback.ast',
   'heuristics.ts.fs-rename-callback.ast',
+  'heuristics.ts.fs-copy-file-callback.ast',
   'heuristics.ts.child-process-exec-file.ast',
   'heuristics.ts.explicit-any.ast',
   'heuristics.ts.debugger.ast',

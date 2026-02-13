@@ -2160,6 +2160,49 @@ const hasFsRenameCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsCopyFileCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isCopyFileProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'copyFile') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'copyFile');
+      if (!isCopyFileProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -3377,6 +3420,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-rename-callback.ast',
             code: 'HEURISTICS_FS_RENAME_CALLBACK_AST',
             message: 'AST heuristic detected fs.rename callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsCopyFileCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-copy-file-callback.ast',
+            code: 'HEURISTICS_FS_COPY_FILE_CALLBACK_AST',
+            message: 'AST heuristic detected fs.copyFile callback usage.',
             filePath: fileFact.path,
           })
         );
