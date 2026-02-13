@@ -560,6 +560,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-unlink-sync.ast',
+    description: 'Detects fs.unlinkSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-unlink-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.unlinkSync usage.',
+      code: 'HEURISTICS_FS_UNLINK_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-chmod-sync.ast',
     description: 'Detects fs.chmodSync usage in TypeScript/TSX production files.',
     severity: 'WARN',

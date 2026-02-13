@@ -304,6 +304,7 @@
   - 
 - 
 - `heuristics.ts.fs-unlink-callback.ast`
+- `heuristics.ts.fs-unlink-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-readlink-callback.ast`
@@ -679,6 +680,7 @@
 - 
 - 
 - `heuristics.ts.fs-unlink-callback.ast`
+- `heuristics.ts.fs-unlink-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-readlink-callback.ast`
