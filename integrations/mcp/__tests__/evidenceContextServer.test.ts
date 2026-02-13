@@ -172,6 +172,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           findings_by_platform?: Record<string, number>;
           highest_severity?: string | null;
           ledger_count?: number;
+          ledger_by_platform?: Record<string, number>;
           rulesets_count?: number;
           rulesets_by_platform?: Record<string, number>;
           platforms?: string[];
@@ -200,6 +201,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.deepEqual(payload.evidence?.findings_by_platform, {});
       assert.equal(payload.evidence?.highest_severity, null);
       assert.equal(payload.evidence?.ledger_count, 0);
+      assert.deepEqual(payload.evidence?.ledger_by_platform, {});
       assert.equal(payload.evidence?.rulesets_count, 0);
       assert.deepEqual(payload.evidence?.rulesets_by_platform, {});
       assert.deepEqual(payload.evidence?.platforms, []);
@@ -248,6 +250,20 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       { platform: 'backend', bundle: 'backend', hash: '222' },
       { platform: 'ios', bundle: 'ios', hash: '111' },
     ];
+    payload.ledger = [
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        file: 'apps/backend/src/main.ts',
+        firstSeen: '2026-02-01T10:00:00.000Z',
+        lastSeen: '2026-02-01T10:00:00.000Z',
+      },
+      {
+        ruleId: 'ios.force-unwrap',
+        file: 'apps/ios/Feature/View.swift',
+        firstSeen: '2026-02-01T10:00:00.000Z',
+        lastSeen: '2026-02-01T10:00:00.000Z',
+      },
+    ];
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
@@ -264,6 +280,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
           highest_severity?: string | null;
         };
         ledger_count?: number;
+        ledger_by_platform?: Record<string, number>;
         rulesets_count?: number;
         rulesets_by_platform?: Record<string, number>;
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
@@ -275,7 +292,8 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.deepEqual(summary.snapshot?.severity_counts, { ERROR: 1 });
       assert.deepEqual(summary.snapshot?.findings_by_platform, { backend: 1 });
       assert.equal(summary.snapshot?.highest_severity, 'ERROR');
-      assert.equal(summary.ledger_count, 0);
+      assert.equal(summary.ledger_count, 2);
+      assert.deepEqual(summary.ledger_by_platform, { backend: 1, ios: 1 });
       assert.equal(summary.rulesets_count, 2);
       assert.deepEqual(summary.rulesets_by_platform, { backend: 1, ios: 1 });
       assert.deepEqual(summary.platforms, [

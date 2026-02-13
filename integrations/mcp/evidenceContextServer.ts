@@ -200,12 +200,40 @@ const toRulesetsByPlatform = (rulesets: AiEvidenceV2_1['rulesets']): Record<stri
   return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
 };
 
+const inferPlatformFromFilePath = (
+  filePath: string
+): 'ios' | 'backend' | 'frontend' | 'android' | 'generic' => {
+  const file = filePath.toLowerCase();
+  if (file.startsWith('apps/ios/') || file.endsWith('.swift')) {
+    return 'ios';
+  }
+  if (file.startsWith('apps/backend/')) {
+    return 'backend';
+  }
+  if (file.startsWith('apps/frontend/')) {
+    return 'frontend';
+  }
+  if (file.startsWith('apps/android/') || file.endsWith('.kt') || file.endsWith('.kts')) {
+    return 'android';
+  }
+  return 'generic';
+};
+
 const toFindingsByPlatform = (
   findings: AiEvidenceV2_1['snapshot']['findings']
 ): Record<string, number> => {
   const counts = new Map<string, number>();
   for (const finding of findings) {
-    const platform = inferFindingPlatform(finding);
+    const platform = inferPlatformFromFilePath(finding.file);
+    counts.set(platform, (counts.get(platform) ?? 0) + 1);
+  }
+  return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
+};
+
+const toLedgerByPlatform = (ledger: AiEvidenceV2_1['ledger']): Record<string, number> => {
+  const counts = new Map<string, number>();
+  for (const entry of ledger) {
+    const platform = inferPlatformFromFilePath(entry.file);
     counts.set(platform, (counts.get(platform) ?? 0) + 1);
   }
   return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
@@ -243,6 +271,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
     },
     ledger_count: evidence.ledger.length,
+    ledger_by_platform: toLedgerByPlatform(evidence.ledger),
     rulesets_count: evidence.rulesets.length,
     rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
     platforms: sortPlatforms(evidence.platforms).filter((entry) => entry.detected),
@@ -472,20 +501,7 @@ const normalizeQueryToken = (value: string | null): string | undefined => {
 const inferFindingPlatform = (
   finding: AiEvidenceV2_1['snapshot']['findings'][number]
 ): 'ios' | 'backend' | 'frontend' | 'android' | 'generic' => {
-  const file = finding.file.toLowerCase();
-  if (file.startsWith('apps/ios/') || file.endsWith('.swift')) {
-    return 'ios';
-  }
-  if (file.startsWith('apps/backend/')) {
-    return 'backend';
-  }
-  if (file.startsWith('apps/frontend/')) {
-    return 'frontend';
-  }
-  if (file.startsWith('apps/android/') || file.endsWith('.kt') || file.endsWith('.kts')) {
-    return 'android';
-  }
-  return 'generic';
+  return inferPlatformFromFilePath(finding.file);
 };
 
 const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
@@ -597,6 +613,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
+      ledger_by_platform: toLedgerByPlatform(evidence.ledger),
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
       platforms: Object.keys(evidence.platforms).sort(),

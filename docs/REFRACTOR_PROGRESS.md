@@ -185,6 +185,7 @@
 - ✅ Context API summary/status expose deterministic ruleset platform coverage (`rulesets_by_platform`).
 - ✅ Context API summary/status expose deterministic findings platform coverage (`findings_by_platform`).
 - ✅ Context API summary/status expose deterministic `highest_severity` facet.
+- ✅ Context API summary/status expose deterministic `ledger_by_platform` facet.
 - 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
@@ -657,4 +658,5 @@
 - ✅ `P10-3` Extend MCP summary/status contract with deterministic `rulesets_by_platform` facet.
 - ✅ `P10-4` Extend MCP summary/status contract with deterministic `findings_by_platform` facet.
 - ✅ `P10-5` Extend MCP summary/status contract with deterministic `highest_severity` facet.
-- 🚧 `P10-6` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
+- ✅ `P10-6` Extend MCP summary/status contract with deterministic `ledger_by_platform` facet.
+- 🚧 `P10-7` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
