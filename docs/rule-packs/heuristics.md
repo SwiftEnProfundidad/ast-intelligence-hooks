@@ -94,6 +94,7 @@
 - `heuristics.ts.fs-readv-sync.ast`
 - `heuristics.ts.fs-writev-sync.ast`
 - `heuristics.ts.fs-write-sync.ast`
+- `heuristics.ts.fs-fsync-sync.ast`
   - 
 - `heuristics.ts.child-process-exec-sync.ast`
   - 
@@ -337,6 +338,7 @@
 - `heuristics.ts.fs-readv-sync.ast`
 - `heuristics.ts.fs-writev-sync.ast`
 - `heuristics.ts.fs-write-sync.ast`
+- `heuristics.ts.fs-fsync-sync.ast`
 - 
 - `heuristics.ts.child-process-exec-sync.ast`
 - 
