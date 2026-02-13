@@ -1901,6 +1901,32 @@ const hasChildProcessShellTrueCall = (node: unknown): boolean => {
   });
 };
 
+const hasVmDynamicCodeExecutionCall = (node: unknown): boolean => {
+  const targetNames = new Set(['runInNewContext', 'runInThisContext']);
+
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (isObject(callee) && callee.type === 'Identifier') {
+      return targetNames.has(callee.name);
+    }
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+    const propertyNode = callee.property;
+    if (!isObject(propertyNode)) {
+      return false;
+    }
+    if (callee.computed === true) {
+      return propertyNode.type === 'StringLiteral' && targetNames.has(propertyNode.value);
+    }
+    return propertyNode.type === 'Identifier' && targetNames.has(propertyNode.name);
+  });
+};
+
 const hasSpawnSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -6402,6 +6428,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.child-process-shell-true.ast',
             code: 'HEURISTICS_CHILD_PROCESS_SHELL_TRUE_AST',
             message: 'AST heuristic detected child_process call with shell=true.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasVmDynamicCodeExecutionCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.vm-dynamic-code-execution.ast',
+            code: 'HEURISTICS_VM_DYNAMIC_CODE_EXECUTION_AST',
+            message: 'AST heuristic detected vm dynamic code execution call.',
             filePath: fileFact.path,
           })
         );

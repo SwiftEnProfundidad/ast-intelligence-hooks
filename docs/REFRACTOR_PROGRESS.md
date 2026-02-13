@@ -629,5 +629,6 @@
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript command execution via dynamic shell invocation detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript insecure TLS env override via NODE_TLS_REJECT_UNAUTHORIZED=0 detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript child_process spawn/exec with shell:true detection (external billing path omitted).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript vm dynamic code execution (runInNewContext/runInThisContext) detection (external billing path omitted).
+- ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript vm dynamic code execution (runInNewContext/runInThisContext) detection (external billing path omitted).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript command injection risk via child_process execFile with untrusted args detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.
