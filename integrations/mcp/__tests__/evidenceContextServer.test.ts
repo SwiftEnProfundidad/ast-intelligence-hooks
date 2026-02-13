@@ -508,9 +508,13 @@ test('returns findings endpoint with deterministic ordering and filters', async 
       assert.equal(response.status, 200);
       const body = (await response.json()) as {
         findings_count?: number;
+        total_count?: number;
+        pagination?: { limit?: number | null; offset?: number };
         findings?: Array<{ ruleId: string; file: string }>;
       };
       assert.equal(body.findings_count, 3);
+      assert.equal(body.total_count, 3);
+      assert.deepEqual(body.pagination, { limit: null, offset: 0 });
       assert.deepEqual(body.findings, [
         {
           ruleId: 'backend.avoid-explicit-any',
@@ -540,9 +544,11 @@ test('returns findings endpoint with deterministic ordering and filters', async 
       assert.equal(severityResponse.status, 200);
       const severityBody = (await severityResponse.json()) as {
         findings_count?: number;
+        total_count?: number;
         filters?: { severity?: string | null };
       };
       assert.equal(severityBody.findings_count, 2);
+      assert.equal(severityBody.total_count, 2);
       assert.equal(severityBody.filters?.severity, 'error');
 
       const platformResponse = await fetch(`${baseUrl}/ai-evidence/findings?platform=ios`);
@@ -570,8 +576,31 @@ test('returns findings endpoint with deterministic ordering and filters', async 
       assert.equal(ruleResponse.status, 200);
       const ruleBody = (await ruleResponse.json()) as {
         findings_count?: number;
+        total_count?: number;
       };
       assert.equal(ruleBody.findings_count, 1);
+      assert.equal(ruleBody.total_count, 1);
+
+      const pagedResponse = await fetch(`${baseUrl}/ai-evidence/findings?limit=1&offset=1`);
+      assert.equal(pagedResponse.status, 200);
+      const pagedBody = (await pagedResponse.json()) as {
+        findings_count?: number;
+        total_count?: number;
+        pagination?: { limit?: number | null; offset?: number };
+        findings?: Array<{ ruleId: string }>;
+      };
+      assert.equal(pagedBody.findings_count, 1);
+      assert.equal(pagedBody.total_count, 3);
+      assert.deepEqual(pagedBody.pagination, { limit: 1, offset: 1 });
+      assert.deepEqual(pagedBody.findings, [
+        {
+          ruleId: 'backend.no-console-log',
+          severity: 'WARN',
+          code: 'backend.no-console-log',
+          message: 'Avoid console.log',
+          file: 'apps/backend/src/z.ts',
+        },
+      ]);
     });
   });
 });

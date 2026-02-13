@@ -20,7 +20,7 @@ Applies to any agent runtime (CLI, IDE extension, automation worker) that can pe
    - `GET /ai-evidence/summary`
 4. Load deterministic snapshot details:
    - `GET /ai-evidence/snapshot`
-5. Load deterministic findings list and optional filter slices:
+5. Load deterministic findings list and optional filter/pagination slices:
    - `GET /ai-evidence/findings`
 6. Load active ruleset provenance (and optional scoped filter):
    - `GET /ai-evidence/rulesets`
@@ -53,7 +53,7 @@ Use compact endpoints first:
 
 - `summary` for stage/outcome/counts
 - `snapshot` for deterministic findings details
-- `findings` for filtered violation slices (`severity`, `ruleId`, `platform`)
+- `findings` for filtered violation slices (`severity`, `ruleId`, `platform`, `limit`, `offset`)
 - `platforms` for targeting (`detectedOnly`, optional `confidence`)
 - `rulesets` for policy provenance
 - `rulesets?platform=...&bundle=...` for deterministic scoped provenance slices
@@ -72,6 +72,7 @@ curl -s http://127.0.0.1:7341/status
 curl -s http://127.0.0.1:7341/ai-evidence/summary
 curl -s http://127.0.0.1:7341/ai-evidence/snapshot
 curl -s "http://127.0.0.1:7341/ai-evidence/findings?severity=ERROR"
+curl -s "http://127.0.0.1:7341/ai-evidence/findings?limit=20&offset=0"
 curl -s http://127.0.0.1:7341/ai-evidence/rulesets
 curl -s "http://127.0.0.1:7341/ai-evidence/rulesets?platform=backend&bundle=backend"
 curl -s http://127.0.0.1:7341/ai-evidence/platforms

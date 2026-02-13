@@ -275,7 +275,8 @@ For full historical execution details, see:
   - ✅ Added MCP/context API deterministic `platforms` confidence filter semantics with test coverage and docs alignment.
   - ✅ Added MCP/context API deterministic `ledger` age filter semantics (`lastSeenAfter`/`lastSeenBefore`) with test coverage and docs alignment.
   - ✅ Added MCP/context API deterministic `status` enrichment with endpoint/filter capability metadata and test coverage.
-  - 🚧 Continue MCP/context API incremental expansion with deterministic pagination for `findings` endpoint + tests/docs.
+  - ✅ Added MCP/context API deterministic pagination for `findings` endpoint (`limit`/`offset`) with test coverage and docs alignment.
+  - 🚧 Continue MCP/context API incremental expansion with deterministic pagination bounds (`maxLimit`) + tests/docs.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

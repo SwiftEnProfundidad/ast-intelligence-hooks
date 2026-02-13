@@ -94,6 +94,16 @@ const parseBooleanQuery = (value: string | null): boolean | undefined => {
   return undefined;
 };
 
+const parseNonNegativeIntQuery = (value: string | null): number | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  if (!/^\d+$/.test(value.trim())) {
+    return undefined;
+  }
+  return Number.parseInt(value.trim(), 10);
+};
+
 const includeSuppressedFromQuery = (requestUrl: URL): boolean => {
   const view = requestUrl.searchParams.get('view')?.trim().toLowerCase();
   if (view === 'compact') {
@@ -338,7 +348,10 @@ const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   const ruleIdFilter = normalizeQueryToken(requestUrl.searchParams.get('ruleId'));
   const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
 
-  const findings = sortSnapshotFindings(evidence.snapshot.findings).filter((finding) => {
+  const limit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
+  const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
+
+  const filteredFindings = sortSnapshotFindings(evidence.snapshot.findings).filter((finding) => {
     if (severityFilter && finding.severity.toLowerCase() !== severityFilter) {
       return false;
     }
@@ -350,6 +363,10 @@ const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
     }
     return true;
   });
+  const findings =
+    limit === undefined
+      ? filteredFindings.slice(offset)
+      : filteredFindings.slice(offset, offset + limit);
 
   return {
     version: evidence.version,
@@ -359,10 +376,15 @@ const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
       outcome: evidence.snapshot.outcome,
     },
     findings_count: findings.length,
+    total_count: filteredFindings.length,
     filters: {
       severity: severityFilter ?? null,
       ruleId: ruleIdFilter ?? null,
       platform: platformFilter ?? null,
+    },
+    pagination: {
+      limit: limit ?? null,
+      offset,
     },
     findings,
   };
