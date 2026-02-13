@@ -318,6 +318,14 @@ const toSuppressedReasonsWithoutReplacementCount = (evidence: AiEvidenceV2_1): n
   return reasons.size;
 };
 
+const toSuppressedPlatformRulePairsCount = (evidence: AiEvidenceV2_1): number => {
+  const pairs = new Set<string>();
+  for (const entry of evidence.consolidation?.suppressed ?? []) {
+    pairs.add(`${entry.platform}:${entry.ruleId}`);
+  }
+  return pairs.size;
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -483,6 +491,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_rule_file_pairs_count: toSuppressedRuleFilePairsCount(evidence),
     suppressed_reasons_with_replacement_count: toSuppressedReasonsWithReplacementCount(evidence),
     suppressed_reasons_without_replacement_count: toSuppressedReasonsWithoutReplacementCount(evidence),
+    suppressed_platform_rule_pairs_count: toSuppressedPlatformRulePairsCount(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -856,6 +865,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_rule_file_pairs_count: toSuppressedRuleFilePairsCount(evidence),
       suppressed_reasons_with_replacement_count: toSuppressedReasonsWithReplacementCount(evidence),
       suppressed_reasons_without_replacement_count: toSuppressedReasonsWithoutReplacementCount(evidence),
+      suppressed_platform_rule_pairs_count: toSuppressedPlatformRulePairsCount(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
