@@ -2590,6 +2590,49 @@ const hasFsLchownCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsLchmodCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isLchmodProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'lchmod') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'lchmod');
+      if (!isLchmodProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasFsUnlinkCallbackCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4863,6 +4906,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-lchown-callback.ast',
             code: 'HEURISTICS_FS_LCHOWN_CALLBACK_AST',
             message: 'AST heuristic detected fs.lchown callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsLchmodCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-lchmod-callback.ast',
+            code: 'HEURISTICS_FS_LCHMOD_CALLBACK_AST',
+            message: 'AST heuristic detected fs.lchmod callback usage.',
             filePath: fileFact.path,
           })
         );

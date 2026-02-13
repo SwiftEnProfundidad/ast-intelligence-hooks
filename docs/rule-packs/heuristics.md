@@ -93,6 +93,7 @@
   - `heuristics.ts.fs-chmod-callback.ast`
   - `heuristics.ts.fs-chown-callback.ast`
   - `heuristics.ts.fs-lchown-callback.ast`
+  - `heuristics.ts.fs-lchmod-callback.ast`
   - `heuristics.ts.fs-unlink-callback.ast`
   - `heuristics.ts.fs-readlink-callback.ast`
   - `heuristics.ts.fs-symlink-callback.ast`
@@ -200,6 +201,7 @@
 - `heuristics.ts.fs-chmod-callback.ast`
 - `heuristics.ts.fs-chown-callback.ast`
 - `heuristics.ts.fs-lchown-callback.ast`
+- `heuristics.ts.fs-lchmod-callback.ast`
 - `heuristics.ts.fs-unlink-callback.ast`
 - `heuristics.ts.fs-readlink-callback.ast`
 - `heuristics.ts.fs-symlink-callback.ast`
