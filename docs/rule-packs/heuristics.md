@@ -302,6 +302,7 @@
   - 
 - 
 - `heuristics.ts.fs-readlink-callback.ast`
+- `heuristics.ts.fs-readlink-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-symlink-callback.ast`
@@ -665,6 +666,7 @@
 - 
 - 
 - `heuristics.ts.fs-readlink-callback.ast`
+- `heuristics.ts.fs-readlink-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-symlink-callback.ast`
