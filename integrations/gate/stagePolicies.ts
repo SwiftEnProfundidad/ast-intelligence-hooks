@@ -40,6 +40,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.fs-fstat-sync.ast',
   'heuristics.ts.fs-ftruncate-sync.ast',
   'heuristics.ts.fs-futimes-sync.ast',
+  'heuristics.ts.fs-lutimes-sync.ast',
   'heuristics.ts.child-process-exec-sync.ast',
   'heuristics.ts.child-process-exec.ast',
   'heuristics.ts.child-process-spawn-sync.ast',

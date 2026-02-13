@@ -724,6 +724,29 @@ const hasFsFutimesSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsLutimesSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'lutimesSync'
+    );
+  });
+};
+
 const hasExecSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4844,6 +4867,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-futimes-sync.ast',
             code: 'HEURISTICS_FS_FUTIMES_SYNC_AST',
             message: 'AST heuristic detected fs.futimesSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsLutimesSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-lutimes-sync.ast',
+            code: 'HEURISTICS_FS_LUTIMES_SYNC_AST',
+            message: 'AST heuristic detected fs.lutimesSync usage.',
             filePath: fileFact.path,
           })
         );

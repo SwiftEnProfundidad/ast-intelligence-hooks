@@ -224,6 +224,7 @@
 - `heuristics.ts.fs-futimes-sync.ast`
   - 
 - `heuristics.ts.fs-lutimes-callback.ast`
+- `heuristics.ts.fs-lutimes-sync.ast`
   - 
 - `heuristics.ts.fs-link-callback.ast`
   - 
@@ -463,6 +464,7 @@
 - `heuristics.ts.fs-futimes-sync.ast`
 - 
 - `heuristics.ts.fs-lutimes-callback.ast`
+- `heuristics.ts.fs-lutimes-sync.ast`
 - 
 - `heuristics.ts.fs-link-callback.ast`
 - 
