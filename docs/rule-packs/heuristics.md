@@ -104,6 +104,7 @@
   - 
 - 
 - `heuristics.ts.fs-read-file-sync.ast`
+- `heuristics.ts.fs-read-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-stat-sync.ast`
@@ -466,6 +467,7 @@
 - 
 - 
 - `heuristics.ts.fs-read-file-sync.ast`
+- `heuristics.ts.fs-read-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-stat-sync.ast`

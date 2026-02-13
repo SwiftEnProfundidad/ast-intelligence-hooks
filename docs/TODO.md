@@ -236,7 +236,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript sync-style `fs.fsyncSync` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript sync-style `fs.fdatasyncSync` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript sync-style `fs.closeSync` semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: sync-style `fs.readSync` semantic detection.
+  - ✅ Added TypeScript sync-style `fs.readSync` semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: sync-style `fs.readlinkSync` semantic detection.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
