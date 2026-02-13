@@ -567,5 +567,6 @@
 - ✅ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).
 - ⏳ `P8-5` Optional adapter external IDE replay evidence capture (deferred).
 - ✅ TypeScript callback-style `fs.lutimes` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: callback-style `fs.fchown` detection (external billing path omitted).
+- ✅ TypeScript callback-style `fs.fchown` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: callback-style `fs.fchmod` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

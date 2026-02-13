@@ -3149,6 +3149,49 @@ const hasFsLutimesCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsFchownCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isFchownProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'fchown') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'fchown');
+      if (!isFchownProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4586,6 +4629,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-fdatasync-callback.ast',
             code: 'HEURISTICS_FS_FDATASYNC_CALLBACK_AST',
             message: 'AST heuristic detected fs.fdatasync callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsFchownCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-fchown-callback.ast',
+            code: 'HEURISTICS_FS_FCHOWN_CALLBACK_AST',
+            message: 'AST heuristic detected fs.fchown callback usage.',
             filePath: fileFact.path,
           })
         );
