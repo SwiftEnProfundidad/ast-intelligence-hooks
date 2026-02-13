@@ -80,6 +80,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.fs-fsync-callback.ast',
   'heuristics.ts.fs-fdatasync-callback.ast',
   'heuristics.ts.fs-fchown-callback.ast',
+  'heuristics.ts.fs-fchmod-callback.ast',
   'heuristics.ts.fs-ftruncate-callback.ast',
   'heuristics.ts.fs-futimes-callback.ast',
   'heuristics.ts.fs-lutimes-callback.ast',

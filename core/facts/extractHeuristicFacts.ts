@@ -3192,6 +3192,49 @@ const hasFsFchownCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsFchmodCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isFchmodProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'fchmod') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'fchmod');
+      if (!isFchmodProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4640,6 +4683,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-fchown-callback.ast',
             code: 'HEURISTICS_FS_FCHOWN_CALLBACK_AST',
             message: 'AST heuristic detected fs.fchown callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsFchmodCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-fchmod-callback.ast',
+            code: 'HEURISTICS_FS_FCHMOD_CALLBACK_AST',
+            message: 'AST heuristic detected fs.fchmod callback usage.',
             filePath: fileFact.path,
           })
         );
