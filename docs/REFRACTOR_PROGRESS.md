@@ -167,6 +167,7 @@
 - ✅ TypeScript callback-style `fs.close` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript callback-style `fs.read` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript callback-style `fs.write` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
+- ✅ TypeScript callback-style `fs.fsync` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ⏳ High-value semantic heuristics expansion is queued in local-only mode (external billing path omitted).
 - ⏳ Additional incremental expansion is pending after external rollout closure.
 
@@ -562,5 +563,5 @@
 - ⏳ `P8-4` Regenerate latest external handoff artifacts with `READY` verdict and close Phase 8 blocker (after billing reactivation + successful `P8-3`).
 - ✅ `P7-1` Keep documentation hygiene maintenance active (root validation docs only; generated reports regenerated on demand).
 - ⏳ `P8-5` Optional adapter external IDE replay evidence capture (deferred).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: callback-style `fs.fsync` detection (external billing path omitted).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: callback-style `fs.fdatasync` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

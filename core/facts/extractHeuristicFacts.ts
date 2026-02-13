@@ -2934,6 +2934,49 @@ const hasFsWriteCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsFsyncCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isFsyncProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'fsync') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'fsync');
+      if (!isFsyncProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4349,6 +4392,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-write-callback.ast',
             code: 'HEURISTICS_FS_WRITE_CALLBACK_AST',
             message: 'AST heuristic detected fs.write callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsFsyncCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-fsync-callback.ast',
+            code: 'HEURISTICS_FS_FSYNC_CALLBACK_AST',
+            message: 'AST heuristic detected fs.fsync callback usage.',
             filePath: fileFact.path,
           })
         );
