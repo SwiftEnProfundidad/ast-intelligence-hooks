@@ -52,7 +52,7 @@ If any check fails, agent behavior should downgrade to:
 
 Use compact endpoints first:
 
-- `summary` for stage/outcome/has-findings/counts, findings file count (`findings_files_count`), findings rule count (`findings_rules_count`), findings with lines count (`findings_with_lines_count`), findings without lines count (`findings_without_lines_count`), severity distribution (`severity_counts`), highest severity (`highest_severity`), blocking findings count (`blocking_findings_count`), findings platform distribution (`findings_by_platform`), ledger file count (`ledger_files_count`), ledger rule count (`ledger_rules_count`), ledger platform distribution (`ledger_by_platform`), ruleset platform count (`rulesets_platforms_count`), ruleset bundle count (`rulesets_bundles_count`), platform confidence distribution (`platform_confidence_counts`), suppressed findings count (`suppressed_findings_count`), tracked-platform count (`tracked_platforms_count`), detected-platform count (`detected_platforms_count`), non-detected platform count (`non_detected_platforms_count`), policy coverage (`rulesets_by_platform`), and deterministic ruleset signature (`rulesets_fingerprint`)
+- `summary` for stage/outcome/has-findings/counts, findings file count (`findings_files_count`), findings rule count (`findings_rules_count`), findings with lines count (`findings_with_lines_count`), findings without lines count (`findings_without_lines_count`), severity distribution (`severity_counts`), highest severity (`highest_severity`), blocking findings count (`blocking_findings_count`), findings platform distribution (`findings_by_platform`), ledger file count (`ledger_files_count`), ledger rule count (`ledger_rules_count`), ledger platform distribution (`ledger_by_platform`), ruleset platform count (`rulesets_platforms_count`), ruleset bundle count (`rulesets_bundles_count`), ruleset hash count (`rulesets_hashes_count`), platform confidence distribution (`platform_confidence_counts`), suppressed findings count (`suppressed_findings_count`), tracked-platform count (`tracked_platforms_count`), detected-platform count (`detected_platforms_count`), non-detected platform count (`non_detected_platforms_count`), policy coverage (`rulesets_by_platform`), and deterministic ruleset signature (`rulesets_fingerprint`)
 - `snapshot` for deterministic findings details
 - `findings` for filtered violation slices (`severity`, `ruleId`, `platform`, `limit`, `offset`, bounded by `maxLimit=100`)
 - `platforms` for targeting (`detectedOnly`, optional `confidence`, `limit`, `offset`, bounded by `maxLimit=100`)
@@ -146,6 +146,7 @@ Summary facet contract:
   },
   "rulesets_platforms_count": 2,
   "rulesets_bundles_count": 2,
+  "rulesets_hashes_count": 2,
   "ledger_files_count": 2,
   "ledger_rules_count": 2,
   "platform_confidence_counts": {
