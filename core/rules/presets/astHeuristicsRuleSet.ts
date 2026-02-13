@@ -1388,6 +1388,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-readv-callback.ast',
+    description: 'Detects fs.readv callback-style usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-readv-callback.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.readv callback usage.',
+      code: 'HEURISTICS_FS_READV_CALLBACK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-write-callback.ast',
     description: 'Detects fs.write callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',

@@ -570,5 +570,6 @@
 - ✅ TypeScript callback-style `fs.fchown` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript callback-style `fs.fchmod` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript callback-style `fs.fstat` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: callback-style `fs.readv` detection (external billing path omitted).
+- ✅ TypeScript callback-style `fs.readv` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: callback-style `fs.writev` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

@@ -108,6 +108,7 @@
   - `heuristics.ts.fs-cp-callback.ast`
   - `heuristics.ts.fs-close-callback.ast`
   - `heuristics.ts.fs-read-callback.ast`
+  - `heuristics.ts.fs-readv-callback.ast`
   - `heuristics.ts.fs-write-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
@@ -209,6 +210,7 @@
 - `heuristics.ts.fs-cp-callback.ast`
 - `heuristics.ts.fs-close-callback.ast`
 - `heuristics.ts.fs-read-callback.ast`
+- `heuristics.ts.fs-readv-callback.ast`
 - `heuristics.ts.fs-write-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`

@@ -3278,6 +3278,49 @@ const hasFsFstatCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsReadvCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isReadvProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'readv') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'readv');
+      if (!isReadvProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4682,6 +4725,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-read-callback.ast',
             code: 'HEURISTICS_FS_READ_CALLBACK_AST',
             message: 'AST heuristic detected fs.read callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsReadvCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-readv-callback.ast',
+            code: 'HEURISTICS_FS_READV_CALLBACK_AST',
+            message: 'AST heuristic detected fs.readv callback usage.',
             filePath: fileFact.path,
           })
         );
