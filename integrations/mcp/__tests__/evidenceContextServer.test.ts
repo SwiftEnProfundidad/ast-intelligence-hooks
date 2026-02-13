@@ -170,6 +170,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           has_findings?: boolean;
           findings_count?: number;
           findings_files_count?: number;
+          findings_with_lines_count?: number;
           severity_counts?: Record<string, number>;
           findings_by_platform?: Record<string, number>;
           highest_severity?: string | null;
@@ -208,6 +209,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.has_findings, false);
       assert.equal(payload.evidence?.findings_count, 0);
       assert.equal(payload.evidence?.findings_files_count, 0);
+      assert.equal(payload.evidence?.findings_with_lines_count, 0);
       assert.deepEqual(payload.evidence?.severity_counts, {});
       assert.deepEqual(payload.evidence?.findings_by_platform, {});
       assert.equal(payload.evidence?.highest_severity, null);
@@ -295,6 +297,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
           has_findings?: boolean;
           findings_count?: number;
           findings_files_count?: number;
+          findings_with_lines_count?: number;
           severity_counts?: Record<string, number>;
           findings_by_platform?: Record<string, number>;
           highest_severity?: string | null;
@@ -318,6 +321,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.snapshot?.has_findings, true);
       assert.equal(summary.snapshot?.findings_count, 1);
       assert.equal(summary.snapshot?.findings_files_count, 1);
+      assert.equal(summary.snapshot?.findings_with_lines_count, 1);
       assert.deepEqual(summary.snapshot?.severity_counts, { ERROR: 1 });
       assert.deepEqual(summary.snapshot?.findings_by_platform, { backend: 1 });
       assert.equal(summary.snapshot?.highest_severity, 'ERROR');

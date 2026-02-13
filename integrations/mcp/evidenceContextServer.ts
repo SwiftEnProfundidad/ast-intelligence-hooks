@@ -214,6 +214,16 @@ const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']):
   return files.size;
 };
 
+const toFindingsWithLinesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
+  let count = 0;
+  for (const finding of findings) {
+    if (finding.lines && finding.lines.length > 0) {
+      count += 1;
+    }
+  }
+  return count;
+};
+
 const toPlatformConfidenceCounts = (
   platforms: AiEvidenceV2_1['platforms']
 ): Record<string, number> => {
@@ -306,6 +316,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
       findings_files_count: toFindingsFilesCount(evidence.snapshot.findings),
+      findings_with_lines_count: toFindingsWithLinesCount(evidence.snapshot.findings),
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
@@ -661,6 +672,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
       findings_files_count: toFindingsFilesCount(evidence.snapshot.findings),
+      findings_with_lines_count: toFindingsWithLinesCount(evidence.snapshot.findings),
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
