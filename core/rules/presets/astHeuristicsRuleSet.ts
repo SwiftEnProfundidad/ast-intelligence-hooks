@@ -327,6 +327,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.weak-crypto-hash.ast',
+    description:
+      'Detects weak crypto hash algorithms (md5/sha1) in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.weak-crypto-hash.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected weak crypto hash usage (md5/sha1).',
+      code: 'HEURISTICS_WEAK_CRYPTO_HASH_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-write-file-sync.ast',
     description: 'Detects fs.writeFileSync usage in TypeScript/TSX production files.',
     severity: 'WARN',

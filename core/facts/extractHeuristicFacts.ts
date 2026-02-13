@@ -393,6 +393,45 @@ const hasHardcodedSecretTokenLiteral = (node: unknown): boolean => {
   });
 };
 
+const hasWeakCryptoHashCreateHashCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    if (
+      !isObject(objectNode) ||
+      objectNode.type !== 'Identifier' ||
+      objectNode.name !== 'crypto' ||
+      !isObject(propertyNode) ||
+      propertyNode.type !== 'Identifier' ||
+      propertyNode.name !== 'createHash'
+    ) {
+      return false;
+    }
+
+    const args = value.arguments;
+    if (!Array.isArray(args) || args.length === 0) {
+      return false;
+    }
+
+    const firstArg = args[0];
+    if (!isObject(firstArg) || firstArg.type !== 'StringLiteral') {
+      return false;
+    }
+
+    const algorithm = firstArg.value.toLowerCase();
+    return algorithm === 'md5' || algorithm === 'sha1';
+  });
+};
+
 const hasFsWriteFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5245,6 +5284,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.hardcoded-secret-token.ast',
             code: 'HEURISTICS_HARDCODED_SECRET_TOKEN_AST',
             message: 'AST heuristic detected hardcoded secret/token literal.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasWeakCryptoHashCreateHashCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.weak-crypto-hash.ast',
+            code: 'HEURISTICS_WEAK_CRYPTO_HASH_AST',
+            message: 'AST heuristic detected weak crypto hash usage (md5/sha1).',
             filePath: fileFact.path,
           })
         );

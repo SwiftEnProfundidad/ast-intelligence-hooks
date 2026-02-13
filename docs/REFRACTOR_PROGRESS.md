@@ -616,5 +616,6 @@
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.truncateSync` detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.rmdirSync` detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript hardcoded-secret token pattern detection (external billing path omitted).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript weak-crypto hash pattern detection (`md5`/`sha1`) (external billing path omitted).
+- ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript weak-crypto hash pattern detection (`md5`/`sha1`) (external billing path omitted).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript insecure token generation via `Math.random` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

@@ -25,6 +25,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.child-process-import.ast',
   'heuristics.ts.process-env-mutation.ast',
   'heuristics.ts.hardcoded-secret-token.ast',
+  'heuristics.ts.weak-crypto-hash.ast',
   'heuristics.ts.fs-write-file-sync.ast',
   'heuristics.ts.fs-rm-sync.ast',
   'heuristics.ts.fs-mkdir-sync.ast',
