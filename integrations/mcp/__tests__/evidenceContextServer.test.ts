@@ -334,6 +334,65 @@ test('returns ledger endpoint sorted deterministically', async () => {
   });
 });
 
+test('returns snapshot endpoint with deterministic findings ordering', async () => {
+  await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
+    const payload = createEvidencePayload();
+    payload.snapshot.findings = [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'WARN',
+        code: 'backend.no-console-log',
+        message: 'Avoid console.log',
+        file: 'apps/backend/src/z.ts',
+      },
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'ERROR',
+        code: 'backend.avoid-explicit-any',
+        message: 'Avoid explicit any',
+        file: 'apps/backend/src/a.ts',
+        lines: [10],
+      },
+    ];
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+    await withEvidenceServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/ai-evidence/snapshot`);
+      assert.equal(response.status, 200);
+      const body = (await response.json()) as {
+        version?: string;
+        snapshot?: {
+          stage?: string;
+          outcome?: string;
+          findings_count?: number;
+          findings?: Array<{ ruleId: string; file: string }>;
+        };
+      };
+      assert.equal(body.version, '2.1');
+      assert.equal(body.snapshot?.stage, 'CI');
+      assert.equal(body.snapshot?.outcome, 'PASS');
+      assert.equal(body.snapshot?.findings_count, 2);
+      assert.deepEqual(body.snapshot?.findings, [
+        {
+          ruleId: 'backend.avoid-explicit-any',
+          severity: 'ERROR',
+          code: 'backend.avoid-explicit-any',
+          message: 'Avoid explicit any',
+          file: 'apps/backend/src/a.ts',
+          lines: [10],
+        },
+        {
+          ruleId: 'backend.no-console-log',
+          severity: 'WARN',
+          code: 'backend.no-console-log',
+          message: 'Avoid console.log',
+          file: 'apps/backend/src/z.ts',
+        },
+      ]);
+    });
+  });
+});
+
 test('returns compact payload without consolidation when includeSuppressed=false', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
     writeFileSync(

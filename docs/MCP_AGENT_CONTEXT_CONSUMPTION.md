@@ -18,13 +18,15 @@ Applies to any agent runtime (CLI, IDE extension, automation worker) that can pe
    - `GET /status`
 3. Load compact execution context:
    - `GET /ai-evidence/summary`
-4. Load active ruleset provenance:
+4. Load deterministic snapshot details:
+   - `GET /ai-evidence/snapshot`
+5. Load active ruleset provenance:
    - `GET /ai-evidence/rulesets`
-5. Load active platform state:
+6. Load active platform state:
    - `GET /ai-evidence/platforms`
-6. Load active ledger continuity context:
+7. Load active ledger continuity context:
    - `GET /ai-evidence/ledger`
-7. Load full evidence only when needed:
+8. Load full evidence only when needed:
    - `GET /ai-evidence` (or `?view=compact`)
 
 ## Deterministic Decision Gate (Agent Side)
@@ -47,6 +49,7 @@ If any check fails, agent behavior should downgrade to:
 Use compact endpoints first:
 
 - `summary` for stage/outcome/counts
+- `snapshot` for deterministic findings details
 - `platforms` for targeting
 - `rulesets` for policy provenance
 - `ledger` for active recurring-violation continuity
@@ -62,6 +65,7 @@ Fetch full `/ai-evidence` only when:
 curl -s http://127.0.0.1:7341/health
 curl -s http://127.0.0.1:7341/status
 curl -s http://127.0.0.1:7341/ai-evidence/summary
+curl -s http://127.0.0.1:7341/ai-evidence/snapshot
 curl -s http://127.0.0.1:7341/ai-evidence/rulesets
 curl -s http://127.0.0.1:7341/ai-evidence/platforms
 curl -s http://127.0.0.1:7341/ai-evidence/ledger

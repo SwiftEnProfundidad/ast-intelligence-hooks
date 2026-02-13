@@ -118,6 +118,7 @@ Read-only endpoints:
 - `GET /status`
 - `GET /ai-evidence`
 - `GET /ai-evidence/summary`
+- `GET /ai-evidence/snapshot`
 - `GET /ai-evidence/rulesets`
 - `GET /ai-evidence/platforms`
 - `GET /ai-evidence/ledger`

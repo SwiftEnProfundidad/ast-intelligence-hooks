@@ -632,4 +632,5 @@
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript vm dynamic code execution (runInNewContext/runInThisContext) detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript command injection risk via child_process execFile with untrusted args detection (external billing path omitted).
 - ✅ `P10-1` Extend MCP/context API with deterministic `ledger` endpoint (server + tests + docs).
-- 🚧 `P10-1` Continue MCP/context API incremental expansion with deterministic `snapshot` endpoint (server + tests + docs).
+- ✅ `P10-1` Extend MCP/context API with deterministic `snapshot` endpoint (server + tests + docs).
+- 🚧 `P10-1` Continue MCP/context API incremental expansion with deterministic `findings` endpoint and filters (server + tests + docs).

@@ -188,6 +188,49 @@ const toLedgerPayload = (evidence: AiEvidenceV2_1) => {
   };
 };
 
+const sortSnapshotFindings = (
+  findings: AiEvidenceV2_1['snapshot']['findings']
+): AiEvidenceV2_1['snapshot']['findings'] => {
+  return [...findings].sort((left, right) => {
+    const byRule = left.ruleId.localeCompare(right.ruleId);
+    if (byRule !== 0) {
+      return byRule;
+    }
+    const byFile = left.file.localeCompare(right.file);
+    if (byFile !== 0) {
+      return byFile;
+    }
+    const leftLines = left.lines ? left.lines.join(',') : '';
+    const rightLines = right.lines ? right.lines.join(',') : '';
+    const byLines = leftLines.localeCompare(rightLines);
+    if (byLines !== 0) {
+      return byLines;
+    }
+    const byCode = left.code.localeCompare(right.code);
+    if (byCode !== 0) {
+      return byCode;
+    }
+    const bySeverity = left.severity.localeCompare(right.severity);
+    if (bySeverity !== 0) {
+      return bySeverity;
+    }
+    return left.message.localeCompare(right.message);
+  });
+};
+
+const toSnapshotPayload = (evidence: AiEvidenceV2_1) => {
+  return {
+    version: evidence.version,
+    timestamp: evidence.timestamp,
+    snapshot: {
+      stage: evidence.snapshot.stage,
+      outcome: evidence.snapshot.outcome,
+      findings_count: evidence.snapshot.findings.length,
+      findings: sortSnapshotFindings(evidence.snapshot.findings),
+    },
+  };
+};
+
 const toResponsePayload = (evidence: AiEvidenceV2_1, requestUrl: URL): unknown => {
   if (includeSuppressedFromQuery(requestUrl)) {
     return evidence;
@@ -252,6 +295,7 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
   const rulesetsRoute = `${route}/rulesets`;
   const platformsRoute = `${route}/platforms`;
   const ledgerRoute = `${route}/ledger`;
+  const snapshotRoute = `${route}/snapshot`;
 
   const server = createServer((req, res) => {
     const method = req.method ?? 'GET';
@@ -329,6 +373,18 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
       }
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(json(toLedgerPayload(evidence)));
+      return;
+    }
+
+    if (method === 'GET' && path === snapshotRoute) {
+      const evidence = readEvidence(repoRoot);
+      if (!evidence) {
+        res.writeHead(404, { 'content-type': 'application/json' });
+        res.end(json({ error: '.ai_evidence.json not found or invalid v2.1 file' }));
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(json(toSnapshotPayload(evidence)));
       return;
     }
 
