@@ -931,6 +931,29 @@ const hasFsReadlinkSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsSymlinkSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'symlinkSync'
+    );
+  });
+};
+
 const hasExecSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5150,6 +5173,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-readlink-sync.ast',
             code: 'HEURISTICS_FS_READLINK_SYNC_AST',
             message: 'AST heuristic detected fs.readlinkSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsSymlinkSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-symlink-sync.ast',
+            code: 'HEURISTICS_FS_SYMLINK_SYNC_AST',
+            message: 'AST heuristic detected fs.symlinkSync usage.',
             filePath: fileFact.path,
           })
         );

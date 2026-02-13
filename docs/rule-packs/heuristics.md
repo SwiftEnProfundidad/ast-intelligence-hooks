@@ -306,6 +306,7 @@
   - 
 - 
 - `heuristics.ts.fs-symlink-callback.ast`
+- `heuristics.ts.fs-symlink-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-fchown-callback.ast`
@@ -670,6 +671,7 @@
 - 
 - 
 - `heuristics.ts.fs-symlink-callback.ast`
+- `heuristics.ts.fs-symlink-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-fchown-callback.ast`
