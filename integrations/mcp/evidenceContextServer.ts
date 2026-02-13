@@ -514,6 +514,16 @@ const toSuppressedReasonRulePlatformTriplesCount = (
   return triples.size;
 };
 
+const toSuppressedReasonFilePlatformTriplesCount = (
+  evidence: AiEvidenceV2_1,
+): number => {
+  const triples = new Set<string>();
+  for (const entry of evidence.consolidation?.suppressed ?? []) {
+    triples.add(`${entry.reason}:${entry.file}:${entry.platform}`);
+  }
+  return triples.size;
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -701,6 +711,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedReasonRuleFileTriplesCount(evidence),
     suppressed_reason_rule_platform_triples_count:
       toSuppressedReasonRulePlatformTriplesCount(evidence),
+    suppressed_reason_file_platform_triples_count:
+      toSuppressedReasonFilePlatformTriplesCount(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1096,6 +1108,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedReasonRuleFileTriplesCount(evidence),
       suppressed_reason_rule_platform_triples_count:
         toSuppressedReasonRulePlatformTriplesCount(evidence),
+      suppressed_reason_file_platform_triples_count:
+        toSuppressedReasonFilePlatformTriplesCount(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,

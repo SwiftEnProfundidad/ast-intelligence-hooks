@@ -231,7 +231,8 @@
 - ✅ Context API summary/status expose deterministic `suppressed_non_replacement_rule_file_platform_triples_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_reason_rule_file_triples_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_reason_rule_platform_triples_count` facet.
-- 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
+- ✅ Context API summary/status expose deterministic `suppressed_reason_file_platform_triples_count` facet.
+- 🚧 Context API summary/status expose deterministic `suppressed_reason_platform_file_pairs_count` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
