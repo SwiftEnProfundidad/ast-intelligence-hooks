@@ -632,6 +632,29 @@ const hasFsUtimesSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsRenameSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'renameSync'
+    );
+  });
+};
+
 const hasFsChmodSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5214,6 +5237,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-utimes-sync.ast',
             code: 'HEURISTICS_FS_UTIMES_SYNC_AST',
             message: 'AST heuristic detected fs.utimesSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsRenameSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-rename-sync.ast',
+            code: 'HEURISTICS_FS_RENAME_SYNC_AST',
+            message: 'AST heuristic detected fs.renameSync usage.',
             filePath: fileFact.path,
           })
         );

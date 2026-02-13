@@ -95,6 +95,7 @@
   - 
 - 
 - `heuristics.ts.fs-rm-sync.ast`
+- `heuristics.ts.fs-rename-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-mkdir-sync.ast`
@@ -468,6 +469,7 @@
 - 
 - 
 - `heuristics.ts.fs-rm-sync.ast`
+- `heuristics.ts.fs-rename-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-mkdir-sync.ast`
