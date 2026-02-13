@@ -488,6 +488,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-access-sync.ast',
+    description: 'Detects fs.accessSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-access-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.accessSync usage.',
+      code: 'HEURISTICS_FS_ACCESS_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-chmod-sync.ast',
     description: 'Detects fs.chmodSync usage in TypeScript/TSX production files.',
     severity: 'WARN',
