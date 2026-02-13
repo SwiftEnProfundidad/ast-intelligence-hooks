@@ -460,6 +460,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.jwt-sign-no-expiration.ast',
+    description:
+      'Detects jsonwebtoken.sign usage without exp/expiresIn in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.jwt-sign-no-expiration.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected jsonwebtoken.sign without expiration.',
+      code: 'HEURISTICS_JWT_SIGN_NO_EXPIRATION_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
     description:
       'Detects Buffer.allocUnsafeSlow usage in TypeScript/TSX production files.',

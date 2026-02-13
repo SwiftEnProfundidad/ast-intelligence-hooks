@@ -31,6 +31,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.weak-token-randomuuid.ast',
   'heuristics.ts.jwt-decode-without-verify.ast',
   'heuristics.ts.jwt-verify-ignore-expiration.ast',
+  'heuristics.ts.jwt-sign-no-expiration.ast',
   'heuristics.ts.buffer-alloc-unsafe.ast',
   'heuristics.ts.buffer-alloc-unsafe-slow.ast',
   'heuristics.ts.fs-write-file-sync.ast',
