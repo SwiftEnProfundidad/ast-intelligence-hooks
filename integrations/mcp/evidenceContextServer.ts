@@ -206,6 +206,14 @@ const toRulesetsFingerprint = (rulesets: AiEvidenceV2_1['rulesets']): string => 
     .join('|');
 };
 
+const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
+  const files = new Set<string>();
+  for (const finding of findings) {
+    files.add(finding.file);
+  }
+  return files.size;
+};
+
 const toPlatformConfidenceCounts = (
   platforms: AiEvidenceV2_1['platforms']
 ): Record<string, number> => {
@@ -297,6 +305,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       outcome: evidence.snapshot.outcome,
       has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
+      findings_files_count: toFindingsFilesCount(evidence.snapshot.findings),
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
@@ -651,6 +660,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       outcome: evidence.snapshot.outcome,
       has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
+      findings_files_count: toFindingsFilesCount(evidence.snapshot.findings),
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),

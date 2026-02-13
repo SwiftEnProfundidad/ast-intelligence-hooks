@@ -120,6 +120,7 @@ Read-only endpoints:
 - `GET /ai-evidence`
 - `GET /ai-evidence/summary`
   - snapshot metadata includes `has_findings` (fast boolean gate for non-empty findings)
+  - snapshot metadata includes `findings_files_count` (deterministic count of distinct files with findings)
   - snapshot metadata includes `severity_counts` (deterministic key order)
   - snapshot metadata includes `findings_by_platform` (deterministic platform-key order)
   - snapshot metadata includes `highest_severity` (deterministic severity ranking)
