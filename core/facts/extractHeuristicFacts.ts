@@ -3321,6 +3321,49 @@ const hasFsReadvCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsWritevCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isWritevProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'writev') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'writev');
+      if (!isWritevProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4736,6 +4779,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-readv-callback.ast',
             code: 'HEURISTICS_FS_READV_CALLBACK_AST',
             message: 'AST heuristic detected fs.readv callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsWritevCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-writev-callback.ast',
+            code: 'HEURISTICS_FS_WRITEV_CALLBACK_AST',
+            message: 'AST heuristic detected fs.writev callback usage.',
             filePath: fileFact.path,
           })
         );
