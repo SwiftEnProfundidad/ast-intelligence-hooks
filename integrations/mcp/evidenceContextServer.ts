@@ -206,6 +206,16 @@ const toRulesetsFingerprint = (rulesets: AiEvidenceV2_1['rulesets']): string => 
     .join('|');
 };
 
+const toPlatformConfidenceCounts = (
+  platforms: AiEvidenceV2_1['platforms']
+): Record<string, number> => {
+  const counts = new Map<string, number>();
+  for (const entry of Object.values(platforms)) {
+    counts.set(entry.confidence, (counts.get(entry.confidence) ?? 0) + 1);
+  }
+  return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
+};
+
 const inferPlatformFromFilePath = (
   filePath: string
 ): 'ios' | 'backend' | 'frontend' | 'android' | 'generic' => {
@@ -297,6 +307,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     rulesets_count: evidence.rulesets.length,
     rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
     rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),
+    platform_confidence_counts: toPlatformConfidenceCounts(evidence.platforms),
     suppressed_findings_count: suppressedFindingsCount,
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
@@ -649,6 +660,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
       rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),
+      platform_confidence_counts: toPlatformConfidenceCounts(evidence.platforms),
       suppressed_findings_count: suppressedFindingsCount,
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
