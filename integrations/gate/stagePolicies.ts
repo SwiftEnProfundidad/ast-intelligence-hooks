@@ -40,6 +40,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.fs-copy-file-sync.ast',
   'heuristics.ts.fs-unlink-sync.ast',
   'heuristics.ts.fs-truncate-sync.ast',
+  'heuristics.ts.fs-rmdir-sync.ast',
   'heuristics.ts.fs-chmod-sync.ast',
   'heuristics.ts.fs-chown-sync.ast',
   'heuristics.ts.fs-fchown-sync.ast',

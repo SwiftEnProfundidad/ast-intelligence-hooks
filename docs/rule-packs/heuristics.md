@@ -264,6 +264,7 @@
   - 
 - 
 - `heuristics.ts.fs-rmdir-callback.ast`
+- `heuristics.ts.fs-rmdir-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-rm-callback.ast`
@@ -641,6 +642,7 @@
 - 
 - 
 - `heuristics.ts.fs-rmdir-callback.ast`
+- `heuristics.ts.fs-rmdir-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-rm-callback.ast`
