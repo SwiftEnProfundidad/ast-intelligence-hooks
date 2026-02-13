@@ -231,6 +231,68 @@ const toSnapshotPayload = (evidence: AiEvidenceV2_1) => {
   };
 };
 
+const normalizeQueryToken = (value: string | null): string | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized.length > 0 ? normalized : undefined;
+};
+
+const inferFindingPlatform = (
+  finding: AiEvidenceV2_1['snapshot']['findings'][number]
+): 'ios' | 'backend' | 'frontend' | 'android' | 'generic' => {
+  const file = finding.file.toLowerCase();
+  if (file.startsWith('apps/ios/') || file.endsWith('.swift')) {
+    return 'ios';
+  }
+  if (file.startsWith('apps/backend/')) {
+    return 'backend';
+  }
+  if (file.startsWith('apps/frontend/')) {
+    return 'frontend';
+  }
+  if (file.startsWith('apps/android/') || file.endsWith('.kt') || file.endsWith('.kts')) {
+    return 'android';
+  }
+  return 'generic';
+};
+
+const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
+  const severityFilter = normalizeQueryToken(requestUrl.searchParams.get('severity'));
+  const ruleIdFilter = normalizeQueryToken(requestUrl.searchParams.get('ruleId'));
+  const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
+
+  const findings = sortSnapshotFindings(evidence.snapshot.findings).filter((finding) => {
+    if (severityFilter && finding.severity.toLowerCase() !== severityFilter) {
+      return false;
+    }
+    if (ruleIdFilter && finding.ruleId.toLowerCase() !== ruleIdFilter) {
+      return false;
+    }
+    if (platformFilter && inferFindingPlatform(finding) !== platformFilter) {
+      return false;
+    }
+    return true;
+  });
+
+  return {
+    version: evidence.version,
+    timestamp: evidence.timestamp,
+    snapshot: {
+      stage: evidence.snapshot.stage,
+      outcome: evidence.snapshot.outcome,
+    },
+    findings_count: findings.length,
+    filters: {
+      severity: severityFilter ?? null,
+      ruleId: ruleIdFilter ?? null,
+      platform: platformFilter ?? null,
+    },
+    findings,
+  };
+};
+
 const toResponsePayload = (evidence: AiEvidenceV2_1, requestUrl: URL): unknown => {
   if (includeSuppressedFromQuery(requestUrl)) {
     return evidence;
@@ -296,6 +358,7 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
   const platformsRoute = `${route}/platforms`;
   const ledgerRoute = `${route}/ledger`;
   const snapshotRoute = `${route}/snapshot`;
+  const findingsRoute = `${route}/findings`;
 
   const server = createServer((req, res) => {
     const method = req.method ?? 'GET';
@@ -385,6 +448,18 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
       }
       res.writeHead(200, { 'content-type': 'application/json' });
       res.end(json(toSnapshotPayload(evidence)));
+      return;
+    }
+
+    if (method === 'GET' && path === findingsRoute) {
+      const evidence = readEvidence(repoRoot);
+      if (!evidence) {
+        res.writeHead(404, { 'content-type': 'application/json' });
+        res.end(json({ error: '.ai_evidence.json not found or invalid v2.1 file' }));
+        return;
+      }
+      res.writeHead(200, { 'content-type': 'application/json' });
+      res.end(json(toFindingsPayload(evidence, requestUrl)));
       return;
     }
 

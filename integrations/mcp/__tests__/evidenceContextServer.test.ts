@@ -393,6 +393,108 @@ test('returns snapshot endpoint with deterministic findings ordering', async () 
   });
 });
 
+test('returns findings endpoint with deterministic ordering and filters', async () => {
+  await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
+    const payload = createEvidencePayload();
+    payload.snapshot.findings = [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'WARN',
+        code: 'backend.no-console-log',
+        message: 'Avoid console.log',
+        file: 'apps/backend/src/z.ts',
+      },
+      {
+        ruleId: 'heuristics.ios.force-unwrap.ast',
+        severity: 'ERROR',
+        code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST',
+        message: 'Force unwrap detected.',
+        file: 'apps/ios/Feature/View.swift',
+      },
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'ERROR',
+        code: 'backend.avoid-explicit-any',
+        message: 'Avoid explicit any',
+        file: 'apps/backend/src/a.ts',
+        lines: [10],
+      },
+    ];
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+    await withEvidenceServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/ai-evidence/findings`);
+      assert.equal(response.status, 200);
+      const body = (await response.json()) as {
+        findings_count?: number;
+        findings?: Array<{ ruleId: string; file: string }>;
+      };
+      assert.equal(body.findings_count, 3);
+      assert.deepEqual(body.findings, [
+        {
+          ruleId: 'backend.avoid-explicit-any',
+          severity: 'ERROR',
+          code: 'backend.avoid-explicit-any',
+          message: 'Avoid explicit any',
+          file: 'apps/backend/src/a.ts',
+          lines: [10],
+        },
+        {
+          ruleId: 'backend.no-console-log',
+          severity: 'WARN',
+          code: 'backend.no-console-log',
+          message: 'Avoid console.log',
+          file: 'apps/backend/src/z.ts',
+        },
+        {
+          ruleId: 'heuristics.ios.force-unwrap.ast',
+          severity: 'ERROR',
+          code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST',
+          message: 'Force unwrap detected.',
+          file: 'apps/ios/Feature/View.swift',
+        },
+      ]);
+
+      const severityResponse = await fetch(`${baseUrl}/ai-evidence/findings?severity=ERROR`);
+      assert.equal(severityResponse.status, 200);
+      const severityBody = (await severityResponse.json()) as {
+        findings_count?: number;
+        filters?: { severity?: string | null };
+      };
+      assert.equal(severityBody.findings_count, 2);
+      assert.equal(severityBody.filters?.severity, 'error');
+
+      const platformResponse = await fetch(`${baseUrl}/ai-evidence/findings?platform=ios`);
+      assert.equal(platformResponse.status, 200);
+      const platformBody = (await platformResponse.json()) as {
+        findings_count?: number;
+        findings?: Array<{ ruleId: string }>;
+        filters?: { platform?: string | null };
+      };
+      assert.equal(platformBody.findings_count, 1);
+      assert.deepEqual(platformBody.findings, [
+        {
+          ruleId: 'heuristics.ios.force-unwrap.ast',
+          severity: 'ERROR',
+          code: 'HEURISTICS_IOS_FORCE_UNWRAP_AST',
+          message: 'Force unwrap detected.',
+          file: 'apps/ios/Feature/View.swift',
+        },
+      ]);
+      assert.equal(platformBody.filters?.platform, 'ios');
+
+      const ruleResponse = await fetch(
+        `${baseUrl}/ai-evidence/findings?ruleId=backend.avoid-explicit-any`
+      );
+      assert.equal(ruleResponse.status, 200);
+      const ruleBody = (await ruleResponse.json()) as {
+        findings_count?: number;
+      };
+      assert.equal(ruleBody.findings_count, 1);
+    });
+  });
+});
+
 test('returns compact payload without consolidation when includeSuppressed=false', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
     writeFileSync(
