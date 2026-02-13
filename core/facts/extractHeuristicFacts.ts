@@ -1927,6 +1927,72 @@ const hasVmDynamicCodeExecutionCall = (node: unknown): boolean => {
   });
 };
 
+const hasExecFileUntrustedArgsCall = (node: unknown): boolean => {
+  const isStaticStringLike = (candidate: unknown): boolean => {
+    if (!isObject(candidate)) {
+      return false;
+    }
+    if (candidate.type === 'StringLiteral') {
+      return true;
+    }
+    if (
+      candidate.type === 'TemplateLiteral' &&
+      Array.isArray(candidate.expressions) &&
+      candidate.expressions.length === 0
+    ) {
+      return true;
+    }
+    return false;
+  };
+
+  const isTrustedArgsArrayLiteral = (candidate: unknown): boolean => {
+    if (!isObject(candidate) || candidate.type !== 'ArrayExpression' || !Array.isArray(candidate.elements)) {
+      return false;
+    }
+    return candidate.elements.every((element) => isStaticStringLike(element));
+  };
+
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    let isExecFileCall = false;
+    if (isObject(callee) && callee.type === 'Identifier') {
+      isExecFileCall = callee.name === 'execFile' || callee.name === 'execFileSync';
+    } else if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      if (isObject(propertyNode)) {
+        if (callee.computed === true) {
+          isExecFileCall =
+            propertyNode.type === 'StringLiteral' &&
+            (propertyNode.value === 'execFile' || propertyNode.value === 'execFileSync');
+        } else {
+          isExecFileCall =
+            propertyNode.type === 'Identifier' &&
+            (propertyNode.name === 'execFile' || propertyNode.name === 'execFileSync');
+        }
+      }
+    }
+
+    if (!isExecFileCall) {
+      return false;
+    }
+
+    const args = value.arguments;
+    if (!Array.isArray(args) || args.length < 2) {
+      return false;
+    }
+    const fileArg = args[0];
+    const commandArgs = args[1];
+    if (!isStaticStringLike(fileArg)) {
+      return false;
+    }
+    return !isTrustedArgsArrayLiteral(commandArgs);
+  });
+};
+
 const hasSpawnSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -6439,6 +6505,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.vm-dynamic-code-execution.ast',
             code: 'HEURISTICS_VM_DYNAMIC_CODE_EXECUTION_AST',
             message: 'AST heuristic detected vm dynamic code execution call.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasExecFileUntrustedArgsCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.child-process-exec-file-untrusted-args.ast',
+            code: 'HEURISTICS_CHILD_PROCESS_EXEC_FILE_UNTRUSTED_ARGS_AST',
+            message: 'AST heuristic detected execFile/execFileSync with non-literal args array.',
             filePath: fileFact.path,
           })
         );

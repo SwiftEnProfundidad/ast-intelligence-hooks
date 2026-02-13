@@ -267,7 +267,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript insecure TLS env override via NODE_TLS_REJECT_UNAUTHORIZED=0 semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript child_process spawn/exec shell:true semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript vm dynamic code execution (runInNewContext/runInThisContext) semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: TypeScript command injection risk via child_process execFile with untrusted args.
+  - ✅ Added TypeScript command injection risk via child_process execFile with untrusted args semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Resume MCP/context API incremental expansion after Phase 8 closure.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

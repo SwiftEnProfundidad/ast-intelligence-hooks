@@ -37,6 +37,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.tls-env-override.ast',
   'heuristics.ts.child-process-shell-true.ast',
   'heuristics.ts.vm-dynamic-code-execution.ast',
+  'heuristics.ts.child-process-exec-file-untrusted-args.ast',
   'heuristics.ts.buffer-alloc-unsafe.ast',
   'heuristics.ts.buffer-alloc-unsafe-slow.ast',
   'heuristics.ts.fs-write-file-sync.ast',

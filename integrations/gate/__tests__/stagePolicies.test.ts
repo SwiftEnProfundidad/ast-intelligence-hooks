@@ -134,6 +134,10 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
   assert.equal(findSeverity('heuristics.ts.child-process-spawn.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.child-process-fork.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.child-process-exec-file-sync.ast', 'PRE_COMMIT'), 'WARN');
+  assert.equal(
+    findSeverity('heuristics.ts.child-process-exec-file-untrusted-args.ast', 'PRE_COMMIT'),
+    'WARN'
+  );
   assert.equal(findSeverity('heuristics.ts.child-process-exec-file.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-append-file-sync.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-promises-write-file.ast', 'PRE_COMMIT'), 'WARN');
@@ -265,6 +269,10 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
   assert.equal(findSeverity('heuristics.ts.child-process-spawn.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.child-process-fork.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.child-process-exec-file-sync.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(
+    findSeverity('heuristics.ts.child-process-exec-file-untrusted-args.ast', 'PRE_PUSH'),
+    'ERROR'
+  );
   assert.equal(findSeverity('heuristics.ts.child-process-exec-file.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-append-file-sync.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-promises-write-file.ast', 'PRE_PUSH'), 'ERROR');
@@ -2782,6 +2790,38 @@ test('gate promotes execFile heuristic to blocking in PRE_PUSH and CI only', () 
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [execFileFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes execFile untrusted args heuristic to blocking in PRE_PUSH and CI only', () => {
+  const execFileUntrustedArgsFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.child-process-exec-file-untrusted-args.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_CHILD_PROCESS_EXEC_FILE_UNTRUSTED_ARGS_AST',
+    message: 'AST heuristic detected execFile/execFileSync with non-literal args array.',
+    filePath: 'apps/backend/src/main.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [execFileUntrustedArgsFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [execFileUntrustedArgsFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [execFileUntrustedArgsFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');

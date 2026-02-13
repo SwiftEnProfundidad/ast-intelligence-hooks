@@ -261,6 +261,12 @@
 - 
 - 
 - 
+- `heuristics.ts.child-process-exec-file-untrusted-args.ast`
+  - 
+- 
+- 
+- 
+- 
 - `heuristics.ts.child-process-exec-file.ast`
   - 
 - 
@@ -882,6 +888,11 @@
 - 
 - 
 - `heuristics.ts.child-process-exec-file-sync.ast`
+- 
+- 
+- 
+- 
+- `heuristics.ts.child-process-exec-file-untrusted-args.ast`
 - 
 - 
 - 
