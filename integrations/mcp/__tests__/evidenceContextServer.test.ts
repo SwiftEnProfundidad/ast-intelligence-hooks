@@ -196,6 +196,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_reasons_count?: number;
           suppressed_with_replacement_count?: number;
           suppressed_without_replacement_count?: number;
+          suppressed_rule_file_pairs_count?: number;
           tracked_platforms_count?: number;
           detected_platforms_count?: number;
           non_detected_platforms_count?: number;
@@ -249,6 +250,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_reasons_count, 1);
       assert.equal(payload.evidence?.suppressed_with_replacement_count, 1);
       assert.equal(payload.evidence?.suppressed_without_replacement_count, 0);
+      assert.equal(payload.evidence?.suppressed_rule_file_pairs_count, 1);
       assert.equal(payload.evidence?.tracked_platforms_count, 0);
       assert.equal(payload.evidence?.detected_platforms_count, 0);
       assert.equal(payload.evidence?.non_detected_platforms_count, 0);
@@ -352,6 +354,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_reasons_count?: number;
         suppressed_with_replacement_count?: number;
         suppressed_without_replacement_count?: number;
+        suppressed_rule_file_pairs_count?: number;
         tracked_platforms_count?: number;
         detected_platforms_count?: number;
         non_detected_platforms_count?: number;
@@ -389,6 +392,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_reasons_count, 1);
       assert.equal(summary.suppressed_with_replacement_count, 1);
       assert.equal(summary.suppressed_without_replacement_count, 0);
+      assert.equal(summary.suppressed_rule_file_pairs_count, 1);
       assert.equal(summary.tracked_platforms_count, 3);
       assert.equal(summary.detected_platforms_count, 2);
       assert.equal(summary.non_detected_platforms_count, 1);
