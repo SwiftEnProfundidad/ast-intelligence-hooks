@@ -334,6 +334,7 @@
   - 
 - 
 - `heuristics.ts.fs-truncate-callback.ast`
+- `heuristics.ts.fs-truncate-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-futimes-callback.ast`
@@ -710,6 +711,7 @@
 - 
 - 
 - `heuristics.ts.fs-truncate-callback.ast`
+- `heuristics.ts.fs-truncate-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-futimes-callback.ast`

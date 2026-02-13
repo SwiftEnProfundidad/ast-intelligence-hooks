@@ -701,6 +701,29 @@ const hasFsUnlinkSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsTruncateSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'truncateSync'
+    );
+  });
+};
+
 const hasFsChmodSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5316,6 +5339,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-unlink-sync.ast',
             code: 'HEURISTICS_FS_UNLINK_SYNC_AST',
             message: 'AST heuristic detected fs.unlinkSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsTruncateSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-truncate-sync.ast',
+            code: 'HEURISTICS_FS_TRUNCATE_SYNC_AST',
+            message: 'AST heuristic detected fs.truncateSync usage.',
             filePath: fileFact.path,
           })
         );
