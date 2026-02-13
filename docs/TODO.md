@@ -130,7 +130,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_replacement_reason_rule_file_platform_quadruples_count` for replacement reason/rule/file/platform suppression triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_reason_rule_file_platform_quadruples_count` for non-replacement reason/rule/file/platform suppression triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_reason_rule_file_platform_replacement_split_count` for replacement-vs-non-replacement suppression split triage.
-- [ ] MCP context summary/status now expose deterministic `suppressed_replacement_split_modes_count` for replacement-mode suppression split triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_split_modes_count` for replacement-mode suppression split triage.
+- [ ] MCP context summary/status now expose deterministic `suppressed_replacement_split_mode_replacement_count` for replacement-mode replacement bucket triage.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:

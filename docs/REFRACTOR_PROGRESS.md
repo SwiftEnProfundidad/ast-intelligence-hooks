@@ -244,7 +244,8 @@
 - ✅ Context API summary/status expose deterministic `suppressed_replacement_reason_rule_file_platform_quadruples_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_non_replacement_reason_rule_file_platform_quadruples_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_reason_rule_file_platform_replacement_split_count` facet.
-- 🚧 Context API summary/status expose deterministic `suppressed_replacement_split_modes_count` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_replacement_split_modes_count` facet.
+- 🚧 Context API summary/status expose deterministic `suppressed_replacement_split_mode_replacement_count` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
