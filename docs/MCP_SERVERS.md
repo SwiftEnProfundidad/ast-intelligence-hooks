@@ -51,6 +51,7 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
 - `GET /ai-evidence/rulesets`
   - `200` with deterministic sorted rulesets
   - supports `?platform=...&bundle=...` for deterministic filtered slices
+  - supports `?limit=...&offset=...` for deterministic pagination (`maxLimit=100`)
   - `404` when missing or invalid
 - `GET /ai-evidence/platforms`
   - `200` with detected platforms only

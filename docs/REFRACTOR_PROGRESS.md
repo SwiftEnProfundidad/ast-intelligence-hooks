@@ -640,4 +640,5 @@
 - ✅ `P10-1` Extend MCP/context API with deterministic `status` filter-capabilities enrichment (server + tests + docs).
 - ✅ `P10-1` Extend MCP/context API with deterministic `findings` pagination semantics (server + tests + docs).
 - ✅ `P10-1` Extend MCP/context API with deterministic pagination bounds (`maxLimit=100`) for `findings` (server + tests + docs).
-- 🚧 `P10-1` Continue MCP/context API incremental expansion with deterministic `rulesets` pagination semantics (server + tests + docs).
+- ✅ `P10-1` Extend MCP/context API with deterministic `rulesets` pagination semantics (server + tests + docs).
+- 🚧 `P10-1` Continue MCP/context API incremental expansion with deterministic `platforms` pagination semantics (server + tests + docs).

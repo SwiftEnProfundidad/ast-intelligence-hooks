@@ -15,6 +15,7 @@ Read-only server to expose deterministic evidence before agent actions.
   - `limit` is bounded by deterministic `maxLimit=100`
 - `GET /ai-evidence/rulesets`: deterministic sorted list of loaded rulesets (`platform/bundle/hash`)
 - `GET /ai-evidence/rulesets?platform=...&bundle=...`: deterministic filtered rulesets slice
+- `GET /ai-evidence/rulesets?limit=...&offset=...`: deterministic paginated rulesets slice (`maxLimit=100`)
 - `GET /ai-evidence/platforms`: detected platforms only (default)
 - `GET /ai-evidence/platforms?detectedOnly=false`: all tracked platforms with detection state
 - `GET /ai-evidence/platforms?detectedOnly=false&confidence=LOW`: deterministic filtered slice by confidence

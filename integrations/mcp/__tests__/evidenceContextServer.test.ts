@@ -110,7 +110,13 @@ test('returns degraded status when evidence file is missing', async () => {
       };
       assert.equal(payload.status, 'degraded');
       assert.ok(payload.context_api?.endpoints?.includes('/ai-evidence/findings'));
-      assert.deepEqual(payload.context_api?.filters?.rulesets, ['platform', 'bundle']);
+      assert.deepEqual(payload.context_api?.filters?.rulesets, [
+        'platform',
+        'bundle',
+        'limit',
+        'offset',
+        'maxLimit',
+      ]);
       assert.equal(payload.evidence?.present, false);
       assert.equal(payload.evidence?.valid, false);
       assert.equal(payload.evidence?.version, null);
@@ -255,11 +261,25 @@ test('returns rulesets endpoint sorted deterministically', async () => {
       assert.equal(response.status, 200);
       const body = (await response.json()) as {
         version?: string;
+        total_count?: number;
         filters?: { platform?: string | null; bundle?: string | null };
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         rulesets?: Array<{ platform: string; bundle: string; hash: string }>;
       };
       assert.equal(body.version, '2.1');
+      assert.equal(body.total_count, 3);
       assert.deepEqual(body.filters, { platform: null, bundle: null });
+      assert.deepEqual(body.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
+      });
       assert.deepEqual(body.rulesets, [
         { platform: 'backend', bundle: 'backend', hash: 'bbb' },
         { platform: 'ios', bundle: 'ios', hash: 'aaa' },
@@ -269,13 +289,65 @@ test('returns rulesets endpoint sorted deterministically', async () => {
       const filteredResponse = await fetch(`${baseUrl}/ai-evidence/rulesets?platform=ios&bundle=shared`);
       assert.equal(filteredResponse.status, 200);
       const filteredBody = (await filteredResponse.json()) as {
+        total_count?: number;
         filters?: { platform?: string | null; bundle?: string | null };
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         rulesets?: Array<{ platform: string; bundle: string; hash: string }>;
       };
+      assert.equal(filteredBody.total_count, 1);
       assert.deepEqual(filteredBody.filters, { platform: 'ios', bundle: 'shared' });
+      assert.deepEqual(filteredBody.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
+      });
       assert.deepEqual(filteredBody.rulesets, [
         { platform: 'ios', bundle: 'shared', hash: 'zzz' },
       ]);
+
+      const pagedResponse = await fetch(`${baseUrl}/ai-evidence/rulesets?limit=1&offset=1`);
+      assert.equal(pagedResponse.status, 200);
+      const pagedBody = (await pagedResponse.json()) as {
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
+        rulesets?: Array<{ platform: string; bundle: string; hash: string }>;
+      };
+      assert.equal(pagedBody.total_count, 3);
+      assert.deepEqual(pagedBody.pagination, {
+        requested_limit: 1,
+        max_limit: 100,
+        limit: 1,
+        offset: 1,
+      });
+      assert.deepEqual(pagedBody.rulesets, [{ platform: 'ios', bundle: 'ios', hash: 'aaa' }]);
+
+      const cappedResponse = await fetch(`${baseUrl}/ai-evidence/rulesets?limit=9999`);
+      assert.equal(cappedResponse.status, 200);
+      const cappedBody = (await cappedResponse.json()) as {
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
+      };
+      assert.deepEqual(cappedBody.pagination, {
+        requested_limit: 9999,
+        max_limit: 100,
+        limit: 100,
+        offset: 0,
+      });
     });
   });
 });

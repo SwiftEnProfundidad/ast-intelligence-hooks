@@ -277,7 +277,8 @@ For full historical execution details, see:
   - ✅ Added MCP/context API deterministic `status` enrichment with endpoint/filter capability metadata and test coverage.
   - ✅ Added MCP/context API deterministic pagination for `findings` endpoint (`limit`/`offset`) with test coverage and docs alignment.
   - ✅ Added MCP/context API deterministic pagination bounds (`maxLimit=100`) for `findings` with test coverage and docs alignment.
-  - 🚧 Continue MCP/context API incremental expansion with deterministic `rulesets` pagination semantics + tests/docs.
+  - ✅ Added MCP/context API deterministic pagination for `rulesets` (`limit`/`offset`, `maxLimit=100`) with test coverage and docs alignment.
+  - 🚧 Continue MCP/context API incremental expansion with deterministic `platforms` pagination semantics + tests/docs.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

@@ -12,6 +12,7 @@ export type EvidenceServerOptions = {
 
 const DEFAULT_ROUTE = '/ai-evidence';
 const MAX_FINDINGS_LIMIT = 100;
+const MAX_RULESETS_LIMIT = 100;
 
 const json = (value: unknown): string => JSON.stringify(value);
 const truthyQueryValues = new Set(['1', 'true', 'yes', 'on']);
@@ -31,7 +32,7 @@ const CONTEXT_API_CAPABILITIES = {
   ],
   filters: {
     findings: ['severity', 'ruleId', 'platform', 'limit', 'offset', 'maxLimit'],
-    rulesets: ['platform', 'bundle'],
+    rulesets: ['platform', 'bundle', 'limit', 'offset', 'maxLimit'],
     platforms: ['detectedOnly', 'confidence'],
     ledger: ['lastSeenAfter', 'lastSeenBefore'],
   },
@@ -170,7 +171,12 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
 const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
   const bundleFilter = normalizeQueryToken(requestUrl.searchParams.get('bundle'));
-  const rulesets = sortRulesets(evidence.rulesets).filter((ruleset) => {
+  const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
+  const limit =
+    requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_RULESETS_LIMIT);
+  const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
+
+  const filteredRulesets = sortRulesets(evidence.rulesets).filter((ruleset) => {
     if (platformFilter && ruleset.platform.toLowerCase() !== platformFilter) {
       return false;
     }
@@ -179,13 +185,24 @@ const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
     }
     return true;
   });
+  const rulesets =
+    limit === undefined
+      ? filteredRulesets.slice(offset)
+      : filteredRulesets.slice(offset, offset + limit);
 
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
+    total_count: filteredRulesets.length,
     filters: {
       platform: platformFilter ?? null,
       bundle: bundleFilter ?? null,
+    },
+    pagination: {
+      requested_limit: requestedLimit ?? null,
+      max_limit: MAX_RULESETS_LIMIT,
+      limit: limit ?? null,
+      offset,
     },
     rulesets,
   };
