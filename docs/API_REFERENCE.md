@@ -124,6 +124,7 @@ Read-only endpoints:
   - snapshot metadata includes `findings_rules_count` (deterministic count of distinct rule IDs in findings)
   - snapshot metadata includes `findings_with_lines_count` (deterministic count of findings with line metadata)
   - snapshot metadata includes `findings_without_lines_count` (deterministic count of findings without line metadata)
+  - includes `rulesets_platforms_count` (deterministic count of distinct platforms covered by loaded rulesets)
   - includes `rulesets_bundles_count` (deterministic count of distinct loaded ruleset bundles)
   - includes `ledger_files_count` (deterministic count of distinct files with open ledger entries)
   - snapshot metadata includes `severity_counts` (deterministic key order)

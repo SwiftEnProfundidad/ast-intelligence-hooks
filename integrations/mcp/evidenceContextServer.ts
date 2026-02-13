@@ -214,6 +214,14 @@ const toRulesetsBundlesCount = (rulesets: AiEvidenceV2_1['rulesets']): number =>
   return bundles.size;
 };
 
+const toRulesetsPlatformsCount = (rulesets: AiEvidenceV2_1['rulesets']): number => {
+  const platforms = new Set<string>();
+  for (const ruleset of rulesets) {
+    platforms.add(ruleset.platform);
+  }
+  return platforms.size;
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -353,6 +361,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     ledger_files_count: toLedgerFilesCount(evidence.ledger),
     ledger_by_platform: toLedgerByPlatform(evidence.ledger),
     rulesets_count: evidence.rulesets.length,
+    rulesets_platforms_count: toRulesetsPlatformsCount(evidence.rulesets),
     rulesets_bundles_count: toRulesetsBundlesCount(evidence.rulesets),
     rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
     rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),
@@ -713,6 +722,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       ledger_files_count: toLedgerFilesCount(evidence.ledger),
       ledger_by_platform: toLedgerByPlatform(evidence.ledger),
       rulesets_count: evidence.rulesets.length,
+      rulesets_platforms_count: toRulesetsPlatformsCount(evidence.rulesets),
       rulesets_bundles_count: toRulesetsBundlesCount(evidence.rulesets),
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
       rulesets_fingerprint: toRulesetsFingerprint(evidence.rulesets),

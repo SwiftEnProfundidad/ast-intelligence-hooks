@@ -181,6 +181,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           ledger_files_count?: number;
           ledger_by_platform?: Record<string, number>;
           rulesets_count?: number;
+          rulesets_platforms_count?: number;
           rulesets_bundles_count?: number;
           rulesets_by_platform?: Record<string, number>;
           rulesets_fingerprint?: string;
@@ -224,6 +225,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.ledger_files_count, 0);
       assert.deepEqual(payload.evidence?.ledger_by_platform, {});
       assert.equal(payload.evidence?.rulesets_count, 0);
+      assert.equal(payload.evidence?.rulesets_platforms_count, 0);
       assert.equal(payload.evidence?.rulesets_bundles_count, 0);
       assert.deepEqual(payload.evidence?.rulesets_by_platform, {});
       assert.equal(payload.evidence?.rulesets_fingerprint, '');
@@ -317,6 +319,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         ledger_files_count?: number;
         ledger_by_platform?: Record<string, number>;
         rulesets_count?: number;
+        rulesets_platforms_count?: number;
         rulesets_bundles_count?: number;
         rulesets_by_platform?: Record<string, number>;
         rulesets_fingerprint?: string;
@@ -344,6 +347,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.ledger_files_count, 2);
       assert.deepEqual(summary.ledger_by_platform, { backend: 1, ios: 1 });
       assert.equal(summary.rulesets_count, 2);
+      assert.equal(summary.rulesets_platforms_count, 2);
       assert.equal(summary.rulesets_bundles_count, 2);
       assert.deepEqual(summary.rulesets_by_platform, { backend: 1, ios: 1 });
       assert.equal(summary.rulesets_fingerprint, '222|111');
