@@ -11,6 +11,7 @@ export type EvidenceServerOptions = {
 };
 
 const DEFAULT_ROUTE = '/ai-evidence';
+const MAX_FINDINGS_LIMIT = 100;
 
 const json = (value: unknown): string => JSON.stringify(value);
 const truthyQueryValues = new Set(['1', 'true', 'yes', 'on']);
@@ -29,7 +30,7 @@ const CONTEXT_API_CAPABILITIES = {
     '/ai-evidence/ledger',
   ],
   filters: {
-    findings: ['severity', 'ruleId', 'platform'],
+    findings: ['severity', 'ruleId', 'platform', 'limit', 'offset', 'maxLimit'],
     rulesets: ['platform', 'bundle'],
     platforms: ['detectedOnly', 'confidence'],
     ledger: ['lastSeenAfter', 'lastSeenBefore'],
@@ -348,7 +349,9 @@ const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   const ruleIdFilter = normalizeQueryToken(requestUrl.searchParams.get('ruleId'));
   const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
 
-  const limit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
+  const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
+  const limit =
+    requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_FINDINGS_LIMIT);
   const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
 
   const filteredFindings = sortSnapshotFindings(evidence.snapshot.findings).filter((finding) => {
@@ -383,6 +386,8 @@ const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
       platform: platformFilter ?? null,
     },
     pagination: {
+      requested_limit: requestedLimit ?? null,
+      max_limit: MAX_FINDINGS_LIMIT,
       limit: limit ?? null,
       offset,
     },

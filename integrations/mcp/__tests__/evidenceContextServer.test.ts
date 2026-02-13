@@ -153,7 +153,14 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       };
       assert.equal(payload.status, 'ok');
       assert.ok(payload.context_api?.endpoints?.includes('/ai-evidence/rulesets'));
-      assert.deepEqual(payload.context_api?.filters?.findings, ['severity', 'ruleId', 'platform']);
+      assert.deepEqual(payload.context_api?.filters?.findings, [
+        'severity',
+        'ruleId',
+        'platform',
+        'limit',
+        'offset',
+        'maxLimit',
+      ]);
       assert.equal(payload.evidence?.valid, true);
       assert.equal(payload.evidence?.version, '2.1');
       assert.equal(payload.evidence?.stage, 'CI');
@@ -509,12 +516,22 @@ test('returns findings endpoint with deterministic ordering and filters', async 
       const body = (await response.json()) as {
         findings_count?: number;
         total_count?: number;
-        pagination?: { limit?: number | null; offset?: number };
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         findings?: Array<{ ruleId: string; file: string }>;
       };
       assert.equal(body.findings_count, 3);
       assert.equal(body.total_count, 3);
-      assert.deepEqual(body.pagination, { limit: null, offset: 0 });
+      assert.deepEqual(body.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
+      });
       assert.deepEqual(body.findings, [
         {
           ruleId: 'backend.avoid-explicit-any',
@@ -586,12 +603,22 @@ test('returns findings endpoint with deterministic ordering and filters', async 
       const pagedBody = (await pagedResponse.json()) as {
         findings_count?: number;
         total_count?: number;
-        pagination?: { limit?: number | null; offset?: number };
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         findings?: Array<{ ruleId: string }>;
       };
       assert.equal(pagedBody.findings_count, 1);
       assert.equal(pagedBody.total_count, 3);
-      assert.deepEqual(pagedBody.pagination, { limit: 1, offset: 1 });
+      assert.deepEqual(pagedBody.pagination, {
+        requested_limit: 1,
+        max_limit: 100,
+        limit: 1,
+        offset: 1,
+      });
       assert.deepEqual(pagedBody.findings, [
         {
           ruleId: 'backend.no-console-log',
@@ -601,6 +628,27 @@ test('returns findings endpoint with deterministic ordering and filters', async 
           file: 'apps/backend/src/z.ts',
         },
       ]);
+
+      const cappedResponse = await fetch(`${baseUrl}/ai-evidence/findings?limit=9999&offset=0`);
+      assert.equal(cappedResponse.status, 200);
+      const cappedBody = (await cappedResponse.json()) as {
+        findings_count?: number;
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
+      };
+      assert.equal(cappedBody.total_count, 3);
+      assert.equal(cappedBody.findings_count, 3);
+      assert.deepEqual(cappedBody.pagination, {
+        requested_limit: 9999,
+        max_limit: 100,
+        limit: 100,
+        offset: 0,
+      });
     });
   });
 });

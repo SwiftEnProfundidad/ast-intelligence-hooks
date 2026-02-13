@@ -122,6 +122,7 @@ Read-only endpoints:
 - `GET /ai-evidence/snapshot`
 - `GET /ai-evidence/findings`
 - `GET /ai-evidence/findings?limit=...&offset=...`
+  - deterministic bound: `maxLimit=100`
 - `GET /ai-evidence/rulesets`
 - `GET /ai-evidence/rulesets?platform=...&bundle=...`
 - `GET /ai-evidence/platforms`

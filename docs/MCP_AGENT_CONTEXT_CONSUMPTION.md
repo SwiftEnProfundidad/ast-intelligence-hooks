@@ -53,7 +53,7 @@ Use compact endpoints first:
 
 - `summary` for stage/outcome/counts
 - `snapshot` for deterministic findings details
-- `findings` for filtered violation slices (`severity`, `ruleId`, `platform`, `limit`, `offset`)
+- `findings` for filtered violation slices (`severity`, `ruleId`, `platform`, `limit`, `offset`, bounded by `maxLimit=100`)
 - `platforms` for targeting (`detectedOnly`, optional `confidence`)
 - `rulesets` for policy provenance
 - `rulesets?platform=...&bundle=...` for deterministic scoped provenance slices
