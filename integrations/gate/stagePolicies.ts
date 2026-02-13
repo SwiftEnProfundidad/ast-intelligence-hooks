@@ -29,6 +29,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.insecure-token-math-random.ast',
   'heuristics.ts.insecure-token-date-now.ast',
   'heuristics.ts.buffer-alloc-unsafe.ast',
+  'heuristics.ts.buffer-alloc-unsafe-slow.ast',
   'heuristics.ts.fs-write-file-sync.ast',
   'heuristics.ts.fs-rm-sync.ast',
   'heuristics.ts.fs-mkdir-sync.ast',

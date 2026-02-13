@@ -403,6 +403,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
+    description:
+      'Detects Buffer.allocUnsafeSlow usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected Buffer.allocUnsafeSlow usage.',
+      code: 'HEURISTICS_BUFFER_ALLOC_UNSAFE_SLOW_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-write-file-sync.ast',
     description: 'Detects fs.writeFileSync usage in TypeScript/TSX production files.',
     severity: 'WARN',

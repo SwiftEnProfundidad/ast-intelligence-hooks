@@ -552,6 +552,30 @@ const hasBufferAllocUnsafeCall = (node: unknown): boolean => {
   });
 };
 
+const hasBufferAllocUnsafeSlowCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'Buffer' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'allocUnsafeSlow'
+    );
+  });
+};
+
 const hasFsWriteFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5448,6 +5472,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.buffer-alloc-unsafe.ast',
             code: 'HEURISTICS_BUFFER_ALLOC_UNSAFE_AST',
             message: 'AST heuristic detected Buffer.allocUnsafe usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasBufferAllocUnsafeSlowCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
+            code: 'HEURISTICS_BUFFER_ALLOC_UNSAFE_SLOW_AST',
+            message: 'AST heuristic detected Buffer.allocUnsafeSlow usage.',
             filePath: fileFact.path,
           })
         );

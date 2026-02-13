@@ -620,5 +620,6 @@
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript insecure token generation via `Math.random` detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript insecure token generation via `Date.now` detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript unsafe buffer allocation via `Buffer.allocUnsafe` detection (external billing path omitted).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript unsafe buffer allocation via `Buffer.allocUnsafeSlow` detection (external billing path omitted).
+- ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript unsafe buffer allocation via `Buffer.allocUnsafeSlow` detection (external billing path omitted).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript weak UUID/token generation via `crypto.randomUUID()` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.
