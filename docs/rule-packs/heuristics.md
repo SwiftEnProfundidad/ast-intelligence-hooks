@@ -339,6 +339,7 @@
   - 
 - 
 - `heuristics.ts.fs-link-callback.ast`
+- `heuristics.ts.fs-link-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-mkdtemp-callback.ast`
@@ -704,6 +705,7 @@
 - 
 - 
 - `heuristics.ts.fs-link-callback.ast`
+- `heuristics.ts.fs-link-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-mkdtemp-callback.ast`
