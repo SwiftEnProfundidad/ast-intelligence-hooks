@@ -105,6 +105,11 @@ test('returns degraded status when evidence file is missing', async () => {
             platforms?: string[];
             ledger?: string[];
           };
+          pagination_bounds?: {
+            findings?: { max_limit?: number };
+            rulesets?: { max_limit?: number };
+            platforms?: { max_limit?: number };
+          };
         };
         evidence?: { present?: boolean; valid?: boolean; version?: string | null };
       };
@@ -117,6 +122,9 @@ test('returns degraded status when evidence file is missing', async () => {
         'offset',
         'maxLimit',
       ]);
+      assert.equal(payload.context_api?.pagination_bounds?.findings?.max_limit, 100);
+      assert.equal(payload.context_api?.pagination_bounds?.rulesets?.max_limit, 100);
+      assert.equal(payload.context_api?.pagination_bounds?.platforms?.max_limit, 100);
       assert.equal(payload.evidence?.present, false);
       assert.equal(payload.evidence?.valid, false);
       assert.equal(payload.evidence?.version, null);
@@ -145,6 +153,11 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
             platforms?: string[];
             ledger?: string[];
           };
+          pagination_bounds?: {
+            findings?: { max_limit?: number };
+            rulesets?: { max_limit?: number };
+            platforms?: { max_limit?: number };
+          };
         };
         evidence?: {
           valid?: boolean;
@@ -167,6 +180,9 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
         'offset',
         'maxLimit',
       ]);
+      assert.equal(payload.context_api?.pagination_bounds?.findings?.max_limit, 100);
+      assert.equal(payload.context_api?.pagination_bounds?.rulesets?.max_limit, 100);
+      assert.equal(payload.context_api?.pagination_bounds?.platforms?.max_limit, 100);
       assert.equal(payload.evidence?.valid, true);
       assert.equal(payload.evidence?.version, '2.1');
       assert.equal(payload.evidence?.stage, 'CI');

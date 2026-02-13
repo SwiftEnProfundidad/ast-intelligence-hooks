@@ -37,6 +37,11 @@ const CONTEXT_API_CAPABILITIES = {
     platforms: ['detectedOnly', 'confidence', 'limit', 'offset', 'maxLimit'],
     ledger: ['lastSeenAfter', 'lastSeenBefore'],
   },
+  pagination_bounds: {
+    findings: { max_limit: MAX_FINDINGS_LIMIT },
+    rulesets: { max_limit: MAX_RULESETS_LIMIT },
+    platforms: { max_limit: MAX_PLATFORMS_LIMIT },
+  },
 } as const;
 
 type EvidenceReadResult =

@@ -116,7 +116,7 @@ Read-only endpoints:
 
 - `GET /health`
 - `GET /status`
-  - includes `context_api.endpoints[]` and `context_api.filters` capabilities
+  - includes `context_api.endpoints[]`, `context_api.filters`, and `context_api.pagination_bounds` capabilities
 - `GET /ai-evidence`
 - `GET /ai-evidence/summary`
 - `GET /ai-evidence/snapshot`
