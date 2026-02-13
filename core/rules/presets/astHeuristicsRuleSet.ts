@@ -2000,6 +2000,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-cp-sync.ast',
+    description: 'Detects fs.cpSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-cp-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.cpSync usage.',
+      code: 'HEURISTICS_FS_CP_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-fdatasync-callback.ast',
     description: 'Detects fs.fdatasync callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',
