@@ -793,6 +793,29 @@ const hasFsWritevSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsWriteSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'writeSync'
+    );
+  });
+};
+
 const hasExecSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4946,6 +4969,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-writev-sync.ast',
             code: 'HEURISTICS_FS_WRITEV_SYNC_AST',
             message: 'AST heuristic detected fs.writevSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsWriteSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-write-sync.ast',
+            code: 'HEURISTICS_FS_WRITE_SYNC_AST',
+            message: 'AST heuristic detected fs.writeSync usage.',
             filePath: fileFact.path,
           })
         );
