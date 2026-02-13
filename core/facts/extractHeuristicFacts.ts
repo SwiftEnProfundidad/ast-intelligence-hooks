@@ -734,6 +734,78 @@ const hasTlsRejectUnauthorizedFalseOption = (node: unknown): boolean => {
   });
 };
 
+const hasTlsEnvRejectUnauthorizedZeroOverride = (node: unknown): boolean => {
+  const isZeroLikeLiteral = (candidate: unknown): boolean => {
+    if (!isObject(candidate)) {
+      return false;
+    }
+    if (candidate.type === 'StringLiteral') {
+      return candidate.value === '0';
+    }
+    if (candidate.type === 'NumericLiteral') {
+      return candidate.value === 0;
+    }
+    if (
+      candidate.type === 'TemplateLiteral' &&
+      Array.isArray(candidate.expressions) &&
+      candidate.expressions.length === 0 &&
+      Array.isArray(candidate.quasis) &&
+      candidate.quasis.length === 1
+    ) {
+      return candidate.quasis[0]?.value?.cooked === '0';
+    }
+    return false;
+  };
+
+  const isNodeTlsEnvMember = (candidate: unknown): boolean => {
+    if (!isObject(candidate) || candidate.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const envMember = candidate.object;
+    const keyNode = candidate.property;
+    if (!isObject(envMember) || envMember.type !== 'MemberExpression') {
+      return false;
+    }
+
+    const processNode = envMember.object;
+    const envKeyNode = envMember.property;
+    const isProcessEnv =
+      isObject(processNode) &&
+      processNode.type === 'Identifier' &&
+      processNode.name === 'process' &&
+      ((envMember.computed === true &&
+        isObject(envKeyNode) &&
+        envKeyNode.type === 'StringLiteral' &&
+        envKeyNode.value === 'env') ||
+        (envMember.computed !== true &&
+          isObject(envKeyNode) &&
+          envKeyNode.type === 'Identifier' &&
+          envKeyNode.name === 'env'));
+    if (!isProcessEnv) {
+      return false;
+    }
+
+    return (
+      (candidate.computed === true &&
+        isObject(keyNode) &&
+        keyNode.type === 'StringLiteral' &&
+        keyNode.value === 'NODE_TLS_REJECT_UNAUTHORIZED') ||
+      (candidate.computed !== true &&
+        isObject(keyNode) &&
+        keyNode.type === 'Identifier' &&
+        keyNode.name === 'NODE_TLS_REJECT_UNAUTHORIZED')
+    );
+  };
+
+  return hasNode(node, (value) => {
+    if (value.type !== 'AssignmentExpression') {
+      return false;
+    }
+    return isNodeTlsEnvMember(value.left) && isZeroLikeLiteral(value.right);
+  });
+};
+
 const hasBufferAllocUnsafeCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5776,6 +5848,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.tls-reject-unauthorized-false.ast',
             code: 'HEURISTICS_TLS_REJECT_UNAUTHORIZED_FALSE_AST',
             message: 'AST heuristic detected TLS rejectUnauthorized=false configuration.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasTlsEnvRejectUnauthorizedZeroOverride(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.tls-env-override.ast',
+            code: 'HEURISTICS_TLS_ENV_OVERRIDE_AST',
+            message: 'AST heuristic detected NODE_TLS_REJECT_UNAUTHORIZED=0 override.',
             filePath: fileFact.path,
           })
         );
