@@ -149,6 +149,7 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
   assert.equal(findSeverity('heuristics.ts.fs-access-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-chmod-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-chown-callback.ast', 'PRE_COMMIT'), 'WARN');
+  assert.equal(findSeverity('heuristics.ts.fs-lchown-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-unlink-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-readlink-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-symlink-callback.ast', 'PRE_COMMIT'), 'WARN');
@@ -247,6 +248,7 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
   assert.equal(findSeverity('heuristics.ts.fs-access-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-chmod-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-chown-callback.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.fs-lchown-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-unlink-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-readlink-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-symlink-callback.ast', 'PRE_PUSH'), 'ERROR');
@@ -2471,6 +2473,38 @@ test('gate promotes fs.chown callback heuristic to blocking in PRE_PUSH and CI o
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [fsChownCallbackFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes fs.lchown callback heuristic to blocking in PRE_PUSH and CI only', () => {
+  const fsLchownCallbackFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.fs-lchown-callback.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_FS_LCHOWN_CALLBACK_AST',
+    message: 'AST heuristic detected fs.lchown callback usage.',
+    filePath: 'apps/backend/src/main.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [fsLchownCallbackFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [fsLchownCallbackFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [fsLchownCallbackFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');

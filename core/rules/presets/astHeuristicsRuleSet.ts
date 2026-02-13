@@ -1244,6 +1244,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-lchown-callback.ast',
+    description: 'Detects fs.lchown callback-style usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-lchown-callback.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.lchown callback usage.',
+      code: 'HEURISTICS_FS_LCHOWN_CALLBACK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-unlink-callback.ast',
     description: 'Detects fs.unlink callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',
