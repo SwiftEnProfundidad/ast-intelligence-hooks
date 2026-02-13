@@ -154,6 +154,7 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
   assert.equal(findSeverity('heuristics.ts.fs-mkdtemp-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-opendir-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-open-callback.ast', 'PRE_COMMIT'), 'WARN');
+  assert.equal(findSeverity('heuristics.ts.fs-cp-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.debugger.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ios.force-unwrap.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ios.force-try.ast', 'PRE_COMMIT'), 'WARN');
@@ -235,6 +236,7 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
   assert.equal(findSeverity('heuristics.ts.fs-mkdtemp-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-opendir-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-open-callback.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.fs-cp-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.explicit-any.ast', 'CI'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.debugger.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ios.force-unwrap.ast', 'PRE_PUSH'), 'ERROR');
@@ -2597,6 +2599,38 @@ test('gate promotes fs.open callback heuristic to blocking in PRE_PUSH and CI on
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [fsOpenCallbackFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes fs.cp callback heuristic to blocking in PRE_PUSH and CI only', () => {
+  const fsCpCallbackFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.fs-cp-callback.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_FS_CP_CALLBACK_AST',
+    message: 'AST heuristic detected fs.cp callback usage.',
+    filePath: 'apps/backend/src/main.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [fsCpCallbackFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [fsCpCallbackFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [fsCpCallbackFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');
