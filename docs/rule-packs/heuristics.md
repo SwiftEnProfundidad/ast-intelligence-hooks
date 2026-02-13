@@ -94,6 +94,7 @@
   - `heuristics.ts.fs-readlink-callback.ast`
   - `heuristics.ts.fs-symlink-callback.ast`
   - `heuristics.ts.fs-link-callback.ast`
+  - `heuristics.ts.fs-mkdtemp-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -180,6 +181,7 @@
 - `heuristics.ts.fs-readlink-callback.ast`
 - `heuristics.ts.fs-symlink-callback.ast`
 - `heuristics.ts.fs-link-callback.ast`
+- `heuristics.ts.fs-mkdtemp-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
