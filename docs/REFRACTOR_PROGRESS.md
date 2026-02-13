@@ -625,5 +625,6 @@
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript JWT decode without signature verification detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript JWT verify with `ignoreExpiration: true` detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript JWT sign without expiration detection (external billing path omitted).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript TLS disabled via `rejectUnauthorized: false` detection (external billing path omitted).
+- ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript TLS disabled via `rejectUnauthorized: false` detection (external billing path omitted).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: TypeScript command execution via dynamic shell invocation detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

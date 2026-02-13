@@ -479,6 +479,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.tls-reject-unauthorized-false.ast',
+    description:
+      'Detects TLS configuration using rejectUnauthorized=false in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.tls-reject-unauthorized-false.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected TLS rejectUnauthorized=false configuration.',
+      code: 'HEURISTICS_TLS_REJECT_UNAUTHORIZED_FALSE_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
     description:
       'Detects Buffer.allocUnsafeSlow usage in TypeScript/TSX production files.',

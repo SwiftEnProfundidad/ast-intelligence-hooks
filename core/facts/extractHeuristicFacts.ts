@@ -719,6 +719,21 @@ const hasJwtSignWithoutExpirationCall = (node: unknown): boolean => {
   });
 };
 
+const hasTlsRejectUnauthorizedFalseOption = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'ObjectProperty') {
+      return false;
+    }
+
+    const keyNode = value.key;
+    const valueNode = value.value;
+    const keyMatches =
+      (isObject(keyNode) && keyNode.type === 'Identifier' && keyNode.name === 'rejectUnauthorized') ||
+      (isObject(keyNode) && keyNode.type === 'StringLiteral' && keyNode.value === 'rejectUnauthorized');
+    return keyMatches && isObject(valueNode) && valueNode.type === 'BooleanLiteral' && valueNode.value === false;
+  });
+};
+
 const hasBufferAllocUnsafeCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5696,6 +5711,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.jwt-sign-no-expiration.ast',
             code: 'HEURISTICS_JWT_SIGN_NO_EXPIRATION_AST',
             message: 'AST heuristic detected jsonwebtoken.sign without expiration.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasTlsRejectUnauthorizedFalseOption(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.tls-reject-unauthorized-false.ast',
+            code: 'HEURISTICS_TLS_REJECT_UNAUTHORIZED_FALSE_AST',
+            message: 'AST heuristic detected TLS rejectUnauthorized=false configuration.',
             filePath: fileFact.path,
           })
         );
