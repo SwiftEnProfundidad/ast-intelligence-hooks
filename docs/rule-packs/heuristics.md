@@ -349,6 +349,7 @@
   - 
 - 
 - `heuristics.ts.fs-open-callback.ast`
+- `heuristics.ts.fs-open-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-cp-callback.ast`
@@ -716,6 +717,7 @@
 - 
 - 
 - `heuristics.ts.fs-open-callback.ast`
+- `heuristics.ts.fs-open-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-cp-callback.ast`

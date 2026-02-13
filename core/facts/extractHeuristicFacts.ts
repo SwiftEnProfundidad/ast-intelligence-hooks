@@ -1000,6 +1000,29 @@ const hasFsCpSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsOpenSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'openSync'
+    );
+  });
+};
+
 const hasExecSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5252,6 +5275,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-cp-sync.ast',
             code: 'HEURISTICS_FS_CP_SYNC_AST',
             message: 'AST heuristic detected fs.cpSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsOpenSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-open-sync.ast',
+            code: 'HEURISTICS_FS_OPEN_SYNC_AST',
+            message: 'AST heuristic detected fs.openSync usage.',
             filePath: fileFact.path,
           })
         );

@@ -2018,6 +2018,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-open-sync.ast',
+    description: 'Detects fs.openSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-open-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.openSync usage.',
+      code: 'HEURISTICS_FS_OPEN_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-fdatasync-callback.ast',
     description: 'Detects fs.fdatasync callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',
