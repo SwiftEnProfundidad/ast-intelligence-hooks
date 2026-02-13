@@ -206,6 +206,7 @@
 - ✅ Context API summary/status expose deterministic `suppressed_replacement_rules_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_platforms_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_files_count` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_rules_count` facet.
 - 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
@@ -699,4 +700,5 @@
 - ✅ `P10-24` Extend MCP summary/status contract with deterministic `suppressed_replacement_rules_count` facet.
 - ✅ `P10-25` Extend MCP summary/status contract with deterministic `suppressed_platforms_count` facet.
 - ✅ `P10-26` Extend MCP summary/status contract with deterministic `suppressed_files_count` facet.
-- 🚧 `P10-27` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
+- ✅ `P10-27` Extend MCP summary/status contract with deterministic `suppressed_rules_count` facet.
+- 🚧 `P10-28` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.

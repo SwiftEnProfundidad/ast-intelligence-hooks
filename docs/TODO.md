@@ -92,6 +92,7 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_replacement_rules_count` for suppression-replacement triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_platforms_count` for suppression-platform triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_files_count` for suppression-file triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_rules_count` for suppression-rule triage.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
@@ -337,6 +338,7 @@ For full historical execution details, see:
   - ✅ Added deterministic `suppressed_replacement_rules_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `suppressed_platforms_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `suppressed_files_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `suppressed_rules_count` to MCP summary/status contracts with test/docs alignment.
   - 🚧 Continue MCP context incremental expansion with next deterministic summary facets.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
