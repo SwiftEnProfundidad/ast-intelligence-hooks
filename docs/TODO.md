@@ -94,6 +94,7 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_files_count` for suppression-file triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_rules_count` for suppression-rule triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_reasons_count` for suppression-reason triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_with_replacement_count` for replacement-aware suppression triage.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:

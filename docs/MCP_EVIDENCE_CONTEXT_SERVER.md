@@ -8,7 +8,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence?includeSuppressed=false`: compact response without `consolidation.suppressed[]`
 - `GET /ai-evidence?view=compact`: alias to hide `consolidation.suppressed[]`
 - `GET /ai-evidence?view=full`: explicit full response (default behavior)
-- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/has_findings/counts/findings_files_count/findings_rules_count/findings_with_lines_count/findings_without_lines_count/severity_counts/findings_by_platform/highest_severity/blocking_findings_count/ledger_count/ledger_files_count/ledger_rules_count/ledger_by_platform/rulesets_count/rulesets_platforms_count/rulesets_bundles_count/rulesets_hashes_count/rulesets_by_platform/rulesets_fingerprint/platform_confidence_counts/suppressed_findings_count/suppressed_replacement_rules_count/suppressed_platforms_count/suppressed_files_count/suppressed_rules_count/suppressed_reasons_count/tracked_platforms_count/detected_platforms_count/non_detected_platforms_count/detected platforms`)
+- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/has_findings/counts/findings_files_count/findings_rules_count/findings_with_lines_count/findings_without_lines_count/severity_counts/findings_by_platform/highest_severity/blocking_findings_count/ledger_count/ledger_files_count/ledger_rules_count/ledger_by_platform/rulesets_count/rulesets_platforms_count/rulesets_bundles_count/rulesets_hashes_count/rulesets_by_platform/rulesets_fingerprint/platform_confidence_counts/suppressed_findings_count/suppressed_replacement_rules_count/suppressed_platforms_count/suppressed_files_count/suppressed_rules_count/suppressed_reasons_count/suppressed_with_replacement_count/tracked_platforms_count/detected_platforms_count/non_detected_platforms_count/detected platforms`)
 - `GET /ai-evidence/snapshot`: deterministic snapshot payload (`stage/outcome/findings_count/findings[]`)
 - `GET /ai-evidence/findings`: deterministic findings list with optional filters (`severity`, `ruleId`, `platform`)
 - `GET /ai-evidence/findings?limit=...&offset=...`: deterministic paginated findings slice
@@ -28,7 +28,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`: deterministic filtered/paginated ledger slice (`maxLimit=100`)
   - pagination metadata includes `has_more` when `limit` is provided
 - `GET /health`: basic liveness probe
-- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/has_findings/counts/findings_files_count/findings_rules_count/findings_with_lines_count/findings_without_lines_count/severity_counts/findings_by_platform/highest_severity/blocking_findings_count/ledger_count/ledger_files_count/ledger_rules_count/ledger_by_platform/rulesets_count/rulesets_platforms_count/rulesets_bundles_count/rulesets_hashes_count/rulesets_by_platform/rulesets_fingerprint/platform_confidence_counts/suppressed_findings_count/suppressed_replacement_rules_count/suppressed_platforms_count/suppressed_files_count/suppressed_rules_count/suppressed_reasons_count/tracked_platforms_count/detected_platforms_count/non_detected_platforms_count`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
+- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/has_findings/counts/findings_files_count/findings_rules_count/findings_with_lines_count/findings_without_lines_count/severity_counts/findings_by_platform/highest_severity/blocking_findings_count/ledger_count/ledger_files_count/ledger_rules_count/ledger_by_platform/rulesets_count/rulesets_platforms_count/rulesets_bundles_count/rulesets_hashes_count/rulesets_by_platform/rulesets_fingerprint/platform_confidence_counts/suppressed_findings_count/suppressed_replacement_rules_count/suppressed_platforms_count/suppressed_files_count/suppressed_rules_count/suppressed_reasons_count/suppressed_with_replacement_count/tracked_platforms_count/detected_platforms_count/non_detected_platforms_count`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
 
 ## Runtime
 
@@ -129,6 +129,7 @@ Summary payload facet (excerpt):
   "suppressed_files_count": 1,
   "suppressed_rules_count": 1,
   "suppressed_reasons_count": 1,
+  "suppressed_with_replacement_count": 1,
   "tracked_platforms_count": 3,
   "detected_platforms_count": 2,
   "non_detected_platforms_count": 1
