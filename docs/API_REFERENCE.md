@@ -123,6 +123,7 @@ Read-only endpoints:
   - snapshot metadata includes `severity_counts` (deterministic key order)
   - snapshot metadata includes `findings_by_platform` (deterministic platform-key order)
   - snapshot metadata includes `highest_severity` (deterministic severity ranking)
+  - snapshot metadata includes `blocking_findings_count` (count of CRITICAL+ERROR findings)
   - includes `ledger_by_platform` (deterministic platform-key order)
   - includes `rulesets_by_platform` (deterministic platform-key order)
   - includes `detected_platforms_count` (deterministic count of currently detected platforms)

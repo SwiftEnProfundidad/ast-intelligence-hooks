@@ -258,6 +258,17 @@ const toHighestSeverity = (
   return highest;
 };
 
+const toBlockingFindingsCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
+  let count = 0;
+  for (const finding of findings) {
+    const rank = severityRank[finding.severity.toUpperCase()] ?? Number.MAX_SAFE_INTEGER;
+    if (rank <= severityRank.ERROR) {
+      count += 1;
+    }
+  }
+  return count;
+};
+
 const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   const detectedPlatforms = sortPlatforms(evidence.platforms).filter((entry) => entry.detected);
   return {
@@ -271,6 +282,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
+      blocking_findings_count: toBlockingFindingsCount(evidence.snapshot.findings),
     },
     ledger_count: evidence.ledger.length,
     ledger_by_platform: toLedgerByPlatform(evidence.ledger),
@@ -616,6 +628,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
+      blocking_findings_count: toBlockingFindingsCount(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
       ledger_by_platform: toLedgerByPlatform(evidence.ledger),
       rulesets_count: evidence.rulesets.length,
