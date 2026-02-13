@@ -88,6 +88,7 @@
   - `heuristics.ts.fs-lstat-callback.ast`
   - `heuristics.ts.fs-realpath-callback.ast`
   - `heuristics.ts.fs-access-callback.ast`
+  - `heuristics.ts.fs-chmod-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -168,6 +169,7 @@
 - `heuristics.ts.fs-lstat-callback.ast`
 - `heuristics.ts.fs-realpath-callback.ast`
 - `heuristics.ts.fs-access-callback.ast`
+- `heuristics.ts.fs-chmod-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
