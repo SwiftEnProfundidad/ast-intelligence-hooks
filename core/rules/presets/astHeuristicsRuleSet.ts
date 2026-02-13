@@ -1478,6 +1478,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-fstat-callback.ast',
+    description: 'Detects fs.fstat callback-style usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-fstat-callback.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.fstat callback usage.',
+      code: 'HEURISTICS_FS_FSTAT_CALLBACK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-ftruncate-callback.ast',
     description: 'Detects fs.ftruncate callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',

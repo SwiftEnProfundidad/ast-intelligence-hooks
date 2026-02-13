@@ -3235,6 +3235,49 @@ const hasFsFchmodCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsFstatCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isFstatProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'fstat') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'fstat');
+      if (!isFstatProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4694,6 +4737,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-fchmod-callback.ast',
             code: 'HEURISTICS_FS_FCHMOD_CALLBACK_AST',
             message: 'AST heuristic detected fs.fchmod callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsFstatCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-fstat-callback.ast',
+            code: 'HEURISTICS_FS_FSTAT_CALLBACK_AST',
+            message: 'AST heuristic detected fs.fstat callback usage.',
             filePath: fileFact.path,
           })
         );

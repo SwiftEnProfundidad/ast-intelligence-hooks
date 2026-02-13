@@ -95,6 +95,7 @@
   - `heuristics.ts.fs-symlink-callback.ast`
   - `heuristics.ts.fs-fchown-callback.ast`
   - `heuristics.ts.fs-fchmod-callback.ast`
+  - `heuristics.ts.fs-fstat-callback.ast`
   - `heuristics.ts.fs-fdatasync-callback.ast`
   - `heuristics.ts.fs-fsync-callback.ast`
   - `heuristics.ts.fs-ftruncate-callback.ast`
@@ -195,6 +196,7 @@
 - `heuristics.ts.fs-symlink-callback.ast`
 - `heuristics.ts.fs-fchown-callback.ast`
 - `heuristics.ts.fs-fchmod-callback.ast`
+- `heuristics.ts.fs-fstat-callback.ast`
 - `heuristics.ts.fs-fdatasync-callback.ast`
 - `heuristics.ts.fs-fsync-callback.ast`
 - `heuristics.ts.fs-ftruncate-callback.ast`
