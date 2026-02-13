@@ -563,6 +563,29 @@ const hasFsExistsSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsChmodSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'chmodSync'
+    );
+  });
+};
+
 const hasExecSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4606,6 +4629,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-exists-sync.ast',
             code: 'HEURISTICS_FS_EXISTS_SYNC_AST',
             message: 'AST heuristic detected fs.existsSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsChmodSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-chmod-sync.ast',
+            code: 'HEURISTICS_FS_CHMOD_SYNC_AST',
+            message: 'AST heuristic detected fs.chmodSync usage.',
             filePath: fileFact.path,
           })
         );
