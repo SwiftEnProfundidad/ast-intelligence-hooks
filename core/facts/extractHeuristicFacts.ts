@@ -2590,6 +2590,49 @@ const hasFsSymlinkCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsLinkCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isLinkProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'link') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'link');
+      if (!isLinkProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -3917,6 +3960,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-symlink-callback.ast',
             code: 'HEURISTICS_FS_SYMLINK_CALLBACK_AST',
             message: 'AST heuristic detected fs.symlink callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsLinkCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-link-callback.ast',
+            code: 'HEURISTICS_FS_LINK_CALLBACK_AST',
+            message: 'AST heuristic detected fs.link callback usage.',
             filePath: fileFact.path,
           })
         );

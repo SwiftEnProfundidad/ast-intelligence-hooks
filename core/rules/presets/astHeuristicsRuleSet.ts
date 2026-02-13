@@ -1262,6 +1262,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-link-callback.ast',
+    description: 'Detects fs.link callback-style usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-link-callback.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.link callback usage.',
+      code: 'HEURISTICS_FS_LINK_CALLBACK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.child-process-exec-file.ast',
     description: 'Detects execFile usage in TypeScript/TSX production files.',
     severity: 'WARN',
