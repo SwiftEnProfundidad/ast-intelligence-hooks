@@ -3106,6 +3106,49 @@ const hasFsFtruncateCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsTruncateCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isTruncateProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'truncate') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'truncate');
+      if (!isTruncateProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasFsFutimesCallbackCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4921,6 +4964,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-ftruncate-callback.ast',
             code: 'HEURISTICS_FS_FTRUNCATE_CALLBACK_AST',
             message: 'AST heuristic detected fs.ftruncate callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsTruncateCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-truncate-callback.ast',
+            code: 'HEURISTICS_FS_TRUNCATE_CALLBACK_AST',
+            message: 'AST heuristic detected fs.truncate callback usage.',
             filePath: fileFact.path,
           })
         );

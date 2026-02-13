@@ -1568,6 +1568,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-truncate-callback.ast',
+    description: 'Detects fs.truncate callback-style usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-truncate-callback.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.truncate callback usage.',
+      code: 'HEURISTICS_FS_TRUNCATE_CALLBACK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-futimes-callback.ast',
     description: 'Detects fs.futimes callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',

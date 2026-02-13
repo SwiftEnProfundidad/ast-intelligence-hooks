@@ -100,6 +100,7 @@
   - `heuristics.ts.fs-fdatasync-callback.ast`
   - `heuristics.ts.fs-fsync-callback.ast`
   - `heuristics.ts.fs-ftruncate-callback.ast`
+  - `heuristics.ts.fs-truncate-callback.ast`
   - `heuristics.ts.fs-futimes-callback.ast`
   - `heuristics.ts.fs-lutimes-callback.ast`
   - `heuristics.ts.fs-link-callback.ast`
@@ -204,6 +205,7 @@
 - `heuristics.ts.fs-fdatasync-callback.ast`
 - `heuristics.ts.fs-fsync-callback.ast`
 - `heuristics.ts.fs-ftruncate-callback.ast`
+- `heuristics.ts.fs-truncate-callback.ast`
 - `heuristics.ts.fs-futimes-callback.ast`
 - `heuristics.ts.fs-lutimes-callback.ast`
 - `heuristics.ts.fs-link-callback.ast`
