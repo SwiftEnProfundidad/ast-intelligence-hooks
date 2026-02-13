@@ -40,6 +40,7 @@
   - `heuristics.ts.child-process-import.ast`
   - `heuristics.ts.process-env-mutation.ast`
   - `heuristics.ts.fs-write-file-sync.ast`
+  - `heuristics.ts.fs-rm-sync.ast`
   - `heuristics.ts.child-process-exec-sync.ast`
   - `heuristics.ts.child-process-exec.ast`
   - `heuristics.ts.child-process-spawn-sync.ast`
@@ -148,6 +149,7 @@
 - `heuristics.ts.child-process-import.ast`
 - `heuristics.ts.process-env-mutation.ast`
 - `heuristics.ts.fs-write-file-sync.ast`
+- `heuristics.ts.fs-rm-sync.ast`
 - `heuristics.ts.child-process-exec-sync.ast`
 - `heuristics.ts.child-process-exec.ast`
 - `heuristics.ts.child-process-spawn-sync.ast`

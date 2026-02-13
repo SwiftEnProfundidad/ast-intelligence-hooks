@@ -577,5 +577,6 @@
 - ✅ TypeScript callback-style `fs.statfs` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript callback-style `fs.lchown` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript callback-style `fs.lchmod` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.rmSync` detection (external billing path omitted).
+- ✅ TypeScript sync-style `fs.rmSync` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.mkdirSync` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.
