@@ -2054,6 +2054,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-mkdtemp-sync.ast',
+    description: 'Detects fs.mkdtempSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-mkdtemp-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.mkdtempSync usage.',
+      code: 'HEURISTICS_FS_MKDTEMP_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-fdatasync-callback.ast',
     description: 'Detects fs.fdatasync callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',
