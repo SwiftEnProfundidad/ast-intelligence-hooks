@@ -52,7 +52,7 @@ If any check fails, agent behavior should downgrade to:
 
 Use compact endpoints first:
 
-- `summary` for stage/outcome/counts, severity distribution (`severity_counts`), highest severity (`highest_severity`), findings platform distribution (`findings_by_platform`), ledger platform distribution (`ledger_by_platform`), and policy coverage (`rulesets_by_platform`)
+- `summary` for stage/outcome/has-findings/counts, severity distribution (`severity_counts`), highest severity (`highest_severity`), findings platform distribution (`findings_by_platform`), ledger platform distribution (`ledger_by_platform`), and policy coverage (`rulesets_by_platform`)
 - `snapshot` for deterministic findings details
 - `findings` for filtered violation slices (`severity`, `ruleId`, `platform`, `limit`, `offset`, bounded by `maxLimit=100`)
 - `platforms` for targeting (`detectedOnly`, optional `confidence`, `limit`, `offset`, bounded by `maxLimit=100`)
@@ -124,6 +124,7 @@ Summary facet contract:
 ```json
 {
   "snapshot": {
+    "has_findings": true,
     "severity_counts": {
       "ERROR": 1,
       "WARN": 1

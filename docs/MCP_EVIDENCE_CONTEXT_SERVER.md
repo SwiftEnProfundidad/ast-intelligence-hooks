@@ -8,7 +8,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence?includeSuppressed=false`: compact response without `consolidation.suppressed[]`
 - `GET /ai-evidence?view=compact`: alias to hide `consolidation.suppressed[]`
 - `GET /ai-evidence?view=full`: explicit full response (default behavior)
-- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/counts/severity_counts/findings_by_platform/highest_severity/ledger_by_platform/rulesets_by_platform/detected platforms`)
+- `GET /ai-evidence/summary`: compact deterministic summary (`stage/outcome/has_findings/counts/severity_counts/findings_by_platform/highest_severity/ledger_by_platform/rulesets_by_platform/detected platforms`)
 - `GET /ai-evidence/snapshot`: deterministic snapshot payload (`stage/outcome/findings_count/findings[]`)
 - `GET /ai-evidence/findings`: deterministic findings list with optional filters (`severity`, `ruleId`, `platform`)
 - `GET /ai-evidence/findings?limit=...&offset=...`: deterministic paginated findings slice
@@ -28,7 +28,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`: deterministic filtered/paginated ledger slice (`maxLimit=100`)
   - pagination metadata includes `has_more` when `limit` is provided
 - `GET /health`: basic liveness probe
-- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts/severity_counts/findings_by_platform/highest_severity/ledger_by_platform/rulesets_by_platform`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
+- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/has_findings/counts/severity_counts/findings_by_platform/highest_severity/ledger_by_platform/rulesets_by_platform`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
 
 ## Runtime
 
@@ -101,6 +101,7 @@ Summary payload facet (excerpt):
   "snapshot": {
     "stage": "CI",
     "outcome": "PASS",
+    "has_findings": true,
     "findings_count": 2,
     "severity_counts": { "ERROR": 1, "WARN": 1 },
     "findings_by_platform": { "backend": 1, "ios": 1 },

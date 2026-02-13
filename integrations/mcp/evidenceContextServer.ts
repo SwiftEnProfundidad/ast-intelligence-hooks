@@ -265,6 +265,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     snapshot: {
       stage: evidence.snapshot.stage,
       outcome: evidence.snapshot.outcome,
+      has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
@@ -608,6 +609,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       timestamp: evidence.timestamp,
       stage: evidence.snapshot.stage,
       outcome: evidence.snapshot.outcome,
+      has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),

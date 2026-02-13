@@ -167,6 +167,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           version?: string;
           stage?: string;
           outcome?: string;
+          has_findings?: boolean;
           findings_count?: number;
           severity_counts?: Record<string, number>;
           findings_by_platform?: Record<string, number>;
@@ -196,6 +197,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.version, '2.1');
       assert.equal(payload.evidence?.stage, 'CI');
       assert.equal(payload.evidence?.outcome, 'PASS');
+      assert.equal(payload.evidence?.has_findings, false);
       assert.equal(payload.evidence?.findings_count, 0);
       assert.deepEqual(payload.evidence?.severity_counts, {});
       assert.deepEqual(payload.evidence?.findings_by_platform, {});
@@ -274,6 +276,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         snapshot?: {
           stage?: string;
           outcome?: string;
+          has_findings?: boolean;
           findings_count?: number;
           severity_counts?: Record<string, number>;
           findings_by_platform?: Record<string, number>;
@@ -288,6 +291,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.version, '2.1');
       assert.equal(summary.snapshot?.stage, 'CI');
       assert.equal(summary.snapshot?.outcome, 'PASS');
+      assert.equal(summary.snapshot?.has_findings, true);
       assert.equal(summary.snapshot?.findings_count, 1);
       assert.deepEqual(summary.snapshot?.severity_counts, { ERROR: 1 });
       assert.deepEqual(summary.snapshot?.findings_by_platform, { backend: 1 });

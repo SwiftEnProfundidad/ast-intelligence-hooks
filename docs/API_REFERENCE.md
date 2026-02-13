@@ -119,6 +119,7 @@ Read-only endpoints:
   - includes `context_api.endpoints[]`, `context_api.filters`, and `context_api.pagination_bounds` capabilities
 - `GET /ai-evidence`
 - `GET /ai-evidence/summary`
+  - snapshot metadata includes `has_findings` (fast boolean gate for non-empty findings)
   - snapshot metadata includes `severity_counts` (deterministic key order)
   - snapshot metadata includes `findings_by_platform` (deterministic platform-key order)
   - snapshot metadata includes `highest_severity` (deterministic severity ranking)
