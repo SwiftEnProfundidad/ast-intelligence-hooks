@@ -260,7 +260,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript unsafe buffer allocation via `Buffer.allocUnsafeSlow` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript weak UUID/token generation via `crypto.randomUUID()` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript JWT decode without signature verification semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: TypeScript JWT verify with `ignoreExpiration: true`.
+  - ✅ Added TypeScript JWT verify with `ignoreExpiration: true` semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: TypeScript JWT sign without expiration.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

@@ -610,6 +610,54 @@ const hasJwtDecodeWithoutVerifyCall = (node: unknown): boolean => {
   });
 };
 
+const hasJwtVerifyIgnoreExpirationCall = (node: unknown): boolean => {
+  const hasIgnoreExpirationTrueOption = (candidate: unknown): boolean => {
+    return hasNode(candidate, (value) => {
+      if (value.type !== 'ObjectProperty') {
+        return false;
+      }
+
+      const keyNode = value.key;
+      const valueNode = value.value;
+      const keyMatches =
+        (isObject(keyNode) && keyNode.type === 'Identifier' && keyNode.name === 'ignoreExpiration') ||
+        (isObject(keyNode) && keyNode.type === 'StringLiteral' && keyNode.value === 'ignoreExpiration');
+      return keyMatches && isObject(valueNode) && valueNode.type === 'BooleanLiteral' && valueNode.value === true;
+    });
+  };
+
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    if (
+      !isObject(objectNode) ||
+      objectNode.type !== 'Identifier' ||
+      (objectNode.name !== 'jwt' && objectNode.name !== 'jsonwebtoken') ||
+      !isObject(propertyNode) ||
+      propertyNode.type !== 'Identifier' ||
+      propertyNode.name !== 'verify'
+    ) {
+      return false;
+    }
+
+    const args = value.arguments;
+    if (!Array.isArray(args) || args.length < 3) {
+      return false;
+    }
+
+    return hasIgnoreExpirationTrueOption(args[2]);
+  });
+};
+
 const hasBufferAllocUnsafeCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5565,6 +5613,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.jwt-decode-without-verify.ast',
             code: 'HEURISTICS_JWT_DECODE_WITHOUT_VERIFY_AST',
             message: 'AST heuristic detected jsonwebtoken.decode usage without verify.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasJwtVerifyIgnoreExpirationCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.jwt-verify-ignore-expiration.ast',
+            code: 'HEURISTICS_JWT_VERIFY_IGNORE_EXPIRATION_AST',
+            message: 'AST heuristic detected jsonwebtoken.verify with ignoreExpiration=true.',
             filePath: fileFact.path,
           })
         );

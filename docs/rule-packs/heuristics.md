@@ -143,6 +143,7 @@
 - `heuristics.ts.weak-crypto-hash.ast`
 - `heuristics.ts.weak-token-randomuuid.ast`
 - `heuristics.ts.jwt-decode-without-verify.ast`
+- `heuristics.ts.jwt-verify-ignore-expiration.ast`
 - `heuristics.ts.insecure-token-math-random.ast`
 - `heuristics.ts.insecure-token-date-now.ast`
 - `heuristics.ts.buffer-alloc-unsafe.ast`
@@ -761,6 +762,7 @@
 - `heuristics.ts.weak-crypto-hash.ast`
 - `heuristics.ts.weak-token-randomuuid.ast`
 - `heuristics.ts.jwt-decode-without-verify.ast`
+- `heuristics.ts.jwt-verify-ignore-expiration.ast`
 - `heuristics.ts.insecure-token-math-random.ast`
 - `heuristics.ts.insecure-token-date-now.ast`
 - `heuristics.ts.buffer-alloc-unsafe.ast`
