@@ -416,6 +416,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-realpath-sync.ast',
+    description: 'Detects fs.realpathSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-realpath-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.realpathSync usage.',
+      code: 'HEURISTICS_FS_REALPATH_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.child-process-exec-sync.ast',
     description: 'Detects execSync usage in TypeScript/TSX production files.',
     severity: 'WARN',
