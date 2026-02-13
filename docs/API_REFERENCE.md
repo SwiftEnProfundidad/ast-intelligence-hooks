@@ -133,6 +133,8 @@ Read-only endpoints:
   - deterministic bound: `maxLimit=100`
 - `GET /ai-evidence/ledger`
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`
+- `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`
+  - deterministic bound: `maxLimit=100`
 
 Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
 Consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`.

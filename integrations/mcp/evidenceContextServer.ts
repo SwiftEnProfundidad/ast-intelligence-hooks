@@ -14,6 +14,7 @@ const DEFAULT_ROUTE = '/ai-evidence';
 const MAX_FINDINGS_LIMIT = 100;
 const MAX_RULESETS_LIMIT = 100;
 const MAX_PLATFORMS_LIMIT = 100;
+const MAX_LEDGER_LIMIT = 100;
 
 const json = (value: unknown): string => JSON.stringify(value);
 const truthyQueryValues = new Set(['1', 'true', 'yes', 'on']);
@@ -35,12 +36,13 @@ const CONTEXT_API_CAPABILITIES = {
     findings: ['severity', 'ruleId', 'platform', 'limit', 'offset', 'maxLimit'],
     rulesets: ['platform', 'bundle', 'limit', 'offset', 'maxLimit'],
     platforms: ['detectedOnly', 'confidence', 'limit', 'offset', 'maxLimit'],
-    ledger: ['lastSeenAfter', 'lastSeenBefore'],
+    ledger: ['lastSeenAfter', 'lastSeenBefore', 'limit', 'offset', 'maxLimit'],
   },
   pagination_bounds: {
     findings: { max_limit: MAX_FINDINGS_LIMIT },
     rulesets: { max_limit: MAX_RULESETS_LIMIT },
     platforms: { max_limit: MAX_PLATFORMS_LIMIT },
+    ledger: { max_limit: MAX_LEDGER_LIMIT },
   },
 } as const;
 
@@ -277,21 +279,32 @@ const sortLedger = (ledger: AiEvidenceV2_1['ledger']): AiEvidenceV2_1['ledger'] 
 };
 
 const toLedgerPayload = (evidence: AiEvidenceV2_1) => {
+  const ledger = sortLedger(evidence.ledger);
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
+    total_count: ledger.length,
     filters: {
       lastSeenAfter: null,
       lastSeenBefore: null,
     },
-    ledger: sortLedger(evidence.ledger),
+    pagination: {
+      requested_limit: null,
+      max_limit: MAX_LEDGER_LIMIT,
+      limit: null,
+      offset: 0,
+    },
+    ledger,
   };
 };
 
 const toLedgerPayloadWithFilters = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   const lastSeenAfter = normalizeQueryToken(requestUrl.searchParams.get('lastSeenAfter'));
   const lastSeenBefore = normalizeQueryToken(requestUrl.searchParams.get('lastSeenBefore'));
-  const ledger = sortLedger(evidence.ledger).filter((entry) => {
+  const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
+  const limit = requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_LEDGER_LIMIT);
+  const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
+  const filteredLedger = sortLedger(evidence.ledger).filter((entry) => {
     if (lastSeenAfter && entry.lastSeen.toLowerCase() < lastSeenAfter) {
       return false;
     }
@@ -300,13 +313,24 @@ const toLedgerPayloadWithFilters = (evidence: AiEvidenceV2_1, requestUrl: URL) =
     }
     return true;
   });
+  const ledger =
+    limit === undefined
+      ? filteredLedger.slice(offset)
+      : filteredLedger.slice(offset, offset + limit);
 
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
+    total_count: filteredLedger.length,
     filters: {
       lastSeenAfter: lastSeenAfter ?? null,
       lastSeenBefore: lastSeenBefore ?? null,
+    },
+    pagination: {
+      requested_limit: requestedLimit ?? null,
+      max_limit: MAX_LEDGER_LIMIT,
+      limit: limit ?? null,
+      offset,
     },
     ledger,
   };
@@ -579,7 +603,10 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
       }
       res.writeHead(200, { 'content-type': 'application/json' });
       const hasLedgerFilters =
-        requestUrl.searchParams.has('lastSeenAfter') || requestUrl.searchParams.has('lastSeenBefore');
+        requestUrl.searchParams.has('lastSeenAfter') ||
+        requestUrl.searchParams.has('lastSeenBefore') ||
+        requestUrl.searchParams.has('limit') ||
+        requestUrl.searchParams.has('offset');
       res.end(json(hasLedgerFilters ? toLedgerPayloadWithFilters(evidence, requestUrl) : toLedgerPayload(evidence)));
       return;
     }

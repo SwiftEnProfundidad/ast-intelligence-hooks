@@ -56,6 +56,7 @@ Use compact endpoints first:
 - `snapshot` for deterministic findings details
 - `findings` for filtered violation slices (`severity`, `ruleId`, `platform`, `limit`, `offset`, bounded by `maxLimit=100`)
 - `platforms` for targeting (`detectedOnly`, optional `confidence`, `limit`, `offset`, bounded by `maxLimit=100`)
+- `ledger` for open-violation continuity (`lastSeenAfter`, `lastSeenBefore`, `limit`, `offset`, bounded by `maxLimit=100`)
 - `rulesets` for policy provenance
 - `rulesets?platform=...&bundle=...` for deterministic scoped provenance slices
 - `rulesets?limit=...&offset=...` for deterministic pagination (`maxLimit=100`)
@@ -83,6 +84,7 @@ curl -s "http://127.0.0.1:7341/ai-evidence/platforms?detectedOnly=false&confiden
 curl -s "http://127.0.0.1:7341/ai-evidence/platforms?detectedOnly=false&limit=20&offset=0"
 curl -s http://127.0.0.1:7341/ai-evidence/ledger
 curl -s "http://127.0.0.1:7341/ai-evidence/ledger?lastSeenAfter=2026-02-01t00:00:00.000z"
+curl -s "http://127.0.0.1:7341/ai-evidence/ledger?lastSeenAfter=2026-02-01t00:00:00.000z&limit=20&offset=0"
 ```
 
 ## Failure Handling

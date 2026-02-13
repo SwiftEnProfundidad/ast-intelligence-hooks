@@ -109,6 +109,7 @@ test('returns degraded status when evidence file is missing', async () => {
             findings?: { max_limit?: number };
             rulesets?: { max_limit?: number };
             platforms?: { max_limit?: number };
+            ledger?: { max_limit?: number };
           };
         };
         evidence?: { present?: boolean; valid?: boolean; version?: string | null };
@@ -125,6 +126,7 @@ test('returns degraded status when evidence file is missing', async () => {
       assert.equal(payload.context_api?.pagination_bounds?.findings?.max_limit, 100);
       assert.equal(payload.context_api?.pagination_bounds?.rulesets?.max_limit, 100);
       assert.equal(payload.context_api?.pagination_bounds?.platforms?.max_limit, 100);
+      assert.equal(payload.context_api?.pagination_bounds?.ledger?.max_limit, 100);
       assert.equal(payload.evidence?.present, false);
       assert.equal(payload.evidence?.valid, false);
       assert.equal(payload.evidence?.version, null);
@@ -157,6 +159,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
             findings?: { max_limit?: number };
             rulesets?: { max_limit?: number };
             platforms?: { max_limit?: number };
+            ledger?: { max_limit?: number };
           };
         };
         evidence?: {
@@ -183,6 +186,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.context_api?.pagination_bounds?.findings?.max_limit, 100);
       assert.equal(payload.context_api?.pagination_bounds?.rulesets?.max_limit, 100);
       assert.equal(payload.context_api?.pagination_bounds?.platforms?.max_limit, 100);
+      assert.equal(payload.context_api?.pagination_bounds?.ledger?.max_limit, 100);
       assert.equal(payload.evidence?.valid, true);
       assert.equal(payload.evidence?.version, '2.1');
       assert.equal(payload.evidence?.stage, 'CI');
@@ -518,10 +522,24 @@ test('returns ledger endpoint sorted deterministically', async () => {
       const body = (await response.json()) as {
         version?: string;
         filters?: { lastSeenAfter?: string | null; lastSeenBefore?: string | null };
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         ledger?: Array<{ ruleId: string; file: string }>;
       };
       assert.equal(body.version, '2.1');
+      assert.equal(body.total_count, 3);
       assert.deepEqual(body.filters, { lastSeenAfter: null, lastSeenBefore: null });
+      assert.deepEqual(body.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
+      });
       assert.deepEqual(body.ledger, [
         {
           ruleId: 'backend.avoid-explicit-any',
@@ -551,11 +569,25 @@ test('returns ledger endpoint sorted deterministically', async () => {
       assert.equal(filteredResponse.status, 200);
       const filteredBody = (await filteredResponse.json()) as {
         filters?: { lastSeenAfter?: string | null; lastSeenBefore?: string | null };
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         ledger?: Array<{ ruleId: string; file: string }>;
       };
+      assert.equal(filteredBody.total_count, 2);
       assert.deepEqual(filteredBody.filters, {
         lastSeenAfter: '2026-02-02t10:00:00.000z',
         lastSeenBefore: null,
+      });
+      assert.deepEqual(filteredBody.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
       });
       assert.deepEqual(filteredBody.ledger, [
         {
@@ -565,6 +597,35 @@ test('returns ledger endpoint sorted deterministically', async () => {
           firstSeen: '2026-02-01T10:00:00.000Z',
           lastSeen: '2026-02-02T10:00:00.000Z',
         },
+        {
+          ruleId: 'backend.avoid-explicit-any',
+          file: 'apps/backend/src/b.ts',
+          lines: [30, 31],
+          firstSeen: '2026-02-01T10:00:00.000Z',
+          lastSeen: '2026-02-02T10:00:00.000Z',
+        },
+      ]);
+
+      const pagedResponse = await fetch(`${baseUrl}/ai-evidence/ledger?limit=1&offset=1`);
+      assert.equal(pagedResponse.status, 200);
+      const pagedBody = (await pagedResponse.json()) as {
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
+        ledger?: Array<{ ruleId: string; file: string }>;
+      };
+      assert.equal(pagedBody.total_count, 3);
+      assert.deepEqual(pagedBody.pagination, {
+        requested_limit: 1,
+        max_limit: 100,
+        limit: 1,
+        offset: 1,
+      });
+      assert.deepEqual(pagedBody.ledger, [
         {
           ruleId: 'backend.avoid-explicit-any',
           file: 'apps/backend/src/b.ts',

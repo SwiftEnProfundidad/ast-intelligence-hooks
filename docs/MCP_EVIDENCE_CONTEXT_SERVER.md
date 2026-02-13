@@ -22,6 +22,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/platforms?detectedOnly=false&limit=...&offset=...`: deterministic paginated platform slice (`maxLimit=100`)
 - `GET /ai-evidence/ledger`: deterministic sorted ledger entries (`ruleId/file/lines/firstSeen/lastSeen`)
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`: deterministic filtered ledger slice
+- `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`: deterministic filtered/paginated ledger slice (`maxLimit=100`)
 - `GET /health`: basic liveness probe
 - `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
 

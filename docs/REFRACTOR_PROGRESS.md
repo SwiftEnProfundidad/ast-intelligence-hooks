@@ -179,6 +179,7 @@
 - ✅ Read-only MCP evidence server is implemented.
 - ✅ Context API deterministic platforms pagination is implemented (`/ai-evidence/platforms?detectedOnly=false&limit=...&offset=...`, `maxLimit=100`).
 - ✅ Context API `/status` now exposes deterministic pagination bounds per endpoint (`context_api.pagination_bounds`).
+- ✅ Context API deterministic ledger pagination is implemented (`/ai-evidence/ledger?...&limit=...&offset=...`, `maxLimit=100`).
 - 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
