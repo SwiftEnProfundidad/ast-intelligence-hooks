@@ -2977,6 +2977,49 @@ const hasFsFsyncCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsFdatasyncCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isFdatasyncProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'fdatasync') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'fdatasync');
+      if (!isFdatasyncProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4403,6 +4446,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-fsync-callback.ast',
             code: 'HEURISTICS_FS_FSYNC_CALLBACK_AST',
             message: 'AST heuristic detected fs.fsync callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsFdatasyncCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-fdatasync-callback.ast',
+            code: 'HEURISTICS_FS_FDATASYNC_CALLBACK_AST',
+            message: 'AST heuristic detected fs.fdatasync callback usage.',
             filePath: fileFact.path,
           })
         );

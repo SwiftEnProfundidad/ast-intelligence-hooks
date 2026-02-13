@@ -78,6 +78,7 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.fs-readlink-callback.ast',
   'heuristics.ts.fs-symlink-callback.ast',
   'heuristics.ts.fs-fsync-callback.ast',
+  'heuristics.ts.fs-fdatasync-callback.ast',
   'heuristics.ts.fs-link-callback.ast',
   'heuristics.ts.fs-mkdtemp-callback.ast',
   'heuristics.ts.fs-opendir-callback.ast',
