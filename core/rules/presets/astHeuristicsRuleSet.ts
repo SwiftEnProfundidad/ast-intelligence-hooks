@@ -308,6 +308,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.hardcoded-secret-token.ast',
+    description:
+      'Detects hardcoded secret/token/password/apiKey-like string literals in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.hardcoded-secret-token.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected hardcoded secret/token literal.',
+      code: 'HEURISTICS_HARDCODED_SECRET_TOKEN_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-write-file-sync.ast',
     description: 'Detects fs.writeFileSync usage in TypeScript/TSX production files.',
     severity: 'WARN',

@@ -252,7 +252,8 @@ For full historical execution details, see:
   - ✅ Added TypeScript sync-style `fs.unlinkSync` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript sync-style `fs.truncateSync` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript sync-style `fs.rmdirSync` semantic heuristic with stage-aware promotion and passing tests.
-  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: TypeScript hardcoded-secret token pattern detection.
+  - ✅ Added TypeScript hardcoded-secret token pattern semantic heuristic with stage-aware promotion and passing tests.
+  - 🚧 Continue Phase 9 semantic heuristic expansion with next high-signal rule: TypeScript weak-crypto hash pattern detection (`md5`/`sha1`).
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

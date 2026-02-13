@@ -4,7 +4,11 @@
 
 - 
 - 
+- 
+- 
 - `astHeuristicsRuleSet@0.4.0`
+- 
+- 
 - 
 - 
 - Platform: `frontend`, `backend`, `ios`, `android` (heuristic signals)
@@ -13,13 +17,19 @@
 
 - 
 - 
+- 
+- 
 - `core/rules/presets/astHeuristicsRuleSet.ts`
 
 ## Activation
 
 - 
 - 
+- 
+- 
 - Disabled by default.
+- 
+- 
 - 
 - 
 - Enabled when `PUMUKI_ENABLE_AST_HEURISTICS` is truthy (`1`, `true`, `yes`, `on`).
@@ -28,10 +38,16 @@
 
 - 
 - 
+- 
+- 
 - Semantic and token-aware extractors emit typed `Heuristic` facts.
 - 
 - 
+- 
+- 
 - The shared evaluator matches those facts through declarative `Heuristic` conditions.
+- 
+- 
 - 
 - 
 - Findings are emitted by standard rule evaluation flow and included in `.ai_evidence.json`.
@@ -40,94 +56,153 @@
 
 - 
 - 
+- 
+- 
 - `PRE_COMMIT` keeps all heuristic findings at `WARN`.
+- 
+- 
 - 
 - 
 - `PRE_PUSH` and `CI` promote selected high-confidence heuristic rules to `ERROR`:
   - 
 - 
+- 
+- 
 - `heuristics.ts.console-log.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.console-error.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.eval.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.function-constructor.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.set-timeout-string.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.set-interval-string.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.new-promise-async.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.with-statement.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.process-exit.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.delete-operator.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.inner-html.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.document-write.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.insert-adjacent-html.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.child-process-import.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.process-env-mutation.ast`
+- `heuristics.ts.hardcoded-secret-token.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-write-file-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-rm-sync.ast`
 - `heuristics.ts.fs-rename-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-mkdir-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-readdir-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-read-file-sync.ast`
 - `heuristics.ts.fs-read-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-stat-sync.ast`
 - `heuristics.ts.fs-statfs-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-realpath-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-lstat-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-exists-sync.ast`
 - `heuristics.ts.fs-access-sync.ast`
 - `heuristics.ts.fs-utimes-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-chmod-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-chown-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-fchown-sync.ast`
 - `heuristics.ts.fs-fchmod-sync.ast`
@@ -140,276 +215,450 @@
 - `heuristics.ts.fs-fdatasync-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-exec-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.child-process-exec.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-spawn-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.child-process-spawn.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-fork.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.child-process-exec-file-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-exec-file.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-append-file-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-write-file.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-append-file.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-rm.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-unlink.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-read-file.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-readdir.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-mkdir.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-stat.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-copy-file.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-rename.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-access.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-chmod.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-chown.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-utimes.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-lstat.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-realpath.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-symlink.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-link.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-readlink.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-open.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-opendir.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-promises-cp.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-mkdtemp.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-utimes-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-watch-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-watch-file-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-unwatch-file-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-read-file-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-exists-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-write-file-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-append-file-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-readdir-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-mkdir-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-rmdir-callback.ast`
 - `heuristics.ts.fs-rmdir-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-rm-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-rename-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-copy-file-callback.ast`
 - `heuristics.ts.fs-copy-file-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-stat-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-statfs-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-lstat-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-realpath-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-access-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-chmod-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-chown-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-lchown-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-lchmod-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-unlink-callback.ast`
 - `heuristics.ts.fs-unlink-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-readlink-callback.ast`
 - `heuristics.ts.fs-readlink-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-symlink-callback.ast`
 - `heuristics.ts.fs-symlink-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-fchown-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-fchmod-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-fstat-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-fdatasync-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-fsync-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-ftruncate-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-truncate-callback.ast`
 - `heuristics.ts.fs-truncate-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-futimes-callback.ast`
 - `heuristics.ts.fs-futimes-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-lutimes-callback.ast`
 - `heuristics.ts.fs-lutimes-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-link-callback.ast`
 - `heuristics.ts.fs-link-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-mkdtemp-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-opendir-callback.ast`
 - `heuristics.ts.fs-opendir-sync.ast`
 - `heuristics.ts.fs-mkdtemp-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-open-callback.ast`
 - `heuristics.ts.fs-open-sync.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-cp-callback.ast`
 - `heuristics.ts.fs-cp-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-close-callback.ast`
 - `heuristics.ts.fs-close-sync.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-read-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-readv-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.fs-writev-callback.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.fs-write-callback.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ts.explicit-any.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ts.debugger.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ios.force-unwrap.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ios.anyview.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ios.force-try.ast`
   - 
+- 
+- 
 - 
 - `heuristics.ios.force-cast.ast`
   - 
 - 
+- 
+- 
 - `heuristics.ios.callback-style.ast`
   - 
+- 
+- 
 - 
 - `heuristics.android.thread-sleep.ast`
   - 
 - 
+- 
+- 
 - `heuristics.android.globalscope.ast`
   - 
 - 
+- 
+- 
 - `heuristics.android.run-blocking.ast`
+- 
+- 
 - 
 - 
 - Remaining heuristic rules stay at `WARN` across all stages.
@@ -418,82 +667,135 @@
 
 - 
 - 
+- 
+- 
 - `heuristics.ts.empty-catch.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.explicit-any.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.console-log.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.console-error.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.eval.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.function-constructor.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.set-timeout-string.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.set-interval-string.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.new-promise-async.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.with-statement.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.process-exit.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.delete-operator.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.inner-html.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.document-write.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.insert-adjacent-html.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.child-process-import.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.process-env-mutation.ast`
+- `heuristics.ts.hardcoded-secret-token.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-write-file-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-rm-sync.ast`
 - `heuristics.ts.fs-rename-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-mkdir-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-readdir-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-read-file-sync.ast`
 - `heuristics.ts.fs-read-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-stat-sync.ast`
 - `heuristics.ts.fs-statfs-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-realpath-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-lstat-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-exists-sync.ast`
@@ -501,10 +803,16 @@
 - `heuristics.ts.fs-utimes-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-chmod-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-chown-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-fchown-sync.ast`
@@ -518,217 +826,355 @@
 - `heuristics.ts.fs-fdatasync-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-exec-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.child-process-exec.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-spawn-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.child-process-spawn.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-fork.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.child-process-exec-file-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.child-process-exec-file.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-append-file-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-write-file.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-append-file.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-rm.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-unlink.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-read-file.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-readdir.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-mkdir.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-stat.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-copy-file.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-rename.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-access.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-chmod.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-chown.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-utimes.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-lstat.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-realpath.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-symlink.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-link.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-readlink.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-open.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-opendir.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-promises-cp.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-promises-mkdtemp.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-utimes-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-watch-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-watch-file-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-unwatch-file-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-read-file-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-exists-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-write-file-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-append-file-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-readdir-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-mkdir-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-rmdir-callback.ast`
 - `heuristics.ts.fs-rmdir-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-rm-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-rename-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-copy-file-callback.ast`
 - `heuristics.ts.fs-copy-file-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-stat-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-statfs-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-lstat-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-realpath-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-access-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-chmod-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-chown-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-lchown-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-lchmod-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-unlink-callback.ast`
 - `heuristics.ts.fs-unlink-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-readlink-callback.ast`
 - `heuristics.ts.fs-readlink-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-symlink-callback.ast`
 - `heuristics.ts.fs-symlink-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-fchown-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-fchmod-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-fstat-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-fdatasync-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-fsync-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-ftruncate-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-truncate-callback.ast`
 - `heuristics.ts.fs-truncate-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-futimes-callback.ast`
 - `heuristics.ts.fs-futimes-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-lutimes-callback.ast`
 - `heuristics.ts.fs-lutimes-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-link-callback.ast`
 - `heuristics.ts.fs-link-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-mkdtemp-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-opendir-callback.ast`
@@ -736,52 +1182,84 @@
 - `heuristics.ts.fs-mkdtemp-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-open-callback.ast`
 - `heuristics.ts.fs-open-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-cp-callback.ast`
 - `heuristics.ts.fs-cp-sync.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-close-callback.ast`
 - `heuristics.ts.fs-close-sync.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-read-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-readv-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.fs-writev-callback.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ts.fs-write-callback.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ts.debugger.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ios.force-unwrap.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ios.anyview.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ios.force-try.ast`
+- 
+- 
 - 
 - 
 - `heuristics.ios.force-cast.ast`
 - 
 - 
+- 
+- 
 - `heuristics.ios.callback-style.ast`
+- 
+- 
 - 
 - 
 - `heuristics.android.thread-sleep.ast`
 - 
 - 
+- 
+- 
 - `heuristics.android.globalscope.ast`
+- 
+- 
 - 
 - 
 - `heuristics.android.run-blocking.ast`

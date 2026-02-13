@@ -356,6 +356,43 @@ const hasProcessEnvMutation = (node: unknown): boolean => {
   });
 };
 
+const hasHardcodedSecretTokenLiteral = (node: unknown): boolean => {
+  const sensitiveIdentifierPattern = /(secret|token|password|api[_-]?key)/i;
+  const hasStrongLiteralValue = (value: unknown): boolean => {
+    if (!isObject(value)) {
+      return false;
+    }
+    if (value.type === 'StringLiteral') {
+      return typeof value.value === 'string' && value.value.trim().length >= 12;
+    }
+    if (
+      value.type === 'TemplateLiteral' &&
+      Array.isArray(value.expressions) &&
+      value.expressions.length === 0 &&
+      Array.isArray(value.quasis) &&
+      value.quasis.length === 1
+    ) {
+      const cooked = value.quasis[0]?.value?.cooked;
+      return typeof cooked === 'string' && cooked.trim().length >= 12;
+    }
+    return false;
+  };
+
+  return hasNode(node, (value) => {
+    if (value.type !== 'VariableDeclarator') {
+      return false;
+    }
+    const idNode = value.id;
+    if (!isObject(idNode) || idNode.type !== 'Identifier') {
+      return false;
+    }
+    if (!sensitiveIdentifierPattern.test(idNode.name)) {
+      return false;
+    }
+    return hasStrongLiteralValue(value.init);
+  });
+};
+
 const hasFsWriteFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5197,6 +5234,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.process-env-mutation.ast',
             code: 'HEURISTICS_PROCESS_ENV_MUTATION_AST',
             message: 'AST heuristic detected process.env mutation.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasHardcodedSecretTokenLiteral(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.hardcoded-secret-token.ast',
+            code: 'HEURISTICS_HARDCODED_SECRET_TOKEN_AST',
+            message: 'AST heuristic detected hardcoded secret/token literal.',
             filePath: fileFact.path,
           })
         );
