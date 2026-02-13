@@ -956,6 +956,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-exists-callback.ast',
+    description: 'Detects fs.exists callback-style usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-exists-callback.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.exists callback usage.',
+      code: 'HEURISTICS_FS_EXISTS_CALLBACK_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-write-file-callback.ast',
     description: 'Detects fs.writeFile callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',
