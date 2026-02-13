@@ -528,6 +528,30 @@ const hasInsecureTokenGenerationWithDateNow = (node: unknown): boolean => {
   });
 };
 
+const hasBufferAllocUnsafeCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'Buffer' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'allocUnsafe'
+    );
+  });
+};
+
 const hasFsWriteFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5413,6 +5437,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.insecure-token-date-now.ast',
             code: 'HEURISTICS_INSECURE_TOKEN_DATE_NOW_AST',
             message: 'AST heuristic detected insecure token generation via Date.now.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasBufferAllocUnsafeCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.buffer-alloc-unsafe.ast',
+            code: 'HEURISTICS_BUFFER_ALLOC_UNSAFE_AST',
+            message: 'AST heuristic detected Buffer.allocUnsafe usage.',
             filePath: fileFact.path,
           })
         );
