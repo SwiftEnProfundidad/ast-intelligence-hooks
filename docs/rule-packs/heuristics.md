@@ -108,6 +108,7 @@
   - 
 - 
 - `heuristics.ts.fs-stat-sync.ast`
+- `heuristics.ts.fs-statfs-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-realpath-sync.ast`
@@ -478,6 +479,7 @@
 - 
 - 
 - `heuristics.ts.fs-stat-sync.ast`
+- `heuristics.ts.fs-statfs-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-realpath-sync.ast`
