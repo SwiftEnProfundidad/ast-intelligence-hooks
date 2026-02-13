@@ -125,6 +125,7 @@ Read-only endpoints:
   - snapshot metadata includes `highest_severity` (deterministic severity ranking)
   - includes `ledger_by_platform` (deterministic platform-key order)
   - includes `rulesets_by_platform` (deterministic platform-key order)
+  - includes `detected_platforms_count` (deterministic count of currently detected platforms)
 - `GET /ai-evidence/snapshot`
 - `GET /ai-evidence/findings`
 - `GET /ai-evidence/findings?limit=...&offset=...`

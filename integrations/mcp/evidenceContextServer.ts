@@ -259,6 +259,7 @@ const toHighestSeverity = (
 };
 
 const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
+  const detectedPlatforms = sortPlatforms(evidence.platforms).filter((entry) => entry.detected);
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
@@ -275,7 +276,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     ledger_by_platform: toLedgerByPlatform(evidence.ledger),
     rulesets_count: evidence.rulesets.length,
     rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
-    platforms: sortPlatforms(evidence.platforms).filter((entry) => entry.detected),
+    detected_platforms_count: detectedPlatforms.length,
+    platforms: detectedPlatforms,
   };
 };
 
@@ -618,6 +620,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
       ledger_by_platform: toLedgerByPlatform(evidence.ledger),
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
+      detected_platforms_count: sortPlatforms(evidence.platforms).filter((entry) => entry.detected)
+        .length,
       platforms: Object.keys(evidence.platforms).sort(),
     },
   };

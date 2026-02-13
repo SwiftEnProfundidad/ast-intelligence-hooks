@@ -176,6 +176,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           ledger_by_platform?: Record<string, number>;
           rulesets_count?: number;
           rulesets_by_platform?: Record<string, number>;
+          detected_platforms_count?: number;
           platforms?: string[];
         };
       };
@@ -206,6 +207,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.deepEqual(payload.evidence?.ledger_by_platform, {});
       assert.equal(payload.evidence?.rulesets_count, 0);
       assert.deepEqual(payload.evidence?.rulesets_by_platform, {});
+      assert.equal(payload.evidence?.detected_platforms_count, 0);
       assert.deepEqual(payload.evidence?.platforms, []);
     });
   });
@@ -286,6 +288,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         ledger_by_platform?: Record<string, number>;
         rulesets_count?: number;
         rulesets_by_platform?: Record<string, number>;
+        detected_platforms_count?: number;
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
       };
       assert.equal(summary.version, '2.1');
@@ -300,6 +303,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.deepEqual(summary.ledger_by_platform, { backend: 1, ios: 1 });
       assert.equal(summary.rulesets_count, 2);
       assert.deepEqual(summary.rulesets_by_platform, { backend: 1, ios: 1 });
+      assert.equal(summary.detected_platforms_count, 2);
       assert.deepEqual(summary.platforms, [
         { platform: 'backend', detected: true, confidence: 'HIGH' },
         { platform: 'ios', detected: true, confidence: 'HIGH' },
