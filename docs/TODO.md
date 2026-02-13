@@ -76,6 +76,7 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `detected_platforms_count` for quick active-platform triage.
 - [x] MCP context summary/status now expose deterministic `blocking_findings_count` (CRITICAL+ERROR) for fast block-level triage.
 - [x] MCP context summary/status now expose deterministic `rulesets_fingerprint` for quick ruleset-signature comparisons.
+- [x] MCP context summary/status now expose deterministic `non_detected_platforms_count` for quick inactive-platform triage.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
@@ -305,6 +306,7 @@ For full historical execution details, see:
   - ✅ Added deterministic `detected_platforms_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `blocking_findings_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `rulesets_fingerprint` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `non_detected_platforms_count` to MCP summary/status contracts with test/docs alignment.
   - 🚧 Continue MCP context incremental expansion with next deterministic summary facets.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
