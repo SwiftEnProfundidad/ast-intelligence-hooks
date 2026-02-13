@@ -367,9 +367,23 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
       assert.equal(detectedOnlyResponse.status, 200);
       const detectedOnly = (await detectedOnlyResponse.json()) as {
         filters?: { detectedOnly?: boolean; confidence?: string | null };
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
       };
+      assert.equal(detectedOnly.total_count, 2);
       assert.deepEqual(detectedOnly.filters, { detectedOnly: true, confidence: null });
+      assert.deepEqual(detectedOnly.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
+      });
       assert.deepEqual(detectedOnly.platforms, [
         { platform: 'backend', detected: true, confidence: 'HIGH' },
         { platform: 'ios', detected: true, confidence: 'MEDIUM' },
@@ -379,9 +393,23 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
       assert.equal(allPlatformsResponse.status, 200);
       const allPlatforms = (await allPlatformsResponse.json()) as {
         filters?: { detectedOnly?: boolean; confidence?: string | null };
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
       };
+      assert.equal(allPlatforms.total_count, 3);
       assert.deepEqual(allPlatforms.filters, { detectedOnly: false, confidence: null });
+      assert.deepEqual(allPlatforms.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
+      });
       assert.deepEqual(allPlatforms.platforms, [
         { platform: 'android', detected: false, confidence: 'LOW' },
         { platform: 'backend', detected: true, confidence: 'HIGH' },
@@ -392,11 +420,50 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
       assert.equal(confidenceResponse.status, 200);
       const confidenceFiltered = (await confidenceResponse.json()) as {
         filters?: { detectedOnly?: boolean; confidence?: string | null };
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
         platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
       };
+      assert.equal(confidenceFiltered.total_count, 1);
       assert.deepEqual(confidenceFiltered.filters, { detectedOnly: false, confidence: 'low' });
+      assert.deepEqual(confidenceFiltered.pagination, {
+        requested_limit: null,
+        max_limit: 100,
+        limit: null,
+        offset: 0,
+      });
       assert.deepEqual(confidenceFiltered.platforms, [
         { platform: 'android', detected: false, confidence: 'LOW' },
+      ]);
+
+      const pagedResponse = await fetch(
+        `${baseUrl}/ai-evidence/platforms?detectedOnly=false&limit=1&offset=1`
+      );
+      assert.equal(pagedResponse.status, 200);
+      const pagedBody = (await pagedResponse.json()) as {
+        total_count?: number;
+        pagination?: {
+          requested_limit?: number | null;
+          max_limit?: number;
+          limit?: number | null;
+          offset?: number;
+        };
+        platforms?: Array<{ platform: string; detected: boolean; confidence: string }>;
+      };
+      assert.equal(pagedBody.total_count, 3);
+      assert.deepEqual(pagedBody.pagination, {
+        requested_limit: 1,
+        max_limit: 100,
+        limit: 1,
+        offset: 1,
+      });
+      assert.deepEqual(pagedBody.platforms, [
+        { platform: 'backend', detected: true, confidence: 'HIGH' },
       ]);
     });
   });

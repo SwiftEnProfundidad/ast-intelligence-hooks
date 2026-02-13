@@ -63,6 +63,8 @@ For full historical execution details, see:
 
 ## Active Work
 
+- [x] MCP context endpoint `/ai-evidence/platforms` now supports deterministic pagination (`limit`, `offset`, `maxLimit=100`) with regression coverage and docs alignment.
+- [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS

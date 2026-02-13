@@ -19,6 +19,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/platforms`: detected platforms only (default)
 - `GET /ai-evidence/platforms?detectedOnly=false`: all tracked platforms with detection state
 - `GET /ai-evidence/platforms?detectedOnly=false&confidence=LOW`: deterministic filtered slice by confidence
+- `GET /ai-evidence/platforms?detectedOnly=false&limit=...&offset=...`: deterministic paginated platform slice (`maxLimit=100`)
 - `GET /ai-evidence/ledger`: deterministic sorted ledger entries (`ruleId/file/lines/firstSeen/lastSeen`)
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`: deterministic filtered ledger slice
 - `GET /health`: basic liveness probe

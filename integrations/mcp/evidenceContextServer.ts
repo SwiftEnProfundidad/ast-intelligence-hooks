@@ -13,6 +13,7 @@ export type EvidenceServerOptions = {
 const DEFAULT_ROUTE = '/ai-evidence';
 const MAX_FINDINGS_LIMIT = 100;
 const MAX_RULESETS_LIMIT = 100;
+const MAX_PLATFORMS_LIMIT = 100;
 
 const json = (value: unknown): string => JSON.stringify(value);
 const truthyQueryValues = new Set(['1', 'true', 'yes', 'on']);
@@ -33,7 +34,7 @@ const CONTEXT_API_CAPABILITIES = {
   filters: {
     findings: ['severity', 'ruleId', 'platform', 'limit', 'offset', 'maxLimit'],
     rulesets: ['platform', 'bundle', 'limit', 'offset', 'maxLimit'],
-    platforms: ['detectedOnly', 'confidence'],
+    platforms: ['detectedOnly', 'confidence', 'limit', 'offset', 'maxLimit'],
     ledger: ['lastSeenAfter', 'lastSeenBefore'],
   },
 } as const;
@@ -211,7 +212,11 @@ const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
 const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   const detectedOnly = parseBooleanQuery(requestUrl.searchParams.get('detectedOnly')) ?? true;
   const confidenceFilter = normalizeQueryToken(requestUrl.searchParams.get('confidence'));
-  const platforms = sortPlatforms(evidence.platforms).filter((entry) => {
+  const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
+  const limit =
+    requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_PLATFORMS_LIMIT);
+  const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
+  const filteredPlatforms = sortPlatforms(evidence.platforms).filter((entry) => {
     if (detectedOnly && !entry.detected) {
       return false;
     }
@@ -220,12 +225,23 @@ const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
     }
     return true;
   });
+  const platforms =
+    limit === undefined
+      ? filteredPlatforms.slice(offset)
+      : filteredPlatforms.slice(offset, offset + limit);
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
+    total_count: filteredPlatforms.length,
     filters: {
       detectedOnly,
       confidence: confidenceFilter ?? null,
+    },
+    pagination: {
+      requested_limit: requestedLimit ?? null,
+      max_limit: MAX_PLATFORMS_LIMIT,
+      limit: limit ?? null,
+      offset,
     },
     platforms,
   };
