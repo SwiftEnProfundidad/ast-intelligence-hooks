@@ -12,6 +12,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/snapshot`: deterministic snapshot payload (`stage/outcome/findings_count/findings[]`)
 - `GET /ai-evidence/findings`: deterministic findings list with optional filters (`severity`, `ruleId`, `platform`)
 - `GET /ai-evidence/rulesets`: deterministic sorted list of loaded rulesets (`platform/bundle/hash`)
+- `GET /ai-evidence/rulesets?platform=...&bundle=...`: deterministic filtered rulesets slice
 - `GET /ai-evidence/platforms`: detected platforms only (default)
 - `GET /ai-evidence/platforms?detectedOnly=false`: all tracked platforms with detection state
 - `GET /ai-evidence/ledger`: deterministic sorted ledger entries (`ruleId/file/lines/firstSeen/lastSeen`)

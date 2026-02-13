@@ -226,12 +226,25 @@ test('returns rulesets endpoint sorted deterministically', async () => {
       assert.equal(response.status, 200);
       const body = (await response.json()) as {
         version?: string;
+        filters?: { platform?: string | null; bundle?: string | null };
         rulesets?: Array<{ platform: string; bundle: string; hash: string }>;
       };
       assert.equal(body.version, '2.1');
+      assert.deepEqual(body.filters, { platform: null, bundle: null });
       assert.deepEqual(body.rulesets, [
         { platform: 'backend', bundle: 'backend', hash: 'bbb' },
         { platform: 'ios', bundle: 'ios', hash: 'aaa' },
+        { platform: 'ios', bundle: 'shared', hash: 'zzz' },
+      ]);
+
+      const filteredResponse = await fetch(`${baseUrl}/ai-evidence/rulesets?platform=ios&bundle=shared`);
+      assert.equal(filteredResponse.status, 200);
+      const filteredBody = (await filteredResponse.json()) as {
+        filters?: { platform?: string | null; bundle?: string | null };
+        rulesets?: Array<{ platform: string; bundle: string; hash: string }>;
+      };
+      assert.deepEqual(filteredBody.filters, { platform: 'ios', bundle: 'shared' });
+      assert.deepEqual(filteredBody.rulesets, [
         { platform: 'ios', bundle: 'shared', hash: 'zzz' },
       ]);
     });

@@ -136,11 +136,27 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   };
 };
 
-const toRulesetsPayload = (evidence: AiEvidenceV2_1) => {
+const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
+  const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
+  const bundleFilter = normalizeQueryToken(requestUrl.searchParams.get('bundle'));
+  const rulesets = sortRulesets(evidence.rulesets).filter((ruleset) => {
+    if (platformFilter && ruleset.platform.toLowerCase() !== platformFilter) {
+      return false;
+    }
+    if (bundleFilter && ruleset.bundle.toLowerCase() !== bundleFilter) {
+      return false;
+    }
+    return true;
+  });
+
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
-    rulesets: sortRulesets(evidence.rulesets),
+    filters: {
+      platform: platformFilter ?? null,
+      bundle: bundleFilter ?? null,
+    },
+    rulesets,
   };
 };
 
@@ -411,7 +427,7 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
         return;
       }
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(json(toRulesetsPayload(evidence)));
+      res.end(json(toRulesetsPayload(evidence, requestUrl)));
       return;
     }
 

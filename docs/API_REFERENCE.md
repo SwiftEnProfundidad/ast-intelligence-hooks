@@ -121,6 +121,7 @@ Read-only endpoints:
 - `GET /ai-evidence/snapshot`
 - `GET /ai-evidence/findings`
 - `GET /ai-evidence/rulesets`
+- `GET /ai-evidence/rulesets?platform=...&bundle=...`
 - `GET /ai-evidence/platforms`
 - `GET /ai-evidence/ledger`
 
