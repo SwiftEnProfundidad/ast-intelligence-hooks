@@ -222,6 +222,14 @@ const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']):
   return files.size;
 };
 
+const toFindingsRulesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
+  const rules = new Set<string>();
+  for (const finding of findings) {
+    rules.add(finding.ruleId);
+  }
+  return rules.size;
+};
+
 const toFindingsWithLinesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   let count = 0;
   for (const finding of findings) {
@@ -333,6 +341,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
       findings_files_count: toFindingsFilesCount(evidence.snapshot.findings),
+      findings_rules_count: toFindingsRulesCount(evidence.snapshot.findings),
       findings_with_lines_count: findingsWithLinesCount,
       findings_without_lines_count: evidence.snapshot.findings.length - findingsWithLinesCount,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
@@ -693,6 +702,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       has_findings: evidence.snapshot.findings.length > 0,
       findings_count: evidence.snapshot.findings.length,
       findings_files_count: toFindingsFilesCount(evidence.snapshot.findings),
+      findings_rules_count: toFindingsRulesCount(evidence.snapshot.findings),
       findings_with_lines_count: findingsWithLinesCount,
       findings_without_lines_count: evidence.snapshot.findings.length - findingsWithLinesCount,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),

@@ -85,6 +85,7 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `findings_without_lines_count` for line-metadata gap triage.
 - [x] MCP context summary/status now expose deterministic `ledger_files_count` for recurring file-impact triage.
 - [x] MCP context summary/status now expose deterministic `rulesets_bundles_count` for bundle-coverage triage.
+- [x] MCP context summary/status now expose deterministic `findings_rules_count` for rule-surface triage.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
@@ -323,6 +324,7 @@ For full historical execution details, see:
   - ✅ Added deterministic `findings_without_lines_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `ledger_files_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `rulesets_bundles_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `findings_rules_count` to MCP summary/status contracts with test/docs alignment.
   - 🚧 Continue MCP context incremental expansion with next deterministic summary facets.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):

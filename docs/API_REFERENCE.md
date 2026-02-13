@@ -121,6 +121,7 @@ Read-only endpoints:
 - `GET /ai-evidence/summary`
   - snapshot metadata includes `has_findings` (fast boolean gate for non-empty findings)
   - snapshot metadata includes `findings_files_count` (deterministic count of distinct files with findings)
+  - snapshot metadata includes `findings_rules_count` (deterministic count of distinct rule IDs in findings)
   - snapshot metadata includes `findings_with_lines_count` (deterministic count of findings with line metadata)
   - snapshot metadata includes `findings_without_lines_count` (deterministic count of findings without line metadata)
   - includes `rulesets_bundles_count` (deterministic count of distinct loaded ruleset bundles)
