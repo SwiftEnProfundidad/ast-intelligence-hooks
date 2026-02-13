@@ -183,6 +183,7 @@
 - ✅ Context API paginated endpoints now expose deterministic `pagination.has_more` for stable cursor progression.
 - ✅ Context API summary/status expose deterministic severity distribution (`severity_counts`).
 - ✅ Context API summary/status expose deterministic ruleset platform coverage (`rulesets_by_platform`).
+- ✅ Context API summary/status expose deterministic findings platform coverage (`findings_by_platform`).
 - 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
@@ -653,4 +654,5 @@
 - ✅ `P10-2` Finalize MCP context contract documentation snippets (`status.pagination_bounds` + paginated payload metadata) and keep regressions green.
 - ✅ `P10-2` Extend MCP summary/status contract with deterministic `severity_counts`.
 - ✅ `P10-3` Extend MCP summary/status contract with deterministic `rulesets_by_platform` facet.
-- 🚧 `P10-4` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
+- ✅ `P10-4` Extend MCP summary/status contract with deterministic `findings_by_platform` facet.
+- 🚧 `P10-5` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.

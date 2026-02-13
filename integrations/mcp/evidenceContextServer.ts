@@ -194,6 +194,17 @@ const toRulesetsByPlatform = (rulesets: AiEvidenceV2_1['rulesets']): Record<stri
   return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
 };
 
+const toFindingsByPlatform = (
+  findings: AiEvidenceV2_1['snapshot']['findings']
+): Record<string, number> => {
+  const counts = new Map<string, number>();
+  for (const finding of findings) {
+    const platform = inferFindingPlatform(finding);
+    counts.set(platform, (counts.get(platform) ?? 0) + 1);
+  }
+  return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
+};
+
 const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   return {
     version: evidence.version,
@@ -203,6 +214,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       outcome: evidence.snapshot.outcome,
       findings_count: evidence.snapshot.findings.length,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
+      findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
     },
     ledger_count: evidence.ledger.length,
     rulesets_count: evidence.rulesets.length,
@@ -556,6 +568,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       outcome: evidence.snapshot.outcome,
       findings_count: evidence.snapshot.findings.length,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
+      findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
