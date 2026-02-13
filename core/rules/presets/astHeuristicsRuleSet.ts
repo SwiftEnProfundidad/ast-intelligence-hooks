@@ -542,6 +542,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-fstat-sync.ast',
+    description: 'Detects fs.fstatSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-fstat-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.fstatSync usage.',
+      code: 'HEURISTICS_FS_FSTAT_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.child-process-exec-sync.ast',
     description: 'Detects execSync usage in TypeScript/TSX production files.',
     severity: 'WARN',

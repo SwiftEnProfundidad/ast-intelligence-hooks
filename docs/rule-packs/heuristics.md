@@ -89,6 +89,7 @@
   - 
 - `heuristics.ts.fs-fchown-sync.ast`
 - `heuristics.ts.fs-fchmod-sync.ast`
+- `heuristics.ts.fs-fstat-sync.ast`
   - 
 - `heuristics.ts.child-process-exec-sync.ast`
   - 
@@ -325,6 +326,7 @@
 - 
 - `heuristics.ts.fs-fchown-sync.ast`
 - `heuristics.ts.fs-fchmod-sync.ast`
+- `heuristics.ts.fs-fstat-sync.ast`
 - 
 - `heuristics.ts.child-process-exec-sync.ast`
 - 
