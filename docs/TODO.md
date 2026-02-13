@@ -70,6 +70,7 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `severity_counts` for pre-action prioritization.
 - [x] MCP context summary/status now expose deterministic `rulesets_by_platform` for policy coverage visibility.
 - [x] MCP context summary/status now expose deterministic `findings_by_platform` for platform-priority visibility.
+- [x] MCP context summary/status now expose deterministic `highest_severity` for fast gate-priority checks.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
@@ -293,6 +294,7 @@ For full historical execution details, see:
   - ✅ Added deterministic `severity_counts` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `rulesets_by_platform` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `findings_by_platform` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `highest_severity` to MCP summary/status contracts with test/docs alignment.
   - 🚧 Continue MCP context incremental expansion with next deterministic summary facets.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):

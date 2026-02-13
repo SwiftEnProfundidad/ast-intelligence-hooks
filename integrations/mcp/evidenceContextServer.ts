@@ -162,6 +162,12 @@ const sortPlatforms = (platforms: AiEvidenceV2_1['platforms']) => {
 };
 
 const severityOrder = ['CRITICAL', 'ERROR', 'WARN', 'INFO'] as const;
+const severityRank: Record<string, number> = {
+  CRITICAL: 0,
+  ERROR: 1,
+  WARN: 2,
+  INFO: 3,
+};
 
 const toSeverityCounts = (
   findings: AiEvidenceV2_1['snapshot']['findings']
@@ -205,6 +211,25 @@ const toFindingsByPlatform = (
   return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
 };
 
+const toHighestSeverity = (
+  findings: AiEvidenceV2_1['snapshot']['findings']
+): string | null => {
+  let highest: string | null = null;
+  for (const finding of findings) {
+    const severity = finding.severity.toUpperCase();
+    if (highest === null) {
+      highest = severity;
+      continue;
+    }
+    const currentRank = severityRank[severity] ?? Number.MAX_SAFE_INTEGER;
+    const highestRank = severityRank[highest] ?? Number.MAX_SAFE_INTEGER;
+    if (currentRank < highestRank) {
+      highest = severity;
+    }
+  }
+  return highest;
+};
+
 const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
   return {
     version: evidence.version,
@@ -215,6 +240,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       findings_count: evidence.snapshot.findings.length,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
+      highest_severity: toHighestSeverity(evidence.snapshot.findings),
     },
     ledger_count: evidence.ledger.length,
     rulesets_count: evidence.rulesets.length,
@@ -569,6 +595,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       findings_count: evidence.snapshot.findings.length,
       severity_counts: toSeverityCounts(evidence.snapshot.findings),
       findings_by_platform: toFindingsByPlatform(evidence.snapshot.findings),
+      highest_severity: toHighestSeverity(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
