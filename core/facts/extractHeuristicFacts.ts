@@ -2332,6 +2332,49 @@ const hasFsRealpathCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsAccessCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isAccessProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'access') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'access');
+      if (!isAccessProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -3593,6 +3636,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-realpath-callback.ast',
             code: 'HEURISTICS_FS_REALPATH_CALLBACK_AST',
             message: 'AST heuristic detected fs.realpath callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsAccessCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-access-callback.ast',
+            code: 'HEURISTICS_FS_ACCESS_CALLBACK_AST',
+            message: 'AST heuristic detected fs.access callback usage.',
             filePath: fileFact.path,
           })
         );
