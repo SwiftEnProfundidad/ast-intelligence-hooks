@@ -536,6 +536,25 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.child-process-shell-true.ast',
+    description:
+      'Detects child_process spawn/execFile calls with shell=true in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.child-process-shell-true.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected child_process call with shell=true.',
+      code: 'HEURISTICS_CHILD_PROCESS_SHELL_TRUE_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
     description:
       'Detects Buffer.allocUnsafeSlow usage in TypeScript/TSX production files.',
