@@ -97,6 +97,7 @@
   - `heuristics.ts.fs-fsync-callback.ast`
   - `heuristics.ts.fs-ftruncate-callback.ast`
   - `heuristics.ts.fs-futimes-callback.ast`
+  - `heuristics.ts.fs-lutimes-callback.ast`
   - `heuristics.ts.fs-link-callback.ast`
   - `heuristics.ts.fs-mkdtemp-callback.ast`
   - `heuristics.ts.fs-opendir-callback.ast`
@@ -194,6 +195,7 @@
 - `heuristics.ts.fs-fsync-callback.ast`
 - `heuristics.ts.fs-ftruncate-callback.ast`
 - `heuristics.ts.fs-futimes-callback.ast`
+- `heuristics.ts.fs-lutimes-callback.ast`
 - `heuristics.ts.fs-link-callback.ast`
 - `heuristics.ts.fs-mkdtemp-callback.ast`
 - `heuristics.ts.fs-opendir-callback.ast`

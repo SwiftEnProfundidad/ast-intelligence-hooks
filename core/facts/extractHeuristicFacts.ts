@@ -3106,6 +3106,49 @@ const hasFsFutimesCallbackCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsLutimesCallbackCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+
+    if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      const isLutimesProperty =
+        (callee.computed === true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'StringLiteral' &&
+          propertyNode.value === 'lutimes') ||
+        (callee.computed !== true &&
+          isObject(propertyNode) &&
+          propertyNode.type === 'Identifier' &&
+          propertyNode.name === 'lutimes');
+      if (!isLutimesProperty) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      const isFsObject =
+        isObject(objectNode) &&
+        objectNode.type === 'Identifier' &&
+        objectNode.name === 'fs';
+      if (!isFsObject) {
+        return false;
+      }
+
+      return value.arguments.some((argument) => {
+        return (
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+        );
+      });
+    }
+
+    return false;
+  });
+};
+
 const hasExecFileCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -4565,6 +4608,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-futimes-callback.ast',
             code: 'HEURISTICS_FS_FUTIMES_CALLBACK_AST',
             message: 'AST heuristic detected fs.futimes callback usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsLutimesCallbackCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-lutimes-callback.ast',
+            code: 'HEURISTICS_FS_LUTIMES_CALLBACK_AST',
+            message: 'AST heuristic detected fs.lutimes callback usage.',
             filePath: fileFact.path,
           })
         );
