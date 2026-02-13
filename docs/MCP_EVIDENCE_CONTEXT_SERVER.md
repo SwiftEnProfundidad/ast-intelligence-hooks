@@ -19,7 +19,7 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/ledger`: deterministic sorted ledger entries (`ruleId/file/lines/firstSeen/lastSeen`)
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`: deterministic filtered ledger slice
 - `GET /health`: basic liveness probe
-- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts`) without returning full evidence payload
+- `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts`) plus `context_api` capabilities (`endpoints` + supported filters)
 
 ## Runtime
 

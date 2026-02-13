@@ -637,4 +637,5 @@
 - ✅ `P10-1` Extend MCP/context API with deterministic `rulesets` filter semantics (server + tests + docs).
 - ✅ `P10-1` Extend MCP/context API with deterministic `platforms` confidence filters (server + tests + docs).
 - ✅ `P10-1` Extend MCP/context API with deterministic `ledger` age filters (server + tests + docs).
-- 🚧 `P10-1` Continue MCP/context API incremental expansion with deterministic `status` filter-capabilities enrichment (server + tests + docs).
+- ✅ `P10-1` Extend MCP/context API with deterministic `status` filter-capabilities enrichment (server + tests + docs).
+- 🚧 `P10-1` Continue MCP/context API incremental expansion with deterministic `findings` pagination semantics (server + tests + docs).

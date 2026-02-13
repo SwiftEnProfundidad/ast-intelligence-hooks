@@ -16,6 +16,26 @@ const json = (value: unknown): string => JSON.stringify(value);
 const truthyQueryValues = new Set(['1', 'true', 'yes', 'on']);
 const falsyQueryValues = new Set(['0', 'false', 'no', 'off']);
 
+const CONTEXT_API_CAPABILITIES = {
+  endpoints: [
+    '/health',
+    '/status',
+    '/ai-evidence',
+    '/ai-evidence/summary',
+    '/ai-evidence/snapshot',
+    '/ai-evidence/findings',
+    '/ai-evidence/rulesets',
+    '/ai-evidence/platforms',
+    '/ai-evidence/ledger',
+  ],
+  filters: {
+    findings: ['severity', 'ruleId', 'platform'],
+    rulesets: ['platform', 'bundle'],
+    platforms: ['detectedOnly', 'confidence'],
+    ledger: ['lastSeenAfter', 'lastSeenBefore'],
+  },
+} as const;
+
 type EvidenceReadResult =
   | { kind: 'missing' }
   | { kind: 'invalid'; version?: string }
@@ -363,6 +383,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
   if (readResult.kind === 'missing') {
     return {
       status: 'degraded',
+      context_api: CONTEXT_API_CAPABILITIES,
       evidence: {
         path: evidencePath,
         present: false,
@@ -375,6 +396,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
   if (readResult.kind === 'invalid') {
     return {
       status: 'degraded',
+      context_api: CONTEXT_API_CAPABILITIES,
       evidence: {
         path: evidencePath,
         present: true,
@@ -387,6 +409,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
   const { evidence } = readResult;
   return {
     status: 'ok',
+    context_api: CONTEXT_API_CAPABILITIES,
     evidence: {
       path: evidencePath,
       present: true,

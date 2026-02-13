@@ -37,6 +37,7 @@ Before generating code or applying edits, the agent should enforce:
 
 - `/status.evidence.valid === true`
 - `/status.evidence.version === "2.1"`
+- `/status.context_api.filters` exposes required filter keys before composing filtered requests
 - `/ai-evidence/summary.snapshot.stage` is known (`PRE_COMMIT`, `PRE_PUSH`, `CI`)
 - `/ai-evidence/summary.platforms` is non-empty for platform-scoped tasks
 

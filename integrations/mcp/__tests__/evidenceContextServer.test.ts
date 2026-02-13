@@ -97,9 +97,20 @@ test('returns degraded status when evidence file is missing', async () => {
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         status?: string;
+        context_api?: {
+          endpoints?: string[];
+          filters?: {
+            findings?: string[];
+            rulesets?: string[];
+            platforms?: string[];
+            ledger?: string[];
+          };
+        };
         evidence?: { present?: boolean; valid?: boolean; version?: string | null };
       };
       assert.equal(payload.status, 'degraded');
+      assert.ok(payload.context_api?.endpoints?.includes('/ai-evidence/findings'));
+      assert.deepEqual(payload.context_api?.filters?.rulesets, ['platform', 'bundle']);
       assert.equal(payload.evidence?.present, false);
       assert.equal(payload.evidence?.valid, false);
       assert.equal(payload.evidence?.version, null);
@@ -120,6 +131,15 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         status?: string;
+        context_api?: {
+          endpoints?: string[];
+          filters?: {
+            findings?: string[];
+            rulesets?: string[];
+            platforms?: string[];
+            ledger?: string[];
+          };
+        };
         evidence?: {
           valid?: boolean;
           version?: string;
@@ -132,6 +152,8 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
         };
       };
       assert.equal(payload.status, 'ok');
+      assert.ok(payload.context_api?.endpoints?.includes('/ai-evidence/rulesets'));
+      assert.deepEqual(payload.context_api?.filters?.findings, ['severity', 'ruleId', 'platform']);
       assert.equal(payload.evidence?.valid, true);
       assert.equal(payload.evidence?.version, '2.1');
       assert.equal(payload.evidence?.stage, 'CI');

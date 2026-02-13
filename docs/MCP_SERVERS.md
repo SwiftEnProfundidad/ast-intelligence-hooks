@@ -31,6 +31,8 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
 
 - `GET /health`
   - `200 { "status": "ok" }`
+- `GET /status`
+  - `200` with evidence health summary and `context_api` filter capabilities
 - `GET /ai-evidence`
   - `200` with evidence payload when valid
   - `404` when missing or invalid
