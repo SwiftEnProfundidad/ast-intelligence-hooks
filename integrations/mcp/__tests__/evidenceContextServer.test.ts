@@ -349,6 +349,7 @@ test('returns rulesets endpoint sorted deterministically', async () => {
         max_limit: 100,
         limit: 1,
         offset: 1,
+        has_more: true,
       });
       assert.deepEqual(pagedBody.rulesets, [{ platform: 'ios', bundle: 'ios', hash: 'aaa' }]);
 
@@ -367,6 +368,7 @@ test('returns rulesets endpoint sorted deterministically', async () => {
         max_limit: 100,
         limit: 100,
         offset: 0,
+        has_more: false,
       });
     });
   });
@@ -481,6 +483,7 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
         max_limit: 100,
         limit: 1,
         offset: 1,
+        has_more: true,
       });
       assert.deepEqual(pagedBody.platforms, [
         { platform: 'backend', detected: true, confidence: 'HIGH' },
@@ -624,6 +627,7 @@ test('returns ledger endpoint sorted deterministically', async () => {
         max_limit: 100,
         limit: 1,
         offset: 1,
+        has_more: true,
       });
       assert.deepEqual(pagedBody.ledger, [
         {
@@ -834,6 +838,7 @@ test('returns findings endpoint with deterministic ordering and filters', async 
         max_limit: 100,
         limit: 1,
         offset: 1,
+        has_more: true,
       });
       assert.deepEqual(pagedBody.findings, [
         {
@@ -864,6 +869,7 @@ test('returns findings endpoint with deterministic ordering and filters', async 
         max_limit: 100,
         limit: 100,
         offset: 0,
+        has_more: false,
       });
     });
   });

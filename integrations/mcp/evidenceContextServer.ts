@@ -211,6 +211,9 @@ const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
       max_limit: MAX_RULESETS_LIMIT,
       limit: limit ?? null,
       offset,
+      ...(requestedLimit !== undefined
+        ? { has_more: offset + rulesets.length < filteredRulesets.length }
+        : {}),
     },
     rulesets,
   };
@@ -249,6 +252,9 @@ const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
       max_limit: MAX_PLATFORMS_LIMIT,
       limit: limit ?? null,
       offset,
+      ...(requestedLimit !== undefined
+        ? { has_more: offset + platforms.length < filteredPlatforms.length }
+        : {}),
     },
     platforms,
   };
@@ -331,6 +337,9 @@ const toLedgerPayloadWithFilters = (evidence: AiEvidenceV2_1, requestUrl: URL) =
       max_limit: MAX_LEDGER_LIMIT,
       limit: limit ?? null,
       offset,
+      ...(requestedLimit !== undefined
+        ? { has_more: offset + ledger.length < filteredLedger.length }
+        : {}),
     },
     ledger,
   };
@@ -452,6 +461,9 @@ const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
       max_limit: MAX_FINDINGS_LIMIT,
       limit: limit ?? null,
       offset,
+      ...(requestedLimit !== undefined
+        ? { has_more: offset + findings.length < filteredFindings.length }
+        : {}),
     },
     findings,
   };

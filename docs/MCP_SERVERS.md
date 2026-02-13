@@ -47,22 +47,26 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
   - supports `?severity=...&ruleId=...&platform=...`
   - supports `?limit=...&offset=...` for deterministic pagination
   - applies deterministic `maxLimit=100` bound
+  - paginated responses include `pagination.has_more`
   - `404` when missing or invalid
 - `GET /ai-evidence/rulesets`
   - `200` with deterministic sorted rulesets
   - supports `?platform=...&bundle=...` for deterministic filtered slices
   - supports `?limit=...&offset=...` for deterministic pagination (`maxLimit=100`)
+  - paginated responses include `pagination.has_more`
   - `404` when missing or invalid
 - `GET /ai-evidence/platforms`
   - `200` with detected platforms only
   - supports `?detectedOnly=false` for full platform state
   - supports `?confidence=HIGH|MEDIUM|LOW` for deterministic filtered slices
   - supports `?limit=...&offset=...` for deterministic pagination (`maxLimit=100`)
+  - paginated responses include `pagination.has_more`
   - `404` when missing or invalid
 - `GET /ai-evidence/ledger`
   - `200` with deterministic sorted open-ledger entries
   - supports `?lastSeenAfter=...&lastSeenBefore=...` for deterministic time-window slices
   - supports `?limit=...&offset=...` for deterministic pagination (`maxLimit=100`)
+  - paginated responses include `pagination.has_more`
   - `404` when missing or invalid
 
 ### Run locally

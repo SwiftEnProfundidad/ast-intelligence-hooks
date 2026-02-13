@@ -66,6 +66,7 @@ For full historical execution details, see:
 - [x] MCP context endpoint `/ai-evidence/platforms` now supports deterministic pagination (`limit`, `offset`, `maxLimit=100`) with regression coverage and docs alignment.
 - [x] MCP `/status` now exports deterministic pagination bounds for paginated endpoints (`context_api.pagination_bounds`).
 - [x] MCP context endpoint `/ai-evidence/ledger` now supports deterministic pagination (`limit`, `offset`, `maxLimit=100`) alongside time-window filters.
+- [x] MCP paginated endpoints now expose deterministic `pagination.has_more` for stable page iteration.
 - [ ] MCP context incremental expansion continues with single active track (`summary` + deterministic filtered slices + pagination parity).
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:

@@ -59,6 +59,7 @@ Use compact endpoints first:
 - `ledger` for open-violation continuity (`lastSeenAfter`, `lastSeenBefore`, `limit`, `offset`, bounded by `maxLimit=100`)
 - `rulesets` for policy provenance
 - `rulesets?platform=...&bundle=...` for deterministic scoped provenance slices
+- paginated endpoint responses expose `pagination.has_more` to drive deterministic page iteration
 - `rulesets?limit=...&offset=...` for deterministic pagination (`maxLimit=100`)
 - `ledger` for active recurring-violation continuity (`lastSeenAfter`/`lastSeenBefore`)
 

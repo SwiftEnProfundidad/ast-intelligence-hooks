@@ -13,16 +13,20 @@ Read-only server to expose deterministic evidence before agent actions.
 - `GET /ai-evidence/findings`: deterministic findings list with optional filters (`severity`, `ruleId`, `platform`)
 - `GET /ai-evidence/findings?limit=...&offset=...`: deterministic paginated findings slice
   - `limit` is bounded by deterministic `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
 - `GET /ai-evidence/rulesets`: deterministic sorted list of loaded rulesets (`platform/bundle/hash`)
 - `GET /ai-evidence/rulesets?platform=...&bundle=...`: deterministic filtered rulesets slice
 - `GET /ai-evidence/rulesets?limit=...&offset=...`: deterministic paginated rulesets slice (`maxLimit=100`)
+  - pagination metadata includes `has_more` when `limit` is provided
 - `GET /ai-evidence/platforms`: detected platforms only (default)
 - `GET /ai-evidence/platforms?detectedOnly=false`: all tracked platforms with detection state
 - `GET /ai-evidence/platforms?detectedOnly=false&confidence=LOW`: deterministic filtered slice by confidence
 - `GET /ai-evidence/platforms?detectedOnly=false&limit=...&offset=...`: deterministic paginated platform slice (`maxLimit=100`)
+  - pagination metadata includes `has_more` when `limit` is provided
 - `GET /ai-evidence/ledger`: deterministic sorted ledger entries (`ruleId/file/lines/firstSeen/lastSeen`)
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`: deterministic filtered ledger slice
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`: deterministic filtered/paginated ledger slice (`maxLimit=100`)
+  - pagination metadata includes `has_more` when `limit` is provided
 - `GET /health`: basic liveness probe
 - `GET /status`: lightweight summary (`present/valid/version/stage/outcome/counts`) plus `context_api` capabilities (`endpoints`, supported filters, deterministic pagination bounds)
 

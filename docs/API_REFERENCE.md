@@ -123,18 +123,22 @@ Read-only endpoints:
 - `GET /ai-evidence/findings`
 - `GET /ai-evidence/findings?limit=...&offset=...`
   - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
 - `GET /ai-evidence/rulesets`
 - `GET /ai-evidence/rulesets?platform=...&bundle=...`
 - `GET /ai-evidence/rulesets?limit=...&offset=...`
   - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
 - `GET /ai-evidence/platforms`
 - `GET /ai-evidence/platforms?detectedOnly=false&confidence=...`
 - `GET /ai-evidence/platforms?detectedOnly=false&limit=...&offset=...`
   - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
 - `GET /ai-evidence/ledger`
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`
 - `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`
   - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
 
 Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
 Consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`.
