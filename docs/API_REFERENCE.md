@@ -125,6 +125,7 @@ Read-only endpoints:
 - `GET /ai-evidence/platforms`
 - `GET /ai-evidence/platforms?detectedOnly=false&confidence=...`
 - `GET /ai-evidence/ledger`
+- `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`
 
 Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
 Consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`.

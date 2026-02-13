@@ -211,7 +211,35 @@ const toLedgerPayload = (evidence: AiEvidenceV2_1) => {
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
+    filters: {
+      lastSeenAfter: null,
+      lastSeenBefore: null,
+    },
     ledger: sortLedger(evidence.ledger),
+  };
+};
+
+const toLedgerPayloadWithFilters = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
+  const lastSeenAfter = normalizeQueryToken(requestUrl.searchParams.get('lastSeenAfter'));
+  const lastSeenBefore = normalizeQueryToken(requestUrl.searchParams.get('lastSeenBefore'));
+  const ledger = sortLedger(evidence.ledger).filter((entry) => {
+    if (lastSeenAfter && entry.lastSeen.toLowerCase() < lastSeenAfter) {
+      return false;
+    }
+    if (lastSeenBefore && entry.lastSeen.toLowerCase() > lastSeenBefore) {
+      return false;
+    }
+    return true;
+  });
+
+  return {
+    version: evidence.version,
+    timestamp: evidence.timestamp,
+    filters: {
+      lastSeenAfter: lastSeenAfter ?? null,
+      lastSeenBefore: lastSeenBefore ?? null,
+    },
+    ledger,
   };
 };
 
@@ -462,7 +490,9 @@ export const startEvidenceContextServer = (options: EvidenceServerOptions = {}) 
         return;
       }
       res.writeHead(200, { 'content-type': 'application/json' });
-      res.end(json(toLedgerPayload(evidence)));
+      const hasLedgerFilters =
+        requestUrl.searchParams.has('lastSeenAfter') || requestUrl.searchParams.has('lastSeenBefore');
+      res.end(json(hasLedgerFilters ? toLedgerPayloadWithFilters(evidence, requestUrl) : toLedgerPayload(evidence)));
       return;
     }
 

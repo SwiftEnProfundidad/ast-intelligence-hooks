@@ -323,7 +323,7 @@ test('returns ledger endpoint sorted deterministically', async () => {
         ruleId: 'backend.no-console-log',
         file: 'apps/backend/src/c.ts',
         firstSeen: '2026-02-01T10:00:00.000Z',
-        lastSeen: '2026-02-02T10:00:00.000Z',
+        lastSeen: '2026-02-01T10:00:00.000Z',
       },
     ];
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
@@ -333,9 +333,11 @@ test('returns ledger endpoint sorted deterministically', async () => {
       assert.equal(response.status, 200);
       const body = (await response.json()) as {
         version?: string;
+        filters?: { lastSeenAfter?: string | null; lastSeenBefore?: string | null };
         ledger?: Array<{ ruleId: string; file: string }>;
       };
       assert.equal(body.version, '2.1');
+      assert.deepEqual(body.filters, { lastSeenAfter: null, lastSeenBefore: null });
       assert.deepEqual(body.ledger, [
         {
           ruleId: 'backend.avoid-explicit-any',
@@ -354,6 +356,35 @@ test('returns ledger endpoint sorted deterministically', async () => {
         {
           ruleId: 'backend.no-console-log',
           file: 'apps/backend/src/c.ts',
+          firstSeen: '2026-02-01T10:00:00.000Z',
+          lastSeen: '2026-02-01T10:00:00.000Z',
+        },
+      ]);
+
+      const filteredResponse = await fetch(
+        `${baseUrl}/ai-evidence/ledger?lastSeenAfter=2026-02-02t10:00:00.000z`
+      );
+      assert.equal(filteredResponse.status, 200);
+      const filteredBody = (await filteredResponse.json()) as {
+        filters?: { lastSeenAfter?: string | null; lastSeenBefore?: string | null };
+        ledger?: Array<{ ruleId: string; file: string }>;
+      };
+      assert.deepEqual(filteredBody.filters, {
+        lastSeenAfter: '2026-02-02t10:00:00.000z',
+        lastSeenBefore: null,
+      });
+      assert.deepEqual(filteredBody.ledger, [
+        {
+          ruleId: 'backend.avoid-explicit-any',
+          file: 'apps/backend/src/a.ts',
+          lines: [10, 11],
+          firstSeen: '2026-02-01T10:00:00.000Z',
+          lastSeen: '2026-02-02T10:00:00.000Z',
+        },
+        {
+          ruleId: 'backend.avoid-explicit-any',
+          file: 'apps/backend/src/b.ts',
+          lines: [30, 31],
           firstSeen: '2026-02-01T10:00:00.000Z',
           lastSeen: '2026-02-02T10:00:00.000Z',
         },

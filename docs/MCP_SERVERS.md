@@ -55,6 +55,7 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
   - `404` when missing or invalid
 - `GET /ai-evidence/ledger`
   - `200` with deterministic sorted open-ledger entries
+  - supports `?lastSeenAfter=...&lastSeenBefore=...` for deterministic time-window slices
   - `404` when missing or invalid
 
 ### Run locally

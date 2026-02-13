@@ -26,7 +26,7 @@ Applies to any agent runtime (CLI, IDE extension, automation worker) that can pe
    - `GET /ai-evidence/rulesets`
 7. Load active platform state (and optional confidence slice):
    - `GET /ai-evidence/platforms`
-8. Load active ledger continuity context:
+8. Load active ledger continuity context (and optional time-window slice):
    - `GET /ai-evidence/ledger`
 9. Load full evidence only when needed:
    - `GET /ai-evidence` (or `?view=compact`)
@@ -56,7 +56,7 @@ Use compact endpoints first:
 - `platforms` for targeting (`detectedOnly`, optional `confidence`)
 - `rulesets` for policy provenance
 - `rulesets?platform=...&bundle=...` for deterministic scoped provenance slices
-- `ledger` for active recurring-violation continuity
+- `ledger` for active recurring-violation continuity (`lastSeenAfter`/`lastSeenBefore`)
 
 Fetch full `/ai-evidence` only when:
 
@@ -76,6 +76,7 @@ curl -s "http://127.0.0.1:7341/ai-evidence/rulesets?platform=backend&bundle=back
 curl -s http://127.0.0.1:7341/ai-evidence/platforms
 curl -s "http://127.0.0.1:7341/ai-evidence/platforms?detectedOnly=false&confidence=LOW"
 curl -s http://127.0.0.1:7341/ai-evidence/ledger
+curl -s "http://127.0.0.1:7341/ai-evidence/ledger?lastSeenAfter=2026-02-01t00:00:00.000z"
 ```
 
 ## Failure Handling
