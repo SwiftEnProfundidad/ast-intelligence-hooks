@@ -1910,6 +1910,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-close-sync.ast',
+    description: 'Detects fs.closeSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-close-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.closeSync usage.',
+      code: 'HEURISTICS_FS_CLOSE_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-fdatasync-callback.ast',
     description: 'Detects fs.fdatasync callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',
