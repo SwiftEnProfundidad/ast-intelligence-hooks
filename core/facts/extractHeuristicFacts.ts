@@ -1727,6 +1727,60 @@ const hasExecCall = (node: unknown): boolean => {
   });
 };
 
+const hasDynamicShellInvocationCall = (node: unknown): boolean => {
+  const isDynamicCommandArgument = (candidate: unknown): boolean => {
+    if (!isObject(candidate)) {
+      return true;
+    }
+    if (candidate.type === 'StringLiteral') {
+      return false;
+    }
+    if (
+      candidate.type === 'TemplateLiteral' &&
+      Array.isArray(candidate.expressions) &&
+      candidate.expressions.length === 0
+    ) {
+      return false;
+    }
+    return true;
+  };
+
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    let isExecLikeCall = false;
+    if (isObject(callee) && callee.type === 'Identifier') {
+      isExecLikeCall = callee.name === 'exec' || callee.name === 'execSync';
+    } else if (isObject(callee) && callee.type === 'MemberExpression') {
+      const propertyNode = callee.property;
+      if (isObject(propertyNode)) {
+        if (callee.computed === true) {
+          isExecLikeCall =
+            propertyNode.type === 'StringLiteral' &&
+            (propertyNode.value === 'exec' || propertyNode.value === 'execSync');
+        } else {
+          isExecLikeCall =
+            propertyNode.type === 'Identifier' &&
+            (propertyNode.name === 'exec' || propertyNode.name === 'execSync');
+        }
+      }
+    }
+
+    if (!isExecLikeCall) {
+      return false;
+    }
+
+    const args = value.arguments;
+    if (!Array.isArray(args) || args.length === 0) {
+      return false;
+    }
+    return isDynamicCommandArgument(args[0]);
+  });
+};
+
 const hasSpawnSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -6195,6 +6249,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.child-process-exec.ast',
             code: 'HEURISTICS_CHILD_PROCESS_EXEC_AST',
             message: 'AST heuristic detected exec usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasDynamicShellInvocationCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.dynamic-shell-invocation.ast',
+            code: 'HEURISTICS_DYNAMIC_SHELL_INVOCATION_AST',
+            message: 'AST heuristic detected dynamic shell command invocation.',
             filePath: fileFact.path,
           })
         );

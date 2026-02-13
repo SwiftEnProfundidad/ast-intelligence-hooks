@@ -146,6 +146,7 @@
 - `heuristics.ts.jwt-verify-ignore-expiration.ast`
 - `heuristics.ts.jwt-sign-no-expiration.ast`
 - `heuristics.ts.tls-reject-unauthorized-false.ast`
+- `heuristics.ts.dynamic-shell-invocation.ast`
 - `heuristics.ts.insecure-token-math-random.ast`
 - `heuristics.ts.insecure-token-date-now.ast`
 - `heuristics.ts.buffer-alloc-unsafe.ast`
@@ -767,6 +768,7 @@
 - `heuristics.ts.jwt-verify-ignore-expiration.ast`
 - `heuristics.ts.jwt-sign-no-expiration.ast`
 - `heuristics.ts.tls-reject-unauthorized-false.ast`
+- `heuristics.ts.dynamic-shell-invocation.ast`
 - `heuristics.ts.insecure-token-math-random.ast`
 - `heuristics.ts.insecure-token-date-now.ast`
 - `heuristics.ts.buffer-alloc-unsafe.ast`
