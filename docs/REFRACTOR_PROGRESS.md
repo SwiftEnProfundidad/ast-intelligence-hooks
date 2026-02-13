@@ -215,6 +215,7 @@
 - ✅ Context API summary/status expose deterministic `suppressed_reasons_without_replacement_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_platform_rule_pairs_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_platform_file_pairs_count` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_replacement_rule_file_pairs_count` facet.
 - 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
@@ -274,7 +275,8 @@
 - ✅ `P10-33` completed: MCP summary/status now expose deterministic `suppressed_reasons_without_replacement_count` end-to-end (server/tests/docs).
 - ✅ `P10-34` completed: MCP summary/status now expose deterministic `suppressed_platform_rule_pairs_count` end-to-end (server/tests/docs).
 - ✅ `P10-35` completed: MCP summary/status now expose deterministic `suppressed_platform_file_pairs_count` end-to-end (server/tests/docs).
-- ✅ `P10-36` kickoff recorded: next deterministic facet slice is queued and active in task stream.
+- ✅ `P10-36` completed: MCP summary/status now expose deterministic `suppressed_replacement_rule_file_pairs_count` end-to-end (server/tests/docs).
+- ✅ `P10-37` kickoff recorded: next deterministic facet slice is queued and active in task stream.
 - ✅ Created packaged escalation attachment bundle with integrity hash (`.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`, SHA256 recorded in handoff).
 - ✅ Active TODO now references the packaged escalation bundle path + checksum for direct external handoff.
 - ✅ Fresh `phase5-latest` rerun shows startup failure cleared but queue-stall worsened (`startup_stalled_runs=7`, `oldest_queued_run_age_minutes=852`), and docs/bundle hash were refreshed accordingly.
@@ -726,4 +728,5 @@
 - ✅ `P10-33` Extend MCP summary/status contract with deterministic `suppressed_reasons_without_replacement_count` facet.
 - ✅ `P10-34` Extend MCP summary/status contract with deterministic `suppressed_platform_rule_pairs_count` facet.
 - ✅ `P10-35` Extend MCP summary/status contract with deterministic `suppressed_platform_file_pairs_count` facet.
-- 🚧 `P10-36` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
+- ✅ `P10-36` Extend MCP summary/status contract with deterministic `suppressed_replacement_rule_file_pairs_count` facet.
+- 🚧 `P10-37` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
