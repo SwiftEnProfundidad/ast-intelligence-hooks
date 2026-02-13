@@ -119,6 +119,7 @@
 - 
 - `heuristics.ts.fs-exists-sync.ast`
 - `heuristics.ts.fs-access-sync.ast`
+- `heuristics.ts.fs-utimes-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-chmod-sync.ast`
@@ -491,6 +492,7 @@
 - 
 - `heuristics.ts.fs-exists-sync.ast`
 - `heuristics.ts.fs-access-sync.ast`
+- `heuristics.ts.fs-utimes-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-chmod-sync.ast`

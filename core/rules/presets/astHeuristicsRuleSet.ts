@@ -506,6 +506,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-utimes-sync.ast',
+    description: 'Detects fs.utimesSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-utimes-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.utimesSync usage.',
+      code: 'HEURISTICS_FS_UTIMES_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-chmod-sync.ast',
     description: 'Detects fs.chmodSync usage in TypeScript/TSX production files.',
     severity: 'WARN',
