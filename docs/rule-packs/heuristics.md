@@ -81,6 +81,8 @@
   - 
 - `heuristics.ts.fs-lstat-sync.ast`
   - 
+- `heuristics.ts.fs-exists-sync.ast`
+  - 
 - `heuristics.ts.child-process-exec-sync.ast`
   - 
 - `heuristics.ts.child-process-exec.ast`
@@ -307,6 +309,8 @@
 - `heuristics.ts.fs-realpath-sync.ast`
 - 
 - `heuristics.ts.fs-lstat-sync.ast`
+- 
+- `heuristics.ts.fs-exists-sync.ast`
 - 
 - `heuristics.ts.child-process-exec-sync.ast`
 - 
