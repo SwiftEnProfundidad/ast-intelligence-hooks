@@ -177,6 +177,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           highest_severity?: string | null;
           blocking_findings_count?: number;
           ledger_count?: number;
+          ledger_files_count?: number;
           ledger_by_platform?: Record<string, number>;
           rulesets_count?: number;
           rulesets_by_platform?: Record<string, number>;
@@ -217,6 +218,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.highest_severity, null);
       assert.equal(payload.evidence?.blocking_findings_count, 0);
       assert.equal(payload.evidence?.ledger_count, 0);
+      assert.equal(payload.evidence?.ledger_files_count, 0);
       assert.deepEqual(payload.evidence?.ledger_by_platform, {});
       assert.equal(payload.evidence?.rulesets_count, 0);
       assert.deepEqual(payload.evidence?.rulesets_by_platform, {});
@@ -307,6 +309,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
           blocking_findings_count?: number;
         };
         ledger_count?: number;
+        ledger_files_count?: number;
         ledger_by_platform?: Record<string, number>;
         rulesets_count?: number;
         rulesets_by_platform?: Record<string, number>;
@@ -331,6 +334,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.snapshot?.highest_severity, 'ERROR');
       assert.equal(summary.snapshot?.blocking_findings_count, 1);
       assert.equal(summary.ledger_count, 2);
+      assert.equal(summary.ledger_files_count, 2);
       assert.deepEqual(summary.ledger_by_platform, { backend: 1, ios: 1 });
       assert.equal(summary.rulesets_count, 2);
       assert.deepEqual(summary.rulesets_by_platform, { backend: 1, ios: 1 });

@@ -273,6 +273,14 @@ const toLedgerByPlatform = (ledger: AiEvidenceV2_1['ledger']): Record<string, nu
   return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)));
 };
 
+const toLedgerFilesCount = (ledger: AiEvidenceV2_1['ledger']): number => {
+  const files = new Set<string>();
+  for (const entry of ledger) {
+    files.add(entry.file);
+  }
+  return files.size;
+};
+
 const toHighestSeverity = (
   findings: AiEvidenceV2_1['snapshot']['findings']
 ): string | null => {
@@ -325,6 +333,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       blocking_findings_count: toBlockingFindingsCount(evidence.snapshot.findings),
     },
     ledger_count: evidence.ledger.length,
+    ledger_files_count: toLedgerFilesCount(evidence.ledger),
     ledger_by_platform: toLedgerByPlatform(evidence.ledger),
     rulesets_count: evidence.rulesets.length,
     rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),
@@ -682,6 +691,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       highest_severity: toHighestSeverity(evidence.snapshot.findings),
       blocking_findings_count: toBlockingFindingsCount(evidence.snapshot.findings),
       ledger_count: evidence.ledger.length,
+      ledger_files_count: toLedgerFilesCount(evidence.ledger),
       ledger_by_platform: toLedgerByPlatform(evidence.ledger),
       rulesets_count: evidence.rulesets.length,
       rulesets_by_platform: toRulesetsByPlatform(evidence.rulesets),

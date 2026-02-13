@@ -197,6 +197,7 @@
 - ✅ Context API summary/status expose deterministic `findings_files_count` facet.
 - ✅ Context API summary/status expose deterministic `findings_with_lines_count` facet.
 - ✅ Context API summary/status expose deterministic `findings_without_lines_count` facet.
+- ✅ Context API summary/status expose deterministic `ledger_files_count` facet.
 - 🚧 Context API surface incremental expansion (`summary`, `rulesets`, `platforms`, `ledger`) is in active continuation.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
@@ -681,4 +682,5 @@
 - ✅ `P10-15` Extend MCP summary/status contract with deterministic `findings_files_count` facet.
 - ✅ `P10-16` Extend MCP summary/status contract with deterministic `findings_with_lines_count` facet.
 - ✅ `P10-17` Extend MCP summary/status contract with deterministic `findings_without_lines_count` facet.
-- 🚧 `P10-18` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
+- ✅ `P10-18` Extend MCP summary/status contract with deterministic `ledger_files_count` facet.
+- 🚧 `P10-19` Continue MCP context incremental expansion with next deterministic summary facets, while keeping regressions green.
