@@ -605,5 +605,6 @@
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.linkSync` detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.cpSync` detection (external billing path omitted).
 - ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.openSync` detection (external billing path omitted).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.opendirSync` detection (external billing path omitted).
+- ✅ `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.opendirSync` detection (external billing path omitted).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.mkdtempSync` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

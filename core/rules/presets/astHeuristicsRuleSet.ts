@@ -2036,6 +2036,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-opendir-sync.ast',
+    description: 'Detects fs.opendirSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-opendir-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.opendirSync usage.',
+      code: 'HEURISTICS_FS_OPENDIR_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.fs-fdatasync-callback.ast',
     description: 'Detects fs.fdatasync callback-style usage in TypeScript/TSX production files.',
     severity: 'WARN',

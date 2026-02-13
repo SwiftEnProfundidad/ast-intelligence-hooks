@@ -346,6 +346,7 @@
   - 
 - 
 - `heuristics.ts.fs-opendir-callback.ast`
+- `heuristics.ts.fs-opendir-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-open-callback.ast`
@@ -714,6 +715,7 @@
 - 
 - 
 - `heuristics.ts.fs-opendir-callback.ast`
+- `heuristics.ts.fs-opendir-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-open-callback.ast`
