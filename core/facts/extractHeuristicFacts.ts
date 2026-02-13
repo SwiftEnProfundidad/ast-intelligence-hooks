@@ -655,6 +655,29 @@ const hasFsRenameSyncCall = (node: unknown): boolean => {
   });
 };
 
+const hasFsCopyFileSyncCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+
+    const callee = value.callee;
+    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+      return false;
+    }
+    const objectNode = callee.object;
+    const propertyNode = callee.property;
+    return (
+      isObject(objectNode) &&
+      objectNode.type === 'Identifier' &&
+      objectNode.name === 'fs' &&
+      isObject(propertyNode) &&
+      propertyNode.type === 'Identifier' &&
+      propertyNode.name === 'copyFileSync'
+    );
+  });
+};
+
 const hasFsChmodSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
@@ -5248,6 +5271,17 @@ export const extractHeuristicFacts = (
             ruleId: 'heuristics.ts.fs-rename-sync.ast',
             code: 'HEURISTICS_FS_RENAME_SYNC_AST',
             message: 'AST heuristic detected fs.renameSync usage.',
+            filePath: fileFact.path,
+          })
+        );
+      }
+
+      if (hasFsCopyFileSyncCall(ast)) {
+        heuristicFacts.push(
+          createHeuristicFact({
+            ruleId: 'heuristics.ts.fs-copy-file-sync.ast',
+            code: 'HEURISTICS_FS_COPY_FILE_SYNC_AST',
+            message: 'AST heuristic detected fs.copyFileSync usage.',
             filePath: fileFact.path,
           })
         );

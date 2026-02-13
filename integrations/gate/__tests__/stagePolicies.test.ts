@@ -1230,6 +1230,38 @@ test('gate promotes fs.renameSync heuristic to blocking in PRE_PUSH and CI only'
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
+test('gate promotes fs.copyFileSync heuristic to blocking in PRE_PUSH and CI only', () => {
+  const fsCopyFileSyncFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.fs-copy-file-sync.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_FS_COPY_FILE_SYNC_AST',
+    message: 'AST heuristic detected fs.copyFileSync usage.',
+    filePath: 'apps/backend/src/main.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [fsCopyFileSyncFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [fsCopyFileSyncFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [fsCopyFileSyncFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
 test('gate promotes fs.chmodSync heuristic to blocking in PRE_PUSH and CI only', () => {
   const fsChmodSyncFact = {
     kind: 'Heuristic' as const,

@@ -273,6 +273,7 @@
   - 
 - 
 - `heuristics.ts.fs-copy-file-callback.ast`
+- `heuristics.ts.fs-copy-file-sync.ast`
   - 
 - 
 - `heuristics.ts.fs-stat-callback.ast`
@@ -647,6 +648,7 @@
 - 
 - 
 - `heuristics.ts.fs-copy-file-callback.ast`
+- `heuristics.ts.fs-copy-file-sync.ast`
 - 
 - 
 - `heuristics.ts.fs-stat-callback.ast`
