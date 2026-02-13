@@ -190,6 +190,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           platform_confidence_counts?: Record<string, number>;
           suppressed_findings_count?: number;
           suppressed_replacement_rules_count?: number;
+          suppressed_platforms_count?: number;
           tracked_platforms_count?: number;
           detected_platforms_count?: number;
           non_detected_platforms_count?: number;
@@ -237,6 +238,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.deepEqual(payload.evidence?.platform_confidence_counts, {});
       assert.equal(payload.evidence?.suppressed_findings_count, 1);
       assert.equal(payload.evidence?.suppressed_replacement_rules_count, 1);
+      assert.equal(payload.evidence?.suppressed_platforms_count, 1);
       assert.equal(payload.evidence?.tracked_platforms_count, 0);
       assert.equal(payload.evidence?.detected_platforms_count, 0);
       assert.equal(payload.evidence?.non_detected_platforms_count, 0);
@@ -334,6 +336,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         platform_confidence_counts?: Record<string, number>;
         suppressed_findings_count?: number;
         suppressed_replacement_rules_count?: number;
+        suppressed_platforms_count?: number;
         tracked_platforms_count?: number;
         detected_platforms_count?: number;
         non_detected_platforms_count?: number;
@@ -365,6 +368,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.deepEqual(summary.platform_confidence_counts, { HIGH: 2, LOW: 1 });
       assert.equal(summary.suppressed_findings_count, 1);
       assert.equal(summary.suppressed_replacement_rules_count, 1);
+      assert.equal(summary.suppressed_platforms_count, 1);
       assert.equal(summary.tracked_platforms_count, 3);
       assert.equal(summary.detected_platforms_count, 2);
       assert.equal(summary.non_detected_platforms_count, 1);
