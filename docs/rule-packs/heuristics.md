@@ -99,6 +99,7 @@
   - `heuristics.ts.fs-open-callback.ast`
   - `heuristics.ts.fs-cp-callback.ast`
   - `heuristics.ts.fs-close-callback.ast`
+  - `heuristics.ts.fs-read-callback.ast`
   - `heuristics.ts.explicit-any.ast`
   - `heuristics.ts.debugger.ast`
   - `heuristics.ios.force-unwrap.ast`
@@ -190,6 +191,7 @@
 - `heuristics.ts.fs-open-callback.ast`
 - `heuristics.ts.fs-cp-callback.ast`
 - `heuristics.ts.fs-close-callback.ast`
+- `heuristics.ts.fs-read-callback.ast`
 - `heuristics.ts.debugger.ast`
 - `heuristics.ios.force-unwrap.ast`
 - `heuristics.ios.anyview.ast`
