@@ -650,6 +650,17 @@ const toSuppressedNonReplacementReasonRuleFilePlatformQuadruplesCount = (
   return quadruples.size;
 };
 
+const toSuppressedReasonRuleFilePlatformReplacementSplitCount = (
+  evidence: AiEvidenceV2_1,
+): number => {
+  const splits = new Set<string>();
+  for (const entry of evidence.consolidation?.suppressed ?? []) {
+    const replacementBucket = entry.replacementRuleId === null ? 'non_replacement' : 'replacement';
+    splits.add(`${entry.reason}:${entry.ruleId}:${entry.file}:${entry.platform}:${replacementBucket}`);
+  }
+  return splits.size;
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -861,6 +872,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedReplacementReasonRuleFilePlatformQuadruplesCount(evidence),
     suppressed_non_replacement_reason_rule_file_platform_quadruples_count:
       toSuppressedNonReplacementReasonRuleFilePlatformQuadruplesCount(evidence),
+    suppressed_reason_rule_file_platform_replacement_split_count:
+      toSuppressedReasonRuleFilePlatformReplacementSplitCount(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1280,6 +1293,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedReplacementReasonRuleFilePlatformQuadruplesCount(evidence),
       suppressed_non_replacement_reason_rule_file_platform_quadruples_count:
         toSuppressedNonReplacementReasonRuleFilePlatformQuadruplesCount(evidence),
+      suppressed_reason_rule_file_platform_replacement_split_count:
+        toSuppressedReasonRuleFilePlatformReplacementSplitCount(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
