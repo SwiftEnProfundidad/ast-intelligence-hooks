@@ -693,6 +693,27 @@ const toSuppressedReplacementSplitModeNonReplacementCount = (
   return 0;
 };
 
+const toSuppressedReasonRuleFilePlatformReplacementDualModeCount = (
+  evidence: AiEvidenceV2_1,
+): number => {
+  const modesByKey = new Map<string, Set<string>>();
+  for (const entry of evidence.consolidation?.suppressed ?? []) {
+    const key = `${entry.reason}:${entry.ruleId}:${entry.file}:${entry.platform}`;
+    const mode = entry.replacementRuleId === null ? 'non_replacement' : 'replacement';
+    const modes = modesByKey.get(key) ?? new Set<string>();
+    modes.add(mode);
+    modesByKey.set(key, modes);
+  }
+
+  let count = 0;
+  for (const modes of modesByKey.values()) {
+    if (modes.size > 1) {
+      count += 1;
+    }
+  }
+  return count;
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -912,6 +933,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedReplacementSplitModeReplacementCount(evidence),
     suppressed_replacement_split_mode_non_replacement_count:
       toSuppressedReplacementSplitModeNonReplacementCount(evidence),
+    suppressed_reason_rule_file_platform_replacement_dual_mode_count:
+      toSuppressedReasonRuleFilePlatformReplacementDualModeCount(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1339,6 +1362,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedReplacementSplitModeReplacementCount(evidence),
       suppressed_replacement_split_mode_non_replacement_count:
         toSuppressedReplacementSplitModeNonReplacementCount(evidence),
+      suppressed_reason_rule_file_platform_replacement_dual_mode_count:
+        toSuppressedReasonRuleFilePlatformReplacementDualModeCount(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
