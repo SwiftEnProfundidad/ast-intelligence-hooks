@@ -110,6 +110,7 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
   assert.equal(findSeverity('heuristics.ts.fs-fchown-sync.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-fchmod-sync.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-fstat-sync.ast', 'PRE_COMMIT'), 'WARN');
+  assert.equal(findSeverity('heuristics.ts.fs-ftruncate-sync.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.child-process-exec-sync.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.child-process-exec.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.child-process-spawn-sync.ast', 'PRE_COMMIT'), 'WARN');
@@ -223,6 +224,7 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
   assert.equal(findSeverity('heuristics.ts.fs-fchown-sync.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-fchmod-sync.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-fstat-sync.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.fs-ftruncate-sync.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.child-process-exec-sync.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.child-process-exec.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.child-process-spawn-sync.ast', 'PRE_PUSH'), 'ERROR');
@@ -1253,6 +1255,38 @@ test('gate promotes fs.fstatSync heuristic to blocking in PRE_PUSH and CI only',
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [fsFstatSyncFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes fs.ftruncateSync heuristic to blocking in PRE_PUSH and CI only', () => {
+  const fsFtruncateSyncFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.fs-ftruncate-sync.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_FS_FTRUNCATE_SYNC_AST',
+    message: 'AST heuristic detected fs.ftruncateSync usage.',
+    filePath: 'apps/backend/src/main.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [fsFtruncateSyncFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [fsFtruncateSyncFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [fsFtruncateSyncFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');

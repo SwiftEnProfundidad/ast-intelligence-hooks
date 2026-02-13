@@ -560,6 +560,24 @@ export const astHeuristicsRuleSet: RuleSet = [
     },
   },
   {
+    id: 'heuristics.ts.fs-ftruncate-sync.ast',
+    description: 'Detects fs.ftruncateSync usage in TypeScript/TSX production files.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.fs-ftruncate-sync.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected fs.ftruncateSync usage.',
+      code: 'HEURISTICS_FS_FTRUNCATE_SYNC_AST',
+    },
+  },
+  {
     id: 'heuristics.ts.child-process-exec-sync.ast',
     description: 'Detects execSync usage in TypeScript/TSX production files.',
     severity: 'WARN',
