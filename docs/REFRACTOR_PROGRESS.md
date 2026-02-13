@@ -580,5 +580,6 @@
 - ✅ TypeScript sync-style `fs.rmSync` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript sync-style `fs.mkdirSync` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
 - ✅ TypeScript sync-style `fs.readdirSync` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
-- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.readFileSync` detection (external billing path omitted).
+- ✅ TypeScript sync-style `fs.readFileSync` heuristic is implemented end-to-end (`extractHeuristicFacts`, ruleset, stage promotion, tests).
+- 🚧 `P9-1` Execute next advanced AST semantic heuristic in local-only mode: sync-style `fs.statSync` detection (external billing path omitted).
 - ⏳ `P10-1` Resume MCP/context API incremental expansion after Phase 8 closure.

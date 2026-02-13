@@ -43,6 +43,7 @@
   - `heuristics.ts.fs-rm-sync.ast`
   - `heuristics.ts.fs-mkdir-sync.ast`
   - `heuristics.ts.fs-readdir-sync.ast`
+  - `heuristics.ts.fs-read-file-sync.ast`
   - `heuristics.ts.child-process-exec-sync.ast`
   - `heuristics.ts.child-process-exec.ast`
   - `heuristics.ts.child-process-spawn-sync.ast`
@@ -154,6 +155,7 @@
 - `heuristics.ts.fs-rm-sync.ast`
 - `heuristics.ts.fs-mkdir-sync.ast`
 - `heuristics.ts.fs-readdir-sync.ast`
+- `heuristics.ts.fs-read-file-sync.ast`
 - `heuristics.ts.child-process-exec-sync.ast`
 - `heuristics.ts.child-process-exec.ast`
 - `heuristics.ts.child-process-spawn-sync.ast`
