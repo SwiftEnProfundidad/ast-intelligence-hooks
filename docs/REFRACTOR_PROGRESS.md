@@ -320,7 +320,8 @@
 - ✅ Run MCP/deterministic regression batch after context API expansion.
 - ✅ Normalize progress board to single-active-task model (`1x 🚧` only).
 - ✅ Update MCP context documentation and TODO work log for the new suppression-ratio facet.
-- 🚧 Validate MCP client/contract snapshots for the new suppression-ratio facet.
+- ✅ Validate MCP client/contract snapshots for the new suppression-ratio facet (`test:mcp` pass).
+- 🚧 Validate downstream MCP API consumers for `suppressed_with_replacement_ratio_pct` presence in snapshots/fixtures.
 - ✅ Complete adapter runtime validation and regenerate adapter readiness to READY.
 - ✅ Re-run Phase 5 closure in mock-consumer mode and regenerate READY handoff artifacts.
 - ✅ Remove legacy external-project references from docs/scripts/legacy content and archive filenames, aligned to mock-consumer naming.
