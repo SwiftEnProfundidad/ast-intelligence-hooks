@@ -146,7 +146,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_share_polarization_index_pct` for suppression-share polarization triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_balance_score_pct` for suppression-share balance triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_imbalance_index_pct` for suppression-share imbalance triage.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_polarization_balance_gap_pct` for polarization-vs-balance gap triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_polarization_balance_gap_pct` for polarization-vs-balance gap triage.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_net_polarity_pct` for net replacement-vs-non-replacement polarity triage.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
