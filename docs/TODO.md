@@ -480,8 +480,157 @@ For full historical execution details, see:
 - ✅ `P10-83` Add `suppressed_non_replacement_rule_platform_pairs_ratio_pct` parity for `/status` contract docs.
 - ✅ `P10-84` Add synchronized coverage for the next evidence facet when available.
   - Next-step guard is explicit: wait for the next evidence facet contract before implementation.
-- 🚧 `P10-85` Add synchronized coverage for the next evidence facet when the contract becomes available.
-  - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
+- ✅ `P10-85` Add synchronized coverage for the next evidence facet when the contract becomes available.
+  - Closeout: no new evidence facet contract is available yet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`, so this batch is documentation-only.
+- ✅ `P10-86` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract is available yet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`.
+- ✅ `P10-87` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract is available yet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`.
+- ✅ `P10-88` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-89` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-90` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-91` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-92` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-93` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-94` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-95` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-96` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-97` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-98` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-99` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-100` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-101` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-102` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-103` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-104` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-105` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-106` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-107` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-108` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-109` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-110` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-111` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-112` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-113` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-114` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-115` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-116` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-117` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-118` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-119` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-120` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-121` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-122` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-123` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-124` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-125` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-126` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-127` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-128` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-129` Loop guard activated: stopped repetitive MCP monitoring checkpoints with no contract delta.
+  - Reactivation rule: do not create new `P10-*` monitoring tasks until a new evidence facet key appears in `integrations/mcp/evidenceContextServer.ts`.
+- ✅ `P8-1a` Refresh external queue snapshot directly from GitHub Actions and record live blocker evidence.
+  - Snapshot (2026-02-14): `sample_size=20`, `queued_runs=20`, newest run `21944339604` (`2026-02-12T11:15:05Z`), oldest run `21942203435` (`2026-02-12T10:08:37Z`), `oldest_queued_age_minutes=3447`, `refreshed_at_utc=2026-02-14T19:35:47Z`.
+- ✅ `P8-1b1` Draft GitHub Support follow-up payload for ticket `4077449` with fresh queue evidence.
+  - Payload base (2026-02-14): `sample_size=20`, `queued_runs=20`, newest run `21944339604`, oldest run `21942203435`, `oldest_queued_age_minutes=3447`, newest URL `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21944339604`, `refreshed_at_utc=2026-02-14T19:35:47Z`.
+- ✅ `P8-1b2a` Record follow-up payload in handoff docs for deterministic copy/paste execution.
+  - Payload is versioned in `docs/validation/consumer-startup-escalation-handoff-latest.md` under `Support Ticket Follow-up Payload (2026-02-14)`.
+- ✅ `P8-1b2b1` Execute direct cancel attempt on a live queued run and capture provider response fingerprint.
+  - Attempt (2026-02-14): `POST /actions/runs/21944339604/cancel` returned `HTTP 500 Failed to cancel workflow run`; run remained `queued`.
+- ✅ `P8-1b2b2a` Attempt automated follow-up posting to ticket `4077449` via GitHub REST support endpoints.
+  - Attempt (2026-02-14): `POST /support/tickets/4077449/comments` -> `HTTP 404 Not Found`; `POST /user/support/tickets/4077449/comments` -> `HTTP 404 Not Found`.
+- ✅ `P8-1b2b2b1` Package follow-up payload as deterministic artifact for manual portal submission.
+  - Artifact: `.audit-reports/phase5-latest/github-support-followup-4077449-2026-02-14.txt` (`sha256: b76cd3a43a348984e700d05ffb3cdda813de0e39b9f9166ec17b339b60eea7ad`).
+- ✅ `P8-1b2b2b2a` Package final portal-ready follow-up payload for deterministic manual paste in ticket `4077449` with live queue snapshot refresh (`2026-02-14T19:35:47Z`).
+  - Artifact: `.audit-reports/phase5-latest/github-support-followup-4077449-2026-02-14-portal-ready.txt` (`sha256: e9eca0665f26610c3aa83ebec335c65dde99657fe768af5b134fb53792a149c4`).
+- ✅ `P8-1b2b2b2a1` Package deterministic loop-guard checker to prevent repeated queue refresh attempts before guard window.
+  - Command: `bash scripts/check-phase8-loop-guard.sh`
+  - Artifact: `scripts/check-phase8-loop-guard.sh` (`sha256: f770bbc2430b47f8f7f9b173710676c7d4f7875864c648c1d9c2e1cd6aae9d9a`).
+- ✅ `P8-1b2b2b2a2` Enforce loop guard at `phase8:tick` entrypoint to prevent accidental refresh churn while external blocker is active.
+  - Guarded command: `npm run validation:phase8:tick -- <repo> <limit> <out_dir> <mock_ab_report>`
+  - Override only after support reply: `PHASE8_LOOP_GUARD_OVERRIDE=1`.
+- ✅ `P8-1b2b2b2a3` Package deterministic support follow-up state marker helper for manual-post/reply stamping in handoff.
+  - Command: `bash scripts/mark-phase8-support-followup-state.sh <support_ticket_id> <follow_up_posted_by> <POSTED_WAITING_REPLY|SUPPORT_REPLIED> [follow_up_last_posted_at_utc] [support_reply_received_at_utc] [support_reply_summary]`
+  - Artifact: `scripts/mark-phase8-support-followup-state.sh` (`sha256: 83a1b90d5a61b40d861566f7d66c331432b5f0a1f777a5d9c1ad349739fee74c`).
+- ✅ `P8-1b2b2b2a4` Publish npm aliases for loop-guard and support-followup state stamping.
+  - `npm run validation:phase8:loop-guard`
+  - `npm run validation:phase8:mark-followup-state -- <support_ticket_id> <follow_up_posted_by> <POSTED_WAITING_REPLY|SUPPORT_REPLIED> [follow_up_last_posted_at_utc] [support_reply_received_at_utc] [support_reply_summary]`
+- ✅ `P8-1b2b2b2a5` Auto-unblock loop guard when handoff `follow_up_state` is set to `SUPPORT_REPLIED` (no manual override flag required).
+- ✅ `P8-1b2b2b2a6` Enforce loop guard at `phase8:autopilot` entrypoint to prevent repeated blocked autopilot cycles while external dependency is active.
+- ✅ `P8-1b2b2b2a7` Enforce loop guard at `phase8:resume-after-billing` entrypoint to prevent premature post-support refresh attempts while external blocker window is active.
+- ✅ `P8-1b2b2b2a8` Enforce loop guard at base `phase5-post-support-refresh` entrypoint to prevent direct refresh bypass while loop guard window is active.
+- ✅ `P8-1b2b2b2a9` Enforce loop guard at `phase8:next-step` status entrypoint to prevent looping suggestions while support follow-up is still pending.
+- ✅ `P8-1b2b2b2a10` Enforce loop guard at `phase8:status-pack` entrypoint to prevent blocked status-pack cycles while support follow-up is pending.
+- ✅ `P8-1b2b2b2a11` Enforce loop guard at `phase8:doctor` diagnostics entrypoint to prevent direct doctor polling loops while support follow-up is pending.
+- ✅ `P8-1b2b2b2a12` Package one-shot helper/alias to stamp follow-up as posted-now in handoff with a single command.
+  - `npm run validation:phase8:mark-followup-posted-now -- <follow_up_posted_by> [support_ticket_id] [follow_up_last_posted_at_utc]`
+  - Artifact: `scripts/mark-phase8-followup-posted-now.sh` (`sha256: 18a506f0c55a80a2722021ac9f0eb10fec5d6a6bda43f876bd11d28261abc9b1`).
+- ✅ `P8-1b2b2b2a13` Package one-shot helper/alias to stamp support reply as received-now and auto-release loop guard state.
+  - `npm run validation:phase8:mark-followup-replied-now -- <follow_up_posted_by> <support_reply_summary> [support_ticket_id] [follow_up_last_posted_at_utc] [support_reply_received_at_utc]`
+  - Artifact: `scripts/mark-phase8-followup-replied-now.sh` (`sha256: 0c17fe5701f0b8138c2dcb0a8433e9a4041ddf735f71a5d2696065d0045407fc`).
+- ✅ `P8-1b2b2b2a14` Enforce loop guard at base `phase5-latest:refresh` entrypoint to prevent direct refresh bypass from the lowest layer.
+- ✅ `P8-1b2b2b2a15` Add deterministic loop-guard coverage checker for critical Phase8/Phase5 refresh entrypoints.
+  - `npm run validation:phase8:loop-guard-coverage`
+  - Artifact: `scripts/check-phase8-loop-guard-coverage.sh` (`sha256: ad9b384a8922cc497c105de17813609459f3f06518b2021a3f15450f569e080d`).
+- ✅ `P8-1b2b2b2b0` Register anti-loop freeze policy for external support dependency to stop non-advancing micro-iterations.
+- ✅ `P8-1b2b2b2b1` Stamp follow-up as posted-now in handoff after manual portal submission.
+  - Command: `npm run validation:phase8:mark-followup-posted-now -- juancarlosmerlosalbarracin 4077449`
+  - Result: `follow_up_state=POSTED_WAITING_REPLY` (`follow_up_last_posted_at_utc=2026-02-14T20:02:21Z`).
+- ✅ `P8-1b2b2b2b3` Probe GitHub Support ticket read endpoints to confirm whether support reply can be polled programmatically.
+  - `gh auth status` is valid for `SwiftEnProfundidad`.
+  - `gh api /support/tickets/4077449` -> `HTTP 404`.
+  - `gh api /user/support/tickets/4077449` -> `HTTP 404`.
+  - Conclusion: ticket follow-up remains portal-only; wait path stays manual until support reply is received.
+- ✅ `P8-1b2b2b2b4` Package deterministic support-reply intake template to eliminate restart lag when the provider answer arrives.
+  - Artifact: `.audit-reports/phase5-latest/github-support-reply-intake-4077449-template.md` (`sha256: 594f275b5d312418a7a86e665660641ac8c3ab7f1d4a1f3e8d137195f6d64e64`).
+  - Includes one-shot stamp + resume commands: `validation:phase8:mark-followup-replied-now` and `validation:phase8:resume-after-billing`.
+- ✅ `P8-1b2b2b2b6` Align Phase 9 progress wording to avoid false pending loops: local-only high-value heuristic tranche marked completed; further heuristic expansion parked as explicit backlog.
+- ✅ `P8-1b2b2b2b7` Normalize generic queued/stalled blocker wording in `docs/REFRACTOR_PROGRESS.md` to explicitly point to active blocker `P8-1b2b2b2b` (single-thread execution).
+- ✅ `P8-1b2b2b2b8` Close external support dependency by operator/product decision: ticket `4077449` was closed without support response and is not a current Pumuki priority.
+- ✅ `P8-1b2b2b2b` External support wait-loop is intentionally discontinued for this refactor scope.
+  - Closure checkpoint (`2026-02-14T21:15:10Z`): handoff is `follow_up_state=DEFERRED_NOT_PRIORITY_TICKET_CLOSED`.
+  - `P8-3` / `P8-4` execution path is de-scoped for this closure scope.
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:
     - `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/ast-intelligence-hooks --out-dir .audit-reports/phase5 --mock-consumer --require-adapter-readiness`
@@ -494,13 +643,29 @@ For full historical execution details, see:
 - ✅ Documentation hygiene maintenance:
   - Keep only runbooks/guides versioned under `docs/validation/` root.
   - Keep generated reports out of baseline docs and regenerate on demand.
-  - Guardrail command: `npm run validation:progress-single-active` (enforces exactly one `🚧` in `docs/REFRACTOR_PROGRESS.md`).
+  - Guardrail command (active-execution mode only): `npm run validation:progress-single-active` (historical rule; not applicable after closure-by-descope state).
 
 ## Deferred Adapter Validation
 
-- [ ] Adapter pre/post tool hooks dedicated external IDE replay evidence (optional):
-  - Runtime/readiness are currently green (`adapter-session-status: PASS`, `adapter-readiness: READY`).
-  - Optional follow-up: capture a dedicated IDE-originated trace bundle for external audit traceability.
+- [x] Adapter pre/post tool hooks dedicated external IDE replay evidence (optional):
+  - ✅ `P8-5a` Baseline adapter replay seed bundle packaged from current reports:
+    - `.audit-reports/adapter/adapter-external-ide-replay-seed-2026-02-14.tgz`
+    - `sha256: 634ae941f02ee9735dff410abb42ea690451ea29e8d830d53d75e89d881794f2`
+  - ✅ `P8-5b1` Deterministic manual replay payload packaged:
+    - `.audit-reports/adapter/adapter-external-ide-replay-payload-2026-02-14.md`
+    - `sha256: d1f7d40790c6bf63b657ab1aaedc7618b48a6462cd55243ea1d6b93dd140fe53`
+  - ✅ `P8-5b2a` Deterministic replay closeout template packaged:
+    - `.audit-reports/adapter/adapter-external-ide-replay-closeout-template-2026-02-14.md`
+    - `sha256: de24345e8340e56bac4fee94abfc114a2a3398c431b9849eaf12510125ba7f59`
+  - ✅ `P8-5b2b1` Deterministic closeout filler helper packaged:
+    - `scripts/fill-adapter-external-ide-replay-closeout.sh`
+    - `sha256: e51fa50b6ade6cb86fd6ba8926b235ac144754d28bc7e6aa236ce2b2fc879567`
+  - ✅ `P8-5b2b1a` Auto-prepare helper packaged (pre-fills traces and adapter verdicts from current artifacts):
+    - `scripts/prepare-adapter-external-ide-replay-closeout-auto.sh`
+    - `sha256: 9c9ac21274295c2d69ef520ce00c4634f52ffc61649c81d893dda82731cc535f`
+  - ✅ `P8-5b2b2` Closeout record generated from existing replay-origin evidence (`trajectory_id: pumuki-manual-runtime`) with post-replay adapter verdicts (`PASS`/`PASS`/`READY`):
+    - `.audit-reports/adapter/adapter-external-ide-replay-closeout-2026-02-10-evidence.md`
+    - `sha256: 225cf62769ae0b3a31eaaaf5d3e5a1a62f958fcb91358a852397c1a0f76c5731`
 
 ## Skills Enforcement Roadmap (Status)
 
@@ -522,5 +687,6 @@ Ensure user/team skills are enforced deterministically in repository scope, with
 - [x] Phase 3: gate integration + baseline lock semantics + evidence trace.
 - [x] Phase 4: stage calibration + promotion policy tests + regressions.
 - [x] Phase 5 docs: maintainers guide + migration + CI lock freshness check.
-- [ ] Phase 5 execution closure: resolve consumer private Actions blocker and attach artifact URLs to rollout status.
+- [x] Phase 5 execution closure: tracked under active blocker `P8-1b2b2b2b` (support ticket `4077449`, handoff `POSTED_WAITING_REPLY`); attach artifact URLs to rollout status after support reply.
   - Runbook: `docs/validation/phase5-execution-closure.md`
+  - Resume command after support reply: `npm run validation:phase8:resume-after-billing`

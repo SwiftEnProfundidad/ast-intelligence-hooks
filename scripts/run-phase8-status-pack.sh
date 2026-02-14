@@ -9,6 +9,16 @@ MOCK_AB_REPORT="${4:-.audit-reports/phase5/mock-consumer-ab-report.md}"
 echo "[phase8-status-pack] start"
 echo "[phase8-status-pack] out_dir=${OUT_DIR}"
 
+if [[ -f "scripts/check-phase8-loop-guard.sh" ]]; then
+  if ! bash scripts/check-phase8-loop-guard.sh; then
+    echo "[phase8-status-pack] blocked by loop guard; skipping status-pack cycle"
+    echo "[phase8-status-pack] next_action=manual follow-up post/reply tracking in ticket 4077449"
+    exit 1
+  fi
+else
+  echo "[phase8-status-pack] warning: loop guard checker not found (scripts/check-phase8-loop-guard.sh)"
+fi
+
 if ! npm run validation:progress-single-active; then
   echo "[phase8-status-pack] progress guardrail failed" >&2
   exit 1

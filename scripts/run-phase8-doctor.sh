@@ -11,6 +11,17 @@ HANDOFF_DOC="docs/validation/consumer-startup-escalation-handoff-latest.md"
 
 echo "[phase8-doctor] out_dir=${OUT_DIR}"
 
+if [[ -f "scripts/check-phase8-loop-guard.sh" ]]; then
+  if ! bash scripts/check-phase8-loop-guard.sh; then
+    echo "[phase8-doctor] status=BLOCKED"
+    echo "[phase8-doctor] blocked_by=loop_guard"
+    echo "[phase8-doctor] next_action=manual follow-up post/reply tracking in ticket 4077449"
+    exit 1
+  fi
+else
+  echo "[phase8-doctor] warning: loop guard checker not found (scripts/check-phase8-loop-guard.sh)"
+fi
+
 if [[ ! -f "${BUNDLE_REPORT}" ]]; then
   echo "[phase8-doctor] missing report: ${BUNDLE_REPORT}" >&2
   exit 1

@@ -99,10 +99,57 @@ Please verify platform-side/account-side controls for private Actions startup (p
 - submitted_by: `SwiftEnProfundidad`
 - support_channel: `GitHub Support`
 - follow_up_eta: `2026-02-12 18:00 UTC`
+- follow_up_last_posted_at_utc: `2026-02-14T20:02:21Z`
+- follow_up_last_posted_by: `juancarlosmerlosalbarracin`
+- follow_up_state: `DEFERRED_NOT_PRIORITY_TICKET_CLOSED`
+- support_reply_received_at_utc: `NOT_APPLICABLE_TICKET_CLOSED_BY_OPERATOR_2026-02-14T21:15:10Z`
+- support_reply_summary: `Ticket 4077449 closed by operator decision without support response; external support path is de-scoped and not a current Pumuki priority.`
+- loop_guard_started_at_utc: `2026-02-14T19:38:12Z`
+- loop_guard_next_refresh_not_before_utc: `2026-02-15T19:38:12Z`
+- loop_guard_override_condition: `support path de-scoped by operator/product decision (ticket closed)`
+- loop_guard_auto_release_state: `follow_up_state=DEFERRED_NOT_PRIORITY_TICKET_CLOSED`
+- loop_guard_check_command: `bash scripts/check-phase8-loop-guard.sh`
+- loop_guard_check_command_alias: `npm run validation:phase8:loop-guard`
+- loop_guard_coverage_alias: `npm run validation:phase8:loop-guard-coverage`
+- loop_guard_enforced_in: `scripts/run-phase8-tick.sh`, `scripts/run-phase8-autopilot.sh`, `scripts/run-phase8-after-billing-reactivation.sh`, `scripts/run-phase5-post-support-refresh.sh`, `scripts/refresh-phase5-latest-escalation.sh`, `scripts/run-phase8-next-step.sh`, `scripts/run-phase8-status-pack.sh`, `scripts/run-phase8-doctor.sh`
+- follow_up_tracking_command: `N/A (ticket 4077449 closed/de-scoped for current closure scope)`
+- follow_up_tracking_command_alias: `N/A`
+- follow_up_tracking_posted_now_alias: `N/A`
+- follow_up_tracking_replied_now_alias: `N/A`
 - known_external_cause: `BILLING_INACTIVE_OR_NOT_UPDATED`
 - ticket_closure_owner: `SwiftEnProfundidad (manual close planned)`
 - pre_submission_verification: `PASS`
 - pre_submission_verified_at_utc: `2026-02-11T09:54:18Z`
+
+## Support Ticket Follow-up Payload (2026-02-14)
+
+Use this exact payload in ticket `4077449` as the next support follow-up update:
+
+```text
+Follow-up update for ticket 4077449 (consumer Actions startup queue stall)
+
+Current blocker remains active in private repo:
+- sample_size: 20 recent runs
+- queued_runs: 20/20
+- newest_run_id: 21944339604 (created_at: 2026-02-12T11:15:05Z)
+- oldest_run_id: 21942203435 (created_at: 2026-02-12T10:08:37Z)
+- oldest_queued_age_minutes: 3447 (snapshot captured on 2026-02-14T19:35:47Z)
+- latest_run_url: https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21944339604
+- latest_cancel_attempt: POST /actions/runs/21944339604/cancel -> HTTP 500 Failed to cancel workflow run
+- latest_follow_up_api_attempt_1: POST /support/tickets/4077449/comments -> HTTP 404 Not Found
+- latest_follow_up_api_attempt_2: POST /user/support/tickets/4077449/comments -> HTTP 404 Not Found
+- latest_follow_up_payload_artifact: `.audit-reports/phase5-latest/github-support-followup-4077449-2026-02-14-portal-ready.txt`
+- latest_follow_up_payload_sha256: `e9eca0665f26610c3aa83ebec335c65dde99657fe768af5b134fb53792a149c4`
+
+Impact:
+- Startup queue remains blocked, preventing READY chain completion for:
+  - consumer-startup-unblock-status
+  - phase5-execution-closure-status
+
+Request:
+- Please confirm account/platform-side root cause and required remediation steps.
+- Once mitigated, we will immediately re-run readiness chain and attach new READY evidence.
+```
 
 ## Manual Portal Submission Checklist (Execution)
 
@@ -137,7 +184,7 @@ Use this sequence exactly when submitting in GitHub Support portal:
    - applies `Submission Tracking` update and flips queue from `P8-2b` to `P8-3`.
 10. Channel constraint:
    - GitHub CLI does not provide a `support` command for case creation; submission must be done in GitHub Support portal.
-   - Direct REST probe endpoints also return `404 Not Found` (`POST /support/tickets`, `POST /user/support/tickets`).
+   - Direct REST probe endpoints also return `404 Not Found` (`POST /support/tickets`, `POST /user/support/tickets`, `POST /support/tickets/4077449/comments`, `POST /user/support/tickets/4077449/comments`).
 
 ## Pre-Submission Verification
 

@@ -1,151 +1,284 @@
 # Pumuki AST Intelligence Framework
 
-Enterprise-grade deterministic governance framework for AI-assisted software delivery.
+[![Version](https://img.shields.io/badge/version-6.3.5-1d4ed8)](package.json)
+[![License](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
+[![Build](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-0ea5e9)](package.json)
+[![Evidence](https://img.shields.io/badge/evidence-v2.1-7c3aed)](docs/evidence-v2.1.md)
 
-This repository contains the active v2.x framework line, built around a strict evaluation pipeline:
+**Enterprise governance for AI-assisted code delivery**.
+
+Pumuki convierte cambios de código en decisiones trazables y reproducibles:
 
 `Facts -> Rules -> Gate -> ai_evidence v2.1`
 
-## Executive Summary
+Con esto, equipos enterprise obtienen una única fuente de verdad para decidir qué se bloquea, qué se advierte y por qué, en local y CI.
 
-Pumuki enforces consistent engineering standards across platforms and delivery stages by turning source changes into typed facts, evaluating those facts against versioned rule packs, applying stage policies, and emitting deterministic evidence.
+## Tabla de contenidos
 
-The framework is designed for reproducibility, CI parity, and auditability.
+- [Por qué Pumuki](#por-qué-pumuki)
+- [Quick Start](#quick-start)
+- [Automático vs manual (sin ambigüedades)](#automático-vs-manual-sin-ambigüedades)
+- [Ciclo de vida del software](#ciclo-de-vida-del-software)
+- [Referencia de comandos y uso](#referencia-de-comandos-y-uso)
+- [MCP: instalación y configuración JSON](#mcp-instalación-y-configuración-json)
+- [Arquitectura y filosofía](#arquitectura-y-filosofía)
+- [Contribución y soporte](#contribución-y-soporte)
+- [Referencias](#referencias)
 
-Documentation index: `docs/README.md`
-Release notes: `docs/RELEASE_NOTES.md`
-Package changelog: `CHANGELOG.md`
+## Por qué Pumuki
 
-## Core Guarantees
+### Problema real en equipos grandes
 
-- Deterministic evidence in `.ai_evidence.json` with `version: "2.1"`.
-- Stage-aware gate policies with explicit block/warn thresholds:
-  - `PRE_COMMIT`: block on `CRITICAL`, warn on `ERROR`.
-  - `PRE_PUSH`: block on `ERROR`, warn on `WARN`.
-  - `CI`: block on `ERROR`, warn on `WARN`.
-- Multi-platform evaluation in a single pass when facts include:
-  - `ios`
-  - `backend`
-  - `frontend`
-  - `android`
-- Rule-pack traceability through ruleset bundle identifiers and hashes.
-- Read-only MCP evidence surface for external agent consumption.
+- Reglas inconsistentes entre local y CI.
+- Dificultad para auditar decisiones técnicas.
+- Drift de configuración entre plataformas.
+- Incidencias operativas sin trazabilidad reproducible.
 
-## Architecture Boundaries
+### Qué resuelve Pumuki
 
-- `core/`
-  - Pure domain logic only: facts, rules, gate, condition matching.
-  - No infrastructure coupling.
-- `integrations/git/`
-  - Stage runners, Git scopes (staged/range), platform gate orchestration.
-- `integrations/evidence/`
-  - Deterministic evidence build/write pipeline.
-- `integrations/platform/`
-  - Platform detection from facts.
-- `integrations/mcp/`
-  - Read-only evidence context server.
+- Políticas de gate por etapa (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
+- Reglas versionadas y bloqueadas (`skills.lock.json`).
+- Evidencia determinística (`.ai_evidence.json`).
+- Operación guiada por runbooks para triage, closure y handoff.
 
-## Repository Operations
+### Dónde encaja mejor
 
-### Install and validate baseline
+- Repos multiplaforma (`ios`, `backend`, `frontend`, `android`).
+- Equipos con requisitos de compliance y auditoría.
+- Entornos con alta frecuencia de cambios y uso de IA.
+
+## Quick Start
+
+### Prerrequisitos
+
+- `Node.js >= 18.0.0`
+- `npm >= 9.0.0`
+- `git`
+
+### Instalación
 
 ```bash
+git clone https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git
+cd ast-intelligence-hooks
 npm ci
-npm run typecheck
-npm run test:deterministic
 ```
 
-### Run gates locally
+### Verificación mínima
 
-Interactive:
+```bash
+npm run typecheck
+npm run test:deterministic
+npm run validation:package-manifest
+```
+
+### Primera ejecución
 
 ```bash
 npm run framework:menu
 ```
 
-The interactive menu includes stage evaluation plus optional adapter diagnostics (adapter reports, consumer diagnostics, mock-consumer A/B validation report, and Phase 5 execution-closure snapshots/orchestration), and operational checks (`docs/validation` hygiene and `skills:lock:check`).
+## Automático vs manual (sin ambigüedades)
 
-For menu-driven consumer diagnostics on your environment, you can set:
+### Automático
+
+El flujo principal está automatizado:
+
+- extracción de facts,
+- evaluación de rules,
+- aplicación de gate,
+- generación de `ai_evidence v2.1`,
+- ejecución en workflows CI.
+
+### Manual
+
+Los comandos `validation:*` son operativos y se ejecutan cuando hay runbooks de diagnóstico/cierre/handoff.
+
+Ejemplos:
+
+- `validation:consumer-startup-triage`
+- `validation:phase5-execution-closure`
+- `validation:phase8:*`
+- `validation:adapter-*`
+
+Regla práctica:
+
+- Desarrollo normal: pipeline automático + tests.
+- Incidente/rollout: comandos manuales del runbook.
+
+## Ciclo de vida del software
+
+### Instalación (fresh setup)
 
 ```bash
-export PUMUKI_CONSUMER_REPO_PATH=/absolute/path/to/consumer-repo
-```
-
-Direct stage wrappers:
-
-```bash
-# PRE_COMMIT (staged scope)
-npx tsx integrations/git/preCommitIOS.cli.ts
-
-# PRE_PUSH (upstream..HEAD)
-npx tsx integrations/git/prePushBackend.cli.ts
-
-# CI (baseRef..HEAD)
-npx tsx integrations/git/ciFrontend.cli.ts
-```
-
-### Deterministic test suites
-
-```bash
-npm run test:evidence
-npm run test:mcp
-npm run test:heuristics
+npm ci
+npm run typecheck
 npm run test:deterministic
-npm run validation:package-manifest
-npm run validation:package-smoke
-npm run validation:package-smoke:minimal
-npm run validation:mock-consumer-ab-report -- --repo <owner>/<repo>
-npm run validation:phase5-execution-closure -- --repo <owner>/<repo> --out-dir .audit-reports/phase5 --mock-consumer
-npm run validation:phase5-external-handoff -- --repo <owner>/<repo> --require-mock-ab-report
-```
-
-### Validation docs hygiene
-
-```bash
-npm run validation:docs-hygiene
-npm run validation:clean-artifacts -- --dry-run
-```
-
-### Skills lock freshness
-
-```bash
 npm run skills:lock:check
 ```
 
-## Rule Packs and Overrides
+### Upgrade
 
-Rule-pack catalog:
+```bash
+git pull
+npm ci
+npm run skills:lock:check
+npm run validation:docs-hygiene
+npm run test:deterministic
+```
 
-- `docs/rule-packs/README.md`
-- `docs/rule-packs/ios.md`
-- `docs/rule-packs/backend.md`
-- `docs/rule-packs/frontend.md`
-- `docs/rule-packs/android.md`
-- `docs/rule-packs/heuristics.md`
+### Uninstall (limpieza local)
 
-Project-level overrides are loaded from:
+```bash
+rm -rf node_modules
+rm -rf .audit-reports
+```
 
-- `.pumuki/rules.ts`
-- `pumuki.rules.ts`
+Si tenías guardias legacy activos:
 
-Locked baseline rules remain immutable unless `allowOverrideLocked: true`.
+```bash
+npm run ast:guard:stop
+```
 
-## Evidence Contract
+### Conflictos de dependencias
 
-- Schema: `docs/evidence-v2.1.md`
-- Source of truth: `.ai_evidence.json` (`version: "2.1"`)
-- Snapshot + ledger model with deterministic serialization
-- Optional consolidation trace for suppressed equivalent findings
+| Síntoma | Causa habitual | Acción recomendada |
+| --- | --- | --- |
+| local != CI | lock de skills desalineado | `npm run skills:lock:check` |
+| TSX no arranca | Node incompatible | actualizar a Node `>=18` |
+| fallos tras upgrade | lockfile/node_modules inconsistentes | `rm -rf node_modules package-lock.json && npm install` |
+| ruido en docs/artefactos | residuos en `.audit-reports` | `npm run validation:clean-artifacts -- --dry-run` |
 
-## MCP Evidence Context Server
+## Referencia de comandos y uso
 
-Start server:
+Nota de uso de flags en npm scripts:
+
+```bash
+npm run <script> -- <flags>
+```
+
+### Core, CLI y framework
+
+| Comando | Descripción | Ejemplo |
+| --- | --- | --- |
+| `npm run install-hooks` | instala hooks/binarios del framework | `npm run install-hooks` |
+| `npm run check-version` | verifica versión runtime | `npm run check-version` |
+| `npm run audit` | ejecuta CLI AST | `npm run audit -- --help` |
+| `npm run ast` | alias CLI AST | `npm run ast -- --help` |
+| `npm run framework:menu` | menú operativo interactivo | `npm run framework:menu` |
+| `npm run mcp:evidence` | inicia servidor MCP read-only de evidencia | `npm run mcp:evidence` |
+| `npm run violations` | CLI de violaciones | `npm run violations -- --help` |
+| `npm run violations:list` | lista violaciones | `npm run violations:list` |
+| `npm run violations:show` | muestra una violación | `npm run violations:show -- <id>` |
+| `npm run violations:summary` | resumen agregado | `npm run violations:summary` |
+| `npm run violations:top` | top de violaciones | `npm run violations:top` |
+
+### Calidad y pruebas
+
+| Comando | Descripción | Ejemplo |
+| --- | --- | --- |
+| `npm run typecheck` | typecheck TS sin emitir | `npm run typecheck` |
+| `npm run test` | suite Jest general | `npm run test` |
+| `npm run test:evidence` | tests de evidencia | `npm run test:evidence` |
+| `npm run test:mcp` | tests de MCP | `npm run test:mcp` |
+| `npm run test:heuristics` | tests de heurísticas AST | `npm run test:heuristics` |
+| `npm run test:stage-gates` | tests de políticas/stages | `npm run test:stage-gates` |
+| `npm run test:deterministic` | baseline determinístico recomendado | `npm run test:deterministic` |
+| `npm run validation:package-manifest` | valida manifest de paquete | `npm run validation:package-manifest` |
+| `npm run validation:package-smoke` | smoke install bloqueante | `npm run validation:package-smoke` |
+| `npm run validation:package-smoke:minimal` | smoke install mínimo | `npm run validation:package-smoke:minimal` |
+| `npm run validation:docs-hygiene` | guardrail de docs | `npm run validation:docs-hygiene` |
+| `npm run validation:clean-artifacts -- --dry-run` | limpieza simulada de artefactos | `npm run validation:clean-artifacts -- --dry-run` |
+| `npm run skills:compile` | compila lock de skills | `npm run skills:compile` |
+| `npm run skills:lock:check` | verifica lock de skills | `npm run skills:lock:check` |
+
+### Consumer diagnostics y soporte
+
+| Comando | Flags principales | Ejemplo |
+| --- | --- | --- |
+| `validation:consumer-ci-artifacts` | `--repo --limit --out` | `npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 --out .audit-reports/consumer-triage/consumer-ci-artifacts-report.md` |
+| `validation:consumer-ci-auth-check` | `--repo --out` | `npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo> --out .audit-reports/consumer-triage/consumer-ci-auth-check.md` |
+| `validation:consumer-workflow-lint` | `--repo-path --actionlint-bin --out` | `npm run validation:consumer-workflow-lint -- --repo-path /path/repo --actionlint-bin /tmp/actionlint --out .audit-reports/consumer-triage/consumer-workflow-lint-report.md` |
+| `validation:consumer-support-bundle` | `--repo --limit --out` | `npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 --out .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md` |
+| `validation:consumer-support-ticket-draft` | `--repo --support-bundle --auth-report --out` | `npm run validation:consumer-support-ticket-draft -- --repo <owner>/<repo> --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md --out .audit-reports/consumer-triage/consumer-support-ticket-draft.md` |
+| `validation:consumer-startup-unblock-status` | `--repo --support-bundle --auth-report --workflow-lint-report --out` | `npm run validation:consumer-startup-unblock-status -- --repo <owner>/<repo> --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md --workflow-lint-report .audit-reports/consumer-triage/consumer-workflow-lint-report.md --out .audit-reports/consumer-triage/consumer-startup-unblock-status.md` |
+| `validation:consumer-startup-triage` | `--repo --out-dir [--skip-workflow-lint]` | `npm run validation:consumer-startup-triage -- --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --out-dir .audit-reports/consumer-triage-temp --skip-workflow-lint` |
+
+### Phase 5 (closure/handoff)
+
+| Comando | Flags principales | Ejemplo |
+| --- | --- | --- |
+| `validation:phase5-blockers-readiness` | `--consumer-triage-report --out [--require-adapter-report --adapter-report]` | `npm run validation:phase5-blockers-readiness -- --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md --out .audit-reports/phase5/phase5-blockers-readiness.md` |
+| `validation:phase5-execution-closure-status` | `--phase5-blockers-report --consumer-unblock-report --out` | `npm run validation:phase5-execution-closure-status -- --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md --out .audit-reports/phase5/phase5-execution-closure-status.md` |
+| `validation:phase5-execution-closure` | `--repo --out-dir [--mock-consumer] [--skip-workflow-lint] [--skip-auth-preflight]` | `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --out-dir .audit-reports/phase5 --mock-consumer` |
+| `validation:phase5-external-handoff` | `--repo [--require-mock-ab-report] [--require-artifact-urls] [--artifact-url] [--out]` | `npm run validation:phase5-external-handoff -- --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --require-mock-ab-report` |
+| `validation:phase5-latest:refresh` | (script shell) | `npm run validation:phase5-latest:refresh` |
+| `validation:phase5-latest:sync-docs` | (script shell) | `npm run validation:phase5-latest:sync-docs` |
+| `validation:phase5-latest:ready-check` | (script shell) | `npm run validation:phase5-latest:ready-check` |
+| `validation:phase5-post-support:refresh` | (script shell) | `npm run validation:phase5-post-support:refresh` |
+
+### Phase 8 (operations, anti-loop, status)
+
+| Comando | Flags principales | Ejemplo |
+| --- | --- | --- |
+| `validation:phase8:resume-after-billing` | (script shell) | `npm run validation:phase8:resume-after-billing` |
+| `validation:phase8:next-step` | (script shell) | `npm run validation:phase8:next-step` |
+| `validation:phase8:doctor` | (script shell) | `npm run validation:phase8:doctor` |
+| `validation:phase8:autopilot` | (script shell) | `npm run validation:phase8:autopilot` |
+| `validation:phase8:status-pack` | (script shell) | `npm run validation:phase8:status-pack` |
+| `validation:phase8:tick` | (script shell) | `npm run validation:phase8:tick` |
+| `validation:phase8:loop-guard` | (script shell) | `npm run validation:phase8:loop-guard` |
+| `validation:phase8:loop-guard-coverage` | (script shell) | `npm run validation:phase8:loop-guard-coverage` |
+| `validation:phase8:mark-followup-state` | `<ticket_id> <posted_by> <POSTED_WAITING_REPLY\|SUPPORT_REPLIED> [posted_at] [reply_at] [summary]` | `npm run validation:phase8:mark-followup-state -- 4077449 juancarlosmerlosalbarracin POSTED_WAITING_REPLY` |
+| `validation:phase8:mark-followup-posted-now` | `<posted_by> [ticket_id] [posted_at]` | `npm run validation:phase8:mark-followup-posted-now -- juancarlosmerlosalbarracin 4077449` |
+| `validation:phase8:mark-followup-replied-now` | `<posted_by> <summary> [ticket_id] [posted_at] [reply_at]` | `npm run validation:phase8:mark-followup-replied-now -- juancarlosmerlosalbarracin "support replied" 4077449` |
+| `validation:phase8:ready-handoff` | (script shell) | `npm run validation:phase8:ready-handoff` |
+| `validation:phase8:close-ready` | (script shell) | `npm run validation:phase8:close-ready` |
+
+### Adapter readiness y legacy compatibility
+
+| Comando | Descripción |
+| --- | --- |
+| `validation:adapter-session-status` | status de sesión adapter |
+| `validation:adapter-real-session-report` | reporte de sesión real |
+| `validation:adapter-readiness` | readiness final del adapter |
+| `validate:adapter-hooks-local` | validación local legacy |
+| `print:adapter-hooks-config` | imprime config legacy |
+| `install:adapter-hooks-config` | instala config legacy |
+| `verify:adapter-hooks-runtime` | verifica runtime legacy |
+| `assess:adapter-hooks-session` | evalúa sesión legacy |
+| `assess:adapter-hooks-session:any` | evalúa sesión legacy con simuladas |
+
+## MCP: instalación y configuración JSON
+
+### ¿Es obligatorio MCP para usar Pumuki?
+
+No.
+
+- El core de Pumuki no requiere registrar MCP en JSON.
+- MCP es una capacidad adicional para clientes/agentes externos.
+
+### Arrancar MCP local
 
 ```bash
 npm run mcp:evidence
 ```
 
-Endpoints:
+### Configuración JSON (cuando tu cliente lo pida)
+
+```json
+{
+  "mcpServers": {
+    "pumuki-evidence": {
+      "command": "npm",
+      "args": ["run", "mcp:evidence"],
+      "cwd": "/absolute/path/to/ast-intelligence-hooks"
+    }
+  }
+}
+```
+
+### Endpoints disponibles
 
 - `GET /health`
 - `GET /status`
@@ -154,177 +287,92 @@ Endpoints:
 - `GET /ai-evidence?view=compact`
 - `GET /ai-evidence?view=full`
 
-Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+## Arquitectura y filosofía
 
-## IDE Adapters (Optional)
+### Principios
 
-Pumuki gate execution is IDE-agnostic by design.
+- Determinismo primero.
+- Separación de capas estricta (`core` vs `integrations`).
+- Trazabilidad de reglas y evidencias.
+- Operación basada en runbooks, no en improvisación.
 
-- The deterministic gate flow (`Facts -> Rules -> Gate -> ai_evidence`) runs through `core/*` and `integrations/*`.
-- IDE/editor adapter diagnostics are isolated under `scripts/*` and `docs/validation/*`.
-- PRE_COMMIT / PRE_PUSH / CI do not require any IDE adapter command to pass.
-- Adapter diagnostics are operational and optional:
-  - `docs/validation/README.md`
-  - `docs/validation/phase5-execution-closure.md`
+### Estructura técnica
 
-## Consumer CI Diagnostics
+- `core/facts/*`: facts AST/semánticos.
+- `core/rules/*`: reglas y heurísticas.
+- `core/gate/*`: decisión final de política.
+- `integrations/git/*`: runners por stage/scope.
+- `integrations/gate/stagePolicies.ts`: umbrales por etapa.
+- `integrations/evidence/*`: evidencia determinística.
+- `integrations/platform/*`: detección de plataformas.
+- `integrations/mcp/*`: API de evidencia read-only.
 
-Stabilization guardrail:
+### Política por etapa
 
-- Framework validation must use a dedicated mock consumer repository for active integration work.
-- Enterprise consumer repositories are diagnostics-only (read-only) unless explicitly approved as external remediation work.
-- Policy reference: `docs/validation/enterprise-consumer-isolation-policy.md`
+- `PRE_COMMIT`: block `CRITICAL`, warn `ERROR`.
+- `PRE_PUSH`: block `ERROR`, warn `WARN`.
+- `CI`: block `ERROR`, warn `WARN`.
 
-Generate a consumer-repository CI run/artifact report (for rollout validation and startup-failure triage):
+### Workflows CI
 
-```bash
-# One-shot triage bundle (auth + artifacts + support bundle + ticket draft + unblock status)
-npm run validation:consumer-startup-triage -- \
-  --repo <owner>/<repo> \
-  --out-dir .audit-reports/consumer-triage \
-  --skip-workflow-lint
-
-# Optional: include semantic workflow lint in the one-shot triage run
-npm run validation:consumer-startup-triage -- \
-  --repo <owner>/<repo> \
-  --repo-path /Users/you/Projects/consumer-repo \
-  --actionlint-bin /tmp/actionlint-bin/actionlint
-
-npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 \
-  --out .audit-reports/consumer-triage/consumer-ci-artifacts-report.md
-
-# Optional: run semantic workflow lint on consumer repo (requires actionlint binary)
-npm run validation:consumer-workflow-lint -- \
-  --repo-path /Users/you/Projects/consumer-repo \
-  --actionlint-bin /tmp/actionlint-bin/actionlint \
-  --out .audit-reports/consumer-triage/consumer-workflow-lint-report.md
-
-# Build support bundle (ready-to-paste payload for GitHub Support)
-npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 \
-  --out .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md
-
-# Auth/scopes precheck for private-repo Actions diagnostics
-npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo> \
-  --out .audit-reports/consumer-triage/consumer-ci-auth-check.md
-
-# Build GitHub Support ticket draft from support bundle + auth report
-npm run validation:consumer-support-ticket-draft -- \
-  --repo <owner>/<repo> \
-  --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md \
-  --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md \
-  --out .audit-reports/consumer-triage/consumer-support-ticket-draft.md
-
-# Build consolidated unblock status for startup_failure incident
-npm run validation:consumer-startup-unblock-status -- \
-  --repo <owner>/<repo> \
-  --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md \
-  --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md \
-  --workflow-lint-report .audit-reports/consumer-triage/consumer-workflow-lint-report.md \
-  --out .audit-reports/consumer-triage/consumer-startup-unblock-status.md
-
-# Build consolidated readiness report for pending Phase 5 diagnostics blockers (adapter report optional)
-npm run validation:phase5-blockers-readiness -- \
-  --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
-  --out .audit-reports/phase5/phase5-blockers-readiness.md
-
-# Optional strict mode: require adapter report in readiness verdict
-npm run validation:phase5-blockers-readiness -- \
-  --require-adapter-report \
-  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
-  --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md \
-  --out .audit-reports/phase5/phase5-blockers-readiness.md
-
-# Build Phase 5 execution-closure status snapshot
-npm run validation:phase5-execution-closure-status -- \
-  --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md \
-  --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md \
-  --out .audit-reports/phase5/phase5-execution-closure-status.md
-
-# One-shot: run full Phase 5 execution-closure orchestration
-npm run validation:phase5-execution-closure -- \
-  --repo <owner>/<repo> \
-  --out-dir .audit-reports/phase5 \
-  --skip-workflow-lint
-
-# Local mock-consumer closure (uses package-smoke summaries only)
-npm run validation:phase5-execution-closure -- \
-  --repo <owner>/<repo> \
-  --out-dir .audit-reports/phase5 \
-  --mock-consumer
-
-# Includes deterministic mock A/B report in:
-# .audit-reports/phase5/mock-consumer-ab-report.md
-
-# Build external handoff report from phase5 outputs
-npm run validation:phase5-external-handoff -- \
-  --repo <owner>/<repo> \
-  --require-mock-ab-report
-
-# Optional strict mode (require artifact URLs)
-npm run validation:phase5-external-handoff -- \
-  --repo <owner>/<repo> \
-  --require-mock-ab-report \
-  --require-artifact-urls \
-  --artifact-url https://github.com/<owner>/<repo>/actions/runs/<run-id>
-
-# Optional: bypass auth preflight fail-fast
-npm run validation:phase5-execution-closure -- \
-  --repo <owner>/<repo> \
-  --out-dir .audit-reports/phase5 \
-  --skip-workflow-lint \
-  --skip-auth-preflight
-
-# Optional: generate adapter-only readiness report
-# (current adapter implementation consumes --adapter-report as input path)
-npm run validation:adapter-readiness -- \
-  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
-  --out .audit-reports/adapter/adapter-readiness.md
-
-# Optional adapter status/report aliases (provider-agnostic command naming)
-npm run validation:adapter-session-status -- \
-  --out .audit-reports/adapter/adapter-session-status.md
-
-npm run validation:adapter-real-session-report -- \
-  --status-report .audit-reports/adapter/adapter-session-status.md \
-  --out .audit-reports/adapter/adapter-real-session-report.md
-```
-
-Related docs:
-
-- `docs/validation/README.md`
-- `docs/validation/archive/skills-rollout-consumer-ci-artifacts.md`
-- `docs/validation/consumer-ci-startup-failure-playbook.md`
-- `docs/validation/phase5-execution-closure.md`
-- `docs/validation/mock-consumer-integration-runbook.md`
-
-## CI Model
-
-Platform workflows use reusable gate orchestration and upload `.ai_evidence.json` as artifact:
-
+- `.github/workflows/ci.yml`
 - `.github/workflows/pumuki-ios.yml`
 - `.github/workflows/pumuki-backend.yml`
 - `.github/workflows/pumuki-frontend.yml`
 - `.github/workflows/pumuki-android.yml`
 - `.github/workflows/pumuki-gate-template.yml`
+- `.github/workflows/pumuki-evidence-tests.yml`
+- `.github/workflows/pumuki-heuristics-tests.yml`
+- `.github/workflows/pumuki-package-smoke.yml`
+- `.github/workflows/pumuki-phase5-mock.yml`
 
-## Governance and Traceability
+## Contribución y soporte
 
-- Active refactor branch: `enterprise-refactor`
-- Roadmap tracking: `docs/TODO.md`
+### Contribución
+
+Checklist recomendado antes de PR:
+
+```bash
+npm ci
+npm run typecheck
+npm run test:deterministic
+npm run validation:docs-hygiene
+npm run skills:lock:check
+```
+
+Reglas:
+
+- No romper determinismo de `.ai_evidence.json`.
+- Mantener paridad local/CI.
+- Añadir test cuando cambia comportamiento.
+- Actualizar documentación si añades/modificas comandos.
+
+### Soporte y documentación
+
+- `docs/README.md`
+- `docs/validation/README.md`
+- `docs/evidence-v2.1.md`
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+- `docs/TODO.md`
+- `docs/REFRACTOR_PROGRESS.md`
+
+## Referencias
+
+- Guía didáctica profunda: `PUMUKI.md`
+- Rule packs: `docs/rule-packs/README.md`
 - Release notes: `docs/RELEASE_NOTES.md`
+- Changelog: `CHANGELOG.md`
 
 <!-- BEGIN CODEX SKILLS README -->
 ## Codex Skills
 
-This repository can consume Codex Skills to enforce platform-specific engineering rules and workflows.
+- Fuente portable: `docs/codex-skills/*.md`
+- Fallback local: `~/.codex/skills/**`
 
-- Preferred portable source: vendored skills under `docs/codex-skills/*.md`.
-- Fallback source: local skill paths under `~/.codex/skills/**`.
-- Sync command:
+Sync:
 
 ```bash
 ./scripts/sync-codex-skills.sh
 ```
 
-The sync process copies the configured local skills into `docs/codex-skills/` for repository portability.
 <!-- END CODEX SKILLS README -->

@@ -16,6 +16,17 @@ if npm run validation:phase5-latest:ready-check -- "${OUT_DIR}" >/tmp/phase8-nex
   exit 0
 fi
 
+if [[ -f "scripts/check-phase8-loop-guard.sh" ]]; then
+  if ! bash scripts/check-phase8-loop-guard.sh; then
+    echo "[phase8-next-step] status=BLOCKED"
+    echo "[phase8-next-step] blocked_by=loop_guard"
+    echo "[phase8-next-step] next_action=manual follow-up post/reply tracking in ticket 4077449"
+    exit 1
+  fi
+else
+  echo "[phase8-next-step] warning: loop guard checker not found (scripts/check-phase8-loop-guard.sh)"
+fi
+
 KNOWN_CAUSE="$(rg -n "known_external_cause:" "${HANDOFF_DOC}" | head -n 1 | sed 's/^[0-9]*:[[:space:]]*//')"
 if [[ -z "${KNOWN_CAUSE}" ]]; then
   KNOWN_CAUSE="known_external_cause: <missing>"

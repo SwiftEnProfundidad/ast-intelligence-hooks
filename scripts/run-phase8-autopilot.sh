@@ -8,6 +8,17 @@ MOCK_AB_REPORT="${4:-.audit-reports/phase5/mock-consumer-ab-report.md}"
 
 echo "[phase8-autopilot] out_dir=${OUT_DIR}"
 
+if [[ -f "scripts/check-phase8-loop-guard.sh" ]]; then
+  if ! bash scripts/check-phase8-loop-guard.sh; then
+    echo "[phase8-autopilot] blocked by loop guard; skipping autopilot cycle"
+    echo "[phase8-autopilot] next_action=manual follow-up post/reply tracking in ticket 4077449"
+    echo "[phase8-autopilot] override_if_support_replied=PHASE8_LOOP_GUARD_OVERRIDE=1 npm run validation:phase8:autopilot -- ${OUT_DIR} ${REPO} ${LIMIT} ${MOCK_AB_REPORT}"
+    exit 1
+  fi
+else
+  echo "[phase8-autopilot] warning: loop guard checker not found (scripts/check-phase8-loop-guard.sh)"
+fi
+
 if npm run validation:phase8:doctor -- "${OUT_DIR}" "${REPO}" "${LIMIT}" "${MOCK_AB_REPORT}" >/tmp/phase8-autopilot-doctor.log 2>&1; then
   cat /tmp/phase8-autopilot-doctor.log
   echo "[phase8-autopilot] status=READY"

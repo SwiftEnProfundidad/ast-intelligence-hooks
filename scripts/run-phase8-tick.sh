@@ -10,6 +10,16 @@ echo "[phase8-tick] repo=${REPO}"
 echo "[phase8-tick] limit=${LIMIT}"
 echo "[phase8-tick] out_dir=${OUT_DIR}"
 
+if [[ -f "scripts/check-phase8-loop-guard.sh" ]]; then
+  if ! bash scripts/check-phase8-loop-guard.sh; then
+    echo "[phase8-tick] blocked by loop guard; skipping refresh"
+    echo "[phase8-tick] override_if_support_replied=PHASE8_LOOP_GUARD_OVERRIDE=1 npm run validation:phase8:tick -- ${REPO} ${LIMIT} ${OUT_DIR} ${MOCK_AB_REPORT}"
+    exit 1
+  fi
+else
+  echo "[phase8-tick] warning: loop guard checker not found (scripts/check-phase8-loop-guard.sh)"
+fi
+
 if ! npm run validation:phase5-latest:refresh -- "${REPO}" "${LIMIT}" "${OUT_DIR}" "${MOCK_AB_REPORT}"; then
   echo "[phase8-tick] refresh completed with BLOCKED chain (expected while external blocker persists)"
 fi
