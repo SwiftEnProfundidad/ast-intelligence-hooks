@@ -318,6 +318,16 @@ const toSuppressedWithReplacementFilesCount = (evidence: AiEvidenceV2_1): number
   return files.size;
 };
 
+const toSuppressedWithReplacementPlatformsCount = (evidence: AiEvidenceV2_1): number => {
+  const platforms = new Set<string>();
+  for (const entry of evidence.consolidation?.suppressed ?? []) {
+    if (entry.replacementRuleId !== null || entry.replacedByRuleId.length > 0) {
+      platforms.add(entry.platform);
+    }
+  }
+  return platforms.size;
+};
+
 const toSuppressedWithoutReplacementFilesCount = (evidence: AiEvidenceV2_1): number => {
   const files = new Set<string>();
   for (const entry of evidence.consolidation?.suppressed ?? []) {
@@ -342,6 +352,14 @@ const toSuppressedWithoutReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): 
     return 0;
   }
   return Math.round((toSuppressedWithoutReplacementFilesCount(evidence) / totalFiles) * 100);
+};
+
+const toSuppressedWithReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
+  const totalPlatforms = toSuppressedPlatformsCount(evidence);
+  if (totalPlatforms === 0) {
+    return 0;
+  }
+  return Math.round((toSuppressedWithReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
 };
 
 const toSuppressedWithReplacementRatioPct = (evidence: AiEvidenceV2_1): number => {
@@ -1676,6 +1694,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
     suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
     suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
+    suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
     suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
     suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
     suppressed_without_replacement_files_ratio_pct: toSuppressedWithoutReplacementFilesRatioPct(evidence),
@@ -2238,14 +2257,15 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_replacement_rules_count: toSuppressedReplacementRulesCount(evidence),
       suppressed_platforms_count: toSuppressedPlatformsCount(evidence),
       suppressed_files_count: toSuppressedFilesCount(evidence),
-    suppressed_rules_count: toSuppressedRulesCount(evidence),
-    suppressed_reasons_count: toSuppressedReasonsCount(evidence),
-    suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
-    suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
-    suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
-    suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
-    suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
-    suppressed_without_replacement_files_ratio_pct: toSuppressedWithoutReplacementFilesRatioPct(evidence),
+      suppressed_rules_count: toSuppressedRulesCount(evidence),
+      suppressed_reasons_count: toSuppressedReasonsCount(evidence),
+      suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
+      suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
+      suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
+      suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
+      suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
+      suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
+      suppressed_without_replacement_files_ratio_pct: toSuppressedWithoutReplacementFilesRatioPct(evidence),
       suppressed_with_replacement_ratio_pct: toSuppressedWithReplacementRatioPct(evidence),
       suppressed_reasons_with_replacement_ratio_pct: toSuppressedReasonsWithReplacementRatioPct(evidence),
       suppressed_reasons_without_replacement_ratio_pct: toSuppressedReasonsWithoutReplacementRatioPct(evidence),

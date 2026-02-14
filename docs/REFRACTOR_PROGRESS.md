@@ -356,7 +356,8 @@
 - ✅ `P10-64` Added deterministic `suppressed_without_replacement_files_count` to MCP summary/status contracts with tests.
 - ✅ `P10-65` Added deterministic `suppressed_without_replacement_files_ratio_pct` to MCP summary/status contracts with tests.
 - ✅ `P10-66` Added deterministic `suppressed_with_replacement_files_ratio_pct` to MCP summary/status contracts with tests.
-- 🚧 `P10-67` Define and implement the next MCP context deterministic facet after `suppressed_with_replacement_files_ratio_pct`.
+- ✅ `P10-67` Added deterministic `suppressed_with_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
+- 🚧 `P10-68` Define and implement the next MCP context deterministic facet after `suppressed_with_replacement_platforms_ratio_pct`.
 - ✅ Support ticket draft summary now includes both `startup_failure_runs` and `startup_stalled_runs` counters (with regression coverage).
 - ✅ `docs/TODO.md` active-work section was normalized to a single startup-unblock item with current live signals and escalation handoff pointer.
 - ✅ GitHub support ticket template now includes queued/stalled counters (`startup_stalled_runs`) and updated attachment contract for current escalation evidence.
@@ -884,4 +885,5 @@
 - ✅ `P10-64` Added deterministic `suppressed_without_replacement_files_count` to MCP summary/status contracts with tests.
 - ✅ `P10-65` Added deterministic `suppressed_without_replacement_files_ratio_pct` to MCP summary/status contracts with tests.
 - ✅ `P10-66` Added deterministic `suppressed_with_replacement_files_ratio_pct` to MCP summary/status contracts with tests.
-- 🚧 `P10-67` Define and implement the next MCP context deterministic facet after `suppressed_with_replacement_files_ratio_pct`.
+- ✅ `P10-67` Added deterministic `suppressed_with_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
+- 🚧 `P10-68` Define and implement the next MCP context deterministic facet after `suppressed_with_replacement_platforms_ratio_pct`.
