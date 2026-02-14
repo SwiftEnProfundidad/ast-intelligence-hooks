@@ -927,6 +927,13 @@ const toSuppressedShareTriageSummary = (evidence: AiEvidenceV2_1): string => {
   return `${label} | ${bucket} | priority ${priorityScore} | ${triageHint}`;
 };
 
+const toSuppressedShareTriageDigest = (evidence: AiEvidenceV2_1): string => {
+  const directionCode = toSuppressedShareDirectionCode(evidence);
+  const bucket = toSuppressedShareDirectionStrengthBucket(evidence);
+  const priorityScore = toSuppressedShareDirectionPriorityScore(evidence);
+  return `${directionCode}:${bucket}:${priorityScore}`;
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1196,6 +1203,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareDirectionPriorityScore(evidence),
     suppressed_share_triage_summary:
       toSuppressedShareTriageSummary(evidence),
+    suppressed_share_triage_digest:
+      toSuppressedShareTriageDigest(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1673,6 +1682,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareDirectionPriorityScore(evidence),
       suppressed_share_triage_summary:
         toSuppressedShareTriageSummary(evidence),
+      suppressed_share_triage_digest:
+        toSuppressedShareTriageDigest(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
