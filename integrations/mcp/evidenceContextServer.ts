@@ -328,6 +328,14 @@ const toSuppressedWithoutReplacementFilesCount = (evidence: AiEvidenceV2_1): num
   return files.size;
 };
 
+const toSuppressedWithReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number => {
+  const totalFiles = toSuppressedFilesCount(evidence);
+  if (totalFiles === 0) {
+    return 0;
+  }
+  return Math.round((toSuppressedWithReplacementFilesCount(evidence) / totalFiles) * 100);
+};
+
 const toSuppressedWithoutReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalFiles = toSuppressedFilesCount(evidence);
   if (totalFiles === 0) {
@@ -1667,6 +1675,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_reasons_count: toSuppressedReasonsCount(evidence),
     suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
     suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
+    suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
     suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
     suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
     suppressed_without_replacement_files_ratio_pct: toSuppressedWithoutReplacementFilesRatioPct(evidence),
@@ -2233,6 +2242,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
     suppressed_reasons_count: toSuppressedReasonsCount(evidence),
     suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
     suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
+    suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
     suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
     suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
     suppressed_without_replacement_files_ratio_pct: toSuppressedWithoutReplacementFilesRatioPct(evidence),

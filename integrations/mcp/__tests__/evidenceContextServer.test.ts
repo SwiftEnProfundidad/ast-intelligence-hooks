@@ -196,6 +196,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_reasons_count?: number;
           suppressed_non_replacement_rules_count?: number;
           suppressed_with_replacement_files_count?: number;
+          suppressed_with_replacement_files_ratio_pct?: number;
           suppressed_without_replacement_files_count?: number;
           suppressed_without_replacement_files_ratio_pct?: number;
           suppressed_with_replacement_count?: number;
@@ -362,6 +363,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_reasons_count, 1);
       assert.equal(payload.evidence?.suppressed_non_replacement_rules_count, 0);
       assert.equal(payload.evidence?.suppressed_with_replacement_files_count, 1);
+      assert.equal(payload.evidence?.suppressed_with_replacement_files_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_without_replacement_files_count, 0);
       assert.equal(payload.evidence?.suppressed_without_replacement_files_ratio_pct, 0);
       assert.equal(payload.evidence?.suppressed_with_replacement_count, 1);
@@ -605,6 +607,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_rules_count?: number;
         suppressed_reasons_count?: number;
         suppressed_with_replacement_files_count?: number;
+        suppressed_with_replacement_files_ratio_pct?: number;
         suppressed_without_replacement_files_count?: number;
         suppressed_without_replacement_files_ratio_pct?: number;
         suppressed_with_replacement_count?: number;
@@ -756,6 +759,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_reasons_count, 1);
       assert.equal(summary.suppressed_with_replacement_count, 1);
       assert.equal(summary.suppressed_with_replacement_files_count, 1);
+      assert.equal(summary.suppressed_with_replacement_files_ratio_pct, 100);
       assert.equal(summary.suppressed_without_replacement_files_count, 0);
       assert.equal(summary.suppressed_without_replacement_files_ratio_pct, 0);
       assert.equal(summary.suppressed_with_replacement_ratio_pct, 100);
