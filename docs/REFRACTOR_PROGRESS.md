@@ -12,9 +12,10 @@
 - ✅ Repo analysis + documentation summary for Pumuki/AST intelligence hooks
 - ✅ PR #287 merged (`enterprise-refactor -> develop`) with refactor/doc closure
 - ✅ Release execution (`6.3.6`) completed: PRs merged, npm `latest` updated, branches cleaned, local/remote synced
-- ✅ npm smoke no interactivo validado con `npx -y pumuki-ast-hooks@latest` (exit opción `27`)
-- ✅ Logo PNG de Pumuki restaurado en `README.md` para branding npm/GitHub
-- ✅ Logo de `README.md` expandido a ancho completo y responsive (`width="100%"`)
+- ✅ Non-interactive npm smoke validated with `npx -y pumuki-ast-hooks@latest` (exit option `27`)
+- ✅ Pumuki PNG logo restored in `README.md` for npm/GitHub branding
+- ✅ `README.md` logo expanded to full-width responsive layout (`width="100%"`)
+- ✅ Documentation update entries normalized to English
 - 🚧 Post-release monitoring: verify downstream consumers adopt `6.3.6` baseline
 
 ## Phase 1 - Deterministic Core + Evidence v2.1
