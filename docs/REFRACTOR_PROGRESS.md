@@ -373,7 +373,9 @@
 - ✅ `P10-81` Added `suppressed_non_replacement_rule_platform_pairs_ratio_pct` to MCP context summary/status contracts, tests, and docs.
 - ✅ `P10-82` Keep MCP context docs and regressions synchronized after next evidence facet expansion.
 - ✅ `P10-83` Add `suppressed_non_replacement_rule_platform_pairs_ratio_pct` parity for `/status` contract docs.
-- 🚧 `P10-84` Add synchronized coverage for the next evidence facet when available.
+- ✅ `P10-84` Add synchronized coverage for the next evidence facet when available.
+  - Next-step guard was made explicit: wait for the next evidence facet contract before implementation.
+- 🚧 `P10-85` Add synchronized coverage for the next evidence facet when the contract becomes available.
 - ✅ Support ticket draft summary now includes both `startup_failure_runs` and `startup_stalled_runs` counters (with regression coverage).
 - ✅ `docs/TODO.md` active-work section was normalized to a single startup-unblock item with current live signals and escalation handoff pointer.
 - ✅ GitHub support ticket template now includes queued/stalled counters (`startup_stalled_runs`) and updated attachment contract for current escalation evidence.
@@ -904,4 +906,4 @@
 - ✅ `P10-67` Added deterministic `suppressed_with_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
 - ✅ `P10-68` Added deterministic `suppressed_without_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
 - ✅ `P10-69` Added deterministic `suppressed_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
-- 🚧 `P10-70` Define and implement the next MCP context deterministic facet after `suppressed_replacement_platforms_ratio_pct`.
+- ✅ `P10-70` Define and implement the next MCP context deterministic facet after `suppressed_replacement_platforms_ratio_pct`.
