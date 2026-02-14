@@ -736,6 +736,17 @@ const toSuppressedRuleFilePlatformDistinctTotalCount = (
   return triples.size;
 };
 
+const toSuppressedReplacementRuleFilePlatformShareOfTotalPct = (
+  evidence: AiEvidenceV2_1,
+): number => {
+  const replacement = toSuppressedReplacementRuleFilePlatformDistinctCount(evidence);
+  const total = toSuppressedRuleFilePlatformDistinctTotalCount(evidence);
+  if (total === 0) {
+    return 0;
+  }
+  return Number(((replacement / total) * 100).toFixed(2));
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -963,6 +974,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedNonReplacementRuleFilePlatformDistinctCount(evidence),
     suppressed_rule_file_platform_distinct_total_count:
       toSuppressedRuleFilePlatformDistinctTotalCount(evidence),
+    suppressed_replacement_rule_file_platform_share_of_total_pct:
+      toSuppressedReplacementRuleFilePlatformShareOfTotalPct(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1398,6 +1411,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedNonReplacementRuleFilePlatformDistinctCount(evidence),
       suppressed_rule_file_platform_distinct_total_count:
         toSuppressedRuleFilePlatformDistinctTotalCount(evidence),
+      suppressed_replacement_rule_file_platform_share_of_total_pct:
+        toSuppressedReplacementRuleFilePlatformShareOfTotalPct(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
