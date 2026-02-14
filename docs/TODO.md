@@ -157,7 +157,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_share_direction_code` for suppression-share direction code triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_direction_triage_hint` for suppression-share direction triage guidance.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_direction_priority_score` for suppression-share direction priority scoring.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_summary` for suppression-share triage summary rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_summary` for suppression-share triage summary rollup.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_digest` for suppression-share triage digest rollup.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
