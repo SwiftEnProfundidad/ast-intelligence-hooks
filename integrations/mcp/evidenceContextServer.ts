@@ -362,6 +362,14 @@ const toSuppressedWithReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1):
   return Math.round((toSuppressedWithReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
 };
 
+const toSuppressedWithoutReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
+  const totalPlatforms = toSuppressedPlatformsCount(evidence);
+  if (totalPlatforms === 0) {
+    return 0;
+  }
+  return Math.round((toSuppressedNonReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
+};
+
 const toSuppressedWithReplacementRatioPct = (evidence: AiEvidenceV2_1): number => {
   const total = evidence.consolidation?.suppressed?.length ?? 0;
   if (total === 0) {
@@ -1695,6 +1703,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
     suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
     suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
+    suppressed_without_replacement_platforms_ratio_pct: toSuppressedWithoutReplacementPlatformsRatioPct(evidence),
     suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
     suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
     suppressed_without_replacement_files_ratio_pct: toSuppressedWithoutReplacementFilesRatioPct(evidence),
@@ -2263,6 +2272,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
       suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
       suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
+      suppressed_without_replacement_platforms_ratio_pct: toSuppressedWithoutReplacementPlatformsRatioPct(evidence),
       suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
       suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
       suppressed_without_replacement_files_ratio_pct: toSuppressedWithoutReplacementFilesRatioPct(evidence),
