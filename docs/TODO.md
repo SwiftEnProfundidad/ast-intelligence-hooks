@@ -254,7 +254,7 @@ For full historical execution details, see:
     - close-ready package helper (run only when chain is READY): `npm run validation:phase8:close-ready -- .audit-reports/phase5-latest`.
     - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
     - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
-- [ ] Local-only refactor continuation [ACTIVE]:
+- ✅ Local-only refactor continuation:
   - ✅ Added TypeScript `debugger` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `console.error` semantic heuristic with stage-aware promotion and passing tests.
   - ✅ Added TypeScript `eval` semantic heuristic with stage-aware promotion and passing tests.
@@ -452,7 +452,7 @@ For full historical execution details, see:
     - `.audit-reports/phase5/phase5-external-handoff.md` (`verdict: READY`)
   - Remaining externalization step:
     - Attach external artifact URLs to rollout status notes when consumer run IDs are available.
-- [ ] Documentation hygiene maintenance:
+- ✅ Documentation hygiene maintenance:
   - Keep only runbooks/guides versioned under `docs/validation/` root.
   - Keep generated reports out of baseline docs and regenerate on demand.
   - Guardrail command: `npm run validation:progress-single-active` (enforces exactly one `🚧` in `docs/REFRACTOR_PROGRESS.md`).
