@@ -280,6 +280,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_share_triage_stream_rank?: 0 | 1 | 2 | 3;
           suppressed_share_triage_stream_score?: number;
           suppressed_share_triage_stream_score_band?: 'LOW' | 'MEDIUM' | 'HIGH';
+          suppressed_share_triage_stream_signal?: string;
           tracked_platforms_count?: number;
           detected_platforms_count?: number;
           non_detected_platforms_count?: number;
@@ -435,6 +436,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_share_triage_stream_rank, 3);
       assert.equal(payload.evidence?.suppressed_share_triage_stream_score, 100);
       assert.equal(payload.evidence?.suppressed_share_triage_stream_score_band, 'HIGH');
+      assert.equal(payload.evidence?.suppressed_share_triage_stream_signal, 'priority:HIGH');
       assert.equal(payload.evidence?.tracked_platforms_count, 0);
       assert.equal(payload.evidence?.detected_platforms_count, 0);
       assert.equal(payload.evidence?.non_detected_platforms_count, 0);
@@ -622,6 +624,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_share_triage_stream_rank?: 0 | 1 | 2 | 3;
         suppressed_share_triage_stream_score?: number;
         suppressed_share_triage_stream_score_band?: 'LOW' | 'MEDIUM' | 'HIGH';
+        suppressed_share_triage_stream_signal?: string;
         tracked_platforms_count?: number;
         detected_platforms_count?: number;
         non_detected_platforms_count?: number;
@@ -758,6 +761,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_share_triage_stream_rank, 3);
       assert.equal(summary.suppressed_share_triage_stream_score, 100);
       assert.equal(summary.suppressed_share_triage_stream_score_band, 'HIGH');
+      assert.equal(summary.suppressed_share_triage_stream_signal, 'priority:HIGH');
       assert.equal(summary.tracked_platforms_count, 3);
       assert.equal(summary.detected_platforms_count, 2);
       assert.equal(summary.non_detected_platforms_count, 1);
