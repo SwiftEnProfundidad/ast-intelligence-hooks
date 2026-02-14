@@ -346,6 +346,9 @@ const toSuppressedWithReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): num
   return Math.round((toSuppressedWithReplacementFilesCount(evidence) / totalFiles) * 100);
 };
 
+const toSuppressedReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number =>
+  toSuppressedWithReplacementFilesRatioPct(evidence);
+
 const toSuppressedWithoutReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalFiles = toSuppressedFilesCount(evidence);
   if (totalFiles === 0) {
@@ -1707,10 +1710,11 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_files_count: toSuppressedFilesCount(evidence),
     suppressed_rules_count: toSuppressedRulesCount(evidence),
     suppressed_reasons_count: toSuppressedReasonsCount(evidence),
-    suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
-    suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
-    suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
-    suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
+      suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
+      suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
+      suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
+      suppressed_replacement_files_ratio_pct: toSuppressedReplacementFilesRatioPct(evidence),
+      suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
     suppressed_without_replacement_platforms_ratio_pct: toSuppressedWithoutReplacementPlatformsRatioPct(evidence),
     suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
     suppressed_without_replacement_files_count: toSuppressedWithoutReplacementFilesCount(evidence),
@@ -2280,6 +2284,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
       suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
       suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
+      suppressed_replacement_files_ratio_pct: toSuppressedReplacementFilesRatioPct(evidence),
       suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
       suppressed_without_replacement_platforms_ratio_pct: toSuppressedWithoutReplacementPlatformsRatioPct(evidence),
       suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
