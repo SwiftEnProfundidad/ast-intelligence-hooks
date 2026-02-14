@@ -910,6 +910,15 @@ const toSuppressedShareDirectionTriageHint = (evidence: AiEvidenceV2_1): string 
     : 'Non-replacement-leaning suppression; review non-replacement paths before replacement.';
 };
 
+const toSuppressedShareDirectionPriorityScore = (evidence: AiEvidenceV2_1): number => {
+  const confidence = toSuppressedShareDirectionConfidence(evidence);
+  const direction = toSuppressedShareDirection(evidence);
+  if (direction === 'balanced') {
+    return 0;
+  }
+  return Number(confidence.toFixed(2));
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1175,6 +1184,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareDirectionCode(evidence),
     suppressed_share_direction_triage_hint:
       toSuppressedShareDirectionTriageHint(evidence),
+    suppressed_share_direction_priority_score:
+      toSuppressedShareDirectionPriorityScore(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1648,6 +1659,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareDirectionCode(evidence),
       suppressed_share_direction_triage_hint:
         toSuppressedShareDirectionTriageHint(evidence),
+      suppressed_share_direction_priority_score:
+        toSuppressedShareDirectionPriorityScore(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,

@@ -270,7 +270,8 @@
 - ✅ Context API summary/status expose deterministic `suppressed_share_direction_label` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_direction_code` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_direction_triage_hint` facet.
-- 🚧 Context API summary/status expose deterministic `suppressed_share_direction_priority_score` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_share_direction_priority_score` facet.
+- 🚧 Context API summary/status expose deterministic `suppressed_share_triage_summary` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
