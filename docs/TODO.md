@@ -90,15 +90,19 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `ledger_rules_count` for recurring-rule triage.
 - [x] MCP context summary/status now expose deterministic `rulesets_hashes_count` for hash-signature triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_replacement_rules_count` for suppression-replacement triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rules_count` for non-replacement suppression triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_platforms_count` for suppression-platform triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_files_count` for suppression-file triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_rules_count` for suppression-rule triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_reasons_count` for suppression-reason triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_with_replacement_count` for replacement-aware suppression triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_with_replacement_ratio_pct` for replacement-coverage triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_finding_coverage_ratio_pct` for suppression finding coverage triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_without_replacement_count` for non-replacement suppression triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_rule_file_pairs_count` for suppression surface triage by rule/file pair.
 - [x] MCP context summary/status now expose deterministic `suppressed_reasons_with_replacement_count` for replacement-reason suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reasons_coverage_ratio_pct` for reason-diversity triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rules_ratio_pct` for replacement-rule coverage triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_reasons_without_replacement_count` for non-replacement reason suppression triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_platform_rule_pairs_count` for platform-rule suppression surface triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_platform_file_pairs_count` for platform-file suppression surface triage.
@@ -443,7 +447,18 @@ For full historical execution details, see:
   - ✅ Added deterministic `suppressed_files_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `suppressed_rules_count` to MCP summary/status contracts with test/docs alignment.
 - ✅ `P10-53` Added explicit checkpoint for MCP context expansion tail: `suppressed_share_triage_stream_signal_family_trace_hash_weight` is already part of the implemented and test-asserted extension surface.
-- 🚧 `P10-54` Resume MCP context incremental expansion only when a new deterministic summary facet beyond current implemented set is formally added to the local roadmap.
+- ✅ `P10-54` Added deterministic `suppressed_finding_coverage_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-55` Added deterministic `suppressed_non_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-56` Added deterministic `suppressed_without_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-57` Added deterministic `suppressed_reasons_with_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-58` Added deterministic `suppressed_reasons_without_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-59` Added deterministic `suppressed_reasons_coverage_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-60` Added deterministic `suppressed_replacement_rules_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-61` Added deterministic `suppressed_non_replacement_rules_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-62` Added deterministic `suppressed_non_replacement_rules_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-63` Added deterministic `suppressed_with_replacement_files_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-64` Added deterministic `suppressed_without_replacement_files_count` facet to MCP summary/status contracts with tests.
+- 🚧 `P10-65` Define and implement the next MCP context deterministic facet after `suppressed_without_replacement_files_count`.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

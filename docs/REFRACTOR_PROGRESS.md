@@ -343,7 +343,18 @@
 - ✅ External escalation handoff document is now versioned in repo (`docs/validation/consumer-startup-escalation-handoff-latest.md`) with latest run URLs and artifact contract.
 - ✅ Additional controlled probe (`21885514510`) was executed and `phase5-latest` artifacts were regenerated; blockage persists with `startup_failure_runs=1` and `startup_stalled_runs=4`.
 - ✅ Documentation indexes now include vendored Codex skills and latest escalation handoff doc; `docs-index-coverage` guardrail is green again.
-- 🚧 `P10-54` Pause MCP context facet expansion until a new deterministic summary facet is defined in roadmap notes and approved for execution.
+- ✅ `P10-54` Added deterministic `suppressed_finding_coverage_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-55` Added deterministic `suppressed_non_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-56` Added deterministic `suppressed_without_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-57` Added deterministic `suppressed_reasons_with_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-58` Added deterministic `suppressed_reasons_without_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-59` Added deterministic `suppressed_reasons_coverage_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-60` Added deterministic `suppressed_replacement_rules_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-61` Added deterministic `suppressed_non_replacement_rules_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-62` Added deterministic `suppressed_non_replacement_rules_count` to MCP summary/status contracts with tests.
+- ✅ `P10-63` Added deterministic `suppressed_with_replacement_files_count` to MCP summary/status contracts with tests.
+- ✅ `P10-64` Added deterministic `suppressed_without_replacement_files_count` to MCP summary/status contracts with tests.
+- 🚧 `P10-65` Define and implement the next MCP context deterministic facet after `suppressed_without_replacement_files_count`.
 - ✅ Support ticket draft summary now includes both `startup_failure_runs` and `startup_stalled_runs` counters (with regression coverage).
 - ✅ `docs/TODO.md` active-work section was normalized to a single startup-unblock item with current live signals and escalation handoff pointer.
 - ✅ GitHub support ticket template now includes queued/stalled counters (`startup_stalled_runs`) and updated attachment contract for current escalation evidence.
@@ -858,4 +869,15 @@
 - ✅ `P10-51` Extend MCP summary/status contract with deterministic `suppressed_reason_rule_platform_triples_count` facet.
 - ✅ `P10-52` Extend MCP summary/status contract with deterministic `suppressed_share_triage_stream_signal_family_trace_hash_weight` facet.
 - ✅ `P10-53` Added explicit checkpoint for MCP context expansion tail: `suppressed_share_triage_stream_signal_family_trace_hash_weight` is implemented and included in deterministic assertions.
-- 🚧 `P10-54` Resume MCP context incremental expansion only after a new deterministic summary facet is formally added to the local roadmap.
+- ✅ `P10-54` Added deterministic `suppressed_finding_coverage_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-55` Added deterministic `suppressed_non_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-56` Added deterministic `suppressed_without_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-57` Added deterministic `suppressed_reasons_with_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-58` Added deterministic `suppressed_reasons_without_replacement_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-59` Added deterministic `suppressed_reasons_coverage_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-60` Added deterministic `suppressed_replacement_rules_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-61` Added deterministic `suppressed_non_replacement_rules_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-62` Added deterministic `suppressed_non_replacement_rules_count` to MCP summary/status contracts with tests.
+- ✅ `P10-63` Added deterministic `suppressed_with_replacement_files_count` to MCP summary/status contracts with tests.
+- ✅ `P10-64` Added deterministic `suppressed_without_replacement_files_count` to MCP summary/status contracts with tests.
+- 🚧 `P10-65` Define and implement the next MCP context deterministic facet after `suppressed_without_replacement_files_count`.
