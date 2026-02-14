@@ -162,7 +162,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_action` for suppression-share triage action rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_playbook` for suppression-share triage playbook rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_priority_band` for suppression-share triage priority band rollup.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_order` for suppression-share triage order rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_order` for suppression-share triage order rollup.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_primary_side` for suppression-share triage primary-side rollup.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS

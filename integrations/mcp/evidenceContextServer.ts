@@ -983,6 +983,23 @@ const toSuppressedShareTriagePriorityBand = (
   return 'LOW';
 };
 
+const toSuppressedShareTriageOrder = (evidence: AiEvidenceV2_1): string => {
+  const action = toSuppressedShareTriageAction(evidence);
+  if (action === 'review_replacement_first') {
+    return 'replacement>non_replacement';
+  }
+  if (action === 'review_replacement_then_non_replacement') {
+    return 'replacement>non_replacement';
+  }
+  if (action === 'review_non_replacement_first') {
+    return 'non_replacement>replacement';
+  }
+  if (action === 'review_non_replacement_then_replacement') {
+    return 'non_replacement>replacement';
+  }
+  return 'replacement=non_replacement';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1260,6 +1277,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareTriagePlaybook(evidence),
     suppressed_share_triage_priority_band:
       toSuppressedShareTriagePriorityBand(evidence),
+    suppressed_share_triage_order:
+      toSuppressedShareTriageOrder(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1745,6 +1764,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareTriagePlaybook(evidence),
       suppressed_share_triage_priority_band:
         toSuppressedShareTriagePriorityBand(evidence),
+      suppressed_share_triage_order:
+        toSuppressedShareTriageOrder(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
