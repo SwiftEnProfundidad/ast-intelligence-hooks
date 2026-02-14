@@ -462,7 +462,8 @@ For full historical execution details, see:
 - ✅ `P10-66` Added deterministic `suppressed_with_replacement_files_ratio_pct` facet to MCP summary/status contracts with tests.
 - ✅ `P10-67` Added deterministic `suppressed_with_replacement_platforms_ratio_pct` facet to MCP summary/status contracts with tests.
 - ✅ `P10-68` Added deterministic `suppressed_without_replacement_platforms_ratio_pct` facet to MCP summary/status contracts with tests.
-- 🚧 `P10-69` Define and implement the next MCP context deterministic facet after `suppressed_without_replacement_platforms_ratio_pct`.
+- ✅ `P10-69` Added deterministic `suppressed_replacement_platforms_ratio_pct` facet to MCP summary/status contracts with tests.
+- 🚧 `P10-70` Define and implement the next MCP context deterministic facet after `suppressed_replacement_platforms_ratio_pct`.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

@@ -209,6 +209,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_reasons_coverage_ratio_pct?: number;
           suppressed_replacement_rules_ratio_pct?: number;
           suppressed_non_replacement_rules_ratio_pct?: number;
+          suppressed_replacement_platforms_ratio_pct?: number;
           suppressed_without_replacement_count?: number;
           suppressed_non_replacement_ratio_pct?: number;
           suppressed_without_replacement_ratio_pct?: number;
@@ -378,6 +379,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_reasons_coverage_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_replacement_rules_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_non_replacement_rules_ratio_pct, 0);
+      assert.equal(payload.evidence?.suppressed_replacement_platforms_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_without_replacement_count, 0);
       assert.equal(payload.evidence?.suppressed_non_replacement_ratio_pct, 0);
       assert.equal(payload.evidence?.suppressed_without_replacement_ratio_pct, 0);
@@ -624,6 +626,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_reasons_coverage_ratio_pct?: number;
         suppressed_replacement_rules_ratio_pct?: number;
         suppressed_non_replacement_rules_ratio_pct?: number;
+        suppressed_replacement_platforms_ratio_pct?: number;
         suppressed_without_replacement_count?: number;
         suppressed_non_replacement_ratio_pct?: number;
         suppressed_without_replacement_ratio_pct?: number;
@@ -777,6 +780,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_reasons_coverage_ratio_pct, 100);
       assert.equal(summary.suppressed_replacement_rules_ratio_pct, 100);
       assert.equal(summary.suppressed_non_replacement_rules_ratio_pct, 0);
+      assert.equal(summary.suppressed_replacement_platforms_ratio_pct, 100);
       assert.equal(summary.suppressed_without_replacement_count, 0);
       assert.equal(summary.suppressed_non_replacement_ratio_pct, 0);
       assert.equal(summary.suppressed_without_replacement_ratio_pct, 0);

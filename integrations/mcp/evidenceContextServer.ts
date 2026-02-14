@@ -370,6 +370,14 @@ const toSuppressedWithoutReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_
   return Math.round((toSuppressedNonReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
 };
 
+const toSuppressedReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
+  const totalPlatforms = toSuppressedPlatformsCount(evidence);
+  if (totalPlatforms === 0) {
+    return 0;
+  }
+  return Math.round((toSuppressedReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
+};
+
 const toSuppressedWithReplacementRatioPct = (evidence: AiEvidenceV2_1): number => {
   const total = evidence.consolidation?.suppressed?.length ?? 0;
   if (total === 0) {
@@ -1714,6 +1722,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_reasons_coverage_ratio_pct: toSuppressedReasonsCoverageRatioPct(evidence),
     suppressed_replacement_rules_ratio_pct: toSuppressedReplacementRulesRatioPct(evidence),
     suppressed_non_replacement_rules_ratio_pct: toSuppressedNonReplacementRulesRatioPct(evidence),
+    suppressed_replacement_platforms_ratio_pct: toSuppressedReplacementPlatformsRatioPct(evidence),
     suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
     suppressed_non_replacement_ratio_pct: toSuppressedNonReplacementRatioPct(evidence),
     suppressed_without_replacement_ratio_pct: toSuppressedWithoutReplacementRatioPct(evidence),
@@ -2283,6 +2292,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_reasons_coverage_ratio_pct: toSuppressedReasonsCoverageRatioPct(evidence),
       suppressed_replacement_rules_ratio_pct: toSuppressedReplacementRulesRatioPct(evidence),
       suppressed_non_replacement_rules_ratio_pct: toSuppressedNonReplacementRulesRatioPct(evidence),
+      suppressed_replacement_platforms_ratio_pct: toSuppressedReplacementPlatformsRatioPct(evidence),
       suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
       suppressed_non_replacement_ratio_pct: toSuppressedNonReplacementRatioPct(evidence),
       suppressed_without_replacement_ratio_pct: toSuppressedWithoutReplacementRatioPct(evidence),
