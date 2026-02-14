@@ -16,7 +16,8 @@
 - ✅ Pumuki PNG logo restored in `README.md` for npm/GitHub branding
 - ✅ `README.md` logo expanded to full-width responsive layout (`width="100%"`)
 - ✅ Documentation update entries normalized to English
-- 🚧 Post-release monitoring: verify downstream consumers adopt `6.3.6` baseline
+- ✅ `README.md` and `PUMUKI.md` fully translated to English (enterprise + junior didactic format)
+- 🚧 Release `6.3.7`: merge to `main`, publish to npm, and confirm `latest`
 
 ## Phase 1 - Deterministic Core + Evidence v2.1
 
