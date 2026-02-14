@@ -1,0 +1,13 @@
+name: Pumuki Android Gate
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  android-gate:
+    uses: ./.github/workflows/pumuki-gate-template.yml
+    with:
+      gate_name: Android Gate
+      runner_path: integrations/git/ciAndroid.ts
+      artifact_name: ai-evidence-android

@@ -1,0 +1,13 @@
+name: Pumuki iOS Gate
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  ios-gate:
+    uses: ./.github/workflows/pumuki-gate-template.yml
+    with:
+      gate_name: iOS Gate
+      runner_path: integrations/git/ciIOS.ts
+      artifact_name: ai-evidence

@@ -26,15 +26,14 @@
         "noUnusedParameters": false
     },
     "include": [
-        "scripts/hooks-system/infrastructure/**/*.ts",
-        "scripts/hooks-system/domain/**/*.ts",
-        "scripts/hooks-system/application/**/*.ts"
+        "core/**/*.ts",
+        "integrations/**/*.ts"
     ],
     "exclude": [
         "node_modules",
         "dist",
-        "__tests__",
-        "*.spec.ts",
-        "*.test.ts"
+        "**/__tests__/**",
+        "**/*.spec.ts",
+        "**/*.test.ts"
     ]
 }
