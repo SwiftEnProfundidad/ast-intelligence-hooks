@@ -472,7 +472,8 @@ For full historical execution details, see:
 - ✅ `P10-76` Added deterministic `suppressed_non_replacement_rule_file_pairs_ratio_pct` facet to MCP summary/status contracts with tests.
 - ✅ `P10-77` Added deterministic `suppressed_replacement_rule_file_pairs_ratio_pct` facet to MCP summary/status contracts with tests.
 - ✅ `P10-78` Extended MCP context docs and progress/test artifacts for `suppressed_replacement_rule_file_pairs_ratio_pct`.
-- 🚧 `P10-79` Define and implement the next MCP context deterministic facet in the suppression pair dimension.
+- ✅ `P10-79` Added deterministic `suppressed_replacement_rule_platform_pairs_ratio_pct` to MCP summary/status contracts with tests.
+- 🚧 `P10-80` Extend MCP context docs and progress/test artifacts for `suppressed_replacement_rule_platform_pairs_ratio_pct`.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

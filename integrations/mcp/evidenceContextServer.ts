@@ -543,6 +543,17 @@ const toSuppressedReplacementRuleFilePairsRatioPct = (
   return Math.round((replacementRuleFilePairs / totalRuleFilePairs) * 100);
 };
 
+const toSuppressedReplacementRulePlatformPairsRatioPct = (
+  evidence: AiEvidenceV2_1,
+): number => {
+  const replacementRulePlatformPairs = toSuppressedReplacementRulePlatformPairsCount(evidence);
+  const totalRulePlatformPairs = toSuppressedPlatformRulePairsCount(evidence);
+  if (totalRulePlatformPairs === 0) {
+    return 0;
+  }
+  return Math.round((replacementRulePlatformPairs / totalRulePlatformPairs) * 100);
+};
+
 const toSuppressedReplacementRulePlatformPairsCount = (evidence: AiEvidenceV2_1): number => {
   const pairs = new Set<string>();
   for (const entry of evidence.consolidation?.suppressed ?? []) {
@@ -1801,6 +1812,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_replacement_rule_file_pairs_count: toSuppressedReplacementRuleFilePairsCount(evidence),
     suppressed_replacement_rule_file_pairs_ratio_pct:
       toSuppressedReplacementRuleFilePairsRatioPct(evidence),
+    suppressed_replacement_rule_platform_pairs_ratio_pct:
+      toSuppressedReplacementRulePlatformPairsRatioPct(evidence),
     suppressed_replacement_rule_platform_pairs_count: toSuppressedReplacementRulePlatformPairsCount(evidence),
     suppressed_replacement_platforms_count: toSuppressedReplacementPlatformsCount(evidence),
     suppressed_non_replacement_platforms_count: toSuppressedNonReplacementPlatformsCount(evidence),
@@ -2381,6 +2394,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_replacement_rule_file_pairs_count: toSuppressedReplacementRuleFilePairsCount(evidence),
       suppressed_replacement_rule_file_pairs_ratio_pct:
         toSuppressedReplacementRuleFilePairsRatioPct(evidence),
+      suppressed_replacement_rule_platform_pairs_ratio_pct:
+        toSuppressedReplacementRulePlatformPairsRatioPct(evidence),
       suppressed_replacement_rule_platform_pairs_count: toSuppressedReplacementRulePlatformPairsCount(evidence),
       suppressed_replacement_platforms_count: toSuppressedReplacementPlatformsCount(evidence),
       suppressed_non_replacement_platforms_count: toSuppressedNonReplacementPlatformsCount(evidence),

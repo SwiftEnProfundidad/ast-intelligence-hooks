@@ -224,6 +224,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_platform_file_pairs_count?: number;
           suppressed_replacement_rule_file_pairs_count?: number;
           suppressed_replacement_rule_file_pairs_ratio_pct?: number;
+          suppressed_replacement_rule_platform_pairs_ratio_pct?: number;
           suppressed_replacement_rule_platform_pairs_count?: number;
           suppressed_replacement_platforms_count?: number;
           suppressed_with_replacement_platforms_count?: number;
@@ -405,6 +406,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_platform_file_pairs_count, 1);
       assert.equal(payload.evidence?.suppressed_replacement_rule_file_pairs_count, 1);
       assert.equal(payload.evidence?.suppressed_replacement_rule_file_pairs_ratio_pct, 100);
+      assert.equal(payload.evidence?.suppressed_replacement_rule_platform_pairs_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_replacement_rule_platform_pairs_count, 1);
       assert.equal(payload.evidence?.suppressed_replacement_platforms_count, 1);
       assert.equal(payload.evidence?.suppressed_non_replacement_platforms_count, 0);
@@ -657,6 +659,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_platform_file_pairs_count?: number;
         suppressed_replacement_rule_file_pairs_count?: number;
         suppressed_replacement_rule_file_pairs_ratio_pct?: number;
+        suppressed_replacement_rule_platform_pairs_ratio_pct?: number;
         suppressed_replacement_rule_platform_pairs_count?: number;
         suppressed_replacement_platforms_count?: number;
         suppressed_with_replacement_platforms_count?: number;
@@ -822,6 +825,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_platform_file_pairs_count, 1);
       assert.equal(summary.suppressed_replacement_rule_file_pairs_count, 1);
       assert.equal(summary.suppressed_replacement_rule_file_pairs_ratio_pct, 100);
+      assert.equal(summary.suppressed_replacement_rule_platform_pairs_ratio_pct, 100);
       assert.equal(summary.suppressed_replacement_rule_platform_pairs_count, 1);
       assert.equal(summary.suppressed_replacement_platforms_count, 1);
       assert.equal(summary.suppressed_non_replacement_platforms_count, 0);
