@@ -442,7 +442,8 @@ For full historical execution details, see:
   - ✅ Added deterministic `suppressed_platforms_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `suppressed_files_count` to MCP summary/status contracts with test/docs alignment.
   - ✅ Added deterministic `suppressed_rules_count` to MCP summary/status contracts with test/docs alignment.
-  - 🚧 Continue MCP context incremental expansion with next deterministic summary facets.
+- ✅ `P10-53` Added explicit checkpoint for MCP context expansion tail: `suppressed_share_triage_stream_signal_family_trace_hash_weight` is already part of the implemented and test-asserted extension surface.
+- 🚧 `P10-54` Resume MCP context incremental expansion only when a new deterministic summary facet beyond current implemented set is formally added to the local roadmap.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

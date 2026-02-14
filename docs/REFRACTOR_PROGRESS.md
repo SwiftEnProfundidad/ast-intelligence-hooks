@@ -856,4 +856,5 @@
 - ✅ `P10-50` Extend MCP summary/status contract with deterministic `suppressed_reason_rule_file_triples_count` facet.
 - ✅ `P10-51` Extend MCP summary/status contract with deterministic `suppressed_reason_rule_platform_triples_count` facet.
 - ✅ `P10-52` Extend MCP summary/status contract with deterministic `suppressed_share_triage_stream_signal_family_trace_hash_weight` facet.
-- 🚧 `P10-53` Continue MCP context incremental expansion with next deterministic summary facet (per roadmap), while keeping regressions green.
+- ✅ `P10-53` Added explicit checkpoint for MCP context expansion tail: `suppressed_share_triage_stream_signal_family_trace_hash_weight` is implemented and included in deterministic assertions.
+- 🚧 `P10-54` Resume MCP context incremental expansion only after a new deterministic summary facet is formally added to the local roadmap.
