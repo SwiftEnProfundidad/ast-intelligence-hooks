@@ -883,6 +883,17 @@ const toSuppressedShareDirectionLabel = (evidence: AiEvidenceV2_1): string => {
   return 'Balanced';
 };
 
+const toSuppressedShareDirectionCode = (evidence: AiEvidenceV2_1): 'R' | 'N' | 'B' => {
+  const direction = toSuppressedShareDirection(evidence);
+  if (direction === 'replacement') {
+    return 'R';
+  }
+  if (direction === 'non_replacement') {
+    return 'N';
+  }
+  return 'B';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1144,6 +1155,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareDirectionIsBalanced(evidence),
     suppressed_share_direction_label:
       toSuppressedShareDirectionLabel(evidence),
+    suppressed_share_direction_code:
+      toSuppressedShareDirectionCode(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1613,6 +1626,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareDirectionIsBalanced(evidence),
       suppressed_share_direction_label:
         toSuppressedShareDirectionLabel(evidence),
+      suppressed_share_direction_code:
+        toSuppressedShareDirectionCode(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
