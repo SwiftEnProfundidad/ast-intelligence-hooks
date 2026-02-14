@@ -272,6 +272,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_share_triage_focus_mode?: 'single' | 'dual';
           suppressed_share_triage_intensity?: number;
           suppressed_share_triage_lane?: string;
+          suppressed_share_triage_route?: string;
           tracked_platforms_count?: number;
           detected_platforms_count?: number;
           non_detected_platforms_count?: number;
@@ -416,6 +417,10 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_share_triage_focus_mode, 'single');
       assert.equal(payload.evidence?.suppressed_share_triage_intensity, 100);
       assert.equal(payload.evidence?.suppressed_share_triage_lane, 'replacement_fast_lane');
+      assert.equal(
+        payload.evidence?.suppressed_share_triage_route,
+        'replacement_fast_lane:replacement_rules>non_replacement_paths',
+      );
       assert.equal(payload.evidence?.tracked_platforms_count, 0);
       assert.equal(payload.evidence?.detected_platforms_count, 0);
       assert.equal(payload.evidence?.non_detected_platforms_count, 0);
@@ -595,6 +600,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_share_triage_focus_mode?: 'single' | 'dual';
         suppressed_share_triage_intensity?: number;
         suppressed_share_triage_lane?: string;
+        suppressed_share_triage_route?: string;
         tracked_platforms_count?: number;
         detected_platforms_count?: number;
         non_detected_platforms_count?: number;
@@ -720,6 +726,10 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_share_triage_focus_mode, 'single');
       assert.equal(summary.suppressed_share_triage_intensity, 100);
       assert.equal(summary.suppressed_share_triage_lane, 'replacement_fast_lane');
+      assert.equal(
+        summary.suppressed_share_triage_route,
+        'replacement_fast_lane:replacement_rules>non_replacement_paths',
+      );
       assert.equal(summary.tracked_platforms_count, 3);
       assert.equal(summary.detected_platforms_count, 2);
       assert.equal(summary.non_detected_platforms_count, 1);
