@@ -1,0 +1,16 @@
+# Tests
+core/**/__tests__/
+integrations/**/__tests__/
+scripts/__tests__/
+
+# Local diagnostics artifacts
+.audit-reports/
+.audit_tmp/
+
+# Historical/legacy implementation not part of v2 package
+legacy/
+
+docs/validation/archive/
+
+# OS/editor files
+.DS_Store

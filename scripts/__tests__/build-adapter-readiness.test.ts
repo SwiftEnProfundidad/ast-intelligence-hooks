@@ -1,0 +1,138 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import test from 'node:test';
+import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
+
+const scriptPath = resolve(process.cwd(), 'scripts/build-adapter-readiness.ts');
+
+const runGenerator = (params: {
+  cwd: string;
+  adapterReportFile?: string;
+  outFile?: string;
+}): { status: number; stdout: string; stderr: string } => {
+  const args = ['--yes', 'tsx@4.21.0', scriptPath];
+
+  if (params.adapterReportFile) {
+    args.push('--adapter-report', params.adapterReportFile);
+  }
+  if (params.outFile) {
+    args.push('--out', params.outFile);
+  }
+
+  try {
+    const stdout = execFileSync('npx', args, {
+      cwd: params.cwd,
+      stdio: ['ignore', 'pipe', 'pipe'],
+      encoding: 'utf8',
+    });
+    return { status: 0, stdout, stderr: '' };
+  } catch (error) {
+    const cast = error as {
+      status?: number;
+      stdout?: string | Buffer;
+      stderr?: string | Buffer;
+    };
+    const stdout =
+      typeof cast.stdout === 'string'
+        ? cast.stdout
+        : cast.stdout?.toString('utf8') ?? '';
+    const stderr =
+      typeof cast.stderr === 'string'
+        ? cast.stderr
+        : cast.stderr?.toString('utf8') ?? '';
+    return {
+      status: Number.isFinite(cast.status) ? Number(cast.status) : 1,
+      stdout,
+      stderr,
+    };
+  }
+};
+
+test('build-adapter-readiness returns PENDING when adapter report is missing', async () => {
+  await withTempDir('pumuki-adapter-readiness-missing-', (tempRoot) => {
+    const result = runGenerator({
+      cwd: tempRoot,
+      outFile: '.audit-reports/adapter/adapter-readiness.md',
+    });
+
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /verdict=PENDING/);
+
+    const report = readFileSync(
+      join(tempRoot, '.audit-reports/adapter/adapter-readiness.md'),
+      'utf8'
+    );
+    assert.match(report, /- verdict: PENDING/);
+    assert.match(report, /Missing Adapter adapter report/);
+  });
+});
+
+test('build-adapter-readiness returns READY when adapter report passes', async () => {
+  await withTempDir('pumuki-adapter-readiness-ready-', (tempRoot) => {
+    const auditAdapter = join(tempRoot, '.audit-reports/adapter');
+    mkdirSync(auditAdapter, { recursive: true });
+
+    writeFileSync(
+      join(auditAdapter, 'adapter-real-session-report.md'),
+      [
+        '# Adapter Hook Runtime - Real Session Report',
+        '',
+        '- Validation result: PASS',
+        '- Any `bash: node: command not found`: NO',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = runGenerator({
+      cwd: tempRoot,
+      adapterReportFile: '.audit-reports/adapter/adapter-real-session-report.md',
+      outFile: '.audit-reports/adapter/adapter-readiness.md',
+    });
+
+    assert.equal(result.status, 0);
+    assert.match(result.stdout, /verdict=READY/);
+
+    const report = readFileSync(
+      join(auditAdapter, 'adapter-readiness.md'),
+      'utf8'
+    );
+    assert.match(report, /- verdict: READY/);
+    assert.match(report, /- adapter: PASS/);
+  });
+});
+
+test('build-adapter-readiness returns BLOCKED when adapter report fails', async () => {
+  await withTempDir('pumuki-adapter-readiness-blocked-', (tempRoot) => {
+    const auditAdapter = join(tempRoot, '.audit-reports/adapter');
+    mkdirSync(auditAdapter, { recursive: true });
+
+    writeFileSync(
+      join(auditAdapter, 'adapter-real-session-report.md'),
+      [
+        '# Adapter Hook Runtime - Real Session Report',
+        '',
+        '- Validation result: FAIL',
+        '- Any `bash: node: command not found`: YES',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = runGenerator({
+      cwd: tempRoot,
+      adapterReportFile: '.audit-reports/adapter/adapter-real-session-report.md',
+      outFile: '.audit-reports/adapter/adapter-readiness.md',
+    });
+
+    assert.equal(result.status, 1);
+    assert.match(result.stdout, /verdict=BLOCKED/);
+
+    const report = readFileSync(
+      join(auditAdapter, 'adapter-readiness.md'),
+      'utf8'
+    );
+    assert.match(report, /- verdict: BLOCKED/);
+    assert.match(report, /Adapter adapter validation is FAIL/);
+  });
+});

@@ -2,40 +2,691 @@
 
 ## Scope
 
-This document tracks the agreed improvements for **Pumuki AST Intelligence Framework**.
+Operational tracking for active **Pumuki AST Intelligence Framework v2.x** work.
 
-## Done
+## Completed Milestones
 
-- Refactor `README.md` to position the project as a framework (governance + lifecycle + commands).
-- Add Git governance section documenting `ast:gitflow` and `ast:release` with options and flow.
-- Add Developer Experience section (notifications + evidence freshness + git-tree guardrails).
-- Make `docs/ARCHITECTURE.md` more normative by adding invariants + control primitives.
+- Deterministic v2.x architecture is active: `Facts -> Rules -> Gate -> ai_evidence v2.1`.
+- Multi-platform stage runners are implemented (iOS, backend, frontend, android).
+- Skills lock/policy enforcement is integrated with stage-aware gate calibration.
+- Evidence/mcp deterministic validation suites are in place and green.
+- IDE adapter hook-runtime hardening and diagnostics commands are implemented (current baseline: Adapter).
+- Consumer CI diagnostic tooling is implemented (artifact scan, auth check, support bundle, ticket draft).
+- Consumer startup-failure unblock status helper is implemented (`validation:consumer-startup-unblock-status`).
+- Consumer startup triage orchestrator is implemented (`validation:consumer-startup-triage`).
+- Phase 5 blockers readiness helper is implemented (`validation:phase5-blockers-readiness`).
+- Phase 5 execution closure status helper is implemented (`validation:phase5-execution-closure-status`).
+- Phase 5 execution closure one-shot orchestrator is implemented (`validation:phase5-execution-closure`).
+- Framework menu exposes Phase 5 one-shot orchestration action (`Run phase5 execution closure (one-shot orchestration)`).
+- Framework menu exposes external handoff report generation (`Build phase5 external handoff report`).
+- Adapter readiness helper is implemented (`validation:adapter-readiness`).
+- Adapter real-session report generator is implemented (`validation:adapter-real-session-report`, current baseline naming).
+- iOS AST heuristic coverage includes force-cast (`as!`) detection with stage-aware severity promotion.
+- Framework menu operational checks include docs hygiene and skills lock freshness (`skills:lock:check`).
+- IDE-agnostic boundary guardrail test is implemented for `core/*` and `integrations/*`.
+- Rule-pack version-to-doc sync guardrail test is implemented (`scripts/__tests__/rule-pack-docs-sync.test.ts`).
+- Active enterprise docs IDE/provider-agnostic guardrail test is implemented (`scripts/__tests__/enterprise-docs-agnostic.test.ts`).
+- Active enterprise docs English-only guardrail test is implemented (`scripts/__tests__/enterprise-docs-language.test.ts`).
+- Active docs index coverage guardrail test is implemented (`scripts/__tests__/docs-index-coverage.test.ts`).
+- Active docs markdown reference-integrity guardrail test is implemented (`scripts/__tests__/docs-markdown-reference-integrity.test.ts`).
+- Root markdown baseline guardrail is implemented (`scripts/__tests__/root-docs-baseline.test.ts`).
+- Legacy provider-named hook scripts are preserved as compatibility aliases mapped to adapter-native scripts (`scripts/__tests__/adapter-script-aliases.test.ts`).
+- Legacy ruleset lookup is provider-agnostic and covered by regression tests (`integrations/git/resolveLegacyRulesetFile.ts`, `integrations/git/__tests__/resolveLegacyRulesetFile.test.ts`).
+- MCP read-only evidence context API now includes deterministic `summary`, `rulesets`, and `platforms` endpoints (`integrations/mcp/evidenceContextServer.ts`).
+- Formal cross-agent MCP context consumption pattern is documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
+- Validation artifact cleanup command is available (`validation:clean-artifacts`, dry-run supported).
+- Framework menu includes artifact cleanup action (`Clean local validation artifacts`).
+- Phase 5 one-shot flow includes auth preflight fail-fast with optional bypass (`--skip-auth-preflight`).
+- Documentation baseline is normalized to enterprise English and active v2.x behavior.
+- Root `CHANGELOG.md` is normalized to active enterprise v2 baseline.
+- Package manifest guardrail logic is reusable and regression-tested in stage gates (`scripts/package-manifest-lib.ts`, `scripts/__tests__/package-manifest-lib.test.ts`).
+- Package smoke CI matrix (`block` + `minimal`) is active and green with evidence v2.1 assertions.
+- Framework menu consumer diagnostics defaults are host-agnostic:
+  - no hardcoded local repository paths
+  - optional environment default via `PUMUKI_CONSUMER_REPO_PATH`
+- Adapter validation runbooks are provider-neutral (no provider-specific hooks path assumptions).
+- Mock consumer integration runbook is versioned and indexed (`docs/validation/mock-consumer-integration-runbook.md`).
+- External rollout execution pack is published (`docs/validation/phase8-external-rollout-pack.md`).
+- Phase 5 one-shot closure supports local mock-consumer mode (`--mock-consumer`) with deterministic A/B + triage/unblock generation from package-smoke summaries.
+- Mock consumer A/B deterministic report is implemented (`validation:mock-consumer-ab-report`).
+- Framework menu exposes mock consumer A/B report generation as a first-class action.
+- Phase5 mock-closure CI workflow is active (`.github/workflows/pumuki-phase5-mock.yml`).
+- Phase 5 mock-consumer closure execution is validated with READY outputs:
+  - `.audit-reports/phase5/phase5-blockers-readiness.md`
+  - `.audit-reports/phase5/phase5-execution-closure-status.md`
+  - `.audit-reports/phase5/phase5-execution-closure-run-report.md`
 
-## In Progress
+For full historical execution details, see:
 
-- Standardize visuals in `docs/images/` to consistent, resolution-independent assets.
+- `docs/RELEASE_NOTES.md`
+- `docs/validation/archive/`
 
-## Next
+## Active Work
 
-### Documentation
+- [x] MCP context endpoint `/ai-evidence/platforms` now supports deterministic pagination (`limit`, `offset`, `maxLimit=100`) with regression coverage and docs alignment.
+- [x] MCP `/status` now exports deterministic pagination bounds for paginated endpoints (`context_api.pagination_bounds`).
+- [x] MCP context endpoint `/ai-evidence/ledger` now supports deterministic pagination (`limit`, `offset`, `maxLimit=100`) alongside time-window filters.
+- [x] MCP paginated endpoints now expose deterministic `pagination.has_more` for stable page iteration.
+- [x] MCP context summary/status now expose deterministic `severity_counts` for pre-action prioritization.
+- [x] MCP context summary/status now expose deterministic `rulesets_by_platform` for policy coverage visibility.
+- [x] MCP context summary/status now expose deterministic `findings_by_platform` for platform-priority visibility.
+- [x] MCP context summary/status now expose deterministic `highest_severity` for fast gate-priority checks.
+- [x] MCP context summary/status now expose deterministic `ledger_by_platform` for recurring-violation visibility.
+- [x] MCP context summary/status now expose deterministic `has_findings` for fast non-empty gate checks.
+- [x] MCP context summary/status now expose deterministic `detected_platforms_count` for quick active-platform triage.
+- [x] MCP context summary/status now expose deterministic `blocking_findings_count` (CRITICAL+ERROR) for fast block-level triage.
+- [x] MCP context summary/status now expose deterministic `rulesets_fingerprint` for quick ruleset-signature comparisons.
+- [x] MCP context summary/status now expose deterministic `non_detected_platforms_count` for quick inactive-platform triage.
+- [x] MCP context summary/status now expose deterministic `tracked_platforms_count` for quick total-platform triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_findings_count` for quick suppression-aware triage.
+- [x] MCP context summary/status now expose deterministic `platform_confidence_counts` for confidence-distribution triage.
+- [x] MCP context summary/status now expose deterministic `findings_files_count` for per-file impact triage.
+- [x] MCP context summary/status now expose deterministic `findings_with_lines_count` for location-precision triage.
+- [x] MCP context summary/status now expose deterministic `findings_without_lines_count` for line-metadata gap triage.
+- [x] MCP context summary/status now expose deterministic `ledger_files_count` for recurring file-impact triage.
+- [x] MCP context summary/status now expose deterministic `rulesets_bundles_count` for bundle-coverage triage.
+- [x] MCP context summary/status now expose deterministic `findings_rules_count` for rule-surface triage.
+- [x] MCP context summary/status now expose deterministic `rulesets_platforms_count` for platform-coverage triage.
+- [x] MCP context summary/status now expose deterministic `ledger_rules_count` for recurring-rule triage.
+- [x] MCP context summary/status now expose deterministic `rulesets_hashes_count` for hash-signature triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rules_count` for suppression-replacement triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rules_count` for non-replacement suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_platforms_count` for suppression-platform triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_files_count` for suppression-file triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_rules_count` for suppression-rule triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reasons_count` for suppression-reason triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_with_replacement_count` for replacement-aware suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_with_replacement_ratio_pct` for replacement-coverage triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_finding_coverage_ratio_pct` for suppression finding coverage triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_without_replacement_count` for non-replacement suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_rule_file_pairs_count` for suppression surface triage by rule/file pair.
+- [x] MCP context summary/status now expose deterministic `suppressed_reasons_with_replacement_count` for replacement-reason suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reasons_coverage_ratio_pct` for reason-diversity triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rules_ratio_pct` for replacement-rule coverage triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reasons_without_replacement_count` for non-replacement reason suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_platform_rule_pairs_count` for platform-rule suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_platform_file_pairs_count` for platform-file suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_pairs_count` for replacement-rule file suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_platform_pairs_count` for replacement-rule platform suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_platforms_count` for replacement-only platform suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_platforms_count` for non-replacement-only platform suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_reason_file_pairs_count` for non-replacement reason/file suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_file_pairs_count` for non-replacement rule/file suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_platform_pairs_count` for non-replacement rule/platform suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_reasons_count` for non-replacement reason-distribution suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_reason_file_pairs_count` for replacement reason/file suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_reason_pairs_count` for replacement rule/reason suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_ids_count` for replacement-rule cardinality suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_reasons_count` for replacement reason-distribution suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_platform_triples_count` for replacement rule/file/platform suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_file_platform_triples_count` for non-replacement rule/file/platform suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_rule_file_triples_count` for reason/rule/file suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_rule_platform_triples_count` for reason/rule/platform suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_file_platform_triples_count` for reason/file/platform suppression surface triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_platform_pairs_count` for reason/platform suppression pair triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_file_pairs_count` for reason/file suppression pair triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_reason_platform_pairs_count` for replacement reason/platform suppression pair triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_reason_platform_pairs_count` for non-replacement reason/platform suppression pair triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_reason_rule_file_triples_count` for replacement reason/rule/file suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_reason_rule_file_triples_count` for non-replacement reason/rule/file suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_reason_rule_platform_triples_count` for replacement reason/rule/platform suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_reason_rule_platform_triples_count` for non-replacement reason/rule/platform suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_rule_file_platform_quadruples_count` for reason/rule/file/platform suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_reason_rule_file_platform_quadruples_count` for replacement reason/rule/file/platform suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_reason_rule_file_platform_quadruples_count` for non-replacement reason/rule/file/platform suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_rule_file_platform_replacement_split_count` for replacement-vs-non-replacement suppression split triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_split_modes_count` for replacement-mode suppression split triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_split_mode_replacement_count` for replacement-mode replacement bucket triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_split_mode_non_replacement_count` for replacement-mode non-replacement bucket triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_reason_rule_file_platform_replacement_dual_mode_count` for replacement dual-mode suppression triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_platform_distinct_count` for replacement rule/file/platform distinct triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_file_platform_distinct_count` for non-replacement rule/file/platform distinct triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_rule_file_platform_distinct_total_count` for total rule/file/platform distinct triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_platform_share_of_total_pct` for replacement rule/file/platform share triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_file_platform_share_of_total_pct` for non-replacement rule/file/platform share triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_vs_non_replacement_share_gap_pct` for replacement-vs-non-replacement share-delta triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_platform_dominance_pct` for replacement-share dominance triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_minus_non_replacement_share_signed_pct` for signed share-delta triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_file_platform_dominance_pct` for non-replacement-share dominance triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_polarization_index_pct` for suppression-share polarization triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_balance_score_pct` for suppression-share balance triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_imbalance_index_pct` for suppression-share imbalance triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_polarization_balance_gap_pct` for polarization-vs-balance gap triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_net_polarity_pct` for net replacement-vs-non-replacement polarity triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction` for suppression-share direction triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_confidence` for suppression-share direction confidence triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_strength_bucket` for suppression-share direction strength triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_strength_rank` for suppression-share direction rank triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_is_balanced` for suppression-share balanced state triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_label` for suppression-share direction label triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_code` for suppression-share direction code triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_triage_hint` for suppression-share direction triage guidance.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_priority_score` for suppression-share direction priority scoring.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_summary` for suppression-share triage summary rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_digest` for suppression-share triage digest rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_action` for suppression-share triage action rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_playbook` for suppression-share triage playbook rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_priority_band` for suppression-share triage priority band rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_order` for suppression-share triage order rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_primary_side` for suppression-share triage primary-side rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_secondary_side` for suppression-share triage secondary-side rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_side_pair` for suppression-share triage side-pair rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_side_alignment` for suppression-share triage side-alignment rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_focus_target` for suppression-share triage focus-target rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_focus_order` for suppression-share triage focus-order rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_focus_mode` for suppression-share triage focus-mode rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_intensity` for suppression-share triage intensity rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_lane` for suppression-share triage lane rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_route` for suppression-share triage route rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_channel` for suppression-share triage channel rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_track` for suppression-share triage track rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream` for suppression-share triage stream rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_class` for suppression-share triage stream-class rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_rank` for suppression-share triage stream-rank rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_score` for suppression-share triage stream-score rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_score_band` for suppression-share triage stream-score-band rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal` for suppression-share triage stream-signal rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_code` for suppression-share triage stream-signal-code rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family` for suppression-share triage stream-signal-family rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_code` for suppression-share triage stream-signal-family-code rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_rank` for suppression-share triage stream-signal-family-rank rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_weight` for suppression-share triage stream-signal-family-weight rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_bucket` for suppression-share triage stream-signal-family-bucket rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_digest` for suppression-share triage stream-signal-family-digest rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_digest_code` for suppression-share triage stream-signal-family-digest-code rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace` for suppression-share triage stream-signal-family-trace rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_code` for suppression-share triage stream-signal-family-trace-code rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash` for suppression-share triage stream-signal-family-trace-hash rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_code` for suppression-share triage stream-signal-family-trace-hash-code rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_bucket` for suppression-share triage stream-signal-family-trace-hash-bucket rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_rank` for suppression-share triage stream-signal-family-trace-hash-rank rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_weight` for suppression-share triage stream-signal-family-trace-hash-weight rollup.
+- [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
+  - Runtime wiring refreshed and validated:
+    - `npm run install:adapter-hooks-config` => PASS
+    - `npm run verify:adapter-hooks-runtime` => PASS (`node_bin=/opt/homebrew/bin/node`)
+  - Local hook simulation validated:
+    - `bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh` => PASS
+    - `npm run assess:adapter-hooks-session:any` => PASS
+    - `npm run assess:adapter-hooks-session` => PASS
+  - Non-simulated runtime event capture validated:
+    - manual pre/post invocation via `run-hook-with-node.sh` and repo path payload (`integrations/git/index.ts`) => PASS
+  - Local baseline regenerated:
+    - `.audit-reports/adapter/adapter-session-status.md` (verdict: PASS)
+    - `.audit-reports/adapter/adapter-real-session-report.md`
+    - `.audit-reports/adapter/adapter-readiness.md` (verdict: READY)
+  - Regression batch completed after MCP context expansion:
+    - `npm run test:mcp` => PASS
+    - `npm run test:deterministic` => PASS
+- [x] Consumer private-repo Actions startup-failure unblock package and escalation prep:
+  - Current live signals (`.audit-reports/phase5-latest/*`):
+    - `startup_failure_runs: 0`
+    - `startup_stalled_runs: 8`
+    - `oldest_queued_run_age_minutes: 32`
+    - latest probe: `21944339604` (`queued`, `jobs=0`, `artifacts=0`)
+    - cancel attempts on queued runs return `HTTP 500`
+  - Escalation handoff is ready in repo:
+    - `docs/validation/consumer-startup-escalation-handoff-latest.md`
+  - Packaged attachment bundle (ready to share):
+    - `.audit-reports/phase5-latest/consumer-startup-escalation-bundle-latest.tgz`
+    - `sha256: 00fbaa5952e3ca32bf6f3e546b76895aa550cc99f4500fadd7e970803420cc0c`
+  - External handoff state:
+    - root cause identified: billing for GitHub Actions is currently inactive/unavailable in consumer account.
+    - external retries are intentionally paused; resume only after billing reactivation.
+    - resume runbook after billing activation: `docs/validation/phase8-post-billing-reactivation-runbook.md`.
+    - pre-submission verification executed (`PASS`, `2026-02-11T09:54:18Z`).
+    - submission sent to GitHub Support: ticket `4077449`, submitted by `SwiftEnProfundidad` at `2026-02-11T13:54:02Z`.
+    - follow-up ETA registered: `2026-02-12 18:00 UTC`.
+    - user will close support ticket manually because billing cause is known.
+    - automated CLI submission path is not available (`gh support` command does not exist).
+    - direct REST submission probes also fail with `404 Not Found` (`/support/tickets`, `/user/support/tickets`).
+    - follow checklist in `docs/validation/consumer-startup-escalation-handoff-latest.md` (`Manual Portal Submission Checklist`) to avoid missing fields/attachments.
+    - payload export helper: `npm run validation:phase5-escalation:payload -- .audit-reports/phase5-latest`.
+    - deterministic pre-submit gate: `npm run validation:phase5-escalation:ready-to-submit -- .audit-reports/phase5-latest`.
+    - one-shot pre-submit package helper: `npm run validation:phase5-escalation:prepare -- .audit-reports/phase5-latest`.
+    - latest one-shot preparation run result: `READY PACKAGE` (payload + bundle ready).
+    - latest deterministic pre-submit gate run: `READY TO SUBMIT` (checksum + attachments aligned).
+    - optional close helper after submission: `npm run validation:phase5-escalation:close-submission -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
+    - post-submit tracking can be updated with: `npm run validation:phase5-escalation:mark-submitted -- <ticket_id> <submitted_by> "<follow_up_eta>" [submitted_at_utc]`.
+    - post-support fast close check (resume only after billing reactivation): `npm run validation:phase5-post-support:refresh -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - one-shot resume helper after billing reactivation: `npm run validation:phase8:resume-after-billing -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - next-step status helper (prints deterministic next command): `npm run validation:phase8:next-step -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - doctor helper (signals + next command): `npm run validation:phase8:doctor -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - autopilot helper (doctor + conditional close-ready): `npm run validation:phase8:autopilot -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - status pack helper (progress guardrail + doctor): `npm run validation:phase8:status-pack -- .audit-reports/phase5-latest SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - tick helper (refresh + status-pack): `npm run validation:phase8:tick -- SwiftEnProfundidad/pumuki-actions-healthcheck-temp 8 .audit-reports/phase5-latest .audit-reports/phase5/mock-consumer-ab-report.md`.
+    - ready handoff summary helper (run only when chain is READY): `npm run validation:phase8:ready-handoff -- .audit-reports/phase5-latest`.
+    - close-ready package helper (run only when chain is READY): `npm run validation:phase8:close-ready -- .audit-reports/phase5-latest`.
+    - once sent, record `support_ticket_id/submitted_at_utc/submitted_by` in `docs/validation/consumer-startup-escalation-handoff-latest.md`.
+    - after support response + refresh, run `npm run validation:phase5-latest:ready-check` (must return `0`) before marking Phase 8 closed.
+- ✅ Local-only refactor continuation:
+  - ✅ Added TypeScript `debugger` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `console.error` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `eval` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `Function` constructor semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `setTimeout(string)` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `setInterval(string)` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `new Promise(async executor)` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `with` statement semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `process.exit` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `delete` operator semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `innerHTML` assignment semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `document.write` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `insertAdjacentHTML` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `child_process` import/require semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `process.env` mutation semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.writeFileSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `execSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `exec` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `spawnSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `spawn` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fork` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `execFileSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.appendFileSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `execFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.writeFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.appendFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.rm` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.unlink` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.readFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.readdir` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.mkdir` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.stat` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.copyFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.rename` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.access` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.chmod` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.chown` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.utimes` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.lstat` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.realpath` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.symlink` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.link` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.readlink` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.open` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.opendir` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.cp` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript `fs.promises.mkdtemp` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.utimes` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.watch` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.watchFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.unwatchFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.readFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.writeFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.appendFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.readdir` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.mkdir` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.rmdir` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.rm` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.rename` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.copyFile` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.stat` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.lstat` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.realpath` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.access` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.chmod` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.chown` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.unlink` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.readlink` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.symlink` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.link` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.mkdtemp` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.opendir` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.open` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.cp` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.close` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.read` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.write` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.fsync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.fdatasync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.ftruncate` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.futimes` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.lutimes` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.fchown` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.fchmod` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.fstat` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.readv` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.writev` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.exists` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.truncate` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.statfs` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.lchown` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript callback-style `fs.lchmod` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.rmSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.mkdirSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.readdirSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.readFileSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.statSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.realpathSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.lstatSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.existsSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.chmodSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.chownSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.fchownSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.fchmodSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.fstatSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.ftruncateSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.futimesSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.lutimesSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.readvSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.writevSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.writeSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.fsyncSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.fdatasyncSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.closeSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.readSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.readlinkSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.symlinkSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.linkSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.cpSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.openSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.opendirSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.mkdtempSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.statfsSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.accessSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.utimesSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.renameSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.copyFileSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.unlinkSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.truncateSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript sync-style `fs.rmdirSync` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript hardcoded-secret token pattern semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript weak-crypto hash pattern semantic heuristic (`md5`/`sha1`) with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript insecure token generation via `Math.random` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript insecure token generation via `Date.now` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript unsafe buffer allocation via `Buffer.allocUnsafe` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript unsafe buffer allocation via `Buffer.allocUnsafeSlow` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript weak UUID/token generation via `crypto.randomUUID()` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript JWT decode without signature verification semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript JWT verify with `ignoreExpiration: true` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript JWT sign without expiration semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript TLS disabled via `rejectUnauthorized: false` semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript dynamic shell command invocation semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript insecure TLS env override via NODE_TLS_REJECT_UNAUTHORIZED=0 semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript child_process spawn/exec shell:true semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript vm dynamic code execution (runInNewContext/runInThisContext) semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added TypeScript command injection risk via child_process execFile with untrusted args semantic heuristic with stage-aware promotion and passing tests.
+  - ✅ Added MCP/context API deterministic `ledger` endpoint with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic `snapshot` endpoint with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic `findings` endpoint with `severity`/`ruleId`/`platform` filters, test coverage, and docs alignment.
+  - ✅ Added MCP/context API deterministic `rulesets` filter semantics (`platform`/`bundle`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic `platforms` confidence filter semantics with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic `ledger` age filter semantics (`lastSeenAfter`/`lastSeenBefore`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic `status` enrichment with endpoint/filter capability metadata and test coverage.
+  - ✅ Added MCP/context API deterministic pagination for `findings` endpoint (`limit`/`offset`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic pagination bounds (`maxLimit=100`) for `findings` with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic pagination for `rulesets` (`limit`/`offset`, `maxLimit=100`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic pagination for `platforms` (`limit`/`offset`, `maxLimit=100`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API deterministic pagination for `ledger` (`limit`/`offset`, `maxLimit=100`) with test coverage and docs alignment.
+  - ✅ Added MCP/context API paginated `has_more` metadata (`findings`, `rulesets`, `platforms`, `ledger`) with test coverage and docs alignment.
+  - ✅ Finalized MCP context contract documentation snippets for agent consumption (`status.pagination_bounds` + paginated payload metadata).
+  - ✅ Added deterministic `severity_counts` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `rulesets_by_platform` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `findings_by_platform` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `highest_severity` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `ledger_by_platform` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `has_findings` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `detected_platforms_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `blocking_findings_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `rulesets_fingerprint` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `non_detected_platforms_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `tracked_platforms_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `suppressed_findings_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `platform_confidence_counts` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `findings_files_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `findings_with_lines_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `findings_without_lines_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `ledger_files_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `rulesets_bundles_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `findings_rules_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `rulesets_platforms_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `ledger_rules_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `rulesets_hashes_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `suppressed_replacement_rules_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `suppressed_platforms_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `suppressed_files_count` to MCP summary/status contracts with test/docs alignment.
+  - ✅ Added deterministic `suppressed_rules_count` to MCP summary/status contracts with test/docs alignment.
+- ✅ `P10-53` Added explicit checkpoint for MCP context expansion tail: `suppressed_share_triage_stream_signal_family_trace_hash_weight` is already part of the implemented and test-asserted extension surface.
+- ✅ `P10-54` Added deterministic `suppressed_finding_coverage_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-55` Added deterministic `suppressed_non_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-56` Added deterministic `suppressed_without_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-57` Added deterministic `suppressed_reasons_with_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-58` Added deterministic `suppressed_reasons_without_replacement_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-59` Added deterministic `suppressed_reasons_coverage_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-60` Added deterministic `suppressed_replacement_rules_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-61` Added deterministic `suppressed_non_replacement_rules_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-62` Added deterministic `suppressed_non_replacement_rules_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-63` Added deterministic `suppressed_with_replacement_files_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-64` Added deterministic `suppressed_without_replacement_files_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-65` Added deterministic `suppressed_without_replacement_files_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-66` Added deterministic `suppressed_with_replacement_files_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-67` Added deterministic `suppressed_with_replacement_platforms_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-68` Added deterministic `suppressed_without_replacement_platforms_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-69` Added deterministic `suppressed_replacement_platforms_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-70` Added deterministic `suppressed_replacement_files_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-71` Added deterministic `suppressed_non_replacement_platforms_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-72` Added deterministic `suppressed_with_replacement_platforms_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-73` Added deterministic `suppressed_without_replacement_platforms_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-74` Added deterministic `suppressed_non_replacement_files_count` facet to MCP summary/status contracts with tests.
+- ✅ `P10-75` Added deterministic `suppressed_non_replacement_files_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-76` Added deterministic `suppressed_non_replacement_rule_file_pairs_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-77` Added deterministic `suppressed_replacement_rule_file_pairs_ratio_pct` facet to MCP summary/status contracts with tests.
+- ✅ `P10-78` Extended MCP context docs and progress/test artifacts for `suppressed_replacement_rule_file_pairs_ratio_pct`.
+- ✅ `P10-79` Added deterministic `suppressed_replacement_rule_platform_pairs_ratio_pct` to MCP summary/status contracts with tests.
+- ✅ `P10-80` Extended MCP context docs and progress/test artifacts for `suppressed_replacement_rule_platform_pairs_ratio_pct`.
+  - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
+- ✅ `P10-81` Added `suppressed_non_replacement_rule_platform_pairs_ratio_pct` to MCP summary/status payloads and tests.
+- ✅ `P10-82` Keep MCP context docs and regressions synchronized after next evidence facet expansion.
+- ✅ `P10-83` Add `suppressed_non_replacement_rule_platform_pairs_ratio_pct` parity for `/status` contract docs.
+- ✅ `P10-84` Add synchronized coverage for the next evidence facet when available.
+  - Next-step guard is explicit: wait for the next evidence facet contract before implementation.
+- ✅ `P10-85` Add synchronized coverage for the next evidence facet when the contract becomes available.
+  - Closeout: no new evidence facet contract is available yet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`, so this batch is documentation-only.
+- ✅ `P10-86` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract is available yet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`.
+- ✅ `P10-87` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract is available yet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`.
+- ✅ `P10-88` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-89` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-90` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-91` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-92` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-93` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-94` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-95` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-96` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-97` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-98` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-99` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-100` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-101` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-102` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-103` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-104` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-105` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-106` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-107` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-108` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-109` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-110` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-111` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-112` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-113` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-114` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-115` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-116` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-117` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-118` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-119` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-120` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-121` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-122` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-123` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-124` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-125` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-126` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-127` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-128` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
+  - Monitoring checkpoint (2026-02-14): no new evidence facet contract was detected for the monitored expansion slice.
+- ✅ `P10-129` Loop guard activated: stopped repetitive MCP monitoring checkpoints with no contract delta.
+  - Reactivation rule: do not create new `P10-*` monitoring tasks until a new evidence facet key appears in `integrations/mcp/evidenceContextServer.ts`.
+- ✅ `P8-1a` Refresh external queue snapshot directly from GitHub Actions and record live blocker evidence.
+  - Snapshot (2026-02-14): `sample_size=20`, `queued_runs=20`, newest run `21944339604` (`2026-02-12T11:15:05Z`), oldest run `21942203435` (`2026-02-12T10:08:37Z`), `oldest_queued_age_minutes=3447`, `refreshed_at_utc=2026-02-14T19:35:47Z`.
+- ✅ `P8-1b1` Draft GitHub Support follow-up payload for ticket `4077449` with fresh queue evidence.
+  - Payload base (2026-02-14): `sample_size=20`, `queued_runs=20`, newest run `21944339604`, oldest run `21942203435`, `oldest_queued_age_minutes=3447`, newest URL `https://github.com/SwiftEnProfundidad/pumuki-actions-healthcheck-temp/actions/runs/21944339604`, `refreshed_at_utc=2026-02-14T19:35:47Z`.
+- ✅ `P8-1b2a` Record follow-up payload in handoff docs for deterministic copy/paste execution.
+  - Payload is versioned in `docs/validation/consumer-startup-escalation-handoff-latest.md` under `Support Ticket Follow-up Payload (2026-02-14)`.
+- ✅ `P8-1b2b1` Execute direct cancel attempt on a live queued run and capture provider response fingerprint.
+  - Attempt (2026-02-14): `POST /actions/runs/21944339604/cancel` returned `HTTP 500 Failed to cancel workflow run`; run remained `queued`.
+- ✅ `P8-1b2b2a` Attempt automated follow-up posting to ticket `4077449` via GitHub REST support endpoints.
+  - Attempt (2026-02-14): `POST /support/tickets/4077449/comments` -> `HTTP 404 Not Found`; `POST /user/support/tickets/4077449/comments` -> `HTTP 404 Not Found`.
+- ✅ `P8-1b2b2b1` Package follow-up payload as deterministic artifact for manual portal submission.
+  - Artifact: `.audit-reports/phase5-latest/github-support-followup-4077449-2026-02-14.txt` (`sha256: b76cd3a43a348984e700d05ffb3cdda813de0e39b9f9166ec17b339b60eea7ad`).
+- ✅ `P8-1b2b2b2a` Package final portal-ready follow-up payload for deterministic manual paste in ticket `4077449` with live queue snapshot refresh (`2026-02-14T19:35:47Z`).
+  - Artifact: `.audit-reports/phase5-latest/github-support-followup-4077449-2026-02-14-portal-ready.txt` (`sha256: e9eca0665f26610c3aa83ebec335c65dde99657fe768af5b134fb53792a149c4`).
+- ✅ `P8-1b2b2b2a1` Package deterministic loop-guard checker to prevent repeated queue refresh attempts before guard window.
+  - Command: `bash scripts/check-phase8-loop-guard.sh`
+  - Artifact: `scripts/check-phase8-loop-guard.sh` (`sha256: f770bbc2430b47f8f7f9b173710676c7d4f7875864c648c1d9c2e1cd6aae9d9a`).
+- ✅ `P8-1b2b2b2a2` Enforce loop guard at `phase8:tick` entrypoint to prevent accidental refresh churn while external blocker is active.
+  - Guarded command: `npm run validation:phase8:tick -- <repo> <limit> <out_dir> <mock_ab_report>`
+  - Override only after support reply: `PHASE8_LOOP_GUARD_OVERRIDE=1`.
+- ✅ `P8-1b2b2b2a3` Package deterministic support follow-up state marker helper for manual-post/reply stamping in handoff.
+  - Command: `bash scripts/mark-phase8-support-followup-state.sh <support_ticket_id> <follow_up_posted_by> <POSTED_WAITING_REPLY|SUPPORT_REPLIED> [follow_up_last_posted_at_utc] [support_reply_received_at_utc] [support_reply_summary]`
+  - Artifact: `scripts/mark-phase8-support-followup-state.sh` (`sha256: 83a1b90d5a61b40d861566f7d66c331432b5f0a1f777a5d9c1ad349739fee74c`).
+- ✅ `P8-1b2b2b2a4` Publish npm aliases for loop-guard and support-followup state stamping.
+  - `npm run validation:phase8:loop-guard`
+  - `npm run validation:phase8:mark-followup-state -- <support_ticket_id> <follow_up_posted_by> <POSTED_WAITING_REPLY|SUPPORT_REPLIED> [follow_up_last_posted_at_utc] [support_reply_received_at_utc] [support_reply_summary]`
+- ✅ `P8-1b2b2b2a5` Auto-unblock loop guard when handoff `follow_up_state` is set to `SUPPORT_REPLIED` (no manual override flag required).
+- ✅ `P8-1b2b2b2a6` Enforce loop guard at `phase8:autopilot` entrypoint to prevent repeated blocked autopilot cycles while external dependency is active.
+- ✅ `P8-1b2b2b2a7` Enforce loop guard at `phase8:resume-after-billing` entrypoint to prevent premature post-support refresh attempts while external blocker window is active.
+- ✅ `P8-1b2b2b2a8` Enforce loop guard at base `phase5-post-support-refresh` entrypoint to prevent direct refresh bypass while loop guard window is active.
+- ✅ `P8-1b2b2b2a9` Enforce loop guard at `phase8:next-step` status entrypoint to prevent looping suggestions while support follow-up is still pending.
+- ✅ `P8-1b2b2b2a10` Enforce loop guard at `phase8:status-pack` entrypoint to prevent blocked status-pack cycles while support follow-up is pending.
+- ✅ `P8-1b2b2b2a11` Enforce loop guard at `phase8:doctor` diagnostics entrypoint to prevent direct doctor polling loops while support follow-up is pending.
+- ✅ `P8-1b2b2b2a12` Package one-shot helper/alias to stamp follow-up as posted-now in handoff with a single command.
+  - `npm run validation:phase8:mark-followup-posted-now -- <follow_up_posted_by> [support_ticket_id] [follow_up_last_posted_at_utc]`
+  - Artifact: `scripts/mark-phase8-followup-posted-now.sh` (`sha256: 18a506f0c55a80a2722021ac9f0eb10fec5d6a6bda43f876bd11d28261abc9b1`).
+- ✅ `P8-1b2b2b2a13` Package one-shot helper/alias to stamp support reply as received-now and auto-release loop guard state.
+  - `npm run validation:phase8:mark-followup-replied-now -- <follow_up_posted_by> <support_reply_summary> [support_ticket_id] [follow_up_last_posted_at_utc] [support_reply_received_at_utc]`
+  - Artifact: `scripts/mark-phase8-followup-replied-now.sh` (`sha256: 0c17fe5701f0b8138c2dcb0a8433e9a4041ddf735f71a5d2696065d0045407fc`).
+- ✅ `P8-1b2b2b2a14` Enforce loop guard at base `phase5-latest:refresh` entrypoint to prevent direct refresh bypass from the lowest layer.
+- ✅ `P8-1b2b2b2a15` Add deterministic loop-guard coverage checker for critical Phase8/Phase5 refresh entrypoints.
+  - `npm run validation:phase8:loop-guard-coverage`
+  - Artifact: `scripts/check-phase8-loop-guard-coverage.sh` (`sha256: ad9b384a8922cc497c105de17813609459f3f06518b2021a3f15450f569e080d`).
+- ✅ `P8-1b2b2b2b0` Register anti-loop freeze policy for external support dependency to stop non-advancing micro-iterations.
+- ✅ `P8-1b2b2b2b1` Stamp follow-up as posted-now in handoff after manual portal submission.
+  - Command: `npm run validation:phase8:mark-followup-posted-now -- juancarlosmerlosalbarracin 4077449`
+  - Result: `follow_up_state=POSTED_WAITING_REPLY` (`follow_up_last_posted_at_utc=2026-02-14T20:02:21Z`).
+- ✅ `P8-1b2b2b2b3` Probe GitHub Support ticket read endpoints to confirm whether support reply can be polled programmatically.
+  - `gh auth status` is valid for `SwiftEnProfundidad`.
+  - `gh api /support/tickets/4077449` -> `HTTP 404`.
+  - `gh api /user/support/tickets/4077449` -> `HTTP 404`.
+  - Conclusion: ticket follow-up remains portal-only; wait path stays manual until support reply is received.
+- ✅ `P8-1b2b2b2b4` Package deterministic support-reply intake template to eliminate restart lag when the provider answer arrives.
+  - Artifact: `.audit-reports/phase5-latest/github-support-reply-intake-4077449-template.md` (`sha256: 594f275b5d312418a7a86e665660641ac8c3ab7f1d4a1f3e8d137195f6d64e64`).
+  - Includes one-shot stamp + resume commands: `validation:phase8:mark-followup-replied-now` and `validation:phase8:resume-after-billing`.
+- ✅ `P8-1b2b2b2b6` Align Phase 9 progress wording to avoid false pending loops: local-only high-value heuristic tranche marked completed; further heuristic expansion parked as explicit backlog.
+- ✅ `P8-1b2b2b2b7` Normalize generic queued/stalled blocker wording in `docs/REFRACTOR_PROGRESS.md` to explicitly point to active blocker `P8-1b2b2b2b` (single-thread execution).
+- ✅ `P8-1b2b2b2b8` Close external support dependency by operator/product decision: ticket `4077449` was closed without support response and is not a current Pumuki priority.
+- ✅ `P8-1b2b2b2b` External support wait-loop is intentionally discontinued for this refactor scope.
+  - Closure checkpoint (`2026-02-14T21:15:10Z`): handoff is `follow_up_state=DEFERRED_NOT_PRIORITY_TICKET_CLOSED`.
+  - `P8-3` / `P8-4` execution path is de-scoped for this closure scope.
+- [x] Phase 5 execution closure (external consumer diagnostics dependency):
+  - One-shot closure re-run completed in mock-consumer mode:
+    - `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/ast-intelligence-hooks --out-dir .audit-reports/phase5 --mock-consumer --require-adapter-readiness`
+  - READY artifacts regenerated:
+    - `.audit-reports/phase5/phase5-blockers-readiness.md` (`verdict: READY`)
+    - `.audit-reports/phase5/phase5-execution-closure-status.md` (`verdict: READY`)
+    - `.audit-reports/phase5/phase5-external-handoff.md` (`verdict: READY`)
+  - Remaining externalization step:
+    - Attach external artifact URLs to rollout status notes when consumer run IDs are available.
+- ✅ Documentation hygiene maintenance:
+  - Keep only runbooks/guides versioned under `docs/validation/` root.
+  - Keep generated reports out of baseline docs and regenerate on demand.
+  - Guardrail command (active-execution mode only): `npm run validation:progress-single-active` (historical rule; not applicable after closure-by-descope state).
 
-- Add README section explaining manual hook-system usage:
-  - interactive menu
-  - non-interactive usage via `AUDIT_OPTION`
-  - how `npx ast-hooks` maps to those flows
-- Convert root `ARCHITECTURE.md` into **Conceptual Architecture** and link to `docs/ARCHITECTURE.md` as the contract.
+## Deferred Adapter Validation
 
-### Framework Features
+- [x] Adapter pre/post tool hooks dedicated external IDE replay evidence (optional):
+  - ✅ `P8-5a` Baseline adapter replay seed bundle packaged from current reports:
+    - `.audit-reports/adapter/adapter-external-ide-replay-seed-2026-02-14.tgz`
+    - `sha256: 634ae941f02ee9735dff410abb42ea690451ea29e8d830d53d75e89d881794f2`
+  - ✅ `P8-5b1` Deterministic manual replay payload packaged:
+    - `.audit-reports/adapter/adapter-external-ide-replay-payload-2026-02-14.md`
+    - `sha256: d1f7d40790c6bf63b657ab1aaedc7618b48a6462cd55243ea1d6b93dd140fe53`
+  - ✅ `P8-5b2a` Deterministic replay closeout template packaged:
+    - `.audit-reports/adapter/adapter-external-ide-replay-closeout-template-2026-02-14.md`
+    - `sha256: de24345e8340e56bac4fee94abfc114a2a3398c431b9849eaf12510125ba7f59`
+  - ✅ `P8-5b2b1` Deterministic closeout filler helper packaged:
+    - `scripts/fill-adapter-external-ide-replay-closeout.sh`
+    - `sha256: e51fa50b6ade6cb86fd6ba8926b235ac144754d28bc7e6aa236ce2b2fc879567`
+  - ✅ `P8-5b2b1a` Auto-prepare helper packaged (pre-fills traces and adapter verdicts from current artifacts):
+    - `scripts/prepare-adapter-external-ide-replay-closeout-auto.sh`
+    - `sha256: 9c9ac21274295c2d69ef520ce00c4634f52ffc61649c81d893dda82731cc535f`
+  - ✅ `P8-5b2b2` Closeout record generated from existing replay-origin evidence (`trajectory_id: pumuki-manual-runtime`) with post-replay adapter verdicts (`PASS`/`PASS`/`READY`):
+    - `.audit-reports/adapter/adapter-external-ide-replay-closeout-2026-02-10-evidence.md`
+    - `sha256: 225cf62769ae0b3a31eaaaf5d3e5a1a62f958fcb91358a852397c1a0f76c5731`
 
-- Add `human_intent` to both:
-  - `.AI_EVIDENCE.json` (source of truth)
-  - AI Gate output/state (must not drift)
+## Skills Enforcement Roadmap (Status)
 
-### Design Constraints
+### Goal
 
-- Avoid drift: define a single canonical writer and a deterministic merge strategy.
-- Ensure `expires_at` is enforced (ignore stale intent).
+Ensure user/team skills are enforced deterministically in repository scope, without coupling audits to `~/.codex`.
 
-## Notes
+### Guardrails
 
-- README uses inline HTML (`<img>`) for GitHub-friendly full-width rendering.
+- Keep enforcement inputs versioned in repository scope.
+- Keep `core/*` pure; implement loading/adaptation in `integrations/*`.
+- Do not read `~/.codex/**` during CI gate execution.
+- Trace every applied skills bundle in `.ai_evidence.json` (`rulesets[]`).
+
+### Phase Status
+
+- [x] Phase 1: contracts + validators + deterministic hash tests.
+- [x] Phase 2: compiler + templates + deterministic fixtures + stale check.
+- [x] Phase 3: gate integration + baseline lock semantics + evidence trace.
+- [x] Phase 4: stage calibration + promotion policy tests + regressions.
+- [x] Phase 5 docs: maintainers guide + migration + CI lock freshness check.
+- [x] Phase 5 execution closure: tracked under active blocker `P8-1b2b2b2b` (support ticket `4077449`, handoff `POSTED_WAITING_REPLY`); attach artifact URLs to rollout status after support reply.
+  - Runbook: `docs/validation/phase5-execution-closure.md`
+  - Resume command after support reply: `npm run validation:phase8:resume-after-billing`

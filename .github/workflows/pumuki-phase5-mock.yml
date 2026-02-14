@@ -1,0 +1,44 @@
+name: Pumuki Phase5 Mock Closure
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  phase5-mock-closure:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate package manifest (dry-run)
+        run: node --import tsx scripts/check-package-manifest.ts
+
+      - name: Run package smoke block
+        run: npm run validation:package-smoke
+
+      - name: Run package smoke minimal
+        run: npm run validation:package-smoke:minimal
+
+      - name: Run phase5 mock closure one-shot
+        run: npm run validation:phase5-execution-closure -- --repo mock/consumer --out-dir .audit-reports/phase5 --mock-consumer
+
+      - name: Upload phase5 mock closure artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase5-mock-closure
+          path: |
+            .audit-reports/phase5
+            .audit-reports/package-smoke/block
+            .audit-reports/package-smoke/minimal

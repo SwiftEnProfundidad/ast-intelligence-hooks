@@ -24,7 +24,7 @@
   <text class="txt" x="80" y="265">2) ESLint audits</text>
   <text class="txt" x="80" y="300">3) AST Intelligence analysis</text>
   <text class="txt" x="80" y="335">4) Intelligent Audit Gate (block/allow)</text>
-  <text class="txt" x="80" y="370">5) Evidence update (.AI_EVIDENCE.json)</text>
+  <text class="txt" x="80" y="370">5) Evidence update (.ai_evidence.json)</text>
 
   <text class="muted" x="80" y="435">Pipeline</text>
   <text class="accent" x="80" y="470">Source files → AST analyzers → violations → severity evaluation → AI Gate verdict</text>
@@ -33,7 +33,7 @@
   <text class="txt" x="80" y="570">• .audit_tmp/ast-summary.json</text>
   <text class="txt" x="80" y="605">• .audit_tmp/ast-summary-enhanced.json</text>
   <text class="txt" x="80" y="640">• reports/ (json + text)</text>
-  <text class="txt" x="80" y="675">• .AI_EVIDENCE.json (ai_gate + metrics)</text>
+  <text class="txt" x="80" y="675">• .ai_evidence.json (ai_gate + metrics)</text>
 
   <text class="warn" x="80" y="750">Rule: Fail fast, block early</text>
   <text class="ok" x="80" y="785">Goal: deterministic governance across iOS / Android / Backend / Frontend</text>

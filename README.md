@@ -1,518 +1,378 @@
 # Pumuki AST Intelligence Framework
 
- <p align="center">
-  <img src="https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/logo.png" alt="Pumuki AST Intelligence Framework" width="800" />
- </p>
+[![Version](https://img.shields.io/badge/version-6.3.6-1d4ed8)](package.json)
+[![License](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
+[![Build](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-0ea5e9)](package.json)
+[![Evidence](https://img.shields.io/badge/evidence-v2.1-7c3aed)](docs/evidence-v2.1.md)
 
-Portable, project‑agnostic, multi‑platform enterprise framework to govern AI‑assisted development through AST analysis, deterministic evidence, AI Gate controls, and operational automation.
+**Enterprise governance for AI-assisted code delivery**.
 
-![npm](https://img.shields.io/npm/v/pumuki-ast-hooks.svg)
-![node](https://img.shields.io/badge/node-%3E%3D18-43853d)
-![platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android%20%7C%20Backend%20%7C%20Frontend-blue)
-![license](https://img.shields.io/badge/license-MIT-black)
+Pumuki convierte cambios de código en decisiones trazables y reproducibles:
 
-Latest release: 6.3.3 (2026-01-28)
+`Facts -> Rules -> Gate -> ai_evidence v2.1`
 
----
+Con esto, equipos enterprise obtienen una única fuente de verdad para decidir qué se bloquea, qué se advierte y por qué, en local y CI.
 
-## Quick start (30–60s)
+## Tabla de contenidos
+
+- [Por qué Pumuki](#por-qué-pumuki)
+- [Quick Start](#quick-start)
+- [Automático vs manual (sin ambigüedades)](#automático-vs-manual-sin-ambigüedades)
+- [Ciclo de vida del software](#ciclo-de-vida-del-software)
+- [Referencia de comandos y uso](#referencia-de-comandos-y-uso)
+- [MCP: instalación y configuración JSON](#mcp-instalación-y-configuración-json)
+- [Arquitectura y filosofía](#arquitectura-y-filosofía)
+- [Contribución y soporte](#contribución-y-soporte)
+- [Referencias](#referencias)
+
+## Por qué Pumuki
+
+### Problema real en equipos grandes
+
+- Reglas inconsistentes entre local y CI.
+- Dificultad para auditar decisiones técnicas.
+- Drift de configuración entre plataformas.
+- Incidencias operativas sin trazabilidad reproducible.
+
+### Qué resuelve Pumuki
+
+- Políticas de gate por etapa (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
+- Reglas versionadas y bloqueadas (`skills.lock.json`).
+- Evidencia determinística (`.ai_evidence.json`).
+- Operación guiada por runbooks para triage, closure y handoff.
+
+### Dónde encaja mejor
+
+- Repos multiplaforma (`ios`, `backend`, `frontend`, `android`).
+- Equipos con requisitos de compliance y auditoría.
+- Entornos con alta frecuencia de cambios y uso de IA.
+
+## Quick Start
+
+### Prerrequisitos
+
+- `Node.js >= 18.0.0`
+- `npm >= 9.0.0`
+- `git`
+
+### Instalación
 
 ```bash
-git init
-npm install --save-dev pumuki-ast-hooks
-npx ast-install
-npx ast-hooks audit
+git clone https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git
+cd ast-intelligence-hooks
+npm ci
 ```
 
-Default installation mode: `npm-runtime`.
-
-To use the embedded runtime (`vendored` mode):
+### Verificación mínima
 
 ```bash
-HOOK_INSTALL_MODE=vendored npx ast-install
+npm run typecheck
+npm run test:deterministic
+npm run validation:package-manifest
 ```
 
----
-
-## Operational visuals (examples)
-
-### Pre‑write enforcement (block before writing)
-
-![Pre-write hook output](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/Hook_02.png)
-
-### AI Gate (blocked example)
-
-![AI Gate blocked example](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ai_gate.png)
-
-### ai-start (bootstrap + evidence refresh)
-
-![ai-start output](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ai-start.png)
-
-### Pre-flight check (in-memory validation)
-
-![pre-flight-check output](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/pre-flight-check.png)
-
-### Interactive menu (orchestrator overview)
-
-The framework includes an interactive audit menu that drives the orchestrator (full audit, strict modes, pattern checks, ESLint suites, AST intelligence, export, etc.).
+### Primera ejecución
 
 ```bash
-npx ast-hooks
+npm run framework:menu
 ```
 
-Documentation:
+## Automático vs manual (sin ambigüedades)
 
-- `docs/USAGE.md` (Interactive Menu, non‑interactive `AUDIT_OPTION`, and typical flows)
-- `CHANGELOG.md` (Release notes and changes)
-- `docs/RELEASE_NOTES.md` (Historical release notes)
+### Automático
 
----
+El flujo principal está automatizado:
 
-## Visual Overview
+- extracción de facts,
+- evaluación de rules,
+- aplicación de gate,
+- generación de `ai_evidence v2.1`,
+- ejecución en workflows CI.
 
-![AST Intelligence System Overview](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_01.svg)
+### Manual
 
-![AST Intelligence Workflow](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_02.svg)
+Los comandos `validation:*` son operativos y se ejecutan cuando hay runbooks de diagnóstico/cierre/handoff.
 
-![AST Intelligence Audit - Part 1](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_03.svg)
+Ejemplos:
 
-![AST Intelligence Audit - Part 2](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_04.svg)
+- `validation:consumer-startup-triage`
+- `validation:phase5-execution-closure`
+- `validation:phase8:*`
+- `validation:adapter-*`
 
-![AST Intelligence Audit - Part 3](https://cdn.jsdelivr.net/gh/SwiftEnProfundidad/ast-intelligence-hooks@8f3d85cf2083d71dc778ad78c20a1b5559f23467/assets/ast_intelligence_05.svg)
+Regla práctica:
 
----
+- Desarrollo normal: pipeline automático + tests.
+- Incidente/rollout: comandos manuales del runbook.
 
-## 1. Identity
+## Ciclo de vida del software
 
-### Name
-
-Pumuki AST Intelligence Framework
-
-### Enterprise positioning (one line)
-
-Enterprise governance for AI‑assisted development: persistent evidence, deterministic gate, and multi‑platform AST enforcement.
-
----
-
-## 2. Clear definition
-
-### 2.1 What the framework is
-
-Pumuki AST Intelligence Framework is a portable, project‑agnostic framework for long‑lived systems that governs AI‑assisted work by combining:
-
-- multi‑platform AST analysis;
-- persistent evidence as the source of truth;
-- a deterministic gate (ALLOW/BLOCK);
-- enforcement before writing, before commit, and in CI/CD;
-- MCP integration for agents;
-- Git Flow automation;
-- a guard/daemon and operational signals.
-
-### 2.2 What problem it solves
-
-AI assistants are probabilistic systems: they can produce a coherent change once and a degrading change on the next run, even with the same prompt. In enterprise repositories this causes:
-
-- architecture drift;
-- silent introduction of anti‑patterns;
-- security degradation;
-- accumulation of technical debt;
-- loss of traceability.
-
-Pumuki introduces control and operational reproducibility: it does not rely on “conversation”, it relies on evidence and enforcement.
-
-### 2.3 Why it exists
-
-Without governance, AI:
-
-- does not preserve verifiable context;
-- does not apply rules deterministically;
-- can break architectural invariants;
-- can introduce high‑impact defects that are not obvious in a superficial review.
-
-Pumuki exists to make AI usage compatible with enterprise engineering standards.
-
-### 2.4 Why AI cannot be trusted without governance
-
-Operational reliability is not achieved with prompts. It is achieved with:
-
-- persistent, auditable evidence;
-- formal rules per platform;
-- deterministic enforcement;
-- early blocking of critical violations.
-
----
-
-## 3. Core principles
-
-### 3.1 Evidence over conversation
-
-Decisions are made based on a persistent evidence file (`.AI_EVIDENCE.json`), not chat memory.
-
-### 3.2 Gated intelligence
-
-Before any AI‑assisted operation, repository state and evidence are validated. If it does not comply, the operation is blocked.
-
-### 3.3 AST, not heuristics
-
-Rules run on real ASTs and code structure, avoiding fragile approximations.
-
-### 3.4 Fail fast, block early
-
-Pumuki blocks as early as possible: pre‑write, pre‑commit, and CI.
-
-### 3.5 Platform‑agnostic governance
-
-A single enforcement model governs iOS, Android, backend, and frontend.
-
-### 3.6 Token economy (cost-aware operation)
-
-This framework treats token usage as an operational cost.
-
-- **Batch checks and avoid redundant scans**.
-- **Reuse cached context** when safe.
-- **Ask the user for missing info** instead of exploring blindly.
-- **Keep responses concise**.
-
-This principle is part of the framework contract and is surfaced to agents via:
-
-- `ai_gate_check` → `mandatory_rules.framework_rules`
-- `pre_flight_check` → `framework_rules`
-
----
-
-## 4. Architecture and mental model
-
-### 4.1 AI Evidence File (`.AI_EVIDENCE.json`)
-
-`.AI_EVIDENCE.json` is the persistent source of truth. It represents the governance state and enables reproducible decisions.
-
-It includes:
-
-- session and branch context;
-- violations by severity;
-- gate state;
-- detected platforms;
-- operational watchers;
-- cognitive layers.
-
-### 4.2 AI Gate (ALLOW / BLOCK)
-
-The AI Gate decides:
-
-- **ALLOWED**: proceed (following rules).
-- **BLOCKED**: the operation is blocked with actionable feedback.
-
-### 4.3 Deterministic enforcement
-
-Enforcement happens in layers:
-
-1) pre‑write in IDEs that support it;
-2) Git hooks as a universal fallback;
-3) MCP gate/pre‑flight for agents;
-4) CI/CD as final enforcement.
-
-### 4.4 Cognitive layers
-
-#### Human Intent (Intentional Memory)
-
-Defines the human goal, constraints, and expiration.
-
-#### Semantic Snapshot (Semantic Memory)
-
-Summarizes project state (health, active platforms, gate state) to prevent drift.
-
----
-
-## 5. Features (complete)
-
-### 5.1 AST Intelligence (iOS, Android, Backend, Frontend)
-
-Multi‑platform AST‑based analysis:
-
-- iOS (Swift)
-- Android (Kotlin)
-- Backend (Node.js / NestJS)
-- Frontend (React / Next.js)
-
-### 5.2 Pre‑write enforcement
-
-Block before writing when the IDE can intercept operations.
-
-### 5.3 In‑memory AST analysis
-
-Validation over proposed code as a string (without writing to disk).
-
-### 5.4 IDE hooks
-
-IDE integrations to intercept changes before writing (or fallback via Git).
-
-### 5.5 MCP server
-
-MCP server for agents with blocking and non‑blocking tools.
-
-### 5.6 Git hooks
-
-Universal Git‑level enforcement (pre‑commit / pre‑push) to prevent violations from entering history.
-
-### 5.7 Git Flow automation
-
-Automation of feature/fix cycles and releases.
-
-### 5.8 macOS notifications
-
-Operational notifications for gate, evidence, health, guard, and tokens.
-
-### 5.9 Evidence guard daemon
-
-Guard/daemon to keep evidence fresh and reduce drift during long sessions. Automatically refreshes evidence every 3 minutes during active development sessions, independent of commits or manual triggers.
-
-### 5.10 CI/CD enforcement
-
-Apply the same rules in pipelines.
-
----
-
-## 6. Pre‑Write Enforcement
-
-### 6.1 What it does
-
-Analyzes code before writing it to disk. This prevents dangerous or degrading patterns from even entering the working tree.
-
-### 6.2 IDE interception
-
-When the IDE supports pre‑write hooks, the framework intercepts edit/write operations and validates the final content.
-
-### 6.3 Content reconstruction from partial diffs
-
-If the IDE provides partial diffs, the system reconstructs the final content by applying `old_string → new_string` transformations over the current state before analyzing.
-
-### 6.4 Blocking behavior
-
-If CRITICAL/HIGH violations exist, the operation is blocked.
-
-### 6.5 Example (in‑memory pre‑flight)
-
-```javascript
-const { analyzeCodeInMemory } = require('./scripts/hooks-system/infrastructure/ast/ast-core');
-
-const virtualFilePath = 'apps/backend/src/users/UserService.ts';
-const proposedCode = `
-export class UserService {
-  // ...
-}
-`;
-
-const result = analyzeCodeInMemory(proposedCode, virtualFilePath);
-
-if (result.hasCritical || result.hasHigh) {
-  throw new Error('BLOCKED: Critical/High violations detected');
-}
-```
-
----
-
-## 7. MCP Integration
-
-### 7.1 Purpose
-
-MCP provides a standard contract so agents can consume governance tools (gate and pre‑flight) before modifying the repository.
-
-### 7.2 Tools (blocking vs non‑blocking)
-
-#### Blocking
-
-- `ai_gate_check`
-- `pre_flight_check`
-
-#### Non‑blocking
-
-- `read_platform_rules`
-- `set_human_intent`
-- `get_human_intent`
-- `clear_human_intent`
-- `suggest_human_intent`
-- `auto_execute_ai_start`
-- `check_evidence_status`
-- `validate_and_fix`
-- `sync_branches`
-- `cleanup_stale_branches`
-- `auto_complete_gitflow`
-- `record_test_created`
-- `reset_tdd_session`
-
-### 7.3 Blocking vs non‑blocking
-
-Blocking tools return ALLOWED/BLOCKED and stop the flow if violations are detected.
-
----
-
-## 8. Git Governance
-
-### 8.1 `ast:gitflow`
-
-Automates the feature/fix → develop cycle.
-
-### 8.2 `ast:release`
-
-Automates the develop → main release.
-
-### 8.3 Full Git Flow cycle
-
-The Git Flow cycle includes branch validation, commits, push, PR, merge (by policy), cleanup, and sync.
-
----
-
-## 9. Commands (required)
-
-### Installation (dev)
+### Instalación (fresh setup)
 
 ```bash
-npm install --save-dev pumuki-ast-hooks
-npx ast-install
+npm ci
+npm run typecheck
+npm run test:deterministic
+npm run skills:lock:check
 ```
 
-### Installation (legacy)
+### Upgrade
 
 ```bash
-npm install --save-dev pumuki-ast-hooks
-npx ast-install
+git pull
+npm ci
+npm run skills:lock:check
+npm run validation:docs-hygiene
+npm run test:deterministic
 ```
 
-### Update
+### Uninstall (limpieza local)
 
 ```bash
-npm install --save-dev pumuki-ast-hooks@latest
-npx ast-install
+rm -rf node_modules
+rm -rf .audit-reports
 ```
 
-### Uninstall
+Si tenías guardias legacy activos:
 
 ```bash
-npx ast-uninstall
-npm uninstall pumuki-ast-hooks
-```
-
-### Install hooks
-
-```bash
-npm run install-hooks
-```
-
-### Interactive menu
-
-```bash
-npx ast-hooks
-```
-
-### Version check
-
-```bash
-npm run ast:check-version
-```
-
-### Audit
-
-```bash
-npm run audit
-```
-
-### Git Flow
-
-```bash
-npm run ast:gitflow
-```
-
-### Release
-
-```bash
-npm run ast:release
-```
-
-### Guard start/stop/status/logs
-
-```bash
-npm run ast:guard:start
 npm run ast:guard:stop
-npm run ast:guard:status
-npm run ast:guard:logs
 ```
 
-### Evidence refresh
+### Conflictos de dependencias
+
+| Síntoma | Causa habitual | Acción recomendada |
+| --- | --- | --- |
+| local != CI | lock de skills desalineado | `npm run skills:lock:check` |
+| TSX no arranca | Node incompatible | actualizar a Node `>=18` |
+| fallos tras upgrade | lockfile/node_modules inconsistentes | `rm -rf node_modules package-lock.json && npm install` |
+| ruido en docs/artefactos | residuos en `.audit-reports` | `npm run validation:clean-artifacts -- --dry-run` |
+
+## Referencia de comandos y uso
+
+Nota de uso de flags en npm scripts:
 
 ```bash
-npm run ast:refresh
-npx ast-hooks evidence:full-update
-bash scripts/hooks-system/bin/update-evidence.sh
+npm run <script> -- <flags>
 ```
 
----
+### Core, CLI y framework
 
-## 10. IDE Compatibility Matrix
+| Comando | Descripción | Ejemplo |
+| --- | --- | --- |
+| `npm run install-hooks` | instala hooks/binarios del framework | `npm run install-hooks` |
+| `npm run check-version` | verifica versión runtime | `npm run check-version` |
+| `npm run audit` | ejecuta CLI AST | `npm run audit -- --help` |
+| `npm run ast` | alias CLI AST | `npm run ast -- --help` |
+| `npm run framework:menu` | menú operativo interactivo | `npm run framework:menu` |
+| `npm run mcp:evidence` | inicia servidor MCP read-only de evidencia | `npm run mcp:evidence` |
+| `npm run violations` | CLI de violaciones | `npm run violations -- --help` |
+| `npm run violations:list` | lista violaciones | `npm run violations:list` |
+| `npm run violations:show` | muestra una violación | `npm run violations:show -- <id>` |
+| `npm run violations:summary` | resumen agregado | `npm run violations:summary` |
+| `npm run violations:top` | top de violaciones | `npm run violations:top` |
 
-| IDE | Hook Support | Blocks Before Write? | Fallback |
-| --- | --- | --- | --- |
-| Windsurf | `pre_write_code` | Yes | Git pre-commit |
-| Claude Code | `PreToolUse` (Write/Edit/MultiEdit) | Yes | Git pre-commit |
-| OpenCode | `tool.execute.before` | Yes | Git pre-commit |
-| Cursor | Post-write (`afterFileEdit`) | No | Git pre-commit |
-| Codex CLI | Approval policies only | Manual | Git pre-commit |
-| Kilo Code | Not documented | No | Git pre-commit |
+### Calidad y pruebas
 
----
+| Comando | Descripción | Ejemplo |
+| --- | --- | --- |
+| `npm run typecheck` | typecheck TS sin emitir | `npm run typecheck` |
+| `npm run test` | suite Jest general | `npm run test` |
+| `npm run test:evidence` | tests de evidencia | `npm run test:evidence` |
+| `npm run test:mcp` | tests de MCP | `npm run test:mcp` |
+| `npm run test:heuristics` | tests de heurísticas AST | `npm run test:heuristics` |
+| `npm run test:stage-gates` | tests de políticas/stages | `npm run test:stage-gates` |
+| `npm run test:deterministic` | baseline determinístico recomendado | `npm run test:deterministic` |
+| `npm run validation:package-manifest` | valida manifest de paquete | `npm run validation:package-manifest` |
+| `npm run validation:package-smoke` | smoke install bloqueante | `npm run validation:package-smoke` |
+| `npm run validation:package-smoke:minimal` | smoke install mínimo | `npm run validation:package-smoke:minimal` |
+| `npm run validation:docs-hygiene` | guardrail de docs | `npm run validation:docs-hygiene` |
+| `npm run validation:clean-artifacts -- --dry-run` | limpieza simulada de artefactos | `npm run validation:clean-artifacts -- --dry-run` |
+| `npm run skills:compile` | compila lock de skills | `npm run skills:compile` |
+| `npm run skills:lock:check` | verifica lock de skills | `npm run skills:lock:check` |
 
-## 10. Rule Exclusions (`ast-exclusions.json`)
+### Consumer diagnostics y soporte
 
-Use `config/ast-exclusions.json` to suppress specific rules for specific files.
+| Comando | Flags principales | Ejemplo |
+| --- | --- | --- |
+| `validation:consumer-ci-artifacts` | `--repo --limit --out` | `npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo> --limit 20 --out .audit-reports/consumer-triage/consumer-ci-artifacts-report.md` |
+| `validation:consumer-ci-auth-check` | `--repo --out` | `npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo> --out .audit-reports/consumer-triage/consumer-ci-auth-check.md` |
+| `validation:consumer-workflow-lint` | `--repo-path --actionlint-bin --out` | `npm run validation:consumer-workflow-lint -- --repo-path /path/repo --actionlint-bin /tmp/actionlint --out .audit-reports/consumer-triage/consumer-workflow-lint-report.md` |
+| `validation:consumer-support-bundle` | `--repo --limit --out` | `npm run validation:consumer-support-bundle -- --repo <owner>/<repo> --limit 20 --out .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md` |
+| `validation:consumer-support-ticket-draft` | `--repo --support-bundle --auth-report --out` | `npm run validation:consumer-support-ticket-draft -- --repo <owner>/<repo> --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md --out .audit-reports/consumer-triage/consumer-support-ticket-draft.md` |
+| `validation:consumer-startup-unblock-status` | `--repo --support-bundle --auth-report --workflow-lint-report --out` | `npm run validation:consumer-startup-unblock-status -- --repo <owner>/<repo> --support-bundle .audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md --auth-report .audit-reports/consumer-triage/consumer-ci-auth-check.md --workflow-lint-report .audit-reports/consumer-triage/consumer-workflow-lint-report.md --out .audit-reports/consumer-triage/consumer-startup-unblock-status.md` |
+| `validation:consumer-startup-triage` | `--repo --out-dir [--skip-workflow-lint]` | `npm run validation:consumer-startup-triage -- --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --out-dir .audit-reports/consumer-triage-temp --skip-workflow-lint` |
 
-Example:
+### Phase 5 (closure/handoff)
+
+| Comando | Flags principales | Ejemplo |
+| --- | --- | --- |
+| `validation:phase5-blockers-readiness` | `--consumer-triage-report --out [--require-adapter-report --adapter-report]` | `npm run validation:phase5-blockers-readiness -- --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md --out .audit-reports/phase5/phase5-blockers-readiness.md` |
+| `validation:phase5-execution-closure-status` | `--phase5-blockers-report --consumer-unblock-report --out` | `npm run validation:phase5-execution-closure-status -- --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md --out .audit-reports/phase5/phase5-execution-closure-status.md` |
+| `validation:phase5-execution-closure` | `--repo --out-dir [--mock-consumer] [--skip-workflow-lint] [--skip-auth-preflight]` | `npm run validation:phase5-execution-closure -- --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --out-dir .audit-reports/phase5 --mock-consumer` |
+| `validation:phase5-external-handoff` | `--repo [--require-mock-ab-report] [--require-artifact-urls] [--artifact-url] [--out]` | `npm run validation:phase5-external-handoff -- --repo SwiftEnProfundidad/pumuki-actions-healthcheck-temp --require-mock-ab-report` |
+| `validation:phase5-latest:refresh` | (script shell) | `npm run validation:phase5-latest:refresh` |
+| `validation:phase5-latest:sync-docs` | (script shell) | `npm run validation:phase5-latest:sync-docs` |
+| `validation:phase5-latest:ready-check` | (script shell) | `npm run validation:phase5-latest:ready-check` |
+| `validation:phase5-post-support:refresh` | (script shell) | `npm run validation:phase5-post-support:refresh` |
+
+### Phase 8 (operations, anti-loop, status)
+
+| Comando | Flags principales | Ejemplo |
+| --- | --- | --- |
+| `validation:phase8:resume-after-billing` | (script shell) | `npm run validation:phase8:resume-after-billing` |
+| `validation:phase8:next-step` | (script shell) | `npm run validation:phase8:next-step` |
+| `validation:phase8:doctor` | (script shell) | `npm run validation:phase8:doctor` |
+| `validation:phase8:autopilot` | (script shell) | `npm run validation:phase8:autopilot` |
+| `validation:phase8:status-pack` | (script shell) | `npm run validation:phase8:status-pack` |
+| `validation:phase8:tick` | (script shell) | `npm run validation:phase8:tick` |
+| `validation:phase8:loop-guard` | (script shell) | `npm run validation:phase8:loop-guard` |
+| `validation:phase8:loop-guard-coverage` | (script shell) | `npm run validation:phase8:loop-guard-coverage` |
+| `validation:phase8:mark-followup-state` | `<ticket_id> <posted_by> <POSTED_WAITING_REPLY\|SUPPORT_REPLIED> [posted_at] [reply_at] [summary]` | `npm run validation:phase8:mark-followup-state -- 4077449 juancarlosmerlosalbarracin POSTED_WAITING_REPLY` |
+| `validation:phase8:mark-followup-posted-now` | `<posted_by> [ticket_id] [posted_at]` | `npm run validation:phase8:mark-followup-posted-now -- juancarlosmerlosalbarracin 4077449` |
+| `validation:phase8:mark-followup-replied-now` | `<posted_by> <summary> [ticket_id] [posted_at] [reply_at]` | `npm run validation:phase8:mark-followup-replied-now -- juancarlosmerlosalbarracin "support replied" 4077449` |
+| `validation:phase8:ready-handoff` | (script shell) | `npm run validation:phase8:ready-handoff` |
+| `validation:phase8:close-ready` | (script shell) | `npm run validation:phase8:close-ready` |
+
+### Adapter readiness y legacy compatibility
+
+| Comando | Descripción |
+| --- | --- |
+| `validation:adapter-session-status` | status de sesión adapter |
+| `validation:adapter-real-session-report` | reporte de sesión real |
+| `validation:adapter-readiness` | readiness final del adapter |
+| `validate:adapter-hooks-local` | validación local legacy |
+| `print:adapter-hooks-config` | imprime config legacy |
+| `install:adapter-hooks-config` | instala config legacy |
+| `verify:adapter-hooks-runtime` | verifica runtime legacy |
+| `assess:adapter-hooks-session` | evalúa sesión legacy |
+| `assess:adapter-hooks-session:any` | evalúa sesión legacy con simuladas |
+
+## MCP: instalación y configuración JSON
+
+### ¿Es obligatorio MCP para usar Pumuki?
+
+No.
+
+- El core de Pumuki no requiere registrar MCP en JSON.
+- MCP es una capacidad adicional para clientes/agentes externos.
+
+### Arrancar MCP local
+
+```bash
+npm run mcp:evidence
+```
+
+### Configuración JSON (cuando tu cliente lo pida)
 
 ```json
 {
-  "exclusions": {
-    "rules": {
-      "ios.solid.dip.concrete_dependency": {
-        "files": [
-          "apps/ios/Infrastructure/Repositories/Auth/AuthLoginRepositoryImpl.swift"
-        ],
-        "excludePatterns": [
-          "**/*Auth*Repository*.swift"
-        ]
-      }
+  "mcpServers": {
+    "pumuki-evidence": {
+      "command": "npm",
+      "args": ["run", "mcp:evidence"],
+      "cwd": "/absolute/path/to/ast-intelligence-hooks"
     }
   }
 }
 ```
 
-Rules without `files`/`paths`/`globs` are treated as global exclusions.
+### Endpoints disponibles
 
----
+- `GET /health`
+- `GET /status`
+- `GET /ai-evidence`
+- `GET /ai-evidence?includeSuppressed=false`
+- `GET /ai-evidence?view=compact`
+- `GET /ai-evidence?view=full`
 
-## 11. Typical Enterprise Use Cases
+## Arquitectura y filosofía
 
-- Long‑running feature development with AI assistance.
-- Regulated systems where traceability and control are mandatory.
-- Platform teams governing multiple repositories.
-- Monorepos and multi‑team repositories with architecture drift risk.
+### Principios
 
----
+- Determinismo primero.
+- Separación de capas estricta (`core` vs `integrations`).
+- Trazabilidad de reglas y evidencias.
+- Operación basada en runbooks, no en improvisación.
 
-## 12. Intended Audience
+### Estructura técnica
 
-Designed for:
+- `core/facts/*`: facts AST/semánticos.
+- `core/rules/*`: reglas y heurísticas.
+- `core/gate/*`: decisión final de política.
+- `integrations/git/*`: runners por stage/scope.
+- `integrations/gate/stagePolicies.ts`: umbrales por etapa.
+- `integrations/evidence/*`: evidencia determinística.
+- `integrations/platform/*`: detección de plataformas.
+- `integrations/mcp/*`: API de evidencia read-only.
 
-- senior engineers;
-- software architects;
-- platform teams;
-- teams responsible for SDLC quality, security, and governance.
+### Política por etapa
 
----
+- `PRE_COMMIT`: block `CRITICAL`, warn `ERROR`.
+- `PRE_PUSH`: block `ERROR`, warn `WARN`.
+- `CI`: block `ERROR`, warn `WARN`.
 
-## 13. Maturity & Stability
+### Workflows CI
 
-Production‑ready, version‑evolving, and designed for CI/CD integration.
+- `.github/workflows/ci.yml`
+- `.github/workflows/pumuki-ios.yml`
+- `.github/workflows/pumuki-backend.yml`
+- `.github/workflows/pumuki-frontend.yml`
+- `.github/workflows/pumuki-android.yml`
+- `.github/workflows/pumuki-gate-template.yml`
+- `.github/workflows/pumuki-evidence-tests.yml`
+- `.github/workflows/pumuki-heuristics-tests.yml`
+- `.github/workflows/pumuki-package-smoke.yml`
+- `.github/workflows/pumuki-phase5-mock.yml`
 
----
+## Contribución y soporte
 
-## 14. License
+### Contribución
 
-MIT
+Checklist recomendado antes de PR:
+
+```bash
+npm ci
+npm run typecheck
+npm run test:deterministic
+npm run validation:docs-hygiene
+npm run skills:lock:check
+```
+
+Reglas:
+
+- No romper determinismo de `.ai_evidence.json`.
+- Mantener paridad local/CI.
+- Añadir test cuando cambia comportamiento.
+- Actualizar documentación si añades/modificas comandos.
+
+### Soporte y documentación
+
+- `docs/README.md`
+- `docs/validation/README.md`
+- `docs/evidence-v2.1.md`
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+- `docs/TODO.md`
+- `docs/REFRACTOR_PROGRESS.md`
+
+## Referencias
+
+- Guía didáctica profunda: `PUMUKI.md`
+- Rule packs: `docs/rule-packs/README.md`
+- Release notes: `docs/RELEASE_NOTES.md`
+- Changelog: `CHANGELOG.md`
+
+<!-- BEGIN CODEX SKILLS README -->
+## Codex Skills
+
+- Fuente portable: `docs/codex-skills/*.md`
+- Fallback local: `~/.codex/skills/**`
+
+Sync:
+
+```bash
+./scripts/sync-codex-skills.sh
+```
+
+<!-- END CODEX SKILLS README -->

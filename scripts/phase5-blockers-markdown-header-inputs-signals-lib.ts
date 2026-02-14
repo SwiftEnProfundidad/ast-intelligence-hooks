@@ -1,0 +1,48 @@
+import type { Phase5BlockersSummary } from './phase5-blockers-contract';
+
+export const appendPhase5BlockersHeaderSection = (params: {
+  lines: string[];
+  generatedAt: string;
+  summary: Phase5BlockersSummary;
+}): void => {
+  params.lines.push('# Phase 5 Blockers Readiness');
+  params.lines.push('');
+  params.lines.push(`- generated_at: ${params.generatedAt}`);
+  params.lines.push(`- verdict: ${params.summary.verdict}`);
+  params.lines.push('');
+};
+
+export const appendPhase5BlockersInputsSection = (params: {
+  lines: string[];
+  adapterReportPath: string;
+  consumerTriageReportPath: string;
+  hasAdapterReport: boolean;
+  hasConsumerTriageReport: boolean;
+  requireAdapterReport: boolean;
+}): void => {
+  params.lines.push('## Inputs');
+  params.lines.push('');
+  params.lines.push(
+    `- adapter_report: \`${params.adapterReportPath}\` (${params.hasAdapterReport ? 'found' : 'missing'})`
+  );
+  params.lines.push(`- adapter_required: ${params.requireAdapterReport ? 'YES' : 'NO'}`);
+  params.lines.push(
+    `- consumer_triage_report: \`${params.consumerTriageReportPath}\` (${params.hasConsumerTriageReport ? 'found' : 'missing'})`
+  );
+  params.lines.push('');
+};
+
+export const appendPhase5BlockersSignalsSection = (params: {
+  lines: string[];
+  summary: Phase5BlockersSummary;
+}): void => {
+  params.lines.push('## Signals');
+  params.lines.push('');
+  params.lines.push(
+    `- adapter_validation_result: ${params.summary.adapterValidationResult ?? 'unknown'}`
+  );
+  params.lines.push(
+    `- consumer_triage_verdict: ${params.summary.consumerTriageVerdict ?? 'unknown'}`
+  );
+  params.lines.push('');
+};

@@ -1,0 +1,13 @@
+name: Pumuki Backend Gate
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  backend-gate:
+    uses: ./.github/workflows/pumuki-gate-template.yml
+    with:
+      gate_name: Backend Gate
+      runner_path: integrations/git/ciBackend.ts
+      artifact_name: ai-evidence-backend

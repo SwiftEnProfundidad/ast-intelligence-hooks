@@ -1,0 +1,13 @@
+name: Pumuki Frontend Gate
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  frontend-gate:
+    uses: ./.github/workflows/pumuki-gate-template.yml
+    with:
+      gate_name: Frontend Gate
+      runner_path: integrations/git/ciFrontend.ts
+      artifact_name: ai-evidence-frontend

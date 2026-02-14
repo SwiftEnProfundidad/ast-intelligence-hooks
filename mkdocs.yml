@@ -1,0 +1,33 @@
+site_name: Pumuki Docs
+site_description: Enterprise governance framework for AI-assisted code delivery
+site_url: https://swiftenprofundidad.github.io/ast-intelligence-hooks/
+repo_url: https://github.com/SwiftEnProfundidad/ast-intelligence-hooks
+repo_name: SwiftEnProfundidad/ast-intelligence-hooks
+
+theme:
+  name: material
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - content.code.copy
+    - content.code.select
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+
+nav:
+  - Home: README.md
+  - PUMUKI Playbook: PUMUKI.md
+  - Docs Index: docs/README.md
+  - Validation Runbooks: docs/validation/README.md
+  - Evidence Contract: docs/evidence-v2.1.md
+  - MCP Evidence Server: docs/MCP_EVIDENCE_CONTEXT_SERVER.md
+

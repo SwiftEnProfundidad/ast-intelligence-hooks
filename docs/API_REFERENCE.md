@@ -1,161 +1,233 @@
-# Hook System API Documentation
+# API Reference (v2.x)
 
-## Overview
+This document describes the active TypeScript API surface used by the deterministic gate flow in this repository.
 
-The Hook System provides automated quality gates and intelligent AST analysis for multi-platform projects. It ensures code quality, security, and architectural compliance through pre-commit hooks and CI/CD integration.
+## Stage policies
 
-## Core Services
+File: `integrations/gate/stagePolicies.ts`
 
-### GitOperations
+- `policyForPreCommit(): GatePolicy`
+- `policyForPrePush(): GatePolicy`
+- `policyForCI(): GatePolicy`
+- `applyHeuristicSeverityForStage(rules, stage): RuleSet`
 
-Centralized Git operations for the hook system.
+## Git stage runners
 
-#### Methods
+File: `integrations/git/stageRunners.ts`
 
-- `getStagedFiles()`: Returns array of staged file paths
-- `getWorkingDirectoryFiles()`: Returns array of modified files in working directory
-- `getAllChangedFiles()`: Returns all changed files (staged + working directory)
-- `isInGitRepository()`: Boolean check for Git repository
-- `getRepositoryRoot()`: Returns absolute path to repository root
+- `runPreCommitStage(): Promise<number>`
+- `runPrePushStage(): Promise<number>`
+- `runCiStage(): Promise<number>`
 
-**Location**: `infrastructure/core/GitOperations.js`
+Exit code contract:
 
-### SeverityConfig
+- `0` on pass/warn
+- `1` on block or runner error
 
-Centralized severity mapping and utilities.
+## Platform wrappers (exports)
 
-#### Constants
+File: `integrations/git/index.ts`
 
-- `SEVERITY_LEVELS`: Numeric severity rankings (CRITICAL: 4, HIGH: 3, etc.)
-- `SEVERITY_MAP`: String mappings for different severity formats
-- `SEVERITY_ICONS`: Emoji icons for each severity level
-- `SEVERITY_LABELS`: Human-readable labels
+- `runPreCommitIOS`, `runPreCommitBackend`, `runPreCommitFrontend`, `runPreCommitAndroid`
+- `runPrePushIOS`, `runPrePushBackend`, `runPrePushFrontend`, `runPrePushAndroid`
+- `runCiIOS`, `runCiBackend`, `runCiFrontend`, `runCiAndroid`
+- `evaluateStagedIOS` (legacy compatibility entry still exported)
 
-#### Methods
+## Shared execution entry
 
-- `getSeverityValue(severity)`: Normalizes severity string
-- `getSeverityIcon(severity)`: Returns emoji icon
-- `getSeverityLabel(severity)`: Returns human-readable label
-- `isBlocking(severity)`: Checks if severity blocks commits
-- `filterBySeverity(violations, severity)`: Filters violations by severity
-- `sortBySeverity(violations)`: Sorts violations by severity (highest first)
+File: `integrations/git/runPlatformGate.ts`
 
-**Location**: `domain/entities/SeverityConfig.js`
+Primary function:
 
-## Entry Points
+- `runPlatformGate(params: { policy: GatePolicy; scope: GateScope }): Promise<number>`
 
-### Command Line Scripts
+Behavior:
 
-Located in `bin/` directory:
+- Builds facts from staged or range scope.
+- Detects platforms from facts.
+- Loads and merges baseline + project rules.
+- Applies optional heuristic rule-pack and stage-aware promotion.
+- Evaluates findings + gate decision.
+- Writes `.ai_evidence.json` via `generateEvidence`.
 
-- `run-ast-adapter.js`: AST analysis adapter for pre-commit hooks
-- `violations-api.js`: Query interface for violations data
-- `update-evidence.sh`: Updates .AI_EVIDENCE.json with metrics
-- `ai-commit.sh`: Intelligent commit wrapper
-- `pumuki-audit.js`: Global audit runner
+## Git scope helpers
 
-### Orchestrators
+Files:
 
-Located in `infrastructure/shell/orchestrators/`:
+- `integrations/git/getCommitRangeFacts.ts`
+- `integrations/git/resolveGitRefs.ts`
+- `integrations/git/runCliCommand.ts`
 
-- `audit-orchestrator.sh`: Main audit menu and pre-commit integration
-- `intelligent-audit.js`: Severity intelligence evaluator
+Key helpers:
 
-### Guards
+- `getFactsForCommitRange({ fromRef, toRef, extensions })`
+- `resolveUpstreamRef()`
+- `resolveCiBaseRef()`
+- `runCliCommand(runner)`
 
-Located in `infrastructure/guards/`:
+## Evidence API
 
-- `master-validator.sh`: Primary pre-commit validation gate
+Files:
 
-## Configuration
+- `integrations/evidence/schema.ts`
+- `integrations/evidence/buildEvidence.ts`
+- `integrations/evidence/writeEvidence.ts`
+- `integrations/evidence/generateEvidence.ts`
 
-### Files
+Key types:
 
-- `config/detect-secrets-baseline.json`: Secret detection baseline
-- `config/rules.json`: AST rule definitions
-- `config/paths.conf`: Path configurations
+- `AiEvidenceV2_1`
+- `Snapshot`
+- `LedgerEntry`
+- `PlatformState`
+- `RulesetState`
 
-### Environment Variables
+Contract:
 
-- `ENABLE_INTELLIGENT_SEVERITY`: Enable/disable intelligent severity evaluation
-- `PRE_COMMIT`: Set to 'true' during pre-commit hooks
+- Source of truth: `version: "2.1"`
+- Deterministic output order
+- Snapshot + ledger merge model
 
-## Architecture
+## Rule packs
 
-```
-node_modules/pumuki-ast-hooks/
-├── application/          # Business logic (Use Cases, Services)
-├── domain/               # Core entities (SeverityConfig, etc.)
-├── infrastructure/       # Technical implementations
-│   ├── ast/              # AST analysis engines
-│   ├── core/             # Core utilities (GitOperations)
-│   ├── guards/           # Validation gates
-│   ├── reporting/        # Report generation
-│   └── shell/            # Shell scripts
-├── bin/                  # CLI entry points
-├── config/               # Configuration files
-├── hooks/                # Git hook templates
-└── presentation/         # CLI interface
-```
+Files:
 
-## Usage Examples
+- `core/rules/presets/iosEnterpriseRuleSet.ts`
+- `core/rules/presets/backendRuleSet.ts`
+- `core/rules/presets/frontendRuleSet.ts`
+- `core/rules/presets/androidRuleSet.ts`
+- `core/rules/presets/astHeuristicsRuleSet.ts`
+- `core/rules/presets/rulePackVersions.ts`
 
-### Basic AST Analysis
+## MCP read-only evidence context
 
-```bash
-# Run AST analysis on staged files
-npm run audit
+Files:
 
-# Or using CLI directly
-npx ast-hooks analyze
+- `integrations/mcp/evidenceContextServer.ts`
+- `integrations/mcp/evidenceContextServer.cli.ts`
 
-# Query violations by severity
-npm run violations:list
-
-# Or using CLI
-npx ast-violations list
-```
-
-### Pre-commit Integration
-
-The system automatically runs during `git commit` via pre-commit hooks installed with `npm run install-hooks`.
-
-### Manual Audit
+CLI:
 
 ```bash
-# Run full audit
-npm run audit
-
-# With intelligent severity
-ENABLE_INTELLIGENT_SEVERITY=true npm run audit
-
-# Using CLI
-npx ast-hooks analyze
+npm run mcp:evidence
 ```
 
-## Testing
+Read-only endpoints:
 
-Run integration tests:
+- `GET /health`
+- `GET /status`
+  - includes `context_api.endpoints[]`, `context_api.filters`, and `context_api.pagination_bounds` capabilities
+- `GET /ai-evidence`
+- `GET /ai-evidence/summary`
+  - snapshot metadata includes `has_findings` (fast boolean gate for non-empty findings)
+  - snapshot metadata includes `findings_files_count` (deterministic count of distinct files with findings)
+  - snapshot metadata includes `findings_rules_count` (deterministic count of distinct rule IDs in findings)
+  - snapshot metadata includes `findings_with_lines_count` (deterministic count of findings with line metadata)
+  - snapshot metadata includes `findings_without_lines_count` (deterministic count of findings without line metadata)
+  - includes `rulesets_platforms_count` (deterministic count of distinct platforms covered by loaded rulesets)
+  - includes `rulesets_bundles_count` (deterministic count of distinct loaded ruleset bundles)
+  - includes `rulesets_hashes_count` (deterministic count of distinct loaded ruleset hashes)
+  - includes `ledger_files_count` (deterministic count of distinct files with open ledger entries)
+  - includes `ledger_rules_count` (deterministic count of distinct rule IDs with open ledger entries)
+  - includes `suppressed_replacement_rules_count` (deterministic count of distinct replacement rule IDs in suppressed findings)
+  - includes `suppressed_platforms_count` (deterministic count of distinct platforms represented in suppressed findings)
+  - includes `suppressed_files_count` (deterministic count of distinct files represented in suppressed findings)
+  - includes `suppressed_rules_count` (deterministic count of distinct original rule IDs represented in suppressed findings)
+  - snapshot metadata includes `severity_counts` (deterministic key order)
+  - snapshot metadata includes `findings_by_platform` (deterministic platform-key order)
+  - snapshot metadata includes `highest_severity` (deterministic severity ranking)
+  - snapshot metadata includes `blocking_findings_count` (count of CRITICAL+ERROR findings)
+  - includes `ledger_by_platform` (deterministic platform-key order)
+  - includes `rulesets_by_platform` (deterministic platform-key order)
+  - includes `rulesets_fingerprint` (deterministic ordered hash signature)
+  - includes `platform_confidence_counts` (deterministic counts by platform confidence level)
+  - includes `suppressed_findings_count` (deterministic count of suppressed findings in consolidation)
+  - includes `tracked_platforms_count` (deterministic count of currently tracked platforms)
+  - includes `detected_platforms_count` (deterministic count of currently detected platforms)
+  - includes `non_detected_platforms_count` (deterministic count of currently tracked but non-detected platforms)
+- `GET /ai-evidence/snapshot`
+- `GET /ai-evidence/findings`
+- `GET /ai-evidence/findings?limit=...&offset=...`
+  - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
+- `GET /ai-evidence/rulesets`
+- `GET /ai-evidence/rulesets?platform=...&bundle=...`
+- `GET /ai-evidence/rulesets?limit=...&offset=...`
+  - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
+- `GET /ai-evidence/platforms`
+- `GET /ai-evidence/platforms?detectedOnly=false&confidence=...`
+- `GET /ai-evidence/platforms?detectedOnly=false&limit=...&offset=...`
+  - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
+- `GET /ai-evidence/ledger`
+- `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...`
+- `GET /ai-evidence/ledger?lastSeenAfter=...&lastSeenBefore=...&limit=...&offset=...`
+  - deterministic bound: `maxLimit=100`
+  - pagination metadata includes `has_more` when `limit` is provided
+
+Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
+Consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`.
+
+## Local execution quick refs
 
 ```bash
-npm test -- scripts/hooks-system/__tests__/integration.test.js
+npm run framework:menu
+npm run validation:adapter-readiness
+npm run typecheck
+npm run test:deterministic
 ```
 
-## Development
+## Optional diagnostics adapters
 
-### Adding New Rules
+Files:
 
-1. Add rule definition to `config/rules.json`
-2. Implement rule logic in appropriate AST analyzer
-3. Update SeverityConfig if new severity levels needed
-4. Add tests in `__tests__/` directory
+- `scripts/build-adapter-readiness.ts`
+- `scripts/adapter-readiness-lib.ts`
+- `scripts/build-phase5-blockers-readiness.ts`
+- `scripts/phase5-blockers-readiness-lib.ts`
+- `scripts/build-phase5-execution-closure-status.ts`
+- `scripts/phase5-execution-closure-status-lib.ts`
+- `scripts/run-phase5-execution-closure.ts`
+- `scripts/phase5-execution-closure-lib.ts`
+- `scripts/clean-validation-artifacts.ts`
+- `scripts/clean-validation-artifacts-lib.ts`
+- `scripts/framework-menu.ts`
 
-### Extending Git Operations
+Commands:
 
-1. Add new methods to `GitOperations` class
-2. Update integration tests
-3. Document in this API reference
+- `npm run validation:adapter-readiness`
+- `npm run validation:adapter-session-status`
+- `npm run validation:adapter-real-session-report`
+- `npm run validation:phase5-blockers-readiness`
+- `npm run validation:phase5-execution-closure-status`
+- `npm run validation:phase5-execution-closure`
+- `npm run validation:phase5-external-handoff`
+- `npm run validation:clean-artifacts`
 
----
+`validation:phase5-execution-closure` notes:
 
-## 🐈💚 Pumuki Team® - Hook System API Reference
+- defaults to output directory `.audit-reports/phase5`
+- runs auth preflight and fails fast on auth/scope blockers
+- supports `--skip-auth-preflight` when preflight must be bypassed
+
+Framework menu action:
+
+- `Build adapter readiness report`
+- `Build phase5 execution closure status report`
+- `Run phase5 execution closure (one-shot orchestration)`
+- `Build phase5 external handoff report`
+- `Clean local validation artifacts`
+
+Deterministic argument builders exported from menu module:
+
+- `buildAdapterReadinessCommandArgs({ scriptPath, adapterReportFile, outFile })`
+- `buildCleanValidationArtifactsCommandArgs({ scriptPath, dryRun })`
+- `buildPhase5BlockersReadinessCommandArgs({ scriptPath, adapterReportFile, consumerTriageReportFile, outFile })`
+- `buildPhase5ExecutionClosureStatusCommandArgs({ scriptPath, phase5BlockersReportFile, consumerUnblockReportFile, adapterReadinessReportFile, outFile, requireAdapterReadiness })`
+- `buildPhase5ExternalHandoffCommandArgs({ scriptPath, repo, phase5StatusReportFile, phase5BlockersReportFile, consumerUnblockReportFile, mockAbReportFile, runReportFile, outFile, artifactUrls, requireArtifactUrls, requireMockAbReport })`
+- `buildPhase5ExecutionClosureCommandArgs({ scriptPath, repo, limit, outDir, runWorkflowLint, includeAuthPreflight, repoPath, actionlintBin, includeAdapter, requireAdapterReadiness })`
+
+Current adapter implementation note:
+
+- The adapter report input flag is named `adapterReportFile` / `--adapter-report` for compatibility with existing runbooks.
