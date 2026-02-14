@@ -777,6 +777,15 @@ const toSuppressedReplacementRuleFilePlatformDominancePct = (
   return Number(Math.max(replacement, nonReplacement).toFixed(2));
 };
 
+const toSuppressedReplacementMinusNonReplacementShareSignedPct = (
+  evidence: AiEvidenceV2_1,
+): number => {
+  const replacement = toSuppressedReplacementRuleFilePlatformShareOfTotalPct(evidence);
+  const nonReplacement =
+    toSuppressedNonReplacementRuleFilePlatformShareOfTotalPct(evidence);
+  return Number((replacement - nonReplacement).toFixed(2));
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1012,6 +1021,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedReplacementVsNonReplacementShareGapPct(evidence),
     suppressed_replacement_rule_file_platform_dominance_pct:
       toSuppressedReplacementRuleFilePlatformDominancePct(evidence),
+    suppressed_replacement_minus_non_replacement_share_signed_pct:
+      toSuppressedReplacementMinusNonReplacementShareSignedPct(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1455,6 +1466,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedReplacementVsNonReplacementShareGapPct(evidence),
       suppressed_replacement_rule_file_platform_dominance_pct:
         toSuppressedReplacementRuleFilePlatformDominancePct(evidence),
+      suppressed_replacement_minus_non_replacement_share_signed_pct:
+        toSuppressedReplacementMinusNonReplacementShareSignedPct(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
