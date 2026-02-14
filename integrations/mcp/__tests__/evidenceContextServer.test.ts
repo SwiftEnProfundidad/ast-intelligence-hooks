@@ -274,6 +274,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_share_triage_lane?: string;
           suppressed_share_triage_route?: string;
           suppressed_share_triage_channel?: 'watch' | 'balanced' | 'fast' | 'standard';
+          suppressed_share_triage_track?: string;
           tracked_platforms_count?: number;
           detected_platforms_count?: number;
           non_detected_platforms_count?: number;
@@ -423,6 +424,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
         'replacement_fast_lane:replacement_rules>non_replacement_paths',
       );
       assert.equal(payload.evidence?.suppressed_share_triage_channel, 'fast');
+      assert.equal(payload.evidence?.suppressed_share_triage_track, 'replacement_fast_track');
       assert.equal(payload.evidence?.tracked_platforms_count, 0);
       assert.equal(payload.evidence?.detected_platforms_count, 0);
       assert.equal(payload.evidence?.non_detected_platforms_count, 0);
@@ -604,6 +606,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_share_triage_lane?: string;
         suppressed_share_triage_route?: string;
         suppressed_share_triage_channel?: 'watch' | 'balanced' | 'fast' | 'standard';
+        suppressed_share_triage_track?: string;
         tracked_platforms_count?: number;
         detected_platforms_count?: number;
         non_detected_platforms_count?: number;
@@ -734,6 +737,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         'replacement_fast_lane:replacement_rules>non_replacement_paths',
       );
       assert.equal(summary.suppressed_share_triage_channel, 'fast');
+      assert.equal(summary.suppressed_share_triage_track, 'replacement_fast_track');
       assert.equal(summary.tracked_platforms_count, 3);
       assert.equal(summary.detected_platforms_count, 2);
       assert.equal(summary.non_detected_platforms_count, 1);

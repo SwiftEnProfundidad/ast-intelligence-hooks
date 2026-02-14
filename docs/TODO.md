@@ -174,7 +174,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_lane` for suppression-share triage lane rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_route` for suppression-share triage route rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_channel` for suppression-share triage channel rollup.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_track` for suppression-share triage track rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_track` for suppression-share triage track rollup.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_stream` for suppression-share triage stream rollup.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
