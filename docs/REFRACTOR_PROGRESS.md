@@ -282,7 +282,8 @@
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_side_pair` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_side_alignment` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_focus_target` facet.
-- 🚧 Context API summary/status expose deterministic `suppressed_share_triage_focus_order` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_share_triage_focus_order` facet.
+- 🚧 Context API summary/status expose deterministic `suppressed_share_triage_focus_mode` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
