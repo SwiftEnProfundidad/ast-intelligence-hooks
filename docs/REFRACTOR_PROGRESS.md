@@ -209,6 +209,7 @@
 - ✅ Context API summary/status expose deterministic `suppressed_rules_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_reasons_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_with_replacement_count` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_with_replacement_ratio_pct` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_without_replacement_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_rule_file_pairs_count` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_reasons_with_replacement_count` facet.
@@ -318,6 +319,7 @@
 - ✅ Regenerate local adapter runtime baseline and capture blockers.
 - ✅ Run MCP/deterministic regression batch after context API expansion.
 - ✅ Normalize progress board to single-active-task model (`1x 🚧` only).
+- 🚧 Update MCP context documentation and TODO work log for the new suppression-ratio facet.
 - ✅ Complete adapter runtime validation and regenerate adapter readiness to READY.
 - ✅ Re-run Phase 5 closure in mock-consumer mode and regenerate READY handoff artifacts.
 - ✅ Remove legacy external-project references from docs/scripts/legacy content and archive filenames, aligned to mock-consumer naming.

@@ -280,6 +280,14 @@ const toSuppressedWithReplacementCount = (evidence: AiEvidenceV2_1): number => {
   return count;
 };
 
+const toSuppressedWithReplacementRatioPct = (evidence: AiEvidenceV2_1): number => {
+  const total = evidence.consolidation?.suppressed?.length ?? 0;
+  if (total === 0) {
+    return 0;
+  }
+  return Math.round((toSuppressedWithReplacementCount(evidence) / total) * 100);
+};
+
 const toSuppressedWithoutReplacementCount = (evidence: AiEvidenceV2_1): number => {
   let count = 0;
   for (const entry of evidence.consolidation?.suppressed ?? []) {
@@ -1549,6 +1557,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_rules_count: toSuppressedRulesCount(evidence),
     suppressed_reasons_count: toSuppressedReasonsCount(evidence),
     suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
+    suppressed_with_replacement_ratio_pct: toSuppressedWithReplacementRatioPct(evidence),
     suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
     suppressed_rule_file_pairs_count: toSuppressedRuleFilePairsCount(evidence),
     suppressed_reasons_with_replacement_count: toSuppressedReasonsWithReplacementCount(evidence),
@@ -2102,6 +2111,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_rules_count: toSuppressedRulesCount(evidence),
       suppressed_reasons_count: toSuppressedReasonsCount(evidence),
       suppressed_with_replacement_count: toSuppressedWithReplacementCount(evidence),
+      suppressed_with_replacement_ratio_pct: toSuppressedWithReplacementRatioPct(evidence),
       suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
       suppressed_rule_file_pairs_count: toSuppressedRuleFilePairsCount(evidence),
       suppressed_reasons_with_replacement_count: toSuppressedReasonsWithReplacementCount(evidence),

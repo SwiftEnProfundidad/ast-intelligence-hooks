@@ -195,6 +195,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_rules_count?: number;
           suppressed_reasons_count?: number;
           suppressed_with_replacement_count?: number;
+          suppressed_with_replacement_ratio_pct?: number;
           suppressed_without_replacement_count?: number;
           suppressed_rule_file_pairs_count?: number;
           suppressed_reasons_with_replacement_count?: number;
@@ -348,6 +349,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_rules_count, 1);
       assert.equal(payload.evidence?.suppressed_reasons_count, 1);
       assert.equal(payload.evidence?.suppressed_with_replacement_count, 1);
+      assert.equal(payload.evidence?.suppressed_with_replacement_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_without_replacement_count, 0);
       assert.equal(payload.evidence?.suppressed_rule_file_pairs_count, 1);
       assert.equal(payload.evidence?.suppressed_reasons_with_replacement_count, 1);
@@ -575,13 +577,14 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_replacement_rules_count?: number;
         suppressed_platforms_count?: number;
         suppressed_files_count?: number;
-        suppressed_rules_count?: number;
-        suppressed_reasons_count?: number;
-        suppressed_with_replacement_count?: number;
-        suppressed_without_replacement_count?: number;
-        suppressed_rule_file_pairs_count?: number;
-        suppressed_reasons_with_replacement_count?: number;
-        suppressed_reasons_without_replacement_count?: number;
+          suppressed_rules_count?: number;
+          suppressed_reasons_count?: number;
+          suppressed_with_replacement_count?: number;
+          suppressed_with_replacement_ratio_pct?: number;
+          suppressed_without_replacement_count?: number;
+          suppressed_rule_file_pairs_count?: number;
+          suppressed_reasons_with_replacement_count?: number;
+          suppressed_reasons_without_replacement_count?: number;
         suppressed_platform_rule_pairs_count?: number;
         suppressed_platform_file_pairs_count?: number;
         suppressed_replacement_rule_file_pairs_count?: number;
@@ -715,6 +718,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_rules_count, 1);
       assert.equal(summary.suppressed_reasons_count, 1);
       assert.equal(summary.suppressed_with_replacement_count, 1);
+      assert.equal(summary.suppressed_with_replacement_ratio_pct, 100);
       assert.equal(summary.suppressed_without_replacement_count, 0);
       assert.equal(summary.suppressed_rule_file_pairs_count, 1);
       assert.equal(summary.suppressed_reasons_with_replacement_count, 1);
