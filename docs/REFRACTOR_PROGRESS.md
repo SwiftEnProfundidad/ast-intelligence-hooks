@@ -302,7 +302,8 @@
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_weight` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_bucket` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_digest` facet.
-- 🚧 Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_digest_code` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_digest_code` facet.
+- 🚧 Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_trace` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
