@@ -338,6 +338,16 @@ const toSuppressedWithoutReplacementFilesCount = (evidence: AiEvidenceV2_1): num
   return files.size;
 };
 
+const toSuppressedNonReplacementFilesCount = (evidence: AiEvidenceV2_1): number => {
+  const files = new Set<string>();
+  for (const entry of evidence.consolidation?.suppressed ?? []) {
+    if (entry.replacementRuleId === null) {
+      files.add(entry.file);
+    }
+  }
+  return files.size;
+};
+
 const toSuppressedWithReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalFiles = toSuppressedFilesCount(evidence);
   if (totalFiles === 0) {
@@ -1748,6 +1758,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_replacement_platforms_ratio_pct: toSuppressedReplacementPlatformsRatioPct(evidence),
     suppressed_with_replacement_platforms_count: toSuppressedWithReplacementPlatformsCount(evidence),
     suppressed_without_replacement_platforms_count: toSuppressedWithoutReplacementPlatformsCount(evidence),
+    suppressed_non_replacement_files_count: toSuppressedNonReplacementFilesCount(evidence),
     suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
     suppressed_non_replacement_ratio_pct: toSuppressedNonReplacementRatioPct(evidence),
     suppressed_without_replacement_ratio_pct: toSuppressedWithoutReplacementRatioPct(evidence),
@@ -2322,6 +2333,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_replacement_platforms_ratio_pct: toSuppressedReplacementPlatformsRatioPct(evidence),
       suppressed_with_replacement_platforms_count: toSuppressedWithReplacementPlatformsCount(evidence),
       suppressed_without_replacement_platforms_count: toSuppressedWithoutReplacementPlatformsCount(evidence),
+      suppressed_non_replacement_files_count: toSuppressedNonReplacementFilesCount(evidence),
       suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
       suppressed_non_replacement_ratio_pct: toSuppressedNonReplacementRatioPct(evidence),
       suppressed_without_replacement_ratio_pct: toSuppressedWithoutReplacementRatioPct(evidence),
