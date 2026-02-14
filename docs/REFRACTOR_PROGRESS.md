@@ -11,7 +11,8 @@
 - ✅ Preflight checks, context capture, and skill inventory (2026-02-14)
 - ✅ Repo analysis + documentation summary for Pumuki/AST intelligence hooks
 - ✅ PR #287 merged (`enterprise-refactor -> develop`) with refactor/doc closure
-- 🚧 Release execution (`6.3.6`): PR `develop -> main`, npm publish, branch cleanup, sync local/remote
+- ✅ Release execution (`6.3.6`) completed: PRs merged, npm `latest` updated, branches cleaned, local/remote synced
+- 🚧 Post-release monitoring: verify downstream consumers adopt `6.3.6` baseline
 
 ## Phase 1 - Deterministic Core + Evidence v2.1
 
