@@ -477,7 +477,8 @@ For full historical execution details, see:
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - ✅ `P10-81` Added `suppressed_non_replacement_rule_platform_pairs_ratio_pct` to MCP summary/status payloads and tests.
 - ✅ `P10-82` Keep MCP context docs and regressions synchronized after next evidence facet expansion.
-- 🚧 `P10-83` Add synchronized coverage for the next evidence facet when available.
+- ✅ `P10-83` Add `suppressed_non_replacement_rule_platform_pairs_ratio_pct` parity for `/status` contract docs.
+- 🚧 `P10-84` Add synchronized coverage for the next evidence facet when available.
   - Keep deterministic regressions green after each batch (`npm run test:deterministic` + targeted suites).
 - [x] Phase 5 execution closure (external consumer diagnostics dependency):
   - One-shot closure re-run completed in mock-consumer mode:

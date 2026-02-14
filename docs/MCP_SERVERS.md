@@ -32,7 +32,7 @@ Expose deterministic evidence (`.ai_evidence.json`) to external agents without a
 - `GET /health`
   - `200 { "status": "ok" }`
 - `GET /status`
-  - `200` with evidence health summary and `context_api` filter/pagination capabilities
+  - `200` with evidence health summary and `context_api` filter/pagination capabilities (including `present`, `valid`, `version`, `stage`, `outcome`, `has_findings`, `tracked_platforms_count`, `detected_platforms_count`, `non_detected_platforms_count`, `suppressed_findings_count`, `suppressed_replacement_rule_platform_pairs_ratio_pct`, `suppressed_non_replacement_rule_platform_pairs_ratio_pct`, and related suppression facets)
 - `GET /ai-evidence`
   - `200` with evidence payload when valid
   - `404` when missing or invalid
