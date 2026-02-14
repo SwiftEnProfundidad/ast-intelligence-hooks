@@ -596,6 +596,17 @@ const toSuppressedNonReplacementRuleFilePairsCount = (
   return pairs.size;
 };
 
+const toSuppressedNonReplacementRuleFilePairsRatioPct = (
+  evidence: AiEvidenceV2_1,
+): number => {
+  const nonReplacementRuleFilePairs = toSuppressedNonReplacementRuleFilePairsCount(evidence);
+  const totalRuleFilePairs = toSuppressedRuleFilePairsCount(evidence);
+  if (totalRuleFilePairs === 0) {
+    return 0;
+  }
+  return Math.round((nonReplacementRuleFilePairs / totalRuleFilePairs) * 100);
+};
+
 const toSuppressedNonReplacementRulePlatformPairsCount = (
   evidence: AiEvidenceV2_1,
 ): number => {
@@ -1782,6 +1793,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_non_replacement_platforms_count: toSuppressedNonReplacementPlatformsCount(evidence),
     suppressed_non_replacement_reason_file_pairs_count: toSuppressedNonReplacementReasonFilePairsCount(evidence),
     suppressed_non_replacement_rule_file_pairs_count: toSuppressedNonReplacementRuleFilePairsCount(evidence),
+    suppressed_non_replacement_rule_file_pairs_ratio_pct:
+      toSuppressedNonReplacementRuleFilePairsRatioPct(evidence),
     suppressed_non_replacement_rule_platform_pairs_count: toSuppressedNonReplacementRulePlatformPairsCount(evidence),
     suppressed_non_replacement_reasons_count: toSuppressedNonReplacementReasonsCount(evidence),
     suppressed_replacement_reason_file_pairs_count: toSuppressedReplacementReasonFilePairsCount(evidence),
@@ -2358,6 +2371,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_non_replacement_platforms_count: toSuppressedNonReplacementPlatformsCount(evidence),
       suppressed_non_replacement_reason_file_pairs_count: toSuppressedNonReplacementReasonFilePairsCount(evidence),
       suppressed_non_replacement_rule_file_pairs_count: toSuppressedNonReplacementRuleFilePairsCount(evidence),
+      suppressed_non_replacement_rule_file_pairs_ratio_pct:
+        toSuppressedNonReplacementRuleFilePairsRatioPct(evidence),
       suppressed_non_replacement_rule_platform_pairs_count: toSuppressedNonReplacementRulePlatformPairsCount(evidence),
       suppressed_non_replacement_reasons_count: toSuppressedNonReplacementReasonsCount(evidence),
       suppressed_replacement_reason_file_pairs_count: toSuppressedReplacementReasonFilePairsCount(evidence),
