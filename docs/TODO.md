@@ -144,7 +144,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_replacement_minus_non_replacement_share_signed_pct` for signed share-delta triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_file_platform_dominance_pct` for non-replacement-share dominance triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_polarization_index_pct` for suppression-share polarization triage.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_balance_score_pct` for suppression-share balance triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_balance_score_pct` for suppression-share balance triage.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_imbalance_index_pct` for suppression-share imbalance triage.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
