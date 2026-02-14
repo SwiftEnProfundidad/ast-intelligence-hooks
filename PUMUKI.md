@@ -1,67 +1,67 @@
-# PUMUKI Playbook — Enterprise Governance made Practical
+# PUMUKI Playbook - Enterprise Governance, Practically Explained
 
-Este documento es la guía completa (didáctica + operativa) para entender y operar Pumuki sin ambigüedades.
+This document is the complete didactic and operational guide to understand and run Pumuki without ambiguity.
 
-Objetivo: que un perfil junior pueda ejecutar el framework con criterio de producción.
+Goal: enable a junior profile to operate the framework with production-level criteria.
 
-## 1) Qué es Pumuki (en una frase)
+## 1) What is Pumuki (one sentence)
 
-Pumuki es un framework de gobernanza determinística que convierte cambios de código en decisiones auditables de calidad y riesgo.
+Pumuki is a deterministic governance framework that transforms code changes into auditable quality and risk decisions.
 
 Pipeline:
 
 `Facts -> Rules -> Gate -> ai_evidence v2.1`
 
-## 2) Qué problema soluciona
+## 2) What problem it solves
 
-En equipos enterprise, el problema no es solo detectar errores, sino tener una decisión consistente entre:
+In enterprise teams, the real problem is not only finding issues. The hard part is getting one consistent decision model across:
 
-- local,
-- hooks,
+- local development,
+- git hooks,
 - CI,
-- y operación externa.
+- and external operational workflows.
 
-Pumuki resuelve eso con:
+Pumuki solves this with:
 
-- reglas versionadas y bloqueadas,
-- políticas por etapa,
-- evidencia determinística,
-- runbooks para incidentes y handoff.
+- versioned and locked rules,
+- stage-aware policies,
+- deterministic evidence,
+- runbooks for incidents and handoff.
 
-## 3) Qué está automatizado vs qué es manual
+## 3) What is automated vs what is manual
 
-### Automatizado
+### Automated
 
-- Extracción de facts.
-- Evaluación de rules.
-- Gate por etapa (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
-- Emisión de `.ai_evidence.json`.
-- Ejecución CI en workflows del repo.
+- Facts extraction.
+- Rules evaluation.
+- Gate evaluation by stage (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
+- `.ai_evidence.json` generation.
+- CI workflow execution.
 
-### Manual (intencional)
+### Manual (intentionally)
 
-Los comandos `validation:*` son para operación dirigida:
+`validation:*` commands are designed for guided operations:
 
 - triage,
 - closure,
 - handoff,
-- diagnósticos de adapter,
-- controles de rollout.
+- adapter diagnostics,
+- rollout controls.
 
-Regla de oro:
+Golden rule:
 
-- desarrollo normal -> automático,
-- incidente/rollout -> manual por runbook.
+- normal development: automated path,
+- incident/rollout handling: manual runbook path.
 
-## 4) MCP: cuándo hace falta y cuándo no
+## 4) MCP: when you need it and when you do not
 
-### No hace falta MCP JSON para usar el core
+### You do not need MCP JSON for core usage
 
-Puedes usar Pumuki completo sin registrar servidores MCP en ningún JSON.
+You can run the full Pumuki core without registering any MCP server in JSON files.
 
-### Sí hace falta MCP JSON si quieres integración con clientes externos
+### You do need MCP JSON for external MCP/agent clients
 
-Si vas a consumir evidencia desde cliente MCP/agentic, registra servidor:
+If you want to consume evidence from an MCP-compatible external client, register the server:
 
 ```json
 {
@@ -75,34 +75,34 @@ Si vas a consumir evidencia desde cliente MCP/agentic, registra servidor:
 }
 ```
 
-Arranque local:
+Local start:
 
 ```bash
 npm run mcp:evidence
 ```
 
-## 5) Arquitectura de referencia
+## 5) Reference architecture map
 
-- `core/facts/*`: hechos AST/semánticos.
-- `core/rules/*`: reglas y heurísticas.
-- `core/gate/*`: decisión final.
-- `integrations/git/*`: scopes y runners de stage.
-- `integrations/gate/stagePolicies.ts`: umbrales por etapa.
-- `integrations/evidence/*`: evidencia determinística.
-- `integrations/platform/*`: detección de plataforma.
-- `integrations/mcp/*`: servidor read-only de evidencia.
+- `core/facts/*`: AST and semantic facts.
+- `core/rules/*`: rules and heuristics.
+- `core/gate/*`: final decision engine.
+- `integrations/git/*`: stage runners and git scopes.
+- `integrations/gate/stagePolicies.ts`: stage thresholds.
+- `integrations/evidence/*`: deterministic evidence.
+- `integrations/platform/*`: platform detection.
+- `integrations/mcp/*`: read-only evidence MCP server.
 
-## 6) Ciclo de vida operativo paso a paso
+## 6) End-to-end lifecycle (step by step)
 
-1. Cambias código.
-2. Pumuki extrae facts.
-3. Evalúa rules/packs versionados.
-4. Aplica gate según etapa.
-5. Emite evidencia.
-6. Si hay bloqueo operativo, ejecutas comandos `validation:*` del runbook.
-7. Documentas salida en artefactos `.audit-reports/*`.
+1. You change code.
+2. Pumuki extracts facts.
+3. Pumuki evaluates rule packs.
+4. Pumuki applies the stage policy.
+5. Pumuki writes evidence.
+6. If there is an operational blocker, you run targeted `validation:*` commands.
+7. You document outcomes in `.audit-reports/*` artifacts.
 
-## 7) Runbook mínimo para junior
+## 7) Junior-ready practical guide (with project mock cases)
 
 ### Setup
 
@@ -113,7 +113,7 @@ npm run test:deterministic
 npm run skills:lock:check
 ```
 
-### Caso práctico A — Startup triage mock
+### Practical case A - Mock startup triage
 
 ```bash
 npm run validation:consumer-startup-triage -- \
@@ -122,7 +122,9 @@ npm run validation:consumer-startup-triage -- \
   --skip-workflow-lint
 ```
 
-### Caso práctico B — Execution closure mock (Phase5)
+Expected output: refreshed triage artifacts in `.audit-reports/consumer-triage-temp`.
+
+### Practical case B - Mock execution closure (Phase 5)
 
 ```bash
 npm run validation:phase5-execution-closure -- \
@@ -131,7 +133,9 @@ npm run validation:phase5-execution-closure -- \
   --mock-consumer
 ```
 
-### Caso práctico C — Handoff externo
+Expected output: closure chain artifacts (`blockers`, `status`, `handoff`) under `.audit-reports/phase5`.
+
+### Practical case C - External handoff package
 
 ```bash
 npm run validation:phase5-external-handoff -- \
@@ -139,14 +143,18 @@ npm run validation:phase5-external-handoff -- \
   --require-mock-ab-report
 ```
 
-### Caso práctico D — Diagnóstico de estado externo (Phase8)
+Expected output: a handoff-ready report for external stakeholders.
+
+### Practical case D - External status diagnostics (Phase 8)
 
 ```bash
 npm run validation:phase8:doctor
 npm run validation:phase8:status-pack
 ```
 
-### Caso práctico E — Adapter readiness
+Expected output: clear state diagnostics and anti-loop progress pack.
+
+### Practical case E - Adapter readiness chain
 
 ```bash
 npm run validation:adapter-session-status -- --out .audit-reports/adapter/adapter-session-status.md
@@ -154,30 +162,32 @@ npm run validation:adapter-real-session-report -- --status-report .audit-reports
 npm run validation:adapter-readiness -- --adapter-report .audit-reports/adapter/adapter-real-session-report.md --out .audit-reports/adapter/adapter-readiness.md
 ```
 
-## 8) Cómo evitar bucles operativos
+Expected output: deterministic adapter readiness verdict for rollout decisions.
 
-- No abras subtareas técnicas cuando el bloqueo es externo.
-- Marca estado en runbook/handoff y espera evento real.
-- Si el frente deja de ser prioridad, ciérralo explícitamente como `de-scoped`.
+## 8) How to avoid operational loops
 
-## 9) Checklist de comprensión total
+- Do not open technical sub-tasks when the blocker is external.
+- Update handoff/runbook status and wait for a real external event.
+- If the front is no longer a priority, explicitly mark it as `de-scoped`.
 
-Debes poder responder “sí” a esto:
+## 9) Full-understanding checklist
 
-- ¿Diferencio automático vs manual?
-- ¿Sé cuándo necesito MCP JSON?
-- ¿Sé ejecutar triage y closure mock end-to-end?
-- ¿Sé dónde leer evidencia y estado (`.ai_evidence.json`, `.audit-reports/*`)?
-- ¿Sé mapear cada problema al comando correcto?
+You should be able to answer yes to all:
 
-## 10) Resumen ejecutivo
+- Do I clearly separate automated flow from manual operations?
+- Do I know exactly when MCP JSON is required?
+- Can I execute mock triage and closure end to end?
+- Do I know where evidence and status artifacts live (`.ai_evidence.json`, `.audit-reports/*`)?
+- Can I map each operational problem to the right command quickly?
 
-Pumuki reduce riesgo de entrega porque convierte calidad en un sistema reproducible:
+## 10) Executive summary
 
-- técnico,
+Pumuki reduces delivery risk by turning quality governance into a reproducible system that is:
+
+- technical,
 - auditable,
-- operativo,
-- y escalable para equipos enterprise.
+- operational,
+- and enterprise-scalable.
 
-Si quieres una visión breve, usa `README.md`.
-Si quieres operar con confianza, usa este playbook.
+For a concise project overview, read `README.md`.
+For hands-on operational execution, use this playbook.
