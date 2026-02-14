@@ -307,6 +307,7 @@
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_trace_code` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_code` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_bucket` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
@@ -849,4 +850,4 @@
 - ✅ `P10-49` Extend MCP summary/status contract with deterministic `suppressed_non_replacement_rule_file_platform_triples_count` facet.
 - ✅ `P10-50` Extend MCP summary/status contract with deterministic `suppressed_reason_rule_file_triples_count` facet.
 - ✅ `P10-51` Extend MCP summary/status contract with deterministic `suppressed_reason_rule_platform_triples_count` facet.
-- 🚧 `P10-52` Continue MCP context incremental expansion with next deterministic summary facet (`suppressed_share_triage_stream_signal_family_trace_hash_bucket`), while keeping regressions green.
+- 🚧 `P10-52` Continue MCP context incremental expansion with next deterministic summary facet (`suppressed_share_triage_stream_signal_family_trace_hash_rank`), while keeping regressions green.

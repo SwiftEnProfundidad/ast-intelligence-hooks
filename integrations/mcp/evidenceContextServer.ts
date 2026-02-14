@@ -1354,6 +1354,20 @@ const toSuppressedShareTriageStreamSignalFamilyTraceHashCode = (
   return `TRACE_HASH_${traceHash}`;
 };
 
+const toSuppressedShareTriageStreamSignalFamilyTraceHashBucket = (
+  evidence: AiEvidenceV2_1,
+): 'LOW' | 'MEDIUM' | 'HIGH' => {
+  const traceHash = toSuppressedShareTriageStreamSignalFamilyTraceHash(evidence);
+  const leadByte = Number.parseInt(traceHash.slice(0, 2), 16);
+  if (leadByte >= 170) {
+    return 'HIGH';
+  }
+  if (leadByte >= 85) {
+    return 'MEDIUM';
+  }
+  return 'LOW';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1693,6 +1707,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareTriageStreamSignalFamilyTraceHash(evidence),
     suppressed_share_triage_stream_signal_family_trace_hash_code:
       toSuppressedShareTriageStreamSignalFamilyTraceHashCode(evidence),
+    suppressed_share_triage_stream_signal_family_trace_hash_bucket:
+      toSuppressedShareTriageStreamSignalFamilyTraceHashBucket(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -2240,6 +2256,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareTriageStreamSignalFamilyTraceHash(evidence),
       suppressed_share_triage_stream_signal_family_trace_hash_code:
         toSuppressedShareTriageStreamSignalFamilyTraceHashCode(evidence),
+      suppressed_share_triage_stream_signal_family_trace_hash_bucket:
+        toSuppressedShareTriageStreamSignalFamilyTraceHashBucket(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
