@@ -17,7 +17,8 @@
 - ✅ `README.md` logo expanded to full-width responsive layout (`width="100%"`)
 - ✅ Documentation update entries normalized to English
 - ✅ `README.md` and `PUMUKI.md` fully translated to English (enterprise + junior didactic format)
-- 🚧 Release `6.3.7`: merge to `main`, publish to npm, and confirm `latest`
+- ✅ Release `6.3.7` completed: merged to `main`, published to npm, and confirmed `latest`
+- 🚧 Post-release monitoring: verify downstream consumers adopt `6.3.7` baseline
 
 ## Phase 1 - Deterministic Core + Evidence v2.1
 
