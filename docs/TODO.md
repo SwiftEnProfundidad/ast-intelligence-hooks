@@ -140,7 +140,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_platform_share_of_total_pct` for replacement rule/file/platform share triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_non_replacement_rule_file_platform_share_of_total_pct` for non-replacement rule/file/platform share triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_replacement_vs_non_replacement_share_gap_pct` for replacement-vs-non-replacement share-delta triage.
-- [ ] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_platform_dominance_pct` for replacement-share dominance triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_replacement_rule_file_platform_dominance_pct` for replacement-share dominance triage.
+- [ ] MCP context summary/status now expose deterministic `suppressed_replacement_minus_non_replacement_share_signed_pct` for signed share-delta triage.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
