@@ -6,6 +6,8 @@
 [![Node](https://img.shields.io/badge/node-%3E%3D18-0ea5e9)](package.json)
 [![Evidence](https://img.shields.io/badge/evidence-v2.1-7c3aed)](docs/evidence-v2.1.md)
 
+![Pumuki](assets/logo.png)
+
 **Enterprise governance for AI-assisted code delivery**.
 
 Pumuki convierte cambios de código en decisiones trazables y reproducibles:
