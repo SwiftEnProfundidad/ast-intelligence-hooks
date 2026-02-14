@@ -257,7 +257,8 @@
 - ✅ Context API summary/status expose deterministic `suppressed_replacement_rule_file_platform_dominance_pct` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_replacement_minus_non_replacement_share_signed_pct` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_non_replacement_rule_file_platform_dominance_pct` facet.
-- 🚧 Context API summary/status expose deterministic `suppressed_share_polarization_index_pct` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_share_polarization_index_pct` facet.
+- 🚧 Context API summary/status expose deterministic `suppressed_share_balance_score_pct` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus
