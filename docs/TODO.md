@@ -192,7 +192,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace` for suppression-share triage stream-signal-family-trace rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_code` for suppression-share triage stream-signal-family-trace-code rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash` for suppression-share triage stream-signal-family-trace-hash rollup.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_code` for suppression-share triage stream-signal-family-trace-hash-code rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_code` for suppression-share triage stream-signal-family-trace-hash-code rollup.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_signal_family_trace_hash_bucket` for suppression-share triage stream-signal-family-trace-hash-bucket rollup.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
