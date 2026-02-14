@@ -950,6 +950,23 @@ const toSuppressedShareTriageAction = (evidence: AiEvidenceV2_1): string => {
     : 'review_non_replacement_then_replacement';
 };
 
+const toSuppressedShareTriagePlaybook = (evidence: AiEvidenceV2_1): string => {
+  const action = toSuppressedShareTriageAction(evidence);
+  if (action === 'review_replacement_first') {
+    return 'review_replacement_rules>validate_replacements>check_non_replacement_fallbacks';
+  }
+  if (action === 'review_replacement_then_non_replacement') {
+    return 'review_replacement_rules>review_non_replacement_paths>validate_balance_delta';
+  }
+  if (action === 'review_non_replacement_first') {
+    return 'review_non_replacement_paths>validate_suppression_justification>check_replacement_rules';
+  }
+  if (action === 'review_non_replacement_then_replacement') {
+    return 'review_non_replacement_paths>review_replacement_rules>validate_balance_delta';
+  }
+  return 'review_replacement_rules>review_non_replacement_paths>validate_balance_delta';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1223,6 +1240,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareTriageDigest(evidence),
     suppressed_share_triage_action:
       toSuppressedShareTriageAction(evidence),
+    suppressed_share_triage_playbook:
+      toSuppressedShareTriagePlaybook(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1704,6 +1723,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareTriageDigest(evidence),
       suppressed_share_triage_action:
         toSuppressedShareTriageAction(evidence),
+      suppressed_share_triage_playbook:
+        toSuppressedShareTriagePlaybook(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
