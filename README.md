@@ -1,6 +1,6 @@
 # Pumuki AST Intelligence Framework
 
-[![Version](https://img.shields.io/badge/version-6.3.5-1d4ed8)](package.json)
+[![Version](https://img.shields.io/badge/version-6.3.6-1d4ed8)](package.json)
 [![License](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
 [![Build](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-0ea5e9)](package.json)
