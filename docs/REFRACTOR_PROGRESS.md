@@ -370,7 +370,8 @@
 - ✅ `P10-78` Extended MCP context docs and progress/test artifacts for the new facet.
 - ✅ `P10-79` Added deterministic `suppressed_replacement_rule_platform_pairs_ratio_pct` to MCP summary/status contracts with tests.
 - ✅ `P10-80` Extended MCP context docs and progress/test artifacts for `suppressed_replacement_rule_platform_pairs_ratio_pct`.
-- 🚧 `P10-81` Add `suppressed_non_replacement_rule_platform_pairs_ratio_pct` to MCP context summary/status contracts, tests, and docs.
+- ✅ `P10-81` Added `suppressed_non_replacement_rule_platform_pairs_ratio_pct` to MCP context summary/status contracts, tests, and docs.
+- 🚧 `P10-82` Keep MCP context docs and regressions synchronized after next evidence facet expansion.
 - ✅ Support ticket draft summary now includes both `startup_failure_runs` and `startup_stalled_runs` counters (with regression coverage).
 - ✅ `docs/TODO.md` active-work section was normalized to a single startup-unblock item with current live signals and escalation handoff pointer.
 - ✅ GitHub support ticket template now includes queued/stalled counters (`startup_stalled_runs`) and updated attachment contract for current escalation evidence.
