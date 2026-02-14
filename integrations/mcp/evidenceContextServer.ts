@@ -370,7 +370,7 @@ const toSuppressedWithoutReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_
   if (totalPlatforms === 0) {
     return 0;
   }
-  return Math.round((toSuppressedNonReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
+  return Math.round((toSuppressedWithoutReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
 };
 
 const toSuppressedNonReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
@@ -538,6 +538,16 @@ const toSuppressedNonReplacementPlatformsCount = (evidence: AiEvidenceV2_1): num
   const platforms = new Set<string>();
   for (const entry of evidence.consolidation?.suppressed ?? []) {
     if (entry.replacementRuleId === null) {
+      platforms.add(entry.platform);
+    }
+  }
+  return platforms.size;
+};
+
+const toSuppressedWithoutReplacementPlatformsCount = (evidence: AiEvidenceV2_1): number => {
+  const platforms = new Set<string>();
+  for (const entry of evidence.consolidation?.suppressed ?? []) {
+    if (entry.replacementRuleId === null && entry.replacedByRuleId.length === 0) {
       platforms.add(entry.platform);
     }
   }
@@ -1718,8 +1728,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_files_count: toSuppressedFilesCount(evidence),
     suppressed_rules_count: toSuppressedRulesCount(evidence),
     suppressed_reasons_count: toSuppressedReasonsCount(evidence),
-      suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
-      suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
+    suppressed_non_replacement_rules_count: toSuppressedNonReplacementRulesCount(evidence),
+    suppressed_with_replacement_files_count: toSuppressedWithReplacementFilesCount(evidence),
     suppressed_with_replacement_files_ratio_pct: toSuppressedWithReplacementFilesRatioPct(evidence),
     suppressed_replacement_files_ratio_pct: toSuppressedReplacementFilesRatioPct(evidence),
     suppressed_with_replacement_platforms_ratio_pct: toSuppressedWithReplacementPlatformsRatioPct(evidence),
@@ -1737,6 +1747,7 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
     suppressed_non_replacement_rules_ratio_pct: toSuppressedNonReplacementRulesRatioPct(evidence),
     suppressed_replacement_platforms_ratio_pct: toSuppressedReplacementPlatformsRatioPct(evidence),
     suppressed_with_replacement_platforms_count: toSuppressedWithReplacementPlatformsCount(evidence),
+    suppressed_without_replacement_platforms_count: toSuppressedWithoutReplacementPlatformsCount(evidence),
     suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
     suppressed_non_replacement_ratio_pct: toSuppressedNonReplacementRatioPct(evidence),
     suppressed_without_replacement_ratio_pct: toSuppressedWithoutReplacementRatioPct(evidence),
@@ -2310,6 +2321,7 @@ const toStatusPayload = (repoRoot: string): unknown => {
       suppressed_non_replacement_rules_ratio_pct: toSuppressedNonReplacementRulesRatioPct(evidence),
       suppressed_replacement_platforms_ratio_pct: toSuppressedReplacementPlatformsRatioPct(evidence),
       suppressed_with_replacement_platforms_count: toSuppressedWithReplacementPlatformsCount(evidence),
+      suppressed_without_replacement_platforms_count: toSuppressedWithoutReplacementPlatformsCount(evidence),
       suppressed_without_replacement_count: toSuppressedWithoutReplacementCount(evidence),
       suppressed_non_replacement_ratio_pct: toSuppressedNonReplacementRatioPct(evidence),
       suppressed_without_replacement_ratio_pct: toSuppressedWithoutReplacementRatioPct(evidence),
