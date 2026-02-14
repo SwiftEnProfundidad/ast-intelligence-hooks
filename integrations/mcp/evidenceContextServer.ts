@@ -894,6 +894,22 @@ const toSuppressedShareDirectionCode = (evidence: AiEvidenceV2_1): 'R' | 'N' | '
   return 'B';
 };
 
+const toSuppressedShareDirectionTriageHint = (evidence: AiEvidenceV2_1): string => {
+  const direction = toSuppressedShareDirection(evidence);
+  const confidence = toSuppressedShareDirectionConfidence(evidence);
+  if (direction === 'balanced') {
+    return 'Balanced suppression split; inspect replacement and non-replacement paths equally.';
+  }
+  if (direction === 'replacement') {
+    return confidence >= 66.67
+      ? 'Replacement-dominant suppression; prioritize replacement rule review first.'
+      : 'Replacement-leaning suppression; review replacement paths before non-replacement.';
+  }
+  return confidence >= 66.67
+    ? 'Non-replacement-dominant suppression; prioritize non-replacement suppression review first.'
+    : 'Non-replacement-leaning suppression; review non-replacement paths before replacement.';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1157,6 +1173,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareDirectionLabel(evidence),
     suppressed_share_direction_code:
       toSuppressedShareDirectionCode(evidence),
+    suppressed_share_direction_triage_hint:
+      toSuppressedShareDirectionTriageHint(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1628,6 +1646,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareDirectionLabel(evidence),
       suppressed_share_direction_code:
         toSuppressedShareDirectionCode(evidence),
+      suppressed_share_direction_triage_hint:
+        toSuppressedShareDirectionTriageHint(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
