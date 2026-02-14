@@ -868,6 +868,10 @@ const toSuppressedShareDirectionStrengthRank = (evidence: AiEvidenceV2_1): 1 | 2
   return 1;
 };
 
+const toSuppressedShareDirectionIsBalanced = (evidence: AiEvidenceV2_1): boolean => {
+  return toSuppressedShareDirection(evidence) === 'balanced';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1125,6 +1129,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareDirectionStrengthBucket(evidence),
     suppressed_share_direction_strength_rank:
       toSuppressedShareDirectionStrengthRank(evidence),
+    suppressed_share_direction_is_balanced:
+      toSuppressedShareDirectionIsBalanced(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1590,6 +1596,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareDirectionStrengthBucket(evidence),
       suppressed_share_direction_strength_rank:
         toSuppressedShareDirectionStrengthRank(evidence),
+      suppressed_share_direction_is_balanced:
+        toSuppressedShareDirectionIsBalanced(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
