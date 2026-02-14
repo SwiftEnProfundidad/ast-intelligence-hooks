@@ -200,6 +200,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_replacement_files_ratio_pct?: number;
           suppressed_with_replacement_platforms_ratio_pct?: number;
           suppressed_without_replacement_platforms_ratio_pct?: number;
+          suppressed_non_replacement_platforms_ratio_pct?: number;
           suppressed_without_replacement_files_count?: number;
           suppressed_without_replacement_files_ratio_pct?: number;
           suppressed_with_replacement_count?: number;
@@ -222,6 +223,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           suppressed_replacement_rule_file_pairs_count?: number;
           suppressed_replacement_rule_platform_pairs_count?: number;
           suppressed_replacement_platforms_count?: number;
+          suppressed_with_replacement_platforms_count?: number;
           suppressed_non_replacement_platforms_count?: number;
           suppressed_non_replacement_reason_file_pairs_count?: number;
           suppressed_non_replacement_rule_file_pairs_count?: number;
@@ -371,6 +373,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_replacement_files_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_with_replacement_platforms_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_without_replacement_platforms_ratio_pct, 0);
+      assert.equal(payload.evidence?.suppressed_non_replacement_platforms_ratio_pct, 0);
       assert.equal(payload.evidence?.suppressed_without_replacement_files_count, 0);
       assert.equal(payload.evidence?.suppressed_without_replacement_files_ratio_pct, 0);
       assert.equal(payload.evidence?.suppressed_with_replacement_count, 1);
@@ -382,6 +385,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.evidence?.suppressed_replacement_rules_ratio_pct, 100);
       assert.equal(payload.evidence?.suppressed_non_replacement_rules_ratio_pct, 0);
       assert.equal(payload.evidence?.suppressed_replacement_platforms_ratio_pct, 100);
+      assert.equal(payload.evidence?.suppressed_with_replacement_platforms_count, 1);
       assert.equal(payload.evidence?.suppressed_without_replacement_count, 0);
       assert.equal(payload.evidence?.suppressed_non_replacement_ratio_pct, 0);
       assert.equal(payload.evidence?.suppressed_without_replacement_ratio_pct, 0);
@@ -618,9 +622,10 @@ test('returns summary payload from dedicated summary endpoint', async () => {
           suppressed_with_replacement_files_ratio_pct?: number;
           suppressed_replacement_files_ratio_pct?: number;
           suppressed_with_replacement_platforms_ratio_pct?: number;
-        suppressed_without_replacement_platforms_ratio_pct?: number;
-        suppressed_without_replacement_files_count?: number;
-        suppressed_without_replacement_files_ratio_pct?: number;
+          suppressed_without_replacement_platforms_ratio_pct?: number;
+          suppressed_non_replacement_platforms_ratio_pct?: number;
+          suppressed_without_replacement_files_count?: number;
+          suppressed_without_replacement_files_ratio_pct?: number;
         suppressed_with_replacement_count?: number;
         suppressed_with_replacement_ratio_pct?: number;
         suppressed_reasons_with_replacement_ratio_pct?: number;
@@ -638,10 +643,11 @@ test('returns summary payload from dedicated summary endpoint', async () => {
         suppressed_reasons_without_replacement_count?: number;
         suppressed_platform_rule_pairs_count?: number;
         suppressed_platform_file_pairs_count?: number;
-        suppressed_replacement_rule_file_pairs_count?: number;
-        suppressed_replacement_rule_platform_pairs_count?: number;
-        suppressed_replacement_platforms_count?: number;
-        suppressed_non_replacement_platforms_count?: number;
+          suppressed_replacement_rule_file_pairs_count?: number;
+          suppressed_replacement_rule_platform_pairs_count?: number;
+          suppressed_replacement_platforms_count?: number;
+          suppressed_with_replacement_platforms_count?: number;
+          suppressed_non_replacement_platforms_count?: number;
         suppressed_non_replacement_reason_file_pairs_count?: number;
         suppressed_non_replacement_rule_file_pairs_count?: number;
         suppressed_non_replacement_rule_platform_pairs_count?: number;
@@ -775,6 +781,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_replacement_files_ratio_pct, 100);
       assert.equal(summary.suppressed_with_replacement_platforms_ratio_pct, 100);
       assert.equal(summary.suppressed_without_replacement_platforms_ratio_pct, 0);
+      assert.equal(summary.suppressed_non_replacement_platforms_ratio_pct, 0);
       assert.equal(summary.suppressed_without_replacement_files_count, 0);
       assert.equal(summary.suppressed_without_replacement_files_ratio_pct, 0);
       assert.equal(summary.suppressed_with_replacement_ratio_pct, 100);
@@ -785,6 +792,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
       assert.equal(summary.suppressed_replacement_rules_ratio_pct, 100);
       assert.equal(summary.suppressed_non_replacement_rules_ratio_pct, 0);
       assert.equal(summary.suppressed_replacement_platforms_ratio_pct, 100);
+      assert.equal(summary.suppressed_with_replacement_platforms_count, 1);
       assert.equal(summary.suppressed_without_replacement_count, 0);
       assert.equal(summary.suppressed_non_replacement_ratio_pct, 0);
       assert.equal(summary.suppressed_without_replacement_ratio_pct, 0);
