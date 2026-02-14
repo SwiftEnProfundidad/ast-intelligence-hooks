@@ -1182,6 +1182,22 @@ const toSuppressedShareTriageStreamClass = (
   return 'standard';
 };
 
+const toSuppressedShareTriageStreamRank = (
+  evidence: AiEvidenceV2_1,
+): 0 | 1 | 2 | 3 => {
+  const streamClass = toSuppressedShareTriageStreamClass(evidence);
+  if (streamClass === 'observation') {
+    return 0;
+  }
+  if (streamClass === 'balanced') {
+    return 1;
+  }
+  if (streamClass === 'standard') {
+    return 2;
+  }
+  return 3;
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1489,6 +1505,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareTriageStream(evidence),
     suppressed_share_triage_stream_class:
       toSuppressedShareTriageStreamClass(evidence),
+    suppressed_share_triage_stream_rank:
+      toSuppressedShareTriageStreamRank(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -2004,6 +2022,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareTriageStream(evidence),
       suppressed_share_triage_stream_class:
         toSuppressedShareTriageStreamClass(evidence),
+      suppressed_share_triage_stream_rank:
+        toSuppressedShareTriageStreamRank(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,

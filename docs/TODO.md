@@ -177,7 +177,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_track` for suppression-share triage track rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream` for suppression-share triage stream rollup.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_class` for suppression-share triage stream-class rollup.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_rank` for suppression-share triage stream-rank rollup.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_rank` for suppression-share triage stream-rank rollup.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_triage_stream_score` for suppression-share triage stream-score rollup.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
