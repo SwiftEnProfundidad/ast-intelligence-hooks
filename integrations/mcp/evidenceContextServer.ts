@@ -1084,6 +1084,23 @@ const toSuppressedShareTriageIntensity = (evidence: AiEvidenceV2_1): number => {
   return Number((priorityScore * multiplier).toFixed(2));
 };
 
+const toSuppressedShareTriageLane = (evidence: AiEvidenceV2_1): string => {
+  const priorityBand = toSuppressedShareTriagePriorityBand(evidence);
+  const primarySide = toSuppressedShareTriagePrimarySide(evidence);
+  if (priorityBand === 'NONE') {
+    return 'watch_lane';
+  }
+  if (primarySide === 'balanced') {
+    return `balanced_${priorityBand.toLowerCase()}_lane`;
+  }
+  if (primarySide === 'replacement') {
+    return priorityBand === 'HIGH' ? 'replacement_fast_lane' : 'replacement_standard_lane';
+  }
+  return priorityBand === 'HIGH'
+    ? 'non_replacement_fast_lane'
+    : 'non_replacement_standard_lane';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1379,6 +1396,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareTriageFocusMode(evidence),
     suppressed_share_triage_intensity:
       toSuppressedShareTriageIntensity(evidence),
+    suppressed_share_triage_lane:
+      toSuppressedShareTriageLane(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1882,6 +1901,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareTriageFocusMode(evidence),
       suppressed_share_triage_intensity:
         toSuppressedShareTriageIntensity(evidence),
+      suppressed_share_triage_lane:
+        toSuppressedShareTriageLane(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
