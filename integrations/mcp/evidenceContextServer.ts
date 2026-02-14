@@ -844,6 +844,19 @@ const toSuppressedShareDirectionConfidence = (evidence: AiEvidenceV2_1): number 
   return Number(Math.min(Math.abs(netPolarity), 100).toFixed(2));
 };
 
+const toSuppressedShareDirectionStrengthBucket = (
+  evidence: AiEvidenceV2_1,
+): 'LOW' | 'MEDIUM' | 'HIGH' => {
+  const confidence = toSuppressedShareDirectionConfidence(evidence);
+  if (confidence >= 66.67) {
+    return 'HIGH';
+  }
+  if (confidence >= 33.34) {
+    return 'MEDIUM';
+  }
+  return 'LOW';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1097,6 +1110,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareDirection(evidence),
     suppressed_share_direction_confidence:
       toSuppressedShareDirectionConfidence(evidence),
+    suppressed_share_direction_strength_bucket:
+      toSuppressedShareDirectionStrengthBucket(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1558,6 +1573,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareDirection(evidence),
       suppressed_share_direction_confidence:
         toSuppressedShareDirectionConfidence(evidence),
+      suppressed_share_direction_strength_bucket:
+        toSuppressedShareDirectionStrengthBucket(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,

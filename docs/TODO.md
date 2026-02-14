@@ -150,7 +150,8 @@ For full historical execution details, see:
 - [x] MCP context summary/status now expose deterministic `suppressed_share_net_polarity_pct` for net replacement-vs-non-replacement polarity triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_direction` for suppression-share direction triage.
 - [x] MCP context summary/status now expose deterministic `suppressed_share_direction_confidence` for suppression-share direction confidence triage.
-- [ ] MCP context summary/status now expose deterministic `suppressed_share_direction_strength_bucket` for suppression-share direction strength triage.
+- [x] MCP context summary/status now expose deterministic `suppressed_share_direction_strength_bucket` for suppression-share direction strength triage.
+- [ ] MCP context summary/status now expose deterministic `suppressed_share_direction_strength_rank` for suppression-share direction rank triage.
 - [x] Real external pre/post tool runtime validation rerun and adapter readiness regeneration.
   - Runtime wiring refreshed and validated:
     - `npm run install:adapter-hooks-config` => PASS
