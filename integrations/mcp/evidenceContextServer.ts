@@ -826,6 +826,19 @@ const toSuppressedShareNetPolarityPct = (evidence: AiEvidenceV2_1): number => {
   return Number((replacement - nonReplacement).toFixed(2));
 };
 
+const toSuppressedShareDirection = (
+  evidence: AiEvidenceV2_1,
+): 'replacement' | 'non_replacement' | 'balanced' => {
+  const netPolarity = toSuppressedShareNetPolarityPct(evidence);
+  if (netPolarity > 0) {
+    return 'replacement';
+  }
+  if (netPolarity < 0) {
+    return 'non_replacement';
+  }
+  return 'balanced';
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1075,6 +1088,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedSharePolarizationBalanceGapPct(evidence),
     suppressed_share_net_polarity_pct:
       toSuppressedShareNetPolarityPct(evidence),
+    suppressed_share_direction:
+      toSuppressedShareDirection(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -1532,6 +1547,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedSharePolarizationBalanceGapPct(evidence),
       suppressed_share_net_polarity_pct:
         toSuppressedShareNetPolarityPct(evidence),
+      suppressed_share_direction:
+        toSuppressedShareDirection(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
