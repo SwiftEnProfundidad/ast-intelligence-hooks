@@ -292,7 +292,8 @@
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_class` facet.
 - ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_rank` facet.
-- 🚧 Context API summary/status expose deterministic `suppressed_share_triage_stream_score` facet.
+- ✅ Context API summary/status expose deterministic `suppressed_share_triage_stream_score` facet.
+- 🚧 Context API summary/status expose deterministic `suppressed_share_triage_stream_score_band` facet.
 - ✅ Formal cross-agent consumption patterns are documented (`docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`).
 
 ## Current Focus

@@ -1198,6 +1198,11 @@ const toSuppressedShareTriageStreamRank = (
   return 3;
 };
 
+const toSuppressedShareTriageStreamScore = (evidence: AiEvidenceV2_1): number => {
+  const rank = toSuppressedShareTriageStreamRank(evidence);
+  return Number(((rank / 3) * 100).toFixed(2));
+};
+
 const toFindingsFilesCount = (findings: AiEvidenceV2_1['snapshot']['findings']): number => {
   const files = new Set<string>();
   for (const finding of findings) {
@@ -1507,6 +1512,8 @@ const toSummaryPayload = (evidence: AiEvidenceV2_1) => {
       toSuppressedShareTriageStreamClass(evidence),
     suppressed_share_triage_stream_rank:
       toSuppressedShareTriageStreamRank(evidence),
+    suppressed_share_triage_stream_score:
+      toSuppressedShareTriageStreamScore(evidence),
     tracked_platforms_count: sortedPlatforms.length,
     detected_platforms_count: detectedPlatforms.length,
     non_detected_platforms_count: sortedPlatforms.length - detectedPlatforms.length,
@@ -2024,6 +2031,8 @@ const toStatusPayload = (repoRoot: string): unknown => {
         toSuppressedShareTriageStreamClass(evidence),
       suppressed_share_triage_stream_rank:
         toSuppressedShareTriageStreamRank(evidence),
+      suppressed_share_triage_stream_score:
+        toSuppressedShareTriageStreamScore(evidence),
       tracked_platforms_count: sortedPlatforms.length,
       detected_platforms_count: detectedPlatformsCount,
       non_detected_platforms_count: sortedPlatforms.length - detectedPlatformsCount,
