@@ -1,13 +1,13 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-02-07T21:44:53.178Z",
+  "generatedAt": "2026-02-15T01:30:26.023Z",
   "bundles": [
     {
       "name": "android-guidelines",
       "version": "1.0.0",
-      "source": "file:legacy/skills/android-guidelines/SKILL.md",
-      "hash": "0dc1309e8d4e52abc4949164f5408632d3e3583ec0a652b6fecf069990e44fd3",
+      "source": "file:docs/codex-skills/windsurf-rules-android.md",
+      "hash": "2f3551b6025083e315365d139f37d59e748991bcab43aae3e92b103e7eb6fb98",
       "rules": [
         {
           "id": "skills.android.no-globalscope",
@@ -18,7 +18,7 @@
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "android-guidelines",
-          "sourcePath": "legacy/skills/android-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-android.md"
         },
         {
           "id": "skills.android.no-runblocking",
@@ -29,7 +29,7 @@
           "stage": "PRE_COMMIT",
           "locked": true,
           "sourceSkill": "android-guidelines",
-          "sourcePath": "legacy/skills/android-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-android.md"
         },
         {
           "id": "skills.android.no-thread-sleep",
@@ -40,15 +40,15 @@
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "android-guidelines",
-          "sourcePath": "legacy/skills/android-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-android.md"
         }
       ]
     },
     {
       "name": "backend-guidelines",
       "version": "1.0.0",
-      "source": "file:legacy/skills/backend-guidelines/SKILL.md",
-      "hash": "33124a205fc65fd9af4c741fa283b71c6859ee8c24dc72fd7e765a103207da92",
+      "source": "file:docs/codex-skills/windsurf-rules-backend.md",
+      "hash": "bcd62ff3299d89d6796b079b74c317b80e6bdcfb231c7b308e191a32a4e667dd",
       "rules": [
         {
           "id": "skills.backend.avoid-explicit-any",
@@ -59,7 +59,7 @@
           "stage": "PRE_COMMIT",
           "locked": true,
           "sourceSkill": "backend-guidelines",
-          "sourcePath": "legacy/skills/backend-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-backend.md"
         },
         {
           "id": "skills.backend.no-console-log",
@@ -70,7 +70,7 @@
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "backend-guidelines",
-          "sourcePath": "legacy/skills/backend-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-backend.md"
         },
         {
           "id": "skills.backend.no-empty-catch",
@@ -80,15 +80,15 @@
           "confidence": "HIGH",
           "locked": true,
           "sourceSkill": "backend-guidelines",
-          "sourcePath": "legacy/skills/backend-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-backend.md"
         }
       ]
     },
     {
       "name": "frontend-guidelines",
       "version": "1.0.0",
-      "source": "file:legacy/skills/frontend-guidelines/SKILL.md",
-      "hash": "972a0499a8f65435756c2e7b1b17c21d9d7e1c6abb4b98c8a20db692b5db1149",
+      "source": "file:docs/codex-skills/windsurf-rules-frontend.md",
+      "hash": "0387b8713c9e4e147d84ed90f8b5ebcae0733adbaeba50dc12f00cf0047687b9",
       "rules": [
         {
           "id": "skills.frontend.avoid-explicit-any",
@@ -99,7 +99,7 @@
           "stage": "PRE_COMMIT",
           "locked": true,
           "sourceSkill": "frontend-guidelines",
-          "sourcePath": "legacy/skills/frontend-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-frontend.md"
         },
         {
           "id": "skills.frontend.no-console-log",
@@ -110,7 +110,7 @@
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "frontend-guidelines",
-          "sourcePath": "legacy/skills/frontend-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-frontend.md"
         },
         {
           "id": "skills.frontend.no-empty-catch",
@@ -121,15 +121,15 @@
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "frontend-guidelines",
-          "sourcePath": "legacy/skills/frontend-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-frontend.md"
         }
       ]
     },
     {
       "name": "ios-guidelines",
       "version": "1.0.0",
-      "source": "file:legacy/skills/ios-guidelines/SKILL.md",
-      "hash": "be7d7eae5328d00d692bd5fb12269f8610425f6448f7e2854f5d5325ddd97e12",
+      "source": "file:docs/codex-skills/windsurf-rules-ios.md",
+      "hash": "023de46b9b30224cbf7d76472c6f7cfd809d1baff09a64b5a93b716171d2566a",
       "rules": [
         {
           "id": "skills.ios.no-anyview",
@@ -139,7 +139,7 @@
           "confidence": "HIGH",
           "locked": true,
           "sourceSkill": "ios-guidelines",
-          "sourcePath": "legacy/skills/ios-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-ios.md"
         },
         {
           "id": "skills.ios.no-callback-style-outside-bridges",
@@ -150,7 +150,7 @@
           "stage": "PRE_PUSH",
           "locked": true,
           "sourceSkill": "ios-guidelines",
-          "sourcePath": "legacy/skills/ios-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-ios.md"
         },
         {
           "id": "skills.ios.no-force-try",
@@ -160,7 +160,7 @@
           "confidence": "HIGH",
           "locked": true,
           "sourceSkill": "ios-guidelines",
-          "sourcePath": "legacy/skills/ios-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-ios.md"
         },
         {
           "id": "skills.ios.no-force-unwrap",
@@ -170,7 +170,7 @@
           "confidence": "HIGH",
           "locked": true,
           "sourceSkill": "ios-guidelines",
-          "sourcePath": "legacy/skills/ios-guidelines/SKILL.md"
+          "sourcePath": "docs/codex-skills/windsurf-rules-ios.md"
         }
       ]
     }

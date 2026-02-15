@@ -31,8 +31,7 @@
     "violations:top": "node bin/violations top",
     "violations:demo": "bash bin/demo-violations",
     "test": "jest --runInBand",
-    "lint": "npm run lint:hooks",
-    "lint:hooks": "eslint \"legacy/scripts/hooks-system/application/**/*.js\" \"legacy/scripts/hooks-system/bin/**/*.js\" \"legacy/bin/**/*.js\"",
+    "lint": "npm run typecheck",
     "build:ts": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
     "test:heuristics": "npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts",
@@ -95,12 +94,8 @@
     "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",
     "skills:lock:check": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts --check",
     "mcp:evidence": "node bin/pumuki-mcp-evidence.js",
-    "validate:adapter-hooks-local": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/validate-local-runtime.sh",
-    "print:adapter-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/print-adapter-hooks-config.sh",
-    "install:adapter-hooks-config": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/install-adapter-hooks-config.sh",
-    "verify:adapter-hooks-runtime": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-adapter-hooks-runtime.sh",
-    "assess:adapter-hooks-session": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh",
-    "assess:adapter-hooks-session:any": "bash legacy/scripts/hooks-system/infrastructure/cascade-hooks/assess-adapter-session.sh --include-simulated"
+    "validate:adapter-hooks-local": "echo 'Migrated to modern TS scripts — use validation:adapter-readiness instead'",
+    "verify:adapter-hooks-runtime": "echo 'Migrated to modern TS scripts — use validation:adapter-readiness instead'"
   },
   "keywords": [
     "ast",
@@ -141,10 +136,11 @@
     "npm": ">=9.0.0"
   },
   "dependencies": {
+    "@babel/parser": "^7.28.5",
     "glob": "^10.5.0",
     "ts-morph": ">=21.0.0",
     "tsx": "^4.21.0",
-    "@babel/parser": "^7.28.5"
+    "zod": "^4.3.6"
   },
   "peerDependencies": {
     "ts-morph": ">=21.0.0"
@@ -153,11 +149,14 @@
     "@babel/generator": "^7.28.5",
     "@babel/traverse": "^7.28.5",
     "@types/node": "^20.10.0",
+    "@typescript-eslint/eslint-plugin": "^8.55.0",
+    "@typescript-eslint/parser": "^8.55.0",
     "eslint": "^9.12.0",
     "jest": "^30.2.0",
     "jscodeshift": "^17.3.0",
     "recast": "^0.23.11",
-    "typescript": "^5.3.0"
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.55.0"
   },
   "files": [
     "bin/*.js",
