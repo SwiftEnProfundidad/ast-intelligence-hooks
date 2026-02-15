@@ -1,5 +1,10 @@
 import type { AiEvidenceV2_1 } from '../evidence/schema';
-import { inferPlatformFromFilePath, sortPlatforms, sortRulesets } from './evidenceFacets';
+import { sortPlatforms, sortRulesets } from './evidenceFacets';
+import {
+  inferFindingPlatform,
+  sortLedger,
+  sortSnapshotFindings,
+} from './evidencePayloadCollectionsSorters';
 import {
   MAX_FINDINGS_LIMIT,
   MAX_LEDGER_LIMIT,
@@ -11,66 +16,7 @@ import {
   parseNonNegativeIntQuery,
 } from './evidencePayloadConfig';
 
-export const sortSnapshotFindings = (
-  findings: AiEvidenceV2_1['snapshot']['findings']
-): AiEvidenceV2_1['snapshot']['findings'] => {
-  return [...findings].sort((left, right) => {
-    const byRule = left.ruleId.localeCompare(right.ruleId);
-    if (byRule !== 0) {
-      return byRule;
-    }
-    const byFile = left.file.localeCompare(right.file);
-    if (byFile !== 0) {
-      return byFile;
-    }
-    const leftLines = left.lines ? (Array.isArray(left.lines) ? left.lines.join(',') : String(left.lines)) : '';
-    const rightLines = right.lines ? (Array.isArray(right.lines) ? right.lines.join(',') : String(right.lines)) : '';
-    const byLines = leftLines.localeCompare(rightLines);
-    if (byLines !== 0) {
-      return byLines;
-    }
-    const byCode = left.code.localeCompare(right.code);
-    if (byCode !== 0) {
-      return byCode;
-    }
-    const bySeverity = left.severity.localeCompare(right.severity);
-    if (bySeverity !== 0) {
-      return bySeverity;
-    }
-    return left.message.localeCompare(right.message);
-  });
-};
-
-export const sortLedger = (ledger: AiEvidenceV2_1['ledger']): AiEvidenceV2_1['ledger'] => {
-  return [...ledger].sort((left, right) => {
-    const byRule = left.ruleId.localeCompare(right.ruleId);
-    if (byRule !== 0) {
-      return byRule;
-    }
-    const byFile = left.file.localeCompare(right.file);
-    if (byFile !== 0) {
-      return byFile;
-    }
-    const leftLines = left.lines ? (Array.isArray(left.lines) ? left.lines.join(',') : String(left.lines)) : '';
-    const rightLines = right.lines ? (Array.isArray(right.lines) ? right.lines.join(',') : String(right.lines)) : '';
-    const byLines = leftLines.localeCompare(rightLines);
-    if (byLines !== 0) {
-      return byLines;
-    }
-    const byFirstSeen = left.firstSeen.localeCompare(right.firstSeen);
-    if (byFirstSeen !== 0) {
-      return byFirstSeen;
-    }
-    return left.lastSeen.localeCompare(right.lastSeen);
-  });
-};
-
-export const inferFindingPlatform = (
-  finding: AiEvidenceV2_1['snapshot']['findings'][number]
-): 'ios' | 'backend' | 'frontend' | 'android' | 'generic' => {
-  return inferPlatformFromFilePath(finding.file);
-};
-
+export { sortSnapshotFindings, sortLedger, inferFindingPlatform };
 
 export const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => {
   const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
@@ -291,4 +237,3 @@ export const toResponsePayload = (evidence: AiEvidenceV2_1, requestUrl: URL): un
   const { consolidation: _ignored, ...rest } = evidence;
   return rest;
 };
-
