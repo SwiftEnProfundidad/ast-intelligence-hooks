@@ -13,7 +13,7 @@ const sampleLock = {
     {
       name: 'ios-guidelines',
       version: '1.0.0',
-      source: 'file:legacy/skills/ios-guidelines/SKILL.md',
+      source: 'file:docs/codex-skills/windsurf-rules-ios.md',
       hash: 'a'.repeat(64),
       rules: [
         {
@@ -22,7 +22,7 @@ const sampleLock = {
           severity: 'WARN',
           platform: 'ios',
           sourceSkill: 'ios-guidelines',
-          sourcePath: 'legacy/skills/ios-guidelines/SKILL.md',
+          sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
           stage: 'PRE_PUSH',
           locked: true,
           confidence: 'HIGH',
@@ -32,7 +32,7 @@ const sampleLock = {
     {
       name: 'backend-guidelines',
       version: '1.0.0',
-      source: 'file:legacy/skills/backend-guidelines/SKILL.md',
+      source: 'file:docs/codex-skills/windsurf-rules-backend.md',
       hash: 'b'.repeat(64),
       rules: [
         {
@@ -41,7 +41,7 @@ const sampleLock = {
           severity: 'CRITICAL',
           platform: 'backend',
           sourceSkill: 'backend-guidelines',
-          sourcePath: 'legacy/skills/backend-guidelines/SKILL.md',
+          sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
           locked: true,
         },
       ],

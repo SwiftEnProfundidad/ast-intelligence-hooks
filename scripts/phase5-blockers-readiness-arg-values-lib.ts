@@ -1,4 +1,4 @@
-import type { Phase5BlockersReadinessCliOptions } from './phase5-blockers-readiness-cli-lib';
+import type { Phase5BlockersReadinessCliOptions } from './phase5-blockers-readiness-cli-contract';
 
 export type Phase5BlockersReadinessValueArg =
   '--adapter-report'

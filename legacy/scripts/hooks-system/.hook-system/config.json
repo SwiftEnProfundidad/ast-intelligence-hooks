@@ -1,8 +1,0 @@
-{
-  "notification": {
-    "enabled": true
-  },
-  "recovery": {
-    "maxAttempts": 5
-  }
-}

@@ -122,3 +122,26 @@ Purpose: read-only exposure of evidence context for agents.
 - Do not move decision logic from `core/*` into integrations.
 - Do not couple integrations directly to each other when shared runtime exists.
 - Prefer extending facts/rules/policies over adding ad-hoc shell conditions.
+
+## Critical Module Map
+
+### MCP evidence payload and facets
+
+- `integrations/mcp/evidenceFacetsBase.ts`: shared deterministic facets for rulesets and severity.
+- `integrations/mcp/evidenceFacetsSuppressed.ts`: suppression/replacement facet computations.
+- `integrations/mcp/evidenceFacetsSnapshot.ts`: snapshot/ledger/findings facet computations.
+- `integrations/mcp/evidencePayloadConfig.ts`: query parsing and API capability contracts.
+- `integrations/mcp/evidencePayloadCollections.ts`: deterministic endpoint payload builders for findings/rulesets/platforms/ledger.
+- `integrations/mcp/evidencePayloadSummary.ts`: summary/status payload builders.
+
+### Git gate runtime
+
+- `integrations/git/runPlatformGate.ts`: orchestration of facts, rules, stage policy, and evidence generation.
+- `integrations/git/baselineRuleSets.ts`: baseline rule-pack assembly for detected platforms.
+
+### Detector partitions
+
+- `core/facts/detectors/fs/sync.ts`: public fs-sync detector barrel.
+- `core/facts/detectors/fs/syncPart1.ts`, `core/facts/detectors/fs/syncPart2.ts`, `core/facts/detectors/fs/syncPart3.ts`: fs sync detector partitions.
+- `core/facts/detectors/process/index.ts`: public process detector barrel.
+- `core/facts/detectors/process/core.ts`, `core/facts/detectors/process/shell.ts`, `core/facts/detectors/process/spawn.ts`: process detector partitions.

@@ -1,5 +1,0 @@
-#!/bin/bash
-# Script Wrapper
-# Redirects to the centralized implementation in scripts/hooks-system
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
-bash "$REPO_ROOT/scripts/hooks-system/bin/gitflow" "$@"

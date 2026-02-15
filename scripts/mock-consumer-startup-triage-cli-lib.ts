@@ -6,14 +6,7 @@ import {
   applyMockConsumerStartupTriageValueArg,
   isMockConsumerStartupTriageValueArg,
 } from './mock-consumer-startup-triage-arg-values-lib';
-
-export type MockConsumerStartupTriageCliOptions = {
-  repo: string;
-  outDir: string;
-  blockSummaryFile: string;
-  minimalSummaryFile: string;
-  dryRun: boolean;
-};
+import type { MockConsumerStartupTriageCliOptions } from './mock-consumer-startup-triage-cli-contract';
 
 export const DEFAULT_MOCK_CONSUMER_TRIAGE_REPO = 'owner/repo';
 export const DEFAULT_MOCK_CONSUMER_TRIAGE_OUT_DIR = '.audit-reports/phase5';

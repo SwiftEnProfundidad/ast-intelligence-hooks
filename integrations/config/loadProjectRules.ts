@@ -1,13 +1,21 @@
 import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { ProjectRulesConfig } from './projectRules';
+import { projectRulesConfigSchema } from './projectRulesSchema';
 
 const isObject = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null;
 };
 
-const isProjectRulesConfig = (value: unknown): value is ProjectRulesConfig => {
-  return isObject(value);
+const validateProjectRulesConfig = (value: unknown): ProjectRulesConfig | undefined => {
+  const result = projectRulesConfigSchema.safeParse(value);
+  if (result.success) {
+    return result.data as ProjectRulesConfig;
+  }
+  console.warn(
+    `[pumuki] Invalid project rules config: ${result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')}`
+  );
+  return undefined;
 };
 
 const loadFromPath = (configPath: string): ProjectRulesConfig | undefined => {
@@ -16,14 +24,12 @@ const loadFromPath = (configPath: string): ProjectRulesConfig | undefined => {
   }
 
   const loaded: unknown = require(configPath);
-  if (isProjectRulesConfig(loaded)) {
-    return loaded;
+  const validated = validateProjectRulesConfig(loaded);
+  if (validated) {
+    return validated;
   }
   if (isObject(loaded) && 'default' in loaded) {
-    const candidate = loaded.default;
-    if (isProjectRulesConfig(candidate)) {
-      return candidate;
-    }
+    return validateProjectRulesConfig(loaded.default);
   }
 
   return undefined;
