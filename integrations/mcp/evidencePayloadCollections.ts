@@ -6,6 +6,11 @@ import {
   sortSnapshotFindings,
 } from './evidencePayloadCollectionsSorters';
 import {
+  capRequestedLimit,
+  sliceByOffsetAndLimit,
+  toPaginationPayload,
+} from './evidencePayloadCollectionsPaging';
+import {
   MAX_FINDINGS_LIMIT,
   MAX_LEDGER_LIMIT,
   MAX_PLATFORMS_LIMIT,
@@ -22,8 +27,7 @@ export const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => 
   const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
   const bundleFilter = normalizeQueryToken(requestUrl.searchParams.get('bundle'));
   const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
-  const limit =
-    requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_RULESETS_LIMIT);
+  const limit = capRequestedLimit(requestedLimit, MAX_RULESETS_LIMIT);
   const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
 
   const filteredRulesets = sortRulesets(evidence.rulesets).filter((ruleset) => {
@@ -35,10 +39,7 @@ export const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => 
     }
     return true;
   });
-  const rulesets =
-    limit === undefined
-      ? filteredRulesets.slice(offset)
-      : filteredRulesets.slice(offset, offset + limit);
+  const rulesets = sliceByOffsetAndLimit(filteredRulesets, offset, limit);
 
   return {
     version: evidence.version,
@@ -48,15 +49,14 @@ export const toRulesetsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => 
       platform: platformFilter ?? null,
       bundle: bundleFilter ?? null,
     },
-    pagination: {
-      requested_limit: requestedLimit ?? null,
-      max_limit: MAX_RULESETS_LIMIT,
-      limit: limit ?? null,
+    pagination: toPaginationPayload({
+      requestedLimit,
+      maxLimit: MAX_RULESETS_LIMIT,
+      limit,
       offset,
-      ...(requestedLimit !== undefined
-        ? { has_more: offset + rulesets.length < filteredRulesets.length }
-        : {}),
-    },
+      pageSize: rulesets.length,
+      totalCount: filteredRulesets.length,
+    }),
     rulesets,
   };
 };
@@ -65,8 +65,7 @@ export const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) =>
   const detectedOnly = parseBooleanQuery(requestUrl.searchParams.get('detectedOnly')) ?? true;
   const confidenceFilter = normalizeQueryToken(requestUrl.searchParams.get('confidence'));
   const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
-  const limit =
-    requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_PLATFORMS_LIMIT);
+  const limit = capRequestedLimit(requestedLimit, MAX_PLATFORMS_LIMIT);
   const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
   const filteredPlatforms = sortPlatforms(evidence.platforms).filter((entry) => {
     if (detectedOnly && !entry.detected) {
@@ -77,10 +76,7 @@ export const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) =>
     }
     return true;
   });
-  const platforms =
-    limit === undefined
-      ? filteredPlatforms.slice(offset)
-      : filteredPlatforms.slice(offset, offset + limit);
+  const platforms = sliceByOffsetAndLimit(filteredPlatforms, offset, limit);
   return {
     version: evidence.version,
     timestamp: evidence.timestamp,
@@ -89,15 +85,14 @@ export const toPlatformsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) =>
       detectedOnly,
       confidence: confidenceFilter ?? null,
     },
-    pagination: {
-      requested_limit: requestedLimit ?? null,
-      max_limit: MAX_PLATFORMS_LIMIT,
-      limit: limit ?? null,
+    pagination: toPaginationPayload({
+      requestedLimit,
+      maxLimit: MAX_PLATFORMS_LIMIT,
+      limit,
       offset,
-      ...(requestedLimit !== undefined
-        ? { has_more: offset + platforms.length < filteredPlatforms.length }
-        : {}),
-    },
+      pageSize: platforms.length,
+      totalCount: filteredPlatforms.length,
+    }),
     platforms,
   };
 };
@@ -126,7 +121,7 @@ export const toLedgerPayloadWithFilters = (evidence: AiEvidenceV2_1, requestUrl:
   const lastSeenAfter = normalizeQueryToken(requestUrl.searchParams.get('lastSeenAfter'));
   const lastSeenBefore = normalizeQueryToken(requestUrl.searchParams.get('lastSeenBefore'));
   const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
-  const limit = requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_LEDGER_LIMIT);
+  const limit = capRequestedLimit(requestedLimit, MAX_LEDGER_LIMIT);
   const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
   const filteredLedger = sortLedger(evidence.ledger).filter((entry) => {
     if (lastSeenAfter && entry.lastSeen.toLowerCase() < lastSeenAfter) {
@@ -137,10 +132,7 @@ export const toLedgerPayloadWithFilters = (evidence: AiEvidenceV2_1, requestUrl:
     }
     return true;
   });
-  const ledger =
-    limit === undefined
-      ? filteredLedger.slice(offset)
-      : filteredLedger.slice(offset, offset + limit);
+  const ledger = sliceByOffsetAndLimit(filteredLedger, offset, limit);
 
   return {
     version: evidence.version,
@@ -150,15 +142,14 @@ export const toLedgerPayloadWithFilters = (evidence: AiEvidenceV2_1, requestUrl:
       lastSeenAfter: lastSeenAfter ?? null,
       lastSeenBefore: lastSeenBefore ?? null,
     },
-    pagination: {
-      requested_limit: requestedLimit ?? null,
-      max_limit: MAX_LEDGER_LIMIT,
-      limit: limit ?? null,
+    pagination: toPaginationPayload({
+      requestedLimit,
+      maxLimit: MAX_LEDGER_LIMIT,
+      limit,
       offset,
-      ...(requestedLimit !== undefined
-        ? { has_more: offset + ledger.length < filteredLedger.length }
-        : {}),
-    },
+      pageSize: ledger.length,
+      totalCount: filteredLedger.length,
+    }),
     ledger,
   };
 };
@@ -182,8 +173,7 @@ export const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => 
   const platformFilter = normalizeQueryToken(requestUrl.searchParams.get('platform'));
 
   const requestedLimit = parseNonNegativeIntQuery(requestUrl.searchParams.get('limit'));
-  const limit =
-    requestedLimit === undefined ? undefined : Math.min(requestedLimit, MAX_FINDINGS_LIMIT);
+  const limit = capRequestedLimit(requestedLimit, MAX_FINDINGS_LIMIT);
   const offset = parseNonNegativeIntQuery(requestUrl.searchParams.get('offset')) ?? 0;
 
   const filteredFindings = sortSnapshotFindings(evidence.snapshot.findings).filter((finding) => {
@@ -198,10 +188,7 @@ export const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => 
     }
     return true;
   });
-  const findings =
-    limit === undefined
-      ? filteredFindings.slice(offset)
-      : filteredFindings.slice(offset, offset + limit);
+  const findings = sliceByOffsetAndLimit(filteredFindings, offset, limit);
 
   return {
     version: evidence.version,
@@ -217,15 +204,14 @@ export const toFindingsPayload = (evidence: AiEvidenceV2_1, requestUrl: URL) => 
       ruleId: ruleIdFilter ?? null,
       platform: platformFilter ?? null,
     },
-    pagination: {
-      requested_limit: requestedLimit ?? null,
-      max_limit: MAX_FINDINGS_LIMIT,
-      limit: limit ?? null,
+    pagination: toPaginationPayload({
+      requestedLimit,
+      maxLimit: MAX_FINDINGS_LIMIT,
+      limit,
       offset,
-      ...(requestedLimit !== undefined
-        ? { has_more: offset + findings.length < filteredFindings.length }
-        : {}),
-    },
+      pageSize: findings.length,
+      totalCount: filteredFindings.length,
+    }),
     findings,
   };
 };
