@@ -1,17 +1,19 @@
 import type { AiEvidenceV2_1 } from '../evidence/schema';
+import { includeSuppressedFromQuery } from './evidencePayloadConfig';
 import { sortSnapshotFindings } from './evidencePayloadCollectionsSorters';
-import {
-  includeSuppressedFromQuery,
-} from './evidencePayloadConfig';
-export { toRulesetsPayload } from './evidencePayloadCollectionsRulesets';
+export { toFindingsPayload } from './evidencePayloadCollectionsFindings';
 export { toPlatformsPayload } from './evidencePayloadCollectionsPlatforms';
 export {
   toLedgerPayload,
   toLedgerPayloadWithFilters,
 } from './evidencePayloadCollectionsLedger';
-export { toFindingsPayload } from './evidencePayloadCollectionsFindings';
+export { toRulesetsPayload } from './evidencePayloadCollectionsRulesets';
 
-export { sortSnapshotFindings, sortLedger, inferFindingPlatform } from './evidencePayloadCollectionsSorters';
+export {
+  inferFindingPlatform,
+  sortLedger,
+  sortSnapshotFindings,
+} from './evidencePayloadCollectionsSorters';
 
 export const toSnapshotPayload = (evidence: AiEvidenceV2_1) => {
   return {
