@@ -5,6 +5,13 @@ import {
   toSuppressedWithoutReplacementPlatformsCount,
 } from './evidenceFacetsSuppressedRelations';
 
+const toRoundedRatioPct = (numerator: number, denominator: number): number => {
+  if (denominator === 0) {
+    return 0;
+  }
+  return Math.round((numerator / denominator) * 100);
+};
+
 export const toSuppressedReplacementRulesCount = (evidence: AiEvidenceV2_1): number => {
   const replacements = new Set<string>();
   for (const entry of evidence.consolidation?.suppressed ?? []) {
@@ -24,10 +31,7 @@ export const toSuppressedRulesCount = (evidence: AiEvidenceV2_1): number => {
 export const toSuppressedReplacementRulesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const replacementRules = toSuppressedReplacementRulesCount(evidence);
   const suppressedRules = toSuppressedRulesCount(evidence);
-  if (suppressedRules === 0) {
-    return 0;
-  }
-  return Math.round((replacementRules / suppressedRules) * 100);
+  return toRoundedRatioPct(replacementRules, suppressedRules);
 };
 
 export const toSuppressedNonReplacementRulesCount = (evidence: AiEvidenceV2_1): number => {
@@ -43,10 +47,7 @@ export const toSuppressedNonReplacementRulesCount = (evidence: AiEvidenceV2_1): 
 export const toSuppressedNonReplacementRulesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const nonReplacementRules = toSuppressedNonReplacementRulesCount(evidence);
   const suppressedRules = toSuppressedRulesCount(evidence);
-  if (suppressedRules === 0) {
-    return 0;
-  }
-  return Math.round((nonReplacementRules / suppressedRules) * 100);
+  return toRoundedRatioPct(nonReplacementRules, suppressedRules);
 };
 
 export const inferPlatformFromFilePath = (
@@ -144,10 +145,7 @@ export const toSuppressedNonReplacementFilesCount = (evidence: AiEvidenceV2_1): 
 
 export const toSuppressedWithReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalFiles = toSuppressedFilesCount(evidence);
-  if (totalFiles === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedWithReplacementFilesCount(evidence) / totalFiles) * 100);
+  return toRoundedRatioPct(toSuppressedWithReplacementFilesCount(evidence), totalFiles);
 };
 
 export const toSuppressedReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number =>
@@ -155,68 +153,44 @@ export const toSuppressedReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): 
 
 export const toSuppressedWithoutReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalFiles = toSuppressedFilesCount(evidence);
-  if (totalFiles === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedWithoutReplacementFilesCount(evidence) / totalFiles) * 100);
+  return toRoundedRatioPct(toSuppressedWithoutReplacementFilesCount(evidence), totalFiles);
 };
 
 export const toSuppressedNonReplacementFilesRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalFiles = toSuppressedFilesCount(evidence);
-  if (totalFiles === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedNonReplacementFilesCount(evidence) / totalFiles) * 100);
+  return toRoundedRatioPct(toSuppressedNonReplacementFilesCount(evidence), totalFiles);
 };
 
 export const toSuppressedWithReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalPlatforms = toSuppressedPlatformsCount(evidence);
-  if (totalPlatforms === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedWithReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
+  return toRoundedRatioPct(toSuppressedWithReplacementPlatformsCount(evidence), totalPlatforms);
 };
 
 export const toSuppressedWithoutReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalPlatforms = toSuppressedPlatformsCount(evidence);
-  if (totalPlatforms === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedWithoutReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
+  return toRoundedRatioPct(toSuppressedWithoutReplacementPlatformsCount(evidence), totalPlatforms);
 };
 
 export const toSuppressedNonReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalPlatforms = toSuppressedPlatformsCount(evidence);
-  if (totalPlatforms === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedNonReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
+  return toRoundedRatioPct(toSuppressedNonReplacementPlatformsCount(evidence), totalPlatforms);
 };
 
 export const toSuppressedReplacementPlatformsRatioPct = (evidence: AiEvidenceV2_1): number => {
   const totalPlatforms = toSuppressedPlatformsCount(evidence);
-  if (totalPlatforms === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedReplacementPlatformsCount(evidence) / totalPlatforms) * 100);
+  return toRoundedRatioPct(toSuppressedReplacementPlatformsCount(evidence), totalPlatforms);
 };
 
 export const toSuppressedWithReplacementRatioPct = (evidence: AiEvidenceV2_1): number => {
   const total = evidence.consolidation?.suppressed?.length ?? 0;
-  if (total === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedWithReplacementCount(evidence) / total) * 100);
+  return toRoundedRatioPct(toSuppressedWithReplacementCount(evidence), total);
 };
 
 export const toSuppressedFindingCoverageRatioPct = (evidence: AiEvidenceV2_1): number => {
   const suppressedFindingsCount = evidence.consolidation?.suppressed?.length ?? 0;
   const findingUniverseSize =
     suppressedFindingsCount + evidence.snapshot.findings.length;
-  if (findingUniverseSize === 0) {
-    return 0;
-  }
-  return Math.round((suppressedFindingsCount / findingUniverseSize) * 100);
+  return toRoundedRatioPct(suppressedFindingsCount, findingUniverseSize);
 };
 
 export const toSuppressedWithoutReplacementCount = (evidence: AiEvidenceV2_1): number => {
@@ -230,28 +204,18 @@ export const toSuppressedWithoutReplacementCount = (evidence: AiEvidenceV2_1): n
 };
 
 export const toSuppressedNonReplacementRatioPct = (evidence: AiEvidenceV2_1): number => {
-  const total = evidence.consolidation?.suppressed?.length ?? 0;
-  if (total === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedWithoutReplacementCount(evidence) / total) * 100);
+  return toSuppressedWithoutReplacementRatioPct(evidence);
 };
 
 export const toSuppressedWithoutReplacementRatioPct = (evidence: AiEvidenceV2_1): number => {
   const total = evidence.consolidation?.suppressed?.length ?? 0;
-  if (total === 0) {
-    return 0;
-  }
-  return Math.round((toSuppressedWithoutReplacementCount(evidence) / total) * 100);
+  return toRoundedRatioPct(toSuppressedWithoutReplacementCount(evidence), total);
 };
 
 export const toSuppressedReasonsCoverageRatioPct = (evidence: AiEvidenceV2_1): number => {
   const suppressedFindingsCount = evidence.consolidation?.suppressed?.length ?? 0;
   const reasonsCount = toSuppressedReasonsCount(evidence);
-  if (suppressedFindingsCount === 0) {
-    return 0;
-  }
-  return Math.round((reasonsCount / suppressedFindingsCount) * 100);
+  return toRoundedRatioPct(reasonsCount, suppressedFindingsCount);
 };
 
 
