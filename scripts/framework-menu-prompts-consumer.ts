@@ -5,13 +5,13 @@ import {
 } from './framework-menu-prompts-consumer-ci-lib';
 import {
   askConsumerStartupTriagePrompt,
-  askConsumerWorkflowLintPrompt,
-} from './framework-menu-prompts-consumer-workflow-lib';
+} from './framework-menu-prompts-consumer-startup-triage-lib';
+import { askConsumerWorkflowLintPrompt } from './framework-menu-prompts-consumer-workflow-lint-lib';
 import {
-  askConsumerStartupUnblockStatusPrompt,
   askConsumerSupportBundlePrompt,
-  askConsumerSupportTicketDraftPrompt,
-} from './framework-menu-prompts-consumer-support-lib';
+} from './framework-menu-prompts-consumer-support-bundle-lib';
+import { askConsumerSupportTicketDraftPrompt } from './framework-menu-prompts-consumer-support-ticket-lib';
+import { askConsumerStartupUnblockStatusPrompt } from './framework-menu-prompts-consumer-unblock-status-lib';
 
 export const createConsumerPrompts = (rl: Questioner) => {
   return {

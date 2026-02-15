@@ -68,7 +68,9 @@ export type ConsolidationSuppressedFinding = {
   file: string;
   lines?: EvidenceLines;
   replacedByRuleId: string;
-  reason: 'semantic-family-precedence';
+  replacementRuleId?: string | null;
+  platform?: string;
+  reason: string;
 };
 
 export type AiEvidenceV2_1 = {

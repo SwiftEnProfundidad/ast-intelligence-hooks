@@ -18,7 +18,24 @@
 - ✅ Documentation update entries normalized to English
 - ✅ `README.md` and `PUMUKI.md` fully translated to English (enterprise + junior didactic format)
 - ✅ Release `6.3.7` completed: merged to `main`, published to npm, and confirmed `latest`
-- 🚧 Post-release monitoring: verify downstream consumers adopt `6.3.7` baseline
+- ✅ Technical audit and refactoring plan completed (`INFORME_AUDITORIA_AST.md`)
+- [x] **Fase 1: Modularización del Núcleo** 
+  - [x] Definir `HeuristicDetector` interface.
+  - [x] Implementar `HeuristicRegistry`.
+  - [x] Extraer detectores a `core/facts/detectors/`.
+  - [x] Refactorizar `extractHeuristicFacts.ts`.
+  - [x] Verificar tests `test:heuristics`.
+
+- ✅ **Fase 2: Refactorización de Reglas** — `astHeuristicsRuleSet.ts` split into domain modules (`core/rules/presets/heuristics/`)
+- ✅ **Fase 3: Refactorización de evidenceContextServer.ts** — extracted `evidenceFacets.ts` (pure metric helpers), `evidencePayloads.ts` (payload builders), slim router in `evidenceContextServer.ts`. Schema fix: `ConsolidationSuppressedFinding` updated with `replacementRuleId`, `platform`, widened `reason`. All 14 MCP tests pass.
+- ✅ **Fase 4: Auditoría de Services** — `GitService`, `EvidenceService` auditados (ver informe abajo)
+- ✅ Phase 3: Decoupled `runPlatformGate.ts` — extracted `GitService` + `EvidenceService` with DI interfaces
+- ✅ Phase 4: Hardened ESLint for TypeScript + `zod` schema validation for project rules config
+- ✅ Final Cleanup: Resolved `legacy/` references in skills config and removed dead code (`resolveLegacyRulesetFile`)
+- ✅ Worktree consolidation (2026-02-15): merged parallel Arena worktrees (`7b27b4f4` primary, `f573acfa` discarded). Fixed 20 TS errors in detectors (`unknown` → typed casts), adopted `reduce` pattern for `astHeuristicsRuleSet`, resolved `ConsolidationSuppressedFinding` schema conflict (optional `replacementRuleId`/`platform`), cleaned 43 spam monitoring entries from progress log. `tsc --noEmit` green.
+- ✅ Deep audit execution completed (2026-02-15): phases 1-7 executed end-to-end from `docs/AUDIT_PROMPT.md`; evidence outputs generated in `.audit-reports/2026-02-15-audit-full.md`, `.audit-reports/eslint-full.json`, and `.audit-reports/npm-audit.json`. Key findings: `41,500` TS LOC, `10` production files `>300` lines (`5` `>500`), `29` recent commits with `>10` files, `jest` currently discovers `0` tests, and `npm audit` reports `0` vulnerabilities.
+- 🚧 Next task in progress (2026-02-15): Phase 1 critical remediation planning and implementation scope for test runner recovery (`jest.config.js` TS discovery) plus first critical coverage baseline for gate/evidence/heuristics runtime paths.
+- ⏳ Post-release monitoring: verify downstream consumers adopt `6.3.7` baseline
 
 ## Phase 1 - Deterministic Core + Evidence v2.1
 
@@ -391,92 +408,7 @@
   - Next-step guard was made explicit: wait for the next evidence facet contract before implementation.
 - ✅ `P10-85` Add synchronized coverage for the next evidence facet when the contract becomes available.
   - Closeout: contract scan confirms no new evidence facet is available yet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`; no implementation changes were required in this batch.
-- ✅ `P10-86` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan confirms no evidence facet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`; no implementation changes were required.
-- ✅ `P10-87` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan confirms no evidence facet beyond `suppressed_non_replacement_rule_platform_pairs_ratio_pct`; no implementation changes were required.
-- ✅ `P10-88` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-89` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-90` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-91` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-92` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-93` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-94` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-95` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-96` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-97` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-98` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-99` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-100` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-101` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-102` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-103` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-104` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-105` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-106` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-107` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-108` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-109` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-110` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-111` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-112` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-113` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-114` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-115` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-116` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-117` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-118` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-119` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-120` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-121` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-122` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-123` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-124` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-125` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-126` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-127` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
-- ✅ `P10-128` Monitor MCP contract for the next evidence facet and implement synchronized coverage as soon as it becomes available.
-  - Monitoring checkpoint (2026-02-14): contract scan did not reveal a new evidence facet for the monitored expansion slice; no implementation changes were required.
+- ✅ `P10-86..P10-128` MCP contract monitoring checkpoints (43 iterations, no contract delta detected — collapsed).
 - ✅ `P10-129` Loop guard activated: stopped repetitive MCP monitoring checkpoints with no contract delta.
   - Reactivation rule: do not create new `P10-*` monitoring tasks until a new evidence facet key appears in `integrations/mcp/evidenceContextServer.ts`.
 - ✅ `P8-1a` Refresh external queue snapshot directly from GitHub Actions and record live blocker evidence.
@@ -1098,3 +1030,72 @@
 - ✅ `P10-67` Added deterministic `suppressed_with_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
 - ✅ `P10-68` Added deterministic `suppressed_without_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
 - ✅ `P10-69` Added deterministic `suppressed_replacement_platforms_ratio_pct` to MCP summary/status contracts with tests.
+
+## Auditoría de Services — GitService + EvidenceService
+
+### GitService (`integrations/git/GitService.ts`, 113 líneas)
+
+**Arquitectura:**
+- Interfaz `IGitService` con 3 métodos: `runGit`, `getStagedFacts`, `resolveRepoRoot`
+- Clase `GitService` implementa `IGitService`
+- Inyección de dependencias via `GateServices` en `runPlatformGate.ts`
+- Función pura `parseNameStatus` exportada (testeable independientemente)
+
+**Hallazgos positivos:**
+- ✅ Interfaz DI bien definida — permite mock en tests
+- ✅ `parseNameStatus` es pura y exportada — facilita testing unitario
+- ✅ Manejo de rename/copy (`R`/`C`) en status codes
+- ✅ `resolveRepoRoot` tiene fallback a `process.cwd()` en caso de error
+- ✅ Usa `execFileSync` (no `execSync`) — evita shell injection
+
+**Hallazgos negativos / Riesgos:**
+- ⚠️ **Código duplicado con `getCommitRangeFacts.ts`**: ambos archivos tienen funciones `parseNameStatus`, `hasAllowedExtension`, tipos `ChangeFact`/`ContentFact`, y lógica de `runGit` casi idénticas. `getCommitRangeFacts.ts` NO usa `IGitService` — tiene su propio `runGit` hardcodeado.
+- ⚠️ **Sin tests unitarios dedicados**: `GitService` no tiene tests propios. Se testea indirectamente via `stageRunners.test.ts` (integration tests con repos temporales reales).
+- ⚠️ **`runGit` no recibe `cwd`**: La clase asume que `process.cwd()` es el repo. Los tests de `stageRunners` hacen `process.chdir()` para compensar, lo cual es frágil.
+- ℹ️ **`getStagedFacts` es síncrono**: Usa `execFileSync` — aceptable para git hooks pero limita composición async.
+
+### EvidenceService (`integrations/git/EvidenceService.ts`, 178 líneas)
+
+**Arquitectura:**
+- Interfaz `IEvidenceService` con 3 métodos: `loadPreviousEvidence`, `toDetectedPlatformsRecord`, `buildRulesetState`
+- Clase `EvidenceService` implementa `IEvidenceService`
+- Funciones privadas: `isRecord`, `isAiEvidenceV2_1`, `stableStringify`
+
+**Hallazgos positivos:**
+- ✅ `stableStringify` produce hashes deterministas (claves ordenadas)
+- ✅ `isAiEvidenceV2_1` valida versión + estructura antes de cast
+- ✅ `loadPreviousEvidence` tiene try/catch con fallback a `undefined`
+- ✅ `buildRulesetState` genera hashes SHA-256 por plataforma/bundle — trazabilidad completa
+- ✅ Soporta policy trace como ruleset state adicional
+
+**Hallazgos negativos / Riesgos:**
+- ⚠️ **Sin tests unitarios dedicados**: Igual que `GitService`, se testea solo indirectamente via integration tests.
+- ⚠️ **`stableStringify` es privada pero debería ser reutilizable**: Es una utilidad genérica de serialización determinista que podría vivir en `core/utils/`.
+- ⚠️ **Duplicación de lectura de evidencia**: `readEvidence` en `evidencePayloads.ts` (MCP) y `loadPreviousEvidence` en `EvidenceService` hacen lo mismo con implementaciones ligeramente distintas.
+- ⚠️ **Acoplamiento a rule packs concretos**: `buildRulesetState` importa directamente los 5 rule sets para hashearlos. Si se añade una plataforma, hay que tocar este método.
+- ℹ️ **`toDetectedPlatformsRecord` es trivial**: Filtra nulls de un record — podría ser inline.
+
+### getCommitRangeFacts.ts (107 líneas) — Hallazgo transversal
+
+- ⚠️ **No usa `IGitService`**: Tiene su propio `runGit` hardcodeado con `execFileSync`. Rompe DI para scope `range`.
+- ⚠️ **`parseNameStatus` duplicada**: Copia exacta de la de `GitService.ts`.
+
+### Resumen de cobertura de tests
+
+| Componente | Tests unitarios | Tests integración | Cobertura |
+|---|---|---|---|
+| `GitService` | ❌ | ✅ Via `stageRunners.test.ts` (9 tests) | Indirecta |
+| `EvidenceService` | ❌ | ✅ Via `stageRunners.test.ts` (9 tests) | Indirecta |
+| `getCommitRangeFacts` | ❌ | ✅ Via `stageRunners.test.ts` (PRE_PUSH/CI) | Indirecta |
+| `parseNameStatus` | ❌ | ✅ Implícita | Sin edge cases |
+| `evidenceContextServer` | N/A | ✅ 14 tests dedicados | Completa |
+
+### Recomendaciones priorizadas
+
+1. **[ALTA] Eliminar duplicación `getCommitRangeFacts` ↔ `GitService`**: Unificar `parseNameStatus` y `hasAllowedExtension`. Hacer que `getCommitRangeFacts` use `IGitService.runGit`.
+2. **[MEDIA] Tests unitarios para `parseNameStatus`**: Cubrir edge cases (líneas vacías, renames, copias, status desconocidos).
+3. **[MEDIA] Tests unitarios para `EvidenceService.buildRulesetState`**: Verificar hashes deterministas, plataformas, policy trace.
+4. **[BAJA] Extraer `stableStringify` a `core/utils/`**: Reutilizable para cualquier hash determinista.
+5. **[BAJA] Unificar lectura de evidencia**: `readEvidence` (MCP) y `loadPreviousEvidence` (EvidenceService) deberían compartir implementación.
+6. **[BACKLOG] Pasar `cwd` a `GitService.runGit`**: Eliminar dependencia implícita de `process.cwd()`.
+7. **[BACKLOG] Desacoplar `buildRulesetState` de rule packs concretos**: Recibir rule sets como parámetro.
