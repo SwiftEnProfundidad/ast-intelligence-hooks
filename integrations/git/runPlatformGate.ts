@@ -7,11 +7,7 @@ import type { GateStage } from '../../core/gate/GateStage';
 import { evaluateRules } from '../../core/gate/evaluateRules';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
-import { androidRuleSet } from '../../core/rules/presets/androidRuleSet';
 import { astHeuristicsRuleSet } from '../../core/rules/presets/astHeuristicsRuleSet';
-import { backendRuleSet } from '../../core/rules/presets/backendRuleSet';
-import { frontendRuleSet } from '../../core/rules/presets/frontendRuleSet';
-import { iosEnterpriseRuleSet } from '../../core/rules/presets/iosEnterpriseRuleSet';
 import { loadHeuristicsConfig } from '../config/heuristics';
 import { loadProjectRules } from '../config/loadProjectRules';
 import { loadSkillsRuleSetForStage } from '../config/skillsRuleSet';
@@ -22,7 +18,8 @@ import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import { GitService, type IGitService } from './GitService';
-import { EvidenceService, type IEvidenceService, type BaselineRuleSetEntry } from './EvidenceService';
+import { EvidenceService, type IEvidenceService } from './EvidenceService';
+import { buildBaselineRuleSetEntries, buildCombinedBaselineRules } from './baselineRuleSets';
 
 type GateScope =
   | {
@@ -40,44 +37,6 @@ const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts
 
 const formatFinding = (finding: Finding): string => {
   return `${finding.ruleId}: ${finding.message}`;
-};
-
-const buildCombinedBaselineRules = (
-  detected: ReturnType<typeof detectPlatformsFromFacts>
-): RuleSet => {
-  const rules: RuleSet[number][] = [];
-  if (detected.ios) {
-    rules.push(...iosEnterpriseRuleSet);
-  }
-  if (detected.backend) {
-    rules.push(...backendRuleSet);
-  }
-  if (detected.frontend) {
-    rules.push(...frontendRuleSet);
-  }
-  if (detected.android) {
-    rules.push(...androidRuleSet);
-  }
-  return rules;
-};
-
-const buildBaselineRuleSetEntries = (
-  detected: ReturnType<typeof detectPlatformsFromFacts>
-): BaselineRuleSetEntry[] => {
-  const entries: BaselineRuleSetEntry[] = [];
-  if (detected.ios) {
-    entries.push({ platform: 'ios', bundle: `iosEnterpriseRuleSet@${rulePackVersions.iosEnterpriseRuleSet}`, rules: iosEnterpriseRuleSet });
-  }
-  if (detected.backend) {
-    entries.push({ platform: 'backend', bundle: `backendRuleSet@${rulePackVersions.backendRuleSet}`, rules: backendRuleSet });
-  }
-  if (detected.frontend) {
-    entries.push({ platform: 'frontend', bundle: `frontendRuleSet@${rulePackVersions.frontendRuleSet}`, rules: frontendRuleSet });
-  }
-  if (detected.android) {
-    entries.push({ platform: 'android', bundle: `androidRuleSet@${rulePackVersions.androidRuleSet}`, rules: androidRuleSet });
-  }
-  return entries;
 };
 
 const normalizeStageForSkills = (
