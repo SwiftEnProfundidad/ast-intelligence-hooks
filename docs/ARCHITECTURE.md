@@ -128,7 +128,12 @@ Purpose: read-only exposure of evidence context for agents.
 ### MCP evidence payload and facets
 
 - `integrations/mcp/evidenceFacetsBase.ts`: shared deterministic facets for rulesets and severity.
-- `integrations/mcp/evidenceFacetsSuppressed.ts`: suppression/replacement facet computations.
+- `integrations/mcp/evidenceFacetsSuppressed.ts`: stable barrel for all suppression/replacement facets.
+- `integrations/mcp/evidenceFacetsSuppressedBase.ts`: base suppression counters/ratios and platform/file/reason facets.
+- `integrations/mcp/evidenceFacetsSuppressedRelations.ts`: suppression relation facets (rule/file/platform/reason pair and tuple metrics).
+- `integrations/mcp/evidenceFacetsSuppressedShare.ts`: stable barrel for suppression share/triage facets.
+- `integrations/mcp/evidenceFacetsSuppressedShareCore.ts`: suppression share direction and balance metrics.
+- `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`: suppression triage routing/stream/digest facets built on share core.
 - `integrations/mcp/evidenceFacetsSnapshot.ts`: snapshot/ledger/findings facet computations.
 - `integrations/mcp/evidencePayloadConfig.ts`: query parsing and API capability contracts.
 - `integrations/mcp/evidencePayloadCollections.ts`: deterministic endpoint payload builders for findings/rulesets/platforms/ledger.
