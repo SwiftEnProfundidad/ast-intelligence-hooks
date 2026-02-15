@@ -1,4 +1,3 @@
-import type { Finding } from '../../core/gate/Finding';
 import { evaluateGate } from '../../core/gate/evaluateGate';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
 import type { ResolvedStagePolicy } from '../gate/stagePolicies';
@@ -7,10 +6,7 @@ import { EvidenceService, type IEvidenceService } from './EvidenceService';
 import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
 import { resolveFactsForGateScope, type GateScope } from './runPlatformGateFacts';
 import { emitPlatformGateEvidence } from './runPlatformGateEvidence';
-
-const formatFinding = (finding: Finding): string => {
-  return `${finding.ruleId}: ${finding.message}`;
-};
+import { printGateFindings } from './runPlatformGateOutput';
 
 export type GateServices = {
   git: IGitService;
@@ -64,9 +60,7 @@ export async function runPlatformGate(params: {
   });
 
   if (decision.outcome === 'BLOCK') {
-    for (const finding of findings) {
-      console.log(formatFinding(finding));
-    }
+    printGateFindings(findings);
     return 1;
   }
 
