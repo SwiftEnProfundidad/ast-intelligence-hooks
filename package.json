@@ -30,7 +30,7 @@
     "violations:summary": "node bin/violations summary",
     "violations:top": "node bin/violations top",
     "violations:demo": "bash bin/demo-violations",
-    "test": "jest --runInBand",
+    "test": "npx --yes tsx@4.21.0 --test integrations/config/__tests__/*.test.ts integrations/gate/__tests__/*.test.ts integrations/git/__tests__/*.test.ts scripts/__tests__/*.test.ts && jest --runInBand --testMatch \"**/__tests__/**/*.spec.ts\"",
     "lint": "npm run typecheck",
     "build:ts": "tsc --noEmit",
     "typecheck": "tsc --noEmit",
