@@ -22,7 +22,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `consumer-support-bundle-gh-*`
   - `framework-menu-runners-validation-*`
   - `consumer-support-bundle-markdown-sections-*`
-- ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
+- 🚧 Reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ✅ Añadir test unitario para `integrations/git/runPlatformGateOutput.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ⏳ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
