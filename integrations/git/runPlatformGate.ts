@@ -3,26 +3,12 @@ import { evaluateGate } from '../../core/gate/evaluateGate';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { generateEvidence } from '../evidence/generateEvidence';
 import type { ResolvedStagePolicy } from '../gate/stagePolicies';
-import { getFactsForCommitRange } from './getCommitRangeFacts';
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import { GitService, type IGitService } from './GitService';
 import { EvidenceService, type IEvidenceService } from './EvidenceService';
 import { buildBaselineRuleSetEntries } from './baselineRuleSets';
 import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
-
-type GateScope =
-  | {
-    kind: 'staged';
-    extensions?: string[];
-  }
-  | {
-    kind: 'range';
-    fromRef: string;
-    toRef: string;
-    extensions?: string[];
-  };
-
-const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts'];
+import { resolveFactsForGateScope, type GateScope } from './runPlatformGateFacts';
 
 const formatFinding = (finding: Finding): string => {
   return `${finding.ruleId}: ${finding.message}`;
@@ -47,15 +33,10 @@ export async function runPlatformGate(params: {
   const git = params.services?.git ?? defaultServices.git;
   const evidence = params.services?.evidence ?? defaultServices.evidence;
 
-  const extensions = params.scope.extensions ?? DEFAULT_EXTENSIONS;
-  const facts =
-    params.scope.kind === 'staged'
-      ? git.getStagedFacts(extensions)
-      : await getFactsForCommitRange({
-        fromRef: params.scope.fromRef,
-        toRef: params.scope.toRef,
-        extensions,
-      });
+  const facts = await resolveFactsForGateScope({
+    scope: params.scope,
+    git,
+  });
 
   const {
     detectedPlatforms,
