@@ -1,14 +1,12 @@
 import type { Finding } from '../../core/gate/Finding';
 import { evaluateGate } from '../../core/gate/evaluateGate';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
-import { generateEvidence } from '../evidence/generateEvidence';
 import type { ResolvedStagePolicy } from '../gate/stagePolicies';
-import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import { GitService, type IGitService } from './GitService';
 import { EvidenceService, type IEvidenceService } from './EvidenceService';
-import { buildBaselineRuleSetEntries } from './baselineRuleSets';
 import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
 import { resolveFactsForGateScope, type GateScope } from './runPlatformGateFacts';
+import { emitPlatformGateEvidence } from './runPlatformGateEvidence';
 
 const formatFinding = (finding: Finding): string => {
   return `${finding.ruleId}: ${finding.message}`;
@@ -32,6 +30,7 @@ export async function runPlatformGate(params: {
 }): Promise<number> {
   const git = params.services?.git ?? defaultServices.git;
   const evidence = params.services?.evidence ?? defaultServices.evidence;
+  const repoRoot = git.resolveRepoRoot();
 
   const facts = await resolveFactsForGateScope({
     scope: params.scope,
@@ -47,25 +46,21 @@ export async function runPlatformGate(params: {
   } = evaluatePlatformGateFindings({
     facts,
     stage: params.policy.stage,
-    repoRoot: git.resolveRepoRoot(),
+    repoRoot,
   });
   const decision = evaluateGate([...findings], params.policy);
 
-  generateEvidence({
+  emitPlatformGateEvidence({
     stage: params.policy.stage,
+    policyTrace: params.policyTrace,
     findings,
     gateOutcome: decision.outcome,
-    previousEvidence: evidence.loadPreviousEvidence(git.resolveRepoRoot()),
-    detectedPlatforms: evidence.toDetectedPlatformsRecord(detectedPlatforms),
-    loadedRulesets: evidence.buildRulesetState({
-      baselineRuleSets: buildBaselineRuleSetEntries(detectedPlatforms),
-      projectRules,
-      heuristicRules,
-      heuristicsBundle: `astHeuristicsRuleSet@${rulePackVersions.astHeuristicsRuleSet}`,
-      skillsBundles: skillsRuleSet.activeBundles,
-      policyTrace: params.policyTrace,
-      stage: params.policy.stage,
-    }),
+    repoRoot,
+    detectedPlatforms,
+    skillsRuleSet,
+    projectRules,
+    heuristicRules,
+    evidenceService: evidence,
   });
 
   if (decision.outcome === 'BLOCK') {
