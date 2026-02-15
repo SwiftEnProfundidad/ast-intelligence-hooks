@@ -1,12 +1,9 @@
 module.exports = {
     bail: true,
     testEnvironment: 'node',
-    testMatch: [
-        '**/__tests__/**/*.spec.ts',
-        '**/__tests__/**/*.test.ts',
-        '**/*.test.ts',
-        '**/*.spec.ts'
-    ],
+    // jest solo ejecuta suites spec; los archivos *.test.ts usan node:test y
+    // se ejecutan mediante scripts tsx --test.
+    testMatch: ['**/__tests__/**/*.spec.ts'],
     transform: {
         '^.+\\.tsx?$': 'babel-jest'
     },
