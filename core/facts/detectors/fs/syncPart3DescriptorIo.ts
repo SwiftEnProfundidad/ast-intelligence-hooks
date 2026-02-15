@@ -1,9 +1,6 @@
 import { hasNode, isObject } from '../utils/astHelpers';
 
-export * from './syncPart3Links';
-export * from './syncPart3DescriptorIo';
-
-export const hasFsCpSyncCall = (node: unknown): boolean => {
+export const hasFsFsyncSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -21,12 +18,12 @@ export const hasFsCpSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'cpSync'
+      propertyNode.name === 'fsyncSync'
     );
   });
 };
 
-export const hasFsOpenSyncCall = (node: unknown): boolean => {
+export const hasFsFdatasyncSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -44,12 +41,12 @@ export const hasFsOpenSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'openSync'
+      propertyNode.name === 'fdatasyncSync'
     );
   });
 };
 
-export const hasFsOpendirSyncCall = (node: unknown): boolean => {
+export const hasFsCloseSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -67,12 +64,12 @@ export const hasFsOpendirSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'opendirSync'
+      propertyNode.name === 'closeSync'
     );
   });
 };
 
-export const hasFsMkdtempSyncCall = (node: unknown): boolean => {
+export const hasFsReadSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -90,30 +87,7 @@ export const hasFsMkdtempSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'mkdtempSync'
-    );
-  });
-};
-
-export const hasFsAppendFileSyncCall = (node: unknown): boolean => {
-  return hasNode(node, (value) => {
-    if (value.type !== 'CallExpression') {
-      return false;
-    }
-
-    const callee = value.callee;
-    if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
-      return false;
-    }
-    const objectNode = callee.object;
-    const propertyNode = callee.property;
-    return (
-      isObject(objectNode) &&
-      objectNode.type === 'Identifier' &&
-      objectNode.name === 'fs' &&
-      isObject(propertyNode) &&
-      propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'appendFileSync'
+      propertyNode.name === 'readSync'
     );
   });
 };
