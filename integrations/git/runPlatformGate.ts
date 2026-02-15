@@ -1,25 +1,14 @@
-import type { Fact } from '../../core/facts/Fact';
-import { extractHeuristicFacts } from '../../core/facts/extractHeuristicFacts';
 import type { Finding } from '../../core/gate/Finding';
 import { evaluateGate } from '../../core/gate/evaluateGate';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
-import type { GateStage } from '../../core/gate/GateStage';
-import { evaluateRules } from '../../core/gate/evaluateRules';
-import type { RuleSet } from '../../core/rules/RuleSet';
-import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
-import { astHeuristicsRuleSet } from '../../core/rules/presets/astHeuristicsRuleSet';
-import { loadHeuristicsConfig } from '../config/heuristics';
-import { loadProjectRules } from '../config/loadProjectRules';
-import { loadSkillsRuleSetForStage } from '../config/skillsRuleSet';
 import { generateEvidence } from '../evidence/generateEvidence';
 import type { ResolvedStagePolicy } from '../gate/stagePolicies';
-import { applyHeuristicSeverityForStage } from '../gate/stagePolicies';
-import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
 import { getFactsForCommitRange } from './getCommitRangeFacts';
 import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
 import { GitService, type IGitService } from './GitService';
 import { EvidenceService, type IEvidenceService } from './EvidenceService';
-import { buildBaselineRuleSetEntries, buildCombinedBaselineRules } from './baselineRuleSets';
+import { buildBaselineRuleSetEntries } from './baselineRuleSets';
+import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
 
 type GateScope =
   | {
@@ -37,12 +26,6 @@ const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts
 
 const formatFinding = (finding: Finding): string => {
   return `${finding.ruleId}: ${finding.message}`;
-};
-
-const normalizeStageForSkills = (
-  stage: GateStage
-): Exclude<GateStage, 'STAGED'> => {
-  return stage === 'STAGED' ? 'PRE_COMMIT' : stage;
 };
 
 export type GateServices = {
@@ -74,37 +57,17 @@ export async function runPlatformGate(params: {
         extensions,
       });
 
-  const detectedPlatforms = detectPlatformsFromFacts(facts);
-  const heuristicsConfig = loadHeuristicsConfig();
-  const stageForSkills = normalizeStageForSkills(params.policy.stage);
-  const skillsRuleSet = loadSkillsRuleSetForStage(stageForSkills, git.resolveRepoRoot());
-  const baselineRules = buildCombinedBaselineRules(detectedPlatforms);
-  const shouldExtractHeuristicFacts =
-    heuristicsConfig.astSemanticEnabled || skillsRuleSet.requiresHeuristicFacts;
-  const heuristicFacts = shouldExtractHeuristicFacts
-    ? extractHeuristicFacts({
-      facts,
-      detectedPlatforms,
-    })
-    : [];
-  const evaluationFacts: ReadonlyArray<Fact> =
-    heuristicFacts.length > 0 ? [...facts, ...heuristicFacts] : facts;
-  const heuristicRules = heuristicsConfig.astSemanticEnabled
-    ? applyHeuristicSeverityForStage(astHeuristicsRuleSet, params.policy.stage).filter(
-      (rule) => !skillsRuleSet.mappedHeuristicRuleIds.has(rule.id)
-    )
-    : [];
-  const baselineRulesWithHeuristicsAndSkills: RuleSet = [
-    ...baselineRules,
-    ...heuristicRules,
-    ...skillsRuleSet.rules,
-  ];
-  const projectConfig = loadProjectRules();
-  const projectRules = projectConfig?.rules ?? [];
-  const mergedRules = mergeRuleSets(baselineRulesWithHeuristicsAndSkills, projectRules, {
-    allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
+  const {
+    detectedPlatforms,
+    skillsRuleSet,
+    projectRules,
+    heuristicRules,
+    findings,
+  } = evaluatePlatformGateFindings({
+    facts,
+    stage: params.policy.stage,
+    repoRoot: git.resolveRepoRoot(),
   });
-  const findings = evaluateRules(mergedRules, evaluationFacts);
   const decision = evaluateGate([...findings], params.policy);
 
   generateEvidence({
