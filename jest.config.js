@@ -1,7 +1,12 @@
 module.exports = {
     bail: true,
     testEnvironment: 'node',
-    testMatch: ['**/__tests__/**/*.spec.ts'],
+    testMatch: [
+        '**/__tests__/**/*.spec.ts',
+        '**/__tests__/**/*.test.ts',
+        '**/*.test.ts',
+        '**/*.spec.ts'
+    ],
     transform: {
         '^.+\\.tsx?$': 'babel-jest'
     },
