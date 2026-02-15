@@ -7,13 +7,7 @@ import {
   isPhase5BlockersReadinessValueArg,
 } from './phase5-blockers-readiness-arg-values-lib';
 export { readPhase5BlockersReadinessInput } from './phase5-blockers-readiness-input-lib';
-
-export type Phase5BlockersReadinessCliOptions = {
-  adapterReportFile: string;
-  consumerTriageReportFile: string;
-  outFile: string;
-  requireAdapterReport: boolean;
-};
+import type { Phase5BlockersReadinessCliOptions } from './phase5-blockers-readiness-cli-contract';
 
 export const DEFAULT_ADAPTER_REPORT_FILE = '.audit-reports/adapter/adapter-real-session-report.md';
 export const DEFAULT_CONSUMER_TRIAGE_FILE =

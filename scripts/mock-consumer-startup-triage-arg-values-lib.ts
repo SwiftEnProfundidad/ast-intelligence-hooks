@@ -1,4 +1,4 @@
-import type { MockConsumerStartupTriageCliOptions } from './mock-consumer-startup-triage-cli-lib';
+import type { MockConsumerStartupTriageCliOptions } from './mock-consumer-startup-triage-cli-contract';
 
 export type MockConsumerStartupTriageValueArg =
   '--repo'
