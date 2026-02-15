@@ -9,19 +9,13 @@ export type {
   MockConsumerAbReportParams,
 } from './framework-menu-runners-consumer-contract';
 
-export {
-  runConsumerCiArtifactsScan,
-  runConsumerCiAuthCheck,
-  runConsumerWorkflowLintScan,
-} from './framework-menu-runners-consumer-ci-lib';
+export { runConsumerCiArtifactsScan } from './framework-menu-runners-consumer-artifacts-lib';
+export { runConsumerCiAuthCheck } from './framework-menu-runners-consumer-auth-lib';
+export { runConsumerWorkflowLintScan } from './framework-menu-runners-consumer-workflow-lib';
 
-export {
-  runConsumerSupportBundle,
-  runConsumerSupportTicketDraft,
-  runConsumerStartupUnblockStatus,
-} from './framework-menu-runners-consumer-support-lib';
+export { runConsumerSupportBundle } from './framework-menu-runners-consumer-support-bundle-lib';
+export { runConsumerSupportTicketDraft } from './framework-menu-runners-consumer-support-ticket-lib';
+export { runConsumerStartupUnblockStatus } from './framework-menu-runners-consumer-unblock-lib';
 
-export {
-  runConsumerStartupTriage,
-  runMockConsumerAbReport,
-} from './framework-menu-runners-consumer-triage-lib';
+export { runConsumerStartupTriage } from './framework-menu-runners-consumer-startup-triage-lib';
+export { runMockConsumerAbReport } from './framework-menu-runners-consumer-mock-ab-lib';

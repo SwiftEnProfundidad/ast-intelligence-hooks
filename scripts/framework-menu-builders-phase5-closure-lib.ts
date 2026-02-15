@@ -1,11 +1,11 @@
 import type { Phase5ExecutionClosureCommandParams } from './framework-menu-builders-phase5-contract';
-import { buildPhase5TsxCommandPrefix } from './framework-menu-builders-phase5-shared-lib';
+import { buildFrameworkMenuTsxCommandPrefix } from './framework-menu-builders-shared-lib';
 
 export const buildPhase5ExecutionClosureCommandArgs = (
   params: Phase5ExecutionClosureCommandParams
 ): string[] => {
   const args = [
-    ...buildPhase5TsxCommandPrefix(params.scriptPath),
+    ...buildFrameworkMenuTsxCommandPrefix(params.scriptPath),
     '--repo',
     params.repo,
     '--limit',
