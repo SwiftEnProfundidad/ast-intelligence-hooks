@@ -1,9 +1,6 @@
 import { hasNode, isObject } from '../utils/astHelpers';
 
-export * from './syncPart1Metadata';
-export * from './syncPart1FileOps';
-
-export const hasFsRmSyncCall = (node: unknown): boolean => {
+export const hasFsWriteFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -21,12 +18,12 @@ export const hasFsRmSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'rmSync'
+      propertyNode.name === 'writeFileSync'
     );
   });
 };
 
-export const hasFsMkdirSyncCall = (node: unknown): boolean => {
+export const hasFsReadFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -44,12 +41,12 @@ export const hasFsMkdirSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'mkdirSync'
+      propertyNode.name === 'readFileSync'
     );
   });
 };
 
-export const hasFsReaddirSyncCall = (node: unknown): boolean => {
+export const hasFsRenameSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -67,12 +64,12 @@ export const hasFsReaddirSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'readdirSync'
+      propertyNode.name === 'renameSync'
     );
   });
 };
 
-export const hasFsUtimesSyncCall = (node: unknown): boolean => {
+export const hasFsCopyFileSyncCall = (node: unknown): boolean => {
   return hasNode(node, (value) => {
     if (value.type !== 'CallExpression') {
       return false;
@@ -90,7 +87,7 @@ export const hasFsUtimesSyncCall = (node: unknown): boolean => {
       objectNode.name === 'fs' &&
       isObject(propertyNode) &&
       propertyNode.type === 'Identifier' &&
-      propertyNode.name === 'utimesSync'
+      propertyNode.name === 'copyFileSync'
     );
   });
 };
