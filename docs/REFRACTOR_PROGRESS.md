@@ -60,10 +60,10 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 ## Fase 3 — Medio (deuda técnica)
 - ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
 - ✅ Particionar detectores grandes (`core/facts/detectors/fs/sync.ts`, `core/facts/detectors/process/index.ts`).
-- 🚧 Resolver ciclos detectados por `madge` en scripts de `phase5`/`mock-consumer`.
+- ✅ Resolver ciclos detectados por `madge` en scripts de `phase5`/`mock-consumer`.
 
 ## Fase 4 — Bajo (nice-to-have)
-- ⏳ Añadir guardrail de tamaño de archivo/imports en CI.
+- 🚧 Añadir guardrail de tamaño de archivo/imports en CI.
 - ⏳ Normalizar documentación mínima en módulos críticos.
 
 ## Notas
