@@ -20,10 +20,10 @@ module.exports = {
     ],
     coverageThreshold: {
         global: {
-            statements: 0,
-            branches: 0,
-            functions: 0,
-            lines: 0
+            statements: 1,
+            branches: 1,
+            functions: 1,
+            lines: 1
         },
         './core/gate/conditionMatches.ts': {
             statements: 60,
