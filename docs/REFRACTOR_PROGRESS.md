@@ -65,7 +65,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `core/facts/detectors/vm/index.ts`.
 - ✅ Añadir test unitario para `core/facts/detectors/process/core.ts`.
 - ✅ Añadir test unitario para `core/facts/detectors/process/shell.ts`.
-- 🚧 Añadir test unitario para `core/facts/detectors/process/spawn.ts`.
+- ✅ Añadir test unitario para `core/facts/detectors/process/spawn.ts`.
+- 🚧 Añadir test unitario para `core/facts/detectors/fs/callbacks.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
