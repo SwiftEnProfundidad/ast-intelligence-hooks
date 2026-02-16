@@ -80,7 +80,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `core/facts/detectors/fs/syncPart3.ts`.
 - ✅ Añadir test unitario para `core/facts/detectors/fs/syncPart3DescriptorIo.ts`.
 - ✅ Añadir test unitario para `core/facts/detectors/fs/syncPart3Links.ts`.
-- 🚧 Añadir test unitario para `core/facts/detectors/fs/syncPart3PathOps.ts`.
+- ✅ Añadir test unitario para `core/facts/detectors/fs/syncPart3PathOps.ts`.
+- 🚧 Añadir test unitario para `core/facts/detectors/fs/sync.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
