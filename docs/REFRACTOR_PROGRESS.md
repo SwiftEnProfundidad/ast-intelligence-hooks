@@ -27,7 +27,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateFacts.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateEvaluation.ts`.
-- 🚧 Añadir test unitario para `integrations/git/runPlatformGate.ts`.
+- ✅ Añadir test unitario para `integrations/git/runPlatformGate.ts`.
+- 🚧 Añadir test unitario para `integrations/git/getCommitRangeFacts.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ⏳ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
