@@ -10,7 +10,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
 - ✅ Validar ejecución de suites tras corrección: suites y pruebas recuperadas, cobertura global `4.12%`.
-- 🚧 Definir baseline mínimo de cobertura para rutas críticas (`gate`, `evidence`, `heuristics`).
+- ✅ Definir baseline mínimo de cobertura para rutas críticas (`gate`, `evidence`, `heuristics`).
 
 ## Fase 2 — Alto (calidad)
 - ⏳ Dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
