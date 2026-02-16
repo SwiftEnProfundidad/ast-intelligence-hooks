@@ -86,6 +86,7 @@
     "validation:phase5-escalation:close-submission": "bash scripts/close-phase5-escalation-submission.sh",
     "validation:phase5-escalation:mark-submitted": "bash scripts/mark-phase5-escalation-submitted.sh",
     "validation:phase5-escalation:payload": "bash scripts/build-phase5-support-portal-payload.sh",
+    "validation:architecture-guardrails": "npx --yes tsx@4.21.0 --test scripts/__tests__/architecture-file-size-guardrails.test.ts",
     "validation:package-manifest": "node --import tsx scripts/check-package-manifest.ts",
     "validation:package-smoke": "node --import tsx scripts/package-install-smoke.ts --mode=block",
     "validation:package-smoke:minimal": "node --import tsx scripts/package-install-smoke.ts --mode=minimal",

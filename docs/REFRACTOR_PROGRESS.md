@@ -63,8 +63,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Resolver ciclos detectados por `madge` en scripts de `phase5`/`mock-consumer`.
 
 ## Fase 4 — Bajo (nice-to-have)
-- 🚧 Añadir guardrail de tamaño de archivo/imports en CI.
-- ⏳ Normalizar documentación mínima en módulos críticos.
+- ✅ Añadir guardrail de tamaño de archivo/imports en CI.
+- 🚧 Normalizar documentación mínima en módulos críticos.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

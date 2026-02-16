@@ -148,5 +148,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run architecture size/import guardrails
+        run: npm run validation:architecture-guardrails
+
       - name: Run stage gate suites
         run: npm run test:stage-gates
