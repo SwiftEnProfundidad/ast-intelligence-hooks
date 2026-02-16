@@ -58,8 +58,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/git/ciFrontend.cli.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
-- 🚧 Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
-- ⏳ Particionar detectores grandes (`core/facts/detectors/fs/sync.ts`, `core/facts/detectors/process/index.ts`).
+- ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
+- 🚧 Particionar detectores grandes (`core/facts/detectors/fs/sync.ts`, `core/facts/detectors/process/index.ts`).
 - ⏳ Resolver ciclos detectados por `madge` en scripts de `phase5`/`mock-consumer`.
 
 ## Fase 4 — Bajo (nice-to-have)
