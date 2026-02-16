@@ -110,7 +110,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `core/rules/Severity.ts`.
 - ✅ Añadir test unitario para `core/rules/index.ts`.
 - ✅ Añadir test unitario para `core/rules/presets/index.ts`.
-- 🚧 Añadir test unitario para `core/rules/presets/rulePackVersions.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/rulePackVersions.ts`.
+- 🚧 Añadir test unitario para `core/rules/presets/androidRuleSet.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
