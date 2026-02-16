@@ -100,7 +100,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `core/gate/GatePolicy.ts`.
 - ✅ Añadir test unitario para `core/gate/GateStage.ts`.
 - ✅ Añadir test unitario para `core/gate/conditionMatches.ts`.
-- 🚧 Añadir test unitario para `core/gate/evaluateRules.ts`.
+- ✅ Añadir test unitario para `core/gate/evaluateRules.ts`.
+- 🚧 Añadir test unitario para `core/gate/evaluateGate.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
