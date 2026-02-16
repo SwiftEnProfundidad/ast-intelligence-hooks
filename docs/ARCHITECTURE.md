@@ -125,28 +125,66 @@ Purpose: read-only exposure of evidence context for agents.
 
 ## Critical Module Map
 
+Critical modules must document, at minimum:
+
+- purpose (single responsibility),
+- stable entrypoints (files consumed by other modules),
+- deterministic invariants (behavior that must not change between refactors).
+
 ### MCP evidence payload and facets
 
-- `integrations/mcp/evidenceFacetsBase.ts`: shared deterministic facets for rulesets and severity.
-- `integrations/mcp/evidenceFacetsSuppressed.ts`: stable barrel for all suppression/replacement facets.
-- `integrations/mcp/evidenceFacetsSuppressedBase.ts`: base suppression counters/ratios and platform/file/reason facets.
-- `integrations/mcp/evidenceFacetsSuppressedRelations.ts`: suppression relation facets (rule/file/platform/reason pair and tuple metrics).
-- `integrations/mcp/evidenceFacetsSuppressedShare.ts`: stable barrel for suppression share/triage facets.
-- `integrations/mcp/evidenceFacetsSuppressedShareCore.ts`: suppression share direction and balance metrics.
-- `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`: suppression triage routing/stream/digest facets built on share core.
-- `integrations/mcp/evidenceFacetsSnapshot.ts`: snapshot/ledger/findings facet computations.
-- `integrations/mcp/evidencePayloadConfig.ts`: query parsing and API capability contracts.
-- `integrations/mcp/evidencePayloadCollections.ts`: deterministic endpoint payload builders for findings/rulesets/platforms/ledger.
-- `integrations/mcp/evidencePayloadSummary.ts`: summary/status payload builders.
+Purpose:
+- deterministic transformation from evidence snapshots to MCP facets/payloads.
+
+Stable entrypoints:
+- `integrations/mcp/evidenceFacetsBase.ts`
+- `integrations/mcp/evidenceFacetsSuppressed.ts`
+- `integrations/mcp/evidenceFacetsSuppressedBase.ts`
+- `integrations/mcp/evidenceFacetsSuppressedRelations.ts`
+- `integrations/mcp/evidenceFacetsSuppressedShare.ts`
+- `integrations/mcp/evidenceFacetsSuppressedShareCore.ts`
+- `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`
+- `integrations/mcp/evidenceFacetsSnapshot.ts`
+- `integrations/mcp/evidencePayloadConfig.ts`
+- `integrations/mcp/evidencePayloadCollections.ts`
+- `integrations/mcp/evidencePayloadSummary.ts`
+
+Deterministic invariants:
+- facet computation is pure from evidence inputs (no side effects).
+- facet keys and tuple naming stay stable across releases.
+- suppression and share metrics remain reproducible for the same snapshot.
 
 ### Git gate runtime
 
-- `integrations/git/runPlatformGate.ts`: orchestration of facts, rules, stage policy, and evidence generation.
-- `integrations/git/baselineRuleSets.ts`: baseline rule-pack assembly for detected platforms.
+Purpose:
+- orchestrate facts, rules, policies, and evidence emission for stage-gate decisions.
+
+Stable entrypoints:
+- `integrations/git/runPlatformGate.ts`
+- `integrations/git/baselineRuleSets.ts`
+
+Deterministic invariants:
+- gate outcome depends only on facts + policy evaluation.
+- evidence emission always includes stage/policy/ruleset traceability.
+- stage runners remain thin wrappers over shared orchestration.
 
 ### Detector partitions
 
-- `core/facts/detectors/fs/sync.ts`: public fs-sync detector barrel.
-- `core/facts/detectors/fs/syncPart1.ts`, `core/facts/detectors/fs/syncPart2.ts`, `core/facts/detectors/fs/syncPart3.ts`: fs sync detector partitions.
-- `core/facts/detectors/process/index.ts`: public process detector barrel.
-- `core/facts/detectors/process/core.ts`, `core/facts/detectors/process/shell.ts`, `core/facts/detectors/process/spawn.ts`: process detector partitions.
+Purpose:
+- expose stable detector barrels while keeping implementations split by concern.
+
+Stable entrypoints:
+- `core/facts/detectors/fs/sync.ts`
+- `core/facts/detectors/process/index.ts`
+
+Partition files:
+- `core/facts/detectors/fs/syncPart1.ts`
+- `core/facts/detectors/fs/syncPart2.ts`
+- `core/facts/detectors/fs/syncPart3.ts`
+- `core/facts/detectors/process/core.ts`
+- `core/facts/detectors/process/shell.ts`
+- `core/facts/detectors/process/spawn.ts`
+
+Deterministic invariants:
+- barrels define the public detector surface.
+- partition internals may move, exported behavior and fact shapes must stay stable.

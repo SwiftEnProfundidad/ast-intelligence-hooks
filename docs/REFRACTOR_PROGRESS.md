@@ -64,7 +64,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 
 ## Fase 4 — Bajo (nice-to-have)
 - ✅ Añadir guardrail de tamaño de archivo/imports en CI.
-- 🚧 Normalizar documentación mínima en módulos críticos.
+- ✅ Normalizar documentación mínima en módulos críticos.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
