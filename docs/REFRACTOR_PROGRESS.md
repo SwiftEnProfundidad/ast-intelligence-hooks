@@ -37,7 +37,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/git/ciBackend.ts`.
 - ✅ Añadir test unitario para `integrations/git/ciFrontend.ts`.
 - ✅ Añadir test unitario para `integrations/git/preCommitIOS.ts`.
-- 🚧 Añadir test unitario para `integrations/git/preCommitAndroid.ts`.
+- ✅ Añadir test unitario para `integrations/git/preCommitAndroid.ts`.
+- 🚧 Añadir test unitario para `integrations/git/preCommitBackend.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ⏳ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
