@@ -13,9 +13,25 @@ export type GateServices = {
   evidence: IEvidenceService;
 };
 
+export type GateDependencies = {
+  evaluateGate: typeof evaluateGate;
+  evaluatePlatformGateFindings: typeof evaluatePlatformGateFindings;
+  resolveFactsForGateScope: typeof resolveFactsForGateScope;
+  emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
+  printGateFindings: typeof printGateFindings;
+};
+
 const defaultServices: GateServices = {
   git: new GitService(),
   evidence: new EvidenceService(),
+};
+
+const defaultDependencies: GateDependencies = {
+  evaluateGate,
+  evaluatePlatformGateFindings,
+  resolveFactsForGateScope,
+  emitPlatformGateEvidence,
+  printGateFindings,
 };
 
 export async function runPlatformGate(params: {
@@ -23,12 +39,17 @@ export async function runPlatformGate(params: {
   policyTrace?: ResolvedStagePolicy['trace'];
   scope: GateScope;
   services?: Partial<GateServices>;
+  dependencies?: Partial<GateDependencies>;
 }): Promise<number> {
   const git = params.services?.git ?? defaultServices.git;
   const evidence = params.services?.evidence ?? defaultServices.evidence;
+  const dependencies: GateDependencies = {
+    ...defaultDependencies,
+    ...params.dependencies,
+  };
   const repoRoot = git.resolveRepoRoot();
 
-  const facts = await resolveFactsForGateScope({
+  const facts = await dependencies.resolveFactsForGateScope({
     scope: params.scope,
     git,
   });
@@ -39,14 +60,14 @@ export async function runPlatformGate(params: {
     projectRules,
     heuristicRules,
     findings,
-  } = evaluatePlatformGateFindings({
+  } = dependencies.evaluatePlatformGateFindings({
     facts,
     stage: params.policy.stage,
     repoRoot,
   });
-  const decision = evaluateGate([...findings], params.policy);
+  const decision = dependencies.evaluateGate([...findings], params.policy);
 
-  emitPlatformGateEvidence({
+  dependencies.emitPlatformGateEvidence({
     stage: params.policy.stage,
     policyTrace: params.policyTrace,
     findings,
@@ -60,7 +81,7 @@ export async function runPlatformGate(params: {
   });
 
   if (decision.outcome === 'BLOCK') {
-    printGateFindings(findings);
+    dependencies.printGateFindings(findings);
     return 1;
   }
 
