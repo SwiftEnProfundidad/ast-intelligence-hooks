@@ -155,6 +155,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reforzar cobertura de `integrations/config/loadProjectRules.ts` (fallback `default` + fallback a root cuando local es inválido).
 - ✅ Reforzar cobertura de `integrations/config/projectRulesSchema.ts` (enum `stage/platform` + nesting `Any/Not`).
 - ✅ Reforzar cobertura de `integrations/config/skillsPolicy.ts` (parse + carga desde fichero + casos inválidos).
+- ✅ Reforzar cobertura de `integrations/config/skillsLock.ts` (hash determinista + carga válida + JSON malformado).
 - ✅ Añadir test unitario para `integrations/evidence/writeEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.
