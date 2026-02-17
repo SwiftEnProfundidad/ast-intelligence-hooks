@@ -178,6 +178,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reforzar cobertura de `integrations/lifecycle/gitService.ts` (delegación de status/unset + trim de getLocalConfig).
 - ✅ Añadir test unitario para `integrations/lifecycle/artifacts.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/state.ts`.
+- ✅ Reforzar cobertura de `integrations/lifecycle/state.ts` (sobrescritura canónica de hooks + clear idempotente sin claves).
 - ✅ Añadir test unitario para `integrations/lifecycle/hookBlock.ts`.
 - ✅ Reforzar cobertura de `integrations/lifecycle/hookBlock.ts` (detección parcial de marcadores + normalización de saltos tras remove/upsert).
 - ✅ Añadir test unitario para `integrations/lifecycle/hookManager.ts`.
