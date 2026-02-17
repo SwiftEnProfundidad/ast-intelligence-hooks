@@ -152,6 +152,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/config/skillsRuleSet.ts`.
 - ✅ Reforzar cobertura de `integrations/config/skillsCompilerTemplates.ts` (stages válidos + bundles iOS enterprise).
 - ✅ Reforzar cobertura de `integrations/config/projectRules.ts` (conditions compuestas + plataformas `text/generic`).
+- ✅ Reforzar cobertura de `integrations/config/loadProjectRules.ts` (fallback `default` + fallback a root cuando local es inválido).
 - ✅ Añadir test unitario para `integrations/evidence/writeEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.
