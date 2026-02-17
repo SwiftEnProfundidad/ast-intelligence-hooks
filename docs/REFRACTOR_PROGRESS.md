@@ -164,6 +164,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Publicar `pumuki@6.3.11` con la limpieza estricta de trazas y revalidar ciclo install/remove en consumidor mock.
 - ✅ Revalidar en `pumuki-mock-consumer` el ciclo desde cero (`clean -> install pumuki+dayjs -> remove`) confirmando `pumuki` eliminado y `dayjs` preservado.
 - ✅ Revalidar en `pumuki-mock-consumer` el ciclo desde cero con `dependencies` + `devDependencies` (`pumuki + dayjs + zod`), confirmando que `remove` solo elimina Pumuki.
+- ✅ Limpiar `pumuki-mock-consumer` a baseline sin instalaciones temporales (`pumuki`, dependencias de prueba, `node_modules`, `.ai_evidence.json`).
 - 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
 
 ## Notas
