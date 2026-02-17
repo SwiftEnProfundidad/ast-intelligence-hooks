@@ -259,6 +259,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Extender cobertura semántica enterprise de SOLID (SRP/OCP/LSP/ISP/DIP) con señales AST no superficiales y contrato de evidencia.
 - ✅ Ejecutar validación determinista del lote SOLID (detectors TS + extractor heurístico + stage policies) y cerrar versión de pack heurístico.
 - ✅ Cerrar implementación integral de reglas/skills (heurísticas iOS + SOLID TS + stage promotions + contracts skills) con validación completa (`typecheck`, `skills:lock:check`, `test:deterministic` y suite dirigida de policies/presets).
+- ✅ Endurecer `pumuki-mock-consumer` con una mini-app feature-first más elaborada y escenario `violations` ampliado para cubrir skills iOS/backend/frontend/android + heurísticas críticas (security/process/fs/browser/SOLID) mediante `docs/VIOLATION_SKILLS_MATRIX.md`.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
