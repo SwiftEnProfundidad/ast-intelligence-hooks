@@ -62,6 +62,29 @@ npx tsx integrations/git/prePushBackend.cli.ts
 npx tsx integrations/git/ciFrontend.cli.ts
 ```
 
+### 2.1) Lifecycle CLI (install / uninstall / update / doctor / status)
+
+```bash
+# install managed hooks
+npx --yes pumuki install
+
+# inspect enterprise baseline safety checks
+npx --yes pumuki doctor
+
+# show lifecycle status
+npx --yes pumuki status
+
+# update dependency to latest and re-apply hooks
+npx --yes pumuki update --latest
+
+# uninstall managed hooks and purge untracked evidence artifacts
+npx --yes pumuki uninstall --purge-artifacts
+```
+
+Safety rule:
+- If tracked files exist under `node_modules/`, `pumuki install` and `pumuki update` intentionally fail.
+- This prevents lifecycle contamination in enterprise repositories.
+
 Notes:
 - CLI wrappers call shared stage runners via `integrations/git/runCliCommand.ts`.
 - Execution path is centralized in `integrations/git/runPlatformGate.ts`.

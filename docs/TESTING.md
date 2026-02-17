@@ -13,6 +13,7 @@ npm run test:deterministic
 npm run validation:package-manifest
 npm run validation:package-smoke
 npm run validation:package-smoke:minimal
+npm run validation:lifecycle-smoke
 ```
 
 ## What each suite validates
@@ -45,6 +46,11 @@ npm run validation:package-smoke:minimal
   - Package-install smoke (`PASS` scenario): `npm pack` + temporary consumer install + clean minimal staged/range path.
   - Validates allow path (exit `0`) with evidence v2.1 metadata.
   - Writes artifacts to `.audit-reports/package-smoke/minimal/`.
+
+- `npm run validation:lifecycle-smoke`
+  - Lifecycle round-trip smoke on minimal scenario.
+  - Validates `pumuki install -> stage runners -> pumuki uninstall --purge-artifacts`.
+  - Fails if repo `git status --short` after uninstall differs from pre-install snapshot.
 
 ## Test locations
 

@@ -73,6 +73,32 @@ npx tsx integrations/git/prePushBackend.cli.ts
 npx tsx integrations/git/ciFrontend.cli.ts
 ```
 
+## Lifecycle commands (enterprise consumer repositories)
+
+Install managed Git hooks in the current repository:
+
+```bash
+npx --yes pumuki install
+```
+
+Run lifecycle doctor before rollout:
+
+```bash
+npx --yes pumuki doctor
+```
+
+Uninstall and purge untracked Pumuki artifacts:
+
+```bash
+npx --yes pumuki uninstall --purge-artifacts
+```
+
+Update to latest published Pumuki and re-apply hooks:
+
+```bash
+npx --yes pumuki update --latest
+```
+
 ## Optional: enable heuristic pilot
 
 ```bash

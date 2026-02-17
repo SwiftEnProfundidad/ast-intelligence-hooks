@@ -169,8 +169,13 @@ npm run <script> -- <flags>
 
 | Command | Description | Example |
 | --- | --- | --- |
-| `npm run install-hooks` | Install framework hooks/binaries | `npm run install-hooks` |
-| `npm run check-version` | Verify runtime version | `npm run check-version` |
+| `npm run install-hooks` | Install managed Pumuki hooks (`pre-commit`, `pre-push`) | `npm run install-hooks` |
+| `npm run check-version` | Print lifecycle/runtime status | `npm run check-version` |
+| `npm run pumuki:install` | Install managed hooks in current Git repo | `npm run pumuki:install` |
+| `npm run pumuki:uninstall` | Uninstall managed hooks and purge untracked Pumuki artifacts | `npm run pumuki:uninstall` |
+| `npm run pumuki:update` | Update Pumuki dependency to latest and re-apply hooks | `npm run pumuki:update` |
+| `npm run pumuki:doctor` | Enterprise baseline safety checks (tracked `node_modules`, hook/state drift) | `npm run pumuki:doctor` |
+| `npm run pumuki:status` | Lifecycle status snapshot | `npm run pumuki:status` |
 | `npm run audit` | Run AST CLI | `npm run audit -- --help` |
 | `npm run ast` | AST CLI alias | `npm run ast -- --help` |
 | `npm run framework:menu` | Launch interactive operations menu | `npm run framework:menu` |
@@ -195,6 +200,7 @@ npm run <script> -- <flags>
 | `npm run validation:package-manifest` | Validate package manifest contract | `npm run validation:package-manifest` |
 | `npm run validation:package-smoke` | Blocking package smoke test | `npm run validation:package-smoke` |
 | `npm run validation:package-smoke:minimal` | Minimal package smoke test | `npm run validation:package-smoke:minimal` |
+| `npm run validation:lifecycle-smoke` | Lifecycle smoke check (`install -> run -> uninstall` clean round-trip) | `npm run validation:lifecycle-smoke` |
 | `npm run validation:docs-hygiene` | Documentation guardrail checks | `npm run validation:docs-hygiene` |
 | `npm run validation:clean-artifacts -- --dry-run` | Simulated artifact cleanup | `npm run validation:clean-artifacts -- --dry-run` |
 | `npm run skills:compile` | Compile skills lock | `npm run skills:compile` |

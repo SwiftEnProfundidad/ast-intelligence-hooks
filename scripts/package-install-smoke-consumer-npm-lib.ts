@@ -1,3 +1,5 @@
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import {
   assertSuccess,
   runCommand,
@@ -22,6 +24,11 @@ export const installTarballIntoConsumerRepo = (
   workspace: SmokeWorkspace
 ): void => {
   runNpmStep(workspace, ['init', '-y'], 'npm init');
+  writeFileSync(
+    join(workspace.consumerRepo, '.gitignore'),
+    'node_modules/\n.ai_evidence.json\n',
+    'utf8'
+  );
   runNpmStep(workspace, ['install', workspace.tarballPath ?? ''], 'npm install <tarball>');
 };
 

@@ -1,11 +1,16 @@
 export const REQUIRED_PACKAGE_PATHS = [
+  'bin/pumuki.js',
   'bin/pumuki-framework.js',
   'bin/pumuki-pre-commit.js',
   'bin/pumuki-pre-push.js',
   'bin/pumuki-ci.js',
   'bin/pumuki-mcp-evidence.js',
+  'core/utils/stableStringify.ts',
+  'core/facts/detectors/typescript/index.ts',
+  'core/rules/presets/heuristics/typescript.ts',
   'scripts/package-install-smoke.ts',
   'integrations/git/runPlatformGate.ts',
+  'integrations/lifecycle/cli.ts',
   'integrations/evidence/buildEvidence.ts',
 ];
 

@@ -22,7 +22,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `consumer-support-bundle-gh-*`
   - `framework-menu-runners-validation-*`
   - `consumer-support-bundle-markdown-sections-*`
-- 🚧 Reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateOutput.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateFacts.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateEvidence.ts`.
@@ -115,7 +115,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `core/rules/presets/backendRuleSet.ts`.
 - ✅ Añadir test unitario para `core/rules/presets/frontendRuleSet.ts`.
 - ✅ Añadir test unitario para `core/rules/presets/exampleRuleSet.ts`.
-- 🚧 Añadir test unitario para `core/rules/presets/iosEnterpriseRuleSet.ts`.
+- ⏳ Añadir test unitario para `core/rules/presets/iosEnterpriseRuleSet.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
@@ -125,6 +125,23 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 ## Fase 4 — Bajo (nice-to-have)
 - ✅ Añadir guardrail de tamaño de archivo/imports en CI.
 - ✅ Normalizar documentación mínima en módulos críticos.
+
+## Operaciones de entorno
+- ✅ Convertir `ast-intelligence-hooks` en repositorio Git standalone (sin dependencia de `worktree` legacy).
+- ✅ Verificar integridad post-conversión (`.git` directorio propio, branch/HEAD intactos, estado limpio).
+- ✅ Ejecutar siguiente lote de refactor solicitado por el usuario.
+- ✅ Ejecutar demo end-to-end de Pumuki sobre mock consumer (pack → install → stages).
+- ✅ Validar estado base del mock consumer antes de reinstalar Pumuki.
+- ✅ Resetear `pumuki-mock-consumer` a estado base sin instalación activa de `pumuki-ast-hooks`.
+- ✅ Limpiar worktree del mock consumer (tracked restaurado, untracked aislado fuera del repo).
+- ✅ Diagnosticar residuos en mock: `node_modules/pumuki-ast-hooks` y `node_modules/.package-lock.json` están versionados (tracked), no ignorados.
+- ✅ Corregir empaquetado NPM para incluir runtime faltante (`core/utils`, heuristics presets, AST detectors) y desbloquear runtime en consumidor mock.
+- ✅ Implementar lifecycle enterprise (`pumuki install|uninstall|update|doctor|status`) con estado local en `git config` y hooks idempotentes.
+- ✅ Integrar guardrail lifecycle round-trip en `validation:package-smoke` (`install -> stages -> uninstall`) con verificación de `git status` estable.
+- ✅ Validar guardrails del lote (`validation:package-manifest`, `validation:package-smoke`, `validation:package-smoke:minimal`).
+- ✅ Alinear el lote de lifecycle con reglas activas del repositorio (cambios mínimos y comportamiento determinista).
+- ✅ Revalidar lifecycle en local (`typecheck`, `lifecycle tests`, `validation:package-manifest`, `validation:lifecycle-smoke`, `validation:package-smoke`).
+- 🚧 Ejecutar demostración guiada final en `pumuki-mock-consumer` limpio para constatar flujo enterprise completo.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

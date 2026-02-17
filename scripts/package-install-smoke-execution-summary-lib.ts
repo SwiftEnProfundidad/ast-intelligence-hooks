@@ -28,7 +28,11 @@ const findStepResult = (
 export const appendSmokeSuccessSummary = (params: {
   workspace: SmokeWorkspace;
   results: ReadonlyArray<SmokeStepResult>;
+  lifecycleStatusSnapshot: string;
+  lifecycleStatusAfterUninstall: string;
 }): void => {
+  const renderStatusSnapshot = (value: string): string =>
+    value.length === 0 ? '(clean)' : value.split('\n').join(' ; ');
   const preCommit = findStepResult(params.results, 'pre-commit');
   const prePush = findStepResult(params.results, 'pre-push');
   const ci = findStepResult(params.results, 'ci');
@@ -37,5 +41,11 @@ export const appendSmokeSuccessSummary = (params: {
   params.workspace.summary.push(`- pre-commit exit: \`${preCommit.exitCode}\` (${preCommit.outcome})`);
   params.workspace.summary.push(`- pre-push exit: \`${prePush.exitCode}\` (${prePush.outcome})`);
   params.workspace.summary.push(`- ci exit: \`${ci.exitCode}\` (${ci.outcome})`);
+  params.workspace.summary.push(
+    `- lifecycle status before install: \`${renderStatusSnapshot(params.lifecycleStatusSnapshot)}\``
+  );
+  params.workspace.summary.push(
+    `- lifecycle status after uninstall: \`${renderStatusSnapshot(params.lifecycleStatusAfterUninstall)}\``
+  );
   params.workspace.summary.push(`- Artifact root: \`${params.workspace.reportsDir}\``);
 };
