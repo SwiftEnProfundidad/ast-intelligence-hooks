@@ -18,6 +18,7 @@ import {
 } from '../platform/detectPlatforms';
 import { extractHeuristicFacts } from '../../core/facts/extractHeuristicFacts';
 import { buildCombinedBaselineRules } from './baselineRuleSets';
+import { attachFindingTraceability } from './findingTraceability';
 
 type PlatformGateEvaluationResult = {
   detectedPlatforms: DetectedPlatforms;
@@ -25,6 +26,32 @@ type PlatformGateEvaluationResult = {
   projectRules: RuleSet;
   heuristicRules: RuleSet;
   findings: ReadonlyArray<Finding>;
+};
+
+export type PlatformGateEvaluationDependencies = {
+  detectPlatformsFromFacts: typeof detectPlatformsFromFacts;
+  loadHeuristicsConfig: typeof loadHeuristicsConfig;
+  loadSkillsRuleSetForStage: typeof loadSkillsRuleSetForStage;
+  buildCombinedBaselineRules: typeof buildCombinedBaselineRules;
+  extractHeuristicFacts: typeof extractHeuristicFacts;
+  applyHeuristicSeverityForStage: typeof applyHeuristicSeverityForStage;
+  loadProjectRules: typeof loadProjectRules;
+  mergeRuleSets: typeof mergeRuleSets;
+  evaluateRules: typeof evaluateRules;
+  attachFindingTraceability: typeof attachFindingTraceability;
+};
+
+const defaultDependencies: PlatformGateEvaluationDependencies = {
+  detectPlatformsFromFacts,
+  loadHeuristicsConfig,
+  loadSkillsRuleSetForStage,
+  buildCombinedBaselineRules,
+  extractHeuristicFacts,
+  applyHeuristicSeverityForStage,
+  loadProjectRules,
+  mergeRuleSets,
+  evaluateRules,
+  attachFindingTraceability,
 };
 
 const normalizeStageForSkills = (
@@ -38,17 +65,25 @@ export const evaluatePlatformGateFindings = (
     facts: ReadonlyArray<Fact>;
     stage: GateStage;
     repoRoot: string;
-  }
+  },
+  dependencies: Partial<PlatformGateEvaluationDependencies> = {}
 ): PlatformGateEvaluationResult => {
-  const detectedPlatforms = detectPlatformsFromFacts(params.facts);
-  const heuristicsConfig = loadHeuristicsConfig();
+  const activeDependencies: PlatformGateEvaluationDependencies = {
+    ...defaultDependencies,
+    ...dependencies,
+  };
+  const detectedPlatforms = activeDependencies.detectPlatformsFromFacts(params.facts);
+  const heuristicsConfig = activeDependencies.loadHeuristicsConfig();
   const stageForSkills = normalizeStageForSkills(params.stage);
-  const skillsRuleSet = loadSkillsRuleSetForStage(stageForSkills, params.repoRoot);
-  const baselineRules = buildCombinedBaselineRules(detectedPlatforms);
+  const skillsRuleSet = activeDependencies.loadSkillsRuleSetForStage(
+    stageForSkills,
+    params.repoRoot
+  );
+  const baselineRules = activeDependencies.buildCombinedBaselineRules(detectedPlatforms);
   const shouldExtractHeuristicFacts =
     heuristicsConfig.astSemanticEnabled || skillsRuleSet.requiresHeuristicFacts;
   const heuristicFacts = shouldExtractHeuristicFacts
-    ? extractHeuristicFacts({
+    ? activeDependencies.extractHeuristicFacts({
       facts: params.facts,
       detectedPlatforms,
     })
@@ -56,7 +91,7 @@ export const evaluatePlatformGateFindings = (
   const evaluationFacts: ReadonlyArray<Fact> =
     heuristicFacts.length > 0 ? [...params.facts, ...heuristicFacts] : params.facts;
   const heuristicRules = heuristicsConfig.astSemanticEnabled
-    ? applyHeuristicSeverityForStage(astHeuristicsRuleSet, params.stage).filter(
+    ? activeDependencies.applyHeuristicSeverityForStage(astHeuristicsRuleSet, params.stage).filter(
       (rule) => !skillsRuleSet.mappedHeuristicRuleIds.has(rule.id)
     )
     : [];
@@ -65,12 +100,21 @@ export const evaluatePlatformGateFindings = (
     ...heuristicRules,
     ...skillsRuleSet.rules,
   ];
-  const projectConfig = loadProjectRules();
+  const projectConfig = activeDependencies.loadProjectRules();
   const projectRules = projectConfig?.rules ?? [];
-  const mergedRules = mergeRuleSets(baselineRulesWithHeuristicsAndSkills, projectRules, {
-    allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
+  const mergedRules = activeDependencies.mergeRuleSets(
+    baselineRulesWithHeuristicsAndSkills,
+    projectRules,
+    {
+      allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
+    }
+  );
+  const rawFindings = activeDependencies.evaluateRules(mergedRules, evaluationFacts);
+  const findings = activeDependencies.attachFindingTraceability({
+    findings: rawFindings,
+    rules: mergedRules,
+    facts: evaluationFacts,
   });
-  const findings = evaluateRules(mergedRules, evaluationFacts);
 
   return {
     detectedPlatforms,

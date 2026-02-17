@@ -26,6 +26,10 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Package smoke runner export wiring was restored for staged payload setup (`validation:package-smoke` / `validation:package-smoke:minimal`).
 - `pumuki remove` now prunes only directories traceable to the Pumuki dependency tree, guaranteeing third-party dependency folders are never removed.
+- Evidence traceability is now attached deterministically at evaluation time:
+  - findings include `filePath`/`lines` when traceable from matched facts,
+  - evidence v2.1 persists `matchedBy` and `source` for snapshot + compatibility violations,
+  - baseline/skills findings no longer collapse to `file: "unknown"` when matching facts are available.
 
 ### Refactored
 

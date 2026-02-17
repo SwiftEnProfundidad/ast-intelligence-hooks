@@ -10,6 +10,14 @@ import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { buildBaselineRuleSetEntries } from './baselineRuleSets';
 import type { IEvidenceService } from './EvidenceService';
 
+export type PlatformGateEvidenceDependencies = {
+  generateEvidence: typeof generateEvidence;
+};
+
+const defaultDependencies: PlatformGateEvidenceDependencies = {
+  generateEvidence,
+};
+
 export const emitPlatformGateEvidence = (params: {
   stage: GateStage;
   policyTrace?: ResolvedStagePolicy['trace'];
@@ -21,8 +29,13 @@ export const emitPlatformGateEvidence = (params: {
   projectRules: RuleSet;
   heuristicRules: RuleSet;
   evidenceService: IEvidenceService;
-}): void => {
-  generateEvidence({
+}, dependencies: Partial<PlatformGateEvidenceDependencies> = {}): void => {
+  const activeDependencies: PlatformGateEvidenceDependencies = {
+    ...defaultDependencies,
+    ...dependencies,
+  };
+
+  activeDependencies.generateEvidence({
     stage: params.stage,
     findings: params.findings,
     gateOutcome: params.gateOutcome,

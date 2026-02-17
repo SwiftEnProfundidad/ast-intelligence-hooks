@@ -18,18 +18,36 @@ const validateProjectRulesConfig = (value: unknown): ProjectRulesConfig | undefi
   return undefined;
 };
 
+const hasConfigPayload = (value: ProjectRulesConfig | undefined): boolean => {
+  if (!value) {
+    return false;
+  }
+  return value.rules !== undefined || value.allowOverrideLocked !== undefined;
+};
+
 const loadFromPath = (configPath: string): ProjectRulesConfig | undefined => {
   if (!existsSync(configPath)) {
     return undefined;
   }
 
   const loaded: unknown = require(configPath);
+  const defaultExport = isObject(loaded) && 'default' in loaded ? loaded.default : undefined;
+  const defaultValidated =
+    defaultExport !== undefined ? validateProjectRulesConfig(defaultExport) : undefined;
+  if (hasConfigPayload(defaultValidated)) {
+    return defaultValidated;
+  }
+
   const validated = validateProjectRulesConfig(loaded);
-  if (validated) {
+  if (hasConfigPayload(validated)) {
     return validated;
   }
-  if (isObject(loaded) && 'default' in loaded) {
-    return validateProjectRulesConfig(loaded.default);
+
+  if (defaultValidated) {
+    return defaultValidated;
+  }
+  if (validated) {
+    return validated;
   }
 
   return undefined;

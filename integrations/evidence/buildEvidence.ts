@@ -74,6 +74,14 @@ const ledgerKey = (entry: Pick<LedgerEntry, 'ruleId' | 'file' | 'lines'>): strin
   return `${entry.ruleId}::${entry.file}::${linesKey(entry.lines)}`;
 };
 
+const normalizeOptionalString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
 const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
   const file = (finding.filePath ?? finding.file ?? 'unknown').replace(/\\/g, '/');
   return {
@@ -83,6 +91,8 @@ const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
     message: finding.message,
     file,
     lines: normalizeLines(finding.lines),
+    matchedBy: normalizeOptionalString(finding.matchedBy),
+    source: normalizeOptionalString(finding.source),
   };
 };
 
@@ -260,6 +270,8 @@ const toCompatibilityViolations = (
     message: finding.message,
     file: finding.file,
     lines: finding.lines,
+    matchedBy: finding.matchedBy,
+    source: finding.source,
   }));
 };
 

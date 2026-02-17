@@ -192,7 +192,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reforzar cobertura de `integrations/lifecycle/uninstall.ts` (idempotencia, `process.cwd` por defecto y no-op con hooks custom no gestionados).
 - ✅ Reforzar cobertura de `integrations/lifecycle/remove.ts` (propagación de `purgeArtifacts` y rutas no-op deterministas).
 - ✅ Reforzar cobertura de `integrations/lifecycle/doctor.ts` (mensajes de veredicto, hooks parciales y metadatos de estado).
-- 🚧 Reforzar cobertura de `integrations/lifecycle/update.ts` (modo dry-run, propagación de repoRoot y rutas idempotentes).
+- ✅ Reforzar cobertura de `integrations/lifecycle/update.ts` (modo dry-run, propagación de repoRoot y rutas idempotentes).
 - ✅ Añadir test unitario para `integrations/lifecycle/uninstall.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/remove.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/doctor.ts`.
@@ -260,6 +260,13 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar validación determinista del lote SOLID (detectors TS + extractor heurístico + stage policies) y cerrar versión de pack heurístico.
 - ✅ Cerrar implementación integral de reglas/skills (heurísticas iOS + SOLID TS + stage promotions + contracts skills) con validación completa (`typecheck`, `skills:lock:check`, `test:deterministic` y suite dirigida de policies/presets).
 - ✅ Endurecer `pumuki-mock-consumer` con una mini-app feature-first más elaborada y escenario `violations` ampliado para cubrir skills iOS/backend/frontend/android + heurísticas críticas (security/process/fs/browser/SOLID) mediante `docs/VIOLATION_SKILLS_MATRIX.md`.
+- ✅ Corregir carga de `pumuki.rules.ts` con `default export` en `integrations/config/loadProjectRules.ts` y añadir test de regresión.
+- ✅ Auditar el `.ai_evidence.json` del mock y confirmar cobertura metodológica activa (`SOLID/Clean/TDD/BDD`) junto con gaps de trazabilidad (`file/lines`).
+- ✅ Implementar trazabilidad determinista de findings (`filePath`, `lines`, `matchedBy`, `source`) en evaluación y evidencia v2.1.
+- ✅ Añadir cobertura de regresión para trazabilidad (`integrations/git/__tests__/findingTraceability.test.ts`, `integrations/git/__tests__/runPlatformGateEvaluation.test.ts`, `integrations/evidence/__tests__/buildEvidence.test.ts`).
+- ✅ Endurecer pruebas de integración Git eliminando monkey-patching frágil en `runPlatformGate`/`runPlatformGateEvidence` mediante inyección explícita en tests.
+- ✅ Ajustar guardrail IDE-agnostic para excluir archivos de test (`*.test.ts`, `*.spec.ts`) del escaneo de runtime coupling.
+- 🚧 Publicar siguiente versión de `pumuki` con fixes de `loadProjectRules` + trazabilidad de evidencia y revalidar en `pumuki-mock-consumer`.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

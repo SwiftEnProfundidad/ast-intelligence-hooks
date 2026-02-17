@@ -431,6 +431,33 @@ test('infers gate outcome from findings when gateOutcome is not provided', () =>
   assert.equal(warnResult.ai_gate.status, 'ALLOWED');
 });
 
+test('preserves finding traceability fields in snapshot and compatibility violations', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'CRITICAL',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'console.log no permitido',
+        filePath: 'apps/backend/src/main.ts',
+        lines: [12],
+        matchedBy: 'FileContent',
+        source: 'git:staged',
+      },
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.findings[0]?.matchedBy, 'FileContent');
+  assert.equal(result.snapshot.findings[0]?.source, 'git:staged');
+  assert.equal(result.ai_gate.violations[0]?.matchedBy, 'FileContent');
+  assert.equal(result.ai_gate.violations[0]?.source, 'git:staged');
+});
+
 test('preserves firstSeen from previous ledger and refreshes lastSeen timestamp', () => {
   const previous = emptyEvidence();
   previous.ledger = [

@@ -66,21 +66,9 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
     },
   };
 
-  const generateEvidenceModule = require('../../evidence/generateEvidence') as {
-    generateEvidence: (params: GenerateEvidenceParams) => unknown;
-  };
-  const originalGenerateEvidence = generateEvidenceModule.generateEvidence;
   let capturedGenerateEvidenceParams: GenerateEvidenceParams | undefined;
-  generateEvidenceModule.generateEvidence = (params: GenerateEvidenceParams): unknown => {
-    capturedGenerateEvidenceParams = params;
-    return {
-      evidence: { version: '2.1' },
-      write: { ok: true, path: '/tmp/.ai_evidence.json' },
-    };
-  };
-
-  try {
-    emitPlatformGateEvidence({
+  emitPlatformGateEvidence(
+    {
       stage: 'PRE_PUSH',
       policyTrace,
       findings,
@@ -91,10 +79,17 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
       projectRules,
       heuristicRules,
       evidenceService,
-    });
-  } finally {
-    generateEvidenceModule.generateEvidence = originalGenerateEvidence;
-  }
+    },
+    {
+      generateEvidence: (params: GenerateEvidenceParams) => {
+        capturedGenerateEvidenceParams = params;
+        return {
+          evidence: { version: '2.1' },
+          write: { ok: true, path: '/tmp/.ai_evidence.json' },
+        };
+      },
+    }
+  );
 
   assert.equal(loadPreviousEvidenceRepoRoot, '/repo/root');
   assert.deepEqual(toDetectedPlatformsRecordInput, detectedPlatforms);

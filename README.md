@@ -142,6 +142,7 @@ Dedicated gate binaries are available:
 - Rules are evaluated with platform-aware packs and project overrides.
 - Gate applies stage policy thresholds.
 - Evidence is generated as deterministic, machine-readable contract.
+- Findings carry deterministic traceability when available (`file`, `lines`, `matchedBy`, `source`).
 
 ### Default stage policies
 

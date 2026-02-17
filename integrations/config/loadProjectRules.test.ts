@@ -57,6 +57,21 @@ test('loadProjectRules usa pumuki.rules.ts cuando no existe .pumuki/rules.ts', a
   });
 });
 
+test('loadProjectRules resuelve correctamente default export cuando el módulo cargado no expone rules en raíz', async () => {
+  await withTempDir('pumuki-project-rules-default-only-', async (tempRoot) => {
+    writeFileSync(
+      join(tempRoot, 'pumuki.rules.ts'),
+      `module.exports = { default: ${JSON.stringify(buildRuleConfig('rule.default.only'), null, 2)} };\n`,
+      'utf8'
+    );
+
+    await withCwd(tempRoot, async () => {
+      const config = loadProjectRules();
+      assert.equal(config?.rules?.[0]?.id, 'rule.default.only');
+    });
+  });
+});
+
 test('loadProjectRules devuelve undefined si la configuración no valida contra schema', async () => {
   await withTempDir('pumuki-project-rules-invalid-', async (tempRoot) => {
     writeRulesModule(join(tempRoot, 'pumuki.rules.ts'), {

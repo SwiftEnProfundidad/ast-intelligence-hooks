@@ -11,6 +11,8 @@ export type SnapshotFinding = {
   message: string;
   file: string;
   lines?: EvidenceLines;
+  matchedBy?: string;
+  source?: string;
 };
 
 export type Snapshot = {
@@ -61,6 +63,8 @@ export type CompatibilityViolation = {
   message: string;
   file: string;
   lines?: EvidenceLines;
+  matchedBy?: string;
+  source?: string;
 };
 
 export type ConsolidationSuppressedFinding = {
