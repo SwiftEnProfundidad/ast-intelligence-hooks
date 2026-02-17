@@ -166,6 +166,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Revalidar en `pumuki-mock-consumer` el ciclo desde cero con `dependencies` + `devDependencies` (`pumuki + dayjs + zod`), confirmando que `remove` solo elimina Pumuki.
 - ✅ Limpiar `pumuki-mock-consumer` a baseline sin instalaciones temporales (`pumuki`, dependencias de prueba, `node_modules`, `.ai_evidence.json`).
 - ✅ Crear checklist maestro de validación completa (`docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md`) con cobertura end-to-end de todas las capacidades.
+- ✅ Traducir `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` al español manteniendo estructura y cobertura completa.
+- ✅ Actualizar `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` con estados visibles por tarea (`✅/🚧/⏳`) y una única tarea activa en progreso.
 - 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
 
 ## Notas

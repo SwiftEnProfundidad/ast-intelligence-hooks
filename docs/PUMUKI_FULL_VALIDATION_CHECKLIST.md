@@ -1,148 +1,148 @@
-# Pumuki Full Validation Checklist
+# Checklist Completo de Validación de Pumuki
 
-Master checklist to validate the full Pumuki cycle end-to-end before rollout in enterprise consumer repositories.
+Checklist maestro para validar el ciclo completo de Pumuki end-to-end antes del rollout en repositorios enterprise consumidores.
 
-## Legend
+## Leyenda
 
-- ✅ Done
-- 🚧 In progress
-- ⏳ Pending
+- ✅ Completada
+- 🚧 En progreso
+- ⏳ Pendiente
 
-## Validation policy
+## Política de validación
 
-- Execute tasks in order.
-- Close one task at a time.
-- Keep evidence for each task (command output + expected result).
-- Any warning/error found during execution must be fixed immediately before continuing.
+- Ejecutar las tareas en orden.
+- Cerrar una tarea cada vez.
+- Guardar evidencia de cada tarea (salida de comandos + resultado esperado).
+- Cualquier warning/error detectado durante la ejecución debe corregirse de inmediato antes de continuar.
 
-## Scope
+## Alcance
 
-This checklist covers:
+Este checklist cubre:
 
-- npm package distribution and command surface.
-- lifecycle management (`install`, `doctor`, `status`, `update`, `uninstall`, `remove`).
+- distribución del paquete npm y superficie de comandos.
+- gestión de lifecycle (`install`, `doctor`, `status`, `update`, `uninstall`, `remove`).
 - stage gates (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
-- multi-platform evaluation (iOS, backend, frontend, android).
-- rulesets, stage policies, and override behavior.
-- deterministic evidence v2.1.
+- evaluación multi-plataforma (iOS, backend, frontend, android).
+- rulesets, políticas por stage y comportamiento de overrides.
+- evidencia determinista v2.1.
 - MCP evidence context server.
-- framework operational CLI/menu.
-- deterministic/regression suites.
-- mock-consumer execution matrix.
+- CLI/menú operativo del framework.
+- suites deterministas/regresión.
+- matriz de ejecución en mock-consumer.
 
-## Task board
+## Tablero de tareas
 
-### A. Package and distribution
+### A. Paquete y distribución
 
-- ⏳ A1. Verify npm metadata and dist-tags (`latest`, `next`) match target release.
-- ⏳ A2. Verify package can be installed from npm in a clean consumer repository.
-- ⏳ A3. Verify published binaries are available after install:
+- ✅ A1. Verificar que metadata npm y dist-tags (`latest`, `next`) coinciden con la release objetivo.
+- ✅ A2. Verificar que el paquete se puede instalar desde npm en un repositorio consumidor limpio.
+- ⏳ A3. Verificar que los binarios publicados están disponibles tras la instalación:
   - `pumuki`
   - `pumuki-pre-commit`
   - `pumuki-pre-push`
   - `pumuki-ci`
   - `pumuki-mcp-evidence`
-- ⏳ A4. Verify `VERSION`, `package.json` version, and release notes/changelog are aligned.
+- ✅ A4. Verificar que `VERSION`, versión en `package.json` y release notes/changelog están alineados.
 
-### B. Lifecycle management
+### B. Gestión de lifecycle
 
-- ⏳ B1. `pumuki install` installs only managed hook blocks and lifecycle state.
-- ⏳ B2. `pumuki doctor` returns PASS on a clean baseline.
-- ⏳ B3. `pumuki status` reflects installed lifecycle and managed hooks.
-- ⏳ B4. `pumuki update --latest` keeps managed hooks idempotent and healthy.
-- ⏳ B5. `pumuki uninstall --purge-artifacts` removes managed hooks and known artifacts.
-- ⏳ B6. `pumuki remove` removes all Pumuki traces and keeps third-party dependencies untouched.
-- ⏳ B7. Safety guard: tracked `node_modules` blocks install/update as expected.
-- ⏳ B8. Re-run install/remove cycle twice to validate idempotency.
+- ✅ B1. `pumuki install` instala solo bloques gestionados de hooks y estado de lifecycle.
+- ✅ B2. `pumuki doctor` devuelve PASS sobre baseline limpia.
+- ✅ B3. `pumuki status` refleja lifecycle instalado y hooks gestionados.
+- ⏳ B4. `pumuki update --latest` mantiene hooks gestionados idempotentes y saludables.
+- ⏳ B5. `pumuki uninstall --purge-artifacts` elimina hooks gestionados y artifacts conocidos.
+- ✅ B6. `pumuki remove` elimina todos los rastros de Pumuki y no toca dependencias de terceros.
+- ⏳ B7. Guardrail de seguridad: `node_modules` tracked bloquea install/update según lo esperado.
+- ✅ B8. Re-ejecutar ciclo install/remove dos veces para validar idempotencia.
 
-### C. Stage gate runtime
+### C. Runtime de stage gates
 
-- ⏳ C1. `pumuki-pre-commit` evaluates staged scope only (`git diff --cached`).
-- ⏳ C2. `pumuki-pre-push` evaluates `upstream..HEAD`.
-- ⏳ C3. `pumuki-ci` evaluates `baseRef..HEAD` (`GITHUB_BASE_REF` or fallback).
-- ⏳ C4. Exit codes are deterministic (`0` allow, `1` block).
-- ⏳ C5. Gate behavior is consistent between direct binaries and hook-triggered execution.
+- ✅ C1. `pumuki-pre-commit` evalúa solo scope staged (`git diff --cached`).
+- ✅ C2. `pumuki-pre-push` evalúa `upstream..HEAD`.
+- ✅ C3. `pumuki-ci` evalúa `baseRef..HEAD` (`GITHUB_BASE_REF` o fallback).
+- ✅ C4. Los exit codes son deterministas (`0` allow, `1` block).
+- ⏳ C5. El comportamiento de gate es consistente entre binarios directos y ejecución por hooks.
 
-### D. Platform detection and combined evaluation
+### D. Detección de plataforma y evaluación combinada
 
-- ⏳ D1. iOS selector coverage (`*.swift`) works in mixed repositories.
-- ⏳ D2. Backend selector coverage (`apps/backend/**/*.ts`) works in mixed repositories.
-- ⏳ D3. Frontend selector coverage (`apps/frontend|apps/web`) works in mixed repositories.
-- ⏳ D4. Android selector coverage (`*.kt`, `*.kts`) works in mixed repositories.
-- ⏳ D5. Multi-platform commit/range triggers combined ruleset loading and combined gate output.
-- ⏳ D6. Platform false positives are not observed outside selector scope.
+- ⏳ D1. Cobertura del selector iOS (`*.swift`) funciona en repos mixtos.
+- ⏳ D2. Cobertura del selector backend (`apps/backend/**/*.ts`) funciona en repos mixtos.
+- ⏳ D3. Cobertura del selector frontend (`apps/frontend|apps/web`) funciona en repos mixtos.
+- ⏳ D4. Cobertura del selector android (`*.kt`, `*.kts`) funciona en repos mixtos.
+- ⏳ D5. Commit/range multi-plataforma dispara carga combinada de rulesets y salida combinada de gate.
+- ⏳ D6. No se observan falsos positivos de plataforma fuera del scope de selectores.
 
-### E. Rulesets, policies, and overrides
+### E. Rulesets, políticas y overrides
 
-- ⏳ E1. Baseline packs load correctly:
+- ⏳ E1. Los baseline packs cargan correctamente:
   - `iosEnterpriseRuleSet`
   - `backendRuleSet`
   - `frontendRuleSet`
   - `androidRuleSet`
-- ⏳ E2. Stage policy thresholds match expected defaults:
+- ⏳ E2. Los umbrales por stage coinciden con defaults esperados:
   - PRE_COMMIT: block `CRITICAL`, warn `ERROR`
   - PRE_PUSH: block `ERROR`, warn `WARN`
   - CI: block `ERROR`, warn `WARN`
-- ⏳ E3. Project overrides apply without breaking locked baseline semantics.
-- ⏳ E4. Locked rules remain enforced when overrides are not explicitly allowed.
+- ⏳ E3. Los overrides de proyecto aplican sin romper semántica de baseline locked.
+- ⏳ E4. Locked rules siguen aplicándose cuando override no está permitido explícitamente.
 
-### F. Evidence v2.1 contract
+### F. Contrato de evidencia v2.1
 
-- ⏳ F1. `.ai_evidence.json` is generated for each stage run.
-- ⏳ F2. Evidence schema fields are valid (`version`, `snapshot`, `ledger`).
-- ⏳ F3. Evidence includes active platforms and loaded rulesets.
-- ⏳ F4. Evidence ordering is deterministic across equivalent runs.
-- ⏳ F5. Suppression/ledger fields remain machine-readable and stable.
+- ⏳ F1. Se genera `.ai_evidence.json` en cada ejecución de stage.
+- ⏳ F2. Los campos del esquema de evidencia son válidos (`version`, `snapshot`, `ledger`).
+- ⏳ F3. La evidencia incluye plataformas activas y rulesets cargados.
+- ⏳ F4. El orden de la evidencia es determinista en ejecuciones equivalentes.
+- ⏳ F5. Campos de suppressions/ledger se mantienen estables y machine-readable.
 
 ### G. MCP evidence context server
 
-- 🚧 G1. Start MCP evidence server (`pumuki-mcp-evidence`) from consumer repo context.
-- ⏳ G2. Validate MCP context endpoints/facets respond with valid payload shape.
-- ⏳ G3. Validate MCP reads latest `.ai_evidence.json` deterministically.
-- ⏳ G4. Validate MCP behavior when evidence file is missing/corrupted.
+- 🚧 G1. Arrancar MCP evidence server (`pumuki-mcp-evidence`) desde contexto de repositorio consumidor.
+- ⏳ G2. Validar que endpoints/facetas MCP responden con shape de payload válido.
+- ⏳ G3. Validar que MCP lee el último `.ai_evidence.json` de forma determinista.
+- ⏳ G4. Validar comportamiento MCP cuando falta o está corrupto el fichero de evidencia.
 
-### H. Framework operational UX
+### H. UX operativa del framework
 
-- ⏳ H1. `npm run framework:menu` opens and executes expected actions.
-- ⏳ H2. Menu actions that map to gate/lifecycle commands produce expected outputs.
-- ⏳ H3. Menu actions that generate validation reports create files in expected locations.
+- ⏳ H1. `npm run framework:menu` abre y ejecuta acciones esperadas.
+- ⏳ H2. Acciones del menú que mapean a comandos gate/lifecycle producen salidas esperadas.
+- ⏳ H3. Acciones del menú que generan reportes de validación crean ficheros en rutas esperadas.
 
-### I. Deterministic test and validation suites
+### I. Suites deterministas y de validación
 
-- ⏳ I1. `npm run typecheck` passes.
-- ⏳ I2. `npm run test` passes.
-- ⏳ I3. `npm run test:deterministic` passes.
-- ⏳ I4. `npm run test:heuristics` passes.
-- ⏳ I5. `npm run test:mcp` passes.
-- ⏳ I6. `npm run test:stage-gates` passes.
-- ⏳ I7. `npm run validation:package-manifest` passes.
-- ⏳ I8. `npm run validation:lifecycle-smoke` passes.
-- ⏳ I9. `npm run validation:package-smoke` passes.
-- ⏳ I10. `npm run validation:package-smoke:minimal` passes.
-- ⏳ I11. `npm run validation:docs-hygiene` passes.
+- ✅ I1. `npm run typecheck` pasa.
+- ⏳ I2. `npm run test` pasa.
+- ⏳ I3. `npm run test:deterministic` pasa.
+- ⏳ I4. `npm run test:heuristics` pasa.
+- ⏳ I5. `npm run test:mcp` pasa.
+- ⏳ I6. `npm run test:stage-gates` pasa.
+- ⏳ I7. `npm run validation:package-manifest` pasa.
+- ⏳ I8. `npm run validation:lifecycle-smoke` pasa.
+- ⏳ I9. `npm run validation:package-smoke` pasa.
+- ⏳ I10. `npm run validation:package-smoke:minimal` pasa.
+- ⏳ I11. `npm run validation:docs-hygiene` pasa.
 
-### J. Mock consumer full cycle
+### J. Ciclo completo en mock consumer
 
-- ⏳ J1. Clean scenario: pre-commit/pre-push/ci => all pass (`0`).
-- ⏳ J2. Violations scenario: pre-commit/pre-push/ci => block (`1`) as expected.
-- ⏳ J3. Mixed scenario: deterministic combined blocking/warning behavior.
-- ⏳ J4. Lifecycle cleanup after each scenario leaves repository baseline clean.
-- ⏳ J5. Re-run matrix to confirm repeatability (same outcomes on rerun).
+- ✅ J1. Escenario clean: pre-commit/pre-push/ci => todo pasa (`0`).
+- ✅ J2. Escenario violations: pre-commit/pre-push/ci => bloquea (`1`) según lo esperado.
+- ✅ J3. Escenario mixed: comportamiento determinista combinado de bloqueos/warnings.
+- ✅ J4. Limpieza lifecycle tras cada escenario deja el baseline del repositorio limpio.
+- ⏳ J5. Re-ejecutar matriz para confirmar repetibilidad (mismos resultados en rerun).
 
-### K. Failure and recovery paths
+### K. Rutas de fallo y recuperación
 
-- ⏳ K1. PRE_PUSH without upstream produces clear guidance and safe failure path.
-- ⏳ K2. CI without `GITHUB_BASE_REF` correctly falls back to default base ref.
-- ⏳ K3. Hook drift recovery: `doctor` detects and `install`/`update` restores managed blocks.
-- ⏳ K4. Partial lifecycle state mismatch is detected and recoverable.
+- ⏳ K1. PRE_PUSH sin upstream produce guía clara y ruta de fallo segura.
+- ⏳ K2. CI sin `GITHUB_BASE_REF` hace fallback correcto a base ref por defecto.
+- ⏳ K3. Recuperación de hook drift: `doctor` detecta y `install`/`update` restaura bloques gestionados.
+- ⏳ K4. Mismatch parcial de estado lifecycle se detecta y es recuperable.
 
-### L. Release closure
+### L. Cierre de release
 
-- ⏳ L1. README/USAGE/INSTALLATION commands match current runtime behavior.
-- ⏳ L2. CHANGELOG includes all user-visible behavior changes.
-- ⏳ L3. Release package tested in mock consumer from npm (not local path).
-- ⏳ L4. Final go/no-go report created with links to evidence artifacts and logs.
+- ⏳ L1. Comandos en README/USAGE/INSTALLATION coinciden con comportamiento real runtime.
+- ✅ L2. CHANGELOG incluye todos los cambios visibles para usuario.
+- ✅ L3. Paquete release probado en mock consumer desde npm (no ruta local).
+- ⏳ L4. Informe final go/no-go creado con enlaces a artifacts y logs de evidencia.
 
-## Exit criteria
+## Criterio de salida
 
-All tasks A1-L4 must be ✅ with stored command evidence and no unresolved warnings/errors.
+Todas las tareas A1-L4 deben estar en ✅ con evidencia de comandos almacenada y sin warnings/errores pendientes.
