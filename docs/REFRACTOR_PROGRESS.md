@@ -22,7 +22,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `consumer-support-bundle-gh-*`
   - `framework-menu-runners-validation-*`
   - `consumer-support-bundle-markdown-sections-*`
-- 🚧 Reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateOutput.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateFacts.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateEvidence.ts`.
@@ -189,6 +189,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reforzar cobertura de `integrations/lifecycle/status.ts` (cwd por defecto + estado vacío sin hooks/config).
 - ✅ Añadir test unitario para `integrations/lifecycle/install.ts`.
 - ✅ Reforzar cobertura de `integrations/lifecycle/install.ts` (idempotencia en segunda ejecución + uso de `process.cwd` por defecto).
+- ✅ Reforzar cobertura de `integrations/lifecycle/uninstall.ts` (idempotencia, `process.cwd` por defecto y no-op con hooks custom no gestionados).
+- 🚧 Reforzar cobertura de `integrations/lifecycle/remove.ts` (propagación de `purgeArtifacts` y rutas no-op deterministas).
 - ✅ Añadir test unitario para `integrations/lifecycle/uninstall.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/remove.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/doctor.ts`.
