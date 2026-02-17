@@ -141,6 +141,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar guardrails del lote (`validation:package-manifest`, `validation:package-smoke`, `validation:package-smoke:minimal`).
 - ✅ Alinear el lote de lifecycle con reglas activas del repositorio (cambios mínimos y comportamiento determinista).
 - ✅ Revalidar lifecycle en local (`typecheck`, `lifecycle tests`, `validation:package-manifest`, `validation:lifecycle-smoke`, `validation:package-smoke`).
+- ✅ Corregir `test:mcp` para suite MCP dividida y revalidar `test:deterministic` completo.
 - 🚧 Ejecutar demostración guiada final en `pumuki-mock-consumer` limpio para constatar flujo enterprise completo.
 
 ## Notas
