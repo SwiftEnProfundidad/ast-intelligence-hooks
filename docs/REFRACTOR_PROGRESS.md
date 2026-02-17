@@ -149,6 +149,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/config/skillsLock.ts`.
 - ✅ Añadir test unitario para `integrations/config/projectRules.ts`.
 - ✅ Añadir test unitario para `integrations/config/skillsCompilerTemplates.ts`.
+- ✅ Añadir test unitario para `integrations/config/skillsRuleSet.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/writeEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.

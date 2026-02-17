@@ -27,6 +27,18 @@ const sampleLock = {
           locked: true,
           confidence: 'HIGH',
         },
+        {
+          id: 'skills.ios.no-task-detached',
+          description:
+            'Avoid Task.detached in production iOS code without strict isolation rationale.',
+          severity: 'WARN',
+          platform: 'ios',
+          sourceSkill: 'ios-concurrency-guidelines',
+          sourcePath: 'docs/codex-skills/swift-concurrency.md',
+          stage: 'PRE_PUSH',
+          locked: true,
+          confidence: 'MEDIUM',
+        },
       ],
     },
     {
@@ -87,7 +99,7 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     assert.equal(preCommit.requiresHeuristicFacts, false);
 
     const prePush = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
-    assert.equal(prePush.rules.length, 1);
+    assert.equal(prePush.rules.length, 2);
     assert.equal(prePush.activeBundles.length, 1);
     assert.equal(prePush.activeBundles[0]?.name, 'ios-guidelines');
 
@@ -98,6 +110,7 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     assert.equal(firstRule.when.kind, 'Heuristic');
     assert.equal(firstRule.when.where?.ruleId, 'heuristics.ios.force-try.ast');
     assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.force-try.ast'), true);
+    assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.task-detached.ast'), true);
     assert.equal(prePush.requiresHeuristicFacts, true);
   });
 });
@@ -109,5 +122,99 @@ test('falls back gracefully when lock/policy files are missing', async () => {
     assert.equal(result.activeBundles.length, 0);
     assert.equal(result.requiresHeuristicFacts, false);
     assert.equal(result.mappedHeuristicRuleIds.size, 0);
+  });
+});
+
+test('returns empty result when defaultBundleEnabled is false and no bundle override exists', async () => {
+  await withTempDir('pumuki-skills-ruleset-disabled-', async (tempRoot) => {
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
+    writeFileSync(
+      join(tempRoot, 'skills.policy.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          defaultBundleEnabled: false,
+          stages: samplePolicy.stages,
+          bundles: {},
+        },
+        null,
+        2
+      )
+    );
+
+    const result = loadSkillsRuleSetForStage('CI', tempRoot);
+    assert.equal(result.rules.length, 0);
+    assert.equal(result.activeBundles.length, 0);
+    assert.equal(result.mappedHeuristicRuleIds.size, 0);
+    assert.equal(result.requiresHeuristicFacts, false);
+  });
+});
+
+test('ignores unmapped rules and promotes only from PRE_PUSH/CI', async () => {
+  await withTempDir('pumuki-skills-ruleset-promotion-', async (tempRoot) => {
+    const lock = {
+      version: '1.0',
+      compilerVersion: '1.0.0',
+      generatedAt: '2026-02-07T23:15:00.000Z',
+      bundles: [
+        {
+          name: 'ios-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+          hash: 'a'.repeat(64),
+          rules: [
+            {
+              id: 'skills.ios.no-force-try',
+              description: 'Disallow force try in production iOS code.',
+              severity: 'WARN',
+              platform: 'ios',
+              sourceSkill: 'ios-guidelines',
+              sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              locked: true,
+              confidence: 'HIGH',
+            },
+            {
+              id: 'skills.ios.custom-non-mapped-rule',
+              description: 'Rule without heuristic mapping must be ignored.',
+              severity: 'CRITICAL',
+              platform: 'ios',
+              sourceSkill: 'ios-guidelines',
+              sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              locked: true,
+              confidence: 'HIGH',
+            },
+          ],
+        },
+      ],
+    } as const;
+
+    const policy = {
+      version: '1.0',
+      defaultBundleEnabled: true,
+      stages: samplePolicy.stages,
+      bundles: {
+        'ios-guidelines': {
+          enabled: true,
+          promoteToErrorRuleIds: ['skills.ios.no-force-try'],
+        },
+      },
+    } as const;
+
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+    writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(policy, null, 2));
+
+    const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+    assert.equal(preCommit.rules.length, 1);
+    assert.equal(preCommit.rules[0]?.id, 'skills.ios.no-force-try');
+    assert.equal(preCommit.rules[0]?.severity, 'WARN');
+
+    const prePush = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
+    assert.equal(prePush.rules.length, 1);
+    assert.equal(prePush.rules[0]?.id, 'skills.ios.no-force-try');
+    assert.equal(prePush.rules[0]?.severity, 'ERROR');
+    assert.equal(
+      prePush.rules.some((rule) => rule.id === 'skills.ios.custom-non-mapped-rule'),
+      false
+    );
   });
 });
