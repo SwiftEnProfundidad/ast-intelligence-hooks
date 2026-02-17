@@ -118,6 +118,9 @@ Practical rule:
 
 ### Consumer package install (enterprise UX)
 
+Canonical package name: `pumuki`.
+Legacy package `pumuki-ast-hooks` is deprecated and frozen at `6.3.7`.
+
 ```bash
 npm install --save-exact pumuki
 npm update pumuki

@@ -149,6 +149,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Unificar iOS del mock exclusivamente bajo `apps/ios/` (eliminando duplicación `ios/`) para mantener estructura homogénea `apps/*`.
 - ✅ Migrar nombre canónico del paquete a `pumuki` y alinear comandos enterprise cortos (`npm install/update/uninstall pumuki`) con documentación y validaciones.
 - ✅ Publicar `pumuki@6.3.8` en npm y alinear tags de distribución (`latest` y `next`) a la misma versión.
+- ✅ Marcar `pumuki-ast-hooks` como paquete npm legacy/deprecado y documentar migración explícita en `README.md`.
 - 🚧 Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
 
 ## Notas
