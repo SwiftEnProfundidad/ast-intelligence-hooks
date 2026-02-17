@@ -146,7 +146,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Sincronizar documentación afectada por lifecycle (`README`, `CHANGELOG`, `INSTALLATION`, `USAGE`) en el mismo lote.
 - ✅ Endurecer `pumuki remove` para podar residuo huérfano `node_modules/.package-lock.json` y validar con test dedicado.
 - ✅ Completar `pumuki-mock-consumer` con escenarios reproducibles multi-plataforma (`clean`, `violations`, `mixed`) y script de aplicación de escenarios.
-- ✅ Añadir espejo iOS en `apps/ios/` dentro del mock (manteniendo `ios/`) para cubrir compatibilidad legacy y heurísticas modernas.
+- ✅ Unificar iOS del mock exclusivamente bajo `apps/ios/` (eliminando duplicación `ios/`) para mantener estructura homogénea `apps/*`.
 - 🚧 Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
 
 ## Notas
