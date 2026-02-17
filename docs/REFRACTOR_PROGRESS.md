@@ -162,6 +162,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
 - ✅ Reforzar cobertura de `integrations/evidence/readEvidence.ts` (version no string + ausencia de `version`).
 - ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.
+- ✅ Reforzar cobertura de `integrations/evidence/generateEvidence.ts` (gateOutcome explícito + ejecución limpia en temp git repo).
 - ✅ Añadir test unitario para `integrations/evidence/schema.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/buildEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/constants.ts`.
