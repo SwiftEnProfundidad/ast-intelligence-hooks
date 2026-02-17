@@ -171,6 +171,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/lifecycle/constants.ts`.
 - ✅ Reforzar cobertura de `integrations/lifecycle/constants.ts` (contrato estricto de config keys + formato/deduplicación de hooks).
 - ✅ Añadir test unitario para `integrations/lifecycle/packageInfo.ts`.
+- ✅ Reforzar cobertura de `integrations/lifecycle/packageInfo.ts` (determinismo de getters + strings no vacíos/trimmed).
 - ✅ Añadir test unitario para `integrations/lifecycle/npmService.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/gitService.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/artifacts.ts`.
