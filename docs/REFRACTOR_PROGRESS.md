@@ -169,7 +169,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Traducir `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` al español manteniendo estructura y cobertura completa.
 - ✅ Actualizar `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` con estados visibles por tarea (`✅/🚧/⏳`) y una única tarea activa en progreso.
 - ✅ Aclarar explícitamente en `README.md`, `docs/USAGE.md` y `docs/INSTALLATION.md` que `npm uninstall pumuki` no elimina hooks/estado lifecycle.
-- 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
+- ✅ Reordenar `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` por secuencia real de pruebas y reflejar `npm install pumuki` + `npx pumuki install` como completadas.
+- 🚧 Ejecutar `npx pumuki doctor` y `npx pumuki status` en `pumuki-mock-consumer` para cerrar bloque de lifecycle secuencial.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

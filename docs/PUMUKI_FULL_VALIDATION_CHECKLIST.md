@@ -1,11 +1,11 @@
 # Checklist Completo de Validación de Pumuki
 
-Checklist maestro para validar el ciclo completo de Pumuki end-to-end antes del rollout en repositorios enterprise consumidores.
+Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial antes del rollout en repositorios enterprise consumidores.
 
 ## Leyenda
 
 - ✅ Completada
-- 🚧 En progreso
+- 🚧 En progreso (solo 1 tarea activa)
 - ⏳ Pendiente
 
 ## Política de validación
@@ -15,134 +15,137 @@ Checklist maestro para validar el ciclo completo de Pumuki end-to-end antes del 
 - Guardar evidencia de cada tarea (salida de comandos + resultado esperado).
 - Cualquier warning/error detectado durante la ejecución debe corregirse de inmediato antes de continuar.
 
-## Alcance
+## Orden de ejecución recomendado
 
-Este checklist cubre:
+1. Preparación de entorno y baseline.
+2. Distribución e instalación de paquete.
+3. Lifecycle de Pumuki.
+4. Stage gates runtime.
+5. Detección multi-plataforma y evaluación combinada.
+6. Rulesets, políticas y overrides.
+7. Contrato de evidencia v2.1.
+8. MCP evidence context server.
+9. UX operativa (framework menu).
+10. Suites deterministas y validaciones.
+11. Fallos y recuperación.
+12. Cierre de release.
 
-- distribución del paquete npm y superficie de comandos.
-- gestión de lifecycle (`install`, `doctor`, `status`, `update`, `uninstall`, `remove`).
-- stage gates (`PRE_COMMIT`, `PRE_PUSH`, `CI`).
-- evaluación multi-plataforma (iOS, backend, frontend, android).
-- rulesets, políticas por stage y comportamiento de overrides.
-- evidencia determinista v2.1.
-- MCP evidence context server.
-- CLI/menú operativo del framework.
-- suites deterministas/regresión.
-- matriz de ejecución en mock-consumer.
+## Tablero de tareas (ordenado)
 
-## Tablero de tareas
+### 1) Preparación de entorno y baseline
 
-### A. Paquete y distribución
+- ✅ 1.1 Confirmar repositorio consumidor objetivo y rama de trabajo.
+- ✅ 1.2 Limpiar baseline del mock consumer (sin instalaciones temporales ni artifacts).
+- ✅ 1.3 Confirmar estado base limpio antes de reinstalar Pumuki.
 
-- ✅ A1. Verificar que metadata npm y dist-tags (`latest`, `next`) coinciden con la release objetivo.
-- ✅ A2. Verificar que el paquete se puede instalar desde npm en un repositorio consumidor limpio.
-- ⏳ A3. Verificar que los binarios publicados están disponibles tras la instalación:
+### 2) Distribución e instalación de paquete
+
+- ✅ 2.1 Verificar metadata npm y dist-tags (`latest`, `next`) de la release objetivo.
+- ✅ 2.2 Instalar `pumuki` desde npm en repositorio consumidor limpio.
+- ✅ 2.3 Instalar hooks gestionados con `npx pumuki install` (validado en mock).
+- ⏳ 2.4 Verificar disponibilidad de todos los binarios publicados:
   - `pumuki`
   - `pumuki-pre-commit`
   - `pumuki-pre-push`
   - `pumuki-ci`
   - `pumuki-mcp-evidence`
-- ✅ A4. Verificar que `VERSION`, versión en `package.json` y release notes/changelog están alineados.
+- ✅ 2.5 Verificar alineación `VERSION` + `package.json` + changelog/release notes.
 
-### B. Gestión de lifecycle
+### 3) Lifecycle de Pumuki
 
-- ✅ B1. `pumuki install` instala solo bloques gestionados de hooks y estado de lifecycle.
-- ✅ B2. `pumuki doctor` devuelve PASS sobre baseline limpia.
-- ✅ B3. `pumuki status` refleja lifecycle instalado y hooks gestionados.
-- ⏳ B4. `pumuki update --latest` mantiene hooks gestionados idempotentes y saludables.
-- ⏳ B5. `pumuki uninstall --purge-artifacts` elimina hooks gestionados y artifacts conocidos.
-- ✅ B6. `pumuki remove` elimina todos los rastros de Pumuki y no toca dependencias de terceros.
-- ⏳ B7. Guardrail de seguridad: `node_modules` tracked bloquea install/update según lo esperado.
-- ✅ B8. Re-ejecutar ciclo install/remove dos veces para validar idempotencia.
+- 🚧 3.1 Ejecutar y validar `npx pumuki doctor` tras instalación en baseline limpia.
+- ⏳ 3.2 Ejecutar y validar `npx pumuki status` tras instalación.
+- ⏳ 3.3 Validar `npx pumuki update --latest` (idempotencia y salud de hooks).
+- ⏳ 3.4 Validar `npx pumuki uninstall --purge-artifacts` (solo hooks + artifacts gestionados).
+- ✅ 3.5 Validar `npx --yes pumuki remove` (limpieza total de rastro Pumuki sin tocar terceros).
+- ✅ 3.6 Validar idempotencia lifecycle (ciclo install/remove repetido).
+- ⏳ 3.7 Validar guardrail: install/update falla si hay `node_modules` tracked.
 
-### C. Runtime de stage gates
+### 4) Stage gates runtime
 
-- ✅ C1. `pumuki-pre-commit` evalúa solo scope staged (`git diff --cached`).
-- ✅ C2. `pumuki-pre-push` evalúa `upstream..HEAD`.
-- ✅ C3. `pumuki-ci` evalúa `baseRef..HEAD` (`GITHUB_BASE_REF` o fallback).
-- ✅ C4. Los exit codes son deterministas (`0` allow, `1` block).
-- ⏳ C5. El comportamiento de gate es consistente entre binarios directos y ejecución por hooks.
+- ✅ 4.1 `pumuki-pre-commit` evalúa exclusivamente staged (`git diff --cached`).
+- ✅ 4.2 `pumuki-pre-push` evalúa `upstream..HEAD`.
+- ✅ 4.3 `pumuki-ci` evalúa `baseRef..HEAD` (`GITHUB_BASE_REF` o fallback).
+- ✅ 4.4 Exit codes deterministas (`0` allow, `1` block).
+- ⏳ 4.5 Consistencia entre ejecución directa de binarios y ejecución vía hooks.
 
-### D. Detección de plataforma y evaluación combinada
+### 5) Detección multi-plataforma y evaluación combinada
 
-- ⏳ D1. Cobertura del selector iOS (`*.swift`) funciona en repos mixtos.
-- ⏳ D2. Cobertura del selector backend (`apps/backend/**/*.ts`) funciona en repos mixtos.
-- ⏳ D3. Cobertura del selector frontend (`apps/frontend|apps/web`) funciona en repos mixtos.
-- ⏳ D4. Cobertura del selector android (`*.kt`, `*.kts`) funciona en repos mixtos.
-- ⏳ D5. Commit/range multi-plataforma dispara carga combinada de rulesets y salida combinada de gate.
-- ⏳ D6. No se observan falsos positivos de plataforma fuera del scope de selectores.
+- ⏳ 5.1 Cobertura iOS (`*.swift`) en repos mixtos.
+- ⏳ 5.2 Cobertura backend (`apps/backend/**/*.ts`) en repos mixtos.
+- ⏳ 5.3 Cobertura frontend (`apps/frontend|apps/web`) en repos mixtos.
+- ⏳ 5.4 Cobertura android (`*.kt`, `*.kts`) en repos mixtos.
+- ⏳ 5.5 Commits/rangos multi-plataforma cargan rulesets combinados y salida combinada.
+- ⏳ 5.6 No hay falsos positivos de plataforma fuera de selectores.
 
-### E. Rulesets, políticas y overrides
+### 6) Rulesets, políticas y overrides
 
-- ⏳ E1. Los baseline packs cargan correctamente:
+- ⏳ 6.1 Verificar carga de baseline packs:
   - `iosEnterpriseRuleSet`
   - `backendRuleSet`
   - `frontendRuleSet`
   - `androidRuleSet`
-- ⏳ E2. Los umbrales por stage coinciden con defaults esperados:
+- ⏳ 6.2 Verificar políticas por stage:
   - PRE_COMMIT: block `CRITICAL`, warn `ERROR`
   - PRE_PUSH: block `ERROR`, warn `WARN`
   - CI: block `ERROR`, warn `WARN`
-- ⏳ E3. Los overrides de proyecto aplican sin romper semántica de baseline locked.
-- ⏳ E4. Locked rules siguen aplicándose cuando override no está permitido explícitamente.
+- ⏳ 6.3 Verificar aplicación de overrides de proyecto.
+- ⏳ 6.4 Verificar enforcement de locked rules sin override explícito permitido.
 
-### F. Contrato de evidencia v2.1
+### 7) Contrato de evidencia v2.1
 
-- ⏳ F1. Se genera `.ai_evidence.json` en cada ejecución de stage.
-- ⏳ F2. Los campos del esquema de evidencia son válidos (`version`, `snapshot`, `ledger`).
-- ⏳ F3. La evidencia incluye plataformas activas y rulesets cargados.
-- ⏳ F4. El orden de la evidencia es determinista en ejecuciones equivalentes.
-- ⏳ F5. Campos de suppressions/ledger se mantienen estables y machine-readable.
+- ⏳ 7.1 Se genera `.ai_evidence.json` en cada stage.
+- ⏳ 7.2 Campos de esquema válidos (`version`, `snapshot`, `ledger`).
+- ⏳ 7.3 Evidencia incluye plataformas activas y rulesets cargados.
+- ⏳ 7.4 Orden determinista entre ejecuciones equivalentes.
+- ⏳ 7.5 Suppressions/ledger se mantienen estables y machine-readable.
 
-### G. MCP evidence context server
+### 8) MCP evidence context server
 
-- 🚧 G1. Arrancar MCP evidence server (`pumuki-mcp-evidence`) desde contexto de repositorio consumidor.
-- ⏳ G2. Validar que endpoints/facetas MCP responden con shape de payload válido.
-- ⏳ G3. Validar que MCP lee el último `.ai_evidence.json` de forma determinista.
-- ⏳ G4. Validar comportamiento MCP cuando falta o está corrupto el fichero de evidencia.
+- ⏳ 8.1 Arrancar `pumuki-mcp-evidence` desde contexto de repositorio consumidor.
+- ⏳ 8.2 Validar endpoints/facetas MCP con payload shape válido.
+- ⏳ 8.3 Validar lectura determinista del último `.ai_evidence.json`.
+- ⏳ 8.4 Validar comportamiento cuando falta/corrompe evidencia.
 
-### H. UX operativa del framework
+### 9) UX operativa (framework menu)
 
-- ⏳ H1. `npm run framework:menu` abre y ejecuta acciones esperadas.
-- ⏳ H2. Acciones del menú que mapean a comandos gate/lifecycle producen salidas esperadas.
-- ⏳ H3. Acciones del menú que generan reportes de validación crean ficheros en rutas esperadas.
+- ⏳ 9.1 `npm run framework:menu` abre y ejecuta acciones esperadas.
+- ⏳ 9.2 Acciones mapeadas a lifecycle/gates producen salidas esperadas.
+- ⏳ 9.3 Acciones de reportes generan archivos en rutas esperadas.
 
-### I. Suites deterministas y de validación
+### 10) Suites deterministas y validaciones
 
-- ✅ I1. `npm run typecheck` pasa.
-- ⏳ I2. `npm run test` pasa.
-- ⏳ I3. `npm run test:deterministic` pasa.
-- ⏳ I4. `npm run test:heuristics` pasa.
-- ⏳ I5. `npm run test:mcp` pasa.
-- ⏳ I6. `npm run test:stage-gates` pasa.
-- ⏳ I7. `npm run validation:package-manifest` pasa.
-- ⏳ I8. `npm run validation:lifecycle-smoke` pasa.
-- ⏳ I9. `npm run validation:package-smoke` pasa.
-- ⏳ I10. `npm run validation:package-smoke:minimal` pasa.
-- ⏳ I11. `npm run validation:docs-hygiene` pasa.
+- ✅ 10.1 `npm run typecheck` pasa.
+- ⏳ 10.2 `npm run test` pasa.
+- ⏳ 10.3 `npm run test:deterministic` pasa.
+- ⏳ 10.4 `npm run test:heuristics` pasa.
+- ⏳ 10.5 `npm run test:mcp` pasa.
+- ⏳ 10.6 `npm run test:stage-gates` pasa.
+- ⏳ 10.7 `npm run validation:package-manifest` pasa.
+- ⏳ 10.8 `npm run validation:lifecycle-smoke` pasa.
+- ⏳ 10.9 `npm run validation:package-smoke` pasa.
+- ⏳ 10.10 `npm run validation:package-smoke:minimal` pasa.
+- ⏳ 10.11 `npm run validation:docs-hygiene` pasa.
 
-### J. Ciclo completo en mock consumer
+### 11) Mock consumer: ciclo funcional completo
 
-- ✅ J1. Escenario clean: pre-commit/pre-push/ci => todo pasa (`0`).
-- ✅ J2. Escenario violations: pre-commit/pre-push/ci => bloquea (`1`) según lo esperado.
-- ✅ J3. Escenario mixed: comportamiento determinista combinado de bloqueos/warnings.
-- ✅ J4. Limpieza lifecycle tras cada escenario deja el baseline del repositorio limpio.
-- ⏳ J5. Re-ejecutar matriz para confirmar repetibilidad (mismos resultados en rerun).
+- ✅ 11.1 Escenario clean: pre-commit/pre-push/ci => `0`.
+- ✅ 11.2 Escenario violations: pre-commit/pre-push/ci => `1` esperado.
+- ✅ 11.3 Escenario mixed: comportamiento determinista combinado.
+- ✅ 11.4 Cleanup lifecycle tras cada escenario deja baseline limpio.
+- ⏳ 11.5 Repetir matriz completa para confirmar repetibilidad exacta.
 
-### K. Rutas de fallo y recuperación
+### 12) Fallos, recuperación y cierre de release
 
-- ⏳ K1. PRE_PUSH sin upstream produce guía clara y ruta de fallo segura.
-- ⏳ K2. CI sin `GITHUB_BASE_REF` hace fallback correcto a base ref por defecto.
-- ⏳ K3. Recuperación de hook drift: `doctor` detecta y `install`/`update` restaura bloques gestionados.
-- ⏳ K4. Mismatch parcial de estado lifecycle se detecta y es recuperable.
-
-### L. Cierre de release
-
-- ⏳ L1. Comandos en README/USAGE/INSTALLATION coinciden con comportamiento real runtime.
-- ✅ L2. CHANGELOG incluye todos los cambios visibles para usuario.
-- ✅ L3. Paquete release probado en mock consumer desde npm (no ruta local).
-- ⏳ L4. Informe final go/no-go creado con enlaces a artifacts y logs de evidencia.
+- ⏳ 12.1 PRE_PUSH sin upstream: guía clara y fallo seguro.
+- ⏳ 12.2 CI sin `GITHUB_BASE_REF`: fallback correcto.
+- ⏳ 12.3 Hook drift: `doctor` detecta y `install/update` restaura.
+- ⏳ 12.4 Mismatch parcial lifecycle: detectado y recuperable.
+- ⏳ 12.5 README/USAGE/INSTALLATION alineados con runtime actual.
+- ✅ 12.6 CHANGELOG incluye cambios visibles para usuario.
+- ✅ 12.7 Release probada en mock desde npm (no ruta local).
+- ⏳ 12.8 Informe final go/no-go con enlaces a artifacts y logs.
 
 ## Criterio de salida
 
-Todas las tareas A1-L4 deben estar en ✅ con evidencia de comandos almacenada y sin warnings/errores pendientes.
+Todas las tareas deben estar en ✅ con evidencia de comandos almacenada y sin warnings/errores pendientes.
