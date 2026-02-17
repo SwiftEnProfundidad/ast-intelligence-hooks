@@ -156,6 +156,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Publicar `pumuki@6.3.9` en npm (tags `latest` y `next`) para reflejar la documentación enterprise reescrita.
 - ✅ Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
 - ✅ Endurecer `pumuki-mock-consumer` con fixtures multiarchivo por plataforma y runner único `npm run pumuki:matrix`.
+- ✅ Endurecer `pumuki remove` para podar residuos vacíos de `node_modules` sin borrar dependencias reales de terceros.
 - 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
 
 ## Notas

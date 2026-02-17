@@ -13,11 +13,30 @@ export type LifecycleRemoveResult = {
   removedArtifacts: ReadonlyArray<string>;
 };
 
+const pruneEmptyNodeModulesDirectories = (directoryPath: string): boolean => {
+  const entries = readdirSync(directoryPath, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (!entry.isDirectory()) {
+      continue;
+    }
+    const childPath = join(directoryPath, entry.name);
+    const childIsEmpty = pruneEmptyNodeModulesDirectories(childPath);
+    if (childIsEmpty) {
+      rmSync(childPath, { recursive: true, force: true });
+    }
+  }
+
+  return readdirSync(directoryPath).length === 0;
+};
+
 const cleanupNodeModulesIfOnlyLockfile = (repoRoot: string): void => {
   const nodeModulesPath = join(repoRoot, 'node_modules');
   if (!existsSync(nodeModulesPath)) {
     return;
   }
+
+  pruneEmptyNodeModulesDirectories(nodeModulesPath);
 
   const entries = readdirSync(nodeModulesPath, { withFileTypes: true });
   if (entries.length === 0) {

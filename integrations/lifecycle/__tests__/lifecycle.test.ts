@@ -174,3 +174,49 @@ test('runLifecycleRemove deletes node_modules when residue is .package-lock.json
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('runLifecycleRemove prunes empty scoped directories before cleaning lockfile residue', () => {
+  const repo = createGitRepo();
+  try {
+    const nodeModulesDir = join(repo, 'node_modules');
+    const scopedDir = join(nodeModulesDir, '@babel');
+    mkdirSync(scopedDir, { recursive: true });
+    writeFileSync(join(nodeModulesDir, '.package-lock.json'), '{}\n', 'utf8');
+
+    const removeResult = runLifecycleRemove({
+      cwd: repo,
+      npm: {
+        runNpm() {},
+      },
+    });
+
+    assert.equal(removeResult.packageRemoved, false);
+    assert.equal(existsSync(nodeModulesDir), false);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleRemove never removes node_modules when non-empty dependencies remain', () => {
+  const repo = createGitRepo();
+  try {
+    const nodeModulesDir = join(repo, 'node_modules');
+    const dependencyDir = join(nodeModulesDir, '@kept', 'dependency');
+    mkdirSync(dependencyDir, { recursive: true });
+    writeFileSync(join(nodeModulesDir, '.package-lock.json'), '{}\n', 'utf8');
+    writeFileSync(join(dependencyDir, 'index.js'), 'module.exports = {};\n', 'utf8');
+
+    const removeResult = runLifecycleRemove({
+      cwd: repo,
+      npm: {
+        runNpm() {},
+      },
+    });
+
+    assert.equal(removeResult.packageRemoved, false);
+    assert.equal(existsSync(nodeModulesDir), true);
+    assert.equal(existsSync(join(dependencyDir, 'index.js')), true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
