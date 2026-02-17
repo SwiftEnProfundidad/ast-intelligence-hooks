@@ -169,6 +169,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/evidence/buildEvidence.ts`.
 - ✅ Reforzar cobertura de `integrations/evidence/buildEvidence.ts` (inferencia de outcome + continuidad de ledger `firstSeen`).
 - ✅ Añadir test unitario para `integrations/lifecycle/constants.ts`.
+- ✅ Reforzar cobertura de `integrations/lifecycle/constants.ts` (contrato estricto de config keys + formato/deduplicación de hooks).
 - ✅ Añadir test unitario para `integrations/lifecycle/packageInfo.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/npmService.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/gitService.ts`.
