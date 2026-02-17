@@ -394,3 +394,71 @@ test('dedupes rulesets by platform+bundle and sorts output deterministically', (
     { platform: 'ios', bundle: 'heuristics', hash: 'ios-heur-1' },
   ]);
 });
+
+test('infers gate outcome from findings when gateOutcome is not provided', () => {
+  const blockResult = buildEvidence({
+    stage: 'PRE_PUSH',
+    findings: [
+      {
+        ruleId: 'ios.no-force-unwrap',
+        severity: 'CRITICAL',
+        code: 'IOS_NO_FORCE_UNWRAP',
+        message: 'Force unwrap is forbidden.',
+        filePath: 'apps/ios/App/Feature.swift',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+  assert.equal(blockResult.snapshot.outcome, 'BLOCK');
+  assert.equal(blockResult.ai_gate.status, 'BLOCKED');
+
+  const warnResult = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'WARN',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'console.log is discouraged.',
+        filePath: 'apps/backend/src/main.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+  assert.equal(warnResult.snapshot.outcome, 'WARN');
+  assert.equal(warnResult.ai_gate.status, 'ALLOWED');
+});
+
+test('preserves firstSeen from previous ledger and refreshes lastSeen timestamp', () => {
+  const previous = emptyEvidence();
+  previous.ledger = [
+    {
+      ruleId: 'backend.no-console-log',
+      file: 'apps/backend/src/main.ts',
+      firstSeen: '2026-01-01T00:00:00.000Z',
+      lastSeen: '2026-01-05T00:00:00.000Z',
+    },
+  ];
+
+  const result = buildEvidence({
+    stage: 'CI',
+    findings: [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'ERROR',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'console.log no permitido',
+        filePath: 'apps/backend/src/main.ts',
+      },
+    ],
+    previousEvidence: previous,
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.ledger.length, 1);
+  assert.equal(result.ledger[0]?.firstSeen, '2026-01-01T00:00:00.000Z');
+  assert.equal(result.ledger[0]?.lastSeen, result.timestamp);
+});

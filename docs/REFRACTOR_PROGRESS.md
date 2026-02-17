@@ -167,6 +167,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/evidence/schema.ts`.
 - ✅ Reforzar cobertura de `integrations/evidence/schema.ts` (consolidation + variantes opcionales de `HumanIntent` y `PlatformState`).
 - ✅ Añadir test unitario para `integrations/evidence/buildEvidence.ts`.
+- ✅ Reforzar cobertura de `integrations/evidence/buildEvidence.ts` (inferencia de outcome + continuidad de ledger `firstSeen`).
 - ✅ Añadir test unitario para `integrations/lifecycle/constants.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/packageInfo.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/npmService.ts`.
