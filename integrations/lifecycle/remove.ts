@@ -1,6 +1,9 @@
 import { existsSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { resolveCurrentPumukiDependency } from './consumerPackage';
+import {
+  hasDeclaredDependenciesBeyondPumuki,
+  resolveCurrentPumukiDependency,
+} from './consumerPackage';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { LifecycleNpmService, type ILifecycleNpmService } from './npmService';
 import { getCurrentPumukiPackageName } from './packageInfo';
@@ -30,13 +33,20 @@ const pruneEmptyNodeModulesDirectories = (directoryPath: string): boolean => {
   return readdirSync(directoryPath).length === 0;
 };
 
-const cleanupNodeModulesIfOnlyLockfile = (repoRoot: string): void => {
+const cleanupNodeModulesIfOnlyLockfile = (
+  repoRoot: string,
+  options?: {
+    allowPruneEmptyDirectories?: boolean;
+  }
+): void => {
   const nodeModulesPath = join(repoRoot, 'node_modules');
   if (!existsSync(nodeModulesPath)) {
     return;
   }
 
-  pruneEmptyNodeModulesDirectories(nodeModulesPath);
+  if (options?.allowPruneEmptyDirectories === true) {
+    pruneEmptyNodeModulesDirectories(nodeModulesPath);
+  }
 
   const entries = readdirSync(nodeModulesPath, { withFileTypes: true });
   if (entries.length === 0) {
@@ -90,10 +100,13 @@ export const runLifecycleRemove = (params?: {
   });
 
   const currentDependency = resolveCurrentPumukiDependency(repoRoot);
+  const hasExternalDependencies = hasDeclaredDependenciesBeyondPumuki(repoRoot);
   const packageName = getCurrentPumukiPackageName();
 
   if (currentDependency.source === 'none') {
-    cleanupNodeModulesIfOnlyLockfile(repoRoot);
+    cleanupNodeModulesIfOnlyLockfile(repoRoot, {
+      allowPruneEmptyDirectories: !hasExternalDependencies,
+    });
     return {
       repoRoot,
       packageRemoved: false,
@@ -103,7 +116,9 @@ export const runLifecycleRemove = (params?: {
   }
 
   npm.runNpm(['uninstall', packageName], repoRoot);
-  cleanupNodeModulesIfOnlyLockfile(repoRoot);
+  cleanupNodeModulesIfOnlyLockfile(repoRoot, {
+    allowPruneEmptyDirectories: !hasExternalDependencies,
+  });
 
   return {
     repoRoot,

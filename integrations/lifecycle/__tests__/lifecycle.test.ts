@@ -220,3 +220,44 @@ test('runLifecycleRemove never removes node_modules when non-empty dependencies 
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('runLifecycleRemove does not prune empty third-party directories when other dependencies are declared', () => {
+  const repo = createGitRepo();
+  try {
+    const packageName = getCurrentPumukiPackageName();
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+          dependencies: {
+            [packageName]: '1.0.0',
+            react: '18.3.1',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const nodeModulesDir = join(repo, 'node_modules');
+    const emptyThirdPartyScopeDir = join(nodeModulesDir, '@babel');
+    mkdirSync(emptyThirdPartyScopeDir, { recursive: true });
+    writeFileSync(join(nodeModulesDir, '.package-lock.json'), '{}\n', 'utf8');
+
+    const removeResult = runLifecycleRemove({
+      cwd: repo,
+      npm: {
+        runNpm() {},
+      },
+    });
+
+    assert.equal(removeResult.packageRemoved, true);
+    assert.equal(existsSync(emptyThirdPartyScopeDir), true);
+    assert.equal(existsSync(join(nodeModulesDir, '.package-lock.json')), true);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});

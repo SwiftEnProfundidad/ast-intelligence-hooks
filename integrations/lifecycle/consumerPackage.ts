@@ -7,6 +7,8 @@ export type ConsumerDependencySource = 'dependencies' | 'devDependencies' | 'non
 type ConsumerPackageJson = {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  optionalDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 };
 
 const readPackageJson = (repoRoot: string): ConsumerPackageJson => {
@@ -45,4 +47,24 @@ export const resolveCurrentPumukiDependency = (repoRoot: string): {
   return {
     source: 'none',
   };
+};
+
+export const hasDeclaredDependenciesBeyondPumuki = (repoRoot: string): boolean => {
+  const pkg = readPackageJson(repoRoot);
+  const pumukiPackage = getCurrentPumukiPackageName();
+  const ignoredPackages = new Set([pumukiPackage, 'pumuki-ast-hooks']);
+
+  const hasExternalDependency = (section?: Record<string, string>): boolean => {
+    if (!section) {
+      return false;
+    }
+    return Object.keys(section).some((dependencyName) => !ignoredPackages.has(dependencyName));
+  };
+
+  return (
+    hasExternalDependency(pkg.dependencies) ||
+    hasExternalDependency(pkg.devDependencies) ||
+    hasExternalDependency(pkg.optionalDependencies) ||
+    hasExternalDependency(pkg.peerDependencies)
+  );
 };

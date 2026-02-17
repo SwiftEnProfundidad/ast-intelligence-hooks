@@ -157,6 +157,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
 - ✅ Endurecer `pumuki-mock-consumer` con fixtures multiarchivo por plataforma y runner único `npm run pumuki:matrix`.
 - ✅ Endurecer `pumuki remove` para podar residuos vacíos de `node_modules` sin borrar dependencias reales de terceros.
+- ✅ Restringir poda de vacíos en `node_modules` a repos sin dependencias externas declaradas (seguridad enterprise reforzada).
 - 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
 
 ## Notas
