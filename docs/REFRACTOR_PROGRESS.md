@@ -188,6 +188,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/lifecycle/status.ts`.
 - ✅ Reforzar cobertura de `integrations/lifecycle/status.ts` (cwd por defecto + estado vacío sin hooks/config).
 - ✅ Añadir test unitario para `integrations/lifecycle/install.ts`.
+- ✅ Reforzar cobertura de `integrations/lifecycle/install.ts` (idempotencia en segunda ejecución + uso de `process.cwd` por defecto).
 - ✅ Añadir test unitario para `integrations/lifecycle/uninstall.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/remove.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/doctor.ts`.
