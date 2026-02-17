@@ -159,6 +159,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reforzar cobertura de `integrations/config/skillsSources.ts` (contrato de bundle + manifiestos inválidos).
 - ✅ Reforzar cobertura de `integrations/config/heuristics.ts` (truthy contract + vacíos/espacios).
 - ✅ Añadir test unitario para `integrations/evidence/writeEvidence.ts`.
+- ✅ Reforzar cobertura de `integrations/evidence/writeEvidence.ts` (repos temporales git + paths externos + lines no finitas).
 - ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
 - ✅ Reforzar cobertura de `integrations/evidence/readEvidence.ts` (version no string + ausencia de `version`).
 - ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.
