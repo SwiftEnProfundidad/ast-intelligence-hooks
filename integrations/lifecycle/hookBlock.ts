@@ -12,6 +12,9 @@ const HOOK_COMMANDS: Record<PumukiManagedHook, string> = {
 const trimTrailingWhitespace = (value: string): string =>
   value.replace(/[ \t]+\n/g, '\n').trimEnd();
 
+const collapseBlankLines = (value: string): string =>
+  value.replace(/\n{3,}/g, '\n\n');
+
 export const hasPumukiManagedBlock = (contents: string): boolean =>
   contents.includes(PUMUKI_MANAGED_BLOCK_START) &&
   contents.includes(PUMUKI_MANAGED_BLOCK_END);
@@ -78,7 +81,9 @@ export const removePumukiManagedBlock = (contents: string): {
     };
   }
 
-  const stripped = trimTrailingWhitespace(contents.replace(managedBlockPattern, '\n\n'));
+  const stripped = trimTrailingWhitespace(
+    collapseBlankLines(contents.replace(managedBlockPattern, '\n\n'))
+  );
   if (stripped === '' || stripped === '#!/usr/bin/env sh') {
     return {
       updated: '',
