@@ -4,6 +4,20 @@ import type { ILifecycleGitService } from './gitService';
 
 const PUMUKI_ARTIFACTS = ['.ai_evidence.json', '.AI_EVIDENCE.json'] as const;
 
+const isTrackedArtifactAlias = (params: {
+  git: ILifecycleGitService;
+  repoRoot: string;
+  relativePath: (typeof PUMUKI_ARTIFACTS)[number];
+}): boolean => {
+  const canonical = params.relativePath.toLowerCase();
+  return PUMUKI_ARTIFACTS.some((candidate) => {
+    if (candidate.toLowerCase() !== canonical) {
+      return false;
+    }
+    return params.git.isPathTracked(params.repoRoot, candidate);
+  });
+};
+
 export const purgeUntrackedPumukiArtifacts = (params: {
   git: ILifecycleGitService;
   repoRoot: string;
@@ -15,7 +29,13 @@ export const purgeUntrackedPumukiArtifacts = (params: {
     if (!existsSync(absolutePath)) {
       continue;
     }
-    if (params.git.isPathTracked(params.repoRoot, relativePath)) {
+    if (
+      isTrackedArtifactAlias({
+        git: params.git,
+        repoRoot: params.repoRoot,
+        relativePath,
+      })
+    ) {
       continue;
     }
     unlinkSync(absolutePath);

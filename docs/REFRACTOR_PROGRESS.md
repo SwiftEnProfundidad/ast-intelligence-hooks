@@ -22,7 +22,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `consumer-support-bundle-gh-*`
   - `framework-menu-runners-validation-*`
   - `consumer-support-bundle-markdown-sections-*`
-- ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
+- 🚧 Reducir backlog de archivos sin test en `core/` e `integrations/`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateOutput.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateFacts.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateEvidence.ts`.
@@ -115,7 +115,56 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `core/rules/presets/backendRuleSet.ts`.
 - ✅ Añadir test unitario para `core/rules/presets/frontendRuleSet.ts`.
 - ✅ Añadir test unitario para `core/rules/presets/exampleRuleSet.ts`.
-- ⏳ Añadir test unitario para `core/rules/presets/iosEnterpriseRuleSet.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/iosEnterpriseRuleSet.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/iosNonNegotiableRuleSet.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/astHeuristicsRuleSet.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/ios.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/typescript.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/android.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/browser.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/process.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/security.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/vm.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsPromises.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsCallbacks.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsSync.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsSyncFileOperationsRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsSyncDescriptorRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsSyncAppendRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsSyncPathRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsPromisesFileOperations.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsPromisesMetadataRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsCallbacksFileOperationsRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/fsCallbacksMetadataRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/securityCredentialsRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/securityCryptoRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/securityJwtRules.ts`.
+- ✅ Añadir test unitario para `core/rules/presets/heuristics/securityTlsRules.ts`.
+- ✅ Añadir test unitario para `core/utils/stableStringify.ts`.
+- ✅ Añadir test unitario para `integrations/config/heuristics.ts`.
+- ✅ Añadir test unitario para `integrations/config/projectRulesSchema.ts`.
+- ✅ Añadir test unitario para `integrations/config/loadProjectRules.ts`.
+- ✅ Añadir test unitario para `integrations/config/skillsPolicy.ts`.
+- ✅ Añadir test unitario para `integrations/config/skillsSources.ts`.
+- ✅ Añadir test unitario para `integrations/config/skillsLock.ts`.
+- ✅ Añadir test unitario para `integrations/config/projectRules.ts`.
+- ✅ Añadir test unitario para `integrations/config/skillsCompilerTemplates.ts`.
+- ✅ Añadir test unitario para `integrations/evidence/writeEvidence.ts`.
+- ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
+- ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.
+- ✅ Añadir test unitario para `integrations/evidence/schema.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/constants.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/packageInfo.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/npmService.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/gitService.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/artifacts.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/state.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/hookBlock.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/hookManager.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/consumerPackage.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/status.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/install.ts`.
+- ✅ Añadir test unitario para `integrations/lifecycle/uninstall.ts`.
 
 ## Fase 3 — Medio (deuda técnica)
 - ✅ Reducir acoplamiento en `integrations/git/runPlatformGate.ts`.
@@ -170,7 +219,11 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Actualizar `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` con estados visibles por tarea (`✅/🚧/⏳`) y una única tarea activa en progreso.
 - ✅ Aclarar explícitamente en `README.md`, `docs/USAGE.md` y `docs/INSTALLATION.md` que `npm uninstall pumuki` no elimina hooks/estado lifecycle.
 - ✅ Reordenar `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` por secuencia real de pruebas y reflejar `npm install pumuki` + `npx pumuki install` como completadas.
-- 🚧 Ejecutar `npx pumuki doctor` y `npx pumuki status` en `pumuki-mock-consumer` para cerrar bloque de lifecycle secuencial.
+- ✅ Ejecutar `npx pumuki doctor` y `npx pumuki status` en `pumuki-mock-consumer` para cerrar bloque de lifecycle secuencial.
+- ✅ Integrar fuentes iOS avanzadas (`swift-concurrency` + `swiftui-expert`) en `skills.sources`, `skills.lock`, mappings y heurísticas AST.
+- ✅ Ejecutar validación dirigida del lote iOS (detectors + heuristics + skills ruleset) y ajustar severidades finales por stage.
+- ✅ Extender cobertura semántica enterprise de SOLID (SRP/OCP/LSP/ISP/DIP) con señales AST no superficiales y contrato de evidencia.
+- ✅ Ejecutar validación determinista del lote SOLID (detectors TS + extractor heurístico + stage policies) y cerrar versión de pack heurístico.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
