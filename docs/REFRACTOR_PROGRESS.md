@@ -153,6 +153,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Corregir `Quick Start` del `README.md` para consumo real por npm (`pumuki`) y comandos ejecutables de lifecycle/gates.
 - ✅ Auditar `README.md` con criterios enterprise (profesionalismo, claridad, estructura y completitud) y generar backlog de mejoras priorizado.
 - ✅ Reescribir `README.md` de forma integral con estándar enterprise (audiencia consumer/framework separada, comandos reales y estructura consistente).
+- ✅ Publicar `pumuki@6.3.9` en npm (tags `latest` y `next`) para reflejar la documentación enterprise reescrita.
 - 🚧 Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
 
 ## Notas
