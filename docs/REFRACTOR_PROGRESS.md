@@ -191,7 +191,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reforzar cobertura de `integrations/lifecycle/install.ts` (idempotencia en segunda ejecución + uso de `process.cwd` por defecto).
 - ✅ Reforzar cobertura de `integrations/lifecycle/uninstall.ts` (idempotencia, `process.cwd` por defecto y no-op con hooks custom no gestionados).
 - ✅ Reforzar cobertura de `integrations/lifecycle/remove.ts` (propagación de `purgeArtifacts` y rutas no-op deterministas).
-- 🚧 Reforzar cobertura de `integrations/lifecycle/doctor.ts` (mensajes de veredicto, hooks parciales y metadatos de estado).
+- ✅ Reforzar cobertura de `integrations/lifecycle/doctor.ts` (mensajes de veredicto, hooks parciales y metadatos de estado).
+- 🚧 Reforzar cobertura de `integrations/lifecycle/update.ts` (modo dry-run, propagación de repoRoot y rutas idempotentes).
 - ✅ Añadir test unitario para `integrations/lifecycle/uninstall.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/remove.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/doctor.ts`.

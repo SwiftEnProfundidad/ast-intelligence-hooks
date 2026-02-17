@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, unlinkSync } from 'node:fs';
+import { mkdirSync, realpathSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
@@ -7,37 +8,51 @@ import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
 import { installPumukiHooks } from '../hookManager';
 import { doctorHasBlockingIssues, runLifecycleDoctor } from '../doctor';
+import { getCurrentPumukiVersion } from '../packageInfo';
+
+const withCwd = <T>(cwd: string, fn: () => T): T => {
+  const previous = process.cwd();
+  process.chdir(cwd);
+  try {
+    return fn();
+  } finally {
+    process.chdir(previous);
+  }
+};
 
 class FakeLifecycleGitService implements ILifecycleGitService {
+  readonly resolveRepoRootCalls: string[] = [];
+
   constructor(
     private readonly repoRoot: string,
     private readonly trackedNodeModulesPaths: ReadonlyArray<string> = [],
     private readonly state: Record<string, string | undefined> = {}
   ) {}
 
-  runGit(): string {
+  runGit(_args: ReadonlyArray<string>, _cwd: string): string {
     return '';
   }
 
-  resolveRepoRoot(): string {
+  resolveRepoRoot(cwd: string): string {
+    this.resolveRepoRootCalls.push(cwd);
     return this.repoRoot;
   }
 
-  getStatusShort(): string {
+  getStatusShort(_cwd: string): string {
     return '';
   }
 
-  listTrackedNodeModulesPaths(): ReadonlyArray<string> {
+  listTrackedNodeModulesPaths(_cwd: string): ReadonlyArray<string> {
     return this.trackedNodeModulesPaths;
   }
 
-  isPathTracked(): boolean {
+  isPathTracked(_cwd: string, _path: string): boolean {
     return false;
   }
 
-  setLocalConfig(): void {}
+  setLocalConfig(_cwd: string, _key: string, _value: string): void {}
 
-  unsetLocalConfig(): void {}
+  unsetLocalConfig(_cwd: string, _key: string): void {}
 
   getLocalConfig(_cwd: string, key: string): string | undefined {
     return this.state[key];
@@ -121,5 +136,50 @@ test('runLifecycleDoctor queda limpio cuando estado y hooks son consistentes', a
 
     assert.deepEqual(report.issues, []);
     assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor usa process.cwd por defecto y conserva metadatos de lifecycle', async () => {
+  await withTempDir('pumuki-doctor-default-cwd-', async (repoRoot) => {
+    const git = new FakeLifecycleGitService(repoRoot, [], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'true',
+      [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
+      [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      [PUMUKI_CONFIG_KEYS.installedAt]: '2026-02-17T00:00:00.000Z',
+    });
+    const defaultCwd = tmpdir();
+    const report = withCwd(defaultCwd, () =>
+      runLifecycleDoctor({
+        git,
+      })
+    );
+
+    assert.equal(report.packageVersion, getCurrentPumukiVersion());
+    assert.equal(report.lifecycleState.installed, 'true');
+    assert.equal(report.lifecycleState.version, '6.3.11');
+    assert.equal(report.lifecycleState.hooks, 'pre-commit,pre-push');
+    assert.equal(report.lifecycleState.installedAt, '2026-02-17T00:00:00.000Z');
+    assert.equal(git.resolveRepoRootCalls.length >= 1, true);
+    assert.equal(realpathSync(git.resolveRepoRootCalls[0] ?? defaultCwd), realpathSync(defaultCwd));
+  });
+});
+
+test('runLifecycleDoctor reporta error y warning cuando hay tracked node_modules y hooks huérfanos', async () => {
+  await withTempDir('pumuki-doctor-mixed-issues-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    const git = new FakeLifecycleGitService(repoRoot, ['node_modules/pkg/index.js'], {
+      [PUMUKI_CONFIG_KEYS.installed]: 'false',
+    });
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+    });
+
+    assert.equal(report.issues.length, 2);
+    assert.equal(report.issues[0]?.severity, 'error');
+    assert.equal(report.issues[1]?.severity, 'warning');
+    assert.equal(doctorHasBlockingIssues(report), true);
   });
 });
