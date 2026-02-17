@@ -261,3 +261,49 @@ test('runLifecycleRemove does not prune empty third-party directories when other
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('runLifecycleRemove prunes newly empty directories created by pumuki uninstall while preserving pre-existing empties', () => {
+  const repo = createGitRepo();
+  try {
+    const packageName = getCurrentPumukiPackageName();
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+          dependencies: {
+            [packageName]: '1.0.0',
+            dayjs: '1.11.13',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const nodeModulesDir = join(repo, 'node_modules');
+    const preExistingEmptyScopeDir = join(nodeModulesDir, '@pre-existing');
+    const scopeToBecomeEmptyDir = join(nodeModulesDir, '@pumuki-only');
+    const transientPackageDir = join(scopeToBecomeEmptyDir, 'transient-package');
+    mkdirSync(preExistingEmptyScopeDir, { recursive: true });
+    mkdirSync(transientPackageDir, { recursive: true });
+    writeFileSync(join(transientPackageDir, 'index.js'), 'module.exports = {};\n', 'utf8');
+
+    const removeResult = runLifecycleRemove({
+      cwd: repo,
+      npm: {
+        runNpm() {
+          rmSync(transientPackageDir, { recursive: true, force: true });
+        },
+      },
+    });
+
+    assert.equal(removeResult.packageRemoved, true);
+    assert.equal(existsSync(preExistingEmptyScopeDir), true);
+    assert.equal(existsSync(scopeToBecomeEmptyDir), false);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});

@@ -118,7 +118,7 @@ The `pumuki` binary provides repository lifecycle operations:
 | `pumuki doctor` | Safety checks (hook drift, tracked `node_modules`, lifecycle state) |
 | `pumuki status` | Current lifecycle snapshot |
 
-`pumuki remove` is dependency-safe by design: it never deletes non-Pumuki third-party dependencies.
+`pumuki remove` is dependency-safe by design: it never deletes non-Pumuki third-party dependencies and preserves pre-existing third-party empty directories.
 
 ## Gate Commands
 
