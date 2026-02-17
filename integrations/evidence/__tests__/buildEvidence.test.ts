@@ -357,3 +357,40 @@ test('keeps one deterministic finding when same rule repeats on multiple lines i
     'heuristics.ts.explicit-any.ast'
   );
 });
+
+test('normalizes detected platforms in deterministic key order', () => {
+  const result = buildEvidence({
+    stage: 'CI',
+    findings: [],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+      backend: { detected: true, confidence: 'MEDIUM' },
+      android: { detected: false, confidence: 'LOW' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(Object.keys(result.platforms), ['android', 'backend', 'ios']);
+  assert.deepEqual(result.platforms.backend, { detected: true, confidence: 'MEDIUM' });
+  assert.deepEqual(result.platforms.ios, { detected: true, confidence: 'HIGH' });
+});
+
+test('dedupes rulesets by platform+bundle and sorts output deterministically', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    detectedPlatforms: {},
+    loadedRulesets: [
+      { platform: 'ios', bundle: 'gold', hash: 'ios-gold-1' },
+      { platform: 'backend', bundle: 'backend', hash: 'be-1' },
+      { platform: 'ios', bundle: 'gold', hash: 'ios-gold-2' },
+      { platform: 'ios', bundle: 'heuristics', hash: 'ios-heur-1' },
+    ],
+  });
+
+  assert.deepEqual(result.rulesets, [
+    { platform: 'backend', bundle: 'backend', hash: 'be-1' },
+    { platform: 'ios', bundle: 'gold', hash: 'ios-gold-1' },
+    { platform: 'ios', bundle: 'heuristics', hash: 'ios-heur-1' },
+  ]);
+});

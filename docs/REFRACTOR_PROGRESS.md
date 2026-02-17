@@ -153,6 +153,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/schema.ts`.
+- ✅ Añadir test unitario para `integrations/evidence/buildEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/constants.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/packageInfo.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/npmService.ts`.
