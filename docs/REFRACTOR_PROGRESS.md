@@ -175,6 +175,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/lifecycle/npmService.ts`.
 - ✅ Reforzar cobertura de `integrations/lifecycle/npmService.ts` (mensajes de error con comando completo y args explícitos).
 - ✅ Añadir test unitario para `integrations/lifecycle/gitService.ts`.
+- ✅ Reforzar cobertura de `integrations/lifecycle/gitService.ts` (delegación de status/unset + trim de getLocalConfig).
 - ✅ Añadir test unitario para `integrations/lifecycle/artifacts.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/state.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/hookBlock.ts`.
