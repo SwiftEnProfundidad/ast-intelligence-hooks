@@ -144,6 +144,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Corregir `test:mcp` para suite MCP dividida y revalidar `test:deterministic` completo.
 - ✅ Añadir comando de una sola ejecución `pumuki remove` (cleanup + desinstalación de paquete) y validar E2E en consumidor temporal.
 - ✅ Sincronizar documentación afectada por lifecycle (`README`, `CHANGELOG`, `INSTALLATION`, `USAGE`) en el mismo lote.
+- ✅ Endurecer `pumuki remove` para podar residuo huérfano `node_modules/.package-lock.json` y validar con test dedicado.
 - 🚧 Ejecutar demostración guiada final en `pumuki-mock-consumer` limpio para constatar flujo enterprise completo.
 
 ## Notas

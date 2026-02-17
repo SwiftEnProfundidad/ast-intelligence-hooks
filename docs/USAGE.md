@@ -85,6 +85,7 @@ npx --yes pumuki remove
 ```
 
 `pumuki remove` is the enterprise-safe removal path because it performs lifecycle cleanup before package uninstall.
+When no modules remain, it also prunes orphan `node_modules/.package-lock.json` residue.
 
 Safety rule:
 - If tracked files exist under `node_modules/`, `pumuki install` and `pumuki update` intentionally fail.

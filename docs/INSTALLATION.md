@@ -100,6 +100,7 @@ npx --yes pumuki remove
 ```
 
 Use this command instead of plain `npm uninstall pumuki-ast-hooks` when you need deterministic lifecycle cleanup.
+It also removes orphan `node_modules/.package-lock.json` residue when `node_modules` has no other entries.
 
 Update to latest published Pumuki and re-apply hooks:
 

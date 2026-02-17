@@ -11,7 +11,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - New lifecycle command `pumuki remove` to perform enterprise cleanup and dependency removal in one step:
   - removes managed hooks and lifecycle local state,
   - purges untracked evidence artifacts,
-  - uninstalls `pumuki-ast-hooks` from the consumer `package.json`.
+  - uninstalls `pumuki-ast-hooks` from the consumer `package.json`,
+  - prunes orphan `node_modules/.package-lock.json` residue when `node_modules` has no other content.
 
 ### Changed
 

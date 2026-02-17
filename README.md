@@ -154,6 +154,8 @@ For consumer repositories using the package:
 npx --yes pumuki remove
 ```
 
+This command also prunes orphan `node_modules/.package-lock.json` residue when no installed modules remain.
+
 ### Dependency conflict troubleshooting
 
 | Symptom | Typical root cause | Recommended action |

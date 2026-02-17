@@ -131,3 +131,46 @@ test('runLifecycleRemove purges lifecycle state and requests package uninstall',
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('runLifecycleRemove deletes node_modules when only .package-lock.json residue exists', () => {
+  const repo = createGitRepo();
+  try {
+    const nodeModulesDir = join(repo, 'node_modules');
+    mkdirSync(nodeModulesDir, { recursive: true });
+    writeFileSync(join(nodeModulesDir, '.package-lock.json'), '{}\n', 'utf8');
+
+    const removeResult = runLifecycleRemove({
+      cwd: repo,
+      npm: {
+        runNpm() {},
+      },
+    });
+
+    assert.equal(removeResult.packageRemoved, false);
+    assert.equal(existsSync(nodeModulesDir), false);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleRemove deletes node_modules when residue is .package-lock.json plus empty .bin', () => {
+  const repo = createGitRepo();
+  try {
+    const nodeModulesDir = join(repo, 'node_modules');
+    const nodeModulesBinDir = join(nodeModulesDir, '.bin');
+    mkdirSync(nodeModulesBinDir, { recursive: true });
+    writeFileSync(join(nodeModulesDir, '.package-lock.json'), '{}\n', 'utf8');
+
+    const removeResult = runLifecycleRemove({
+      cwd: repo,
+      npm: {
+        runNpm() {},
+      },
+    });
+
+    assert.equal(removeResult.packageRemoved, false);
+    assert.equal(existsSync(nodeModulesDir), false);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});

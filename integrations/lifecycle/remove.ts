@@ -1,3 +1,5 @@
+import { existsSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import { resolveCurrentPumukiDependency } from './consumerPackage';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { LifecycleNpmService, type ILifecycleNpmService } from './npmService';
@@ -9,6 +11,48 @@ export type LifecycleRemoveResult = {
   packageRemoved: boolean;
   changedHooks: ReadonlyArray<string>;
   removedArtifacts: ReadonlyArray<string>;
+};
+
+const cleanupNodeModulesIfOnlyLockfile = (repoRoot: string): void => {
+  const nodeModulesPath = join(repoRoot, 'node_modules');
+  if (!existsSync(nodeModulesPath)) {
+    return;
+  }
+
+  const entries = readdirSync(nodeModulesPath, { withFileTypes: true });
+  if (entries.length === 0) {
+    rmSync(nodeModulesPath, { recursive: true, force: true });
+    return;
+  }
+
+  const allowedNames = new Set(['.package-lock.json', '.bin']);
+  const hasOnlyAllowedEntries = entries.every((entry) => allowedNames.has(entry.name));
+  if (!hasOnlyAllowedEntries) {
+    return;
+  }
+
+  const lockfileEntry = entries.find((entry) => entry.name === '.package-lock.json' && entry.isFile());
+  if (!lockfileEntry) {
+    return;
+  }
+
+  const binEntry = entries.find((entry) => entry.name === '.bin' && entry.isDirectory());
+  if (binEntry) {
+    const binPath = join(nodeModulesPath, '.bin');
+    const binEntries = readdirSync(binPath);
+    if (binEntries.length > 0) {
+      return;
+    }
+    rmSync(binPath, { recursive: true, force: true });
+  }
+
+  if (existsSync(join(nodeModulesPath, '.package-lock.json'))) {
+    unlinkSync(join(nodeModulesPath, '.package-lock.json'));
+  }
+
+  if (readdirSync(nodeModulesPath).length === 0) {
+    rmSync(nodeModulesPath, { recursive: true, force: true });
+  }
 };
 
 export const runLifecycleRemove = (params?: {
@@ -30,6 +74,7 @@ export const runLifecycleRemove = (params?: {
   const packageName = getCurrentPumukiPackageName();
 
   if (currentDependency.source === 'none') {
+    cleanupNodeModulesIfOnlyLockfile(repoRoot);
     return {
       repoRoot,
       packageRemoved: false,
@@ -39,6 +84,7 @@ export const runLifecycleRemove = (params?: {
   }
 
   npm.runNpm(['uninstall', packageName], repoRoot);
+  cleanupNodeModulesIfOnlyLockfile(repoRoot);
 
   return {
     repoRoot,
