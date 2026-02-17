@@ -158,6 +158,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Endurecer `pumuki-mock-consumer` con fixtures multiarchivo por plataforma y runner único `npm run pumuki:matrix`.
 - ✅ Endurecer `pumuki remove` para podar residuos vacíos de `node_modules` sin borrar dependencias reales de terceros.
 - ✅ Restringir poda de vacíos en `node_modules` a repos sin dependencias externas declaradas (seguridad enterprise reforzada).
+- ✅ Publicar `pumuki@6.3.10` con hardening de desinstalación (`latest` y `next`).
 - 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
 
 ## Notas
