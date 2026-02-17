@@ -185,6 +185,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/lifecycle/consumerPackage.ts`.
 - ✅ Reforzar cobertura de `integrations/lifecycle/consumerPackage.ts` (prioridad deps/devDeps y exclusión explícita de optional/peer para resolve).
 - ✅ Añadir test unitario para `integrations/lifecycle/status.ts`.
+- ✅ Reforzar cobertura de `integrations/lifecycle/status.ts` (cwd por defecto + estado vacío sin hooks/config).
 - ✅ Añadir test unitario para `integrations/lifecycle/install.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/uninstall.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/remove.ts`.
