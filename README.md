@@ -104,6 +104,7 @@ npx --yes pumuki remove
 ```
 
 `pumuki remove` performs managed uninstall + artifact purge in one command.
+`npm uninstall pumuki` only removes the dependency from `package.json`; it does not remove managed hooks or lifecycle state.
 
 ## Lifecycle Commands
 
@@ -119,6 +120,7 @@ The `pumuki` binary provides repository lifecycle operations:
 | `pumuki status` | Current lifecycle snapshot |
 
 `pumuki remove` is dependency-safe by design: it never deletes non-Pumuki third-party dependencies and preserves pre-existing third-party empty directories.
+Use `pumuki remove` (or `pumuki uninstall --purge-artifacts` + `npm uninstall pumuki`) for complete teardown.
 
 ## Gate Commands
 

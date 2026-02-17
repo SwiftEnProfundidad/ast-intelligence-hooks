@@ -107,6 +107,7 @@ npx --yes pumuki remove
 
 Use this command instead of plain `npm uninstall pumuki` when you need deterministic lifecycle cleanup.
 It also removes orphan `node_modules/.package-lock.json` residue when `node_modules` has no other entries.
+Plain `npm uninstall pumuki` removes only the dependency entry and leaves managed hooks/lifecycle state untouched.
 
 Update to latest published Pumuki and re-apply hooks:
 
