@@ -183,6 +183,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir test unitario para `integrations/lifecycle/hookManager.ts`.
 - ✅ Reforzar cobertura de `integrations/lifecycle/hookManager.ts` (creación automática de `.git/hooks`, preservación custom y estado mixto/no-op).
 - ✅ Añadir test unitario para `integrations/lifecycle/consumerPackage.ts`.
+- ✅ Reforzar cobertura de `integrations/lifecycle/consumerPackage.ts` (prioridad deps/devDeps y exclusión explícita de optional/peer para resolve).
 - ✅ Añadir test unitario para `integrations/lifecycle/status.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/install.ts`.
 - ✅ Añadir test unitario para `integrations/lifecycle/uninstall.ts`.
