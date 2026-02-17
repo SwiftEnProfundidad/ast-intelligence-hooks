@@ -161,7 +161,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Publicar `pumuki@6.3.10` con hardening de desinstalación (`latest` y `next`).
 - ✅ Refinar `pumuki remove` para eliminar vacíos nuevos tras uninstall manteniendo vacíos preexistentes de terceros.
 - ✅ Endurecer `pumuki remove` para limpiar trazas del árbol de dependencias de Pumuki sin borrar dependencias ajenas (incluyendo vacíos no relacionados).
-- 🚧 Publicar `pumuki@6.3.11` con la limpieza estricta de trazas y revalidar ciclo install/remove en consumidor mock.
+- ✅ Publicar `pumuki@6.3.11` con la limpieza estricta de trazas y revalidar ciclo install/remove en consumidor mock.
 - 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
 
 ## Notas
