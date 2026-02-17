@@ -75,6 +75,12 @@ npx tsx integrations/git/ciFrontend.cli.ts
 
 ## Lifecycle commands (enterprise consumer repositories)
 
+Install the package from npm (canonical enterprise command):
+
+```bash
+npm install --save-exact pumuki
+```
+
 Install managed Git hooks in the current repository:
 
 ```bash
@@ -99,13 +105,20 @@ One-command cleanup and package removal:
 npx --yes pumuki remove
 ```
 
-Use this command instead of plain `npm uninstall pumuki-ast-hooks` when you need deterministic lifecycle cleanup.
+Use this command instead of plain `npm uninstall pumuki` when you need deterministic lifecycle cleanup.
 It also removes orphan `node_modules/.package-lock.json` residue when `node_modules` has no other entries.
 
 Update to latest published Pumuki and re-apply hooks:
 
 ```bash
 npx --yes pumuki update --latest
+```
+
+Package-level updates/removal also support short npm commands:
+
+```bash
+npm update pumuki
+npm uninstall pumuki
 ```
 
 ## Optional: enable heuristic pilot

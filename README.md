@@ -116,6 +116,16 @@ Practical rule:
 
 ## Software Lifecycle
 
+### Consumer package install (enterprise UX)
+
+```bash
+npm install --save-exact pumuki
+npm update pumuki
+npm uninstall pumuki
+```
+
+`npm upgrade pumuki` is also supported as an alias to update in npm environments where `upgrade` is mapped.
+
 ### Installation (fresh setup)
 
 ```bash

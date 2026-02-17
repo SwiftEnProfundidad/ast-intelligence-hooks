@@ -132,9 +132,9 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar siguiente lote de refactor solicitado por el usuario.
 - ✅ Ejecutar demo end-to-end de Pumuki sobre mock consumer (pack → install → stages).
 - ✅ Validar estado base del mock consumer antes de reinstalar Pumuki.
-- ✅ Resetear `pumuki-mock-consumer` a estado base sin instalación activa de `pumuki-ast-hooks`.
+- ✅ Resetear `pumuki-mock-consumer` a estado base sin instalación activa de `pumuki`.
 - ✅ Limpiar worktree del mock consumer (tracked restaurado, untracked aislado fuera del repo).
-- ✅ Diagnosticar residuos en mock: `node_modules/pumuki-ast-hooks` y `node_modules/.package-lock.json` están versionados (tracked), no ignorados.
+- ✅ Diagnosticar residuos en mock: `node_modules/pumuki` y `node_modules/.package-lock.json` están versionados (tracked), no ignorados.
 - ✅ Corregir empaquetado NPM para incluir runtime faltante (`core/utils`, heuristics presets, AST detectors) y desbloquear runtime en consumidor mock.
 - ✅ Implementar lifecycle enterprise (`pumuki install|uninstall|update|doctor|status`) con estado local en `git config` y hooks idempotentes.
 - ✅ Integrar guardrail lifecycle round-trip en `validation:package-smoke` (`install -> stages -> uninstall`) con verificación de `git status` estable.
@@ -147,6 +147,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Endurecer `pumuki remove` para podar residuo huérfano `node_modules/.package-lock.json` y validar con test dedicado.
 - ✅ Completar `pumuki-mock-consumer` con escenarios reproducibles multi-plataforma (`clean`, `violations`, `mixed`) y script de aplicación de escenarios.
 - ✅ Unificar iOS del mock exclusivamente bajo `apps/ios/` (eliminando duplicación `ios/`) para mantener estructura homogénea `apps/*`.
+- ✅ Migrar nombre canónico del paquete a `pumuki` y alinear comandos enterprise cortos (`npm install/update/uninstall pumuki`) con documentación y validaciones.
 - 🚧 Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
 
 ## Notas

@@ -56,7 +56,7 @@ npm pack
 2. Install tarball in mock consumer:
 
 ```bash
-npm install /absolute/path/to/pumuki-ast-hooks-<version>.tgz
+npm install /absolute/path/to/pumuki-<version>.tgz
 ```
 
 3. Execute stage wrappers from mock consumer:

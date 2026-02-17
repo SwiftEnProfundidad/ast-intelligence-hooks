@@ -8,6 +8,7 @@ import {
   pushCommandLog,
   type SmokeWorkspace,
 } from './package-install-smoke-workspace-lib';
+import packageJson from '../package.json';
 
 const runNpmStep = (
   workspace: SmokeWorkspace,
@@ -35,10 +36,11 @@ export const installTarballIntoConsumerRepo = (
 export const verifyInstalledPackageCanBeRequired = (
   workspace: SmokeWorkspace
 ): void => {
+  const packageName = packageJson.name;
   const installCheck = runCommand({
     cwd: workspace.consumerRepo,
     executable: 'node',
-    args: ['-e', "const p=require('pumuki-ast-hooks'); console.log(p.name,p.version);"],
+    args: ['-e', `const p=require('${packageName}'); console.log(p.name,p.version);`],
   });
   pushCommandLog(workspace.commandLog, installCheck);
   assertSuccess(installCheck, 'package require smoke');

@@ -64,6 +64,16 @@ npx tsx integrations/git/ciFrontend.cli.ts
 
 ### 2.1) Lifecycle CLI (install / uninstall / remove / update / doctor / status)
 
+Canonical npm package commands:
+
+```bash
+npm install --save-exact pumuki
+npm update pumuki
+npm uninstall pumuki
+```
+
+`npm upgrade pumuki` is valid where npm maps `upgrade` to `update`.
+
 ```bash
 # install managed hooks
 npx --yes pumuki install

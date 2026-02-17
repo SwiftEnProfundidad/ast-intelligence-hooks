@@ -55,8 +55,8 @@ If Adapter shows hook failures with:
 
 - `bash: node: command not found`
 - command path similar to:
-  - `.../node_modules/pumuki-ast-hooks/.../pre-write-code-hook.js`
-  - `.../node_modules/pumuki-ast-hooks/.../post-write-code-hook.js`
+  - `.../node_modules/pumuki/.../pre-write-code-hook.js`
+  - `.../node_modules/pumuki/.../post-write-code-hook.js`
 
 then the active adapter hooks config is using a stale direct `node` invocation.
 
