@@ -154,7 +154,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Auditar `README.md` con criterios enterprise (profesionalismo, claridad, estructura y completitud) y generar backlog de mejoras priorizado.
 - ✅ Reescribir `README.md` de forma integral con estándar enterprise (audiencia consumer/framework separada, comandos reales y estructura consistente).
 - ✅ Publicar `pumuki@6.3.9` en npm (tags `latest` y `next`) para reflejar la documentación enterprise reescrita.
-- 🚧 Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
+- ✅ Ejecutar matriz E2E completa en `pumuki-mock-consumer` (`install -> pre-commit/pre-push/ci -> remove`) sobre escenarios `clean`, `violations` y `mixed`.
+- 🚧 Integrar MCP en `pumuki-mock-consumer` y validar consumo real de `ai_evidence` desde cliente MCP externo.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
