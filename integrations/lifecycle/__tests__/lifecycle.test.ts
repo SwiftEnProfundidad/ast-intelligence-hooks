@@ -175,7 +175,7 @@ test('runLifecycleRemove deletes node_modules when residue is .package-lock.json
   }
 });
 
-test('runLifecycleRemove prunes empty scoped directories before cleaning lockfile residue', () => {
+test('runLifecycleRemove preserves unrelated empty scoped directories when no pumuki trace exists', () => {
   const repo = createGitRepo();
   try {
     const nodeModulesDir = join(repo, 'node_modules');
@@ -191,7 +191,9 @@ test('runLifecycleRemove prunes empty scoped directories before cleaning lockfil
     });
 
     assert.equal(removeResult.packageRemoved, false);
-    assert.equal(existsSync(nodeModulesDir), false);
+    assert.equal(existsSync(nodeModulesDir), true);
+    assert.equal(existsSync(scopedDir), true);
+    assert.equal(existsSync(join(nodeModulesDir, '.package-lock.json')), true);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
@@ -262,7 +264,7 @@ test('runLifecycleRemove does not prune empty third-party directories when other
   }
 });
 
-test('runLifecycleRemove prunes newly empty directories created by pumuki uninstall while preserving pre-existing empties', () => {
+test('runLifecycleRemove removes only pumuki trace residue and preserves unrelated dependencies', () => {
   const repo = createGitRepo();
   try {
     const packageName = getCurrentPumukiPackageName();
@@ -284,25 +286,59 @@ test('runLifecycleRemove prunes newly empty directories created by pumuki uninst
     );
 
     const nodeModulesDir = join(repo, 'node_modules');
-    const preExistingEmptyScopeDir = join(nodeModulesDir, '@pre-existing');
-    const scopeToBecomeEmptyDir = join(nodeModulesDir, '@pumuki-only');
-    const transientPackageDir = join(scopeToBecomeEmptyDir, 'transient-package');
-    mkdirSync(preExistingEmptyScopeDir, { recursive: true });
-    mkdirSync(transientPackageDir, { recursive: true });
-    writeFileSync(join(transientPackageDir, 'index.js'), 'module.exports = {};\n', 'utf8');
+    const pumukiPackageDir = join(nodeModulesDir, packageName);
+    const pumukiTransientScopeDir = join(nodeModulesDir, '@pumuki');
+    const pumukiTransientPackageDir = join(pumukiTransientScopeDir, 'transient');
+    const unrelatedEmptyScopeDir = join(nodeModulesDir, '@keep-empty');
+    const unrelatedDependencyDir = join(nodeModulesDir, 'dayjs');
+    mkdirSync(pumukiPackageDir, { recursive: true });
+    mkdirSync(pumukiTransientPackageDir, { recursive: true });
+    mkdirSync(unrelatedEmptyScopeDir, { recursive: true });
+    mkdirSync(unrelatedDependencyDir, { recursive: true });
+    writeFileSync(
+      join(pumukiPackageDir, 'package.json'),
+      JSON.stringify(
+        {
+          name: packageName,
+          version: '1.0.0',
+          dependencies: {
+            '@pumuki/transient': '1.0.0',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    writeFileSync(
+      join(pumukiTransientPackageDir, 'package.json'),
+      JSON.stringify(
+        {
+          name: '@pumuki/transient',
+          version: '1.0.0',
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    writeFileSync(join(unrelatedDependencyDir, 'index.js'), 'module.exports = {};\n', 'utf8');
 
     const removeResult = runLifecycleRemove({
       cwd: repo,
       npm: {
         runNpm() {
-          rmSync(transientPackageDir, { recursive: true, force: true });
+          rmSync(pumukiPackageDir, { recursive: true, force: true });
+          rmSync(pumukiTransientPackageDir, { recursive: true, force: true });
         },
       },
     });
 
     assert.equal(removeResult.packageRemoved, true);
-    assert.equal(existsSync(preExistingEmptyScopeDir), true);
-    assert.equal(existsSync(scopeToBecomeEmptyDir), false);
+    assert.equal(existsSync(unrelatedEmptyScopeDir), true);
+    assert.equal(existsSync(unrelatedDependencyDir), true);
+    assert.equal(existsSync(pumukiPackageDir), false);
+    assert.equal(existsSync(pumukiTransientScopeDir), false);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
