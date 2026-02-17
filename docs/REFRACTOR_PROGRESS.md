@@ -157,6 +157,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reforzar cobertura de `integrations/config/skillsPolicy.ts` (parse + carga desde fichero + casos inválidos).
 - ✅ Reforzar cobertura de `integrations/config/skillsLock.ts` (hash determinista + carga válida + JSON malformado).
 - ✅ Reforzar cobertura de `integrations/config/skillsSources.ts` (contrato de bundle + manifiestos inválidos).
+- ✅ Reforzar cobertura de `integrations/config/heuristics.ts` (truthy contract + vacíos/espacios).
 - ✅ Añadir test unitario para `integrations/evidence/writeEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/readEvidence.ts`.
 - ✅ Añadir test unitario para `integrations/evidence/generateEvidence.ts`.
