@@ -148,6 +148,12 @@ If legacy guards are active:
 npm run ast:guard:stop
 ```
 
+For consumer repositories using the package:
+
+```bash
+npx --yes pumuki remove
+```
+
 ### Dependency conflict troubleshooting
 
 | Symptom | Typical root cause | Recommended action |

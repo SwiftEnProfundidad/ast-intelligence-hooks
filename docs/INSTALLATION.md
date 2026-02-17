@@ -99,6 +99,8 @@ One-command cleanup and package removal:
 npx --yes pumuki remove
 ```
 
+Use this command instead of plain `npm uninstall pumuki-ast-hooks` when you need deterministic lifecycle cleanup.
+
 Update to latest published Pumuki and re-apply hooks:
 
 ```bash

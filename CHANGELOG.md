@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- New lifecycle command `pumuki remove` to perform enterprise cleanup and dependency removal in one step:
+  - removes managed hooks and lifecycle local state,
+  - purges untracked evidence artifacts,
+  - uninstalls `pumuki-ast-hooks` from the consumer `package.json`.
+
 ### Changed
 
 - Stage-gates test execution now uses glob-based test targets for easier maintenance.
