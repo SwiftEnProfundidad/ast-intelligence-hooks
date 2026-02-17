@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
@@ -9,31 +10,48 @@ import type { ILifecycleNpmService } from '../npmService';
 import { getCurrentPumukiPackageName } from '../packageInfo';
 import { runLifecycleRemove } from '../remove';
 
+const withCwd = <T>(cwd: string, fn: () => T): T => {
+  const previous = process.cwd();
+  process.chdir(cwd);
+  try {
+    return fn();
+  } finally {
+    process.chdir(previous);
+  }
+};
+
 class FakeLifecycleGitService implements ILifecycleGitService {
   readonly unsetCalls: Array<{ cwd: string; key: string }> = [];
+  readonly isPathTrackedCalls: Array<{ cwd: string; path: string }> = [];
+  readonly resolveRepoRootCalls: string[] = [];
 
   constructor(
     private readonly repoRoot: string,
     private readonly trackedPaths: ReadonlySet<string> = new Set()
   ) {}
 
-  runGit(): string {
+  runGit(_args: ReadonlyArray<string>, _cwd: string): string {
     return '';
   }
 
-  resolveRepoRoot(): string {
+  resolveRepoRoot(cwd: string): string {
+    this.resolveRepoRootCalls.push(cwd);
     return this.repoRoot;
   }
 
-  getStatusShort(): string {
+  getStatusShort(_cwd: string): string {
     return '';
   }
 
-  listTrackedNodeModulesPaths(): ReadonlyArray<string> {
+  listTrackedNodeModulesPaths(_cwd: string): ReadonlyArray<string> {
     return [];
   }
 
   isPathTracked(_cwd: string, path: string): boolean {
+    this.isPathTrackedCalls.push({
+      cwd: _cwd,
+      path,
+    });
     return this.trackedPaths.has(path);
   }
 
@@ -173,5 +191,76 @@ test('runLifecycleRemove con dependencia declarada de pumuki invoca npm uninstal
     assert.equal(npm.calls[0]?.cwd, repoRoot);
     assert.equal(existsSync(join(repoRoot, '.git/hooks/pre-commit')), false);
     assert.equal(existsSync(join(repoRoot, '.git/hooks/pre-push')), false);
+  });
+});
+
+test('runLifecycleRemove propaga purge de artefactos consultando tracking git', async () => {
+  await withTempDir('pumuki-remove-purge-artifacts-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), '{}\n', 'utf8');
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, new Set(['.ai_evidence.json']));
+    const npm = new FakeLifecycleNpmService();
+    const result = runLifecycleRemove({
+      cwd: repoRoot,
+      git,
+      npm,
+    });
+
+    assert.equal(result.packageRemoved, false);
+    assert.deepEqual(result.removedArtifacts, []);
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
+    assert.equal(npm.calls.length, 0);
+    assert.equal(git.isPathTrackedCalls.length >= 1, true);
+    assert.equal(
+      git.isPathTrackedCalls.some(
+        (call) => call.cwd === repoRoot && call.path.toLowerCase() === '.ai_evidence.json'
+      ),
+      true
+    );
+  });
+});
+
+test('runLifecycleRemove usa process.cwd cuando no recibe cwd explícito', async () => {
+  await withTempDir('pumuki-remove-default-cwd-', async (repoRoot) => {
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot);
+    const npm = new FakeLifecycleNpmService();
+    const defaultCwd = tmpdir();
+    const result = withCwd(defaultCwd, () =>
+      runLifecycleRemove({
+        git,
+        npm,
+      })
+    );
+
+    assert.equal(result.repoRoot, repoRoot);
+    assert.equal(git.resolveRepoRootCalls.length >= 1, true);
+    assert.equal(realpathSync(git.resolveRepoRootCalls[0] ?? defaultCwd), realpathSync(defaultCwd));
   });
 });
