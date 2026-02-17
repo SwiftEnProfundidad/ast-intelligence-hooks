@@ -142,6 +142,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Alinear el lote de lifecycle con reglas activas del repositorio (cambios mínimos y comportamiento determinista).
 - ✅ Revalidar lifecycle en local (`typecheck`, `lifecycle tests`, `validation:package-manifest`, `validation:lifecycle-smoke`, `validation:package-smoke`).
 - ✅ Corregir `test:mcp` para suite MCP dividida y revalidar `test:deterministic` completo.
+- ✅ Añadir comando de una sola ejecución `pumuki remove` (cleanup + desinstalación de paquete) y validar E2E en consumidor temporal.
 - 🚧 Ejecutar demostración guiada final en `pumuki-mock-consumer` limpio para constatar flujo enterprise completo.
 
 ## Notas

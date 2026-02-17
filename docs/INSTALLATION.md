@@ -93,6 +93,12 @@ Uninstall and purge untracked Pumuki artifacts:
 npx --yes pumuki uninstall --purge-artifacts
 ```
 
+One-command cleanup and package removal:
+
+```bash
+npx --yes pumuki remove
+```
+
 Update to latest published Pumuki and re-apply hooks:
 
 ```bash

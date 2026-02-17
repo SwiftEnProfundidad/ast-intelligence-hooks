@@ -18,6 +18,7 @@
     "check-version": "node bin/pumuki.js status",
     "pumuki:install": "node bin/pumuki.js install",
     "pumuki:uninstall": "node bin/pumuki.js uninstall --purge-artifacts",
+    "pumuki:remove": "node bin/pumuki.js remove",
     "pumuki:update": "node bin/pumuki.js update --latest",
     "pumuki:doctor": "node bin/pumuki.js doctor",
     "pumuki:status": "node bin/pumuki.js status",

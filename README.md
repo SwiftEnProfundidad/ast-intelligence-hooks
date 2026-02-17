@@ -173,6 +173,7 @@ npm run <script> -- <flags>
 | `npm run check-version` | Print lifecycle/runtime status | `npm run check-version` |
 | `npm run pumuki:install` | Install managed hooks in current Git repo | `npm run pumuki:install` |
 | `npm run pumuki:uninstall` | Uninstall managed hooks and purge untracked Pumuki artifacts | `npm run pumuki:uninstall` |
+| `npm run pumuki:remove` | One-command cleanup + package removal from consumer repo | `npm run pumuki:remove` |
 | `npm run pumuki:update` | Update Pumuki dependency to latest and re-apply hooks | `npm run pumuki:update` |
 | `npm run pumuki:doctor` | Enterprise baseline safety checks (tracked `node_modules`, hook/state drift) | `npm run pumuki:doctor` |
 | `npm run pumuki:status` | Lifecycle status snapshot | `npm run pumuki:status` |

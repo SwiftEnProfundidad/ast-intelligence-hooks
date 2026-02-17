@@ -62,7 +62,7 @@ npx tsx integrations/git/prePushBackend.cli.ts
 npx tsx integrations/git/ciFrontend.cli.ts
 ```
 
-### 2.1) Lifecycle CLI (install / uninstall / update / doctor / status)
+### 2.1) Lifecycle CLI (install / uninstall / remove / update / doctor / status)
 
 ```bash
 # install managed hooks
@@ -79,6 +79,9 @@ npx --yes pumuki update --latest
 
 # uninstall managed hooks and purge untracked evidence artifacts
 npx --yes pumuki uninstall --purge-artifacts
+
+# one-command cleanup + dependency removal from package.json
+npx --yes pumuki remove
 ```
 
 Safety rule:

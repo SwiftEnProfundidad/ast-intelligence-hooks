@@ -1,10 +1,17 @@
 import { runLifecycleDoctor, type LifecycleDoctorReport } from './doctor';
 import { runLifecycleInstall } from './install';
+import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
 import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
 
-type LifecycleCommand = 'install' | 'uninstall' | 'update' | 'doctor' | 'status';
+type LifecycleCommand =
+  | 'install'
+  | 'uninstall'
+  | 'remove'
+  | 'update'
+  | 'doctor'
+  | 'status';
 
 type ParsedArgs = {
   command: LifecycleCommand;
@@ -16,6 +23,7 @@ const HELP_TEXT = `
 Pumuki lifecycle commands:
   pumuki install
   pumuki uninstall [--purge-artifacts]
+  pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor
   pumuki status
@@ -24,6 +32,7 @@ Pumuki lifecycle commands:
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'install' ||
   value === 'uninstall' ||
+  value === 'remove' ||
   value === 'update' ||
   value === 'doctor' ||
   value === 'status';
@@ -114,6 +123,16 @@ export const runLifecycleCli = async (
             `[pumuki] removed artifacts: ${result.removedArtifacts.join(', ') || 'none'}`
           );
         }
+        return 0;
+      }
+      case 'remove': {
+        const result = runLifecycleRemove();
+        console.log(
+          `[pumuki] removed from ${result.repoRoot} (package removed: ${result.packageRemoved ? 'yes' : 'no'}, hooks changed: ${result.changedHooks.join(', ') || 'none'})`
+        );
+        console.log(
+          `[pumuki] removed artifacts: ${result.removedArtifacts.join(', ') || 'none'}`
+        );
         return 0;
       }
       case 'update': {
