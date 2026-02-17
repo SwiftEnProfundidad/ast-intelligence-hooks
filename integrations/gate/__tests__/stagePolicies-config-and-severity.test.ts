@@ -1,6 +1,7 @@
 import test from 'node:test';
 import {
   assert,
+  astHeuristicsRuleSet,
   applyHeuristicSeverityForStage,
   evaluateGate,
   evaluateRules,
@@ -201,6 +202,30 @@ test('keeps heuristic severities as WARN in PRE_COMMIT', () => {
   assert.equal(findSeverity('heuristics.ts.fs-writev-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.fs-write-callback.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ts.debugger.ast', 'PRE_COMMIT'), 'WARN');
+  assert.equal(
+    findSeverity('heuristics.ts.solid.srp.class-command-query-mix.ast', 'PRE_COMMIT'),
+    'WARN'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.isp.interface-command-query-mix.ast', 'PRE_COMMIT'),
+    'WARN'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.ocp.discriminator-switch.ast', 'PRE_COMMIT'),
+    'WARN'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.lsp.override-not-implemented.ast', 'PRE_COMMIT'),
+    'WARN'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.dip.framework-import.ast', 'PRE_COMMIT'),
+    'WARN'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.dip.concrete-instantiation.ast', 'PRE_COMMIT'),
+    'WARN'
+  );
   assert.equal(findSeverity('heuristics.ios.force-unwrap.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ios.force-try.ast', 'PRE_COMMIT'), 'WARN');
   assert.equal(findSeverity('heuristics.ios.force-cast.ast', 'PRE_COMMIT'), 'WARN');
@@ -335,6 +360,30 @@ test('promotes selected heuristic severities to ERROR in PRE_PUSH and CI', () =>
   assert.equal(findSeverity('heuristics.ts.fs-readv-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-writev-callback.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.fs-write-callback.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(
+    findSeverity('heuristics.ts.solid.srp.class-command-query-mix.ast', 'PRE_PUSH'),
+    'ERROR'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.isp.interface-command-query-mix.ast', 'PRE_PUSH'),
+    'ERROR'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.ocp.discriminator-switch.ast', 'PRE_PUSH'),
+    'ERROR'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.lsp.override-not-implemented.ast', 'PRE_PUSH'),
+    'ERROR'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.dip.framework-import.ast', 'PRE_PUSH'),
+    'ERROR'
+  );
+  assert.equal(
+    findSeverity('heuristics.ts.solid.dip.concrete-instantiation.ast', 'PRE_PUSH'),
+    'ERROR'
+  );
   assert.equal(findSeverity('heuristics.ts.explicit-any.ast', 'CI'), 'ERROR');
   assert.equal(findSeverity('heuristics.ts.debugger.ast', 'PRE_PUSH'), 'ERROR');
   assert.equal(findSeverity('heuristics.ios.force-unwrap.ast', 'PRE_PUSH'), 'ERROR');

@@ -157,11 +157,28 @@ const promotedHeuristicRuleIds = new Set<string>([
   'heuristics.ts.child-process-exec-file.ast',
   'heuristics.ts.explicit-any.ast',
   'heuristics.ts.debugger.ast',
+  'heuristics.ts.solid.srp.class-command-query-mix.ast',
+  'heuristics.ts.solid.isp.interface-command-query-mix.ast',
+  'heuristics.ts.solid.ocp.discriminator-switch.ast',
+  'heuristics.ts.solid.lsp.override-not-implemented.ast',
+  'heuristics.ts.solid.dip.framework-import.ast',
+  'heuristics.ts.solid.dip.concrete-instantiation.ast',
   'heuristics.ios.force-unwrap.ast',
   'heuristics.ios.anyview.ast',
   'heuristics.ios.force-try.ast',
   'heuristics.ios.force-cast.ast',
   'heuristics.ios.callback-style.ast',
+  'heuristics.ios.dispatchqueue.ast',
+  'heuristics.ios.dispatchgroup.ast',
+  'heuristics.ios.dispatchsemaphore.ast',
+  'heuristics.ios.operation-queue.ast',
+  'heuristics.ios.task-detached.ast',
+  'heuristics.ios.unchecked-sendable.ast',
+  'heuristics.ios.observable-object.ast',
+  'heuristics.ios.navigation-view.ast',
+  'heuristics.ios.on-tap-gesture.ast',
+  'heuristics.ios.string-format.ast',
+  'heuristics.ios.uiscreen-main-bounds.ast',
   'heuristics.android.thread-sleep.ast',
   'heuristics.android.globalscope.ast',
   'heuristics.android.run-blocking.ast',
@@ -200,6 +217,7 @@ const defaultPolicyByStage: Record<SkillsStage, GatePolicy> = {
     warnOnOrAbove: 'WARN',
   },
 };
+
 
 const createPolicyTraceHash = (params: {
   stage: SkillsStage;

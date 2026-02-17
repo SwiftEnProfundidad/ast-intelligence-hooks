@@ -5,6 +5,9 @@ import {
   applyHeuristicSeverityForStage,
   evaluateGate,
   evaluateRules,
+  policyForCI,
+  policyForPreCommit,
+  policyForPrePush,
 } from './stagePoliciesFixtures';
 test('gate blocks promoted heuristic rules only in PRE_PUSH and CI', () => {
   const consoleLogFact = {

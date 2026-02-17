@@ -4,7 +4,7 @@ import { rulePackVersions, type RulePackName } from './rulePackVersions';
 
 test('rulePackVersions expone versiones semver para todos los packs conocidos', () => {
   const expected: Record<RulePackName, string> = {
-    astHeuristicsRuleSet: '0.4.0',
+    astHeuristicsRuleSet: '0.5.0',
     iosEnterpriseRuleSet: '1.0.0',
     backendRuleSet: '1.0.0',
     frontendRuleSet: '1.0.0',

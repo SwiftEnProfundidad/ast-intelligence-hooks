@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   hasAsyncPromiseExecutor,
+  hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
   hasConsoleLogCall,
   hasDebuggerStatement,
@@ -9,9 +10,14 @@ import {
   hasEmptyCatchClause,
   hasEvalCall,
   hasExplicitAnyType,
+  hasFrameworkDependencyImport,
   hasFunctionConstructorUsage,
+  hasMixedCommandQueryClass,
+  hasMixedCommandQueryInterface,
+  hasOverrideMethodThrowingNotImplemented,
   hasSetIntervalStringCallback,
   hasSetTimeoutStringCallback,
+  hasTypeDiscriminatorSwitch,
   hasWithStatement,
 } from './index';
 
@@ -228,4 +234,145 @@ test('hasDebuggerStatement detecta nodos debugger', () => {
 
   assert.equal(hasDebuggerStatement(debuggerAst), true);
   assert.equal(hasDebuggerStatement(noDebuggerAst), false);
+});
+
+test('hasMixedCommandQueryClass detecta mezcla command/query en la misma clase', () => {
+  const mixedClassAst = {
+    type: 'ClassDeclaration',
+    body: {
+      type: 'ClassBody',
+      body: [
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'getById' } },
+        { type: 'ClassMethod', key: { type: 'Identifier', name: 'save' } },
+      ],
+    },
+  };
+  const queryOnlyClassAst = {
+    type: 'ClassDeclaration',
+    body: {
+      type: 'ClassBody',
+      body: [{ type: 'ClassMethod', key: { type: 'Identifier', name: 'getById' } }],
+    },
+  };
+
+  assert.equal(hasMixedCommandQueryClass(mixedClassAst), true);
+  assert.equal(hasMixedCommandQueryClass(queryOnlyClassAst), false);
+});
+
+test('hasMixedCommandQueryInterface detecta mezcla command/query en la misma interfaz', () => {
+  const mixedInterfaceAst = {
+    type: 'TSInterfaceDeclaration',
+    body: {
+      type: 'TSInterfaceBody',
+      body: [
+        { type: 'TSMethodSignature', key: { type: 'Identifier', name: 'findById' } },
+        { type: 'TSMethodSignature', key: { type: 'Identifier', name: 'create' } },
+      ],
+    },
+  };
+  const queryOnlyInterfaceAst = {
+    type: 'TSInterfaceDeclaration',
+    body: {
+      type: 'TSInterfaceBody',
+      body: [{ type: 'TSMethodSignature', key: { type: 'Identifier', name: 'findById' } }],
+    },
+  };
+
+  assert.equal(hasMixedCommandQueryInterface(mixedInterfaceAst), true);
+  assert.equal(hasMixedCommandQueryInterface(queryOnlyInterfaceAst), false);
+});
+
+test('hasTypeDiscriminatorSwitch detecta switch por tipo/kind con multiples cases', () => {
+  const switchAst = {
+    type: 'SwitchStatement',
+    discriminant: {
+      type: 'MemberExpression',
+      computed: false,
+      object: { type: 'Identifier', name: 'event' },
+      property: { type: 'Identifier', name: 'kind' },
+    },
+    cases: [
+      { type: 'SwitchCase', test: { type: 'StringLiteral', value: 'a' } },
+      { type: 'SwitchCase', test: { type: 'StringLiteral', value: 'b' } },
+    ],
+  };
+  const nonDiscriminatorAst = {
+    type: 'SwitchStatement',
+    discriminant: { type: 'Identifier', name: 'index' },
+    cases: [
+      { type: 'SwitchCase', test: { type: 'NumericLiteral', value: 1 } },
+      { type: 'SwitchCase', test: { type: 'NumericLiteral', value: 2 } },
+    ],
+  };
+
+  assert.equal(hasTypeDiscriminatorSwitch(switchAst), true);
+  assert.equal(hasTypeDiscriminatorSwitch(nonDiscriminatorAst), false);
+});
+
+test('hasOverrideMethodThrowingNotImplemented detecta override con throw not implemented', () => {
+  const overrideThrowAst = {
+    type: 'ClassMethod',
+    override: true,
+    body: {
+      type: 'BlockStatement',
+      body: [
+        {
+          type: 'ThrowStatement',
+          argument: {
+            type: 'NewExpression',
+            callee: { type: 'Identifier', name: 'Error' },
+            arguments: [{ type: 'StringLiteral', value: 'Not implemented' }],
+          },
+        },
+      ],
+    },
+  };
+  const overrideValidAst = {
+    type: 'ClassMethod',
+    override: true,
+    body: {
+      type: 'BlockStatement',
+      body: [{ type: 'ReturnStatement', argument: { type: 'NumericLiteral', value: 1 } }],
+    },
+  };
+
+  assert.equal(hasOverrideMethodThrowingNotImplemented(overrideThrowAst), true);
+  assert.equal(hasOverrideMethodThrowingNotImplemented(overrideValidAst), false);
+});
+
+test('hasFrameworkDependencyImport detecta import/require de frameworks concretos', () => {
+  const importAst = {
+    type: 'ImportDeclaration',
+    source: { type: 'StringLiteral', value: '@nestjs/common' },
+  };
+  const requireAst = {
+    type: 'CallExpression',
+    callee: { type: 'Identifier', name: 'require' },
+    arguments: [{ type: 'StringLiteral', value: '@prisma/client' }],
+  };
+  const localRequireAst = {
+    type: 'CallExpression',
+    callee: { type: 'Identifier', name: 'require' },
+    arguments: [{ type: 'StringLiteral', value: './local' }],
+  };
+
+  assert.equal(hasFrameworkDependencyImport(importAst), true);
+  assert.equal(hasFrameworkDependencyImport(requireAst), true);
+  assert.equal(hasFrameworkDependencyImport(localRequireAst), false);
+});
+
+test('hasConcreteDependencyInstantiation detecta instanciacion directa de dependencias concretas', () => {
+  const concreteAst = {
+    type: 'NewExpression',
+    callee: { type: 'Identifier', name: 'PrismaClient' },
+    arguments: [],
+  };
+  const localAst = {
+    type: 'NewExpression',
+    callee: { type: 'Identifier', name: 'LocalBuilder' },
+    arguments: [],
+  };
+
+  assert.equal(hasConcreteDependencyInstantiation(concreteAst), true);
+  assert.equal(hasConcreteDependencyInstantiation(localAst), false);
 });

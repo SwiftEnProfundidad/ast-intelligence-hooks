@@ -5,6 +5,9 @@ import {
   applyHeuristicSeverityForStage,
   evaluateGate,
   evaluateRules,
+  policyForCI,
+  policyForPreCommit,
+  policyForPrePush,
 } from './stagePoliciesFixtures';
 test('gate promotes fs.unlinkSync heuristic to blocking in PRE_PUSH and CI only', () => {
   const fsUnlinkSyncFact = {

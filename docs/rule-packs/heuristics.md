@@ -6,7 +6,7 @@
 - 
 - 
 - 
-- `astHeuristicsRuleSet@0.4.0`
+- `astHeuristicsRuleSet@0.5.0`
 - 
 - 
 - 

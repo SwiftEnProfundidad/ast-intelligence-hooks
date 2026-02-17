@@ -4,7 +4,10 @@ import {
   astHeuristicsRuleSet,
   applyHeuristicSeverityForStage,
   evaluateGate,
-  evaluateRules
+  evaluateRules,
+  policyForCI,
+  policyForPreCommit,
+  policyForPrePush,
 } from './stagePoliciesFixtures';
 
 test('gate promotes fs.copyFile callback heuristic to blocking in PRE_PUSH and CI only', () => {

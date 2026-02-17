@@ -5,6 +5,9 @@ import {
   applyHeuristicSeverityForStage,
   evaluateGate,
   evaluateRules,
+  policyForCI,
+  policyForPreCommit,
+  policyForPrePush,
 } from './stagePoliciesFixtures';
 test('gate promotes weak crypto hash heuristic to blocking in PRE_PUSH and CI only', () => {
   const weakCryptoHashFact = {

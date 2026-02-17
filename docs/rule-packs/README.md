@@ -2,6 +2,10 @@
 
 This folder documents the baseline Rule Packs used by the v2.x deterministic gate flow.
 
+## Baseline doctrine
+
+- `engineering-baseline.md` defines locked enterprise methodology and SOLID coverage.
+
 ## Current versions
 
 - `iosEnterpriseRuleSet@1.0.0`
@@ -10,7 +14,16 @@ This folder documents the baseline Rule Packs used by the v2.x deterministic gat
 - `backendRuleSet@1.0.0`
 - `frontendRuleSet@1.0.0`
 - `androidRuleSet@1.0.0`
-- `astHeuristicsRuleSet@0.4.0` (enabled only when `PUMUKI_ENABLE_AST_HEURISTICS` is true)
+- `astHeuristicsRuleSet@0.5.0` (enabled only when `PUMUKI_ENABLE_AST_HEURISTICS` is true)
+
+## Skills bundles (locked compiler templates)
+
+- `ios-guidelines@1.0.0`
+- `ios-concurrency-guidelines@1.0.0`
+- `ios-swiftui-expert-guidelines@1.0.0`
+- `backend-guidelines@1.0.0`
+- `frontend-guidelines@1.0.0`
+- `android-guidelines@1.0.0`
 
 ## Evidence linkage
 

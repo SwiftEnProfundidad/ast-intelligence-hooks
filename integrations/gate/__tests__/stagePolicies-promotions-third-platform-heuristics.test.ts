@@ -4,7 +4,10 @@ import {
   astHeuristicsRuleSet,
   applyHeuristicSeverityForStage,
   evaluateGate,
-  evaluateRules
+  evaluateRules,
+  policyForCI,
+  policyForPreCommit,
+  policyForPrePush
 } from './stagePoliciesFixtures';
 
 test('gate promotes fs.fstat callback heuristic to blocking in PRE_PUSH and CI only', () => {
@@ -354,6 +357,38 @@ test('gate promotes iOS force-cast heuristic to blocking in PRE_PUSH and CI only
   const ciFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
     [forceCastFact]
+  );
+  const ciDecision = evaluateGate([...ciFindings], policyForCI());
+  assert.equal(ciDecision.outcome, 'BLOCK');
+});
+
+test('gate promotes SOLID DIP concrete-instantiation heuristic to blocking in PRE_PUSH and CI only', () => {
+  const solidDipFact = {
+    kind: 'Heuristic' as const,
+    ruleId: 'heuristics.ts.solid.dip.concrete-instantiation.ast',
+    severity: 'WARN' as const,
+    code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST',
+    message: 'AST heuristic detected DIP risk: direct instantiation of concrete framework dependency.',
+    filePath: 'apps/backend/src/application/use-cases/CreateUserUseCase.ts',
+  };
+
+  const preCommitFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_COMMIT'),
+    [solidDipFact]
+  );
+  const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
+  assert.equal(preCommitDecision.outcome, 'PASS');
+
+  const prePushFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
+    [solidDipFact]
+  );
+  const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+
+  const ciFindings = evaluateRules(
+    applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'CI'),
+    [solidDipFact]
   );
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');

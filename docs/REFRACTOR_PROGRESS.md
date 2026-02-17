@@ -258,6 +258,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar validación dirigida del lote iOS (detectors + heuristics + skills ruleset) y ajustar severidades finales por stage.
 - ✅ Extender cobertura semántica enterprise de SOLID (SRP/OCP/LSP/ISP/DIP) con señales AST no superficiales y contrato de evidencia.
 - ✅ Ejecutar validación determinista del lote SOLID (detectors TS + extractor heurístico + stage policies) y cerrar versión de pack heurístico.
+- ✅ Cerrar implementación integral de reglas/skills (heurísticas iOS + SOLID TS + stage promotions + contracts skills) con validación completa (`typecheck`, `skills:lock:check`, `test:deterministic` y suite dirigida de policies/presets).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
