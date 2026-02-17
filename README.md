@@ -1,6 +1,6 @@
 # Pumuki AST Intelligence Framework
 
-[![Version](https://img.shields.io/badge/version-6.3.7-1d4ed8)](package.json)
+[![Version](https://img.shields.io/npm/v/pumuki?color=1d4ed8)](https://www.npmjs.com/package/pumuki)
 [![License](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
 [![Build](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
 [![Node](https://img.shields.io/badge/node-%3E%3D18-0ea5e9)](package.json)
@@ -50,7 +50,7 @@ This gives enterprise teams one deterministic source of truth to decide what is 
 - Teams with compliance/audit requirements.
 - High-change environments with AI-assisted development.
 
-## Quick Start
+## Quick Start (Consumer Repository)
 
 ### Prerequisites
 
@@ -61,23 +61,30 @@ This gives enterprise teams one deterministic source of truth to decide what is 
 ### Installation
 
 ```bash
-git clone https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git
-cd ast-intelligence-hooks
-npm ci
+npm install --save-exact pumuki
 ```
 
 ### Minimal verification
 
 ```bash
-npm run typecheck
-npm run test:deterministic
-npm run validation:package-manifest
+npx pumuki doctor
+npx pumuki status
 ```
 
 ### First run
 
 ```bash
-npm run framework:menu
+npx pumuki install
+npx pumuki-pre-commit
+npx pumuki-pre-push
+npx pumuki-ci
+```
+
+### Cleanup
+
+```bash
+npm uninstall pumuki
+npx --yes pumuki remove
 ```
 
 ## Automated vs Manual Operations
