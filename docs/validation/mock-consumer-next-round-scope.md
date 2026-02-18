@@ -46,6 +46,18 @@ Status:
 Status:
 - `✅` implemented (mock commit `24dd39a`), validated with artifact contract check `summary_contract=PASS`.
 
+## Third Atomic Task
+
+- Harden artifact lifecycle behavior in `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh` so failed runs do not leave stale-success summaries.
+- On non-zero execution (guardrail or stage failure), ensure `artifacts/pumuki-matrix-summary.json` is removed or updated with a deterministic `FAIL` verdict (single-source-of-truth, no stale PASS file).
+
+### Acceptance Criteria for Third Task
+
+1. Dirty-baseline run (expected fail-fast) does not leave a stale `PASS` summary artifact.
+2. Successful run still writes a valid `PASS` summary artifact with the same parseable schema.
+3. Console output contract remains unchanged.
+4. The behavior is reproducible in back-to-back runs (`fail` then `pass`, `pass` then `fail`).
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.

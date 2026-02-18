@@ -17,7 +17,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar primer task atómico de la nueva ronda: guardrail de baseline limpia en `scripts/run-pumuki-matrix.sh` del mock (fail-fast + guía explícita).
 - ✅ Definir segundo task atómico de la nueva ronda (post-guardrail) con objetivo y criterio de aceptación verificable antes de implementación.
 - ✅ Ejecutar segundo task atómico de la nueva ronda: artefacto determinista de resumen de matriz en `artifacts/` del mock sin romper contrato actual de consola.
-- 🚧 Definir tercer task atómico de la nueva ronda (post-resumen) con criterio de aceptación verificable antes de implementación.
+- ✅ Definir tercer task atómico de la nueva ronda (post-resumen) con criterio de aceptación verificable antes de implementación.
+- 🚧 Ejecutar tercer task atómico de la nueva ronda: evitar artefacto de resumen stale en ejecuciones fallidas (`FAIL` determinista o limpieza explícita) sin romper contrato actual.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
@@ -403,7 +404,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar siguiente bloque post-release: ejecutar primer task atómico de la nueva ronda en mock (`run-pumuki-matrix.sh` con preflight de baseline limpia) y consolidar evidencia en handoff/tracker. Evidencia: commit mock `5f8c06b` (`test(matrix): fail fast when source baseline is dirty`), validación dirty baseline (`exit 17` con guía explícita) y revalidación clean baseline en verde (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`).
 - ✅ Continuar siguiente bloque post-release: definir y fijar segundo task atómico de la nueva ronda en documentación (scope + backlog visible + tracker) antes de ejecutar cambios adicionales. Alcance fijado en `docs/validation/mock-consumer-next-round-scope.md`: generar artefacto determinista de resumen de matriz (`artifacts/`) con package spec, exits por escenario, veredicto final y timestamp, manteniendo contrato de consola actual.
 - ✅ Continuar siguiente bloque post-release: ejecutar segundo task atómico en mock (`scripts/run-pumuki-matrix.sh` con salida de artefacto de resumen) y consolidar evidencia en handoff/tracker. Evidencia: commit mock `24dd39a` (`test(matrix): emit deterministic summary artifact`), matriz en verde con contrato de consola intacto (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`) y artefacto `artifacts/pumuki-matrix-summary.json` validado con `jq` (`summary_contract=PASS`).
-- 🚧 Continuar siguiente bloque post-release: definir y fijar tercer task atómico de la nueva ronda en documentación (scope + backlog visible + tracker) antes de ejecutar cambios adicionales.
+- ✅ Continuar siguiente bloque post-release: definir y fijar tercer task atómico de la nueva ronda en documentación (scope + backlog visible + tracker) antes de ejecutar cambios adicionales. Alcance fijado en `docs/validation/mock-consumer-next-round-scope.md`: endurecer ciclo de vida del artefacto `artifacts/pumuki-matrix-summary.json` para evitar stale `PASS` tras ejecuciones fallidas, con criterios verificables (`fail->pass`, `pass->fail`) y contrato de consola intacto.
+- 🚧 Continuar siguiente bloque post-release: ejecutar tercer task atómico en mock (`run-pumuki-matrix.sh` con manejo determinista de artefacto en fallo) y consolidar evidencia en handoff/tracker.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
