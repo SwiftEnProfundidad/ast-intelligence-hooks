@@ -288,6 +288,33 @@ Conclusion:
 - failed runs now leave deterministic machine-readable failure state.
 - successful runs clear stale failure state while preserving current PASS summary behavior and console contract.
 
+## Next-Round Task 5 Output (failure context metadata)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `5af7ded`
+- change: `pumuki-matrix-last-failure.json` now includes deterministic `failure_step` and `failure_log_path`, with scenario-aware failure context after preflight.
+
+Validation evidence:
+- dirty preflight failure:
+  - `dirty_exit=17`
+  - `dirty_failure={"final_verdict":"FAIL","exit_code":17,"failure_phase":"preflight","failure_step":"source_repo_cleanliness","failure_log_path":null,"package_spec":"pumuki@latest"}`
+- successful matrix run:
+  - `pass_summary_exists=1`
+  - `pass_failure_exists=0`
+  - `pass_summary={"final_verdict":"PASS","package_spec":"pumuki@latest"}`
+- forced scenario failure after preflight (invalid package):
+  - `scenario_exit=1`
+  - `scenario_failure={"final_verdict":"FAIL","exit_code":1,"failure_phase":"clean","failure_step":"npm_install_package","failure_log_path":"/tmp/pumuki-clean-npm-install.log","package_spec":"pumuki@0.0.0-not-a-real-version"}`
+  - `scenario_log_exists=1`
+  - `summary_exists_after_scenario_fail=0`
+
+Conclusion:
+- failure metadata now supports deterministic step-level and scenario-aware triage context.
+- backward-compatible fields remain intact while console/summary contracts stay stable.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:

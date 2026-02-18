@@ -103,6 +103,12 @@ Status:
 3. Existing consumers of `pumuki-matrix-last-failure.json` remain compatible (old keys still present; schema stable).
 4. Console output contract remains unchanged and summary artifact behavior from task 3/4 is preserved.
 
+Status:
+- `✅` implemented (mock commit `5af7ded`), validated with deterministic checks:
+  - dirty preflight failure: `exit=17`, `failure_phase=preflight`, `failure_step=source_repo_cleanliness`, `failure_log_path=null`
+  - scenario-aware failure after preflight (forced with invalid package): `exit=1`, `failure_phase=clean`, `failure_step=npm_install_package`, `failure_log_path=/tmp/pumuki-clean-npm-install.log` (file exists)
+  - successful run keeps behavior from task 3/4: `summary` present with `final_verdict=PASS`, `last-failure` absent
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
