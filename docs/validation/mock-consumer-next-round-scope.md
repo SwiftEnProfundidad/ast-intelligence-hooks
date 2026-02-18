@@ -193,6 +193,21 @@ Status:
   - successful run: `summary` presente (`final_verdict=PASS`) y artefactos stale de fallo eliminados
   - final console line preserved: `All scenario matrix checks passed for package: pumuki@latest`
 
+## Tenth Atomic Task
+
+- Add deterministic, portable command metadata in failure artifact:
+  - keep `failure_command` (resolved command) for operator copy/paste,
+  - add `failure_command_template` with placeholders (`{repo_root}`, `{clone_dir}`, `{scenario}`, `{package_spec}`, `{base_ref}`) to avoid machine-specific path coupling.
+- Optionally include `failure_command_variables` object with resolved values used in the template.
+- Preserve backward compatibility for all existing keys and current console behavior.
+
+### Acceptance Criteria for Tenth Task
+
+1. Preflight dirty failure (`exit 17`) includes non-empty `failure_command_template` without absolute local paths.
+2. Scenario failure on `npm_install_package` includes template `npm install --save-exact "{package_spec}"` and resolved `package_spec` in variables.
+3. Existing `failure_command` remains present and non-empty where command-backed step exists.
+4. Successful run still removes stale failure artifacts and preserves summary/console contracts unchanged.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
