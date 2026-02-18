@@ -89,6 +89,25 @@ const samplePolicy = {
   },
 } as const;
 
+const collectHeuristicPrefixes = (
+  when: NonNullable<ReturnType<typeof loadSkillsRuleSetForStage>['rules'][number]>['when']
+): string[] => {
+  if (when.kind === 'Heuristic') {
+    return [when.where?.filePathPrefix ?? ''].filter((prefix) => prefix.length > 0);
+  }
+
+  if (when.kind === 'Any') {
+    return when.conditions
+      .filter((condition): condition is { kind: 'Heuristic'; where?: { filePathPrefix?: string } } =>
+        condition.kind === 'Heuristic'
+      )
+      .map((condition) => condition.where?.filePathPrefix ?? '')
+      .filter((prefix) => prefix.length > 0);
+  }
+
+  return [];
+};
+
 test('loads and transforms active bundles into heuristic-driven rules', async () => {
   await withTempDir('pumuki-skills-ruleset-', async (tempRoot) => {
     writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
@@ -107,8 +126,9 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     assert.ok(firstRule);
     assert.equal(firstRule.id, 'skills.ios.no-force-try');
     assert.equal(firstRule.severity, 'ERROR');
-    assert.equal(firstRule.when.kind, 'Heuristic');
-    assert.equal(firstRule.when.where?.ruleId, 'heuristics.ios.force-try.ast');
+    const iosHeuristicPrefixes = collectHeuristicPrefixes(firstRule.when).sort();
+    assert.equal(iosHeuristicPrefixes.length > 0, true);
+    assert.equal(iosHeuristicPrefixes.includes('apps/ios/'), true);
     assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.force-try.ast'), true);
     assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.task-detached.ast'), true);
     assert.equal(prePush.requiresHeuristicFacts, true);
@@ -216,5 +236,64 @@ test('ignores unmapped rules and promotes only from PRE_PUSH/CI', async () => {
       prePush.rules.some((rule) => rule.id === 'skills.ios.custom-non-mapped-rule'),
       false
     );
+  });
+});
+
+test('scopes backend/frontend heuristic rules to platform file prefixes', async () => {
+  await withTempDir('pumuki-skills-ruleset-platform-scope-', async (tempRoot) => {
+    const lock = {
+      version: '1.0',
+      compilerVersion: '1.0.0',
+      generatedAt: '2026-02-07T23:15:00.000Z',
+      bundles: [
+        {
+          name: 'backend-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+          hash: 'a'.repeat(64),
+          rules: [
+            {
+              id: 'skills.backend.avoid-explicit-any',
+              description: 'Avoid explicit any in backend runtime code.',
+              severity: 'WARN',
+              platform: 'backend',
+              sourceSkill: 'backend-guidelines',
+              sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+              locked: true,
+            },
+          ],
+        },
+        {
+          name: 'frontend-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/codex-skills/windsurf-rules-frontend.md',
+          hash: 'b'.repeat(64),
+          rules: [
+            {
+              id: 'skills.frontend.avoid-explicit-any',
+              description: 'Avoid explicit any in frontend runtime code.',
+              severity: 'WARN',
+              platform: 'frontend',
+              sourceSkill: 'frontend-guidelines',
+              sourcePath: 'docs/codex-skills/windsurf-rules-frontend.md',
+              locked: true,
+            },
+          ],
+        },
+      ],
+    } as const;
+
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+    const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+    const backendRule = preCommit.rules.find((rule) => rule.id === 'skills.backend.avoid-explicit-any');
+    const frontendRule = preCommit.rules.find((rule) => rule.id === 'skills.frontend.avoid-explicit-any');
+
+    assert.ok(backendRule);
+    assert.ok(frontendRule);
+    assert.deepEqual(collectHeuristicPrefixes(backendRule.when), ['apps/backend/']);
+
+    const frontendPrefixes = collectHeuristicPrefixes(frontendRule.when).sort();
+    assert.deepEqual(frontendPrefixes, ['apps/frontend/', 'apps/web/']);
   });
 });

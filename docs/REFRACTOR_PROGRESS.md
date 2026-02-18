@@ -277,7 +277,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar cobertura frontend en repos mixtos (`apps/frontend|apps/web`) y confirmar bloqueo esperado en escenario `violations`.
 - ✅ Validar cobertura Android en repos mixtos (`apps/android/**/*.kt|*.kts`) y confirmar bloqueo esperado en escenario `violations`.
 - ✅ Validar evaluación combinada multi-plataforma en `PRE_COMMIT/PRE_PUSH/CI` (checklist 5.5) y comprobar rulesets cargados de forma conjunta.
-- 🚧 Validar ausencia de falsos positivos cross-platform (checklist 5.6), con foco en findings backend/skills durante staging exclusivo frontend.
+- ✅ Scopear reglas de skills heurísticas por plataforma (`filePathPrefix`) para eliminar firing cross-platform (`skills.backend.*` en staging frontend-only), con test de regresión en `integrations/config/__tests__/skillsRuleSet.test.ts`.
+- 🚧 Revalidar en `pumuki-mock-consumer` ausencia de falsos positivos cross-platform (checklist 5.6) tras el fix de scope por plataforma.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

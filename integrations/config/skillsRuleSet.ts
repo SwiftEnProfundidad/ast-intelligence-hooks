@@ -1,4 +1,5 @@
 import type { GateStage } from '../../core/gate/GateStage';
+import type { Condition } from '../../core/rules/Condition';
 import type { RuleDefinition } from '../../core/rules/RuleDefinition';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { isSeverityAtLeast, type Severity } from '../../core/rules/Severity';
@@ -50,6 +51,18 @@ const SKILL_TO_HEURISTIC_RULE_ID: Record<string, string> = {
   'skills.android.no-runblocking': 'heuristics.android.run-blocking.ast',
 };
 
+const PLATFORM_HEURISTIC_FILE_PREFIXES: Record<
+  NonNullable<RuleDefinition['platform']>,
+  ReadonlyArray<string>
+> = {
+  ios: ['apps/ios/', 'ios/'],
+  backend: ['apps/backend/'],
+  frontend: ['apps/frontend/', 'apps/web/'],
+  android: ['apps/android/'],
+  text: [],
+  generic: [],
+};
+
 const toCode = (ruleId: string): string => {
   return `SKILLS_${ruleId.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase()}`;
 };
@@ -62,6 +75,42 @@ const stageApplies = (
     return true;
   }
   return STAGE_RANK[currentStage] >= STAGE_RANK[ruleStage];
+};
+
+const buildHeuristicConditionForPlatform = (params: {
+  ruleId: string;
+  platform: NonNullable<RuleDefinition['platform']>;
+}): Condition => {
+  const prefixes = PLATFORM_HEURISTIC_FILE_PREFIXES[params.platform] ?? [];
+  if (prefixes.length === 0) {
+    return {
+      kind: 'Heuristic',
+      where: {
+        ruleId: params.ruleId,
+      },
+    };
+  }
+
+  if (prefixes.length === 1) {
+    return {
+      kind: 'Heuristic',
+      where: {
+        ruleId: params.ruleId,
+        filePathPrefix: prefixes[0],
+      },
+    };
+  }
+
+  return {
+    kind: 'Any',
+    conditions: prefixes.map((prefix) => ({
+      kind: 'Heuristic' as const,
+      where: {
+        ruleId: params.ruleId,
+        filePathPrefix: prefix,
+      },
+    })),
+  };
 };
 
 const resolveBundleEnabled = (params: {
@@ -119,12 +168,10 @@ const toRuleDefinition = (params: {
     platform: params.rule.platform,
     locked: params.rule.locked ?? true,
     confidence: params.rule.confidence,
-    when: {
-      kind: 'Heuristic',
-      where: {
-        ruleId: mappedHeuristicRuleId,
-      },
-    },
+    when: buildHeuristicConditionForPlatform({
+      ruleId: mappedHeuristicRuleId,
+      platform: params.rule.platform,
+    }),
     then: {
       kind: 'Finding',
       message: params.rule.description,
