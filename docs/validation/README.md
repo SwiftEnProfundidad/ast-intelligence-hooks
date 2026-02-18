@@ -22,6 +22,7 @@ Keep these as source-of-truth operational references:
 - `adapter-real-session-report-template.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
+- `mock-consumer-post-release-handoff-pack.md`
 - `phase12-go-no-go-report.md`
 - `post-phase12-next-lot-decision.md`
 
