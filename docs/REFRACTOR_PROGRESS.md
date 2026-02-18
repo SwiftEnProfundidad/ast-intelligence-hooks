@@ -8,8 +8,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ⏳ Pendiente
 
 ## Tareas Abiertas (Vista Rápida)
-- 🚧 Dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
-- ⏳ Dividir `integrations/mcp/evidencePayloads.ts` por builders/contextos.
+- 🚧 Dividir `integrations/mcp/evidencePayloads.ts` por builders/contextos.
 - ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
 
 ## Backlog Visible (Corto Plazo)
@@ -38,7 +37,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar noveno task atómico de la nueva ronda: metadata determinista `failure_command` por `failure_step` en `pumuki-matrix-last-failure.json` sin romper compatibilidad ni contrato de consola.
 - ✅ Definir décimo task atómico de la nueva ronda (post-failure-command) con criterio de aceptación verificable para seguir endureciendo operación del runner.
 - ✅ Ejecutar décimo task atómico de la nueva ronda: metadata portable `failure_command_template` (+ variables) en `pumuki-matrix-last-failure.json` sin romper compatibilidad ni contrato de consola.
-- 🚧 Ejecutar siguiente bloque alto de refactor: dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
+- ✅ Ejecutar siguiente bloque alto de refactor: dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
+- ⏳ Ejecutar siguiente bloque alto de refactor: dividir `integrations/mcp/evidencePayloads.ts` por builders/contextos.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
@@ -46,7 +46,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Definir baseline mínimo de cobertura para rutas críticas (`gate`, `evidence`, `heuristics`).
 
 ## Fase 2 — Alto (calidad)
-- ⏳ Dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
+- ✅ Dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
 - ⏳ Dividir `integrations/mcp/evidencePayloads.ts` por builders/contextos.
 - ✅ Particionar `integrations/gate/__tests__/stagePolicies-promotions-first.test.ts` en suites pequeñas.
 - ✅ Particionar `integrations/gate/__tests__/stagePolicies-promotions-second.test.ts` en suites pequeñas.
