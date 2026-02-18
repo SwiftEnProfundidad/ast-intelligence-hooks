@@ -39,6 +39,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar siguiente bloque alto de refactor: dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
 - ✅ Ejecutar siguiente bloque alto de refactor: dividir `integrations/mcp/evidencePayloads.ts` por builders/contextos.
 - ✅ Reducir backlog sin test (slice MCP payloads): añadir cobertura de re-export para `integrations/mcp/evidencePayloadContext.ts` y `integrations/mcp/evidencePayloadBuilders.ts`.
+- ✅ Reducir backlog sin test (slice MCP facets barrels): añadir cobertura de re-export para `integrations/mcp/evidenceFacetsBase.ts` y `integrations/mcp/evidenceFacetsSnapshot.ts`.
 - 🚧 Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/`.
 
 ## Fase 1 — Crítico (bloquea release)
