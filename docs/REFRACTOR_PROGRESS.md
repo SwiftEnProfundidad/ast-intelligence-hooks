@@ -356,7 +356,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Resolver bloqueo de checklist 10.8: corregir `validation:lifecycle-smoke` (exit esperado `0`) y revalidar. Fix aplicado: smoke lifecycle desactiva bootstrap OpenSpec (`PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1`) y smoke gates fuerzan bypass SDD (`PUMUKI_SDD_BYPASS=1`); revalidado con `exit 0`.
 - ✅ Continuar checklist 10.9: ejecutar `npm run validation:package-smoke` y registrar resultado. Resultado: `exit 0` (modo `block` ejecutado sin errores).
 - ✅ Continuar checklist 10.10: ejecutar `npm run validation:package-smoke:minimal` y registrar resultado. Resultado: `exit 0` (modo `minimal` ejecutado sin errores).
-- 🚧 Continuar checklist 10.11: ejecutar `npm run validation:docs-hygiene` y registrar resultado.
+- ✅ Continuar checklist 10.11: ejecutar `npm run validation:docs-hygiene` y registrar resultado. Resultado: `exit 0` (`validation docs hygiene check passed`).
+- 🚧 Continuar checklist 12.1: validar comportamiento `PRE_PUSH` sin upstream (fallo seguro + guía clara).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
