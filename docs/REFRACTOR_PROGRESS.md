@@ -7,6 +7,13 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - 🚧 En progreso
 - ⏳ Pendiente
 
+## Backlog Visible (Corto Plazo)
+- ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
+- ✅ Recuperar matriz determinista tras bloqueo OpenSpec en clone interno del runner (`scripts/run-pumuki-matrix.sh` en mock).
+- 🚧 Normalizar baseline de `pumuki-mock-consumer` tras la ronda actual (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`).
+- ⏳ Re-ejecutar checklist operativo next-cycle completo en mock real con baseline limpia.
+- ⏳ Actualizar handoff + tracker con cierre final de ronda y dejar siguiente tarea activa.
+
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
 - ✅ Validar ejecución de suites tras corrección: suites y pruebas recuperadas, cobertura global `4.12%`.
