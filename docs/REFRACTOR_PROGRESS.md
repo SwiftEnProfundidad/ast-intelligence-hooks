@@ -290,7 +290,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar estabilidad/machine-readability de `suppressions` y `ledger` en evidencia v2.1 (checklist 7.5): `ledger`/`suppressions` como arrays, claves de ledger estables entre runs equivalentes, `firstSeen` estable y `lastSeen` monótono.
 - ✅ Validar arranque de `pumuki-mcp-evidence` desde repositorio consumidor (checklist 8.1): servidor iniciado en puerto temporal (`7391`) con `health` (`{\"status\":\"ok\"}`) y `status` accesibles.
 - ✅ Validar endpoints/facetas MCP con payload shape válido (checklist 8.2): `status`, `root`, `summary`, `snapshot`, `findings`, `rulesets`, `platforms` y `ledger` respondiendo con contrato JSON correcto.
-- 🚧 Iniciar validación de lectura determinista del último `.ai_evidence.json` vía MCP (checklist 8.3).
+- ✅ Validar lectura determinista del último `.ai_evidence.json` vía MCP (checklist 8.3): lecturas consecutivas en `root`, `summary` y `findings` devolvieron hashes idénticos.
+- 🚧 Iniciar validación de comportamiento MCP cuando falta/corrompe evidencia (checklist 8.4).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
