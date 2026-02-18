@@ -223,6 +223,35 @@ Conclusion:
 - fail-fast operator safety guard is active and deterministic.
 - clean-baseline deterministic contract is preserved.
 
+## Next-Round Task 2 Output (deterministic matrix summary artifact)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `24dd39a`
+- change: matrix runner now writes `artifacts/pumuki-matrix-summary.json` after successful runs.
+
+Validation evidence:
+- command: `npm run pumuki:matrix`
+- console contract preserved:
+  - `clean`: `pre-commit=0 pre-push=0 ci=0`
+  - `violations`: `pre-commit=1 pre-push=1 ci=1`
+  - `mixed`: `pre-commit=1 pre-push=1 ci=1`
+  - final line unchanged: `All scenario matrix checks passed for package: pumuki@latest`
+- artifact output:
+  - path: `artifacts/pumuki-matrix-summary.json`
+  - sample contract (`jq`):
+    - `package_spec="pumuki@latest"`
+    - `final_verdict="PASS"`
+    - `generated_at_utc` present
+    - `scenarios.clean|violations|mixed` include `pre_commit_exit`, `pre_push_exit`, `ci_exit`
+  - assertion check: `summary_contract=PASS`
+
+Conclusion:
+- deterministic summary artifact is produced and parseable.
+- existing matrix stage-exit behavior and console output contract remain stable.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:

@@ -43,6 +43,9 @@ Status:
    - `violations => 1/1/1`
    - `mixed => 1/1/1`
 
+Status:
+- `✅` implemented (mock commit `24dd39a`), validated with artifact contract check `summary_contract=PASS`.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
