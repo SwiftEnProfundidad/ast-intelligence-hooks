@@ -405,6 +405,34 @@ Conclusion:
 - failure-log artifacts now carry deterministic integrity metadata (hash + size) for portable triage verification.
 - compatibility and console contract remain unchanged.
 
+## Next-Round Task 9 Output (failure command metadata)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `eec64fd`
+- change: `pumuki-matrix-last-failure.json` now includes `failure_command`, resolved deterministically from `failure_step`.
+
+Validation evidence:
+- preflight dirty failure:
+  - `preflight_exit=17`
+  - `preflight={"exit_code":17,"failure_phase":"preflight","failure_step":"source_repo_cleanliness","failure_command":"git -C \".../pumuki-mock-consumer\" status --porcelain --untracked-files=normal"}`
+  - `preflight_cmd_non_empty=yes`
+- scenario failure after preflight (invalid package):
+  - `scenario_exit=1`
+  - `scenario={"exit_code":1,"failure_phase":"clean","failure_step":"npm_install_package","failure_command":"npm install --save-exact \"pumuki@0.0.0-not-a-real-version\""}`
+  - `scenario_cmd_check=yes`
+- successful run after failure:
+  - `success_last_line=All scenario matrix checks passed for package: pumuki@latest`
+  - `summary_json={"final_verdict":"PASS","run_id":"pumuki-matrix-..."}`
+  - `failure_json_exists_after_success=0`
+  - `failure_log_exists_after_success=0`
+
+Conclusion:
+- each failure report now carries the exact canonical command behind the failing step, improving deterministic triage.
+- compatibility and console contract remain unchanged.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:

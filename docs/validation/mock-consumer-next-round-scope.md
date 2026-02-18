@@ -186,6 +186,13 @@ Status:
 3. Successful run still removes stale `pumuki-matrix-last-failure.json` + `pumuki-matrix-last-failure.log` and preserves summary contract.
 4. Existing artifact keys remain backward-compatible and console output contract remains unchanged.
 
+Status:
+- `✅` implemented (mock commit `eec64fd`), validated with deterministic checks:
+  - preflight dirty failure: `exit=17`, `failure_step=source_repo_cleanliness`, `failure_command` no vacío
+  - scenario failure after preflight (invalid package): `exit=1`, `failure_step=npm_install_package`, `failure_command="npm install --save-exact \"pumuki@0.0.0-not-a-real-version\""`
+  - successful run: `summary` presente (`final_verdict=PASS`) y artefactos stale de fallo eliminados
+  - final console line preserved: `All scenario matrix checks passed for package: pumuki@latest`
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
