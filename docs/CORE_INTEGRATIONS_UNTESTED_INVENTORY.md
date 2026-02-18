@@ -1,18 +1,18 @@
-# Inventario Determinista: core/integrations sin test directo
+# Deterministic Inventory: core/integrations without direct tests
 
-## Criterio
-- Alcance: archivos `*.ts` bajo `core/` e `integrations/`, excluyendo `__tests__/`, `*.test.ts`, `*.spec.ts` y `*.d.ts`.
-- Se considera "sin test directo" si no existe `archivo.test.ts`/`archivo.spec.ts` como sibling o en `__tests__/`.
-- Priorización determinista por impacto: `score = (reverse_dependencies * 20) + loc`.
-- Prioridades: `P1` (deps>=8 o loc>=220), `P2` (deps>=4 o loc>=140), `P3` (deps>=2 o loc>=70), `P4` resto.
+## Criteria
+- Scope: `*.ts` files under `core/` and `integrations/`, excluding `__tests__/`, `*.test.ts`, `*.spec.ts`, and `*.d.ts`.
+- A file is considered "without direct test" when no sibling `file.test.ts` / `file.spec.ts` exists (or under local `__tests__/`).
+- Deterministic impact prioritization: `score = (reverse_dependencies * 20) + loc`.
+- Priority levels: `P1` (deps>=8 or loc>=220), `P2` (deps>=4 or loc>=140), `P3` (deps>=2 or loc>=70), `P4` otherwise.
 
-## Resumen
-- Total source files analizados: **204**
-- Total test files detectados: **208**
-- Total sin test directo: **22**
-- Prioridades: P1=1, P2=1, P3=9, P4=11
+## Summary
+- Total source files analyzed: **204**
+- Total test files detected: **208**
+- Total without direct test: **22**
+- Priority distribution: P1=1, P2=1, P3=9, P4=11
 
-## Top 60 por impacto
+## Top 60 by impact
 | Priority | Score | RevDeps | LOC | File |
 |---|---:|---:|---:|---|
 | P1 | 399 | 5 | 299 | `integrations/gate/stagePolicies.ts` |
@@ -38,20 +38,20 @@
 | P4 | 3 | 0 | 3 | `integrations/mcp/evidenceFacetsBase.ts` |
 | P4 | 2 | 0 | 2 | `integrations/mcp/index.ts` |
 
-## Artefacto completo
-- Ver listado completo en `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.json`.
+## Full artifact
+- See full list in `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.json`.
 
-## Lote Atómico Inicial Seleccionado (Batch 01)
+## Selected Initial Atomic Batch (Batch 01)
 - `integrations/gate/stagePolicies.ts` (P1, score 399)
 - `integrations/platform/detectPlatforms.ts` (P2, score 138)
 - `integrations/mcp/evidenceContextServer.ts` (P3, score 172)
 
-### Criterio de selección
-- Prioridad por impacto (score + prioridad) sobre el inventario determinista.
-- Cobertura transversal de dominios (`gate`, `platform`, `mcp`) para reducir riesgo sistémico temprano.
-- Límite operativo estricto: máximo 3 archivos para mantener cierre atómico y trazable.
+### Selection criteria
+- Impact-first selection (score + priority) over the deterministic inventory.
+- Cross-domain coverage (`gate`, `platform`, `mcp`) to reduce early systemic risk.
+- Strict operational limit: maximum 3 files to keep the cycle atomic and traceable.
 
-### Criterio de cierre del Batch 01
-- Existe al menos un test unitario directo por cada archivo del lote.
-- Los tests del lote pasan en local.
-- El tracker se actualiza con Batch 01 en ✅ y Batch 02 como única tarea en 🚧.
+### Batch 01 exit criteria
+- At least one direct unit test exists for each file in the batch.
+- Batch tests pass locally.
+- Tracker is updated with Batch 01 as ✅ and Batch 02 as the only 🚧 active task.

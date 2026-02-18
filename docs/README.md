@@ -80,6 +80,7 @@ Language baseline: active repository documentation is maintained in English.
 - `RELEASE_NOTES.md`: v2.x release notes and rollout checkpoints.
 - `TODO.md`: active operational work tracking.
 - `REFRACTOR_PROGRESS.md`: linear phase-by-phase status (done/in-progress/pending).
+- `CORE_INTEGRATIONS_UNTESTED_INVENTORY.md`: deterministic inventory and prioritization of untested files for `core/` and `integrations/`.
 - `PUMUKI_FULL_VALIDATION_CHECKLIST.md`: sequential full validation matrix for enterprise readiness.
 - `PUMUKI_OPENSPEC_SDD_ROADMAP.md`: phased rollout roadmap for OpenSpec+SDD integration.
 

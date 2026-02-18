@@ -11,6 +11,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ⏳ Ver tarea activa (🚧) en “Cierre Finito del Siguiente Bloque (Core/Integrations sin test)”.
 
 ## Backlog Visible (Corto Plazo)
+- ✅ Corregir cumplimiento de documentación enterprise tras ejecución local de tests: indexar `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.md` en `docs/README.md` y normalizar su contenido a inglés para pasar `docs-index-coverage` + `enterprise-docs-language` (verificado OK con `npm test -- integrations/platform/__tests__/detectPlatforms.test.ts`).
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
 - ✅ Recuperar matriz determinista tras bloqueo OpenSpec en clone interno del runner (`scripts/run-pumuki-matrix.sh` en mock).
 - ✅ Normalizar baseline de `pumuki-mock-consumer` tras la ronda actual (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`).
