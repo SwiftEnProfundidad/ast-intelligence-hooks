@@ -292,7 +292,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar endpoints/facetas MCP con payload shape válido (checklist 8.2): `status`, `root`, `summary`, `snapshot`, `findings`, `rulesets`, `platforms` y `ledger` respondiendo con contrato JSON correcto.
 - ✅ Validar lectura determinista del último `.ai_evidence.json` vía MCP (checklist 8.3): lecturas consecutivas en `root`, `summary` y `findings` devolvieron hashes idénticos.
 - ✅ Validar comportamiento MCP cuando falta/corrompe evidencia (checklist 8.4): `/status` en `degraded`, `evidence.present`/`valid` coherentes por caso (`missing` y `corrupt`), y endpoints de evidencia devolviendo `404`.
-- ✅ Validar UX operativa `framework:menu` (checklist 9.1): menú abrió correctamente, ejecutó acción `7` (`Show active skills bundles`) y cerró con `27` (`Exit`) con código `0`.
+- ✅ Validar UX operativa del menú en consumidor (checklist 9.1): `npx pumuki-framework` abrió correctamente, ejecutó acción `7` (`Show active skills bundles`) y cerró con `27` (`Exit`) con código `0` (sin depender de script `npm run framework:menu` en el mock).
 - 🚧 Iniciar validación de acciones lifecycle/gates mapeadas en `framework:menu` (checklist 9.2).
 
 ## Notas
