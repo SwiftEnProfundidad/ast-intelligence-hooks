@@ -80,12 +80,12 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 
 ### 6) Rulesets, políticas y overrides
 
-- 🚧 6.1 Verificar carga de baseline packs:
+- ✅ 6.1 Verificar carga de baseline packs:
   - `iosEnterpriseRuleSet`
   - `backendRuleSet`
   - `frontendRuleSet`
   - `androidRuleSet`
-- ⏳ 6.2 Verificar políticas por stage:
+- 🚧 6.2 Verificar políticas por stage:
   - PRE_COMMIT: block `CRITICAL`, warn `ERROR`
   - PRE_PUSH: block `ERROR`, warn `WARN`
   - CI: block `ERROR`, warn `WARN`

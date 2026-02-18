@@ -279,7 +279,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar evaluación combinada multi-plataforma en `PRE_COMMIT/PRE_PUSH/CI` (checklist 5.5) y comprobar rulesets cargados de forma conjunta.
 - ✅ Scopear reglas de skills heurísticas por plataforma (`filePathPrefix`) para eliminar firing cross-platform (`skills.backend.*` en staging frontend-only), con test de regresión en `integrations/config/__tests__/skillsRuleSet.test.ts`.
 - ✅ Revalidar en `pumuki-mock-consumer` ausencia de falsos positivos cross-platform (checklist 5.6) tras el fix de scope por plataforma.
-- 🚧 Iniciar validación de carga de baseline packs en `pumuki-mock-consumer` (checklist 6.1: `iosEnterpriseRuleSet`, `backendRuleSet`, `frontendRuleSet`, `androidRuleSet`).
+- ✅ Validar carga de baseline packs en `pumuki-mock-consumer` (checklist 6.1) con evidencia de bundles activos: `iosEnterpriseRuleSet@1.0.0`, `backendRuleSet@1.0.0`, `frontendRuleSet@1.0.0`, `androidRuleSet@1.0.0`.
+- 🚧 Iniciar validación de políticas por stage en `pumuki-mock-consumer` (checklist 6.2: PRE_COMMIT/PRE_PUSH/CI).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
