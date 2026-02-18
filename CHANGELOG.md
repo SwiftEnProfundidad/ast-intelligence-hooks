@@ -6,6 +6,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.14] - 2026-02-18
+
 ### Added
 
 - New lifecycle command `pumuki remove` to perform enterprise cleanup and dependency removal in one step:

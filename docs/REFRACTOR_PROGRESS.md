@@ -366,7 +366,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar checklist 12.8: preparar informe final go/no-go con evidencia consolidada de 12.x y estado de release. Reporte generado en `docs/validation/phase12-go-no-go-report.md` con veredicto `GO`, anchors de evidencia (`checklist`, `tracker`, `changelog`, `release notes`) y referencias de logs mock-only de validación 12.x.
 - ✅ Preparar siguiente lote según instrucción del usuario (post-cierre 12.x): paquete de decisión generado en `docs/validation/post-phase12-next-lot-decision.md` con rutas mutuamente excluyentes (`release` vs `hardening`) y criterios de entrada/ejecución.
 - ✅ Abrir siguiente lote por instrucción del usuario (`ok, continúa`) asumiendo ruta `release`: normalizada la coherencia de baseline de versión (`VERSION` alineado con `package.json` en `v6.3.13`).
-- 🚧 Continuar ruta `release` (lote atómico siguiente): definir versión objetivo de publicación y aplicar bump en `package.json`, `VERSION` y `CHANGELOG`.
+- ✅ Continuar ruta `release` (lote atómico siguiente): versión objetivo de publicación definida y bump aplicado a `6.3.14` en `package.json`, `package-lock.json`, `VERSION` y `CHANGELOG`.
+- 🚧 Continuar ruta `release` (lote atómico siguiente): publicar `pumuki@6.3.14` en npm y validar dist-tags/resultados de instalación en consumidor mock.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
