@@ -152,6 +152,20 @@ Status:
   - successful run: `summary` present, stale `last-failure` JSON removed, stale copied failure-log artifact removed
   - final console line preserved: `All scenario matrix checks passed for package: pumuki@latest`
 
+## Eighth Atomic Task
+
+- Add deterministic artifact-integrity metadata for copied failure logs:
+  - when `failure_log_artifact` exists, include `failure_log_artifact_sha256` and `failure_log_artifact_bytes` in `pumuki-matrix-last-failure.json`.
+- Keep fields null when no copied artifact exists (preflight failure path).
+- Preserve existing fields and console behavior unchanged.
+
+### Acceptance Criteria for Eighth Task
+
+1. Scenario failure with copied log sets non-empty `failure_log_artifact_sha256` and positive `failure_log_artifact_bytes`.
+2. Preflight dirty failure keeps `failure_log_artifact=null`, `failure_log_artifact_sha256=null`, `failure_log_artifact_bytes=null`.
+3. Successful run still removes stale failure JSON + copied failure log artifact.
+4. Existing artifact keys remain backward-compatible and console output contract remains unchanged.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
