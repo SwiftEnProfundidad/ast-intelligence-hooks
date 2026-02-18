@@ -146,6 +146,25 @@ Operational conclusion:
 - Stage/evidence contract remains stable.
 - Deterministic matrix is currently blocked by OpenSpec dependency resolution in matrix clone bootstrap.
 
+### Remediation Applied (same cycle)
+
+Fix applied in mock repository:
+- repo: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`
+- commit: `8f57767`
+- change: `scripts/run-pumuki-matrix.sh` now performs explicit OpenSpec bootstrap in each internal clone stage before opening SDD session.
+
+Post-fix verification:
+- command: `npm run pumuki:matrix`
+- result:
+  - `clean`: `pre-commit=0 pre-push=0 ci=0`
+  - `violations`: `pre-commit=1 pre-push=1 ci=1`
+  - `mixed`: `pre-commit=1 pre-push=1 ci=1`
+  - final line: `All scenario matrix checks passed for package: pumuki@latest`
+
+Updated operational conclusion:
+- Stage/evidence contract stable.
+- Deterministic matrix recovered without manual OpenSpec workaround.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
