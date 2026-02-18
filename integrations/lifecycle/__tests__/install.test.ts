@@ -157,3 +157,22 @@ test('runLifecycleInstall con bootstrapOpenSpec=false no ejecuta bootstrap y pre
     rmSync(repo, { recursive: true, force: true });
   }
 });
+
+test('runLifecycleInstall respeta PUMUKI_SKIP_OPENSPEC_BOOTSTRAP=1 cuando bootstrapOpenSpec no se define', () => {
+  const repo = createGitRepo();
+  const previous = process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP;
+  process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP = '1';
+  try {
+    const result = runLifecycleInstall({ cwd: repo });
+    assert.equal(result.openSpecBootstrap, undefined);
+    assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts), undefined);
+    assert.equal(existsSync(join(repo, 'openspec')), false);
+  } finally {
+    if (typeof previous === 'string') {
+      process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP = previous;
+    } else {
+      delete process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP;
+    }
+    rmSync(repo, { recursive: true, force: true });
+  }
+});

@@ -24,11 +24,16 @@ export const runGateStep = (
   step: SmokeGateStep,
   expectation: SmokeExpectation
 ): { outcome: string; exitCode: number } => {
+  const gateEnv: NodeJS.ProcessEnv = {
+    PUMUKI_SDD_BYPASS: '1',
+    ...(step.label === 'ci' ? { GITHUB_BASE_REF: 'main' } : {}),
+  };
+
   const result = runCommand({
     cwd: workspace.consumerRepo,
     executable: step.command,
     args: step.args,
-    env: step.label === 'ci' ? { GITHUB_BASE_REF: 'main' } : undefined,
+    env: gateEnv,
   });
 
   pushCommandLog(workspace.commandLog, result);

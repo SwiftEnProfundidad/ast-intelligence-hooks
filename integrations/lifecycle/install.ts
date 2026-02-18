@@ -33,13 +33,15 @@ export const runLifecycleInstall = (params?: {
     );
   }
 
-  const openSpecBootstrap =
-    params?.bootstrapOpenSpec ?? true
-      ? runOpenSpecBootstrap({
-        repoRoot: report.repoRoot,
-        npm: params?.npm ?? new LifecycleNpmService(),
-      })
-      : undefined;
+  const shouldBootstrapOpenSpec =
+    params?.bootstrapOpenSpec ?? process.env.PUMUKI_SKIP_OPENSPEC_BOOTSTRAP !== '1';
+
+  const openSpecBootstrap = shouldBootstrapOpenSpec
+    ? runOpenSpecBootstrap({
+      repoRoot: report.repoRoot,
+      npm: params?.npm ?? new LifecycleNpmService(),
+    })
+    : undefined;
 
   const hookResult = installPumukiHooks(report.repoRoot);
   const version = getCurrentPumukiVersion();

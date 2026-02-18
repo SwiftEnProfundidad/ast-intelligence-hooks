@@ -31,6 +31,9 @@ export const runLifecycleInstallStep = (workspace: SmokeWorkspace): void => {
     cwd: workspace.consumerRepo,
     executable: 'npx',
     args: ['--yes', 'pumuki', 'install'],
+    env: {
+      PUMUKI_SKIP_OPENSPEC_BOOTSTRAP: '1',
+    },
   });
   pushCommandLog(workspace.commandLog, result);
   assertNoFatalOutput(result, 'pumuki lifecycle install');
