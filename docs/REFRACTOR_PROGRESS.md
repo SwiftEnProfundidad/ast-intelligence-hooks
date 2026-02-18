@@ -276,7 +276,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar cobertura backend en repos mixtos (`apps/backend/**/*.ts`) y confirmar bloqueo esperado en escenario `violations`.
 - ✅ Validar cobertura frontend en repos mixtos (`apps/frontend|apps/web`) y confirmar bloqueo esperado en escenario `violations`.
 - ✅ Validar cobertura Android en repos mixtos (`apps/android/**/*.kt|*.kts`) y confirmar bloqueo esperado en escenario `violations`.
-- 🚧 Validar evaluación combinada multi-plataforma en `PRE_COMMIT/PRE_PUSH/CI` (checklist 5.5) y comprobar rulesets cargados de forma conjunta.
+- ✅ Validar evaluación combinada multi-plataforma en `PRE_COMMIT/PRE_PUSH/CI` (checklist 5.5) y comprobar rulesets cargados de forma conjunta.
+- 🚧 Validar ausencia de falsos positivos cross-platform (checklist 5.6), con foco en findings backend/skills durante staging exclusivo frontend.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
