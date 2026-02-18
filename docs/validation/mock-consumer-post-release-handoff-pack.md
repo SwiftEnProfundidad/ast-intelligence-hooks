@@ -165,6 +165,36 @@ Updated operational conclusion:
 - Stage/evidence contract stable.
 - Deterministic matrix recovered without manual OpenSpec workaround.
 
+## Next-Cycle Final Output (baseline normalized)
+
+Execution date: `2026-02-18`  
+Source environment:
+- real repo: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`
+- temp repo (stage/evidence): `/tmp/pumuki-stage-evidence-next-final-9e7qEM/repo`
+
+Observed matrix result (real repo):
+- `clean`: `pre-commit=0 pre-push=0 ci=0`
+- `violations`: `pre-commit=1 pre-push=1 ci=1`
+- `mixed`: `pre-commit=1 pre-push=1 ci=1`
+- final line: `All scenario matrix checks passed for package: pumuki@latest`
+
+Observed stage/evidence contract result (temp repo):
+- `pre_commit_exit=1` with `PRE_COMMIT/BLOCK/22`
+- `pre_push_exit=1` with `PRE_PUSH/BLOCK/39`
+- `ci_exit=1` with `CI/BLOCK/39`
+- bundle contract check:
+  - `android=true`
+  - `backend=true`
+  - `frontend=true`
+  - `ios=true`
+  - `project_rules=true`
+  - `gate_policy=true`
+
+Final conclusion for this round:
+- Matrix deterministic contract: `PASS`
+- Stage/evidence contract: `PASS`
+- Baseline drift in real mock repo: `NONE` (`git status` clean)
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
