@@ -91,6 +91,31 @@ Expected bundles present in summaries:
 - `project-rules`
 - `gate-policy.default.<stage>`
 
+## Latest Operational Output (real user environment)
+
+Execution date: `2026-02-18`  
+Source environment:
+- real repo: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`
+- stage/evidence temp clone root: `/tmp/pumuki-stage-evidence-25sqIb`
+
+Observed results:
+- matrix:
+  - `clean`: `pre-commit=0 pre-push=0 ci=0`
+  - `violations`: `pre-commit=1 pre-push=1 ci=1`
+  - `mixed`: `pre-commit=1 pre-push=1 ci=1`
+  - final line: `All scenario matrix checks passed for package: pumuki@latest`
+- stage/evidence violations path:
+  - `pre_commit_exit=1` with `{"stage":"PRE_COMMIT","outcome":"BLOCK","total_findings":22,...}`
+  - `pre_push_exit=1` with `{"stage":"PRE_PUSH","outcome":"BLOCK","total_findings":39,...}`
+  - `ci_exit=1` with `{"stage":"CI","outcome":"BLOCK","total_findings":39,...}`
+- bundles confirmed in summaries:
+  - `androidRuleSet@1.0.0`
+  - `backendRuleSet@1.0.0`
+  - `frontendRuleSet@1.0.0`
+  - `iosEnterpriseRuleSet@1.0.0`
+  - `project-rules`
+  - `gate-policy.default.PRE_COMMIT|PRE_PUSH|CI`
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
@@ -108,4 +133,3 @@ Validation round is considered closed only when all checks pass:
   - clean scenario missing backend domain test artifact.
 - `methodology.bdd.backend-application-change-requires-spec` in `clean`:
   - clean scenario missing backend app spec artifact recognized by diff extensions.
-
