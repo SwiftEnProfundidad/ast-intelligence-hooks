@@ -55,6 +55,7 @@ Language baseline: active repository documentation is maintained in English.
 - `validation/mock-consumer-integration-runbook.md`
 - `validation/github-support-ticket-template-startup-failure.md`
 - `validation/skills-rollout-consumer-repositories.md`
+- `validation/phase12-go-no-go-report.md`
 - `validation/archive/README.md`: historical validation reports.
 
 ## Vendored Codex Skills

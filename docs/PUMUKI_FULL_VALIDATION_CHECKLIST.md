@@ -117,16 +117,16 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 ### 10) Suites deterministas y validaciones
 
 - ✅ 10.1 `npm run typecheck` pasa.
-- 🚧 10.2 `npm run test` pasa.
-- ⏳ 10.3 `npm run test:deterministic` pasa.
-- ⏳ 10.4 `npm run test:heuristics` pasa.
-- ⏳ 10.5 `npm run test:mcp` pasa.
-- ⏳ 10.6 `npm run test:stage-gates` pasa.
-- ⏳ 10.7 `npm run validation:package-manifest` pasa.
-- ⏳ 10.8 `npm run validation:lifecycle-smoke` pasa.
-- ⏳ 10.9 `npm run validation:package-smoke` pasa.
-- ⏳ 10.10 `npm run validation:package-smoke:minimal` pasa.
-- ⏳ 10.11 `npm run validation:docs-hygiene` pasa.
+- ✅ 10.2 `npm run test` pasa.
+- ✅ 10.3 `npm run test:deterministic` pasa.
+- ✅ 10.4 `npm run test:heuristics` pasa.
+- ✅ 10.5 `npm run test:mcp` pasa.
+- ✅ 10.6 `npm run test:stage-gates` pasa.
+- ✅ 10.7 `npm run validation:package-manifest` pasa.
+- ✅ 10.8 `npm run validation:lifecycle-smoke` pasa.
+- ✅ 10.9 `npm run validation:package-smoke` pasa.
+- ✅ 10.10 `npm run validation:package-smoke:minimal` pasa.
+- ✅ 10.11 `npm run validation:docs-hygiene` pasa.
 
 ### 11) Mock consumer: ciclo funcional completo
 
@@ -145,7 +145,7 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 12.5 README/USAGE/INSTALLATION alineados con runtime actual.
 - ✅ 12.6 CHANGELOG incluye cambios visibles para usuario.
 - ✅ 12.7 Release probada en mock desde npm (no ruta local).
-- 🚧 12.8 Informe final go/no-go con enlaces a artifacts y logs.
+- ✅ 12.8 Informe final go/no-go con enlaces a artifacts y logs.
 
 ## Criterio de salida
 
