@@ -287,7 +287,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar contrato de esquema mínimo de evidencia (`version`, `snapshot`, `ledger`) en `pumuki-mock-consumer` (checklist 7.2): presencia y tipos correctos (`version:string`, `snapshot:object`, `ledger:array`).
 - ✅ Validar presencia de plataformas activas y rulesets cargados en evidencia (checklist 7.3): `activePlatforms=[android,backend,frontend,ios]`, bundles baseline de 4 plataformas presentes, más `project-rules` y `gate-policy.*`.
 - ✅ Validar orden determinista entre ejecuciones equivalentes en evidencia v2.1 (checklist 7.4): dos ejecuciones `PRE_COMMIT` equivalentes produjeron payload normalizado idéntico (sha256 `e92e71282a4d5b347f9b0d29228917b0be7ddd2493ee89d732a85968371bb5ab`).
-- 🚧 Iniciar validación de estabilidad/machine-readability de `suppressions` y `ledger` en evidencia v2.1 (checklist 7.5).
+- ✅ Validar estabilidad/machine-readability de `suppressions` y `ledger` en evidencia v2.1 (checklist 7.5): `ledger`/`suppressions` como arrays, claves de ledger estables entre runs equivalentes, `firstSeen` estable y `lastSeen` monótono.
+- 🚧 Iniciar validación de arranque de `pumuki-mcp-evidence` desde repositorio consumidor (checklist 8.1).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

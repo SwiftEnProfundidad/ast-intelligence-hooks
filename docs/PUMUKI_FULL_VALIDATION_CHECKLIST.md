@@ -98,11 +98,11 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 7.2 Campos de esquema válidos (`version`, `snapshot`, `ledger`).
 - ✅ 7.3 Evidencia incluye plataformas activas y rulesets cargados.
 - ✅ 7.4 Orden determinista entre ejecuciones equivalentes.
-- 🚧 7.5 Suppressions/ledger se mantienen estables y machine-readable.
+- ✅ 7.5 Suppressions/ledger se mantienen estables y machine-readable.
 
 ### 8) MCP evidence context server
 
-- ⏳ 8.1 Arrancar `pumuki-mcp-evidence` desde contexto de repositorio consumidor.
+- 🚧 8.1 Arrancar `pumuki-mcp-evidence` desde contexto de repositorio consumidor.
 - ⏳ 8.2 Validar endpoints/facetas MCP con payload shape válido.
 - ⏳ 8.3 Validar lectura determinista del último `.ai_evidence.json`.
 - ⏳ 8.4 Validar comportamiento cuando falta/corrompe evidencia.
