@@ -43,6 +43,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Package smoke runner export wiring was restored for staged payload setup (`validation:package-smoke` / `validation:package-smoke:minimal`).
 - `pumuki remove` now prunes only directories traceable to the Pumuki dependency tree, guaranteeing third-party dependency folders are never removed.
+- `pumuki-pre-push` now fails safe when the branch has no upstream configured, returning `exit 1` with an explicit guidance message instead of silently evaluating `HEAD..HEAD`.
 - Lifecycle git command execution now suppresses expected git stderr in fail-safe paths to avoid noisy output during deterministic tests.
 - Framework menu report actions now resolve runner scripts from both consumer repo root and installed package root, enabling report generation from `npx pumuki-framework` in consumer repositories.
 - Evidence traceability is now attached deterministically at evaluation time:

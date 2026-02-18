@@ -31,7 +31,7 @@ test(
 );
 
 test(
-  'resolveUpstreamRef falls back to HEAD when tracking branch is missing',
+  'resolveUpstreamRef returns null when tracking branch is missing',
   { concurrency: false },
   async () => {
     await withResolveRepo(async (repoRoot) => {
@@ -39,7 +39,7 @@ test(
 
       const resolved = resolveUpstreamRef();
 
-      assert.equal(resolved, 'HEAD');
+      assert.equal(resolved, null);
     });
   }
 );

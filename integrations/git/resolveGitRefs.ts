@@ -26,11 +26,11 @@ const resolveDefaultCiBaseRef = (): string => {
   return 'HEAD';
 };
 
-export const resolveUpstreamRef = (): string => {
+export const resolveUpstreamRef = (): string | null => {
   try {
     return runGit(['rev-parse', '@{u}']);
   } catch {
-    return 'HEAD';
+    return null;
   }
 };
 

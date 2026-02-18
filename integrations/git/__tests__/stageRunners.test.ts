@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { runCiStage, runPreCommitStage, runPrePushStage } from '../stageRunners';
@@ -112,6 +112,23 @@ const setupBackendCommitRangeWithoutUpstream = (repoRoot: string): void => {
 
   stageBackendFile(repoRoot);
   runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
+};
+
+const withCapturedConsoleError = async (
+  callback: () => Promise<void>
+): Promise<Array<string>> => {
+  const original = console.error;
+  const messages: Array<string> = [];
+  console.error = (...args: Array<unknown>) => {
+    messages.push(args.map((arg) => String(arg)).join(' '));
+  };
+
+  try {
+    await callback();
+    return messages;
+  } finally {
+    console.error = original;
+  }
 };
 
 test('runPreCommitStage uses skills stage policy override and writes policy trace into evidence', async () => {
@@ -239,19 +256,22 @@ test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is ab
   });
 });
 
-test('runPrePushStage falls back gracefully when branch has no upstream', async () => {
+test('runPrePushStage fails safe with guidance when branch has no upstream', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);
 
-    const exitCode = await runPrePushStage();
-    assert.equal(exitCode, 0);
+    const messages = await withCapturedConsoleError(async () => {
+      const exitCode = await runPrePushStage();
+      assert.equal(exitCode, 1);
+    });
 
-    const evidence = readEvidence(repoRoot);
-    assert.equal(evidence.version, '2.1');
-    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
-    assert.equal(evidence.snapshot.outcome, 'PASS');
-    assert.equal(evidence.snapshot.findings.length, 0);
-    assertPolicyTrace(evidence, 'gate-policy.default.PRE_PUSH');
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), false);
+    assert.equal(
+      messages.some((message) =>
+        message.includes('pumuki pre-push blocked: branch has no upstream tracking reference.')
+      ),
+      true
+    );
   });
 });
 
