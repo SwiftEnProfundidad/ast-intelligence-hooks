@@ -89,8 +89,8 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
   - PRE_COMMIT: block `CRITICAL`, warn `ERROR`
   - PRE_PUSH: block `ERROR`, warn `WARN`
   - CI: block `ERROR`, warn `WARN`
-- 🚧 6.3 Verificar aplicación de overrides de proyecto.
-- ⏳ 6.4 Verificar enforcement de locked rules sin override explícito permitido.
+- ✅ 6.3 Verificar aplicación de overrides de proyecto.
+- 🚧 6.4 Verificar enforcement de locked rules sin override explícito permitido.
 
 ### 7) Contrato de evidencia v2.1
 

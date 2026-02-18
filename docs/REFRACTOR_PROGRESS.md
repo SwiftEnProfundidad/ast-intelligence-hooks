@@ -281,7 +281,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Revalidar en `pumuki-mock-consumer` ausencia de falsos positivos cross-platform (checklist 5.6) tras el fix de scope por plataforma.
 - ✅ Validar carga de baseline packs en `pumuki-mock-consumer` (checklist 6.1) con evidencia de bundles activos: `iosEnterpriseRuleSet@1.0.0`, `backendRuleSet@1.0.0`, `frontendRuleSet@1.0.0`, `androidRuleSet@1.0.0`.
 - ✅ Validar políticas por stage en `pumuki-mock-consumer` (checklist 6.2) con evidencia: `pre-commit(clean)=0`, `pre-commit(mixed)=1`, `pre-push(mixed)=1`, `ci(mixed)=1`.
-- 🚧 Iniciar validación de overrides de proyecto en `pumuki-mock-consumer` (checklist 6.3).
+- ✅ Validar overrides de proyecto en `pumuki-mock-consumer` (checklist 6.3): override de `backend.avoid-explicit-any` aplicado y observado en evidencia con severidad final `ERROR`.
+- 🚧 Iniciar validación de enforcement de reglas locked sin override permitido en `pumuki-mock-consumer` (checklist 6.4).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
