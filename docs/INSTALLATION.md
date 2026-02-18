@@ -1,6 +1,7 @@
 # Installation Guide (v2.x)
 
 This guide covers the active setup for the deterministic framework implementation in this repository.
+From v2.x, SDD with OpenSpec is part of the default enterprise installation path.
 
 ## Prerequisites
 
@@ -33,6 +34,55 @@ npm run test:deterministic
 
 If both commands pass, the workspace is ready.
 
+## Enterprise consumer installation (recommended)
+
+### 1) Install package
+
+```bash
+npm install --save-exact pumuki
+```
+
+### 2) Install managed lifecycle and OpenSpec bootstrap
+
+```bash
+npx --yes pumuki install
+```
+
+Behavior:
+- Installs managed hooks (`pre-commit`, `pre-push`).
+- Auto-installs `@fission-ai/openspec@latest` when OpenSpec is missing/incompatible (when `package.json` exists).
+- Scaffolds `openspec/` baseline if missing (`project.md`, archive/spec placeholders).
+
+### 3) Verify lifecycle and SDD status
+
+```bash
+npx --yes pumuki doctor
+npx --yes pumuki status
+npx --yes pumuki sdd status
+```
+
+### 4) Open active SDD session
+
+```bash
+npx --yes pumuki sdd session --open --change=<change-id>
+```
+
+Optional maintenance:
+
+```bash
+npx --yes pumuki sdd session --refresh
+npx --yes pumuki sdd validate --stage=PRE_COMMIT
+```
+
+### 5) Run gates
+
+```bash
+npx --yes pumuki-pre-write
+npx --yes pumuki-pre-commit
+npx --yes pumuki-pre-push
+npx --yes pumuki-ci
+```
+
 ## Run the framework locally
 
 ### Interactive menu
@@ -45,90 +95,66 @@ Menu starts in `Consumer` mode by default (focused options for day-to-day gate u
 Use `A` to switch to the full `Advanced` menu and `C` to switch back.
 Each option includes a short inline description.
 
-Optional adapter readiness check:
-
-```bash
-npm run validation:adapter-readiness -- \
-  --adapter-report .audit-reports/adapter/adapter-real-session-report.md \
-  --out .audit-reports/adapter/adapter-readiness.md
-
-npm run validation:adapter-session-status -- \
-  --out .audit-reports/adapter/adapter-session-status.md
-
-npm run validation:adapter-real-session-report -- \
-  --status-report .audit-reports/adapter/adapter-session-status.md \
-  --out .audit-reports/adapter/adapter-real-session-report.md
-```
-
-Note: the current adapter implementation uses `--adapter-report` as the adapter input flag.
-
 ### Direct stage runners
 
 ```bash
+# PRE_WRITE
+npx --yes pumuki-pre-write
+
 # PRE_COMMIT
-npx tsx integrations/git/preCommitIOS.cli.ts
+npx --yes pumuki-pre-commit
 
 # PRE_PUSH
-npx tsx integrations/git/prePushBackend.cli.ts
+npx --yes pumuki-pre-push
 
 # CI
-npx tsx integrations/git/ciFrontend.cli.ts
+npx --yes pumuki-ci
 ```
 
-## Lifecycle commands (enterprise consumer repositories)
-
-Install the package from npm (canonical enterprise command):
+## Lifecycle + SDD commands
 
 ```bash
+# package level
 npm install --save-exact pumuki
-```
-
-Install managed Git hooks in the current repository:
-
-```bash
-npx --yes pumuki install
-```
-
-Run lifecycle doctor before rollout:
-
-```bash
-npx --yes pumuki doctor
-```
-
-Uninstall and purge untracked Pumuki artifacts:
-
-```bash
-npx --yes pumuki uninstall --purge-artifacts
-```
-
-One-command cleanup and package removal:
-
-```bash
-npx --yes pumuki remove
-```
-
-Use this command instead of plain `npm uninstall pumuki` when you need deterministic lifecycle cleanup.
-It also removes orphan `node_modules/.package-lock.json` residue when `node_modules` has no other entries.
-Plain `npm uninstall pumuki` removes only the dependency entry and leaves managed hooks/lifecycle state untouched.
-
-Update to latest published Pumuki and re-apply hooks:
-
-```bash
-npx --yes pumuki update --latest
-```
-
-Package-level updates/removal also support short npm commands:
-
-```bash
 npm update pumuki
 npm uninstall pumuki
+
+# lifecycle
+npx --yes pumuki install
+npx --yes pumuki update --latest
+npx --yes pumuki doctor
+npx --yes pumuki status
+npx --yes pumuki uninstall --purge-artifacts
+npx --yes pumuki remove
+
+# sdd
+npx --yes pumuki sdd status
+npx --yes pumuki sdd validate --stage=PRE_WRITE
+npx --yes pumuki sdd validate --stage=PRE_COMMIT
+npx --yes pumuki sdd validate --stage=PRE_PUSH
+npx --yes pumuki sdd validate --stage=CI
+npx --yes pumuki sdd session --open --change=<change-id>
+npx --yes pumuki sdd session --refresh
+npx --yes pumuki sdd session --close
 ```
 
-## Optional: enable heuristic pilot
+Notes:
+- `pumuki remove` is the deterministic teardown path (`hooks + state + managed artifacts + dependency removal`).
+- Plain `npm uninstall pumuki` removes only the dependency entry.
+- `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` when required.
+
+## Guardrails
+
+- `pumuki install` / `pumuki update` block when tracked files exist under `node_modules`.
+- `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, and `CI` enforce SDD/OpenSpec policy.
+
+Emergency bypass (incident-only):
 
 ```bash
-PUMUKI_ENABLE_AST_HEURISTICS=true npx tsx integrations/git/prePushIOS.cli.ts
+PUMUKI_SDD_BYPASS=1 npx --yes pumuki sdd validate --stage=PRE_COMMIT
 ```
+
+Remove bypass immediately after remediation.
 
 ## CI workflows
 
@@ -142,15 +168,16 @@ The repository ships reusable and platform workflows:
 
 Each run uploads `.ai_evidence.json` artifact.
 
-## MCP evidence context server
-
-Start read-only evidence server:
+## MCP servers
 
 ```bash
 npm run mcp:evidence
+npm run mcp:enterprise
 ```
 
-Reference: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`.
+References:
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+- `docs/MCP_SERVERS.md`
 
 ## Evidence file
 
@@ -170,6 +197,16 @@ git branch --set-upstream-to origin/<branch>
 
 Ensure `GITHUB_BASE_REF` is present or that `origin/main` exists.
 
-### No findings while expecting violations
+### SDD blocks installation or gates
 
-Confirm changed files match supported platform paths/extensions consumed by platform detectors.
+```bash
+npx --yes pumuki sdd status
+npx --yes pumuki sdd validate --stage=PRE_COMMIT
+```
+
+Then reopen/refresh active session:
+
+```bash
+npx --yes pumuki sdd session --open --change=<change-id>
+npx --yes pumuki sdd session --refresh
+```

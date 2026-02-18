@@ -7,6 +7,7 @@ const ROOT_MARKDOWN_BASELINE = [
   'ARCHITECTURE.md',
   'CHANGELOG.md',
   'CLAUDE.md',
+  'PUMUKI.md',
   'README.md',
 ] as const;
 

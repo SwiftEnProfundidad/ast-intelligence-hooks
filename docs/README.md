@@ -75,6 +75,8 @@ Language baseline: active repository documentation is maintained in English.
 - `RELEASE_NOTES.md`: v2.x release notes and rollout checkpoints.
 - `TODO.md`: active operational work tracking.
 - `REFRACTOR_PROGRESS.md`: linear phase-by-phase status (done/in-progress/pending).
+- `PUMUKI_FULL_VALIDATION_CHECKLIST.md`: sequential full validation matrix for enterprise readiness.
+- `PUMUKI_OPENSPEC_SDD_ROADMAP.md`: phased rollout roadmap for OpenSpec+SDD integration.
 
 ## Root-Level Pointers
 
@@ -83,3 +85,4 @@ Language baseline: active repository documentation is maintained in English.
 - `CHANGELOG.md` (repository root) tracks top-level package changes for the active baseline.
 - `AGENTS.md` (repository root) defines repository execution constraints for coding agents.
 - `CLAUDE.md` (repository root) provides a concise agent profile aligned with repository policies.
+- `PUMUKI.md` (repository root) is the framework-facing manual entrypoint.

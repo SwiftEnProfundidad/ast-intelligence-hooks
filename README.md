@@ -21,8 +21,9 @@ Pumuki converts code changes into traceable, reproducible decisions:
 - [Quick Start for Consumer Repositories](#quick-start-for-consumer-repositories)
 - [Lifecycle Commands](#lifecycle-commands)
 - [Gate Commands](#gate-commands)
+- [OpenSpec SDD (Mandatory)](#openspec-sdd-mandatory)
 - [Architecture and Policy Model](#architecture-and-policy-model)
-- [MCP Evidence Context Server (Optional)](#mcp-evidence-context-server-optional)
+- [MCP Servers (Optional)](#mcp-servers-optional)
 - [Framework Development (This Repository)](#framework-development-this-repository)
 - [Deterministic Validation Suite](#deterministic-validation-suite)
 - [Troubleshooting](#troubleshooting)
@@ -47,10 +48,11 @@ Legacy package `pumuki-ast-hooks` is deprecated and frozen at `6.3.7`.
 ## Capabilities
 
 - Stage-aware gate policies: `PRE_COMMIT`, `PRE_PUSH`, `CI`.
+- OpenSpec SDD enforcement across `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, and `CI`.
 - Multi-platform detection and combined evaluation: iOS, Backend, Frontend, Android.
 - Rules + overrides with locked baseline semantics.
 - Deterministic evidence (`.ai_evidence.json`) for machine and human workflows.
-- Optional read-only MCP evidence server for agent consumption.
+- Optional MCP servers (evidence + enterprise baseline surface) for agent consumption.
 
 ## Quick Start for Consumer Repositories
 
@@ -74,14 +76,21 @@ Run from the target repository root:
 npx pumuki install
 ```
 
-### 3) Verify lifecycle status
+### 3) Verify lifecycle and SDD status
 
 ```bash
 npx pumuki doctor
 npx pumuki status
+npx pumuki sdd status
 ```
 
-### 4) Run stage gates manually (optional)
+### 4) Open SDD session for your active OpenSpec change (required)
+
+```bash
+npx pumuki sdd session --open --change=<change-id>
+```
+
+### 5) Run stage gates manually (optional)
 
 ```bash
 npx pumuki-pre-commit
@@ -89,10 +98,11 @@ npx pumuki-pre-push
 npx pumuki-ci
 ```
 
-### 5) Expected outputs
+### 6) Expected outputs
 
 - Gate exit code: `0` (allow) or `1` (block).
 - Deterministic evidence file: `.ai_evidence.json`.
+- SDD telemetry in evidence: `snapshot.sdd_metrics`.
 
 ### Update and remove
 
@@ -118,6 +128,9 @@ The `pumuki` binary provides repository lifecycle operations:
 | `pumuki update --latest` | Update package and re-apply managed hooks |
 | `pumuki doctor` | Safety checks (hook drift, tracked `node_modules`, lifecycle state) |
 | `pumuki status` | Current lifecycle snapshot |
+| `pumuki sdd status` | OpenSpec/SDD compatibility and active session snapshot |
+| `pumuki sdd validate --stage=<...>` | SDD decision for selected stage (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`) |
+| `pumuki sdd session --open|--refresh|--close` | Manage active SDD session lifecycle per repository |
 
 `pumuki remove` is dependency-safe by design: it never deletes non-Pumuki third-party dependencies and preserves pre-existing third-party empty directories.
 Use `pumuki remove` (or `pumuki uninstall --purge-artifacts` + `npm uninstall pumuki`) for complete teardown.
@@ -131,6 +144,47 @@ Dedicated gate binaries are available:
 | `pumuki-pre-commit` | `PRE_COMMIT` |
 | `pumuki-pre-push` | `PRE_PUSH` |
 | `pumuki-ci` | `CI` |
+| `pumuki-pre-write` | `PRE_WRITE` |
+
+## OpenSpec SDD (Mandatory)
+
+Pumuki now enforces SDD/OpenSpec as a first-class guardrail.
+
+### Enforcement behavior
+
+- `PRE_WRITE`: requires valid OpenSpec installation/project/session.
+- `PRE_COMMIT`, `PRE_PUSH`, `CI`: require valid session plus `openspec validate --changes`.
+- Blocking SDD decisions are emitted into evidence as finding `sdd.policy.blocked` with `source: "sdd-policy"`.
+
+### Auto-bootstrap and compatibility
+
+- `pumuki install` auto-bootstraps OpenSpec when needed:
+  - installs `@fission-ai/openspec@latest` (when `package.json` exists and OpenSpec is missing/incompatible),
+  - scaffolds `openspec/` baseline (`project.md`, archive/spec placeholders) when absent.
+- `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` before reapplying hooks.
+
+### Minimal daily flow
+
+```bash
+# one-time per repo
+npx pumuki install
+
+# start/restart work on a change
+npx pumuki sdd session --open --change=<change-id>
+# or
+npx pumuki sdd session --refresh
+
+# verify policy explicitly
+npx pumuki sdd validate --stage=PRE_COMMIT
+```
+
+### Emergency bypass (restricted)
+
+```bash
+PUMUKI_SDD_BYPASS=1 npx pumuki sdd validate --stage=PRE_COMMIT
+```
+
+Use only for controlled incident recovery. Bypass should be temporary and auditable.
 
 ## Architecture and Policy Model
 
@@ -161,11 +215,11 @@ Dedicated gate binaries are available:
 | Frontend | `apps/frontend/**/*.{ts,tsx,js,jsx}` and `apps/web/**/*.{ts,tsx,js,jsx}` |
 | Android | `*.kt`, `*.kts` |
 
-## MCP Evidence Context Server (Optional)
+## MCP Servers (Optional)
 
 MCP is optional. Pumuki core does not depend on MCP.
 
-### Consumer repository usage
+### Consumer repository usage (Evidence Server)
 
 Use the published binary from npm:
 
@@ -181,12 +235,32 @@ Use the published binary from npm:
 }
 ```
 
+### Consumer repository usage (Enterprise Baseline Server)
+
+```json
+{
+  "mcpServers": {
+    "pumuki-enterprise": {
+      "command": "npx",
+      "args": ["--yes", "pumuki-mcp-enterprise"],
+      "cwd": "/absolute/path/to/your-consumer-repo"
+    }
+  }
+}
+```
+
+Enterprise server baseline surface:
+- Resources: `evidence://status`, `gitflow://state`, `context://active`, `sdd://status`, `sdd://active-change`.
+- Tools: `ai_gate_check`, `check_sdd_status`, `validate_and_fix`, `sync_branches`, `cleanup_stale_branches`.
+- Mutating tools are always forced to `dry-run` in baseline mode.
+
 ### Framework repository usage
 
 If you are developing this framework locally:
 
 ```bash
 npm run mcp:evidence
+npm run mcp:enterprise
 ```
 
 ## Framework Development (This Repository)

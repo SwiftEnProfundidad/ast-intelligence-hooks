@@ -16,6 +16,7 @@ const ROOT_DOC_POINTERS = [
   'CHANGELOG.md',
   'AGENTS.md',
   'CLAUDE.md',
+  'PUMUKI.md',
 ] as const;
 
 const EXCLUDED_PATH_PREFIXES = [

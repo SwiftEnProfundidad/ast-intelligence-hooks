@@ -112,12 +112,12 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 
 - ✅ 9.1 `npx pumuki-framework` (en repositorio consumidor) abre y ejecuta acciones esperadas.
 - ✅ 9.2 Acciones mapeadas a lifecycle/gates producen salidas esperadas.
-- 🚧 9.3 Acciones de reportes generan archivos en rutas esperadas.
+- ✅ 9.3 Acciones de reportes generan archivos en rutas esperadas.
 
 ### 10) Suites deterministas y validaciones
 
 - ✅ 10.1 `npm run typecheck` pasa.
-- ⏳ 10.2 `npm run test` pasa.
+- 🚧 10.2 `npm run test` pasa.
 - ⏳ 10.3 `npm run test:deterministic` pasa.
 - ⏳ 10.4 `npm run test:heuristics` pasa.
 - ⏳ 10.5 `npm run test:mcp` pasa.
