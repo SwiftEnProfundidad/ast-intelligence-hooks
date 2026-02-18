@@ -371,7 +371,9 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Diagnosticar bloqueo de verificación post-publish en matriz mock (`pumuki@6.3.14`): `scenario:clean` falla por guardrail SDD obligatorio en `PRE_COMMIT` (`SDD_SESSION_MISSING`), no por regresión de reglas AST.
 - ✅ Continuar ruta `release` (lote atómico siguiente): adaptar ejecución de matriz mock al guardrail SDD y revalidar cierre post-publish con `pumuki@6.3.14`. Evidencia en `pumuki-mock-consumer`: `PUMUKI_SDD_BYPASS=1 npm run pumuki:matrix` => `clean(0/0/0)`, `violations(1/1/1)`, `mixed(1/1/1)`, `All scenario matrix checks passed for package: pumuki@latest`.
 - ✅ Continuar ruta `release` (lote atómico siguiente): cerrar release con commit atómico final de tracking/documentación y dejar worktree listo para el siguiente lote.
-- 🚧 Iniciar siguiente lote post-release: hardening de matriz mock para ejecutar `clean` sin bypass SDD explícito (sesión/controlado por escenario) y mantener verificación enterprise en verde.
+- ✅ Iniciar siguiente lote post-release: hardening de matriz mock para ejecutar `clean` sin bypass SDD explícito (sesión/controlado por escenario) y mantener verificación enterprise en verde. Evidencia en `pumuki-mock-consumer`: `npm run pumuki:matrix` en verde tras actualizar `scripts/run-pumuki-matrix.sh` para crear `openspec` change por escenario (`npx openspec new change matrix-<scenario>`) + apertura/cierre de sesión SDD automática (`npx pumuki sdd session --open/--close`), con resultados esperados (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`) sin usar `PUMUKI_SDD_BYPASS`.
+- ✅ Continuar siguiente lote post-release: preparar commit atómico de cierre del tracker para este hardening y dejar la trazabilidad actualizada.
+- 🚧 Continuar siguiente lote post-release: preparar commit atómico en `pumuki-mock-consumer` para `scripts/run-pumuki-matrix.sh` y dejar baseline lista para la siguiente validación enterprise.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
