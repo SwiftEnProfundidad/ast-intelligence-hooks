@@ -90,11 +90,11 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
   - PRE_PUSH: block `ERROR`, warn `WARN`
   - CI: block `ERROR`, warn `WARN`
 - ✅ 6.3 Verificar aplicación de overrides de proyecto.
-- 🚧 6.4 Verificar enforcement de locked rules sin override explícito permitido.
+- ✅ 6.4 Verificar enforcement de locked rules sin override explícito permitido.
 
 ### 7) Contrato de evidencia v2.1
 
-- ⏳ 7.1 Se genera `.ai_evidence.json` en cada stage.
+- 🚧 7.1 Se genera `.ai_evidence.json` en cada stage.
 - ⏳ 7.2 Campos de esquema válidos (`version`, `snapshot`, `ledger`).
 - ⏳ 7.3 Evidencia incluye plataformas activas y rulesets cargados.
 - ⏳ 7.4 Orden determinista entre ejecuciones equivalentes.

@@ -282,7 +282,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar carga de baseline packs en `pumuki-mock-consumer` (checklist 6.1) con evidencia de bundles activos: `iosEnterpriseRuleSet@1.0.0`, `backendRuleSet@1.0.0`, `frontendRuleSet@1.0.0`, `androidRuleSet@1.0.0`.
 - ✅ Validar políticas por stage en `pumuki-mock-consumer` (checklist 6.2) con evidencia: `pre-commit(clean)=0`, `pre-commit(mixed)=1`, `pre-push(mixed)=1`, `ci(mixed)=1`.
 - ✅ Validar overrides de proyecto en `pumuki-mock-consumer` (checklist 6.3): override de `backend.avoid-explicit-any` aplicado y observado en evidencia con severidad final `ERROR`.
-- 🚧 Iniciar validación de enforcement de reglas locked sin override permitido en `pumuki-mock-consumer` (checklist 6.4).
+- ✅ Validar enforcement de reglas locked sin override permitido en `pumuki-mock-consumer` (checklist 6.4): intento de downgrade `backend.no-console-log -> INFO` ignorado y evidencia final mantenida en `CRITICAL`.
+- 🚧 Iniciar validación de generación de `.ai_evidence.json` por stage en `pumuki-mock-consumer` (checklist 7.1).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
