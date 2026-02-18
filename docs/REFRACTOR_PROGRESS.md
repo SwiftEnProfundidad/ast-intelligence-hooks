@@ -8,7 +8,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ⏳ Pendiente
 
 ## Tareas Abiertas (Vista Rápida)
-- 🚧 Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ⏳ Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/` (ver cierre finito siguiente).
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
@@ -60,6 +60,13 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`.
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidencePayloadStatus.ts`.
 - ✅ Validar bloque MCP completo (suite focalizada + actualización final del tracker para cerrar este bloque).
+
+## Cierre Finito del Siguiente Bloque (Core/Integrations sin test)
+- 🚧 Generar inventario determinista de archivos sin test en `core/` e `integrations/` con prioridad por impacto.
+- ⏳ Seleccionar lote atómico inicial (máx. 3 archivos) con criterio explícito de cierre.
+- ⏳ Añadir cobertura unitaria del lote atómico inicial y validar en local.
+- ⏳ Actualizar tracker con resultado del lote (✅) y dejar siguiente lote como única tarea en 🚧.
+- ⏳ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
