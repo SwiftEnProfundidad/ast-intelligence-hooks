@@ -109,6 +109,20 @@ Status:
   - scenario-aware failure after preflight (forced with invalid package): `exit=1`, `failure_phase=clean`, `failure_step=npm_install_package`, `failure_log_path=/tmp/pumuki-clean-npm-install.log` (file exists)
   - successful run keeps behavior from task 3/4: `summary` present with `final_verdict=PASS`, `last-failure` absent
 
+## Sixth Atomic Task
+
+- Add deterministic run identifier propagation to matrix artifacts:
+  - include `run_id` in `pumuki-matrix-summary.json`,
+  - include the same `run_id` in `pumuki-matrix-last-failure.json`.
+- `run_id` must be generated once per runner execution and reused in both artifacts to correlate success/failure evidence across logs.
+
+### Acceptance Criteria for Sixth Task
+
+1. Successful run produces `pumuki-matrix-summary.json` with non-empty `run_id`.
+2. Failed run produces `pumuki-matrix-last-failure.json` with non-empty `run_id`.
+3. For a given execution, `run_id` is stable and identical across any emitted artifact in that run.
+4. Existing artifact keys remain backward-compatible and console output contract stays unchanged.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
