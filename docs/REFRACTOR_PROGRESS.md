@@ -71,7 +71,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir cobertura unitaria del Batch 02 y validar en local (avance final: ✅ `integrations/mcp/evidencePayloadConfig.ts`, ✅ `integrations/sdd/types.ts`, ✅ `integrations/mcp/evidenceFacetsRulesets.ts`).
 - ✅ Seleccionar Batch 03 (máx. 3 archivos críticos restantes de `core/`/`integrations/`) y publicar criterio de cierre en este tracker (Batch 03: `integrations/mcp/evidenceFacetsPlatforms.ts`, `integrations/mcp/evidenceFacetsFindings.ts`, `integrations/sdd/index.ts`).
 - ✅ Criterio de selección Batch 03: top impacto restante del inventario (score/revDeps), cobertura cruzada `mcp+sdd` y límite operativo estricto de 3 archivos.
-- 🚧 Añadir cobertura unitaria del Batch 03 y validar en local (avance: ✅ `integrations/mcp/evidenceFacetsPlatforms.ts`; pendientes: `integrations/mcp/evidenceFacetsFindings.ts`, `integrations/sdd/index.ts`).
+- 🚧 Añadir cobertura unitaria del Batch 03 y validar en local (avance: ✅ `integrations/mcp/evidenceFacetsPlatforms.ts`, ✅ `integrations/mcp/evidenceFacetsFindings.ts`; pendiente: `integrations/sdd/index.ts`).
 - ⏳ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado.
 
 ## Fase 1 — Crítico (bloquea release)
