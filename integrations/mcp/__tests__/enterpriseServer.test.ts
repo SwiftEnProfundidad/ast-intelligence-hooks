@@ -1,0 +1,466 @@
+import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
+import { once } from 'node:events';
+import test from 'node:test';
+import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { startEnterpriseMcpServer } from '../enterpriseServer';
+
+const runGit = (cwd: string, args: ReadonlyArray<string>): void => {
+  execFileSync('git', args, {
+    cwd,
+    stdio: 'ignore',
+  });
+};
+
+const withSddBypass = async (callback: () => Promise<void>): Promise<void> => {
+  const previous = process.env.PUMUKI_SDD_BYPASS;
+  process.env.PUMUKI_SDD_BYPASS = '1';
+  try {
+    await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_SDD_BYPASS;
+    } else {
+      process.env.PUMUKI_SDD_BYPASS = previous;
+    }
+  }
+};
+
+const withEnterpriseServer = async (
+  repoRoot: string,
+  callback: (baseUrl: string) => Promise<void>
+): Promise<void> => {
+  const started = startEnterpriseMcpServer({
+    host: '127.0.0.1',
+    port: 0,
+    repoRoot,
+  });
+
+  try {
+    await once(started.server, 'listening');
+    const address = started.server.address();
+    assert.ok(address && typeof address === 'object');
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+    await callback(baseUrl);
+  } finally {
+    await new Promise<void>((resolve) => {
+      started.server.close(() => resolve());
+    });
+  }
+};
+
+test('enterprise server exposes health endpoint', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/health`);
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as { status?: string };
+      assert.equal(payload.status, 'ok');
+    });
+  });
+});
+
+test('enterprise server enforces method checks for health/status/resources/resource/tools/tool', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const checks: Array<{ path: string; method: string }> = [
+        { path: '/health', method: 'POST' },
+        { path: '/status', method: 'POST' },
+        { path: '/resources', method: 'POST' },
+        { path: '/resource?uri=evidence%3A%2F%2Fstatus', method: 'POST' },
+        { path: '/tools', method: 'POST' },
+        { path: '/tool', method: 'GET' },
+      ];
+      for (const check of checks) {
+        const response = await fetch(`${baseUrl}${check.path}`, {
+          method: check.method,
+        });
+        assert.equal(response.status, 405);
+      }
+    });
+  });
+});
+
+test('enterprise server exposes baseline status payload with capabilities', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/status`);
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as {
+        status?: string;
+        repoRoot?: string;
+        capabilities?: {
+          resources?: string[];
+          tools?: string[];
+          mode?: string;
+        };
+        evidence?: {
+          status?: string;
+        };
+      };
+
+      assert.equal(payload.status, 'ok');
+      assert.equal(payload.repoRoot, repoRoot);
+      assert.equal(payload.capabilities?.mode, 'baseline');
+      assert.equal(
+        payload.capabilities?.resources?.includes('evidence://status'),
+        true
+      );
+      assert.equal(
+        payload.capabilities?.tools?.includes('ai_gate_check'),
+        true
+      );
+      assert.equal(payload.evidence?.status, 'degraded');
+      assert.equal((payload as { lifecycle?: unknown }).lifecycle, null);
+      assert.equal((payload as { sdd?: unknown }).sdd, null);
+    });
+  });
+});
+
+test('enterprise server exposes enterprise resources catalog', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/resources`);
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as {
+        resources?: Array<{ uri?: string }>;
+      };
+      const uris = (payload.resources ?? []).map((resource) => resource.uri);
+      assert.deepEqual(uris, [
+        'evidence://status',
+        'gitflow://state',
+        'context://active',
+        'sdd://status',
+        'sdd://active-change',
+      ]);
+    });
+  });
+});
+
+test('enterprise server exposes enterprise tools catalog', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/tools`);
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as {
+        tools?: Array<{ name?: string; mutating?: boolean }>;
+      };
+      const names = (payload.tools ?? []).map((tool) => tool.name);
+      assert.deepEqual(names, [
+        'ai_gate_check',
+        'check_sdd_status',
+        'validate_and_fix',
+        'sync_branches',
+        'cleanup_stale_branches',
+      ]);
+      const mutatingTools = (payload.tools ?? []).filter((tool) => tool.mutating);
+      assert.deepEqual(
+        mutatingTools.map((tool) => tool.name),
+        ['validate_and_fix', 'sync_branches', 'cleanup_stale_branches']
+      );
+    });
+  });
+});
+
+test('enterprise server executes legacy-style tools in safe mode', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init']);
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const aiGateResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'ai_gate_check',
+        }),
+      });
+      assert.equal(aiGateResponse.status, 200);
+      const aiGatePayload = (await aiGateResponse.json()) as {
+        tool?: string;
+        success?: boolean;
+        dryRun?: boolean;
+        executed?: boolean;
+      };
+      assert.equal(aiGatePayload.tool, 'ai_gate_check');
+      assert.equal(aiGatePayload.success, false);
+      assert.equal(aiGatePayload.dryRun, true);
+      assert.equal(aiGatePayload.executed, true);
+
+      const sddStatusResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'check_sdd_status',
+          args: {
+            stage: 'PRE_COMMIT',
+          },
+        }),
+      });
+      assert.equal(sddStatusResponse.status, 200);
+      const sddStatusPayload = (await sddStatusResponse.json()) as {
+        tool?: string;
+        result?: {
+          decision?: {
+            code?: string;
+          };
+        };
+      };
+      assert.equal(sddStatusPayload.tool, 'check_sdd_status');
+      assert.equal(
+        sddStatusPayload.result?.decision?.code,
+        'OPENSPEC_MISSING'
+      );
+
+      const cleanupResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'cleanup_stale_branches',
+          dryRun: false,
+        }),
+      });
+      assert.equal(cleanupResponse.status, 200);
+      const cleanupPayload = (await cleanupResponse.json()) as {
+        success?: boolean;
+        dryRun?: boolean;
+        executed?: boolean;
+        result?: {
+          guard?: {
+            decision?: {
+              code?: string;
+            };
+          };
+        };
+      };
+      assert.equal(cleanupPayload.success, false);
+      assert.equal(cleanupPayload.dryRun, true);
+      assert.equal(cleanupPayload.executed, false);
+      assert.equal(
+        cleanupPayload.result?.guard?.decision?.code,
+        'OPENSPEC_MISSING'
+      );
+    });
+  });
+});
+
+test('enterprise server blocks critical tools with SDD_VALIDATION_ERROR outside git repositories', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const response = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'sync_branches',
+          dryRun: false,
+        }),
+      });
+      assert.equal(response.status, 200);
+      const payload = (await response.json()) as {
+        success?: boolean;
+        dryRun?: boolean;
+        executed?: boolean;
+        result?: {
+          guard?: {
+            decision?: {
+              code?: string;
+            };
+          };
+        };
+      };
+      assert.equal(payload.success, false);
+      assert.equal(payload.executed, false);
+      assert.equal(payload.dryRun, true);
+      assert.equal(payload.result?.guard?.decision?.code, 'SDD_VALIDATION_ERROR');
+    });
+  });
+});
+
+test('enterprise server executes validate_and_fix in baseline dry-run when SDD bypass is enabled', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      await withSddBypass(async () => {
+        const response = await fetch(`${baseUrl}/tool`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: 'validate_and_fix',
+            dryRun: false,
+            args: {
+              stage: 'CI',
+            },
+          }),
+        });
+        assert.equal(response.status, 200);
+        const payload = (await response.json()) as {
+          tool?: string;
+          success?: boolean;
+          dryRun?: boolean;
+          executed?: boolean;
+          warnings?: string[];
+          result?: {
+            evaluation?: {
+              decision?: {
+                code?: string;
+              };
+            };
+            suggestedActions?: string[];
+          };
+        };
+        assert.equal(payload.tool, 'validate_and_fix');
+        assert.equal(payload.success, true);
+        assert.equal(payload.dryRun, true);
+        assert.equal(payload.executed, false);
+        assert.equal(
+          (payload.warnings ?? []).includes(
+            'Mutating auto-fixes are disabled in enterprise baseline mode.'
+          ),
+          true
+        );
+        assert.equal(payload.result?.evaluation?.decision?.code, 'ALLOWED');
+        assert.equal((payload.result?.suggestedActions?.length ?? 0) > 0, true);
+      });
+    });
+  });
+});
+
+test('enterprise server keeps sync_branches in dry-run even when dryRun=false is requested', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      await withSddBypass(async () => {
+        const response = await fetch(`${baseUrl}/tool`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: 'sync_branches',
+            dryRun: false,
+          }),
+        });
+        assert.equal(response.status, 200);
+        const payload = (await response.json()) as {
+          success?: boolean;
+          dryRun?: boolean;
+          executed?: boolean;
+          warnings?: string[];
+          result?: {
+            plan?: string[];
+          };
+        };
+        assert.equal(payload.success, true);
+        assert.equal(payload.dryRun, true);
+        assert.equal(payload.executed, false);
+        assert.equal(
+          (payload.warnings ?? []).includes(
+            'Dry-run mode active: no git command executed.'
+          ),
+          true
+        );
+        assert.equal(
+          (payload.result?.plan ?? []).includes('No upstream configured for current branch.'),
+          true
+        );
+      });
+    });
+  });
+});
+
+test('enterprise server rejects invalid tool invocations', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const invalidToolResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'unknown_tool',
+        }),
+      });
+      assert.equal(invalidToolResponse.status, 404);
+
+      const invalidJsonResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: '{bad-json',
+      });
+      assert.equal(invalidJsonResponse.status, 400);
+
+      const invalidBodyResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: 'null',
+      });
+      assert.equal(invalidBodyResponse.status, 400);
+    });
+  });
+});
+
+test('enterprise server exposes resource payloads and handles unknown uri', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const evidenceResponse = await fetch(
+        `${baseUrl}/resource?uri=${encodeURIComponent('evidence://status')}`
+      );
+      assert.equal(evidenceResponse.status, 200);
+      const evidencePayload = (await evidenceResponse.json()) as {
+        uri?: string;
+        payload?: { status?: string };
+      };
+      assert.equal(evidencePayload.uri, 'evidence://status');
+      assert.equal(typeof evidencePayload.payload?.status, 'string');
+
+      const contextResponse = await fetch(
+        `${baseUrl}/resource?uri=${encodeURIComponent('context://active')}`
+      );
+      assert.equal(contextResponse.status, 200);
+      const contextPayload = (await contextResponse.json()) as {
+        payload?: { repoRoot?: string };
+      };
+      assert.equal(contextPayload.payload?.repoRoot, repoRoot);
+
+      const activeChangeResponse = await fetch(
+        `${baseUrl}/resource?uri=${encodeURIComponent('sdd://active-change')}`
+      );
+      assert.equal(activeChangeResponse.status, 200);
+      const activeChangePayload = (await activeChangeResponse.json()) as {
+        payload?: { active?: boolean; changeId?: string | null };
+      };
+      assert.equal(activeChangePayload.payload?.active, false);
+      assert.equal(activeChangePayload.payload?.changeId, null);
+
+      const sddStatusResponse = await fetch(
+        `${baseUrl}/resource?uri=${encodeURIComponent('sdd://status')}`
+      );
+      assert.equal(sddStatusResponse.status, 200);
+      const sddStatusPayload = (await sddStatusResponse.json()) as {
+        payload?: { available?: boolean };
+      };
+      assert.equal(sddStatusPayload.payload?.available, false);
+
+      const missingResponse = await fetch(
+        `${baseUrl}/resource?uri=${encodeURIComponent('unknown://resource')}`
+      );
+      assert.equal(missingResponse.status, 404);
+    });
+  });
+});

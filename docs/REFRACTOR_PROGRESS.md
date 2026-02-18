@@ -331,7 +331,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Aislar `integrations/git/__tests__/stageRunners.test.ts` del gate SDD obligatorio mediante bypass de test (`PUMUKI_SDD_BYPASS=1`) para que la suite valide stage policies sin dependencia de OpenSpec/session.
 - ✅ Limpiar worktree con commits atómicos — commit 1/4 aplicado (`integrations/sdd` + enforcement `runPlatformGate*` + evidencia SDD y tests asociados).
 - ✅ Limpiar worktree con commits atómicos — commit 2/4 aplicado (lifecycle OpenSpec: bootstrap/migración/cleanup y tests).
-- 🚧 Limpiar worktree con commits atómicos — commit 3/4 (MCP enterprise server + catálogo de resources/tools y guardrails).
+- ✅ Limpiar worktree con commits atómicos — commit 3/4 aplicado (MCP enterprise server + catálogo de resources/tools y guardrails).
+- 🚧 Limpiar worktree con commits atómicos — commit 4/4 (wiring de package/bin + docs y tests de baseline documental).
 - ⏳ Ejecutar checklist 10.2: validar `npm run test` del framework para cierre de bloque determinista.
 
 ## Notas
