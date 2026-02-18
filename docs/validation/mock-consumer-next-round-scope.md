@@ -145,6 +145,13 @@ Status:
 3. Successful run removes stale failure JSON and stale copied failure-log artifact.
 4. Existing console output and current artifact fields remain backward-compatible.
 
+Status:
+- `✅` implemented (mock commit `a4fb8e8`), validated with deterministic checks:
+  - preflight dirty failure: `exit=17`, `failure_log_artifact=null`
+  - scenario failure after preflight (invalid package): `exit=1`, `failure_log_artifact=/.../artifacts/pumuki-matrix-last-failure.log`, copied file exists
+  - successful run: `summary` present, stale `last-failure` JSON removed, stale copied failure-log artifact removed
+  - final console line preserved: `All scenario matrix checks passed for package: pumuki@latest`
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.

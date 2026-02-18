@@ -348,6 +348,33 @@ Conclusion:
 - both success and failure artifacts now carry deterministic non-empty `run_id`.
 - compatibility and console contract remain unchanged.
 
+## Next-Round Task 7 Output (portable failure log artifact)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `a4fb8e8`
+- change: when a failure has an internal log, runner now copies it into `artifacts/pumuki-matrix-last-failure.log` and exposes path via `failure_log_artifact` in `pumuki-matrix-last-failure.json`.
+
+Validation evidence:
+- preflight dirty failure:
+  - `preflight_exit=17`
+  - `preflight={"final_verdict":"FAIL","exit_code":17,"failure_phase":"preflight","failure_step":"source_repo_cleanliness","failure_log_artifact":null,"run_id":"pumuki-matrix-..."}`
+- scenario failure after preflight (invalid package):
+  - `scenario_exit=1`
+  - `scenario={"final_verdict":"FAIL","exit_code":1,"failure_phase":"clean","failure_step":"npm_install_package","failure_log_artifact":"/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-last-failure.log","run_id":"pumuki-matrix-..."}`
+  - `scenario_log_artifact_exists=1`
+- successful run after failure:
+  - `pass_summary_exists=1`
+  - `pass_failure_json_exists=0`
+  - `pass_failure_log_artifact_exists=0`
+  - `pass_last_line=All scenario matrix checks passed for package: pumuki@latest`
+
+Conclusion:
+- failure triage now includes a portable artifact-local log reference.
+- successful runs continue to clean stale failure state and preserve console contract.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
