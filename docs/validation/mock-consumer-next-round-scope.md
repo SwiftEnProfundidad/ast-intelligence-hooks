@@ -166,6 +166,13 @@ Status:
 3. Successful run still removes stale failure JSON + copied failure log artifact.
 4. Existing artifact keys remain backward-compatible and console output contract remains unchanged.
 
+Status:
+- `✅` implemented (mock commit `ecf4e9c`), validated with deterministic checks:
+  - preflight dirty failure: `exit=17`, `failure_log_artifact=null`, `failure_log_artifact_sha256=null`, `failure_log_artifact_bytes=null`
+  - scenario failure after preflight (invalid package): `exit=1`, `failure_log_artifact` present, `failure_log_artifact_sha256` non-empty, `failure_log_artifact_bytes=378 (>0)`
+  - successful run: `summary` present (`final_verdict=PASS`), stale `last-failure` JSON/log artifacts removed
+  - final console line preserved: `All scenario matrix checks passed for package: pumuki@latest`
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.

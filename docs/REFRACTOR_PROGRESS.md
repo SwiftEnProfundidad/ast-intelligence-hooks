@@ -28,7 +28,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Definir séptimo task atómico de la nueva ronda (post-run-id) con criterio de aceptación verificable para continuar endureciendo operación del runner.
 - ✅ Ejecutar séptimo task atómico de la nueva ronda: captura determinista de log de fallo en `artifacts/` + referencia `failure_log_artifact` sin romper compatibilidad ni contrato de consola.
 - ✅ Definir octavo task atómico de la nueva ronda (post-failure-log-artifact) con criterio de aceptación verificable para continuar endureciendo operación del runner.
-- 🚧 Ejecutar octavo task atómico de la nueva ronda: metadatos de integridad (`sha256` + bytes) para `failure_log_artifact` sin romper compatibilidad ni contrato de consola.
+- ✅ Ejecutar octavo task atómico de la nueva ronda: metadatos de integridad (`sha256` + bytes) para `failure_log_artifact` sin romper compatibilidad ni contrato de consola.
+- 🚧 Definir noveno task atómico de la nueva ronda (post-integrity-metadata) con criterio de aceptación verificable para seguir endureciendo operación del runner.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
