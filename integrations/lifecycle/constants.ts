@@ -6,6 +6,7 @@ export const PUMUKI_CONFIG_KEYS = {
   version: 'pumuki.version',
   hooks: 'pumuki.hooks',
   installedAt: 'pumuki.installed-at',
+  openSpecManagedArtifacts: 'pumuki.openspec.managed-artifacts',
 } as const;
 
 export const PUMUKI_MANAGED_HOOKS = ['pre-commit', 'pre-push'] as const;

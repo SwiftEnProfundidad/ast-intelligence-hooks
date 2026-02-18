@@ -33,6 +33,7 @@ test('config keys mantienen contrato estable por campo', () => {
     version: 'pumuki.version',
     hooks: 'pumuki.hooks',
     installedAt: 'pumuki.installed-at',
+    openSpecManagedArtifacts: 'pumuki.openspec.managed-artifacts',
   });
 });
 

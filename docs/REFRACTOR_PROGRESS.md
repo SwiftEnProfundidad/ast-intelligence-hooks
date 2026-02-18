@@ -330,7 +330,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Alinear baseline documental de tests con el estado real del repositorio: `scripts/__tests__/root-docs-baseline.test.ts` y `scripts/__tests__/docs-index-coverage.test.ts` ahora incluyen `PUMUKI.md`, y `docs/README.md` indexa `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` + `docs/PUMUKI_OPENSPEC_SDD_ROADMAP.md`.
 - ✅ Aislar `integrations/git/__tests__/stageRunners.test.ts` del gate SDD obligatorio mediante bypass de test (`PUMUKI_SDD_BYPASS=1`) para que la suite valide stage policies sin dependencia de OpenSpec/session.
 - ✅ Limpiar worktree con commits atómicos — commit 1/4 aplicado (`integrations/sdd` + enforcement `runPlatformGate*` + evidencia SDD y tests asociados).
-- 🚧 Limpiar worktree con commits atómicos — commit 2/4 (lifecycle OpenSpec: bootstrap/migración/cleanup y tests).
+- ✅ Limpiar worktree con commits atómicos — commit 2/4 aplicado (lifecycle OpenSpec: bootstrap/migración/cleanup y tests).
+- 🚧 Limpiar worktree con commits atómicos — commit 3/4 (MCP enterprise server + catálogo de resources/tools y guardrails).
 - ⏳ Ejecutar checklist 10.2: validar `npm run test` del framework para cierre de bloque determinista.
 
 ## Notas

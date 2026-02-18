@@ -4,6 +4,14 @@ import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
 import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
+import {
+  closeSddSession,
+  evaluateSddPolicy,
+  openSddSession,
+  readSddStatus,
+  refreshSddSession,
+  type SddStage,
+} from '../sdd';
 
 type LifecycleCommand =
   | 'install'
@@ -11,12 +19,23 @@ type LifecycleCommand =
   | 'remove'
   | 'update'
   | 'doctor'
-  | 'status';
+  | 'status'
+  | 'sdd';
+
+type SddCommand = 'status' | 'validate' | 'session';
+
+type SddSessionAction = 'open' | 'refresh' | 'close';
 
 type ParsedArgs = {
   command: LifecycleCommand;
   purgeArtifacts: boolean;
   updateSpec?: string;
+  json: boolean;
+  sddCommand?: SddCommand;
+  sddStage?: SddStage;
+  sddSessionAction?: SddSessionAction;
+  sddChangeId?: string;
+  sddTtlMinutes?: number;
 };
 
 const HELP_TEXT = `
@@ -27,6 +46,11 @@ Pumuki lifecycle commands:
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor
   pumuki status
+  pumuki sdd status [--json]
+  pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
+  pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
+  pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
+  pumuki sdd session --close [--json]
 `.trim();
 
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
@@ -35,7 +59,21 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'remove' ||
   value === 'update' ||
   value === 'doctor' ||
-  value === 'status';
+  value === 'status' ||
+  value === 'sdd';
+
+const parseSddStage = (value: string | undefined): SddStage => {
+  const normalized = (value ?? 'PRE_COMMIT').trim().toUpperCase();
+  if (
+    normalized === 'PRE_WRITE' ||
+    normalized === 'PRE_COMMIT' ||
+    normalized === 'PRE_PUSH' ||
+    normalized === 'CI'
+  ) {
+    return normalized;
+  }
+  throw new Error(`Unsupported SDD stage "${value}". Use PRE_WRITE, PRE_COMMIT, PRE_PUSH or CI.`);
+};
 
 export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   const commandRaw = argv[0];
@@ -48,7 +86,105 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
 
   let purgeArtifacts = false;
   let updateSpec: string | undefined;
+  let json = false;
+  let sddCommand: SddCommand | undefined;
+  let sddStage: SddStage | undefined;
+  let sddSessionAction: SddSessionAction | undefined;
+  let sddChangeId: string | undefined;
+  let sddTtlMinutes: number | undefined;
+
+  if (commandRaw === 'sdd') {
+    const subcommandRaw = argv[1] ?? 'status';
+    if (
+      subcommandRaw !== 'status' &&
+      subcommandRaw !== 'validate' &&
+      subcommandRaw !== 'session'
+    ) {
+      throw new Error(`Unsupported SDD subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
+    }
+    sddCommand = subcommandRaw;
+
+    for (const arg of argv.slice(2)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg.startsWith('--stage=')) {
+        sddStage = parseSddStage(arg.slice('--stage='.length));
+        continue;
+      }
+      if (arg === '--open') {
+        sddSessionAction = 'open';
+        continue;
+      }
+      if (arg === '--refresh') {
+        sddSessionAction = 'refresh';
+        continue;
+      }
+      if (arg === '--close') {
+        sddSessionAction = 'close';
+        continue;
+      }
+      if (arg.startsWith('--change=')) {
+        sddChangeId = arg.slice('--change='.length).trim();
+        continue;
+      }
+      if (arg.startsWith('--ttl-minutes=')) {
+        const minutes = Number.parseInt(arg.slice('--ttl-minutes='.length), 10);
+        if (!Number.isFinite(minutes) || minutes <= 0) {
+          throw new Error(`Invalid --ttl-minutes value "${arg}".`);
+        }
+        sddTtlMinutes = minutes;
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+
+    if (sddCommand === 'status') {
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        sddCommand,
+      };
+    }
+    if (sddCommand === 'validate') {
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        sddCommand,
+        sddStage: sddStage ?? 'PRE_COMMIT',
+      };
+    }
+
+    if (!sddSessionAction) {
+      throw new Error(
+        `Missing SDD session action. Use one of --open | --refresh | --close.\n\n${HELP_TEXT}`
+      );
+    }
+    if (sddSessionAction === 'open' && (!sddChangeId || sddChangeId.length === 0)) {
+      throw new Error(`Missing --change=<change-id> for "pumuki sdd session --open".\n\n${HELP_TEXT}`);
+    }
+    if (sddSessionAction !== 'open' && sddChangeId) {
+      throw new Error(`--change is only supported with "--open".\n\n${HELP_TEXT}`);
+    }
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      sddCommand,
+      sddSessionAction,
+      sddChangeId,
+      sddTtlMinutes,
+    };
+  }
+
   for (const arg of argv.slice(1)) {
+    if (arg === '--json') {
+      json = true;
+      continue;
+    }
     if (arg === '--purge-artifacts') {
       purgeArtifacts = true;
       continue;
@@ -69,6 +205,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     command: commandRaw,
     purgeArtifacts,
     updateSpec,
+    json,
   };
 };
 
@@ -109,6 +246,14 @@ export const runLifecycleCli = async (
         console.log(
           `[pumuki] installed ${result.version} at ${result.repoRoot} (hooks changed: ${result.changedHooks.join(', ') || 'none'})`
         );
+        if (result.openSpecBootstrap) {
+          console.log(
+            `[pumuki] openspec bootstrap: installed=${result.openSpecBootstrap.packageInstalled ? 'yes' : 'no'} project=${result.openSpecBootstrap.projectInitialized ? 'yes' : 'no'} actions=${result.openSpecBootstrap.actions.join(', ') || 'none'}`
+          );
+          if (result.openSpecBootstrap.skippedReason === 'NO_PACKAGE_JSON') {
+            console.log('[pumuki] openspec bootstrap skipped npm install (package.json not found)');
+          }
+        }
         return 0;
       }
       case 'uninstall': {
@@ -142,6 +287,9 @@ export const runLifecycleCli = async (
         console.log(
           `[pumuki] updated to ${result.targetSpec} at ${result.repoRoot} (hooks changed: ${result.reinstallHooksChanged.join(', ') || 'none'})`
         );
+        console.log(
+          `[pumuki] openspec compatibility: migrated-legacy=${result.openSpecCompatibility.migratedLegacyPackage ? 'yes' : 'no'} actions=${result.openSpecCompatibility.actions.join(', ') || 'none'}`
+        );
         return 0;
       }
       case 'doctor': {
@@ -151,16 +299,104 @@ export const runLifecycleCli = async (
       }
       case 'status': {
         const status = readLifecycleStatus();
-        console.log(`[pumuki] repo: ${status.repoRoot}`);
-        console.log(`[pumuki] package version: ${status.packageVersion}`);
-        console.log(`[pumuki] lifecycle installed: ${status.lifecycleState.installed ?? 'false'}`);
-        console.log(`[pumuki] lifecycle version: ${status.lifecycleState.version ?? 'unknown'}`);
-        console.log(
-          `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
-        );
-        console.log(
-          `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
-        );
+        if (parsed.json) {
+          console.log(JSON.stringify(status, null, 2));
+        } else {
+          console.log(`[pumuki] repo: ${status.repoRoot}`);
+          console.log(`[pumuki] package version: ${status.packageVersion}`);
+          console.log(`[pumuki] lifecycle installed: ${status.lifecycleState.installed ?? 'false'}`);
+          console.log(`[pumuki] lifecycle version: ${status.lifecycleState.version ?? 'unknown'}`);
+          console.log(
+            `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
+          );
+          console.log(
+            `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
+          );
+        }
+        return 0;
+      }
+      case 'sdd': {
+        if (parsed.sddCommand === 'status') {
+          const sddStatus = readSddStatus();
+          if (parsed.json) {
+            console.log(JSON.stringify(sddStatus, null, 2));
+          } else {
+            console.log(`[pumuki][sdd] repo: ${sddStatus.repoRoot}`);
+            console.log(
+              `[pumuki][sdd] openspec: installed=${sddStatus.openspec.installed ? 'yes' : 'no'} version=${sddStatus.openspec.version ?? 'unknown'}`
+            );
+            console.log(
+              `[pumuki][sdd] openspec compatibility: compatible=${sddStatus.openspec.compatible ? 'yes' : 'no'} minimum=${sddStatus.openspec.minimumVersion} recommended=${sddStatus.openspec.recommendedVersion} parsed=${sddStatus.openspec.parsedVersion ?? 'unknown'}`
+            );
+            console.log(
+              `[pumuki][sdd] openspec project initialized: ${sddStatus.openspec.projectInitialized ? 'yes' : 'no'}`
+            );
+            console.log(
+              `[pumuki][sdd] session: active=${sddStatus.session.active ? 'yes' : 'no'} valid=${sddStatus.session.valid ? 'yes' : 'no'} change=${sddStatus.session.changeId ?? 'none'}`
+            );
+            if (typeof sddStatus.session.remainingSeconds === 'number') {
+              console.log(
+                `[pumuki][sdd] session remaining seconds: ${sddStatus.session.remainingSeconds}`
+              );
+            }
+          }
+          return 0;
+        }
+        if (parsed.sddCommand === 'validate') {
+          const result = evaluateSddPolicy({
+            stage: parsed.sddStage ?? 'PRE_COMMIT',
+          });
+          if (parsed.json) {
+            console.log(JSON.stringify(result, null, 2));
+          } else {
+            console.log(
+              `[pumuki][sdd] stage=${result.stage} allowed=${result.decision.allowed ? 'yes' : 'no'} code=${result.decision.code}`
+            );
+            console.log(`[pumuki][sdd] ${result.decision.message}`);
+            if (result.validation) {
+              console.log(
+                `[pumuki][sdd] validation: ok=${result.validation.ok ? 'yes' : 'no'} failed=${result.validation.totals.failed} errors=${result.validation.issues.errors}`
+              );
+            }
+          }
+          return result.decision.allowed ? 0 : 1;
+        }
+        if (parsed.sddCommand === 'session') {
+          if (parsed.sddSessionAction === 'open') {
+            const session = openSddSession({
+              changeId: parsed.sddChangeId ?? '',
+              ttlMinutes: parsed.sddTtlMinutes,
+            });
+            if (parsed.json) {
+              console.log(JSON.stringify(session, null, 2));
+            } else {
+              console.log(
+                `[pumuki][sdd] session opened: change=${session.changeId} ttlMinutes=${session.ttlMinutes ?? 'unknown'} valid=${session.valid ? 'yes' : 'no'}`
+              );
+            }
+            return 0;
+          }
+          if (parsed.sddSessionAction === 'refresh') {
+            const session = refreshSddSession({
+              ttlMinutes: parsed.sddTtlMinutes,
+            });
+            if (parsed.json) {
+              console.log(JSON.stringify(session, null, 2));
+            } else {
+              console.log(
+                `[pumuki][sdd] session refreshed: change=${session.changeId ?? 'none'} ttlMinutes=${session.ttlMinutes ?? 'unknown'} valid=${session.valid ? 'yes' : 'no'}`
+              );
+            }
+            return 0;
+          }
+          const session = closeSddSession();
+          if (parsed.json) {
+            console.log(JSON.stringify(session, null, 2));
+          } else {
+            console.log('[pumuki][sdd] session closed');
+          }
+          return 0;
+        }
         return 0;
       }
       default:

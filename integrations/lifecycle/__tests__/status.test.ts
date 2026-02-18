@@ -88,6 +88,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       version: '6.3.11',
       hooks: 'pre-commit,pre-push',
       installedAt: '2026-02-17T10:00:00.000Z',
+      openSpecManagedArtifacts: undefined,
     });
     assert.deepEqual(status.hookStatus, {
       'pre-commit': { exists: true, managedBlockPresent: true },
@@ -103,6 +104,7 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
         PUMUKI_CONFIG_KEYS.version,
         PUMUKI_CONFIG_KEYS.hooks,
         PUMUKI_CONFIG_KEYS.installedAt,
+        PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts,
       ]
     );
     assert.ok(git.getConfigCalls.every((call) => call.cwd === repoRoot));
@@ -136,6 +138,7 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
       version: undefined,
       hooks: undefined,
       installedAt: undefined,
+      openSpecManagedArtifacts: undefined,
     });
     assert.deepEqual(status.hookStatus, {
       'pre-commit': { exists: false, managedBlockPresent: false },

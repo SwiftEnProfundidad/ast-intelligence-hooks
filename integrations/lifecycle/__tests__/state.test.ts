@@ -2,7 +2,13 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { PUMUKI_CONFIG_KEYS, PUMUKI_MANAGED_HOOKS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
-import { clearLifecycleState, readLifecycleState, writeLifecycleState } from '../state';
+import {
+  clearLifecycleState,
+  readLifecycleState,
+  readOpenSpecManagedArtifacts,
+  writeLifecycleState,
+  writeOpenSpecManagedArtifacts,
+} from '../state';
 
 class FakeLifecycleGitService implements ILifecycleGitService {
   readonly setCalls: Array<{ cwd: string; key: string; value: string }> = [];
@@ -59,6 +65,8 @@ test('readLifecycleState devuelve valores actuales desde git config local', () =
     [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
     [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
     [PUMUKI_CONFIG_KEYS.installedAt]: '2026-02-17T10:00:00.000Z',
+    [PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts]:
+      'openspec/project.md,openspec/specs/.gitkeep',
   });
 
   const state = readLifecycleState(git, repoRoot);
@@ -68,12 +76,14 @@ test('readLifecycleState devuelve valores actuales desde git config local', () =
     version: '6.3.11',
     hooks: 'pre-commit,pre-push',
     installedAt: '2026-02-17T10:00:00.000Z',
+    openSpecManagedArtifacts: 'openspec/project.md,openspec/specs/.gitkeep',
   });
   assert.deepEqual(git.getCalls.map((call) => call.key), [
     PUMUKI_CONFIG_KEYS.installed,
     PUMUKI_CONFIG_KEYS.version,
     PUMUKI_CONFIG_KEYS.hooks,
     PUMUKI_CONFIG_KEYS.installedAt,
+    PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts,
   ]);
 });
 
@@ -107,6 +117,7 @@ test('clearLifecycleState elimina todas las claves lifecycle de git config local
     [PUMUKI_CONFIG_KEYS.version]: '6.3.11',
     [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
     [PUMUKI_CONFIG_KEYS.installedAt]: '2026-02-17T10:00:00.000Z',
+    [PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts]: 'openspec/project.md',
   });
 
   clearLifecycleState(git, repoRoot);
@@ -116,6 +127,7 @@ test('clearLifecycleState elimina todas las claves lifecycle de git config local
     { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.version },
     { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.hooks },
     { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.installedAt },
+    { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts },
   ]);
   const state = readLifecycleState(git, repoRoot);
   assert.deepEqual(state, {
@@ -123,6 +135,7 @@ test('clearLifecycleState elimina todas las claves lifecycle de git config local
     version: undefined,
     hooks: undefined,
     installedAt: undefined,
+    openSpecManagedArtifacts: undefined,
   });
 });
 
@@ -157,5 +170,48 @@ test('clearLifecycleState es idempotente aunque no existan claves previas', () =
     { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.version },
     { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.hooks },
     { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.installedAt },
+    { cwd: repoRoot, key: PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts },
   ]);
+});
+
+test('writeOpenSpecManagedArtifacts persiste lista determinista y readOpenSpecManagedArtifacts la parsea', () => {
+  const repoRoot = '/tmp/repo';
+  const git = new FakeLifecycleGitService();
+
+  writeOpenSpecManagedArtifacts({
+    git,
+    repoRoot,
+    artifacts: [
+      'openspec/specs/.gitkeep',
+      'openspec/project.md',
+      'openspec/project.md',
+      ' openspec/changes/archive/.gitkeep ',
+    ],
+  });
+
+  const managed = readOpenSpecManagedArtifacts(git, repoRoot);
+  assert.deepEqual(managed, [
+    'openspec/changes/archive/.gitkeep',
+    'openspec/project.md',
+    'openspec/specs/.gitkeep',
+  ]);
+});
+
+test('writeOpenSpecManagedArtifacts limpia la key cuando recibe lista vacía', () => {
+  const repoRoot = '/tmp/repo';
+  const git = new FakeLifecycleGitService({
+    [PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts]: 'openspec/project.md',
+  });
+
+  writeOpenSpecManagedArtifacts({
+    git,
+    repoRoot,
+    artifacts: [],
+  });
+
+  assert.equal(readOpenSpecManagedArtifacts(git, repoRoot).length, 0);
+  assert.equal(
+    git.unsetCalls.some((call) => call.key === PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts),
+    true
+  );
 });

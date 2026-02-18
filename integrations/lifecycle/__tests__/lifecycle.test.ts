@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { PUMUKI_MANAGED_BLOCK_END, PUMUKI_MANAGED_BLOCK_START } from '../constants';
-import { getCurrentPumukiPackageName } from '../packageInfo';
+import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
 import { parseLifecycleCliArgs } from '../cli';
 import { runLifecycleInstall } from '../install';
 import { runLifecycleRemove } from '../remove';
@@ -97,7 +97,7 @@ test('runLifecycleRemove purges lifecycle state and requests package uninstall',
           name: 'fixture',
           version: '1.0.0',
           dependencies: {
-            [packageName]: '1.0.0',
+            [packageName]: getCurrentPumukiVersion(),
           },
         },
         null,
@@ -127,6 +127,34 @@ test('runLifecycleRemove purges lifecycle state and requests package uninstall',
     assert.equal(npmCalls.length, 1);
     assert.deepEqual(npmCalls[0]?.args, ['uninstall', packageName]);
     assert.equal(realpathSync(npmCalls[0]?.cwd ?? ''), realpathSync(repo));
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleRemove purges OpenSpec artifacts managed by bootstrap when package is not declared', () => {
+  const repo = createGitRepo();
+  try {
+    const installResult = runLifecycleInstall({ cwd: repo });
+    assert.equal(
+      (installResult.openSpecBootstrap?.managedArtifacts.length ?? 0) > 0,
+      true
+    );
+    assert.equal(existsSync(join(repo, 'openspec', 'project.md')), true);
+
+    const removeResult = runLifecycleRemove({
+      cwd: repo,
+      npm: {
+        runNpm() {},
+      },
+    });
+
+    assert.equal(removeResult.packageRemoved, false);
+    assert.equal(
+      removeResult.removedArtifacts.includes('openspec/project.md'),
+      true
+    );
+    assert.equal(existsSync(join(repo, 'openspec')), false);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

@@ -61,6 +61,10 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), 'true');
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.version), getCurrentPumukiVersion());
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.hooks), 'pre-commit,pre-push');
+    assert.equal(
+      typeof readLocalConfig(repo, PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts),
+      'string'
+    );
     const installedAt = readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installedAt);
     assert.equal(typeof installedAt, 'string');
     assert.equal(Number.isFinite(Date.parse(installedAt ?? '')), true);
@@ -87,6 +91,10 @@ test('runLifecycleInstall bloquea cuando hay node_modules trackeado y no persist
     assert.equal(existsSync(join(repo, '.git/hooks/pre-push')), false);
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), undefined);
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.version), undefined);
+    assert.equal(
+      readLocalConfig(repo, PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts),
+      undefined
+    );
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
@@ -119,6 +127,32 @@ test('runLifecycleInstall usa process.cwd cuando no recibe cwd explícito', () =
     const result = withCwd(repo, () => runLifecycleInstall());
     assert.equal(realpathSync(result.repoRoot), realpathSync(repo));
     assert.deepEqual(result.changedHooks, ['pre-commit', 'pre-push']);
+  } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleInstall con bootstrapOpenSpec=false no ejecuta bootstrap y preserva artefactos OpenSpec previos', () => {
+  const repo = createGitRepo();
+  try {
+    runGit(repo, [
+      'config',
+      '--local',
+      PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts,
+      'openspec/project.md',
+    ]);
+
+    const result = runLifecycleInstall({
+      cwd: repo,
+      bootstrapOpenSpec: false,
+    });
+
+    assert.equal(result.openSpecBootstrap, undefined);
+    assert.equal(
+      readLocalConfig(repo, PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts),
+      'openspec/project.md'
+    );
+    assert.equal(existsSync(join(repo, 'openspec')), false);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

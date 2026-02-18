@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
@@ -104,5 +104,57 @@ test('purgeUntrackedPumukiArtifacts ignora rutas ausentes', async () => {
     });
 
     assert.deepEqual(removed, []);
+  });
+});
+
+test('purgeUntrackedPumukiArtifacts elimina artefactos OpenSpec gestionados y poda directorios vacíos', async () => {
+  await withTempDir('pumuki-artifacts-openspec-managed-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'openspec', 'changes', 'archive'), {
+      recursive: true,
+    });
+    mkdirSync(join(repoRoot, 'openspec', 'specs'), {
+      recursive: true,
+    });
+    writeFileSync(join(repoRoot, 'openspec', 'project.md'), '# OpenSpec Project\n', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'changes', 'archive', '.gitkeep'), '', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'specs', '.gitkeep'), '', 'utf8');
+
+    const removed = purgeUntrackedPumukiArtifacts({
+      git: createGitStub([]),
+      repoRoot,
+      managedOpenSpecArtifacts: [
+        'openspec/project.md',
+        'openspec/changes/archive/.gitkeep',
+        'openspec/specs/.gitkeep',
+      ],
+    });
+
+    assert.deepEqual(removed, [
+      'openspec/project.md',
+      'openspec/changes/archive/.gitkeep',
+      'openspec/specs/.gitkeep',
+    ]);
+    assert.equal(existsSync(join(repoRoot, 'openspec', 'project.md')), false);
+    assert.equal(existsSync(join(repoRoot, 'openspec')), false);
+  });
+});
+
+test('purgeUntrackedPumukiArtifacts preserva artefactos OpenSpec gestionados que están trackeados', async () => {
+  await withTempDir('pumuki-artifacts-openspec-tracked-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'openspec', 'changes', 'archive'), {
+      recursive: true,
+    });
+    writeFileSync(join(repoRoot, 'openspec', 'project.md'), '# OpenSpec Project\n', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'changes', 'archive', '.gitkeep'), '', 'utf8');
+
+    const removed = purgeUntrackedPumukiArtifacts({
+      git: createGitStub(['openspec/project.md']),
+      repoRoot,
+      managedOpenSpecArtifacts: ['openspec/project.md', 'openspec/changes/archive/.gitkeep'],
+    });
+
+    assert.deepEqual(removed, ['openspec/changes/archive/.gitkeep']);
+    assert.equal(existsSync(join(repoRoot, 'openspec', 'project.md')), true);
+    assert.equal(existsSync(join(repoRoot, 'openspec')), true);
   });
 });

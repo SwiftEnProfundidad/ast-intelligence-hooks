@@ -22,6 +22,7 @@ export class LifecycleGitService implements ILifecycleGitService {
     return execFileSync('git', args, {
       cwd,
       encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
     });
   }
 

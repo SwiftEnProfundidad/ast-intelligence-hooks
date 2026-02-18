@@ -3,12 +3,17 @@ import { doctorHasBlockingIssues, runLifecycleDoctor } from './doctor';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { runLifecycleInstall } from './install';
 import { LifecycleNpmService, type ILifecycleNpmService } from './npmService';
+import {
+  runOpenSpecCompatibilityMigration,
+  type OpenSpecCompatibilityMigrationResult,
+} from './openSpecBootstrap';
 import { getCurrentPumukiPackageName } from './packageInfo';
 
 export type LifecycleUpdateResult = {
   repoRoot: string;
   targetSpec: string;
   reinstallHooksChanged: ReadonlyArray<string>;
+  openSpecCompatibility: OpenSpecCompatibilityMigrationResult;
 };
 
 const resolveTargetSpec = (explicitSpec?: string): string => {
@@ -48,14 +53,20 @@ export const runLifecycleUpdate = (params?: {
   npm.runNpm(installArgs, doctorReport.repoRoot);
 
   try {
+    const openSpecCompatibility = runOpenSpecCompatibilityMigration({
+      repoRoot: doctorReport.repoRoot,
+      npm,
+    });
     const installResult = runLifecycleInstall({
       cwd: doctorReport.repoRoot,
       git,
+      bootstrapOpenSpec: false,
     });
     return {
       repoRoot: installResult.repoRoot,
       targetSpec,
       reinstallHooksChanged: installResult.changedHooks,
+      openSpecCompatibility,
     };
   } catch (error) {
     if (currentDependency.spec) {

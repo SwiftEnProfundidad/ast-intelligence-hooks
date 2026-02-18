@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
@@ -115,6 +115,8 @@ test('runLifecycleUpdate usa --save-dev con target por defecto cuando pumuki no 
     assert.equal(result.targetSpec, `${packageName}@latest`);
     assert.deepEqual(npm.calls[0]?.args, ['install', '--save-dev', '--save-exact', `${packageName}@latest`]);
     assert.equal(result.reinstallHooksChanged.length > 0, true);
+    assert.equal(result.openSpecCompatibility.migratedLegacyPackage, false);
+    assert.deepEqual(result.openSpecCompatibility.actions, []);
   });
 });
 
@@ -149,6 +151,8 @@ test('runLifecycleUpdate usa dependencies y respeta targetSpec explícito', asyn
 
     assert.equal(result.targetSpec, `${packageName}@next`);
     assert.deepEqual(npm.calls[0]?.args, ['install', '--save-exact', `${packageName}@next`]);
+    assert.equal(result.openSpecCompatibility.migratedLegacyPackage, false);
+    assert.deepEqual(result.openSpecCompatibility.actions, []);
   });
 });
 
@@ -189,5 +193,85 @@ test('runLifecycleUpdate ejecuta rollback si falla reinstall tras update', async
     assert.equal(npm.calls.length, 2);
     assert.deepEqual(npm.calls[0]?.args, ['install', '--save-dev', '--save-exact', `${packageName}@next`]);
     assert.deepEqual(npm.calls[1]?.args, ['install', '--save-dev', '--save-exact', `${packageName}@6.3.11`]);
+  });
+});
+
+test('runLifecycleUpdate migra openspec legacy en dependencies a @fission-ai/openspec', async () => {
+  await withTempDir('pumuki-update-openspec-legacy-', async (repoRoot) => {
+    const packageName = getCurrentPumukiPackageName();
+    mkdirSync(join(repoRoot, '.git'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+          dependencies: {
+            [packageName]: '6.3.11',
+            openspec: '^0.0.0',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [[], []]);
+    const npm = new FakeLifecycleNpmService();
+    const result = runLifecycleUpdate({
+      cwd: repoRoot,
+      git,
+      npm,
+    });
+
+    assert.equal(result.openSpecCompatibility.migratedLegacyPackage, true);
+    assert.equal(result.openSpecCompatibility.migratedFrom, 'dependencies');
+    assert.deepEqual(result.openSpecCompatibility.actions, [
+      'npm-uninstall:openspec',
+      'npm-install:@fission-ai/openspec@latest',
+    ]);
+
+    assert.deepEqual(npm.calls[0]?.args, ['install', '--save-exact', `${packageName}@latest`]);
+    assert.deepEqual(npm.calls[1]?.args, ['uninstall', 'openspec']);
+    assert.deepEqual(npm.calls[2]?.args, [
+      'install',
+      '--save-exact',
+      '@fission-ai/openspec@latest',
+    ]);
+  });
+});
+
+test('runLifecycleUpdate no hace scaffold openspec durante reinstall de hooks (bootstrap desactivado)', async () => {
+  await withTempDir('pumuki-update-no-bootstrap-scaffold-', async (repoRoot) => {
+    const packageName = getCurrentPumukiPackageName();
+    mkdirSync(join(repoRoot, '.git'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+          dependencies: {
+            [packageName]: '6.3.11',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(repoRoot, [[], []]);
+    const npm = new FakeLifecycleNpmService();
+    const result = runLifecycleUpdate({
+      cwd: repoRoot,
+      git,
+      npm,
+    });
+
+    assert.equal(result.reinstallHooksChanged.length > 0, true);
+    assert.equal(result.openSpecCompatibility.migratedLegacyPackage, false);
+    assert.equal(existsSync(join(repoRoot, 'openspec')), false);
   });
 });

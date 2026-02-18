@@ -1,18 +1,23 @@
 import { installPumukiHooks } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { doctorHasBlockingIssues, runLifecycleDoctor } from './doctor';
+import { runOpenSpecBootstrap, type OpenSpecBootstrapResult } from './openSpecBootstrap';
+import { LifecycleNpmService, type ILifecycleNpmService } from './npmService';
 import { getCurrentPumukiVersion } from './packageInfo';
-import { writeLifecycleState } from './state';
+import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 
 export type LifecycleInstallResult = {
   repoRoot: string;
   version: string;
   changedHooks: ReadonlyArray<string>;
+  openSpecBootstrap?: OpenSpecBootstrapResult;
 };
 
 export const runLifecycleInstall = (params?: {
   cwd?: string;
   git?: ILifecycleGitService;
+  npm?: ILifecycleNpmService;
+  bootstrapOpenSpec?: boolean;
 }): LifecycleInstallResult => {
   const git = params?.git ?? new LifecycleGitService();
   const report = runLifecycleDoctor({
@@ -28,17 +33,33 @@ export const runLifecycleInstall = (params?: {
     );
   }
 
+  const openSpecBootstrap =
+    params?.bootstrapOpenSpec ?? true
+      ? runOpenSpecBootstrap({
+        repoRoot: report.repoRoot,
+        npm: params?.npm ?? new LifecycleNpmService(),
+      })
+      : undefined;
+
   const hookResult = installPumukiHooks(report.repoRoot);
   const version = getCurrentPumukiVersion();
+  const mergedOpenSpecArtifacts = new Set(
+    readOpenSpecManagedArtifacts(git, report.repoRoot)
+  );
+  for (const artifact of openSpecBootstrap?.managedArtifacts ?? []) {
+    mergedOpenSpecArtifacts.add(artifact);
+  }
   writeLifecycleState({
     git,
     repoRoot: report.repoRoot,
     version,
+    openSpecManagedArtifacts: Array.from(mergedOpenSpecArtifacts),
   });
 
   return {
     repoRoot: report.repoRoot,
     version,
     changedHooks: hookResult.changedHooks,
+    openSpecBootstrap,
   };
 };

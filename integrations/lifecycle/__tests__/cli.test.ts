@@ -51,22 +51,60 @@ test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
     command: 'install',
     purgeArtifacts: false,
     updateSpec: undefined,
+    json: false,
   });
   assert.deepEqual(parseLifecycleCliArgs(['uninstall', '--purge-artifacts']), {
     command: 'uninstall',
     purgeArtifacts: true,
     updateSpec: undefined,
+    json: false,
   });
   assert.deepEqual(parseLifecycleCliArgs(['update', `--spec= ${packageName}@next `]), {
     command: 'update',
     purgeArtifacts: false,
     updateSpec: `${packageName}@next`,
+    json: false,
   });
   assert.deepEqual(parseLifecycleCliArgs(['update', '--latest']), {
     command: 'update',
     purgeArtifacts: false,
     updateSpec: undefined,
+    json: false,
   });
+});
+
+test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
+  assert.deepEqual(parseLifecycleCliArgs(['sdd', 'status', '--json']), {
+    command: 'sdd',
+    purgeArtifacts: false,
+    json: true,
+    sddCommand: 'status',
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['sdd', 'validate', '--stage=ci']), {
+    command: 'sdd',
+    purgeArtifacts: false,
+    json: false,
+    sddCommand: 'validate',
+    sddStage: 'CI',
+  });
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'sdd',
+      'session',
+      '--open',
+      '--change=add-auth-feature',
+      '--ttl-minutes=60',
+    ]),
+    {
+      command: 'sdd',
+      purgeArtifacts: false,
+      json: false,
+      sddCommand: 'session',
+      sddSessionAction: 'open',
+      sddChangeId: 'add-auth-feature',
+      sddTtlMinutes: 60,
+    }
+  );
 });
 
 test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () => {

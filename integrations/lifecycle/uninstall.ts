@@ -1,7 +1,7 @@
 import { purgeUntrackedPumukiArtifacts } from './artifacts';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { uninstallPumukiHooks } from './hookManager';
-import { clearLifecycleState } from './state';
+import { clearLifecycleState, readOpenSpecManagedArtifacts } from './state';
 
 export type LifecycleUninstallResult = {
   repoRoot: string;
@@ -17,6 +17,7 @@ export const runLifecycleUninstall = (params?: {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
+  const managedOpenSpecArtifacts = readOpenSpecManagedArtifacts(git, repoRoot);
 
   const hookResult = uninstallPumukiHooks(repoRoot);
   clearLifecycleState(git, repoRoot);
@@ -25,6 +26,7 @@ export const runLifecycleUninstall = (params?: {
     ? purgeUntrackedPumukiArtifacts({
       git,
       repoRoot,
+      managedOpenSpecArtifacts,
     })
     : [];
 

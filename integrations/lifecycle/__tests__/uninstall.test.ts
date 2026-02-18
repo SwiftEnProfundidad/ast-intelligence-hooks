@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
 import { installPumukiHooks } from '../hookManager';
 import { runLifecycleUninstall } from '../uninstall';
@@ -21,11 +22,17 @@ const withCwd = <T>(cwd: string, fn: () => T): T => {
 class FakeLifecycleGitService implements ILifecycleGitService {
   readonly unsetCalls: Array<{ cwd: string; key: string }> = [];
   readonly resolveRepoRootCalls: string[] = [];
+  private readonly config = new Map<string, string>();
 
   constructor(
     private readonly repoRoot: string,
-    private readonly trackedPaths: ReadonlySet<string> = new Set()
-  ) {}
+    private readonly trackedPaths: ReadonlySet<string> = new Set(),
+    initialConfig: Record<string, string> = {}
+  ) {
+    for (const [key, value] of Object.entries(initialConfig)) {
+      this.config.set(key, value);
+    }
+  }
 
   runGit(_args: ReadonlyArray<string>, _cwd: string): string {
     return '';
@@ -48,14 +55,17 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.trackedPaths.has(path);
   }
 
-  setLocalConfig(): void {}
+  setLocalConfig(_cwd: string, key: string, value: string): void {
+    this.config.set(key, value);
+  }
 
   unsetLocalConfig(cwd: string, key: string): void {
     this.unsetCalls.push({ cwd, key });
+    this.config.delete(key);
   }
 
-  getLocalConfig(): string | undefined {
-    return undefined;
+  getLocalConfig(_cwd: string, key: string): string | undefined {
+    return this.config.get(key);
   }
 }
 
@@ -76,7 +86,7 @@ test('runLifecycleUninstall sin purge elimina hooks gestionados y limpia estado'
     assert.deepEqual(result.removedArtifacts, []);
     assert.equal(existsSync(join(repoRoot, '.git/hooks/pre-commit')), false);
     assert.equal(existsSync(join(repoRoot, '.git/hooks/pre-push')), false);
-    assert.equal(git.unsetCalls.length, 4);
+    assert.equal(git.unsetCalls.length, 5);
   });
 });
 
@@ -138,7 +148,7 @@ test('runLifecycleUninstall es idempotente cuando se ejecuta dos veces seguidas'
 
     assert.deepEqual(first.changedHooks, ['pre-commit', 'pre-push']);
     assert.deepEqual(second.changedHooks, []);
-    assert.equal(git.unsetCalls.length, 8);
+    assert.equal(git.unsetCalls.length, 10);
   });
 });
 
@@ -177,6 +187,65 @@ test('runLifecycleUninstall preserva hooks custom sin bloque gestionado', async 
 
     assert.deepEqual(result.changedHooks, []);
     assert.equal(existsSync(customHookPath), true);
-    assert.equal(git.unsetCalls.length, 4);
+    assert.equal(git.unsetCalls.length, 5);
+  });
+});
+
+test('runLifecycleUninstall purge elimina artefactos OpenSpec gestionados y no trackeados', async () => {
+  await withTempDir('pumuki-uninstall-purge-openspec-managed-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    mkdirSync(join(repoRoot, 'openspec', 'changes', 'archive'), {
+      recursive: true,
+    });
+    mkdirSync(join(repoRoot, 'openspec', 'specs'), {
+      recursive: true,
+    });
+    writeFileSync(join(repoRoot, 'openspec', 'project.md'), '# OpenSpec Project\n', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'changes', 'archive', '.gitkeep'), '', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'specs', '.gitkeep'), '', 'utf8');
+
+    const git = new FakeLifecycleGitService(repoRoot, new Set(), {
+      [PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts]:
+        'openspec/project.md,openspec/changes/archive/.gitkeep,openspec/specs/.gitkeep',
+    });
+    const result = runLifecycleUninstall({
+      cwd: repoRoot,
+      purgeArtifacts: true,
+      git,
+    });
+
+    assert.deepEqual(result.removedArtifacts, [
+      'openspec/project.md',
+      'openspec/changes/archive/.gitkeep',
+      'openspec/specs/.gitkeep',
+    ]);
+    assert.equal(existsSync(join(repoRoot, 'openspec')), false);
+  });
+});
+
+test('runLifecycleUninstall purge preserva artefactos OpenSpec gestionados cuando están trackeados', async () => {
+  await withTempDir('pumuki-uninstall-purge-openspec-tracked-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    mkdirSync(join(repoRoot, 'openspec', 'changes', 'archive'), {
+      recursive: true,
+    });
+    writeFileSync(join(repoRoot, 'openspec', 'project.md'), '# OpenSpec Project\n', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'changes', 'archive', '.gitkeep'), '', 'utf8');
+
+    const git = new FakeLifecycleGitService(repoRoot, new Set(['openspec/project.md']), {
+      [PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts]:
+        'openspec/project.md,openspec/changes/archive/.gitkeep',
+    });
+    const result = runLifecycleUninstall({
+      cwd: repoRoot,
+      purgeArtifacts: true,
+      git,
+    });
+
+    assert.deepEqual(result.removedArtifacts, ['openspec/changes/archive/.gitkeep']);
+    assert.equal(existsSync(join(repoRoot, 'openspec', 'project.md')), true);
+    assert.equal(existsSync(join(repoRoot, 'openspec')), true);
   });
 });
