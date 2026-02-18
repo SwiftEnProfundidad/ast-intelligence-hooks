@@ -8,7 +8,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ⏳ Pendiente
 
 ## Tareas Abiertas (Vista Rápida)
-- ⏳ Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/` (ver cierre finito siguiente).
+- ⏳ Ver tarea activa (🚧) en “Cierre Finito del Siguiente Bloque (Core/Integrations sin test)”.
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
@@ -62,8 +62,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar bloque MCP completo (suite focalizada + actualización final del tracker para cerrar este bloque).
 
 ## Cierre Finito del Siguiente Bloque (Core/Integrations sin test)
-- 🚧 Generar inventario determinista de archivos sin test en `core/` e `integrations/` con prioridad por impacto.
-- ⏳ Seleccionar lote atómico inicial (máx. 3 archivos) con criterio explícito de cierre.
+- ✅ Generar inventario determinista de archivos sin test en `core/` e `integrations/` con prioridad por impacto (`docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.md`, `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.json`; total sin test directo: 22).
+- 🚧 Seleccionar lote atómico inicial (máx. 3 archivos) con criterio explícito de cierre.
 - ⏳ Añadir cobertura unitaria del lote atómico inicial y validar en local.
 - ⏳ Actualizar tracker con resultado del lote (✅) y dejar siguiente lote como única tarea en 🚧.
 - ⏳ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado.
