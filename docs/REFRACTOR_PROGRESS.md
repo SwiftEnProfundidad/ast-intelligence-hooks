@@ -273,7 +273,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Cerrar bloque lifecycle pendiente en mock consumer (`pumuki update --latest`, `pumuki uninstall --purge-artifacts`, guardrail de `node_modules` tracked) y reflejar evidencia en checklist.
 - ✅ Validar consistencia runtime entre ejecución directa de binarios (`pumuki-pre-commit/pre-push/ci`) y ejecución vía hooks gestionados en `pumuki-mock-consumer`.
 - ✅ Iniciar validación de detección multi-plataforma en repos mixtos (bloque checklist 5.1–5.6), comenzando por cobertura iOS.
-- 🚧 Validar cobertura backend en repos mixtos (`apps/backend/**/*.ts`) y confirmar bloqueo esperado en escenario `violations`.
+- ✅ Validar cobertura backend en repos mixtos (`apps/backend/**/*.ts`) y confirmar bloqueo esperado en escenario `violations`.
+- 🚧 Validar cobertura frontend en repos mixtos (`apps/frontend|apps/web`) y confirmar bloqueo esperado en escenario `violations`.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

@@ -72,8 +72,8 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 ### 5) Detección multi-plataforma y evaluación combinada
 
 - ✅ 5.1 Cobertura iOS (`*.swift`) en repos mixtos.
-- 🚧 5.2 Cobertura backend (`apps/backend/**/*.ts`) en repos mixtos.
-- ⏳ 5.3 Cobertura frontend (`apps/frontend|apps/web`) en repos mixtos.
+- ✅ 5.2 Cobertura backend (`apps/backend/**/*.ts`) en repos mixtos.
+- 🚧 5.3 Cobertura frontend (`apps/frontend|apps/web`) en repos mixtos.
 - ⏳ 5.4 Cobertura android (`*.kt`, `*.kts`) en repos mixtos.
 - ⏳ 5.5 Commits/rangos multi-plataforma cargan rulesets combinados y salida combinada.
 - ⏳ 5.6 No hay falsos positivos de plataforma fuera de selectores.
