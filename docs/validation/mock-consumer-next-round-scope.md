@@ -64,6 +64,24 @@ Status:
   - `pass` (`npm run pumuki:matrix`) => summary artifact present with `final_verdict=PASS`
   - `fail` (`exit 17`) => summary artifact absent again (no stale `PASS`)
 
+## Fourth Atomic Task
+
+- Add deterministic failure-report artifact handling in `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`.
+- On non-zero execution, write `artifacts/pumuki-matrix-last-failure.json` with stable machine-readable fields:
+  - package spec,
+  - timestamp UTC,
+  - exit code,
+  - failure phase (`preflight` or scenario name when available),
+  - final verdict (`FAIL`).
+- On successful matrix completion, remove any stale `pumuki-matrix-last-failure.json`.
+
+### Acceptance Criteria for Fourth Task
+
+1. Dirty-baseline fail-fast run (`exit 17`) creates `pumuki-matrix-last-failure.json` with `final_verdict=FAIL` and `exit_code=17`.
+2. Successful run removes stale `pumuki-matrix-last-failure.json` and still writes valid `pumuki-matrix-summary.json` (`final_verdict=PASS`).
+3. Back-to-back behavior is deterministic (`fail -> pass -> fail`) for both artifacts (`summary` and `last-failure`).
+4. Existing console output contract remains unchanged.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
