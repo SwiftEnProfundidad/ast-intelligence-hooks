@@ -289,6 +289,12 @@ Operational menu:
 npm run framework:menu
 ```
 
+Consumer repositories should use:
+
+```bash
+npx --yes pumuki-framework
+```
+
 Menu behavior:
 - Default mode is `Consumer` (focused options: staged/range gates, bundles, evidence, exit).
 - Type `A` to switch to `Advanced` mode (full operational surface).
@@ -314,6 +320,8 @@ Core validation commands used by maintainers:
 | Symptom | Typical cause | Action |
 | --- | --- | --- |
 | Gate behaves differently in local and CI | Skills lock or policy drift | `npm run skills:lock:check` |
+| `pumuki-pre-push` blocks with missing upstream guidance | Branch has no upstream tracking ref | `git push --set-upstream origin <branch>` |
+| CI result differs from expected base range | `GITHUB_BASE_REF` missing and fallback refs unavailable | Ensure `GITHUB_BASE_REF`, or keep `origin/main` / `main` available |
 | `tsx` runtime errors | Unsupported Node runtime | Upgrade to `Node >= 18` |
 | Upgrade side effects | Inconsistent modules/lockfile state | `rm -rf node_modules package-lock.json && npm install` |
 | Consumer repo still has artifacts after tests | Lifecycle was not removed | `npx --yes pumuki remove` |

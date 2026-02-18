@@ -138,14 +138,14 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 
 ### 12) Fallos, recuperación y cierre de release
 
-- ⏳ 12.1 PRE_PUSH sin upstream: guía clara y fallo seguro.
-- ⏳ 12.2 CI sin `GITHUB_BASE_REF`: fallback correcto.
-- ⏳ 12.3 Hook drift: `doctor` detecta y `install/update` restaura.
-- ⏳ 12.4 Mismatch parcial lifecycle: detectado y recuperable.
-- ⏳ 12.5 README/USAGE/INSTALLATION alineados con runtime actual.
+- ✅ 12.1 PRE_PUSH sin upstream: guía clara y fallo seguro.
+- ✅ 12.2 CI sin `GITHUB_BASE_REF`: fallback correcto.
+- ✅ 12.3 Hook drift: `doctor` detecta y `install/update` restaura.
+- ✅ 12.4 Mismatch parcial lifecycle: detectado y recuperable.
+- ✅ 12.5 README/USAGE/INSTALLATION alineados con runtime actual.
 - ✅ 12.6 CHANGELOG incluye cambios visibles para usuario.
 - ✅ 12.7 Release probada en mock desde npm (no ruta local).
-- ⏳ 12.8 Informe final go/no-go con enlaces a artifacts y logs.
+- 🚧 12.8 Informe final go/no-go con enlaces a artifacts y logs.
 
 ## Criterio de salida
 

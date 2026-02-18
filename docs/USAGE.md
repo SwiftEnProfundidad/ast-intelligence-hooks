@@ -65,8 +65,16 @@ If policy blocks, expected decision codes include:
 
 ### 1) Interactive menu
 
+Framework repository (maintainers):
+
 ```bash
 npm run framework:menu
+```
+
+Consumer repository:
+
+```bash
+npx --yes pumuki-framework
 ```
 
 Menu starts in `Consumer` mode by default (focused operational options).
@@ -232,13 +240,14 @@ npm run validation:clean-artifacts -- --dry-run
 ### PRE_PUSH
 
 - Resolves upstream with `git rev-parse @{u}`.
+- Fails safe (`exit 1`) with guidance when no upstream is configured.
 - Evaluates `upstream..HEAD` commit range.
 - Requires valid SDD/OpenSpec status (session + active change + validation).
 
 ### CI
 
 - Resolves base ref from `GITHUB_BASE_REF` when available.
-- Fallback base ref: `origin/main`.
+- Fallback base ref order: `origin/main` -> `main` -> `HEAD`.
 - Evaluates `baseRef..HEAD`.
 - Requires valid SDD/OpenSpec status (session + active change + validation).
 
@@ -333,10 +342,11 @@ npx --yes pumuki sdd session --refresh
 
 ### No upstream configured for PRE_PUSH
 
+PRE_PUSH fails safe by design when the branch has no upstream.
 Set upstream once:
 
 ```bash
-git branch --set-upstream-to origin/<branch>
+git push --set-upstream origin <branch>
 ```
 
 ### Empty evidence or PASS with no findings
@@ -345,7 +355,8 @@ Confirm changed files match supported extensions and platform paths expected by 
 
 ### CI base ref mismatch
 
-Set `GITHUB_BASE_REF` in CI context or ensure `origin/main` exists.
+Set `GITHUB_BASE_REF` in CI context, or ensure at least one default base exists:
+`origin/main` (preferred) or `main` (fallback before `HEAD`).
 
 ### Emergency bypass (incident-only)
 

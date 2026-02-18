@@ -83,7 +83,7 @@ npx --yes pumuki-pre-push
 npx --yes pumuki-ci
 ```
 
-## Run the framework locally
+## Run menu from this framework repository
 
 ### Interactive menu
 
@@ -94,6 +94,13 @@ npm run framework:menu
 Menu starts in `Consumer` mode by default (focused options for day-to-day gate usage).
 Use `A` to switch to the full `Advanced` menu and `C` to switch back.
 Each option includes a short inline description.
+
+Consumer repositories do not have the `framework:menu` npm script by default.
+Use the published binary instead:
+
+```bash
+npx --yes pumuki-framework
+```
 
 ### Direct stage runners
 
@@ -190,12 +197,13 @@ Schema reference: `docs/evidence-v2.1.md`.
 ### PRE_PUSH fails due to missing upstream
 
 ```bash
-git branch --set-upstream-to origin/<branch>
+git push --set-upstream origin <branch>
 ```
 
 ### CI cannot resolve base ref
 
-Ensure `GITHUB_BASE_REF` is present or that `origin/main` exists.
+Ensure `GITHUB_BASE_REF` is present, or that `origin/main` (preferred) or `main` exists.
+CI fallback order is `origin/main` -> `main` -> `HEAD`.
 
 ### SDD blocks installation or gates
 
