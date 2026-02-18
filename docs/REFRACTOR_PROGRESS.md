@@ -10,8 +10,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 ## Backlog Visible (Corto Plazo)
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
 - ✅ Recuperar matriz determinista tras bloqueo OpenSpec en clone interno del runner (`scripts/run-pumuki-matrix.sh` en mock).
-- 🚧 Normalizar baseline de `pumuki-mock-consumer` tras la ronda actual (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`).
-- ⏳ Re-ejecutar checklist operativo next-cycle completo en mock real con baseline limpia.
+- ✅ Normalizar baseline de `pumuki-mock-consumer` tras la ronda actual (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`).
+- 🚧 Re-ejecutar checklist operativo next-cycle completo en mock real con baseline limpia.
 - ⏳ Actualizar handoff + tracker con cierre final de ronda y dejar siguiente tarea activa.
 
 ## Fase 1 — Crítico (bloquea release)
@@ -392,7 +392,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar siguiente bloque post-release: preparar siguiente ronda de validación enterprise en mock (checklist operativo de ejecución + criterios de aceptación) para iniciar el próximo ciclo sin deriva. Entregado en `docs/validation/mock-consumer-next-cycle-enterprise-checklist.md` e indexado en `docs/validation/README.md` + `docs/README.md`.
 - ✅ Continuar siguiente bloque post-release: ejecutar el checklist operativo del próximo ciclo en `pumuki-mock-consumer` (entorno real), consolidar salidas y adjuntar evidencia de cierre en el handoff pack. Evidencia: matriz real bloqueada en `scenario:clean` por resolución OpenSpec en clone interno (`npx openspec` => `could not determine executable to run`); stage/evidence revalidado manualmente en temp clone con OpenSpec preinstalado (`PRE_COMMIT/BLOCK/22`, `PRE_PUSH/BLOCK/39`, `CI/BLOCK/39`, bundle contract completo). Documentado en `docs/validation/mock-consumer-post-release-handoff-pack.md`.
 - ✅ Continuar siguiente bloque post-release: preparar fix atómico en `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh` para bootstrap explícito de OpenSpec en clone interno y recuperar matriz determinista sin workaround manual. Evidencia: commit mock `8f57767` (`test(matrix): bootstrap openspec in clone before sdd session`) y revalidación en entorno real `npm run pumuki:matrix` en verde (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `All scenario matrix checks passed for package: pumuki@latest`).
-- 🚧 Continuar siguiente bloque post-release: normalizar baseline del mock tras la ronda (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`) y dejar repositorio consumidor listo para el siguiente ciclo sin drift.
+- ✅ Continuar siguiente bloque post-release: normalizar baseline del mock tras la ronda (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`) y dejar repositorio consumidor listo para el siguiente ciclo sin drift. Evidencia: commit mock `1af138b` (`chore(mock): normalize openspec baseline for enterprise cycle`) con `package.json`, `package-lock.json` y scaffold `openspec/` consolidados en baseline versionada.
+- 🚧 Continuar siguiente bloque post-release: re-ejecutar checklist next-cycle completo en `pumuki-mock-consumer` (baseline ya normalizada) y consolidar evidencia final de ronda.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
