@@ -433,6 +433,40 @@ Conclusion:
 - each failure report now carries the exact canonical command behind the failing step, improving deterministic triage.
 - compatibility and console contract remain unchanged.
 
+## Next-Round Task 10 Output (portable command template metadata)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `ab9f616`
+- change: `pumuki-matrix-last-failure.json` now includes:
+  - `failure_command_template` (portable template with placeholders),
+  - `failure_command_variables` (resolved values for template placeholders),
+  while preserving existing `failure_command`.
+
+Validation evidence:
+- preflight dirty failure:
+  - `preflight_exit=17`
+  - `preflight_json={"exit_code":17,"failure_phase":"preflight","failure_step":"source_repo_cleanliness","failure_command_template":"git -C \"{repo_root}\" status --porcelain --untracked-files=normal","failure_command_variables":{"repo_root":"...","clone_dir":"...","scenario":null,"package_spec":"pumuki@latest","base_ref":null}}`
+  - `preflight_template_non_empty=true`
+  - `preflight_template_has_placeholder=true`
+  - `preflight_template_has_users=false`
+- scenario failure after preflight (invalid package):
+  - `scenario_exit=1`
+  - `scenario_json={"exit_code":1,"failure_phase":"clean","failure_step":"npm_install_package","failure_command":"npm install --save-exact \"pumuki@0.0.0-not-a-real-version\"","failure_command_template":"npm install --save-exact \"{package_spec}\"","failure_command_variables":{"repo_root":"...","clone_dir":"...","scenario":"clean","package_spec":"pumuki@0.0.0-not-a-real-version","base_ref":"upstream-clean"}}`
+  - `scenario_template=npm install --save-exact "{package_spec}"`
+  - `scenario_var_package=pumuki@0.0.0-not-a-real-version`
+  - `scenario_command_present=true`
+- successful run after failure:
+  - `success_last_line=All scenario matrix checks passed for package: pumuki@latest`
+  - `summary_json={"final_verdict":"PASS","run_id":"pumuki-matrix-..."}`
+  - `failure_json_exists_after_success=0`
+  - `failure_log_exists_after_success=0`
+
+Conclusion:
+- failure reports now include machine-portable command templates plus resolved variables, without breaking existing command metadata or console contract.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:

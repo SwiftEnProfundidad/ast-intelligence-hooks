@@ -208,6 +208,13 @@ Status:
 3. Existing `failure_command` remains present and non-empty where command-backed step exists.
 4. Successful run still removes stale failure artifacts and preserves summary/console contracts unchanged.
 
+Status:
+- `✅` implemented (mock commit `ab9f616`), validated with deterministic checks:
+  - preflight dirty failure: `exit=17`, `failure_command_template` no vacío y portable (`{repo_root}` presente, sin paths absolutos de usuario)
+  - scenario failure after preflight (invalid package): `exit=1`, `failure_step=npm_install_package`, `failure_command_template="npm install --save-exact \"{package_spec}\""`, `failure_command_variables.package_spec="pumuki@0.0.0-not-a-real-version"`
+  - `failure_command` legado sigue presente y no vacío en steps command-backed
+  - successful run: `summary` presente (`final_verdict=PASS`) y artefactos stale de fallo eliminados
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
