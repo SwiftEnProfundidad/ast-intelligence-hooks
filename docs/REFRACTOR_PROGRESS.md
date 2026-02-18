@@ -25,7 +25,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar quinto task atómico de la nueva ronda: extender metadata de fallo (`failure_step`, `failure_log_path`, contexto por escenario) sin romper contrato de consola ni compatibilidad del artefacto.
 - ✅ Definir sexto task atómico de la nueva ronda (post-failure-context) con criterio de aceptación verificable para continuar endureciendo operación del runner.
 - ✅ Ejecutar sexto task atómico de la nueva ronda: correlación determinista por `run_id` entre artefactos de éxito/fallo sin romper compatibilidad ni contrato de consola.
-- 🚧 Definir séptimo task atómico de la nueva ronda (post-run-id) con criterio de aceptación verificable para continuar endureciendo operación del runner.
+- ✅ Definir séptimo task atómico de la nueva ronda (post-run-id) con criterio de aceptación verificable para continuar endureciendo operación del runner.
+- 🚧 Ejecutar séptimo task atómico de la nueva ronda: captura determinista de log de fallo en `artifacts/` + referencia `failure_log_artifact` sin romper compatibilidad ni contrato de consola.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
@@ -419,6 +420,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar siguiente bloque post-release: ejecutar quinto task atómico en mock (`run-pumuki-matrix.sh` con metadata de fallo enriquecida por step/contexto) y consolidar evidencia en handoff/tracker. Evidencia: commit mock `5af7ded` (`test(matrix): add failure-step context metadata`) con validaciones: preflight dirty (`exit=17`, `failure_phase=preflight`, `failure_step=source_repo_cleanliness`, `failure_log_path=null`), fallo por escenario post-preflight (`exit=1`, `failure_phase=clean`, `failure_step=npm_install_package`, `failure_log_path=/tmp/pumuki-clean-npm-install.log`, log existente) y run exitoso preservando contrato (`summary PASS`, `last-failure` ausente).
 - ✅ Continuar siguiente bloque post-release: definir y fijar sexto task atómico de la nueva ronda en documentación (scope + backlog visible + tracker) antes de ejecutar cambios adicionales. Alcance fijado en `docs/validation/mock-consumer-next-round-scope.md`: añadir `run_id` determinista por ejecución y compartirlo entre `pumuki-matrix-summary.json` y `pumuki-matrix-last-failure.json` para correlación estable de evidencias.
 - ✅ Continuar siguiente bloque post-release: ejecutar sexto task atómico en mock (`run-pumuki-matrix.sh` con `run_id` compartido entre artefactos) y consolidar evidencia en handoff/tracker. Evidencia: commit mock `a9d9b29` (`test(matrix): add deterministic run-id to artifacts`) con validaciones: preflight dirty (`run_id` no vacío en `last-failure`), run exitoso (`run_id` no vacío en `summary`, línea final intacta), fallo por escenario post-preflight (`run_id` no vacío en `last-failure`) y estabilidad de lectura por ejecución (`scenario_stable=yes`).
+- ✅ Continuar siguiente bloque post-release: definir y fijar séptimo task atómico de la nueva ronda en documentación (scope + backlog visible + tracker) antes de ejecutar cambios adicionales. Alcance fijado en `docs/validation/mock-consumer-next-round-scope.md`: capturar log de fallo en `artifacts/` y añadir `failure_log_artifact` en JSON para triage portable, preservando campos/contrato existentes.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

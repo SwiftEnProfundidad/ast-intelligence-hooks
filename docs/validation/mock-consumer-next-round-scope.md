@@ -130,6 +130,21 @@ Status:
   - forced scenario failure after preflight: `exit=1` and `last-failure.run_id` non-empty
   - run-level stability check: repeated reads in the same run keep identical `run_id`
 
+## Seventh Atomic Task
+
+- Add deterministic failure-log artifact capture for triage portability:
+  - when `failure_log_path` exists, copy it into `artifacts/` as a deterministic file (for example `pumuki-matrix-last-failure.log`),
+  - include `failure_log_artifact` in `pumuki-matrix-last-failure.json` pointing to the copied artifact path.
+- Preserve backward compatibility of existing fields (`failure_log_path`, `failure_phase`, `failure_step`, `run_id`, etc.).
+- On successful runs, remove stale copied failure-log artifact alongside `pumuki-matrix-last-failure.json`.
+
+### Acceptance Criteria for Seventh Task
+
+1. Scenario failure with an internal step log produces `failure_log_artifact` in JSON and a real file under `artifacts/`.
+2. Preflight dirty failure keeps `failure_log_artifact=null` (no synthetic log).
+3. Successful run removes stale failure JSON and stale copied failure-log artifact.
+4. Existing console output and current artifact fields remain backward-compatible.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
