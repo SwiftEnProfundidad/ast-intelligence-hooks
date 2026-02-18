@@ -8,7 +8,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ⏳ Pendiente
 
 ## Tareas Abiertas (Vista Rápida)
-- 🚧 Cerrar bloque de backlog MCP con lista finita y verificable (ver “Cierre Finito del Bloque Actual”).
+- 🚧 Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/`.
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
@@ -52,14 +52,14 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reducir backlog sin test (slice MCP suppressed relations): añadir cobertura unitaria para `integrations/mcp/evidenceFacetsSuppressedRelations.ts`.
 - ✅ Reducir backlog sin test (slice MCP suppressed summary payload): añadir cobertura unitaria para `integrations/mcp/evidencePayloadSummarySuppressed.ts`.
 - ✅ Reducir backlog sin test (slice MCP collections core): añadir cobertura unitaria para `integrations/mcp/evidencePayloadCollections.ts`.
-- 🚧 Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ⏳ Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/`.
 
 ## Cierre Finito del Bloque Actual
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedBase.ts`.
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareCore.ts`.
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`.
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidencePayloadStatus.ts`.
-- 🚧 Validar bloque MCP completo (suite focalizada + actualización final del tracker para cerrar este bloque).
+- ✅ Validar bloque MCP completo (suite focalizada + actualización final del tracker para cerrar este bloque).
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
@@ -76,7 +76,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `consumer-support-bundle-gh-*`
   - `framework-menu-runners-validation-*`
   - `consumer-support-bundle-markdown-sections-*`
-- 🚧 Reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateOutput.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateFacts.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateEvidence.ts`.
