@@ -215,6 +215,12 @@ Operational menu:
 npm run framework:menu
 ```
 
+Menu behavior:
+- Default mode is `Consumer` (focused options: staged/range gates, bundles, evidence, exit).
+- Type `A` to switch to `Advanced` mode (full operational surface).
+- Type `C` in advanced mode to return to consumer mode.
+- Set `PUMUKI_MENU_MODE=advanced` to start directly in advanced mode.
+
 ## Deterministic Validation Suite
 
 Core validation commands used by maintainers:

@@ -21,6 +21,7 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Active documentation guardrails now enforce:
   - English-only baseline for active enterprise docs.
   - Local markdown reference integrity for active docs.
+- Interactive framework menu now defaults to `Consumer` mode and separates the full surface behind `Advanced` mode (`A` to switch, `C` to return), with short inline help per option.
 
 ### Fixed
 

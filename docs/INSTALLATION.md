@@ -41,7 +41,9 @@ If both commands pass, the workspace is ready.
 npm run framework:menu
 ```
 
-Menu includes deterministic gate actions and optional operational diagnostics adapters.
+Menu starts in `Consumer` mode by default (focused options for day-to-day gate usage).
+Use `A` to switch to the full `Advanced` menu and `C` to switch back.
+Each option includes a short inline description.
 
 Optional adapter readiness check:
 

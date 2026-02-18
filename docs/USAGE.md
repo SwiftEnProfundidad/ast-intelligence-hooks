@@ -32,7 +32,14 @@ Policy source: `integrations/gate/stagePolicies.ts`.
 npm run framework:menu
 ```
 
-Menu supports staged evaluation, commit-range evaluation, evidence reading, and CI runner entrypoints.
+Menu starts in `Consumer` mode by default (focused operational options).
+Use `A` to switch to `Advanced` mode (full options), and `C` to return to `Consumer`.
+Each option now includes a short inline description in the interactive list.
+If needed, you can start directly in advanced mode:
+
+```bash
+PUMUKI_MENU_MODE=advanced npm run framework:menu
+```
 
 To avoid host-specific defaults for consumer diagnostics prompts, set:
 

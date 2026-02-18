@@ -294,7 +294,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar comportamiento MCP cuando falta/corrompe evidencia (checklist 8.4): `/status` en `degraded`, `evidence.present`/`valid` coherentes por caso (`missing` y `corrupt`), y endpoints de evidencia devolviendo `404`.
 - ✅ Validar UX operativa del menú en consumidor (checklist 9.1): `npx pumuki-framework` abrió correctamente, ejecutó acción `7` (`Show active skills bundles`) y cerró con `27` (`Exit`) con código `0` (sin depender de script `npm run framework:menu` en el mock).
 - ✅ Revalidar explícitamente en entorno mock-only (copia temporal de `pumuki-mock-consumer`) el bloque operativo `lifecycle + pumuki:matrix + framework:menu + MCP` sin ejecutar pruebas de runtime en el repo framework.
-- 🚧 Iniciar validación de acciones lifecycle/gates mapeadas en `framework:menu` (checklist 9.2).
+- ✅ Simplificar `framework:menu` a modo `Consumer` por defecto con cambio explícito a `Advanced` (`A`/`C`) y ayuda breve por opción, revalidado en entorno mock-only con paquete local (`npm pack` + instalación en copia temporal de `pumuki-mock-consumer`).
+- 🚧 Iniciar validación de acciones de reportes del menú para confirmar generación de archivos en rutas esperadas (checklist 9.3).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
