@@ -76,11 +76,11 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 5.3 Cobertura frontend (`apps/frontend|apps/web`) en repos mixtos.
 - ✅ 5.4 Cobertura android (`*.kt`, `*.kts`) en repos mixtos.
 - ✅ 5.5 Commits/rangos multi-plataforma cargan rulesets combinados y salida combinada.
-- 🚧 5.6 No hay falsos positivos de plataforma fuera de selectores.
+- ✅ 5.6 No hay falsos positivos de plataforma fuera de selectores.
 
 ### 6) Rulesets, políticas y overrides
 
-- ⏳ 6.1 Verificar carga de baseline packs:
+- 🚧 6.1 Verificar carga de baseline packs:
   - `iosEnterpriseRuleSet`
   - `backendRuleSet`
   - `frontendRuleSet`
