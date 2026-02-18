@@ -40,3 +40,18 @@
 
 ## Artefacto completo
 - Ver listado completo en `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.json`.
+
+## Lote Atómico Inicial Seleccionado (Batch 01)
+- `integrations/gate/stagePolicies.ts` (P1, score 399)
+- `integrations/platform/detectPlatforms.ts` (P2, score 138)
+- `integrations/mcp/evidenceContextServer.ts` (P3, score 172)
+
+### Criterio de selección
+- Prioridad por impacto (score + prioridad) sobre el inventario determinista.
+- Cobertura transversal de dominios (`gate`, `platform`, `mcp`) para reducir riesgo sistémico temprano.
+- Límite operativo estricto: máximo 3 archivos para mantener cierre atómico y trazable.
+
+### Criterio de cierre del Batch 01
+- Existe al menos un test unitario directo por cada archivo del lote.
+- Los tests del lote pasan en local.
+- El tracker se actualiza con Batch 01 en ✅ y Batch 02 como única tarea en 🚧.
