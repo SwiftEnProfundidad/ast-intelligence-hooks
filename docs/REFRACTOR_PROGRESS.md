@@ -284,7 +284,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar overrides de proyecto en `pumuki-mock-consumer` (checklist 6.3): override de `backend.avoid-explicit-any` aplicado y observado en evidencia con severidad final `ERROR`.
 - ✅ Validar enforcement de reglas locked sin override permitido en `pumuki-mock-consumer` (checklist 6.4): intento de downgrade `backend.no-console-log -> INFO` ignorado y evidencia final mantenida en `CRITICAL`.
 - ✅ Validar generación de `.ai_evidence.json` por stage en `pumuki-mock-consumer` (checklist 7.1): evidencia presente en `PRE_COMMIT`, `PRE_PUSH` y `CI` con `snapshot.stage` y `outcome` coherentes.
-- 🚧 Iniciar validación de contrato de esquema mínimo de evidencia (`version`, `snapshot`, `ledger`) en `pumuki-mock-consumer` (checklist 7.2).
+- ✅ Validar contrato de esquema mínimo de evidencia (`version`, `snapshot`, `ledger`) en `pumuki-mock-consumer` (checklist 7.2): presencia y tipos correctos (`version:string`, `snapshot:object`, `ledger:array`).
+- 🚧 Iniciar validación de presencia de plataformas activas y rulesets cargados en evidencia (checklist 7.3).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
