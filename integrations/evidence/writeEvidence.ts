@@ -78,6 +78,8 @@ const normalizeFindingPath = (
     message: finding.message,
     file: toRelativeRepoPath(repoRoot, finding.file),
     lines: normalizeLines(finding.lines),
+    matchedBy: finding.matchedBy,
+    source: finding.source,
   };
 };
 
@@ -101,6 +103,8 @@ const toCompatibilityViolations = (
     message: finding.message,
     file: finding.file,
     lines: finding.lines,
+    matchedBy: finding.matchedBy,
+    source: finding.source,
   }));
 };
 

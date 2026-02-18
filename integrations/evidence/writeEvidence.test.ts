@@ -38,6 +38,8 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
         message: 'z finding',
         file: join(repoRoot, 'apps/ios/B.swift'),
         lines: [9.8, 1, 1, Number.NaN, 4],
+        matchedBy: 'FileContent',
+        source: 'git:staged',
       },
       {
         ruleId: 'a.rule',
@@ -46,6 +48,8 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
         message: 'a finding',
         file: 'apps/backend/A.ts',
         lines: '   ',
+        matchedBy: 'Heuristic',
+        source: 'heuristics:ast',
       },
     ],
   },
@@ -106,10 +110,14 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
       assert.equal(written.snapshot.findings[0]?.ruleId, 'a.rule');
       assert.equal(written.snapshot.findings[0]?.file, 'apps/backend/A.ts');
       assert.equal('lines' in (written.snapshot.findings[0] ?? {}), false);
+      assert.equal(written.snapshot.findings[0]?.matchedBy, 'Heuristic');
+      assert.equal(written.snapshot.findings[0]?.source, 'heuristics:ast');
 
       assert.equal(written.snapshot.findings[1]?.ruleId, 'z.rule');
       assert.equal(written.snapshot.findings[1]?.file.endsWith('/apps/ios/B.swift'), true);
       assert.deepEqual(written.snapshot.findings[1]?.lines, [1, 4, 9]);
+      assert.equal(written.snapshot.findings[1]?.matchedBy, 'FileContent');
+      assert.equal(written.snapshot.findings[1]?.source, 'git:staged');
 
       assert.equal(written.ledger[0]?.ruleId, 'a.rule');
       assert.deepEqual(written.ledger[0]?.lines, [2, 3]);
@@ -122,6 +130,13 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
         'ios:z-bundle',
       ]);
       assert.deepEqual(written.ai_gate.violations.map((item) => item.ruleId), ['a.rule', 'z.rule']);
+      assert.deepEqual(
+        written.ai_gate.violations.map((item) => [item.ruleId, item.matchedBy, item.source]),
+        [
+          ['a.rule', 'Heuristic', 'heuristics:ast'],
+          ['z.rule', 'FileContent', 'git:staged'],
+        ]
+      );
     });
   });
 });

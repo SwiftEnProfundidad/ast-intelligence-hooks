@@ -258,6 +258,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar validación dirigida del lote iOS (detectors + heuristics + skills ruleset) y ajustar severidades finales por stage.
 - ✅ Extender cobertura semántica enterprise de SOLID (SRP/OCP/LSP/ISP/DIP) con señales AST no superficiales y contrato de evidencia.
 - ✅ Ejecutar validación determinista del lote SOLID (detectors TS + extractor heurístico + stage policies) y cerrar versión de pack heurístico.
+- ✅ Corregir persistencia de trazabilidad en evidence (`matchedBy` y `source`) en `snapshot.findings` y `ai_gate.violations`, con tests de regresión en verde.
+- ✅ Publicar hotfix npm (`pumuki@6.3.13`) y revalidar en `pumuki-mock-consumer` que `.ai_evidence.json` conserva trazabilidad completa en escenario `violations`.
 - ✅ Cerrar implementación integral de reglas/skills (heurísticas iOS + SOLID TS + stage promotions + contracts skills) con validación completa (`typecheck`, `skills:lock:check`, `test:deterministic` y suite dirigida de policies/presets).
 - ✅ Endurecer `pumuki-mock-consumer` con una mini-app feature-first más elaborada y escenario `violations` ampliado para cubrir skills iOS/backend/frontend/android + heurísticas críticas (security/process/fs/browser/SOLID) mediante `docs/VIOLATION_SKILLS_MATRIX.md`.
 - ✅ Corregir carga de `pumuki.rules.ts` con `default export` en `integrations/config/loadProjectRules.ts` y añadir test de regresión.
@@ -266,7 +268,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir cobertura de regresión para trazabilidad (`integrations/git/__tests__/findingTraceability.test.ts`, `integrations/git/__tests__/runPlatformGateEvaluation.test.ts`, `integrations/evidence/__tests__/buildEvidence.test.ts`).
 - ✅ Endurecer pruebas de integración Git eliminando monkey-patching frágil en `runPlatformGate`/`runPlatformGateEvidence` mediante inyección explícita en tests.
 - ✅ Ajustar guardrail IDE-agnostic para excluir archivos de test (`*.test.ts`, `*.spec.ts`) del escaneo de runtime coupling.
-- 🚧 Publicar siguiente versión de `pumuki` con fixes de `loadProjectRules` + trazabilidad de evidencia y revalidar en `pumuki-mock-consumer`.
+- ✅ Publicar siguiente versión de `pumuki` con fixes de `loadProjectRules` + trazabilidad de evidencia y revalidar en `pumuki-mock-consumer`.
+- 🚧 Reejecutar matriz completa `pumuki:matrix` sobre `pumuki-mock-consumer` con `pumuki@6.3.13` y cerrar pendientes restantes del checklist full validation.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
