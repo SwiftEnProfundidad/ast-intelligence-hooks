@@ -360,7 +360,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar checklist 12.1: validar comportamiento `PRE_PUSH` sin upstream (fallo seguro + guía clara). Resultado: sin bypass SDD bloquea fail-closed (`SDD_SESSION_MISSING`), pero con `PUMUKI_SDD_BYPASS=1` el comando devuelve `exit 0` sin guía de upstream (gap detectado).
 - ✅ Resolver gap de checklist 12.1: forzar fallo seguro y mensaje guía explícito cuando `PRE_PUSH` no tiene upstream, incluso con bypass SDD (`resolveUpstreamRef -> null`, `runPrePushStage -> exit 1 + guidance`, tests `resolveGitRefs` y `stageRunners` en verde).
 - ✅ Continuar checklist 12.2: validar comportamiento `CI` sin `GITHUB_BASE_REF` con fallback correcto (`origin/main|main|HEAD`) en entorno mock-only. Evidencia en clon temporal de `pumuki-mock-consumer` con paquete local: `case_a_origin_main_and_main -> exit=1/BLOCK/findings=41`, `case_b_main_only -> exit=1/BLOCK/findings=41`, `case_c_head_fallback -> exit=0/PASS/findings=0`.
-- 🚧 Continuar checklist 12.3: validar hook drift (`doctor` detecta drift y `install/update` restaura hooks gestionados) en entorno mock-only.
+- ✅ Continuar checklist 12.3: validar hook drift (`doctor` detecta drift y `install/update` restaura hooks gestionados) en entorno mock-only. Evidencia en clon temporal de `pumuki-mock-consumer` (rama `main`, baseline saneado en temp por `node_modules` tracked): drift `pre-commit` => `doctor verdict: WARN` (`hook pre-commit: missing`), `pumuki install` restaura => `doctor verdict: PASS`; drift `pre-push` => `doctor verdict: WARN` (`hook pre-push: missing`), `pumuki update --latest` restaura => `doctor verdict: PASS`.
+- 🚧 Continuar checklist 12.4: validar mismatch parcial de lifecycle (estado detectado por `status/doctor` y recuperación determinista) en entorno mock-only.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
