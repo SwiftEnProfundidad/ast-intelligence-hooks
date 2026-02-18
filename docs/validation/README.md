@@ -23,6 +23,7 @@ Keep these as source-of-truth operational references:
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
 - `phase12-go-no-go-report.md`
+- `post-phase12-next-lot-decision.md`
 
 ## Archived Historical Reports
 
