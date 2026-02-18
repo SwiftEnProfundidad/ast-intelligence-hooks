@@ -67,11 +67,11 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 4.2 `pumuki-pre-push` evalúa `upstream..HEAD`.
 - ✅ 4.3 `pumuki-ci` evalúa `baseRef..HEAD` (`GITHUB_BASE_REF` o fallback).
 - ✅ 4.4 Exit codes deterministas (`0` allow, `1` block).
-- 🚧 4.5 Consistencia entre ejecución directa de binarios y ejecución vía hooks.
+- ✅ 4.5 Consistencia entre ejecución directa de binarios y ejecución vía hooks.
 
 ### 5) Detección multi-plataforma y evaluación combinada
 
-- ⏳ 5.1 Cobertura iOS (`*.swift`) en repos mixtos.
+- 🚧 5.1 Cobertura iOS (`*.swift`) en repos mixtos.
 - ⏳ 5.2 Cobertura backend (`apps/backend/**/*.ts`) en repos mixtos.
 - ⏳ 5.3 Cobertura frontend (`apps/frontend|apps/web`) en repos mixtos.
 - ⏳ 5.4 Cobertura android (`*.kt`, `*.kts`) en repos mixtos.
