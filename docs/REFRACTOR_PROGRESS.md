@@ -51,6 +51,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reducir backlog sin test (slice MCP suppressed share barrel): añadir cobertura de re-export para `integrations/mcp/evidenceFacetsSuppressedShare.ts`.
 - ✅ Reducir backlog sin test (slice MCP suppressed relations): añadir cobertura unitaria para `integrations/mcp/evidenceFacetsSuppressedRelations.ts`.
 - ✅ Reducir backlog sin test (slice MCP suppressed summary payload): añadir cobertura unitaria para `integrations/mcp/evidencePayloadSummarySuppressed.ts`.
+- ✅ Reducir backlog sin test (slice MCP collections core): añadir cobertura unitaria para `integrations/mcp/evidencePayloadCollections.ts`.
 - 🚧 Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/`.
 
 ## Fase 1 — Crítico (bloquea release)
