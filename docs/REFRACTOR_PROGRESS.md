@@ -272,7 +272,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reejecutar matriz completa `pumuki:matrix` sobre `pumuki-mock-consumer` con `pumuki@6.3.13` y cerrar pendientes restantes del checklist full validation.
 - ✅ Cerrar bloque lifecycle pendiente en mock consumer (`pumuki update --latest`, `pumuki uninstall --purge-artifacts`, guardrail de `node_modules` tracked) y reflejar evidencia en checklist.
 - ✅ Validar consistencia runtime entre ejecución directa de binarios (`pumuki-pre-commit/pre-push/ci`) y ejecución vía hooks gestionados en `pumuki-mock-consumer`.
-- 🚧 Iniciar validación de detección multi-plataforma en repos mixtos (bloque checklist 5.1–5.6), comenzando por cobertura iOS.
+- ✅ Iniciar validación de detección multi-plataforma en repos mixtos (bloque checklist 5.1–5.6), comenzando por cobertura iOS.
+- 🚧 Validar cobertura backend en repos mixtos (`apps/backend/**/*.ts`) y confirmar bloqueo esperado en escenario `violations`.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
