@@ -270,6 +270,24 @@ Conclusion:
 - failed runs no longer leave stale-success summary artifacts.
 - successful runs keep generating a valid parseable `PASS` summary with unchanged console contract.
 
+## Next-Round Task 4 Output (deterministic last-failure artifact)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `d3427c7`
+- change: runner now writes `artifacts/pumuki-matrix-last-failure.json` on non-zero exit (`final_verdict=FAIL`, `exit_code`, `failure_phase`) and removes stale failure artifact on successful runs.
+
+Validation evidence (`fail -> pass -> fail`):
+- `A_exit=17 A_summary_exists=0 A_failure_exists=1 A_failure={"final_verdict":"FAIL","exit_code":17,"failure_phase":"preflight","package_spec":"pumuki@latest"}`
+- `B_summary_exists=1 B_failure_exists=0 B_summary={"final_verdict":"PASS","package_spec":"pumuki@latest"}`
+- `C_exit=17 C_summary_exists=0 C_failure_exists=1 C_failure={"final_verdict":"FAIL","exit_code":17,"failure_phase":"preflight","package_spec":"pumuki@latest"}`
+
+Conclusion:
+- failed runs now leave deterministic machine-readable failure state.
+- successful runs clear stale failure state while preserving current PASS summary behavior and console contract.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:

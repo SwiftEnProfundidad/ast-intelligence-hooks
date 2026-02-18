@@ -82,6 +82,12 @@ Status:
 3. Back-to-back behavior is deterministic (`fail -> pass -> fail`) for both artifacts (`summary` and `last-failure`).
 4. Existing console output contract remains unchanged.
 
+Status:
+- `✅` implemented (mock commit `d3427c7`), validated with deterministic sequence:
+  - `fail` (`exit 17`) => `summary` absent, `last-failure` present (`final_verdict=FAIL`, `exit_code=17`, `failure_phase=preflight`)
+  - `pass` (`npm run pumuki:matrix`) => `summary` present (`final_verdict=PASS`), `last-failure` absent
+  - `fail` (`exit 17`) => `summary` absent, `last-failure` present again with `final_verdict=FAIL`
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
