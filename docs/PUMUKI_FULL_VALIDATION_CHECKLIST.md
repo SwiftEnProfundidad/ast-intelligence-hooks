@@ -53,13 +53,13 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 
 ### 3) Lifecycle de Pumuki
 
-- 🚧 3.1 Ejecutar y validar `npx pumuki doctor` tras instalación en baseline limpia.
-- ⏳ 3.2 Ejecutar y validar `npx pumuki status` tras instalación.
-- ⏳ 3.3 Validar `npx pumuki update --latest` (idempotencia y salud de hooks).
-- ⏳ 3.4 Validar `npx pumuki uninstall --purge-artifacts` (solo hooks + artifacts gestionados).
+- ✅ 3.1 Ejecutar y validar `npx pumuki doctor` tras instalación en baseline limpia.
+- ✅ 3.2 Ejecutar y validar `npx pumuki status` tras instalación.
+- ✅ 3.3 Validar `npx pumuki update --latest` (idempotencia y salud de hooks).
+- ✅ 3.4 Validar `npx pumuki uninstall --purge-artifacts` (solo hooks + artifacts gestionados).
 - ✅ 3.5 Validar `npx --yes pumuki remove` (limpieza total de rastro Pumuki sin tocar terceros).
 - ✅ 3.6 Validar idempotencia lifecycle (ciclo install/remove repetido).
-- ⏳ 3.7 Validar guardrail: install/update falla si hay `node_modules` tracked.
+- ✅ 3.7 Validar guardrail: install/update falla si hay `node_modules` tracked.
 
 ### 4) Stage gates runtime
 
@@ -67,7 +67,7 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 4.2 `pumuki-pre-push` evalúa `upstream..HEAD`.
 - ✅ 4.3 `pumuki-ci` evalúa `baseRef..HEAD` (`GITHUB_BASE_REF` o fallback).
 - ✅ 4.4 Exit codes deterministas (`0` allow, `1` block).
-- ⏳ 4.5 Consistencia entre ejecución directa de binarios y ejecución vía hooks.
+- 🚧 4.5 Consistencia entre ejecución directa de binarios y ejecución vía hooks.
 
 ### 5) Detección multi-plataforma y evaluación combinada
 
@@ -133,7 +133,7 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 11.2 Escenario violations: pre-commit/pre-push/ci => `1` esperado.
 - ✅ 11.3 Escenario mixed: comportamiento determinista combinado.
 - ✅ 11.4 Cleanup lifecycle tras cada escenario deja baseline limpio.
-- ⏳ 11.5 Repetir matriz completa para confirmar repetibilidad exacta.
+- ✅ 11.5 Repetir matriz completa para confirmar repetibilidad exacta.
 
 ### 12) Fallos, recuperación y cierre de release
 

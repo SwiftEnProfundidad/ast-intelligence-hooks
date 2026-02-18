@@ -269,7 +269,9 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Endurecer pruebas de integración Git eliminando monkey-patching frágil en `runPlatformGate`/`runPlatformGateEvidence` mediante inyección explícita en tests.
 - ✅ Ajustar guardrail IDE-agnostic para excluir archivos de test (`*.test.ts`, `*.spec.ts`) del escaneo de runtime coupling.
 - ✅ Publicar siguiente versión de `pumuki` con fixes de `loadProjectRules` + trazabilidad de evidencia y revalidar en `pumuki-mock-consumer`.
-- 🚧 Reejecutar matriz completa `pumuki:matrix` sobre `pumuki-mock-consumer` con `pumuki@6.3.13` y cerrar pendientes restantes del checklist full validation.
+- ✅ Reejecutar matriz completa `pumuki:matrix` sobre `pumuki-mock-consumer` con `pumuki@6.3.13` y cerrar pendientes restantes del checklist full validation.
+- ✅ Cerrar bloque lifecycle pendiente en mock consumer (`pumuki update --latest`, `pumuki uninstall --purge-artifacts`, guardrail de `node_modules` tracked) y reflejar evidencia en checklist.
+- 🚧 Validar consistencia runtime entre ejecución directa de binarios (`pumuki-pre-commit/pre-push/ci`) y ejecución vía hooks gestionados en `pumuki-mock-consumer`.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
