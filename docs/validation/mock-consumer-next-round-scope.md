@@ -173,6 +173,19 @@ Status:
   - successful run: `summary` present (`final_verdict=PASS`), stale `last-failure` JSON/log artifacts removed
   - final console line preserved: `All scenario matrix checks passed for package: pumuki@latest`
 
+## Ninth Atomic Task
+
+- Add deterministic `failure_command` metadata to `artifacts/pumuki-matrix-last-failure.json`.
+- Map each `failure_step` to a canonical command string used by the runner for that step.
+- Keep backward compatibility: preserve all existing keys; `failure_command` can be `null` only when the step is not command-backed.
+
+### Acceptance Criteria for Ninth Task
+
+1. Preflight dirty failure (`exit 17`) includes `failure_step=source_repo_cleanliness` and non-empty `failure_command`.
+2. Scenario failure after preflight (for example invalid package on `npm_install_package`) includes non-empty `failure_command` matching that step.
+3. Successful run still removes stale `pumuki-matrix-last-failure.json` + `pumuki-matrix-last-failure.log` and preserves summary contract.
+4. Existing artifact keys remain backward-compatible and console output contract remains unchanged.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
