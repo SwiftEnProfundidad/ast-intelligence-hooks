@@ -7,6 +7,12 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - 🚧 En progreso
 - ⏳ Pendiente
 
+## Tareas Abiertas (Vista Rápida)
+- 🚧 Ejecutar décimo task atómico de la nueva ronda: metadata portable `failure_command_template` (+ variables) en `pumuki-matrix-last-failure.json` sin romper compatibilidad ni contrato de consola.
+- ⏳ Dividir `integrations/mcp/evidenceFacets.ts` por dominios de facetas.
+- ⏳ Dividir `integrations/mcp/evidencePayloads.ts` por builders/contextos.
+- ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
+
 ## Backlog Visible (Corto Plazo)
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
 - ✅ Recuperar matriz determinista tras bloqueo OpenSpec en clone interno del runner (`scripts/run-pumuki-matrix.sh` en mock).
