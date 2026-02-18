@@ -54,6 +54,7 @@ Language baseline: active repository documentation is maintained in English.
 - `validation/enterprise-consumer-isolation-policy.md`
 - `validation/mock-consumer-integration-runbook.md`
 - `validation/mock-consumer-post-release-handoff-pack.md`
+- `validation/mock-consumer-next-cycle-enterprise-checklist.md`
 - `validation/github-support-ticket-template-startup-failure.md`
 - `validation/skills-rollout-consumer-repositories.md`
 - `validation/phase12-go-no-go-report.md`
