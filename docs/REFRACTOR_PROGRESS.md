@@ -58,8 +58,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedBase.ts`.
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareCore.ts`.
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`.
-- 🚧 Añadir cobertura unitaria directa para `integrations/mcp/evidencePayloadStatus.ts`.
-- ⏳ Validar bloque MCP completo (suite focalizada + actualización final del tracker para cerrar este bloque).
+- ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidencePayloadStatus.ts`.
+- 🚧 Validar bloque MCP completo (suite focalizada + actualización final del tracker para cerrar este bloque).
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
