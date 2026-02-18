@@ -58,6 +58,12 @@ Status:
 3. Console output contract remains unchanged.
 4. The behavior is reproducible in back-to-back runs (`fail` then `pass`, `pass` then `fail`).
 
+Status:
+- `✅` implemented (mock commit `9b49a6e`), validated with deterministic sequence:
+  - `fail` (`exit 17`) => summary artifact absent
+  - `pass` (`npm run pumuki:matrix`) => summary artifact present with `final_verdict=PASS`
+  - `fail` (`exit 17`) => summary artifact absent again (no stale `PASS`)
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.

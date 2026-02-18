@@ -252,6 +252,24 @@ Conclusion:
 - deterministic summary artifact is produced and parseable.
 - existing matrix stage-exit behavior and console output contract remain stable.
 
+## Next-Round Task 3 Output (no stale summary on failed runs)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `9b49a6e`
+- change: runner now deletes `artifacts/pumuki-matrix-summary.json` at run start and on non-zero exit, preventing stale `PASS` artifacts after failures.
+
+Validation evidence (`fail -> pass -> fail`):
+- `A_exit=17 A_summary_exists=0`
+- `B_summary_exists=1 B_verdict=PASS`
+- `C_exit=17 C_summary_exists=0`
+
+Conclusion:
+- failed runs no longer leave stale-success summary artifacts.
+- successful runs keep generating a valid parseable `PASS` summary with unchanged console contract.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
