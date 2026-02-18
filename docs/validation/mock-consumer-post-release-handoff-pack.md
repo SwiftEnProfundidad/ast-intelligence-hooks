@@ -116,6 +116,36 @@ Observed results:
   - `project-rules`
   - `gate-policy.default.PRE_COMMIT|PRE_PUSH|CI`
 
+## Next-Cycle Execution Output (real user environment)
+
+Execution date: `2026-02-18`  
+Source environment:
+- real repo: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`
+
+Observed matrix result:
+- `npm run pumuki:matrix` failed in `scenario:clean` before gates:
+  - `ERROR: failed to create OpenSpec change for scenario 'clean'.`
+  - `npm error could not determine executable to run`
+- root cause (reproduced):
+  - matrix internal clone installs only `pumuki` (`npm install --save-exact pumuki@...`)
+  - `@fission-ai/openspec` is not installed in that clone
+  - `npx openspec` cannot resolve local bin and falls back to package `openspec` (no executable contract for this flow)
+
+Stage/evidence fallback validation (manual temp clone with explicit OpenSpec preinstall):
+- temp repo: `/tmp/pumuki-stage-evidence-next-manual-umLTI6/repo`
+- preinstall:
+  - `npm install --save-dev --save-exact @fission-ai/openspec@latest`
+  - `npm install --save-exact pumuki@6.3.14`
+- results:
+  - `pre_commit_exit=1` with `PRE_COMMIT/BLOCK/22`
+  - `pre_push_exit=1` with `PRE_PUSH/BLOCK/39`
+  - `ci_exit=1` with `CI/BLOCK/39`
+  - bundle contract check: `{"android":true,"backend":true,"frontend":true,"ios":true,"project_rules":true,"gate_policy":true}`
+
+Operational conclusion:
+- Stage/evidence contract remains stable.
+- Deterministic matrix is currently blocked by OpenSpec dependency resolution in matrix clone bootstrap.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
