@@ -75,8 +75,10 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado (Batch 03 cerrado: 3/3 archivos con test directo y verificación local en verde).
 - ✅ Seleccionar Batch 04 (máx. 3 archivos críticos restantes de `core/`/`integrations/`) y publicar criterio de cierre en este tracker (Batch 04: `integrations/mcp/evidencePayloadSummary.ts`, `integrations/mcp/evidenceFacets.ts`, `integrations/mcp/evidenceFacetsLedger.ts`).
 - ✅ Criterio de selección Batch 04: top impacto restante del inventario tras Batch 03 (score/loc/revDeps), foco en facetas+summary MCP aún sin test directo y límite operativo estricto de 3 archivos.
-- 🚧 Añadir cobertura unitaria del Batch 04 y validar en local (avance: ✅ `integrations/mcp/evidencePayloadSummary.ts`, ✅ `integrations/mcp/evidenceFacets.ts`; pendiente: `integrations/mcp/evidenceFacetsLedger.ts`).
-- ⏳ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado.
+- ✅ Añadir cobertura unitaria del Batch 04 y validar en local (avance: ✅ `integrations/mcp/evidencePayloadSummary.ts`, ✅ `integrations/mcp/evidenceFacets.ts`, ✅ `integrations/mcp/evidenceFacetsLedger.ts`).
+- ✅ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado (Batch 04 cerrado: 3/3 archivos con test directo y verificación local en verde).
+- 🚧 Seleccionar Batch 05 (máx. 3 archivos críticos restantes de `core/`/`integrations/`) y publicar criterio de cierre en este tracker.
+- ⏳ Añadir cobertura unitaria del Batch 05 y validar en local.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
