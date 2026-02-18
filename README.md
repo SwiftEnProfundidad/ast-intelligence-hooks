@@ -160,7 +160,7 @@ Pumuki now enforces SDD/OpenSpec as a first-class guardrail.
 
 - `pumuki install` auto-bootstraps OpenSpec when needed:
   - installs `@fission-ai/openspec@latest` (when `package.json` exists and OpenSpec is missing/incompatible),
-  - scaffolds `openspec/` baseline (`project.md`, archive/spec placeholders) when absent.
+  - scaffolds `openspec/` baseline (`project` file plus archive/spec placeholders) when absent.
 - `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` before reapplying hooks.
 
 ### Minimal daily flow

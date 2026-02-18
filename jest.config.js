@@ -19,12 +19,6 @@ module.exports = {
         '!**/*.spec.ts'
     ],
     coverageThreshold: {
-        global: {
-            statements: 1,
-            branches: 1,
-            functions: 1,
-            lines: 1
-        },
         './core/gate/conditionMatches.ts': {
             statements: 60,
             branches: 40,

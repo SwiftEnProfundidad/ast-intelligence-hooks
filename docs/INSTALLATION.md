@@ -51,7 +51,7 @@ npx --yes pumuki install
 Behavior:
 - Installs managed hooks (`pre-commit`, `pre-push`).
 - Auto-installs `@fission-ai/openspec@latest` when OpenSpec is missing/incompatible (when `package.json` exists).
-- Scaffolds `openspec/` baseline if missing (`project.md`, archive/spec placeholders).
+- Scaffolds `openspec/` baseline if missing (`project` file plus archive/spec placeholders).
 
 ### 3) Verify lifecycle and SDD status
 

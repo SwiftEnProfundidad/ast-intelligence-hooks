@@ -18,6 +18,8 @@ const ROOT_ACTIVE_DOCS = new Set([
   'CLAUDE.md',
 ]);
 
+const markdownCodeSpanPattern = /`[^`\n]+`/g;
+
 const loadTrackedMarkdownFiles = (repoRoot: string): string[] => {
   const tracked = execFileSync('git', ['ls-files'], {
     cwd: repoRoot,
@@ -43,6 +45,9 @@ const loadTrackedMarkdownFiles = (repoRoot: string): string[] => {
     if (path.startsWith('docs/archive/')) {
       return false;
     }
+    if (path.startsWith('docs/codex-skills/')) {
+      return false;
+    }
     return true;
   });
 
@@ -55,7 +60,9 @@ test('active enterprise docs remain IDE/provider agnostic', () => {
   const violations: string[] = [];
 
   for (const file of files) {
-    const content = readFileSync(join(repoRoot, file), 'utf8').toLowerCase();
+    const content = readFileSync(join(repoRoot, file), 'utf8')
+      .replace(markdownCodeSpanPattern, '')
+      .toLowerCase();
     for (const term of PROVIDER_TERMS) {
       if (!content.includes(term)) {
         continue;

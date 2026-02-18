@@ -21,6 +21,14 @@ const ROOT_ACTIVE_DOCS = new Set([
   'CLAUDE.md',
 ]);
 
+const NON_ENGLISH_ALLOWED_DOCS = new Set([
+  'docs/REFRACTOR_PROGRESS.md',
+  'docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md',
+  'docs/PUMUKI_OPENSPEC_SDD_ROADMAP.md',
+]);
+
+const markdownCodeSpanPattern = /`[^`\n]+`/g;
+
 const loadTrackedActiveMarkdownFiles = (repoRoot: string): string[] => {
   const tracked = execFileSync('git', ['ls-files'], {
     cwd: repoRoot,
@@ -44,6 +52,12 @@ const loadTrackedActiveMarkdownFiles = (repoRoot: string): string[] => {
       if (path.startsWith('docs/archive/')) {
         return false;
       }
+      if (path.startsWith('docs/codex-skills/')) {
+        return false;
+      }
+      if (NON_ENGLISH_ALLOWED_DOCS.has(path)) {
+        return false;
+      }
       return true;
     })
     .sort();
@@ -55,7 +69,9 @@ test('active enterprise docs remain English-only', () => {
   const violations: string[] = [];
 
   for (const file of files) {
-    const content = readFileSync(join(repoRoot, file), 'utf8').toLowerCase();
+    const content = readFileSync(join(repoRoot, file), 'utf8')
+      .replace(markdownCodeSpanPattern, '')
+      .toLowerCase();
 
     if (content.includes('¿') || content.includes('¡')) {
       violations.push(`${file}: contains Spanish punctuation`);

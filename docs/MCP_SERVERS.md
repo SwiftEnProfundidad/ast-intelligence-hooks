@@ -30,7 +30,7 @@ npx --yes pumuki-mcp-enterprise
 - `integrations/mcp/evidenceContextServer.ts`
 - `integrations/mcp/evidenceContextServer.cli.ts`
 
-### Objetivo
+### Purpose
 
 Exponer evidencia v2.1 de forma determinista y solo lectura.
 
@@ -70,9 +70,9 @@ Comportamiento:
 - `integrations/mcp/enterpriseServer.ts`
 - `integrations/mcp/enterpriseServer.cli.ts`
 
-### Objetivo
+### Purpose
 
-Exponer contexto operativo enterprise del repo activo:
+Expose enterprise operational state for the active repository:
 
 - estado de evidencia,
 - estado gitflow,
