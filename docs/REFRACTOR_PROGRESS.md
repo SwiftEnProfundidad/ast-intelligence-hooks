@@ -345,7 +345,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Crear commit atómico del lote 10.2 (fixes de guardrails documentales + ajuste de cobertura en `jest.config.js` + actualización de tracker).
 - ✅ Iniciar checklist 10.3 en entorno mock-only para cierre de validación enterprise (OpenSpec/SDD + MCP enterprise + menú consumidor): validado `pumuki sdd status --json` sobre clon temporal de `pumuki-mock-consumer` con tarball local de Pumuki.
 - ✅ Continuar checklist 10.3 en entorno mock-only: validar `pumuki-mcp-enterprise` (health/status/resources/tools) desde consumidor temporal. Resultado: bloqueo reproducible en runtime (`bin/pumuki-mcp-enterprise.js` lanza `TypeError: require(...) is not a function` en consumidor mock-only).
-- 🚧 Corregir runtime del binario `pumuki-mcp-enterprise` para eliminar el fallo `require(...) is not a function` y revalidar smoke `/health|/status|/resources|/tools` en mock-only.
+- ✅ Corregir runtime del binario `pumuki-mcp-enterprise` para eliminar el fallo `require(...) is not a function` y revalidar smoke `/health|/status|/resources|/tools` en mock-only.
+- 🚧 Continuar checklist 10.3 en entorno mock-only: validar `POST /tool` (`ai_gate_check` + tool mutating en `dry-run` forzado) y registrar resultado.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
