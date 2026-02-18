@@ -367,7 +367,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Preparar siguiente lote según instrucción del usuario (post-cierre 12.x): paquete de decisión generado en `docs/validation/post-phase12-next-lot-decision.md` con rutas mutuamente excluyentes (`release` vs `hardening`) y criterios de entrada/ejecución.
 - ✅ Abrir siguiente lote por instrucción del usuario (`ok, continúa`) asumiendo ruta `release`: normalizada la coherencia de baseline de versión (`VERSION` alineado con `package.json` en `v6.3.13`).
 - ✅ Continuar ruta `release` (lote atómico siguiente): versión objetivo de publicación definida y bump aplicado a `6.3.14` en `package.json`, `package-lock.json`, `VERSION` y `CHANGELOG`.
-- 🚧 Continuar ruta `release` (lote atómico siguiente): publicar `pumuki@6.3.14` en npm y validar dist-tags/resultados de instalación en consumidor mock.
+- ✅ Continuar ruta `release` (lote atómico siguiente): publicar `pumuki@6.3.14` en npm y validar dist-tags/resultados de instalación en consumidor mock. Evidencia: `npm publish` exitoso (`+ pumuki@6.3.14`), dist-tags alineados (`latest=6.3.14`, `next=6.3.14`) y verificación en clon temporal de `pumuki-mock-consumer` con `npm install --save-exact pumuki@6.3.14` + `npx pumuki status` (`package version: 6.3.14`).
+- 🚧 Continuar ruta `release` (lote atómico siguiente): ejecutar verificación post-publish final (matriz mock consumer con `pumuki@6.3.14`) y cerrar lote de release.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
