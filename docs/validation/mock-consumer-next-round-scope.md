@@ -123,6 +123,13 @@ Status:
 3. For a given execution, `run_id` is stable and identical across any emitted artifact in that run.
 4. Existing artifact keys remain backward-compatible and console output contract stays unchanged.
 
+Status:
+- `✅` implemented (mock commit `a9d9b29`), validated with deterministic checks:
+  - dirty preflight failure: `exit=17` and `last-failure.run_id` non-empty
+  - successful run: `summary.run_id` non-empty, final line unchanged (`All scenario matrix checks passed for package: pumuki@latest`), `last-failure` absent
+  - forced scenario failure after preflight: `exit=1` and `last-failure.run_id` non-empty
+  - run-level stability check: repeated reads in the same run keep identical `run_id`
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.

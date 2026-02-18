@@ -315,6 +315,39 @@ Conclusion:
 - failure metadata now supports deterministic step-level and scenario-aware triage context.
 - backward-compatible fields remain intact while console/summary contracts stay stable.
 
+## Next-Round Task 6 Output (run-id correlation across artifacts)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `a9d9b29`
+- change: artifacts now include shared per-execution `run_id`:
+  - `pumuki-matrix-summary.json.run_id`
+  - `pumuki-matrix-last-failure.json.run_id`
+
+Validation evidence:
+- dirty preflight failure:
+  - `preflight_exit=17`
+  - `preflight={"final_verdict":"FAIL","exit_code":17,"failure_phase":"preflight","run_id":"pumuki-matrix-20260218T193834Z-45255"}`
+- successful matrix run:
+  - `pass_summary={"final_verdict":"PASS","package_spec":"pumuki@latest","run_id":"pumuki-matrix-20260218T193834Z-45291"}`
+  - `pass_failure_exists=0`
+  - `pass_last_line=All scenario matrix checks passed for package: pumuki@latest`
+- forced scenario failure after preflight (invalid package):
+  - `scenario_exit=1`
+  - `scenario={"final_verdict":"FAIL","exit_code":1,"failure_phase":"clean","failure_step":"npm_install_package","run_id":"pumuki-matrix-20260218T193910Z-51028"}`
+  - `summary_exists_after_scenario_fail=0`
+- run-id checks:
+  - `preflight_non_empty=yes`
+  - `summary_non_empty=yes`
+  - `scenario_non_empty=yes`
+  - `scenario_stable=yes`
+
+Conclusion:
+- both success and failure artifacts now carry deterministic non-empty `run_id`.
+- compatibility and console contract remain unchanged.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
