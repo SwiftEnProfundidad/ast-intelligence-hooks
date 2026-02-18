@@ -14,6 +14,7 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - Cerrar una tarea cada vez.
 - Guardar evidencia de cada tarea (salida de comandos + resultado esperado).
 - Cualquier warning/error detectado durante la ejecución debe corregirse de inmediato antes de continuar.
+- Todas las pruebas de validación de runtime se ejecutan únicamente en `pumuki-mock-consumer` (no en el repo de framework `ast-intelligence-hooks`).
 
 ## Orden de ejecución recomendado
 
