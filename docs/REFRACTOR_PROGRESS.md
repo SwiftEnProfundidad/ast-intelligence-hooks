@@ -56,8 +56,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 
 ## Cierre Finito del Bloque Actual
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedBase.ts`.
-- 🚧 Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareCore.ts`.
-- ⏳ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`.
+- ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareCore.ts`.
+- 🚧 Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedShareTriage.ts`.
 - ⏳ Añadir cobertura unitaria directa para `integrations/mcp/evidencePayloadStatus.ts`.
 - ⏳ Validar bloque MCP completo (suite focalizada + actualización final del tracker para cerrar este bloque).
 
