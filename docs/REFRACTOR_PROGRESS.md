@@ -365,7 +365,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar checklist 12.5: validar alineación final de `README/USAGE/INSTALLATION` con runtime actual y cerrar desvíos residuales. Ajustes aplicados: clarificación de menú en consumidor (`npx pumuki-framework`) vs script de framework (`npm run framework:menu`), comportamiento `PRE_PUSH` sin upstream (fail-safe + guía), y fallback de CI documentado como `origin/main -> main -> HEAD`.
 - ✅ Continuar checklist 12.8: preparar informe final go/no-go con evidencia consolidada de 12.x y estado de release. Reporte generado en `docs/validation/phase12-go-no-go-report.md` con veredicto `GO`, anchors de evidencia (`checklist`, `tracker`, `changelog`, `release notes`) y referencias de logs mock-only de validación 12.x.
 - ✅ Preparar siguiente lote según instrucción del usuario (post-cierre 12.x): paquete de decisión generado en `docs/validation/post-phase12-next-lot-decision.md` con rutas mutuamente excluyentes (`release` vs `hardening`) y criterios de entrada/ejecución.
-- 🚧 Esperando decisión explícita del usuario para abrir el siguiente lote: `Proceed with release path` o `Proceed with hardening path`.
+- ✅ Abrir siguiente lote por instrucción del usuario (`ok, continúa`) asumiendo ruta `release`: normalizada la coherencia de baseline de versión (`VERSION` alineado con `package.json` en `v6.3.13`).
+- 🚧 Continuar ruta `release` (lote atómico siguiente): definir versión objetivo de publicación y aplicar bump en `package.json`, `VERSION` y `CHANGELOG`.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
