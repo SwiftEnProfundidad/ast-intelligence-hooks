@@ -375,7 +375,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar siguiente lote post-release: preparar commit atómico de cierre del tracker para este hardening y dejar la trazabilidad actualizada.
 - ✅ Continuar siguiente lote post-release: preparar commit atómico en `pumuki-mock-consumer` para `scripts/run-pumuki-matrix.sh` y dejar baseline lista para la siguiente validación enterprise. Evidencia: commit `0521546` en `pumuki-mock-consumer` (`test(matrix): open/close SDD session per scenario without global bypass`) aplicado sobre `scripts/run-pumuki-matrix.sh`.
 - ✅ Continuar siguiente lote post-release: consolidar tracking con commit atómico en framework y preparar baseline de validación enterprise posterior. Baseline actual medido en `pumuki-mock-consumer`: rama `feat/pumuki-validation` (`ahead 3`), `12` archivos staged (`apps/*` + `pumuki.rules.ts`) y `2` unstaged (`package.json`, `package-lock.json`).
-- 🚧 Continuar siguiente lote post-release: normalizar baseline reproducible en `pumuki-mock-consumer` (cerrar staged/unstaged pendientes en commit atómico) antes de la siguiente validación enterprise.
+- ✅ Continuar siguiente lote post-release: normalizar baseline reproducible en `pumuki-mock-consumer` (cerrar staged/unstaged pendientes en commit atómico) antes de la siguiente validación enterprise. Evidencia: commit `b82b4cb` en `pumuki-mock-consumer` (`chore(mock): normalize baseline before next enterprise validation`) con `14` archivos consolidados y worktree limpio.
+- 🚧 Continuar siguiente lote post-release: ejecutar la siguiente validación enterprise sobre baseline normalizada del mock (matriz + checks de stage/evidence) y registrar evidencias de cierre.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
