@@ -195,6 +195,34 @@ Final conclusion for this round:
 - Stage/evidence contract: `PASS`
 - Baseline drift in real mock repo: `NONE` (`git status` clean)
 
+## Next-Round Task 1 Output (dirty baseline guardrail)
+
+Execution date: `2026-02-18`  
+Target: `pumuki-mock-consumer/scripts/run-pumuki-matrix.sh`
+
+Implementation:
+- commit: `5f8c06b`
+- change: preflight guard added to matrix runner to fail-fast when source repo baseline is dirty (before clone/scenario execution).
+
+Validation evidence:
+- dirty baseline run:
+  - command: `npm run pumuki:matrix`
+  - exit: `17`
+  - message:
+    - `ERROR: source repository baseline is dirty; matrix runner requires a clean baseline.`
+    - actionable guidance includes `git -C "<repo>" status --short --branch` and cleanup instruction.
+- clean baseline run (after commit):
+  - command: `npm run pumuki:matrix`
+  - result:
+    - `clean`: `0/0/0`
+    - `violations`: `1/1/1`
+    - `mixed`: `1/1/1`
+    - final line: `All scenario matrix checks passed for package: pumuki@latest`
+
+Conclusion:
+- fail-fast operator safety guard is active and deterministic.
+- clean-baseline deterministic contract is preserved.
+
 ## Exit Criteria
 
 Validation round is considered closed only when all checks pass:
