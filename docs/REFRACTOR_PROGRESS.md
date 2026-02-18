@@ -357,7 +357,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar checklist 10.9: ejecutar `npm run validation:package-smoke` y registrar resultado. Resultado: `exit 0` (modo `block` ejecutado sin errores).
 - ✅ Continuar checklist 10.10: ejecutar `npm run validation:package-smoke:minimal` y registrar resultado. Resultado: `exit 0` (modo `minimal` ejecutado sin errores).
 - ✅ Continuar checklist 10.11: ejecutar `npm run validation:docs-hygiene` y registrar resultado. Resultado: `exit 0` (`validation docs hygiene check passed`).
-- 🚧 Continuar checklist 12.1: validar comportamiento `PRE_PUSH` sin upstream (fallo seguro + guía clara).
+- ✅ Continuar checklist 12.1: validar comportamiento `PRE_PUSH` sin upstream (fallo seguro + guía clara). Resultado: sin bypass SDD bloquea fail-closed (`SDD_SESSION_MISSING`), pero con `PUMUKI_SDD_BYPASS=1` el comando devuelve `exit 0` sin guía de upstream (gap detectado).
+- 🚧 Resolver gap de checklist 12.1: forzar fallo seguro y mensaje guía explícito cuando `PRE_PUSH` no tiene upstream, incluso con bypass SDD.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
