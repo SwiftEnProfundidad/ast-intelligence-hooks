@@ -121,3 +121,62 @@ test('generateEvidence respeta gateOutcome explícito al componer build + write'
     });
   });
 });
+
+test('generateEvidence persiste contrato SDD cuando se informa bloqueo de policy', async () => {
+  await withTempDir('pumuki-generate-evidence-sdd-contract-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const result = generateEvidence({
+        stage: 'PRE_PUSH',
+        gateOutcome: 'BLOCK',
+        findings: [
+          {
+            ruleId: 'sdd.policy.blocked',
+            severity: 'ERROR',
+            code: 'SDD_VALIDATION_FAILED',
+            message: 'OpenSpec validation failed',
+            filePath: 'openspec/changes',
+            matchedBy: 'SddPolicy',
+            source: 'sdd-policy',
+          },
+        ],
+        detectedPlatforms: {},
+        loadedRulesets: [{ platform: 'policy', bundle: 'gate-policy.default.PRE_PUSH', hash: 'hash-policy' }],
+        sddMetrics: {
+          enforced: true,
+          stage: 'PRE_PUSH',
+          decision: {
+            allowed: false,
+            code: 'SDD_VALIDATION_FAILED',
+            message: 'OpenSpec validation failed',
+          },
+        },
+      });
+
+      assert.equal(result.evidence.snapshot.findings[0]?.source, 'sdd-policy');
+      assert.deepEqual(result.evidence.sdd_metrics, {
+        enforced: true,
+        stage: 'PRE_PUSH',
+        decision: {
+          allowed: false,
+          code: 'SDD_VALIDATION_FAILED',
+          message: 'OpenSpec validation failed',
+        },
+      });
+      assert.equal(result.write.ok, true);
+
+      const persisted = JSON.parse(readFileSync(join(tempRoot, '.ai_evidence.json'), 'utf8')) as AiEvidenceV2_1;
+      assert.equal(persisted.snapshot.findings[0]?.source, 'sdd-policy');
+      assert.equal(persisted.ai_gate.violations[0]?.source, 'sdd-policy');
+      assert.deepEqual(persisted.sdd_metrics, {
+        enforced: true,
+        stage: 'PRE_PUSH',
+        decision: {
+          allowed: false,
+          code: 'SDD_VALIDATION_FAILED',
+          message: 'OpenSpec validation failed',
+        },
+      });
+    });
+  });
+});

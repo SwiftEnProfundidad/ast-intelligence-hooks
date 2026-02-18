@@ -1,12 +1,17 @@
 import { evaluateGate } from '../../core/gate/evaluateGate';
+import type { Finding } from '../../core/gate/Finding';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
+import type { RuleSet } from '../../core/rules/RuleSet';
+import type { SkillsRuleSetLoadResult } from '../config/skillsRuleSet';
 import type { ResolvedStagePolicy } from '../gate/stagePolicies';
+import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { GitService, type IGitService } from './GitService';
 import { EvidenceService, type IEvidenceService } from './EvidenceService';
 import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
 import { resolveFactsForGateScope, type GateScope } from './runPlatformGateFacts';
 import { emitPlatformGateEvidence } from './runPlatformGateEvidence';
 import { printGateFindings } from './runPlatformGateOutput';
+import { evaluateSddPolicy, type SddDecision } from '../sdd';
 
 export type GateServices = {
   git: IGitService;
@@ -19,6 +24,10 @@ export type GateDependencies = {
   resolveFactsForGateScope: typeof resolveFactsForGateScope;
   emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
   printGateFindings: typeof printGateFindings;
+  evaluateSddForStage: (
+    stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI',
+    repoRoot: string
+  ) => Pick<SddDecision, 'allowed' | 'code' | 'message'>;
 };
 
 const defaultServices: GateServices = {
@@ -32,7 +41,22 @@ const defaultDependencies: GateDependencies = {
   resolveFactsForGateScope,
   emitPlatformGateEvidence,
   printGateFindings,
+  evaluateSddForStage: (stage, repoRoot) =>
+    evaluateSddPolicy({
+      stage,
+      repoRoot,
+    }).decision,
 };
+
+const toSddBlockingFinding = (decision: Pick<SddDecision, 'code' | 'message'>): Finding => ({
+  ruleId: 'sdd.policy.blocked',
+  severity: 'ERROR',
+  code: decision.code,
+  message: decision.message,
+  filePath: 'openspec/changes',
+  matchedBy: 'SddPolicy',
+  source: 'sdd-policy',
+});
 
 export async function runPlatformGate(params: {
   policy: GatePolicy;
@@ -48,6 +72,45 @@ export async function runPlatformGate(params: {
     ...params.dependencies,
   };
   const repoRoot = git.resolveRepoRoot();
+  let sddDecision:
+    | Pick<SddDecision, 'allowed' | 'code' | 'message'>
+    | undefined;
+
+  if (
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+  ) {
+    sddDecision = dependencies.evaluateSddForStage(
+      params.policy.stage,
+      repoRoot
+    );
+    if (!sddDecision.allowed) {
+      console.log(`[pumuki][sdd] ${sddDecision.code}: ${sddDecision.message}`);
+      const emptyDetectedPlatforms: DetectedPlatforms = {};
+      const emptySkillsRuleSet: SkillsRuleSetLoadResult = {
+        rules: [],
+        activeBundles: [],
+        mappedHeuristicRuleIds: new Set<string>(),
+        requiresHeuristicFacts: false,
+      };
+      const emptyRuleSet: RuleSet = [];
+      dependencies.emitPlatformGateEvidence({
+        stage: params.policy.stage,
+        policyTrace: params.policyTrace,
+        findings: [toSddBlockingFinding(sddDecision)],
+        gateOutcome: 'BLOCK',
+        repoRoot,
+        detectedPlatforms: emptyDetectedPlatforms,
+        skillsRuleSet: emptySkillsRuleSet,
+        projectRules: emptyRuleSet,
+        heuristicRules: emptyRuleSet,
+        evidenceService: evidence,
+        sddDecision,
+      });
+      return 1;
+    }
+  }
 
   const facts = await dependencies.resolveFactsForGateScope({
     scope: params.scope,
@@ -78,6 +141,7 @@ export async function runPlatformGate(params: {
     projectRules,
     heuristicRules,
     evidenceService: evidence,
+    sddDecision,
   });
 
   if (decision.outcome === 'BLOCK') {

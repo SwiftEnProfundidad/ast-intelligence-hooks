@@ -30,7 +30,17 @@ type EvidenceShape = {
 const withStageRunnerRepo = async (
   callback: (repoRoot: string) => Promise<void>
 ): Promise<void> => {
-  await withTempRepo(callback, { tempPrefix: 'pumuki-stage-runner-' });
+  const previousBypass = process.env.PUMUKI_SDD_BYPASS;
+  process.env.PUMUKI_SDD_BYPASS = '1';
+  try {
+    await withTempRepo(callback, { tempPrefix: 'pumuki-stage-runner-' });
+  } finally {
+    if (typeof previousBypass === 'undefined') {
+      delete process.env.PUMUKI_SDD_BYPASS;
+    } else {
+      process.env.PUMUKI_SDD_BYPASS = previousBypass;
+    }
+  }
 };
 
 const readEvidence = (repoRoot: string): EvidenceShape => {

@@ -93,6 +93,15 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
       INFO: 0,
     },
   },
+  sdd_metrics: {
+    enforced: true,
+    stage: 'PRE_PUSH',
+    decision: {
+      allowed: true,
+      code: 'ALLOWED',
+      message: 'sdd policy passed',
+    },
+  },
 });
 
 test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', async () => {
@@ -137,6 +146,15 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
           ['z.rule', 'FileContent', 'git:staged'],
         ]
       );
+      assert.deepEqual(written.sdd_metrics, {
+        enforced: true,
+        stage: 'PRE_PUSH',
+        decision: {
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'sdd policy passed',
+        },
+      });
     });
   });
 });

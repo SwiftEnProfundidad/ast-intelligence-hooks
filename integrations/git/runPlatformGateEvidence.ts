@@ -9,6 +9,7 @@ import type { ResolvedStagePolicy } from '../gate/stagePolicies';
 import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { buildBaselineRuleSetEntries } from './baselineRuleSets';
 import type { IEvidenceService } from './EvidenceService';
+import type { SddDecision } from '../sdd';
 
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
@@ -29,6 +30,7 @@ export const emitPlatformGateEvidence = (params: {
   projectRules: RuleSet;
   heuristicRules: RuleSet;
   evidenceService: IEvidenceService;
+  sddDecision?: Pick<SddDecision, 'allowed' | 'code' | 'message'>;
 }, dependencies: Partial<PlatformGateEvidenceDependencies> = {}): void => {
   const activeDependencies: PlatformGateEvidenceDependencies = {
     ...defaultDependencies,
@@ -50,5 +52,16 @@ export const emitPlatformGateEvidence = (params: {
       policyTrace: params.policyTrace,
       stage: params.stage,
     }),
+    sddMetrics: params.sddDecision
+      ? {
+        enforced: true,
+        stage: params.stage,
+        decision: {
+          allowed: params.sddDecision.allowed,
+          code: params.sddDecision.code,
+          message: params.sddDecision.message,
+        },
+      }
+      : undefined,
   });
 };

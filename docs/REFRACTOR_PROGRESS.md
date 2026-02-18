@@ -295,7 +295,43 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar UX operativa del menú en consumidor (checklist 9.1): `npx pumuki-framework` abrió correctamente, ejecutó acción `7` (`Show active skills bundles`) y cerró con `27` (`Exit`) con código `0` (sin depender de script `npm run framework:menu` en el mock).
 - ✅ Revalidar explícitamente en entorno mock-only (copia temporal de `pumuki-mock-consumer`) el bloque operativo `lifecycle + pumuki:matrix + framework:menu + MCP` sin ejecutar pruebas de runtime en el repo framework.
 - ✅ Simplificar `framework:menu` a modo `Consumer` por defecto con cambio explícito a `Advanced` (`A`/`C`) y ayuda breve por opción, revalidado en entorno mock-only con paquete local (`npm pack` + instalación en copia temporal de `pumuki-mock-consumer`).
-- 🚧 Iniciar validación de acciones de reportes del menú para confirmar generación de archivos en rutas esperadas (checklist 9.3).
+- ✅ Auditar preflight legacy vs refactor actual: confirmado que el legacy incluía fail-closed previo a escritura (`pre-tool-use-guard` + `pre-tool-use-evidence-validator` con bloqueo por `ai_gate=BLOCKED`, evidencia stale o inválida), mientras el core actual bloquea principalmente en hooks Git (`PRE_COMMIT/PRE_PUSH/CI`).
+- ✅ Crear roadmap de ejecución OpenSpec+SDD en `docs/PUMUKI_OPENSPEC_SDD_ROADMAP.md` con fases y tareas en formato de estado (`✅/🚧/⏳`) y una única tarea activa.
+- ✅ Implementar Fase 1 del roadmap OpenSpec+SDD en Pumuki (`integrations/sdd`: cliente OpenSpec + policy + sesión SDD) incluyendo comandos `pumuki sdd status|validate|session`, contrato JSON y persistencia de sesión por repositorio.
+- ✅ Integrar Fase 2 del roadmap OpenSpec+SDD en Pumuki: enforcement bloqueante del gate SDD en `PRE_COMMIT`.
+- ✅ Integrar Fase 2 del roadmap OpenSpec+SDD en Pumuki: enforcement bloqueante del gate SDD en `PRE_PUSH`.
+- ✅ Integrar Fase 2 del roadmap OpenSpec+SDD en Pumuki: enforcement bloqueante del gate SDD en `CI`.
+- ✅ Integrar Fase 2 del roadmap OpenSpec+SDD en Pumuki: enforcement ligero SDD en `PRE_WRITE` y binario dedicado `pumuki-pre-write`.
+- ✅ Integrar Fase 2 del roadmap OpenSpec+SDD en Pumuki: bypass de emergencia auditado para SDD (`PUMUKI_SDD_BYPASS=1`).
+- ✅ Implementar Fase 3 del roadmap OpenSpec+SDD en Pumuki: auto-bootstrap de OpenSpec en `pumuki install` (instalación `@fission-ai/openspec` + scaffold `openspec/` cuando falta).
+- ✅ Implementar Fase 3 del roadmap OpenSpec+SDD en Pumuki: compat/migración OpenSpec en `pumuki update` (migración automática de paquete legacy `openspec` a `@fission-ai/openspec` respetando `dependencies/devDependencies`).
+- ✅ Implementar Fase 3 del roadmap OpenSpec+SDD en Pumuki: limpieza segura OpenSpec en `pumuki uninstall/remove` (solo artefactos gestionados por Pumuki y nunca trackeados por el repo).
+- ✅ Implementar Fase 3 del roadmap OpenSpec+SDD en Pumuki: matriz de compatibilidad de versión mínima de OpenSpec con validación explícita en lifecycle/policy.
+- ✅ Implementar Fase 4 del roadmap OpenSpec+SDD en Pumuki: crear `pumuki-mcp-enterprise` como base de MCP enterprise con guardrails (binario dedicado + server base `/health` y `/status`).
+- ✅ Implementar Fase 4 del roadmap OpenSpec+SDD en Pumuki: exponer recursos enterprise (`evidence://status`, `gitflow://state`, `context://active`, `sdd://status`, `sdd://active-change`) sobre MCP enterprise.
+- ✅ Implementar Fase 4 del roadmap OpenSpec+SDD en Pumuki: exponer tools legacy-style seguras (`ai_gate_check`, `check_sdd_status`, `validate_and_fix`, `sync_branches`, `cleanup_stale_branches`) mediante catálogo `/tools` e invocación segura `/tool`.
+- ✅ Implementar Fase 4 del roadmap OpenSpec+SDD en Pumuki: aplicar `dry-run` forzado por defecto en tools mutating (`validate_and_fix`, `sync_branches`, `cleanup_stale_branches`) para baseline enterprise fail-safe.
+- ✅ Implementar Fase 4 del roadmap OpenSpec+SDD en Pumuki: enforzar gate/session para tools críticas del MCP enterprise (bloqueo fail-closed en `/tool` con decisión SDD cuando `validate_and_fix`, `sync_branches` o `cleanup_stale_branches` no cumplen policy/session).
+- ✅ Implementar Fase 5 del roadmap OpenSpec+SDD en Pumuki: añadir `sdd_metrics` en `.ai_evidence.json` para trazabilidad explícita de enforcement SDD por stage.
+- ✅ Implementar Fase 5 del roadmap OpenSpec+SDD en Pumuki: añadir findings con `source: "sdd-policy"` en bloqueos SDD para trazabilidad end-to-end del motivo de rechazo.
+- ✅ Implementar Fase 5 del roadmap OpenSpec+SDD en Pumuki: garantizar orden determinista de payload/evidencia con nuevos campos SDD (`sdd_metrics` + finding `sdd-policy`) para evitar drift entre ejecuciones equivalentes (deduplicación canónica estable de findings independiente del orden de entrada).
+- ✅ Implementar Fase 5 del roadmap OpenSpec+SDD en Pumuki: añadir tests de contrato de esquema SDD + evidencia para blindar compatibilidad de payload (incluyendo `sdd_metrics` y findings `source: "sdd-policy"` en `schema/read/generate`).
+- ✅ Implementar Fase 6 del roadmap OpenSpec+SDD en Pumuki: ampliar tests unitarios `integrations/sdd/*` para cubrir escenarios de compatibilidad y session lifecycle sin regressions.
+- ✅ Implementar Fase 6 del roadmap OpenSpec+SDD en Pumuki: ampliar tests unitarios/integración `integrations/mcp-enterprise/*` para cubrir recursos/tools legacy-style y guardrails SDD.
+- ✅ Implementar Fase 6 del roadmap OpenSpec+SDD en Pumuki: reforzar tests lifecycle (`install/update/remove`) con OpenSpec bootstrap para garantizar no-regresión de setup/migración/cleanup.
+- ✅ Implementar Fase 6 del roadmap OpenSpec+SDD en Pumuki: revalidar `test:deterministic` y nuevas suites OpenSpec+SDD para cierre técnico sin regresiones.
+- ✅ Implementar Fase 7 del roadmap OpenSpec+SDD en Pumuki: actualizar `README.md` para reflejar SDD obligatorio con OpenSpec, comandos reales y guardrails enterprise.
+- ✅ Implementar Fase 7 del roadmap OpenSpec+SDD en Pumuki: actualizar `docs/USAGE.md` para alinear flujo diario SDD/OpenSpec, comandos `pumuki sdd` y guardrails por stage.
+- ✅ Implementar Fase 7 del roadmap OpenSpec+SDD en Pumuki: actualizar `docs/INSTALLATION.md` para cubrir bootstrap/migración OpenSpec y flujo SDD obligatorio por entorno.
+- ✅ Implementar Fase 7 del roadmap OpenSpec+SDD en Pumuki: actualizar `docs/MCP_SERVERS.md` para documentar MCP enterprise (`pumuki-mcp-enterprise`) con recursos/tools, guardrails SDD y modo `dry-run` forzado.
+- ✅ Implementar Fase 7 del roadmap OpenSpec+SDD en Pumuki: actualizar `CHANGELOG.md` y preparar release notes del lote OpenSpec+SDD+MCP enterprise.
+- ✅ Iniciar validación de acciones de reportes del menú para confirmar generación de archivos en rutas esperadas (checklist 9.3): validado en copia temporal de `pumuki-mock-consumer` con `npx pumuki-framework` (`A -> 9 -> 16 -> 22 -> 27`) y generación correcta de `.audit-reports/adapter/adapter-session-status.md`, `.audit-reports/adapter/adapter-real-session-report.md` y `.audit-reports/adapter/adapter-readiness.md`.
+- ✅ Corregir resolución de scripts de reportes del framework menu para repos consumidor: fallback de `scripts/*` ahora soporta `cwd` del consumidor y root del paquete instalado (`node_modules/pumuki`), eliminando el fallo "Could not find scripts/...".
+- ✅ Alinear baseline documental de tests con el estado real del repositorio: `scripts/__tests__/root-docs-baseline.test.ts` y `scripts/__tests__/docs-index-coverage.test.ts` ahora incluyen `PUMUKI.md`, y `docs/README.md` indexa `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` + `docs/PUMUKI_OPENSPEC_SDD_ROADMAP.md`.
+- ✅ Aislar `integrations/git/__tests__/stageRunners.test.ts` del gate SDD obligatorio mediante bypass de test (`PUMUKI_SDD_BYPASS=1`) para que la suite valide stage policies sin dependencia de OpenSpec/session.
+- ✅ Limpiar worktree con commits atómicos — commit 1/4 aplicado (`integrations/sdd` + enforcement `runPlatformGate*` + evidencia SDD y tests asociados).
+- 🚧 Limpiar worktree con commits atómicos — commit 2/4 (lifecycle OpenSpec: bootstrap/migración/cleanup y tests).
+- ⏳ Ejecutar checklist 10.2: validar `npm run test` del framework para cierre de bloque determinista.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

@@ -76,6 +76,11 @@ test('runPlatformGate permite inyectar dependencias internas sin monkey patch gl
   let printedFindings = false;
 
   const dependencies: Partial<GateDependencies> = {
+    evaluateSddForStage: () => ({
+      allowed: true,
+      code: 'ALLOWED',
+      message: 'ok',
+    }),
     resolveFactsForGateScope: async (params) => {
       resolvedScope = params.scope as typeof scope;
       return facts;

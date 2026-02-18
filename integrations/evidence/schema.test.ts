@@ -81,6 +81,87 @@ test('AiEvidenceV2_1 soporta snapshot/ledger/platforms/rulesets con contrato 2.1
   assert.equal(evidence.ai_gate.violations[0]?.level, 'ERROR');
 });
 
+test('AiEvidenceV2_1 soporta contrato SDD en evidencia (sdd_metrics + source sdd-policy)', () => {
+  const evidence: AiEvidenceV2_1 = {
+    version: '2.1',
+    timestamp: '2026-02-18T10:00:00.000Z',
+    snapshot: {
+      stage: 'PRE_PUSH',
+      outcome: 'BLOCK',
+      findings: [
+        sampleFinding({
+          ruleId: 'sdd.policy.blocked',
+          severity: 'ERROR',
+          code: 'SDD_VALIDATION_FAILED',
+          message: 'OpenSpec validation failed',
+          file: 'openspec/changes',
+          lines: undefined,
+          matchedBy: 'SddPolicy',
+          source: 'sdd-policy',
+        }),
+      ],
+    },
+    ledger: [
+      {
+        ruleId: 'sdd.policy.blocked',
+        file: 'openspec/changes',
+        firstSeen: '2026-02-18T09:58:00.000Z',
+        lastSeen: '2026-02-18T10:00:00.000Z',
+      },
+    ],
+    platforms: {},
+    rulesets: [{ platform: 'policy', bundle: 'gate-policy.default.PRE_PUSH', hash: 'hash-policy' }],
+    human_intent: null,
+    ai_gate: {
+      status: 'BLOCKED',
+      violations: [
+        sampleViolation({
+          ruleId: 'sdd.policy.blocked',
+          code: 'SDD_VALIDATION_FAILED',
+          message: 'OpenSpec validation failed',
+          file: 'openspec/changes',
+          lines: undefined,
+          matchedBy: 'SddPolicy',
+          source: 'sdd-policy',
+        }),
+      ],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'BLOCKED',
+      total_violations: 1,
+      by_severity: {
+        INFO: 0,
+        WARN: 0,
+        ERROR: 1,
+        CRITICAL: 0,
+      },
+    },
+    sdd_metrics: {
+      enforced: true,
+      stage: 'PRE_PUSH',
+      decision: {
+        allowed: false,
+        code: 'SDD_VALIDATION_FAILED',
+        message: 'OpenSpec validation failed',
+      },
+    },
+  };
+
+  assert.equal(evidence.snapshot.findings[0]?.source, 'sdd-policy');
+  assert.equal(evidence.snapshot.findings[0]?.matchedBy, 'SddPolicy');
+  assert.equal(evidence.ai_gate.violations[0]?.source, 'sdd-policy');
+  assert.deepEqual(evidence.sdd_metrics, {
+    enforced: true,
+    stage: 'PRE_PUSH',
+    decision: {
+      allowed: false,
+      code: 'SDD_VALIDATION_FAILED',
+      message: 'OpenSpec validation failed',
+    },
+  });
+});
+
 test('EvidenceLines acepta string, number y array numérico según contrato', () => {
   const stringLines = sampleFinding({ lines: 'L12-L14' });
   const numberLines = sampleFinding({ lines: 12 });

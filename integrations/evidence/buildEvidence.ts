@@ -11,6 +11,7 @@ import type {
   LedgerEntry,
   PlatformState,
   RulesetState,
+  SddMetrics,
   SnapshotFinding,
 } from './schema';
 import { resolveHumanIntent } from './humanIntent';
@@ -28,6 +29,7 @@ export type BuildEvidenceParams = {
   humanIntent?: HumanIntentState | null;
   detectedPlatforms: Record<string, PlatformState>;
   loadedRulesets: ReadonlyArray<RulesetState>;
+  sddMetrics?: SddMetrics;
 };
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
@@ -94,6 +96,30 @@ const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
     matchedBy: normalizeOptionalString(finding.matchedBy),
     source: normalizeOptionalString(finding.source),
   };
+};
+
+const pickDeterministicDuplicateFinding = (
+  current: SnapshotFinding,
+  candidate: SnapshotFinding
+): SnapshotFinding => {
+  const bySeverity = severityRank[candidate.severity] - severityRank[current.severity];
+  if (bySeverity > 0) {
+    return candidate;
+  }
+  if (bySeverity < 0) {
+    return current;
+  }
+
+  const tuple = (finding: SnapshotFinding): string => {
+    return [
+      finding.code,
+      finding.message,
+      finding.matchedBy ?? '',
+      finding.source ?? '',
+    ].join('\u0000');
+  };
+
+  return tuple(candidate).localeCompare(tuple(current)) < 0 ? candidate : current;
 };
 
 const severityRank: Record<Severity, number> = {
@@ -228,9 +254,11 @@ const normalizeAndDedupeFindings = (
   for (const finding of findings) {
     const normalized = normalizeFinding(finding);
     const key = findingKey(normalized);
-    if (!unique.has(key)) {
-      unique.set(key, normalized);
-    }
+    const current = unique.get(key);
+    unique.set(
+      key,
+      current ? pickDeterministicDuplicateFinding(current, normalized) : normalized
+    );
   }
   const deduped = Array.from(unique.values()).sort(compareFindingEntries);
   const consolidated = consolidateEquivalentFindings(deduped);
@@ -371,6 +399,17 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       total_violations: normalizedFindings.length,
       by_severity: severity,
     },
+    sdd_metrics: params.sddMetrics
+      ? {
+        enforced: params.sddMetrics.enforced,
+        stage: params.sddMetrics.stage,
+        decision: {
+          allowed: params.sddMetrics.decision.allowed,
+          code: params.sddMetrics.decision.code,
+          message: params.sddMetrics.decision.message,
+        },
+      }
+      : undefined,
     consolidation:
       consolidatedFindings.suppressed.length > 0
         ? { suppressed: consolidatedFindings.suppressed }

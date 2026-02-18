@@ -57,6 +57,67 @@ test('readEvidenceResult devuelve valid cuando el archivo tiene version 2.1', as
   });
 });
 
+test('readEvidenceResult preserva contrato SDD (sdd_metrics + source sdd-policy)', async () => {
+  await withTempDir('pumuki-read-evidence-sdd-contract-', async (tempRoot) => {
+    const evidence = sampleEvidence();
+    evidence.snapshot.stage = 'PRE_PUSH';
+    evidence.snapshot.outcome = 'BLOCK';
+    evidence.snapshot.findings = [
+      {
+        ruleId: 'sdd.policy.blocked',
+        severity: 'ERROR',
+        code: 'SDD_VALIDATION_FAILED',
+        message: 'OpenSpec validation failed',
+        file: 'openspec/changes',
+        matchedBy: 'SddPolicy',
+        source: 'sdd-policy',
+      },
+    ];
+    evidence.ledger = [
+      {
+        ruleId: 'sdd.policy.blocked',
+        file: 'openspec/changes',
+        firstSeen: '2026-02-18T10:00:00.000Z',
+        lastSeen: '2026-02-18T10:01:00.000Z',
+      },
+    ];
+    evidence.ai_gate.status = 'BLOCKED';
+    evidence.ai_gate.violations = [
+      {
+        ruleId: 'sdd.policy.blocked',
+        level: 'ERROR',
+        code: 'SDD_VALIDATION_FAILED',
+        message: 'OpenSpec validation failed',
+        file: 'openspec/changes',
+        matchedBy: 'SddPolicy',
+        source: 'sdd-policy',
+      },
+    ];
+    evidence.severity_metrics.gate_status = 'BLOCKED';
+    evidence.severity_metrics.total_violations = 1;
+    evidence.severity_metrics.by_severity.ERROR = 1;
+    evidence.sdd_metrics = {
+      enforced: true,
+      stage: 'PRE_PUSH',
+      decision: {
+        allowed: false,
+        code: 'SDD_VALIDATION_FAILED',
+        message: 'OpenSpec validation failed',
+      },
+    };
+
+    writeFileSync(join(tempRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const result = readEvidenceResult(tempRoot);
+    assert.equal(result.kind, 'valid');
+    if (result.kind === 'valid') {
+      assert.equal(result.evidence.snapshot.findings[0]?.source, 'sdd-policy');
+      assert.equal(result.evidence.ai_gate.violations[0]?.source, 'sdd-policy');
+      assert.deepEqual(result.evidence.sdd_metrics, evidence.sdd_metrics);
+    }
+  });
+});
+
 test('readEvidenceResult devuelve invalid y versión cuando el schema es de otra versión', async () => {
   await withTempDir('pumuki-read-evidence-invalid-version-', async (tempRoot) => {
     writeFileSync(

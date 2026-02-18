@@ -16,6 +16,15 @@ type GenerateEvidenceParams = {
   previousEvidence: unknown;
   detectedPlatforms: unknown;
   loadedRulesets: unknown;
+  sddMetrics?: {
+    enforced: boolean;
+    stage: string;
+    decision: {
+      allowed: boolean;
+      code: string;
+      message: string;
+    };
+  };
 };
 
 test('emitPlatformGateEvidence construye payload y delega en generateEvidence', () => {
@@ -79,6 +88,11 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
       projectRules,
       heuristicRules,
       evidenceService,
+      sddDecision: {
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'sdd ok',
+      },
     },
     {
       generateEvidence: (params: GenerateEvidenceParams) => {
@@ -113,4 +127,13 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
   assert.deepEqual(capturedGenerateEvidenceParams?.previousEvidence, previousEvidence);
   assert.deepEqual(capturedGenerateEvidenceParams?.detectedPlatforms, detectedPlatformsRecord);
   assert.deepEqual(capturedGenerateEvidenceParams?.loadedRulesets, rulesetState);
+  assert.deepEqual(capturedGenerateEvidenceParams?.sddMetrics, {
+    enforced: true,
+    stage: 'PRE_PUSH',
+    decision: {
+      allowed: true,
+      code: 'ALLOWED',
+      message: 'sdd ok',
+    },
+  });
 });

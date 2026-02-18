@@ -133,6 +133,94 @@ test('respects explicit gate outcome for stage-aware blocking decisions', () => 
   assert.equal(result.severity_metrics.gate_status, 'BLOCKED');
 });
 
+test('deduplicates equivalent findings deterministically regardless of input order', () => {
+  const baseFinding = {
+    ruleId: 'backend.no-console-log',
+    severity: 'ERROR' as const,
+    filePath: 'apps/backend/src/service.ts',
+    lines: [4, 7],
+  };
+
+  const firstRun = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ...baseFinding,
+        code: 'B_RULE',
+        message: 'second variant',
+        matchedBy: 'Heuristic',
+        source: 'heuristics:ast',
+      },
+      {
+        ...baseFinding,
+        code: 'A_RULE',
+        message: 'first variant',
+        matchedBy: 'FileContent',
+        source: 'git:staged',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  const secondRun = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ...baseFinding,
+        code: 'A_RULE',
+        message: 'first variant',
+        matchedBy: 'FileContent',
+        source: 'git:staged',
+      },
+      {
+        ...baseFinding,
+        code: 'B_RULE',
+        message: 'second variant',
+        matchedBy: 'Heuristic',
+        source: 'heuristics:ast',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(firstRun.snapshot.findings.length, 1);
+  assert.equal(secondRun.snapshot.findings.length, 1);
+  assert.deepEqual(firstRun.snapshot.findings, secondRun.snapshot.findings);
+  assert.equal(firstRun.snapshot.findings[0]?.code, 'A_RULE');
+  assert.equal(firstRun.snapshot.findings[0]?.source, 'git:staged');
+});
+
+test('persists sdd metrics for stage-level enforcement traceability', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    findings: [],
+    gateOutcome: 'PASS',
+    detectedPlatforms: {},
+    loadedRulesets: [],
+    sddMetrics: {
+      enforced: true,
+      stage: 'PRE_PUSH',
+      decision: {
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'sdd policy passed',
+      },
+    },
+  });
+
+  assert.deepEqual(result.sdd_metrics, {
+    enforced: true,
+    stage: 'PRE_PUSH',
+    decision: {
+      allowed: true,
+      code: 'ALLOWED',
+      message: 'sdd policy passed',
+    },
+  });
+});
+
 test('suppresses duplicated iOS heuristic findings shadowed by stronger baseline findings', () => {
   const result = buildEvidence({
     stage: 'PRE_PUSH',

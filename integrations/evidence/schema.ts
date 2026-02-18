@@ -67,6 +67,16 @@ export type CompatibilityViolation = {
   source?: string;
 };
 
+export type SddMetrics = {
+  enforced: boolean;
+  stage: GateStage;
+  decision: {
+    allowed: boolean;
+    code: string;
+    message: string;
+  };
+};
+
 export type ConsolidationSuppressedFinding = {
   ruleId: string;
   file: string;
@@ -95,6 +105,7 @@ export type AiEvidenceV2_1 = {
     total_violations: number;
     by_severity: Record<Severity, number>;
   };
+  sdd_metrics?: SddMetrics;
   consolidation?: {
     suppressed: ConsolidationSuppressedFinding[];
   };

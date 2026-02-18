@@ -100,9 +100,15 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
       projectRules: RuleSet;
       heuristicRules: RuleSet;
       evidenceService: IEvidenceService;
+      sddDecision?: {
+        allowed: boolean;
+        code: string;
+        message: string;
+      };
     }
     | undefined;
   let printedFindings: ReadonlyArray<Finding> | undefined;
+  let sddCheckCalled = false;
 
   const result = await runPlatformGate({
     policy,
@@ -131,6 +137,14 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
       printGateFindings: (gateFindings) => {
         printedFindings = gateFindings;
       },
+      evaluateSddForStage: () => {
+        sddCheckCalled = true;
+        return {
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        };
+      },
     },
   });
 
@@ -156,8 +170,14 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
     projectRules: evaluationResult.projectRules,
     heuristicRules: evaluationResult.heuristicRules,
     evidenceService: evidence,
+    sddDecision: {
+      allowed: true,
+      code: 'ALLOWED',
+      message: 'ok',
+    },
   });
   assert.deepEqual(printedFindings, findings);
+  assert.equal(sddCheckCalled, true);
 });
 
 test('runPlatformGate devuelve 0 y no imprime findings cuando evaluateGate retorna ALLOW', async () => {
@@ -185,6 +205,7 @@ test('runPlatformGate devuelve 0 y no imprime findings cuando evaluateGate retor
 
   let printCalled = false;
   let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+  let sddCheckCalled = false;
 
   const result = await runPlatformGate({
     policy,
@@ -203,10 +224,238 @@ test('runPlatformGate devuelve 0 y no imprime findings cuando evaluateGate retor
       printGateFindings: () => {
         printCalled = true;
       },
+      evaluateSddForStage: () => {
+        sddCheckCalled = true;
+        return {
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        };
+      },
     },
   });
 
   assert.equal(result, 0);
   assert.equal(printCalled, false);
   assert.equal(emittedOutcome, 'ALLOW');
+  assert.equal(sddCheckCalled, true);
+});
+
+test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'CRITICAL',
+    warnOnOrAbove: 'ERROR',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let resolveFactsCalled = false;
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      sddDecision?: {
+        allowed: boolean;
+        code: string;
+        message: string;
+      };
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: false,
+        code: 'SDD_SESSION_MISSING',
+        message: 'session missing',
+      }),
+      resolveFactsForGateScope: async () => {
+        resolveFactsCalled = true;
+        return [];
+      },
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = paramsArg;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(resolveFactsCalled, false);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.findings.length, 1);
+  assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
+  assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
+  assert.deepEqual(emittedArgs?.sddDecision, {
+    allowed: false,
+    code: 'SDD_SESSION_MISSING',
+    message: 'session missing',
+  });
+});
+
+test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_PUSH', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let resolveFactsCalled = false;
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      sddDecision?: {
+        allowed: boolean;
+        code: string;
+        message: string;
+      };
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: false,
+        code: 'SDD_VALIDATION_FAILED',
+        message: 'validate failed',
+      }),
+      resolveFactsForGateScope: async () => {
+        resolveFactsCalled = true;
+        return [];
+      },
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = paramsArg;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(resolveFactsCalled, false);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.findings.length, 1);
+  assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
+  assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
+  assert.deepEqual(emittedArgs?.sddDecision, {
+    allowed: false,
+    code: 'SDD_VALIDATION_FAILED',
+    message: 'validate failed',
+  });
+});
+
+test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
+  const policy: GatePolicy = {
+    stage: 'CI',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'range' as const, fromRef: 'origin/main', toRef: 'HEAD' };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let resolveFactsCalled = false;
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      sddDecision?: {
+        allowed: boolean;
+        code: string;
+        message: string;
+      };
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: false,
+        code: 'SDD_VALIDATION_FAILED',
+        message: 'ci validate failed',
+      }),
+      resolveFactsForGateScope: async () => {
+        resolveFactsCalled = true;
+        return [];
+      },
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = paramsArg;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(resolveFactsCalled, false);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.findings.length, 1);
+  assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
+  assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
+  assert.deepEqual(emittedArgs?.sddDecision, {
+    allowed: false,
+    code: 'SDD_VALIDATION_FAILED',
+    message: 'ci validate failed',
+  });
 });
