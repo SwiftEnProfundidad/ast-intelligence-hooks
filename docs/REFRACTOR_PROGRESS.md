@@ -352,7 +352,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar checklist 10.5: ejecutar `npm run test:mcp` de forma explícita y registrar resultado. Resultado: `exit 0` (`36` tests pass, `0` fail).
 - ✅ Continuar checklist 10.6: ejecutar `npm run test:stage-gates` de forma explícita y registrar resultado. Resultado: `exit 0` (`624` pass, `0` fail, `4` skipped).
 - ✅ Continuar checklist 10.7: ejecutar `npm run validation:package-manifest` y registrar resultado. Resultado: `exit 0` (`package manifest check passed`, `files scanned: 796`).
-- 🚧 Continuar checklist 10.8: ejecutar `npm run validation:lifecycle-smoke` y registrar resultado.
+- ✅ Continuar checklist 10.8: ejecutar `npm run validation:lifecycle-smoke` y registrar resultado. Resultado: fallo reproducible (`pumuki-pre-commit expected exit code 0, got 1`) en `scripts/package-install-smoke-gate-lib.ts` durante smoke minimal.
+- 🚧 Resolver bloqueo de checklist 10.8: corregir `validation:lifecycle-smoke` (exit esperado `0`) y revalidar.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
