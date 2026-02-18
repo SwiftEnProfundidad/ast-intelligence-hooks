@@ -88,6 +88,21 @@ Status:
   - `pass` (`npm run pumuki:matrix`) => `summary` present (`final_verdict=PASS`), `last-failure` absent
   - `fail` (`exit 17`) => `summary` absent, `last-failure` present again with `final_verdict=FAIL`
 
+## Fifth Atomic Task
+
+- Extend failure metadata in `artifacts/pumuki-matrix-last-failure.json` to include deterministic execution context for triage:
+  - `failure_step` (stable enum-like value),
+  - `failure_log_path` (when an internal step log exists),
+  - keep existing fields unchanged for backward compatibility.
+- Ensure the runner sets scenario-aware context when a failure happens after preflight (`scenario=<name>` + step), not only `preflight`.
+
+### Acceptance Criteria for Fifth Task
+
+1. Dirty-baseline fail-fast (`exit 17`) still reports `failure_phase=preflight`, includes deterministic `failure_step`, and keeps `final_verdict=FAIL`.
+2. A forced scenario failure path after preflight records scenario-aware failure context (`failure_phase=<scenario>` + deterministic `failure_step`).
+3. Existing consumers of `pumuki-matrix-last-failure.json` remain compatible (old keys still present; schema stable).
+4. Console output contract remains unchanged and summary artifact behavior from task 3/4 is preserved.
+
 ## Out of Scope (current round)
 
 - Changes to rule semantics.
