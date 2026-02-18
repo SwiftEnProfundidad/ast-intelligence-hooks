@@ -291,7 +291,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Validar arranque de `pumuki-mcp-evidence` desde repositorio consumidor (checklist 8.1): servidor iniciado en puerto temporal (`7391`) con `health` (`{\"status\":\"ok\"}`) y `status` accesibles.
 - ✅ Validar endpoints/facetas MCP con payload shape válido (checklist 8.2): `status`, `root`, `summary`, `snapshot`, `findings`, `rulesets`, `platforms` y `ledger` respondiendo con contrato JSON correcto.
 - ✅ Validar lectura determinista del último `.ai_evidence.json` vía MCP (checklist 8.3): lecturas consecutivas en `root`, `summary` y `findings` devolvieron hashes idénticos.
-- 🚧 Iniciar validación de comportamiento MCP cuando falta/corrompe evidencia (checklist 8.4).
+- ✅ Validar comportamiento MCP cuando falta/corrompe evidencia (checklist 8.4): `/status` en `degraded`, `evidence.present`/`valid` coherentes por caso (`missing` y `corrupt`), y endpoints de evidencia devolviendo `404`.
+- 🚧 Iniciar validación de UX operativa `framework:menu` (checklist 9.1).
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.

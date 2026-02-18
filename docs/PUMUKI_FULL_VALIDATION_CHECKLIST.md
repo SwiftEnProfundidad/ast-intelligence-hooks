@@ -105,11 +105,11 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 8.1 Arrancar `pumuki-mcp-evidence` desde contexto de repositorio consumidor.
 - ✅ 8.2 Validar endpoints/facetas MCP con payload shape válido.
 - ✅ 8.3 Validar lectura determinista del último `.ai_evidence.json`.
-- 🚧 8.4 Validar comportamiento cuando falta/corrompe evidencia.
+- ✅ 8.4 Validar comportamiento cuando falta/corrompe evidencia.
 
 ### 9) UX operativa (framework menu)
 
-- ⏳ 9.1 `npm run framework:menu` abre y ejecuta acciones esperadas.
+- 🚧 9.1 `npm run framework:menu` abre y ejecuta acciones esperadas.
 - ⏳ 9.2 Acciones mapeadas a lifecycle/gates producen salidas esperadas.
 - ⏳ 9.3 Acciones de reportes generan archivos en rutas esperadas.
 
