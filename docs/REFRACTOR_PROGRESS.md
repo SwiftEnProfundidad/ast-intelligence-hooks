@@ -8,7 +8,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ⏳ Pendiente
 
 ## Tareas Abiertas (Vista Rápida)
-- ⏳ Ver tarea activa (🚧) en “Cierre Finito del Siguiente Bloque (Core/Integrations sin test)”.
+- ⏳ Restan **10 archivos** del inventario original sin test directo; ver tarea activa (🚧) y plan finito en “Cierre Finito del Siguiente Bloque (Core/Integrations sin test)”.
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Corregir cumplimiento de documentación enterprise tras ejecución local de tests: indexar `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.md` en `docs/README.md` y normalizar su contenido a inglés para pasar `docs-index-coverage` + `enterprise-docs-language` (verificado OK con `npm test -- integrations/platform/__tests__/detectPlatforms.test.ts`).
@@ -77,8 +77,12 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Criterio de selección Batch 04: top impacto restante del inventario tras Batch 03 (score/loc/revDeps), foco en facetas+summary MCP aún sin test directo y límite operativo estricto de 3 archivos.
 - ✅ Añadir cobertura unitaria del Batch 04 y validar en local (avance: ✅ `integrations/mcp/evidencePayloadSummary.ts`, ✅ `integrations/mcp/evidenceFacets.ts`, ✅ `integrations/mcp/evidenceFacetsLedger.ts`).
 - ✅ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado (Batch 04 cerrado: 3/3 archivos con test directo y verificación local en verde).
-- 🚧 Seleccionar Batch 05 (máx. 3 archivos críticos restantes de `core/`/`integrations/`) y publicar criterio de cierre en este tracker.
-- ⏳ Añadir cobertura unitaria del Batch 05 y validar en local.
+- ✅ Seleccionar Batch 05 y publicar criterio de cierre (orden por score restante + límite operativo estricto de 3 archivos): `integrations/platform/detectFrontend.ts`, `integrations/platform/detectAndroid.ts`, `integrations/platform/detectBackend.ts`.
+- 🚧 Añadir cobertura unitaria del Batch 05 y validar en local.
+- ⏳ Añadir cobertura unitaria del Batch 06 y validar en local (`integrations/mcp/evidenceFacetsSuppressedShare.ts`, `integrations/git/index.ts`, `integrations/mcp/evidenceContextServer.cli.ts`).
+- ⏳ Añadir cobertura unitaria del Batch 07 y validar en local (`integrations/mcp/enterpriseServer.cli.ts`, `integrations/mcp/evidenceFacetsSnapshot.ts`, `integrations/mcp/evidenceFacetsBase.ts`).
+- ⏳ Añadir cobertura unitaria del Batch 08 y validar en local (`integrations/mcp/index.ts`).
+- ⏳ Cerrar bloque cuando el inventario restante llegue a **0/22** archivos sin test directo.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
