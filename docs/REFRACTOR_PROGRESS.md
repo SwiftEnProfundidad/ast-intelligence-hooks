@@ -350,7 +350,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Continuar checklist 10.3: ejecutar `npm run test:deterministic` y registrar resultado para cierre de validaciones deterministas. Resultado: `exit 0` (sub-suites `test:evidence`, `test:mcp`, `test:heuristics` en verde).
 - ✅ Continuar checklist 10.4: ejecutar `npm run test:heuristics` de forma explícita y registrar resultado. Resultado: `exit 0` (`8` tests pass, `0` fail).
 - ✅ Continuar checklist 10.5: ejecutar `npm run test:mcp` de forma explícita y registrar resultado. Resultado: `exit 0` (`36` tests pass, `0` fail).
-- 🚧 Continuar checklist 10.6: ejecutar `npm run test:stage-gates` de forma explícita y registrar resultado.
+- ✅ Continuar checklist 10.6: ejecutar `npm run test:stage-gates` de forma explícita y registrar resultado. Resultado: `exit 0` (`624` pass, `0` fail, `4` skipped).
+- 🚧 Continuar checklist 10.7: ejecutar `npm run validation:package-manifest` y registrar resultado.
 
 ## Notas
 - Estrategia obligatoria: commits atómicos por tarea.
