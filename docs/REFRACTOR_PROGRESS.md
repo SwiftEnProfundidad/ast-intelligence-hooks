@@ -57,6 +57,15 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `cd /Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer && npm install --save-exact pumuki@latest && npm audit && npm run pumuki:matrix`
   Checkpoint manual programado si no hay release:
   - `2026-02-26` (revisar `npm view pumuki version` y repetir comprobación de cadena).
+- ✅ Definir procedimiento operativo de checkpoint (pasos + criterio de salida) para evitar ambigüedad.
+  Pasos del checkpoint:
+  1. `npm view pumuki version` para registrar versión publicada.
+  2. `npm install --save-exact pumuki@latest` en `pumuki-mock-consumer`.
+  3. `npm ls pumuki glob minimatch --depth=2` para verificar cadena real instalada.
+  4. `npm audit --json` para confirmar severidades y `fixAvailable`.
+  5. `npm run pumuki:matrix` para validar que gates siguen estables.
+  Criterio de salida:
+  - cerrar tarea `🚧` solo si la cadena queda saneada y la matriz mantiene `PASS` en `clean/violations/mixed`.
 - 🚧 Esperar desbloqueo upstream y ejecutar revalidación completa en el mock cuando se cumpla la condición.
 
 ## Cierre Operativo Final de Cobertura
