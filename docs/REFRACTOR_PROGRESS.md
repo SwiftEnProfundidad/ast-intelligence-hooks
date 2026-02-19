@@ -42,7 +42,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C2-F4-T3` del ciclo 02: gaps/FP/FN registrados (sin FP/FN en run SDD-blocked; gaps operativos documentados sobre short-circuit y semántica `platforms` vs `rulesets_count`).
 - ✅ Ejecutar `C2-F5-T1` del ciclo 02: conclusiones y estado final consolidados (matriz/lifecycle/evidencia/MCP en estado estable dentro del alcance).
 - ✅ Ejecutar `C2-F5-T2` del ciclo 02: cierre administrativo reflejado en tracker global con consistencia documental ciclo/tracker.
-- 🚧 Tarea activa actual: ejecutar `C2-F5-T3` del ciclo 02 (definir siguiente tarea activa para ciclo 03 o mantenimiento).
+- ✅ Ejecutar `C2-F5-T3` del ciclo 02: siguiente tarea activa definida para ciclo 03 y cierre formal del ciclo 02.
+- 🚧 Tarea activa actual: ejecutar `C3-F0-T1` (crear `docs/PUMUKI_CYCLE_03_SDD_ACTIVE_VALIDATION.md` con alcance congelado para validación completa con sesión SDD activa).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
