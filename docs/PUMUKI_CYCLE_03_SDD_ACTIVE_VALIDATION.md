@@ -21,8 +21,26 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 
 ## Fase 0 — Arranque y Alcance
 - ✅ C3-F0-T1: Crear documento de ciclo 03 y alinear tracking global.
-- 🚧 C3-F0-T2: Congelar alcance del ciclo (entradas/salidas/límites/done) para SDD activo.
-- ⏳ C3-F0-T3: Publicar checkpoint único del ciclo 03 (comando + criterio de aceptación).
+- ✅ C3-F0-T2: Congelar alcance del ciclo (entradas/salidas/límites/done) para SDD activo.
+- 🚧 C3-F0-T3: Publicar checkpoint único del ciclo 03 (comando + criterio de aceptación).
+
+### Alcance Congelado (C3-F0-T2)
+- Entradas obligatorias:
+  - `ast-intelligence-hooks` en baseline limpia y rama operativa sincronizada.
+  - `pumuki-mock-consumer` disponible y limpio para ejecutar escenarios.
+  - sesión SDD activa y válida antes de evaluar gates de plataforma.
+- Salidas obligatorias:
+  - evidencia de ejecución con findings de plataforma en `.ai_evidence.json` (sin short-circuit SDD).
+  - validación MCP consistente sobre `status/summary/findings/rulesets/platforms/ledger`.
+  - cierre documental del ciclo 03 en este documento y `docs/REFRACTOR_PROGRESS.md`.
+- Límites (fuera de alcance del ciclo 03):
+  - cambios de arquitectura de Pumuki no necesarios para validación.
+  - añadir nuevos rule packs o cambiar semántica de reglas AST.
+  - depender de CI remota para declarar éxito del ciclo.
+- Definición exacta de done del ciclo 03:
+  - fases `C3-F0..C3-F4` en `✅` o bloqueo explícito documentado.
+  - una única tarea `🚧` visible en todo momento.
+  - evidencia final coherente entre consola, `.ai_evidence.json` y MCP.
 
 ## Fase 1 — Baseline SDD Activo en Mock
 - ⏳ C3-F1-T1: Verificar baseline limpia del mock consumer antes de abrir sesión SDD.

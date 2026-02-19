@@ -44,7 +44,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C2-F5-T2` del ciclo 02: cierre administrativo reflejado en tracker global con consistencia documental ciclo/tracker.
 - ✅ Ejecutar `C2-F5-T3` del ciclo 02: siguiente tarea activa definida para ciclo 03 y cierre formal del ciclo 02.
 - ✅ Ejecutar `C3-F0-T1`: crear `docs/PUMUKI_CYCLE_03_SDD_ACTIVE_VALIDATION.md` y alinear inicio del ciclo 03.
-- 🚧 Tarea activa actual: ejecutar `C3-F0-T2` (congelar alcance del ciclo 03 con entradas/salidas/límites/done en el nuevo documento).
+- ✅ Ejecutar `C3-F0-T2`: alcance del ciclo 03 congelado en `docs/PUMUKI_CYCLE_03_SDD_ACTIVE_VALIDATION.md` (entradas/salidas/límites/done).
+- 🚧 Tarea activa actual: ejecutar `C3-F0-T3` (publicar checkpoint único del ciclo 03 con comando y criterio de aceptación).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
