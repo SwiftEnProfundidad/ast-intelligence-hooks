@@ -62,7 +62,54 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C4-F0-T2`: alcance del ciclo 04 congelado en documento (`entradas/salidas/límites/done`) y transición controlada a siguiente tarea.
 - ✅ Ejecutar `C4-F0-T3`: checkpoint único del ciclo 04 publicado (comando reproducible + criterio de aceptación verificable).
 - ✅ Ejecutar `C4-F1-T1`: contrato de `evidence.exists` en MCP `/status` definido (booleano obligatorio, semántica por casos A/B/C y sin `null`).
-- 🚧 Tarea activa actual: ejecutar `C4-F1-T2` (implementar corrección runtime MCP para cumplir contrato sin romper payload).
+- ✅ Ejecutar `C4-F1-T2`: corrección runtime MCP aplicada (`evidence.exists` booleano y `findings_count` estable en estado degradado) con suites MCP focalizadas en verde.
+- ✅ Ejecutar `C4-F1-T3`: validación real en mock completada (`/health`, `/status`, `/ai-evidence/*` en `200`) y contrato de `status.evidence` confirmado (`exists/present/valid/findings_count`).
+- ✅ Ejecutar `C4-F2-T1`: criterio explícito de deduplicación base+skills definido (clave de colisión, precedencia, desempate determinista y preservación de trazabilidad en `consolidation.suppressed`).
+- ✅ Ejecutar `C4-F2-T2`: deduplicación runtime implementada con colisión semántica (`stage+platform+file+anchor+family`) y precedencia `project-rules > skills > platform-preset > heuristics`, preservando trazabilidad en `consolidation.suppressed`.
+- ✅ Ejecutar `C4-F2-T3`: paridad validada entre `.ai_evidence.json` y MCP en mock real (`findings/rulesets/platforms/suppressed` consistentes y `status.evidence.exists` booleano).
+- ✅ Ejecutar `C4-F3-T1`: contrato operativo `PRE_PUSH/CI` documentado con resolución determinista de rangos (`PRE_PUSH` fail-safe sin upstream; `CI` con orden de fallback explícito hasta `HEAD`).
+- ✅ Ejecutar `C4-F3-T2`: runbook/checklist ajustados para eliminar ambigüedad operativa en ejecución por rango (`PRE_PUSH` con upstream obligatorio y `CI` con base explícita en checklist estándar).
+- ✅ Ejecutar `C4-F3-T3`: patrón final validado en mock (clon temporal limpio) con `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, salida final `All scenario matrix checks passed for package: pumuki@latest`.
+- ✅ Ejecutar `C4-F4-T1`: conclusiones del ciclo 04 consolidadas (objetivo de hardening cumplido para MCP status, deduplicación y contrato de rangos con validación operativa final en mock).
+- ✅ Ejecutar `C4-F4-T2`: cierre administrativo del ciclo 04 reflejado en tracker global con alineación de estado entre documento de ciclo y tracker maestro.
+- ✅ Ejecutar `C4-F4-T3`: siguiente tarea activa definida y cierre formal del ciclo 04 (`C4-F0..C4-F4` en `✅`).
+- ✅ Ejecutar `C5-F0-T1`: crear `docs/PUMUKI_CYCLE_05_ENTERPRISE_OPERATIONS.md` con objetivo, alcance congelado inicial y backlog visible.
+- ✅ Ejecutar `C5-F0-T2`: checkpoint único del ciclo 05 publicado con comando reproducible y criterio de aceptación explícito para matriz mock.
+- ✅ Ejecutar `C5-F0-T3`: resultado del checkpoint registrado y activación de fase de implementación del ciclo 05 con trazabilidad al patrón validado en cierre de ciclo 04.
+- ✅ Ejecutar `C5-F1-T1`: contrato operativo mínimo de ejecución mock definido (preflight limpio, install, matrix con patrón esperado y closeout documental).
+- ✅ Ejecutar bloque 1 (`Baseline preflight`) del checklist operativo en `pumuki-mock-consumer`:
+  - `git status --short --branch` limpio en working tree.
+  - rama actual: `feat/pumuki-validation`.
+  - upstream no resoluble (`## ... [gone]`, `fatal: ambiguous argument '@{u}'`).
+- ✅ Intentar resolver upstream con `git push --set-upstream origin feat/pumuki-validation`:
+  - bloqueo externo detectado: `origin` inválido (`/tmp/pumuki-mock-consumer-remote.git` no existe como repo Git accesible).
+  - diagnóstico confirmado con `git remote -v`.
+- ✅ Resolver upstream en modo mock local (sin remoto): `feat/pumuki-validation` ahora trackea `main` local (`git branch --set-upstream-to=main feat/pumuki-validation`).
+- ✅ Re-ejecutar bloque 1 (`Baseline preflight`) y confirmar estado `PASS` con `@{u}` resoluble en entorno local:
+  - `git status --short --branch`: `## feat/pumuki-validation...main [ahead 28]` (working tree limpio).
+  - `git rev-parse --abbrev-ref HEAD`: `feat/pumuki-validation`.
+  - `git rev-parse --abbrev-ref --symbolic-full-name @{u}`: `main`.
+- ✅ Ejecutar `C5-F1-T2` (ajustar runbook/checklist para eliminar ambigüedad de pasos y salidas en operación mock):
+  - checklist actualizado con recuperación de upstream por modo (`local mock` vs `remote`).
+  - template de comandos único añadido (preflight/install/matrix).
+  - criterios de `PASS` por bloque y regla de corte obligatoria (`stop on first failure`) añadidos.
+- ✅ Ejecutar `C5-F1-T3` (verificar patrón operativo final en mock sin bucles):
+  - preflight verificado: `feat/pumuki-validation` con upstream `main`.
+  - `npm install --save-exact pumuki@latest` + `npx pumuki install` en verde.
+  - `npm run pumuki:matrix` en verde con contrato esperado:
+    - `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`
+    - `All scenario matrix checks passed for package: pumuki@latest`.
+- ✅ Ejecutar `C5-F2-T1` (consolidar conclusiones del ciclo 05):
+  - conclusiones del ciclo 05 consolidadas en `docs/PUMUKI_CYCLE_05_ENTERPRISE_OPERATIONS.md`.
+  - estado operativo final de ciclo documentado: runbook/checklist estable + patrón matrix confirmado.
+- ✅ Ejecutar `C5-F2-T2` (reflejar cierre administrativo en tracker global):
+  - cierre administrativo reflejado y alineado con `docs/PUMUKI_CYCLE_05_ENTERPRISE_OPERATIONS.md`.
+  - transición de fase de cierre aplicada manteniendo una sola tarea activa en progreso.
+- ✅ Ejecutar `C5-F2-T3` (definir siguiente tarea activa post-ciclo 05):
+  - siguiente tarea activa post-ciclo definida sin ampliar alcance funcional.
+  - cierre formal del ciclo 05 reflejado (`C5-F0..C5-F2` en `✅`).
+- ✅ Ejecutar cierre atómico de documentación del ciclo 05 (commit único de docs de ciclo/tracker/checklist).
+- 🚧 Tarea activa actual: ejecutar handoff final (push/PR) del cierre documental del ciclo 05.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
