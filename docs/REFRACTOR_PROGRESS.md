@@ -116,7 +116,10 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `scripts/__tests__/docs-index-coverage.test.ts`: indexadas en `docs/README.md` las páginas `docs/PUMUKI_CYCLE_02..05_*`.
   - `scripts/__tests__/enterprise-docs-language.test.ts`: añadidas `docs/PUMUKI_CYCLE_02..05_*` al allowlist de docs no-English.
   - revalidación: `npm test -- integrations/evidence/__tests__/buildEvidence.test.ts integrations/mcp/__tests__/evidencePayloadStatus.test.ts integrations/mcp/__tests__/evidencePayloads.test.ts integrations/mcp/__tests__/evidenceContextServer-health.test.ts integrations/mcp/__tests__/evidenceContextServer.test.ts` en verde.
-- 🚧 Tarea activa actual: cerrar lote técnico pendiente de MCP/evidence + documentación asociada con commit/push atómico final.
+- ✅ Cerrar lote técnico pendiente de MCP/evidence + documentación asociada con commit/push atómico final:
+  - commit publicado en `main`: `536cfca`.
+  - `origin/main` sincronizado y worktree local limpio.
+- 🚧 Tarea activa actual: esperar instrucción para apertura del siguiente ciclo (sin pendientes técnicos abiertos en este lote).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
