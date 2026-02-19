@@ -233,7 +233,18 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C13-T3-A5`: evidencia consolidada y transición a `C13-T4` completada (`run_id=pumuki-matrix-20260219T231355Z-17264`, `final_verdict=PASS`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `MATRIX_EXIT=0`, `MOCK_DRIFT=NO`).
 - ✅ Ejecutar `C13-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260219T232030Z-28000`, `final_verdict=PASS`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `MATRIX_EXIT=0`).
 - ✅ Ejecutar `C13-T5`: cierre de ciclo completado (trackers actualizados + commit/push atómico en `main`).
-- 🚧 Tarea activa actual: esperar instrucción explícita para apertura de `Cycle 14` (sin nuevas tareas en este lote).
+- ✅ Apertura de `Cycle 14` ejecutada por instrucción explícita del usuario:
+  - tracker creado en `docs/PUMUKI_CYCLE_14_SCOPE_TRACKER.md`.
+- ✅ Ejecutar `C14-T1`: alcance único del ciclo confirmado en `docs/PUMUKI_CYCLE_14_SCOPE_TRACKER.md` (`Validación end-to-end en pumuki-mock-consumer`).
+- ✅ Ejecutar `C14-T2`: criterio de salida verificable definido en `docs/PUMUKI_CYCLE_14_SCOPE_TRACKER.md` (comando único + salidas esperadas + exit code).
+- ✅ Ejecutar `C14-T3-A1`: preflight del mock completado (`pumuki-mock-consumer`: `feat/pumuki-validation`, upstream `main`, working tree limpio).
+- ✅ Ejecutar `C14-T3-A2`: comando único ejecutado y salida real capturada en mock (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final esperada presente, `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C14-T3-A3`: criterio verificado contra `artifacts/pumuki-matrix-summary.json` (`run_id=pumuki-matrix-20260219T232945Z-39378`, `package_spec=pumuki@latest`, `final_verdict=PASS`, `criteria_pass=true`).
+- ✅ Ejecutar `C14-T3-A4`: drift residual verificado en `pumuki-mock-consumer` (`git status --short --branch` sin cambios; baseline estable en `feat/pumuki-validation...main [ahead 28]`).
+- ✅ Ejecutar `C14-T3-A5`: evidencia final de implementación consolidada en `docs/PUMUKI_CYCLE_14_SCOPE_TRACKER.md` (ejecución en verde, verificación por artefacto y drift post-ejecución).
+- ✅ Ejecutar `C14-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260219T233504Z-48648`, `final_verdict=PASS`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C14-T5`: cierre del ciclo 14 consolidado (trackers actualizados y cierre preparado para commit/push atómico en `main`).
+- 🚧 Tarea activa actual: `C15-T1` abrir tracker de `Cycle 15` con alcance único y criterio verificable.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
