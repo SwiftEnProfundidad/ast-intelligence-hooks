@@ -21,7 +21,7 @@ Cerrar de forma finita los gaps no bloqueantes detectados en ciclo 03, mantenien
 ## Fase 0 — Arranque y Alcance
 - ✅ C4-F0-T1: Crear documento del ciclo 04 y alinear tracking global.
 - ✅ C4-F0-T2: Congelar alcance exacto del ciclo 04 (entradas/salidas/límites/done).
-- 🚧 C4-F0-T3: Publicar checkpoint único del ciclo 04 (comando + criterio de aceptación).
+- ✅ C4-F0-T3: Publicar checkpoint único del ciclo 04 (comando + criterio de aceptación).
 
 ### Resultado C4-F0-T1 (Documento Creado)
 - Documento creado: `docs/PUMUKI_CYCLE_04_GAP_HARDENING.md`.
@@ -49,8 +49,25 @@ Cerrar de forma finita los gaps no bloqueantes detectados en ciclo 03, mantenien
 - Alcance formalmente congelado en este documento con entradas/salidas/límites/done.
 - Se habilita `C4-F0-T3` como siguiente tarea activa única.
 
+### Checkpoint Único del Ciclo 04 (C4-F0-T3)
+- Fecha de checkpoint: `2026-02-27`.
+- Comando único de checkpoint:
+  - `cd /Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer && npm install --save-exact pumuki@latest && npx pumuki install && npm run pumuki:matrix`
+- Criterio de aceptación del checkpoint:
+  - matriz operativa estable:
+    - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0`
+    - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1`
+    - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1`
+  - salida final incluye `All scenario matrix checks passed`.
+  - sin aparición de `SDD_SESSION_MISSING` en ejecuciones con sesión SDD activa.
+  - el ciclo 04 mantiene una única tarea en progreso en tracker/doc.
+
+### Resultado C4-F0-T3 (Checkpoint Publicado)
+- Checkpoint único publicado con comando reproducible y criterio de aceptación explícito.
+- Se activa la fase de implementación técnica: `C4-F1-T1`.
+
 ## Fase 1 — MCP Status Consistency
-- ⏳ C4-F1-T1: Definir contrato esperado para `evidence.exists` en `/status`.
+- 🚧 C4-F1-T1: Definir contrato esperado para `evidence.exists` en `/status`.
 - ⏳ C4-F1-T2: Implementar corrección en runtime MCP sin romper payload existente.
 - ⏳ C4-F1-T3: Validar endpoint (`/health`, `/status`, `/ai-evidence/*`) en mock con evidencia real.
 
