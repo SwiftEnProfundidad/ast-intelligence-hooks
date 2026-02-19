@@ -198,9 +198,35 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - baseline del mock restaurada (`git restore package.json package-lock.json && npm install`) y repo limpio.
 
 ## Fase 4 — Evidencia y MCP
-- ⏳ C2-F4-T1: Verificar campos críticos de `.ai_evidence.json` contra resultados reales.
-- ⏳ C2-F4-T2: Validar consumo de evidencia vía MCP (facetas/resumen).
+- ✅ C2-F4-T1: Verificar campos críticos de `.ai_evidence.json` contra resultados reales.
+- 🚧 C2-F4-T2: Validar consumo de evidencia vía MCP (facetas/resumen).
 - ⏳ C2-F4-T3: Registrar gaps o falsos positivos/falsos negativos observados.
+
+### Resultado C2-F4-T1 (Campos Críticos de `.ai_evidence.json`)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Flujo ejecutado:
+  - `npm install --save-exact pumuki@6.3.15`
+  - `npx pumuki install`
+  - `npm run scenario:violations`
+  - `git add apps`
+  - `npx pumuki-pre-commit`
+- Resultado real del gate:
+  - consola: `[pumuki][sdd] SDD_SESSION_MISSING ...`
+  - exit code: `1`
+- Contraste de campos críticos:
+  - `version`: `2.1` ✅
+  - `snapshot.stage`: `PRE_COMMIT` ✅
+  - `snapshot.outcome`: `BLOCK` ✅
+  - `snapshot.findings[0].ruleId`: `sdd.policy.blocked` ✅
+  - `snapshot.findings[0].file`: `openspec/changes` ✅
+  - `snapshot.findings[0].severity`: `ERROR` ✅
+  - `ai_gate.status`: `BLOCKED` ✅
+  - `ai_gate.violations[0].code`: `SDD_SESSION_MISSING` ✅
+  - `sdd_metrics.enforced`: `true` ✅
+  - `sdd_metrics.decision.allowed`: `false` ✅
+  - `ledger` entradas: `1` ✅
+- Observación de consistencia:
+  - la evidencia refleja bloqueo temprano por política SDD, por eso `rulesets/platforms` aparecen vacíos en este run (comportamiento coherente con short-circuit previo a evaluación de reglas de plataforma).
 
 ## Fase 5 — Cierre del Ciclo
 - ⏳ C2-F5-T1: Consolidar conclusiones y estado final del ciclo.
