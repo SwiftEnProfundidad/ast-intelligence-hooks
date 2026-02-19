@@ -9,7 +9,13 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 
 ## Tareas Abiertas (Vista Rápida)
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
-- 🚧 Tarea activa actual: publicar cierre operativo final de la fase de cobertura y preparar siguiente ciclo de validación en repo mock (entrada única para evitar ambigüedad).
+- ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
+- 🚧 Tarea activa actual: preparar y ejecutar el siguiente ciclo de validación en `pumuki-mock-consumer` y consolidar evidencia final en este tracker.
+
+## Cierre Operativo Final de Cobertura
+- ✅ Inventario base de `core/` + `integrations/` cerrado en `0/22` con batches 01..08 completados.
+- ✅ Inventario incremental post-0/22 evaluado y cerrado en `0` (sin Batch 09 ejecutable).
+- ✅ Bloques finitos de cobertura cerrados en este repositorio; siguiente foco operativo movido al ciclo end-to-end en repo mock.
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Corregir cumplimiento de documentación enterprise tras ejecución local de tests: indexar `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.md` en `docs/README.md` y normalizar su contenido a inglés para pasar `docs-index-coverage` + `enterprise-docs-language` (verificado OK con `npm test -- integrations/platform/__tests__/detectPlatforms.test.ts`).
