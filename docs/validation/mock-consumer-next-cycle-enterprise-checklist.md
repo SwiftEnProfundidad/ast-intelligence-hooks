@@ -2,6 +2,8 @@
 
 Operational checklist for the next mock validation cycle after the post-release hardening closeout.
 
+Status: `Closed` (executed and consolidated in tracker/handoff for cycle 05).
+
 ## Legend
 
 - `✅` completed
@@ -16,7 +18,7 @@ Operational checklist for the next mock validation cycle after the post-release 
 
 ## Execution Sequence
 
-1. `⏳` Baseline preflight
+1. `✅` Baseline preflight
    - `git status --short --branch` must be clean.
    - Ensure branch is the expected validation branch.
    - PRE_PUSH precondition must be true:
@@ -28,13 +30,13 @@ Operational checklist for the next mock validation cycle after the post-release 
      - `git status --short` => empty
      - `git rev-parse --abbrev-ref HEAD` => expected branch
      - `git rev-parse --abbrev-ref --symbolic-full-name @{u}` => non-empty ref
-2. `⏳` Install target package version
+2. `✅` Install target package version
    - `npm install --save-exact pumuki@<version>`
    - `npx pumuki install`
    - Pass condition for block 2:
      - `npx pumuki install` exits `0`
      - hooks report as managed in output
-3. `⏳` Deterministic matrix run
+3. `✅` Deterministic matrix run
    - `npm run pumuki:matrix`
    - Expected:
     - `clean => 0/0/0`
@@ -43,7 +45,7 @@ Operational checklist for the next mock validation cycle after the post-release 
    - Pass condition for block 3:
      - process exit `0`
      - output contains `All scenario matrix checks passed`
-4. `⏳` Stage/evidence contract run (temp clone)
+4. `✅` Stage/evidence contract run (temp clone)
    - Use a temp clone of mock repo.
    - Open SDD session and run violations path for `PRE_COMMIT`, `PRE_PUSH`, `CI`.
    - Use explicit commands (no implicit range resolution):
@@ -52,7 +54,7 @@ Operational checklist for the next mock validation cycle after the post-release 
      - `GITHUB_BASE_REF=<base-branch> npx pumuki-ci`
    - Validate stage tag after each run:
      - `jq -r '.snapshot.stage + \" \" + .snapshot.outcome' .ai_evidence.json`
-5. `⏳` Ruleset bundle contract verification
+5. `✅` Ruleset bundle contract verification
    - Confirm stage outputs include:
      - `androidRuleSet@1.0.0`
      - `backendRuleSet@1.0.0`
@@ -60,7 +62,7 @@ Operational checklist for the next mock validation cycle after the post-release 
      - `iosEnterpriseRuleSet@1.0.0`
      - `project-rules`
      - `gate-policy.default.<stage>`
-6. `⏳` Closeout update
+6. `✅` Closeout update
    - Append command output summary to handoff pack.
    - Update tracker with `✅` for completed step and move `🚧` to the next item.
 

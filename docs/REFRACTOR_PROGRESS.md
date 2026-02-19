@@ -119,6 +119,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Cerrar lote técnico pendiente de MCP/evidence + documentación asociada con commit/push atómico final:
   - commit publicado en `main`: `536cfca`.
   - `origin/main` sincronizado y worktree local limpio.
+- ✅ Cerrar checklist operativo `docs/validation/mock-consumer-next-cycle-enterprise-checklist.md`:
+  - estado marcado como `Closed` y bloques `1..6` en `✅`.
 - ✅ Espera de apertura del siguiente ciclo registrada (sin pendientes técnicos abiertos en este lote).
 - 🚧 Tarea activa actual: ninguna tarea técnica en ejecución; estado de cierre final mantenido hasta nueva instrucción explícita de ciclo.
 
