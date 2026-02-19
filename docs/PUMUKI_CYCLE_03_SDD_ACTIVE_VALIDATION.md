@@ -99,9 +99,28 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
   - baseline operativa confirmada; se habilita fase de ejecución de gates por plataforma (`C3-F2-T1`).
 
 ## Fase 2 — Gates de Plataforma con SDD Activo
-- 🚧 C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
-- ⏳ C3-F2-T2: Ejecutar `scenario:violations` con SDD activo y validar detección multi-plataforma.
+- ✅ C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
+- 🚧 C3-F2-T2: Ejecutar `scenario:violations` con SDD activo y validar detección multi-plataforma.
 - ⏳ C3-F2-T3: Ejecutar `scenario:mixed` con SDD activo y validar severidades/outcomes esperados.
+
+### Resultado C3-F2-T1 (`scenario:clean` con SDD Activo)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Flujo ejecutado:
+  - `npm run scenario:clean`
+  - `git add apps`
+  - `npx pumuki-pre-commit`
+- Resultado del gate:
+  - `pre-commit-exit=0`.
+  - no aparece `SDD_SESSION_MISSING`.
+- Evidencia generada (`.ai_evidence.json`):
+  - `snapshot.stage=PRE_COMMIT`
+  - `snapshot.outcome=PASS`
+  - `findings_count=0`
+- Drift y control:
+  - durante la ejecución aparecieron untracked en `apps/backend/specs` y `apps/backend/src/domain/tests`.
+  - como el entorno bloquea limpieza destructiva, esos directorios se movieron a backup temporal:
+    - `/tmp/pumuki-mock-generated-backup-20260219-144621`
+  - estado final del mock controlado: sólo queda el drift esperado de sesión SDD (`openspec/changes/cycle-03-sdd-active-validation/`).
 
 ## Fase 3 — Evidencia + MCP (Cobertura Completa)
 - ⏳ C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
