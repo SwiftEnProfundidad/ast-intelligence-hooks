@@ -19,6 +19,11 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Esperar confirmación de cierre/merge y abrir PR final si aplica.
 - ✅ Monitorizar CI/review de la PR final y ejecutar merge cuando esté en verde.
 - ✅ Ejecutar limpieza post-merge segura (con backup tag + borrado de rama feature mergeada) sin pérdida de datos.
+- ✅ Sincronizar ramas local/remoto y normalizar a baseline de ramas operativas (`main` + `develop`) sin pérdida:
+  - `develop` creada/sincronizada desde `main` y publicada en remoto.
+  - rama remota extra `archive/refactor-fs-syncpart3-split-2026-02-15` eliminada tras backup tag:
+    - `backup/archive-refactor-fs-syncpart3-split-2026-02-15-20260219-110248` -> `7c4e4b78c7693987261e3caea1e4f53387c00033`.
+  - estado final de ramas remotas: `origin/main`, `origin/develop`.
 - 🚧 Tarea activa actual: esperar próxima instrucción para el siguiente ciclo (sin tareas técnicas pendientes de este cierre).
 
 ## Próximo Ciclo Mock (Definición Atómica)
