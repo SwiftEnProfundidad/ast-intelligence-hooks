@@ -162,9 +162,25 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
   - mock quedó en estado controlado con único drift esperado: `openspec/changes/cycle-03-sdd-active-validation/`.
 
 ## Fase 3 — Evidencia + MCP (Cobertura Completa)
-- 🚧 C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
-- ⏳ C3-F3-T2: Verificar MCP con facetas no vacías para plataformas/rulesets/findings.
+- ✅ C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
+- 🚧 C3-F3-T2: Verificar MCP con facetas no vacías para plataformas/rulesets/findings.
 - ⏳ C3-F3-T3: Registrar gaps, FP y FN observados con SDD activo.
+
+### Resultado C3-F3-T1 (Evidencia de Plataforma en `.ai_evidence.json`)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Evidencia analizada (snapshot final):
+  - `snapshot.stage=CI`
+  - `snapshot.outcome=BLOCK`
+  - `findings_count=24`
+- Verificación de foco (plataforma vs policy SDD):
+  - `methodology.sdd.session-required`: `0`.
+  - findings de plataforma (`android|backend|frontend|ios|skills.<platform>`): `24`.
+  - distribución por ruta de fichero:
+    - `backend=6`
+    - `ios=18`
+    - `android=0`, `web=0` en este snapshot `mixed`.
+- Conclusión:
+  - la evidencia no está dominada por policy SDD; contiene findings reales de plataformas y cumple el criterio de `C3-F3-T1`.
 
 ## Fase 4 — Cierre
 - ⏳ C3-F4-T1: Consolidar conclusiones del ciclo 03.

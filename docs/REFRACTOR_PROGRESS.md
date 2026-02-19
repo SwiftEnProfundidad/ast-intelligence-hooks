@@ -52,7 +52,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C3-F2-T1`: `scenario:clean` validado con SDD activo (`pre-commit=0`, `outcome=PASS`, `findings=0`) y drift de ejecución controlado con backup temporal no destructivo.
 - ✅ Ejecutar `C3-F2-T2`: `scenario:violations` validado con SDD activo (`pre-commit=1`, `outcome=BLOCK`, `findings=22`) con cobertura multi-plataforma (`android/backend/ios/web`) y sin short-circuit por `SDD_SESSION_MISSING`.
 - ✅ Ejecutar `C3-F2-T3`: `scenario:mixed` validado con SDD activo sobre rango real de commits (`pre-commit=1`, `pre-push=1`, `ci=1`, `outcome=BLOCK`, `findings=24`) y sin `SDD_SESSION_MISSING`.
-- 🚧 Tarea activa actual: ejecutar `C3-F3-T1` (verificar `.ai_evidence.json` con findings de plataforma, no solo policy SDD).
+- ✅ Ejecutar `C3-F3-T1`: evidencia `.ai_evidence.json` validada con findings de plataforma reales (snapshot `CI/BLOCK`, `findings=24`, `backend=6`, `ios=18`) y sin dependencia de `SDD_SESSION_MISSING` (`0`).
+- 🚧 Tarea activa actual: ejecutar `C3-F3-T2` (verificar MCP con facetas no vacías para plataformas/rulesets/findings).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
