@@ -99,8 +99,8 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 
 ## Fase 2 — Validación de Gates y Matriz
 - ✅ C2-F2-T1: Ejecutar validación por escenario (`clean`, `violations`, `mixed`) con salida trazable.
-- 🚧 C2-F2-T2: Verificar coherencia entre salida de consola y artefactos de evidencia.
-- ⏳ C2-F2-T3: Documentar diferencias respecto al baseline esperado.
+- ✅ C2-F2-T2: Verificar coherencia entre salida de consola y artefactos de evidencia.
+- 🚧 C2-F2-T3: Documentar diferencias respecto al baseline esperado.
 
 ### Resultado C2-F2-T1 (Matriz por Escenarios)
 - Repositorio ejecutado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -112,6 +112,20 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1` -> `PASS`.
   - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` -> `PASS`.
   - cierre: `All scenario matrix checks passed for package: pumuki@latest`.
+
+### Resultado C2-F2-T2 (Coherencia Consola vs Artefactos)
+- Artefacto verificado:
+  - `artifacts/pumuki-matrix-summary.json`
+- Coherencia confirmada:
+  - `final_verdict`: `PASS` (alineado con cierre de consola).
+  - `scenarios.clean`: `0/0/0` (alineado con consola).
+  - `scenarios.violations`: `1/1/1` (alineado con consola).
+  - `scenarios.mixed`: `1/1/1` (alineado con consola).
+  - `package_spec`: `pumuki@latest`.
+- Artefactos de fallo:
+  - `artifacts/pumuki-matrix-last-failure.json`: no generado.
+  - `artifacts/pumuki-matrix-last-failure.log`: no generado.
+  - estado consistente con ejecución exitosa (`PASS`).
 
 ## Fase 3 — Lifecycle Enterprise
 - ⏳ C2-F3-T1: Validar `install` y estado de hooks gestionados.
