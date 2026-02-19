@@ -10,7 +10,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 ## Tareas Abiertas (Vista Rápida)
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
 - ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
-- ⏳ Tarea activa actual: consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker (única tarea en 🚧).
+- ✅ Consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker.
+- ⏳ Tarea activa actual: ver sección “Riesgos Mock Pendientes” (única tarea en 🚧).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
@@ -25,7 +26,11 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` → `status: PASS`
   - cierre: `All scenario matrix checks passed for package: pumuki@latest`
   - runtime npm: `3 high severity vulnerabilities` reportadas por `npm audit` en mock consumer.
-- 🚧 Consolidar evidencia resultante en este tracker y cerrar el ciclo.
+- ✅ Consolidar evidencia resultante en este tracker y cerrar el ciclo.
+
+## Riesgos Mock Pendientes
+- 🚧 Ejecutar triage/remediación de `npm audit` en `pumuki-mock-consumer` (3 high) y documentar resultado final (fix aplicado o riesgo aceptado con justificación).
+- ⏳ Re-ejecutar `npm run pumuki:matrix` tras el triage de dependencias y registrar si cambia el comportamiento de gates.
 
 ## Cierre Operativo Final de Cobertura
 - ✅ Inventario base de `core/` + `integrations/` cerrado en `0/22` con batches 01..08 completados.
