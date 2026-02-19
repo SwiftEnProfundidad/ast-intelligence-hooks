@@ -109,7 +109,10 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - siguiente tarea activa post-ciclo definida sin ampliar alcance funcional.
   - cierre formal del ciclo 05 reflejado (`C5-F0..C5-F2` en `✅`).
 - ✅ Ejecutar cierre atómico de documentación del ciclo 05 (commit único de docs de ciclo/tracker/checklist).
-- 🚧 Tarea activa actual: ejecutar handoff final (push/PR) del cierre documental del ciclo 05.
+- ✅ Ejecutar handoff final (push/PR) del cierre documental del ciclo 05:
+  - commit de cierre documental publicado en `main`: `35b571c`.
+  - `origin/main` sincronizado con el cierre documental del ciclo 05.
+- 🚧 Tarea activa actual: esperar instrucción de apertura del siguiente ciclo (sin tareas técnicas pendientes del ciclo 05).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
