@@ -9,7 +9,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 
 ## Tareas Abiertas (Vista Rápida)
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
-- ⏳ Tarea activa actual: seleccionar Batch 09 (máx. 3 archivos) del inventario incremental post-0/22 en `core/` e `integrations/` y publicar criterio de cierre (ver “Próximo Bloque Finito (Post 0/22)”).
+- ⏳ Tarea activa actual: ver sección “Próximo Bloque Finito (Post 0/22)” (única tarea en 🚧).
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Corregir cumplimiento de documentación enterprise tras ejecución local de tests: indexar `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.md` en `docs/README.md` y normalizar su contenido a inglés para pasar `docs-index-coverage` + `enterprise-docs-language` (verificado OK con `npm test -- integrations/platform/__tests__/detectPlatforms.test.ts`).
@@ -87,10 +87,10 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Cerrar bloque cuando el inventario restante llegue a **0/22** archivos sin test directo.
 
 ## Próximo Bloque Finito (Post 0/22)
-- 🚧 Seleccionar Batch 09 (máx. 3 archivos) del inventario incremental post-0/22 en `core/` e `integrations/` y publicar criterio de cierre.
-- ⏳ Añadir cobertura unitaria del Batch 09 y validar en local.
-- ⏳ Actualizar tracker con resultado del Batch 09 y dejar Batch 10 como única tarea activa.
-- ⏳ Cerrar bloque post-0/22 cuando el inventario incremental planificado quede en 0.
+- ✅ Seleccionar Batch 09 (máx. 3 archivos) del inventario incremental post-0/22 en `core/` e `integrations/` y publicar criterio de cierre (resultado: inventario incremental refinado `TOTAL=0`, sin archivos elegibles para Batch 09).
+- ✅ Añadir cobertura unitaria del Batch 09 y validar en local (N/A: sin archivos elegibles en inventario incremental refinado).
+- ✅ Actualizar tracker con resultado del Batch 09 y dejar Batch 10 como única tarea activa (N/A: no se abre Batch 10 al no existir Batch 09 ejecutable).
+- 🚧 Cerrar bloque post-0/22 cuando el inventario incremental planificado quede en 0 (estado actual: `0`, pendiente cierre formal final del ciclo).
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
@@ -107,7 +107,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `consumer-support-bundle-gh-*`
   - `framework-menu-runners-validation-*`
   - `consumer-support-bundle-markdown-sections-*`
-- ⏳ Reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ✅ Reducir backlog de archivos sin test en `core/` e `integrations/` para criterio de cobertura directa (inventario incremental refinado actual: `0`).
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateOutput.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateFacts.ts`.
 - ✅ Añadir test unitario para `integrations/git/runPlatformGateEvidence.ts`.
