@@ -164,7 +164,7 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 ## Fase 3 — Evidencia + MCP (Cobertura Completa)
 - ✅ C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
 - ✅ C3-F3-T2: Verificar MCP con facetas no vacías para plataformas/rulesets/findings.
-- 🚧 C3-F3-T3: Registrar gaps, FP y FN observados con SDD activo.
+- ✅ C3-F3-T3: Registrar gaps, FP y FN observados con SDD activo.
 
 ### Resultado C3-F3-T1 (Evidencia de Plataforma en `.ai_evidence.json`)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -199,7 +199,21 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 - Conclusión:
   - facetas MCP críticas (`findings`, `rulesets`, `platforms`) no vacías y coherentes con la evidencia real del snapshot.
 
+### Resultado C3-F3-T3 (Gaps, FP y FN con SDD Activo)
+- Base analizada:
+  - escenario objetivo: `mixed` (contrato mock: violaciones en `backend + ios`, `android + web` limpios).
+  - evidencia activa: `snapshot.stage=CI`, `snapshot.outcome=BLOCK`, `findings=24`, `SDD_SESSION_MISSING=0`.
+  - distribución por plataforma (ruta de fichero): `backend=6`, `ios=18`, `android=0`, `web=0`.
+- FP observados:
+  - `0` FP de plataforma en este snapshot (no aparecen findings en `android/web` para `mixed`).
+- FN observados:
+  - `0` FN a nivel de cobertura de plataforma del escenario `mixed` (se detectan hallazgos en `backend/ios`).
+- Gaps observados:
+  - Gap operativo confirmado: `PRE_PUSH/CI` dependen de rango de commit real; sin commit temporal del escenario los exits pueden dar `0` por falta de delta evaluable.
+  - Gap de señal en MCP `/status`: campo `evidence.exists` aparece `null` en mock aun con evidencia válida (`valid=true`, `findings_count>0`); no bloquea el gate pero reduce claridad contractual.
+  - Gap de ruido potencial: coexistencia de reglas base + skills sobre el mismo patrón (ej. `backend.no-console-log` y `skills.backend.no-console-log`) incrementa volumen de findings; no se clasifica como FP, pero conviene evaluar estrategia de deduplicación/presentación.
+
 ## Fase 4 — Cierre
-- ⏳ C3-F4-T1: Consolidar conclusiones del ciclo 03.
+- 🚧 C3-F4-T1: Consolidar conclusiones del ciclo 03.
 - ⏳ C3-F4-T2: Actualizar tracker global con cierre administrativo ciclo 03.
 - ⏳ C3-F4-T3: Definir siguiente tarea activa (ciclo 04 o mantenimiento).
