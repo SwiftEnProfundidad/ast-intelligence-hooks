@@ -69,7 +69,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
 - ✅ Recuperar matriz determinista tras bloqueo OpenSpec en clone interno del runner (`scripts/run-pumuki-matrix.sh` en mock).
 - ✅ Normalizar baseline de `pumuki-mock-consumer` tras la ronda actual (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`).
-- ✅ Re-ejecuta r checklist operativo next-cycle completo en mock real con baseline limpia.
+- ✅ Re-ejecutar checklist operativo next-cycle completo en mock real con baseline limpia.
 - ✅ Actualizar handoff + tracker con cierre final de ronda y dejar siguiente tarea activa.
 - ✅ Preparar siguiente bloque post-release con alcance acotado (objetivo, criterios de aceptación y primer task atómico) para iniciar la próxima ronda sin ambigüedad.
 - ✅ Ejecutar primer task atómico de la nueva ronda: guardrail de baseline limpia en `scripts/run-pumuki-matrix.sh` del mock (fail-fast + guía explícita).
