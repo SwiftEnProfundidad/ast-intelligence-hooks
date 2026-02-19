@@ -56,8 +56,8 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 
 ## Fase 1 — Baseline SDD Activo en Mock
 - ✅ C3-F1-T1: Verificar baseline limpia del mock consumer antes de abrir sesión SDD.
-- 🚧 C3-F1-T2: Abrir sesión SDD válida y registrar contexto de cambio.
-- ⏳ C3-F1-T3: Confirmar baseline operativa con SDD activo (sin drift).
+- ✅ C3-F1-T2: Abrir sesión SDD válida y registrar contexto de cambio.
+- 🚧 C3-F1-T3: Confirmar baseline operativa con SDD activo (sin drift).
 
 ### Resultado C3-F1-T1 (Baseline Limpia Pre-SDD)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -69,6 +69,21 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
   - remote `origin`: `/tmp/pumuki-mock-consumer-remote.git`.
 - Conclusión:
   - baseline operativa lista para abrir sesión SDD (`C3-F1-T2`) sin drift previo.
+
+### Resultado C3-F1-T2 (Sesión SDD Abierta + Contexto de Cambio)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Contexto de cambio OpenSpec:
+  - comando: `npx openspec new change cycle-03-sdd-active-validation`
+  - ruta creada: `openspec/changes/cycle-03-sdd-active-validation/`.
+- Apertura de sesión SDD:
+  - comando: `npx pumuki sdd session --open --change=cycle-03-sdd-active-validation --json`
+  - resultado: `active=true`, `valid=true`, `ttlMinutes=45`.
+  - `changeId` activo: `cycle-03-sdd-active-validation`.
+- Verificación de estado:
+  - comando: `npx pumuki sdd status --json`
+  - resultado: `openspec.compatible=true` y sesión activa/válida.
+- Estado de working tree tras apertura:
+  - `?? openspec/changes/cycle-03-sdd-active-validation/` (drift esperado por creación del change para la sesión SDD).
 
 ## Fase 2 — Gates de Plataforma con SDD Activo
 - ⏳ C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
