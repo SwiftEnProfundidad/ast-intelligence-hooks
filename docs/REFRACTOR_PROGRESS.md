@@ -9,6 +9,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 
 ## Tareas Abiertas (Vista Rápida)
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
+- ⏳ Tarea activa actual: seleccionar Batch 09 (máx. 3 archivos) del inventario incremental post-0/22 en `core/` e `integrations/` y publicar criterio de cierre (ver “Próximo Bloque Finito (Post 0/22)”).
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Corregir cumplimiento de documentación enterprise tras ejecución local de tests: indexar `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.md` en `docs/README.md` y normalizar su contenido a inglés para pasar `docs-index-coverage` + `enterprise-docs-language` (verificado OK con `npm test -- integrations/platform/__tests__/detectPlatforms.test.ts`).
@@ -53,7 +54,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Reducir backlog sin test (slice MCP suppressed relations): añadir cobertura unitaria para `integrations/mcp/evidenceFacetsSuppressedRelations.ts`.
 - ✅ Reducir backlog sin test (slice MCP suppressed summary payload): añadir cobertura unitaria para `integrations/mcp/evidencePayloadSummarySuppressed.ts`.
 - ✅ Reducir backlog sin test (slice MCP collections core): añadir cobertura unitaria para `integrations/mcp/evidencePayloadCollections.ts`.
-- 🚧 Ejecutar siguiente bloque alto de refactor: reducir backlog de archivos sin test en `core/` e `integrations/`.
+- ✅ Definir alcance finito del siguiente bloque alto de refactor post-0/22 con tareas visibles y criterio de cierre explícito.
 
 ## Cierre Finito del Bloque Actual
 - ✅ Añadir cobertura unitaria directa para `integrations/mcp/evidenceFacetsSuppressedBase.ts`.
@@ -84,6 +85,12 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir cobertura unitaria del Batch 07 y validar en local (avance: ✅ `integrations/mcp/enterpriseServer.cli.ts`, ✅ `integrations/mcp/evidenceFacetsSnapshot.ts`, ✅ `integrations/mcp/evidenceFacetsBase.ts`).
 - ✅ Añadir cobertura unitaria del Batch 08 y validar en local (`integrations/mcp/index.ts`).
 - ✅ Cerrar bloque cuando el inventario restante llegue a **0/22** archivos sin test directo.
+
+## Próximo Bloque Finito (Post 0/22)
+- 🚧 Seleccionar Batch 09 (máx. 3 archivos) del inventario incremental post-0/22 en `core/` e `integrations/` y publicar criterio de cierre.
+- ⏳ Añadir cobertura unitaria del Batch 09 y validar en local.
+- ⏳ Actualizar tracker con resultado del Batch 09 y dejar Batch 10 como única tarea activa.
+- ⏳ Cerrar bloque post-0/22 cuando el inventario incremental planificado quede en 0.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
