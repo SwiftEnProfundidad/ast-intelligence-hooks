@@ -10,7 +10,12 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 ## Tareas Abiertas (Vista Rápida)
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
 - ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
-- 🚧 Tarea activa actual: preparar y ejecutar el siguiente ciclo de validación en `pumuki-mock-consumer` y consolidar evidencia final en este tracker.
+- ⏳ Tarea activa actual: ver “Próximo Ciclo Mock (Definición Atómica)” (única tarea en 🚧).
+
+## Próximo Ciclo Mock (Definición Atómica)
+- 🚧 Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
+- ⏳ Ejecutar comando de arranque en `pumuki-mock-consumer` y capturar salida real.
+- ⏳ Consolidar evidencia resultante en este tracker y cerrar el ciclo.
 
 ## Cierre Operativo Final de Cobertura
 - ✅ Inventario base de `core/` + `integrations/` cerrado en `0/22` con batches 01..08 completados.
