@@ -55,7 +55,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C3-F3-T1`: evidencia `.ai_evidence.json` validada con findings de plataforma reales (snapshot `CI/BLOCK`, `findings=24`, `backend=6`, `ios=18`) y sin dependencia de `SDD_SESSION_MISSING` (`0`).
 - ✅ Ejecutar `C3-F3-T2`: MCP `pumuki-mcp-evidence` validado en mock (`/health`, `/status`, `/ai-evidence/findings|rulesets|platforms`) con facetas no vacías (`24/10/2`) y payload coherente con evidencia activa.
 - ✅ Ejecutar `C3-F3-T3`: registro de gaps/FP/FN consolidado con SDD activo (FP=0, FN=0 por cobertura de plataforma en `mixed`; gaps operativos documentados en commit-range de `PRE_PUSH/CI`, señal `evidence.exists=null` y ruido por solape base+skills).
-- 🚧 Tarea activa actual: ejecutar `C3-F4-T1` (consolidar conclusiones del ciclo 03).
+- ✅ Ejecutar `C3-F4-T1`: conclusiones del ciclo 03 consolidadas (objetivo cumplido con SDD activo, coherencia evidencia+MCP, y gaps no bloqueantes documentados).
+- 🚧 Tarea activa actual: ejecutar `C3-F4-T2` (actualizar tracker global con cierre administrativo ciclo 03).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
