@@ -82,8 +82,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Cerrar Batch 05 (3/3 archivos con test directo y verificación local en verde).
 - ✅ Añadir cobertura unitaria del Batch 06 y validar en local (avance: ✅ `integrations/mcp/evidenceFacetsSuppressedShare.ts`, ✅ `integrations/git/index.ts`, ✅ `integrations/mcp/evidenceContextServer.cli.ts`).
 - ✅ Añadir cobertura unitaria del Batch 07 y validar en local (avance: ✅ `integrations/mcp/enterpriseServer.cli.ts`, ✅ `integrations/mcp/evidenceFacetsSnapshot.ts`, ✅ `integrations/mcp/evidenceFacetsBase.ts`).
-- 🚧 Añadir cobertura unitaria del Batch 08 y validar en local (`integrations/mcp/index.ts`).
-- ⏳ Cerrar bloque cuando el inventario restante llegue a **0/22** archivos sin test directo.
+- ✅ Añadir cobertura unitaria del Batch 08 y validar en local (`integrations/mcp/index.ts`).
+- 🚧 Cerrar bloque cuando el inventario restante llegue a **0/22** archivos sin test directo.
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
