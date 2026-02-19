@@ -67,9 +67,27 @@ Cerrar de forma finita los gaps no bloqueantes detectados en ciclo 03, mantenien
 - Se activa la fase de implementación técnica: `C4-F1-T1`.
 
 ## Fase 1 — MCP Status Consistency
-- 🚧 C4-F1-T1: Definir contrato esperado para `evidence.exists` en `/status`.
-- ⏳ C4-F1-T2: Implementar corrección en runtime MCP sin romper payload existente.
+- ✅ C4-F1-T1: Definir contrato esperado para `evidence.exists` en `/status`.
+- 🚧 C4-F1-T2: Implementar corrección en runtime MCP sin romper payload existente.
 - ⏳ C4-F1-T3: Validar endpoint (`/health`, `/status`, `/ai-evidence/*`) en mock con evidencia real.
+
+### Resultado C4-F1-T1 (Contrato `evidence.exists` Definido)
+- Endpoint objetivo: `GET /status` de `pumuki-mcp-evidence`.
+- Contrato normativo (`status.evidence`):
+  - `exists`: **booleano obligatorio** (`true|false`, nunca `null`).
+  - `valid`: **booleano obligatorio** (`true|false`, nunca `null`).
+  - `findings_count`: entero `>= 0`.
+- Reglas semánticas mínimas:
+  - Caso A — evidencia ausente:
+    - `exists=false`, `valid=false`, `findings_count=0`.
+  - Caso B — evidencia presente y válida:
+    - `exists=true`, `valid=true`, `findings_count>=0`.
+  - Caso C — evidencia presente pero inválida/no parseable:
+    - `exists=true`, `valid=false`, `findings_count=0`.
+- Restricción de compatibilidad:
+  - no romper shape actual de `/status`; solo eliminar ambigüedad (`exists=null`).
+- Criterio de salida para la tarea de implementación (`C4-F1-T2`):
+  - runtime devuelve `exists` booleano en todos los casos anteriores y mantiene estabilidad del resto del payload.
 
 ## Fase 2 — Noise Control (Base + Skills)
 - ⏳ C4-F2-T1: Definir criterio explícito de deduplicación/presentación de findings.

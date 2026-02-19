@@ -61,7 +61,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C4-F0-T1`: documento de ciclo 04 creado (`docs/PUMUKI_CYCLE_04_GAP_HARDENING.md`) con backlog visible y tareas atómicas por fase.
 - ✅ Ejecutar `C4-F0-T2`: alcance del ciclo 04 congelado en documento (`entradas/salidas/límites/done`) y transición controlada a siguiente tarea.
 - ✅ Ejecutar `C4-F0-T3`: checkpoint único del ciclo 04 publicado (comando reproducible + criterio de aceptación verificable).
-- 🚧 Tarea activa actual: ejecutar `C4-F1-T1` (definir contrato esperado para `evidence.exists` en MCP `/status`).
+- ✅ Ejecutar `C4-F1-T1`: contrato de `evidence.exists` en MCP `/status` definido (booleano obligatorio, semántica por casos A/B/C y sin `null`).
+- 🚧 Tarea activa actual: ejecutar `C4-F1-T2` (implementar corrección runtime MCP para cumplir contrato sin romper payload).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
