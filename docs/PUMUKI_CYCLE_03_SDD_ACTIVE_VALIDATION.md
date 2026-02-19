@@ -243,7 +243,8 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 ### Resultado C3-F4-T3 (Siguiente Tarea Activa Definida)
 - Decisión de continuidad: iniciar `ciclo 04` (no mantenimiento pasivo).
 - Siguiente tarea activa definida:
-  - `🚧 C4-F0-T1`: crear documento de ciclo 04 con alcance finito sobre los gaps no bloqueantes identificados en ciclo 03:
+  - `✅ C4-F0-T1`: documento creado (`docs/PUMUKI_CYCLE_04_GAP_HARDENING.md`).
+  - `🚧 C4-F0-T2`: congelar alcance exacto del ciclo 04 sobre los gaps no bloqueantes identificados en ciclo 03:
     - consistencia de señal MCP `/status` (`evidence.exists` no nulo cuando hay evidencia válida),
     - estrategia de reducción de ruido por solape reglas base + skills,
     - contrato operativo explícito para evaluación `PRE_PUSH/CI` basada en rango real de commits.

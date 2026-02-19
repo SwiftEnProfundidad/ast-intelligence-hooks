@@ -58,7 +58,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C3-F4-T1`: conclusiones del ciclo 03 consolidadas (objetivo cumplido con SDD activo, coherencia evidencia+MCP, y gaps no bloqueantes documentados).
 - ✅ Ejecutar `C3-F4-T2`: cierre administrativo del ciclo 03 reflejado en tracker global (trazabilidad completa, sin expansión de alcance y con una única tarea activa).
 - ✅ Ejecutar `C3-F4-T3`: siguiente tarea activa definida y cierre formal del ciclo 03 (`C3-F0..C3-F4` en `✅`).
-- 🚧 Tarea activa actual: ejecutar `C4-F0-T1` (crear documento del ciclo 04 con alcance finito para gaps no bloqueantes detectados en ciclo 03).
+- ✅ Ejecutar `C4-F0-T1`: documento de ciclo 04 creado (`docs/PUMUKI_CYCLE_04_GAP_HARDENING.md`) con backlog visible y tareas atómicas por fase.
+- 🚧 Tarea activa actual: ejecutar `C4-F0-T2` (congelar alcance exacto del ciclo 04: entradas/salidas/límites/done).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
