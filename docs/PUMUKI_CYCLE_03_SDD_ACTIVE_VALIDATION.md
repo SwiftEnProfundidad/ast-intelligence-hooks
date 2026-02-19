@@ -100,8 +100,8 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 
 ## Fase 2 — Gates de Plataforma con SDD Activo
 - ✅ C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
-- 🚧 C3-F2-T2: Ejecutar `scenario:violations` con SDD activo y validar detección multi-plataforma.
-- ⏳ C3-F2-T3: Ejecutar `scenario:mixed` con SDD activo y validar severidades/outcomes esperados.
+- ✅ C3-F2-T2: Ejecutar `scenario:violations` con SDD activo y validar detección multi-plataforma.
+- 🚧 C3-F2-T3: Ejecutar `scenario:mixed` con SDD activo y validar severidades/outcomes esperados.
 
 ### Resultado C3-F2-T1 (`scenario:clean` con SDD Activo)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -121,6 +121,27 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
   - como el entorno bloquea limpieza destructiva, esos directorios se movieron a backup temporal:
     - `/tmp/pumuki-mock-generated-backup-20260219-144621`
   - estado final del mock controlado: sólo queda el drift esperado de sesión SDD (`openspec/changes/cycle-03-sdd-active-validation/`).
+
+### Resultado C3-F2-T2 (`scenario:violations` con SDD Activo)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Ajuste operativo aplicado (controlado, no-bucle):
+  - como `apps` estaba alineado con `scenarios/violations` (`diff_count_violations=0`), se creó baseline temporal `clean` para generar delta real de validación.
+  - commit temporal local: `tmp: c3-f2-t2 clean baseline` (revertido al finalizar con `git reset --soft HEAD~1`).
+- Flujo ejecutado:
+  - `npm run scenario:clean` -> `git add apps` -> `npx pumuki-pre-commit` (`0`).
+  - `npm run scenario:violations` -> `git add apps` -> `npx pumuki-pre-commit` (`1`).
+- Resultado del gate (violations):
+  - `pre-commit-exit=1`.
+  - sin `SDD_SESSION_MISSING`.
+  - staged files: `14` archivos (`android/backend/ios/web` + specs/tests backend).
+- Evidencia (`.ai_evidence.json`):
+  - `snapshot.stage=PRE_COMMIT`
+  - `snapshot.outcome=BLOCK`
+  - `findings_count=22`
+  - breakdown por plataforma (ruta de fichero):
+    - `android=3`, `backend=11`, `ios=6`, `web=2`.
+- Estado final mock tras limpieza:
+  - quedó únicamente el drift esperado de sesión SDD (`openspec/changes/cycle-03-sdd-active-validation/`).
 
 ## Fase 3 — Evidencia + MCP (Cobertura Completa)
 - ⏳ C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
