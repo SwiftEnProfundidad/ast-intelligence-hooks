@@ -100,7 +100,7 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 ## Fase 2 — Validación de Gates y Matriz
 - ✅ C2-F2-T1: Ejecutar validación por escenario (`clean`, `violations`, `mixed`) con salida trazable.
 - ✅ C2-F2-T2: Verificar coherencia entre salida de consola y artefactos de evidencia.
-- 🚧 C2-F2-T3: Documentar diferencias respecto al baseline esperado.
+- ✅ C2-F2-T3: Documentar diferencias respecto al baseline esperado.
 
 ### Resultado C2-F2-T1 (Matriz por Escenarios)
 - Repositorio ejecutado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -127,8 +127,22 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - `artifacts/pumuki-matrix-last-failure.log`: no generado.
   - estado consistente con ejecución exitosa (`PASS`).
 
+### Resultado C2-F2-T3 (Diferencias vs Baseline Esperado)
+- Baseline esperado (definido en `C2-F0-T3`):
+  - `clean`: `0/0/0`
+  - `violations`: `1/1/1`
+  - `mixed`: `1/1/1`
+  - cierre con `All scenario matrix checks passed`
+- Observado en ejecución (`C2-F2-T1` + `C2-F2-T2`):
+  - `clean`: `0/0/0`
+  - `violations`: `1/1/1`
+  - `mixed`: `1/1/1`
+  - cierre con `All scenario matrix checks passed`
+- Diferencias detectadas:
+  - ninguna (baseline y observado coinciden 1:1).
+
 ## Fase 3 — Lifecycle Enterprise
-- ⏳ C2-F3-T1: Validar `install` y estado de hooks gestionados.
+- 🚧 C2-F3-T1: Validar `install` y estado de hooks gestionados.
 - ⏳ C2-F3-T2: Validar `update` y consistencia de versión/reportes.
 - ⏳ C2-F3-T3: Validar `remove` con limpieza estricta sin tocar terceros.
 
