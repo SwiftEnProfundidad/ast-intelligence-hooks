@@ -44,12 +44,15 @@ Checklist maestro para validar el ciclo completo de Pumuki de forma secuencial a
 - ✅ 2.1 Verificar metadata npm y dist-tags (`latest`, `next`) de la release objetivo.
 - ✅ 2.2 Instalar `pumuki` desde npm en repositorio consumidor limpio.
 - ✅ 2.3 Instalar hooks gestionados con `npx pumuki install` (validado en mock).
-- ⏳ 2.4 Verificar disponibilidad de todos los binarios publicados:
+- ✅ 2.4 Verificar disponibilidad de todos los binarios publicados:
   - `pumuki`
   - `pumuki-pre-commit`
   - `pumuki-pre-push`
   - `pumuki-ci`
   - `pumuki-mcp-evidence`
+  - evidencia (`npm view pumuki@latest version bin --json`):
+    - versión publicada: `6.3.15`
+    - binarios requeridos presentes y publicados.
 - ✅ 2.5 Verificar alineación `VERSION` + `package.json` + changelog/release notes.
 
 ### 3) Lifecycle de Pumuki

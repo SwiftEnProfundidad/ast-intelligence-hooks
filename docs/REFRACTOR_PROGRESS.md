@@ -121,8 +121,14 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - `origin/main` sincronizado y worktree local limpio.
 - ✅ Cerrar checklist operativo `docs/validation/mock-consumer-next-cycle-enterprise-checklist.md`:
   - estado marcado como `Closed` y bloques `1..6` en `✅`.
+- ✅ Cerrar pendiente `2.4` del checklist maestro:
+  - verificación de binarios publicados con `npm view pumuki@latest version bin --json`.
+  - binarios requeridos (`pumuki`, `pumuki-pre-commit`, `pumuki-pre-push`, `pumuki-ci`, `pumuki-mcp-evidence`) presentes en `6.3.15`.
+- ✅ Cerrar fase 8 del roadmap OpenSpec+SDD:
+  - checklist final de aceptación enterprise ejecutado/cerrado.
+  - evidencia de no regresión consolidada y documentada.
 - ✅ Espera de apertura del siguiente ciclo registrada (sin pendientes técnicos abiertos en este lote).
-- 🚧 Tarea activa actual: ninguna tarea técnica en ejecución; estado de cierre final mantenido hasta nueva instrucción explícita de ciclo.
+- 🚧 Tarea activa actual: ninguna tarea técnica en ejecución; repositorio en estado de cierre total hasta nueva instrucción explícita.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.

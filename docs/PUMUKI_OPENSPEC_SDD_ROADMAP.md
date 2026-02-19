@@ -51,5 +51,11 @@
 - ✅ Actualizar `CHANGELOG.md` y preparar release.
 
 ## Fase 8 — Cierre Operativo
-- 🚧 Ejecutar checklist final de aceptación enterprise.
-- ⏳ Cerrar fase con evidencia de no regresión.
+- ✅ Ejecutar checklist final de aceptación enterprise.
+- ✅ Cerrar fase con evidencia de no regresión.
+
+### Resultado de cierre Fase 8
+- Checklist final consolidado en `docs/PUMUKI_FULL_VALIDATION_CHECKLIST.md` con tareas en `✅`.
+- Evidencia de no regresión:
+  - suites de validación en verde en el bloque final (`npm test -- ...buildEvidence/evidencePayloadStatus/evidencePayloads/evidenceContextServer*`).
+  - matriz mock y contratos stage/evidence/MCP estabilizados en los ciclos operativos cerrados.
