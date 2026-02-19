@@ -13,7 +13,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker.
 - ✅ Cerrar bloqueo upstream de seguridad con release saneada de `pumuki` y revalidación de matriz en mock.
 - ✅ Preparar commit atómico de release `6.3.15` (dependencia saneada + tracker/changelog/version) y dejar worktree listo para handoff.
-- 🚧 Tarea activa actual: ejecutar checkpoint final en `pumuki-mock-consumer` real con baseline limpia y registrar cierre operativo definitivo.
+- ✅ Ejecutar checkpoint final en `pumuki-mock-consumer` real con baseline limpia y registrar cierre operativo definitivo.
+- 🚧 Tarea activa actual: consolidar cierre final del lote release/mock (hándoff operativo + commits listos para push en ambos repos).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
@@ -57,6 +58,11 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - verificación npm: `npm view pumuki version` => `6.3.15` (`latest`), `npm dist-tag ls pumuki` => `latest=6.3.15`.
   - verificación consumer limpio: `npm ls pumuki glob minimatch --depth=3` => sin `glob`; `minimatch@10.2.1` sólo vía `ts-morph`; `npm audit --omit=dev` => `0` vulnerabilidades.
   - revalidación matriz mock (clon limpio con baseline commit temporal): `npm run pumuki:matrix` => `clean(0/0/0)`, `violations(1/1/1)`, `mixed(1/1/1)`, `All scenario matrix checks passed`.
+- ✅ Checkpoint final ejecutado en mock real (`/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`) con baseline limpia:
+  - commit atómico aplicado: `2ed6f2b` (`chore(mock): bump pumuki to 6.3.15 for final checkpoint`).
+  - cadena instalada verificada: `pumuki@6.3.15` sin `glob`, `minimatch@10.2.1` vía `ts-morph`.
+  - seguridad: `npm audit --omit=dev` => `0` vulnerabilidades.
+  - matriz real: `clean(0/0/0)`, `violations(1/1/1)`, `mixed(1/1/1)`, `All scenario matrix checks passed for package: pumuki@latest`.
 - ✅ Definir condición de desbloqueo y protocolo de revalidación.
   Condición de desbloqueo (upstream):
   - publicación de `pumuki` con cadena saneada (`glob` > `10.5.0` y `minimatch` >= `10.2.1`).
