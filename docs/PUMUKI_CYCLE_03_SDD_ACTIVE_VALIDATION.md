@@ -22,7 +22,7 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 ## Fase 0 — Arranque y Alcance
 - ✅ C3-F0-T1: Crear documento de ciclo 03 y alinear tracking global.
 - ✅ C3-F0-T2: Congelar alcance del ciclo (entradas/salidas/límites/done) para SDD activo.
-- 🚧 C3-F0-T3: Publicar checkpoint único del ciclo 03 (comando + criterio de aceptación).
+- ✅ C3-F0-T3: Publicar checkpoint único del ciclo 03 (comando + criterio de aceptación).
 
 ### Alcance Congelado (C3-F0-T2)
 - Entradas obligatorias:
@@ -42,8 +42,20 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
   - una única tarea `🚧` visible en todo momento.
   - evidencia final coherente entre consola, `.ai_evidence.json` y MCP.
 
+### Checkpoint Único del Ciclo 03 (C3-F0-T3)
+- Fecha de checkpoint: `2026-02-27`.
+- Comando único de checkpoint:
+  - `cd /Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer && npm install --save-exact pumuki@latest && npx pumuki install && npx pumuki sdd session --open --change=cycle-03-sdd-active-checkpoint && npm run pumuki:matrix`
+- Criterio de aceptación del checkpoint:
+  - no aparece `SDD_SESSION_MISSING` en la ejecución.
+  - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0`.
+  - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1`.
+  - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1`.
+  - `.ai_evidence.json` contiene findings de plataforma (`apps/android|backend|ios|web`) en `violations`/`mixed`.
+  - salida final contiene `All scenario matrix checks passed`.
+
 ## Fase 1 — Baseline SDD Activo en Mock
-- ⏳ C3-F1-T1: Verificar baseline limpia del mock consumer antes de abrir sesión SDD.
+- 🚧 C3-F1-T1: Verificar baseline limpia del mock consumer antes de abrir sesión SDD.
 - ⏳ C3-F1-T2: Abrir sesión SDD válida y registrar contexto de cambio.
 - ⏳ C3-F1-T3: Confirmar baseline operativa con SDD activo (sin drift).
 
