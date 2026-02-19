@@ -98,9 +98,20 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - `npm latest`: `6.3.15`
 
 ## Fase 2 — Validación de Gates y Matriz
-- 🚧 C2-F2-T1: Ejecutar validación por escenario (`clean`, `violations`, `mixed`) con salida trazable.
-- ⏳ C2-F2-T2: Verificar coherencia entre salida de consola y artefactos de evidencia.
+- ✅ C2-F2-T1: Ejecutar validación por escenario (`clean`, `violations`, `mixed`) con salida trazable.
+- 🚧 C2-F2-T2: Verificar coherencia entre salida de consola y artefactos de evidencia.
 - ⏳ C2-F2-T3: Documentar diferencias respecto al baseline esperado.
+
+### Resultado C2-F2-T1 (Matriz por Escenarios)
+- Repositorio ejecutado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Estado previo: baseline limpia (`git status --short` sin cambios).
+- Ejecución:
+  - `npm run pumuki:matrix`
+- Resultado:
+  - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0` -> `PASS`.
+  - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1` -> `PASS`.
+  - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` -> `PASS`.
+  - cierre: `All scenario matrix checks passed for package: pumuki@latest`.
 
 ## Fase 3 — Lifecycle Enterprise
 - ⏳ C2-F3-T1: Validar `install` y estado de hooks gestionados.
