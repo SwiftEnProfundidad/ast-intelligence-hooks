@@ -199,8 +199,8 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 
 ## Fase 4 — Evidencia y MCP
 - ✅ C2-F4-T1: Verificar campos críticos de `.ai_evidence.json` contra resultados reales.
-- 🚧 C2-F4-T2: Validar consumo de evidencia vía MCP (facetas/resumen).
-- ⏳ C2-F4-T3: Registrar gaps o falsos positivos/falsos negativos observados.
+- ✅ C2-F4-T2: Validar consumo de evidencia vía MCP (facetas/resumen).
+- 🚧 C2-F4-T3: Registrar gaps o falsos positivos/falsos negativos observados.
 
 ### Resultado C2-F4-T1 (Campos Críticos de `.ai_evidence.json`)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -227,6 +227,24 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - `ledger` entradas: `1` ✅
 - Observación de consistencia:
   - la evidencia refleja bloqueo temprano por política SDD, por eso `rulesets/platforms` aparecen vacíos en este run (comportamiento coherente con short-circuit previo a evaluación de reglas de plataforma).
+
+### Resultado C2-F4-T2 (Consumo MCP Facetas/Resumen)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Runtime MCP:
+  - `npx --yes pumuki-mcp-evidence` en `127.0.0.1:7341`.
+  - endpoints consumidos: `/status`, `/ai-evidence/summary`, `/ai-evidence/rulesets`, `/ai-evidence/platforms`, `/ai-evidence/ledger`.
+- Verificación de contrato MCP (`/status`):
+  - `present=true`, `valid=true`, `version=2.1`.
+  - `stage=PRE_COMMIT`, `outcome=BLOCK`.
+  - `context_api.endpoints` contiene `/ai-evidence/summary` (`endpoint_count=9`).
+  - filtros disponibles para findings: `severity`, `ruleId`, `platform`, `limit`, `offset`, `maxLimit`.
+- Verificación de facetas (`summary` + colecciones):
+  - `summary`: `findings_count=1`, `blocking_findings_count=1`, `highest_severity=ERROR`, `rulesets_count=1`.
+  - `rulesets`: `total_count=1`, primer bundle `gate-policy.default.PRE_COMMIT` (plataforma `policy`).
+  - `platforms`: `total_count=0` (coherente con bloqueo SDD previo a detección de plataformas).
+  - `ledger`: `total_count=1`, primer registro `ruleId=sdd.policy.blocked`, `file=openspec/changes`.
+- Consistencia contra fuente:
+  - `.ai_evidence.json` mantiene `snapshot.stage=PRE_COMMIT`, `snapshot.outcome=BLOCK`, `findings=1`, `ruleId=sdd.policy.blocked`.
 
 ## Fase 5 — Cierre del Ciclo
 - ⏳ C2-F5-T1: Consolidar conclusiones y estado final del ciclo.

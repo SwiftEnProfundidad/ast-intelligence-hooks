@@ -38,7 +38,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C2-F3-T2` del ciclo 02: `update` validado en mock con `latest=6.3.15`, hooks estables y consistencia `status`/`npm ls`/`package-lock`.
 - ✅ Ejecutar `C2-F3-T3` del ciclo 02: `remove` validado con limpieza estricta de Pumuki (paquete/hooks/artefacto) y preservación de terceros (`dayjs`/`zod`).
 - ✅ Ejecutar `C2-F4-T1` del ciclo 02: evidencia validada contra resultado real (`PRE_COMMIT BLOCK` por `SDD_SESSION_MISSING`) con coherencia en `ai_gate`, `snapshot`, `sdd_metrics` y `ledger`.
-- 🚧 Tarea activa actual: ejecutar `C2-F4-T2` del ciclo 02 (validar consumo de evidencia vía MCP en facetas/resumen).
+- ✅ Ejecutar `C2-F4-T2` del ciclo 02: consumo MCP validado (`status`, `summary`, `rulesets`, `platforms`, `ledger`) con consistencia 1:1 frente a `.ai_evidence.json`.
+- 🚧 Tarea activa actual: ejecutar `C2-F4-T3` del ciclo 02 (registrar gaps o falsos positivos/falsos negativos observados).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
