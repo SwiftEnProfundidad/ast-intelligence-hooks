@@ -11,7 +11,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
 - ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
 - ✅ Consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker.
-- ⏳ Tarea activa actual: ver sección “Riesgos Mock Pendientes” (única tarea en 🚧).
+- ⏳ Tarea activa actual: ver sección “Riesgos Mock Pendientes” (única tarea en 🚧: revalidación de matriz tras triage).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
@@ -29,8 +29,13 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Consolidar evidencia resultante en este tracker y cerrar el ciclo.
 
 ## Riesgos Mock Pendientes
-- 🚧 Ejecutar triage/remediación de `npm audit` en `pumuki-mock-consumer` (3 high) y documentar resultado final (fix aplicado o riesgo aceptado con justificación).
-- ⏳ Re-ejecutar `npm run pumuki:matrix` tras el triage de dependencias y registrar si cambia el comportamiento de gates.
+- ✅ Ejecutar triage/remediación de `npm audit` en `pumuki-mock-consumer` (3 high) y documentar resultado final (fix aplicado o riesgo aceptado con justificación).
+  Resultado del triage (`npm audit --json` + `npm audit fix --dry-run`):
+  - `high: 3` (sin `moderate/critical`)
+  - cadena afectada: `minimatch` `<10.2.1` <- `glob@<=10.5.0` <- `pumuki`
+  - `fixAvailable: false` para los paquetes afectados
+  - decisión: **riesgo aceptado temporalmente** en el mock consumer hasta publicar upstream una versión de `pumuki` sin esa cadena vulnerable.
+- 🚧 Re-ejecutar `npm run pumuki:matrix` tras el triage de dependencias y registrar si cambia el comportamiento de gates.
 
 ## Cierre Operativo Final de Cobertura
 - ✅ Inventario base de `core/` + `integrations/` cerrado en `0/22` con batches 01..08 completados.
@@ -42,7 +47,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Capturar salida operativa real del handoff pack en entorno mock y consolidarla en documentación.
 - ✅ Recuperar matriz determinista tras bloqueo OpenSpec en clone interno del runner (`scripts/run-pumuki-matrix.sh` en mock).
 - ✅ Normalizar baseline de `pumuki-mock-consumer` tras la ronda actual (resolver cambios residuales en `package.json`, `package-lock.json` y `openspec/`).
-- ✅ Re-ejecutar checklist operativo next-cycle completo en mock real con baseline limpia.
+- ✅ Re-ejecuta r checklist operativo next-cycle completo en mock real con baseline limpia.
 - ✅ Actualizar handoff + tracker con cierre final de ronda y dejar siguiente tarea activa.
 - ✅ Preparar siguiente bloque post-release con alcance acotado (objetivo, criterios de aceptación y primer task atómico) para iniciar la próxima ronda sin ambigüedad.
 - ✅ Ejecutar primer task atómico de la nueva ronda: guardrail de baseline limpia en `scripts/run-pumuki-matrix.sh` del mock (fail-fast + guía explícita).
