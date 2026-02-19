@@ -78,8 +78,9 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Añadir cobertura unitaria del Batch 04 y validar en local (avance: ✅ `integrations/mcp/evidencePayloadSummary.ts`, ✅ `integrations/mcp/evidenceFacets.ts`, ✅ `integrations/mcp/evidenceFacetsLedger.ts`).
 - ✅ Cerrar bloque cuando no queden archivos críticos sin test en ese lote planificado (Batch 04 cerrado: 3/3 archivos con test directo y verificación local en verde).
 - ✅ Seleccionar Batch 05 y publicar criterio de cierre (orden por score restante + límite operativo estricto de 3 archivos): `integrations/platform/detectFrontend.ts`, `integrations/platform/detectAndroid.ts`, `integrations/platform/detectBackend.ts`.
-- 🚧 Añadir cobertura unitaria del Batch 05 y validar en local (avance: ✅ `integrations/platform/detectFrontend.ts`, ✅ `integrations/platform/detectAndroid.ts`; pendiente: `integrations/platform/detectBackend.ts`).
-- ⏳ Añadir cobertura unitaria del Batch 06 y validar en local (`integrations/mcp/evidenceFacetsSuppressedShare.ts`, `integrations/git/index.ts`, `integrations/mcp/evidenceContextServer.cli.ts`).
+- ✅ Añadir cobertura unitaria del Batch 05 y validar en local (avance: ✅ `integrations/platform/detectFrontend.ts`, ✅ `integrations/platform/detectAndroid.ts`, ✅ `integrations/platform/detectBackend.ts`).
+- ✅ Cerrar Batch 05 (3/3 archivos con test directo y verificación local en verde).
+- 🚧 Añadir cobertura unitaria del Batch 06 y validar en local (`integrations/mcp/evidenceFacetsSuppressedShare.ts`, `integrations/git/index.ts`, `integrations/mcp/evidenceContextServer.cli.ts`).
 - ⏳ Añadir cobertura unitaria del Batch 07 y validar en local (`integrations/mcp/enterpriseServer.cli.ts`, `integrations/mcp/evidenceFacetsSnapshot.ts`, `integrations/mcp/evidenceFacetsBase.ts`).
 - ⏳ Añadir cobertura unitaria del Batch 08 y validar en local (`integrations/mcp/index.ts`).
 - ⏳ Cerrar bloque cuando el inventario restante llegue a **0/22** archivos sin test directo.
