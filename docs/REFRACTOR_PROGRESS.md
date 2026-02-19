@@ -11,7 +11,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
 - ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
 - ✅ Consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker.
-- ⏳ Tarea activa actual: ver sección “Seguimiento Upstream Seguridad (Mock)” (única tarea en 🚧: bloqueo externo hasta release saneada de `pumuki`).
+- ✅ Cerrar bloqueo upstream de seguridad con release saneada de `pumuki` y revalidación de matriz en mock.
+- 🚧 Tarea activa actual: preparar commit atómico de release `6.3.15` (dependencia saneada + tracker/changelog/version) y dejar worktree listo para handoff.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
@@ -50,6 +51,11 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - referencia base: `GHSA-3ppc-4f35-3m26` / npm advisory `1113296` (`minimatch` ReDoS).
   - versión objetivo de salida: próxima versión de `pumuki` que elimine la cadena vulnerable (`glob` > `10.5.0` y `minimatch` >= `10.2.1`).
 - ✅ Checkpoint de revalidación sobre `pumuki@latest` ejecutado (`2026-02-19`): versión publicada `6.3.14` aún no sanea la cadena (`glob@10.5.0`, `minimatch@9.0.5`), `npm audit` mantiene `high: 3`, `fixAvailable: false`.
+- ✅ Desbloqueo upstream ejecutado (`2026-02-19`) con publicación de `pumuki@6.3.15`:
+  - cambio aplicado: eliminación de `glob` en `dependencies` (runtime) para romper cadena vulnerable `pumuki -> glob -> minimatch`.
+  - verificación npm: `npm view pumuki version` => `6.3.15` (`latest`), `npm dist-tag ls pumuki` => `latest=6.3.15`.
+  - verificación consumer limpio: `npm ls pumuki glob minimatch --depth=3` => sin `glob`; `minimatch@10.2.1` sólo vía `ts-morph`; `npm audit --omit=dev` => `0` vulnerabilidades.
+  - revalidación matriz mock (clon limpio con baseline commit temporal): `npm run pumuki:matrix` => `clean(0/0/0)`, `violations(1/1/1)`, `mixed(1/1/1)`, `All scenario matrix checks passed`.
 - ✅ Definir condición de desbloqueo y protocolo de revalidación.
   Condición de desbloqueo (upstream):
   - publicación de `pumuki` con cadena saneada (`glob` > `10.5.0` y `minimatch` >= `10.2.1`).
@@ -68,7 +74,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - cerrar tarea `🚧` solo si la cadena queda saneada y la matriz mantiene `PASS` en `clean/violations/mixed`.
 - ✅ Declarar estado operativo actual: **bloqueado externamente** (sin más acciones locales productivas hasta cumplir condición de desbloqueo o llegar al checkpoint `2026-02-26`).
 - ✅ Aplicar política de no-iteración local mientras persista el bloqueo externo (no ejecutar nuevas rondas de validación fuera del trigger de desbloqueo/checkpoint).
-- 🚧 Esperar desbloqueo upstream y ejecutar revalidación completa en el mock cuando se cumpla la condición.
+- ✅ Esperar desbloqueo upstream y ejecutar revalidación completa en el mock cuando se cumpla la condición.
 
 ## Cierre Operativo Final de Cobertura
 - ✅ Inventario base de `core/` + `integrations/` cerrado en `0/22` con batches 01..08 completados.

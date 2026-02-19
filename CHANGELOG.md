@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.15] - 2026-02-19
+
+### Fixed
+
+- Removed unused runtime dependency `glob` from `dependencies` to eliminate the vulnerable consumer chain `pumuki -> glob -> minimatch` without changing the Node.js support baseline (`>=18`).
+- Regenerated lockfile after dependency cleanup to keep published manifest deterministic.
+
 ## [6.3.14] - 2026-02-18
 
 ### Added
