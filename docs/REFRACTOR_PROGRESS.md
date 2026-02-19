@@ -11,7 +11,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
 - ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
 - ✅ Consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker.
-- ⏳ Tarea activa actual: ver sección “Riesgos Mock Pendientes” (única tarea en 🚧: revalidación de matriz tras triage).
+- ⏳ Tarea activa actual: ver sección “Riesgos Mock Pendientes” (única tarea en 🚧).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
@@ -35,7 +35,13 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - cadena afectada: `minimatch` `<10.2.1` <- `glob@<=10.5.0` <- `pumuki`
   - `fixAvailable: false` para los paquetes afectados
   - decisión: **riesgo aceptado temporalmente** en el mock consumer hasta publicar upstream una versión de `pumuki` sin esa cadena vulnerable.
-- 🚧 Re-ejecutar `npm run pumuki:matrix` tras el triage de dependencias y registrar si cambia el comportamiento de gates.
+- ✅ Re-ejecutar `npm run pumuki:matrix` tras el triage de dependencias y registrar si cambia el comportamiento de gates.
+  Resultado: **sin cambios** en gates (se mantiene patrón esperado)
+  - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0` (`PASS`)
+  - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1` (`PASS`)
+  - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` (`PASS`)
+  - `All scenario matrix checks passed for package: pumuki@latest`.
+- 🚧 Cerrar bloque de riesgos mock con decisión de seguimiento: mantener riesgo aceptado temporal y revisar al publicar versión de `pumuki` que elimine la cadena `glob/minimatch`.
 
 ## Cierre Operativo Final de Cobertura
 - ✅ Inventario base de `core/` + `integrations/` cerrado en `0/22` con batches 01..08 completados.
