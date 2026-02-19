@@ -54,9 +54,18 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - resultado documentado en `docs/REFRACTOR_PROGRESS.md`.
 
 ## Fase 1 — Baseline Operativa Mock
-- 🚧 C2-F1-T1: Verificar baseline limpia del mock consumer y estado de ramas.
-- ⏳ C2-F1-T2: Confirmar versión objetivo de `pumuki` para ciclo y lock de dependencias.
+- ✅ C2-F1-T1: Verificar baseline limpia del mock consumer y estado de ramas.
+- 🚧 C2-F1-T2: Confirmar versión objetivo de `pumuki` para ciclo y lock de dependencias.
 - ⏳ C2-F1-T3: Registrar snapshot inicial de estado para comparación final.
+
+### Resultado C2-F1-T1 (Baseline Mock)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Baseline: limpia (`git status --short` sin cambios staged/unstaged).
+- Estado de ramas local/remoto:
+  - `feat/pumuki-validation` (HEAD: `2ed6f2b`) trackeando `origin/feat/pumuki-validation`.
+  - `main` (HEAD: `a57b79c`) trackeando `origin/main`.
+- Remote operativo detectado:
+  - `origin` -> `/tmp/pumuki-mock-consumer-remote.git`.
 
 ## Fase 2 — Validación de Gates y Matriz
 - ⏳ C2-F2-T1: Ejecutar validación por escenario (`clean`, `violations`, `mixed`) con salida trazable.
