@@ -12,7 +12,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
 - ✅ Consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker.
 - ✅ Cerrar bloqueo upstream de seguridad con release saneada de `pumuki` y revalidación de matriz en mock.
-- 🚧 Tarea activa actual: preparar commit atómico de release `6.3.15` (dependencia saneada + tracker/changelog/version) y dejar worktree listo para handoff.
+- ✅ Preparar commit atómico de release `6.3.15` (dependencia saneada + tracker/changelog/version) y dejar worktree listo para handoff.
+- 🚧 Tarea activa actual: ejecutar checkpoint final en `pumuki-mock-consumer` real con baseline limpia y registrar cierre operativo definitivo.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
