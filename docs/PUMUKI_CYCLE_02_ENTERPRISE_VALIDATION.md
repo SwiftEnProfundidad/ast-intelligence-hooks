@@ -200,7 +200,7 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 ## Fase 4 — Evidencia y MCP
 - ✅ C2-F4-T1: Verificar campos críticos de `.ai_evidence.json` contra resultados reales.
 - ✅ C2-F4-T2: Validar consumo de evidencia vía MCP (facetas/resumen).
-- 🚧 C2-F4-T3: Registrar gaps o falsos positivos/falsos negativos observados.
+- ✅ C2-F4-T3: Registrar gaps o falsos positivos/falsos negativos observados.
 
 ### Resultado C2-F4-T1 (Campos Críticos de `.ai_evidence.json`)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -246,7 +246,24 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 - Consistencia contra fuente:
   - `.ai_evidence.json` mantiene `snapshot.stage=PRE_COMMIT`, `snapshot.outcome=BLOCK`, `findings=1`, `ruleId=sdd.policy.blocked`.
 
+### Resultado C2-F4-T3 (Gaps / FP / FN Observados)
+- Evidencia base analizada:
+  - `snapshot.stage=PRE_COMMIT`
+  - `snapshot.outcome=BLOCK`
+  - `snapshot.findings=1`
+  - `ruleId único: sdd.policy.blocked`
+  - `file único: openspec/changes`
+- Falsos positivos (FP):
+  - ninguno observado en este run (la violación reportada coincide con la política SDD activa y con la salida de consola).
+- Falsos negativos (FN):
+  - ninguno observado dentro del alcance de este run (el bloqueo SDD es explícito y trazable en `ai_gate`, `snapshot`, `ledger` y MCP).
+- Gaps operativos detectados (no bloqueantes para cierre de F4):
+  - Gap G1 — Cobertura funcional condicionada por SDD: con `SDD_SESSION_MISSING`, no se ejecuta evaluación de reglas de plataformas (`apps/*`), por diseño de short-circuit.
+  - Gap G2 — Ambigüedad potencial para consumidor: en runs bloqueados por SDD, `platforms` puede ser `[]` mientras `rulesets_count` refleja el bundle de policy (`gate-policy.default.PRE_COMMIT`).
+- Acción de mitigación registrada:
+  - mantener esta semántica documentada en ciclo/tracker y exigir sesión SDD activa en pruebas de detección AST por plataforma.
+
 ## Fase 5 — Cierre del Ciclo
-- ⏳ C2-F5-T1: Consolidar conclusiones y estado final del ciclo.
+- 🚧 C2-F5-T1: Consolidar conclusiones y estado final del ciclo.
 - ⏳ C2-F5-T2: Actualizar tracker global (`REFRACTOR_PROGRESS.md`) con cierre de ciclo 02.
 - ⏳ C2-F5-T3: Dejar definida la siguiente tarea activa para ciclo 03 o mantenimiento.
