@@ -216,7 +216,7 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 ## Fase 4 — Cierre
 - ✅ C3-F4-T1: Consolidar conclusiones del ciclo 03.
 - ✅ C3-F4-T2: Actualizar tracker global con cierre administrativo ciclo 03.
-- 🚧 C3-F4-T3: Definir siguiente tarea activa (ciclo 04 o mantenimiento).
+- ✅ C3-F4-T3: Definir siguiente tarea activa (ciclo 04 o mantenimiento).
 
 ### Resultado C3-F4-T1 (Conclusiones Consolidadas del Ciclo 03)
 - Estado global del ciclo:
@@ -239,3 +239,14 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 - Consistencia de cierre:
   - no se abrieron fases ni tareas nuevas fuera del alcance congelado del ciclo 03.
   - se mantiene regla de visibilidad: una única tarea en progreso en los documentos de seguimiento.
+
+### Resultado C3-F4-T3 (Siguiente Tarea Activa Definida)
+- Decisión de continuidad: iniciar `ciclo 04` (no mantenimiento pasivo).
+- Siguiente tarea activa definida:
+  - `🚧 C4-F0-T1`: crear documento de ciclo 04 con alcance finito sobre los gaps no bloqueantes identificados en ciclo 03:
+    - consistencia de señal MCP `/status` (`evidence.exists` no nulo cuando hay evidencia válida),
+    - estrategia de reducción de ruido por solape reglas base + skills,
+    - contrato operativo explícito para evaluación `PRE_PUSH/CI` basada en rango real de commits.
+- Estado final ciclo 03:
+  - todas las tareas `C3-F0..C3-F4` en `✅`.
+  - ciclo 03 cerrado formalmente.
