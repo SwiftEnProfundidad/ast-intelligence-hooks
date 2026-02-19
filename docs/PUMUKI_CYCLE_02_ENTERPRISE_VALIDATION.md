@@ -55,8 +55,8 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 
 ## Fase 1 — Baseline Operativa Mock
 - ✅ C2-F1-T1: Verificar baseline limpia del mock consumer y estado de ramas.
-- 🚧 C2-F1-T2: Confirmar versión objetivo de `pumuki` para ciclo y lock de dependencias.
-- ⏳ C2-F1-T3: Registrar snapshot inicial de estado para comparación final.
+- ✅ C2-F1-T2: Confirmar versión objetivo de `pumuki` para ciclo y lock de dependencias.
+- 🚧 C2-F1-T3: Registrar snapshot inicial de estado para comparación final.
 
 ### Resultado C2-F1-T1 (Baseline Mock)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -66,6 +66,15 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - `main` (HEAD: `a57b79c`) trackeando `origin/main`.
 - Remote operativo detectado:
   - `origin` -> `/tmp/pumuki-mock-consumer-remote.git`.
+
+### Resultado C2-F1-T2 (Versión Objetivo + Lock)
+- Versión objetivo fijada para Cycle 02: `pumuki@6.3.15`.
+- Verificación en mock consumer:
+  - `package.json`: `dependencies.pumuki = 6.3.15`.
+  - `package-lock.json` (root): `dependencies.pumuki = 6.3.15`.
+  - `package-lock.json` (instalado): `node_modules/pumuki.version = 6.3.15`.
+- Referencia de registry en el momento de validación:
+  - `npm view pumuki version` => `6.3.15`.
 
 ## Fase 2 — Validación de Gates y Matriz
 - ⏳ C2-F2-T1: Ejecutar validación por escenario (`clean`, `violations`, `mixed`) con salida trazable.
