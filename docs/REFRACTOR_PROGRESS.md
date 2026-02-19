@@ -35,7 +35,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C2-F2-T2` del ciclo 02: coherencia confirmada entre consola y `artifacts/pumuki-matrix-summary.json` (incluye ausencia consistente de artefactos de fallo en `PASS`).
 - ✅ Ejecutar `C2-F2-T3` del ciclo 02: diferencias documentadas contra baseline esperado (resultado: sin diferencias).
 - ✅ Ejecutar `C2-F3-T1` del ciclo 02: `install` validado en mock con hooks gestionados (`pre-commit` y `pre-push`) y estado lifecycle consistente.
-- 🚧 Tarea activa actual: ejecutar `C2-F3-T2` del ciclo 02 (validar `update` y consistencia de versión/reportes).
+- ✅ Ejecutar `C2-F3-T2` del ciclo 02: `update` validado en mock con `latest=6.3.15`, hooks estables y consistencia `status`/`npm ls`/`package-lock`.
+- 🚧 Tarea activa actual: ejecutar `C2-F3-T3` del ciclo 02 (validar `remove` con limpieza estricta sin tocar terceros).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.

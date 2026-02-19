@@ -143,8 +143,8 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 
 ## Fase 3 — Lifecycle Enterprise
 - ✅ C2-F3-T1: Validar `install` y estado de hooks gestionados.
-- 🚧 C2-F3-T2: Validar `update` y consistencia de versión/reportes.
-- ⏳ C2-F3-T3: Validar `remove` con limpieza estricta sin tocar terceros.
+- ✅ C2-F3-T2: Validar `update` y consistencia de versión/reportes.
+- 🚧 C2-F3-T3: Validar `remove` con limpieza estricta sin tocar terceros.
 
 ### Resultado C2-F3-T1 (Install + Hooks Gestionados)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -159,6 +159,22 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 - Verificación de hooks en `.git/hooks`:
   - `pre-commit` y `pre-push` presentes, ejecutables y con bloque `# >>> PUMUKI MANAGED START >>>`.
   - ambos hooks invocan `npx --yes pumuki-pre-commit` / `npx --yes pumuki-pre-push`.
+
+### Resultado C2-F3-T2 (Update + Consistencia de Versión/Reportes)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Comandos ejecutados:
+  - `npm install --save-exact pumuki@6.3.15`
+  - `npx pumuki install`
+  - `npx pumuki update --latest`
+  - `npx pumuki status`
+  - `npm ls pumuki --depth=0`
+  - `npm view pumuki version`
+- Resultado de consistencia:
+  - `update` finaliza en `pumuki@latest` sin cambios de hooks (`hooks changed: none`).
+  - `status` reporta `package version: 6.3.15` y `lifecycle version: 6.3.15`.
+  - `npm ls` confirma `pumuki@6.3.15` instalado.
+  - `npm view pumuki version` devuelve `6.3.15` (`latest`).
+  - `package.json` y `package-lock.json` mantienen `6.3.15` (consistencia 1:1).
 
 ## Fase 4 — Evidencia y MCP
 - ⏳ C2-F4-T1: Verificar campos críticos de `.ai_evidence.json` contra resultados reales.
