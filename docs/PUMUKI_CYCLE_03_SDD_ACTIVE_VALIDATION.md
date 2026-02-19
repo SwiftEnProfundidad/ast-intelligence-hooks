@@ -57,7 +57,7 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 ## Fase 1 — Baseline SDD Activo en Mock
 - ✅ C3-F1-T1: Verificar baseline limpia del mock consumer antes de abrir sesión SDD.
 - ✅ C3-F1-T2: Abrir sesión SDD válida y registrar contexto de cambio.
-- 🚧 C3-F1-T3: Confirmar baseline operativa con SDD activo (sin drift).
+- ✅ C3-F1-T3: Confirmar baseline operativa con SDD activo (sin drift).
 
 ### Resultado C3-F1-T1 (Baseline Limpia Pre-SDD)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -85,8 +85,21 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 - Estado de working tree tras apertura:
   - `?? openspec/changes/cycle-03-sdd-active-validation/` (drift esperado por creación del change para la sesión SDD).
 
+### Resultado C3-F1-T3 (Baseline Operativa con SDD Activo)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Verificaciones ejecutadas:
+  - `git status --short --branch`
+  - `find openspec/changes -maxdepth 2 -mindepth 1 -type d`
+  - `npx pumuki sdd status --json`
+- Resultado de estabilidad:
+  - sesión SDD continúa `active=true` y `valid=true` con `changeId=cycle-03-sdd-active-validation`.
+  - OpenSpec compatible (`version=1.1.1`, `compatible=true`).
+  - drift observado: **únicamente** `openspec/changes/cycle-03-sdd-active-validation/` (esperado/aceptado para este ciclo).
+- Conclusión:
+  - baseline operativa confirmada; se habilita fase de ejecución de gates por plataforma (`C3-F2-T1`).
+
 ## Fase 2 — Gates de Plataforma con SDD Activo
-- ⏳ C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
+- 🚧 C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
 - ⏳ C3-F2-T2: Ejecutar `scenario:violations` con SDD activo y validar detección multi-plataforma.
 - ⏳ C3-F2-T3: Ejecutar `scenario:mixed` con SDD activo y validar severidades/outcomes esperados.
 

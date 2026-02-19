@@ -48,7 +48,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C3-F0-T3`: checkpoint único de ciclo 03 publicado (fecha/comando/criterio de aceptación con sesión SDD activa).
 - ✅ Ejecutar `C3-F1-T1`: baseline limpia del mock verificada (rama/upstream/remote listos) antes de abrir sesión SDD.
 - ✅ Ejecutar `C3-F1-T2`: sesión SDD válida abierta en mock con `changeId=cycle-03-sdd-active-validation` y contexto OpenSpec registrado.
-- 🚧 Tarea activa actual: ejecutar `C3-F1-T3` (confirmar baseline operativa con SDD activo y drift controlado).
+- ✅ Ejecutar `C3-F1-T3`: baseline operativa confirmada con SDD activo (`valid=true`) y drift controlado únicamente en `openspec/changes/cycle-03-sdd-active-validation/`.
+- 🚧 Tarea activa actual: ejecutar `C3-F2-T1` (ejecutar `scenario:clean` con SDD activo y validar salida esperada).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
