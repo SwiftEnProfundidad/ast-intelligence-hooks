@@ -265,8 +265,8 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 
 ## Fase 5 — Cierre del Ciclo
 - ✅ C2-F5-T1: Consolidar conclusiones y estado final del ciclo.
-- 🚧 C2-F5-T2: Actualizar tracker global (`REFRACTOR_PROGRESS.md`) con cierre de ciclo 02.
-- ⏳ C2-F5-T3: Dejar definida la siguiente tarea activa para ciclo 03 o mantenimiento.
+- ✅ C2-F5-T2: Actualizar tracker global (`REFRACTOR_PROGRESS.md`) con cierre de ciclo 02.
+- 🚧 C2-F5-T3: Dejar definida la siguiente tarea activa para ciclo 03 o mantenimiento.
 
 ### Resultado C2-F5-T1 (Conclusiones y Estado Final Consolidado)
 - Veredicto global del ciclo 02: **estable y consistente** en el alcance definido.
@@ -280,3 +280,10 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - gap operativo documentado: en bloqueo SDD temprano, `platforms=[]` puede coexistir con `rulesets_count=1` (bundle policy), comportamiento esperado y documentado.
 - Estado operativo al finalizar `C2-F5-T1`:
   - ciclo listo para cierre administrativo (`C2-F5-T2`) y definición del siguiente frente (`C2-F5-T3`).
+
+### Resultado C2-F5-T2 (Cierre Administrativo en Tracker Global)
+- `docs/REFRACTOR_PROGRESS.md` actualizado con:
+  - registro explícito de `C2-F5-T2` como completada.
+  - transición de tarea activa hacia `C2-F5-T3`.
+- Criterio de cierre administrativo cumplido:
+  - estado del ciclo reflejado de forma consistente en ambos documentos (`PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md` y `REFRACTOR_PROGRESS.md`).

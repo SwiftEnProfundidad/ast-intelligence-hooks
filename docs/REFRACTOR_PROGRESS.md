@@ -41,7 +41,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C2-F4-T2` del ciclo 02: consumo MCP validado (`status`, `summary`, `rulesets`, `platforms`, `ledger`) con consistencia 1:1 frente a `.ai_evidence.json`.
 - ✅ Ejecutar `C2-F4-T3` del ciclo 02: gaps/FP/FN registrados (sin FP/FN en run SDD-blocked; gaps operativos documentados sobre short-circuit y semántica `platforms` vs `rulesets_count`).
 - ✅ Ejecutar `C2-F5-T1` del ciclo 02: conclusiones y estado final consolidados (matriz/lifecycle/evidencia/MCP en estado estable dentro del alcance).
-- 🚧 Tarea activa actual: ejecutar `C2-F5-T2` del ciclo 02 (actualizar tracker global con cierre administrativo del ciclo 02).
+- ✅ Ejecutar `C2-F5-T2` del ciclo 02: cierre administrativo reflejado en tracker global con consistencia documental ciclo/tracker.
+- 🚧 Tarea activa actual: ejecutar `C2-F5-T3` del ciclo 02 (definir siguiente tarea activa para ciclo 03 o mantenimiento).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
