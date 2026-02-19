@@ -264,6 +264,19 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - mantener esta semántica documentada en ciclo/tracker y exigir sesión SDD activa en pruebas de detección AST por plataforma.
 
 ## Fase 5 — Cierre del Ciclo
-- 🚧 C2-F5-T1: Consolidar conclusiones y estado final del ciclo.
-- ⏳ C2-F5-T2: Actualizar tracker global (`REFRACTOR_PROGRESS.md`) con cierre de ciclo 02.
+- ✅ C2-F5-T1: Consolidar conclusiones y estado final del ciclo.
+- 🚧 C2-F5-T2: Actualizar tracker global (`REFRACTOR_PROGRESS.md`) con cierre de ciclo 02.
 - ⏳ C2-F5-T3: Dejar definida la siguiente tarea activa para ciclo 03 o mantenimiento.
+
+### Resultado C2-F5-T1 (Conclusiones y Estado Final Consolidado)
+- Veredicto global del ciclo 02: **estable y consistente** en el alcance definido.
+- Conclusiones por eje:
+  - Gates/matriz: patrón esperado confirmado (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`).
+  - Lifecycle: `install/update/remove` verificados con comportamiento enterprise (idempotencia, hooks gestionados, limpieza de Pumuki, preservación de terceros).
+  - Evidencia: `.ai_evidence.json` coherente con ejecución real; `version=2.1` y trazabilidad SDD explícita.
+  - MCP: consumo read-only validado en `status/summary/rulesets/platforms/ledger` con consistencia 1:1 frente a la evidencia.
+- Riesgos abiertos al cierre de esta consolidación:
+  - ninguno crítico dentro del alcance del ciclo 02.
+  - gap operativo documentado: en bloqueo SDD temprano, `platforms=[]` puede coexistir con `rulesets_count=1` (bundle policy), comportamiento esperado y documentado.
+- Estado operativo al finalizar `C2-F5-T1`:
+  - ciclo listo para cierre administrativo (`C2-F5-T2`) y definición del siguiente frente (`C2-F5-T3`).
