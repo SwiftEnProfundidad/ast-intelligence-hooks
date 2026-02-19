@@ -17,7 +17,9 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Consolidar cierre final del lote release/mock (hándoff operativo + commits listos para push en ambos repos).
 - ✅ Ejecutar push final coordinado de los commits de cierre en ambos repos.
 - ✅ Esperar confirmación de cierre/merge y abrir PR final si aplica.
-- 🚧 Tarea activa actual: monitorizar CI/review de la PR final y ejecutar merge cuando esté en verde.
+- ✅ Monitorizar CI/review de la PR final y ejecutar merge cuando esté en verde.
+- ✅ Ejecutar limpieza post-merge segura (con backup tag + borrado de rama feature mergeada) sin pérdida de datos.
+- 🚧 Tarea activa actual: esperar próxima instrucción para el siguiente ciclo (sin tareas técnicas pendientes de este cierre).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
