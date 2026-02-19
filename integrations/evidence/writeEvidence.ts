@@ -78,6 +78,8 @@ const normalizeFindingPath = (
     message: finding.message,
     file: toRelativeRepoPath(repoRoot, finding.file),
     lines: normalizeLines(finding.lines),
+    matchedBy: finding.matchedBy,
+    source: finding.source,
   };
 };
 
@@ -101,6 +103,8 @@ const toCompatibilityViolations = (
     message: finding.message,
     file: finding.file,
     lines: finding.lines,
+    matchedBy: finding.matchedBy,
+    source: finding.source,
   }));
 };
 
@@ -165,6 +169,17 @@ const toStableEvidence = (
       total_violations: evidence.severity_metrics.total_violations,
       by_severity: bySeverity,
     },
+    sdd_metrics: evidence.sdd_metrics
+      ? {
+        enforced: evidence.sdd_metrics.enforced,
+        stage: evidence.sdd_metrics.stage,
+        decision: {
+          allowed: evidence.sdd_metrics.decision.allowed,
+          code: evidence.sdd_metrics.decision.code,
+          message: evidence.sdd_metrics.decision.message,
+        },
+      }
+      : undefined,
   };
 };
 

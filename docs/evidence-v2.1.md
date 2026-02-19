@@ -10,6 +10,10 @@
   - `stage`: `PRE_COMMIT` | `PRE_PUSH` | `CI`
   - `outcome`: `PASS` | `WARN` | `BLOCK`
   - `findings[]`: normalized findings for the current run
+    - `file`: normalized path (or `unknown` when no deterministic trace exists)
+    - `lines` (optional): deterministic line evidence when available
+    - `matchedBy` (optional): condition family that produced traceability (`FileContent`, `Heuristic`, `FileChange`, etc.)
+    - `source` (optional): fact source used for traceability (`git:staged`, `heuristics:ast`, ...)
 - `ledger[]`:
   - persistent open violations by key (`ruleId + file + lines`)
   - `firstSeen` / `lastSeen` maintained deterministically
@@ -23,6 +27,7 @@
 - `ai_gate`:
   - compatibility status and violation list
   - mirrors `human_intent` to avoid state drift
+  - violations carry the same traceability fields as snapshot findings (`file`, `lines`, `matchedBy`, `source`)
 - `severity_metrics`:
   - gate status + totals by severity
 - `consolidation` (optional):

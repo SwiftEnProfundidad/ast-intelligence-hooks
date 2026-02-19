@@ -11,6 +11,8 @@ export type SnapshotFinding = {
   message: string;
   file: string;
   lines?: EvidenceLines;
+  matchedBy?: string;
+  source?: string;
 };
 
 export type Snapshot = {
@@ -61,6 +63,18 @@ export type CompatibilityViolation = {
   message: string;
   file: string;
   lines?: EvidenceLines;
+  matchedBy?: string;
+  source?: string;
+};
+
+export type SddMetrics = {
+  enforced: boolean;
+  stage: GateStage;
+  decision: {
+    allowed: boolean;
+    code: string;
+    message: string;
+  };
 };
 
 export type ConsolidationSuppressedFinding = {
@@ -91,6 +105,7 @@ export type AiEvidenceV2_1 = {
     total_violations: number;
     by_severity: Record<Severity, number>;
   };
+  sdd_metrics?: SddMetrics;
   consolidation?: {
     suppressed: ConsolidationSuppressedFinding[];
   };

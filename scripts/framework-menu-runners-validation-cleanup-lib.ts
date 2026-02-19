@@ -1,5 +1,8 @@
+export type ValidationArtifactsCleanupRunnerParams = {
+  dryRun: boolean;
+};
+
 import { buildCleanValidationArtifactsCommandArgs } from './framework-menu-builders';
-import type { ValidationArtifactsCleanupRunnerParams } from './framework-menu-runners-validation-contract';
 import {
   getExitCode,
   resolveScriptOrReportMissing,

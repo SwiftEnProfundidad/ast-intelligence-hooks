@@ -133,6 +133,94 @@ test('respects explicit gate outcome for stage-aware blocking decisions', () => 
   assert.equal(result.severity_metrics.gate_status, 'BLOCKED');
 });
 
+test('deduplicates equivalent findings deterministically regardless of input order', () => {
+  const baseFinding = {
+    ruleId: 'backend.no-console-log',
+    severity: 'ERROR' as const,
+    filePath: 'apps/backend/src/service.ts',
+    lines: [4, 7],
+  };
+
+  const firstRun = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ...baseFinding,
+        code: 'B_RULE',
+        message: 'second variant',
+        matchedBy: 'Heuristic',
+        source: 'heuristics:ast',
+      },
+      {
+        ...baseFinding,
+        code: 'A_RULE',
+        message: 'first variant',
+        matchedBy: 'FileContent',
+        source: 'git:staged',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  const secondRun = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ...baseFinding,
+        code: 'A_RULE',
+        message: 'first variant',
+        matchedBy: 'FileContent',
+        source: 'git:staged',
+      },
+      {
+        ...baseFinding,
+        code: 'B_RULE',
+        message: 'second variant',
+        matchedBy: 'Heuristic',
+        source: 'heuristics:ast',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(firstRun.snapshot.findings.length, 1);
+  assert.equal(secondRun.snapshot.findings.length, 1);
+  assert.deepEqual(firstRun.snapshot.findings, secondRun.snapshot.findings);
+  assert.equal(firstRun.snapshot.findings[0]?.code, 'A_RULE');
+  assert.equal(firstRun.snapshot.findings[0]?.source, 'git:staged');
+});
+
+test('persists sdd metrics for stage-level enforcement traceability', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    findings: [],
+    gateOutcome: 'PASS',
+    detectedPlatforms: {},
+    loadedRulesets: [],
+    sddMetrics: {
+      enforced: true,
+      stage: 'PRE_PUSH',
+      decision: {
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'sdd policy passed',
+      },
+    },
+  });
+
+  assert.deepEqual(result.sdd_metrics, {
+    enforced: true,
+    stage: 'PRE_PUSH',
+    decision: {
+      allowed: true,
+      code: 'ALLOWED',
+      message: 'sdd policy passed',
+    },
+  });
+});
+
 test('suppresses duplicated iOS heuristic findings shadowed by stronger baseline findings', () => {
   const result = buildEvidence({
     stage: 'PRE_PUSH',
@@ -356,4 +444,136 @@ test('keeps one deterministic finding when same rule repeats on multiple lines i
     result.consolidation.suppressed[0]?.replacedByRuleId,
     'heuristics.ts.explicit-any.ast'
   );
+});
+
+test('normalizes detected platforms in deterministic key order', () => {
+  const result = buildEvidence({
+    stage: 'CI',
+    findings: [],
+    detectedPlatforms: {
+      ios: { detected: true, confidence: 'HIGH' },
+      backend: { detected: true, confidence: 'MEDIUM' },
+      android: { detected: false, confidence: 'LOW' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(Object.keys(result.platforms), ['android', 'backend', 'ios']);
+  assert.deepEqual(result.platforms.backend, { detected: true, confidence: 'MEDIUM' });
+  assert.deepEqual(result.platforms.ios, { detected: true, confidence: 'HIGH' });
+});
+
+test('dedupes rulesets by platform+bundle and sorts output deterministically', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    detectedPlatforms: {},
+    loadedRulesets: [
+      { platform: 'ios', bundle: 'gold', hash: 'ios-gold-1' },
+      { platform: 'backend', bundle: 'backend', hash: 'be-1' },
+      { platform: 'ios', bundle: 'gold', hash: 'ios-gold-2' },
+      { platform: 'ios', bundle: 'heuristics', hash: 'ios-heur-1' },
+    ],
+  });
+
+  assert.deepEqual(result.rulesets, [
+    { platform: 'backend', bundle: 'backend', hash: 'be-1' },
+    { platform: 'ios', bundle: 'gold', hash: 'ios-gold-1' },
+    { platform: 'ios', bundle: 'heuristics', hash: 'ios-heur-1' },
+  ]);
+});
+
+test('infers gate outcome from findings when gateOutcome is not provided', () => {
+  const blockResult = buildEvidence({
+    stage: 'PRE_PUSH',
+    findings: [
+      {
+        ruleId: 'ios.no-force-unwrap',
+        severity: 'CRITICAL',
+        code: 'IOS_NO_FORCE_UNWRAP',
+        message: 'Force unwrap is forbidden.',
+        filePath: 'apps/ios/App/Feature.swift',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+  assert.equal(blockResult.snapshot.outcome, 'BLOCK');
+  assert.equal(blockResult.ai_gate.status, 'BLOCKED');
+
+  const warnResult = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'WARN',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'console.log is discouraged.',
+        filePath: 'apps/backend/src/main.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+  assert.equal(warnResult.snapshot.outcome, 'WARN');
+  assert.equal(warnResult.ai_gate.status, 'ALLOWED');
+});
+
+test('preserves finding traceability fields in snapshot and compatibility violations', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'CRITICAL',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'console.log no permitido',
+        filePath: 'apps/backend/src/main.ts',
+        lines: [12],
+        matchedBy: 'FileContent',
+        source: 'git:staged',
+      },
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.findings[0]?.matchedBy, 'FileContent');
+  assert.equal(result.snapshot.findings[0]?.source, 'git:staged');
+  assert.equal(result.ai_gate.violations[0]?.matchedBy, 'FileContent');
+  assert.equal(result.ai_gate.violations[0]?.source, 'git:staged');
+});
+
+test('preserves firstSeen from previous ledger and refreshes lastSeen timestamp', () => {
+  const previous = emptyEvidence();
+  previous.ledger = [
+    {
+      ruleId: 'backend.no-console-log',
+      file: 'apps/backend/src/main.ts',
+      firstSeen: '2026-01-01T00:00:00.000Z',
+      lastSeen: '2026-01-05T00:00:00.000Z',
+    },
+  ];
+
+  const result = buildEvidence({
+    stage: 'CI',
+    findings: [
+      {
+        ruleId: 'backend.no-console-log',
+        severity: 'ERROR',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'console.log no permitido',
+        filePath: 'apps/backend/src/main.ts',
+      },
+    ],
+    previousEvidence: previous,
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.ledger.length, 1);
+  assert.equal(result.ledger[0]?.firstSeen, '2026-01-01T00:00:00.000Z');
+  assert.equal(result.ledger[0]?.lastSeen, result.timestamp);
 });

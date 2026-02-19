@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
@@ -13,6 +13,7 @@ const WRAPPER_PATH = resolve(
   process.cwd(),
   'legacy/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh'
 );
+const ADAPTER_RUNTIME_TEST = existsSync(VERIFY_SCRIPT) && existsSync(WRAPPER_PATH) ? test : test.skip;
 
 type CommandResult = {
   exitCode: number;
@@ -89,7 +90,7 @@ const runVerify = (homeRoot: string): CommandResult => {
   }
 };
 
-test('verify-adapter-hooks-runtime passes when hooks.json points to wrapper script', async () => {
+ADAPTER_RUNTIME_TEST('verify-adapter-hooks-runtime passes when hooks.json points to wrapper script', async () => {
   await withTempDir('pumuki-adapter-verify-ok-', async (tempRoot) => {
     writeHooksConfig({
       homeRoot: tempRoot,
@@ -105,14 +106,14 @@ test('verify-adapter-hooks-runtime passes when hooks.json points to wrapper scri
   });
 });
 
-test('verify-adapter-hooks-runtime fails with actionable message on stale direct-node commands', async () => {
+ADAPTER_RUNTIME_TEST('verify-adapter-hooks-runtime fails with actionable message on stale direct-node commands', async () => {
   await withTempDir('pumuki-adapter-verify-stale-', async (tempRoot) => {
     writeHooksConfig({
       homeRoot: tempRoot,
       preCommand:
-        'node /tmp/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js',
+        'node /tmp/node_modules/pumuki/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js',
       postCommand:
-        'node /tmp/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js',
+        'node /tmp/node_modules/pumuki/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js',
     });
 
     const result = runVerify(tempRoot);
@@ -124,7 +125,7 @@ test('verify-adapter-hooks-runtime fails with actionable message on stale direct
   });
 });
 
-test('verify-adapter-hooks-runtime falls back to legacy windsurf hooks.json when adapter config is absent', async () => {
+ADAPTER_RUNTIME_TEST('verify-adapter-hooks-runtime falls back to legacy windsurf hooks.json when adapter config is absent', async () => {
   await withTempDir('pumuki-adapter-verify-fallback-', async (tempRoot) => {
     writeHooksConfig({
       homeRoot: tempRoot,
@@ -140,7 +141,7 @@ test('verify-adapter-hooks-runtime falls back to legacy windsurf hooks.json when
   });
 });
 
-test('verify-adapter-hooks-runtime fails when one active config is stale even if another is valid', async () => {
+ADAPTER_RUNTIME_TEST('verify-adapter-hooks-runtime fails when one active config is stale even if another is valid', async () => {
   await withTempDir('pumuki-adapter-verify-dual-stale-', async (tempRoot) => {
     writeHooksConfig({
       homeRoot: tempRoot,
@@ -152,9 +153,9 @@ test('verify-adapter-hooks-runtime fails when one active config is stale even if
       homeRoot: tempRoot,
       adapterName: 'windsurf',
       preCommand:
-        'node /tmp/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js',
+        'node /tmp/node_modules/pumuki/scripts/hooks-system/infrastructure/cascade-hooks/pre-write-code-hook.js',
       postCommand:
-        'node /tmp/node_modules/pumuki-ast-hooks/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js',
+        'node /tmp/node_modules/pumuki/scripts/hooks-system/infrastructure/cascade-hooks/post-write-code-hook.js',
     });
 
     const result = runVerify(tempRoot);

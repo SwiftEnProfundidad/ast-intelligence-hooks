@@ -40,6 +40,18 @@ const isTypeScriptHeuristicTargetPath = (path: string): boolean => {
   );
 };
 
+const isTypeScriptDomainOrApplicationPath = (path: string): boolean => {
+  if (!isTypeScriptHeuristicTargetPath(path)) {
+    return false;
+  }
+  return (
+    path.includes('/domain/') ||
+    path.includes('/application/') ||
+    path.includes('/use-cases/') ||
+    path.includes('/core/')
+  );
+};
+
 const isIOSSwiftPath = (path: string): boolean => {
   return path.endsWith('.swift') && path.startsWith('apps/ios/');
 };
@@ -132,6 +144,7 @@ type ASTDetectorRegistryEntry = {
   readonly ruleId: string;
   readonly code: string;
   readonly message: string;
+  readonly pathCheck?: (path: string) => boolean;
 };
 
 const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
@@ -148,6 +161,12 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: TS.hasWithStatement, ruleId: 'heuristics.ts.with-statement.ast', code: 'HEURISTICS_WITH_STATEMENT_AST', message: 'AST heuristic detected with-statement usage.' },
   { detect: TS.hasDeleteOperator, ruleId: 'heuristics.ts.delete-operator.ast', code: 'HEURISTICS_DELETE_OPERATOR_AST', message: 'AST heuristic detected delete-operator usage.' },
   { detect: TS.hasDebuggerStatement, ruleId: 'heuristics.ts.debugger.ast', code: 'HEURISTICS_DEBUGGER_AST', message: 'AST heuristic detected debugger statement usage.' },
+  { detect: TS.hasMixedCommandQueryClass, ruleId: 'heuristics.ts.solid.srp.class-command-query-mix.ast', code: 'HEURISTICS_SOLID_SRP_CLASS_COMMAND_QUERY_MIX_AST', message: 'AST heuristic detected class-level SRP/CQS mix (commands and queries in the same class).' },
+  { detect: TS.hasMixedCommandQueryInterface, ruleId: 'heuristics.ts.solid.isp.interface-command-query-mix.ast', code: 'HEURISTICS_SOLID_ISP_INTERFACE_COMMAND_QUERY_MIX_AST', message: 'AST heuristic detected interface-level ISP/CQS mix (commands and queries in the same contract).' },
+  { detect: TS.hasTypeDiscriminatorSwitch, ruleId: 'heuristics.ts.solid.ocp.discriminator-switch.ast', code: 'HEURISTICS_SOLID_OCP_DISCRIMINATOR_SWITCH_AST', message: 'AST heuristic detected OCP risk via discriminator switch branching.' },
+  { detect: TS.hasOverrideMethodThrowingNotImplemented, ruleId: 'heuristics.ts.solid.lsp.override-not-implemented.ast', code: 'HEURISTICS_SOLID_LSP_OVERRIDE_NOT_IMPLEMENTED_AST', message: 'AST heuristic detected LSP risk: override throws not-implemented/unsupported.' },
+  { detect: TS.hasFrameworkDependencyImport, ruleId: 'heuristics.ts.solid.dip.framework-import.ast', code: 'HEURISTICS_SOLID_DIP_FRAMEWORK_IMPORT_AST', message: 'AST heuristic detected DIP risk: framework dependency imported in domain/application code.', pathCheck: isTypeScriptDomainOrApplicationPath },
+  { detect: TS.hasConcreteDependencyInstantiation, ruleId: 'heuristics.ts.solid.dip.concrete-instantiation.ast', code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST', message: 'AST heuristic detected DIP risk: direct instantiation of concrete framework dependency.', pathCheck: isTypeScriptDomainOrApplicationPath },
 
   // Process
   { detect: Process.hasProcessExitCall, ruleId: 'heuristics.ts.process-exit.ast', code: 'HEURISTICS_PROCESS_EXIT_AST', message: 'AST heuristic detected process.exit usage.' },
@@ -318,6 +337,17 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForceTryUsage, ruleId: 'heuristics.ios.force-try.ast', code: 'HEURISTICS_IOS_FORCE_TRY_AST', message: 'AST heuristic detected force try usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftForceCastUsage, ruleId: 'heuristics.ios.force-cast.ast', code: 'HEURISTICS_IOS_FORCE_CAST_AST', message: 'AST heuristic detected force cast usage.' },
   { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath, isApprovedIOSBridgePath], detect: TextIOS.hasSwiftCallbackStyleSignature, ruleId: 'heuristics.ios.callback-style.ast', code: 'HEURISTICS_IOS_CALLBACK_STYLE_AST', message: 'AST heuristic detected callback-style API signature outside bridge layers.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftDispatchQueueUsage, ruleId: 'heuristics.ios.dispatchqueue.ast', code: 'HEURISTICS_IOS_DISPATCHQUEUE_AST', message: 'AST heuristic detected DispatchQueue usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftDispatchGroupUsage, ruleId: 'heuristics.ios.dispatchgroup.ast', code: 'HEURISTICS_IOS_DISPATCHGROUP_AST', message: 'AST heuristic detected DispatchGroup usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftDispatchSemaphoreUsage, ruleId: 'heuristics.ios.dispatchsemaphore.ast', code: 'HEURISTICS_IOS_DISPATCHSEMAPHORE_AST', message: 'AST heuristic detected DispatchSemaphore usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftOperationQueueUsage, ruleId: 'heuristics.ios.operation-queue.ast', code: 'HEURISTICS_IOS_OPERATION_QUEUE_AST', message: 'AST heuristic detected OperationQueue usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftTaskDetachedUsage, ruleId: 'heuristics.ios.task-detached.ast', code: 'HEURISTICS_IOS_TASK_DETACHED_AST', message: 'AST heuristic detected Task.detached usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUncheckedSendableUsage, ruleId: 'heuristics.ios.unchecked-sendable.ast', code: 'HEURISTICS_IOS_UNCHECKED_SENDABLE_AST', message: 'AST heuristic detected @unchecked Sendable usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftObservableObjectUsage, ruleId: 'heuristics.ios.observable-object.ast', code: 'HEURISTICS_IOS_OBSERVABLE_OBJECT_AST', message: 'AST heuristic detected ObservableObject usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftNavigationViewUsage, ruleId: 'heuristics.ios.navigation-view.ast', code: 'HEURISTICS_IOS_NAVIGATION_VIEW_AST', message: 'AST heuristic detected NavigationView usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftOnTapGestureUsage, ruleId: 'heuristics.ios.on-tap-gesture.ast', code: 'HEURISTICS_IOS_ON_TAP_GESTURE_AST', message: 'AST heuristic detected onTapGesture usage where Button may be preferred.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftStringFormatUsage, ruleId: 'heuristics.ios.string-format.ast', code: 'HEURISTICS_IOS_STRING_FORMAT_AST', message: 'AST heuristic detected String(format:) usage.' },
+  { platform: 'ios', pathCheck: isIOSSwiftPath, excludePaths: [isSwiftTestPath], detect: TextIOS.hasSwiftUIScreenMainBoundsUsage, ruleId: 'heuristics.ios.uiscreen-main-bounds.ast', code: 'HEURISTICS_IOS_UISCREEN_MAIN_BOUNDS_AST', message: 'AST heuristic detected UIScreen.main.bounds usage.' },
 
   // Android
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinThreadSleepCall, ruleId: 'heuristics.android.thread-sleep.ast', code: 'HEURISTICS_ANDROID_THREAD_SLEEP_AST', message: 'AST heuristic detected Thread.sleep usage in production Kotlin code.' },
@@ -374,6 +404,9 @@ export const extractHeuristicFacts = (
       });
 
       for (const entry of astDetectorRegistry) {
+        if (entry.pathCheck && !entry.pathCheck(fileFact.path)) {
+          continue;
+        }
         if (entry.detect(ast)) {
           heuristicFacts.push(
             createHeuristicFact({

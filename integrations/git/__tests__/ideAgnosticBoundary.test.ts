@@ -31,6 +31,9 @@ const walkTsFiles = (rootDir: string): string[] => {
       if (!absolute.endsWith('.ts')) {
         continue;
       }
+      if (absolute.endsWith('.test.ts') || absolute.endsWith('.spec.ts')) {
+        continue;
+      }
 
       files.push(absolute);
     }

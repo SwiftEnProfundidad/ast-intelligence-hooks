@@ -11,6 +11,7 @@ import type {
   LedgerEntry,
   PlatformState,
   RulesetState,
+  SddMetrics,
   SnapshotFinding,
 } from './schema';
 import { resolveHumanIntent } from './humanIntent';
@@ -28,6 +29,7 @@ export type BuildEvidenceParams = {
   humanIntent?: HumanIntentState | null;
   detectedPlatforms: Record<string, PlatformState>;
   loadedRulesets: ReadonlyArray<RulesetState>;
+  sddMetrics?: SddMetrics;
 };
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
@@ -74,6 +76,14 @@ const ledgerKey = (entry: Pick<LedgerEntry, 'ruleId' | 'file' | 'lines'>): strin
   return `${entry.ruleId}::${entry.file}::${linesKey(entry.lines)}`;
 };
 
+const normalizeOptionalString = (value: unknown): string | undefined => {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+};
+
 const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
   const file = (finding.filePath ?? finding.file ?? 'unknown').replace(/\\/g, '/');
   return {
@@ -83,7 +93,33 @@ const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
     message: finding.message,
     file,
     lines: normalizeLines(finding.lines),
+    matchedBy: normalizeOptionalString(finding.matchedBy),
+    source: normalizeOptionalString(finding.source),
   };
+};
+
+const pickDeterministicDuplicateFinding = (
+  current: SnapshotFinding,
+  candidate: SnapshotFinding
+): SnapshotFinding => {
+  const bySeverity = severityRank[candidate.severity] - severityRank[current.severity];
+  if (bySeverity > 0) {
+    return candidate;
+  }
+  if (bySeverity < 0) {
+    return current;
+  }
+
+  const tuple = (finding: SnapshotFinding): string => {
+    return [
+      finding.code,
+      finding.message,
+      finding.matchedBy ?? '',
+      finding.source ?? '',
+    ].join('\u0000');
+  };
+
+  return tuple(candidate).localeCompare(tuple(current)) < 0 ? candidate : current;
 };
 
 const severityRank: Record<Severity, number> = {
@@ -94,9 +130,26 @@ const severityRank: Record<Severity, number> = {
 };
 
 const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
-  ['ios.no-force-unwrap', 'heuristics.ios.force-unwrap.ast'],
-  ['ios.no-anyview', 'heuristics.ios.anyview.ast'],
-  ['ios.no-completion-handlers-outside-bridges', 'heuristics.ios.callback-style.ast'],
+  ['ios.no-force-unwrap', 'skills.ios.no-force-unwrap', 'heuristics.ios.force-unwrap.ast'],
+  ['skills.ios.no-force-try', 'heuristics.ios.force-try.ast'],
+  ['skills.ios.no-force-cast', 'heuristics.ios.force-cast.ast'],
+  ['ios.no-anyview', 'skills.ios.no-anyview', 'heuristics.ios.anyview.ast'],
+  [
+    'ios.no-completion-handlers-outside-bridges',
+    'skills.ios.no-callback-style-outside-bridges',
+    'heuristics.ios.callback-style.ast',
+  ],
+  ['ios.no-gcd', 'skills.ios.no-dispatchqueue', 'heuristics.ios.dispatchqueue.ast'],
+  ['ios.no-gcd', 'skills.ios.no-dispatchgroup', 'heuristics.ios.dispatchgroup.ast'],
+  ['ios.no-gcd', 'skills.ios.no-dispatchsemaphore', 'heuristics.ios.dispatchsemaphore.ast'],
+  ['ios.no-gcd', 'skills.ios.no-operation-queue', 'heuristics.ios.operation-queue.ast'],
+  ['skills.ios.no-task-detached', 'heuristics.ios.task-detached.ast'],
+  ['skills.ios.no-unchecked-sendable', 'heuristics.ios.unchecked-sendable.ast'],
+  ['skills.ios.no-observable-object', 'heuristics.ios.observable-object.ast'],
+  ['skills.ios.no-navigation-view', 'heuristics.ios.navigation-view.ast'],
+  ['skills.ios.no-on-tap-gesture', 'heuristics.ios.on-tap-gesture.ast'],
+  ['skills.ios.no-string-format', 'heuristics.ios.string-format.ast'],
+  ['skills.ios.no-uiscreen-main-bounds', 'heuristics.ios.uiscreen-main-bounds.ast'],
   ['backend.no-console-log', 'frontend.no-console-log', 'heuristics.ts.console-log.ast'],
   ['backend.avoid-explicit-any', 'heuristics.ts.explicit-any.ast'],
   ['backend.no-empty-catch', 'heuristics.ts.empty-catch.ast'],
@@ -201,9 +254,11 @@ const normalizeAndDedupeFindings = (
   for (const finding of findings) {
     const normalized = normalizeFinding(finding);
     const key = findingKey(normalized);
-    if (!unique.has(key)) {
-      unique.set(key, normalized);
-    }
+    const current = unique.get(key);
+    unique.set(
+      key,
+      current ? pickDeterministicDuplicateFinding(current, normalized) : normalized
+    );
   }
   const deduped = Array.from(unique.values()).sort(compareFindingEntries);
   const consolidated = consolidateEquivalentFindings(deduped);
@@ -243,6 +298,8 @@ const toCompatibilityViolations = (
     message: finding.message,
     file: finding.file,
     lines: finding.lines,
+    matchedBy: finding.matchedBy,
+    source: finding.source,
   }));
 };
 
@@ -342,6 +399,17 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       total_violations: normalizedFindings.length,
       by_severity: severity,
     },
+    sdd_metrics: params.sddMetrics
+      ? {
+        enforced: params.sddMetrics.enforced,
+        stage: params.sddMetrics.stage,
+        decision: {
+          allowed: params.sddMetrics.decision.allowed,
+          code: params.sddMetrics.decision.code,
+          message: params.sddMetrics.decision.message,
+        },
+      }
+      : undefined,
     consolidation:
       consolidatedFindings.suppressed.length > 0
         ? { suppressed: consolidatedFindings.suppressed }

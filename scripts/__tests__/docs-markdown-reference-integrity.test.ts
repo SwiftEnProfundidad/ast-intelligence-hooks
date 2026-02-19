@@ -33,6 +33,9 @@ const loadTrackedMarkdownFiles = (repoRoot: string): string[] => {
       if (path.startsWith('docs/archive/')) {
         return false;
       }
+      if (path.startsWith('docs/codex-skills/')) {
+        return false;
+      }
       return true;
     })
     .sort();

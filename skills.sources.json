@@ -9,6 +9,20 @@
       "enabled": true
     },
     {
+      "name": "ios-concurrency-guidelines",
+      "version": "1.0.0",
+      "template": "ios-concurrency-guidelines",
+      "sourcePath": "docs/codex-skills/swift-concurrency.md",
+      "enabled": true
+    },
+    {
+      "name": "ios-swiftui-expert-guidelines",
+      "version": "1.0.0",
+      "template": "ios-swiftui-expert-guidelines",
+      "sourcePath": "docs/codex-skills/swiftui-expert-skill.md",
+      "enabled": true
+    },
+    {
       "name": "backend-guidelines",
       "version": "1.0.0",
       "template": "backend-guidelines",

@@ -23,6 +23,7 @@ Exit code contract:
 
 - `0` on pass/warn
 - `1` on block or runner error
+- `1` on `PRE_PUSH` when no upstream tracking branch is configured (fail-safe).
 
 ## Platform wrappers (exports)
 
@@ -61,7 +62,7 @@ Files:
 Key helpers:
 
 - `getFactsForCommitRange({ fromRef, toRef, extensions })`
-- `resolveUpstreamRef()`
+- `resolveUpstreamRef()` (`string | null`; `null` when upstream is missing)
 - `resolveCiBaseRef()`
 - `runCliCommand(runner)`
 

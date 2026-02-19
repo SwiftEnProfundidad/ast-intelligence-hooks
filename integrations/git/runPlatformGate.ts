@@ -1,53 +1,33 @@
-import type { Fact } from '../../core/facts/Fact';
-import { extractHeuristicFacts } from '../../core/facts/extractHeuristicFacts';
-import type { Finding } from '../../core/gate/Finding';
 import { evaluateGate } from '../../core/gate/evaluateGate';
+import type { Finding } from '../../core/gate/Finding';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
-import type { GateStage } from '../../core/gate/GateStage';
-import { evaluateRules } from '../../core/gate/evaluateRules';
 import type { RuleSet } from '../../core/rules/RuleSet';
-import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
-import { astHeuristicsRuleSet } from '../../core/rules/presets/astHeuristicsRuleSet';
-import { loadHeuristicsConfig } from '../config/heuristics';
-import { loadProjectRules } from '../config/loadProjectRules';
-import { loadSkillsRuleSetForStage } from '../config/skillsRuleSet';
-import { generateEvidence } from '../evidence/generateEvidence';
+import type { SkillsRuleSetLoadResult } from '../config/skillsRuleSet';
 import type { ResolvedStagePolicy } from '../gate/stagePolicies';
-import { applyHeuristicSeverityForStage } from '../gate/stagePolicies';
-import { detectPlatformsFromFacts } from '../platform/detectPlatforms';
-import { getFactsForCommitRange } from './getCommitRangeFacts';
-import { rulePackVersions } from '../../core/rules/presets/rulePackVersions';
+import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { GitService, type IGitService } from './GitService';
 import { EvidenceService, type IEvidenceService } from './EvidenceService';
-import { buildBaselineRuleSetEntries, buildCombinedBaselineRules } from './baselineRuleSets';
-
-type GateScope =
-  | {
-    kind: 'staged';
-    extensions?: string[];
-  }
-  | {
-    kind: 'range';
-    fromRef: string;
-    toRef: string;
-    extensions?: string[];
-  };
-
-const DEFAULT_EXTENSIONS = ['.swift', '.ts', '.tsx', '.js', '.jsx', '.kt', '.kts'];
-
-const formatFinding = (finding: Finding): string => {
-  return `${finding.ruleId}: ${finding.message}`;
-};
-
-const normalizeStageForSkills = (
-  stage: GateStage
-): Exclude<GateStage, 'STAGED'> => {
-  return stage === 'STAGED' ? 'PRE_COMMIT' : stage;
-};
+import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
+import { resolveFactsForGateScope, type GateScope } from './runPlatformGateFacts';
+import { emitPlatformGateEvidence } from './runPlatformGateEvidence';
+import { printGateFindings } from './runPlatformGateOutput';
+import { evaluateSddPolicy, type SddDecision } from '../sdd';
 
 export type GateServices = {
   git: IGitService;
   evidence: IEvidenceService;
+};
+
+export type GateDependencies = {
+  evaluateGate: typeof evaluateGate;
+  evaluatePlatformGateFindings: typeof evaluatePlatformGateFindings;
+  resolveFactsForGateScope: typeof resolveFactsForGateScope;
+  emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
+  printGateFindings: typeof printGateFindings;
+  evaluateSddForStage: (
+    stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI',
+    repoRoot: string
+  ) => Pick<SddDecision, 'allowed' | 'code' | 'message'>;
 };
 
 const defaultServices: GateServices = {
@@ -55,79 +35,117 @@ const defaultServices: GateServices = {
   evidence: new EvidenceService(),
 };
 
+const defaultDependencies: GateDependencies = {
+  evaluateGate,
+  evaluatePlatformGateFindings,
+  resolveFactsForGateScope,
+  emitPlatformGateEvidence,
+  printGateFindings,
+  evaluateSddForStage: (stage, repoRoot) =>
+    evaluateSddPolicy({
+      stage,
+      repoRoot,
+    }).decision,
+};
+
+const toSddBlockingFinding = (decision: Pick<SddDecision, 'code' | 'message'>): Finding => ({
+  ruleId: 'sdd.policy.blocked',
+  severity: 'ERROR',
+  code: decision.code,
+  message: decision.message,
+  filePath: 'openspec/changes',
+  matchedBy: 'SddPolicy',
+  source: 'sdd-policy',
+});
+
 export async function runPlatformGate(params: {
   policy: GatePolicy;
   policyTrace?: ResolvedStagePolicy['trace'];
   scope: GateScope;
   services?: Partial<GateServices>;
+  dependencies?: Partial<GateDependencies>;
 }): Promise<number> {
   const git = params.services?.git ?? defaultServices.git;
   const evidence = params.services?.evidence ?? defaultServices.evidence;
+  const dependencies: GateDependencies = {
+    ...defaultDependencies,
+    ...params.dependencies,
+  };
+  const repoRoot = git.resolveRepoRoot();
+  let sddDecision:
+    | Pick<SddDecision, 'allowed' | 'code' | 'message'>
+    | undefined;
 
-  const extensions = params.scope.extensions ?? DEFAULT_EXTENSIONS;
-  const facts =
-    params.scope.kind === 'staged'
-      ? git.getStagedFacts(extensions)
-      : await getFactsForCommitRange({
-        fromRef: params.scope.fromRef,
-        toRef: params.scope.toRef,
-        extensions,
+  if (
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+  ) {
+    sddDecision = dependencies.evaluateSddForStage(
+      params.policy.stage,
+      repoRoot
+    );
+    if (!sddDecision.allowed) {
+      console.log(`[pumuki][sdd] ${sddDecision.code}: ${sddDecision.message}`);
+      const emptyDetectedPlatforms: DetectedPlatforms = {};
+      const emptySkillsRuleSet: SkillsRuleSetLoadResult = {
+        rules: [],
+        activeBundles: [],
+        mappedHeuristicRuleIds: new Set<string>(),
+        requiresHeuristicFacts: false,
+      };
+      const emptyRuleSet: RuleSet = [];
+      dependencies.emitPlatformGateEvidence({
+        stage: params.policy.stage,
+        policyTrace: params.policyTrace,
+        findings: [toSddBlockingFinding(sddDecision)],
+        gateOutcome: 'BLOCK',
+        repoRoot,
+        detectedPlatforms: emptyDetectedPlatforms,
+        skillsRuleSet: emptySkillsRuleSet,
+        projectRules: emptyRuleSet,
+        heuristicRules: emptyRuleSet,
+        evidenceService: evidence,
+        sddDecision,
       });
+      return 1;
+    }
+  }
 
-  const detectedPlatforms = detectPlatformsFromFacts(facts);
-  const heuristicsConfig = loadHeuristicsConfig();
-  const stageForSkills = normalizeStageForSkills(params.policy.stage);
-  const skillsRuleSet = loadSkillsRuleSetForStage(stageForSkills, git.resolveRepoRoot());
-  const baselineRules = buildCombinedBaselineRules(detectedPlatforms);
-  const shouldExtractHeuristicFacts =
-    heuristicsConfig.astSemanticEnabled || skillsRuleSet.requiresHeuristicFacts;
-  const heuristicFacts = shouldExtractHeuristicFacts
-    ? extractHeuristicFacts({
-      facts,
-      detectedPlatforms,
-    })
-    : [];
-  const evaluationFacts: ReadonlyArray<Fact> =
-    heuristicFacts.length > 0 ? [...facts, ...heuristicFacts] : facts;
-  const heuristicRules = heuristicsConfig.astSemanticEnabled
-    ? applyHeuristicSeverityForStage(astHeuristicsRuleSet, params.policy.stage).filter(
-      (rule) => !skillsRuleSet.mappedHeuristicRuleIds.has(rule.id)
-    )
-    : [];
-  const baselineRulesWithHeuristicsAndSkills: RuleSet = [
-    ...baselineRules,
-    ...heuristicRules,
-    ...skillsRuleSet.rules,
-  ];
-  const projectConfig = loadProjectRules();
-  const projectRules = projectConfig?.rules ?? [];
-  const mergedRules = mergeRuleSets(baselineRulesWithHeuristicsAndSkills, projectRules, {
-    allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
+  const facts = await dependencies.resolveFactsForGateScope({
+    scope: params.scope,
+    git,
   });
-  const findings = evaluateRules(mergedRules, evaluationFacts);
-  const decision = evaluateGate([...findings], params.policy);
 
-  generateEvidence({
+  const {
+    detectedPlatforms,
+    skillsRuleSet,
+    projectRules,
+    heuristicRules,
+    findings,
+  } = dependencies.evaluatePlatformGateFindings({
+    facts,
     stage: params.policy.stage,
+    repoRoot,
+  });
+  const decision = dependencies.evaluateGate([...findings], params.policy);
+
+  dependencies.emitPlatformGateEvidence({
+    stage: params.policy.stage,
+    policyTrace: params.policyTrace,
     findings,
     gateOutcome: decision.outcome,
-    previousEvidence: evidence.loadPreviousEvidence(git.resolveRepoRoot()),
-    detectedPlatforms: evidence.toDetectedPlatformsRecord(detectedPlatforms),
-    loadedRulesets: evidence.buildRulesetState({
-      baselineRuleSets: buildBaselineRuleSetEntries(detectedPlatforms),
-      projectRules,
-      heuristicRules,
-      heuristicsBundle: `astHeuristicsRuleSet@${rulePackVersions.astHeuristicsRuleSet}`,
-      skillsBundles: skillsRuleSet.activeBundles,
-      policyTrace: params.policyTrace,
-      stage: params.policy.stage,
-    }),
+    repoRoot,
+    detectedPlatforms,
+    skillsRuleSet,
+    projectRules,
+    heuristicRules,
+    evidenceService: evidence,
+    sddDecision,
   });
 
   if (decision.outcome === 'BLOCK') {
-    for (const finding of findings) {
-      console.log(formatFinding(finding));
-    }
+    dependencies.printGateFindings(findings);
     return 1;
   }
 

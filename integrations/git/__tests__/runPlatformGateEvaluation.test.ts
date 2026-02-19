@@ -1,0 +1,281 @@
+import assert from 'node:assert/strict';
+import test from 'node:test';
+import type { Fact } from '../../../core/facts/Fact';
+import type { Finding } from '../../../core/gate/Finding';
+import type { RuleDefinition } from '../../../core/rules/RuleDefinition';
+import type { RuleSet } from '../../../core/rules/RuleSet';
+import type { SkillsRuleSetLoadResult } from '../../config/skillsRuleSet';
+import type { DetectedPlatforms } from '../../platform/detectPlatforms';
+import {
+  evaluatePlatformGateFindings,
+  type PlatformGateEvaluationDependencies,
+} from '../runPlatformGateEvaluation';
+
+const makeRule = (id: string, severity: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' = 'WARN'): RuleDefinition => {
+  return {
+    id,
+    description: id,
+    severity,
+    when: { kind: 'FileChange' },
+    then: { kind: 'Finding', message: id, code: id.toUpperCase() },
+    platform: 'backend',
+  };
+};
+
+test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic facts cuando skills lo requiere', () => {
+  const inputFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      path: 'src/a.ts',
+      changeType: 'modified',
+      source: 'test',
+    },
+  ];
+  const heuristicFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'Heuristic',
+      ruleId: 'heuristic.test',
+      severity: 'WARN',
+      code: 'HEURISTIC_TEST',
+      message: 'heuristic fact',
+      filePath: 'src/a.ts',
+      source: 'test',
+    },
+  ];
+  const detectedPlatforms: DetectedPlatforms = {
+    backend: { detected: true, confidence: 'HIGH' },
+  };
+  const baselineRule = makeRule('baseline.rule');
+  const skillsRule = makeRule('skills.rule');
+  const mergedRule = makeRule('merged.rule');
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'merged.rule',
+      severity: 'WARN',
+      code: 'MERGED_RULE',
+      message: 'finding',
+      filePath: 'src/a.ts',
+    },
+  ];
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [skillsRule],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: true,
+  };
+
+  let capturedSkillsStage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' | undefined;
+  let capturedSkillsRepoRoot: string | undefined;
+  let capturedExtractHeuristicFactsInput:
+    | {
+      facts: ReadonlyArray<Fact>;
+      detectedPlatforms: DetectedPlatforms;
+    }
+    | undefined;
+  let capturedMergeRuleSetsInput:
+    | {
+      baselineRules: RuleSet;
+      projectRules: RuleSet;
+      options?: { allowDowngradeBaseline?: boolean };
+    }
+    | undefined;
+  let capturedEvaluateRulesInput:
+    | {
+      rules: RuleSet;
+      facts: ReadonlyArray<Fact>;
+    }
+    | undefined;
+  let capturedTraceabilityInput:
+    | {
+      findings: ReadonlyArray<Finding>;
+      rules: RuleSet;
+      facts: ReadonlyArray<Fact>;
+    }
+    | undefined;
+
+  const deps: Partial<PlatformGateEvaluationDependencies> = {
+    detectPlatformsFromFacts: () => detectedPlatforms,
+    loadHeuristicsConfig: () => ({ astSemanticEnabled: false }),
+    loadSkillsRuleSetForStage: (stage, repoRoot) => {
+      capturedSkillsStage = stage;
+      capturedSkillsRepoRoot = repoRoot;
+      return skillsRuleSet;
+    },
+    buildCombinedBaselineRules: () => [baselineRule],
+    extractHeuristicFacts: (input) => {
+      capturedExtractHeuristicFactsInput = input;
+      return heuristicFacts;
+    },
+    applyHeuristicSeverityForStage: () => {
+      throw new Error('No debe invocarse cuando astSemanticEnabled=false');
+    },
+    loadProjectRules: () => undefined,
+    mergeRuleSets: (baselineRules, projectRules, options) => {
+      capturedMergeRuleSetsInput = { baselineRules, projectRules, options };
+      return [mergedRule];
+    },
+    evaluateRules: (rules, factsArg) => {
+      capturedEvaluateRulesInput = { rules, facts: factsArg };
+      return findings;
+    },
+    attachFindingTraceability: (input) => {
+      capturedTraceabilityInput = input;
+      return input.findings;
+    },
+  };
+
+  const result = evaluatePlatformGateFindings(
+    {
+      facts: inputFacts,
+      stage: 'STAGED',
+      repoRoot: '/repo',
+    },
+    deps
+  );
+
+  assert.equal(capturedSkillsStage, 'PRE_COMMIT');
+  assert.equal(capturedSkillsRepoRoot, '/repo');
+  assert.deepEqual(capturedExtractHeuristicFactsInput, {
+    facts: inputFacts,
+    detectedPlatforms,
+  });
+  assert.deepEqual(
+    capturedMergeRuleSetsInput?.baselineRules.map((rule) => rule.id),
+    ['baseline.rule', 'skills.rule']
+  );
+  assert.deepEqual(capturedMergeRuleSetsInput?.projectRules, []);
+  assert.deepEqual(capturedMergeRuleSetsInput?.options, {
+    allowDowngradeBaseline: false,
+  });
+  assert.deepEqual(capturedEvaluateRulesInput?.rules, [mergedRule]);
+  assert.deepEqual(capturedEvaluateRulesInput?.facts, [...inputFacts, ...heuristicFacts]);
+  assert.deepEqual(capturedTraceabilityInput?.findings, findings);
+  assert.deepEqual(capturedTraceabilityInput?.rules, [mergedRule]);
+  assert.deepEqual(capturedTraceabilityInput?.facts, [...inputFacts, ...heuristicFacts]);
+  assert.deepEqual(result.detectedPlatforms, detectedPlatforms);
+  assert.deepEqual(result.skillsRuleSet, skillsRuleSet);
+  assert.deepEqual(result.projectRules, []);
+  assert.deepEqual(result.heuristicRules, []);
+  assert.deepEqual(result.findings, findings);
+});
+
+test('evaluatePlatformGateFindings filtra heuristicas mapeadas y permite downgrade cuando projectRules lo habilita', () => {
+  const inputFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'src/a.ts',
+      content: 'console.log("x")',
+      source: 'test',
+    },
+  ];
+  const detectedPlatforms: DetectedPlatforms = {
+    backend: { detected: true, confidence: 'HIGH' },
+  };
+  const baselineRule = makeRule('baseline.rule');
+  const heuristicKeptRule = makeRule('heuristic.keep');
+  const heuristicFilteredRule = makeRule('heuristic.filtered');
+  const skillsRule = makeRule('skills.rule');
+  const projectRule = makeRule('project.rule', 'ERROR');
+  const mergedRule = makeRule('merged.rule', 'ERROR');
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'merged.rule',
+      severity: 'ERROR',
+      code: 'MERGED_RULE',
+      message: 'finding',
+      filePath: 'src/a.ts',
+    },
+  ];
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [skillsRule],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(['heuristic.filtered']),
+    requiresHeuristicFacts: false,
+  };
+
+  let applyHeuristicSeverityStage: 'STAGED' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' | undefined;
+  let extractHeuristicFactsInvocations = 0;
+  let capturedMergeRuleSetsInput:
+    | {
+      baselineRules: RuleSet;
+      projectRules: RuleSet;
+      options?: { allowDowngradeBaseline?: boolean };
+    }
+    | undefined;
+  let capturedEvaluateRulesInput:
+    | {
+      rules: RuleSet;
+      facts: ReadonlyArray<Fact>;
+    }
+    | undefined;
+  let capturedTraceabilityInput:
+    | {
+      findings: ReadonlyArray<Finding>;
+      rules: RuleSet;
+      facts: ReadonlyArray<Fact>;
+    }
+    | undefined;
+
+  const deps: Partial<PlatformGateEvaluationDependencies> = {
+    detectPlatformsFromFacts: () => detectedPlatforms,
+    loadHeuristicsConfig: () => ({ astSemanticEnabled: true }),
+    loadSkillsRuleSetForStage: () => skillsRuleSet,
+    buildCombinedBaselineRules: () => [baselineRule],
+    extractHeuristicFacts: () => {
+      extractHeuristicFactsInvocations += 1;
+      return [];
+    },
+    applyHeuristicSeverityForStage: (_rules, stage) => {
+      applyHeuristicSeverityStage = stage;
+      return [heuristicKeptRule, heuristicFilteredRule];
+    },
+    loadProjectRules: () => ({
+      rules: [projectRule],
+      allowOverrideLocked: true,
+    }),
+    mergeRuleSets: (baselineRules, projectRules, options) => {
+      capturedMergeRuleSetsInput = { baselineRules, projectRules, options };
+      return [mergedRule];
+    },
+    evaluateRules: (rules, factsArg) => {
+      capturedEvaluateRulesInput = { rules, facts: factsArg };
+      return findings;
+    },
+    attachFindingTraceability: (input) => {
+      capturedTraceabilityInput = input;
+      return input.findings;
+    },
+  };
+
+  const result = evaluatePlatformGateFindings(
+    {
+      facts: inputFacts,
+      stage: 'PRE_PUSH',
+      repoRoot: '/repo',
+    },
+    deps
+  );
+
+  assert.equal(applyHeuristicSeverityStage, 'PRE_PUSH');
+  assert.equal(extractHeuristicFactsInvocations, 1);
+  assert.deepEqual(
+    capturedMergeRuleSetsInput?.baselineRules.map((rule) => rule.id),
+    ['baseline.rule', 'heuristic.keep', 'skills.rule']
+  );
+  assert.deepEqual(capturedMergeRuleSetsInput?.projectRules.map((rule) => rule.id), [
+    'project.rule',
+  ]);
+  assert.deepEqual(capturedMergeRuleSetsInput?.options, {
+    allowDowngradeBaseline: true,
+  });
+  assert.deepEqual(capturedEvaluateRulesInput?.rules, [mergedRule]);
+  assert.deepEqual(capturedEvaluateRulesInput?.facts, inputFacts);
+  assert.deepEqual(capturedTraceabilityInput?.findings, findings);
+  assert.deepEqual(capturedTraceabilityInput?.rules, [mergedRule]);
+  assert.deepEqual(capturedTraceabilityInput?.facts, inputFacts);
+  assert.deepEqual(result.detectedPlatforms, detectedPlatforms);
+  assert.deepEqual(result.skillsRuleSet, skillsRuleSet);
+  assert.deepEqual(result.projectRules, [projectRule]);
+  assert.deepEqual(result.heuristicRules.map((rule) => rule.id), ['heuristic.keep']);
+  assert.deepEqual(result.findings, findings);
+});

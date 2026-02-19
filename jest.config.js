@@ -1,6 +1,8 @@
 module.exports = {
     bail: true,
     testEnvironment: 'node',
+    // jest solo ejecuta suites spec; los archivos *.test.ts usan node:test y
+    // se ejecutan mediante scripts tsx --test.
     testMatch: ['**/__tests__/**/*.spec.ts'],
     transform: {
         '^.+\\.tsx?$': 'babel-jest'
@@ -17,12 +19,6 @@ module.exports = {
         '!**/*.spec.ts'
     ],
     coverageThreshold: {
-        global: {
-            statements: 0,
-            branches: 0,
-            functions: 0,
-            lines: 0
-        },
         './core/gate/conditionMatches.ts': {
             statements: 60,
             branches: 40,

@@ -1,7 +1,7 @@
 {
   "version": "1.0",
   "compilerVersion": "1.0.0",
-  "generatedAt": "2026-02-15T01:30:26.023Z",
+  "generatedAt": "2026-02-17T15:34:38.602Z",
   "bundles": [
     {
       "name": "android-guidelines",
@@ -126,10 +126,84 @@
       ]
     },
     {
+      "name": "ios-concurrency-guidelines",
+      "version": "1.0.0",
+      "source": "file:docs/codex-skills/swift-concurrency.md",
+      "hash": "cb53052857f658ea9cf42d03b5c36b6350d574178990a5cfcacbc1a7954067f6",
+      "rules": [
+        {
+          "id": "skills.ios.no-dispatchgroup",
+          "description": "Avoid DispatchGroup in production iOS code; prefer TaskGroup.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "docs/codex-skills/swift-concurrency.md"
+        },
+        {
+          "id": "skills.ios.no-dispatchqueue",
+          "description": "Avoid DispatchQueue in production iOS code; prefer structured concurrency.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "docs/codex-skills/swift-concurrency.md"
+        },
+        {
+          "id": "skills.ios.no-dispatchsemaphore",
+          "description": "Avoid DispatchSemaphore in production iOS code.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "docs/codex-skills/swift-concurrency.md"
+        },
+        {
+          "id": "skills.ios.no-operation-queue",
+          "description": "Avoid OperationQueue in production iOS code unless explicitly justified.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "docs/codex-skills/swift-concurrency.md"
+        },
+        {
+          "id": "skills.ios.no-task-detached",
+          "description": "Avoid Task.detached in production iOS code without strict isolation rationale.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "docs/codex-skills/swift-concurrency.md"
+        },
+        {
+          "id": "skills.ios.no-unchecked-sendable",
+          "description": "Avoid @unchecked Sendable in production iOS code without strict safety invariant.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-concurrency-guidelines",
+          "sourcePath": "docs/codex-skills/swift-concurrency.md"
+        }
+      ]
+    },
+    {
       "name": "ios-guidelines",
       "version": "1.0.0",
       "source": "file:docs/codex-skills/windsurf-rules-ios.md",
-      "hash": "023de46b9b30224cbf7d76472c6f7cfd809d1baff09a64b5a93b716171d2566a",
+      "hash": "c0538c91069865394153975891d0905aecd2c907ca11036aafb6fb82fcd1d8c5",
       "rules": [
         {
           "id": "skills.ios.no-anyview",
@@ -153,6 +227,16 @@
           "sourcePath": "docs/codex-skills/windsurf-rules-ios.md"
         },
         {
+          "id": "skills.ios.no-force-cast",
+          "description": "Disallow force cast in production iOS code.",
+          "severity": "ERROR",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "locked": true,
+          "sourceSkill": "ios-guidelines",
+          "sourcePath": "docs/codex-skills/windsurf-rules-ios.md"
+        },
+        {
           "id": "skills.ios.no-force-try",
           "description": "Disallow force try in production iOS code.",
           "severity": "ERROR",
@@ -171,6 +255,69 @@
           "locked": true,
           "sourceSkill": "ios-guidelines",
           "sourcePath": "docs/codex-skills/windsurf-rules-ios.md"
+        }
+      ]
+    },
+    {
+      "name": "ios-swiftui-expert-guidelines",
+      "version": "1.0.0",
+      "source": "file:docs/codex-skills/swiftui-expert-skill.md",
+      "hash": "50503c6d5d99ca25120b319de77f832be27c2127dd8f420222673ba754530df1",
+      "rules": [
+        {
+          "id": "skills.ios.no-navigation-view",
+          "description": "Avoid NavigationView in modern iOS code; prefer NavigationStack.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "docs/codex-skills/swiftui-expert-skill.md"
+        },
+        {
+          "id": "skills.ios.no-observable-object",
+          "description": "Avoid ObservableObject in modern iOS code; prefer @Observable where available.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "docs/codex-skills/swiftui-expert-skill.md"
+        },
+        {
+          "id": "skills.ios.no-on-tap-gesture",
+          "description": "Avoid onTapGesture for button-like interactions in production iOS code.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "MEDIUM",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "docs/codex-skills/swiftui-expert-skill.md"
+        },
+        {
+          "id": "skills.ios.no-string-format",
+          "description": "Avoid String(format:) in SwiftUI presentation code; prefer modern formatting APIs.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "docs/codex-skills/swiftui-expert-skill.md"
+        },
+        {
+          "id": "skills.ios.no-uiscreen-main-bounds",
+          "description": "Avoid UIScreen.main.bounds in SwiftUI layout code; prefer relative layout APIs.",
+          "severity": "WARN",
+          "platform": "ios",
+          "confidence": "HIGH",
+          "stage": "PRE_PUSH",
+          "locked": true,
+          "sourceSkill": "ios-swiftui-expert-guidelines",
+          "sourcePath": "docs/codex-skills/swiftui-expert-skill.md"
         }
       ]
     }

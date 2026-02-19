@@ -1,0 +1,169 @@
+{
+  "summary": {
+    "total_source_files": 204,
+    "total_test_files": 208,
+    "total_without_direct_test": 22,
+    "by_priority": {
+      "P1": 1,
+      "P2": 1,
+      "P3": 9,
+      "P4": 11
+    }
+  },
+  "entries": [
+    {
+      "file": "integrations/gate/stagePolicies.ts",
+      "loc": 299,
+      "reverse_dependencies": 5,
+      "score": 399,
+      "priority": "P1"
+    },
+    {
+      "file": "integrations/platform/detectPlatforms.ts",
+      "loc": 58,
+      "reverse_dependencies": 4,
+      "score": 138,
+      "priority": "P2"
+    },
+    {
+      "file": "integrations/mcp/evidenceContextServer.ts",
+      "loc": 132,
+      "reverse_dependencies": 2,
+      "score": 172,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/mcp/evidencePayloadConfig.ts",
+      "loc": 71,
+      "reverse_dependencies": 3,
+      "score": 131,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/sdd/types.ts",
+      "loc": 63,
+      "reverse_dependencies": 2,
+      "score": 103,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacetsRulesets.ts",
+      "loc": 47,
+      "reverse_dependencies": 2,
+      "score": 87,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacetsPlatforms.ts",
+      "loc": 19,
+      "reverse_dependencies": 3,
+      "score": 79,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacetsFindings.ts",
+      "loc": 35,
+      "reverse_dependencies": 2,
+      "score": 75,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/sdd/index.ts",
+      "loc": 11,
+      "reverse_dependencies": 3,
+      "score": 71,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacets.ts",
+      "loc": 6,
+      "reverse_dependencies": 3,
+      "score": 66,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacetsLedger.ts",
+      "loc": 24,
+      "reverse_dependencies": 2,
+      "score": 64,
+      "priority": "P3"
+    },
+    {
+      "file": "integrations/mcp/evidencePayloadSummary.ts",
+      "loc": 62,
+      "reverse_dependencies": 1,
+      "score": 82,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/platform/detectFrontend.ts",
+      "loc": 26,
+      "reverse_dependencies": 1,
+      "score": 46,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/platform/detectAndroid.ts",
+      "loc": 22,
+      "reverse_dependencies": 1,
+      "score": 42,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/platform/detectBackend.ts",
+      "loc": 19,
+      "reverse_dependencies": 1,
+      "score": 39,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacetsSuppressedShare.ts",
+      "loc": 2,
+      "reverse_dependencies": 1,
+      "score": 22,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/git/index.ts",
+      "loc": 13,
+      "reverse_dependencies": 0,
+      "score": 13,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/mcp/evidenceContextServer.cli.ts",
+      "loc": 13,
+      "reverse_dependencies": 0,
+      "score": 13,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/mcp/enterpriseServer.cli.ts",
+      "loc": 9,
+      "reverse_dependencies": 0,
+      "score": 9,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacetsSnapshot.ts",
+      "loc": 4,
+      "reverse_dependencies": 0,
+      "score": 4,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/mcp/evidenceFacetsBase.ts",
+      "loc": 3,
+      "reverse_dependencies": 0,
+      "score": 3,
+      "priority": "P4"
+    },
+    {
+      "file": "integrations/mcp/index.ts",
+      "loc": 2,
+      "reverse_dependencies": 0,
+      "score": 2,
+      "priority": "P4"
+    }
+  ]
+}

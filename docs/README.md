@@ -53,8 +53,13 @@ Language baseline: active repository documentation is maintained in English.
 - `validation/adapter-real-session-report-template.md`
 - `validation/enterprise-consumer-isolation-policy.md`
 - `validation/mock-consumer-integration-runbook.md`
+- `validation/mock-consumer-post-release-handoff-pack.md`
+- `validation/mock-consumer-next-cycle-enterprise-checklist.md`
+- `validation/mock-consumer-next-round-scope.md`
 - `validation/github-support-ticket-template-startup-failure.md`
 - `validation/skills-rollout-consumer-repositories.md`
+- `validation/phase12-go-no-go-report.md`
+- `validation/post-phase12-next-lot-decision.md`
 - `validation/archive/README.md`: historical validation reports.
 
 ## Vendored Codex Skills
@@ -75,6 +80,9 @@ Language baseline: active repository documentation is maintained in English.
 - `RELEASE_NOTES.md`: v2.x release notes and rollout checkpoints.
 - `TODO.md`: active operational work tracking.
 - `REFRACTOR_PROGRESS.md`: linear phase-by-phase status (done/in-progress/pending).
+- `CORE_INTEGRATIONS_UNTESTED_INVENTORY.md`: deterministic inventory and prioritization of untested files for `core/` and `integrations/`.
+- `PUMUKI_FULL_VALIDATION_CHECKLIST.md`: sequential full validation matrix for enterprise readiness.
+- `PUMUKI_OPENSPEC_SDD_ROADMAP.md`: phased rollout roadmap for OpenSpec+SDD integration.
 
 ## Root-Level Pointers
 
@@ -83,3 +91,4 @@ Language baseline: active repository documentation is maintained in English.
 - `CHANGELOG.md` (repository root) tracks top-level package changes for the active baseline.
 - `AGENTS.md` (repository root) defines repository execution constraints for coding agents.
 - `CLAUDE.md` (repository root) provides a concise agent profile aligned with repository policies.
+- `PUMUKI.md` (repository root) is the framework-facing manual entrypoint.

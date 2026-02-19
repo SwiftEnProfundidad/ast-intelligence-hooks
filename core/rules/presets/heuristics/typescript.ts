@@ -217,4 +217,117 @@ export const typescriptRules: RuleSet = [
       code: 'HEURISTICS_DEBUGGER_AST',
     },
   },
+  {
+    id: 'heuristics.ts.solid.srp.class-command-query-mix.ast',
+    description: 'Detects SRP/CQS violations when classes mix command and query responsibilities.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.solid.srp.class-command-query-mix.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected class-level SRP/CQS mix (commands and queries in the same class).',
+      code: 'HEURISTICS_SOLID_SRP_CLASS_COMMAND_QUERY_MIX_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.solid.isp.interface-command-query-mix.ast',
+    description: 'Detects ISP/CQS violations when interfaces mix command and query responsibilities.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.solid.isp.interface-command-query-mix.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected interface-level ISP/CQS mix (commands and queries in the same contract).',
+      code: 'HEURISTICS_SOLID_ISP_INTERFACE_COMMAND_QUERY_MIX_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.solid.ocp.discriminator-switch.ast',
+    description: 'Detects OCP risk when behavior branches by discriminator switch.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.solid.ocp.discriminator-switch.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected OCP risk via discriminator switch branching.',
+      code: 'HEURISTICS_SOLID_OCP_DISCRIMINATOR_SWITCH_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.solid.lsp.override-not-implemented.ast',
+    description: 'Detects LSP risk when overrides throw not-implemented/unsupported errors.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.solid.lsp.override-not-implemented.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected LSP risk: override throws not-implemented/unsupported.',
+      code: 'HEURISTICS_SOLID_LSP_OVERRIDE_NOT_IMPLEMENTED_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.solid.dip.framework-import.ast',
+    description: 'Detects DIP risk when domain/application code imports framework dependencies.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.solid.dip.framework-import.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected DIP risk: framework dependency imported in domain/application code.',
+      code: 'HEURISTICS_SOLID_DIP_FRAMEWORK_IMPORT_AST',
+    },
+  },
+  {
+    id: 'heuristics.ts.solid.dip.concrete-instantiation.ast',
+    description:
+      'Detects DIP risk when domain/application code instantiates concrete framework dependencies.',
+    severity: 'WARN',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.solid.dip.concrete-instantiation.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message:
+        'AST heuristic detected DIP risk: direct instantiation of concrete framework dependency.',
+      code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST',
+    },
+  },
 ];
