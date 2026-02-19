@@ -10,7 +10,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 ## Tareas Abiertas (Vista Rápida)
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
 - ✅ Publicar cierre operativo final de la fase de cobertura (inventario base 0/22 + inventario incremental refinado 0).
-- ⏳ Tarea activa actual: ver “Próximo Ciclo Mock (Definición Atómica)” (única tarea en 🚧).
+- ⏳ Tarea activa actual: consolidar evidencia del ciclo mock ejecutado y cerrar ciclo en este tracker (única tarea en 🚧).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
@@ -18,8 +18,14 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   `cd /Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer && npm install --save-exact pumuki@latest && npm run pumuki:matrix`
   Criterio de aceptación:
   salida con `status: PASS` para `clean`, `violations` y `mixed`, presencia de `All scenario matrix checks passed`, y exit code `0`.
-- 🚧 Ejecutar comando de arranque en `pumuki-mock-consumer` y capturar salida real.
-- ⏳ Consolidar evidencia resultante en este tracker y cerrar el ciclo.
+- ✅ Ejecutar comando de arranque en `pumuki-mock-consumer` y capturar salida real.
+  Resultado capturado (real):
+  - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0` → `status: PASS`
+  - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1` → `status: PASS`
+  - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` → `status: PASS`
+  - cierre: `All scenario matrix checks passed for package: pumuki@latest`
+  - runtime npm: `3 high severity vulnerabilities` reportadas por `npm audit` en mock consumer.
+- 🚧 Consolidar evidencia resultante en este tracker y cerrar el ciclo.
 
 ## Cierre Operativo Final de Cobertura
 - ✅ Inventario base de `core/` + `integrations/` cerrado en `0/22` con batches 01..08 completados.
