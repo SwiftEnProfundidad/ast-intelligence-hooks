@@ -142,9 +142,23 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - ninguna (baseline y observado coinciden 1:1).
 
 ## Fase 3 — Lifecycle Enterprise
-- 🚧 C2-F3-T1: Validar `install` y estado de hooks gestionados.
-- ⏳ C2-F3-T2: Validar `update` y consistencia de versión/reportes.
+- ✅ C2-F3-T1: Validar `install` y estado de hooks gestionados.
+- 🚧 C2-F3-T2: Validar `update` y consistencia de versión/reportes.
 - ⏳ C2-F3-T3: Validar `remove` con limpieza estricta sin tocar terceros.
+
+### Resultado C2-F3-T1 (Install + Hooks Gestionados)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Comandos ejecutados:
+  - `npm install --save-exact pumuki@6.3.15`
+  - `npx pumuki install`
+  - `npx pumuki status`
+- Resultado lifecycle:
+  - `installed 6.3.15` con `hooks changed: none` (idempotencia correcta).
+  - `lifecycle installed: true`, `lifecycle version: 6.3.15`.
+  - `hooks: pre-commit=managed, pre-push=managed`.
+- Verificación de hooks en `.git/hooks`:
+  - `pre-commit` y `pre-push` presentes, ejecutables y con bloque `# >>> PUMUKI MANAGED START >>>`.
+  - ambos hooks invocan `npx --yes pumuki-pre-commit` / `npx --yes pumuki-pre-push`.
 
 ## Fase 4 — Evidencia y MCP
 - ⏳ C2-F4-T1: Verificar campos críticos de `.ai_evidence.json` contra resultados reales.
