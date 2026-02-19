@@ -66,6 +66,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   5. `npm run pumuki:matrix` para validar que gates siguen estables.
   Criterio de salida:
   - cerrar tarea `🚧` solo si la cadena queda saneada y la matriz mantiene `PASS` en `clean/violations/mixed`.
+- ✅ Declarar estado operativo actual: **bloqueado externamente** (sin más acciones locales productivas hasta cumplir condición de desbloqueo o llegar al checkpoint `2026-02-26`).
 - 🚧 Esperar desbloqueo upstream y ejecutar revalidación completa en el mock cuando se cumpla la condición.
 
 ## Cierre Operativo Final de Cobertura
