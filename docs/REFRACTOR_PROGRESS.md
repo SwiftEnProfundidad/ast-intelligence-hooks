@@ -46,7 +46,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C3-F0-T1`: crear `docs/PUMUKI_CYCLE_03_SDD_ACTIVE_VALIDATION.md` y alinear inicio del ciclo 03.
 - ✅ Ejecutar `C3-F0-T2`: alcance del ciclo 03 congelado en `docs/PUMUKI_CYCLE_03_SDD_ACTIVE_VALIDATION.md` (entradas/salidas/límites/done).
 - ✅ Ejecutar `C3-F0-T3`: checkpoint único de ciclo 03 publicado (fecha/comando/criterio de aceptación con sesión SDD activa).
-- 🚧 Tarea activa actual: ejecutar `C3-F1-T1` (verificar baseline limpia del mock consumer antes de abrir sesión SDD).
+- ✅ Ejecutar `C3-F1-T1`: baseline limpia del mock verificada (rama/upstream/remote listos) antes de abrir sesión SDD.
+- 🚧 Tarea activa actual: ejecutar `C3-F1-T2` (abrir sesión SDD válida y registrar contexto de cambio).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.

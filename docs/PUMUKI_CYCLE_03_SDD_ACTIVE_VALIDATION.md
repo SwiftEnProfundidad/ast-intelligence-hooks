@@ -55,9 +55,20 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
   - salida final contiene `All scenario matrix checks passed`.
 
 ## Fase 1 — Baseline SDD Activo en Mock
-- 🚧 C3-F1-T1: Verificar baseline limpia del mock consumer antes de abrir sesión SDD.
-- ⏳ C3-F1-T2: Abrir sesión SDD válida y registrar contexto de cambio.
+- ✅ C3-F1-T1: Verificar baseline limpia del mock consumer antes de abrir sesión SDD.
+- 🚧 C3-F1-T2: Abrir sesión SDD válida y registrar contexto de cambio.
 - ⏳ C3-F1-T3: Confirmar baseline operativa con SDD activo (sin drift).
+
+### Resultado C3-F1-T1 (Baseline Limpia Pre-SDD)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Estado baseline:
+  - `git status --short --branch` limpio en `feat/pumuki-validation...origin/feat/pumuki-validation`.
+  - `HEAD`: `2ed6f2b`.
+  - `main`: `a57b79c`.
+  - upstream activo: `origin/feat/pumuki-validation`.
+  - remote `origin`: `/tmp/pumuki-mock-consumer-remote.git`.
+- Conclusión:
+  - baseline operativa lista para abrir sesión SDD (`C3-F1-T2`) sin drift previo.
 
 ## Fase 2 — Gates de Plataforma con SDD Activo
 - ⏳ C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
