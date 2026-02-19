@@ -200,7 +200,18 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C10-T3-A5`: evidencia final de implementación consolidada y transición completada a `C10-T4` (`run_id=pumuki-matrix-20260219T221341Z-42491`, criterio satisfecho y sin drift).
 - ✅ Ejecutar `C10-T4`: validación final del alcance completada en mock (`run_id=pumuki-matrix-20260219T223433Z-61662`, `final_verdict=PASS`, `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, línea final presente y `MATRIX_EXIT=0`).
 - ✅ Ejecutar `C10-T5`: cierre del ciclo 10 completado (trackers sincronizados y cierre operativo preparado para commit/push atómico).
-- 🚧 Tarea activa actual: esperar instrucción explícita del usuario para abrir `Cycle 11` (sin ejecución autónoma).
+- ✅ Apertura de `Cycle 11` ejecutada por instrucción explícita del usuario:
+  - tracker creado en `docs/PUMUKI_CYCLE_11_SCOPE_TRACKER.md`.
+- ✅ Ejecutar `C11-T1`: alcance único del ciclo confirmado en `docs/PUMUKI_CYCLE_11_SCOPE_TRACKER.md` (`Validación end-to-end en pumuki-mock-consumer`).
+- ✅ Ejecutar `C11-T2`: criterio de salida verificable definido en `docs/PUMUKI_CYCLE_11_SCOPE_TRACKER.md` (comando único + salida esperada + exit code).
+- ✅ Ejecutar `C11-T3-A1`: preflight del mock completado (`feat/pumuki-validation`, upstream `main`, working tree limpio).
+- ✅ Ejecutar `C11-T3-A2`: comando único ejecutado en mock y salida real capturada (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final esperada presente, `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C11-T3-A3`: criterio verificado contra `artifacts/pumuki-matrix-summary.json` (`run_id=pumuki-matrix-20260219T224406Z-74136`, `final_verdict=PASS`, `criteria_pass=true`).
+- ✅ Ejecutar `C11-T3-A4`: drift residual verificado en mock (`git status --short --branch` sin cambios y `MOCK_DRIFT=NO`).
+- ✅ Ejecutar `C11-T3-A5`: evidencia consolidada y transición a `C11-T4` completada (`run_id=pumuki-matrix-20260219T224406Z-74136`, `final_verdict=PASS`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `MATRIX_EXIT=0`, `MOCK_DRIFT=NO`).
+- ✅ Ejecutar `C11-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260219T225001Z-83682`, `final_verdict=PASS`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C11-T5`: cierre de ciclo completado (trackers actualizados + commit/push atómico en `main`).
+- 🚧 Tarea activa actual: esperar instrucción explícita para apertura de `Cycle 12` (sin nuevas tareas en este lote).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
