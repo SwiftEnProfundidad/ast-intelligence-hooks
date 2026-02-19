@@ -20,12 +20,34 @@ Cerrar de forma finita los gaps no bloqueantes detectados en ciclo 03, mantenien
 
 ## Fase 0 — Arranque y Alcance
 - ✅ C4-F0-T1: Crear documento del ciclo 04 y alinear tracking global.
-- 🚧 C4-F0-T2: Congelar alcance exacto del ciclo 04 (entradas/salidas/límites/done).
-- ⏳ C4-F0-T3: Publicar checkpoint único del ciclo 04 (comando + criterio de aceptación).
+- ✅ C4-F0-T2: Congelar alcance exacto del ciclo 04 (entradas/salidas/límites/done).
+- 🚧 C4-F0-T3: Publicar checkpoint único del ciclo 04 (comando + criterio de aceptación).
 
 ### Resultado C4-F0-T1 (Documento Creado)
 - Documento creado: `docs/PUMUKI_CYCLE_04_GAP_HARDENING.md`.
 - Scope inicial cargado con 3 gaps priorizados y regla de una sola tarea activa.
+
+### Alcance Congelado (C4-F0-T2)
+- Entradas obligatorias:
+  - baseline limpia en `ast-intelligence-hooks` antes de cada ejecución de tarea del ciclo.
+  - `pumuki-mock-consumer` operativo para validación de contratos de evidencia/MCP y comportamiento de gates.
+  - evidencia activa disponible en mock (`.ai_evidence.json`) para validaciones de consistencia.
+- Salidas obligatorias:
+  - contrato MCP `/status` sin ambigüedad para `evidence.exists` cuando `valid=true`.
+  - estrategia explícita de reducción de ruido por solape reglas base+skills sin perder trazabilidad.
+  - guía operativa explícita para `PRE_PUSH/CI` con rango real de commits, incluida en documentación ejecutable.
+- Límites (fuera de alcance ciclo 04):
+  - rediseño completo de arquitectura de rules engine.
+  - añadir nuevos dominios/plataformas de reglas fuera de `android/backend/frontend/ios`.
+  - depender de CI remota para declarar cierre del ciclo.
+- Definición exacta de done ciclo 04:
+  - fases `C4-F0..C4-F4` en `✅` o bloqueo explícito documentado.
+  - una única tarea `🚧` visible en todo momento en documentos de seguimiento.
+  - evidencia final coherente entre ejecución real, `.ai_evidence.json`, MCP y tracker global.
+
+### Resultado C4-F0-T2 (Alcance Congelado)
+- Alcance formalmente congelado en este documento con entradas/salidas/límites/done.
+- Se habilita `C4-F0-T3` como siguiente tarea activa única.
 
 ## Fase 1 — MCP Status Consistency
 - ⏳ C4-F1-T1: Definir contrato esperado para `evidence.exists` en `/status`.
