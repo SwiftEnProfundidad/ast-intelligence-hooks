@@ -9,7 +9,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 
 ## Tareas Abiertas (Vista Rápida)
 - ✅ Bloque finito anterior cerrado con inventario restante **0/22** archivos sin test directo.
-- ⏳ Tarea activa actual: ver sección “Próximo Bloque Finito (Post 0/22)” (única tarea en 🚧).
+- 🚧 Tarea activa actual: publicar cierre operativo final de la fase de cobertura y preparar siguiente ciclo de validación en repo mock (entrada única para evitar ambigüedad).
 
 ## Backlog Visible (Corto Plazo)
 - ✅ Corregir cumplimiento de documentación enterprise tras ejecución local de tests: indexar `docs/CORE_INTEGRATIONS_UNTESTED_INVENTORY.md` en `docs/README.md` y normalizar su contenido a inglés para pasar `docs-index-coverage` + `enterprise-docs-language` (verificado OK con `npm test -- integrations/platform/__tests__/detectPlatforms.test.ts`).
@@ -90,7 +90,7 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Seleccionar Batch 09 (máx. 3 archivos) del inventario incremental post-0/22 en `core/` e `integrations/` y publicar criterio de cierre (resultado: inventario incremental refinado `TOTAL=0`, sin archivos elegibles para Batch 09).
 - ✅ Añadir cobertura unitaria del Batch 09 y validar en local (N/A: sin archivos elegibles en inventario incremental refinado).
 - ✅ Actualizar tracker con resultado del Batch 09 y dejar Batch 10 como única tarea activa (N/A: no se abre Batch 10 al no existir Batch 09 ejecutable).
-- 🚧 Cerrar bloque post-0/22 cuando el inventario incremental planificado quede en 0 (estado actual: `0`, pendiente cierre formal final del ciclo).
+- ✅ Cerrar bloque post-0/22 cuando el inventario incremental planificado quede en 0 (estado final: `0`).
 
 ## Fase 1 — Crítico (bloquea release)
 - ✅ Corregir `jest.config.js` para descubrir y ejecutar tests TS reales de Jest (`*.spec.ts`) con `babel-jest`.
