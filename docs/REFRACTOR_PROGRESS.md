@@ -13,8 +13,12 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ⏳ Tarea activa actual: ver “Próximo Ciclo Mock (Definición Atómica)” (única tarea en 🚧).
 
 ## Próximo Ciclo Mock (Definición Atómica)
-- 🚧 Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
-- ⏳ Ejecutar comando de arranque en `pumuki-mock-consumer` y capturar salida real.
+- ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
+  Comando publicado:
+  `cd /Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer && npm install --save-exact pumuki@latest && npm run pumuki:matrix`
+  Criterio de aceptación:
+  salida con `status: PASS` para `clean`, `violations` y `mixed`, presencia de `All scenario matrix checks passed`, y exit code `0`.
+- 🚧 Ejecutar comando de arranque en `pumuki-mock-consumer` y capturar salida real.
 - ⏳ Consolidar evidencia resultante en este tracker y cerrar el ciclo.
 
 ## Cierre Operativo Final de Cobertura
