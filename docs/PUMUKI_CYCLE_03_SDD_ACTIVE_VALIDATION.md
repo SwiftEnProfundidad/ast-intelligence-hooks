@@ -163,8 +163,8 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 
 ## Fase 3 — Evidencia + MCP (Cobertura Completa)
 - ✅ C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
-- 🚧 C3-F3-T2: Verificar MCP con facetas no vacías para plataformas/rulesets/findings.
-- ⏳ C3-F3-T3: Registrar gaps, FP y FN observados con SDD activo.
+- ✅ C3-F3-T2: Verificar MCP con facetas no vacías para plataformas/rulesets/findings.
+- 🚧 C3-F3-T3: Registrar gaps, FP y FN observados con SDD activo.
 
 ### Resultado C3-F3-T1 (Evidencia de Plataforma en `.ai_evidence.json`)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -181,6 +181,23 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
     - `android=0`, `web=0` en este snapshot `mixed`.
 - Conclusión:
   - la evidencia no está dominada por policy SDD; contiene findings reales de plataformas y cumple el criterio de `C3-F3-T1`.
+
+### Resultado C3-F3-T2 (MCP Facets no Vacías)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Servidor MCP levantado desde consumidor:
+  - comando: `PUMUKI_EVIDENCE_PORT=7541 npx --yes pumuki-mcp-evidence`.
+  - `GET /health`: `status=ok`.
+  - `GET /status`: route y endpoints MCP disponibles (`/ai-evidence/*`) con filtros/paginación publicados.
+- Validación de facetas objetivo:
+  - `GET /ai-evidence/findings` -> `findings_count=24`.
+  - `GET /ai-evidence/rulesets` -> `rulesets_count=10`.
+  - `GET /ai-evidence/platforms` -> `platforms_count=2`.
+- Muestras verificadas:
+  - findings con `backend.*` (ej. `backend.no-console-log`).
+  - rulesets con bundles de plataforma (`backendRuleSet@1.0.0`, `iosEnterpriseRuleSet@1.0.0`) y policy.
+  - platforms detectadas: `backend`, `ios` (`HIGH`).
+- Conclusión:
+  - facetas MCP críticas (`findings`, `rulesets`, `platforms`) no vacías y coherentes con la evidencia real del snapshot.
 
 ## Fase 4 — Cierre
 - ⏳ C3-F4-T1: Consolidar conclusiones del ciclo 03.
