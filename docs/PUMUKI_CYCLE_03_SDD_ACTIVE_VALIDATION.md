@@ -101,7 +101,7 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 ## Fase 2 — Gates de Plataforma con SDD Activo
 - ✅ C3-F2-T1: Ejecutar `scenario:clean` con SDD activo y validar salida esperada.
 - ✅ C3-F2-T2: Ejecutar `scenario:violations` con SDD activo y validar detección multi-plataforma.
-- 🚧 C3-F2-T3: Ejecutar `scenario:mixed` con SDD activo y validar severidades/outcomes esperados.
+- ✅ C3-F2-T3: Ejecutar `scenario:mixed` con SDD activo y validar severidades/outcomes esperados.
 
 ### Resultado C3-F2-T1 (`scenario:clean` con SDD Activo)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -143,8 +143,26 @@ Ejecutar un ciclo completo y finito de validación en mock consumer con sesión 
 - Estado final mock tras limpieza:
   - quedó únicamente el drift esperado de sesión SDD (`openspec/changes/cycle-03-sdd-active-validation/`).
 
+### Resultado C3-F2-T3 (`scenario:mixed` con SDD Activo)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Ajuste operativo clave:
+  - para `PRE_PUSH` y `CI` se requiere rango de commit real; por eso se usó commit temporal de baseline `clean` y commit temporal del escenario `mixed`.
+  - sin commit temporal de `mixed`, `PRE_PUSH/CI` no evaluaban el delta correcto y podían devolver `0`.
+- Flujo ejecutado:
+  - `scenario:clean` -> `git add apps` -> `pumuki-pre-commit=0` -> commit temporal baseline.
+  - `scenario:mixed` -> `git add apps` -> `pumuki-pre-commit=1` -> commit temporal mixed.
+  - `pumuki-pre-push=1` y `pumuki-ci=1` con `upstream-c3-f2-t3=HEAD~1`.
+- Evidencia (`.ai_evidence.json` final):
+  - `snapshot.stage=CI`
+  - `snapshot.outcome=BLOCK`
+  - `findings_count=24`
+  - `SDD_SESSION_MISSING`: ausente.
+- Cierre operativo:
+  - cleanup completo de commits/branch temporal.
+  - mock quedó en estado controlado con único drift esperado: `openspec/changes/cycle-03-sdd-active-validation/`.
+
 ## Fase 3 — Evidencia + MCP (Cobertura Completa)
-- ⏳ C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
+- 🚧 C3-F3-T1: Verificar `.ai_evidence.json` con findings de plataforma (no solo policy SDD).
 - ⏳ C3-F3-T2: Verificar MCP con facetas no vacías para plataformas/rulesets/findings.
 - ⏳ C3-F3-T3: Registrar gaps, FP y FN observados con SDD activo.
 

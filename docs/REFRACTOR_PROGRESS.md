@@ -51,7 +51,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C3-F1-T3`: baseline operativa confirmada con SDD activo (`valid=true`) y drift controlado únicamente en `openspec/changes/cycle-03-sdd-active-validation/`.
 - ✅ Ejecutar `C3-F2-T1`: `scenario:clean` validado con SDD activo (`pre-commit=0`, `outcome=PASS`, `findings=0`) y drift de ejecución controlado con backup temporal no destructivo.
 - ✅ Ejecutar `C3-F2-T2`: `scenario:violations` validado con SDD activo (`pre-commit=1`, `outcome=BLOCK`, `findings=22`) con cobertura multi-plataforma (`android/backend/ios/web`) y sin short-circuit por `SDD_SESSION_MISSING`.
-- 🚧 Tarea activa actual: ejecutar `C3-F2-T3` (ejecutar `scenario:mixed` con SDD activo y validar severidades/outcomes esperados).
+- ✅ Ejecutar `C3-F2-T3`: `scenario:mixed` validado con SDD activo sobre rango real de commits (`pre-commit=1`, `pre-push=1`, `ci=1`, `outcome=BLOCK`, `findings=24`) y sin `SDD_SESSION_MISSING`.
+- 🚧 Tarea activa actual: ejecutar `C3-F3-T1` (verificar `.ai_evidence.json` con findings de plataforma, no solo policy SDD).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
