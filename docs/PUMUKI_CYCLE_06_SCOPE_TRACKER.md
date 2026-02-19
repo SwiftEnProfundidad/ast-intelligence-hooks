@@ -1,0 +1,113 @@
+# PUMUKI Cycle 06 — Scope Tracker
+
+Seguimiento simple del próximo ciclo para evitar bucles y mantener visibilidad total.
+
+## Leyenda
+
+- ✅ Completada
+- 🚧 En progreso (solo 1 activa)
+- ⏳ Pendiente
+
+## Alcances posibles (elegir 1)
+
+- Seguridad y dependencias.
+- Runtime Pumuki (gates, evidence, MCP).
+- Validación end-to-end en `pumuki-mock-consumer`.
+- UX operativa (menú/comandos/runbook).
+- Documentación de release y operación.
+
+## Alcance confirmado (C6)
+
+- ✅ Alcance único seleccionado: **Validación end-to-end en `pumuki-mock-consumer`**.
+
+## Criterio de salida verificable (C6-T2)
+
+- Comando operativo de validación:
+  - `cd /Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer && npm install --save-exact pumuki@latest && npx pumuki install && npm run pumuki:matrix`
+- Resultado esperado (obligatorio):
+  - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0`
+  - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1`
+  - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1`
+  - cierre: `All scenario matrix checks passed for package: pumuki@latest`
+- Criterio de aceptación final:
+  - exit code `0`,
+  - sin cambios residuales no intencionados en el mock (`git status --short` limpio o solo cambios esperados del escenario),
+  - tracker de ciclo actualizado con transición `C6-T3 -> C6-T4`.
+
+## Tareas del ciclo
+
+- ✅ C6-T1: Confirmar alcance único del ciclo (elegir 1 de la lista anterior).
+- ✅ C6-T2: Definir criterio de salida verificable (comandos + salida esperada).
+- ✅ C6-T3: Ejecutar implementación del alcance (máximo 5 tareas atómicas).
+- ✅ C6-T4: Ejecutar validación final del alcance (tests/comandos en verde).
+- ✅ C6-T5: Cerrar ciclo (actualizar trackers + commit/push).
+
+## Ejecución C6-T3 (microtareas atómicas)
+
+- ✅ C6-T3-A1: Preflight del mock ejecutado:
+  - repo: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`
+  - branch: `feat/pumuki-validation`
+  - upstream: `main`
+  - estado: working tree limpio (`git status --short` vacío)
+- ✅ C6-T3-A2: Ejecutar comando operativo de validación (`npm install --save-exact pumuki@latest && npx pumuki install && npm run pumuki:matrix`).
+  - resultado observado:
+    - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0` (`PASS`)
+    - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1` (`PASS`)
+    - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` (`PASS`)
+    - cierre: `All scenario matrix checks passed for package: pumuki@latest`
+- ✅ C6-T3-A3: Verificar salida esperada (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, cierre `All scenario matrix checks passed`).
+  - verificación formal en `artifacts/pumuki-matrix-summary.json`:
+    - `final_verdict=PASS`
+    - `clean=0/0/0`
+    - `violations=1/1/1`
+    - `mixed=1/1/1`
+    - `run_id=pumuki-matrix-20260219T195408Z-83201`
+- ✅ C6-T3-A4: Verificar drift residual post-ejecución en mock (`git status --short`).
+  - resultado: sin drift residual (`git status --short` vacío) en `pumuki-mock-consumer`.
+- ✅ C6-T3-A5: Registrar evidencia final y transición de tarea activa `C6-T4`.
+  - cierre del bloque `C6-T3` completado con evidencia consistente (`PASS`, sin drift).
+
+## Ejecución C6-T4 (microtareas atómicas)
+
+- ✅ C6-T4-A1: Consolidar validación final del alcance contra criterio definido (`PASS` matriz + `exit 0` + sin drift).
+  - consolidación:
+    - matriz validada en `PASS` (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`),
+    - ejecución completada sin error (`exit 0`),
+    - repositorio mock sin drift residual (`git status --short` vacío).
+- ✅ C6-T4-A2: Registrar resultado de validación final en tracker de ciclo.
+  - resultado consolidado en tracker:
+    - matriz `PASS` contra criterio (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`),
+    - `exit 0`,
+    - sin drift residual en `pumuki-mock-consumer`.
+- ✅ C6-T4-A3: Dejar transición explícita de tarea activa hacia `C6-T5`.
+  - transición aplicada: `C6-T5` queda como única tarea activa del ciclo.
+
+## Ejecución C6-T5 (microtareas atómicas)
+
+- ✅ C6-T5-A1: Consolidar cierre administrativo del ciclo en `docs/PUMUKI_CYCLE_06_SCOPE_TRACKER.md`.
+  - cierre administrativo consolidado:
+    - alcance único validado end-to-end en `pumuki-mock-consumer`,
+    - criterio de salida cumplido (`PASS` matriz + `exit 0` + sin drift),
+    - trazabilidad del ciclo mantenida con una sola tarea activa en cada transición.
+- ✅ C6-T5-A2: Reflejar cierre del ciclo en `docs/REFRACTOR_PROGRESS.md` con una sola tarea activa.
+  - reflejo aplicado:
+    - cierre de hitos `C6-T1..C6-T5-A1` registrado,
+    - tarea activa única alineada al siguiente paso (`C6-T5-A3`).
+- ✅ C6-T5-A3: Preparar cierre final de la iteración (commit/push) sin abrir tareas nuevas.
+  - cierre ejecutado:
+    - estado final del ciclo reflejado en `docs/PUMUKI_CYCLE_06_SCOPE_TRACKER.md` y `docs/REFRACTOR_PROGRESS.md`,
+    - commit/push atómico de cierre preparado.
+
+## Estado Final del Ciclo 06
+
+- Resultado global: ✅ **Ciclo 06 cerrado**.
+- Alcance ejecutado: validación end-to-end en `pumuki-mock-consumer`.
+- Criterio de salida: cumplido (`PASS` matriz + `exit 0` + sin drift).
+- Siguiente tarea activa: 🚧 esperar instrucción explícita del usuario para abrir `Cycle 07` (sin ejecución autónoma).
+
+## Regla Anti-Bucle
+
+- 1 ciclo = 1 alcance cerrado.
+- Máximo 5 tareas.
+- No se añaden tareas nuevas durante la ejecución del ciclo.
+- Solo puede existir una tarea `🚧` a la vez.

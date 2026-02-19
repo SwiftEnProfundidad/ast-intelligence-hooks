@@ -135,10 +135,24 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - compilación verificada: `npx tsc --noEmit` en verde.
 - ✅ Verificar no regresión funcional del módulo de evidencia tras fixes:
   - test directo ejecutado: `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts` (`18/18` en verde).
+- ✅ Crear tracker simple del nuevo ciclo en `docs/PUMUKI_CYCLE_06_SCOPE_TRACKER.md` (leyenda + tareas + regla anti-bucle).
+- ✅ Ejecutar `C6-T1`: alcance único del ciclo confirmado en `docs/PUMUKI_CYCLE_06_SCOPE_TRACKER.md` (`Validación end-to-end en pumuki-mock-consumer`).
+- ✅ Ejecutar `C6-T2`: criterio de salida verificable definido (comando único + salidas esperadas `clean/violations/mixed` + criterio de aceptación final) en `docs/PUMUKI_CYCLE_06_SCOPE_TRACKER.md`.
+- ✅ Ejecutar `C6-T3-A1`: preflight del mock completado (`feat/pumuki-validation`, upstream `main`, working tree limpio).
+- ✅ Ejecutar `C6-T3-A2`: comando operativo completado en mock con matriz `PASS` (`clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`).
+- ✅ Ejecutar `C6-T3-A3`: verificación formal del criterio de salida contra `artifacts/pumuki-matrix-summary.json` (`final_verdict=PASS`, `run_id=pumuki-matrix-20260219T195408Z-83201`).
+- ✅ Ejecutar `C6-T3-A4`: verificación de drift residual post-ejecución en mock (`git status --short` vacío).
+- ✅ Ejecutar `C6-T3-A5`: evidencia final del bloque `C6-T3` registrada y transición de tarea activa a `C6-T4`.
+- ✅ Ejecutar `C6-T4-A1`: consolidación final del alcance confirmada (`PASS` matriz + `exit 0` + sin drift residual en mock).
+- ✅ Ejecutar `C6-T4-A2`: resultado de validación final registrado en tracker de ciclo (criterio cumplido de forma explícita).
+- ✅ Ejecutar `C6-T4-A3`: transición explícita completada, moviendo la tarea activa hacia `C6-T5`.
+- ✅ Ejecutar `C6-T5-A1`: cierre administrativo del ciclo 06 consolidado en `docs/PUMUKI_CYCLE_06_SCOPE_TRACKER.md`.
+- ✅ Ejecutar `C6-T5-A2`: cierre del ciclo reflejado en tracker global con alineación de tarea activa única.
+- ✅ Ejecutar `C6-T5-A3`: cierre final de iteración preparado (docs alineados + commit/push atómico de cierre).
 - ✅ Espera de apertura del siguiente ciclo registrada (sin pendientes técnicos abiertos en este lote).
 - ✅ Cierre total del lote actual confirmado: sin tareas técnicas pendientes en ejecución.
 - ✅ Cierre administrativo final ejecutado: commit y push del tracker completados.
-- 🚧 Tarea activa actual: esperar nueva instrucción explícita del usuario (sin ejecución autónoma).
+- 🚧 Tarea activa actual: esperar instrucción explícita del usuario para abrir `Cycle 07` (sin ejecución autónoma).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
