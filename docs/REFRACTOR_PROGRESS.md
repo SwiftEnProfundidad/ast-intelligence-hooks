@@ -30,7 +30,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C2-F0-T3` del ciclo 02: checkpoint único de cierre publicado (`2026-02-26`, comando y criterio) en `docs/PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md`.
 - ✅ Ejecutar `C2-F1-T1` del ciclo 02: baseline mock verificada como limpia y estado de ramas/remote documentado en `docs/PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md`.
 - ✅ Ejecutar `C2-F1-T2` del ciclo 02: versión objetivo y lock de `pumuki` confirmados en `6.3.15` (package + lock + installed + latest) en mock.
-- 🚧 Tarea activa actual: ejecutar `C2-F1-T3` del ciclo 02 (registrar snapshot inicial de estado para comparación final).
+- ✅ Ejecutar `C2-F1-T3` del ciclo 02: snapshot inicial registrado (framework + mock + versión/lock) en `docs/PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md`.
+- 🚧 Tarea activa actual: ejecutar `C2-F2-T1` del ciclo 02 (validación por escenarios `clean`/`violations`/`mixed` con salida trazable).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
