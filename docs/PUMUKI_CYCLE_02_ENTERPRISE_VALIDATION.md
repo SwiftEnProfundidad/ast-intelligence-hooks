@@ -144,7 +144,7 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
 ## Fase 3 — Lifecycle Enterprise
 - ✅ C2-F3-T1: Validar `install` y estado de hooks gestionados.
 - ✅ C2-F3-T2: Validar `update` y consistencia de versión/reportes.
-- 🚧 C2-F3-T3: Validar `remove` con limpieza estricta sin tocar terceros.
+- ✅ C2-F3-T3: Validar `remove` con limpieza estricta sin tocar terceros.
 
 ### Resultado C2-F3-T1 (Install + Hooks Gestionados)
 - Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
@@ -175,6 +175,27 @@ Ejecutar un ciclo completo, finito y verificable de validación enterprise de Pu
   - `npm ls` confirma `pumuki@6.3.15` instalado.
   - `npm view pumuki version` devuelve `6.3.15` (`latest`).
   - `package.json` y `package-lock.json` mantienen `6.3.15` (consistencia 1:1).
+
+### Resultado C2-F3-T3 (Remove + Limpieza Estricta)
+- Repositorio validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+- Setup de validación:
+  - `npm install --save-exact pumuki@6.3.15`
+  - `npm install --save-exact dayjs`
+  - `npm install --save-dev --save-exact zod`
+  - verificación previa: `hasPumuki=true`, `hasDayjs=true`, `hasZod=true`.
+- Comando de desinstalación:
+  - `npx --yes pumuki remove`
+- Resultado de limpieza:
+  - `package removed: yes`
+  - `hooks changed: pre-commit, pre-push`
+  - hooks finales: `pre-commit=missing`, `pre-push=missing`
+  - artefactos: `.ai_evidence.json` eliminado cuando existe.
+- Verificación de terceros (no tocados):
+  - `npm ls dayjs zod --depth=0` mantiene `dayjs@1.11.19` y `zod@4.3.6`.
+  - runtime OK tras remove: `deps-ok-after`.
+  - `package.json` final: `hasPumuki=false`, `hasDayjs=true`, `hasZod=true`.
+- Post-validación:
+  - baseline del mock restaurada (`git restore package.json package-lock.json && npm install`) y repo limpio.
 
 ## Fase 4 — Evidencia y MCP
 - ⏳ C2-F4-T1: Verificar campos críticos de `.ai_evidence.json` contra resultados reales.
