@@ -45,7 +45,13 @@ test('returns degraded status when evidence file is missing', async () => {
             ledger?: { max_limit?: number };
           };
         };
-        evidence?: { present?: boolean; valid?: boolean; version?: string | null };
+        evidence?: {
+          exists?: boolean;
+          present?: boolean;
+          valid?: boolean;
+          version?: string | null;
+          findings_count?: number;
+        };
       };
       assert.equal(payload.status, 'degraded');
       assert.ok(payload.context_api?.endpoints?.includes('/ai-evidence/findings'));
@@ -60,9 +66,11 @@ test('returns degraded status when evidence file is missing', async () => {
       assert.equal(payload.context_api?.pagination_bounds?.rulesets?.max_limit, 100);
       assert.equal(payload.context_api?.pagination_bounds?.platforms?.max_limit, 100);
       assert.equal(payload.context_api?.pagination_bounds?.ledger?.max_limit, 100);
+      assert.equal(payload.evidence?.exists, false);
       assert.equal(payload.evidence?.present, false);
       assert.equal(payload.evidence?.valid, false);
       assert.equal(payload.evidence?.version, null);
+      assert.equal(payload.evidence?.findings_count, 0);
     });
   });
 });
@@ -96,6 +104,8 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
           };
         };
         evidence?: {
+          exists?: boolean;
+          present?: boolean;
           valid?: boolean;
           version?: string;
           stage?: string;
@@ -277,6 +287,8 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
       assert.equal(payload.context_api?.pagination_bounds?.platforms?.max_limit, 100);
       assert.equal(payload.context_api?.pagination_bounds?.ledger?.max_limit, 100);
       assert.equal(payload.evidence?.valid, true);
+      assert.equal(payload.evidence?.exists, true);
+      assert.equal(payload.evidence?.present, true);
       assert.equal(payload.evidence?.version, '2.1');
       assert.equal(payload.evidence?.stage, 'CI');
       assert.equal(payload.evidence?.outcome, 'PASS');
@@ -470,4 +482,3 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
     });
   });
 });
-

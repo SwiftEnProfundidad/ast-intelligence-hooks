@@ -112,7 +112,11 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar handoff final (push/PR) del cierre documental del ciclo 05:
   - commit de cierre documental publicado en `main`: `35b571c`.
   - `origin/main` sincronizado con el cierre documental del ciclo 05.
-- 🚧 Tarea activa actual: esperar instrucción de apertura del siguiente ciclo (sin tareas técnicas pendientes del ciclo 05).
+- ✅ Resolver bloqueos de test detectados al cerrar ciclo 05:
+  - `scripts/__tests__/docs-index-coverage.test.ts`: indexadas en `docs/README.md` las páginas `docs/PUMUKI_CYCLE_02..05_*`.
+  - `scripts/__tests__/enterprise-docs-language.test.ts`: añadidas `docs/PUMUKI_CYCLE_02..05_*` al allowlist de docs no-English.
+  - revalidación: `npm test -- integrations/evidence/__tests__/buildEvidence.test.ts integrations/mcp/__tests__/evidencePayloadStatus.test.ts integrations/mcp/__tests__/evidencePayloads.test.ts integrations/mcp/__tests__/evidenceContextServer-health.test.ts integrations/mcp/__tests__/evidenceContextServer.test.ts` en verde.
+- 🚧 Tarea activa actual: cerrar lote técnico pendiente de MCP/evidence + documentación asociada con commit/push atómico final.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.

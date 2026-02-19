@@ -66,11 +66,18 @@ test('returns degraded status and 404 on normalized custom evidence route when f
       assert.equal(statusResponse.status, 200);
       const statusPayload = (await statusResponse.json()) as {
         status?: string;
-        evidence?: { present?: boolean; valid?: boolean };
+        evidence?: {
+          exists?: boolean;
+          present?: boolean;
+          valid?: boolean;
+          findings_count?: number;
+        };
       };
       assert.equal(statusPayload.status, 'degraded');
+      assert.equal(statusPayload.evidence?.exists, false);
       assert.equal(statusPayload.evidence?.present, false);
       assert.equal(statusPayload.evidence?.valid, false);
+      assert.equal(statusPayload.evidence?.findings_count, 0);
 
       const evidenceResponse = await fetch(`${baseUrl}${route}`);
       assert.equal(evidenceResponse.status, 404);

@@ -129,6 +129,33 @@ const severityRank: Record<Severity, number> = {
   CRITICAL: 3,
 };
 
+type RuleOrigin = 'project-rules' | 'skills' | 'platform-preset' | 'heuristics';
+
+const ruleOriginRank: Record<RuleOrigin, number> = {
+  heuristics: 0,
+  'platform-preset': 1,
+  skills: 2,
+  'project-rules': 3,
+};
+
+const inferRuleOrigin = (ruleId: string): RuleOrigin => {
+  if (ruleId.startsWith('heuristics.')) {
+    return 'heuristics';
+  }
+  if (ruleId.startsWith('skills.')) {
+    return 'skills';
+  }
+  if (
+    ruleId.startsWith('ios.') ||
+    ruleId.startsWith('android.') ||
+    ruleId.startsWith('backend.') ||
+    ruleId.startsWith('frontend.')
+  ) {
+    return 'platform-preset';
+  }
+  return 'project-rules';
+};
+
 const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
   ['ios.no-force-unwrap', 'skills.ios.no-force-unwrap', 'heuristics.ios.force-unwrap.ast'],
   ['skills.ios.no-force-try', 'heuristics.ios.force-try.ast'],
@@ -150,9 +177,39 @@ const equivalentRuleFamilies: ReadonlyArray<ReadonlyArray<string>> = [
   ['skills.ios.no-on-tap-gesture', 'heuristics.ios.on-tap-gesture.ast'],
   ['skills.ios.no-string-format', 'heuristics.ios.string-format.ast'],
   ['skills.ios.no-uiscreen-main-bounds', 'heuristics.ios.uiscreen-main-bounds.ast'],
-  ['backend.no-console-log', 'frontend.no-console-log', 'heuristics.ts.console-log.ast'],
-  ['backend.avoid-explicit-any', 'heuristics.ts.explicit-any.ast'],
-  ['backend.no-empty-catch', 'heuristics.ts.empty-catch.ast'],
+  [
+    'backend.no-console-log',
+    'frontend.no-console-log',
+    'skills.backend.no-console-log',
+    'skills.frontend.no-console-log',
+    'heuristics.ts.console-log.ast',
+  ],
+  [
+    'backend.avoid-explicit-any',
+    'skills.backend.avoid-explicit-any',
+    'skills.frontend.avoid-explicit-any',
+    'heuristics.ts.explicit-any.ast',
+  ],
+  [
+    'backend.no-empty-catch',
+    'skills.backend.no-empty-catch',
+    'skills.frontend.no-empty-catch',
+    'heuristics.ts.empty-catch.ast',
+  ],
+  [
+    'android.no-thread-sleep',
+    'skills.android.no-thread-sleep',
+    'heuristics.android.thread-sleep.ast',
+  ],
+  [
+    'android.no-global-scope',
+    'skills.android.no-globalscope',
+    'heuristics.android.globalscope.ast',
+  ],
+  [
+    'skills.android.no-runblocking',
+    'heuristics.android.run-blocking.ast',
+  ],
 ];
 
 const ruleFamilyIndex = new Map<string, number>();
@@ -162,11 +219,92 @@ equivalentRuleFamilies.forEach((family, familyIndex) => {
   });
 });
 
-const isHeuristicRuleId = (ruleId: string): boolean => {
-  return ruleId.startsWith('heuristics.');
+const semanticKeywordFamilies: ReadonlyArray<readonly [string, RegExp]> = [
+  ['keyword:explicit-any', /(?:^|[._-])explicit(?:[._-])?any(?:$|[._-])/i],
+  ['keyword:empty-catch', /(?:^|[._-])empty(?:[._-])?catch(?:$|[._-])/i],
+  ['keyword:console-log', /(?:^|[._-])console(?:[._-])?log(?:$|[._-])/i],
+  ['keyword:anyview', /(?:^|[._-])anyview(?:$|[._-])/i],
+  ['keyword:force-unwrap', /(?:^|[._-])force(?:[._-])?unwrap(?:$|[._-])/i],
+];
+
+const normalizeAnchorLine = (lines?: EvidenceLines): number => {
+  if (typeof lines === 'number' && Number.isFinite(lines)) {
+    return Math.max(0, Math.trunc(lines));
+  }
+  if (typeof lines === 'string') {
+    const match = lines.match(/-?\d+/);
+    if (!match) {
+      return 0;
+    }
+    const value = Number.parseInt(match[0], 10);
+    return Number.isFinite(value) ? Math.max(0, value) : 0;
+  }
+  if (!lines || lines.length === 0) {
+    return 0;
+  }
+  const finite = lines.filter((line) => Number.isFinite(line)).map((line) => Math.trunc(line));
+  if (finite.length === 0) {
+    return 0;
+  }
+  return Math.max(0, Math.min(...finite));
 };
 
-const preferFinding = (
+const inferPlatformFromFinding = (finding: Pick<SnapshotFinding, 'file' | 'ruleId'>): string => {
+  const file = finding.file.replace(/\\/g, '/').toLowerCase();
+  if (file.startsWith('apps/ios/') || file.startsWith('ios/')) {
+    return 'ios';
+  }
+  if (file.startsWith('apps/backend/')) {
+    return 'backend';
+  }
+  if (file.startsWith('apps/web/') || file.startsWith('apps/frontend/')) {
+    return 'frontend';
+  }
+  if (file.startsWith('apps/android/')) {
+    return 'android';
+  }
+  if (finding.ruleId.startsWith('ios.') || finding.ruleId.startsWith('skills.ios.')) {
+    return 'ios';
+  }
+  if (finding.ruleId.startsWith('backend.') || finding.ruleId.startsWith('skills.backend.')) {
+    return 'backend';
+  }
+  if (finding.ruleId.startsWith('frontend.') || finding.ruleId.startsWith('skills.frontend.')) {
+    return 'frontend';
+  }
+  if (finding.ruleId.startsWith('android.') || finding.ruleId.startsWith('skills.android.')) {
+    return 'android';
+  }
+  return 'generic';
+};
+
+const toSemanticFamilyToken = (ruleId: string): string => {
+  for (const [token, pattern] of semanticKeywordFamilies) {
+    if (pattern.test(ruleId)) {
+      return token;
+    }
+  }
+  const familyIndex = ruleFamilyIndex.get(ruleId);
+  if (typeof familyIndex === 'number') {
+    return `family:${familyIndex}`;
+  }
+  return `rule:${ruleId}`;
+};
+
+const toSemanticCollision = (
+  stage: GateStage,
+  finding: SnapshotFinding
+): { key: string; platform: string } => {
+  const platform = inferPlatformFromFinding(finding);
+  const anchorLine = normalizeAnchorLine(finding.lines);
+  const semanticFamily = toSemanticFamilyToken(finding.ruleId);
+  return {
+    key: `${stage}::${platform}::${finding.file}::${anchorLine}::${semanticFamily}`,
+    platform,
+  };
+};
+
+const preferFindingForSemanticCollision = (
   current: SnapshotFinding,
   candidate: SnapshotFinding
 ): SnapshotFinding => {
@@ -178,41 +316,60 @@ const preferFinding = (
     return current;
   }
 
-  const currentIsHeuristic = isHeuristicRuleId(current.ruleId);
-  const candidateIsHeuristic = isHeuristicRuleId(candidate.ruleId);
-  if (currentIsHeuristic !== candidateIsHeuristic) {
-    return currentIsHeuristic ? candidate : current;
+  const byOrigin =
+    ruleOriginRank[inferRuleOrigin(candidate.ruleId)] -
+    ruleOriginRank[inferRuleOrigin(current.ruleId)];
+  if (byOrigin > 0) {
+    return candidate;
+  }
+  if (byOrigin < 0) {
+    return current;
   }
 
-  return candidate.ruleId.localeCompare(current.ruleId) < 0 ? candidate : current;
+  const byRuleId = candidate.ruleId.localeCompare(current.ruleId);
+  if (byRuleId < 0) {
+    return candidate;
+  }
+  if (byRuleId > 0) {
+    return current;
+  }
+
+  const tuple = (finding: SnapshotFinding): string => {
+    return [
+      finding.code,
+      finding.message,
+      finding.matchedBy ?? '',
+      finding.source ?? '',
+    ].join('\u0000');
+  };
+  return tuple(candidate).localeCompare(tuple(current)) < 0 ? candidate : current;
 };
 
 const consolidateEquivalentFindings = (
+  stage: GateStage,
   findings: ReadonlyArray<SnapshotFinding>
 ): { findings: SnapshotFinding[]; suppressed: ConsolidationSuppressedFinding[] } => {
-  const selectedByFileFamily = new Map<string, SnapshotFinding>();
+  const selectedByCollision = new Map<string, SnapshotFinding>();
+  const platformByCollision = new Map<string, string>();
   for (const finding of findings) {
-    const familyIndex = ruleFamilyIndex.get(finding.ruleId);
-    if (typeof familyIndex === 'undefined') {
-      continue;
-    }
-    const key = `${finding.file}::${familyIndex}`;
-    const current = selectedByFileFamily.get(key);
+    const collision = toSemanticCollision(stage, finding);
+    const current = selectedByCollision.get(collision.key);
     if (!current) {
-      selectedByFileFamily.set(key, finding);
+      selectedByCollision.set(collision.key, finding);
+      platformByCollision.set(collision.key, collision.platform);
       continue;
     }
-    selectedByFileFamily.set(key, preferFinding(current, finding));
+    selectedByCollision.set(
+      collision.key,
+      preferFindingForSemanticCollision(current, finding)
+    );
   }
 
   const suppressed: ConsolidationSuppressedFinding[] = [];
 
   const filtered = findings.filter((finding) => {
-    const familyIndex = ruleFamilyIndex.get(finding.ruleId);
-    if (typeof familyIndex === 'undefined') {
-      return true;
-    }
-    const selected = selectedByFileFamily.get(`${finding.file}::${familyIndex}`);
+    const collision = toSemanticCollision(stage, finding);
+    const selected = selectedByCollision.get(collision.key);
     if (!selected) {
       return true;
     }
@@ -223,6 +380,8 @@ const consolidateEquivalentFindings = (
         file: finding.file,
         lines: finding.lines,
         replacedByRuleId: selected.ruleId,
+        replacementRuleId: selected.ruleId,
+        platform: platformByCollision.get(collision.key),
         reason: 'semantic-family-precedence',
       });
     }
@@ -238,7 +397,11 @@ const consolidateEquivalentFindings = (
     if (byRule !== 0) {
       return byRule;
     }
-    return left.replacedByRuleId.localeCompare(right.replacedByRuleId);
+    const byReplacement = left.replacedByRuleId.localeCompare(right.replacedByRuleId);
+    if (byReplacement !== 0) {
+      return byReplacement;
+    }
+    return (left.platform ?? '').localeCompare(right.platform ?? '');
   });
 
   return {
@@ -248,6 +411,7 @@ const consolidateEquivalentFindings = (
 };
 
 const normalizeAndDedupeFindings = (
+  stage: GateStage,
   findings: ReadonlyArray<BuildFindingInput>
 ): { findings: SnapshotFinding[]; suppressed: ConsolidationSuppressedFinding[] } => {
   const unique = new Map<string, SnapshotFinding>();
@@ -261,7 +425,7 @@ const normalizeAndDedupeFindings = (
     );
   }
   const deduped = Array.from(unique.values()).sort(compareFindingEntries);
-  const consolidated = consolidateEquivalentFindings(deduped);
+  const consolidated = consolidateEquivalentFindings(stage, deduped);
   return {
     findings: consolidated.findings.sort(compareFindingEntries),
     suppressed: consolidated.suppressed,
@@ -362,7 +526,7 @@ const normalizeRulesets = (rulesets: ReadonlyArray<RulesetState>): RulesetState[
 
 export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const now = new Date().toISOString();
-  const consolidatedFindings = normalizeAndDedupeFindings(params.findings);
+  const consolidatedFindings = normalizeAndDedupeFindings(params.stage, params.findings);
   const normalizedFindings = consolidatedFindings.findings;
   const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';

@@ -257,6 +257,8 @@ test('suppresses duplicated iOS heuristic findings shadowed by stronger baseline
     ['heuristics.ios.anyview.ast']
   );
   assert.equal(result.consolidation.suppressed[0]?.replacedByRuleId, 'ios.no-anyview');
+  assert.equal(result.consolidation.suppressed[0]?.replacementRuleId, 'ios.no-anyview');
+  assert.equal(result.consolidation.suppressed[0]?.platform, 'ios');
   assert.equal(result.severity_metrics.by_severity.CRITICAL, 1);
   assert.equal(result.severity_metrics.by_severity.ERROR, 0);
 });
@@ -329,6 +331,11 @@ test('keeps strongest finding in backend explicit-any family and drops weaker du
     result.consolidation.suppressed[0]?.replacedByRuleId,
     'heuristics.ts.explicit-any.ast'
   );
+  assert.equal(
+    result.consolidation.suppressed[0]?.replacementRuleId,
+    'heuristics.ts.explicit-any.ast'
+  );
+  assert.equal(result.consolidation.suppressed[0]?.platform, 'backend');
   assert.equal(result.severity_metrics.by_severity.ERROR, 1);
   assert.equal(result.severity_metrics.by_severity.WARN, 0);
 });
@@ -368,9 +375,10 @@ test('prefers baseline finding on equal severity tie within same semantic family
     result.consolidation.suppressed[0]?.ruleId,
     'heuristics.ts.explicit-any.ast'
   );
+  assert.equal(result.consolidation.suppressed[0]?.platform, 'backend');
 });
 
-test('applies semantic-family consolidation at file level even when lines differ', () => {
+test('does not consolidate semantic-family findings when anchor lines differ', () => {
   const result = buildEvidence({
     stage: 'PRE_PUSH',
     gateOutcome: 'BLOCK',
@@ -398,15 +406,14 @@ test('applies semantic-family consolidation at file level even when lines differ
     loadedRulesets: [],
   });
 
-  assert.deepEqual(
-    result.snapshot.findings.map((finding) => finding.ruleId),
-    ['heuristics.ts.explicit-any.ast']
-  );
-  assert.ok(result.consolidation);
-  assert.deepEqual(result.consolidation.suppressed[0]?.lines, [42]);
+  assert.deepEqual(result.snapshot.findings.map((finding) => finding.ruleId), [
+    'backend.avoid-explicit-any',
+    'heuristics.ts.explicit-any.ast',
+  ]);
+  assert.equal(result.consolidation, undefined);
 });
 
-test('keeps one deterministic finding when same rule repeats on multiple lines in one file', () => {
+test('keeps findings for same rule when anchors differ and preserves deterministic order', () => {
   const result = buildEvidence({
     stage: 'PRE_PUSH',
     gateOutcome: 'BLOCK',
@@ -434,15 +441,71 @@ test('keeps one deterministic finding when same rule repeats on multiple lines i
     loadedRulesets: [],
   });
 
-  assert.equal(result.snapshot.findings.length, 1);
+  assert.equal(result.snapshot.findings.length, 2);
   assert.equal(result.snapshot.findings[0]?.ruleId, 'heuristics.ts.explicit-any.ast');
   assert.deepEqual(result.snapshot.findings[0]?.lines, [5]);
+  assert.equal(result.snapshot.findings[1]?.ruleId, 'heuristics.ts.explicit-any.ast');
+  assert.deepEqual(result.snapshot.findings[1]?.lines, [40]);
+  assert.equal(result.consolidation, undefined);
+});
+
+test('applies origin precedence project-rules > skills > platform-preset > heuristics on tie', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    gateOutcome: 'WARN',
+    findings: [
+      {
+        ruleId: 'heuristics.ts.explicit-any.ast',
+        severity: 'WARN',
+        code: 'HEURISTICS_EXPLICIT_ANY_AST',
+        message: 'heuristic finding',
+        filePath: 'apps/backend/src/main.ts',
+      },
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'WARN',
+        code: 'BACKEND_AVOID_EXPLICIT_ANY',
+        message: 'platform preset finding',
+        filePath: 'apps/backend/src/main.ts',
+      },
+      {
+        ruleId: 'skills.backend.avoid-explicit-any',
+        severity: 'WARN',
+        code: 'SKILLS_BACKEND_AVOID_EXPLICIT_ANY',
+        message: 'skills finding',
+        filePath: 'apps/backend/src/main.ts',
+      },
+      {
+        ruleId: 'project.backend.no-explicit-any',
+        severity: 'WARN',
+        code: 'PROJECT_BACKEND_NO_EXPLICIT_ANY',
+        message: 'project rule finding',
+        filePath: 'apps/backend/src/main.ts',
+      },
+    ],
+    detectedPlatforms: {
+      backend: { detected: true, confidence: 'HIGH' },
+    },
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(
+    result.snapshot.findings.map((finding) => finding.ruleId),
+    ['project.backend.no-explicit-any']
+  );
   assert.ok(result.consolidation);
-  assert.equal(result.consolidation.suppressed.length, 1);
-  assert.deepEqual(result.consolidation.suppressed[0]?.lines, [40]);
-  assert.equal(
-    result.consolidation.suppressed[0]?.replacedByRuleId,
-    'heuristics.ts.explicit-any.ast'
+  assert.deepEqual(
+    result.consolidation.suppressed.map((entry) => entry.ruleId),
+    [
+      'backend.avoid-explicit-any',
+      'heuristics.ts.explicit-any.ast',
+      'skills.backend.avoid-explicit-any',
+    ]
+  );
+  assert.ok(
+    result.consolidation.suppressed.every(
+      (entry) => entry.replacedByRuleId === 'project.backend.no-explicit-any'
+    )
   );
 });
 

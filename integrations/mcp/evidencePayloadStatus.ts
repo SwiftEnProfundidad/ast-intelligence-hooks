@@ -32,9 +32,11 @@ export const toStatusPayload = (repoRoot: string): unknown => {
       context_api: CONTEXT_API_CAPABILITIES,
       evidence: {
         path: evidencePath,
+        exists: false,
         present: false,
         valid: false,
         version: null,
+        findings_count: 0,
       },
     };
   }
@@ -45,9 +47,11 @@ export const toStatusPayload = (repoRoot: string): unknown => {
       context_api: CONTEXT_API_CAPABILITIES,
       evidence: {
         path: evidencePath,
+        exists: true,
         present: true,
         valid: false,
         version: readResult.version ?? null,
+        findings_count: 0,
       },
     };
   }
@@ -62,6 +66,7 @@ export const toStatusPayload = (repoRoot: string): unknown => {
     context_api: CONTEXT_API_CAPABILITIES,
     evidence: {
       path: evidencePath,
+      exists: true,
       present: true,
       valid: true,
       version: evidence.version,

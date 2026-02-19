@@ -85,18 +85,22 @@ test('toStatusPayload devuelve degraded cuando falta .ai_evidence.json', async (
       context_api: unknown;
       evidence: {
         path: string;
+        exists: boolean;
         present: boolean;
         valid: boolean;
         version: string | null;
+        findings_count: number;
       };
     };
 
     assert.equal(payload.status, 'degraded');
     assert.deepEqual(payload.context_api, CONTEXT_API_CAPABILITIES);
     assert.equal(payload.evidence.path, resolve(repoRoot, '.ai_evidence.json'));
+    assert.equal(payload.evidence.exists, false);
     assert.equal(payload.evidence.present, false);
     assert.equal(payload.evidence.valid, false);
     assert.equal(payload.evidence.version, null);
+    assert.equal(payload.evidence.findings_count, 0);
   });
 });
 
@@ -112,17 +116,21 @@ test('toStatusPayload devuelve degraded con evidencia inválida y version conoci
       status: string;
       evidence: {
         path: string;
+        exists: boolean;
         present: boolean;
         valid: boolean;
         version: string | null;
+        findings_count: number;
       };
     };
 
     assert.equal(payload.status, 'degraded');
     assert.equal(payload.evidence.path, resolve(repoRoot, '.ai_evidence.json'));
+    assert.equal(payload.evidence.exists, true);
     assert.equal(payload.evidence.present, true);
     assert.equal(payload.evidence.valid, false);
     assert.equal(payload.evidence.version, '2.0');
+    assert.equal(payload.evidence.findings_count, 0);
   });
 });
 
@@ -133,16 +141,20 @@ test('toStatusPayload devuelve degraded con evidencia inválida y version descon
     const payload = toStatusPayload(repoRoot) as {
       status: string;
       evidence: {
+        exists: boolean;
         present: boolean;
         valid: boolean;
         version: string | null;
+        findings_count: number;
       };
     };
 
     assert.equal(payload.status, 'degraded');
+    assert.equal(payload.evidence.exists, true);
     assert.equal(payload.evidence.present, true);
     assert.equal(payload.evidence.valid, false);
     assert.equal(payload.evidence.version, null);
+    assert.equal(payload.evidence.findings_count, 0);
   });
 });
 
@@ -155,6 +167,7 @@ test('toStatusPayload devuelve ok y métricas derivadas cuando la evidencia es v
       context_api: unknown;
       evidence: {
         path: string;
+        exists: boolean;
         present: boolean;
         valid: boolean;
         version: string;
@@ -181,6 +194,7 @@ test('toStatusPayload devuelve ok y métricas derivadas cuando la evidencia es v
     assert.equal(payload.status, 'ok');
     assert.deepEqual(payload.context_api, CONTEXT_API_CAPABILITIES);
     assert.equal(payload.evidence.path, resolve(repoRoot, '.ai_evidence.json'));
+    assert.equal(payload.evidence.exists, true);
     assert.equal(payload.evidence.present, true);
     assert.equal(payload.evidence.valid, true);
     assert.equal(payload.evidence.version, '2.1');

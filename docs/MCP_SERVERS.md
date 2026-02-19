@@ -107,6 +107,9 @@ Variables de entorno:
 - `lifecycle` (o `null` si no aplica)
 - `sdd` (o `null` si no aplica)
 - `evidence` (status payload)
+  - `evidence.exists`: booleano obligatorio (`true|false`, nunca `null`)
+  - `evidence.present`: alias de compatibilidad (mismo estado de existencia)
+  - `evidence.valid`: booleano obligatorio
 
 ### Catálogo de resources
 

@@ -178,13 +178,21 @@ test('toStatusPayload retorna degraded cuando no existe evidencia', async () => 
   await withTempDir('pumuki-evidence-payload-status-', async (repoRoot) => {
     const payload = toStatusPayload(repoRoot) as {
       status: string;
-      evidence?: { present?: boolean; valid?: boolean; version?: string | null };
+      evidence?: {
+        exists?: boolean;
+        present?: boolean;
+        valid?: boolean;
+        version?: string | null;
+        findings_count?: number;
+      };
     };
 
     assert.equal(payload.status, 'degraded');
+    assert.equal(payload.evidence?.exists, false);
     assert.equal(payload.evidence?.present, false);
     assert.equal(payload.evidence?.valid, false);
     assert.equal(payload.evidence?.version, null);
+    assert.equal(payload.evidence?.findings_count, 0);
   });
 });
 
@@ -195,6 +203,7 @@ test('toStatusPayload retorna ok cuando la evidencia v2.1 es válida', async () 
     const payload = toStatusPayload(repoRoot) as {
       status: string;
       evidence?: {
+        exists?: boolean;
         present?: boolean;
         valid?: boolean;
         version?: string | null;
@@ -204,6 +213,7 @@ test('toStatusPayload retorna ok cuando la evidencia v2.1 es válida', async () 
     };
 
     assert.equal(payload.status, 'ok');
+    assert.equal(payload.evidence?.exists, true);
     assert.equal(payload.evidence?.present, true);
     assert.equal(payload.evidence?.valid, true);
     assert.equal(payload.evidence?.version, '2.1');

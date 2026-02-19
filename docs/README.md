@@ -83,6 +83,10 @@ Language baseline: active repository documentation is maintained in English.
 - `CORE_INTEGRATIONS_UNTESTED_INVENTORY.md`: deterministic inventory and prioritization of untested files for `core/` and `integrations/`.
 - `PUMUKI_FULL_VALIDATION_CHECKLIST.md`: sequential full validation matrix for enterprise readiness.
 - `PUMUKI_OPENSPEC_SDD_ROADMAP.md`: phased rollout roadmap for OpenSpec+SDD integration.
+- `PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md`: closed cycle 02 operational validation log.
+- `PUMUKI_CYCLE_03_SDD_ACTIVE_VALIDATION.md`: closed cycle 03 SDD-active validation log.
+- `PUMUKI_CYCLE_04_GAP_HARDENING.md`: closed cycle 04 hardening log.
+- `PUMUKI_CYCLE_05_ENTERPRISE_OPERATIONS.md`: closed cycle 05 enterprise operations log.
 
 ## Root-Level Pointers
 

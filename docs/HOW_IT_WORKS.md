@@ -30,6 +30,8 @@ Pipeline:
 ### PRE_PUSH
 
 - Scope: commit range (`upstream..HEAD`)
+- Upstream resolution: `git rev-parse @{u}`
+- Fail-safe behavior: if upstream is missing, stage exits `1` with guidance; it does not fallback to `HEAD`.
 - Policy:
   - `blockOnOrAbove: ERROR`
   - `warnOnOrAbove: WARN`
@@ -38,8 +40,11 @@ Pipeline:
 
 - Scope: commit range (`baseRef..HEAD`)
 - Base ref resolution:
-  - `GITHUB_BASE_REF` if present
-  - fallback: `origin/main`
+  - `GITHUB_BASE_REF` literal (if resolvable)
+  - `origin/${GITHUB_BASE_REF}` (if literal does not resolve)
+  - `origin/main`
+  - `main`
+  - `HEAD` (final deterministic fallback)
 - Policy:
   - `blockOnOrAbove: ERROR`
   - `warnOnOrAbove: WARN`

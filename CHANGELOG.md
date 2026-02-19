@@ -6,6 +6,11 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- MCP evidence `/status` now guarantees `evidence.exists` as a strict boolean across `missing`, `invalid`, and `valid` evidence states (no `null` ambiguity), while preserving `evidence.present` as compatibility alias.
+- Evidence runtime consolidation now deduplicates base/skills overlaps with deterministic semantic collision keys (`stage+platform+file+anchor+family`), preserving suppressed traceability metadata (`replacedByRuleId`, `replacementRuleId`, `platform`, `reason`).
+
 ## [6.3.15] - 2026-02-19
 
 ### Fixed
