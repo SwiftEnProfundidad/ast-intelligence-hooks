@@ -14,7 +14,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Cerrar bloqueo upstream de seguridad con release saneada de `pumuki` y revalidación de matriz en mock.
 - ✅ Preparar commit atómico de release `6.3.15` (dependencia saneada + tracker/changelog/version) y dejar worktree listo para handoff.
 - ✅ Ejecutar checkpoint final en `pumuki-mock-consumer` real con baseline limpia y registrar cierre operativo definitivo.
-- 🚧 Tarea activa actual: consolidar cierre final del lote release/mock (hándoff operativo + commits listos para push en ambos repos).
+- ✅ Consolidar cierre final del lote release/mock (hándoff operativo + commits listos para push en ambos repos).
+- 🚧 Tarea activa actual: ejecutar push final coordinado de los commits de cierre en ambos repos.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
@@ -63,6 +64,13 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - cadena instalada verificada: `pumuki@6.3.15` sin `glob`, `minimatch@10.2.1` vía `ts-morph`.
   - seguridad: `npm audit --omit=dev` => `0` vulnerabilidades.
   - matriz real: `clean(0/0/0)`, `violations(1/1/1)`, `mixed(1/1/1)`, `All scenario matrix checks passed for package: pumuki@latest`.
+- ✅ Handoff operativo de cierre consolidado para push:
+  - repo `ast-intelligence-hooks` (rama `cascade/refactor-git-and-evidence-services-7b27b4`) preparado con commits de cierre:
+    - `c88ed6b` release `6.3.15` (remove runtime `glob` chain),
+    - `103df7e` avance de tracker tras cierre release,
+    - `75c7eb9` evidencia de checkpoint final en mock real.
+  - repo `pumuki-mock-consumer` (rama `feat/pumuki-validation`) preparado con commit de checkpoint:
+    - `2ed6f2b` bump a `pumuki@6.3.15` + lock saneado para validación final.
 - ✅ Definir condición de desbloqueo y protocolo de revalidación.
   Condición de desbloqueo (upstream):
   - publicación de `pumuki` con cadena saneada (`glob` > `10.5.0` y `minimatch` >= `10.2.1`).
