@@ -167,7 +167,18 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C7-T5-A3`: cierre final de iteración preparado (docs alineados + commit/push atómico de cierre).
 - ✅ Cierre total del lote actual confirmado: sin tareas técnicas pendientes en ejecución.
 - ✅ Cierre administrativo final ejecutado: commit y push del tracker completados.
-- 🚧 Tarea activa actual: esperar instrucción explícita del usuario para abrir `Cycle 08` (sin ejecución autónoma).
+- ✅ Apertura de `Cycle 08` ejecutada por instrucción explícita del usuario:
+  - tracker creado en `docs/PUMUKI_CYCLE_08_SCOPE_TRACKER.md`.
+- ✅ Ejecutar `C8-T1`: alcance único del ciclo confirmado en `docs/PUMUKI_CYCLE_08_SCOPE_TRACKER.md` (`Validación end-to-end en pumuki-mock-consumer`).
+- ✅ Ejecutar `C8-T2`: criterio de salida verificable definido en `docs/PUMUKI_CYCLE_08_SCOPE_TRACKER.md` (comando único + salida esperada `PASS` en `clean/violations/mixed`, línea final esperada y `exit 0`).
+- ✅ Ejecutar `C8-T3-A1`: preflight del mock completado (`feat/pumuki-validation`, upstream `main`, working tree limpio).
+- ✅ Ejecutar `C8-T3-A2`: comando único ejecutado en mock con salida real capturada (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final presente, `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C8-T3-A3`: verificación formal del criterio completada contra evidencia (`artifacts/pumuki-matrix-summary.json` con `final_verdict=PASS` + escenarios esperados, línea final presente y `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C8-T3-A4`: drift residual post-ejecución confirmado en mock (`git status --short` vacío, `MOCK_DRIFT=NO`).
+- ✅ Ejecutar `C8-T3-A5`: evidencia final de implementación consolidada y transición completada a `C8-T4` (`run_id=pumuki-matrix-20260219T211534Z-7641`, criterio satisfecho y sin drift).
+- ✅ Ejecutar `C8-T4`: validación final del alcance completada en mock (`run_id=pumuki-matrix-20260219T212215Z-14397`, `final_verdict=PASS`, `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, línea final presente y `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C8-T5`: cierre del ciclo 08 completado (trackers sincronizados y cierre operativo preparado para commit/push atómico).
+- 🚧 Tarea activa actual: esperar instrucción explícita del usuario para abrir `Cycle 09` (sin ejecución autónoma).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
