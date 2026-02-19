@@ -239,10 +239,10 @@ const normalizeAnchorLine = (lines?: EvidenceLines): number => {
     const value = Number.parseInt(match[0], 10);
     return Number.isFinite(value) ? Math.max(0, value) : 0;
   }
-  if (!lines || lines.length === 0) {
+  if (!Array.isArray(lines) || lines.length === 0) {
     return 0;
   }
-  const finite = lines.filter((line) => Number.isFinite(line)).map((line) => Math.trunc(line));
+  const finite = lines.filter((line: number) => Number.isFinite(line)).map((line: number) => Math.trunc(line));
   if (finite.length === 0) {
     return 0;
   }

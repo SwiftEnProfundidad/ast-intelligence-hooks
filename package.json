@@ -150,12 +150,9 @@
   },
   "dependencies": {
     "@babel/parser": "^7.28.5",
-    "ts-morph": ">=21.0.0",
+    "ts-morph": ">=27.0.2",
     "tsx": "^4.21.0",
     "zod": "^4.3.6"
-  },
-  "peerDependencies": {
-    "ts-morph": ">=21.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -219,5 +216,8 @@
     "./integrations/mcp": "./integrations/mcp/index.ts",
     "./core/gate/evaluateGate": "./core/gate/evaluateGate.ts",
     "./core/gate/evaluateRules": "./core/gate/evaluateRules.ts"
+  },
+  "peerDependencies": {
+    "ts-morph": ">=27.0.2"
   }
 }

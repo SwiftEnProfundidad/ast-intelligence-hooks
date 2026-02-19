@@ -127,6 +127,14 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Cerrar fase 8 del roadmap OpenSpec+SDD:
   - checklist final de aceptación enterprise ejecutado/cerrado.
   - evidencia de no regresión consolidada y documentada.
+- ✅ Resolver vulnerabilidad alta activa reportada en `main`:
+  - upgrade runtime `ts-morph` a `27.0.2` (lock regenerado),
+  - validación de seguridad: `npm audit --omit=dev` => `high: 0`, `total: 0`.
+- ✅ Corregir error de tipado estricto detectado durante verificación:
+  - fix en `integrations/evidence/buildEvidence.ts` (`normalizeAnchorLine`),
+  - compilación verificada: `npx tsc --noEmit` en verde.
+- ✅ Verificar no regresión funcional del módulo de evidencia tras fixes:
+  - test directo ejecutado: `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts` (`18/18` en verde).
 - ✅ Espera de apertura del siguiente ciclo registrada (sin pendientes técnicos abiertos en este lote).
 - ✅ Cierre total del lote actual confirmado: sin tareas técnicas pendientes en ejecución.
 - ✅ Cierre administrativo final ejecutado: commit y push del tracker completados.
