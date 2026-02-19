@@ -24,7 +24,11 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
   - rama remota extra `archive/refactor-fs-syncpart3-split-2026-02-15` eliminada tras backup tag:
     - `backup/archive-refactor-fs-syncpart3-split-2026-02-15-20260219-110248` -> `7c4e4b78c7693987261e3caea1e4f53387c00033`.
   - estado final de ramas remotas: `origin/main`, `origin/develop`.
-- 🚧 Tarea activa actual: esperar próxima instrucción para el siguiente ciclo (sin tareas técnicas pendientes de este cierre).
+- ✅ Esperar próxima instrucción para el siguiente ciclo (sin tareas técnicas pendientes de este cierre).
+- ✅ Crear y publicar definición del nuevo ciclo en `docs/PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md` (incluye regla anti-bucle y criterio de salida).
+- ✅ Ejecutar `C2-F0-T2` del ciclo 02: alcance congelado (entradas/salidas/límites/done) en `docs/PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md`.
+- ✅ Ejecutar `C2-F0-T3` del ciclo 02: checkpoint único de cierre publicado (`2026-02-26`, comando y criterio) en `docs/PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md`.
+- 🚧 Tarea activa actual: ejecutar `C2-F1-T1` del ciclo 02 (verificar baseline limpia del mock consumer y estado de ramas).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
