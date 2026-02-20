@@ -85,9 +85,9 @@ CI guardrail:
 
 - `.github/workflows/ci.yml` includes `Skills Lock Freshness` and fails when committed lock is stale.
 
-Migration guide:
+Skills rollout runbook:
 
-- `docs/skills-repo-enforcement-migration.md`
+- `docs/validation/skills-rollout-consumer-repositories.md`
 
 ## Stage policies
 

@@ -10,7 +10,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Active docs quality guardrails expanded and integrated into stage-gates:
   - English-only baseline check for active enterprise docs.
   - Markdown reference-integrity check for active docs.
-  - Root governance docs (`README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `CLAUDE.md`) included in active-doc guardrails.
+  - Root governance docs (`README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `PUMUKI.md`) included in active-doc guardrails.
 - Stage-gates command simplified to glob-based test targets for maintainability while preserving deterministic coverage.
 - Root `CHANGELOG.md` normalized to active enterprise v2 baseline to avoid legacy drift.
 
@@ -53,7 +53,6 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Mock consumer validation hardening:
   - new runbook: `docs/validation/mock-consumer-integration-runbook.md`
   - formalized package-smoke + manual mock-consumer A/B checklist
-  - validation docs hygiene allowlist updated accordingly
 - Phase 5 mock-closure automation:
   - `scripts/build-mock-consumer-startup-triage.ts` generates triage + unblock reports from local package-smoke summaries
   - `validation:phase5-execution-closure` supports `--mock-consumer`
@@ -145,11 +144,6 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - IDE-agnostic gate boundary hardening:
   - runtime boundary test in `integrations/git/__tests__/ideAgnosticBoundary.test.ts`
   - explicit architecture/docs contract that IDE diagnostics remain optional adapters
-- Active docs governance hardening:
-  - provider-agnostic docs guardrail test:
-    - `scripts/__tests__/enterprise-docs-agnostic.test.ts`
-  - docs index coverage guardrail test:
-    - `scripts/__tests__/docs-index-coverage.test.ts`
 - Compatibility command hardening:
   - legacy provider-named hook scripts now delegate to adapter-native scripts in `package.json`
   - regression guardrail:
@@ -166,9 +160,6 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - cleans local generated `docs/validation/**/artifacts` directories and `.audit_tmp`
   - framework menu action:
     - `Clean local validation artifacts`
-- Rule-pack docs drift prevention:
-  - automated version sync test `scripts/__tests__/rule-pack-docs-sync.test.ts`
-
 ## Notes
 
 - Legacy 5.3.4 migration/release notes were removed from active docs to avoid drift.

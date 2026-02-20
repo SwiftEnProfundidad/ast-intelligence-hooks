@@ -156,7 +156,6 @@ npm run typecheck
 npm run test
 npm run test:deterministic
 npm run validation:package-manifest
-npm run validation:docs-hygiene
 npm run skills:lock:check
 ```
 

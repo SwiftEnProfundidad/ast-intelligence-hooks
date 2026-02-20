@@ -5,10 +5,8 @@ Canonical index for active Pumuki documentation.
 ## Product and Architecture
 
 - `docs/ARCHITECTURE.md`: normative architecture contract.
-- `docs/ARCHITECTURE_DETAILED.md`: deeper implementation architecture.
 - `docs/HOW_IT_WORKS.md`: facts-to-gate execution flow.
 - `docs/API_REFERENCE.md`: public APIs, binaries, and command surfaces.
-- `docs/AST_HEURISTICS_REINTRODUCTION_PLAN.md`: staged heuristics restoration plan.
 
 ## Setup and Usage
 
@@ -37,7 +35,6 @@ Canonical index for active Pumuki documentation.
 - `docs/rule-packs/frontend.md`
 - `docs/rule-packs/android.md`
 - `docs/rule-packs/heuristics.md`
-- `docs/skills-repo-enforcement-migration.md`
 
 ## Validation Runbooks
 
@@ -60,9 +57,8 @@ Canonical index for active Pumuki documentation.
 - `docs/codex-skills/windsurf-rules-frontend.md`
 - `docs/codex-skills/windsurf-rules-ios.md`
 
-## Assets and Releases
+## Releases
 
-- `docs/images/README.md`
 - `docs/RELEASE_NOTES.md`
 
 ## Root-Level Governance Docs
@@ -71,5 +67,4 @@ Canonical index for active Pumuki documentation.
 - `ARCHITECTURE.md`
 - `CHANGELOG.md`
 - `AGENTS.md`
-- `CLAUDE.md`
 - `PUMUKI.md`

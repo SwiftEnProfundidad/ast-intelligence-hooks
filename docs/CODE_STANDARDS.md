@@ -58,7 +58,7 @@ npm run test:heuristics
 - Update docs in the same change when behavior changes.
 - Keep docs aligned with active v2.x runtime.
 - Keep active repository documentation in English (enterprise baseline).
-- Keep root markdown documentation limited to canonical governance docs (`README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `AGENTS.md`, `CLAUDE.md`).
+- Keep root markdown documentation limited to canonical governance docs (`README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `AGENTS.md`, `PUMUKI.md`).
 - Do not add temporary markdown planning artifacts.
 
 ## Commit standards
