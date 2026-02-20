@@ -123,4 +123,5 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - ✅ Commit 5/6: `feat(menu): acción de configuración hard mode enterprise`.
   - ✅ Commit 6/6: `docs(framework): actualizar contratos de evidencia, MCP y uso`.
 - ✅ Actualizar `README.md` a formato enterprise pre-bump (quickstart, hard mode, PRE_WRITE chain, lifecycle/adapters, MCP y mapa documental).
-- 🚧 Ejecutar bump/release y sincronización final (`develop`/`main`) cuando el usuario lo autorice.
+- ✅ Ejecutar bump/release y publicación npm (`v6.3.17`).
+- 🚧 Ejecutar sincronización final (`develop`/`main`) cuando el usuario lo autorice.

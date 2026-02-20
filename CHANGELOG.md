@@ -8,6 +8,26 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.17] - 2026-02-20
+
+### Added
+
+- Introduced deterministic `repo_state.lifecycle.hard_mode` capture in evidence generation (`.pumuki/hard-mode.json` persisted and normalized into `.ai_evidence.json`).
+- Added lifecycle adapter scaffolding command surface:
+  - `pumuki adapter install --agent=<codex|claude|cursor|windsurf|opencode> [--dry-run]`
+  - `npm run adapter:install -- --agent=<name>`
+- Added framework menu hard-mode configuration action for enterprise operation (`Configure hard mode enforcement (enterprise)`).
+
+### Changed
+
+- Unified AI Gate contract now carries resolved policy trace for all stages, including `PRE_WRITE` mapped deterministically to `PRE_COMMIT` policy resolution.
+- Enterprise MCP tool `ai_gate_check` now returns resolved policy metadata (`policy.stage`, `policy.resolved_stage`, `policy.trace`) in the tool result envelope.
+- Refreshed `README.md` with enterprise-first onboarding structure (quickstart, hard mode, PRE_WRITE chain contract, lifecycle/adapters, MCP map).
+
+### Fixed
+
+- Closed PRE_WRITE/MCP policy drift by propagating the same hard-mode persisted policy trace used in `PRE_COMMIT/PRE_PUSH/CI`.
+
 ## [6.3.16] - 2026-02-20
 
 ### Fixed

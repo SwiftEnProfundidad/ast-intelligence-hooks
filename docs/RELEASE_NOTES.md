@@ -5,6 +5,25 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-20 (v6.3.17)
+
+- Evidence and hard-mode state:
+  - Added deterministic `repo_state.lifecycle.hard_mode` capture from `.pumuki/hard-mode.json`.
+  - Evidence v2.1 now includes normalized hard-mode config path/state for runtime traceability.
+- Unified AI Gate hard-mode propagation:
+  - `evaluateAiGate` now exposes resolved policy metadata (`stage`, `resolved_stage`, thresholds, trace).
+  - `PRE_WRITE` now reports policy resolution deterministically via `PRE_COMMIT` mapping.
+- Enterprise MCP contract alignment:
+  - `ai_gate_check` now includes policy trace payload in result responses.
+  - PRE_WRITE/MCP behavior now matches gate policy resolution used by stage runners.
+- Lifecycle + adapter operations:
+  - Added `pumuki adapter install --agent=<...> [--dry-run]` and npm alias `adapter:install`.
+  - Added adapter templates and runtime scaffolding for `codex`, `claude`, `cursor`, `windsurf`, `opencode`.
+- Framework menu UX:
+  - Added explicit maintenance action to configure hard-mode enforcement (`id 18`).
+- Documentation hardening:
+  - Rebuilt `README.md` with enterprise onboarding flow (quickstart, hard mode, PRE_WRITE contract, adapters, MCP references).
+
 ### 2026-02-20 (v6.3.16)
 
 - MCP/evidence hardening:
