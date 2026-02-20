@@ -35,6 +35,7 @@ const MENU_HELP: Readonly<Record<string, string>> = {
   '15': 'Genera reporte de startup-unblock status.',
   '16': 'Genera reporte real-session del adapter.',
   '17': 'Verifica freshness de skills lock.',
+  '18': 'Configura hard mode/enforcement enterprise.',
   '19': 'Ejecuta startup triage bundle del consumidor.',
   '20': 'Genera reporte A/B del mock consumer.',
   '21': 'Genera reporte de blockers readiness (phase5).',

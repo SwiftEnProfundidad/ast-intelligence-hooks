@@ -1,4 +1,8 @@
-import { runAndPrintExitCode, runSkillsLockCheck } from './framework-menu-runners';
+import {
+  runAndPrintExitCode,
+  runHardModeEnforcementConfig,
+  runSkillsLockCheck,
+} from './framework-menu-runners';
 import type {
   FrameworkMenuActionContext,
   MenuAction,
@@ -12,6 +16,11 @@ export const createFrameworkMenuDiagnosticsMaintenanceActions = (
       id: '17',
       label: 'Run skills lock freshness check',
       execute: async () => runAndPrintExitCode(runSkillsLockCheck),
+    },
+    {
+      id: '18',
+      label: 'Configure hard mode enforcement (enterprise)',
+      execute: async () => runAndPrintExitCode(runHardModeEnforcementConfig),
     },
   ];
 };

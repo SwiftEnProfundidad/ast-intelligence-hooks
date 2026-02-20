@@ -31,6 +31,7 @@ export {
 } from './framework-menu-runners-phase5';
 
 export {
+  runHardModeEnforcementConfig,
   runSkillsLockCheck,
   runValidationArtifactsCleanup,
 } from './framework-menu-runners-validation';
