@@ -105,15 +105,8 @@ This runbook is prepared and versioned. Execution in external consumer repositor
 
 ## Execution Reports
 
-- `docs/validation/archive/skills-rollout-consumer-ci-artifacts.md` (consumer GitHub Actions artifact availability status)
-
-Archived historical reports:
-
-- `docs/validation/archive/skills-rollout-mock_consumer-report.md` (initial real-consumer checkpoint)
-- `docs/validation/archive/skills-rollout-mock_consumer-multi-platform-report.md` (positive multi-platform detection across `PRE_COMMIT`, `PRE_PUSH`, and `CI`)
-- `docs/validation/archive/skills-rollout-mock_consumer-workflow-lint.md` (semantic workflow lint findings linked to startup-failure triage)
-- `docs/validation/archive/skills-rollout-mock_consumer-startup-fix-experiment.md` (branch-only remediation test outcome)
-- `docs/validation/archive/private-actions-healthcheck.md` (account-level private Actions reproduction evidence)
+- Historical execution reports were pruned from active docs to keep repository documentation focused.
+- Historical evidence remains recoverable via Git history when needed.
 
 Generated diagnostic outputs (not versioned by default):
 

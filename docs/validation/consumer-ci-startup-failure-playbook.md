@@ -176,9 +176,6 @@ If unresolved after workflow and access-level checks:
 ## Related Reports
 
 - `.audit-reports/consumer-triage/consumer-ci-auth-check.md`
-- `docs/validation/archive/skills-rollout-consumer-ci-artifacts.md`
-- `docs/validation/archive/skills-rollout-mock_consumer-multi-platform-report.md`
-- `docs/validation/archive/private-actions-healthcheck.md`
 - `.audit-reports/consumer-triage/consumer-startup-failure-support-bundle.md`
 - `.audit-reports/consumer-triage/consumer-startup-triage-report.md`
-- `docs/validation/phase5-execution-closure.md`
+- `docs/validation/README.md`

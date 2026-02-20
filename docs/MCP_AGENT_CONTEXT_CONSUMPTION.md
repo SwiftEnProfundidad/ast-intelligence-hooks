@@ -186,4 +186,3 @@ Summary facet contract:
 - `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
 - `docs/MCP_SERVERS.md`
 - `docs/API_REFERENCE.md`
-- `docs/REFRACTOR_PROGRESS.md`

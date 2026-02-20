@@ -44,23 +44,13 @@ Language baseline: active repository documentation is maintained in English.
 
 - `validation/README.md`: validation docs policy.
 - `validation/consumer-ci-startup-failure-playbook.md`
-- `validation/consumer-startup-escalation-handoff-latest.md`
-- `validation/phase5-execution-closure.md`
-- `validation/phase8-external-rollout-pack.md`
-- `validation/phase8-post-billing-reactivation-runbook.md`
 - `validation/adapter-hook-runtime-validation.md`
 - `validation/adapter-hook-runtime-local-report.md`
 - `validation/adapter-real-session-report-template.md`
 - `validation/enterprise-consumer-isolation-policy.md`
 - `validation/mock-consumer-integration-runbook.md`
-- `validation/mock-consumer-post-release-handoff-pack.md`
-- `validation/mock-consumer-next-cycle-enterprise-checklist.md`
-- `validation/mock-consumer-next-round-scope.md`
 - `validation/github-support-ticket-template-startup-failure.md`
 - `validation/skills-rollout-consumer-repositories.md`
-- `validation/phase12-go-no-go-report.md`
-- `validation/post-phase12-next-lot-decision.md`
-- `validation/archive/README.md`: historical validation reports.
 
 ## Vendored Codex Skills
 
@@ -78,15 +68,6 @@ Language baseline: active repository documentation is maintained in English.
 ## Change Tracking
 
 - `RELEASE_NOTES.md`: v2.x release notes and rollout checkpoints.
-- `TODO.md`: active operational work tracking.
-- `REFRACTOR_PROGRESS.md`: linear phase-by-phase status (done/in-progress/pending).
-- `CORE_INTEGRATIONS_UNTESTED_INVENTORY.md`: deterministic inventory and prioritization of untested files for `core/` and `integrations/`.
-- `PUMUKI_FULL_VALIDATION_CHECKLIST.md`: sequential full validation matrix for enterprise readiness.
-- `PUMUKI_OPENSPEC_SDD_ROADMAP.md`: phased rollout roadmap for OpenSpec+SDD integration.
-- `PUMUKI_CYCLE_02_ENTERPRISE_VALIDATION.md`: closed cycle 02 operational validation log.
-- `PUMUKI_CYCLE_03_SDD_ACTIVE_VALIDATION.md`: closed cycle 03 SDD-active validation log.
-- `PUMUKI_CYCLE_04_GAP_HARDENING.md`: closed cycle 04 hardening log.
-- `PUMUKI_CYCLE_05_ENTERPRISE_OPERATIONS.md`: closed cycle 05 enterprise operations log.
 
 ## Root-Level Pointers
 
