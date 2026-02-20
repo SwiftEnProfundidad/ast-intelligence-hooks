@@ -3,10 +3,10 @@
 # Manage Library - Single Script for All Operations
 # ============================================
 # Usage:
-#   ./manage-library.sh reset      - Clean everything
-#   ./manage-library.sh update     - Update library after changes
-#   ./manage-library.sh install    - Full fresh install
-#   ./manage-library.sh            - Show menu
+#   scripts/manage-library.sh reset      - Clean everything
+#   scripts/manage-library.sh update     - Update library after changes
+#   scripts/manage-library.sh install    - Full fresh install
+#   scripts/manage-library.sh            - Show menu
 
 set -e
 

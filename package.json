@@ -58,6 +58,7 @@
     "ast:guard:logs": "bash scripts/hooks-system/bin/evidence-guard logs",
     "ast:check-version": "node scripts/hooks-system/bin/check-version.js",
     "framework:menu": "node bin/pumuki-framework.js",
+    "maintenance:library": "bash scripts/manage-library.sh",
     "validation:consumer-ci-artifacts": "npx --yes tsx@4.21.0 scripts/collect-consumer-ci-artifacts.ts",
     "validation:consumer-ci-auth-check": "npx --yes tsx@4.21.0 scripts/check-consumer-ci-auth.ts",
     "validation:consumer-workflow-lint": "npx --yes tsx@4.21.0 scripts/lint-consumer-workflows.ts",

@@ -1,79 +1,75 @@
-# Documentation Index (v2.x)
+# Documentation Index
 
-This index is the canonical entry point for framework documentation in this repository.
+Canonical index for active Pumuki documentation.
 
-Language baseline: active repository documentation is maintained in English.
+## Product and Architecture
 
-## Core Architecture
+- `docs/ARCHITECTURE.md`: normative architecture contract.
+- `docs/ARCHITECTURE_DETAILED.md`: deeper implementation architecture.
+- `docs/HOW_IT_WORKS.md`: facts-to-gate execution flow.
+- `docs/API_REFERENCE.md`: public APIs, binaries, and command surfaces.
+- `docs/AST_HEURISTICS_REINTRODUCTION_PLAN.md`: staged heuristics restoration plan.
 
-- `ARCHITECTURE.md`: normative architecture contract and layer boundaries.
-- `ARCHITECTURE_DETAILED.md`: deeper implementation-level architecture details.
-- `HOW_IT_WORKS.md`: operational flow from facts to evidence.
-- `API_REFERENCE.md`: exported APIs and integration entrypoints.
-- `AST_HEURISTICS_REINTRODUCTION_PLAN.md`: staged plan for semantic heuristics.
+## Setup and Usage
 
-## Configuration and Operations
+- `docs/INSTALLATION.md`: installation and bootstrap guidance.
+- `docs/USAGE.md`: day-to-day usage.
+- `docs/CONFIGURATION.md`: runtime and repository configuration.
+- `docs/CODE_STANDARDS.md`: coding standards for framework contributors.
+- `docs/CONTRIBUTING.md`: contribution workflow.
+- `docs/DEPENDENCIES.md`: dependency policy and maintenance.
+- `docs/TESTING.md`: test strategy and validation commands.
+- `docs/BRANCH_PROTECTION_GUIDE.md`: branch protection baseline.
 
-- `INSTALLATION.md`: installation and bootstrap.
-- `USAGE.md`: daily usage patterns and stage execution.
-- `CONFIGURATION.md`: runtime and repository configuration.
-- `CONTRIBUTING.md`: contribution standards and guardrails.
-- `CODE_STANDARDS.md`: coding conventions for v2.x work.
-- `DEPENDENCIES.md`: dependency policy and maintenance notes.
-- `TESTING.md`: validation strategy and test command matrix.
-- `BRANCH_PROTECTION_GUIDE.md`: branch protection policy and setup.
-- `skills-repo-enforcement-migration.md`: migration path for skills enforcement.
+## Evidence and MCP
 
-## Evidence and Integrations
+- `docs/evidence-v2.1.md`: deterministic evidence schema.
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`: evidence MCP server contract.
+- `docs/MCP_SERVERS.md`: MCP integration overview.
+- `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`: deterministic MCP consumption model.
 
-- `evidence-v2.1.md`: deterministic evidence schema and behavior.
-- `MCP_EVIDENCE_CONTEXT_SERVER.md`: evidence context server contract.
-- `MCP_SERVERS.md`: MCP integration overview.
-- `MCP_AGENT_CONTEXT_CONSUMPTION.md`: deterministic pre-action context consumption pattern for agents.
+## Rule Packs and Skills
 
-## Rule Packs
+- `docs/rule-packs/README.md`: rule-pack index.
+- `docs/rule-packs/engineering-baseline.md`
+- `docs/rule-packs/ios.md`
+- `docs/rule-packs/backend.md`
+- `docs/rule-packs/frontend.md`
+- `docs/rule-packs/android.md`
+- `docs/rule-packs/heuristics.md`
+- `docs/skills-repo-enforcement-migration.md`
 
-- `rule-packs/README.md`: rule pack versions and override model.
-- `rule-packs/ios.md`
-- `rule-packs/backend.md`
-- `rule-packs/frontend.md`
-- `rule-packs/android.md`
-- `rule-packs/heuristics.md`
+## Validation Runbooks
 
-## Validation and Runbooks
-
-- `validation/README.md`: validation docs policy.
-- `validation/consumer-ci-startup-failure-playbook.md`
-- `validation/adapter-hook-runtime-validation.md`
-- `validation/adapter-hook-runtime-local-report.md`
-- `validation/adapter-real-session-report-template.md`
-- `validation/enterprise-consumer-isolation-policy.md`
-- `validation/mock-consumer-integration-runbook.md`
-- `validation/github-support-ticket-template-startup-failure.md`
-- `validation/skills-rollout-consumer-repositories.md`
+- `docs/validation/README.md`: validation docs policy.
+- `docs/validation/consumer-ci-startup-failure-playbook.md`
+- `docs/validation/github-support-ticket-template-startup-failure.md`
+- `docs/validation/skills-rollout-consumer-repositories.md`
+- `docs/validation/adapter-hook-runtime-validation.md`
+- `docs/validation/adapter-hook-runtime-local-report.md`
+- `docs/validation/adapter-real-session-report-template.md`
+- `docs/validation/enterprise-consumer-isolation-policy.md`
+- `docs/validation/mock-consumer-integration-runbook.md`
 
 ## Vendored Codex Skills
 
-- `codex-skills/swift-concurrency.md`
-- `codex-skills/swiftui-expert-skill.md`
-- `codex-skills/windsurf-rules-android.md`
-- `codex-skills/windsurf-rules-backend.md`
-- `codex-skills/windsurf-rules-frontend.md`
-- `codex-skills/windsurf-rules-ios.md`
+- `docs/codex-skills/swift-concurrency.md`
+- `docs/codex-skills/swiftui-expert-skill.md`
+- `docs/codex-skills/windsurf-rules-android.md`
+- `docs/codex-skills/windsurf-rules-backend.md`
+- `docs/codex-skills/windsurf-rules-frontend.md`
+- `docs/codex-skills/windsurf-rules-ios.md`
 
-## Assets
+## Assets and Releases
 
-- `images/README.md`: visual asset inventory and usage notes.
+- `docs/images/README.md`
+- `docs/RELEASE_NOTES.md`
 
-## Change Tracking
+## Root-Level Governance Docs
 
-- `RELEASE_NOTES.md`: v2.x release notes and rollout checkpoints.
-
-## Root-Level Pointers
-
-- `README.md` (repository root) is the product-facing overview.
-- `ARCHITECTURE.md` (repository root) is a conceptual shortcut; use this index and `docs/ARCHITECTURE.md` for canonical references.
-- `CHANGELOG.md` (repository root) tracks top-level package changes for the active baseline.
-- `AGENTS.md` (repository root) defines repository execution constraints for coding agents.
-- `CLAUDE.md` (repository root) provides a concise agent profile aligned with repository policies.
-- `PUMUKI.md` (repository root) is the framework-facing manual entrypoint.
+- `README.md`
+- `ARCHITECTURE.md`
+- `CHANGELOG.md`
+- `AGENTS.md`
+- `CLAUDE.md`
+- `PUMUKI.md`
