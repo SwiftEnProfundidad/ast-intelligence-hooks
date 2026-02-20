@@ -1,11 +1,5 @@
 import { buildFrameworkMenuTsxCommandPrefix } from './framework-menu-builders-shared-lib';
 
-export const buildValidationDocsHygieneCommandArgs = (params: {
-  scriptPath: string;
-}): string[] => {
-  return buildFrameworkMenuTsxCommandPrefix(params.scriptPath);
-};
-
 export const buildCleanValidationArtifactsCommandArgs = (params: {
   scriptPath: string;
   dryRun: boolean;

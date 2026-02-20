@@ -33,5 +33,4 @@ export {
 export {
   runSkillsLockCheck,
   runValidationArtifactsCleanup,
-  runValidationDocsHygiene,
 } from './framework-menu-runners-validation';

@@ -1,4 +1,4 @@
-import { runAndPrintExitCode, runSkillsLockCheck, runValidationDocsHygiene } from './framework-menu-runners';
+import { runAndPrintExitCode, runSkillsLockCheck } from './framework-menu-runners';
 import type {
   FrameworkMenuActionContext,
   MenuAction,
@@ -10,11 +10,6 @@ export const createFrameworkMenuDiagnosticsMaintenanceActions = (
   return [
     {
       id: '17',
-      label: 'Run docs/validation hygiene check',
-      execute: async () => runAndPrintExitCode(runValidationDocsHygiene),
-    },
-    {
-      id: '18',
       label: 'Run skills lock freshness check',
       execute: async () => runAndPrintExitCode(runSkillsLockCheck),
     },

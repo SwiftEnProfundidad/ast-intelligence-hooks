@@ -9,7 +9,6 @@ import {
   buildPhase5ExternalHandoffCommandArgs,
   buildPhase5ExecutionClosureStatusCommandArgs,
   buildSkillsLockCheckCommandArgs,
-  buildValidationDocsHygieneCommandArgs,
 } from '../framework-menu';
 
 test('builds deterministic command args for adapter real-session report', () => {
@@ -27,18 +26,6 @@ test('builds deterministic command args for adapter real-session report', () => 
     '.audit-reports/adapter/adapter-session-status.md',
     '--out',
     '.audit-reports/adapter/adapter-real-session-report.md',
-  ]);
-});
-
-test('builds deterministic command args for validation docs hygiene check', () => {
-  const args = buildValidationDocsHygieneCommandArgs({
-    scriptPath: '/repo/scripts/check-validation-docs-hygiene.ts',
-  });
-
-  assert.deepEqual(args, [
-    '--yes',
-    'tsx@4.21.0',
-    '/repo/scripts/check-validation-docs-hygiene.ts',
   ]);
 });
 

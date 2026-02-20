@@ -15,5 +15,4 @@ export {
 export {
   buildCleanValidationArtifactsCommandArgs,
   buildSkillsLockCheckCommandArgs,
-  buildValidationDocsHygieneCommandArgs,
 } from './framework-menu-builders-maintenance';
