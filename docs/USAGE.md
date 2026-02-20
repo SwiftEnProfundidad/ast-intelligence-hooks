@@ -113,7 +113,7 @@ npx --yes pumuki-pre-push
 # CI
 npx --yes pumuki-ci
 
-# PRE_WRITE (SDD pre-write policy check)
+# PRE_WRITE (SDD + AI Gate pre-write policy check)
 npx --yes pumuki-pre-write
 ```
 
@@ -158,6 +158,11 @@ npx --yes pumuki uninstall --purge-artifacts
 
 # one-command cleanup + dependency removal from package.json
 npx --yes pumuki remove
+
+# adapter scaffolding for agent/IDE repositories
+npx --yes pumuki adapter install --agent=codex --dry-run
+npx --yes pumuki adapter install --agent=cursor
+npm run adapter:install -- --agent=claude
 ```
 
 `pumuki remove` is the enterprise-safe removal path because it performs lifecycle cleanup before package uninstall.
@@ -253,8 +258,13 @@ npm run validation:clean-artifacts -- --dry-run
 
 ### PRE_WRITE
 
-- Runs SDD pre-write guardrail before continuing editing flow.
+- Runs SDD pre-write guardrail and then AI Gate validation before continuing editing flow.
 - Requires OpenSpec installed, compatible, initialized, and valid active session.
+- AI Gate blocks on missing/invalid/stale evidence, blocked evidence gate status, or protected branch usage.
+- `pumuki sdd validate --stage=PRE_WRITE --json` returns an envelope with:
+  - `sdd` (SDD decision payload)
+  - `ai_gate` (AI Gate evaluation payload)
+  - `telemetry.chain = "pumuki->ai_gate->ai_evidence"`
 
 Resolver source: `integrations/git/resolveGitRefs.ts`.
 
@@ -271,6 +281,7 @@ Schema and behavior:
 - `platforms` and `rulesets` tracking
 - `snapshot.sdd_metrics` tracks stage-level SDD enforcement metadata
 - SDD blocks emit finding `sdd.policy.blocked` with `source: "sdd-policy"`
+- `repo_state` captures deterministic git/lifecycle runtime snapshot
 - stable JSON ordering for deterministic diffs
 
 Reference: `docs/evidence-v2.1.md`.

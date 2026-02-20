@@ -66,6 +66,32 @@ Key helpers:
 - `resolveCiBaseRef()`
 - `runCliCommand(runner)`
 
+## AI Gate evaluator
+
+File: `integrations/gate/evaluateAiGate.ts`
+
+- `evaluateAiGate({ repoRoot, stage, maxAgeSecondsByStage?, protectedBranches? })`
+
+Contract:
+
+- Unified evaluation for `PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI`.
+- Blocks on:
+  - missing/invalid/stale `.ai_evidence.json`
+  - evidence `ai_gate.status = BLOCKED`
+  - protected branch use (`main/master/develop/dev` by default)
+- Returns deterministic payload: `status`, `allowed`, `violations[]`, `evidence`, `repo_state`.
+
+## PRE_WRITE JSON envelope
+
+File: `integrations/lifecycle/cli.ts`
+
+- `pumuki sdd validate --stage=PRE_WRITE --json`
+- Returns deterministic envelope:
+  - `sdd`
+  - `ai_gate`
+  - `telemetry.chain = "pumuki->ai_gate->ai_evidence"`
+  - `telemetry.stage`
+
 ## Evidence API
 
 Files:
@@ -82,6 +108,7 @@ Key types:
 - `LedgerEntry`
 - `PlatformState`
 - `RulesetState`
+- `RepoState`
 
 Contract:
 
@@ -174,6 +201,8 @@ Consumption: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`.
 
 ```bash
 npm run framework:menu
+npm run adapter:install -- --agent=codex --dry-run
+npx --yes pumuki adapter install --agent=cursor
 npm run validation:adapter-readiness
 npm run typecheck
 npm run test:deterministic

@@ -7,7 +7,7 @@
 - `version`: must be `2.1` and is the source of truth
 - `timestamp`: ISO timestamp of generation
 - `snapshot`:
-  - `stage`: `PRE_COMMIT` | `PRE_PUSH` | `CI`
+  - `stage`: `PRE_WRITE` | `PRE_COMMIT` | `PRE_PUSH` | `CI`
   - `outcome`: `PASS` | `WARN` | `BLOCK`
   - `findings[]`: normalized findings for the current run
     - `file`: normalized path (or `unknown` when no deterministic trace exists)
@@ -30,6 +30,10 @@
   - violations carry the same traceability fields as snapshot findings (`file`, `lines`, `matchedBy`, `source`)
 - `severity_metrics`:
   - gate status + totals by severity
+- `repo_state` (optional):
+  - repository operational snapshot captured at evidence generation time
+  - `git`: branch/upstream/ahead-behind/dirty/staged/unstaged
+  - `lifecycle`: managed hooks + installed/version state
 - `consolidation` (optional):
   - `suppressed[]`: trace of equivalent findings removed from snapshot by deterministic semantic-family precedence
 
@@ -43,6 +47,7 @@
 - Cleared violations are removed from ledger.
 - Output JSON is written in stable key order.
 - Canonical writer path is `integrations/evidence/generateEvidence.ts` (`buildEvidence` + `writeEvidence`).
+- `pumuki install` bootstraps `.ai_evidence.json` when missing (`PRE_COMMIT`, `PASS`, empty findings).
 
 ## Overrides
 

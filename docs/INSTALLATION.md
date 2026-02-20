@@ -52,6 +52,7 @@ Behavior:
 - Installs managed hooks (`pre-commit`, `pre-push`).
 - Auto-installs `@fission-ai/openspec@latest` when OpenSpec is missing/incompatible (when `package.json` exists).
 - Scaffolds `openspec/` baseline if missing (`project` file plus archive/spec placeholders).
+- Bootstraps `.ai_evidence.json` when missing (deterministic empty baseline with repo state snapshot).
 
 ### 3) Verify lifecycle and SDD status
 
@@ -82,6 +83,24 @@ npx --yes pumuki-pre-commit
 npx --yes pumuki-pre-push
 npx --yes pumuki-ci
 ```
+
+`PRE_WRITE` JSON shape:
+
+```bash
+npx --yes pumuki sdd validate --stage=PRE_WRITE --json
+```
+
+Includes chained payload sections: `sdd`, `ai_gate`, and `telemetry.chain`.
+
+### 6) Optional adapter scaffolding (agent/IDE)
+
+```bash
+npx --yes pumuki adapter install --agent=codex
+npx --yes pumuki adapter install --agent=cursor --dry-run
+npm run adapter:install -- --agent=claude
+```
+
+Supported agents: `codex`, `claude`, `cursor`, `windsurf`, `opencode`.
 
 ## Run menu from this framework repository
 
@@ -154,6 +173,7 @@ Notes:
 
 - `pumuki install` / `pumuki update` block when tracked files exist under `node_modules`.
 - `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, and `CI` enforce SDD/OpenSpec policy.
+- `PRE_WRITE` also enforces AI Gate checks (evidence freshness/validity and protected branch guardrail).
 
 Emergency bypass (incident-only):
 

@@ -165,6 +165,14 @@ URI no soportada devuelve `404`.
 }
 ```
 
+`ai_gate_check` usa el evaluador unificado (`integrations/gate/evaluateAiGate.ts`) y devuelve:
+
+- `status`: `ALLOWED|BLOCKED`
+- `stage`
+- `violations[]`
+- `evidence` (kind + age/max-age)
+- `repo_state` (git + lifecycle snapshot)
+
 ### Guardrails enterprise (baseline fail-safe)
 
 - Tools mutating (`validate_and_fix`, `sync_branches`, `cleanup_stale_branches`) fuerzan `dryRun=true` aunque se solicite `dryRun=false`.
