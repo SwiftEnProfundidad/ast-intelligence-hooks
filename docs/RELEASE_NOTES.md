@@ -5,6 +5,20 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-20 (v6.3.16)
+
+- MCP/evidence hardening:
+  - `/status` now emits `evidence.exists` as strict boolean in all states.
+  - deterministic semantic consolidation preserves suppressed traceability metadata.
+- Security/runtime hardening:
+  - raised `ts-morph` runtime floor to `>=27.0.2` and removed vulnerable minimatch chain in production audit path.
+- Documentation baseline cleanup:
+  - normalized active governance references to `PUMUKI.md` (replacing `CLAUDE.md` references in active docs).
+  - removed obsolete planning/docs artifacts and duplicated `docs/images/*` mirrors.
+- Maintenance surface simplification:
+  - removed `validation:docs-hygiene` command path and related framework-menu maintenance action.
+  - removed docs-hygiene-only tests/helpers not tied to runtime gate enforcement.
+
 ### Documentation governance hardening
 
 - Active docs quality guardrails expanded and integrated into stage-gates:

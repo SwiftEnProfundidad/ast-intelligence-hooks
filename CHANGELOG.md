@@ -6,12 +6,27 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+No changes yet.
+
+## [6.3.16] - 2026-02-20
+
 ### Fixed
 
 - MCP evidence `/status` now guarantees `evidence.exists` as a strict boolean across `missing`, `invalid`, and `valid` evidence states (no `null` ambiguity), while preserving `evidence.present` as compatibility alias.
 - Evidence runtime consolidation now deduplicates base/skills overlaps with deterministic semantic collision keys (`stage+platform+file+anchor+family`), preserving suppressed traceability metadata (`replacedByRuleId`, `replacementRuleId`, `platform`, `reason`).
 - Runtime dependency `ts-morph` minimum version is now `>=27.0.2`, removing the high-severity production chain `ts-morph -> @ts-morph/common -> minimatch<10.2.1`; `npm audit --omit=dev` is now clean (`0` vulnerabilities).
 - Fixed strict TypeScript typing in `integrations/evidence/buildEvidence.ts` (`normalizeAnchorLine`) to avoid union narrowing errors during `tsc --noEmit`.
+
+### Changed
+
+- Consolidated official documentation index and references to the active enterprise set only.
+- Updated governance references from `CLAUDE.md` to `PUMUKI.md` across active docs.
+
+### Removed
+
+- Deprecated documentation artifacts and duplicated image mirrors under `docs/images/*`.
+- Legacy docs-hygiene command path from package scripts and framework menu maintenance actions.
+- Docs-hygiene-only guardrail tests and helper scripts that were not part of runtime enforcement.
 
 ## [6.3.15] - 2026-02-19
 
