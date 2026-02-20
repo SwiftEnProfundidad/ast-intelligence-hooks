@@ -7,7 +7,8 @@ import { join } from 'node:path';
 import { readLifecycleStatus } from '../lifecycle';
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
-import { readEvidence, toStatusPayload } from './evidencePayloads';
+import { toStatusPayload } from './evidencePayloads';
+import { evaluateAiGate } from '../gate/evaluateAiGate';
 
 export interface EnterpriseServerOptions {
   host?: string;
@@ -351,31 +352,23 @@ const executeEnterpriseTool = (
 ): EnterpriseToolExecution => {
   switch (toolName) {
     case 'ai_gate_check': {
-      const evidence = readEvidence(repoRoot);
-      if (!evidence) {
-        return {
-          name: toolName,
-          success: false,
-          dryRun: true,
-          executed: true,
-          data: {
-            present: false,
-            status: 'UNKNOWN',
-            message: 'Evidence file is missing or invalid.',
-          },
-        };
-      }
+      const stage = toSddStage(args.stage, 'PRE_COMMIT');
+      const evaluation = evaluateAiGate({
+        repoRoot,
+        stage,
+      });
       return {
         name: toolName,
-        success: evidence.ai_gate.status === 'ALLOWED',
+        success: evaluation.allowed,
         dryRun: true,
         executed: true,
         data: {
-          present: true,
-          status: evidence.ai_gate.status,
-          violations: evidence.ai_gate.violations,
-          snapshotOutcome: evidence.snapshot.outcome,
-          stage: evidence.snapshot.stage,
+          status: evaluation.status,
+          stage: evaluation.stage,
+          policy: evaluation.policy,
+          violations: evaluation.violations,
+          evidence: evaluation.evidence,
+          repo_state: evaluation.repo_state,
         },
       };
     }

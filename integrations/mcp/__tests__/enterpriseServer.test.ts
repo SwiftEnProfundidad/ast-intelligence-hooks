@@ -248,6 +248,227 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
   });
 });
 
+test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia esté ALLOWED', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    execFileSync(
+      'node',
+      [
+        '-e',
+        `require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/README.md`)}, "# fixture\\n")`,
+      ],
+      { stdio: 'ignore' }
+    );
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: fixture']);
+    const evidence = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'PASS',
+        findings: [],
+      },
+      ledger: [],
+      platforms: {},
+      rulesets: [],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repoRoot,
+        git: {
+          available: true,
+          branch: 'main',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: '6.3.16',
+          lifecycle_version: '6.3.16',
+          hooks: {
+            pre_commit: 'managed',
+            pre_push: 'managed',
+          },
+        },
+      },
+    };
+    execFileSync(
+      'node',
+      [
+        '-e',
+        `require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/.ai_evidence.json`)}, ${JSON.stringify(
+          JSON.stringify(evidence, null, 2)
+        )})`,
+      ],
+      { stdio: 'ignore' }
+    );
+
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const aiGateResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'ai_gate_check',
+          args: {
+            stage: 'PRE_WRITE',
+          },
+        }),
+      });
+      assert.equal(aiGateResponse.status, 200);
+      const aiGatePayload = (await aiGateResponse.json()) as {
+        success?: boolean;
+        result?: {
+          violations?: Array<{ code?: string }>;
+        };
+      };
+      assert.equal(aiGatePayload.success, false);
+      assert.equal(
+        (aiGatePayload.result?.violations ?? []).some(
+          (violation) => violation.code === 'GITFLOW_PROTECTED_BRANCH'
+        ),
+        true
+      );
+    });
+  });
+});
+
+test('enterprise server ai_gate_check propaga policy trace hard mode persistida para PRE_WRITE', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init', '-b', 'feature/hard-mode-check']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    execFileSync(
+      'node',
+      [
+        '-e',
+        `require('node:fs').mkdirSync(${JSON.stringify(`${repoRoot}/.pumuki`)}, { recursive: true }); require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/.pumuki/hard-mode.json`)}, ${JSON.stringify(JSON.stringify({ enabled: true, profile: 'critical-high' }, null, 2))})`,
+      ],
+      { stdio: 'ignore' }
+    );
+    const evidence = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'PASS',
+        findings: [],
+      },
+      ledger: [],
+      platforms: {},
+      rulesets: [],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repoRoot,
+        git: {
+          available: true,
+          branch: 'feature/hard-mode-check',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: '6.3.16',
+          lifecycle_version: '6.3.16',
+          hooks: {
+            pre_commit: 'managed',
+            pre_push: 'managed',
+          },
+          hard_mode: {
+            enabled: true,
+            profile: 'critical-high',
+            config_path: '.pumuki/hard-mode.json',
+          },
+        },
+      },
+    };
+    execFileSync(
+      'node',
+      [
+        '-e',
+        `require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/.ai_evidence.json`)}, ${JSON.stringify(
+          JSON.stringify(evidence, null, 2)
+        )})`,
+      ],
+      { stdio: 'ignore' }
+    );
+
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const aiGateResponse = await fetch(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'ai_gate_check',
+          args: {
+            stage: 'PRE_WRITE',
+          },
+        }),
+      });
+      assert.equal(aiGateResponse.status, 200);
+      const aiGatePayload = (await aiGateResponse.json()) as {
+        success?: boolean;
+        result?: {
+          policy?: {
+            trace?: {
+              source?: string;
+              bundle?: string;
+            };
+          };
+        };
+      };
+      assert.equal(aiGatePayload.success, true);
+      assert.equal(aiGatePayload.result?.policy?.trace?.source, 'hard-mode');
+      assert.equal(
+        aiGatePayload.result?.policy?.trace?.bundle,
+        'gate-policy.hard-mode.critical-high.PRE_COMMIT'
+      );
+    });
+  });
+});
+
 test('enterprise server blocks critical tools with SDD_VALIDATION_ERROR outside git repositories', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
