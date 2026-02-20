@@ -254,7 +254,12 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C16-T3`: comando único ejecutado y salida real capturada en mock (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final esperada presente, `MATRIX_EXIT=0`).
 - ✅ Ejecutar `C16-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260219T235020Z-82371`, `final_verdict=PASS`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `MATRIX_EXIT=0`).
 - ✅ Ejecutar `C16-T5`: cierre del ciclo 16 consolidado (trackers actualizados y cierre preparado para commit/push atómico en `main`).
-- 🚧 Tarea activa actual: `C17-T1` abrir tracker de `Cycle 17` con alcance único y criterio verificable.
+- ✅ Ejecutar `C17-T1`: tracker de `Cycle 17` abierto en `docs/PUMUKI_CYCLE_17_SCOPE_TRACKER.md` con alcance único y criterio verificable definidos.
+- ✅ Ejecutar `C17-T2`: preflight del mock completado (`pumuki-mock-consumer`: `feat/pumuki-validation`, upstream `main`, working tree limpio).
+- ✅ Ejecutar `C17-T3`: comando único ejecutado y salida real capturada en mock (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final esperada presente, `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C17-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260219T235800Z-98329`, `final_verdict=PASS`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, `MATRIX_EXIT=0`).
+- ✅ Ejecutar `C17-T5`: cierre del ciclo 17 consolidado (trackers actualizados y cierre preparado para commit/push atómico en `main`).
+- 🚧 Tarea activa actual: `C18-T1` abrir tracker de `Cycle 18` con alcance único y criterio verificable.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
