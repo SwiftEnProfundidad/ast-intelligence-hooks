@@ -279,7 +279,8 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C21-T3`: comando único del criterio ejecutado en mock con salida real capturada (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final `All scenario matrix checks passed for package: pumuki@latest`, `exit=0`).
 - ✅ Ejecutar `C21-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260220T002838Z-63606`, `final_verdict=PASS`, `package_spec=pumuki@latest`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, sin drift en working tree).
 - ✅ Ejecutar `C21-T5`: cierre del ciclo 21 consolidado (trackers actualizados y cierre preparado para commit/push atómico en `main`).
-- 🚧 Tarea activa actual: `C22-T1` abrir tracker de `Cycle 22` con alcance único y criterio verificable.
+- ✅ `C22-T1` cancelada por instrucción explícita del usuario (sin abrir nuevos ciclos ni trackers automáticos).
+- 🚧 Estado operativo actual: cierre total confirmado; en espera de nueva instrucción explícita (sin tareas técnicas pendientes).
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
