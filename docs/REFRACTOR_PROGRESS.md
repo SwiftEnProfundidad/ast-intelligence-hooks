@@ -269,7 +269,12 @@ Estado consolidado del refactor con seguimiento de tareas y evidencia del avance
 - ✅ Ejecutar `C19-T3`: comando único del criterio ejecutado en mock con salida real capturada (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final `All scenario matrix checks passed for package: pumuki@latest`, `exit=0`).
 - ✅ Ejecutar `C19-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260220T001414Z-31372`, `final_verdict=PASS`, `package_spec=pumuki@latest`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, sin drift en working tree).
 - ✅ Ejecutar `C19-T5`: cierre del ciclo 19 consolidado (trackers actualizados y cierre preparado para commit/push atómico en `main`).
-- 🚧 Tarea activa actual: `C20-T1` abrir tracker de `Cycle 20` con alcance único y criterio verificable.
+- ✅ Ejecutar `C20-T1`: tracker de `Cycle 20` abierto en `docs/PUMUKI_CYCLE_20_SCOPE_TRACKER.md` con alcance único y criterio verificable definidos.
+- ✅ Ejecutar `C20-T2`: preflight del mock completado (`feat/pumuki-validation...main [ahead 28]`, upstream `main`, working tree limpio, remote `origin=/tmp/pumuki-mock-consumer-remote.git`).
+- ✅ Ejecutar `C20-T3`: comando único del criterio ejecutado en mock con salida real capturada (`clean=PASS`, `violations=PASS`, `mixed=PASS`, línea final `All scenario matrix checks passed for package: pumuki@latest`, `exit=0`).
+- ✅ Ejecutar `C20-T4`: validación final del alcance ejecutada en mock (`run_id=pumuki-matrix-20260220T002125Z-47538`, `final_verdict=PASS`, `package_spec=pumuki@latest`, patrón `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`, sin drift en working tree).
+- ✅ Ejecutar `C20-T5`: cierre del ciclo 20 consolidado (trackers actualizados y cierre preparado para commit/push atómico en `main`).
+- 🚧 Tarea activa actual: `C21-T1` abrir tracker de `Cycle 21` con alcance único y criterio verificable.
 
 ## Próximo Ciclo Mock (Definición Atómica)
 - ✅ Definir y publicar comando único de arranque del ciclo mock + criterio de aceptación.
