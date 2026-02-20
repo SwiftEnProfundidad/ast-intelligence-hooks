@@ -4,22 +4,75 @@
 [![CI](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
 
-Enterprise governance framework for AI-assisted code delivery.
+Enterprise governance framework for AI-assisted software delivery.
 
-Pumuki enforces deterministic quality decisions across local hooks and CI with a single execution model:
+Pumuki enforces deterministic decisions across local hooks, PRE_WRITE guardrails, and CI using one execution model:
 
 `Facts -> Rules -> Gate -> ai_evidence v2.1`
 
-## Why Pumuki
+## What Pumuki Solves
 
-- Deterministic and auditable gate decisions.
-- Stage-aware enforcement (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`).
+Pumuki gives teams a single operational contract for AI-era code quality:
+
+- Deterministic gate decisions with auditable evidence.
+- Unified stage model: `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`.
 - Multi-platform rule evaluation (iOS, Android, Backend, Frontend).
-- OpenSpec + SDD policy enforcement.
-- Evidence-first workflow via `.ai_evidence.json`.
-- Optional MCP servers for agent consumption.
+- Mandatory OpenSpec/SDD policy enforcement.
+- Optional MCP runtime for agent integrations.
 
-## Install in a Consumer Repository
+## Core Capabilities
+
+### 1) Deterministic Gate + Evidence
+
+Every stage can emit `.ai_evidence.json` with stable structure (`version: 2.1`) including:
+
+- `snapshot` (stage/outcome/findings)
+- `ledger` (persistent open violations)
+- `rulesets` and `platforms`
+- `sdd_metrics`
+- `repo_state` (`git` + lifecycle + optional hard mode state)
+
+Reference: `docs/evidence-v2.1.md`.
+
+### 2) Unified AI Gate for PRE_WRITE/MCP
+
+The same AI gate evaluator is shared across CLI and MCP:
+
+- stale/missing/invalid evidence detection
+- blocked evidence gate status detection
+- protected branch guardrail (`main/master/develop/dev`)
+- policy trace visibility (`default`, `skills.policy`, `hard-mode`)
+
+Reference: `integrations/gate/evaluateAiGate.ts`.
+
+### 3) Mandatory OpenSpec + SDD Policy
+
+Pumuki enforces OpenSpec/SDD as first-class guardrails:
+
+- `PRE_WRITE`: OpenSpec installed/project/session valid.
+- `PRE_COMMIT`, `PRE_PUSH`, `CI`: valid session + stage validation.
+- Blocking SDD findings are traceable via `source: "sdd-policy"`.
+
+### 4) Lifecycle and Enterprise Safety
+
+Managed lifecycle commands (`install/update/uninstall/remove`) include:
+
+- hook management (`pre-commit`, `pre-push`)
+- OpenSpec bootstrap/migration
+- deterministic evidence bootstrap
+- safety block when tracked files exist under `node_modules/`
+
+### 5) Adapter Scaffolding (IDE/Agent)
+
+Provider-agnostic adapter scaffolding for consumer repositories:
+
+- `codex`
+- `claude`
+- `cursor`
+- `windsurf`
+- `opencode`
+
+## Quick Start (Consumer Repository)
 
 Prerequisites:
 
@@ -27,121 +80,129 @@ Prerequisites:
 - `npm >= 9`
 - `git`
 
-Install package:
+### 1) Install package
 
 ```bash
 npm install --save-exact pumuki
 ```
 
-Install managed lifecycle/hooks:
+### 2) Install managed lifecycle + bootstrap
 
 ```bash
-npx pumuki install
+npx --yes pumuki install
 ```
 
-Verify state:
+### 3) Verify environment
 
 ```bash
-npx pumuki doctor
-npx pumuki status
-npx pumuki sdd status
+npx --yes pumuki doctor
+npx --yes pumuki status
+npx --yes pumuki sdd status
 ```
 
-## Daily Commands
-
-Gate binaries:
+### 4) Open an SDD session
 
 ```bash
-npx pumuki-pre-write
-npx pumuki-pre-commit
-npx pumuki-pre-push
-npx pumuki-ci
+npx --yes pumuki sdd session --open --change=<change-id>
 ```
 
-Lifecycle commands:
+### 5) Run gates
 
 ```bash
-npx pumuki install
-npx pumuki update --latest
-npx pumuki uninstall --purge-artifacts
-npx pumuki remove
+npx --yes pumuki-pre-write
+npx --yes pumuki-pre-commit
+npx --yes pumuki-pre-push
+npx --yes pumuki-ci
 ```
 
-Notes:
+## Hard Mode (Policy Hardening)
 
-- `pumuki remove` is the complete teardown command (hooks + artifacts + dependency removal logic).
-- `npm uninstall pumuki` only removes dependency entries and does not clean managed lifecycle state.
+Pumuki supports hard-mode policy resolution via `.pumuki/hard-mode.json`.
 
-## OpenSpec SDD (Mandatory Policy)
+Example:
 
-Pumuki enforces OpenSpec/SDD as a first-class policy guardrail.
+```json
+{
+  "enabled": true,
+  "profile": "critical-high"
+}
+```
 
-- `PRE_WRITE`: requires valid OpenSpec installation/project/session.
-- `PRE_COMMIT`, `PRE_PUSH`, `CI`: require valid active session and `openspec validate --changes`.
-- Blocking decisions are emitted in evidence with source `sdd-policy`.
+Current profile support:
 
-Session flow:
+- `critical-high`
+
+Environment overrides:
+
+- `PUMUKI_HARD_MODE` (`true|false|1|0|on|off`)
+- `PUMUKI_HARD_MODE_PROFILE` (`critical-high`)
+
+Runtime traceability:
+
+- policy trace is exposed in AI Gate outputs
+- hard mode state is captured in `repo_state.lifecycle.hard_mode`
+
+## PRE_WRITE Contract
+
+For deterministic pre-write integrations:
 
 ```bash
-npx pumuki sdd session --open --change=<change-id>
-npx pumuki sdd status
-npx pumuki sdd validate --stage=PRE_COMMIT
+npx --yes pumuki sdd validate --stage=PRE_WRITE --json
 ```
 
-Emergency bypass (incident-only):
+Returns a chained envelope with:
+
+- `sdd`
+- `ai_gate`
+- `telemetry.chain = "pumuki->ai_gate->ai_evidence"`
+
+## Lifecycle Commands
 
 ```bash
-PUMUKI_SDD_BYPASS=1 npx pumuki sdd validate --stage=PRE_COMMIT
+npx --yes pumuki install
+npx --yes pumuki update --latest
+npx --yes pumuki uninstall --purge-artifacts
+npx --yes pumuki remove
+npx --yes pumuki doctor
+npx --yes pumuki status
 ```
 
-## Evidence Contract
+Important:
 
-Each run can emit `.ai_evidence.json` with deterministic structure.
+- `pumuki remove` is the full teardown path (hooks + artifacts + dependency cleanup logic).
+- `npm uninstall pumuki` only removes dependency entries.
 
-Key fields include:
+## Adapter Commands
 
-- `snapshot.stage`
-- `snapshot.outcome`
-- `snapshot.findings[]`
-- `snapshot.rulesets[]`
-- `snapshot.platforms[]`
-- `snapshot.sdd_metrics`
-
-Reference: `docs/evidence-v2.1.md`
+```bash
+npx --yes pumuki adapter install --agent=codex --dry-run
+npx --yes pumuki adapter install --agent=cursor
+npm run adapter:install -- --agent=claude
+```
 
 ## MCP Servers (Optional)
 
-Pumuki core does not require MCP. MCP is optional for external clients/agents.
+Pumuki core does not depend on MCP, but MCP is available for external agents.
 
-Evidence server (consumer repo):
+Evidence MCP:
 
-```json
-{
-  "mcpServers": {
-    "pumuki-evidence": {
-      "command": "npx",
-      "args": ["--yes", "pumuki-mcp-evidence"],
-      "cwd": "/absolute/path/to/consumer-repo"
-    }
-  }
-}
+```bash
+npx --yes pumuki-mcp-evidence
 ```
 
-Enterprise server (consumer repo):
+Enterprise MCP:
 
-```json
-{
-  "mcpServers": {
-    "pumuki-enterprise": {
-      "command": "npx",
-      "args": ["--yes", "pumuki-mcp-enterprise"],
-      "cwd": "/absolute/path/to/consumer-repo"
-    }
-  }
-}
+```bash
+npx --yes pumuki-mcp-enterprise
 ```
 
-## Develop Pumuki (This Repository)
+References:
+
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+- `docs/MCP_SERVERS.md`
+- `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`
+
+## Framework Repository (This Repo)
 
 ```bash
 git clone https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git
@@ -149,7 +210,7 @@ cd ast-intelligence-hooks
 npm ci
 ```
 
-Recommended validation baseline:
+Recommended baseline:
 
 ```bash
 npm run typecheck
@@ -159,15 +220,19 @@ npm run validation:package-manifest
 npm run skills:lock:check
 ```
 
-Interactive framework menu:
+Interactive menu:
 
 ```bash
 npm run framework:menu
 ```
 
-## Package Binaries
+Consumer repositories typically run:
 
-Published binaries:
+```bash
+npx --yes pumuki-framework
+```
+
+## Published Binaries
 
 - `pumuki`
 - `pumuki-framework`
@@ -180,42 +245,42 @@ Published binaries:
 
 ## Troubleshooting
 
-- Hook drift or lifecycle mismatch:
+Hook/lifecycle drift:
 
 ```bash
-npx pumuki doctor
-npx pumuki status
+npx --yes pumuki doctor
+npx --yes pumuki status
 ```
 
-- Stale environment after major updates:
-
-```bash
-rm -rf node_modules package-lock.json
-npm install
-```
-
-- Missing upstream for `PRE_PUSH` workflows:
+Missing upstream for `PRE_PUSH`:
 
 ```bash
 git push --set-upstream origin <branch>
 ```
 
-## Documentation
+Emergency SDD bypass (incident-only):
 
-Primary docs index: `docs/README.md`
+```bash
+PUMUKI_SDD_BYPASS=1 npx --yes pumuki sdd validate --stage=PRE_COMMIT
+```
 
-Core references:
+## Documentation Map
+
+Primary index: `docs/README.md`
+
+Core docs:
 
 - `docs/ARCHITECTURE.md`
-- `docs/USAGE.md`
 - `docs/INSTALLATION.md`
+- `docs/USAGE.md`
 - `docs/CONFIGURATION.md`
 - `docs/API_REFERENCE.md`
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+- `docs/evidence-v2.1.md`
 - `docs/MCP_SERVERS.md`
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
 - `docs/validation/README.md`
 
-## Contributing
+Contributor docs:
 
 - `docs/CONTRIBUTING.md`
 - `docs/CODE_STANDARDS.md`
