@@ -4,6 +4,7 @@ import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
 import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
+import { runLifecycleAdapterInstall, type AdapterAgent } from './adapter';
 import {
   closeSddSession,
   evaluateSddPolicy,
@@ -12,6 +13,7 @@ import {
   refreshSddSession,
   type SddStage,
 } from '../sdd';
+import { evaluateAiGate } from '../gate/evaluateAiGate';
 
 type LifecycleCommand =
   | 'install'
@@ -20,7 +22,8 @@ type LifecycleCommand =
   | 'update'
   | 'doctor'
   | 'status'
-  | 'sdd';
+  | 'sdd'
+  | 'adapter';
 
 type SddCommand = 'status' | 'validate' | 'session';
 
@@ -36,6 +39,9 @@ type ParsedArgs = {
   sddSessionAction?: SddSessionAction;
   sddChangeId?: string;
   sddTtlMinutes?: number;
+  adapterCommand?: 'install';
+  adapterAgent?: AdapterAgent;
+  adapterDryRun?: boolean;
 };
 
 const HELP_TEXT = `
@@ -46,6 +52,7 @@ Pumuki lifecycle commands:
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor
   pumuki status
+  pumuki adapter install --agent=<name> [--dry-run] [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
   pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
@@ -60,7 +67,16 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'update' ||
   value === 'doctor' ||
   value === 'status' ||
-  value === 'sdd';
+  value === 'sdd' ||
+  value === 'adapter';
+
+const parseAdapterAgent = (value: string | undefined): AdapterAgent => {
+  const normalized = (value ?? '').trim();
+  if (/^[a-z0-9._-]+$/i.test(normalized)) {
+    return normalized;
+  }
+  throw new Error(`Unsupported adapter agent "${value}". Use an alphanumeric id.`);
+};
 
 const parseSddStage = (value: string | undefined): SddStage => {
   const normalized = (value ?? 'PRE_COMMIT').trim().toUpperCase();
@@ -92,6 +108,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let sddSessionAction: SddSessionAction | undefined;
   let sddChangeId: string | undefined;
   let sddTtlMinutes: number | undefined;
+  let adapterCommand: 'install' | undefined;
+  let adapterAgent: AdapterAgent | undefined;
+  let adapterDryRun = false;
 
   if (commandRaw === 'sdd') {
     const subcommandRaw = argv[1] ?? 'status';
@@ -180,6 +199,41 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     };
   }
 
+  if (commandRaw === 'adapter') {
+    const subcommandRaw = argv[1] ?? '';
+    if (subcommandRaw !== 'install') {
+      throw new Error(`Unsupported adapter subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
+    }
+    adapterCommand = 'install';
+
+    for (const arg of argv.slice(2)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg === '--dry-run') {
+        adapterDryRun = true;
+        continue;
+      }
+      if (arg.startsWith('--agent=')) {
+        adapterAgent = parseAdapterAgent(arg.slice('--agent='.length).trim());
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+    if (!adapterAgent) {
+      throw new Error(`Missing --agent=<name> for "pumuki adapter install".\n\n${HELP_TEXT}`);
+    }
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      adapterCommand,
+      adapterAgent,
+      adapterDryRun,
+    };
+  }
+
   for (const arg of argv.slice(1)) {
     if (arg === '--json') {
       json = true;
@@ -233,6 +287,29 @@ const printDoctorReport = (report: LifecycleDoctorReport): void => {
   const hasBlocking = report.issues.some((issue) => issue.severity === 'error');
   console.log(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
 };
+
+const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->ai_gate->ai_evidence';
+
+type PreWriteValidationEnvelope = {
+  sdd: ReturnType<typeof evaluateSddPolicy>;
+  ai_gate: ReturnType<typeof evaluateAiGate>;
+  telemetry: {
+    chain: typeof PRE_WRITE_TELEMETRY_CHAIN;
+    stage: SddStage;
+  };
+};
+
+const buildPreWriteValidationEnvelope = (
+  result: ReturnType<typeof evaluateSddPolicy>,
+  aiGate: ReturnType<typeof evaluateAiGate>
+): PreWriteValidationEnvelope => ({
+  sdd: result,
+  ai_gate: aiGate,
+  telemetry: {
+    chain: PRE_WRITE_TELEMETRY_CHAIN,
+    stage: result.stage,
+  },
+});
 
 export const runLifecycleCli = async (
   argv: ReadonlyArray<string>
@@ -346,8 +423,23 @@ export const runLifecycleCli = async (
           const result = evaluateSddPolicy({
             stage: parsed.sddStage ?? 'PRE_COMMIT',
           });
+          const shouldEvaluateAiGate = result.stage === 'PRE_WRITE';
+          const aiGate = shouldEvaluateAiGate
+            ? evaluateAiGate({
+              repoRoot: process.cwd(),
+              stage: result.stage,
+            })
+            : null;
           if (parsed.json) {
-            console.log(JSON.stringify(result, null, 2));
+            console.log(
+              JSON.stringify(
+                aiGate
+                  ? buildPreWriteValidationEnvelope(result, aiGate)
+                  : result,
+                null,
+                2
+              )
+            );
           } else {
             console.log(
               `[pumuki][sdd] stage=${result.stage} allowed=${result.decision.allowed ? 'yes' : 'no'} code=${result.decision.code}`
@@ -358,8 +450,24 @@ export const runLifecycleCli = async (
                 `[pumuki][sdd] validation: ok=${result.validation.ok ? 'yes' : 'no'} failed=${result.validation.totals.failed} errors=${result.validation.issues.errors}`
               );
             }
+            if (aiGate) {
+              console.log(
+                `[pumuki][ai-gate] stage=${aiGate.stage} status=${aiGate.status} violations=${aiGate.violations.length}`
+              );
+              for (const violation of aiGate.violations) {
+                console.log(
+                  `[pumuki][ai-gate] ${violation.code}: ${violation.message}`
+                );
+              }
+            }
           }
-          return result.decision.allowed ? 0 : 1;
+          if (!result.decision.allowed) {
+            return 1;
+          }
+          if (aiGate && !aiGate.allowed) {
+            return 1;
+          }
+          return 0;
         }
         if (parsed.sddCommand === 'session') {
           if (parsed.sddSessionAction === 'open') {
@@ -398,6 +506,28 @@ export const runLifecycleCli = async (
           return 0;
         }
         return 0;
+      }
+      case 'adapter': {
+        if (parsed.adapterCommand === 'install' && parsed.adapterAgent) {
+          const result = runLifecycleAdapterInstall({
+            agent: parsed.adapterAgent,
+            dryRun: parsed.adapterDryRun,
+          });
+          if (parsed.json) {
+            console.log(JSON.stringify(result, null, 2));
+          } else {
+            console.log(
+              `[pumuki] adapter install: agent=${result.agent} dry-run=${result.dryRun ? 'yes' : 'no'} changed=${result.changedFiles.length}`
+            );
+            if (result.changedFiles.length > 0) {
+              console.log(
+                `[pumuki] adapter files: ${result.changedFiles.join(', ')}`
+              );
+            }
+          }
+          return 0;
+        }
+        return 1;
       }
       default:
         return 1;

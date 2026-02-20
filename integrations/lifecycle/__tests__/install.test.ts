@@ -68,6 +68,19 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     const installedAt = readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installedAt);
     assert.equal(typeof installedAt, 'string');
     assert.equal(Number.isFinite(Date.parse(installedAt ?? '')), true);
+
+    const evidencePath = join(repo, '.ai_evidence.json');
+    assert.equal(existsSync(evidencePath), true);
+    const evidence = JSON.parse(readFileSync(evidencePath, 'utf8')) as {
+      version: string;
+      snapshot?: { stage?: string; outcome?: string; findings?: unknown[] };
+      repo_state?: { repo_root?: string };
+    };
+    assert.equal(evidence.version, '2.1');
+    assert.equal(evidence.snapshot?.stage, 'PRE_COMMIT');
+    assert.equal(evidence.snapshot?.outcome, 'PASS');
+    assert.deepEqual(evidence.snapshot?.findings, []);
+    assert.equal(realpathSync(evidence.repo_state?.repo_root ?? ''), realpathSync(repo));
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }
@@ -89,6 +102,7 @@ test('runLifecycleInstall bloquea cuando hay node_modules trackeado y no persist
 
     assert.equal(existsSync(join(repo, '.git/hooks/pre-commit')), false);
     assert.equal(existsSync(join(repo, '.git/hooks/pre-push')), false);
+    assert.equal(existsSync(join(repo, '.ai_evidence.json')), false);
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.installed), undefined);
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.version), undefined);
     assert.equal(
@@ -116,6 +130,7 @@ test('runLifecycleInstall es idempotente en segunda ejecución sobre repo ya ins
     assert.equal(readLocalConfig(repo, PUMUKI_CONFIG_KEYS.hooks), 'pre-commit,pre-push');
     assert.equal(typeof firstInstalledAt, 'string');
     assert.equal(typeof secondInstalledAt, 'string');
+    assert.equal(existsSync(join(repo, '.ai_evidence.json')), true);
   } finally {
     rmSync(repo, { recursive: true, force: true });
   }

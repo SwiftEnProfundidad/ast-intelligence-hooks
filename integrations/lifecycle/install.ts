@@ -1,9 +1,14 @@
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 import { installPumukiHooks } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { doctorHasBlockingIssues, runLifecycleDoctor } from './doctor';
 import { runOpenSpecBootstrap, type OpenSpecBootstrapResult } from './openSpecBootstrap';
 import { LifecycleNpmService, type ILifecycleNpmService } from './npmService';
 import { getCurrentPumukiVersion } from './packageInfo';
+import { generateEvidence } from '../evidence/generateEvidence';
+import { readEvidence } from '../evidence/readEvidence';
+import { captureRepoState } from '../evidence/repoState';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 
 export type LifecycleInstallResult = {
@@ -11,6 +16,22 @@ export type LifecycleInstallResult = {
   version: string;
   changedHooks: ReadonlyArray<string>;
   openSpecBootstrap?: OpenSpecBootstrapResult;
+};
+
+const shouldBootstrapEvidence = (repoRoot: string): boolean =>
+  !existsSync(join(repoRoot, '.ai_evidence.json'));
+
+const writeBootstrapEvidence = (repoRoot: string): void => {
+  generateEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    gateOutcome: 'PASS',
+    previousEvidence: readEvidence(repoRoot),
+    detectedPlatforms: {},
+    loadedRulesets: [],
+    repoRoot,
+    repoState: captureRepoState(repoRoot),
+  });
 };
 
 export const runLifecycleInstall = (params?: {
@@ -57,6 +78,10 @@ export const runLifecycleInstall = (params?: {
     version,
     openSpecManagedArtifacts: Array.from(mergedOpenSpecArtifacts),
   });
+
+  if (shouldBootstrapEvidence(report.repoRoot)) {
+    writeBootstrapEvidence(report.repoRoot);
+  }
 
   return {
     repoRoot: report.repoRoot,

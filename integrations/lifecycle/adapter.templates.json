@@ -1,0 +1,128 @@
+{
+  "codex": [
+    {
+      "path": ".pumuki/adapter.json",
+      "payload": {
+        "hooks": {
+          "pre_write": {
+            "command": "npx --yes pumuki-pre-write"
+          },
+          "pre_commit": {
+            "command": "npx --yes pumuki-pre-commit"
+          },
+          "pre_push": {
+            "command": "npx --yes pumuki-pre-push"
+          },
+          "ci": {
+            "command": "npx --yes pumuki-ci"
+          }
+        },
+        "mcp": {
+          "enterprise": {
+            "command": "npx --yes pumuki-mcp-enterprise"
+          }
+        }
+      }
+    }
+  ],
+  "claude": [
+    {
+      "path": ".claude/settings.json",
+      "payload": {
+        "pumuki": {
+          "hooks": {
+            "pre_write": {
+              "command": "npx --yes pumuki-pre-write"
+            },
+            "pre_commit": {
+              "command": "npx --yes pumuki-pre-commit"
+            },
+            "pre_push": {
+              "command": "npx --yes pumuki-pre-push"
+            },
+            "ci": {
+              "command": "npx --yes pumuki-ci"
+            }
+          }
+        },
+        "mcpServers": {
+          "pumuki-enterprise": {
+            "command": "npx",
+            "args": [
+              "--yes",
+              "pumuki-mcp-enterprise"
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "cursor": [
+    {
+      "path": ".cursor/mcp.json",
+      "payload": {
+        "mcpServers": {
+          "pumuki-enterprise": {
+            "command": "npx",
+            "args": [
+              "--yes",
+              "pumuki-mcp-enterprise"
+            ]
+          }
+        },
+        "pumukiHooks": {
+          "pre_write": {
+            "command": "npx --yes pumuki-pre-write"
+          },
+          "pre_commit": {
+            "command": "npx --yes pumuki-pre-commit"
+          },
+          "pre_push": {
+            "command": "npx --yes pumuki-pre-push"
+          },
+          "ci": {
+            "command": "npx --yes pumuki-ci"
+          }
+        }
+      }
+    }
+  ],
+  "windsurf": [
+    {
+      "path": ".codeium/adapter/hooks.json",
+      "payload": {
+        "preCommand": "npx --yes pumuki-pre-write",
+        "postCommand": "npx --yes pumuki-pre-commit",
+        "pushCommand": "npx --yes pumuki-pre-push",
+        "ciCommand": "npx --yes pumuki-ci",
+        "mcpCommand": "npx --yes pumuki-mcp-enterprise"
+      }
+    }
+  ],
+  "opencode": [
+    {
+      "path": ".opencode/adapter.json",
+      "payload": {
+        "hooks": {
+          "pre_write": {
+            "command": "npx --yes pumuki-pre-write"
+          },
+          "pre_commit": {
+            "command": "npx --yes pumuki-pre-commit"
+          },
+          "pre_push": {
+            "command": "npx --yes pumuki-pre-push"
+          },
+          "ci": {
+            "command": "npx --yes pumuki-ci"
+          }
+        },
+        "mcp": {
+          "enterprise": {
+            "command": "npx --yes pumuki-mcp-enterprise"
+          }
+        }
+      }
+    }
+  ]
+}

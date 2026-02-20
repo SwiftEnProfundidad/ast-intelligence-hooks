@@ -7,6 +7,7 @@ import test from 'node:test';
 import { PUMUKI_MANAGED_BLOCK_END, PUMUKI_MANAGED_BLOCK_START } from '../constants';
 import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
 import { parseLifecycleCliArgs } from '../cli';
+import { runLifecycleCli } from '../cli';
 import { runLifecycleInstall } from '../install';
 import { runLifecycleRemove } from '../remove';
 import { runLifecycleUninstall } from '../uninstall';
@@ -37,6 +38,69 @@ test('parseLifecycleCliArgs accepts remove command', () => {
   const parsed = parseLifecycleCliArgs(['remove']);
   assert.equal(parsed.command, 'remove');
   assert.equal(parsed.purgeArtifacts, false);
+});
+
+test('runLifecycleCli bloquea PRE_WRITE cuando SDD está en bypass pero falta ai_evidence', async () => {
+  const repo = createGitRepo();
+  const previousBypass = process.env.PUMUKI_SDD_BYPASS;
+  process.env.PUMUKI_SDD_BYPASS = '1';
+  const previousCwd = process.cwd();
+  process.chdir(repo);
+  try {
+    const exitCode = await runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE']);
+    assert.equal(exitCode, 1);
+  } finally {
+    process.chdir(previousCwd);
+    if (typeof previousBypass === 'undefined') {
+      delete process.env.PUMUKI_SDD_BYPASS;
+    } else {
+      process.env.PUMUKI_SDD_BYPASS = previousBypass;
+    }
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cuando SDD bloquea', async () => {
+  const repo = createGitRepo();
+  const printed: string[] = [];
+  const originalConsoleLog = console.log;
+  const previousCwd = process.cwd();
+  process.chdir(repo);
+  console.log = (...args: unknown[]) => {
+    printed.push(args.map((value) => String(value)).join(' '));
+  };
+  try {
+    const exitCode = await runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json']);
+    assert.equal(exitCode, 1);
+    assert.equal(printed.length > 0, true);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      decision?: {
+        code?: string;
+      };
+      telemetry?: {
+        chain?: string;
+      };
+      sdd?: {
+        decision?: {
+          code?: string;
+        };
+      };
+      ai_gate?: {
+        evidence?: {
+          kind?: string;
+        };
+      };
+    };
+    const decisionCode = payload.sdd?.decision?.code ?? payload.decision?.code;
+    assert.equal(decisionCode, 'OPENSPEC_MISSING');
+    assert.equal(typeof payload.ai_gate, 'object');
+    assert.equal(payload.ai_gate?.evidence?.kind, 'missing');
+    assert.equal(payload.telemetry?.chain, 'pumuki->ai_gate->ai_evidence');
+  } finally {
+    console.log = originalConsoleLog;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
 
 test('runLifecycleInstall and runLifecycleUninstall manage hooks and artifacts cleanly', () => {
