@@ -7,8 +7,13 @@ export type GenerateEvidenceResult = {
   write: WriteEvidenceResult;
 };
 
-export const generateEvidence = (params: BuildEvidenceParams): GenerateEvidenceResult => {
-  const evidence = buildEvidence(params);
-  const write = writeEvidence(evidence);
+export type GenerateEvidenceParams = BuildEvidenceParams & {
+  repoRoot?: string;
+};
+
+export const generateEvidence = (params: GenerateEvidenceParams): GenerateEvidenceResult => {
+  const { repoRoot, ...buildParams } = params;
+  const evidence = buildEvidence(buildParams);
+  const write = writeEvidence(evidence, { repoRoot });
   return { evidence, write };
 };

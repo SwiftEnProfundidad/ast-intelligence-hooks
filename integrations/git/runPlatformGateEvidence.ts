@@ -10,6 +10,7 @@ import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { buildBaselineRuleSetEntries } from './baselineRuleSets';
 import type { IEvidenceService } from './EvidenceService';
 import type { SddDecision } from '../sdd';
+import { captureRepoState } from '../evidence/repoState';
 
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
@@ -41,6 +42,7 @@ export const emitPlatformGateEvidence = (params: {
     stage: params.stage,
     findings: params.findings,
     gateOutcome: params.gateOutcome,
+    repoRoot: params.repoRoot,
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),
     loadedRulesets: params.evidenceService.buildRulesetState({
@@ -52,6 +54,7 @@ export const emitPlatformGateEvidence = (params: {
       policyTrace: params.policyTrace,
       stage: params.stage,
     }),
+    repoState: captureRepoState(params.repoRoot),
     sddMetrics: params.sddDecision
       ? {
         enforced: true,

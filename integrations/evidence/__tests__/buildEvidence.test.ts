@@ -609,6 +609,41 @@ test('preserves finding traceability fields in snapshot and compatibility violat
   assert.equal(result.ai_gate.violations[0]?.source, 'git:staged');
 });
 
+test('propaga repo_state al construir evidencia determinista', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+    repoState: {
+      repo_root: '/tmp/pumuki-repo',
+      git: {
+        available: true,
+        branch: 'feature/repo-state',
+        upstream: 'origin/feature/repo-state',
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: '6.3.16',
+        lifecycle_version: '6.3.16',
+        hooks: {
+          pre_commit: 'managed',
+          pre_push: 'managed',
+        },
+      },
+    },
+  });
+
+  assert.equal(result.repo_state?.repo_root, '/tmp/pumuki-repo');
+  assert.equal(result.repo_state?.git.branch, 'feature/repo-state');
+  assert.equal(result.repo_state?.lifecycle.hooks.pre_push, 'managed');
+});
+
 test('preserves firstSeen from previous ledger and refreshes lastSeen timestamp', () => {
   const previous = emptyEvidence();
   previous.ledger = [

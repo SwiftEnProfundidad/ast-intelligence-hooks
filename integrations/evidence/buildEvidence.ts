@@ -10,6 +10,7 @@ import type {
   HumanIntentState,
   LedgerEntry,
   PlatformState,
+  RepoState,
   RulesetState,
   SddMetrics,
   SnapshotFinding,
@@ -30,6 +31,7 @@ export type BuildEvidenceParams = {
   detectedPlatforms: Record<string, PlatformState>;
   loadedRulesets: ReadonlyArray<RulesetState>;
   sddMetrics?: SddMetrics;
+  repoState?: RepoState;
 };
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
@@ -524,6 +526,43 @@ const normalizeRulesets = (rulesets: ReadonlyArray<RulesetState>): RulesetState[
   });
 };
 
+const normalizeRepoState = (repoState?: RepoState): RepoState | undefined => {
+  if (!repoState) {
+    return undefined;
+  }
+  return {
+    repo_root: repoState.repo_root,
+    git: {
+      available: repoState.git.available,
+      branch: repoState.git.branch ?? null,
+      upstream: repoState.git.upstream ?? null,
+      ahead: Number.isFinite(repoState.git.ahead) ? Math.max(0, Math.trunc(repoState.git.ahead)) : 0,
+      behind: Number.isFinite(repoState.git.behind) ? Math.max(0, Math.trunc(repoState.git.behind)) : 0,
+      dirty: repoState.git.dirty,
+      staged: Number.isFinite(repoState.git.staged) ? Math.max(0, Math.trunc(repoState.git.staged)) : 0,
+      unstaged: Number.isFinite(repoState.git.unstaged)
+        ? Math.max(0, Math.trunc(repoState.git.unstaged))
+        : 0,
+    },
+    lifecycle: {
+      installed: repoState.lifecycle.installed,
+      package_version: repoState.lifecycle.package_version ?? null,
+      lifecycle_version: repoState.lifecycle.lifecycle_version ?? null,
+      hooks: {
+        pre_commit: repoState.lifecycle.hooks.pre_commit,
+        pre_push: repoState.lifecycle.hooks.pre_push,
+      },
+      hard_mode: repoState.lifecycle.hard_mode
+        ? {
+          enabled: repoState.lifecycle.hard_mode.enabled,
+          profile: repoState.lifecycle.hard_mode.profile ?? null,
+          config_path: repoState.lifecycle.hard_mode.config_path,
+        }
+        : undefined,
+    },
+  };
+};
+
 export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const now = new Date().toISOString();
   const consolidatedFindings = normalizeAndDedupeFindings(params.stage, params.findings);
@@ -574,6 +613,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
         },
       }
       : undefined,
+    repo_state: normalizeRepoState(params.repoState),
     consolidation:
       consolidatedFindings.suppressed.length > 0
         ? { suppressed: consolidatedFindings.suppressed }

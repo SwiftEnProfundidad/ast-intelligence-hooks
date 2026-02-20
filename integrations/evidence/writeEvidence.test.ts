@@ -93,6 +93,28 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
       INFO: 0,
     },
   },
+  repo_state: {
+    repo_root: repoRoot,
+    git: {
+      available: true,
+      branch: 'feature/write-evidence',
+      upstream: 'origin/feature/write-evidence',
+      ahead: 0,
+      behind: 0,
+      dirty: false,
+      staged: 0,
+      unstaged: 0,
+    },
+    lifecycle: {
+      installed: true,
+      package_version: '6.3.16',
+      lifecycle_version: '6.3.16',
+      hooks: {
+        pre_commit: 'managed',
+        pre_push: 'managed',
+      },
+    },
+  },
   sdd_metrics: {
     enforced: true,
     stage: 'PRE_PUSH',
@@ -155,6 +177,8 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
           message: 'sdd policy passed',
         },
       });
+      assert.equal(written.repo_state?.git.branch, 'feature/write-evidence');
+      assert.equal(written.repo_state?.lifecycle.hooks.pre_commit, 'managed');
     });
   });
 });

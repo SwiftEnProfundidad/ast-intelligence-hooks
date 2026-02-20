@@ -33,6 +33,28 @@ const sampleEvidence = (): AiEvidenceV2_1 => ({
       INFO: 0,
     },
   },
+  repo_state: {
+    repo_root: '/tmp/pumuki-read-evidence',
+    git: {
+      available: true,
+      branch: 'feature/read-evidence',
+      upstream: 'origin/feature/read-evidence',
+      ahead: 0,
+      behind: 0,
+      dirty: false,
+      staged: 0,
+      unstaged: 0,
+    },
+    lifecycle: {
+      installed: true,
+      package_version: '6.3.16',
+      lifecycle_version: '6.3.16',
+      hooks: {
+        pre_commit: 'managed',
+        pre_push: 'managed',
+      },
+    },
+  },
 });
 
 test('readEvidenceResult devuelve missing cuando no existe .ai_evidence.json', async () => {
@@ -52,6 +74,8 @@ test('readEvidenceResult devuelve valid cuando el archivo tiene version 2.1', as
     assert.equal(result.kind, 'valid');
     if (result.kind === 'valid') {
       assert.deepEqual(result.evidence, evidence);
+      assert.equal(result.evidence.repo_state?.git.branch, 'feature/read-evidence');
+      assert.equal(result.evidence.repo_state?.lifecycle.hooks.pre_push, 'managed');
     }
     assert.deepEqual(readEvidence(tempRoot), evidence);
   });

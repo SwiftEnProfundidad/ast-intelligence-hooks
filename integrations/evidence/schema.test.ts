@@ -73,12 +73,36 @@ test('AiEvidenceV2_1 soporta snapshot/ledger/platforms/rulesets con contrato 2.1
         CRITICAL: 0,
       },
     },
+    repo_state: {
+      repo_root: '/repo',
+      git: {
+        available: true,
+        branch: 'feature/evidence',
+        upstream: 'origin/feature/evidence',
+        ahead: 1,
+        behind: 0,
+        dirty: true,
+        staged: 2,
+        unstaged: 1,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: '6.3.16',
+        lifecycle_version: '6.3.16',
+        hooks: {
+          pre_commit: 'managed',
+          pre_push: 'managed',
+        },
+      },
+    },
   };
 
   assert.equal(evidence.version, '2.1');
   assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
   assert.equal(evidence.snapshot.findings[0]?.ruleId, 'backend.no-console-log');
   assert.equal(evidence.ai_gate.violations[0]?.level, 'ERROR');
+  assert.equal(evidence.repo_state?.git.branch, 'feature/evidence');
+  assert.equal(evidence.repo_state?.lifecycle.hooks.pre_commit, 'managed');
 });
 
 test('AiEvidenceV2_1 soporta contrato SDD en evidencia (sdd_metrics + source sdd-policy)', () => {

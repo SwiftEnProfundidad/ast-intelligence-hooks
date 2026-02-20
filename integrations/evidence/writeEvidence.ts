@@ -6,6 +6,7 @@ import type {
   CompatibilityViolation,
   EvidenceLines,
   LedgerEntry,
+  RepoState,
   SnapshotFinding,
 } from './schema';
 import { normalizeHumanIntent } from './humanIntent';
@@ -108,6 +109,46 @@ const toCompatibilityViolations = (
   }));
 };
 
+const normalizeRepoState = (
+  repoState: RepoState | undefined,
+  repoRoot: string
+): RepoState | undefined => {
+  if (!repoState) {
+    return undefined;
+  }
+  return {
+    repo_root: toRelativeRepoPath(repoRoot, repoState.repo_root),
+    git: {
+      available: repoState.git.available,
+      branch: repoState.git.branch ?? null,
+      upstream: repoState.git.upstream ?? null,
+      ahead: Number.isFinite(repoState.git.ahead) ? Math.max(0, Math.trunc(repoState.git.ahead)) : 0,
+      behind: Number.isFinite(repoState.git.behind) ? Math.max(0, Math.trunc(repoState.git.behind)) : 0,
+      dirty: repoState.git.dirty,
+      staged: Number.isFinite(repoState.git.staged) ? Math.max(0, Math.trunc(repoState.git.staged)) : 0,
+      unstaged: Number.isFinite(repoState.git.unstaged)
+        ? Math.max(0, Math.trunc(repoState.git.unstaged))
+        : 0,
+    },
+    lifecycle: {
+      installed: repoState.lifecycle.installed,
+      package_version: repoState.lifecycle.package_version ?? null,
+      lifecycle_version: repoState.lifecycle.lifecycle_version ?? null,
+      hooks: {
+        pre_commit: repoState.lifecycle.hooks.pre_commit,
+        pre_push: repoState.lifecycle.hooks.pre_push,
+      },
+      hard_mode: repoState.lifecycle.hard_mode
+        ? {
+          enabled: repoState.lifecycle.hard_mode.enabled,
+          profile: repoState.lifecycle.hard_mode.profile ?? null,
+          config_path: toRelativeRepoPath(repoRoot, repoState.lifecycle.hard_mode.config_path),
+        }
+        : undefined,
+    },
+  };
+};
+
 const toStableEvidence = (
   evidence: AiEvidenceV2_1,
   repoRoot: string
@@ -146,6 +187,7 @@ const toStableEvidence = (
     INFO: evidence.severity_metrics.by_severity.INFO,
   };
   const normalizedHumanIntent = normalizeHumanIntent(evidence.human_intent);
+  const normalizedRepoState = normalizeRepoState(evidence.repo_state, repoRoot);
 
   return {
     version: '2.1',
@@ -180,6 +222,7 @@ const toStableEvidence = (
         },
       }
       : undefined,
+    repo_state: normalizedRepoState,
   };
 };
 
@@ -193,8 +236,11 @@ const resolveRepoRoot = (): string => {
   }
 };
 
-export function writeEvidence(evidence: AiEvidenceV2_1): WriteEvidenceResult {
-  const repoRoot = resolveRepoRoot();
+export function writeEvidence(
+  evidence: AiEvidenceV2_1,
+  options?: { repoRoot?: string }
+): WriteEvidenceResult {
+  const repoRoot = options?.repoRoot ?? resolveRepoRoot();
   const outputPath = join(repoRoot, EVIDENCE_FILE_NAME);
 
   try {

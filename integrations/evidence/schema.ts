@@ -87,6 +87,38 @@ export type ConsolidationSuppressedFinding = {
   reason: string;
 };
 
+export type RepoHookState = 'managed' | 'missing' | 'unmanaged';
+
+export type RepoHardModeState = {
+  enabled: boolean;
+  profile: string | null;
+  config_path: string;
+};
+
+export type RepoState = {
+  repo_root: string;
+  git: {
+    available: boolean;
+    branch: string | null;
+    upstream: string | null;
+    ahead: number;
+    behind: number;
+    dirty: boolean;
+    staged: number;
+    unstaged: number;
+  };
+  lifecycle: {
+    installed: boolean;
+    package_version: string | null;
+    lifecycle_version: string | null;
+    hooks: {
+      pre_commit: RepoHookState;
+      pre_push: RepoHookState;
+    };
+    hard_mode?: RepoHardModeState;
+  };
+};
+
 export type AiEvidenceV2_1 = {
   version: '2.1';
   timestamp: string;
@@ -106,6 +138,7 @@ export type AiEvidenceV2_1 = {
     by_severity: Record<Severity, number>;
   };
   sdd_metrics?: SddMetrics;
+  repo_state?: RepoState;
   consolidation?: {
     suppressed: ConsolidationSuppressedFinding[];
   };
