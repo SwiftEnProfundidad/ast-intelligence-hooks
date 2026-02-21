@@ -6,6 +6,7 @@ export type EnterpriseAiGateCheckResult = {
   executed: true;
   success: boolean;
   result: {
+    allowed: ReturnType<typeof evaluateAiGate>['allowed'];
     status: ReturnType<typeof evaluateAiGate>['status'];
     stage: ReturnType<typeof evaluateAiGate>['stage'];
     policy: ReturnType<typeof evaluateAiGate>['policy'];
@@ -30,6 +31,7 @@ export const runEnterpriseAiGateCheck = (params: {
     executed: true,
     success: evaluation.allowed,
     result: {
+      allowed: evaluation.allowed,
       status: evaluation.status,
       stage: evaluation.stage,
       policy: evaluation.policy,
