@@ -358,4 +358,97 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - ✅ Añadida sección `1.1) Non-interactive consumer matrix (1/2/3/4/9)` con comando, contrato de salida y semántica de `diagnosis`.
   - ✅ Añadido comando opcional de canary no interactivo (`runConsumerMenuCanary`) con cleanup garantizado.
 - ✅ Cierre: commit atómico + push y actualización final de esta fase en `REFRACTOR_PROGRESS.md`.
-- 🚧 Próxima tarea: esperar siguiente instrucción del usuario para abrir el siguiente bloque.
+- ✅ Operación GitHub: PR `#313` abierta y mergeada en `main` (`feat/phase-19-menu-matrix-automation`), con borrado de rama.
+- ✅ Diagnóstico operativo: las notificaciones macOS del flujo legacy no están implementadas en el core actual (`bin/`, `scripts/`, `integrations` sin `osascript`/`terminal-notifier`), por lo que en este repo el comportamiento normal hoy es **sin notificaciones del sistema**.
+- ✅ Próxima tarea anterior completada: abrir nuevo bloque de paridad legacy tras validación del usuario.
+
+## Fase 20 — Paridad Legacy Enterprise (pendientes críticos)
+- ✅ T1 (RED): definir tests de notificación macOS para eventos críticos (`BLOCK`, evidencia stale, violación git-flow) con fallback no-macOS.
+  - ✅ Test añadido: `scripts/__tests__/framework-menu-system-notifications.test.ts`.
+  - ✅ Evidencia RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts` falla con `MODULE_NOT_FOUND` de `../framework-menu-system-notifications-lib`.
+- ✅ T2 (GREEN): implementar motor de notificaciones del sistema (macOS) con toggle en configuración/menú interactivo.
+  - ✅ Motor implementado: `scripts/framework-menu-system-notifications-lib.ts` (`buildSystemNotificationPayload`, `emitSystemNotification`, config persistida).
+  - ✅ Toggle de menú implementado: acción `31` en advanced menu + prompt `askSystemNotificationsEnabled`.
+  - ✅ Config persistida: `.pumuki/system-notifications.json` (runner `runSystemNotificationsConfig`).
+  - ✅ Validación GREEN:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts scripts/__tests__/framework-menu-hard-mode-config.test.ts scripts/__tests__/framework-menu-srp-contract.test.ts` (15/15).
+- ✅ T3 (REFACTOR): integrar enforcement estricto de cadena `pumuki -> mcp -> ai_gate -> ai_evidence` en flujo operativo sin intervención manual.
+  - ✅ Nuevo helper MCP reusable: `integrations/mcp/aiGateCheck.ts` (`runEnterpriseAiGateCheck`).
+  - ✅ `enterpriseServer` usa helper MCP para `ai_gate_check` (ruta única de evaluación).
+  - ✅ `lifecycle cli` en `PRE_WRITE` ahora usa helper MCP y emite telemetría de cadena:
+    - `telemetry.chain = pumuki->mcp->ai_gate->ai_evidence`
+    - `telemetry.mcp_tool = ai_gate_check`
+  - ✅ Validación TDD:
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/lifecycle/__tests__/lifecycle.test.ts integrations/mcp/__tests__/enterpriseServer.test.ts` (28/28).
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts scripts/__tests__/framework-menu-hard-mode-config.test.ts scripts/__tests__/framework-menu-srp-contract.test.ts` (15/15).
+- ✅ T4 (RED/GREEN/REFACTOR): restaurar paridad funcional de pre-flight legacy (repo-state, git-flow, stale-evidence, hints operativos) sobre arquitectura actual.
+  - ✅ RED:
+    - `scripts/__tests__/framework-menu-consumer-preflight.test.ts` (nuevo) exige hints operativos + notificaciones para `EVIDENCE_STALE` y `GITFLOW_PROTECTED_BRANCH`.
+    - `scripts/__tests__/framework-menu-consumer-runtime.test.ts` exige ejecución de preflight por stage en opciones `1/2/3/4`.
+    - Evidencia RED confirmada:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-preflight.test.ts scripts/__tests__/framework-menu-consumer-runtime.test.ts`
+      - Fallos esperados: `MODULE_NOT_FOUND` de preflight lib y stages vacíos en runtime.
+  - ✅ GREEN:
+    - Nuevo módulo `scripts/framework-menu-consumer-preflight-lib.ts`:
+      - `runConsumerPreflight(...)` (repo-state + ai gate + hints + emisión de notificaciones).
+      - `formatConsumerPreflight(...)` (panel legacy de preflight operativo).
+    - Wiring en `scripts/framework-menu-consumer-runtime-lib.ts`:
+      - preflight automático por stage antes de ejecutar opciones de auditoría (`1/2/3/4`).
+      - soporte de inyección `runPreflight` para testabilidad y contratos estables.
+    - Validación GREEN:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-preflight.test.ts scripts/__tests__/framework-menu-consumer-runtime.test.ts` (5/5).
+  - ✅ REFACTOR + regresión:
+    - Validación extendida de menú legacy/consumer/notificaciones:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-*.test.ts scripts/__tests__/framework-menu-gate-lib.test.ts scripts/__tests__/framework-menu-legacy-audit.test.ts scripts/__tests__/framework-menu-system-notifications.test.ts`
+      - Resultado: `25/25` tests en verde.
+- ✅ T5 (cierre): validar end-to-end en self-audit del propio repo, actualizar documentación oficial y preparar bloque de commits atómicos.
+  - ✅ Validación end-to-end self-audit ejecutada (repo framework real):
+    - `node --import tsx -e "const m = await import('./scripts/framework-menu-matrix-runner-lib.ts'); const report = await m.default.runConsumerMenuMatrix({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"`
+    - Resultado matriz:
+      - `1` -> `stage=PRE_COMMIT`, `outcome=BLOCK`, `filesScanned=932`, `totalViolations=4`
+      - `2` -> `stage=PRE_PUSH`, `outcome=BLOCK`, `filesScanned=932`, `totalViolations=8`
+      - `3` -> `stage=PRE_COMMIT`, `outcome=PASS`, `filesScanned=0`, `diagnosis=scope-empty`
+      - `4` -> `stage=PRE_PUSH`, `outcome=PASS`, `filesScanned=18`, `diagnosis=repo-clean`
+      - `9` -> `stage=PRE_PUSH`, `outcome=PASS`, `filesScanned=18`, `diagnosis=repo-clean`
+    - Canary controlado:
+      - `node --import tsx -e "const m = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await m.default.runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"`
+      - Resultado: `detected=true`, `ruleIds` contiene `skills.backend.no-empty-catch`.
+  - ✅ Validación de regresión técnica (T3+T4+menú legacy) en verde:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-*.test.ts integrations/mcp/__tests__/aiGateCheck.test.ts integrations/lifecycle/__tests__/lifecycle.test.ts integrations/mcp/__tests__/enterpriseServer.test.ts`
+    - Resultado: `95/95` tests passing.
+  - ✅ Documentación oficial actualizada para el cierre:
+    - `README.md` (pre-flight chain + opción 31 de notificaciones).
+    - `docs/USAGE.md` (sección `1.2` de pre-flight consumer con mapeo por stage y hints operativos).
+    - `docs/API_REFERENCE.md` (pre-flight consumer en quick refs).
+  - ✅ Paquete de commits atómicos preparado:
+    - ✅ Commit 1/3
+      - `feat(mcp): enforce pre-write chain through enterprise ai_gate_check helper`
+      - `integrations/mcp/aiGateCheck.ts`
+      - `integrations/mcp/enterpriseServer.ts`
+      - `integrations/mcp/__tests__/aiGateCheck.test.ts`
+      - `integrations/lifecycle/cli.ts`
+      - `integrations/lifecycle/__tests__/lifecycle.test.ts`
+    - ✅ Commit 2/3
+      - `feat(menu): restore legacy preflight parity and system notifications`
+      - `scripts/framework-menu-consumer-preflight-lib.ts`
+      - `scripts/framework-menu-consumer-runtime-lib.ts`
+      - `scripts/framework-menu-system-notifications-lib.ts`
+      - `scripts/framework-menu-runners-validation-notifications-lib.ts`
+      - `scripts/framework-menu-runners-validation.ts`
+      - `scripts/framework-menu-runners.ts`
+      - `scripts/framework-menu-actions-diagnostics-maintenance-lib.ts`
+      - `scripts/framework-menu-prompts.ts`
+      - `scripts/framework-menu.ts`
+      - `scripts/__tests__/framework-menu-consumer-preflight.test.ts`
+      - `scripts/__tests__/framework-menu-consumer-runtime.test.ts`
+      - `scripts/__tests__/framework-menu-system-notifications.test.ts`
+      - `scripts/__tests__/framework-menu-hard-mode-config.test.ts`
+    - ✅ Commit 3/3
+      - `docs(framework): document consumer preflight and close phase 20`
+      - `README.md`
+      - `docs/USAGE.md`
+      - `docs/API_REFERENCE.md`
+      - `docs/REFRACTOR_PROGRESS.md`
+
+## Fase 21 — Operación siguiente
+- 🚧 Esperar instrucción del usuario para ejecutar commits atómicos/push/PR del bloque Fase 20.

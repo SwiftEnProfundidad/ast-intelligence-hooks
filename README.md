@@ -229,6 +229,12 @@ Interactive menu:
 npm run framework:menu
 ```
 
+Consumer menu notes:
+
+- options `1/2/3/4` execute a pre-flight check before running gates
+- pre-flight validates repo-state, git-flow constraints, and AI gate chain (`pumuki -> mcp -> ai_gate -> ai_evidence`)
+- option `31` in advanced menu toggles macOS system notifications (persisted in `.pumuki/system-notifications.json`)
+
 Consumer repositories typically run:
 
 ```bash

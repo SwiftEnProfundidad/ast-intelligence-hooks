@@ -136,6 +136,27 @@ Optional canary execution (controlled temporary violation + cleanup):
 node --import tsx -e "const { runConsumerMenuCanary } = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
 ```
 
+### 1.2) Consumer pre-flight (legacy parity)
+
+Consumer options `1/2/3/4` run a pre-flight check before gate execution.
+The pre-flight evaluates:
+
+- `repo_state` (branch, upstream, dirty/staged/unstaged, ahead/behind)
+- AI gate consistency (`pumuki -> mcp -> ai_gate -> ai_evidence`)
+- stale/missing/invalid evidence signals
+- git-flow protected branch violations
+
+Stage mapping:
+
+- Option `1` (`repo`) -> `PRE_COMMIT`
+- Option `2` (`repo+staged`) -> `PRE_PUSH`
+- Option `3` (`staged`) -> `PRE_COMMIT`
+- Option `4` (`working tree`) -> `PRE_PUSH`
+
+If a scope is empty, the menu prints an explicit operational hint (`Scope vacío`), so `PASS` with zero findings is distinguishable from a clean repository scan.
+
+System notifications (macOS) can be enabled from advanced menu option `31` (persisted in `.pumuki/system-notifications.json`).
+
 ### 2) Direct stage CLI execution
 
 ```bash
