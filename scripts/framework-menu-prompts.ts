@@ -2,6 +2,7 @@ import { createAdapterPrompts } from './framework-menu-prompts-adapter';
 import { createConsumerPrompts } from './framework-menu-prompts-consumer';
 import { createPhase5Prompts } from './framework-menu-prompts-phase5';
 import { parsePositive, type Questioner } from './framework-menu-prompt-types';
+import type { HardModeProfile } from './framework-menu-runners-validation-hardmode-lib';
 
 export const createFrameworkMenuPrompts = (rl: Questioner) => {
   const askRange = async (fromDefault: string = 'HEAD~1'): Promise<{ fromRef: string; toRef: string }> => {
@@ -22,11 +23,23 @@ export const createFrameworkMenuPrompts = (rl: Questioner) => {
     };
   };
 
+  const askHardModeProfile = async (): Promise<HardModeProfile> => {
+    const profilePrompt = await rl.question(
+      'Hard mode profile [critical-high|all-severities] (default: critical-high): '
+    );
+    const normalized = profilePrompt.trim().toLowerCase();
+    if (normalized === 'all-severities') {
+      return 'all-severities';
+    }
+    return 'critical-high';
+  };
+
   return {
     askRange,
     ...createAdapterPrompts(rl),
     ...createConsumerPrompts(rl),
     ...createPhase5Prompts(rl),
     askValidationArtifactsCleanup,
+    askHardModeProfile,
   };
 };

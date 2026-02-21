@@ -1,11 +1,15 @@
 import { resolvePolicyForStage } from '../integrations/gate/stagePolicies';
 import { runPlatformGate } from '../integrations/git/runPlatformGate';
+import { evaluatePlatformGateFindings } from '../integrations/git/runPlatformGateEvaluation';
 import { runAndPrintExitCode } from './framework-menu-runners';
 
 export type MenuStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
 export type MenuScope =
   | { kind: 'staged' }
+  | { kind: 'repo' }
+  | { kind: 'repoAndStaged' }
+  | { kind: 'workingTree' }
   | {
       kind: 'range';
       fromRef: string;
@@ -50,4 +54,87 @@ export const runRangeGate = async (params: {
   });
 
   await runAndPrintExitCode(() => runPlatformGate(gateParams));
+};
+
+export const runRepoGate = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'repo' },
+  });
+
+  await runAndPrintExitCode(() => runPlatformGate(gateParams));
+};
+
+export const runRepoAndStagedGate = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'repoAndStaged' },
+  });
+
+  await runAndPrintExitCode(() => runPlatformGate(gateParams));
+};
+
+export const runWorkingTreeGate = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'workingTree' },
+  });
+
+  await runAndPrintExitCode(() => runPlatformGate(gateParams));
+};
+
+export const runStagedGateSilent = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'staged' },
+  });
+  await runMenuAuditGate(gateParams);
+};
+
+export const runRepoGateSilent = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'repo' },
+  });
+  await runMenuAuditGate(gateParams);
+};
+
+export const runRepoAndStagedGateSilent = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'repoAndStaged' },
+  });
+  await runMenuAuditGate(gateParams);
+};
+
+export const runWorkingTreeGateSilent = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_COMMIT',
+    scope: { kind: 'workingTree' },
+  });
+  await runMenuAuditGate(gateParams);
+};
+
+const runMenuAuditGate = async (
+  gateParams: ReturnType<typeof buildMenuGateParams>
+): Promise<void> => {
+  await runPlatformGate({
+    ...gateParams,
+    sddShortCircuit: false,
+    dependencies: {
+      printGateFindings: () => {},
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'MENU_AUDIT_SDD_BYPASS',
+        message: 'Menu audit bypasses SDD blocking and keeps findings-only evaluation.',
+      }),
+      evaluatePlatformGateFindings: (params) =>
+        evaluatePlatformGateFindings(params, {
+          loadHeuristicsConfig: () => ({
+            astSemanticEnabled: true,
+            typeScriptScope: 'all',
+          }),
+        }),
+    },
+  });
 };

@@ -9,7 +9,7 @@ import type {
 } from './framework-menu-action-contract';
 
 export const createFrameworkMenuDiagnosticsMaintenanceActions = (
-  _params: FrameworkMenuActionContext
+  params: FrameworkMenuActionContext
 ): ReadonlyArray<MenuAction> => {
   return [
     {
@@ -20,7 +20,10 @@ export const createFrameworkMenuDiagnosticsMaintenanceActions = (
     {
       id: '18',
       label: 'Configure hard mode enforcement (enterprise)',
-      execute: async () => runAndPrintExitCode(runHardModeEnforcementConfig),
+      execute: async () => {
+        const profile = await params.prompts.askHardModeProfile();
+        await runAndPrintExitCode(() => runHardModeEnforcementConfig({ profile }));
+      },
     },
   ];
 };

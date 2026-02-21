@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 
 export const runAndPrintExitCode = async (run: () => Promise<number>): Promise<void> => {
   const code = await run();
@@ -6,13 +6,13 @@ export const runAndPrintExitCode = async (run: () => Promise<number>): Promise<v
 };
 
 export const runNpx = (args: string[]): void => {
-  execFileSync('npx', args, {
+  runBinarySync('npx', args, {
     stdio: 'inherit',
   });
 };
 
 export const runNpm = (args: string[]): void => {
-  execFileSync('npm', args, {
+  runBinarySync('npm', args, {
     stdio: 'inherit',
   });
 };

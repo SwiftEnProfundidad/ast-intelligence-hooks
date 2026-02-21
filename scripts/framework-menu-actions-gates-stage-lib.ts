@@ -28,5 +28,20 @@ export const createFrameworkMenuGateStageActions = (
         await params.runRange({ ...range, stage: 'CI' });
       },
     },
+    {
+      id: '28',
+      label: 'Audit full repository snapshot (PRE_COMMIT policy)',
+      execute: params.runRepoAudit,
+    },
+    {
+      id: '29',
+      label: 'Audit repository + staged snapshot (PRE_COMMIT policy)',
+      execute: params.runRepoAndStagedAudit,
+    },
+    {
+      id: '30',
+      label: 'Audit staged + unstaged working tree (PRE_COMMIT policy)',
+      execute: params.runStagedAndUnstagedAudit,
+    },
   ];
 };
