@@ -1,5 +1,9 @@
 import { createConsumerLegacyMenuActions } from './framework-menu-consumer-actions-lib';
 import {
+  formatConsumerPreflight,
+  runConsumerPreflight,
+} from './framework-menu-consumer-preflight-lib';
+import {
   exportLegacyAuditMarkdown,
   formatLegacyAstBreakdown,
   formatLegacyAuditReport,
@@ -23,6 +27,9 @@ export const createConsumerMenuRuntime = (params: {
   runRepoAndStagedGate: () => Promise<void>;
   runStagedGate: () => Promise<void>;
   runWorkingTreeGate: () => Promise<void>;
+  runPreflight?: (
+    stage: 'PRE_COMMIT' | 'PRE_PUSH'
+  ) => Promise<string | void> | string | void;
   write: (text: string) => void;
 }): {
   actions: ReadonlyArray<ConsumerAction>;
@@ -55,21 +62,46 @@ export const createConsumerMenuRuntime = (params: {
     params.write('\nℹ Scope vacío (working tree): no hay cambios sin commitear para auditar. Usa 1 o 2 para auditoría completa.\n');
   };
 
+  const runPreflight = async (stage: 'PRE_COMMIT' | 'PRE_PUSH'): Promise<void> => {
+    if (params.runPreflight) {
+      const rendered = await params.runPreflight(stage);
+      if (typeof rendered === 'string' && rendered.trim().length > 0) {
+        params.write(`\n${rendered}\n`);
+      }
+      return;
+    }
+
+    const preflight = runConsumerPreflight({
+      stage,
+      repoRoot: process.cwd(),
+    });
+    params.write(
+      `\n${formatConsumerPreflight(preflight, {
+        panelWidth: resolveLegacyPanelOuterWidth(),
+        color: useColor(),
+      })}\n`
+    );
+  };
+
   const actions = createConsumerLegacyMenuActions({
     runFullAudit: async () => {
+      await runPreflight('PRE_COMMIT');
       await params.runRepoGate();
       renderSummary();
     },
     runStrictRepoAndStaged: async () => {
+      await runPreflight('PRE_PUSH');
       await params.runRepoAndStagedGate();
       renderSummary();
     },
     runStrictStagedOnly: async () => {
+      await runPreflight('PRE_COMMIT');
       await params.runStagedGate();
       const summary = renderSummary();
       printEmptyScopeHint(summary, 'staged');
     },
     runStandardCriticalHigh: async () => {
+      await runPreflight('PRE_PUSH');
       await params.runWorkingTreeGate();
       const summary = renderSummary();
       printEmptyScopeHint(summary, 'workingTree');

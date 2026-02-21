@@ -47,6 +47,7 @@ test('consumer runtime avisa cuando STAGING only no tiene archivos en scope', { 
         writeEmptyEvidence(temp, 'PRE_COMMIT');
       },
       runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
       write: (text) => {
         output.push(text);
       },
@@ -75,6 +76,7 @@ test('consumer runtime avisa cuando working tree no tiene archivos en scope', { 
       runWorkingTreeGate: async () => {
         writeEmptyEvidence(temp, 'PRE_PUSH');
       },
+      runPreflight: async () => {},
       write: (text) => {
         output.push(text);
       },
@@ -88,4 +90,25 @@ test('consumer runtime avisa cuando working tree no tiene archivos en scope', { 
   } finally {
     process.chdir(previous);
   }
+});
+
+test('consumer runtime ejecuta preflight con stage correcto por opción', async () => {
+  const stages: string[] = [];
+  const runtime = createConsumerMenuRuntime({
+    runRepoGate: async () => {},
+    runRepoAndStagedGate: async () => {},
+    runStagedGate: async () => {},
+    runWorkingTreeGate: async () => {},
+    runPreflight: async (stage) => {
+      stages.push(stage);
+    },
+    write: () => {},
+  });
+
+  await runtime.actions.find((item) => item.id === '1')?.execute();
+  await runtime.actions.find((item) => item.id === '2')?.execute();
+  await runtime.actions.find((item) => item.id === '3')?.execute();
+  await runtime.actions.find((item) => item.id === '4')?.execute();
+
+  assert.deepEqual(stages, ['PRE_COMMIT', 'PRE_PUSH', 'PRE_COMMIT', 'PRE_PUSH']);
 });

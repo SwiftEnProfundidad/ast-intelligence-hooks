@@ -1,6 +1,7 @@
 import {
   runAndPrintExitCode,
   runHardModeEnforcementConfig,
+  runSystemNotificationsConfig,
   runSkillsLockCheck,
 } from './framework-menu-runners';
 import type {
@@ -23,6 +24,14 @@ export const createFrameworkMenuDiagnosticsMaintenanceActions = (
       execute: async () => {
         const profile = await params.prompts.askHardModeProfile();
         await runAndPrintExitCode(() => runHardModeEnforcementConfig({ profile }));
+      },
+    },
+    {
+      id: '31',
+      label: 'Configure macOS system notifications',
+      execute: async () => {
+        const enabled = await params.prompts.askSystemNotificationsEnabled();
+        await runAndPrintExitCode(() => runSystemNotificationsConfig({ enabled }));
       },
     },
   ];

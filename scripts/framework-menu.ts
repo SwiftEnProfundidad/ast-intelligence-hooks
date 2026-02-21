@@ -29,7 +29,6 @@ import {
 export * from './framework-menu-builders';
 export { buildMenuGateParams } from './framework-menu-gate-lib';
 export { formatActiveSkillsBundles } from './framework-menu-skills-lib';
-
 type MenuMode = 'consumer' | 'advanced';
 
 const ADVANCED_MENU_HELP: Readonly<Record<string, string>> = {
@@ -54,6 +53,7 @@ const ADVANCED_MENU_HELP: Readonly<Record<string, string>> = {
   '16': 'Genera reporte real-session del adapter.',
   '17': 'Verifica freshness de skills lock.',
   '18': 'Configura hard mode/enforcement enterprise.',
+  '31': 'Configura notificaciones del sistema (macOS) para eventos criticos.',
   '19': 'Ejecuta startup triage bundle del consumidor.',
   '20': 'Genera reporte A/B del mock consumer.',
   '21': 'Genera reporte de blockers readiness (phase5).',

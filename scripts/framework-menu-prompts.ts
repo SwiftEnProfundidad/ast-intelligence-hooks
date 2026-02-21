@@ -34,6 +34,11 @@ export const createFrameworkMenuPrompts = (rl: Questioner) => {
     return 'critical-high';
   };
 
+  const askSystemNotificationsEnabled = async (): Promise<boolean> => {
+    const enabledPrompt = await rl.question('Enable macOS system notifications? [yes]: ');
+    return !enabledPrompt.trim() ? true : parsePositive(enabledPrompt);
+  };
+
   return {
     askRange,
     ...createAdapterPrompts(rl),
@@ -41,5 +46,6 @@ export const createFrameworkMenuPrompts = (rl: Questioner) => {
     ...createPhase5Prompts(rl),
     askValidationArtifactsCleanup,
     askHardModeProfile,
+    askSystemNotificationsEnabled,
   };
 };

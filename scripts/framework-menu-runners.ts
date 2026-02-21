@@ -32,6 +32,7 @@ export {
 
 export {
   runHardModeEnforcementConfig,
+  runSystemNotificationsConfig,
   runSkillsLockCheck,
   runValidationArtifactsCleanup,
 } from './framework-menu-runners-validation';
