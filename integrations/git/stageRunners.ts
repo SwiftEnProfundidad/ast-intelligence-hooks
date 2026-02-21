@@ -19,7 +19,7 @@ export async function runPreCommitStage(): Promise<number> {
 export async function runPrePushStage(): Promise<number> {
   const upstreamRef = resolveUpstreamRef();
   if (!upstreamRef) {
-    console.error(PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE);
+    process.stderr.write(`${PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE}\n`);
     return 1;
   }
 

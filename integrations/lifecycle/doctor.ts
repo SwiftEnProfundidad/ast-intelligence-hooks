@@ -66,7 +66,7 @@ export const runLifecycleDoctor = (params?: {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
-  const trackedNodeModulesPaths = git.listTrackedNodeModulesPaths(repoRoot);
+  const trackedNodeModulesPaths = git.trackedNodeModulesPaths(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
 

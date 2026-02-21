@@ -44,4 +44,4 @@ const run = (): number => {
   }
 };
 
-process.exit(run());
+process.exitCode = run();

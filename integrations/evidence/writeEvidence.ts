@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import type {
@@ -7,8 +6,10 @@ import type {
   EvidenceLines,
   LedgerEntry,
   RepoState,
+  SnapshotEvaluationMetrics,
   SnapshotFinding,
 } from './schema';
+import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { normalizeHumanIntent } from './humanIntent';
 
 export type WriteEvidenceResult = {
@@ -109,6 +110,48 @@ const toCompatibilityViolations = (
   }));
 };
 
+const deriveFilesAffected = (findings: ReadonlyArray<SnapshotFinding>): number => {
+  const files = new Set<string>();
+  for (const finding of findings) {
+    const file = finding.file.trim();
+    if (file.length === 0) {
+      continue;
+    }
+    files.add(file);
+  }
+  return files.size;
+};
+
+const normalizeStringArray = (values: ReadonlyArray<string>): string[] => {
+  return Array.from(
+    new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))
+  ).sort();
+};
+
+const normalizeEvaluationMetrics = (
+  value: SnapshotEvaluationMetrics | undefined
+): SnapshotEvaluationMetrics | undefined => {
+  if (!value) {
+    return undefined;
+  }
+  const normalizeCount = (input: number): number =>
+    Number.isFinite(input) ? Math.max(0, Math.trunc(input)) : 0;
+
+  return {
+    facts_total: normalizeCount(value.facts_total),
+    rules_total: normalizeCount(value.rules_total),
+    baseline_rules: normalizeCount(value.baseline_rules),
+    heuristic_rules: normalizeCount(value.heuristic_rules),
+    skills_rules: normalizeCount(value.skills_rules),
+    project_rules: normalizeCount(value.project_rules),
+    matched_rules: normalizeCount(value.matched_rules),
+    unmatched_rules: normalizeCount(value.unmatched_rules),
+    evaluated_rule_ids: normalizeStringArray(value.evaluated_rule_ids),
+    matched_rule_ids: normalizeStringArray(value.matched_rule_ids),
+    unmatched_rule_ids: normalizeStringArray(value.unmatched_rule_ids),
+  };
+};
+
 const normalizeRepoState = (
   repoState: RepoState | undefined,
   repoRoot: string
@@ -188,6 +231,17 @@ const toStableEvidence = (
   };
   const normalizedHumanIntent = normalizeHumanIntent(evidence.human_intent);
   const normalizedRepoState = normalizeRepoState(evidence.repo_state, repoRoot);
+  const normalizedFilesScanned =
+    typeof evidence.snapshot.files_scanned === 'number' && Number.isFinite(evidence.snapshot.files_scanned)
+      ? Math.max(0, Math.trunc(evidence.snapshot.files_scanned))
+      : undefined;
+  const normalizedFilesAffected =
+    typeof evidence.snapshot.files_affected === 'number' && Number.isFinite(evidence.snapshot.files_affected)
+      ? Math.max(0, Math.trunc(evidence.snapshot.files_affected))
+      : deriveFilesAffected(normalizedFindings);
+  const normalizedEvaluationMetrics = normalizeEvaluationMetrics(
+    evidence.snapshot.evaluation_metrics
+  );
 
   return {
     version: '2.1',
@@ -195,7 +249,23 @@ const toStableEvidence = (
     snapshot: {
       stage: evidence.snapshot.stage,
       outcome: evidence.snapshot.outcome,
+      ...(typeof normalizedFilesScanned === 'number'
+        ? { files_scanned: normalizedFilesScanned }
+        : {}),
+      ...(typeof normalizedFilesAffected === 'number'
+        ? { files_affected: normalizedFilesAffected }
+        : {}),
+      ...(normalizedEvaluationMetrics
+        ? { evaluation_metrics: normalizedEvaluationMetrics }
+        : {}),
       findings: normalizedFindings,
+      platforms: buildSnapshotPlatformSummaries(
+        normalizedFindings.map((finding) => ({
+          ruleId: finding.ruleId,
+          severity: finding.severity,
+          file: finding.file,
+        }))
+      ),
     },
     ledger: normalizedLedger,
     platforms: orderedPlatforms,
@@ -227,13 +297,7 @@ const toStableEvidence = (
 };
 
 const resolveRepoRoot = (): string => {
-  try {
-    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
-      encoding: 'utf8',
-    }).trim();
-  } catch {
-    return process.cwd();
-  }
+  return process.cwd();
 };
 
 export function writeEvidence(

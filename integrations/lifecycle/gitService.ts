@@ -1,14 +1,14 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 
 export interface ILifecycleGitService {
   runGit(args: ReadonlyArray<string>, cwd: string): string;
   resolveRepoRoot(cwd: string): string;
-  getStatusShort(cwd: string): string;
-  listTrackedNodeModulesPaths(cwd: string): ReadonlyArray<string>;
-  isPathTracked(cwd: string, path: string): boolean;
-  setLocalConfig(cwd: string, key: string, value: string): void;
-  unsetLocalConfig(cwd: string, key: string): void;
-  getLocalConfig(cwd: string, key: string): string | undefined;
+  statusShort(cwd: string): string;
+  trackedNodeModulesPaths(cwd: string): ReadonlyArray<string>;
+  pathTracked(cwd: string, path: string): boolean;
+  applyLocalConfig(cwd: string, key: string, value: string): void;
+  clearLocalConfig(cwd: string, key: string): void;
+  localConfig(cwd: string, key: string): string | undefined;
 }
 
 const splitNonEmptyLines = (value: string): ReadonlyArray<string> =>
@@ -19,7 +19,7 @@ const splitNonEmptyLines = (value: string): ReadonlyArray<string> =>
 
 export class LifecycleGitService implements ILifecycleGitService {
   runGit(args: ReadonlyArray<string>, cwd: string): string {
-    return execFileSync('git', args, {
+    return runBinarySync('git', args, {
       cwd,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
@@ -30,31 +30,31 @@ export class LifecycleGitService implements ILifecycleGitService {
     return this.runGit(['rev-parse', '--show-toplevel'], cwd).trim();
   }
 
-  getStatusShort(cwd: string): string {
+  statusShort(cwd: string): string {
     return this.runGit(['status', '--short'], cwd);
   }
 
-  listTrackedNodeModulesPaths(cwd: string): ReadonlyArray<string> {
+  trackedNodeModulesPaths(cwd: string): ReadonlyArray<string> {
     const output = this.runGit(['ls-files', '--', 'node_modules', 'node_modules/**'], cwd);
     return splitNonEmptyLines(output);
   }
 
-  isPathTracked(cwd: string, path: string): boolean {
+  pathTracked(cwd: string, path: string): boolean {
     const output = this.runGit(['ls-files', '--', path], cwd);
     return splitNonEmptyLines(output).includes(path);
   }
 
-  setLocalConfig(cwd: string, key: string, value: string): void {
+  applyLocalConfig(cwd: string, key: string, value: string): void {
     this.runGit(['config', '--local', key, value], cwd);
   }
 
-  unsetLocalConfig(cwd: string, key: string): void {
+  clearLocalConfig(cwd: string, key: string): void {
     try {
       this.runGit(['config', '--local', '--unset', key], cwd);
     } catch {}
   }
 
-  getLocalConfig(cwd: string, key: string): string | undefined {
+  localConfig(cwd: string, key: string): string | undefined {
     try {
       return this.runGit(['config', '--local', '--get', key], cwd).trim();
     } catch {

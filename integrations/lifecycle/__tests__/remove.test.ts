@@ -39,15 +39,15 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.repoRoot;
   }
 
-  getStatusShort(_cwd: string): string {
+  statusShort(_cwd: string): string {
     return '';
   }
 
-  listTrackedNodeModulesPaths(_cwd: string): ReadonlyArray<string> {
+  trackedNodeModulesPaths(_cwd: string): ReadonlyArray<string> {
     return [];
   }
 
-  isPathTracked(_cwd: string, path: string): boolean {
+  pathTracked(_cwd: string, path: string): boolean {
     this.isPathTrackedCalls.push({
       cwd: _cwd,
       path,
@@ -55,13 +55,13 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.trackedPaths.has(path);
   }
 
-  setLocalConfig(): void {}
+  applyLocalConfig(): void {}
 
-  unsetLocalConfig(cwd: string, key: string): void {
+  clearLocalConfig(cwd: string, key: string): void {
     this.unsetCalls.push({ cwd, key });
   }
 
-  getLocalConfig(): string | undefined {
+  localConfig(): string | undefined {
     return undefined;
   }
 }

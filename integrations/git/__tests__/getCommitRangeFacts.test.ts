@@ -26,6 +26,9 @@ test('getFactsForCommitRange filtra por extension y construye facts con source d
       throw new Error(`comando git no esperado: ${command}`);
     },
     getStagedFacts: () => [],
+    getRepoFacts: () => [],
+    getRepoAndStagedFacts: () => [],
+    getStagedAndUnstagedFacts: () => [],
     resolveRepoRoot: () => process.cwd(),
   };
 
@@ -87,6 +90,9 @@ test('getFactsForCommitRange retorna vacio si ningun cambio coincide con extensi
       throw new Error(`comando git no esperado: ${command}`);
     },
     getStagedFacts: () => [],
+    getRepoFacts: () => [],
+    getRepoAndStagedFacts: () => [],
+    getStagedAndUnstagedFacts: () => [],
     resolveRepoRoot: () => process.cwd(),
   };
 

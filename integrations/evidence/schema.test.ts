@@ -42,6 +42,21 @@ test('AiEvidenceV2_1 soporta snapshot/ledger/platforms/rulesets con contrato 2.1
     snapshot: {
       stage: 'PRE_PUSH',
       outcome: 'BLOCK',
+      files_scanned: 911,
+      files_affected: 1,
+      evaluation_metrics: {
+        facts_total: 1878,
+        rules_total: 25,
+        baseline_rules: 0,
+        heuristic_rules: 0,
+        skills_rules: 25,
+        project_rules: 0,
+        matched_rules: 1,
+        unmatched_rules: 24,
+        evaluated_rule_ids: ['skills.backend.no-console-log'],
+        matched_rule_ids: ['skills.backend.no-console-log'],
+        unmatched_rule_ids: ['skills.backend.no-empty-catch'],
+      },
       findings: [sampleFinding()],
     },
     ledger: [
@@ -99,6 +114,9 @@ test('AiEvidenceV2_1 soporta snapshot/ledger/platforms/rulesets con contrato 2.1
 
   assert.equal(evidence.version, '2.1');
   assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+  assert.equal(evidence.snapshot.files_scanned, 911);
+  assert.equal(evidence.snapshot.files_affected, 1);
+  assert.equal(evidence.snapshot.evaluation_metrics?.rules_total, 25);
   assert.equal(evidence.snapshot.findings[0]?.ruleId, 'backend.no-console-log');
   assert.equal(evidence.ai_gate.violations[0]?.level, 'ERROR');
   assert.equal(evidence.repo_state?.git.branch, 'feature/evidence');

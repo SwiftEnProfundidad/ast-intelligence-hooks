@@ -51,11 +51,11 @@ const readConfig = (
   repoRoot: string,
   git: ILifecycleGitService
 ): SddSessionState => {
-  const active = git.getLocalConfig(repoRoot, SDD_KEYS.active) === 'true';
-  const changeId = git.getLocalConfig(repoRoot, SDD_KEYS.change) ?? undefined;
-  const updatedAt = git.getLocalConfig(repoRoot, SDD_KEYS.updatedAt) ?? undefined;
-  const expiresAt = git.getLocalConfig(repoRoot, SDD_KEYS.expiresAt) ?? undefined;
-  const ttlRaw = git.getLocalConfig(repoRoot, SDD_KEYS.ttlMinutes);
+  const active = git.localConfig(repoRoot, SDD_KEYS.active) === 'true';
+  const changeId = git.localConfig(repoRoot, SDD_KEYS.change) ?? undefined;
+  const updatedAt = git.localConfig(repoRoot, SDD_KEYS.updatedAt) ?? undefined;
+  const expiresAt = git.localConfig(repoRoot, SDD_KEYS.expiresAt) ?? undefined;
+  const ttlRaw = git.localConfig(repoRoot, SDD_KEYS.ttlMinutes);
   const ttlMinutes =
     typeof ttlRaw === 'string' && ttlRaw.trim().length > 0
       ? Number.parseInt(ttlRaw, 10)
@@ -112,11 +112,11 @@ export const openSddSession = (params: {
   }
 
   const ttlMinutes = parsePositiveMinutes(params.ttlMinutes);
-  git.setLocalConfig(repoRoot, SDD_KEYS.active, 'true');
-  git.setLocalConfig(repoRoot, SDD_KEYS.change, changeId);
-  git.setLocalConfig(repoRoot, SDD_KEYS.updatedAt, nowIso());
-  git.setLocalConfig(repoRoot, SDD_KEYS.expiresAt, addMinutesIso(ttlMinutes));
-  git.setLocalConfig(repoRoot, SDD_KEYS.ttlMinutes, String(ttlMinutes));
+  git.applyLocalConfig(repoRoot, SDD_KEYS.active, 'true');
+  git.applyLocalConfig(repoRoot, SDD_KEYS.change, changeId);
+  git.applyLocalConfig(repoRoot, SDD_KEYS.updatedAt, nowIso());
+  git.applyLocalConfig(repoRoot, SDD_KEYS.expiresAt, addMinutesIso(ttlMinutes));
+  git.applyLocalConfig(repoRoot, SDD_KEYS.ttlMinutes, String(ttlMinutes));
   return readConfig(repoRoot, git);
 };
 
@@ -132,9 +132,9 @@ export const refreshSddSession = (params?: {
     throw new Error('No active SDD session to refresh. Run `pumuki sdd session --open --change=<id>` first.');
   }
   const ttlMinutes = parsePositiveMinutes(params?.ttlMinutes ?? current.ttlMinutes);
-  git.setLocalConfig(repoRoot, SDD_KEYS.updatedAt, nowIso());
-  git.setLocalConfig(repoRoot, SDD_KEYS.expiresAt, addMinutesIso(ttlMinutes));
-  git.setLocalConfig(repoRoot, SDD_KEYS.ttlMinutes, String(ttlMinutes));
+  git.applyLocalConfig(repoRoot, SDD_KEYS.updatedAt, nowIso());
+  git.applyLocalConfig(repoRoot, SDD_KEYS.expiresAt, addMinutesIso(ttlMinutes));
+  git.applyLocalConfig(repoRoot, SDD_KEYS.ttlMinutes, String(ttlMinutes));
   return readConfig(repoRoot, git);
 };
 
@@ -143,10 +143,10 @@ export const closeSddSession = (
   git: ILifecycleGitService = new LifecycleGitService()
 ): SddSessionState => {
   const repoRoot = resolveRepoRoot(cwd, git);
-  git.unsetLocalConfig(repoRoot, SDD_KEYS.active);
-  git.unsetLocalConfig(repoRoot, SDD_KEYS.change);
-  git.unsetLocalConfig(repoRoot, SDD_KEYS.updatedAt);
-  git.unsetLocalConfig(repoRoot, SDD_KEYS.expiresAt);
-  git.unsetLocalConfig(repoRoot, SDD_KEYS.ttlMinutes);
+  git.clearLocalConfig(repoRoot, SDD_KEYS.active);
+  git.clearLocalConfig(repoRoot, SDD_KEYS.change);
+  git.clearLocalConfig(repoRoot, SDD_KEYS.updatedAt);
+  git.clearLocalConfig(repoRoot, SDD_KEYS.expiresAt);
+  git.clearLocalConfig(repoRoot, SDD_KEYS.ttlMinutes);
   return readConfig(repoRoot, git);
 };

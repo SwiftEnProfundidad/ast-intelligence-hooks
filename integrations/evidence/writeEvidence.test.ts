@@ -30,6 +30,19 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
   snapshot: {
     stage: 'PRE_PUSH',
     outcome: 'BLOCK',
+    evaluation_metrics: {
+      facts_total: 1878,
+      rules_total: 25.9,
+      baseline_rules: 0,
+      heuristic_rules: 0,
+      skills_rules: 25,
+      project_rules: 0,
+      matched_rules: 0,
+      unmatched_rules: 25,
+      evaluated_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.no-console-log'],
+      matched_rule_ids: [],
+      unmatched_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+    },
     findings: [
       {
         ruleId: 'z.rule',
@@ -138,6 +151,20 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
       const written = JSON.parse(readFileSync(result.path, 'utf8')) as AiEvidenceV2_1;
 
       assert.equal(written.snapshot.findings.length, 2);
+      assert.equal(written.snapshot.files_affected, 2);
+      assert.deepEqual(written.snapshot.evaluation_metrics, {
+        facts_total: 1878,
+        rules_total: 25,
+        baseline_rules: 0,
+        heuristic_rules: 0,
+        skills_rules: 25,
+        project_rules: 0,
+        matched_rules: 0,
+        unmatched_rules: 25,
+        evaluated_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+        matched_rule_ids: [],
+        unmatched_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+      });
       assert.equal(written.snapshot.findings[0]?.ruleId, 'a.rule');
       assert.equal(written.snapshot.findings[0]?.file, 'apps/backend/A.ts');
       assert.equal('lines' in (written.snapshot.findings[0] ?? {}), false);
@@ -228,6 +255,7 @@ test('writeEvidence conserva paths externos y elimina lines no finitas', async (
       assert.equal(result.ok, true);
 
       const written = JSON.parse(readFileSync(result.path, 'utf8')) as AiEvidenceV2_1;
+      assert.equal(written.snapshot.files_affected, 1);
       assert.equal(written.snapshot.findings[0]?.file, externalFilePath);
       assert.equal('lines' in (written.snapshot.findings[0] ?? {}), false);
       assert.equal(written.ledger[0]?.file, externalFilePath);

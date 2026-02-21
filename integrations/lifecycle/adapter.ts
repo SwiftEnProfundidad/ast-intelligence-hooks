@@ -60,7 +60,7 @@ export const runLifecycleAdapterInstall = (params: {
   dryRun?: boolean;
 }): LifecycleAdapterInstallResult => {
   const git = params.git ?? new LifecycleGitService();
-  const repoRoot = git.resolveRepoRoot(params.cwd);
+  const repoRoot = git.resolveRepoRoot(params.cwd ?? process.cwd());
   const dryRun = params.dryRun === true;
   const templates = resolveTemplatesForAgent(params.agent);
   const changedFiles: string[] = [];

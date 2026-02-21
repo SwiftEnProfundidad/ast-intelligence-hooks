@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 import { resolve } from 'node:path';
 import type {
   ConsumerStartupTriageCommand,
@@ -37,7 +37,7 @@ export const executeConsumerStartupTriageCommands = (
   for (const command of commands) {
     const scriptPath = resolve(process.cwd(), command.script);
     try {
-      execFileSync('npx', ['--yes', 'tsx@4.21.0', scriptPath, ...command.args], {
+      runBinarySync('npx', ['--yes', 'tsx@4.21.0', scriptPath, ...command.args], {
         stdio: 'inherit',
       });
       executions.push({

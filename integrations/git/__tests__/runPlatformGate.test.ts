@@ -13,6 +13,9 @@ const buildGitStub = (repoRoot: string): IGitService => {
   return {
     runGit: () => '',
     getStagedFacts: () => [],
+    getRepoFacts: () => [],
+    getRepoAndStagedFacts: () => [],
+    getStagedAndUnstagedFacts: () => [],
     resolveRepoRoot: () => repoRoot,
   };
 };
@@ -66,6 +69,20 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
     },
     projectRules: [] as RuleSet,
     heuristicRules: [] as RuleSet,
+    coverage: {
+      factsTotal: 1,
+      filesScanned: 1,
+      rulesTotal: 1,
+      baselineRules: 0,
+      heuristicRules: 0,
+      skillsRules: 1,
+      projectRules: 0,
+      matchedRules: 1,
+      unmatchedRules: 0,
+      evaluatedRuleIds: ['rules.backend.no-console-log'],
+      matchedRuleIds: ['rules.backend.no-console-log'],
+      unmatchedRuleIds: [],
+    },
     findings,
   };
 
@@ -94,6 +111,20 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
       policyTrace?: typeof policyTrace;
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      filesScanned: number;
+      evaluationMetrics?: {
+        facts_total: number;
+        rules_total: number;
+        baseline_rules: number;
+        heuristic_rules: number;
+        skills_rules: number;
+        project_rules: number;
+        matched_rules: number;
+        unmatched_rules: number;
+        evaluated_rule_ids: string[];
+        matched_rule_ids: string[];
+        unmatched_rule_ids: string[];
+      };
       repoRoot: string;
       detectedPlatforms: typeof evaluationResult.detectedPlatforms;
       skillsRuleSet: SkillsRuleSetLoadResult;
@@ -164,6 +195,20 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
     policyTrace,
     findings,
     gateOutcome: 'BLOCK',
+    filesScanned: 1,
+    evaluationMetrics: {
+      facts_total: 1,
+      rules_total: 1,
+      baseline_rules: 0,
+      heuristic_rules: 0,
+      skills_rules: 1,
+      project_rules: 0,
+      matched_rules: 1,
+      unmatched_rules: 0,
+      evaluated_rule_ids: ['rules.backend.no-console-log'],
+      matched_rule_ids: ['rules.backend.no-console-log'],
+      unmatched_rule_ids: [],
+    },
     repoRoot: '/repo/root',
     detectedPlatforms: evaluationResult.detectedPlatforms,
     skillsRuleSet: evaluationResult.skillsRuleSet,
@@ -256,6 +301,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
     | {
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      filesScanned: number;
       sddDecision?: {
         allowed: boolean;
         code: string;
@@ -304,6 +350,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
   assert.equal(result, 1);
   assert.equal(resolveFactsCalled, false);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.filesScanned, 0);
   assert.equal(emittedArgs?.findings.length, 1);
   assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
   assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
@@ -329,6 +376,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_PUSH', async () => {
     | {
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      filesScanned: number;
       sddDecision?: {
         allowed: boolean;
         code: string;
@@ -377,6 +425,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_PUSH', async () => {
   assert.equal(result, 1);
   assert.equal(resolveFactsCalled, false);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.filesScanned, 0);
   assert.equal(emittedArgs?.findings.length, 1);
   assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
   assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
@@ -402,6 +451,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
     | {
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      filesScanned: number;
       sddDecision?: {
         allowed: boolean;
         code: string;
@@ -450,6 +500,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
   assert.equal(result, 1);
   assert.equal(resolveFactsCalled, false);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.filesScanned, 0);
   assert.equal(emittedArgs?.findings.length, 1);
   assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
   assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
@@ -457,5 +508,89 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
     allowed: false,
     code: 'SDD_VALIDATION_FAILED',
     message: 'ci validate failed',
+  });
+});
+
+test('runPlatformGate sin short-circuit SDD sigue evaluando findings de reglas y conserva bloqueo', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let resolveFactsCalled = false;
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      filesScanned: number;
+      sddDecision?: {
+        allowed: boolean;
+        code: string;
+        message: string;
+      };
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    sddShortCircuit: false,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: false,
+        code: 'SDD_SESSION_MISSING',
+        message: 'session missing',
+      }),
+      resolveFactsForGateScope: async () => {
+        resolveFactsCalled = true;
+        return [];
+      },
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [
+          {
+            ruleId: 'backend.avoid-explicit-any',
+            severity: 'ERROR',
+            code: 'NO_ANY',
+            message: 'Avoid any',
+            filePath: 'integrations/x.ts',
+          },
+        ],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = paramsArg;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(resolveFactsCalled, true);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.filesScanned, 0);
+  assert.equal(emittedArgs?.findings.length, 2);
+  assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
+  assert.equal(emittedArgs?.findings[1]?.ruleId, 'backend.avoid-explicit-any');
+  assert.deepEqual(emittedArgs?.sddDecision, {
+    allowed: false,
+    code: 'SDD_SESSION_MISSING',
+    message: 'session missing',
   });
 });

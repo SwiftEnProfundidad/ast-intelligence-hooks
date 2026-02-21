@@ -133,6 +133,141 @@ test('respects explicit gate outcome for stage-aware blocking decisions', () => 
   assert.equal(result.severity_metrics.gate_status, 'BLOCKED');
 });
 
+test('persiste snapshot.files_scanned cuando llega desde el runner de gate', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    gateOutcome: 'WARN',
+    filesScanned: 911,
+    findings: [
+      {
+        ruleId: 'heuristics.ts.console-log.ast',
+        severity: 'WARN',
+        code: 'TS_CONSOLE_LOG',
+        message: 'Avoid console.log',
+        filePath: 'scripts/example.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.files_scanned, 911);
+  assert.equal(result.snapshot.files_affected, 1);
+});
+
+test('separa semantica de files_scanned y files_affected en snapshot', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    filesScanned: 939,
+    findings: [
+      {
+        ruleId: 'skills.backend.no-empty-catch',
+        severity: 'ERROR',
+        code: 'BACKEND_NO_EMPTY_CATCH',
+        message: 'No empty catch',
+        filePath: 'scripts/a.ts',
+      },
+      {
+        ruleId: 'skills.backend.no-console-log',
+        severity: 'ERROR',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'No console.log',
+        filePath: 'scripts/a.ts',
+      },
+      {
+        ruleId: 'skills.backend.avoid-explicit-any',
+        severity: 'WARN',
+        code: 'BACKEND_EXPLICIT_ANY',
+        message: 'No explicit any',
+        filePath: 'scripts/b.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.files_scanned, 939);
+  assert.equal(result.snapshot.files_affected, 2);
+  assert.equal(result.snapshot.findings.length, 3);
+});
+
+test('persiste snapshot.evaluation_metrics con inventario evaluado/matcheado', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    gateOutcome: 'PASS',
+    filesScanned: 939,
+    evaluationMetrics: {
+      facts_total: 1878,
+      rules_total: 25,
+      baseline_rules: 0,
+      heuristic_rules: 0,
+      skills_rules: 25,
+      project_rules: 0,
+      matched_rules: 0,
+      unmatched_rules: 25,
+      evaluated_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.no-console-log'],
+      matched_rule_ids: [],
+      unmatched_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.no-console-log'],
+    },
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(result.snapshot.evaluation_metrics, {
+    facts_total: 1878,
+    rules_total: 25,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 25,
+    project_rules: 0,
+    matched_rules: 0,
+    unmatched_rules: 25,
+    evaluated_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+    matched_rule_ids: [],
+    unmatched_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+  });
+});
+
+test('incluye snapshot.platforms con las cinco plataformas y severidades legacy', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'ERROR',
+        code: 'BACKEND_ANY',
+        message: 'Avoid explicit any',
+        filePath: 'apps/backend/src/service.ts',
+      },
+      {
+        ruleId: 'heuristics.ts.inner-html.ast',
+        severity: 'WARN',
+        code: 'TS_INNER_HTML',
+        message: 'Avoid innerHTML',
+        filePath: 'scripts/ui.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.platforms?.length, 5);
+  const backend = result.snapshot.platforms?.find((platform) => platform.platform === 'Backend');
+  const frontend = result.snapshot.platforms?.find((platform) => platform.platform === 'Frontend');
+  const ios = result.snapshot.platforms?.find((platform) => platform.platform === 'iOS');
+  assert.ok(backend);
+  assert.ok(frontend);
+  assert.ok(ios);
+  assert.equal(backend?.files_affected, 1);
+  assert.equal(backend?.by_severity.HIGH, 1);
+  assert.equal(frontend?.files_affected, 1);
+  assert.equal(frontend?.by_severity.MEDIUM, 1);
+  assert.equal(ios?.files_affected, 0);
+});
+
 test('deduplicates equivalent findings deterministically regardless of input order', () => {
   const baseFinding = {
     ruleId: 'backend.no-console-log',

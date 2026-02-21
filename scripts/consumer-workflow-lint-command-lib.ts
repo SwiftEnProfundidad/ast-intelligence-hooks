@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 import type {
   ConsumerWorkflowLintCliOptions,
   ConsumerWorkflowLintResult,
@@ -34,7 +34,7 @@ export const executeConsumerWorkflowLintCommand = (params: {
   workflowPath: string;
 }): ConsumerWorkflowLintResult => {
   try {
-    const output = execFileSync(
+    const output = runBinarySync(
       params.options.actionlintBin,
       ['-color', '-shellcheck=', '-pyflakes=', ...params.workflowFiles],
       {

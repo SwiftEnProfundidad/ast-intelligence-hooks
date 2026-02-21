@@ -1,3 +1,5 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { GateStage } from '../../core/gate/GateStage';
 import type { Condition } from '../../core/rules/Condition';
 import type { RuleDefinition } from '../../core/rules/RuleDefinition';
@@ -63,6 +65,26 @@ const PLATFORM_HEURISTIC_FILE_PREFIXES: Record<
   generic: [],
 };
 
+const resolvePlatformHeuristicPrefixes = (params: {
+  platform: NonNullable<RuleDefinition['platform']>;
+  repoRoot: string;
+}): ReadonlyArray<string> => {
+  const prefixes = PLATFORM_HEURISTIC_FILE_PREFIXES[params.platform] ?? [];
+  if (prefixes.length === 0) {
+    return [];
+  }
+
+  const hasPlatformTree = prefixes.some((prefix) => {
+    return existsSync(resolve(params.repoRoot, prefix));
+  });
+
+  if (!hasPlatformTree) {
+    return [];
+  }
+
+  return prefixes;
+};
+
 const toCode = (ruleId: string): string => {
   return `SKILLS_${ruleId.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase()}`;
 };
@@ -80,8 +102,12 @@ const stageApplies = (
 const buildHeuristicConditionForPlatform = (params: {
   ruleId: string;
   platform: NonNullable<RuleDefinition['platform']>;
+  repoRoot: string;
 }): Condition => {
-  const prefixes = PLATFORM_HEURISTIC_FILE_PREFIXES[params.platform] ?? [];
+  const prefixes = resolvePlatformHeuristicPrefixes({
+    platform: params.platform,
+    repoRoot: params.repoRoot,
+  });
   if (prefixes.length === 0) {
     return {
       kind: 'Heuristic',
@@ -147,6 +173,7 @@ const toRuleDefinition = (params: {
   rule: SkillsCompiledRule;
   stage: Exclude<GateStage, 'STAGED'>;
   bundlePolicy?: SkillsBundlePolicy;
+  repoRoot: string;
 }): RuleDefinition | undefined => {
   const mappedHeuristicRuleId = SKILL_TO_HEURISTIC_RULE_ID[params.rule.id];
   if (!mappedHeuristicRuleId) {
@@ -171,6 +198,7 @@ const toRuleDefinition = (params: {
     when: buildHeuristicConditionForPlatform({
       ruleId: mappedHeuristicRuleId,
       platform: params.rule.platform,
+      repoRoot: params.repoRoot,
     }),
     then: {
       kind: 'Finding',
@@ -224,6 +252,7 @@ export const loadSkillsRuleSetForStage = (
         rule: compiledRule,
         stage,
         bundlePolicy,
+        repoRoot,
       });
 
       if (!convertedRule) {

@@ -14,7 +14,7 @@ const isTrackedArtifactAlias = (params: {
     if (candidate.toLowerCase() !== canonical) {
       return false;
     }
-    return params.git.isPathTracked(params.repoRoot, candidate);
+    return params.git.pathTracked(params.repoRoot, candidate);
   });
 };
 
@@ -32,7 +32,7 @@ export const purgeUntrackedPumukiArtifacts = (params: {
       if (!existsSync(absolute)) {
         break;
       }
-      if (params.git.isPathTracked(params.repoRoot, current)) {
+      if (params.git.pathTracked(params.repoRoot, current)) {
         break;
       }
       if (readdirSync(absolute).length > 0) {
@@ -48,7 +48,7 @@ export const purgeUntrackedPumukiArtifacts = (params: {
     if (!existsSync(absolutePath)) {
       return false;
     }
-    if (params.git.isPathTracked(params.repoRoot, relativePath)) {
+    if (params.git.pathTracked(params.repoRoot, relativePath)) {
       return false;
     }
     const stat = lstatSync(absolutePath);

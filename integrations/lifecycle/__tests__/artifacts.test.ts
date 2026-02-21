@@ -16,18 +16,18 @@ const createGitStub = (
     resolveRepoRoot(cwd: string) {
       return cwd;
     },
-    getStatusShort() {
+    statusShort() {
       return '';
     },
-    listTrackedNodeModulesPaths() {
+    trackedNodeModulesPaths() {
       return [];
     },
-    isPathTracked(_cwd: string, path: string) {
+    pathTracked(_cwd: string, path: string) {
       return trackedPaths.includes(path);
     },
-    setLocalConfig() {},
-    unsetLocalConfig() {},
-    getLocalConfig() {
+    applyLocalConfig() {},
+    clearLocalConfig() {},
+    localConfig() {
       return undefined;
     },
   }) as ILifecycleGitService;

@@ -101,6 +101,62 @@ Adapter readiness diagnostics are available from the interactive menu as:
 - `Run phase5 execution closure (one-shot orchestration)`
 - `Clean local validation artifacts`
 
+### 1.1) Non-interactive consumer matrix (1/2/3/4/9)
+
+For deterministic validation without interactive prompts, run the matrix helper:
+
+```bash
+node --import tsx -e "const { runConsumerMenuMatrix } = await import('./scripts/framework-menu-matrix-runner-lib.ts'); const report = await runConsumerMenuMatrix({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
+```
+
+Expected output shape:
+
+```json
+{
+  "byOption": {
+    "1": { "stage": "PRE_COMMIT", "outcome": "BLOCK|PASS", "filesScanned": 0, "totalViolations": 0, "diagnosis": "scope-empty|repo-clean|violations-detected|unknown" },
+    "2": { "stage": "PRE_PUSH", "outcome": "BLOCK|PASS", "filesScanned": 0, "totalViolations": 0, "diagnosis": "scope-empty|repo-clean|violations-detected|unknown" },
+    "3": { "stage": "PRE_COMMIT", "outcome": "BLOCK|PASS", "filesScanned": 0, "totalViolations": 0, "diagnosis": "scope-empty|repo-clean|violations-detected|unknown" },
+    "4": { "stage": "PRE_PUSH", "outcome": "BLOCK|PASS", "filesScanned": 0, "totalViolations": 0, "diagnosis": "scope-empty|repo-clean|violations-detected|unknown" },
+    "9": { "stage": "PRE_PUSH|PRE_COMMIT", "outcome": "BLOCK|PASS", "filesScanned": 0, "totalViolations": 0, "diagnosis": "scope-empty|repo-clean|violations-detected|unknown" }
+  }
+}
+```
+
+Diagnosis semantics:
+
+- `scope-empty`: selected scope has no files to evaluate (common in option `3` staged-only or option `4` working-tree).
+- `repo-clean`: files were scanned and no violations were detected.
+- `violations-detected`: one or more findings were produced.
+- `unknown`: evidence is missing/invalid or report normalization could not resolve status.
+
+Optional canary execution (controlled temporary violation + cleanup):
+
+```bash
+node --import tsx -e "const { runConsumerMenuCanary } = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
+```
+
+### 1.2) Consumer pre-flight (legacy parity)
+
+Consumer options `1/2/3/4` run a pre-flight check before gate execution.
+The pre-flight evaluates:
+
+- `repo_state` (branch, upstream, dirty/staged/unstaged, ahead/behind)
+- AI gate consistency (`pumuki -> mcp -> ai_gate -> ai_evidence`)
+- stale/missing/invalid evidence signals
+- git-flow protected branch violations
+
+Stage mapping:
+
+- Option `1` (`repo`) -> `PRE_COMMIT`
+- Option `2` (`repo+staged`) -> `PRE_PUSH`
+- Option `3` (`staged`) -> `PRE_COMMIT`
+- Option `4` (`working tree`) -> `PRE_PUSH`
+
+If a scope is empty, the menu prints an explicit operational hint (`Scope vacío`), so `PASS` with zero findings is distinguishable from a clean repository scan.
+
+System notifications (macOS) can be enabled from advanced menu option `31` (persisted in `.pumuki/system-notifications.json`).
+
 ### 2) Direct stage CLI execution
 
 ```bash

@@ -12,6 +12,9 @@ export type FrameworkMenuActionContext = {
   prompts: FrameworkMenuPrompts;
   runStaged: () => Promise<void>;
   runRange: (params: { fromRef: string; toRef: string; stage: 'PRE_PUSH' | 'CI' }) => Promise<void>;
+  runRepoAudit: () => Promise<void>;
+  runRepoAndStagedAudit: () => Promise<void>;
+  runStagedAndUnstagedAudit: () => Promise<void>;
   resolveDefaultRangeFrom: () => string;
   printActiveSkillsBundles: () => void;
 };

@@ -37,6 +37,9 @@ test('evaluateRules genera finding cuando la condicion coincide y usa code expli
     severity: 'WARN',
     code: 'BACKEND_FILE_MODIFIED',
     message: 'Backend file modified.',
+    filePath: 'apps/backend/src/main.ts',
+    matchedBy: 'FileChange',
+    source: 'git',
   });
 });
 
@@ -103,4 +106,96 @@ test('evaluateRules respeta scope y no genera hallazgo cuando no coincide', () =
   const findings = evaluateRules(rules, facts);
 
   assert.deepEqual(findings, []);
+});
+
+test('evaluateRules genera un finding por cada archivo que coincide en FileContent', () => {
+  const rules: RuleSet = [
+    {
+      id: 'rule.multi.filecontent',
+      description: 'Detecta any en backend',
+      severity: 'WARN',
+      when: {
+        kind: 'FileContent',
+        regex: [':\\s*any\\b'],
+      },
+      then: {
+        kind: 'Finding',
+        message: 'Avoid any',
+      },
+      scope: {
+        include: ['apps/backend/'],
+      },
+    },
+  ];
+  const facts = [
+    {
+      kind: 'FileContent',
+      path: 'apps/backend/src/a.ts',
+      content: 'const a: any = 1;',
+      source: 'repo',
+    },
+    {
+      kind: 'FileContent',
+      path: 'apps/backend/src/b.ts',
+      content: 'const b: any = 2;',
+      source: 'repo',
+    },
+  ] as const;
+
+  const findings = evaluateRules(rules, facts);
+
+  assert.equal(findings.length, 2);
+  assert.deepEqual(
+    findings.map((finding) => finding.filePath).sort(),
+    ['apps/backend/src/a.ts', 'apps/backend/src/b.ts']
+  );
+});
+
+test('evaluateRules genera un finding por cada heuristica coincidente', () => {
+  const rules: RuleSet = [
+    {
+      id: 'rule.multi.heuristic',
+      description: 'Mapea heuristicas de console.log',
+      severity: 'ERROR',
+      when: {
+        kind: 'Heuristic',
+        where: {
+          ruleId: 'heuristics.ts.console-log.ast',
+        },
+      },
+      then: {
+        kind: 'Finding',
+        message: 'console.log detected',
+      },
+    },
+  ];
+  const facts = [
+    {
+      kind: 'Heuristic',
+      ruleId: 'heuristics.ts.console-log.ast',
+      severity: 'WARN',
+      code: 'HEURISTICS_CONSOLE_LOG_AST',
+      message: 'console.log',
+      filePath: 'core/a.ts',
+      source: 'heuristics:ast',
+    },
+    {
+      kind: 'Heuristic',
+      ruleId: 'heuristics.ts.console-log.ast',
+      severity: 'WARN',
+      code: 'HEURISTICS_CONSOLE_LOG_AST',
+      message: 'console.log',
+      filePath: 'core/b.ts',
+      source: 'heuristics:ast',
+    },
+  ] as const;
+
+  const findings = evaluateRules(rules, facts);
+
+  assert.equal(findings.length, 2);
+  assert.deepEqual(
+    findings.map((finding) => finding.filePath).sort(),
+    ['core/a.ts', 'core/b.ts']
+  );
+  assert.equal(findings.every((finding) => finding.matchedBy === 'Heuristic'), true);
 });

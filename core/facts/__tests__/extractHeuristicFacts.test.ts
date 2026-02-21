@@ -495,6 +495,34 @@ test('returns empty when no heuristic platform is detected', () => {
   assert.equal(findings.length, 0);
 });
 
+test('detects TypeScript heuristics outside apps scope when PUMUKI_HEURISTICS_TS_SCOPE=all', () => {
+  const previousScope = process.env.PUMUKI_HEURISTICS_TS_SCOPE;
+  process.env.PUMUKI_HEURISTICS_TS_SCOPE = 'all';
+
+  try {
+    const extracted = extractHeuristicFacts({
+      facts: [fileContentFact('core/domain/service.ts', 'const value: any = 1; console.log(value);')],
+      detectedPlatforms: {},
+    });
+
+    const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+    assert.equal(
+      findings.some((finding) => finding.ruleId === 'heuristics.ts.explicit-any.ast'),
+      true
+    );
+    assert.equal(
+      findings.some((finding) => finding.ruleId === 'heuristics.ts.console-log.ast'),
+      true
+    );
+  } finally {
+    if (typeof previousScope === 'string') {
+      process.env.PUMUKI_HEURISTICS_TS_SCOPE = previousScope;
+    } else {
+      delete process.env.PUMUKI_HEURISTICS_TS_SCOPE;
+    }
+  }
+});
+
 test('extracts typed heuristic facts with expected metadata', () => {
   const extracted = extractHeuristicFacts({
     facts: [

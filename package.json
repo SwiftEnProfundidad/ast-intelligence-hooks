@@ -151,6 +151,7 @@
   },
   "dependencies": {
     "@babel/parser": "^7.28.5",
+    "npm-packlist": "10.0.4",
     "ts-morph": ">=27.0.2",
     "tsx": "^4.21.0",
     "zod": "^4.3.6"

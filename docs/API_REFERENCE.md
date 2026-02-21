@@ -208,6 +208,12 @@ npm run typecheck
 npm run test:deterministic
 ```
 
+Consumer menu pre-flight:
+
+- options `1/2/3/4` execute pre-flight before gate evaluation
+- pre-flight checks `repo_state`, stale/missing evidence, git-flow protected branches, and AI gate chain consistency
+- stage mapping is deterministic: `1/3 -> PRE_COMMIT`, `2/4 -> PRE_PUSH`
+
 ## Optional diagnostics adapters
 
 Files:

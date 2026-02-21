@@ -24,7 +24,24 @@ type PlatformGateEvaluationResult = {
   detectedPlatforms: DetectedPlatforms;
   skillsRuleSet: SkillsRuleSetLoadResult;
   projectRules: RuleSet;
+  baselineRules: RuleSet;
   heuristicRules: RuleSet;
+  mergedRules: RuleSet;
+  evaluationFacts: ReadonlyArray<Fact>;
+  coverage: {
+    factsTotal: number;
+    filesScanned: number;
+    rulesTotal: number;
+    baselineRules: number;
+    heuristicRules: number;
+    skillsRules: number;
+    projectRules: number;
+    matchedRules: number;
+    unmatchedRules: number;
+    evaluatedRuleIds: ReadonlyArray<string>;
+    matchedRuleIds: ReadonlyArray<string>;
+    unmatchedRuleIds: ReadonlyArray<string>;
+  };
   findings: ReadonlyArray<Finding>;
 };
 
@@ -60,6 +77,28 @@ const normalizeStageForSkills = (
   return stage === 'STAGED' ? 'PRE_COMMIT' : stage;
 };
 
+const extractFactPath = (fact: Fact): string | null => {
+  if (fact.kind === 'FileContent' || fact.kind === 'FileChange') {
+    return fact.path;
+  }
+  if (fact.kind === 'Heuristic') {
+    return fact.filePath ?? null;
+  }
+  return null;
+};
+
+const countFilesScanned = (facts: ReadonlyArray<Fact>): number => {
+  const files = new Set<string>();
+  for (const fact of facts) {
+    const path = extractFactPath(fact);
+    if (!path || path.trim().length === 0) {
+      continue;
+    }
+    files.add(path.replace(/\\/g, '/'));
+  }
+  return files.size;
+};
+
 export const evaluatePlatformGateFindings = (
   params: {
     facts: ReadonlyArray<Fact>;
@@ -86,6 +125,7 @@ export const evaluatePlatformGateFindings = (
     ? activeDependencies.extractHeuristicFacts({
       facts: params.facts,
       detectedPlatforms,
+      typeScriptScope: heuristicsConfig.typeScriptScope,
     })
     : [];
   const evaluationFacts: ReadonlyArray<Fact> =
@@ -115,12 +155,33 @@ export const evaluatePlatformGateFindings = (
     rules: mergedRules,
     facts: evaluationFacts,
   });
+  const evaluatedRuleIds = mergedRules.map((rule) => rule.id).sort();
+  const matchedRuleIds = Array.from(new Set(findings.map((finding) => finding.ruleId))).sort();
+  const matchedRuleIdsSet = new Set(matchedRuleIds);
+  const unmatchedRuleIds = evaluatedRuleIds.filter((ruleId) => !matchedRuleIdsSet.has(ruleId));
 
   return {
     detectedPlatforms,
     skillsRuleSet,
     projectRules,
+    baselineRules,
     heuristicRules,
+    mergedRules,
+    evaluationFacts,
+    coverage: {
+      factsTotal: evaluationFacts.length,
+      filesScanned: countFilesScanned(evaluationFacts),
+      rulesTotal: mergedRules.length,
+      baselineRules: baselineRules.length,
+      heuristicRules: heuristicRules.length,
+      skillsRules: skillsRuleSet.rules.length,
+      projectRules: projectRules.length,
+      matchedRules: matchedRuleIds.length,
+      unmatchedRules: Math.max(0, mergedRules.length - matchedRuleIds.length),
+      evaluatedRuleIds,
+      matchedRuleIds,
+      unmatchedRuleIds,
+    },
     findings,
   };
 };

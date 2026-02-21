@@ -19,16 +19,17 @@ const main = (): number => {
     });
 
     const mode = options.dryRun ? 'dry-run' : 'write';
-    console.log(
+    process.stdout.write(
       `[build-mock-consumer-ab-report] ${mode} verdict=${report.verdict} out=${options.outFile}`
     );
+    process.stdout.write('\n');
 
     return report.verdict === 'READY' ? 0 : 1;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[build-mock-consumer-ab-report] error: ${message}`);
+    process.stderr.write(`[build-mock-consumer-ab-report] error: ${message}\n`);
     return 1;
   }
 };
 
-process.exit(main());
+process.exitCode = main();

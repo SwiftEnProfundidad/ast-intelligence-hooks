@@ -14,6 +14,7 @@ import {
   type SddStage,
 } from '../sdd';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
+import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
 
 type LifecycleCommand =
   | 'install'
@@ -59,6 +60,14 @@ Pumuki lifecycle commands:
   pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
   pumuki sdd session --close [--json]
 `.trim();
+
+const writeInfo = (message: string): void => {
+  process.stdout.write(`${message}\n`);
+};
+
+const writeError = (message: string): void => {
+  process.stderr.write(`${message}\n`);
+};
 
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'install' ||
@@ -264,31 +273,31 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
 };
 
 const printDoctorReport = (report: LifecycleDoctorReport): void => {
-  console.log(`[pumuki] repo: ${report.repoRoot}`);
-  console.log(`[pumuki] package version: ${report.packageVersion}`);
-  console.log(
+  writeInfo(`[pumuki] repo: ${report.repoRoot}`);
+  writeInfo(`[pumuki] package version: ${report.packageVersion}`);
+  writeInfo(
     `[pumuki] tracked node_modules paths: ${report.trackedNodeModulesPaths.length}`
   );
-  console.log(
+  writeInfo(
     `[pumuki] hook pre-commit: ${report.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}`
   );
-  console.log(
+  writeInfo(
     `[pumuki] hook pre-push: ${report.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
   );
 
   if (report.issues.length === 0) {
-    console.log('[pumuki] doctor verdict: PASS');
+    writeInfo('[pumuki] doctor verdict: PASS');
     return;
   }
 
   for (const issue of report.issues) {
-    console.log(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
+    writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
   }
   const hasBlocking = report.issues.some((issue) => issue.severity === 'error');
-  console.log(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
+  writeInfo(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
 };
 
-const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->ai_gate->ai_evidence';
+const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
 
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
@@ -296,6 +305,7 @@ type PreWriteValidationEnvelope = {
   telemetry: {
     chain: typeof PRE_WRITE_TELEMETRY_CHAIN;
     stage: SddStage;
+    mcp_tool: 'ai_gate_check';
   };
 };
 
@@ -308,6 +318,7 @@ const buildPreWriteValidationEnvelope = (
   telemetry: {
     chain: PRE_WRITE_TELEMETRY_CHAIN,
     stage: result.stage,
+    mcp_tool: 'ai_gate_check',
   },
 });
 
@@ -320,15 +331,15 @@ export const runLifecycleCli = async (
     switch (parsed.command) {
       case 'install': {
         const result = runLifecycleInstall();
-        console.log(
+        writeInfo(
           `[pumuki] installed ${result.version} at ${result.repoRoot} (hooks changed: ${result.changedHooks.join(', ') || 'none'})`
         );
         if (result.openSpecBootstrap) {
-          console.log(
+          writeInfo(
             `[pumuki] openspec bootstrap: installed=${result.openSpecBootstrap.packageInstalled ? 'yes' : 'no'} project=${result.openSpecBootstrap.projectInitialized ? 'yes' : 'no'} actions=${result.openSpecBootstrap.actions.join(', ') || 'none'}`
           );
           if (result.openSpecBootstrap.skippedReason === 'NO_PACKAGE_JSON') {
-            console.log('[pumuki] openspec bootstrap skipped npm install (package.json not found)');
+            writeInfo('[pumuki] openspec bootstrap skipped npm install (package.json not found)');
           }
         }
         return 0;
@@ -337,11 +348,11 @@ export const runLifecycleCli = async (
         const result = runLifecycleUninstall({
           purgeArtifacts: parsed.purgeArtifacts,
         });
-        console.log(
+        writeInfo(
           `[pumuki] uninstalled from ${result.repoRoot} (hooks changed: ${result.changedHooks.join(', ') || 'none'})`
         );
         if (parsed.purgeArtifacts) {
-          console.log(
+          writeInfo(
             `[pumuki] removed artifacts: ${result.removedArtifacts.join(', ') || 'none'}`
           );
         }
@@ -349,10 +360,10 @@ export const runLifecycleCli = async (
       }
       case 'remove': {
         const result = runLifecycleRemove();
-        console.log(
+        writeInfo(
           `[pumuki] removed from ${result.repoRoot} (package removed: ${result.packageRemoved ? 'yes' : 'no'}, hooks changed: ${result.changedHooks.join(', ') || 'none'})`
         );
-        console.log(
+        writeInfo(
           `[pumuki] removed artifacts: ${result.removedArtifacts.join(', ') || 'none'}`
         );
         return 0;
@@ -361,10 +372,10 @@ export const runLifecycleCli = async (
         const result = runLifecycleUpdate({
           targetSpec: parsed.updateSpec,
         });
-        console.log(
+        writeInfo(
           `[pumuki] updated to ${result.targetSpec} at ${result.repoRoot} (hooks changed: ${result.reinstallHooksChanged.join(', ') || 'none'})`
         );
-        console.log(
+        writeInfo(
           `[pumuki] openspec compatibility: migrated-legacy=${result.openSpecCompatibility.migratedLegacyPackage ? 'yes' : 'no'} actions=${result.openSpecCompatibility.actions.join(', ') || 'none'}`
         );
         return 0;
@@ -377,16 +388,16 @@ export const runLifecycleCli = async (
       case 'status': {
         const status = readLifecycleStatus();
         if (parsed.json) {
-          console.log(JSON.stringify(status, null, 2));
+          writeInfo(JSON.stringify(status, null, 2));
         } else {
-          console.log(`[pumuki] repo: ${status.repoRoot}`);
-          console.log(`[pumuki] package version: ${status.packageVersion}`);
-          console.log(`[pumuki] lifecycle installed: ${status.lifecycleState.installed ?? 'false'}`);
-          console.log(`[pumuki] lifecycle version: ${status.lifecycleState.version ?? 'unknown'}`);
-          console.log(
+          writeInfo(`[pumuki] repo: ${status.repoRoot}`);
+          writeInfo(`[pumuki] package version: ${status.packageVersion}`);
+          writeInfo(`[pumuki] lifecycle installed: ${status.lifecycleState.installed ?? 'false'}`);
+          writeInfo(`[pumuki] lifecycle version: ${status.lifecycleState.version ?? 'unknown'}`);
+          writeInfo(
             `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
           );
-          console.log(
+          writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
           );
         }
@@ -396,23 +407,23 @@ export const runLifecycleCli = async (
         if (parsed.sddCommand === 'status') {
           const sddStatus = readSddStatus();
           if (parsed.json) {
-            console.log(JSON.stringify(sddStatus, null, 2));
+            writeInfo(JSON.stringify(sddStatus, null, 2));
           } else {
-            console.log(`[pumuki][sdd] repo: ${sddStatus.repoRoot}`);
-            console.log(
+            writeInfo(`[pumuki][sdd] repo: ${sddStatus.repoRoot}`);
+            writeInfo(
               `[pumuki][sdd] openspec: installed=${sddStatus.openspec.installed ? 'yes' : 'no'} version=${sddStatus.openspec.version ?? 'unknown'}`
             );
-            console.log(
+            writeInfo(
               `[pumuki][sdd] openspec compatibility: compatible=${sddStatus.openspec.compatible ? 'yes' : 'no'} minimum=${sddStatus.openspec.minimumVersion} recommended=${sddStatus.openspec.recommendedVersion} parsed=${sddStatus.openspec.parsedVersion ?? 'unknown'}`
             );
-            console.log(
+            writeInfo(
               `[pumuki][sdd] openspec project initialized: ${sddStatus.openspec.projectInitialized ? 'yes' : 'no'}`
             );
-            console.log(
+            writeInfo(
               `[pumuki][sdd] session: active=${sddStatus.session.active ? 'yes' : 'no'} valid=${sddStatus.session.valid ? 'yes' : 'no'} change=${sddStatus.session.changeId ?? 'none'}`
             );
             if (typeof sddStatus.session.remainingSeconds === 'number') {
-              console.log(
+              writeInfo(
                 `[pumuki][sdd] session remaining seconds: ${sddStatus.session.remainingSeconds}`
               );
             }
@@ -425,13 +436,13 @@ export const runLifecycleCli = async (
           });
           const shouldEvaluateAiGate = result.stage === 'PRE_WRITE';
           const aiGate = shouldEvaluateAiGate
-            ? evaluateAiGate({
+            ? runEnterpriseAiGateCheck({
               repoRoot: process.cwd(),
               stage: result.stage,
-            })
+            }).result
             : null;
           if (parsed.json) {
-            console.log(
+            writeInfo(
               JSON.stringify(
                 aiGate
                   ? buildPreWriteValidationEnvelope(result, aiGate)
@@ -441,21 +452,21 @@ export const runLifecycleCli = async (
               )
             );
           } else {
-            console.log(
+            writeInfo(
               `[pumuki][sdd] stage=${result.stage} allowed=${result.decision.allowed ? 'yes' : 'no'} code=${result.decision.code}`
             );
-            console.log(`[pumuki][sdd] ${result.decision.message}`);
+            writeInfo(`[pumuki][sdd] ${result.decision.message}`);
             if (result.validation) {
-              console.log(
+              writeInfo(
                 `[pumuki][sdd] validation: ok=${result.validation.ok ? 'yes' : 'no'} failed=${result.validation.totals.failed} errors=${result.validation.issues.errors}`
               );
             }
             if (aiGate) {
-              console.log(
+              writeInfo(
                 `[pumuki][ai-gate] stage=${aiGate.stage} status=${aiGate.status} violations=${aiGate.violations.length}`
               );
               for (const violation of aiGate.violations) {
-                console.log(
+                writeInfo(
                   `[pumuki][ai-gate] ${violation.code}: ${violation.message}`
                 );
               }
@@ -476,9 +487,9 @@ export const runLifecycleCli = async (
               ttlMinutes: parsed.sddTtlMinutes,
             });
             if (parsed.json) {
-              console.log(JSON.stringify(session, null, 2));
+              writeInfo(JSON.stringify(session, null, 2));
             } else {
-              console.log(
+              writeInfo(
                 `[pumuki][sdd] session opened: change=${session.changeId} ttlMinutes=${session.ttlMinutes ?? 'unknown'} valid=${session.valid ? 'yes' : 'no'}`
               );
             }
@@ -489,9 +500,9 @@ export const runLifecycleCli = async (
               ttlMinutes: parsed.sddTtlMinutes,
             });
             if (parsed.json) {
-              console.log(JSON.stringify(session, null, 2));
+              writeInfo(JSON.stringify(session, null, 2));
             } else {
-              console.log(
+              writeInfo(
                 `[pumuki][sdd] session refreshed: change=${session.changeId ?? 'none'} ttlMinutes=${session.ttlMinutes ?? 'unknown'} valid=${session.valid ? 'yes' : 'no'}`
               );
             }
@@ -499,9 +510,9 @@ export const runLifecycleCli = async (
           }
           const session = closeSddSession();
           if (parsed.json) {
-            console.log(JSON.stringify(session, null, 2));
+            writeInfo(JSON.stringify(session, null, 2));
           } else {
-            console.log('[pumuki][sdd] session closed');
+            writeInfo('[pumuki][sdd] session closed');
           }
           return 0;
         }
@@ -514,13 +525,13 @@ export const runLifecycleCli = async (
             dryRun: parsed.adapterDryRun,
           });
           if (parsed.json) {
-            console.log(JSON.stringify(result, null, 2));
+            writeInfo(JSON.stringify(result, null, 2));
           } else {
-            console.log(
+            writeInfo(
               `[pumuki] adapter install: agent=${result.agent} dry-run=${result.dryRun ? 'yes' : 'no'} changed=${result.changedFiles.length}`
             );
             if (result.changedFiles.length > 0) {
-              console.log(
+              writeInfo(
                 `[pumuki] adapter files: ${result.changedFiles.join(', ')}`
               );
             }
@@ -534,13 +545,13 @@ export const runLifecycleCli = async (
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected lifecycle CLI error.';
-    console.error(message);
+    writeError(message);
     return 1;
   }
 };
 
 if (require.main === module) {
   void runLifecycleCli(process.argv.slice(2)).then((code) => {
-    process.exit(code);
+    process.exitCode = code;
   });
 }

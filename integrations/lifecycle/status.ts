@@ -18,7 +18,7 @@ export const readLifecycleStatus = (params?: {
   const git = params?.git ?? new LifecycleGitService();
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
-  const trackedNodeModulesCount = git.listTrackedNodeModulesPaths(repoRoot).length;
+  const trackedNodeModulesCount = git.trackedNodeModulesPaths(repoRoot).length;
 
   return {
     repoRoot,

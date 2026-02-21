@@ -63,12 +63,13 @@ test('runLifecycleCli bloquea PRE_WRITE cuando SDD está en bypass pero falta ai
 test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cuando SDD bloquea', async () => {
   const repo = createGitRepo();
   const printed: string[] = [];
-  const originalConsoleLog = console.log;
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
   const previousCwd = process.cwd();
   process.chdir(repo);
-  console.log = (...args: unknown[]) => {
-    printed.push(args.map((value) => String(value)).join(' '));
-  };
+  process.stdout.write = ((chunk: unknown): boolean => {
+    printed.push(String(chunk).trimEnd());
+    return true;
+  }) as typeof process.stdout.write;
   try {
     const exitCode = await runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json']);
     assert.equal(exitCode, 1);
@@ -79,6 +80,7 @@ test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cu
       };
       telemetry?: {
         chain?: string;
+        mcp_tool?: string;
       };
       sdd?: {
         decision?: {
@@ -95,9 +97,10 @@ test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cu
     assert.equal(decisionCode, 'OPENSPEC_MISSING');
     assert.equal(typeof payload.ai_gate, 'object');
     assert.equal(payload.ai_gate?.evidence?.kind, 'missing');
-    assert.equal(payload.telemetry?.chain, 'pumuki->ai_gate->ai_evidence');
+    assert.equal(payload.telemetry?.chain, 'pumuki->mcp->ai_gate->ai_evidence');
+    assert.equal(payload.telemetry?.mcp_tool, 'ai_gate_check');
   } finally {
-    console.log = originalConsoleLog;
+    process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });
   }
