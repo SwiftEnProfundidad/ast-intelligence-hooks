@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
@@ -110,6 +110,7 @@ const collectHeuristicPrefixes = (
 
 test('loads and transforms active bundles into heuristic-driven rules', async () => {
   await withTempDir('pumuki-skills-ruleset-', async (tempRoot) => {
+    mkdirSync(join(tempRoot, 'apps/ios'), { recursive: true });
     writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(samplePolicy, null, 2));
 
@@ -241,6 +242,10 @@ test('ignores unmapped rules and promotes only from PRE_PUSH/CI', async () => {
 
 test('scopes backend/frontend heuristic rules to platform file prefixes', async () => {
   await withTempDir('pumuki-skills-ruleset-platform-scope-', async (tempRoot) => {
+    mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+    mkdirSync(join(tempRoot, 'apps/frontend'), { recursive: true });
+    mkdirSync(join(tempRoot, 'apps/web'), { recursive: true });
+
     const lock = {
       version: '1.0',
       compilerVersion: '1.0.0',
@@ -295,5 +300,42 @@ test('scopes backend/frontend heuristic rules to platform file prefixes', async 
 
     const frontendPrefixes = collectHeuristicPrefixes(frontendRule.when).sort();
     assert.deepEqual(frontendPrefixes, ['apps/frontend/', 'apps/web/']);
+  });
+});
+
+test('falls back to unscoped heuristic conditions when platform folders are not present', async () => {
+  await withTempDir('pumuki-skills-ruleset-framework-fallback-', async (tempRoot) => {
+    const lock = {
+      version: '1.0',
+      compilerVersion: '1.0.0',
+      generatedAt: '2026-02-07T23:15:00.000Z',
+      bundles: [
+        {
+          name: 'backend-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+          hash: 'a'.repeat(64),
+          rules: [
+            {
+              id: 'skills.backend.no-empty-catch',
+              description: 'Disallow empty catch blocks in backend runtime code.',
+              severity: 'CRITICAL',
+              platform: 'backend',
+              sourceSkill: 'backend-guidelines',
+              sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+              locked: true,
+            },
+          ],
+        },
+      ],
+    } as const;
+
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+    const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
+    const backendRule = preCommit.rules.find((rule) => rule.id === 'skills.backend.no-empty-catch');
+    assert.ok(backendRule);
+    assert.equal(backendRule.when.kind, 'Heuristic');
+    assert.equal(backendRule.when.where?.filePathPrefix, undefined);
   });
 });

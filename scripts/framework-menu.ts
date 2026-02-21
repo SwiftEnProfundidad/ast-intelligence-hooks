@@ -9,6 +9,7 @@ import {
 import {
   runRangeGate,
   runRepoAndStagedGate,
+  runRepoAndStagedPrePushGateSilent,
   runRepoAndStagedGateSilent,
   runRepoGate,
   runRepoGateSilent,
@@ -16,6 +17,7 @@ import {
   runStagedGateSilent,
   runWorkingTreeGate,
   runWorkingTreeGateSilent,
+  runWorkingTreePrePushGateSilent,
 } from './framework-menu-gate-lib';
 import { createFrameworkMenuPrompts } from './framework-menu-prompts';
 import { resolveDefaultRangeFrom } from './framework-menu-runners';
@@ -106,9 +108,9 @@ const menu = async (): Promise<void> => {
     });
     const consumerRuntime = createConsumerMenuRuntime({
       runRepoGate: runRepoGateSilent,
-      runRepoAndStagedGate: runRepoAndStagedGateSilent,
+      runRepoAndStagedGate: runRepoAndStagedPrePushGateSilent,
       runStagedGate: runStagedGateSilent,
-      runWorkingTreeGate: runWorkingTreeGateSilent,
+      runWorkingTreeGate: runWorkingTreePrePushGateSilent,
       write: (text) => {
         output.write(text);
       },

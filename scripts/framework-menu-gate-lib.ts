@@ -107,9 +107,25 @@ export const runRepoAndStagedGateSilent = async (): Promise<void> => {
   await runMenuAuditGate(gateParams);
 };
 
+export const runRepoAndStagedPrePushGateSilent = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_PUSH',
+    scope: { kind: 'repoAndStaged' },
+  });
+  await runMenuAuditGate(gateParams);
+};
+
 export const runWorkingTreeGateSilent = async (): Promise<void> => {
   const gateParams = buildMenuGateParams({
     stage: 'PRE_COMMIT',
+    scope: { kind: 'workingTree' },
+  });
+  await runMenuAuditGate(gateParams);
+};
+
+export const runWorkingTreePrePushGateSilent = async (): Promise<void> => {
+  const gateParams = buildMenuGateParams({
+    stage: 'PRE_PUSH',
     scope: { kind: 'workingTree' },
   });
   await runMenuAuditGate(gateParams);

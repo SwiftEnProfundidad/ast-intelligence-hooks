@@ -250,4 +250,41 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - ✅ `a0d9626` — `docs(progress): close phase 17 multi-platform semantic expansion`
 - ✅ Push ejecutado a remoto: `main -> origin/main` con los commits de cierre de Fase 17 (`83ba57d` incluido).
 - ✅ PR abierta y mergeada para el ajuste pendiente de tracking de Fase 17.
-- 🚧 Próxima tarea: validación manual en menú (`npm run framework:menu`, opción `1`) para confirmar render legacy con `snapshot.platforms` en ejecución real end-to-end.
+- ✅ Validación manual en menú completada (`npm run framework:menu`, opción `1`) con renderer legacy y `snapshot.platforms` end-to-end.
+
+## Fase 18 — Self-Audit Real del Repo Framework (sin `apps/*`)
+- ✅ RED: añadir test en `integrations/config/__tests__/skillsRuleSet.test.ts` para fallback sin prefijos de plataforma cuando no existen carpetas `apps/*`.
+- ✅ GREEN: implementar fallback en `integrations/config/skillsRuleSet.ts` para convertir reglas `skills.*` a condición heurística sin `filePathPrefix` cuando el árbol de plataforma no existe en el repo.
+- ✅ REFACTOR: estabilizar tests existentes creando carpetas `apps/ios|backend|frontend|web` en fixtures que validan scoping estricto por prefijos.
+- ✅ Validación técnica ejecutada:
+  - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsRuleSet.test.ts` (6/6)
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGateEvaluation.test.ts scripts/__tests__/framework-menu-gate-lib.test.ts` (3/3)
+  - `npm run framework:menu` (opción `1`) ahora devuelve findings reales en este repo (`skills.backend.no-empty-catch: 3`).
+- ✅ Ajustar opción `2` del menú consumer para ejecutar `repo+staged` con política `PRE_PUSH` (antes corría como `PRE_COMMIT`).
+  - ✅ RED: test nuevo en `scripts/__tests__/framework-menu-gate-lib.test.ts` exigiendo `snapshot.stage === PRE_PUSH`.
+  - ✅ GREEN: nueva función `runRepoAndStagedPrePushGateSilent` en `scripts/framework-menu-gate-lib.ts` y wiring en `scripts/framework-menu.ts`.
+  - ✅ Validación: opción `2` del menú ahora genera `.ai_evidence.json` con `{ stage: PRE_PUSH, findings: 6, files_scanned: 925 }`.
+- ✅ Ajustar opción `4` del menú consumer para ejecutar `working-tree` con política `PRE_PUSH` (consistente con “CRITICAL/HIGH”).
+  - ✅ RED: test nuevo en `scripts/__tests__/framework-menu-gate-lib.test.ts` exigiendo `snapshot.stage === PRE_PUSH` para `runWorkingTreePrePushGateSilent`.
+  - ✅ GREEN: nueva función `runWorkingTreePrePushGateSilent` en `scripts/framework-menu-gate-lib.ts` y wiring en `scripts/framework-menu.ts`.
+  - ✅ Validación: opción `4` del menú ahora genera `.ai_evidence.json` con `{ stage: PRE_PUSH, findings: 0, files_scanned: 5 }`.
+- ✅ Re-semántica visual aplicada en menú consumer para matriz `1/2/3/4` con stage explícito en labels.
+  - ✅ `1) Full audit (repo analysis · PRE_COMMIT)`
+  - ✅ `2) Strict REPO+STAGING (CI/CD · PRE_PUSH)`
+  - ✅ `3) Strict STAGING only (dev · PRE_COMMIT)`
+  - ✅ `4) Standard CRITICAL/HIGH (working tree · PRE_PUSH)`
+  - ✅ Validación TDD:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-actions.test.ts scripts/__tests__/framework-menu-gate-lib.test.ts` (4/4)
+  - ✅ Validación manual:
+    - `npm run framework:menu` muestra labels actualizados con scope/stage explícito.
+- ✅ Validación funcional final ejecutada sobre matriz `1/2/3/4/9` (menú consumer) con evidencia real end-to-end.
+  - ✅ Opción `1` → `{ stage: PRE_COMMIT, outcome: BLOCK, findings: 3, files_scanned: 925 }`
+  - ✅ Opción `2` → `{ stage: PRE_PUSH, outcome: BLOCK, findings: 6, files_scanned: 925 }`
+  - ✅ Opción `3` → `{ stage: PRE_COMMIT, outcome: PASS, findings: 0, files_scanned: 0 }`
+  - ✅ Opción `4` → `{ stage: PRE_PUSH, outcome: PASS, findings: 0, files_scanned: 7 }`
+  - ✅ Opción `9` (diagnóstico de ficheros) muestra top actual:
+    - `integrations/lifecycle/gitService.ts`
+    - `integrations/lifecycle/update.ts`
+    - `scripts/adapter-session-status-writes-log-filter-lib.ts`
+- ✅ Cierre de Fase 18 confirmado con matriz funcional `1/2/3/4/9` validada en ejecución real.
+- 🚧 Próxima tarea: ejecutar commit atómico local del bloque `menu scope/stage normalization + framework fallback`.

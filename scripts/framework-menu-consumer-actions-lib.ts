@@ -22,22 +22,22 @@ export const createConsumerLegacyMenuActions = (
   return [
     {
       id: '1',
-      label: 'Full audit (repo analysis)',
+      label: 'Full audit (repo analysis · PRE_COMMIT)',
       execute: params.runFullAudit,
     },
     {
       id: '2',
-      label: 'Strict REPO+STAGING (CI/CD)',
+      label: 'Strict REPO+STAGING (CI/CD · PRE_PUSH)',
       execute: params.runStrictRepoAndStaged,
     },
     {
       id: '3',
-      label: 'Strict STAGING only (dev)',
+      label: 'Strict STAGING only (dev · PRE_COMMIT)',
       execute: params.runStrictStagedOnly,
     },
     {
       id: '4',
-      label: 'Standard CRITICAL/HIGH',
+      label: 'Standard CRITICAL/HIGH (working tree · PRE_PUSH)',
       execute: params.runStandardCriticalHigh,
     },
     {
