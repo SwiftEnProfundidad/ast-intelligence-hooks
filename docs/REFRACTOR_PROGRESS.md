@@ -244,4 +244,8 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - ✅ Commit atómico propuesto 3/3
     - `docs(progress): close phase 17 multi-platform semantic expansion`
     - `docs/REFRACTOR_PROGRESS.md`
-- 🚧 Siguiente paso: ejecutar los commits atómicos 1/3, 2/3 y 3/3 (pendiente de tu confirmación explícita).
+- ✅ Siguiente paso ejecutado: commits atómicos 1/3, 2/3 y 3/3 aplicados.
+  - ✅ `e43a737` — `feat(evidence): add snapshot platform summaries for legacy severity matrix`
+  - ✅ `2ea42b5` — `feat(menu-legacy): consume snapshot.platforms for deterministic platform breakdown`
+  - ✅ `a0d9626` — `docs(progress): close phase 17 multi-platform semantic expansion`
+- 🚧 Próxima tarea: validación manual en menú (`npm run framework:menu`, opción `1`) para confirmar render legacy con `snapshot.platforms` en ejecución real end-to-end.
