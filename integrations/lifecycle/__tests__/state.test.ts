@@ -30,29 +30,29 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return cwd;
   }
 
-  getStatusShort(): string {
+  statusShort(): string {
     return '';
   }
 
-  listTrackedNodeModulesPaths(): ReadonlyArray<string> {
+  trackedNodeModulesPaths(): ReadonlyArray<string> {
     return [];
   }
 
-  isPathTracked(): boolean {
+  pathTracked(): boolean {
     return false;
   }
 
-  setLocalConfig(cwd: string, key: string, value: string): void {
+  applyLocalConfig(cwd: string, key: string, value: string): void {
     this.setCalls.push({ cwd, key, value });
     this.config.set(key, value);
   }
 
-  unsetLocalConfig(cwd: string, key: string): void {
+  clearLocalConfig(cwd: string, key: string): void {
     this.unsetCalls.push({ cwd, key });
     this.config.delete(key);
   }
 
-  getLocalConfig(cwd: string, key: string): string | undefined {
+  localConfig(cwd: string, key: string): string | undefined {
     this.getCalls.push({ cwd, key });
     return this.config.get(key);
   }

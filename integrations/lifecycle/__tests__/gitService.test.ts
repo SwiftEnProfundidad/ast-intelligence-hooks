@@ -36,72 +36,72 @@ test('LifecycleGitService normaliza salida de repo root y lista tracked node_mod
   );
 
   assert.equal(git.resolveRepoRoot(cwd), '/tmp/repo');
-  assert.deepEqual(git.listTrackedNodeModulesPaths(cwd), ['node_modules/a.js', 'node_modules/b.js']);
+  assert.deepEqual(git.trackedNodeModulesPaths(cwd), ['node_modules/a.js', 'node_modules/b.js']);
 });
 
-test('LifecycleGitService isPathTracked exige coincidencia exacta de path', () => {
+test('LifecycleGitService pathTracked exige coincidencia exacta de path', () => {
   const git = new StubLifecycleGitService();
   const cwd = '/tmp/repo';
 
   git.setOutput(['ls-files', '--', 'node_modules/a.js'], 'node_modules/a.js\n');
   git.setOutput(['ls-files', '--', 'node_modules/missing.js'], 'node_modules/other.js\n');
 
-  assert.equal(git.isPathTracked(cwd, 'node_modules/a.js'), true);
-  assert.equal(git.isPathTracked(cwd, 'node_modules/missing.js'), false);
+  assert.equal(git.pathTracked(cwd, 'node_modules/a.js'), true);
+  assert.equal(git.pathTracked(cwd, 'node_modules/missing.js'), false);
 });
 
-test('LifecycleGitService getLocalConfig devuelve undefined si git config falla', () => {
+test('LifecycleGitService localConfig devuelve undefined si git config falla', () => {
   const git = new StubLifecycleGitService();
   const cwd = '/tmp/repo';
   const key = 'pumuki.version';
 
   git.setFailure(['config', '--local', '--get', key]);
-  assert.equal(git.getLocalConfig(cwd, key), undefined);
+  assert.equal(git.localConfig(cwd, key), undefined);
 });
 
-test('LifecycleGitService unsetLocalConfig absorbe errores y setLocalConfig delega a git', () => {
+test('LifecycleGitService clearLocalConfig absorbe errores y applyLocalConfig delega a git', () => {
   const git = new StubLifecycleGitService();
   const cwd = '/tmp/repo';
   const key = 'pumuki.installed';
 
   git.setFailure(['config', '--local', '--unset', key]);
 
-  assert.doesNotThrow(() => git.unsetLocalConfig(cwd, key));
-  git.setLocalConfig(cwd, key, 'true');
+  assert.doesNotThrow(() => git.clearLocalConfig(cwd, key));
+  git.applyLocalConfig(cwd, key, 'true');
 
   const lastCall = git.calls[git.calls.length - 1];
   assert.deepEqual(lastCall?.args, ['config', '--local', key, 'true']);
   assert.equal(lastCall?.cwd, cwd);
 });
 
-test('LifecycleGitService getStatusShort delega al comando git status --short', () => {
+test('LifecycleGitService statusShort delega al comando git status --short', () => {
   const git = new StubLifecycleGitService();
   const cwd = '/tmp/repo';
   const statusOutput = ' M package.json\n?? .ai_evidence.json\n';
   git.setOutput(['status', '--short'], statusOutput);
 
-  assert.equal(git.getStatusShort(cwd), statusOutput);
+  assert.equal(git.statusShort(cwd), statusOutput);
   const lastCall = git.calls[git.calls.length - 1];
   assert.deepEqual(lastCall?.args, ['status', '--short']);
   assert.equal(lastCall?.cwd, cwd);
 });
 
-test('LifecycleGitService getLocalConfig devuelve valor recortado cuando existe', () => {
+test('LifecycleGitService localConfig devuelve valor recortado cuando existe', () => {
   const git = new StubLifecycleGitService();
   const cwd = '/tmp/repo';
   const key = 'pumuki.version';
   git.setOutput(['config', '--local', '--get', key], ' 6.3.11 \n');
 
-  assert.equal(git.getLocalConfig(cwd, key), '6.3.11');
+  assert.equal(git.localConfig(cwd, key), '6.3.11');
 });
 
-test('LifecycleGitService unsetLocalConfig delega a git cuando la clave existe', () => {
+test('LifecycleGitService clearLocalConfig delega a git cuando la clave existe', () => {
   const git = new StubLifecycleGitService();
   const cwd = '/tmp/repo';
   const key = 'pumuki.hooks';
   git.setOutput(['config', '--local', '--unset', key], '');
 
-  assert.doesNotThrow(() => git.unsetLocalConfig(cwd, key));
+  assert.doesNotThrow(() => git.clearLocalConfig(cwd, key));
   const lastCall = git.calls[git.calls.length - 1];
   assert.deepEqual(lastCall?.args, ['config', '--local', '--unset', key]);
   assert.equal(lastCall?.cwd, cwd);

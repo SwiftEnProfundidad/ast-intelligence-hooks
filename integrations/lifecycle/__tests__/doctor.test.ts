@@ -25,7 +25,7 @@ class FakeLifecycleGitService implements ILifecycleGitService {
 
   constructor(
     private readonly repoRoot: string,
-    private readonly trackedNodeModulesPaths: ReadonlyArray<string> = [],
+    private readonly trackedNodeModules: ReadonlyArray<string> = [],
     private readonly state: Record<string, string | undefined> = {}
   ) {}
 
@@ -38,23 +38,23 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.repoRoot;
   }
 
-  getStatusShort(_cwd: string): string {
+  statusShort(_cwd: string): string {
     return '';
   }
 
-  listTrackedNodeModulesPaths(_cwd: string): ReadonlyArray<string> {
-    return this.trackedNodeModulesPaths;
+  trackedNodeModulesPaths(_cwd: string): ReadonlyArray<string> {
+    return this.trackedNodeModules;
   }
 
-  isPathTracked(_cwd: string, _path: string): boolean {
+  pathTracked(_cwd: string, _path: string): boolean {
     return false;
   }
 
-  setLocalConfig(_cwd: string, _key: string, _value: string): void {}
+  applyLocalConfig(_cwd: string, _key: string, _value: string): void {}
 
-  unsetLocalConfig(_cwd: string, _key: string): void {}
+  clearLocalConfig(_cwd: string, _key: string): void {}
 
-  getLocalConfig(_cwd: string, key: string): string | undefined {
+  localConfig(_cwd: string, key: string): string | undefined {
     return this.state[key];
   }
 }

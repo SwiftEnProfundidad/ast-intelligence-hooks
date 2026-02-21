@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSync as runSpawnSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import type { OpenSpecValidationSummary } from './types';
@@ -29,7 +29,7 @@ const runOpenSpecCommand = (
   args: ReadonlyArray<string>,
   cwd: string
 ): OpenSpecCommandResult => {
-  const result = spawnSync(resolveOpenSpecBinary(cwd), [...args], {
+  const result = runSpawnSync(resolveOpenSpecBinary(cwd), [...args], {
     cwd,
     encoding: 'utf8',
   });

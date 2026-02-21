@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSync as runSpawnSync } from 'node:child_process';
 
 export interface ILifecycleNpmService {
   runNpm(args: ReadonlyArray<string>, cwd: string): void;
@@ -6,7 +6,7 @@ export interface ILifecycleNpmService {
 
 export class LifecycleNpmService implements ILifecycleNpmService {
   runNpm(args: ReadonlyArray<string>, cwd: string): void {
-    const result = spawnSync('npm', args, {
+    const result = runSpawnSync('npm', args, {
       cwd,
       stdio: 'inherit',
       env: process.env,

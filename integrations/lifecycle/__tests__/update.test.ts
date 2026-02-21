@@ -28,11 +28,11 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.repoRoot;
   }
 
-  getStatusShort(): string {
+  statusShort(): string {
     return '';
   }
 
-  listTrackedNodeModulesPaths(): ReadonlyArray<string> {
+  trackedNodeModulesPaths(): ReadonlyArray<string> {
     if (this.trackedQueue.length <= 1) {
       return this.trackedQueue[0] ?? [];
     }
@@ -40,19 +40,19 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return next ?? [];
   }
 
-  isPathTracked(): boolean {
+  pathTracked(): boolean {
     return false;
   }
 
-  setLocalConfig(cwd: string, key: string, value: string): void {
+  applyLocalConfig(cwd: string, key: string, value: string): void {
     this.setCalls.push({ cwd, key, value });
   }
 
-  unsetLocalConfig(cwd: string, key: string): void {
+  clearLocalConfig(cwd: string, key: string): void {
     this.unsetCalls.push({ cwd, key });
   }
 
-  getLocalConfig(): string | undefined {
+  localConfig(): string | undefined {
     return undefined;
   }
 }
