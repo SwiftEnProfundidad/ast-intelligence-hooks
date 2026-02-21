@@ -451,4 +451,13 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
       - `docs/REFRACTOR_PROGRESS.md`
 
 ## Fase 21 — Operación siguiente
-- 🚧 Esperar instrucción del usuario para ejecutar commits atómicos/push/PR del bloque Fase 20.
+- ✅ Ejecutar commits atómicos/push del bloque Fase 20.
+  - ✅ Commits atómicos aplicados localmente:
+    - `51c2afb` — `feat(mcp): enforce pre-write chain through enterprise ai_gate_check helper`
+    - `3ecefc3` — `feat(menu): restore legacy preflight parity and system notifications`
+    - `d530976` — `docs(framework): document consumer preflight and close phase 20`
+  - ✅ Push ejecutado: `main -> origin/main` (`1cfce00..d530976`).
+  - ✅ Nota operativa: en este ciclo no se abrió PR porque los commits ya estaban en rama `main` local; el cierre se realizó con sincronización directa a remoto.
+
+## Fase 22 — Espera Operativa
+- 🚧 Esperar instrucción del usuario para siguiente bloque de implementación/validación.
