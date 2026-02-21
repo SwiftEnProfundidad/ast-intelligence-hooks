@@ -519,4 +519,9 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ PR de release abierta desde `develop` hacia `main`.
   - URL: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/315`
   - Título: `chore: merge develop into main (enterprise audit cycle)`
-- 🚧 Próxima tarea activa: merge de la PR `#315` y validación post-merge en `main`.
+- ✅ Merge ejecutado de PR `#315` hacia `main`.
+  - Estado PR: `MERGED` (`2026-02-21T23:40:40Z`).
+  - Head/Base: `develop -> main`.
+  - Validación post-merge:
+    - `main` sincronizada con remoto (`git status -sb` limpio).
+- 🚧 Próxima tarea activa: espera operativa y definición del siguiente bloque de trabajo.
