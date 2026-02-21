@@ -142,14 +142,13 @@ const detectPlatformByRuleId = (ruleId: string): PlatformName | undefined => {
   ) {
     return 'Frontend';
   }
+  if (normalized.startsWith('heuristics.ts.')) {
+    return 'Backend';
+  }
   return undefined;
 };
 
 const detectPlatform = (file: string, ruleId: string): PlatformName => {
-  const platformFromRule = detectPlatformByRuleId(ruleId);
-  if (platformFromRule) {
-    return platformFromRule;
-  }
   const normalized = file.toLowerCase();
   if (normalized.startsWith('apps/ios/') || normalized.endsWith('.swift')) {
     return 'iOS';
@@ -172,6 +171,10 @@ const detectPlatform = (file: string, ruleId: string): PlatformName => {
   ) {
     return 'Frontend';
   }
+  const platformFromRule = detectPlatformByRuleId(ruleId);
+  if (platformFromRule) {
+    return platformFromRule;
+  }
   return 'Other';
 };
 
@@ -187,6 +190,99 @@ const asRulesets = (value: unknown): EvidenceRulesetState[] => {
     return [];
   }
   return value as EvidenceRulesetState[];
+};
+
+const asNonNegativeInt = (value: unknown): number => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.trunc(value));
+};
+
+const asPlatformName = (value: unknown): PlatformName | null => {
+  if (
+    value === 'iOS'
+    || value === 'Android'
+    || value === 'Backend'
+    || value === 'Frontend'
+    || value === 'Other'
+  ) {
+    return value;
+  }
+  return null;
+};
+
+const parseSnapshotPlatformSummaries = (value: unknown): PlatformSummary[] => {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const order: ReadonlyArray<PlatformName> = ['iOS', 'Android', 'Backend', 'Frontend', 'Other'];
+  const byPlatform = new Map<PlatformName, PlatformSummary>();
+  for (const platform of order) {
+    byPlatform.set(platform, {
+      platform,
+      filesAffected: 0,
+      bySeverity: emptyLegacySeverity(),
+      topViolations: [],
+    });
+  }
+
+  for (const entry of value) {
+    if (typeof entry !== 'object' || entry === null) {
+      continue;
+    }
+    const current = entry as {
+      platform?: unknown;
+      files_affected?: unknown;
+      by_severity?: unknown;
+      top_violations?: unknown;
+    };
+    const platform = asPlatformName(current.platform);
+    if (!platform) {
+      continue;
+    }
+    const bySeverityRaw =
+      typeof current.by_severity === 'object' && current.by_severity !== null
+        ? current.by_severity as Record<string, unknown>
+        : {};
+    const topViolations = Array.isArray(current.top_violations)
+      ? current.top_violations
+        .map((item) => {
+          if (typeof item !== 'object' || item === null) {
+            return null;
+          }
+          const row = item as { rule_id?: unknown; count?: unknown };
+          const ruleId = typeof row.rule_id === 'string' ? row.rule_id : '';
+          if (ruleId.length === 0) {
+            return null;
+          }
+          return {
+            ruleId,
+            count: asNonNegativeInt(row.count),
+          };
+        })
+        .filter((item): item is { ruleId: string; count: number } => item !== null)
+      : [];
+    byPlatform.set(platform, {
+      platform,
+      filesAffected: asNonNegativeInt(current.files_affected),
+      bySeverity: {
+        CRITICAL: asNonNegativeInt(bySeverityRaw.CRITICAL),
+        HIGH: asNonNegativeInt(bySeverityRaw.HIGH),
+        MEDIUM: asNonNegativeInt(bySeverityRaw.MEDIUM),
+        LOW: asNonNegativeInt(bySeverityRaw.LOW),
+      },
+      topViolations,
+    });
+  }
+
+  return order.map((platform) => byPlatform.get(platform) ?? {
+    platform,
+    filesAffected: 0,
+    bySeverity: emptyLegacySeverity(),
+    topViolations: [],
+  });
 };
 
 const toNormalizedFindings = (findings: ReadonlyArray<EvidenceFinding>): NormalizedFinding[] => {
@@ -615,6 +711,7 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
         stage?: unknown;
         outcome?: unknown;
         findings?: unknown;
+        platforms?: unknown;
         files_scanned?: unknown;
         filesScanned?: unknown;
       };
@@ -632,6 +729,7 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
       : files.size;
     const bySeverity = computeLegacySeverity(normalizedFindings, parsed.severity_metrics);
     const totalViolations = normalizedFindings.length;
+    const snapshotPlatforms = parseSnapshotPlatformSummaries(parsed.snapshot?.platforms);
     return {
       status: 'ok',
       stage: asString(parsed.snapshot?.stage, 'unknown'),
@@ -642,7 +740,9 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
       bySeverity,
       patternChecks: computePatternChecks(normalizedFindings),
       eslint: computeEslintCounts(normalizedFindings),
-      platforms: buildPlatformSummaries(normalizedFindings),
+      platforms: snapshotPlatforms.length > 0
+        ? snapshotPlatforms
+        : buildPlatformSummaries(normalizedFindings),
       rulesets: buildRulesetSummaries(normalizedFindings, availableBundles),
       topViolations: countViolations(normalizedFindings).slice(0, 7),
       topFiles: countFiles(normalizedFindings).slice(0, 10),

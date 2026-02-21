@@ -172,6 +172,95 @@ const writeEvidenceWithFilesScannedFixture = (repoRoot: string, filesScanned: nu
   writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
 };
 
+const writeEvidenceMixedRepoHeuristicFixture = (repoRoot: string): void => {
+  const payload = {
+    version: '2.1',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      findings: [
+        {
+          ruleId: 'heuristics.ts.explicit-any.ast',
+          severity: 'ERROR',
+          filePath: 'apps/backend/src/service.ts',
+        },
+        {
+          ruleId: 'heuristics.ts.explicit-any.ast',
+          severity: 'ERROR',
+          filePath: 'apps/web/src/components/Banner.tsx',
+        },
+      ],
+    },
+    severity_metrics: {
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 2,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+  };
+  writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
+};
+
+const writeEvidenceSnapshotPlatformsFixture = (repoRoot: string): void => {
+  const payload = {
+    version: '2.1',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      findings: [
+        {
+          ruleId: 'heuristics.ts.console-log.ast',
+          severity: 'WARN',
+          filePath: 'scripts/only-other.ts',
+        },
+      ],
+      platforms: [
+        {
+          platform: 'iOS',
+          files_affected: 2,
+          by_severity: { CRITICAL: 1, HIGH: 1, MEDIUM: 0, LOW: 0 },
+          top_violations: [{ rule_id: 'ios.no-force-unwrap', count: 2 }],
+        },
+        {
+          platform: 'Android',
+          files_affected: 0,
+          by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 },
+          top_violations: [],
+        },
+        {
+          platform: 'Backend',
+          files_affected: 0,
+          by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 },
+          top_violations: [],
+        },
+        {
+          platform: 'Frontend',
+          files_affected: 0,
+          by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 },
+          top_violations: [],
+        },
+        {
+          platform: 'Other',
+          files_affected: 1,
+          by_severity: { CRITICAL: 0, HIGH: 0, MEDIUM: 1, LOW: 0 },
+          top_violations: [{ rule_id: 'heuristics.ts.console-log.ast', count: 1 }],
+        },
+      ],
+    },
+    severity_metrics: {
+      by_severity: {
+        CRITICAL: 1,
+        ERROR: 1,
+        WARN: 1,
+        INFO: 0,
+      },
+    },
+  };
+  writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
+};
+
 test('formatLegacyAuditReport renderiza secciones legacy con resumen por plataforma', async () => {
   await withTempDir('pumuki-legacy-audit-format-', async (repoRoot) => {
     writeEvidenceFixture(repoRoot);
@@ -284,7 +373,7 @@ test('readLegacyAuditSummary clasifica plataforma por ruleId cuando el path no p
   });
 });
 
-test('readLegacyAuditSummary clasifica heuristics.ts a frontend u other segun regla y ruta', async () => {
+test('readLegacyAuditSummary clasifica heuristics.ts a frontend y backend en repos framework', async () => {
   await withTempDir('pumuki-legacy-audit-ts-heuristic-platform-', async (repoRoot) => {
     writeEvidenceTsHeuristicMappedFixture(repoRoot);
     const summary = readLegacyAuditSummary(repoRoot);
@@ -295,14 +384,20 @@ test('readLegacyAuditSummary clasifica heuristics.ts a frontend u other segun re
     assert.ok(backend);
     assert.ok(frontend);
     assert.ok(other);
-    assert.equal(backend?.filesAffected, 0);
+    assert.equal(backend?.filesAffected, 1);
     assert.equal(frontend?.filesAffected, 1);
-    assert.equal(other?.filesAffected, 1);
+    assert.equal(other?.filesAffected, 0);
+    assert.equal(
+      backend?.topViolations.some(
+        (violation) => violation.ruleId === 'heuristics.ts.child-process-exec-file-sync.ast'
+      ),
+      true
+    );
     assert.equal(
       other?.topViolations.some(
         (violation) => violation.ruleId === 'heuristics.ts.child-process-exec-file-sync.ast'
       ),
-      true
+      false
     );
     assert.equal(
       frontend?.topViolations.some(
@@ -353,4 +448,51 @@ test('renderLegacyPanel mantiene todas las lineas dentro del ancho solicitado', 
   for (const line of panel.split('\n')) {
     assert.ok(line.length <= 70, `line exceeds panel width (70): ${line}`);
   }
+});
+
+test('readLegacyAuditSummary en repo mixto prioriza path apps/* frente a fallback heuristics.ts.*', async () => {
+  await withTempDir('pumuki-legacy-audit-mixed-repo-', async (repoRoot) => {
+    writeEvidenceMixedRepoHeuristicFixture(repoRoot);
+    const summary = readLegacyAuditSummary(repoRoot);
+
+    const backend = summary.platforms.find((platform) => platform.platform === 'Backend');
+    const frontend = summary.platforms.find((platform) => platform.platform === 'Frontend');
+    const other = summary.platforms.find((platform) => platform.platform === 'Other');
+
+    assert.ok(backend);
+    assert.ok(frontend);
+    assert.ok(other);
+    assert.equal(backend?.filesAffected, 1);
+    assert.equal(frontend?.filesAffected, 1);
+    assert.equal(other?.filesAffected, 0);
+    assert.equal(
+      backend?.topViolations.some(
+        (violation) => violation.ruleId === 'heuristics.ts.explicit-any.ast'
+      ),
+      true
+    );
+    assert.equal(
+      frontend?.topViolations.some(
+        (violation) => violation.ruleId === 'heuristics.ts.explicit-any.ast'
+      ),
+      true
+    );
+  });
+});
+
+test('readLegacyAuditSummary prioriza snapshot.platforms cuando existe en evidencia', async () => {
+  await withTempDir('pumuki-legacy-audit-snapshot-platforms-', async (repoRoot) => {
+    writeEvidenceSnapshotPlatformsFixture(repoRoot);
+    const summary = readLegacyAuditSummary(repoRoot);
+
+    const ios = summary.platforms.find((platform) => platform.platform === 'iOS');
+    const other = summary.platforms.find((platform) => platform.platform === 'Other');
+    assert.ok(ios);
+    assert.ok(other);
+    assert.equal(ios?.filesAffected, 2);
+    assert.equal(ios?.bySeverity.CRITICAL, 1);
+    assert.equal(ios?.bySeverity.HIGH, 1);
+    assert.equal(other?.filesAffected, 1);
+    assert.equal(other?.bySeverity.MEDIUM, 1);
+  });
 });
