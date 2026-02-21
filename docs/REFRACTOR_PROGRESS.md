@@ -127,4 +127,78 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ Ejecutar sincronización final (`develop`/`main`) cuando el usuario lo autorice.
 
 ## Fase 10 — Estado Operativo
-- 🚧 Esperar nuevas instrucciones de producto/arquitectura para el siguiente ciclo.
+- ✅ Esperar nuevas instrucciones de producto/arquitectura para el siguiente ciclo.
+
+## Fase 11 — Hard Mode UX y README UX
+- ✅ TDD: añadir selector real en menú para hard mode con dos modos (`critical-high` y `all-severities`) y persistencia en `.pumuki/hard-mode.json`.
+- ✅ Ajustar `README.md` para snippets profesionales compatibles con copiado automático en GitHub/npm.
+
+## Fase 12 — Siguiente paso operativo
+- ✅ Esperar validación del usuario para siguiente bloque de implementación.
+
+## Fase 13 — Menú Legacy++ (Bloque 1)
+- ✅ TDD: añadir panel operativo en menú interactivo con recuento de findings, severidades y top ficheros violados desde `.ai_evidence.json`.
+- ✅ Integrar el panel en `framework-menu` manteniendo SRP y contratos actuales.
+
+## Fase 14 — Menú Legacy++ (Bloque 2)
+- ✅ TDD: añadir tres modos de auditoría operativa en menú (`repo completo`, `repo+staged`, `staged+unstaged`) sin eliminar opciones actuales.
+- ✅ TDD: rediseñar menú `consumer` a formato legado (opciones 1..9) manteniendo `advanced`.
+- ✅ TDD: generar salida de auditoría con secciones legacy (`QUICK SUMMARY`, breakdown por plataforma, top violations, métricas y resumen final).
+- ✅ TDD: alinear renderer legacy con layout visual de referencia (`assets/ast_intelligence_01.svg`..`05.svg`) usando paneles de terminal, cabecera operativa y cierre ejecutivo.
+- ✅ Sincronizar sandbox self-audit (`_sandbox/pumuki-self-audit-20260220-173115`) con el bloque de menú/auditoría legacy para validación local sin publish.
+- ✅ Sincronizar sandbox con el último renderer panelizado para eliminar salida plana antigua y validar ejecución real (`npm run framework:menu`, opción `1`).
+- ✅ TDD: estabilizar panel renderer con ajuste por ancho de terminal y word-wrap para eliminar bordes rotos/line-wrap defectuoso en `METRICS`.
+- ✅ TDD: aplicar tema visual legacy (jerarquía + color ANSI + paneles consistentes) para acercar UI/UX CLI a `assets/ast_intelligence_01.svg`..`05.svg` manteniendo menú actual.
+- ✅ TDD: ajustar color de borde/jerarquía y margen de ancho del panel para reducir clipping visual y acercar contraste al look legacy.
+- ✅ TDD: evitar short-circuit total en auditoría de menú cuando SDD bloquea, manteniendo `sdd.policy.blocked` pero evaluando findings adicionales del repo.
+- ✅ TDD: habilitar heurísticas TypeScript de repo completo en auditoría de menú (`PUMUKI_HEURISTICS_TS_SCOPE=all`) para detectar violaciones fuera de `apps/*`.
+- ✅ TDD: convertir breakdown de plataforma en mini-cards estilo legacy dentro del panel AST para acercar UI/UX a `assets/ast_intelligence_01.svg`..`05.svg`.
+- ✅ TDD: cambiar evaluación de reglas para emitir findings por match real (por archivo/heurística) en vez de colapsar a 1 finding por regla, elevando fidelidad de auditoría.
+- ✅ TDD: mostrar siempre `iOS/Android/Backend/Frontend/Other` en breakdown (incluyendo cero), y clasificar plataforma por `ruleId` cuando el path no aporta contexto.
+- ✅ TDD: calibrar matriz enterprise de severidades heurísticas (CRITICAL/ERROR/WARN) en `PRE_COMMIT/PRE_PUSH/CI`, evitando sobrepromoción global a `ERROR`.
+- ✅ TDD: clasificar `heuristics.ts.*` por plataforma (Backend por defecto, Frontend para familias browser) para evitar concentrar findings válidos en `Other`.
+- ✅ TDD: enriquecer breakdown con vista por `ruleset` además de plataforma en la salida legacy.
+- ✅ Añadir acción de diagnóstico rápido para listar ficheros violados con recuento detallado desde evidencia.
+
+## Fase 15 — Cierre técnico del bloque Legacy++
+- ✅ Ejecutar validación final de regresión (`npm test`) y preparar cierre operativo del bloque para revisión del usuario.
+- ✅ Consolidar cleanup final del diff de menú legacy y proponer paquete de commits atómicos.
+  - `feat(menu-legacy): renderer panelizado + mini-cards por plataforma + breakdown por ruleset`
+    - `scripts/framework-menu-legacy-audit-lib.ts`
+    - `scripts/framework-menu-evidence-summary-lib.ts`
+    - `scripts/framework-menu-gate-lib.ts`
+    - `scripts/framework-menu.ts`
+  - `feat(menu-legacy): acciones consumer + diagnóstico de ficheros violados`
+    - `scripts/framework-menu-consumer-actions-lib.ts`
+    - `scripts/framework-menu-consumer-runtime-lib.ts`
+    - `scripts/framework-menu-actions-gates-stage-lib.ts`
+    - `scripts/framework-menu-actions-diagnostics-maintenance-lib.ts`
+    - `scripts/framework-menu-action-contract.ts`
+    - `scripts/framework-menu-prompts.ts`
+  - `test(menu-legacy): cobertura de auditoría, scopes y acciones consumer`
+    - `scripts/__tests__/framework-menu-legacy-audit.test.ts`
+    - `scripts/__tests__/framework-menu-evidence-summary.test.ts`
+    - `scripts/__tests__/framework-menu-scope-audits.test.ts`
+    - `scripts/__tests__/framework-menu-consumer-actions.test.ts`
+  - `test(gate): cobertura jest al 100% para evaluateRules + compatibilidad de stage policy`
+    - `core/gate/__tests__/evaluateRules.spec.ts`
+    - `core/gate/__tests__/conditionMatches.spec.ts`
+    - `integrations/gate/stagePolicies.ts`
+    - `integrations/gate/__tests__/stagePolicies.test.ts`
+
+## Fase 16 — Espera operativa
+- ✅ TDD: unificar renderer del menú consumer con renderer legacy para eliminar drift visual y bordes rotos por ANSI/anchura.
+- ✅ TDD: reducir ruido operativo del `Full audit` silenciando el volcado raw de findings y dejando salida ejecutiva panelizada.
+- ✅ Diagnóstico de métricas: `Files scanned` estaba cayendo a `files afectados` cuando evidencia no incluye `snapshot.files_scanned`.
+- ✅ Corregir contrato de evidencia y renderer para reportar `Files scanned` real (facts auditados) y recalibrar `Code Health Score`.
+- ✅ Diagnóstico de cobertura actual: en este repo se auditan 911 ficheros TS/JS (0 Swift/Kotlin/TSX), findings concentrados en `heuristics.ts.*` sobre `scripts/*` e `integrations/*`, con bloqueo adicional por `sdd.policy.blocked`.
+- ✅ Validar con el usuario la nueva lectura operativa del menú (`files_scanned` persistido + score recalibrado) antes de cierre definitivo.
+- ✅ Ejecutar auditoría completa del código base de Pumuki (scope repo) y consolidar backlog real por regla/fichero desde `.ai_evidence.json`.
+- ✅ Corregir lote 1 de violaciones AST en framework (`execFileSync`/`spawnSync`/`process.exit`/`console.*`) con TDD y volver a auditar.
+  - Resultado en worktree audit: `63 -> 3` findings, `BLOCK -> PASS` (quedan solo reglas `child_process` nucleares).
+- ✅ Corregir lote residual de `child_process` (`integrations/git/GitService.ts`, `scripts/check-package-manifest.ts`) y propagar compatibilidad en lifecycle/sdd.
+  - Resultado: auditoría `repo` en menú (`runRepoGateSilent`) con `0 findings`, `files_scanned=911`, `outcome=PASS`.
+  - Validación: `npm test -- --runInBand` en verde tras correcciones de regresión.
+- ✅ Consolidar reporte operativo al usuario con estado de tests + auditoría repo/worktree.
+- ✅ Diseñar plan de commits atómicos sobre el diff actual (orden, alcance y riesgo por bloque).
+- 🚧 Ejecutar plan de commits atómicos y después validar alcance de “TODAS las reglas/skills” para plataformas sin código nativo en este repo (iOS/Android/Frontend).

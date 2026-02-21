@@ -80,6 +80,8 @@ Prerequisites:
 - `npm >= 9`
 - `git`
 
+All command/code snippets below are fenced so GitHub and npm renderers can expose native copy controls.
+
 ### 1) Install package
 
 ```bash
@@ -131,11 +133,12 @@ Example:
 Current profile support:
 
 - `critical-high`
+- `all-severities`
 
 Environment overrides:
 
 - `PUMUKI_HARD_MODE` (`true|false|1|0|on|off`)
-- `PUMUKI_HARD_MODE_PROFILE` (`critical-high`)
+- `PUMUKI_HARD_MODE_PROFILE` (`critical-high|all-severities`)
 
 Runtime traceability:
 
