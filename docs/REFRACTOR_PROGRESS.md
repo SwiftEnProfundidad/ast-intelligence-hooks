@@ -311,5 +311,15 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - ✅ REFACTOR: consolidado en `scripts/framework-menu-consumer-runtime-lib.ts` con helper único.
   - ✅ Tests en verde:
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime.test.ts scripts/__tests__/framework-menu-consumer-actions.test.ts` (3/3)
-- ✅ Próxima tarea anterior completada: commit atómico preparado para ajuste de diagnóstico/UX del menú consumer (`scope vacío` + tests).
-- 🚧 Próxima tarea: ejecutar push de este commit y validar en remoto.
+- ✅ Próxima tarea anterior completada: push ejecutado en remoto del commit `37bee29` (ajuste UX de `scope vacío` + tests).
+- ✅ Próxima tarea anterior completada: validación manual final de matriz del menú consumer (`1/2/3/4/9`) ejecutada en `main`.
+  - ✅ Opción `1` → `Files scanned: 926`, `Total violations: 3`, `Stage: PRE_COMMIT`, `Outcome: BLOCK`.
+  - ✅ Opción `2` → `Files scanned: 926`, `Total violations: 6`, `Stage: PRE_PUSH`, `Outcome: BLOCK`.
+  - ✅ Opción `3` → `Files scanned: 0`, `Total violations: 0`, `Stage: PRE_COMMIT`, `Outcome: PASS`, con hint `Scope vacío (staged)`.
+  - ✅ Opción `4` → `Files scanned: 0`, `Total violations: 0`, `Stage: PRE_PUSH`, `Outcome: PASS`, con hint `Scope vacío (working tree)`.
+  - ✅ Opción `9` → top files visibles:
+    - `integrations/lifecycle/gitService.ts`
+    - `integrations/lifecycle/update.ts`
+    - `scripts/adapter-session-status-writes-log-filter-lib.ts`
+- ✅ Próxima tarea anterior completada: commit atómico del cierre de validación manual ejecutado en local.
+- 🚧 Próxima tarea: push final de sincronización a `origin/main` y confirmación de estado limpio.
