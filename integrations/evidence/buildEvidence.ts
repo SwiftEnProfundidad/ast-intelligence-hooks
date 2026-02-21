@@ -15,6 +15,7 @@ import type {
   SddMetrics,
   SnapshotFinding,
 } from './schema';
+import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { resolveHumanIntent } from './humanIntent';
 
 type BuildFindingInput = Finding & {
@@ -595,6 +596,13 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
         ? { files_scanned: normalizedFilesScanned }
         : {}),
       findings: normalizedFindings,
+      platforms: buildSnapshotPlatformSummaries(
+        normalizedFindings.map((finding) => ({
+          ruleId: finding.ruleId,
+          severity: finding.severity,
+          file: finding.file,
+        }))
+      ),
     },
     ledger: updateLedger({
       findings: normalizedFindings,

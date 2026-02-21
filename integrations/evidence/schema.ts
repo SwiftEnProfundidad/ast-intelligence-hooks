@@ -1,6 +1,7 @@
 import type { GateOutcome } from '../../core/gate/GateOutcome';
 import type { GateStage } from '../../core/gate/GateStage';
 import type { Severity } from '../../core/rules/Severity';
+import type { SnapshotPlatformSummary } from './platformSummary';
 
 export type EvidenceLines = string | number | readonly number[];
 
@@ -20,6 +21,7 @@ export type Snapshot = {
   outcome: GateOutcome;
   files_scanned?: number;
   findings: SnapshotFinding[];
+  platforms?: SnapshotPlatformSummary[];
 };
 
 export type LedgerEntry = {

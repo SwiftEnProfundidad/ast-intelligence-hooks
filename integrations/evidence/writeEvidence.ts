@@ -8,6 +8,7 @@ import type {
   RepoState,
   SnapshotFinding,
 } from './schema';
+import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { normalizeHumanIntent } from './humanIntent';
 
 export type WriteEvidenceResult = {
@@ -202,6 +203,13 @@ const toStableEvidence = (
         ? { files_scanned: normalizedFilesScanned }
         : {}),
       findings: normalizedFindings,
+      platforms: buildSnapshotPlatformSummaries(
+        normalizedFindings.map((finding) => ({
+          ruleId: finding.ruleId,
+          severity: finding.severity,
+          file: finding.file,
+        }))
+      ),
     },
     ledger: normalizedLedger,
     platforms: orderedPlatforms,

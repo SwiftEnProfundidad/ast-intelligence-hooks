@@ -154,6 +154,44 @@ test('persiste snapshot.files_scanned cuando llega desde el runner de gate', () 
   assert.equal(result.snapshot.files_scanned, 911);
 });
 
+test('incluye snapshot.platforms con las cinco plataformas y severidades legacy', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    gateOutcome: 'BLOCK',
+    findings: [
+      {
+        ruleId: 'backend.avoid-explicit-any',
+        severity: 'ERROR',
+        code: 'BACKEND_ANY',
+        message: 'Avoid explicit any',
+        filePath: 'apps/backend/src/service.ts',
+      },
+      {
+        ruleId: 'heuristics.ts.inner-html.ast',
+        severity: 'WARN',
+        code: 'TS_INNER_HTML',
+        message: 'Avoid innerHTML',
+        filePath: 'scripts/ui.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.platforms?.length, 5);
+  const backend = result.snapshot.platforms?.find((platform) => platform.platform === 'Backend');
+  const frontend = result.snapshot.platforms?.find((platform) => platform.platform === 'Frontend');
+  const ios = result.snapshot.platforms?.find((platform) => platform.platform === 'iOS');
+  assert.ok(backend);
+  assert.ok(frontend);
+  assert.ok(ios);
+  assert.equal(backend?.files_affected, 1);
+  assert.equal(backend?.by_severity.HIGH, 1);
+  assert.equal(frontend?.files_affected, 1);
+  assert.equal(frontend?.by_severity.MEDIUM, 1);
+  assert.equal(ios?.files_affected, 0);
+});
+
 test('deduplicates equivalent findings deterministically regardless of input order', () => {
   const baseFinding = {
     ruleId: 'backend.no-console-log',
