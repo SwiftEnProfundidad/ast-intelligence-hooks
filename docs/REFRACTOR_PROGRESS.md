@@ -248,4 +248,6 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - ✅ `e43a737` — `feat(evidence): add snapshot platform summaries for legacy severity matrix`
   - ✅ `2ea42b5` — `feat(menu-legacy): consume snapshot.platforms for deterministic platform breakdown`
   - ✅ `a0d9626` — `docs(progress): close phase 17 multi-platform semantic expansion`
+- ✅ Push ejecutado a remoto: `main -> origin/main` con los commits de cierre de Fase 17 (`83ba57d` incluido).
+- ✅ PR abierta y mergeada para el ajuste pendiente de tracking de Fase 17.
 - 🚧 Próxima tarea: validación manual en menú (`npm run framework:menu`, opción `1`) para confirmar render legacy con `snapshot.platforms` en ejecución real end-to-end.
