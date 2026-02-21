@@ -133,12 +133,28 @@ export async function runPlatformGate(params: {
     skillsRuleSet,
     projectRules,
     heuristicRules,
+    coverage,
     findings,
   } = dependencies.evaluatePlatformGateFindings({
     facts,
     stage: params.policy.stage,
     repoRoot,
   });
+  const evaluationMetrics = coverage
+    ? {
+      facts_total: coverage.factsTotal,
+      rules_total: coverage.rulesTotal,
+      baseline_rules: coverage.baselineRules,
+      heuristic_rules: coverage.heuristicRules,
+      skills_rules: coverage.skillsRules,
+      project_rules: coverage.projectRules,
+      matched_rules: coverage.matchedRules,
+      unmatched_rules: coverage.unmatchedRules,
+      evaluated_rule_ids: [...coverage.evaluatedRuleIds],
+      matched_rule_ids: [...coverage.matchedRuleIds],
+      unmatched_rule_ids: [...coverage.unmatchedRuleIds],
+    }
+    : undefined;
   const effectiveFindings = sddBlockingFinding
     ? [sddBlockingFinding, ...findings]
     : findings;
@@ -151,6 +167,7 @@ export async function runPlatformGate(params: {
     findings: effectiveFindings,
     gateOutcome,
     filesScanned,
+    ...(evaluationMetrics ? { evaluationMetrics } : {}),
     repoRoot,
     detectedPlatforms,
     skillsRuleSet,

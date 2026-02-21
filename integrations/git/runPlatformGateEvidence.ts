@@ -11,6 +11,7 @@ import { buildBaselineRuleSetEntries } from './baselineRuleSets';
 import type { IEvidenceService } from './EvidenceService';
 import type { SddDecision } from '../sdd';
 import { captureRepoState } from '../evidence/repoState';
+import type { SnapshotEvaluationMetrics } from '../evidence/schema';
 
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
@@ -26,6 +27,7 @@ export const emitPlatformGateEvidence = (params: {
   findings: ReadonlyArray<Finding>;
   gateOutcome: GateOutcome;
   filesScanned: number;
+  evaluationMetrics?: SnapshotEvaluationMetrics;
   repoRoot: string;
   detectedPlatforms: DetectedPlatforms;
   skillsRuleSet: SkillsRuleSetLoadResult;
@@ -44,6 +46,7 @@ export const emitPlatformGateEvidence = (params: {
     findings: params.findings,
     gateOutcome: params.gateOutcome,
     filesScanned: params.filesScanned,
+    evaluationMetrics: params.evaluationMetrics,
     repoRoot: params.repoRoot,
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),

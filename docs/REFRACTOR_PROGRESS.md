@@ -487,4 +487,36 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - ✅ Push: `main -> origin/main` (`32a9a5d..e158480`).
 
 ## Fase 25 — Espera Operativa
-- 🚧 Esperar instrucción del usuario para el siguiente bloque (implementación o cierre release).
+- ✅ Plan histórico cerrado para evitar duplicidades de fases.
+- ✅ Plan anterior archivado explícitamente en `docs/ENTERPRISE_AUDIT_CYCLE_CLOSED.md`.
+- ✅ Nuevo plan activo documentado fuera de este tracker histórico en `docs/ENTERPRISE_AUDIT_CYCLE_ACTIVE.md`.
+- ✅ Separación ejecutada: histórico y ciclo activo ya no comparten el mismo MD.
+
+## Fase 26 — Arranque del Nuevo Plan de Auditoría
+- ✅ Cerrar ciclo previo y dejar trazabilidad de cierre en documento dedicado.
+- ✅ Crear nuevo MD de planificación independiente para el ciclo actual.
+- ✅ Renombrar rama de trabajo para eliminar referencia confusa a fase numérica (`feature/fase-19-audit-stability` → `feature/enterprise-audit-cycle`).
+- ✅ Cerrar `T1` del plan activo con inventario verificable de reglas por stage (`evaluated_rule_ids`, `matched_rule_ids`, `unmatched_rule_ids`).
+- ✅ Cerrar `T2` del plan activo con persistencia de `files_affected` + `evaluation_metrics` en `.ai_evidence.json`, sin romper contrato v2.1.
+- ✅ Cerrar `T3` del plan activo unificando clasificación multi-plataforma (`path` + `ruleId`) entre evidencia y menú legacy para eliminar drift.
+- ✅ Cerrar `T4` del plan activo con ciclo `RED/GREEN/REFACTOR` en runner/canary de matriz (`happy/sad/edge`, canarios por `stage/plataforma`).
+- ✅ Validación global de cierre ejecutada:
+  - `npm test -- --runInBand` (suite completa en verde).
+  - `npm run typecheck` (`tsc --noEmit` en verde).
+- ✅ Commits atómicos de `T5` ya aplicados:
+  - `56079b9` feat(audit): persist evaluation telemetry and rule-coverage diagnostics
+  - `ddd09c9` feat(menu-matrix): add deterministic baseline and stage/platform canaries
+  - `0baf617` fix(types): align ai-gate and rule evaluation contracts
+- ✅ Cierre Git Flow de `T5` completado:
+  - Push de rama `feature/enterprise-audit-cycle` a remoto.
+  - PR `#314` abierta y mergeada contra `develop`.
+  - Validación post-merge en `develop`:
+    - `npm run typecheck` (verde).
+    - matriz `framework-menu-matrix*` (`11/11` verde).
+- ✅ Estado actual: ciclo activo (`docs/ENTERPRISE_AUDIT_CYCLE_ACTIVE.md`) cerrado, sin tarea en construcción.
+
+## Fase 27 — Release Flow (`develop` -> `main`)
+- ✅ PR de release abierta desde `develop` hacia `main`.
+  - URL: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/315`
+  - Título: `chore: merge develop into main (enterprise audit cycle)`
+- 🚧 Próxima tarea activa: merge de la PR `#315` y validación post-merge en `main`.

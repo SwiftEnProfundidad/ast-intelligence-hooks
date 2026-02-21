@@ -16,10 +16,26 @@ export type SnapshotFinding = {
   source?: string;
 };
 
+export type SnapshotEvaluationMetrics = {
+  facts_total: number;
+  rules_total: number;
+  baseline_rules: number;
+  heuristic_rules: number;
+  skills_rules: number;
+  project_rules: number;
+  matched_rules: number;
+  unmatched_rules: number;
+  evaluated_rule_ids: string[];
+  matched_rule_ids: string[];
+  unmatched_rule_ids: string[];
+};
+
 export type Snapshot = {
   stage: GateStage;
   outcome: GateOutcome;
   files_scanned?: number;
+  files_affected?: number;
+  evaluation_metrics?: SnapshotEvaluationMetrics;
   findings: SnapshotFinding[];
   platforms?: SnapshotPlatformSummary[];
 };

@@ -14,6 +14,19 @@ type GenerateEvidenceParams = {
   findings: ReadonlyArray<Finding>;
   gateOutcome: string;
   filesScanned: number;
+  evaluationMetrics?: {
+    facts_total: number;
+    rules_total: number;
+    baseline_rules: number;
+    heuristic_rules: number;
+    skills_rules: number;
+    project_rules: number;
+    matched_rules: number;
+    unmatched_rules: number;
+    evaluated_rule_ids: string[];
+    matched_rule_ids: string[];
+    unmatched_rule_ids: string[];
+  };
   previousEvidence: unknown;
   detectedPlatforms: unknown;
   loadedRulesets: unknown;
@@ -89,6 +102,19 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
       projectRules,
       heuristicRules,
       filesScanned: 42,
+      evaluationMetrics: {
+        facts_total: 100,
+        rules_total: 20,
+        baseline_rules: 0,
+        heuristic_rules: 0,
+        skills_rules: 20,
+        project_rules: 0,
+        matched_rules: 1,
+        unmatched_rules: 19,
+        evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+        matched_rule_ids: ['skills.backend.no-empty-catch'],
+        unmatched_rule_ids: ['skills.backend.avoid-explicit-any'],
+      },
       evidenceService,
       sddDecision: {
         allowed: true,
@@ -127,6 +153,19 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
   assert.deepEqual(capturedGenerateEvidenceParams?.findings, findings);
   assert.equal(capturedGenerateEvidenceParams?.gateOutcome, 'BLOCK');
   assert.equal(capturedGenerateEvidenceParams?.filesScanned, 42);
+  assert.deepEqual(capturedGenerateEvidenceParams?.evaluationMetrics, {
+    facts_total: 100,
+    rules_total: 20,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 20,
+    project_rules: 0,
+    matched_rules: 1,
+    unmatched_rules: 19,
+    evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+    matched_rule_ids: ['skills.backend.no-empty-catch'],
+    unmatched_rule_ids: ['skills.backend.avoid-explicit-any'],
+  });
   assert.deepEqual(capturedGenerateEvidenceParams?.previousEvidence, previousEvidence);
   assert.deepEqual(capturedGenerateEvidenceParams?.detectedPlatforms, detectedPlatformsRecord);
   assert.deepEqual(capturedGenerateEvidenceParams?.loadedRulesets, rulesetState);

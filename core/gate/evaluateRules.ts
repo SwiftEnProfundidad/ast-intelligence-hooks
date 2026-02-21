@@ -76,7 +76,7 @@ const collectSimpleFindingTargets = (
       .map((fact) => ({
         filePath: fact.path,
         matchedBy: 'FileChange',
-        source: fact.source,
+        source: 'source' in fact && typeof fact.source === 'string' ? fact.source : undefined,
       }));
   }
 
@@ -103,7 +103,7 @@ const collectSimpleFindingTargets = (
       .map((fact) => ({
         filePath: fact.path,
         matchedBy: 'FileContent',
-        source: fact.source,
+        source: 'source' in fact && typeof fact.source === 'string' ? fact.source : undefined,
       }));
   }
 

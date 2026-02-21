@@ -25,7 +25,6 @@ import {
   formatActiveSkillsBundles,
   loadAndFormatActiveSkillsBundles,
 } from './framework-menu-skills-lib';
-
 export * from './framework-menu-builders';
 export { buildMenuGateParams } from './framework-menu-gate-lib';
 export { formatActiveSkillsBundles } from './framework-menu-skills-lib';
@@ -54,6 +53,7 @@ const ADVANCED_MENU_HELP: Readonly<Record<string, string>> = {
   '17': 'Verifica freshness de skills lock.',
   '18': 'Configura hard mode/enforcement enterprise.',
   '31': 'Configura notificaciones del sistema (macOS) para eventos criticos.',
+  '32': 'Diagnóstico de cobertura de reglas evaluadas por stage (repo completo).',
   '19': 'Ejecuta startup triage bundle del consumidor.',
   '20': 'Genera reporte A/B del mock consumer.',
   '21': 'Genera reporte de blockers readiness (phase5).',

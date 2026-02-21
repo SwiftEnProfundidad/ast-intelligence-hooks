@@ -1,20 +1,79 @@
-import { readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { chdir, cwd } from 'node:process';
-import { runRepoGateSilent } from './framework-menu-gate-lib';
-import { readMatrixOptionReport } from './framework-menu-matrix-evidence-lib';
+import {
+  runRepoAndStagedPrePushGateSilent,
+  runRepoGateSilent,
+  runStagedGateSilent,
+  runWorkingTreePrePushGateSilent,
+} from './framework-menu-gate-lib';
+import { readMatrixOptionReport, type MatrixOptionId } from './framework-menu-matrix-evidence-lib';
+
+export type ConsumerMenuCanaryStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+export type ConsumerMenuCanaryPlatform = 'backend' | 'frontend';
 
 export type ConsumerMenuCanaryResult = {
-  option: '1';
+  option: MatrixOptionId;
   detected: boolean;
   totalViolations: number;
   filesScanned: number;
   ruleIds: string[];
 };
 
-const buildCanaryRelativePath = (): string => {
+export type ConsumerMenuCanaryScenario = {
+  stage: ConsumerMenuCanaryStage;
+  platform: ConsumerMenuCanaryPlatform;
+  option: MatrixOptionId;
+  expectedRuleId: string;
+  canaryRelativePath: string;
+  canarySource: string;
+};
+
+const buildCanarySuffix = (): string => {
   const suffix = `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
-  return `scripts/__pumuki_matrix_canary_${suffix}.ts`;
+  return suffix;
+};
+
+export const resolveConsumerMenuCanaryScenario = (params?: {
+  stage?: ConsumerMenuCanaryStage;
+  platform?: ConsumerMenuCanaryPlatform;
+}): ConsumerMenuCanaryScenario => {
+  const stage = params?.stage ?? 'PRE_COMMIT';
+  const platform = params?.platform ?? 'backend';
+  const suffix = buildCanarySuffix();
+
+  if (platform === 'frontend') {
+    return {
+      stage,
+      platform,
+      option: stage === 'PRE_COMMIT' ? '1' : '2',
+      expectedRuleId: 'skills.frontend.avoid-explicit-any',
+      canaryRelativePath: `apps/frontend/__pumuki_matrix_canary_frontend_${suffix}.ts`,
+      canarySource: [
+        'export const __pumukiMatrixCanaryFrontend = (): void => {',
+        '  const risky: any = {};',
+        '  void risky;',
+        '};',
+        '',
+      ].join('\n'),
+    };
+  }
+
+  return {
+    stage,
+    platform: 'backend',
+    option: stage === 'PRE_COMMIT' ? '1' : '2',
+    expectedRuleId: 'skills.backend.no-empty-catch',
+    canaryRelativePath: `scripts/__pumuki_matrix_canary_backend_${suffix}.ts`,
+    canarySource: [
+      'export const __pumukiMatrixCanaryBackend = (): void => {',
+      '  try {',
+      "    throw new Error('pumuki-matrix-canary')",
+      '  } catch {}',
+      '};',
+      '',
+    ].join('\n'),
+  };
 };
 
 const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
@@ -35,39 +94,66 @@ const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
   }
 };
 
+const runGateByOption = async (option: MatrixOptionId): Promise<void> => {
+  if (option === '1') {
+    await runRepoGateSilent();
+    return;
+  }
+  if (option === '2') {
+    await runRepoAndStagedPrePushGateSilent();
+    return;
+  }
+  if (option === '3') {
+    await runStagedGateSilent();
+    return;
+  }
+  if (option === '4') {
+    await runWorkingTreePrePushGateSilent();
+  }
+};
+
 export const runConsumerMenuCanary = async (params?: {
   repoRoot?: string;
+  stage?: ConsumerMenuCanaryStage;
+  platform?: ConsumerMenuCanaryPlatform;
+  dependencies?: {
+    runGate?: (option: MatrixOptionId) => Promise<void>;
+    readOptionReport?: typeof readMatrixOptionReport;
+    extractRuleIds?: (repoRoot: string) => string[];
+  };
 }): Promise<ConsumerMenuCanaryResult> => {
   const previousCwd = cwd();
   const repoRoot = params?.repoRoot ?? previousCwd;
-  const canaryRelativePath = buildCanaryRelativePath();
+  const scenario = resolveConsumerMenuCanaryScenario({
+    stage: params?.stage,
+    platform: params?.platform,
+  });
+  const canaryRelativePath = scenario.canaryRelativePath;
   const canaryAbsolutePath = join(repoRoot, canaryRelativePath);
+  const dependencies = params?.dependencies;
+  const runGate = dependencies?.runGate ?? runGateByOption;
+  const readOptionReport = dependencies?.readOptionReport ?? readMatrixOptionReport;
+  const extractRuleIds = dependencies?.extractRuleIds ?? extractRuleIdsFromEvidence;
 
   chdir(repoRoot);
   try {
+    mkdirSync(dirname(canaryAbsolutePath), { recursive: true });
     writeFileSync(
       canaryAbsolutePath,
-      [
-        'export const __pumukiMatrixCanary = (): void => {',
-        '  try {',
-        "    throw new Error('pumuki-matrix-canary')",
-        '  } catch {}',
-        '};',
-        '',
-      ].join('\n'),
+      scenario.canarySource,
       'utf8'
     );
 
-    await runRepoGateSilent();
-    const option1Report = readMatrixOptionReport(repoRoot, '1');
-    const ruleIds = extractRuleIdsFromEvidence(repoRoot);
+    await runGate(scenario.option);
+    const optionReport = readOptionReport(repoRoot, scenario.option);
+    const ruleIds = extractRuleIds(repoRoot);
 
     return {
-      option: '1',
+      option: scenario.option,
       detected:
-        option1Report.totalViolations > 0 && ruleIds.includes('skills.backend.no-empty-catch'),
-      totalViolations: option1Report.totalViolations,
-      filesScanned: option1Report.filesScanned,
+        optionReport.totalViolations > 0 && ruleIds.includes(scenario.expectedRuleId),
+      totalViolations: optionReport.totalViolations,
+      filesScanned: optionReport.filesScanned,
       ruleIds,
     };
   } finally {

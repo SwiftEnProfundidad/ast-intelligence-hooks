@@ -32,6 +32,7 @@ export {
 
 export {
   runHardModeEnforcementConfig,
+  runRuleCoverageDiagnostics,
   runSystemNotificationsConfig,
   runSkillsLockCheck,
   runValidationArtifactsCleanup,

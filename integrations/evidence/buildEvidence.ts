@@ -12,6 +12,7 @@ import type {
   PlatformState,
   RepoState,
   RulesetState,
+  SnapshotEvaluationMetrics,
   SddMetrics,
   SnapshotFinding,
 } from './schema';
@@ -32,6 +33,7 @@ export type BuildEvidenceParams = {
   humanIntent?: HumanIntentState | null;
   detectedPlatforms: Record<string, PlatformState>;
   loadedRulesets: ReadonlyArray<RulesetState>;
+  evaluationMetrics?: SnapshotEvaluationMetrics;
   sddMetrics?: SddMetrics;
   repoState?: RepoState;
 };
@@ -93,6 +95,49 @@ const normalizeOptionalNonNegativeInt = (value: unknown): number | undefined => 
     return undefined;
   }
   return Math.max(0, Math.trunc(value));
+};
+
+const countFilesAffected = (findings: ReadonlyArray<SnapshotFinding>): number => {
+  const files = new Set<string>();
+  for (const finding of findings) {
+    const file = finding.file.trim();
+    if (file.length === 0) {
+      continue;
+    }
+    files.add(file);
+  }
+  return files.size;
+};
+
+const normalizeStringArray = (values: ReadonlyArray<string>): string[] => {
+  return Array.from(
+    new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))
+  ).sort();
+};
+
+const normalizeEvaluationMetrics = (
+  value?: SnapshotEvaluationMetrics
+): SnapshotEvaluationMetrics | undefined => {
+  if (!value) {
+    return undefined;
+  }
+
+  const normalizeCount = (input: number): number =>
+    Number.isFinite(input) ? Math.max(0, Math.trunc(input)) : 0;
+
+  return {
+    facts_total: normalizeCount(value.facts_total),
+    rules_total: normalizeCount(value.rules_total),
+    baseline_rules: normalizeCount(value.baseline_rules),
+    heuristic_rules: normalizeCount(value.heuristic_rules),
+    skills_rules: normalizeCount(value.skills_rules),
+    project_rules: normalizeCount(value.project_rules),
+    matched_rules: normalizeCount(value.matched_rules),
+    unmatched_rules: normalizeCount(value.unmatched_rules),
+    evaluated_rule_ids: normalizeStringArray(value.evaluated_rule_ids),
+    matched_rule_ids: normalizeStringArray(value.matched_rule_ids),
+    unmatched_rule_ids: normalizeStringArray(value.unmatched_rule_ids),
+  };
 };
 
 const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
@@ -577,6 +622,8 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const consolidatedFindings = normalizeAndDedupeFindings(params.stage, params.findings);
   const normalizedFindings = consolidatedFindings.findings;
   const normalizedFilesScanned = normalizeOptionalNonNegativeInt(params.filesScanned);
+  const normalizedFilesAffected = countFilesAffected(normalizedFindings);
+  const normalizedEvaluationMetrics = normalizeEvaluationMetrics(params.evaluationMetrics);
   const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';
   const severity = bySeverity(normalizedFindings);
@@ -595,6 +642,8 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       ...(typeof normalizedFilesScanned === 'number'
         ? { files_scanned: normalizedFilesScanned }
         : {}),
+      files_affected: normalizedFilesAffected,
+      ...(normalizedEvaluationMetrics ? { evaluation_metrics: normalizedEvaluationMetrics } : {}),
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({

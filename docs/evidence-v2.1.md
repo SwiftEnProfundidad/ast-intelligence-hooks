@@ -9,6 +9,14 @@
 - `snapshot`:
   - `stage`: `PRE_WRITE` | `PRE_COMMIT` | `PRE_PUSH` | `CI`
   - `outcome`: `PASS` | `WARN` | `BLOCK`
+  - `files_scanned` (optional): files evaluated by gate scope (`repo`, `staged`, etc.)
+  - `files_affected` (optional): unique files with findings in this snapshot
+  - `evaluation_metrics` (optional):
+    - `facts_total`
+    - `rules_total`
+    - `baseline_rules` | `heuristic_rules` | `skills_rules` | `project_rules`
+    - `matched_rules` | `unmatched_rules`
+    - `evaluated_rule_ids[]` | `matched_rule_ids[]` | `unmatched_rule_ids[]`
   - `findings[]`: normalized findings for the current run
     - `file`: normalized path (or `unknown` when no deterministic trace exists)
     - `lines` (optional): deterministic line evidence when available
@@ -40,6 +48,7 @@
 ## Deterministic behavior
 
 - Findings are deduplicated by `ruleId + file + lines`.
+- `files_scanned` and `files_affected` are persisted independently to avoid telemetry drift.
 - For selected semantic rule families, equivalent baseline/heuristic duplicates on the same file are consolidated to a single finding, keeping the highest-severity signal deterministically.
 - Consolidation scope is file-level in v2.1: repeated same-family findings (including same rule on different lines) collapse to one deterministic representative.
 - When consolidation removes findings, `consolidation.suppressed[]` keeps the trace (`ruleId`, `replacedByRuleId`, `reason`) for auditability.

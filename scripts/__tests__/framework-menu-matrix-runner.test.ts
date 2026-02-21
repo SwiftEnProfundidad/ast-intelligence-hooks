@@ -1,6 +1,18 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { runConsumerMenuMatrix } from '../framework-menu-matrix-runner-lib';
+import type { ConsumerMenuMatrixOptionReport, MatrixOptionId } from '../framework-menu-matrix-evidence-lib';
+
+const buildOptionReport = (overrides: Partial<ConsumerMenuMatrixOptionReport> = {}): ConsumerMenuMatrixOptionReport => {
+  return {
+    stage: 'PRE_COMMIT',
+    outcome: 'PASS',
+    filesScanned: 10,
+    totalViolations: 0,
+    diagnosis: 'repo-clean',
+    ...overrides,
+  };
+};
 
 test('runConsumerMenuMatrix ejecuta 1/2/3/4/9 y devuelve contrato mínimo por opción', async () => {
   const result = await runConsumerMenuMatrix({ repoRoot: process.cwd() });
@@ -48,4 +60,43 @@ test('runConsumerMenuMatrix ejecuta 1/2/3/4/9 y devuelve contrato mínimo por op
   assert.equal(typeof option9.filesScanned, 'number');
   assert.equal(typeof option9.totalViolations, 'number');
   assert.equal(typeof option9.diagnosis, 'string');
+});
+
+test('runConsumerMenuMatrix mantiene contrato determinista ante fallo de una opción (sad path)', async () => {
+  const calls: string[] = [];
+  const reportsByOption: Record<MatrixOptionId, ConsumerMenuMatrixOptionReport> = {
+    '1': buildOptionReport({ stage: 'PRE_COMMIT', diagnosis: 'repo-clean' }),
+    '2': buildOptionReport({ stage: 'PRE_PUSH', diagnosis: 'violations-detected', totalViolations: 2 }),
+    '3': buildOptionReport({ stage: 'PRE_COMMIT', diagnosis: 'scope-empty', filesScanned: 0 }),
+    '4': buildOptionReport({ stage: 'PRE_PUSH', diagnosis: 'scope-empty', filesScanned: 0 }),
+    '9': buildOptionReport({ stage: 'PRE_PUSH', diagnosis: 'repo-clean' }),
+  };
+
+  const result = await runConsumerMenuMatrix({
+    repoRoot: process.cwd(),
+    dependencies: {
+      runRepoGateSilent: async () => {
+        calls.push('1');
+      },
+      runRepoAndStagedPrePushGateSilent: async () => {
+        calls.push('2');
+        throw new Error('option-2-failure');
+      },
+      runStagedGateSilent: async () => {
+        calls.push('3');
+      },
+      runWorkingTreePrePushGateSilent: async () => {
+        calls.push('4');
+      },
+      readMatrixOptionReport: (_repoRoot: string, optionId: MatrixOptionId) => reportsByOption[optionId],
+    },
+  });
+
+  assert.deepEqual(calls, ['1', '2', '3', '4']);
+  assert.equal(result.byOption['1'].diagnosis, 'repo-clean');
+  assert.equal(result.byOption['2'].diagnosis, 'unknown');
+  assert.equal(result.byOption['2'].stage, 'UNKNOWN');
+  assert.equal(result.byOption['3'].diagnosis, 'scope-empty');
+  assert.equal(result.byOption['4'].stage, 'PRE_PUSH');
+  assert.equal(result.byOption['9'].diagnosis, 'repo-clean');
 });
