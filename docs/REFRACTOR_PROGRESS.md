@@ -201,4 +201,5 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - Validación: `npm test -- --runInBand` en verde tras correcciones de regresión.
 - ✅ Consolidar reporte operativo al usuario con estado de tests + auditoría repo/worktree.
 - ✅ Diseñar plan de commits atómicos sobre el diff actual (orden, alcance y riesgo por bloque).
-- 🚧 Ejecutar plan de commits atómicos y después validar alcance de “TODAS las reglas/skills” para plataformas sin código nativo en este repo (iOS/Android/Frontend).
+- ✅ Ejecutar plan de commits atómicos sobre el diff completo.
+- 🚧 Validar alcance de “TODAS las reglas/skills” para plataformas sin código nativo en este repo (iOS/Android/Frontend).
