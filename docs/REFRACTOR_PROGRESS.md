@@ -524,4 +524,7 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - Head/Base: `develop -> main`.
   - Validación post-merge:
     - `main` sincronizada con remoto (`git status -sb` limpio).
+- ✅ Restauración y sincronización de rama `develop` tras borrado remoto por `--delete-branch`.
+  - `develop` remoto recreada desde `main`.
+  - `main` y `develop` quedan alineadas en el mismo SHA para retomar Git Flow.
 - 🚧 Próxima tarea activa: espera operativa y definición del siguiente bloque de trabajo.
