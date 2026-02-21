@@ -1,37 +1,77 @@
-import { spawnSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import packlist from 'npm-packlist';
 import { inspectPackageManifestPaths } from './package-manifest-lib';
 
-type PackFile = {
+export type PackFile = {
   path: string;
 };
 
-type PackPayload = {
+export type PackPayload = {
   id: string;
   files: PackFile[];
 };
 
-const runPackDryRun = (): PackPayload => {
-  const result = spawnSync('npm', ['pack', '--json', '--dry-run'], {
-    encoding: 'utf8',
-  });
-
-  if (typeof result.status !== 'number' || result.status !== 0) {
-    throw new Error(`npm pack --json --dry-run failed:\n${result.stdout ?? ''}\n${result.stderr ?? ''}`);
-  }
-
-  const parsed = JSON.parse(result.stdout) as PackPayload[];
-  if (!Array.isArray(parsed) || parsed.length === 0) {
-    throw new Error('npm pack --json --dry-run returned an empty payload');
-  }
-  const payload = parsed[0];
-  if (!payload || !Array.isArray(payload.files)) {
-    throw new Error('npm pack --json --dry-run returned an invalid payload');
-  }
-  return payload;
+type PackageJson = {
+  name?: string;
+  version?: string;
 };
 
-const main = (): void => {
-  const payload = runPackDryRun();
+type ReadTextFile = (path: string, encoding: BufferEncoding) => string;
+
+type CheckDeps = {
+  cwd: string;
+  readTextFile: ReadTextFile;
+  listPackFiles: (cwd: string) => Promise<ReadonlyArray<string>>;
+  writeStdout: (message: string) => void;
+  writeStderr: (message: string) => void;
+};
+
+const createDefaultDeps = (): CheckDeps => ({
+  cwd: process.cwd(),
+  readTextFile: (path, encoding) => readFileSync(path, encoding),
+  listPackFiles: (cwd) =>
+    packlist({
+      path: cwd,
+    }),
+  writeStdout: (message) => {
+    process.stdout.write(message);
+  },
+  writeStderr: (message) => {
+    process.stderr.write(message);
+  },
+});
+
+export const readPackageId = (deps: Pick<CheckDeps, 'cwd' | 'readTextFile'>): string => {
+  const packageJsonPath = resolve(deps.cwd, 'package.json');
+  const raw = deps.readTextFile(packageJsonPath, 'utf8');
+  const parsed = JSON.parse(raw) as PackageJson;
+  const name = parsed.name?.trim();
+  const version = parsed.version?.trim();
+  if (!name || !version) {
+    return 'package@unknown';
+  }
+  return `${name}@${version}`;
+};
+
+export const runPackDryRun = async (deps: Pick<CheckDeps, 'cwd' | 'readTextFile' | 'listPackFiles'>): Promise<PackPayload> => {
+  const files = await deps.listPackFiles(deps.cwd);
+
+  return {
+    id: readPackageId(deps),
+    files: files.map((path) => ({ path })),
+  };
+};
+
+export const runPackageManifestCheck = async (
+  partialDeps?: Partial<CheckDeps>
+): Promise<void> => {
+  const deps = {
+    ...createDefaultDeps(),
+    ...partialDeps,
+  } as CheckDeps;
+
+  const payload = await runPackDryRun(deps);
   const filePaths = payload.files.map((file) => file.path);
   const report = inspectPackageManifestPaths(filePaths);
 
@@ -47,8 +87,14 @@ const main = (): void => {
     );
   }
 
-  console.log(`package manifest check passed for ${payload.id}`);
-  console.log(`files scanned: ${filePaths.length}`);
+  deps.writeStdout(`package manifest check passed for ${payload.id}\n`);
+  deps.writeStdout(`files scanned: ${filePaths.length}\n`);
 };
 
-main();
+if (require.main === module) {
+  void runPackageManifestCheck().catch((error: unknown) => {
+    const message = error instanceof Error ? error.message : 'Unexpected package manifest error';
+    createDefaultDeps().writeStderr(`${message}\n`);
+    process.exitCode = 1;
+  });
+}

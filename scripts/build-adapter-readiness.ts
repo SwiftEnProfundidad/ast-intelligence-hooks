@@ -43,9 +43,9 @@ const main = (): number => {
 };
 
 try {
-  process.exit(main());
+  process.exitCode = main();
 } catch (error) {
   const message = error instanceof Error ? error.message : 'unknown error';
   process.stderr.write(`adapter readiness generation failed: ${message}\n`);
-  process.exit(1);
+  process.exitCode = 1;
 }

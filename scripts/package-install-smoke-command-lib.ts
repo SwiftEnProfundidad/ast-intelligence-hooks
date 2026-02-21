@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process';
+import { spawnSync as runSpawnSync } from 'node:child_process';
 
 export type RunCommandResult = {
   command: string;
@@ -22,7 +22,7 @@ export const runCommand = (params: {
 }): RunCommandResult => {
   const { cwd, executable, args, env } = params;
   const command = `${executable} ${args.join(' ')}`.trim();
-  const result = spawnSync(executable, args, {
+  const result = runSpawnSync(executable, args, {
     cwd,
     env: {
       ...process.env,

@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 import type {
   AdapterSessionStatusCommand,
   AdapterSessionStatusCommandExecution,
@@ -8,7 +8,7 @@ export const runAdapterSessionStatusCommand = (
   command: AdapterSessionStatusCommand
 ): AdapterSessionStatusCommandExecution => {
   try {
-    const output = execFileSync('bash', ['-lc', command.command], {
+    const output = runBinarySync('bash', ['-lc', command.command], {
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'pipe'],
     });

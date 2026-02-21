@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 
 export const runGh = (args: ReadonlyArray<string>): string => {
-  return execFileSync('gh', args, {
+  return runBinarySync('gh', args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'pipe'],
   });
