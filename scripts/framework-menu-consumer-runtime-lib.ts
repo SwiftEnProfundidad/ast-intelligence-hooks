@@ -6,6 +6,7 @@ import {
   formatLegacyFileDiagnostics,
   formatLegacyEslintAudit,
   formatLegacyPatternChecks,
+  type LegacyAuditSummary,
   readLegacyAuditSummary,
   renderLegacyPanel,
   resolveLegacyPanelOuterWidth,
@@ -34,11 +35,24 @@ export const createConsumerMenuRuntime = (params: {
     return process.stdout.isTTY === true;
   };
 
-  const renderSummary = (): void => {
-    params.write(`\n${formatLegacyAuditReport(readLegacyAuditSummary(process.cwd()), {
+  const renderSummary = (): LegacyAuditSummary => {
+    const summary = readLegacyAuditSummary(process.cwd());
+    params.write(`\n${formatLegacyAuditReport(summary, {
       panelWidth: resolveLegacyPanelOuterWidth(),
       color: useColor(),
     })}\n`);
+    return summary;
+  };
+
+  const printEmptyScopeHint = (summary: LegacyAuditSummary, scope: 'staged' | 'workingTree'): void => {
+    if (summary.status !== 'ok' || summary.filesScanned > 0) {
+      return;
+    }
+    if (scope === 'staged') {
+      params.write('\nℹ Scope vacío (staged): no hay archivos staged para auditar. Usa 1 o 2 para auditoría completa.\n');
+      return;
+    }
+    params.write('\nℹ Scope vacío (working tree): no hay cambios sin commitear para auditar. Usa 1 o 2 para auditoría completa.\n');
   };
 
   const actions = createConsumerLegacyMenuActions({
@@ -52,11 +66,13 @@ export const createConsumerMenuRuntime = (params: {
     },
     runStrictStagedOnly: async () => {
       await params.runStagedGate();
-      renderSummary();
+      const summary = renderSummary();
+      printEmptyScopeHint(summary, 'staged');
     },
     runStandardCriticalHigh: async () => {
       await params.runWorkingTreeGate();
-      renderSummary();
+      const summary = renderSummary();
+      printEmptyScopeHint(summary, 'workingTree');
     },
     runPatternChecks: async () => {
       params.write(`\n${formatLegacyPatternChecks(readLegacyAuditSummary(process.cwd()))}\n`);

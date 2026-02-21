@@ -298,4 +298,18 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
     - `scripts/__tests__/framework-menu-gate-lib.test.ts`
     - `scripts/__tests__/framework-menu-consumer-actions.test.ts`
     - `docs/REFRACTOR_PROGRESS.md`
-- 🚧 Próxima tarea: validar contigo si hacemos push + PR del commit `135acdd` o seguimos con otro bloque local.
+- ✅ Próxima tarea anterior completada: push ejecutado a `origin/main` con los commits locales pendientes (`135acdd`, `c1631e3`).
+- ✅ Diagnóstico cerrado: el menú no está “ciego”; la matriz real en este repo es:
+  - ✅ Opción `1` (`repo · PRE_COMMIT`) → `findings=3`, `files_scanned=925`, `outcome=BLOCK`.
+  - ✅ Opción `2` (`repo+staged · PRE_PUSH`) → `findings=6`, `files_scanned=925`, `outcome=BLOCK`.
+  - ✅ Opción `3` (`staged · PRE_COMMIT`) puede devolver `0` cuando no hay staged (comportamiento esperado).
+  - ✅ Opción `4` (`working tree · PRE_PUSH`) puede devolver `0` cuando no hay cambios relevantes en working tree.
+- ✅ Validación canaria controlada ejecutada: una violación temporal en `scripts/` dispara findings y clasificación en `Backend`, confirmando que el motor de reglas sí detecta.
+- ✅ TDD UX/diagnóstico aplicado:
+  - ✅ RED: `scripts/__tests__/framework-menu-consumer-runtime.test.ts` (2 fallos esperados).
+  - ✅ GREEN: aviso explícito de `Scope vacío` en opción `3` (staged) y opción `4` (working tree) cuando `files_scanned=0`.
+  - ✅ REFACTOR: consolidado en `scripts/framework-menu-consumer-runtime-lib.ts` con helper único.
+  - ✅ Tests en verde:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime.test.ts scripts/__tests__/framework-menu-consumer-actions.test.ts` (3/3)
+- ✅ Próxima tarea anterior completada: commit atómico preparado para ajuste de diagnóstico/UX del menú consumer (`scope vacío` + tests).
+- 🚧 Próxima tarea: ejecutar push de este commit y validar en remoto.
