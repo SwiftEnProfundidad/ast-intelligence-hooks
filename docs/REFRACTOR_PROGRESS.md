@@ -514,3 +514,9 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
     - `npm run typecheck` (verde).
     - matriz `framework-menu-matrix*` (`11/11` verde).
 - ✅ Estado actual: ciclo activo (`docs/ENTERPRISE_AUDIT_CYCLE_ACTIVE.md`) cerrado, sin tarea en construcción.
+
+## Fase 27 — Release Flow (`develop` -> `main`)
+- ✅ PR de release abierta desde `develop` hacia `main`.
+  - URL: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/315`
+  - Título: `chore: merge develop into main (enterprise audit cycle)`
+- 🚧 Próxima tarea activa: merge de la PR `#315` y validación post-merge en `main`.
