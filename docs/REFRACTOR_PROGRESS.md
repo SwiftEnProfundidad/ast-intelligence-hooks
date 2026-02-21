@@ -287,4 +287,15 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
     - `integrations/lifecycle/update.ts`
     - `scripts/adapter-session-status-writes-log-filter-lib.ts`
 - ✅ Cierre de Fase 18 confirmado con matriz funcional `1/2/3/4/9` validada en ejecución real.
-- 🚧 Próxima tarea: ejecutar commit atómico local del bloque `menu scope/stage normalization + framework fallback`.
+- ✅ Commit atómico local ejecutado:
+  - ✅ `135acdd` — `feat(menu): normalize consumer stage/scope and enable framework self-audit skills`
+  - ✅ Alcance incluido:
+    - `integrations/config/skillsRuleSet.ts`
+    - `integrations/config/__tests__/skillsRuleSet.test.ts`
+    - `scripts/framework-menu.ts`
+    - `scripts/framework-menu-gate-lib.ts`
+    - `scripts/framework-menu-consumer-actions-lib.ts`
+    - `scripts/__tests__/framework-menu-gate-lib.test.ts`
+    - `scripts/__tests__/framework-menu-consumer-actions.test.ts`
+    - `docs/REFRACTOR_PROGRESS.md`
+- 🚧 Próxima tarea: validar contigo si hacemos push + PR del commit `135acdd` o seguimos con otro bloque local.
