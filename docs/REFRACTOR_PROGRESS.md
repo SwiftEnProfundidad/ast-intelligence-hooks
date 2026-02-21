@@ -323,4 +323,5 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
     - `scripts/adapter-session-status-writes-log-filter-lib.ts`
 - ✅ Próxima tarea anterior completada: commit atómico del cierre de validación manual ejecutado en local.
 - ✅ Próxima tarea anterior completada: push final de sincronización ejecutado (`fb3c30d -> origin/main`) y rama alineada.
-- 🚧 Próxima tarea: validar estado final limpio (`git status`) y preparar cierre de bloque para siguiente instrucción.
+- ✅ Próxima tarea anterior completada: estado final limpio validado (`git status` = `main...origin/main`) y bloque cerrado.
+- 🚧 Próxima tarea: esperar siguiente instrucción del usuario para abrir nuevo bloque de trabajo.
