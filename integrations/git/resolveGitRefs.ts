@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 
 const runGit = (args: ReadonlyArray<string>): string => {
-  return execFileSync('git', args, {
+  return runBinarySync('git', args, {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
   }).trim();

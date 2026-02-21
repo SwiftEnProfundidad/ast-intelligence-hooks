@@ -5,15 +5,16 @@ import { printGateFindings } from '../runPlatformGateOutput';
 
 test('printGateFindings no emite logs cuando no hay findings', () => {
   const captured: string[] = [];
-  const originalLog = console.log;
-  console.log = (...args: unknown[]): void => {
-    captured.push(args.join(' '));
-  };
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: unknown): boolean => {
+    captured.push(String(chunk).trimEnd());
+    return true;
+  }) as typeof process.stdout.write;
 
   try {
     printGateFindings([]);
   } finally {
-    console.log = originalLog;
+    process.stdout.write = originalWrite;
   }
 
   assert.deepEqual(captured, []);
@@ -37,15 +38,16 @@ test('printGateFindings imprime ruleId y message por cada finding', () => {
     },
   ];
   const captured: string[] = [];
-  const originalLog = console.log;
-  console.log = (...args: unknown[]): void => {
-    captured.push(args.join(' '));
-  };
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = ((chunk: unknown): boolean => {
+    captured.push(String(chunk).trimEnd());
+    return true;
+  }) as typeof process.stdout.write;
 
   try {
     printGateFindings(findings);
   } finally {
-    console.log = originalLog;
+    process.stdout.write = originalWrite;
   }
 
   assert.deepEqual(captured, ['R1: Primera alerta', 'R2: Segunda alerta']);

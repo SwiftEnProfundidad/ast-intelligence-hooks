@@ -13,6 +13,7 @@ type GenerateEvidenceParams = {
   stage: string;
   findings: ReadonlyArray<Finding>;
   gateOutcome: string;
+  filesScanned: number;
   previousEvidence: unknown;
   detectedPlatforms: unknown;
   loadedRulesets: unknown;
@@ -87,6 +88,7 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
       skillsRuleSet,
       projectRules,
       heuristicRules,
+      filesScanned: 42,
       evidenceService,
       sddDecision: {
         allowed: true,
@@ -124,6 +126,7 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
   assert.equal(capturedGenerateEvidenceParams?.stage, 'PRE_PUSH');
   assert.deepEqual(capturedGenerateEvidenceParams?.findings, findings);
   assert.equal(capturedGenerateEvidenceParams?.gateOutcome, 'BLOCK');
+  assert.equal(capturedGenerateEvidenceParams?.filesScanned, 42);
   assert.deepEqual(capturedGenerateEvidenceParams?.previousEvidence, previousEvidence);
   assert.deepEqual(capturedGenerateEvidenceParams?.detectedPlatforms, detectedPlatformsRecord);
   assert.deepEqual(capturedGenerateEvidenceParams?.loadedRulesets, rulesetState);

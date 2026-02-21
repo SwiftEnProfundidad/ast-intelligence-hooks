@@ -9,83 +9,61 @@ const flushAsync = async (): Promise<void> => {
   });
 };
 
-test('runCliCommand finaliza con el codigo retornado por el runner', async () => {
-  const exitCodes: number[] = [];
-  const originalExit = process.exit;
-  const mutableProcess = process as typeof process & {
-    exit(code?: number): never;
-  };
-  mutableProcess.exit = ((code?: number): never => {
-    exitCodes.push(code ?? 0);
-    return undefined as never;
-  }) as typeof process.exit;
+test('runCliCommand fija process.exitCode con el código retornado por el runner', async () => {
+  const originalExitCode = process.exitCode;
 
   try {
+    process.exitCode = undefined;
     runCliCommand(async () => 7);
     await flushAsync();
+    assert.equal(process.exitCode, 7);
   } finally {
-    mutableProcess.exit = originalExit;
+    process.exitCode = originalExitCode;
   }
-
-  assert.deepEqual(exitCodes, [7]);
 });
 
-test('runCliCommand reporta mensaje de Error y finaliza con codigo 1 cuando el runner falla', async () => {
-  const exitCodes: number[] = [];
+test('runCliCommand escribe error en stderr y fija process.exitCode=1 cuando el runner falla', async () => {
   const errors: string[] = [];
-  const originalExit = process.exit;
-  const originalError = console.error;
-  const mutableProcess = process as typeof process & {
-    exit(code?: number): never;
-  };
-  mutableProcess.exit = ((code?: number): never => {
-    exitCodes.push(code ?? 0);
-    return undefined as never;
-  }) as typeof process.exit;
-  console.error = (...args: unknown[]): void => {
-    errors.push(args.map((value) => String(value)).join(' '));
-  };
+  const originalExitCode = process.exitCode;
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  process.stderr.write = ((chunk: unknown): boolean => {
+    errors.push(String(chunk).trimEnd());
+    return true;
+  }) as typeof process.stderr.write;
 
   try {
+    process.exitCode = undefined;
     runCliCommand(async () => {
       throw new Error('runner failed');
     });
     await flushAsync();
+    assert.deepEqual(errors, ['runner failed']);
+    assert.equal(process.exitCode, 1);
   } finally {
-    mutableProcess.exit = originalExit;
-    console.error = originalError;
+    process.stderr.write = originalStderrWrite;
+    process.exitCode = originalExitCode;
   }
-
-  assert.deepEqual(errors, ['runner failed']);
-  assert.deepEqual(exitCodes, [1]);
 });
 
-test('runCliCommand usa mensaje generico para errores no tipados y finaliza con codigo 1', async () => {
-  const exitCodes: number[] = [];
+test('runCliCommand usa mensaje genérico para errores no tipados y fija process.exitCode=1', async () => {
   const errors: string[] = [];
-  const originalExit = process.exit;
-  const originalError = console.error;
-  const mutableProcess = process as typeof process & {
-    exit(code?: number): never;
-  };
-  mutableProcess.exit = ((code?: number): never => {
-    exitCodes.push(code ?? 0);
-    return undefined as never;
-  }) as typeof process.exit;
-  console.error = (...args: unknown[]): void => {
-    errors.push(args.map((value) => String(value)).join(' '));
-  };
+  const originalExitCode = process.exitCode;
+  const originalStderrWrite = process.stderr.write.bind(process.stderr);
+  process.stderr.write = ((chunk: unknown): boolean => {
+    errors.push(String(chunk).trimEnd());
+    return true;
+  }) as typeof process.stderr.write;
 
   try {
+    process.exitCode = undefined;
     runCliCommand(async () => {
       throw 'non-error';
     });
     await flushAsync();
+    assert.deepEqual(errors, ['Unexpected CLI runner error.']);
+    assert.equal(process.exitCode, 1);
   } finally {
-    mutableProcess.exit = originalExit;
-    console.error = originalError;
+    process.stderr.write = originalStderrWrite;
+    process.exitCode = originalExitCode;
   }
-
-  assert.deepEqual(errors, ['Unexpected CLI runner error.']);
-  assert.deepEqual(exitCodes, [1]);
 });

@@ -15,6 +15,9 @@ const buildGitStub = (repoRoot: string): IGitService => {
   return {
     runGit: () => '',
     getStagedFacts: () => [],
+    getRepoFacts: () => [],
+    getRepoAndStagedFacts: () => [],
+    getStagedAndUnstagedFacts: () => [],
     resolveRepoRoot: () => repoRoot,
   };
 };

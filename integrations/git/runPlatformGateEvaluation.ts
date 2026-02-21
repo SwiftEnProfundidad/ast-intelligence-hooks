@@ -86,6 +86,7 @@ export const evaluatePlatformGateFindings = (
     ? activeDependencies.extractHeuristicFacts({
       facts: params.facts,
       detectedPlatforms,
+      typeScriptScope: heuristicsConfig.typeScriptScope,
     })
     : [];
   const evaluationFacts: ReadonlyArray<Fact> =

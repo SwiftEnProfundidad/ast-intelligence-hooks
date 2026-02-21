@@ -25,6 +25,7 @@ export const emitPlatformGateEvidence = (params: {
   policyTrace?: ResolvedStagePolicy['trace'];
   findings: ReadonlyArray<Finding>;
   gateOutcome: GateOutcome;
+  filesScanned: number;
   repoRoot: string;
   detectedPlatforms: DetectedPlatforms;
   skillsRuleSet: SkillsRuleSetLoadResult;
@@ -42,6 +43,7 @@ export const emitPlatformGateEvidence = (params: {
     stage: params.stage,
     findings: params.findings,
     gateOutcome: params.gateOutcome,
+    filesScanned: params.filesScanned,
     repoRoot: params.repoRoot,
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),

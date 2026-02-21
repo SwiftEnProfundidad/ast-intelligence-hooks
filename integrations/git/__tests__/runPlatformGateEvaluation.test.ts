@@ -95,7 +95,7 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic fac
 
   const deps: Partial<PlatformGateEvaluationDependencies> = {
     detectPlatformsFromFacts: () => detectedPlatforms,
-    loadHeuristicsConfig: () => ({ astSemanticEnabled: false }),
+    loadHeuristicsConfig: () => ({ astSemanticEnabled: false, typeScriptScope: 'platform' }),
     loadSkillsRuleSetForStage: (stage, repoRoot) => {
       capturedSkillsStage = stage;
       capturedSkillsRepoRoot = repoRoot;
@@ -138,6 +138,7 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic fac
   assert.deepEqual(capturedExtractHeuristicFactsInput, {
     facts: inputFacts,
     detectedPlatforms,
+    typeScriptScope: 'platform',
   });
   assert.deepEqual(
     capturedMergeRuleSetsInput?.baselineRules.map((rule) => rule.id),
@@ -218,7 +219,7 @@ test('evaluatePlatformGateFindings filtra heuristicas mapeadas y permite downgra
 
   const deps: Partial<PlatformGateEvaluationDependencies> = {
     detectPlatformsFromFacts: () => detectedPlatforms,
-    loadHeuristicsConfig: () => ({ astSemanticEnabled: true }),
+    loadHeuristicsConfig: () => ({ astSemanticEnabled: true, typeScriptScope: 'platform' }),
     loadSkillsRuleSetForStage: () => skillsRuleSet,
     buildCombinedBaselineRules: () => [baselineRule],
     extractHeuristicFacts: () => {

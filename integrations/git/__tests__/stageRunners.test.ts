@@ -114,20 +114,21 @@ const setupBackendCommitRangeWithoutUpstream = (repoRoot: string): void => {
   runGit(repoRoot, ['commit', '-m', 'feat: backend explicit any fixture']);
 };
 
-const withCapturedConsoleError = async (
+const withCapturedStderr = async (
   callback: () => Promise<void>
 ): Promise<Array<string>> => {
-  const original = console.error;
+  const original = process.stderr.write.bind(process.stderr);
   const messages: Array<string> = [];
-  console.error = (...args: Array<unknown>) => {
-    messages.push(args.map((arg) => String(arg)).join(' '));
-  };
+  process.stderr.write = ((chunk: unknown): boolean => {
+    messages.push(String(chunk).trimEnd());
+    return true;
+  }) as typeof process.stderr.write;
 
   try {
     await callback();
     return messages;
   } finally {
-    console.error = original;
+    process.stderr.write = original;
   }
 };
 
@@ -260,7 +261,7 @@ test('runPrePushStage fails safe with guidance when branch has no upstream', asy
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);
 
-    const messages = await withCapturedConsoleError(async () => {
+    const messages = await withCapturedStderr(async () => {
       const exitCode = await runPrePushStage();
       assert.equal(exitCode, 1);
     });

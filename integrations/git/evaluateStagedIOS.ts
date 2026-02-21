@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 import type { Fact } from '../../core/facts/Fact';
 import type { FileChangeFact } from '../../core/facts/FileChangeFact';
 import type { FileContentFact } from '../../core/facts/FileContentFact';
@@ -21,7 +21,7 @@ type StagedChange = {
 };
 
 const runGit = (args: ReadonlyArray<string>): string => {
-  return execFileSync('git', args, { encoding: 'utf8' });
+  return runBinarySync('git', args, { encoding: 'utf8' });
 };
 
 const parseNameStatus = (output: string): StagedChange[] => {

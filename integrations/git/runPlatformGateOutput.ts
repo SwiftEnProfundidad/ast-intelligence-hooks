@@ -6,6 +6,6 @@ const formatFinding = (finding: Finding): string => {
 
 export const printGateFindings = (findings: ReadonlyArray<Finding>): void => {
   for (const finding of findings) {
-    console.log(formatFinding(finding));
+    process.stdout.write(`${formatFinding(finding)}\n`);
   }
 };
