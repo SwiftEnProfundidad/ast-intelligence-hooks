@@ -80,6 +80,7 @@ test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cu
       };
       telemetry?: {
         chain?: string;
+        mcp_tool?: string;
       };
       sdd?: {
         decision?: {
@@ -96,7 +97,8 @@ test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cu
     assert.equal(decisionCode, 'OPENSPEC_MISSING');
     assert.equal(typeof payload.ai_gate, 'object');
     assert.equal(payload.ai_gate?.evidence?.kind, 'missing');
-    assert.equal(payload.telemetry?.chain, 'pumuki->ai_gate->ai_evidence');
+    assert.equal(payload.telemetry?.chain, 'pumuki->mcp->ai_gate->ai_evidence');
+    assert.equal(payload.telemetry?.mcp_tool, 'ai_gate_check');
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);

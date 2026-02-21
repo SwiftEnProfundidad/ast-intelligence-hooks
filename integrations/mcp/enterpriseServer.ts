@@ -8,7 +8,7 @@ import { readLifecycleStatus } from '../lifecycle';
 import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
 import { toStatusPayload } from './evidencePayloads';
-import { evaluateAiGate } from '../gate/evaluateAiGate';
+import { runEnterpriseAiGateCheck } from './aiGateCheck';
 
 export interface EnterpriseServerOptions {
   host?: string;
@@ -353,23 +353,16 @@ const executeEnterpriseTool = (
   switch (toolName) {
     case 'ai_gate_check': {
       const stage = toSddStage(args.stage, 'PRE_COMMIT');
-      const evaluation = evaluateAiGate({
+      const execution = runEnterpriseAiGateCheck({
         repoRoot,
         stage,
       });
       return {
         name: toolName,
-        success: evaluation.allowed,
-        dryRun: true,
-        executed: true,
-        data: {
-          status: evaluation.status,
-          stage: evaluation.stage,
-          policy: evaluation.policy,
-          violations: evaluation.violations,
-          evidence: evaluation.evidence,
-          repo_state: evaluation.repo_state,
-        },
+        success: execution.success,
+        dryRun: execution.dryRun,
+        executed: execution.executed,
+        data: execution.result,
       };
     }
     case 'check_sdd_status': {

@@ -14,6 +14,7 @@ import {
   type SddStage,
 } from '../sdd';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
+import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
 
 type LifecycleCommand =
   | 'install'
@@ -296,7 +297,7 @@ const printDoctorReport = (report: LifecycleDoctorReport): void => {
   writeInfo(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
 };
 
-const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->ai_gate->ai_evidence';
+const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
 
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
@@ -304,6 +305,7 @@ type PreWriteValidationEnvelope = {
   telemetry: {
     chain: typeof PRE_WRITE_TELEMETRY_CHAIN;
     stage: SddStage;
+    mcp_tool: 'ai_gate_check';
   };
 };
 
@@ -316,6 +318,7 @@ const buildPreWriteValidationEnvelope = (
   telemetry: {
     chain: PRE_WRITE_TELEMETRY_CHAIN,
     stage: result.stage,
+    mcp_tool: 'ai_gate_check',
   },
 });
 
@@ -433,10 +436,10 @@ export const runLifecycleCli = async (
           });
           const shouldEvaluateAiGate = result.stage === 'PRE_WRITE';
           const aiGate = shouldEvaluateAiGate
-            ? evaluateAiGate({
+            ? runEnterpriseAiGateCheck({
               repoRoot: process.cwd(),
               stage: result.stage,
-            })
+            }).result
             : null;
           if (parsed.json) {
             writeInfo(
