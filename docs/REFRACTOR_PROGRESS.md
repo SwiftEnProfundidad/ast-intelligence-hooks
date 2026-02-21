@@ -471,4 +471,20 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
     - `9` -> `PRE_PUSH`, `PASS`, `filesScanned=0`, `diagnosis=scope-empty`
 
 ## Fase 23 — Espera Operativa
+- ✅ Re-ejecutar validación operativa rápida post-sync del menú consumer (matriz `1/2/3/4/9`).
+  - ✅ Comando:
+    - `node --import tsx -e "const m = await import('./scripts/framework-menu-matrix-runner-lib.ts'); const report = await m.default.runConsumerMenuMatrix({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"`
+  - ✅ Resultado:
+    - `1` -> `PRE_COMMIT`, `BLOCK`, `filesScanned=939`, `violations=4`
+    - `2` -> `PRE_PUSH`, `BLOCK`, `filesScanned=939`, `violations=8`
+    - `3` -> `PRE_COMMIT`, `PASS`, `filesScanned=0`, `diagnosis=scope-empty`
+    - `4` -> `PRE_PUSH`, `PASS`, `filesScanned=0`, `diagnosis=scope-empty`
+    - `9` -> `PRE_PUSH`, `PASS`, `filesScanned=0`, `diagnosis=scope-empty`
+
+## Fase 24 — Espera Operativa
+- ✅ Ejecutar commit + push del tracker pendiente (`REFRACTOR_PROGRESS.md`) tras validación rápida.
+  - ✅ Commit: `docs(progress): record post-push matrix validation` (`e158480`).
+  - ✅ Push: `main -> origin/main` (`32a9a5d..e158480`).
+
+## Fase 25 — Espera Operativa
 - 🚧 Esperar instrucción del usuario para el siguiente bloque (implementación o cierre release).
