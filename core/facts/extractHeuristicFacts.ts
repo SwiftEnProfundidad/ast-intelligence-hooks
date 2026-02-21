@@ -23,6 +23,7 @@ export type HeuristicExtractionParams = {
     frontend?: { detected: boolean };
     backend?: { detected: boolean };
   };
+  typeScriptScope?: 'platform' | 'all';
 };
 
 export type ExtractedHeuristicFact = HeuristicFact & { source: string };
@@ -31,7 +32,25 @@ const HEURISTIC_SOURCE = 'heuristics:ast';
 
 // --- Helper Functions ---
 
-const isTypeScriptHeuristicTargetPath = (path: string): boolean => {
+const isAllTypeScriptHeuristicScopeEnabled = (
+  params?: Pick<HeuristicExtractionParams, 'typeScriptScope'>
+): boolean => {
+  if (params?.typeScriptScope === 'all') {
+    return true;
+  }
+  if (params?.typeScriptScope === 'platform') {
+    return false;
+  }
+  return process.env.PUMUKI_HEURISTICS_TS_SCOPE?.trim().toLowerCase() === 'all';
+};
+
+const isTypeScriptHeuristicTargetPath = (
+  path: string,
+  params?: Pick<HeuristicExtractionParams, 'typeScriptScope'>
+): boolean => {
+  if (isAllTypeScriptHeuristicScopeEnabled(params)) {
+    return path.endsWith('.ts') || path.endsWith('.tsx');
+  }
   return (
     (path.endsWith('.ts') || path.endsWith('.tsx')) &&
     (path.startsWith('apps/frontend/') ||
@@ -111,6 +130,9 @@ const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
 };
 
 const hasDetectedHeuristicPlatform = (params: HeuristicExtractionParams): boolean => {
+  if (isAllTypeScriptHeuristicScopeEnabled(params)) {
+    return true;
+  }
   return Boolean(
     params.detectedPlatforms.frontend?.detected ||
     params.detectedPlatforms.backend?.detected ||
@@ -392,8 +414,14 @@ export const extractHeuristicFacts = (
 
     // AST-based heuristics
     const hasTypeScriptPlatform =
-      params.detectedPlatforms.frontend?.detected || params.detectedPlatforms.backend?.detected;
-    if (!hasTypeScriptPlatform || !isTypeScriptHeuristicTargetPath(fileFact.path) || isTestPath(fileFact.path)) {
+      params.detectedPlatforms.frontend?.detected ||
+      params.detectedPlatforms.backend?.detected ||
+      isAllTypeScriptHeuristicScopeEnabled(params);
+    if (
+      !hasTypeScriptPlatform ||
+      !isTypeScriptHeuristicTargetPath(fileFact.path, params) ||
+      isTestPath(fileFact.path)
+    ) {
       continue;
     }
 
