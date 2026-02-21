@@ -324,4 +324,38 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ Próxima tarea anterior completada: commit atómico del cierre de validación manual ejecutado en local.
 - ✅ Próxima tarea anterior completada: push final de sincronización ejecutado (`fb3c30d -> origin/main`) y rama alineada.
 - ✅ Próxima tarea anterior completada: estado final limpio validado (`git status` = `main...origin/main`) y bloque cerrado.
-- 🚧 Próxima tarea: esperar siguiente instrucción del usuario para abrir nuevo bloque de trabajo.
+- ✅ Próxima tarea anterior completada: instrucción recibida para abrir nuevo bloque.
+
+## Fase 19 — Automatización de Matriz de Menú Consumer (1/2/3/4/9)
+- ✅ RED: crear test de integración que ejecute la matriz `1/2/3/4/9` y valide contrato mínimo por opción (`stage`, `outcome`, `files_scanned`, `total_violations`).
+  - ✅ Test añadido: `scripts/__tests__/framework-menu-matrix-runner.test.ts`.
+  - ✅ Estado RED confirmado: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-runner.test.ts` falla con `MODULE_NOT_FOUND` de `../framework-menu-matrix-runner-lib`.
+- ✅ GREEN: implementar runner determinista de matriz (sin interacción manual) para menú consumer.
+  - ✅ Implementado: `scripts/framework-menu-matrix-runner-lib.ts` con ejecución secuencial de opciones `1/2/3/4/9` y reporte tipado por opción.
+  - ✅ Validación GREEN: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-runner.test.ts` (1/1).
+- ✅ REFACTOR: extraer utilidades comunes de parseo/validación de `.ai_evidence.json` usadas por la matriz.
+  - ✅ Nueva utilidad: `scripts/framework-menu-matrix-evidence-lib.ts` (`readMatrixOptionReport`, `toMatrixOptionReport`, tipos compartidos de matriz).
+  - ✅ Runner simplificado: `scripts/framework-menu-matrix-runner-lib.ts` ahora usa `runOption(...)` + utilidad compartida, sin duplicación de normalización.
+  - ✅ Validación post-refactor: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-runner.test.ts` (1/1).
+- ✅ RED: crear test canario controlado que inyecte una violación temporal y exija detección efectiva en `repo` (`option 1`).
+  - ✅ Test añadido: `scripts/__tests__/framework-menu-matrix-canary.test.ts`.
+  - ✅ Estado RED confirmado: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-canary.test.ts` falla con `MODULE_NOT_FOUND` de `../framework-menu-matrix-canary-lib`.
+- ✅ GREEN: implementar helper canario reutilizable y cleanup garantizado tras ejecución.
+  - ✅ Implementado: `scripts/framework-menu-matrix-canary-lib.ts`.
+  - ✅ Cubre creación de violación temporal, ejecución de `option 1` (`repo`) y cleanup garantizado en `finally`.
+  - ✅ Validación GREEN: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-canary.test.ts` (1/1).
+- ✅ REFACTOR: consolidar salida de diagnóstico para diferenciar explícitamente `scope vacío` vs `repo limpio`.
+  - ✅ `scripts/framework-menu-matrix-evidence-lib.ts` ahora emite `diagnosis` por opción: `scope-empty | repo-clean | violations-detected | unknown`.
+  - ✅ `scripts/framework-menu-matrix-runner-lib.ts` y `scripts/framework-menu-matrix-canary-lib.ts` adaptados al nuevo contrato tipado.
+  - ✅ RED del refactor añadido y validado: `scripts/__tests__/framework-menu-matrix-evidence.test.ts`.
+  - ✅ Validación post-refactor:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-evidence.test.ts scripts/__tests__/framework-menu-matrix-runner.test.ts scripts/__tests__/framework-menu-matrix-canary.test.ts` (5/5).
+- ✅ Validación: ejecutar suite nueva + suites relacionadas del menú y dejar evidencia de resultados en esta fase.
+  - ✅ Ejecutado:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-*.test.ts scripts/__tests__/framework-menu-consumer-runtime.test.ts scripts/__tests__/framework-menu-consumer-actions.test.ts scripts/__tests__/framework-menu-gate-lib.test.ts`
+  - ✅ Resultado: `11/11` tests en verde.
+- ✅ Documentación: actualizar `docs/USAGE.md` con ejecución no interactiva de la matriz y lectura de resultados.
+  - ✅ Añadida sección `1.1) Non-interactive consumer matrix (1/2/3/4/9)` con comando, contrato de salida y semántica de `diagnosis`.
+  - ✅ Añadido comando opcional de canary no interactivo (`runConsumerMenuCanary`) con cleanup garantizado.
+- ✅ Cierre: commit atómico + push y actualización final de esta fase en `REFRACTOR_PROGRESS.md`.
+- 🚧 Próxima tarea: esperar siguiente instrucción del usuario para abrir el siguiente bloque.
