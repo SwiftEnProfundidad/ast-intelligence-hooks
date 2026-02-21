@@ -172,6 +172,38 @@ const writeEvidenceWithFilesScannedFixture = (repoRoot: string, filesScanned: nu
   writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
 };
 
+const writeEvidenceWithFileMetricsFixture = (
+  repoRoot: string,
+  filesScanned: number,
+  filesAffected: number
+): void => {
+  const payload = {
+    version: '2.1',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      files_scanned: filesScanned,
+      files_affected: filesAffected,
+      findings: [
+        {
+          ruleId: 'backend.avoid-explicit-any',
+          severity: 'ERROR',
+          filePath: 'apps/backend/src/domain/service.ts',
+        },
+      ],
+    },
+    severity_metrics: {
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 1,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+  };
+  writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
+};
+
 const writeEvidenceMixedRepoHeuristicFixture = (repoRoot: string): void => {
   const payload = {
     version: '2.1',
@@ -432,6 +464,16 @@ test('readLegacyAuditSummary usa snapshot.files_scanned y score por densidad de 
     assert.equal(relaxed.filesScanned, 200);
     assert.equal(strict.filesScanned, 1);
     assert.ok(relaxed.codeHealthScore > strict.codeHealthScore);
+  });
+});
+
+test('readLegacyAuditSummary separa snapshot.files_scanned de snapshot.files_affected', async () => {
+  await withTempDir('pumuki-legacy-audit-file-metrics-', async (repoRoot) => {
+    writeEvidenceWithFileMetricsFixture(repoRoot, 939, 40);
+    const summary = readLegacyAuditSummary(repoRoot);
+
+    assert.equal(summary.filesScanned, 939);
+    assert.equal(summary.filesAffected, 40);
   });
 });
 

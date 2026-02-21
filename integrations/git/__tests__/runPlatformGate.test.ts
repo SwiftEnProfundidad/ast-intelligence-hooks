@@ -69,6 +69,20 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
     },
     projectRules: [] as RuleSet,
     heuristicRules: [] as RuleSet,
+    coverage: {
+      factsTotal: 1,
+      filesScanned: 1,
+      rulesTotal: 1,
+      baselineRules: 0,
+      heuristicRules: 0,
+      skillsRules: 1,
+      projectRules: 0,
+      matchedRules: 1,
+      unmatchedRules: 0,
+      evaluatedRuleIds: ['rules.backend.no-console-log'],
+      matchedRuleIds: ['rules.backend.no-console-log'],
+      unmatchedRuleIds: [],
+    },
     findings,
   };
 
@@ -98,6 +112,19 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
       filesScanned: number;
+      evaluationMetrics?: {
+        facts_total: number;
+        rules_total: number;
+        baseline_rules: number;
+        heuristic_rules: number;
+        skills_rules: number;
+        project_rules: number;
+        matched_rules: number;
+        unmatched_rules: number;
+        evaluated_rule_ids: string[];
+        matched_rule_ids: string[];
+        unmatched_rule_ids: string[];
+      };
       repoRoot: string;
       detectedPlatforms: typeof evaluationResult.detectedPlatforms;
       skillsRuleSet: SkillsRuleSetLoadResult;
@@ -169,6 +196,19 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
     findings,
     gateOutcome: 'BLOCK',
     filesScanned: 1,
+    evaluationMetrics: {
+      facts_total: 1,
+      rules_total: 1,
+      baseline_rules: 0,
+      heuristic_rules: 0,
+      skills_rules: 1,
+      project_rules: 0,
+      matched_rules: 1,
+      unmatched_rules: 0,
+      evaluated_rule_ids: ['rules.backend.no-console-log'],
+      matched_rule_ids: ['rules.backend.no-console-log'],
+      unmatched_rule_ids: [],
+    },
     repoRoot: '/repo/root',
     detectedPlatforms: evaluationResult.detectedPlatforms,
     skillsRuleSet: evaluationResult.skillsRuleSet,

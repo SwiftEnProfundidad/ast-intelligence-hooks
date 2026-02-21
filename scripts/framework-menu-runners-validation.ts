@@ -3,3 +3,4 @@ export { runValidationArtifactsCleanup } from './framework-menu-runners-validati
 export { runHardModeEnforcementConfig } from './framework-menu-runners-validation-hardmode-lib';
 export { runSystemNotificationsConfig } from './framework-menu-runners-validation-notifications-lib';
 export { runSkillsLockCheck } from './framework-menu-runners-validation-skills-lib';
+export { runRuleCoverageDiagnostics } from './framework-menu-runners-validation-rule-coverage-lib';

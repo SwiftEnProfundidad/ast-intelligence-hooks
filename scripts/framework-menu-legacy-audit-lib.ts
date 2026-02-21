@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { buildSnapshotPlatformSummaries } from '../integrations/evidence/platformSummary';
 
 type GateSeverity = 'CRITICAL' | 'ERROR' | 'WARN' | 'INFO';
 type LegacySeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
@@ -19,7 +20,6 @@ type NormalizedFinding = {
   ruleId: string;
   severity: GateSeverity;
   file: string;
-  platform: PlatformName;
 };
 
 type PlatformSummary = {
@@ -101,81 +101,6 @@ const mapLegacySeverity = (severity: GateSeverity): LegacySeverity => {
     return 'MEDIUM';
   }
   return 'LOW';
-};
-
-const detectPlatformByRuleId = (ruleId: string): PlatformName | undefined => {
-  const normalized = ruleId.toLowerCase();
-  if (
-    normalized === 'heuristics.ts.inner-html.ast'
-    || normalized === 'heuristics.ts.document-write.ast'
-    || normalized === 'heuristics.ts.insert-adjacent-html.ast'
-  ) {
-    return 'Frontend';
-  }
-  if (
-    normalized.startsWith('ios.')
-    || normalized.startsWith('skills.ios.')
-    || normalized.startsWith('heuristics.ios.')
-  ) {
-    return 'iOS';
-  }
-  if (
-    normalized.startsWith('android.')
-    || normalized.startsWith('skills.android.')
-    || normalized.startsWith('heuristics.android.')
-  ) {
-    return 'Android';
-  }
-  if (
-    normalized.startsWith('backend.')
-    || normalized.startsWith('skills.backend.')
-    || normalized.startsWith('heuristics.backend.')
-    || normalized.includes('.backend.')
-  ) {
-    return 'Backend';
-  }
-  if (
-    normalized.startsWith('frontend.')
-    || normalized.startsWith('skills.frontend.')
-    || normalized.startsWith('heuristics.frontend.')
-    || normalized.includes('.frontend.')
-  ) {
-    return 'Frontend';
-  }
-  if (normalized.startsWith('heuristics.ts.')) {
-    return 'Backend';
-  }
-  return undefined;
-};
-
-const detectPlatform = (file: string, ruleId: string): PlatformName => {
-  const normalized = file.toLowerCase();
-  if (normalized.startsWith('apps/ios/') || normalized.endsWith('.swift')) {
-    return 'iOS';
-  }
-  if (
-    normalized.startsWith('apps/android/')
-    || normalized.endsWith('.kt')
-    || normalized.endsWith('.kts')
-  ) {
-    return 'Android';
-  }
-  if (normalized.startsWith('apps/backend/')) {
-    return 'Backend';
-  }
-  if (
-    normalized.startsWith('apps/web/')
-    || normalized.startsWith('apps/frontend/')
-    || normalized.endsWith('.tsx')
-    || normalized.endsWith('.jsx')
-  ) {
-    return 'Frontend';
-  }
-  const platformFromRule = detectPlatformByRuleId(ruleId);
-  if (platformFromRule) {
-    return platformFromRule;
-  }
-  return 'Other';
 };
 
 const asFindings = (value: unknown): EvidenceFinding[] => {
@@ -287,13 +212,12 @@ const parseSnapshotPlatformSummaries = (value: unknown): PlatformSummary[] => {
 
 const toNormalizedFindings = (findings: ReadonlyArray<EvidenceFinding>): NormalizedFinding[] => {
   return findings.map((finding) => {
-    const filePath = asString(finding.filePath, asString(finding.file, 'unknown'));
+    const filePath = asString(finding.filePath, asString(finding.file, 'unknown')).replace(/\\/g, '/');
     const ruleId = asString(finding.ruleId, 'unknown.rule');
     return {
       ruleId,
       severity: normalizeGateSeverity(finding.severity),
       file: filePath,
-      platform: detectPlatform(filePath, ruleId),
     };
   });
 };
@@ -397,31 +321,20 @@ const buildRulesetSummaries = (
 };
 
 const buildPlatformSummaries = (findings: ReadonlyArray<NormalizedFinding>): ReadonlyArray<PlatformSummary> => {
-  const order: ReadonlyArray<PlatformName> = ['iOS', 'Android', 'Backend', 'Frontend', 'Other'];
-  const byPlatform = new Map<PlatformName, NormalizedFinding[]>();
-  for (const platform of order) {
-    byPlatform.set(platform, []);
-  }
-  for (const finding of findings) {
-    byPlatform.get(finding.platform)?.push(finding);
-  }
-
-  return order.map((platform) => {
-    const platformFindings = byPlatform.get(platform) ?? [];
-    const severity = emptyLegacySeverity();
-    const files = new Set<string>();
-    for (const finding of platformFindings) {
-      severity[mapLegacySeverity(finding.severity)] += 1;
-      files.add(finding.file);
-    }
-
-    return {
-      platform,
-      filesAffected: files.size,
-      bySeverity: severity,
-      topViolations: countViolations(platformFindings).slice(0, 5),
-    };
-  });
+  return buildSnapshotPlatformSummaries(
+    findings.map((finding) => ({
+      ruleId: finding.ruleId,
+      severity: finding.severity,
+      file: finding.file,
+    }))
+  ).map((platform) => ({
+    platform: platform.platform,
+    filesAffected: platform.files_affected,
+    bySeverity: platform.by_severity,
+    topViolations: platform.top_violations
+      .map((violation) => ({ ruleId: violation.rule_id, count: violation.count }))
+      .slice(0, 5),
+  }));
 };
 
 const computePatternChecks = (findings: ReadonlyArray<NormalizedFinding>) => {
@@ -713,7 +626,9 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
         findings?: unknown;
         platforms?: unknown;
         files_scanned?: unknown;
+        files_affected?: unknown;
         filesScanned?: unknown;
+        filesAffected?: unknown;
       };
       rulesets?: unknown;
       severity_metrics?: unknown;
@@ -727,6 +642,12 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
     const filesScanned = Number.isFinite(declaredFilesScanned)
       ? Math.max(0, Math.trunc(declaredFilesScanned))
       : files.size;
+    const declaredFilesAffected = Number(
+      parsed.snapshot?.files_affected ?? parsed.snapshot?.filesAffected
+    );
+    const filesAffected = Number.isFinite(declaredFilesAffected)
+      ? Math.max(0, Math.trunc(declaredFilesAffected))
+      : files.size;
     const bySeverity = computeLegacySeverity(normalizedFindings, parsed.severity_metrics);
     const totalViolations = normalizedFindings.length;
     const snapshotPlatforms = parseSnapshotPlatformSummaries(parsed.snapshot?.platforms);
@@ -736,7 +657,7 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
       outcome: asString(parsed.snapshot?.outcome, 'unknown'),
       totalViolations,
       filesScanned,
-      filesAffected: files.size,
+      filesAffected,
       bySeverity,
       patternChecks: computePatternChecks(normalizedFindings),
       eslint: computeEslintCounts(normalizedFindings),

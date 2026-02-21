@@ -152,6 +152,82 @@ test('persiste snapshot.files_scanned cuando llega desde el runner de gate', () 
   });
 
   assert.equal(result.snapshot.files_scanned, 911);
+  assert.equal(result.snapshot.files_affected, 1);
+});
+
+test('separa semantica de files_scanned y files_affected en snapshot', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    filesScanned: 939,
+    findings: [
+      {
+        ruleId: 'skills.backend.no-empty-catch',
+        severity: 'ERROR',
+        code: 'BACKEND_NO_EMPTY_CATCH',
+        message: 'No empty catch',
+        filePath: 'scripts/a.ts',
+      },
+      {
+        ruleId: 'skills.backend.no-console-log',
+        severity: 'ERROR',
+        code: 'BACKEND_NO_CONSOLE_LOG',
+        message: 'No console.log',
+        filePath: 'scripts/a.ts',
+      },
+      {
+        ruleId: 'skills.backend.avoid-explicit-any',
+        severity: 'WARN',
+        code: 'BACKEND_EXPLICIT_ANY',
+        message: 'No explicit any',
+        filePath: 'scripts/b.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.files_scanned, 939);
+  assert.equal(result.snapshot.files_affected, 2);
+  assert.equal(result.snapshot.findings.length, 3);
+});
+
+test('persiste snapshot.evaluation_metrics con inventario evaluado/matcheado', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    gateOutcome: 'PASS',
+    filesScanned: 939,
+    evaluationMetrics: {
+      facts_total: 1878,
+      rules_total: 25,
+      baseline_rules: 0,
+      heuristic_rules: 0,
+      skills_rules: 25,
+      project_rules: 0,
+      matched_rules: 0,
+      unmatched_rules: 25,
+      evaluated_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.no-console-log'],
+      matched_rule_ids: [],
+      unmatched_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.no-console-log'],
+    },
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(result.snapshot.evaluation_metrics, {
+    facts_total: 1878,
+    rules_total: 25,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 25,
+    project_rules: 0,
+    matched_rules: 0,
+    unmatched_rules: 25,
+    evaluated_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+    matched_rule_ids: [],
+    unmatched_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+  });
 });
 
 test('incluye snapshot.platforms con las cinco plataformas y severidades legacy', () => {

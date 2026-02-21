@@ -156,7 +156,24 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic fac
   assert.deepEqual(result.detectedPlatforms, detectedPlatforms);
   assert.deepEqual(result.skillsRuleSet, skillsRuleSet);
   assert.deepEqual(result.projectRules, []);
+  assert.deepEqual(result.baselineRules, [baselineRule]);
   assert.deepEqual(result.heuristicRules, []);
+  assert.deepEqual(result.mergedRules, [mergedRule]);
+  assert.deepEqual(result.evaluationFacts, [...inputFacts, ...heuristicFacts]);
+  assert.deepEqual(result.coverage, {
+    factsTotal: 2,
+    filesScanned: 1,
+    rulesTotal: 1,
+    baselineRules: 1,
+    heuristicRules: 0,
+    skillsRules: 1,
+    projectRules: 0,
+    matchedRules: 1,
+    unmatchedRules: 0,
+    evaluatedRuleIds: ['merged.rule'],
+    matchedRuleIds: ['merged.rule'],
+    unmatchedRuleIds: [],
+  });
   assert.deepEqual(result.findings, findings);
 });
 
@@ -277,6 +294,23 @@ test('evaluatePlatformGateFindings filtra heuristicas mapeadas y permite downgra
   assert.deepEqual(result.detectedPlatforms, detectedPlatforms);
   assert.deepEqual(result.skillsRuleSet, skillsRuleSet);
   assert.deepEqual(result.projectRules, [projectRule]);
+  assert.deepEqual(result.baselineRules, [baselineRule]);
   assert.deepEqual(result.heuristicRules.map((rule) => rule.id), ['heuristic.keep']);
+  assert.deepEqual(result.mergedRules, [mergedRule]);
+  assert.deepEqual(result.evaluationFacts, inputFacts);
+  assert.deepEqual(result.coverage, {
+    factsTotal: 1,
+    filesScanned: 1,
+    rulesTotal: 1,
+    baselineRules: 1,
+    heuristicRules: 1,
+    skillsRules: 1,
+    projectRules: 1,
+    matchedRules: 1,
+    unmatchedRules: 0,
+    evaluatedRuleIds: ['merged.rule'],
+    matchedRuleIds: ['merged.rule'],
+    unmatchedRuleIds: [],
+  });
   assert.deepEqual(result.findings, findings);
 });

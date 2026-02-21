@@ -43,6 +43,14 @@ test('framework menu expone accion para configurar notificaciones macOS', () => 
   assert.match(notificationsAction.label, /notifications|macos|system/i);
 });
 
+test('framework menu expone accion para diagnosticar cobertura de reglas', () => {
+  const actions = createFrameworkMenuActions(createMenuContext());
+  const diagnosticsAction = actions.find((action) => action.id === '32');
+
+  assert.ok(diagnosticsAction);
+  assert.match(diagnosticsAction.label, /rule coverage|diagnostics|reglas/i);
+});
+
 test('buildHardModeConfigFromSelection soporta critical-high y all-severities', () => {
   assert.deepEqual(buildHardModeConfigFromSelection('critical-high'), {
     enabled: true,

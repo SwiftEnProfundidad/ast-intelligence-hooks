@@ -1,6 +1,7 @@
 import {
   runAndPrintExitCode,
   runHardModeEnforcementConfig,
+  runRuleCoverageDiagnostics,
   runSystemNotificationsConfig,
   runSkillsLockCheck,
 } from './framework-menu-runners';
@@ -33,6 +34,11 @@ export const createFrameworkMenuDiagnosticsMaintenanceActions = (
         const enabled = await params.prompts.askSystemNotificationsEnabled();
         await runAndPrintExitCode(() => runSystemNotificationsConfig({ enabled }));
       },
+    },
+    {
+      id: '32',
+      label: 'Run rule coverage diagnostics (repo/stages)',
+      execute: async () => runAndPrintExitCode(runRuleCoverageDiagnostics),
     },
   ];
 };
