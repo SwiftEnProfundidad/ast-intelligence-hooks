@@ -202,4 +202,46 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ Consolidar reporte operativo al usuario con estado de tests + auditoría repo/worktree.
 - ✅ Diseñar plan de commits atómicos sobre el diff actual (orden, alcance y riesgo por bloque).
 - ✅ Ejecutar plan de commits atómicos sobre el diff completo.
-- 🚧 Validar alcance de “TODAS las reglas/skills” para plataformas sin código nativo en este repo (iOS/Android/Frontend).
+- ✅ Validar alcance de “TODAS las reglas/skills” para plataformas sin código nativo en este repo (iOS/Android/Frontend).
+  - Diagnóstico estructural: `swift=0`, `kt/kts=0`, `tsx=0`, `apps/ios=0`, `apps/android=0`, `apps/backend=0`, `apps/web|apps/frontend=0`.
+  - Resultado operativo esperado: auditoría `repo` con `files_scanned=911`, `findings=0`, `outcome=PASS` y sin detección de plataformas de app en `snapshot.platforms`.
+  - Causa raíz: el detector de plataformas está orientado a repos consumer (`apps/*`), este repo es framework/core (`core/`, `integrations/`, `scripts/`).
+
+## Fase 17 — Expansión Semántica Multi-Plataforma para Repo Framework
+- ✅ Diseñar/implementar clasificación base de plataforma para repos de framework (sin `apps/*`) usando señal por `ruleId` + familias heurísticas (`ios.*`, `android.*`, `frontend.*`, `backend.*`) y fallback `other`.
+  - ✅ RED: test en `scripts/__tests__/framework-menu-legacy-audit.test.ts` exige que `heuristics.ts.child-process-*` compute como `Backend` (repo framework).
+  - ✅ GREEN: ajustar `detectPlatformByRuleId` en `scripts/framework-menu-legacy-audit-lib.ts` para mapear familia `heuristics.ts.*` a `Backend` por defecto y mantener excepciones de `Frontend` browser.
+- ✅ Añadir cobertura TDD de clasificación multi-plataforma en evidencia/menú legacy (casos: repo framework puro, repo mixto, repo consumer clásico).
+  - ✅ RED confirmado repo mixto: `readLegacyAuditSummary en repo mixto prioriza path apps/* frente a fallback heuristics.ts.*` falla con `2 !== 1` en `Backend` tras el fallback global.
+  - ✅ Evidencia RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit.test.ts` (10 pass / 1 fail).
+- ✅ GREEN: priorizar clasificación por `path` para `apps/*` en repos mixtos y dejar fallback `heuristics.ts.*` para contexto framework puro.
+  - ✅ Implementación: `scripts/framework-menu-legacy-audit-lib.ts` (`detectPlatform` ahora evalúa `path` antes de `ruleId`).
+  - ✅ Validación: `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit.test.ts` (11/11).
+- ✅ REFACTOR + integración: resumir plataformas siempre presentes (incluyendo cero) en `.ai_evidence.json` y renderer legacy sin depender de `apps/*`.
+  - ✅ `buildEvidence` emite `snapshot.platforms` con `iOS/Android/Backend/Frontend/Other`, `files_affected`, `by_severity`, `top_violations`.
+  - ✅ `writeEvidence` normaliza y persiste `snapshot.platforms` de forma determinista.
+  - ✅ `framework-menu-legacy-audit` prioriza `snapshot.platforms` cuando está presente (fallback a cálculo por findings si no existe).
+  - ✅ Validación TDD:
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts` (21/21)
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/writeEvidence.test.ts` (3/3)
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-legacy-audit.test.ts` (12/12)
+- ✅ Cierre de fase 17 (parte 1): barrido final de regresión del bloque (`framework-menu-*` + `integrations/evidence/*`).
+  - ✅ Validación ejecutada:
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/*.test.ts integrations/evidence/__tests__/buildEvidence.test.ts scripts/__tests__/framework-menu-*.test.ts`
+    - Resultado: `87/87` tests en verde.
+- ✅ Cierre de fase 17 (parte 2): preparar paquete de commit atómico del bloque multi-plataforma/evidence legacy.
+  - ✅ Commit atómico propuesto 1/3
+    - `feat(evidence): add snapshot platform summaries for legacy severity matrix`
+    - `integrations/evidence/platformSummary.ts`
+    - `integrations/evidence/schema.ts`
+    - `integrations/evidence/buildEvidence.ts`
+    - `integrations/evidence/writeEvidence.ts`
+    - `integrations/evidence/__tests__/buildEvidence.test.ts`
+  - ✅ Commit atómico propuesto 2/3
+    - `feat(menu-legacy): consume snapshot.platforms for deterministic platform breakdown`
+    - `scripts/framework-menu-legacy-audit-lib.ts`
+    - `scripts/__tests__/framework-menu-legacy-audit.test.ts`
+  - ✅ Commit atómico propuesto 3/3
+    - `docs(progress): close phase 17 multi-platform semantic expansion`
+    - `docs/REFRACTOR_PROGRESS.md`
+- 🚧 Siguiente paso: ejecutar los commits atómicos 1/3, 2/3 y 3/3 (pendiente de tu confirmación explícita).
