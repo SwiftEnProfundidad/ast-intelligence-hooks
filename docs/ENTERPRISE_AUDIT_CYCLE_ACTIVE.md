@@ -75,11 +75,16 @@ Plan operativo del ciclo actual para estabilizar auditoría, trazabilidad y cier
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-evidence.test.ts scripts/__tests__/framework-menu-matrix-runner.test.ts scripts/__tests__/framework-menu-matrix-baseline.test.ts scripts/__tests__/framework-menu-matrix-canary.test.ts` (`11/11`).
   - ✅ Criterio de salida cumplido: happy/sad/edge deterministas + canarios por stage/plataforma en verde.
 
-- 🚧 T5. Cierre Git Flow y handoff
+- ✅ T5. Cierre Git Flow y handoff
   - ✅ Commits atómicos por bloque funcional.
     - `56079b9` feat(audit): persist evaluation telemetry and rule-coverage diagnostics
     - `ddd09c9` feat(menu-matrix): add deterministic baseline and stage/platform canaries
     - `0baf617` fix(types): align ai-gate and rule evaluation contracts
-  - 🚧 PR a `develop`, merge y validación post-merge.
-  - Actualizar documentación de uso si cambia el contrato de evidencia/auditoría.
-  - Criterio de salida: ciclo cerrado sin tareas huérfanas.
+  - ✅ PR a `develop`, merge y validación post-merge.
+    - PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/314`
+    - Merge: `develop` en `562111b`.
+    - Validación post-merge:
+      - `npm run typecheck` (verde).
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-evidence.test.ts scripts/__tests__/framework-menu-matrix-runner.test.ts scripts/__tests__/framework-menu-matrix-baseline.test.ts scripts/__tests__/framework-menu-matrix-canary.test.ts` (`11/11` verde).
+  - ✅ Actualizar documentación de uso si cambia el contrato de evidencia/auditoría.
+  - ✅ Criterio de salida cumplido: ciclo cerrado sin tareas huérfanas.

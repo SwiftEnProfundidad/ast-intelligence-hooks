@@ -507,4 +507,10 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - `56079b9` feat(audit): persist evaluation telemetry and rule-coverage diagnostics
   - `ddd09c9` feat(menu-matrix): add deterministic baseline and stage/platform canaries
   - `0baf617` fix(types): align ai-gate and rule evaluation contracts
-- 🚧 Próxima tarea activa: `T5` pendiente de `push + PR a develop + merge + validación post-merge`.
+- ✅ Cierre Git Flow de `T5` completado:
+  - Push de rama `feature/enterprise-audit-cycle` a remoto.
+  - PR `#314` abierta y mergeada contra `develop`.
+  - Validación post-merge en `develop`:
+    - `npm run typecheck` (verde).
+    - matriz `framework-menu-matrix*` (`11/11` verde).
+- ✅ Estado actual: ciclo activo (`docs/ENTERPRISE_AUDIT_CYCLE_ACTIVE.md`) cerrado, sin tarea en construcción.
