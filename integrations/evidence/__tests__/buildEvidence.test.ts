@@ -133,6 +133,27 @@ test('respects explicit gate outcome for stage-aware blocking decisions', () => 
   assert.equal(result.severity_metrics.gate_status, 'BLOCKED');
 });
 
+test('persiste snapshot.files_scanned cuando llega desde el runner de gate', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    gateOutcome: 'WARN',
+    filesScanned: 911,
+    findings: [
+      {
+        ruleId: 'heuristics.ts.console-log.ast',
+        severity: 'WARN',
+        code: 'TS_CONSOLE_LOG',
+        message: 'Avoid console.log',
+        filePath: 'scripts/example.ts',
+      },
+    ],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.files_scanned, 911);
+});
+
 test('deduplicates equivalent findings deterministically regardless of input order', () => {
   const baseFinding = {
     ruleId: 'backend.no-console-log',

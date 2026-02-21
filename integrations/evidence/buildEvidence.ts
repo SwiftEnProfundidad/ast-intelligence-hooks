@@ -26,6 +26,7 @@ export type BuildEvidenceParams = {
   stage: GateStage;
   findings: ReadonlyArray<BuildFindingInput>;
   gateOutcome?: GateOutcome;
+  filesScanned?: number;
   previousEvidence?: AiEvidenceV2_1;
   humanIntent?: HumanIntentState | null;
   detectedPlatforms: Record<string, PlatformState>;
@@ -84,6 +85,13 @@ const normalizeOptionalString = (value: unknown): string | undefined => {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
+};
+
+const normalizeOptionalNonNegativeInt = (value: unknown): number | undefined => {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return undefined;
+  }
+  return Math.max(0, Math.trunc(value));
 };
 
 const normalizeFinding = (finding: BuildFindingInput): SnapshotFinding => {
@@ -567,6 +575,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const now = new Date().toISOString();
   const consolidatedFindings = normalizeAndDedupeFindings(params.stage, params.findings);
   const normalizedFindings = consolidatedFindings.findings;
+  const normalizedFilesScanned = normalizeOptionalNonNegativeInt(params.filesScanned);
   const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';
   const severity = bySeverity(normalizedFindings);
@@ -582,6 +591,9 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
     snapshot: {
       stage: params.stage,
       outcome,
+      ...(typeof normalizedFilesScanned === 'number'
+        ? { files_scanned: normalizedFilesScanned }
+        : {}),
       findings: normalizedFindings,
     },
     ledger: updateLedger({

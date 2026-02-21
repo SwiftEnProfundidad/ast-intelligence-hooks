@@ -18,6 +18,7 @@ export type SnapshotFinding = {
 export type Snapshot = {
   stage: GateStage;
   outcome: GateOutcome;
+  files_scanned?: number;
   findings: SnapshotFinding[];
 };
 

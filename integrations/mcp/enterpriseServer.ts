@@ -1,7 +1,7 @@
 import { createServer } from 'node:http';
 import type { IncomingMessage } from 'node:http';
 import type { Server } from 'node:http';
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { readLifecycleStatus } from '../lifecycle';
@@ -168,7 +168,7 @@ const safeRunGit = (
     return undefined;
   }
   try {
-    return execFileSync('git', args, {
+    return runBinarySync('git', args, {
       cwd: repoRoot,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],

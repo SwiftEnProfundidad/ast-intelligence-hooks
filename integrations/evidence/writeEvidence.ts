@@ -1,4 +1,3 @@
-import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import type {
@@ -188,6 +187,10 @@ const toStableEvidence = (
   };
   const normalizedHumanIntent = normalizeHumanIntent(evidence.human_intent);
   const normalizedRepoState = normalizeRepoState(evidence.repo_state, repoRoot);
+  const normalizedFilesScanned =
+    typeof evidence.snapshot.files_scanned === 'number' && Number.isFinite(evidence.snapshot.files_scanned)
+      ? Math.max(0, Math.trunc(evidence.snapshot.files_scanned))
+      : undefined;
 
   return {
     version: '2.1',
@@ -195,6 +198,9 @@ const toStableEvidence = (
     snapshot: {
       stage: evidence.snapshot.stage,
       outcome: evidence.snapshot.outcome,
+      ...(typeof normalizedFilesScanned === 'number'
+        ? { files_scanned: normalizedFilesScanned }
+        : {}),
       findings: normalizedFindings,
     },
     ledger: normalizedLedger,
@@ -227,13 +233,7 @@ const toStableEvidence = (
 };
 
 const resolveRepoRoot = (): string => {
-  try {
-    return execFileSync('git', ['rev-parse', '--show-toplevel'], {
-      encoding: 'utf8',
-    }).trim();
-  } catch {
-    return process.cwd();
-  }
+  return process.cwd();
 };
 
 export function writeEvidence(

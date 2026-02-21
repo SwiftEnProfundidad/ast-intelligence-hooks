@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readLifecycleStatus } from '../lifecycle/status';
@@ -25,7 +25,7 @@ const safeRunGit = (repoRoot: string, args: ReadonlyArray<string>): string | und
     return undefined;
   }
   try {
-    return execFileSync('git', args, {
+    return runBinarySync('git', args, {
       cwd: repoRoot,
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
