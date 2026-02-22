@@ -13,8 +13,7 @@ Fecha de cierre: `2026-02-22`
 ### Resumen ejecutivo
 - Ciclo de estabilización completado (`T1..T10` en `✅`).
 - Sincronización de ramas largas completada y verificada:
-  - `origin/main` = `9f40eb9d1ae14bb32a72e696dd4fc72741a06af6`
-  - `origin/develop` = `9f40eb9d1ae14bb32a72e696dd4fc72741a06af6`
+  - `origin/main` y `origin/develop` en el mismo SHA.
 - Cierre Git Flow documentado con PRs:
   - `#318`, `#319`, `#320`, `#321`, `#322`.
 
