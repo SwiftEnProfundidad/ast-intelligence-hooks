@@ -11,6 +11,7 @@ import {
   runRepoAndStagedGate,
   runRepoAndStagedGateSilent,
   runRepoGateSilent,
+  runStagedGate,
   runStagedGateSilent,
   runWorkingTreeGateSilent,
   runRepoAndStagedPrePushGateSilent,

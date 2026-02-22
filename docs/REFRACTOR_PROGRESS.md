@@ -42,7 +42,7 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F7.T1` completada: `README.md` actualizado con rollout de `PUMUKI_MENU_UI_V2` y compatibilidad de flags.
 - ✅ `F7.T2` completada: `docs/USAGE.md` y `docs/API_REFERENCE.md` actualizados (modo clásico/v2, fallback y comandos matrix/canary).
 - ✅ `F7.T3` completada: tracker y plan de ciclo sincronizados con cierre documental de fase.
-- ✅ `F7.T4` completada: cierre Git Flow end-to-end ejecutado (commit, PR/merge y sync de ramas).
+- ✅ `F7.T4` completada: hotfix runtime por TDD aplicado (`runStagedGate` importado), CLI validada en clásico/v2 y cierre Git Flow ejecutado.
 - ✅ Ciclo `MENU_UIUX_MODERNIZATION_CYCLE` cerrado.
 
 ## Hitos recientes

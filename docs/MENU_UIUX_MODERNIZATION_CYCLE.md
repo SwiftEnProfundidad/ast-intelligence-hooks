@@ -60,7 +60,7 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 - ✅ F7.T1 Actualizar `README.md` con nuevo flujo UI/UX y flags.
 - ✅ F7.T2 Actualizar `docs/USAGE.md` y `docs/API_REFERENCE.md` con nuevos comportamientos de menu.
 - ✅ F7.T3 Actualizar `docs/REFRACTOR_PROGRESS.md` y dejar cierre del ciclo documentado.
-- ✅ F7.T4 Cierre Git Flow end-to-end (commits atomicos, PR a `develop`, merge, sync `develop -> main`).
+- ✅ F7.T4 Cierre Git Flow end-to-end (incluye hotfix de runtime detectado en verificacion final).
 
 ## Politica de despliegue del ciclo
 - Estrategia: `Feature flag`.
