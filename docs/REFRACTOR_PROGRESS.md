@@ -30,11 +30,12 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F5.T2` completada: validacion final ejecutada en verde (`npm run typecheck`, `npm test`).
 - ✅ `F5.T3` completada: Git Flow cerrado end-to-end (commits atomicos, PR/merge a `develop`, sync `develop -> main`).
 - ✅ Ciclo `ENTERPRISE_RULE_COVERAGE_CYCLE` cerrado.
-- 🚧 Tarea activa del nuevo ciclo UI/UX: `F1.T1` (design tokens CLI, contraste, fallback y ancho dinamico).
+- ✅ `F1.T1` (UI/UX menu) completada: design tokens CLI, fallback no-color/ascii y ancho dinamico sin doble reduccion.
+- 🚧 Tarea activa del nuevo ciclo UI/UX: `F1.T2` (componentes de render reutilizables `Panel`, `Badge`, `SectionHeader`, `MetricRow`, `ActionRow`, `HintBlock`).
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F1.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
+- 🚧 Ejecutar `F1.T2` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
