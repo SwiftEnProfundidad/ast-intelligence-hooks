@@ -141,10 +141,11 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F4.T1` completada en `ALL_SKILLS_AST_ENFORCEMENT`: TDD integral de `skillsRuleSet`, `runPlatformGateEvaluation` y `runPlatformGate` en verde.
 - ✅ `F4.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: validacion funcional de menu opcion `1` ejecutada con evidencia runtime consistente (`active=409`, `evaluated=409`, `unevaluated=0`, `coverage_ratio=1`).
 - ✅ `F4.T3` completada en `ALL_SKILLS_AST_ENFORCEMENT`: auditoria full-repo publicada en `docs/FULL_REPO_RULES_AUDIT_REPORT.md` con severidad actualizada (`ERROR/HIGH=3`, gate `BLOCKED`).
+- ✅ `F4.T4` completada en `ALL_SKILLS_AST_ENFORCEMENT`: cierre Git Flow ejecutado end-to-end (PR `#346` `feature -> develop`, PR `#347` `develop -> main`).
 - ⏳ Post-cierre anterior pendiente: exponer `PRE_WRITE` de forma visible en la matriz de diagnostico del menu sin romper contratos existentes.
 - ✅ `F0.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: tracker sincronizado y tarea activa unica garantizada.
-- 🚧 Ciclo `ALL_SKILLS_AST_ENFORCEMENT` en ejecucion: `F4.T4` cierre Git Flow end-to-end (`feature -> develop -> main`).
-- Estado activo: ciclo `ALL_SKILLS_AST_ENFORCEMENT` en curso.
+- ✅ Ciclo `ALL_SKILLS_AST_ENFORCEMENT` cerrado con trazabilidad completa de reglas, evidencia y merge a `main`.
+- Estado activo: ciclo `ALL_SKILLS_AST_ENFORCEMENT` cerrado.
 
 ## Siguiente paso operativo
-- ⏳ Ejecutar cierre de PRs y merge secuencial (`feature -> develop -> main`) con verificacion final de ramas.
+- ⏳ Retomar post-cierre previo: exponer `PRE_WRITE` de forma visible en la matriz de diagnostico del menu sin romper contratos existentes.
