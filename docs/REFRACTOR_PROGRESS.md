@@ -74,7 +74,8 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Post-cierre: auditoría de consistencia skills local/vendorizado completada (`MATCH` por hash en Android/Backend/Frontend/iOS/Concurrency/SwiftUI).
 - ✅ Post-cierre: hardening multi-repo aplicado en detección de plataformas (soporte fuera de `apps/*` + fallback ambiguo TS/JS).
 - ✅ Post-cierre: TDD ampliado (`detect*`/`detectPlatforms`/`coreSkillsLock`) y suites de regresión en verde.
-- 🚧 Post-cierre: preparar cierre Git Flow del hardening multi-repo (commit + PR + merge).
+- ✅ Post-cierre: cierre Git Flow del hardening multi-repo completado (`feature -> develop` PR #342, `develop -> main` PR #343).
+- 🚧 Post-cierre: baseline estable, pendiente de siguiente ciclo/instrucción.
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
@@ -108,7 +109,8 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Documentación enterprise alineada al motor unificado (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
 - ✅ Cierre de release ejecutado: `feature/rules-engine-unification -> develop` (#339) y `develop -> main` (#340).
 - ✅ Verificación runtime: core lock embebido con 6 bundles y 759 reglas totales cargadas.
-- Estado activo: hardening post-cierre para garantizar cobertura de reglas en repos genéricos.
+- ✅ Cierre adicional ejecutado: hardening multi-repo mergeado end-to-end (#342/#343) con ramas principales sincronizadas.
+- Estado activo: baseline estable en `main`.
 
 ## Siguiente paso operativo
-- ⏳ Completar cierre Git Flow del hardening multi-repo.
+- ⏳ Definir siguiente ciclo o directiva de trabajo.
