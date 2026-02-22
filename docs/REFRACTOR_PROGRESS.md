@@ -10,7 +10,8 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 
 ## Estado actual
 - ✅ Ciclo anterior cerrado y archivado: se elimino `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
-- ✅ Nuevo plan activo creado: `docs/ENTERPRISE_RULE_COVERAGE_CYCLE.md`.
+- ✅ Ciclo `ENTERPRISE_RULE_COVERAGE_CYCLE` cerrado y documentado.
+- ✅ Nuevo plan activo creado: `docs/MENU_UIUX_MODERNIZATION_CYCLE.md`.
 - ✅ `F1.T1` completada: inventario de reglas activas por stage en cobertura del motor (`activeRuleIds`).
 - ✅ `F1.T2` completada: captura de `evaluated_rule_ids` durante la evaluacion del motor.
 - ✅ `F1.T3` completada: calculo determinista de `unevaluated_rule_ids = active - evaluated`.
@@ -29,10 +30,11 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F5.T2` completada: validacion final ejecutada en verde (`npm run typecheck`, `npm test`).
 - ✅ `F5.T3` completada: Git Flow cerrado end-to-end (commits atomicos, PR/merge a `develop`, sync `develop -> main`).
 - ✅ Ciclo `ENTERPRISE_RULE_COVERAGE_CYCLE` cerrado.
+- 🚧 Tarea activa del nuevo ciclo UI/UX: `F1.T1` (design tokens CLI, contraste, fallback y ancho dinamico).
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- ⏳ Definir nuevo ciclo activo (UI/UX del menu legacy++) en un nuevo plan antes de abrir nuevas tareas.
+- 🚧 Ejecutar `F1.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
