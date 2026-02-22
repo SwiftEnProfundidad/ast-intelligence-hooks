@@ -26,13 +26,13 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 - ✅ F1.T4 Definir reglas de legibilidad terminal (wrapping, truncado, densidad y espaciado).
 
 ## Fase 2 — Consumer menu UX moderna
-- 🚧 F2.T1 Reestructurar visualmente opciones consumer por flujos (auditar, diagnosticar, exportar, salir).
-- ⏳ F2.T2 Mejorar señalizacion de estado (`PASS/WARN/BLOCK`) con indicadores consistentes.
-- ⏳ F2.T3 Mantener mensajes operativos de `scope vacio` vs `repo limpio` con mejor claridad UX.
-- ⏳ F2.T4 Mantener IDs/comportamiento de opciones existentes (sin regresion funcional).
+- ✅ F2.T1 Reestructurar visualmente opciones consumer por flujos (auditar, diagnosticar, exportar, salir).
+- ✅ F2.T2 Mejorar señalizacion de estado (`PASS/WARN/BLOCK`) con indicadores consistentes.
+- ✅ F2.T3 Mantener mensajes operativos de `scope vacio` vs `repo limpio` con mejor claridad UX.
+- ✅ F2.T4 Mantener IDs/comportamiento de opciones existentes (sin regresion funcional).
 
 ## Fase 3 — Advanced menu UX moderna
-- ⏳ F3.T1 Aplicar mismo lenguaje visual moderno del consumer.
+- 🚧 F3.T1 Aplicar mismo lenguaje visual moderno del consumer.
 - ⏳ F3.T2 Agrupar acciones advanced por dominios (Gates, Diagnostics, Maintenance, Validation, Exit).
 - ⏳ F3.T3 Añadir ayuda contextual corta por opcion sin ruido.
 - ⏳ F3.T4 Mantener compatibilidad de acciones y wiring existentes.

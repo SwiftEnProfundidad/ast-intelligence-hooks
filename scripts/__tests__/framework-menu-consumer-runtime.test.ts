@@ -112,3 +112,81 @@ test('consumer runtime ejecuta preflight con stage correcto por opción', async 
 
   assert.deepEqual(stages, ['PRE_COMMIT', 'PRE_PUSH', 'PRE_COMMIT', 'PRE_PUSH']);
 });
+
+test('consumer runtime printMenu agrupa opciones por flujos canónicos', async () => {
+  const output: string[] = [];
+  const runtime = createConsumerMenuRuntime({
+    runRepoGate: async () => {},
+    runRepoAndStagedGate: async () => {},
+    runStagedGate: async () => {},
+    runWorkingTreeGate: async () => {},
+    runPreflight: async () => {},
+    write: (text) => {
+      output.push(text);
+    },
+  });
+
+  runtime.printMenu();
+  const rendered = output.join('\n');
+  assert.match(rendered, /Audit Flows/i);
+  assert.match(rendered, /Diagnostics/i);
+  assert.match(rendered, /Export/i);
+  assert.match(rendered, /System/i);
+  assert.match(rendered, /1\)\s+Full audit/i);
+  assert.match(rendered, /10\)\s+Exit/i);
+});
+
+test('consumer runtime printMenu muestra badge de estado PASS\/WARN\/BLOCK', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-badge-'));
+  process.chdir(temp);
+  try {
+    writeFileSync(
+      join(temp, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          snapshot: {
+            stage: 'PRE_COMMIT',
+            outcome: 'BLOCK',
+            findings: [
+              {
+                ruleId: 'backend.avoid-explicit-any',
+                severity: 'ERROR',
+                filePath: 'apps/backend/src/service.ts',
+              },
+            ],
+            files_scanned: 10,
+            files_affected: 1,
+          },
+          severity_metrics: {
+            by_severity: {
+              CRITICAL: 0,
+              ERROR: 1,
+              WARN: 0,
+              INFO: 0,
+            },
+          },
+        },
+        null,
+        2
+      )
+    );
+
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    runtime.printMenu();
+    assert.match(output.join('\n'), /BLOCK/i);
+  } finally {
+    process.chdir(previous);
+  }
+});

@@ -15,6 +15,12 @@ import {
   renderLegacyPanel,
   resolveLegacyPanelOuterWidth,
 } from './framework-menu-legacy-audit-lib';
+import { resolveConsumerMenuLayout } from './framework-menu-layout-lib';
+import {
+  buildCliDesignTokens,
+  renderActionRow,
+  renderBadge,
+} from './framework-menu-ui-components-lib';
 
 type ConsumerAction = {
   id: string;
@@ -56,10 +62,14 @@ export const createConsumerMenuRuntime = (params: {
       return;
     }
     if (scope === 'staged') {
-      params.write('\nℹ Scope vacío (staged): no hay archivos staged para auditar. Usa 1 o 2 para auditoría completa.\n');
+      params.write(
+        '\nℹ Scope vacío (staged): no hay archivos staged para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
+      );
       return;
     }
-    params.write('\nℹ Scope vacío (working tree): no hay cambios sin commitear para auditar. Usa 1 o 2 para auditoría completa.\n');
+    params.write(
+      '\nℹ Scope vacío (working tree): no hay cambios sin commitear para auditar. Resultado PASS por alcance vacío; usa 1 o 2 para validar repo completo.\n'
+    );
   };
 
   const runPreflight = async (stage: 'PRE_COMMIT' | 'PRE_PUSH'): Promise<void> => {
@@ -125,12 +135,33 @@ export const createConsumerMenuRuntime = (params: {
   });
 
   const printMenu = (): void => {
+    const menuSummary = readLegacyAuditSummary(process.cwd());
+    const menuStatus = menuSummary.status !== 'ok'
+      ? { level: 'info' as const, label: 'NO_EVIDENCE' }
+      : menuSummary.bySeverity.CRITICAL > 0 || menuSummary.bySeverity.HIGH > 0
+        ? { level: 'block' as const, label: 'BLOCK' }
+        : menuSummary.bySeverity.MEDIUM > 0 || menuSummary.bySeverity.LOW > 0
+          ? { level: 'warn' as const, label: 'WARN' }
+          : { level: 'ok' as const, label: 'PASS' };
+    const tokens = buildCliDesignTokens({
+      width: resolveLegacyPanelOuterWidth(),
+      color: useColor(),
+    });
+    const groupedActions = resolveConsumerMenuLayout(actions);
     const lines = [
       'PUMUKI — Hook-System (run: npx ast-hooks)',
       'AST Intelligence System Overview',
+      `Status: ${renderBadge(menuStatus.label, menuStatus.level, tokens)}`,
       'A. Switch to advanced menu',
       '',
-      ...actions.map((action) => `${action.id}) ${action.label}`),
+      ...groupedActions.flatMap((group) => [
+        group.title,
+        ...group.items.map((item) => renderActionRow({
+          id: item.id,
+          label: item.action.label,
+        })),
+        '',
+      ]),
     ];
     params.write(`\n${renderLegacyPanel(lines, {
       width: resolveLegacyPanelOuterWidth(),
