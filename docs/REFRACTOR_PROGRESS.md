@@ -75,7 +75,10 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Post-cierre: hardening multi-repo aplicado en detección de plataformas (soporte fuera de `apps/*` + fallback ambiguo TS/JS).
 - ✅ Post-cierre: TDD ampliado (`detect*`/`detectPlatforms`/`coreSkillsLock`) y suites de regresión en verde.
 - ✅ Post-cierre: cierre Git Flow del hardening multi-repo completado (`feature -> develop` PR #342, `develop -> main` PR #343).
-- 🚧 Post-cierre: baseline estable, pendiente de siguiente ciclo/instrucción.
+- ✅ Post-cierre: auditoria full repo ejecutada con opcion `1` (full audit) y cobertura de reglas `414/414` sin unevaluated.
+- ✅ Post-cierre: informe formal de violaciones generado en `docs/FULL_REPO_RULES_AUDIT_REPORT.md` (resultado actual: 3 `WARN`, 0 `CRITICAL`, 0 `ERROR`).
+- ✅ Post-cierre: unificacion de enforcement entre `PRE_COMMIT`, `PRE_PUSH` y `CI` aplicada (mismas reglas activas, misma promocion de severidad y mismos umbrales por defecto).
+- ⏳ Post-cierre: exponer `PRE_WRITE` de forma visible en la matriz de diagnostico del menu sin romper contratos existentes.
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
@@ -110,7 +113,38 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Cierre de release ejecutado: `feature/rules-engine-unification -> develop` (#339) y `develop -> main` (#340).
 - ✅ Verificación runtime: core lock embebido con 6 bundles y 759 reglas totales cargadas.
 - ✅ Cierre adicional ejecutado: hardening multi-repo mergeado end-to-end (#342/#343) con ramas principales sincronizadas.
-- Estado activo: baseline estable en `main`.
+- ✅ Auditoria full repo con todas las reglas ejecutada (menu opcion 1) con evidencia actualizada y cobertura completa.
+- ✅ Informe detallado de violaciones publicado en `docs/FULL_REPO_RULES_AUDIT_REPORT.md`.
+- ✅ Auditoria transparente sin cambios de codigo ejecutada en matriz `scope=repo` para `PRE_COMMIT`, `PRE_PUSH` y `CI` con heuristicas AST activas.
+- ✅ Verificacion de carga de bundles por stage completada: `android/backend/frontend/ios/concurrency/swiftui` presentes en los 3 stages.
+- ✅ Confirmacion de cobertura por stage completada: `unevaluated=0` en `PRE_COMMIT`, `PRE_PUSH` y `CI`.
+- ✅ Unificacion de stages aplicada en motor: `PRE_COMMIT` ahora evalua el mismo set de reglas que `PRE_PUSH/CI` (`active=evaluated`, sin delta por stage).
+- ✅ Unificacion de severidad aplicada: promocion de heuristicas y `promoteToErrorRuleIds` activa tambien en `PRE_COMMIT`.
+- ✅ Validacion tecnica completada tras unificacion: `npm run test:stage-gates` (770 tests, 0 fail) + `npm run typecheck` en verde.
+- ✅ Verificacion operativa de `pre-write`: binario ejecuta flujo real (`sdd validate --stage=PRE_WRITE`) y bloquea correctamente cuando faltan precondiciones (OpenSpec/evidence/gitflow).
+- ✅ Inventario full repo generado: listado de ficheros propios de Pumuki con mas de 300 lineas (excluyendo `node_modules` y binarios).
+- ✅ Diagnostico de caja negra del rules engine completado: en estado actual no existe `.pumuki/custom-rules.json` ni `skills.policy.json`; la carga efectiva cae a `skills.lock.json` (25 reglas `AUTO`) y no incluye reglas SOLID/SRP como detectores AST dedicados.
+- ✅ Nuevo plan activo creado: `docs/ALL_SKILLS_AST_ENFORCEMENT_CYCLE.md`.
+- ✅ `F0.T3` completada en `ALL_SKILLS_AST_ENFORCEMENT`: continuidad operativa previa cerrada y ciclo declarado activo unico.
+- ✅ `F1.T1` completada en `ALL_SKILLS_AST_ENFORCEMENT`: RED de integridad para reglas `AUTO` sin detector AST.
+- ✅ `F1.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: eliminado fallback declarativo silencioso y contrato `unsupportedAutoRuleIds` operativo.
+- ✅ `F1.T3` completada en `ALL_SKILLS_AST_ENFORCEMENT`: gate bloquea por reglas `AUTO` sin detector con finding de gobernanza explicito.
+- ✅ `F1.T4` completada en `ALL_SKILLS_AST_ENFORCEMENT`: mensajes accionables de mapeo incompleto integrados y validados en tests.
+- ✅ `F2.T1` completada en `ALL_SKILLS_AST_ENFORCEMENT`: RED de mapeo SOLID/SRP/God Class incorporada en suites config.
+- ✅ `F2.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: mapeo skills -> heuristics ampliado para SOLID/Clean Architecture/God Class en backend/frontend.
+- ✅ `F2.T3` completada en `ALL_SKILLS_AST_ENFORCEMENT`: detector AST de God Class (>500 lineas) integrado en facts + preset heuristics.
+- ✅ `F2.T4` completada en `ALL_SKILLS_AST_ENFORCEMENT`: severidad y trazabilidad unificadas en nuevas detecciones con tests de gate/config en verde.
+- ✅ `F3.T1` completada en `ALL_SKILLS_AST_ENFORCEMENT`: RED multi-plataforma por fichero validada con casos backend + ios en layout no estandar.
+- ✅ `F3.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: scope dinamico por rutas observadas integrado en `skillsRuleSet` cuando no existe arbol `apps/*`.
+- ✅ `F3.T3` completada en `ALL_SKILLS_AST_ENFORCEMENT`: semantica alineada entre `PRE_COMMIT`, `PRE_PUSH` y `CI` validada por test de paridad.
+- ✅ `F3.T4` completada en `ALL_SKILLS_AST_ENFORCEMENT`: utilidades de evaluacion refactorizadas para reutilizar coleccion de rutas observadas.
+- ✅ `F4.T1` completada en `ALL_SKILLS_AST_ENFORCEMENT`: TDD integral de `skillsRuleSet`, `runPlatformGateEvaluation` y `runPlatformGate` en verde.
+- ✅ `F4.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: validacion funcional de menu opcion `1` ejecutada con evidencia runtime consistente (`active=409`, `evaluated=409`, `unevaluated=0`, `coverage_ratio=1`).
+- ✅ `F4.T3` completada en `ALL_SKILLS_AST_ENFORCEMENT`: auditoria full-repo publicada en `docs/FULL_REPO_RULES_AUDIT_REPORT.md` con severidad actualizada (`ERROR/HIGH=3`, gate `BLOCKED`).
+- ⏳ Post-cierre anterior pendiente: exponer `PRE_WRITE` de forma visible en la matriz de diagnostico del menu sin romper contratos existentes.
+- ✅ `F0.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: tracker sincronizado y tarea activa unica garantizada.
+- 🚧 Ciclo `ALL_SKILLS_AST_ENFORCEMENT` en ejecucion: `F4.T4` cierre Git Flow end-to-end (`feature -> develop -> main`).
+- Estado activo: ciclo `ALL_SKILLS_AST_ENFORCEMENT` en curso.
 
 ## Siguiente paso operativo
-- ⏳ Definir siguiente ciclo o directiva de trabajo.
+- ⏳ Ejecutar cierre de PRs y merge secuencial (`feature -> develop -> main`) con verificacion final de ramas.

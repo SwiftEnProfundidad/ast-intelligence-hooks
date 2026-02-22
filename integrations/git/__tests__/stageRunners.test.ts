@@ -59,7 +59,7 @@ const writeSkillsPolicy = (
   overrides: Partial<Record<StageName, StageThreshold>>
 ): void => {
   const defaults: Record<StageName, StageThreshold> = {
-    PRE_COMMIT: { blockOnOrAbove: 'CRITICAL', warnOnOrAbove: 'ERROR' },
+    PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
     PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
     CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
   };
@@ -169,7 +169,7 @@ test('runPreCommitStage keeps default policy thresholds when skills policy is ab
     const evidence = readEvidence(repoRoot);
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot.stage, 'PRE_COMMIT');
-    assert.equal(evidence.snapshot.outcome, 'PASS');
+    assert.equal(evidence.snapshot.outcome, 'WARN');
     assert.equal(
       evidence.snapshot.findings.some(
         (finding) => finding.ruleId === 'backend.avoid-explicit-any'

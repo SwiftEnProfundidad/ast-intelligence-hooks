@@ -321,6 +321,67 @@ test('evaluatePlatformGateFindings filtra heuristicas mapeadas y permite downgra
   assert.deepEqual(result.findings, findings);
 });
 
+test('evaluatePlatformGateFindings propaga rutas observadas al loader de skills para scope por fichero', () => {
+  const inputFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'server/src/orders.service.ts',
+      content: 'export class OrdersService {}',
+      source: 'test',
+    },
+    {
+      kind: 'FileContent',
+      path: 'mobile/ios/MainView.swift',
+      content: 'struct MainView: View { var body: some View { Text("x") } }',
+      source: 'test',
+    },
+  ];
+  const detectedPlatforms: DetectedPlatforms = {
+    ios: { detected: true, confidence: 'HIGH' },
+    backend: { detected: true, confidence: 'HIGH' },
+  };
+  const mergedRule = makeRule('merged.rule');
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: false,
+    unsupportedAutoRuleIds: [],
+  };
+
+  let capturedObservedFilePaths: ReadonlyArray<string> | undefined;
+
+  const deps: Partial<PlatformGateEvaluationDependencies> = {
+    detectPlatformsFromFacts: () => detectedPlatforms,
+    loadHeuristicsConfig: () => ({ astSemanticEnabled: false, typeScriptScope: 'platform' }),
+    loadSkillsRuleSetForStage: (_stage, _repoRoot, _detectedPlatforms, observedFilePaths) => {
+      capturedObservedFilePaths = observedFilePaths;
+      return skillsRuleSet;
+    },
+    buildCombinedBaselineRules: () => [],
+    extractHeuristicFacts: () => [],
+    applyHeuristicSeverityForStage: () => [],
+    loadProjectRules: () => undefined,
+    mergeRuleSets: () => [mergedRule],
+    evaluateRules: () => [],
+    attachFindingTraceability: (input) => input.findings,
+  };
+
+  evaluatePlatformGateFindings(
+    {
+      facts: inputFacts,
+      stage: 'PRE_COMMIT',
+      repoRoot: '/repo',
+    },
+    deps
+  );
+
+  assert.deepEqual(
+    capturedObservedFilePaths,
+    ['mobile/ios/MainView.swift', 'server/src/orders.service.ts']
+  );
+});
+
 test('evaluatePlatformGateFindings usa evaluatedRuleIds capturados en evaluacion cuando no hay override de evaluateRules', () => {
   const inputFacts: ReadonlyArray<Fact> = [
     {

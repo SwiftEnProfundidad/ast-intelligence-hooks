@@ -92,6 +92,30 @@ const toRulesCoverageBlockingFinding = (params: {
   };
 };
 
+const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  unsupportedAutoRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  if (params.unsupportedAutoRuleIds.length === 0) {
+    return undefined;
+  }
+
+  const unsupportedAutoRuleIds = [...params.unsupportedAutoRuleIds].sort().join(', ');
+
+  return {
+    ruleId: 'governance.skills.detector-mapping.incomplete',
+    severity: 'ERROR',
+    code: 'SKILLS_DETECTOR_MAPPING_INCOMPLETE_HIGH',
+    message:
+      `Skills detector mapping incomplete at ${params.stage}: ` +
+      `unsupported_auto_rule_ids=[${unsupportedAutoRuleIds}]. ` +
+      'Map every AUTO skill rule to an AST detector before proceeding.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'SkillsDetectorMappingGuard',
+    source: 'skills-detector-mapping',
+  };
+};
+
 export async function runPlatformGate(params: {
   policy: GatePolicy;
   policyTrace?: ResolvedStagePolicy['trace'];
@@ -198,6 +222,15 @@ export async function runPlatformGate(params: {
         unevaluatedRuleIds: coverage?.unevaluatedRuleIds ?? [],
       })
       : undefined;
+  const unsupportedSkillsMappingFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toSkillsUnsupportedAutoRulesBlockingFinding({
+        stage: params.policy.stage,
+        unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
+      })
+      : undefined;
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
@@ -218,13 +251,24 @@ export async function runPlatformGate(params: {
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
   const effectiveFindings = sddBlockingFinding
-    ? [sddBlockingFinding, ...(coverageBlockingFinding ? [coverageBlockingFinding] : []), ...findings]
-    : coverageBlockingFinding
-      ? [coverageBlockingFinding, ...findings]
+    ? [
+      sddBlockingFinding,
+      ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+      ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+      ...findings,
+    ]
+    : unsupportedSkillsMappingFinding || coverageBlockingFinding
+      ? [
+        ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+        ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+        ...findings,
+      ]
       : findings;
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
   const gateOutcome =
-    sddBlockingFinding || coverageBlockingFinding ? 'BLOCK' : decision.outcome;
+    sddBlockingFinding || unsupportedSkillsMappingFinding || coverageBlockingFinding
+      ? 'BLOCK'
+      : decision.outcome;
 
   dependencies.emitPlatformGateEvidence({
     stage: params.policy.stage,

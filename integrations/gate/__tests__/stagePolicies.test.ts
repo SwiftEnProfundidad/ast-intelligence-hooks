@@ -30,7 +30,7 @@ test('resolvePolicyForStage applies PRE_PUSH override from skills.policy.json', 
       version: '1.0',
       defaultBundleEnabled: true,
       stages: {
-        PRE_COMMIT: { blockOnOrAbove: 'CRITICAL', warnOnOrAbove: 'ERROR' },
+        PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
         PRE_PUSH: { blockOnOrAbove: 'CRITICAL', warnOnOrAbove: 'ERROR' },
         CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
       },
@@ -55,7 +55,7 @@ test('resolvePolicyForStage applies PRE_PUSH override from skills.policy.json', 
   });
 });
 
-test('applyHeuristicSeverityForStage promueve heurísticas a ERROR solo en PRE_PUSH/CI', () => {
+test('applyHeuristicSeverityForStage promueve heurísticas a ERROR en PRE_COMMIT/PRE_PUSH/CI', () => {
   const rules: RuleSet = [
     {
       id: 'heuristics.ts.eval.ast',
@@ -98,7 +98,7 @@ test('applyHeuristicSeverityForStage promueve heurísticas a ERROR solo en PRE_P
   assert.equal(promoted[0]?.severity, 'ERROR');
   assert.equal(promoted[1]?.severity, 'WARN');
   assert.equal(promoted[2]?.severity, 'WARN');
-  assert.equal(preCommit[0]?.severity, 'WARN');
+  assert.equal(preCommit[0]?.severity, 'ERROR');
   assert.equal(preCommit[1]?.severity, 'WARN');
   assert.equal(preCommit[2]?.severity, 'WARN');
   assert.equal(rules[0]?.severity, 'WARN');

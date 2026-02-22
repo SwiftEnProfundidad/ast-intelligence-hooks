@@ -330,4 +330,22 @@ export const typescriptRules: RuleSet = [
       code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST',
     },
   },
+  {
+    id: 'heuristics.ts.god-class-large-class.ast',
+    description: 'Detects God Class candidates when a class declaration exceeds 500 lines.',
+    severity: 'ERROR',
+    platform: 'generic',
+    locked: true,
+    when: {
+      kind: 'Heuristic',
+      where: {
+        ruleId: 'heuristics.ts.god-class-large-class.ast',
+      },
+    },
+    then: {
+      kind: 'Finding',
+      message: 'AST heuristic detected God Class candidate (>500 lines in one class declaration).',
+      code: 'HEURISTICS_GOD_CLASS_LARGE_CLASS_AST',
+    },
+  },
 ];

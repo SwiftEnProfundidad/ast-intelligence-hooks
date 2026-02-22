@@ -11,7 +11,11 @@ import {
 } from '../config/skillsPolicy';
 import type { SkillsStage } from '../config/skillsLock';
 
-const heuristicsPromotionStageAllowList = new Set<GateStage>(['PRE_PUSH', 'CI']);
+const heuristicsPromotionStageAllowList = new Set<GateStage>([
+  'PRE_COMMIT',
+  'PRE_PUSH',
+  'CI',
+]);
 const heuristicsPromotionIgnoreSet = new Set<string>([
   'heuristics.ts.empty-catch.ast',
 ]);
@@ -93,8 +97,8 @@ const toGatePolicyRecordFromEnterpriseThresholds = (
 const defaultPolicyByStage: Record<SkillsStage, GatePolicy> = {
   PRE_COMMIT: {
     stage: 'PRE_COMMIT',
-    blockOnOrAbove: 'CRITICAL',
-    warnOnOrAbove: 'ERROR',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
   },
   PRE_PUSH: {
     stage: 'PRE_PUSH',
