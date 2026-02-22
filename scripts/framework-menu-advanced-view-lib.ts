@@ -50,6 +50,30 @@ const ADVANCED_MENU_HELP: Readonly<Record<string, string>> = {
   '27': 'Salir.',
 };
 
+const resolveAdvancedStatusBadge = (
+  evidenceSummary: FrameworkMenuEvidenceSummary,
+  tokens: ReturnType<typeof buildCliDesignTokens>
+): string => {
+  if (evidenceSummary.status === 'missing') {
+    return renderBadge('WARN', 'warn', tokens);
+  }
+  if (evidenceSummary.status === 'invalid') {
+    return renderBadge('BLOCK', 'block', tokens);
+  }
+
+  const outcome = (evidenceSummary.outcome ?? 'UNKNOWN').trim().toUpperCase();
+  if (outcome === 'PASS') {
+    return renderBadge(outcome, 'ok', tokens);
+  }
+  if (outcome === 'WARN') {
+    return renderBadge(outcome, 'warn', tokens);
+  }
+  if (outcome === 'BLOCK') {
+    return renderBadge(outcome, 'block', tokens);
+  }
+  return renderBadge(outcome, 'info', tokens);
+};
+
 export const formatAdvancedMenuView = (
   actions: ReadonlyArray<MenuAction>,
   options?: {
@@ -58,19 +82,7 @@ export const formatAdvancedMenuView = (
 ): string => {
   const evidenceSummary = options?.evidenceSummary ?? readEvidenceSummaryForMenu(process.cwd());
   const tokens = buildCliDesignTokens();
-  const statusBadge = renderBadge(
-    evidenceSummary.status === 'missing'
-      ? 'WARN'
-      : evidenceSummary.status === 'invalid'
-        ? 'BLOCK'
-        : 'PASS',
-    evidenceSummary.status === 'missing'
-      ? 'warn'
-      : evidenceSummary.status === 'invalid'
-        ? 'block'
-        : 'ok',
-    tokens
-  );
+  const statusBadge = resolveAdvancedStatusBadge(evidenceSummary, tokens);
   const groupedActions = resolveAdvancedMenuLayout(actions);
   const lines = [
     'Pumuki Framework Menu (Advanced)',
@@ -81,7 +93,7 @@ export const formatAdvancedMenuView = (
       `${groupIndex + 1}) ${group.title}`,
       ...group.items.map((item) => {
         const help = ADVANCED_MENU_HELP[item.id] ?? '';
-        const compactHelp = help.split('.').at(0) ?? '';
+        const compactHelp = help.trim().replace(/\.$/, '');
         return renderActionRow({
           id: item.id,
           label: item.action.label,
