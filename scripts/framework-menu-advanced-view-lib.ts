@@ -99,3 +99,25 @@ export const formatAdvancedMenuView = (
     }),
   ].join('\n\n');
 };
+
+export const formatAdvancedMenuClassicView = (
+  actions: ReadonlyArray<MenuAction>,
+  options?: {
+    evidenceSummary?: FrameworkMenuEvidenceSummary;
+  }
+): string => {
+  const evidenceSummary = options?.evidenceSummary ?? readEvidenceSummaryForMenu(process.cwd());
+  const lines = [
+    'Pumuki Framework Menu (Advanced)',
+    'C. Switch to consumer menu',
+    ...actions.map((action) => {
+      const help = ADVANCED_MENU_HELP[action.id];
+      const suffix = help ? ` - ${help}` : '';
+      return `${action.id}. ${action.label}${suffix}`;
+    }),
+  ];
+  return [
+    formatEvidenceSummaryForMenu(evidenceSummary),
+    lines.join('\n'),
+  ].join('\n\n');
+};

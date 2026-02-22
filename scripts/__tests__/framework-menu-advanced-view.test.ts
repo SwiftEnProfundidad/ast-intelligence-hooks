@@ -2,7 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createFrameworkMenuActions } from '../framework-menu-actions';
 import { createFrameworkMenuPrompts } from '../framework-menu-prompts';
-import { formatAdvancedMenuView } from '../framework-menu';
+import {
+  formatAdvancedMenuClassicView,
+  formatAdvancedMenuView,
+} from '../framework-menu-advanced-view-lib';
 
 const noop = async (): Promise<void> => {};
 
@@ -60,4 +63,22 @@ test('formatAdvancedMenuView muestra badge WARN cuando falta evidencia', () => {
   });
 
   assert.match(rendered, /WARN/);
+});
+
+test('formatAdvancedMenuClassicView conserva formato legacy sin panel agrupado', () => {
+  const rendered = formatAdvancedMenuClassicView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_COMMIT',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(rendered, /Pumuki Framework Menu \(Advanced\)/);
+  assert.match(rendered, /C\. Switch to consumer menu/);
+  assert.match(rendered, /1\.\s+Evaluate staged changes/);
+  assert.match(rendered, /27\.\s+Exit/);
 });

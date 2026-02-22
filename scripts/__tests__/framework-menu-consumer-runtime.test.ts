@@ -114,29 +114,41 @@ test('consumer runtime ejecuta preflight con stage correcto por opción', async 
 });
 
 test('consumer runtime printMenu agrupa opciones por flujos canónicos', async () => {
-  const output: string[] = [];
-  const runtime = createConsumerMenuRuntime({
-    runRepoGate: async () => {},
-    runRepoAndStagedGate: async () => {},
-    runStagedGate: async () => {},
-    runWorkingTreeGate: async () => {},
-    runPreflight: async () => {},
-    write: (text) => {
-      output.push(text);
-    },
-  });
+  const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
+  process.env.PUMUKI_MENU_UI_V2 = '1';
+  try {
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
 
-  runtime.printMenu();
-  const rendered = output.join('\n');
-  assert.match(rendered, /Audit Flows/i);
-  assert.match(rendered, /Diagnostics/i);
-  assert.match(rendered, /Export/i);
-  assert.match(rendered, /System/i);
-  assert.match(rendered, /1\)\s+Full audit/i);
-  assert.match(rendered, /10\)\s+Exit/i);
+    runtime.printMenu();
+    const rendered = output.join('\n');
+    assert.match(rendered, /Audit Flows/i);
+    assert.match(rendered, /Diagnostics/i);
+    assert.match(rendered, /Export/i);
+    assert.match(rendered, /System/i);
+    assert.match(rendered, /1\)\s+Full audit/i);
+    assert.match(rendered, /10\)\s+Exit/i);
+  } finally {
+    if (typeof previousUiV2 === 'string') {
+      process.env.PUMUKI_MENU_UI_V2 = previousUiV2;
+    } else {
+      delete process.env.PUMUKI_MENU_UI_V2;
+    }
+  }
 });
 
 test('consumer runtime printMenu muestra badge de estado PASS\/WARN\/BLOCK', { concurrency: false }, async () => {
+  const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
+  process.env.PUMUKI_MENU_UI_V2 = '1';
   const previous = process.cwd();
   const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-badge-'));
   process.chdir(temp);
@@ -188,5 +200,36 @@ test('consumer runtime printMenu muestra badge de estado PASS\/WARN\/BLOCK', { c
     assert.match(output.join('\n'), /BLOCK/i);
   } finally {
     process.chdir(previous);
+    if (typeof previousUiV2 === 'string') {
+      process.env.PUMUKI_MENU_UI_V2 = previousUiV2;
+    } else {
+      delete process.env.PUMUKI_MENU_UI_V2;
+    }
+  }
+});
+
+test('consumer runtime printMenu usa vista clásica por defecto cuando PUMUKI_MENU_UI_V2 no está activo', async () => {
+  const previousUiV2 = process.env.PUMUKI_MENU_UI_V2;
+  delete process.env.PUMUKI_MENU_UI_V2;
+  try {
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+    runtime.printMenu();
+    const rendered = output.join('\n');
+    assert.match(rendered, /A\. Switch to advanced menu/);
+    assert.doesNotMatch(rendered, /Audit Flows/i);
+  } finally {
+    if (typeof previousUiV2 === 'string') {
+      process.env.PUMUKI_MENU_UI_V2 = previousUiV2;
+    }
   }
 });

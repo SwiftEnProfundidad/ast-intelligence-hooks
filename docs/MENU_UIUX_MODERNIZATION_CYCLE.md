@@ -44,13 +44,13 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 - ✅ F4.T4 Asegurar salida robusta en anchos pequeños/medios/grandes.
 
 ## Fase 5 — Feature flag y fallback seguro
-- 🚧 F5.T1 Implementar `PUMUKI_MENU_UI_V2=1|0` (default inicial `0`).
-- ⏳ F5.T2 Implementar fallback automatico a renderer actual ante error de v2.
-- ⏳ F5.T3 Mantener compatibilidad con `PUMUKI_MENU_COLOR`, `PUMUKI_MENU_WIDTH`, `PUMUKI_MENU_MODE`.
-- ⏳ F5.T4 Validar degradacion controlada en terminales sin color/Unicode.
+- ✅ F5.T1 Implementar `PUMUKI_MENU_UI_V2=1|0` (default inicial `0`).
+- ✅ F5.T2 Implementar fallback automatico a renderer actual ante error de v2.
+- ✅ F5.T3 Mantener compatibilidad con `PUMUKI_MENU_COLOR`, `PUMUKI_MENU_WIDTH`, `PUMUKI_MENU_MODE`.
+- ✅ F5.T4 Validar degradacion controlada en terminales sin color/Unicode.
 
 ## Fase 6 — TDD completo del ciclo
-- ⏳ F6.T1 RED/GREEN/REFACTOR de render components y formato de paneles.
+- 🚧 F6.T1 RED/GREEN/REFACTOR de render components y formato de paneles.
 - ⏳ F6.T2 RED/GREEN/REFACTOR de runtime consumer/advanced (navegacion, opciones, ayudas).
 - ⏳ F6.T3 RED/GREEN/REFACTOR de reportes (matriz plataformas, severidades, diagnosticos).
 - ⏳ F6.T4 RED/GREEN/REFACTOR de feature flag/fallback.

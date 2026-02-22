@@ -1,7 +1,10 @@
 import { createInterface } from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { createFrameworkMenuActions, type MenuAction } from './framework-menu-actions';
-import { formatAdvancedMenuView } from './framework-menu-advanced-view-lib';
+import {
+  formatAdvancedMenuClassicView,
+  formatAdvancedMenuView,
+} from './framework-menu-advanced-view-lib';
 import { createConsumerMenuRuntime } from './framework-menu-consumer-runtime-lib';
 import {
   runRangeGate,
@@ -19,6 +22,7 @@ import {
   formatActiveSkillsBundles,
   loadAndFormatActiveSkillsBundles,
 } from './framework-menu-skills-lib';
+import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
 export * from './framework-menu-builders';
 export { formatAdvancedMenuView } from './framework-menu-advanced-view-lib';
 export { buildMenuGateParams } from './framework-menu-gate-lib';
@@ -38,7 +42,16 @@ const resolveInitialMenuMode = (): MenuMode => {
 };
 
 const printAdvancedMenu = (actions: ReadonlyArray<MenuAction>): void => {
-  output.write(`\n${formatAdvancedMenuView(actions)}\n`);
+  if (!isMenuUiV2Enabled()) {
+    output.write(`\n${formatAdvancedMenuClassicView(actions)}\n`);
+    return;
+  }
+  try {
+    output.write(`\n${formatAdvancedMenuView(actions)}\n`);
+  } catch {
+    output.write('\n[pumuki][menu-ui-v2] Render failed. Falling back to classic menu.\n');
+    output.write(`\n${formatAdvancedMenuClassicView(actions)}\n`);
+  }
 };
 
 const menu = async (): Promise<void> => {
