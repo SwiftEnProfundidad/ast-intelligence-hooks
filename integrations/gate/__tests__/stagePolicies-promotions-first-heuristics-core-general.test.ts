@@ -9,7 +9,7 @@ import {
   policyForPreCommit,
   policyForPrePush,
 } from './stagePoliciesFixtures';
-test('gate blocks promoted heuristic rules only in PRE_PUSH and CI', () => {
+test('gate blocks promoted heuristic rules in PRE_COMMIT, PRE_PUSH y CI', () => {
   const consoleLogFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.console-log.ast',
@@ -24,7 +24,7 @@ test('gate blocks promoted heuristic rules only in PRE_PUSH and CI', () => {
     [consoleLogFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -41,7 +41,7 @@ test('gate blocks promoted heuristic rules only in PRE_PUSH and CI', () => {
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes console.error heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes console.error heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const consoleErrorFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.console-error.ast',
@@ -56,7 +56,7 @@ test('gate promotes console.error heuristic to blocking in PRE_PUSH and CI only'
     [consoleErrorFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -73,7 +73,7 @@ test('gate promotes console.error heuristic to blocking in PRE_PUSH and CI only'
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes eval heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes eval heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const evalFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.eval.ast',
@@ -88,7 +88,7 @@ test('gate promotes eval heuristic to blocking in PRE_PUSH and CI only', () => {
     [evalFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -105,7 +105,7 @@ test('gate promotes eval heuristic to blocking in PRE_PUSH and CI only', () => {
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes Function-constructor heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes Function-constructor heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const functionConstructorFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.function-constructor.ast',
@@ -120,7 +120,7 @@ test('gate promotes Function-constructor heuristic to blocking in PRE_PUSH and C
     [functionConstructorFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -137,7 +137,7 @@ test('gate promotes Function-constructor heuristic to blocking in PRE_PUSH and C
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes setTimeout-string heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes setTimeout-string heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const timeoutStringFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.set-timeout-string.ast',
@@ -152,7 +152,7 @@ test('gate promotes setTimeout-string heuristic to blocking in PRE_PUSH and CI o
     [timeoutStringFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -169,7 +169,7 @@ test('gate promotes setTimeout-string heuristic to blocking in PRE_PUSH and CI o
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes setInterval-string heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes setInterval-string heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const intervalStringFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.set-interval-string.ast',
@@ -184,7 +184,7 @@ test('gate promotes setInterval-string heuristic to blocking in PRE_PUSH and CI 
     [intervalStringFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -201,7 +201,7 @@ test('gate promotes setInterval-string heuristic to blocking in PRE_PUSH and CI 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes async Promise-executor heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes async Promise-executor heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const asyncPromiseFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.new-promise-async.ast',
@@ -216,7 +216,7 @@ test('gate promotes async Promise-executor heuristic to blocking in PRE_PUSH and
     [asyncPromiseFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -233,7 +233,7 @@ test('gate promotes async Promise-executor heuristic to blocking in PRE_PUSH and
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes with-statement heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes with-statement heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const withStatementFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.with-statement.ast',
@@ -248,7 +248,7 @@ test('gate promotes with-statement heuristic to blocking in PRE_PUSH and CI only
     [withStatementFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -264,4 +264,3 @@ test('gate promotes with-statement heuristic to blocking in PRE_PUSH and CI only
   const ciDecision = evaluateGate([...ciFindings], policyForCI());
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
-

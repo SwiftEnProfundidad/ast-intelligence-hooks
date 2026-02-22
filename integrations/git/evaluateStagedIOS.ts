@@ -110,8 +110,8 @@ export function evaluateStagedIOS(params?: {
     params?.policy ??
     {
       stage: params?.stage ?? 'PRE_COMMIT',
-      blockOnOrAbove: 'CRITICAL',
-      warnOnOrAbove: 'ERROR',
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
     };
 
   const facts = createFacts(changes);

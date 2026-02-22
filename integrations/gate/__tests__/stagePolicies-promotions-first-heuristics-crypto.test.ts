@@ -9,7 +9,7 @@ import {
   policyForPreCommit,
   policyForPrePush,
 } from './stagePoliciesFixtures';
-test('gate promotes weak crypto hash heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes weak crypto hash heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const weakCryptoHashFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.weak-crypto-hash.ast',
@@ -24,7 +24,7 @@ test('gate promotes weak crypto hash heuristic to blocking in PRE_PUSH and CI on
     [weakCryptoHashFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -41,7 +41,7 @@ test('gate promotes weak crypto hash heuristic to blocking in PRE_PUSH and CI on
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes insecure token Math.random heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes insecure token Math.random heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const insecureTokenMathRandomFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.insecure-token-math-random.ast',
@@ -56,7 +56,7 @@ test('gate promotes insecure token Math.random heuristic to blocking in PRE_PUSH
     [insecureTokenMathRandomFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -73,7 +73,7 @@ test('gate promotes insecure token Math.random heuristic to blocking in PRE_PUSH
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes insecure token Date.now heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes insecure token Date.now heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const insecureTokenDateNowFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.insecure-token-date-now.ast',
@@ -88,7 +88,7 @@ test('gate promotes insecure token Date.now heuristic to blocking in PRE_PUSH an
     [insecureTokenDateNowFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -105,7 +105,7 @@ test('gate promotes insecure token Date.now heuristic to blocking in PRE_PUSH an
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes Buffer.allocUnsafe heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes Buffer.allocUnsafe heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const bufferAllocUnsafeFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.buffer-alloc-unsafe.ast',
@@ -120,7 +120,7 @@ test('gate promotes Buffer.allocUnsafe heuristic to blocking in PRE_PUSH and CI 
     [bufferAllocUnsafeFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -137,7 +137,7 @@ test('gate promotes Buffer.allocUnsafe heuristic to blocking in PRE_PUSH and CI 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes jsonwebtoken.decode heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes jsonwebtoken.decode heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const jwtDecodeWithoutVerifyFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.jwt-decode-without-verify.ast',
@@ -152,7 +152,7 @@ test('gate promotes jsonwebtoken.decode heuristic to blocking in PRE_PUSH and CI
     [jwtDecodeWithoutVerifyFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -169,7 +169,7 @@ test('gate promotes jsonwebtoken.decode heuristic to blocking in PRE_PUSH and CI
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes jsonwebtoken.verify ignoreExpiration heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes jsonwebtoken.verify ignoreExpiration heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const jwtVerifyIgnoreExpirationFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.jwt-verify-ignore-expiration.ast',
@@ -184,7 +184,7 @@ test('gate promotes jsonwebtoken.verify ignoreExpiration heuristic to blocking i
     [jwtVerifyIgnoreExpirationFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -201,7 +201,7 @@ test('gate promotes jsonwebtoken.verify ignoreExpiration heuristic to blocking i
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes jsonwebtoken.sign without expiration heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes jsonwebtoken.sign without expiration heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const jwtSignNoExpirationFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.jwt-sign-no-expiration.ast',
@@ -216,7 +216,7 @@ test('gate promotes jsonwebtoken.sign without expiration heuristic to blocking i
     [jwtSignNoExpirationFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -233,7 +233,7 @@ test('gate promotes jsonwebtoken.sign without expiration heuristic to blocking i
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes TLS rejectUnauthorized=false heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes TLS rejectUnauthorized=false heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const tlsRejectUnauthorizedFalseFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.tls-reject-unauthorized-false.ast',
@@ -248,7 +248,7 @@ test('gate promotes TLS rejectUnauthorized=false heuristic to blocking in PRE_PU
     [tlsRejectUnauthorizedFalseFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -265,7 +265,7 @@ test('gate promotes TLS rejectUnauthorized=false heuristic to blocking in PRE_PU
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes dynamic shell invocation heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes dynamic shell invocation heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const dynamicShellInvocationFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.dynamic-shell-invocation.ast',
@@ -280,7 +280,7 @@ test('gate promotes dynamic shell invocation heuristic to blocking in PRE_PUSH a
     [dynamicShellInvocationFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -297,7 +297,7 @@ test('gate promotes dynamic shell invocation heuristic to blocking in PRE_PUSH a
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes TLS env override heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes TLS env override heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const tlsEnvOverrideFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.tls-env-override.ast',
@@ -312,7 +312,7 @@ test('gate promotes TLS env override heuristic to blocking in PRE_PUSH and CI on
     [tlsEnvOverrideFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -329,7 +329,7 @@ test('gate promotes TLS env override heuristic to blocking in PRE_PUSH and CI on
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes child_process shell=true heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes child_process shell=true heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const childProcessShellTrueFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-shell-true.ast',
@@ -344,7 +344,7 @@ test('gate promotes child_process shell=true heuristic to blocking in PRE_PUSH a
     [childProcessShellTrueFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -361,7 +361,7 @@ test('gate promotes child_process shell=true heuristic to blocking in PRE_PUSH a
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes vm dynamic code execution heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes vm dynamic code execution heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const vmDynamicCodeExecutionFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.vm-dynamic-code-execution.ast',
@@ -376,7 +376,7 @@ test('gate promotes vm dynamic code execution heuristic to blocking in PRE_PUSH 
     [vmDynamicCodeExecutionFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -393,7 +393,7 @@ test('gate promotes vm dynamic code execution heuristic to blocking in PRE_PUSH 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes crypto.randomUUID token heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes crypto.randomUUID token heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const weakTokenRandomUuidFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.weak-token-randomuuid.ast',
@@ -408,7 +408,7 @@ test('gate promotes crypto.randomUUID token heuristic to blocking in PRE_PUSH an
     [weakTokenRandomUuidFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -425,7 +425,7 @@ test('gate promotes crypto.randomUUID token heuristic to blocking in PRE_PUSH an
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes Buffer.allocUnsafeSlow heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes Buffer.allocUnsafeSlow heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const bufferAllocUnsafeSlowFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.buffer-alloc-unsafe-slow.ast',
@@ -440,7 +440,7 @@ test('gate promotes Buffer.allocUnsafeSlow heuristic to blocking in PRE_PUSH and
     [bufferAllocUnsafeSlowFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),

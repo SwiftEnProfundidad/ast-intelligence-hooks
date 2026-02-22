@@ -9,7 +9,7 @@ import {
   policyForPreCommit,
   policyForPrePush,
 } from './stagePoliciesFixtures';
-test('gate promotes fs.fsyncSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.fsyncSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsFsyncSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-fsync-sync.ast',
@@ -24,7 +24,7 @@ test('gate promotes fs.fsyncSync heuristic to blocking in PRE_PUSH and CI only',
     [fsFsyncSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -41,7 +41,7 @@ test('gate promotes fs.fsyncSync heuristic to blocking in PRE_PUSH and CI only',
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.fdatasyncSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.fdatasyncSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsFdatasyncSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-fdatasync-sync.ast',
@@ -56,7 +56,7 @@ test('gate promotes fs.fdatasyncSync heuristic to blocking in PRE_PUSH and CI on
     [fsFdatasyncSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -73,7 +73,7 @@ test('gate promotes fs.fdatasyncSync heuristic to blocking in PRE_PUSH and CI on
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.closeSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.closeSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsCloseSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-close-sync.ast',
@@ -88,7 +88,7 @@ test('gate promotes fs.closeSync heuristic to blocking in PRE_PUSH and CI only',
     [fsCloseSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -104,7 +104,7 @@ test('gate promotes fs.closeSync heuristic to blocking in PRE_PUSH and CI only',
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.readSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.readSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsReadSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-read-sync.ast',
@@ -119,7 +119,7 @@ test('gate promotes fs.readSync heuristic to blocking in PRE_PUSH and CI only', 
     [fsReadSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -135,7 +135,7 @@ test('gate promotes fs.readSync heuristic to blocking in PRE_PUSH and CI only', 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.readlinkSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.readlinkSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsReadlinkSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-readlink-sync.ast',
@@ -150,7 +150,7 @@ test('gate promotes fs.readlinkSync heuristic to blocking in PRE_PUSH and CI onl
     [fsReadlinkSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -166,7 +166,7 @@ test('gate promotes fs.readlinkSync heuristic to blocking in PRE_PUSH and CI onl
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.symlinkSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.symlinkSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsSymlinkSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-symlink-sync.ast',
@@ -181,7 +181,7 @@ test('gate promotes fs.symlinkSync heuristic to blocking in PRE_PUSH and CI only
     [fsSymlinkSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -197,7 +197,7 @@ test('gate promotes fs.symlinkSync heuristic to blocking in PRE_PUSH and CI only
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.linkSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.linkSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsLinkSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-link-sync.ast',
@@ -212,7 +212,7 @@ test('gate promotes fs.linkSync heuristic to blocking in PRE_PUSH and CI only', 
     [fsLinkSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -228,7 +228,7 @@ test('gate promotes fs.linkSync heuristic to blocking in PRE_PUSH and CI only', 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.cpSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.cpSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsCpSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-cp-sync.ast',
@@ -243,7 +243,7 @@ test('gate promotes fs.cpSync heuristic to blocking in PRE_PUSH and CI only', ()
     [fsCpSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -259,7 +259,7 @@ test('gate promotes fs.cpSync heuristic to blocking in PRE_PUSH and CI only', ()
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.openSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.openSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsOpenSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-open-sync.ast',
@@ -274,7 +274,7 @@ test('gate promotes fs.openSync heuristic to blocking in PRE_PUSH and CI only', 
     [fsOpenSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -290,7 +290,7 @@ test('gate promotes fs.openSync heuristic to blocking in PRE_PUSH and CI only', 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.opendirSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.opendirSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsOpendirSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-opendir-sync.ast',
@@ -305,7 +305,7 @@ test('gate promotes fs.opendirSync heuristic to blocking in PRE_PUSH and CI only
     [fsOpendirSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -321,7 +321,7 @@ test('gate promotes fs.opendirSync heuristic to blocking in PRE_PUSH and CI only
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.mkdtempSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.mkdtempSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsMkdtempSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-mkdtemp-sync.ast',
@@ -336,7 +336,7 @@ test('gate promotes fs.mkdtempSync heuristic to blocking in PRE_PUSH and CI only
     [fsMkdtempSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),

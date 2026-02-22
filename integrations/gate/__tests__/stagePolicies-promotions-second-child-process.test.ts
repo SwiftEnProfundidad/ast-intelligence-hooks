@@ -10,7 +10,7 @@ import {
   policyForPrePush,
 } from './stagePoliciesFixtures';
 
-test('gate promotes execSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes execSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const execSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-exec-sync.ast',
@@ -25,7 +25,7 @@ test('gate promotes execSync heuristic to blocking in PRE_PUSH and CI only', () 
     [execSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -42,7 +42,7 @@ test('gate promotes execSync heuristic to blocking in PRE_PUSH and CI only', () 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes exec heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes exec heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const execFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-exec.ast',
@@ -57,7 +57,7 @@ test('gate promotes exec heuristic to blocking in PRE_PUSH and CI only', () => {
     [execFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -74,7 +74,7 @@ test('gate promotes exec heuristic to blocking in PRE_PUSH and CI only', () => {
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes spawnSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes spawnSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const spawnSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-spawn-sync.ast',
@@ -89,7 +89,7 @@ test('gate promotes spawnSync heuristic to blocking in PRE_PUSH and CI only', ()
     [spawnSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -106,7 +106,7 @@ test('gate promotes spawnSync heuristic to blocking in PRE_PUSH and CI only', ()
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes spawn heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes spawn heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const spawnFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-spawn.ast',
@@ -121,7 +121,7 @@ test('gate promotes spawn heuristic to blocking in PRE_PUSH and CI only', () => 
     [spawnFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -138,7 +138,7 @@ test('gate promotes spawn heuristic to blocking in PRE_PUSH and CI only', () => 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fork heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fork heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const forkFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-fork.ast',
@@ -153,7 +153,7 @@ test('gate promotes fork heuristic to blocking in PRE_PUSH and CI only', () => {
     [forkFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -170,7 +170,7 @@ test('gate promotes fork heuristic to blocking in PRE_PUSH and CI only', () => {
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes execFileSync heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes execFileSync heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const execFileSyncFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-exec-file-sync.ast',
@@ -185,7 +185,7 @@ test('gate promotes execFileSync heuristic to blocking in PRE_PUSH and CI only',
     [execFileSyncFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -202,7 +202,7 @@ test('gate promotes execFileSync heuristic to blocking in PRE_PUSH and CI only',
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes execFile heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes execFile heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const execFileFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-exec-file.ast',
@@ -217,7 +217,7 @@ test('gate promotes execFile heuristic to blocking in PRE_PUSH and CI only', () 
     [execFileFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -234,7 +234,7 @@ test('gate promotes execFile heuristic to blocking in PRE_PUSH and CI only', () 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes execFile untrusted args heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes execFile untrusted args heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const execFileUntrustedArgsFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.child-process-exec-file-untrusted-args.ast',
@@ -249,7 +249,7 @@ test('gate promotes execFile untrusted args heuristic to blocking in PRE_PUSH an
     [execFileUntrustedArgsFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),

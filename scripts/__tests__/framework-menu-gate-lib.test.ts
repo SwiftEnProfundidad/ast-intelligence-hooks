@@ -38,7 +38,12 @@ test('runRepoGateSilent no inyecta sdd.policy.blocked en modo auditoria de menu'
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
 
       assert.equal(ruleIds.includes('sdd.policy.blocked'), false);
-      assert.equal(ruleIds.includes('heuristics.ts.console-log.ast'), true);
+      assert.equal(
+        ruleIds.includes('skills.backend.no-console-log') ||
+          ruleIds.includes('skills.frontend.no-console-log') ||
+          ruleIds.includes('heuristics.ts.console-log.ast'),
+        true
+      );
     } finally {
       process.chdir(previousCwd);
     }

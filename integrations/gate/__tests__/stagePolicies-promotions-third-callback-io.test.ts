@@ -9,7 +9,7 @@ import {
   policyForPreCommit,
   policyForPrePush,
 } from './stagePoliciesFixtures';
-test('gate promotes fs.utimes callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.utimes callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsUtimesCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-utimes-callback.ast',
@@ -24,7 +24,7 @@ test('gate promotes fs.utimes callback heuristic to blocking in PRE_PUSH and CI 
     [fsUtimesCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -41,7 +41,7 @@ test('gate promotes fs.utimes callback heuristic to blocking in PRE_PUSH and CI 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.watch callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.watch callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsWatchCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-watch-callback.ast',
@@ -56,7 +56,7 @@ test('gate promotes fs.watch callback heuristic to blocking in PRE_PUSH and CI o
     [fsWatchCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -73,7 +73,7 @@ test('gate promotes fs.watch callback heuristic to blocking in PRE_PUSH and CI o
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.watchFile callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.watchFile callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsWatchFileCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-watch-file-callback.ast',
@@ -88,7 +88,7 @@ test('gate promotes fs.watchFile callback heuristic to blocking in PRE_PUSH and 
     [fsWatchFileCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -105,7 +105,7 @@ test('gate promotes fs.watchFile callback heuristic to blocking in PRE_PUSH and 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.unwatchFile callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.unwatchFile callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsUnwatchFileCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-unwatch-file-callback.ast',
@@ -120,7 +120,7 @@ test('gate promotes fs.unwatchFile callback heuristic to blocking in PRE_PUSH an
     [fsUnwatchFileCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -137,7 +137,7 @@ test('gate promotes fs.unwatchFile callback heuristic to blocking in PRE_PUSH an
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.readFile callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.readFile callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsReadFileCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-read-file-callback.ast',
@@ -152,7 +152,7 @@ test('gate promotes fs.readFile callback heuristic to blocking in PRE_PUSH and C
     [fsReadFileCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -169,7 +169,7 @@ test('gate promotes fs.readFile callback heuristic to blocking in PRE_PUSH and C
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.exists callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.exists callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsExistsCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-exists-callback.ast',
@@ -184,7 +184,7 @@ test('gate promotes fs.exists callback heuristic to blocking in PRE_PUSH and CI 
     [fsExistsCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -201,7 +201,7 @@ test('gate promotes fs.exists callback heuristic to blocking in PRE_PUSH and CI 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.writeFile callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.writeFile callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsWriteFileCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-write-file-callback.ast',
@@ -216,7 +216,7 @@ test('gate promotes fs.writeFile callback heuristic to blocking in PRE_PUSH and 
     [fsWriteFileCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -233,7 +233,7 @@ test('gate promotes fs.writeFile callback heuristic to blocking in PRE_PUSH and 
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.appendFile callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.appendFile callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsAppendFileCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-append-file-callback.ast',
@@ -248,7 +248,7 @@ test('gate promotes fs.appendFile callback heuristic to blocking in PRE_PUSH and
     [fsAppendFileCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -265,7 +265,7 @@ test('gate promotes fs.appendFile callback heuristic to blocking in PRE_PUSH and
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.readdir callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.readdir callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsReaddirCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-readdir-callback.ast',
@@ -280,7 +280,7 @@ test('gate promotes fs.readdir callback heuristic to blocking in PRE_PUSH and CI
     [fsReaddirCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -297,7 +297,7 @@ test('gate promotes fs.readdir callback heuristic to blocking in PRE_PUSH and CI
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.mkdir callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.mkdir callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsMkdirCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-mkdir-callback.ast',
@@ -312,7 +312,7 @@ test('gate promotes fs.mkdir callback heuristic to blocking in PRE_PUSH and CI o
     [fsMkdirCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -329,7 +329,7 @@ test('gate promotes fs.mkdir callback heuristic to blocking in PRE_PUSH and CI o
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.rmdir callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.rmdir callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsRmdirCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-rmdir-callback.ast',
@@ -344,7 +344,7 @@ test('gate promotes fs.rmdir callback heuristic to blocking in PRE_PUSH and CI o
     [fsRmdirCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -361,7 +361,7 @@ test('gate promotes fs.rmdir callback heuristic to blocking in PRE_PUSH and CI o
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.rm callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.rm callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsRmCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-rm-callback.ast',
@@ -376,7 +376,7 @@ test('gate promotes fs.rm callback heuristic to blocking in PRE_PUSH and CI only
     [fsRmCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
@@ -393,7 +393,7 @@ test('gate promotes fs.rm callback heuristic to blocking in PRE_PUSH and CI only
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate promotes fs.rename callback heuristic to blocking in PRE_PUSH and CI only', () => {
+test('gate promotes fs.rename callback heuristic to blocking in PRE_COMMIT, PRE_PUSH y CI', () => {
   const fsRenameCallbackFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.fs-rename-callback.ast',
@@ -408,7 +408,7 @@ test('gate promotes fs.rename callback heuristic to blocking in PRE_PUSH and CI 
     [fsRenameCallbackFact]
   );
   const preCommitDecision = evaluateGate([...preCommitFindings], policyForPreCommit());
-  assert.equal(preCommitDecision.outcome, 'PASS');
+  assert.equal(preCommitDecision.outcome, 'BLOCK');
 
   const prePushFindings = evaluateRules(
     applyHeuristicSeverityForStage(astHeuristicsRuleSet, 'PRE_PUSH'),
