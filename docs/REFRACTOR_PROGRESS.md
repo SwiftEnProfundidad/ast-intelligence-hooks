@@ -70,7 +70,7 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F6.T1` completada: `README.md` actualizado con arquitectura de rules engine unificado.
 - ✅ `F6.T2` completada: `docs/USAGE.md` y `docs/API_REFERENCE.md` actualizados con comandos/contratos de custom rules.
 - ✅ `F6.T3` completada: `docs/evidence-v2.1.md` actualizado para reflejar trazabilidad de bundles efectivos y reglas declarativas.
-- 🚧 `F6.T4` en construccion: cierre Git Flow end-to-end (`feature -> develop -> main`).
+- ✅ `F6.T4` completada: cierre Git Flow end-to-end (`feature -> develop -> main`) con PR #339 y PR #340 mergeadas.
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
@@ -102,7 +102,8 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Cobertura de menú extendida: opción `33` en acciones/builders/vista advanced verificada en tests.
 - ✅ Validación consolidada: 21 tests config + 12 tests git + 113 tests framework menu en verde.
 - ✅ Documentación enterprise alineada al motor unificado (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
-- Estado activo: `F6.T4` del ciclo `RULES_ENGINE_UNIFICATION_CYCLE` (Git Flow end-to-end).
+- ✅ Cierre de release ejecutado: `feature/rules-engine-unification -> develop` (#339) y `develop -> main` (#340).
+- Estado activo: ciclo `RULES_ENGINE_UNIFICATION_CYCLE` cerrado.
 
 ## Siguiente paso operativo
-- ⏳ Completar `F6.T4` y cerrar ciclo.
+- ⏳ N/A — ciclo cerrado.
