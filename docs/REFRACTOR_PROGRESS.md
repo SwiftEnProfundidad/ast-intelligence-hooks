@@ -547,4 +547,5 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ `docs/REFRACTOR_PROGRESS.md` se mantiene como histórico.
 - ✅ El seguimiento operativo del ciclo actual vive solo en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
 - ✅ Bloque `T8` cerrado en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (PR `#316` mergeada en `develop`).
-- 🚧 Tarea activa actual: `T9` en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
+- ✅ `T9` cerrado: sincronización `main/develop` completada con ramas alineadas en `02428c0d5dbe492c745845b7a1690905ce205344`.
+- 🚧 Tarea activa actual: `T10` en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
