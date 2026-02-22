@@ -16,6 +16,11 @@ type FindingTarget = {
   source?: string;
 };
 
+export type EvaluateRulesCoverageResult = {
+  findings: ReadonlyArray<Finding>;
+  evaluatedRuleIds: ReadonlyArray<string>;
+};
+
 const toFinding = (
   rule: RuleDefinition,
   consequence: Consequence,
@@ -153,16 +158,18 @@ const collectSimpleFindingTargets = (
   return undefined;
 };
 
-export function evaluateRules(
+const evaluateRulesInternal = (
   rules: RuleSet,
   facts: ReadonlyArray<FactInput>
-): ReadonlyArray<Finding> {
+): EvaluateRulesCoverageResult => {
   const findings: Finding[] = [];
+  const evaluatedRuleIds: string[] = [];
 
   for (const rule of rules) {
     const condition: Condition = rule.when;
     const consequence: Consequence = rule.then;
     if (consequence.kind === 'Finding') {
+      evaluatedRuleIds.push(rule.id);
       const simpleTargets = collectSimpleFindingTargets(condition, facts, rule.scope);
       if (simpleTargets) {
         if (simpleTargets.length === 0) {
@@ -178,5 +185,22 @@ export function evaluateRules(
     }
   }
 
-  return findings;
+  return {
+    findings,
+    evaluatedRuleIds: Array.from(new Set(evaluatedRuleIds)).sort(),
+  };
+};
+
+export function evaluateRules(
+  rules: RuleSet,
+  facts: ReadonlyArray<FactInput>
+): ReadonlyArray<Finding> {
+  return evaluateRulesInternal(rules, facts).findings;
+}
+
+export function evaluateRulesWithCoverage(
+  rules: RuleSet,
+  facts: ReadonlyArray<FactInput>
+): EvaluateRulesCoverageResult {
+  return evaluateRulesInternal(rules, facts);
 }

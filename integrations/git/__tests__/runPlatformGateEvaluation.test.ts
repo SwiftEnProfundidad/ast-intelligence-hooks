@@ -170,9 +170,12 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic fac
     projectRules: 0,
     matchedRules: 1,
     unmatchedRules: 0,
+    unevaluatedRules: 0,
+    activeRuleIds: ['merged.rule'],
     evaluatedRuleIds: ['merged.rule'],
     matchedRuleIds: ['merged.rule'],
     unmatchedRuleIds: [],
+    unevaluatedRuleIds: [],
   });
   assert.deepEqual(result.findings, findings);
 });
@@ -308,9 +311,69 @@ test('evaluatePlatformGateFindings filtra heuristicas mapeadas y permite downgra
     projectRules: 1,
     matchedRules: 1,
     unmatchedRules: 0,
+    unevaluatedRules: 0,
+    activeRuleIds: ['merged.rule'],
     evaluatedRuleIds: ['merged.rule'],
     matchedRuleIds: ['merged.rule'],
     unmatchedRuleIds: [],
+    unevaluatedRuleIds: [],
   });
   assert.deepEqual(result.findings, findings);
+});
+
+test('evaluatePlatformGateFindings usa evaluatedRuleIds capturados en evaluacion cuando no hay override de evaluateRules', () => {
+  const inputFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      path: 'src/a.ts',
+      changeType: 'modified',
+      source: 'test',
+    },
+  ];
+  const mergedRules: RuleSet = [makeRule('rule.active.a'), makeRule('rule.active.b')];
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'rule.active.a',
+      severity: 'WARN',
+      code: 'RULE_ACTIVE_A',
+      message: 'finding',
+      filePath: 'src/a.ts',
+    },
+  ];
+
+  const result = evaluatePlatformGateFindings(
+    {
+      facts: inputFacts,
+      stage: 'PRE_COMMIT',
+      repoRoot: '/repo',
+    },
+    {
+      detectPlatformsFromFacts: () => ({}),
+      loadHeuristicsConfig: () => ({ astSemanticEnabled: false, typeScriptScope: 'platform' }),
+      loadSkillsRuleSetForStage: () => ({
+        rules: [],
+        activeBundles: [],
+        mappedHeuristicRuleIds: new Set<string>(),
+        requiresHeuristicFacts: false,
+      }),
+      buildCombinedBaselineRules: () => [],
+      extractHeuristicFacts: () => [],
+      applyHeuristicSeverityForStage: () => [],
+      loadProjectRules: () => undefined,
+      mergeRuleSets: () => mergedRules,
+      evaluateRulesWithCoverage: () => ({
+        findings,
+        evaluatedRuleIds: ['rule.active.a'],
+      }),
+      attachFindingTraceability: (input) => input.findings,
+    }
+  );
+
+  assert.deepEqual(result.coverage.activeRuleIds, ['rule.active.a', 'rule.active.b']);
+  assert.deepEqual(result.coverage.evaluatedRuleIds, ['rule.active.a']);
+  assert.deepEqual(result.coverage.matchedRuleIds, ['rule.active.a']);
+  assert.deepEqual(result.coverage.unmatchedRuleIds, []);
+  assert.deepEqual(result.coverage.unevaluatedRuleIds, ['rule.active.b']);
+  assert.equal(result.coverage.unmatchedRules, 0);
+  assert.equal(result.coverage.unevaluatedRules, 1);
 });

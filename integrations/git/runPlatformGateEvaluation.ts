@@ -2,6 +2,7 @@ import type { Fact } from '../../core/facts/Fact';
 import type { Finding } from '../../core/gate/Finding';
 import type { GateStage } from '../../core/gate/GateStage';
 import { evaluateRules } from '../../core/gate/evaluateRules';
+import { evaluateRulesWithCoverage } from '../../core/gate/evaluateRules';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { mergeRuleSets } from '../../core/rules/mergeRuleSets';
 import { astHeuristicsRuleSet } from '../../core/rules/presets/astHeuristicsRuleSet';
@@ -38,9 +39,12 @@ type PlatformGateEvaluationResult = {
     projectRules: number;
     matchedRules: number;
     unmatchedRules: number;
+    unevaluatedRules: number;
+    activeRuleIds: ReadonlyArray<string>;
     evaluatedRuleIds: ReadonlyArray<string>;
     matchedRuleIds: ReadonlyArray<string>;
     unmatchedRuleIds: ReadonlyArray<string>;
+    unevaluatedRuleIds: ReadonlyArray<string>;
   };
   findings: ReadonlyArray<Finding>;
 };
@@ -55,6 +59,7 @@ export type PlatformGateEvaluationDependencies = {
   loadProjectRules: typeof loadProjectRules;
   mergeRuleSets: typeof mergeRuleSets;
   evaluateRules: typeof evaluateRules;
+  evaluateRulesWithCoverage: typeof evaluateRulesWithCoverage;
   attachFindingTraceability: typeof attachFindingTraceability;
 };
 
@@ -68,6 +73,7 @@ const defaultDependencies: PlatformGateEvaluationDependencies = {
   loadProjectRules,
   mergeRuleSets,
   evaluateRules,
+  evaluateRulesWithCoverage,
   attachFindingTraceability,
 };
 
@@ -149,16 +155,28 @@ export const evaluatePlatformGateFindings = (
       allowDowngradeBaseline: projectConfig?.allowOverrideLocked === true,
     }
   );
-  const rawFindings = activeDependencies.evaluateRules(mergedRules, evaluationFacts);
+  const usesEvaluateRulesOverride = typeof dependencies.evaluateRules === 'function';
+  const evaluationWithCoverage = usesEvaluateRulesOverride
+    ? {
+      findings: activeDependencies.evaluateRules(mergedRules, evaluationFacts),
+      evaluatedRuleIds: mergedRules.map((rule) => rule.id),
+    }
+    : activeDependencies.evaluateRulesWithCoverage(mergedRules, evaluationFacts);
+  const rawFindings = evaluationWithCoverage.findings;
   const findings = activeDependencies.attachFindingTraceability({
     findings: rawFindings,
     rules: mergedRules,
     facts: evaluationFacts,
   });
-  const evaluatedRuleIds = mergedRules.map((rule) => rule.id).sort();
+  const activeRuleIds = mergedRules.map((rule) => rule.id).sort();
+  const evaluatedRuleIds = Array.from(new Set(evaluationWithCoverage.evaluatedRuleIds)).sort();
   const matchedRuleIds = Array.from(new Set(findings.map((finding) => finding.ruleId))).sort();
   const matchedRuleIdsSet = new Set(matchedRuleIds);
   const unmatchedRuleIds = evaluatedRuleIds.filter((ruleId) => !matchedRuleIdsSet.has(ruleId));
+  const evaluatedRuleIdsSet = new Set(evaluatedRuleIds);
+  const unevaluatedRuleIds = activeRuleIds.filter(
+    (ruleId) => !evaluatedRuleIdsSet.has(ruleId)
+  );
 
   return {
     detectedPlatforms,
@@ -177,10 +195,13 @@ export const evaluatePlatformGateFindings = (
       skillsRules: skillsRuleSet.rules.length,
       projectRules: projectRules.length,
       matchedRules: matchedRuleIds.length,
-      unmatchedRules: Math.max(0, mergedRules.length - matchedRuleIds.length),
+      unmatchedRules: Math.max(0, evaluatedRuleIds.length - matchedRuleIds.length),
+      unevaluatedRules: unevaluatedRuleIds.length,
+      activeRuleIds,
       evaluatedRuleIds,
       matchedRuleIds,
       unmatchedRuleIds,
+      unevaluatedRuleIds,
     },
     findings,
   };

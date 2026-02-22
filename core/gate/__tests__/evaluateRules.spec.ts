@@ -1,7 +1,51 @@
-import { evaluateRules } from '../evaluateRules';
+import { evaluateRules, evaluateRulesWithCoverage } from '../evaluateRules';
 import type { RuleSet } from '../../rules/RuleSet';
 
 describe('evaluateRules', () => {
+  test('captura evaluatedRuleIds durante la evaluacion aun cuando no todas las reglas matchean', () => {
+    const rules: RuleSet = [
+      {
+        id: 'rule.a',
+        description: 'regla a',
+        severity: 'WARN',
+        when: {
+          kind: 'FileChange',
+          where: { pathPrefix: 'apps/backend/', changeType: 'modified' },
+        },
+        then: {
+          kind: 'Finding',
+          message: 'Rule A',
+        },
+      },
+      {
+        id: 'rule.b',
+        description: 'regla b',
+        severity: 'WARN',
+        when: {
+          kind: 'FileChange',
+          where: { pathPrefix: 'apps/frontend/', changeType: 'modified' },
+        },
+        then: {
+          kind: 'Finding',
+          message: 'Rule B',
+        },
+      },
+    ];
+    const facts = [
+      {
+        kind: 'FileChange' as const,
+        path: 'apps/backend/src/main.ts',
+        changeType: 'modified' as const,
+        source: 'git',
+      },
+    ];
+
+    const evaluated = evaluateRulesWithCoverage(rules, facts);
+
+    expect(evaluated.findings).toHaveLength(1);
+    expect(evaluated.evaluatedRuleIds).toEqual(['rule.a', 'rule.b']);
+  });
+
   test('genera finding cuando la condicion coincide y usa code explicito', () => {
     const rules: RuleSet = [
       {
