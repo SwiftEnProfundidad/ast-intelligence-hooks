@@ -2,7 +2,7 @@
 
 Plan operativo unico para unificar el motor de reglas de Pumuki con cobertura total de reglas core + overrides custom por repo.
 
-Estado del plan: `EN_CONSTRUCCION`
+Estado del plan: `CERRADO`
 
 ## Leyenda
 - ✅ Hecho
@@ -59,7 +59,7 @@ Garantizar que Pumuki aplique siempre TODAS las reglas core del producto (sin de
 - ✅ F6.T1 Actualizar `README.md` con arquitectura core rules + custom per repo.
 - ✅ F6.T2 Actualizar `docs/USAGE.md` y `docs/API_REFERENCE.md`.
 - ✅ F6.T3 Actualizar `docs/evidence-v2.1.md` con nuevos campos de cobertura/origen.
-- 🚧 F6.T4 Cierre Git Flow end-to-end: PR a `develop`, merge, sync `develop -> main`.
+- ✅ F6.T4 Cierre Git Flow end-to-end: PR a `develop`, merge, sync `develop -> main`.
 
 ## Política cerrada del ciclo
 - Core rules siempre activas por plataforma detectada.
@@ -67,3 +67,4 @@ Garantizar que Pumuki aplique siempre TODAS las reglas core del producto (sin de
 - Overrides custom solo locales por repo.
 - Política de conflictos: `custom > core`.
 - Evidencia obligatoria y determinista para cobertura de reglas.
+- Ciclo cerrado con merge completado en `develop` y `main`.
