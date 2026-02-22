@@ -258,6 +258,20 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ REFACTOR: estabilizar tests existentes creando carpetas `apps/ios|backend|frontend|web` en fixtures que validan scoping estricto por prefijos.
 - ✅ Validación técnica ejecutada:
   - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsRuleSet.test.ts` (6/6)
+
+## Fase 19 — Hardening de comandos Git Flow
+- ✅ T6 completada: `npm run gitflow*` ya no depende de rutas inexistentes.
+  - ✅ RED:
+    - `scripts/__tests__/gitflow-cli.test.ts` creado para contrato `check/status/workflow/reset` + comando inválido.
+    - Evidencia inicial: `npx --yes tsx@4.21.0 --test scripts/__tests__/gitflow-cli.test.ts` con fallo `5/5` por `bin/gitflow` ausente.
+  - ✅ GREEN:
+    - `bin/gitflow` implementado con wrapper TS.
+    - `scripts/gitflow.ts` y `scripts/gitflow-cli-lib.ts` añadidos con salida determinista y reset no destructivo.
+  - ✅ REFACTOR + validación:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/gitflow-cli.test.ts` (`5/5` pass).
+    - `npm run gitflow --silent`, `npm run gitflow:status --silent`, `npm run gitflow:workflow --silent`, `npm run gitflow:reset --silent`.
+    - `npm run typecheck`.
+- 🚧 T7 en progreso: saneamiento de aliases legacy rotos en `package.json` (paths inexistentes restantes).
   - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGateEvaluation.test.ts scripts/__tests__/framework-menu-gate-lib.test.ts` (3/3)
   - `npm run framework:menu` (opción `1`) ahora devuelve findings reales en este repo (`skills.backend.no-empty-catch: 3`).
 - ✅ Ajustar opción `2` del menú consumer para ejecutar `repo+staged` con política `PRE_PUSH` (antes corría como `PRE_COMMIT`).
@@ -528,4 +542,9 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - `develop` remoto recreada desde `main`.
   - `main` y `develop` quedan alineadas en el mismo SHA para retomar Git Flow.
 - ✅ Contexto operativo restaurado en rama de trabajo `feature/enterprise-audit-cycle`.
-- 🚧 Próxima tarea activa: ejecutar el siguiente bloque de implementación en la feature activa.
+
+## Estado de referencia (sin fases nuevas)
+- ✅ `docs/REFRACTOR_PROGRESS.md` se mantiene como histórico.
+- ✅ El seguimiento operativo del ciclo actual vive solo en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
+- ✅ `docs/ENTERPRISE_AUDIT_CYCLE_ACTIVE.md` queda cerrado y sin uso operativo.
+- 🚧 Tarea activa actual: `T8` en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
