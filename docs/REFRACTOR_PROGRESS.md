@@ -27,11 +27,12 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F4.T4` completada: matriz e2e happy/sad/edge determinista validada.
 - ✅ `F5.T1` completada: documentacion tecnica actualizada (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
 - ✅ `F5.T2` completada: validacion final ejecutada en verde (`npm run typecheck`, `npm test`).
-- 🚧 Tarea activa del ciclo actual: `F5.T3` (cierre Git Flow end-to-end).
+- ✅ `F5.T3` completada: Git Flow cerrado end-to-end (commits atomicos, PR/merge a `develop`, sync `develop -> main`).
+- ✅ Ciclo `ENTERPRISE_RULE_COVERAGE_CYCLE` cerrado.
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F5.T3` del plan activo: commits atomicos, PR, merge, sync `develop -> main`.
+- ⏳ Definir nuevo ciclo activo (UI/UX del menu legacy++) en un nuevo plan antes de abrir nuevas tareas.
