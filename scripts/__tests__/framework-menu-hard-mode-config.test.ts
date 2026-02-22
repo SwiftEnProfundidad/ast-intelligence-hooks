@@ -51,6 +51,14 @@ test('framework menu expone accion para diagnosticar cobertura de reglas', () =>
   assert.match(diagnosticsAction.label, /rule coverage|diagnostics|reglas/i);
 });
 
+test('framework menu expone accion para importar reglas custom', () => {
+  const actions = createFrameworkMenuActions(createMenuContext());
+  const importCustomAction = actions.find((action) => action.id === '33');
+
+  assert.ok(importCustomAction);
+  assert.match(importCustomAction.label, /import custom skills|agents\.md|skills\.md/i);
+});
+
 test('buildHardModeConfigFromSelection soporta critical-high y all-severities', () => {
   assert.deepEqual(buildHardModeConfigFromSelection('critical-high'), {
     enabled: true,

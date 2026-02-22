@@ -1,4 +1,5 @@
-import { type SkillsLockBundle, loadSkillsLock } from '../integrations/config/skillsLock';
+import { type SkillsLockBundle } from '../integrations/config/skillsLock';
+import { loadEffectiveSkillsLock } from '../integrations/config/skillsEffectiveLock';
 
 export const formatActiveSkillsBundles = (
   bundles: ReadonlyArray<Pick<SkillsLockBundle, 'name' | 'version' | 'hash'>>
@@ -21,6 +22,6 @@ export const formatActiveSkillsBundles = (
 };
 
 export const loadAndFormatActiveSkillsBundles = (repoRoot: string): string => {
-  const lock = loadSkillsLock(repoRoot);
+  const lock = loadEffectiveSkillsLock(repoRoot);
   return formatActiveSkillsBundles(lock?.bundles ?? []);
 };

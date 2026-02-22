@@ -72,7 +72,7 @@ export const ADVANCED_MENU_LAYOUT: ReadonlyArray<MenuLayoutGroup> = [
   {
     key: 'maintenance',
     title: 'Maintenance',
-    itemIds: ['17', '18', '31'],
+    itemIds: ['17', '18', '31', '33'],
   },
   {
     key: 'validation',

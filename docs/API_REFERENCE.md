@@ -53,6 +53,30 @@ Behavior:
 - Emits `governance.rules.coverage.incomplete` and forces `BLOCK` when active rules remain unevaluated in `PRE_COMMIT`, `PRE_PUSH`, or `CI`.
 - Writes `.ai_evidence.json` via `generateEvidence`.
 
+## Skills rules engine APIs
+
+Files:
+
+- `integrations/config/coreSkillsLock.ts`
+- `integrations/config/skillsEffectiveLock.ts`
+- `integrations/config/skillsCustomRules.ts`
+- `integrations/config/skillsRuleSet.ts`
+
+Key functions:
+
+- `loadCoreSkillsLock(): SkillsLockV1 | undefined`
+- `loadEffectiveSkillsLock(repoRoot?): SkillsLockV1 | undefined`
+- `loadCustomSkillsRulesFile(repoRoot?): CustomSkillsRulesFileV1 | undefined`
+- `loadCustomSkillsLock(repoRoot?): SkillsLockV1 | undefined`
+- `resolveSkillImportSources({ repoRoot?, explicitSources? }): string[]`
+- `importCustomSkillsRules({ repoRoot?, sourceFiles? }): CustomSkillsImportResult`
+- `loadSkillsRuleSetForStage(stage, repoRoot?, detectedPlatforms?)`
+
+Deterministic precedence:
+
+- `core + repo + custom` merged into one effective lock.
+- Conflict policy: `custom > repo > core` by `ruleId` during ruleset materialization.
+
 ## Git scope helpers
 
 Files:
@@ -229,6 +253,7 @@ Consumer menu pre-flight:
 - pre-flight checks `repo_state`, stale/missing evidence, git-flow protected branches, and AI gate chain consistency
 - stage mapping is deterministic: `1/3 -> PRE_COMMIT`, `2/4 -> PRE_PUSH`
 - in modern UI mode (`PUMUKI_MENU_UI_V2=1`) options are grouped by domains while preserving IDs and execution wiring
+- advanced maintenance option `33` imports custom rules from `AGENTS.md/SKILLS.md` to `/.pumuki/custom-rules.json`
 
 ## Optional diagnostics adapters
 
@@ -275,6 +300,7 @@ Deterministic argument builders exported from menu module:
 
 - `buildAdapterReadinessCommandArgs({ scriptPath, adapterReportFile, outFile })`
 - `buildCleanValidationArtifactsCommandArgs({ scriptPath, dryRun })`
+- `buildImportCustomSkillsCommandArgs()`
 - `buildPhase5BlockersReadinessCommandArgs({ scriptPath, adapterReportFile, consumerTriageReportFile, outFile })`
 - `buildPhase5ExecutionClosureStatusCommandArgs({ scriptPath, phase5BlockersReportFile, consumerUnblockReportFile, adapterReadinessReportFile, outFile, requireAdapterReadiness })`
 - `buildPhase5ExternalHandoffCommandArgs({ scriptPath, repo, phase5StatusReportFile, phase5BlockersReportFile, consumerUnblockReportFile, mockAbReportFile, runReportFile, outFile, artifactUrls, requireArtifactUrls, requireMockAbReport })`

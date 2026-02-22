@@ -4,6 +4,21 @@ import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { loadSkillsRuleSetForStage } from '../skillsRuleSet';
+import type { DetectedPlatforms } from '../../platform/detectPlatforms';
+
+const withCoreSkillsDisabled = async (run: () => Promise<void>): Promise<void> => {
+  const previous = process.env.PUMUKI_DISABLE_CORE_SKILLS;
+  process.env.PUMUKI_DISABLE_CORE_SKILLS = '1';
+  try {
+    await run();
+  } finally {
+    if (typeof previous === 'string') {
+      process.env.PUMUKI_DISABLE_CORE_SKILLS = previous;
+    } else {
+      delete process.env.PUMUKI_DISABLE_CORE_SKILLS;
+    }
+  }
+};
 
 const sampleLock = {
   version: '1.0',
@@ -109,7 +124,7 @@ const collectHeuristicPrefixes = (
 };
 
 test('loads and transforms active bundles into heuristic-driven rules', async () => {
-  await withTempDir('pumuki-skills-ruleset-', async (tempRoot) => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-', async (tempRoot) => {
     mkdirSync(join(tempRoot, 'apps/ios'), { recursive: true });
     writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(samplePolicy, null, 2));
@@ -133,21 +148,21 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.force-try.ast'), true);
     assert.equal(prePush.mappedHeuristicRuleIds.has('heuristics.ios.task-detached.ast'), true);
     assert.equal(prePush.requiresHeuristicFacts, true);
-  });
+  }));
 });
 
 test('falls back gracefully when lock/policy files are missing', async () => {
-  await withTempDir('pumuki-skills-ruleset-empty-', async (tempRoot) => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-empty-', async (tempRoot) => {
     const result = loadSkillsRuleSetForStage('CI', tempRoot);
     assert.equal(result.rules.length, 0);
     assert.equal(result.activeBundles.length, 0);
     assert.equal(result.requiresHeuristicFacts, false);
     assert.equal(result.mappedHeuristicRuleIds.size, 0);
-  });
+  }));
 });
 
 test('returns empty result when defaultBundleEnabled is false and no bundle override exists', async () => {
-  await withTempDir('pumuki-skills-ruleset-disabled-', async (tempRoot) => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-disabled-', async (tempRoot) => {
     writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(sampleLock, null, 2));
     writeFileSync(
       join(tempRoot, 'skills.policy.json'),
@@ -168,11 +183,11 @@ test('returns empty result when defaultBundleEnabled is false and no bundle over
     assert.equal(result.activeBundles.length, 0);
     assert.equal(result.mappedHeuristicRuleIds.size, 0);
     assert.equal(result.requiresHeuristicFacts, false);
-  });
+  }));
 });
 
-test('ignores unmapped rules and promotes only from PRE_PUSH/CI', async () => {
-  await withTempDir('pumuki-skills-ruleset-promotion-', async (tempRoot) => {
+test('preserva reglas no mapeadas como declarativas y promueve solo reglas mapeadas en PRE_PUSH/CI', async () => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-promotion-', async (tempRoot) => {
     const lock = {
       version: '1.0',
       compilerVersion: '1.0.0',
@@ -225,23 +240,31 @@ test('ignores unmapped rules and promotes only from PRE_PUSH/CI', async () => {
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(policy, null, 2));
 
     const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
-    assert.equal(preCommit.rules.length, 1);
-    assert.equal(preCommit.rules[0]?.id, 'skills.ios.no-force-try');
-    assert.equal(preCommit.rules[0]?.severity, 'WARN');
+    assert.equal(preCommit.rules.length, 2);
+    const preCommitMapped = preCommit.rules.find((rule) => rule.id === 'skills.ios.no-force-try');
+    const preCommitDeclarative = preCommit.rules.find(
+      (rule) => rule.id === 'skills.ios.custom-non-mapped-rule'
+    );
+    assert.ok(preCommitMapped);
+    assert.ok(preCommitDeclarative);
+    assert.equal(preCommitMapped.severity, 'WARN');
+    assert.equal(preCommitDeclarative.then.code.endsWith('_DECLARATIVE'), true);
 
     const prePush = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
-    assert.equal(prePush.rules.length, 1);
-    assert.equal(prePush.rules[0]?.id, 'skills.ios.no-force-try');
-    assert.equal(prePush.rules[0]?.severity, 'ERROR');
-    assert.equal(
-      prePush.rules.some((rule) => rule.id === 'skills.ios.custom-non-mapped-rule'),
-      false
+    assert.equal(prePush.rules.length, 2);
+    const prePushMapped = prePush.rules.find((rule) => rule.id === 'skills.ios.no-force-try');
+    const prePushDeclarative = prePush.rules.find(
+      (rule) => rule.id === 'skills.ios.custom-non-mapped-rule'
     );
-  });
+    assert.ok(prePushMapped);
+    assert.ok(prePushDeclarative);
+    assert.equal(prePushMapped.severity, 'ERROR');
+    assert.equal(prePushDeclarative.then.code.endsWith('_DECLARATIVE'), true);
+  }));
 });
 
 test('scopes backend/frontend heuristic rules to platform file prefixes', async () => {
-  await withTempDir('pumuki-skills-ruleset-platform-scope-', async (tempRoot) => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-platform-scope-', async (tempRoot) => {
     mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
     mkdirSync(join(tempRoot, 'apps/frontend'), { recursive: true });
     mkdirSync(join(tempRoot, 'apps/web'), { recursive: true });
@@ -300,11 +323,11 @@ test('scopes backend/frontend heuristic rules to platform file prefixes', async 
 
     const frontendPrefixes = collectHeuristicPrefixes(frontendRule.when).sort();
     assert.deepEqual(frontendPrefixes, ['apps/frontend/', 'apps/web/']);
-  });
+  }));
 });
 
 test('falls back to unscoped heuristic conditions when platform folders are not present', async () => {
-  await withTempDir('pumuki-skills-ruleset-framework-fallback-', async (tempRoot) => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-framework-fallback-', async (tempRoot) => {
     const lock = {
       version: '1.0',
       compilerVersion: '1.0.0',
@@ -337,5 +360,115 @@ test('falls back to unscoped heuristic conditions when platform folders are not 
     assert.ok(backendRule);
     assert.equal(backendRule.when.kind, 'Heuristic');
     assert.equal(backendRule.when.where?.filePathPrefix, undefined);
-  });
+  }));
+});
+
+test('filters platform-specific rules using detectedPlatforms from gate evaluation', async () => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-detected-platforms-', async (tempRoot) => {
+    const lock = {
+      version: '1.0',
+      compilerVersion: '1.0.0',
+      generatedAt: '2026-02-07T23:15:00.000Z',
+      bundles: [
+        {
+          name: 'ios-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+          hash: 'a'.repeat(64),
+          rules: [
+            {
+              id: 'skills.ios.no-force-try',
+              description: 'Disallow force try in production iOS code.',
+              severity: 'WARN',
+              platform: 'ios',
+              sourceSkill: 'ios-guidelines',
+              sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              locked: true,
+            },
+          ],
+        },
+        {
+          name: 'backend-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+          hash: 'b'.repeat(64),
+          rules: [
+            {
+              id: 'skills.backend.no-empty-catch',
+              description: 'Disallow empty catch blocks in backend runtime code.',
+              severity: 'CRITICAL',
+              platform: 'backend',
+              sourceSkill: 'backend-guidelines',
+              sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+              locked: true,
+            },
+          ],
+        },
+      ],
+    } as const;
+
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+    const detectedPlatforms: DetectedPlatforms = {
+      ios: { detected: true, confidence: 'HIGH' },
+      backend: { detected: false, confidence: 'LOW' },
+    };
+
+    const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot, detectedPlatforms);
+    const ruleIds = result.rules.map((rule) => rule.id).sort();
+
+    assert.deepEqual(ruleIds, ['skills.ios.no-force-try']);
+  }));
+});
+
+test('keeps only generic/text rules when no platform is detected', async () => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-no-platform-', async (tempRoot) => {
+    const lock = {
+      version: '1.0',
+      compilerVersion: '1.0.0',
+      generatedAt: '2026-02-07T23:15:00.000Z',
+      bundles: [
+        {
+          name: 'mixed-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/codex-skills/mixed.md',
+          hash: 'c'.repeat(64),
+          rules: [
+            {
+              id: 'skills.backend.no-empty-catch',
+              description: 'Disallow empty catch blocks in backend runtime code.',
+              severity: 'CRITICAL',
+              platform: 'backend',
+              sourceSkill: 'mixed-guidelines',
+              sourcePath: 'docs/codex-skills/mixed.md',
+              locked: true,
+            },
+            {
+              id: 'skills.generic.architecture-note',
+              description: 'Generic declarative project note.',
+              severity: 'INFO',
+              platform: 'generic',
+              sourceSkill: 'mixed-guidelines',
+              sourcePath: 'docs/codex-skills/mixed.md',
+              evaluationMode: 'DECLARATIVE',
+              locked: true,
+            },
+          ],
+        },
+      ],
+    } as const;
+
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+    const detectedPlatforms: DetectedPlatforms = {
+      ios: { detected: false, confidence: 'LOW' },
+      android: { detected: false, confidence: 'LOW' },
+      backend: { detected: false, confidence: 'LOW' },
+      frontend: { detected: false, confidence: 'LOW' },
+    };
+
+    const result = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot, detectedPlatforms);
+    const ruleIds = result.rules.map((rule) => rule.id).sort();
+    assert.deepEqual(ruleIds, ['skills.generic.architecture-note']);
+  }));
 });

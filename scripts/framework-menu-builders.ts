@@ -14,5 +14,6 @@ export {
 } from './framework-menu-builders-phase5';
 export {
   buildCleanValidationArtifactsCommandArgs,
+  buildImportCustomSkillsCommandArgs,
   buildSkillsLockCheckCommandArgs,
 } from './framework-menu-builders-maintenance';

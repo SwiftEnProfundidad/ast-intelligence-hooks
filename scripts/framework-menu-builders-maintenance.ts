@@ -16,3 +16,7 @@ export const buildCleanValidationArtifactsCommandArgs = (params: {
 export const buildSkillsLockCheckCommandArgs = (): string[] => {
   return ['run', 'skills:lock:check'];
 };
+
+export const buildImportCustomSkillsCommandArgs = (): string[] => {
+  return ['run', 'skills:import:custom'];
+};

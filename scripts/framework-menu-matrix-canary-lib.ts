@@ -1,6 +1,7 @@
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { chdir, cwd } from 'node:process';
+import { execFileSync } from 'node:child_process';
 import {
   runRepoAndStagedPrePushGateSilent,
   runRepoGateSilent,
@@ -104,7 +105,7 @@ export const resolveConsumerMenuCanaryScenario = (params?: {
     platform: 'backend',
     option: stage === 'PRE_COMMIT' ? '1' : '2',
     expectedRuleId: 'skills.backend.no-empty-catch',
-    canaryRelativePath: `scripts/__pumuki_matrix_canary_backend_${suffix}.ts`,
+    canaryRelativePath: `apps/backend/src/__pumuki_matrix_canary_backend_${suffix}.ts`,
     canarySource: [
       'export const __pumukiMatrixCanaryBackend = (): void => {',
       '  try {',
@@ -131,6 +132,36 @@ const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
       .filter((ruleId) => ruleId.length > 0);
   } catch {
     return [];
+  }
+};
+
+const stageCanaryPath = (repoRoot: string, relativePath: string): void => {
+  execFileSync('git', ['add', '--', relativePath], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+  });
+};
+
+const cleanupCanaryPathFromIndex = (repoRoot: string, relativePath: string): void => {
+  try {
+    execFileSync('git', ['restore', '--staged', '--', relativePath], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: 'ignore',
+    });
+    return;
+  } catch {
+    // Continue to fallback cleanup strategy.
+  }
+
+  try {
+    execFileSync('git', ['rm', '--cached', '--ignore-unmatch', '--', relativePath], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: 'ignore',
+    });
+  } catch {
+    // best effort cleanup
   }
 };
 
@@ -183,6 +214,9 @@ export const runConsumerMenuCanary = async (params?: {
       scenario.canarySource,
       'utf8'
     );
+    if (scenario.option === '1' || scenario.option === '2') {
+      stageCanaryPath(repoRoot, canaryRelativePath);
+    }
 
     await runGate(scenario.option);
     const optionReport = readOptionReport(repoRoot, scenario.option);
@@ -197,6 +231,11 @@ export const runConsumerMenuCanary = async (params?: {
       ruleIds,
     };
   } finally {
+    try {
+      cleanupCanaryPathFromIndex(repoRoot, canaryRelativePath);
+    } catch {
+      // best effort cleanup
+    }
     try {
       unlinkSync(canaryAbsolutePath);
     } catch {

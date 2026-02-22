@@ -122,7 +122,8 @@ export const evaluatePlatformGateFindings = (
   const stageForSkills = normalizeStageForSkills(params.stage);
   const skillsRuleSet = activeDependencies.loadSkillsRuleSetForStage(
     stageForSkills,
-    params.repoRoot
+    params.repoRoot,
+    detectedPlatforms
   );
   const baselineRules = activeDependencies.buildCombinedBaselineRules(detectedPlatforms);
   const shouldExtractHeuristicFacts =

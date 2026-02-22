@@ -44,6 +44,33 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F7.T3` completada: tracker y plan de ciclo sincronizados con cierre documental de fase.
 - ✅ `F7.T4` completada: hotfix runtime por TDD aplicado (`runStagedGate` importado), CLI validada en clásico/v2 y cierre Git Flow ejecutado.
 - ✅ Ciclo `MENU_UIUX_MODERNIZATION_CYCLE` cerrado.
+- ✅ Nuevo plan activo creado: `docs/RULES_ENGINE_UNIFICATION_CYCLE.md`.
+- ✅ `F0.T1` completada: bootstrap del ciclo con leyenda, fases, tasks y política de Git Flow.
+- ✅ `F0.T2` completada: ciclos anteriores relevantes marcados con continuidad explícita hacia `RULES_ENGINE_UNIFICATION_CYCLE`.
+- ✅ `F0.T3` completada: tracker sincronizado con arranque de ciclo y secuencia operativa.
+- ✅ `F1.T1` completada: snapshot core de reglas embebido y versionado como fuente primaria runtime.
+- ✅ `F1.T2` completada: compilacion de reglas desde skills sincronizadas y hash determinista validada por test.
+- ✅ `F1.T3` completada: carga del motor reenrutada a ruleset efectivo (`core + repo lock + custom`) validada por test.
+- ✅ `F1.T4` completada: fallback seguro sin locks locales validado con tests dedicados de `skillsEffectiveLock`.
+- ✅ `F2.T1` completada: filtrado por plataformas detectadas validado en `skillsRuleSet` sin pérdida de reglas aplicables.
+- ✅ `F2.T2` completada: clasificación `AUTO/DECLARATIVE` validada en tests de reglas no mapeadas y promoción por stage.
+- ✅ `F2.T3` completada: trazabilidad de cobertura por stage validada en suites `runPlatformGateEvaluation` y `runPlatformGateEvidence`.
+- ✅ `F2.T4` completada: bloqueo de gobernanza por cobertura incompleta validado en `runPlatformGate.test.ts`.
+- ✅ `F3.T1` completada: formato local `/.pumuki/custom-rules.json` y contrato de parseo/carga operativo.
+- ✅ `F3.T2` completada: import de reglas desde `AGENTS.md` y rutas `SKILL.md` validado con tests.
+- ✅ `F3.T3` completada: precedencia `custom > core` por `ruleId` validada en `skillsRuleSet`.
+- ✅ `F3.T4` completada: ruleset efectivo expuesto en diagnóstico de menú (`repo + custom`) con test dedicado.
+- ✅ `F4.T1` completada: opción de menú `33` añadida para importar reglas custom.
+- ✅ `F4.T2` completada: builders/runners de import custom validados con tests de comandos/acciones.
+- ✅ `F4.T3` completada: vista advanced muestra ayuda contextual de opción `33` y diagnóstico de bundles efectivos.
+- ✅ `F5.T1` completada: suites de compilación/lock en verde con extracción markdown.
+- ✅ `F5.T2` completada: `skillsRuleSet` validado con plataformas detectadas y reglas declarativas.
+- ✅ `F5.T3` completada: import custom + precedencia `custom > core` validado end-to-end.
+- ✅ `F5.T4` completada: validación funcional de menú/gate/canary en verde.
+- ✅ `F6.T1` completada: `README.md` actualizado con arquitectura de rules engine unificado.
+- ✅ `F6.T2` completada: `docs/USAGE.md` y `docs/API_REFERENCE.md` actualizados con comandos/contratos de custom rules.
+- ✅ `F6.T3` completada: `docs/evidence-v2.1.md` actualizado para reflejar trazabilidad de bundles efectivos y reglas declarativas.
+- 🚧 `F6.T4` en construccion: cierre Git Flow end-to-end (`feature -> develop -> main`).
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
@@ -65,7 +92,17 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ README enterprise reescrito en ingles con cobertura funcional completa de Pumuki (onboarding + operacion).
 - ✅ Capturas de ejecucion del menu (opcion 1) generadas para README en escenarios BLOCK/PASS (`assets/readme/menu-option1`, 6 PNGs).
 - ✅ Revision editorial final y publicacion de cambios de documentacion enterprise completada.
-- 🚧 En construccion: definir siguiente ciclo operativo tras cierre documental enterprise.
+- ✅ Ciclo operativo siguiente definido y documentado (`RULES_ENGINE_UNIFICATION_CYCLE`).
+- ✅ Estabilizacion del canary matrix completada para opcion `1` (`repo`) con staging/cleanup temporal y suite `framework-menu-*` en verde.
+- ✅ Test suite nueva añadida: `integrations/config/__tests__/skillsEffectiveLock.test.ts` para fallback/merge efectivo.
+- ✅ Cobertura extendida de `skillsRuleSet` añadida para plataformas detectadas y reglas `generic/text`.
+- ✅ Suite de gate/evidence en verde: cobertura por stage y guard de gobernanza sin regresiones.
+- ✅ Nueva suite añadida: `integrations/config/__tests__/skillsCustomRules.test.ts` (formato, import y precedencia).
+- ✅ Diagnóstico de bundles activos validado con lock efectivo (`scripts/__tests__/framework-menu-format-and-policy.test.ts`).
+- ✅ Cobertura de menú extendida: opción `33` en acciones/builders/vista advanced verificada en tests.
+- ✅ Validación consolidada: 21 tests config + 12 tests git + 113 tests framework menu en verde.
+- ✅ Documentación enterprise alineada al motor unificado (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
+- Estado activo: `F6.T4` del ciclo `RULES_ENGINE_UNIFICATION_CYCLE` (Git Flow end-to-end).
 
 ## Siguiente paso operativo
-- ⏳ Pendiente definir siguiente ciclo (fuera de este cierre UI/UX).
+- ⏳ Completar `F6.T4` y cerrar ciclo.
