@@ -32,13 +32,13 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 - ✅ F2.T4 Mantener IDs/comportamiento de opciones existentes (sin regresion funcional).
 
 ## Fase 3 — Advanced menu UX moderna
-- 🚧 F3.T1 Aplicar mismo lenguaje visual moderno del consumer.
-- ⏳ F3.T2 Agrupar acciones advanced por dominios (Gates, Diagnostics, Maintenance, Validation, Exit).
-- ⏳ F3.T3 Añadir ayuda contextual corta por opcion sin ruido.
-- ⏳ F3.T4 Mantener compatibilidad de acciones y wiring existentes.
+- ✅ F3.T1 Aplicar mismo lenguaje visual moderno del consumer.
+- ✅ F3.T2 Agrupar acciones advanced por dominios (Gates, Diagnostics, Maintenance, Validation, Exit).
+- ✅ F3.T3 Añadir ayuda contextual corta por opcion sin ruido.
+- ✅ F3.T4 Mantener compatibilidad de acciones y wiring existentes.
 
 ## Fase 4 — Reporte de auditoria moderno
-- ⏳ F4.T1 Modernizar render del reporte legacy conservando contenido funcional.
+- 🚧 F4.T1 Modernizar render del reporte legacy conservando contenido funcional.
 - ⏳ F4.T2 Mostrar siempre matriz por plataforma (`iOS`, `Android`, `Backend`, `Frontend`, `Other`) aunque esten a cero.
 - ⏳ F4.T3 Mejorar bloque de metricas, top violaciones y recomendaciones accionables.
 - ⏳ F4.T4 Asegurar salida robusta en anchos pequeños/medios/grandes.

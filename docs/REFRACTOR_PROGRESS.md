@@ -35,11 +35,12 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F1.T3` (UI/UX menu) completada: layout canónico definido para menús Consumer/Advanced con cobertura de orden y jerarquía por dominio.
 - ✅ `F1.T4` (UI/UX menu) completada: utilidades de legibilidad terminal implementadas y conectadas al renderer base.
 - ✅ Fase 2 completada: menú consumer modernizado por flujos, badge de estado (`PASS/WARN/BLOCK`) y mensajes de alcance vacío clarificados sin regresión de IDs.
-- 🚧 Tarea activa del nuevo ciclo UI/UX: `F3.T1` (aplicar lenguaje visual moderno en menú advanced).
+- ✅ Fase 3 completada: menú advanced alineado visualmente, agrupado por dominios con ayuda contextual corta y sin romper wiring de acciones.
+- 🚧 Tarea activa del nuevo ciclo UI/UX: `F4.T1` (modernizar render del reporte de auditoría conservando funcionalidad).
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F3.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
+- 🚧 Ejecutar `F4.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
