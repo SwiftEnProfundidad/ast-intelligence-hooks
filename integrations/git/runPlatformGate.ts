@@ -18,6 +18,7 @@ import { printGateFindings } from './runPlatformGateOutput';
 import { evaluateSddPolicy, type SddDecision } from '../sdd';
 import type { SnapshotEvaluationMetrics } from '../evidence/schema';
 import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
+import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 
 export type GateServices = {
   git: IGitService;
@@ -63,6 +64,33 @@ const toSddBlockingFinding = (decision: Pick<SddDecision, 'code' | 'message'>): 
   matchedBy: 'SddPolicy',
   source: 'sdd-policy',
 });
+
+const toRulesCoverageBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  activeRuleIds: ReadonlyArray<string>;
+  evaluatedRuleIds: ReadonlyArray<string>;
+  unevaluatedRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  if (params.unevaluatedRuleIds.length === 0) {
+    return undefined;
+  }
+  const active = params.activeRuleIds.length;
+  const evaluated = params.evaluatedRuleIds.length;
+  const coverageRatio = active === 0 ? 1 : Number((evaluated / active).toFixed(6));
+  const unevaluatedRuleIds = [...params.unevaluatedRuleIds].sort().join(', ');
+
+  return {
+    ruleId: 'governance.rules.coverage.incomplete',
+    severity: 'ERROR',
+    code: 'RULES_COVERAGE_INCOMPLETE_HIGH',
+    message:
+      `Coverage incomplete at ${params.stage}: unevaluated_rule_ids=[${unevaluatedRuleIds}]` +
+      ` coverage_ratio=${coverageRatio}. Evaluate all active rules before proceeding.`,
+    filePath: '.ai_evidence.json',
+    matchedBy: 'RulesCoverageGuard',
+    source: 'rules-coverage',
+  };
+};
 
 export async function runPlatformGate(params: {
   policy: GatePolicy;
@@ -112,6 +140,7 @@ export async function runPlatformGate(params: {
           gateOutcome: 'BLOCK',
           filesScanned: 0,
           evaluationMetrics: createEmptyEvaluationMetrics(),
+          rulesCoverage: createEmptySnapshotRulesCoverage(params.policy.stage),
           repoRoot,
           detectedPlatforms: emptyDetectedPlatforms,
           skillsRuleSet: emptySkillsRuleSet,
@@ -158,11 +187,44 @@ export async function runPlatformGate(params: {
       unmatched_rule_ids: [...coverage.unmatchedRuleIds],
     }
     : createEmptyEvaluationMetrics();
+  const coverageBlockingFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toRulesCoverageBlockingFinding({
+        stage: params.policy.stage,
+        activeRuleIds: coverage?.activeRuleIds ?? [],
+        evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
+        unevaluatedRuleIds: coverage?.unevaluatedRuleIds ?? [],
+      })
+      : undefined;
+  const rulesCoverage = coverage
+    ? {
+      stage: params.policy.stage,
+      active_rule_ids: [...coverage.activeRuleIds],
+      evaluated_rule_ids: [...coverage.evaluatedRuleIds],
+      matched_rule_ids: [...coverage.matchedRuleIds],
+      unevaluated_rule_ids: [...coverage.unevaluatedRuleIds],
+      counts: {
+        active: coverage.activeRuleIds.length,
+        evaluated: coverage.evaluatedRuleIds.length,
+        matched: coverage.matchedRuleIds.length,
+        unevaluated: coverage.unevaluatedRuleIds.length,
+      },
+      coverage_ratio:
+        coverage.activeRuleIds.length === 0
+          ? 1
+          : Number((coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length).toFixed(6)),
+    }
+    : createEmptySnapshotRulesCoverage(params.policy.stage);
   const effectiveFindings = sddBlockingFinding
-    ? [sddBlockingFinding, ...findings]
-    : findings;
+    ? [sddBlockingFinding, ...(coverageBlockingFinding ? [coverageBlockingFinding] : []), ...findings]
+    : coverageBlockingFinding
+      ? [coverageBlockingFinding, ...findings]
+      : findings;
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
-  const gateOutcome = sddBlockingFinding ? 'BLOCK' : decision.outcome;
+  const gateOutcome =
+    sddBlockingFinding || coverageBlockingFinding ? 'BLOCK' : decision.outcome;
 
   dependencies.emitPlatformGateEvidence({
     stage: params.policy.stage,
@@ -171,6 +233,7 @@ export async function runPlatformGate(params: {
     gateOutcome,
     filesScanned,
     evaluationMetrics,
+    rulesCoverage,
     repoRoot,
     detectedPlatforms,
     skillsRuleSet,

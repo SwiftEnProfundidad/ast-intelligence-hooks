@@ -30,12 +30,28 @@ export type SnapshotEvaluationMetrics = {
   unmatched_rule_ids: string[];
 };
 
+export type SnapshotRulesCoverage = {
+  stage: GateStage;
+  active_rule_ids: string[];
+  evaluated_rule_ids: string[];
+  matched_rule_ids: string[];
+  unevaluated_rule_ids: string[];
+  counts: {
+    active: number;
+    evaluated: number;
+    matched: number;
+    unevaluated: number;
+  };
+  coverage_ratio: number;
+};
+
 export type Snapshot = {
   stage: GateStage;
   outcome: GateOutcome;
   files_scanned?: number;
   files_affected?: number;
   evaluation_metrics?: SnapshotEvaluationMetrics;
+  rules_coverage?: SnapshotRulesCoverage;
   findings: SnapshotFinding[];
   platforms?: SnapshotPlatformSummary[];
 };

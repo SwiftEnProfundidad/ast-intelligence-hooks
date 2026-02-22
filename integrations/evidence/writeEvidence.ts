@@ -12,6 +12,7 @@ import type {
 import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { normalizeHumanIntent } from './humanIntent';
 import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
+import { normalizeSnapshotRulesCoverage } from './rulesCoverage';
 
 export type WriteEvidenceResult = {
   ok: boolean;
@@ -213,6 +214,10 @@ const toStableEvidence = (
   const normalizedEvaluationMetrics = normalizeSnapshotEvaluationMetrics(
     evidence.snapshot.evaluation_metrics
   );
+  const normalizedRulesCoverage = normalizeSnapshotRulesCoverage(
+    evidence.snapshot.stage,
+    evidence.snapshot.rules_coverage
+  );
 
   return {
     version: '2.1',
@@ -225,6 +230,7 @@ const toStableEvidence = (
         ? { files_affected: normalizedFilesAffected }
         : {}),
       evaluation_metrics: normalizedEvaluationMetrics,
+      rules_coverage: normalizedRulesCoverage,
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({

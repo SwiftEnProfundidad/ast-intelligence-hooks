@@ -230,6 +230,46 @@ test('persiste snapshot.evaluation_metrics con inventario evaluado/matcheado', (
   });
 });
 
+test('persiste snapshot.rules_coverage con active/evaluated/matched/unevaluated y ratio', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    findings: [],
+    gateOutcome: 'PASS',
+    filesScanned: 939,
+    rulesCoverage: {
+      stage: 'PRE_PUSH',
+      active_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.no-console-log'],
+      evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+      matched_rule_ids: ['skills.backend.no-empty-catch'],
+      unevaluated_rule_ids: ['skills.backend.no-console-log'],
+      counts: {
+        active: 2,
+        evaluated: 1,
+        matched: 1,
+        unevaluated: 1,
+      },
+      coverage_ratio: 0.5,
+    },
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.deepEqual(result.snapshot.rules_coverage, {
+    stage: 'PRE_PUSH',
+    active_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+    evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+    matched_rule_ids: ['skills.backend.no-empty-catch'],
+    unevaluated_rule_ids: ['skills.backend.no-console-log'],
+    counts: {
+      active: 2,
+      evaluated: 1,
+      matched: 1,
+      unevaluated: 1,
+    },
+    coverage_ratio: 0.5,
+  });
+});
+
 test('normaliza telemetria por defecto cuando no se informa filesScanned ni evaluationMetrics', () => {
   const result = buildEvidence({
     stage: 'PRE_COMMIT',
@@ -253,6 +293,20 @@ test('normaliza telemetria por defecto cuando no se informa filesScanned ni eval
     evaluated_rule_ids: [],
     matched_rule_ids: [],
     unmatched_rule_ids: [],
+  });
+  assert.deepEqual(result.snapshot.rules_coverage, {
+    stage: 'PRE_COMMIT',
+    active_rule_ids: [],
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unevaluated_rule_ids: [],
+    counts: {
+      active: 0,
+      evaluated: 0,
+      matched: 0,
+      unevaluated: 0,
+    },
+    coverage_ratio: 1,
   });
 });
 

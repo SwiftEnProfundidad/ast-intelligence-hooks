@@ -27,6 +27,20 @@ type GenerateEvidenceParams = {
     matched_rule_ids: string[];
     unmatched_rule_ids: string[];
   };
+  rulesCoverage?: {
+    stage: string;
+    active_rule_ids: string[];
+    evaluated_rule_ids: string[];
+    matched_rule_ids: string[];
+    unevaluated_rule_ids: string[];
+    counts: {
+      active: number;
+      evaluated: number;
+      matched: number;
+      unevaluated: number;
+    };
+    coverage_ratio: number;
+  };
   previousEvidence: unknown;
   detectedPlatforms: unknown;
   loadedRulesets: unknown;
@@ -115,6 +129,20 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
         matched_rule_ids: ['skills.backend.no-empty-catch'],
         unmatched_rule_ids: ['skills.backend.avoid-explicit-any'],
       },
+      rulesCoverage: {
+        stage: 'PRE_PUSH',
+        active_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.avoid-explicit-any'],
+        evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+        matched_rule_ids: ['skills.backend.no-empty-catch'],
+        unevaluated_rule_ids: ['skills.backend.avoid-explicit-any'],
+        counts: {
+          active: 2,
+          evaluated: 1,
+          matched: 1,
+          unevaluated: 1,
+        },
+        coverage_ratio: 0.5,
+      },
       evidenceService,
       sddDecision: {
         allowed: true,
@@ -165,6 +193,20 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
     evaluated_rule_ids: ['skills.backend.no-empty-catch'],
     matched_rule_ids: ['skills.backend.no-empty-catch'],
     unmatched_rule_ids: ['skills.backend.avoid-explicit-any'],
+  });
+  assert.deepEqual(capturedGenerateEvidenceParams?.rulesCoverage, {
+    stage: 'PRE_PUSH',
+    active_rule_ids: ['skills.backend.avoid-explicit-any', 'skills.backend.no-empty-catch'],
+    evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+    matched_rule_ids: ['skills.backend.no-empty-catch'],
+    unevaluated_rule_ids: ['skills.backend.avoid-explicit-any'],
+    counts: {
+      active: 2,
+      evaluated: 1,
+      matched: 1,
+      unevaluated: 1,
+    },
+    coverage_ratio: 0.5,
   });
   assert.deepEqual(capturedGenerateEvidenceParams?.previousEvidence, previousEvidence);
   assert.deepEqual(capturedGenerateEvidenceParams?.detectedPlatforms, detectedPlatformsRecord);
@@ -234,5 +276,19 @@ test('emitPlatformGateEvidence inyecta evaluationMetrics vacio cuando no se info
     evaluated_rule_ids: [],
     matched_rule_ids: [],
     unmatched_rule_ids: [],
+  });
+  assert.deepEqual(capturedGenerateEvidenceParams?.rulesCoverage, {
+    stage: 'PRE_COMMIT',
+    active_rule_ids: [],
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unevaluated_rule_ids: [],
+    counts: {
+      active: 0,
+      evaluated: 0,
+      matched: 0,
+      unevaluated: 0,
+    },
+    coverage_ratio: 1,
   });
 });

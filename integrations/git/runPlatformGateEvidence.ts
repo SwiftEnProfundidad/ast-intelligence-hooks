@@ -11,8 +11,9 @@ import { buildBaselineRuleSetEntries } from './baselineRuleSets';
 import type { IEvidenceService } from './EvidenceService';
 import type { SddDecision } from '../sdd';
 import { captureRepoState } from '../evidence/repoState';
-import type { SnapshotEvaluationMetrics } from '../evidence/schema';
+import type { SnapshotEvaluationMetrics, SnapshotRulesCoverage } from '../evidence/schema';
 import { normalizeSnapshotEvaluationMetrics } from '../evidence/evaluationMetrics';
+import { normalizeSnapshotRulesCoverage } from '../evidence/rulesCoverage';
 
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
@@ -29,6 +30,7 @@ export const emitPlatformGateEvidence = (params: {
   gateOutcome: GateOutcome;
   filesScanned: number;
   evaluationMetrics?: SnapshotEvaluationMetrics;
+  rulesCoverage?: SnapshotRulesCoverage;
   repoRoot: string;
   detectedPlatforms: DetectedPlatforms;
   skillsRuleSet: SkillsRuleSetLoadResult;
@@ -42,6 +44,7 @@ export const emitPlatformGateEvidence = (params: {
     ...dependencies,
   };
   const evaluationMetrics = normalizeSnapshotEvaluationMetrics(params.evaluationMetrics);
+  const rulesCoverage = normalizeSnapshotRulesCoverage(params.stage, params.rulesCoverage);
 
   activeDependencies.generateEvidence({
     stage: params.stage,
@@ -49,6 +52,7 @@ export const emitPlatformGateEvidence = (params: {
     gateOutcome: params.gateOutcome,
     filesScanned: params.filesScanned,
     evaluationMetrics,
+    rulesCoverage,
     repoRoot: params.repoRoot,
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),

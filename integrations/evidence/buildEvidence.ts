@@ -13,12 +13,14 @@ import type {
   RepoState,
   RulesetState,
   SnapshotEvaluationMetrics,
+  SnapshotRulesCoverage,
   SddMetrics,
   SnapshotFinding,
 } from './schema';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { resolveHumanIntent } from './humanIntent';
 import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
+import { normalizeSnapshotRulesCoverage } from './rulesCoverage';
 
 type BuildFindingInput = Finding & {
   file?: string;
@@ -35,6 +37,7 @@ export type BuildEvidenceParams = {
   detectedPlatforms: Record<string, PlatformState>;
   loadedRulesets: ReadonlyArray<RulesetState>;
   evaluationMetrics?: SnapshotEvaluationMetrics;
+  rulesCoverage?: SnapshotRulesCoverage;
   sddMetrics?: SddMetrics;
   repoState?: RepoState;
 };
@@ -594,6 +597,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const normalizedFilesScanned = normalizeOptionalNonNegativeInt(params.filesScanned) ?? 0;
   const normalizedFilesAffected = countFilesAffected(normalizedFindings);
   const normalizedEvaluationMetrics = normalizeSnapshotEvaluationMetrics(params.evaluationMetrics);
+  const normalizedRulesCoverage = normalizeSnapshotRulesCoverage(params.stage, params.rulesCoverage);
   const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';
   const severity = bySeverity(normalizedFindings);
@@ -612,6 +616,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       files_scanned: normalizedFilesScanned,
       files_affected: normalizedFilesAffected,
       evaluation_metrics: normalizedEvaluationMetrics,
+      rules_coverage: normalizedRulesCoverage,
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({
