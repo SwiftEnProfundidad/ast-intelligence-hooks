@@ -4,6 +4,7 @@ import {
   buildAdapterRealSessionReportCommandArgs,
   buildAdapterReadinessCommandArgs,
   buildConsumerStartupTriageCommandArgs,
+  buildImportCustomSkillsCommandArgs,
   buildMockConsumerAbReportCommandArgs,
   buildPhase5BlockersReadinessCommandArgs,
   buildPhase5ExternalHandoffCommandArgs,
@@ -35,6 +36,15 @@ test('builds deterministic command args for skills lock freshness check', () => 
   assert.deepEqual(args, [
     'run',
     'skills:lock:check',
+  ]);
+});
+
+test('builds deterministic command args for custom skills import', () => {
+  const args = buildImportCustomSkillsCommandArgs();
+
+  assert.deepEqual(args, [
+    'run',
+    'skills:import:custom',
   ]);
 });
 

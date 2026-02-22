@@ -6,11 +6,13 @@ import type { RuleDefinition } from '../../core/rules/RuleDefinition';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import { isSeverityAtLeast, type Severity } from '../../core/rules/Severity';
 import {
-  loadSkillsLock,
+  type SkillsRuleEvaluationMode,
   type SkillsCompiledRule,
   type SkillsLockBundle,
 } from './skillsLock';
 import { loadSkillsPolicy, type SkillsBundlePolicy } from './skillsPolicy';
+import type { DetectedPlatforms } from '../platform/detectPlatforms';
+import { loadEffectiveSkillsLock } from './skillsEffectiveLock';
 
 export type SkillsRuleSetLoadResult = {
   rules: RuleSet;
@@ -24,6 +26,13 @@ const STAGE_RANK: Record<Exclude<GateStage, 'STAGED'>, number> = {
   PRE_PUSH: 20,
   CI: 30,
 };
+
+const PLATFORM_KEYS: ReadonlyArray<keyof DetectedPlatforms> = [
+  'ios',
+  'android',
+  'backend',
+  'frontend',
+];
 
 const SKILL_TO_HEURISTIC_RULE_ID: Record<string, string> = {
   'skills.ios.no-force-unwrap': 'heuristics.ios.force-unwrap.ast',
@@ -83,6 +92,19 @@ const resolvePlatformHeuristicPrefixes = (params: {
   }
 
   return prefixes;
+};
+
+const resolveScopeForPlatform = (
+  platform: NonNullable<RuleDefinition['platform']>,
+  repoRoot: string
+): RuleDefinition['scope'] | undefined => {
+  const prefixes = resolvePlatformHeuristicPrefixes({ platform, repoRoot });
+  if (prefixes.length === 0) {
+    return undefined;
+  }
+  return {
+    include: [...prefixes],
+  };
 };
 
 const toCode = (ruleId: string): string => {
@@ -169,6 +191,12 @@ const resolveRuleSeverity = (params: {
     : 'ERROR';
 };
 
+const resolveRuleEvaluationMode = (
+  rule: SkillsCompiledRule
+): SkillsRuleEvaluationMode => {
+  return rule.evaluationMode ?? 'AUTO';
+};
+
 const toRuleDefinition = (params: {
   rule: SkillsCompiledRule;
   stage: Exclude<GateStage, 'STAGED'>;
@@ -176,36 +204,95 @@ const toRuleDefinition = (params: {
   repoRoot: string;
 }): RuleDefinition | undefined => {
   const mappedHeuristicRuleId = SKILL_TO_HEURISTIC_RULE_ID[params.rule.id];
-  if (!mappedHeuristicRuleId) {
-    return undefined;
-  }
 
   if (!stageApplies(params.stage, params.rule.stage)) {
     return undefined;
   }
 
+  const evaluationMode = resolveRuleEvaluationMode(params.rule);
+  const severity = resolveRuleSeverity({
+    rule: params.rule,
+    bundlePolicy: params.bundlePolicy,
+    stage: params.stage,
+  });
+
+  if (mappedHeuristicRuleId && evaluationMode === 'AUTO') {
+    return {
+      id: params.rule.id,
+      description: params.rule.description,
+      severity,
+      platform: params.rule.platform,
+      locked: params.rule.locked ?? true,
+      confidence: params.rule.confidence,
+      when: buildHeuristicConditionForPlatform({
+        ruleId: mappedHeuristicRuleId,
+        platform: params.rule.platform,
+        repoRoot: params.repoRoot,
+      }),
+      then: {
+        kind: 'Finding',
+        message: params.rule.description,
+        code: toCode(params.rule.id),
+      },
+      scope: resolveScopeForPlatform(params.rule.platform, params.repoRoot),
+    };
+  }
+
+  // Declarative fallback: keep rule active/evaluable without emitting findings
+  // until a deterministic automatic detector exists for this rule.
   return {
     id: params.rule.id,
     description: params.rule.description,
-    severity: resolveRuleSeverity({
-      rule: params.rule,
-      bundlePolicy: params.bundlePolicy,
-      stage: params.stage,
-    }),
+    severity,
     platform: params.rule.platform,
     locked: params.rule.locked ?? true,
     confidence: params.rule.confidence,
-    when: buildHeuristicConditionForPlatform({
-      ruleId: mappedHeuristicRuleId,
-      platform: params.rule.platform,
-      repoRoot: params.repoRoot,
-    }),
+    when: {
+      kind: 'FileContent',
+      regex: ['a^'],
+    },
     then: {
       kind: 'Finding',
-      message: params.rule.description,
-      code: toCode(params.rule.id),
+      message: `[Declarative] ${params.rule.description}`,
+      code: `${toCode(params.rule.id)}_DECLARATIVE`,
     },
+    scope: resolveScopeForPlatform(params.rule.platform, params.repoRoot),
   };
+};
+
+const hasDetectedPlatforms = (detectedPlatforms?: DetectedPlatforms): boolean => {
+  if (!detectedPlatforms) {
+    return false;
+  }
+  return PLATFORM_KEYS.some((platform) => detectedPlatforms[platform]?.detected === true);
+};
+
+const isRulePlatformActive = (params: {
+  rule: SkillsCompiledRule;
+  detectedPlatforms?: DetectedPlatforms;
+}): boolean => {
+  if (!params.detectedPlatforms) {
+    return true;
+  }
+  if (params.rule.platform === 'generic' || params.rule.platform === 'text') {
+    return true;
+  }
+  if (!hasDetectedPlatforms(params.detectedPlatforms)) {
+    return false;
+  }
+  if (params.rule.platform === 'ios') {
+    return params.detectedPlatforms?.ios?.detected === true;
+  }
+  if (params.rule.platform === 'android') {
+    return params.detectedPlatforms?.android?.detected === true;
+  }
+  if (params.rule.platform === 'backend') {
+    return params.detectedPlatforms?.backend?.detected === true;
+  }
+  if (params.rule.platform === 'frontend') {
+    return params.detectedPlatforms?.frontend?.detected === true;
+  }
+  return true;
 };
 
 const emptyResult = (): SkillsRuleSetLoadResult => {
@@ -219,9 +306,10 @@ const emptyResult = (): SkillsRuleSetLoadResult => {
 
 export const loadSkillsRuleSetForStage = (
   stage: Exclude<GateStage, 'STAGED'>,
-  repoRoot: string = process.cwd()
+  repoRoot: string = process.cwd(),
+  detectedPlatforms?: DetectedPlatforms
 ): SkillsRuleSetLoadResult => {
-  const lock = loadSkillsLock(repoRoot);
+  const lock = loadEffectiveSkillsLock(repoRoot);
   if (!lock || lock.bundles.length === 0) {
     return emptyResult();
   }
@@ -241,13 +329,22 @@ export const loadSkillsRuleSetForStage = (
     return emptyResult();
   }
 
-  const rules: RuleDefinition[] = [];
+  const rulesById = new Map<string, RuleDefinition>();
   const mappedHeuristicRuleIds = new Set<string>();
 
   for (const bundle of activeBundles) {
     const bundlePolicy = policy?.bundles[bundle.name];
 
     for (const compiledRule of bundle.rules) {
+      if (
+        !isRulePlatformActive({
+          rule: compiledRule,
+          detectedPlatforms,
+        })
+      ) {
+        continue;
+      }
+
       const convertedRule = toRuleDefinition({
         rule: compiledRule,
         stage,
@@ -259,7 +356,7 @@ export const loadSkillsRuleSetForStage = (
         continue;
       }
 
-      rules.push(convertedRule);
+      rulesById.set(convertedRule.id, convertedRule);
       const mappedId = SKILL_TO_HEURISTIC_RULE_ID[compiledRule.id];
       if (mappedId) {
         mappedHeuristicRuleIds.add(mappedId);
@@ -267,10 +364,14 @@ export const loadSkillsRuleSetForStage = (
     }
   }
 
+  const rules = [...rulesById.values()].sort((left, right) =>
+    left.id.localeCompare(right.id)
+  );
+
   return {
     rules,
     activeBundles,
     mappedHeuristicRuleIds,
-    requiresHeuristicFacts: rules.length > 0,
+    requiresHeuristicFacts: mappedHeuristicRuleIds.size > 0,
   };
 };

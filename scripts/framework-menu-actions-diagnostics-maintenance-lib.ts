@@ -1,6 +1,7 @@
 import {
   runAndPrintExitCode,
   runHardModeEnforcementConfig,
+  runImportCustomSkills,
   runRuleCoverageDiagnostics,
   runSystemNotificationsConfig,
   runSkillsLockCheck,
@@ -39,6 +40,11 @@ export const createFrameworkMenuDiagnosticsMaintenanceActions = (
       id: '32',
       label: 'Run rule coverage diagnostics (repo/stages)',
       execute: async () => runAndPrintExitCode(runRuleCoverageDiagnostics),
+    },
+    {
+      id: '33',
+      label: 'Import custom skills rules (AGENTS.md/SKILLS.md)',
+      execute: async () => runAndPrintExitCode(runImportCustomSkills),
     },
   ];
 };

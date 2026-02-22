@@ -17,6 +17,7 @@ Modern teams need fast feedback with strict governance. Pumuki solves that by co
 - Deterministic enforcement at every stage (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`).
 - A single evidence model (`.ai_evidence.json`, v2.1) for auditability and machine consumption.
 - Multi-platform governance for iOS, Android, Backend, and Frontend.
+- Unified skills rules engine with deterministic precedence (`core -> repo -> custom` by `ruleId`).
 - Mandatory OpenSpec/SDD policy checks for enterprise change management.
 - Unified CLI and optional MCP servers for agent-driven workflows.
 
@@ -28,6 +29,25 @@ Each execution follows the same pipeline:
 2. Rule evaluation by platform and policy stage.
 3. Gate decision (`PASS`, `WARN`, `BLOCK`) with deterministic thresholds.
 4. Evidence emission (`.ai_evidence.json`) including findings, metadata, and rules coverage telemetry.
+
+## Rules Engine Resolution Order
+
+Pumuki resolves skills rules through a single effective lock:
+
+1. **Core rules (embedded)**: compiled from the package snapshot (`skills.sources.json` + synchronized skills).
+2. **Repo rules (optional)**: local `skills.lock.json`.
+3. **Custom rules (optional)**: `/.pumuki/custom-rules.json`.
+
+Conflict policy is deterministic:
+
+- `custom > repo > core` (last writer wins by `ruleId`).
+- Platform-specific rules activate only for detected platforms (`ios/android/backend/frontend`).
+- `generic/text` rules remain available as cross-platform governance guards.
+
+Rule evaluation modes:
+
+- `AUTO`: mapped to deterministic detectors/heuristics.
+- `DECLARATIVE`: kept active for coverage/traceability without emitting findings until a detector exists.
 
 ## Core Capabilities
 
@@ -58,7 +78,14 @@ In `PRE_COMMIT`, `PRE_PUSH`, and `CI`, incomplete rules coverage forces block vi
 
 Reference: `docs/evidence-v2.1.md`.
 
-### 3) Unified AI Gate Across CLI and MCP
+### 3) Unified Skills Rules Engine (Core + Repo + Custom)
+
+- Core rules are always available at runtime (no external dependency required during audit).
+- Repo lock and custom rules are merged into one effective ruleset before stage evaluation.
+- Custom rules can be imported from `AGENTS.md`/`SKILLS.md` references or explicit `SKILL.md` paths.
+- Advanced menu option `33` imports custom rules directly to `/.pumuki/custom-rules.json`.
+
+### 4) Unified AI Gate Across CLI and MCP
 
 The same evaluator powers local and MCP integrations:
 
@@ -69,7 +96,7 @@ The same evaluator powers local and MCP integrations:
 
 Reference: `integrations/gate/evaluateAiGate.ts`.
 
-### 4) Mandatory OpenSpec + SDD Policy
+### 5) Mandatory OpenSpec + SDD Policy
 
 Pumuki enforces OpenSpec/SDD as first-class enterprise guardrails:
 
@@ -77,7 +104,7 @@ Pumuki enforces OpenSpec/SDD as first-class enterprise guardrails:
 - Deterministic policy error codes (for automation and support triage)
 - Traceable source attribution (`source: "sdd-policy"`)
 
-### 5) Menu UX v2 (Consumer + Advanced)
+### 6) Menu UX v2 (Consumer + Advanced)
 
 Interactive governance menu with:
 
@@ -92,14 +119,14 @@ Controls:
 - `PUMUKI_MENU_COLOR=0|1`
 - `PUMUKI_MENU_WIDTH=<columns>`
 
-### 6) Hard Mode Policy Hardening
+### 7) Hard Mode Policy Hardening
 
 Hard mode policy can be enabled through `.pumuki/hard-mode.json` and environment overrides:
 
 - `PUMUKI_HARD_MODE`
 - `PUMUKI_HARD_MODE_PROFILE=critical-high|all-severities`
 
-### 7) Lifecycle Management Commands
+### 8) Lifecycle Management Commands
 
 Managed lifecycle operations include hook setup, updates, diagnostics, and safe teardown:
 
@@ -110,7 +137,7 @@ Managed lifecycle operations include hook setup, updates, diagnostics, and safe 
 - `doctor`
 - `status`
 
-### 8) Adapter Scaffolding
+### 9) Adapter Scaffolding
 
 Provider-agnostic adapter scaffolding for consumer repositories:
 
@@ -120,7 +147,7 @@ Provider-agnostic adapter scaffolding for consumer repositories:
 - `windsurf`
 - `opencode`
 
-### 9) Optional MCP Servers
+### 10) Optional MCP Servers
 
 - Evidence MCP server: read-only context API for evidence consumption.
 - Enterprise MCP server: broader operational context integrations.
@@ -298,6 +325,22 @@ npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd session --refresh
 npx --yes pumuki sdd session --close
 npx --yes pumuki sdd validate --stage=PRE_COMMIT
+```
+
+### Skills Engine
+
+```bash
+# Compile local skills lock (repo scope)
+npm run skills:compile
+
+# Check lock freshness against source skills
+npm run skills:lock:check
+
+# Import custom rules from AGENTS.md/SKILLS.md discovered SKILL.md paths
+npm run skills:import:custom
+
+# Import custom rules from explicit SKILL.md sources
+npm run skills:import:custom -- --source /abs/path/to/SKILL.md --source ./skills/backend/SKILL.md
 ```
 
 ### Stage Gates

@@ -15,6 +15,7 @@ import {
   type SkillsRuleTemplate,
 } from './skillsCompilerTemplates';
 import { loadSkillsSources, type SkillsSourceBundleV1 } from './skillsSources';
+import { extractCompiledRulesFromSkillMarkdown } from './skillsMarkdownRules';
 
 const DEFAULT_MANIFEST_FILE = 'skills.sources.json';
 const DEFAULT_OUTPUT_FILE = 'skills.lock.json';
@@ -62,6 +63,8 @@ const toCompiledRule = (
     ...rule,
     sourceSkill: sourceBundle.name,
     sourcePath: sourceBundle.sourcePath,
+    evaluationMode: rule.evaluationMode ?? 'AUTO',
+    origin: rule.origin ?? 'core',
   };
 };
 
@@ -101,9 +104,24 @@ const compileBundle = (
   }
 
   const sourceContent = readFileSync(sourceFilePath, 'utf8');
-  const compiledRules = template.rules
-    .map((rule) => toCompiledRule(rule, sourceBundle))
-    .sort((left, right) => left.id.localeCompare(right.id));
+  const templateRules = template.rules.map((rule) => toCompiledRule(rule, sourceBundle));
+  const markdownRules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: sourceBundle.name,
+    sourcePath: sourceBundle.sourcePath,
+    sourceContent,
+    existingRuleIds: templateRules.map((rule) => rule.id),
+    origin: 'core',
+  });
+
+  const byId = new Map<string, SkillsCompiledRule>();
+  for (const markdownRule of markdownRules) {
+    byId.set(markdownRule.id, markdownRule);
+  }
+  for (const templateRule of templateRules) {
+    byId.set(templateRule.id, templateRule);
+  }
+
+  const compiledRules = [...byId.values()].sort((left, right) => left.id.localeCompare(right.id));
 
   const hash = buildBundleHash({
     sourceBundle,

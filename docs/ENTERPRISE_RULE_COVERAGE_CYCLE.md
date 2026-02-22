@@ -55,3 +55,7 @@ Eliminar falsos verdes en auditoria garantizando trazabilidad completa por stage
 ## Cierre
 - Ciclo completado con contrato de cobertura de reglas estable en runtime/evidence.
 - `main` y `develop` sincronizadas en remoto (`origin/main...origin/develop = 0 0`).
+
+## Continuidad de ciclos
+- Este ciclo permanece `CERRADO`.
+- La continuidad activa pasa a `docs/RULES_ENGINE_UNIFICATION_CYCLE.md`.

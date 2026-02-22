@@ -37,6 +37,7 @@
   - active detected platforms with confidence (`HIGH` | `MEDIUM` | `LOW`)
 - `rulesets[]`:
   - loaded bundles with versioned name and hash
+  - effective skills resolution is reflected here (core/repo/custom as loaded bundles, e.g. `custom-guidelines@1.0.0`)
 - `human_intent`:
   - preserved user goal state (or `null` when missing/expired)
   - `expires_at` is enforced deterministically (expired intent is ignored)
@@ -58,6 +59,7 @@
 - Findings are deduplicated by `ruleId + file + lines`.
 - `files_scanned` and `files_affected` are persisted independently to avoid telemetry drift.
 - `rules_coverage` is normalized with sorted+deduplicated ids and deterministic counts.
+- Declarative skills rules are kept in `active_rule_ids/evaluated_rule_ids` for deterministic coverage traceability even when no automatic detector exists yet.
 - For selected semantic rule families, equivalent baseline/heuristic duplicates on the same file are consolidated to a single finding, keeping the highest-severity signal deterministically.
 - Consolidation scope is file-level in v2.1: repeated same-family findings (including same rule on different lines) collapse to one deterministic representative.
 - When consolidation removes findings, `consolidation.suppressed[]` keeps the trace (`ruleId`, `replacedByRuleId`, `reason`) for auditability.

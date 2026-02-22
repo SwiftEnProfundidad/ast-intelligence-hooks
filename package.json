@@ -106,6 +106,7 @@
     "validation:clean-artifacts": "npx --yes tsx@4.21.0 scripts/clean-validation-artifacts.ts",
     "skills:compile": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts",
     "skills:lock:check": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts --check",
+    "skills:import:custom": "npx --yes tsx@4.21.0 scripts/import-custom-skills.ts",
     "mcp:evidence": "node bin/pumuki-mcp-evidence.js",
     "mcp:enterprise": "node bin/pumuki-mcp-enterprise.js",
     "validate:adapter-hooks-local": "echo 'Migrated to modern TS scripts — use validation:adapter-readiness instead'",

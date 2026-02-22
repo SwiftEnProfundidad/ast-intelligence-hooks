@@ -1,9 +1,25 @@
 import assert from 'node:assert/strict';
+import { mkdirSync } from 'node:fs';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 import { buildMenuGateParams, formatActiveSkillsBundles } from '../framework-menu';
+import { loadAndFormatActiveSkillsBundles } from '../framework-menu-skills-lib';
+
+const withCoreSkillsDisabled = async (run: () => Promise<void>): Promise<void> => {
+  const previous = process.env.PUMUKI_DISABLE_CORE_SKILLS;
+  process.env.PUMUKI_DISABLE_CORE_SKILLS = '1';
+  try {
+    await run();
+  } finally {
+    if (typeof previous === 'string') {
+      process.env.PUMUKI_DISABLE_CORE_SKILLS = previous;
+    } else {
+      delete process.env.PUMUKI_DISABLE_CORE_SKILLS;
+    }
+  }
+};
 
 test('returns guidance when no active skills bundles are available', () => {
   const rendered = formatActiveSkillsBundles([]);
@@ -36,6 +52,70 @@ test('renders active skills bundles deterministically by name/version', () => {
       '- ios-guidelines@1.0.0 hash=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
     ].join('\n')
   );
+});
+
+test('loadAndFormatActiveSkillsBundles uses effective lock (repo + custom) for diagnostics output', async () => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-menu-skills-effective-', async (tempRoot) => {
+    const repoLock = {
+      version: '1.0',
+      compilerVersion: '1.0.0',
+      generatedAt: '2026-02-22T19:20:00.000Z',
+      bundles: [
+        {
+          name: 'repo-local-guidelines',
+          version: '1.0.0',
+          source: 'file:docs/repo/SKILL.md',
+          hash: 'a'.repeat(64),
+          rules: [
+            {
+              id: 'skills.repo.sample',
+              description: 'Sample repo rule.',
+              severity: 'WARN',
+              platform: 'generic',
+              sourceSkill: 'repo-local-guidelines',
+              sourcePath: 'docs/repo/SKILL.md',
+            },
+          ],
+        },
+      ],
+    } as const;
+    writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(repoLock, null, 2), 'utf8');
+
+    mkdirSync(join(tempRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(tempRoot, '.pumuki/custom-rules.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          generatedAt: '2026-02-22T19:21:00.000Z',
+          source_files: ['AGENTS.md'],
+          rules: [
+            {
+              id: 'skills.custom.sample',
+              description: 'Sample custom rule.',
+              severity: 'ERROR',
+              platform: 'backend',
+              evaluationMode: 'DECLARATIVE',
+            },
+          ],
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const rendered = loadAndFormatActiveSkillsBundles(tempRoot);
+    assert.equal(rendered.startsWith('Active skills bundles:\n'), true);
+    assert.match(
+      rendered,
+      /- custom-guidelines@1\.0\.0 hash=[a-f0-9]{64}/
+    );
+    assert.match(
+      rendered,
+      /- repo-local-guidelines@1\.0\.0 hash=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/
+    );
+  }));
 });
 
 test('builds menu gate params using stage policy override from skills.policy.json', async () => {
