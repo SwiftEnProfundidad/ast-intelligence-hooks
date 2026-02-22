@@ -65,6 +65,36 @@ test('formatAdvancedMenuView muestra badge WARN cuando falta evidencia', () => {
   assert.match(rendered, /WARN/);
 });
 
+test('formatAdvancedMenuView alinea badge con outcome BLOCK cuando evidencia es ok', () => {
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      totalFindings: 3,
+      bySeverity: { CRITICAL: 3, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(rendered, /Status:\s+.*BLOCK/);
+});
+
+test('formatAdvancedMenuView conserva ayuda de opcion 8 sin truncar .ai_evidence.json', () => {
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_PUSH',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(rendered, /Read current \.ai_evidence\.json[\s\S]*Lee el \.ai_evidence\.json actual/i);
+});
+
 test('formatAdvancedMenuClassicView conserva formato legacy sin panel agrupado', () => {
   const rendered = formatAdvancedMenuClassicView(buildAdvancedActions(), {
     evidenceSummary: {

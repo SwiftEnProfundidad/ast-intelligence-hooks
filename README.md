@@ -6,69 +6,111 @@
 
 Enterprise governance framework for AI-assisted software delivery.
 
-Pumuki enforces deterministic decisions across local hooks, PRE_WRITE guardrails, and CI using one execution model:
+Pumuki gives engineering teams a deterministic contract across local development, pre-commit hooks, pre-push quality gates, and CI with one execution model:
 
 `Facts -> Rules -> Gate -> ai_evidence v2.1`
 
-## What Pumuki Solves
+## Why Pumuki
 
-Pumuki gives teams a single operational contract for AI-era code quality:
+Modern teams need fast feedback with strict governance. Pumuki solves that by combining:
 
-- Deterministic gate decisions with auditable evidence.
-- Unified stage model: `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`.
-- Multi-platform rule evaluation (iOS, Android, Backend, Frontend).
-- Mandatory OpenSpec/SDD policy enforcement.
-- Optional MCP runtime for agent integrations.
+- Deterministic enforcement at every stage (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`).
+- A single evidence model (`.ai_evidence.json`, v2.1) for auditability and machine consumption.
+- Multi-platform governance for iOS, Android, Backend, and Frontend.
+- Mandatory OpenSpec/SDD policy checks for enterprise change management.
+- Unified CLI and optional MCP servers for agent-driven workflows.
+
+## How It Works
+
+Each execution follows the same pipeline:
+
+1. Facts extraction from staged/range/repo scope.
+2. Rule evaluation by platform and policy stage.
+3. Gate decision (`PASS`, `WARN`, `BLOCK`) with deterministic thresholds.
+4. Evidence emission (`.ai_evidence.json`) including findings, metadata, and rules coverage telemetry.
 
 ## Core Capabilities
 
-### 1) Deterministic Gate + Evidence
+### 1) Deterministic Stage Gates
 
-Every stage can emit `.ai_evidence.json` with stable structure (`version: 2.1`) including:
+- `PRE_WRITE`: write-time governance check (SDD/OpenSpec + AI gate consistency).
+- `PRE_COMMIT`: staged/repo checks with fail-fast blocking semantics.
+- `PRE_PUSH`: upstream/range checks with stricter CI/CD alignment.
+- `CI`: base reference range checks for pipeline governance.
 
-- `snapshot` (stage/outcome/findings)
-- `snapshot.rules_coverage` (active/evaluated/matched/unevaluated ids + ratio)
+Reference: `integrations/gate/stagePolicies.ts`.
+
+### 2) Evidence v2.1 with Rules Coverage Enforcement
+
+Pumuki emits deterministic evidence with stable ordering and rich telemetry:
+
+- `snapshot` (stage, outcome, findings)
+- `snapshot.rules_coverage`:
+  - `active_rule_ids`
+  - `evaluated_rule_ids`
+  - `matched_rule_ids`
+  - `unevaluated_rule_ids`
+  - `counts` and `coverage_ratio`
 - `ledger` (persistent open violations)
-- `rulesets` and `platforms`
-- `sdd_metrics`
-- `repo_state` (`git` + lifecycle + optional hard mode state)
+- `rulesets`, `platforms`, `sdd_metrics`, `repo_state`
 
-Coverage enforcement:
-
-- In `PRE_COMMIT`, `PRE_PUSH`, and `CI`, Pumuki emits `governance.rules.coverage.incomplete`
-  and blocks when any active rule remains unevaluated.
+In `PRE_COMMIT`, `PRE_PUSH`, and `CI`, incomplete rules coverage forces block via `governance.rules.coverage.incomplete`.
 
 Reference: `docs/evidence-v2.1.md`.
 
-### 2) Unified AI Gate for PRE_WRITE/MCP
+### 3) Unified AI Gate Across CLI and MCP
 
-The same AI gate evaluator is shared across CLI and MCP:
+The same evaluator powers local and MCP integrations:
 
-- stale/missing/invalid evidence detection
-- blocked evidence gate status detection
-- protected branch guardrail (`main/master/develop/dev`)
-- policy trace visibility (`default`, `skills.policy`, `hard-mode`)
+- Missing/invalid/stale evidence detection
+- Evidence `BLOCKED` status detection
+- Protected branch guardrails (`main/master/develop/dev` by default)
+- Policy trace visibility (`default`, `skills.policy`, `hard-mode`)
 
 Reference: `integrations/gate/evaluateAiGate.ts`.
 
-### 3) Mandatory OpenSpec + SDD Policy
+### 4) Mandatory OpenSpec + SDD Policy
 
-Pumuki enforces OpenSpec/SDD as first-class guardrails:
+Pumuki enforces OpenSpec/SDD as first-class enterprise guardrails:
 
-- `PRE_WRITE`: OpenSpec installed/project/session valid.
-- `PRE_COMMIT`, `PRE_PUSH`, `CI`: valid session + stage validation.
-- Blocking SDD findings are traceable via `source: "sdd-policy"`.
+- Session/state validation in `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`
+- Deterministic policy error codes (for automation and support triage)
+- Traceable source attribution (`source: "sdd-policy"`)
 
-### 4) Lifecycle and Enterprise Safety
+### 5) Menu UX v2 (Consumer + Advanced)
 
-Managed lifecycle commands (`install/update/uninstall/remove`) include:
+Interactive governance menu with:
 
-- hook management (`pre-commit`, `pre-push`)
-- OpenSpec bootstrap/migration
-- deterministic evidence bootstrap
-- safety block when tracked files exist under `node_modules/`
+- Consumer mode focused on day-to-day auditing workflows
+- Advanced mode grouped by domains (Gates, Diagnostics, Maintenance, Validation, System)
+- Runtime fallback to classic renderer if v2 rendering fails
 
-### 5) Adapter Scaffolding (IDE/Agent)
+Controls:
+
+- `PUMUKI_MENU_UI_V2=0|1`
+- `PUMUKI_MENU_MODE=consumer|advanced`
+- `PUMUKI_MENU_COLOR=0|1`
+- `PUMUKI_MENU_WIDTH=<columns>`
+
+### 6) Hard Mode Policy Hardening
+
+Hard mode policy can be enabled through `.pumuki/hard-mode.json` and environment overrides:
+
+- `PUMUKI_HARD_MODE`
+- `PUMUKI_HARD_MODE_PROFILE=critical-high|all-severities`
+
+### 7) Lifecycle Management Commands
+
+Managed lifecycle operations include hook setup, updates, diagnostics, and safe teardown:
+
+- `install`
+- `update --latest`
+- `uninstall --purge-artifacts`
+- `remove`
+- `doctor`
+- `status`
+
+### 8) Adapter Scaffolding
 
 Provider-agnostic adapter scaffolding for consumer repositories:
 
@@ -78,29 +120,38 @@ Provider-agnostic adapter scaffolding for consumer repositories:
 - `windsurf`
 - `opencode`
 
+### 9) Optional MCP Servers
+
+- Evidence MCP server: read-only context API for evidence consumption.
+- Enterprise MCP server: broader operational context integrations.
+
+References:
+
+- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+- `docs/MCP_SERVERS.md`
+- `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`
+
 ## Quick Start (Consumer Repository)
 
 Prerequisites:
 
-- `Node.js >= 18`
-- `npm >= 9`
-- `git`
+- Node.js `>= 18`
+- npm `>= 9`
+- Git repository
 
-All command/code snippets below are fenced so GitHub and npm renderers can expose native copy controls.
-
-### 1) Install package
+Install:
 
 ```bash
 npm install --save-exact pumuki
 ```
 
-### 2) Install managed lifecycle + bootstrap
+Bootstrap lifecycle:
 
 ```bash
 npx --yes pumuki install
 ```
 
-### 3) Verify environment
+Verify setup:
 
 ```bash
 npx --yes pumuki doctor
@@ -108,13 +159,13 @@ npx --yes pumuki status
 npx --yes pumuki sdd status
 ```
 
-### 4) Open an SDD session
+Open a change session:
 
 ```bash
 npx --yes pumuki sdd session --open --change=<change-id>
 ```
 
-### 5) Run gates
+Run stage gates:
 
 ```bash
 npx --yes pumuki-pre-write
@@ -123,49 +174,112 @@ npx --yes pumuki-pre-push
 npx --yes pumuki-ci
 ```
 
-## Hard Mode (Policy Hardening)
+## Interactive Menu
 
-Pumuki supports hard-mode policy resolution via `.pumuki/hard-mode.json`.
-
-Example:
-
-```json
-{
-  "enabled": true,
-  "profile": "critical-high"
-}
-```
-
-Current profile support:
-
-- `critical-high`
-- `all-severities`
-
-Environment overrides:
-
-- `PUMUKI_HARD_MODE` (`true|false|1|0|on|off`)
-- `PUMUKI_HARD_MODE_PROFILE` (`critical-high|all-severities`)
-
-Runtime traceability:
-
-- policy trace is exposed in AI Gate outputs
-- hard mode state is captured in `repo_state.lifecycle.hard_mode`
-
-## PRE_WRITE Contract
-
-For deterministic pre-write integrations:
+Framework repository:
 
 ```bash
-npx --yes pumuki sdd validate --stage=PRE_WRITE --json
+npm run framework:menu
 ```
 
-Returns a chained envelope with:
+Consumer repository:
 
-- `sdd`
-- `ai_gate`
-- `telemetry.chain = "pumuki->ai_gate->ai_evidence"`
+```bash
+npx --yes pumuki-framework
+```
 
-## Lifecycle Commands
+Start directly in advanced mode:
+
+```bash
+PUMUKI_MENU_MODE=advanced npm run framework:menu
+```
+
+Enable modern UI renderer:
+
+```bash
+PUMUKI_MENU_UI_V2=1 npm run framework:menu
+```
+
+## Option 1 Walkthrough (Consumer Menu)
+
+This walkthrough documents **Option 1: Full audit (repo analysis · PRE_COMMIT)** using real execution output.
+
+### Capture 1 — Consumer Menu (v2)
+
+![Consumer Menu v2](assets/readme/menu-option1/01-menu-consumer-v2.png)
+
+What this shows:
+
+- Consumer menu grouped by operational flows.
+- Option `1` is the full repo audit path for `PRE_COMMIT` policy.
+- Current menu status reflects the latest evidence context.
+
+### Capture 2 — Option 1 Pre-flight (BLOCK context)
+
+![Option 1 Pre-flight Block](assets/readme/menu-option1/02-option1-preflight-block.png)
+
+What this shows:
+
+- Pre-flight validation runs before gate execution.
+- Runtime context includes branch/upstream/worktree/evidence freshness.
+- Operational hints explain *why* governance is currently blocked.
+
+### Capture 3 — Option 1 Final Summary (BLOCK)
+
+![Option 1 Final Summary Block](assets/readme/menu-option1/03-option1-final-summary-block.png)
+
+What this shows:
+
+- Deterministic severity summary and metrics.
+- Explicit blocking decision with stage and outcome:
+  - `Stage: PRE_COMMIT`
+  - `Outcome: BLOCK`
+- Actionable next step for remediation.
+
+### Capture 4 — Option 1 Pre-flight (PASS scenario)
+
+![Option 1 Pre-flight Pass Scenario](assets/readme/menu-option1/04-option1-preflight-pass.png)
+
+What this shows:
+
+- A clean fixture scenario where the audit run can complete without findings.
+- Pre-flight can still show policy warnings (for example branch/evidence guardrails), while the run itself proceeds.
+
+### Capture 5 — Option 1 Final Summary (PASS)
+
+![Option 1 Final Summary Pass](assets/readme/menu-option1/05-option1-final-summary-pass.png)
+
+What this shows:
+
+- Zero violations across severities.
+- Deterministic final decision:
+  - `Stage: PRE_COMMIT`
+  - `Outcome: PASS`
+- Guidance to maintain baseline quality.
+
+### Capture 6 — Menu Status After PASS Run
+
+![Menu After Pass Run](assets/readme/menu-option1/06-menu-after-run-pass.png)
+
+What this shows:
+
+- Menu status is updated to `PASS` after successful run.
+- Teams can quickly see current governance health before choosing the next action.
+
+## Stage Contracts and Exit Codes
+
+| Stage | Typical scope | Block threshold | Exit code behavior |
+|---|---|---|---|
+| `PRE_WRITE` | write-time + SDD/OpenSpec policy | `ERROR` (policy-driven) | `0` pass/warn, `1` block/error |
+| `PRE_COMMIT` | staged/repo audit | `CRITICAL` | `0` pass/warn, `1` block/error |
+| `PRE_PUSH` | upstream/range audit | `ERROR` | `0` pass/warn, `1` block/error |
+| `CI` | baseRef..HEAD audit | `ERROR` | `0` pass/warn, `1` block/error |
+
+For stage runners and wrappers see `integrations/git/stageRunners.ts` and `integrations/git/index.ts`.
+
+## Command Reference
+
+### Lifecycle
 
 ```bash
 npx --yes pumuki install
@@ -176,12 +290,34 @@ npx --yes pumuki doctor
 npx --yes pumuki status
 ```
 
-Important:
+### SDD / OpenSpec
 
-- `pumuki remove` is the full teardown path (hooks + artifacts + dependency cleanup logic).
-- `npm uninstall pumuki` only removes dependency entries.
+```bash
+npx --yes pumuki sdd status
+npx --yes pumuki sdd session --open --change=<change-id>
+npx --yes pumuki sdd session --refresh
+npx --yes pumuki sdd session --close
+npx --yes pumuki sdd validate --stage=PRE_COMMIT
+```
 
-## Adapter Commands
+### Stage Gates
+
+```bash
+npx --yes pumuki-pre-write
+npx --yes pumuki-pre-commit
+npx --yes pumuki-pre-push
+npx --yes pumuki-ci
+```
+
+### Menu
+
+```bash
+npm run framework:menu
+PUMUKI_MENU_UI_V2=1 npm run framework:menu
+PUMUKI_MENU_MODE=advanced npm run framework:menu
+```
+
+### Adapter Scaffolding
 
 ```bash
 npx --yes pumuki adapter install --agent=codex --dry-run
@@ -189,123 +325,71 @@ npx --yes pumuki adapter install --agent=cursor
 npm run adapter:install -- --agent=claude
 ```
 
-## MCP Servers (Optional)
-
-Pumuki core does not depend on MCP, but MCP is available for external agents.
-
-Evidence MCP:
+### MCP (optional)
 
 ```bash
 npx --yes pumuki-mcp-evidence
-```
-
-Enterprise MCP:
-
-```bash
 npx --yes pumuki-mcp-enterprise
 ```
 
-References:
+## Advanced Operational Workflows
 
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
-- `docs/MCP_SERVERS.md`
-- `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`
+### Non-interactive consumer matrix (deterministic validation)
 
-## Framework Repository (This Repo)
+Run all key consumer checks (`1/2/3/4/9`) without manual prompts:
 
 ```bash
-git clone https://github.com/SwiftEnProfundidad/ast-intelligence-hooks.git
-cd ast-intelligence-hooks
-npm ci
+node --import tsx -e "const mod = await import('./scripts/framework-menu-matrix-runner-lib.ts'); const report = await mod.default.runConsumerMenuMatrix({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
 ```
 
-Recommended baseline:
+Optional controlled canary execution:
 
 ```bash
-npm run typecheck
-npm run test
-npm run test:deterministic
-npm run validation:package-manifest
-npm run skills:lock:check
+node --import tsx -e "const mod = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await mod.default.runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
 ```
 
-Interactive menu:
+### Enterprise diagnostics and readiness reports
 
 ```bash
-npm run framework:menu
+npm run validation:consumer-ci-artifacts
+npm run validation:consumer-ci-auth-check
+npm run validation:consumer-workflow-lint
+npm run validation:consumer-support-bundle
+npm run validation:consumer-support-ticket-draft
+npm run validation:consumer-startup-unblock-status
+npm run validation:consumer-startup-triage
+npm run validation:mock-consumer-ab-report
+npm run validation:adapter-readiness
+npm run validation:adapter-session-status
+npm run validation:adapter-real-session-report
+npm run validation:phase5-blockers-readiness
+npm run validation:phase5-execution-closure-status
+npm run validation:phase5-execution-closure
+npm run validation:phase5-external-handoff
+npm run validation:clean-artifacts
 ```
-
-Consumer menu notes:
-
-- options `1/2/3/4` execute a pre-flight check before running gates
-- pre-flight validates repo-state, git-flow constraints, and AI gate chain (`pumuki -> mcp -> ai_gate -> ai_evidence`)
-- option `31` in advanced menu toggles macOS system notifications (persisted in `.pumuki/system-notifications.json`)
-- `PUMUKI_MENU_UI_V2` controls modern menu UI rollout:
-  - `0`/unset: classic renderer (default)
-  - `1`/`true`/`on`: modern renderer (grouped sections + status badges)
-- if modern renderer fails, Pumuki falls back automatically to classic renderer
-- existing controls remain compatible: `PUMUKI_MENU_COLOR`, `PUMUKI_MENU_WIDTH`, `PUMUKI_MENU_MODE`
-
-Consumer repositories typically run:
-
-```bash
-npx --yes pumuki-framework
-```
-
-## Published Binaries
-
-- `pumuki`
-- `pumuki-framework`
-- `pumuki-pre-write`
-- `pumuki-pre-commit`
-- `pumuki-pre-push`
-- `pumuki-ci`
-- `pumuki-mcp-evidence`
-- `pumuki-mcp-enterprise`
 
 ## Troubleshooting
 
-Hook/lifecycle drift:
-
-```bash
-npx --yes pumuki doctor
-npx --yes pumuki status
-```
-
-Missing upstream for `PRE_PUSH`:
+- Missing upstream for push-based checks:
 
 ```bash
 git push --set-upstream origin <branch>
 ```
 
-Emergency SDD bypass (incident-only):
+- Stale/missing evidence: rerun menu option `1/2/3/4` or a direct stage command.
+- Protected branch guardrails (`main/master/develop/dev`) can intentionally block commit/push workflows.
+- If menu v2 render fails, Pumuki auto-falls back to classic UI.
 
-```bash
-PUMUKI_SDD_BYPASS=1 npx --yes pumuki sdd validate --stage=PRE_COMMIT
-```
+## Documentation Index
 
-## Documentation Map
-
-Primary index: `docs/README.md`
-
-Core docs:
-
-- `docs/ARCHITECTURE.md`
-- `docs/INSTALLATION.md`
-- `docs/USAGE.md`
-- `docs/CONFIGURATION.md`
-- `docs/API_REFERENCE.md`
-- `docs/evidence-v2.1.md`
-- `docs/MCP_SERVERS.md`
-- `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
-- `docs/validation/README.md`
-
-Contributor docs:
-
-- `docs/CONTRIBUTING.md`
-- `docs/CODE_STANDARDS.md`
-- `CHANGELOG.md`
+- Usage guide: `docs/USAGE.md`
+- API reference: `docs/API_REFERENCE.md`
+- Evidence schema v2.1: `docs/evidence-v2.1.md`
+- MCP evidence server: `docs/MCP_EVIDENCE_CONTEXT_SERVER.md`
+- MCP consumption guidance: `docs/MCP_AGENT_CONTEXT_CONSUMPTION.md`
+- Architecture overview: `docs/ARCHITECTURE.md`
 
 ## License
 
-MIT (`LICENSE`)
+MIT. See `LICENSE`.
