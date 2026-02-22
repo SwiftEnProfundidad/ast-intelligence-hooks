@@ -48,8 +48,8 @@ Estado del ciclo: `CERRADO`.
     - `#321` `main -> develop`
   - ✅ Alineación final por fast-forward de `main` a `origin/develop` para cerrar drift de merge-commit metadata.
   - ✅ Estado remoto final:
-    - `origin/main`: `7e883df6190af607aacef773ce12d7d14eaaa25c`
-    - `origin/develop`: `7e883df6190af607aacef773ce12d7d14eaaa25c`
+    - `origin/main`: `9f40eb9d1ae14bb32a72e696dd4fc72741a06af6`
+    - `origin/develop`: `9f40eb9d1ae14bb32a72e696dd4fc72741a06af6`
   - ✅ Estado local final:
     - `main`, `develop` y `feature/enterprise-audit-cycle` alineadas y limpias.
 - ✅ T10. Cierre formal del ciclo:
@@ -58,7 +58,7 @@ Estado del ciclo: `CERRADO`.
     - Tracker histórico actualizado con referencia al cierre de `T10`.
     - PRs de sincronización y cierre registradas (`#318`, `#319`, `#320`, `#321`, `#322`).
   - ✅ Estado final de salud del repo:
-    - `origin/main` y `origin/develop` alineadas en `7e883df6190af607aacef773ce12d7d14eaaa25c`.
+    - `origin/main` y `origin/develop` alineadas en `9f40eb9d1ae14bb32a72e696dd4fc72741a06af6`.
     - `feature/enterprise-audit-cycle` alineada a ese mismo baseline.
     - Worktree limpio en cierre de tarea.
   - ✅ Archivo del ciclo en documento de cierre:
