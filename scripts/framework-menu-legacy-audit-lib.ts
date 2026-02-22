@@ -35,6 +35,37 @@ type RulesetSummary = {
   bySeverity: Record<LegacySeverity, number>;
 };
 
+type LegacyMenuPaletteRole =
+  | 'title'
+  | 'subtitle'
+  | 'switch'
+  | 'sectionTitle'
+  | 'statusWarning'
+  | 'rule'
+  | 'goal'
+  | 'critical'
+  | 'high'
+  | 'medium'
+  | 'low'
+  | 'muted'
+  | 'border';
+
+type LegacyMenuDesignTokens = {
+  colorEnabled: boolean;
+  asciiMode: boolean;
+  panelOuterWidth: number;
+  panelInnerWidth: number;
+  border: {
+    topLeft: string;
+    topRight: string;
+    bottomLeft: string;
+    bottomRight: string;
+    horizontal: string;
+    vertical: string;
+  };
+  palette: Record<LegacyMenuPaletteRole, string>;
+};
+
 export type LegacyAuditSummary = {
   status: 'ok' | 'missing' | 'invalid';
   stage: string;
@@ -64,6 +95,10 @@ const EVIDENCE_PATH = '.ai_evidence.json';
 const OVERVIEW_TITLE = 'PUMUKI — Hook-System (run: npx ast-hooks)';
 const OVERVIEW_SUBTITLE = 'AST Intelligence System Overview';
 const ANSI_PATTERN = /\u001b\[[0-9;]*m/g;
+const PANEL_MIN_WIDTH = 56;
+const PANEL_MAX_WIDTH = 120;
+const PANEL_DEFAULT_WIDTH = 88;
+const PANEL_TTY_MARGIN = 8;
 
 const emptyLegacySeverity = (): Record<LegacySeverity, number> => ({
   CRITICAL: 0,
@@ -459,14 +494,16 @@ const clamp = (value: number, min: number, max: number): number => {
 const resolvePanelOuterWidth = (requested?: number): number => {
   const forcedWidth = Number(process.env.PUMUKI_MENU_WIDTH ?? 0);
   if (Number.isFinite(forcedWidth) && forcedWidth > 0) {
-    return clamp(Math.trunc(forcedWidth), 56, 100);
+    return clamp(Math.trunc(forcedWidth), PANEL_MIN_WIDTH, PANEL_MAX_WIDTH);
+  }
+  if (Number.isFinite(requested ?? NaN) && (requested ?? 0) > 0) {
+    return clamp(Math.trunc(Number(requested)), PANEL_MIN_WIDTH, PANEL_MAX_WIDTH);
   }
   const ttyColumns = Number(process.stdout.columns ?? 0);
-  const fallback = 88;
-  const source = Number.isFinite(requested ?? NaN) && (requested ?? 0) > 0
-    ? Number(requested)
-    : (ttyColumns > 0 ? ttyColumns : fallback);
-  return clamp(source - 8, 56, 100);
+  if (Number.isFinite(ttyColumns) && ttyColumns > 0) {
+    return clamp(Math.trunc(ttyColumns - PANEL_TTY_MARGIN), PANEL_MIN_WIDTH, PANEL_MAX_WIDTH);
+  }
+  return PANEL_DEFAULT_WIDTH;
 };
 
 const useColor = (enabled?: boolean): boolean => {
@@ -486,48 +523,128 @@ const color = (text: string, code: string, enabled: boolean): string => {
   return `\u001b[${code}m${text}\u001b[0m`;
 };
 
-const styleLegacyLine = (line: string, enabled: boolean): string => {
-  if (!enabled || line.length === 0) {
+const useAsciiMode = (): boolean => {
+  if (process.env.PUMUKI_MENU_ASCII === '1') {
+    return true;
+  }
+  const locale = (process.env.LC_ALL ?? process.env.LC_CTYPE ?? process.env.LANG ?? '').toLowerCase();
+  return locale === 'c' || locale === 'posix';
+};
+
+const toAsciiLine = (line: string): string => {
+  return line
+    .replace(/—/g, '-')
+    .replace(/→/g, '->')
+    .replace(/•/g, '*')
+    .replace(/●/g, 'o')
+    .replace(/⚠/g, '!')
+    .replace(/✅/g, 'OK')
+    .replace(/ℹ/g, 'i')
+    .replace(/┌/g, '+')
+    .replace(/└/g, '+')
+    .replace(/│/g, '|');
+};
+
+const buildLegacyMenuDesignTokens = (options?: {
+  width?: number;
+  color?: boolean;
+}): LegacyMenuDesignTokens => {
+  const panelOuterWidth = resolvePanelOuterWidth(options?.width);
+  return {
+    colorEnabled: useColor(options?.color),
+    asciiMode: useAsciiMode(),
+    panelOuterWidth,
+    panelInnerWidth: panelOuterWidth - 4,
+    border: useAsciiMode()
+      ? {
+        topLeft: '+',
+        topRight: '+',
+        bottomLeft: '+',
+        bottomRight: '+',
+        horizontal: '-',
+        vertical: '|',
+      }
+      : {
+        topLeft: '╭',
+        topRight: '╮',
+        bottomLeft: '╰',
+        bottomRight: '╯',
+        horizontal: '─',
+        vertical: '│',
+      },
+    palette: {
+      title: '96;1',
+      subtitle: '92;1',
+      switch: '90',
+      sectionTitle: '96;1',
+      statusWarning: '93;1',
+      rule: '93',
+      goal: '92',
+      critical: '91',
+      high: '93',
+      medium: '33',
+      low: '94',
+      muted: '90',
+      border: '94',
+    },
+  };
+};
+
+export const resolveLegacyMenuDesignTokens = (options?: {
+  width?: number;
+  color?: boolean;
+}): LegacyMenuDesignTokens => buildLegacyMenuDesignTokens(options);
+
+const applyPalette = (
+  line: string,
+  role: LegacyMenuPaletteRole,
+  tokens: LegacyMenuDesignTokens
+): string => {
+  return color(line, tokens.palette[role], tokens.colorEnabled);
+};
+
+const styleLegacyLine = (line: string, tokens: LegacyMenuDesignTokens): string => {
+  if (line.length === 0) {
     return line;
   }
   if (line.startsWith('PUMUKI — Hook-System')) {
-    return color(line, '96;1', true);
+    return applyPalette(line, 'title', tokens);
   }
   if (line === OVERVIEW_SUBTITLE) {
-    return color(line, '92;1', true);
+    return applyPalette(line, 'subtitle', tokens);
   }
   if (line.startsWith('A. Switch')) {
-    return color(line, '90', true);
+    return applyPalette(line, 'switch', tokens);
   }
   if (line === 'QUICK SUMMARY' || line === 'METRICS' || line.startsWith('FINAL SUMMARY')) {
-    return color(line, '96;1', true);
+    return applyPalette(line, 'sectionTitle', tokens);
   }
   if (/^(\d\)|5\)|6\))\s/.test(line)) {
-    return color(line, '96;1', true);
+    return applyPalette(line, 'sectionTitle', tokens);
   }
   if (line.includes('ACTION REQUIRED')) {
-    return color(line, '93;1', true);
+    return applyPalette(line, 'statusWarning', tokens);
   }
   if (line.startsWith('Rule:')) {
-    return color(line, '93', true);
+    return applyPalette(line, 'rule', tokens);
   }
   if (line.startsWith('Goal:')) {
-    return color(line, '92', true);
+    return applyPalette(line, 'goal', tokens);
   }
   if (line.startsWith('● CRITICAL')) {
-    return color(line, '91', true);
+    return applyPalette(line, 'critical', tokens);
   }
   if (line.startsWith('● HIGH')) {
-    return color(line, '93', true);
+    return applyPalette(line, 'high', tokens);
   }
   if (line.startsWith('● MEDIUM')) {
-    return color(line, '33', true);
+    return applyPalette(line, 'medium', tokens);
   }
   if (line.startsWith('● LOW')) {
-    return color(line, '94', true);
+    return applyPalette(line, 'low', tokens);
   }
   if (line.startsWith('Pipeline') || line.startsWith('Outputs') || line.startsWith('Top violations:')) {
-    return color(line, '90', true);
+    return applyPalette(line, 'muted', tokens);
   }
   return line;
 };
@@ -573,17 +690,21 @@ const renderPanel = (
   lines: ReadonlyArray<string>,
   options?: { width?: number; color?: boolean }
 ): string => {
-  const outerWidth = resolvePanelOuterWidth(options?.width);
-  const innerWidth = outerWidth - 4;
-  const colorEnabled = useColor(options?.color);
-  const wrappedLines = lines.flatMap((line) => wrapLine(line, innerWidth));
-  const border = (value: string): string => color(value, '94', colorEnabled);
-  const top = border(`╭${'─'.repeat(innerWidth + 2)}╮`);
-  const bottom = border(`╰${'─'.repeat(innerWidth + 2)}╯`);
+  const tokens = buildLegacyMenuDesignTokens(options);
+  const wrappedLines = lines.flatMap((line) =>
+    wrapLine(tokens.asciiMode ? toAsciiLine(line) : line, tokens.panelInnerWidth)
+  );
+  const border = (value: string): string => color(value, tokens.palette.border, tokens.colorEnabled);
+  const top = border(
+    `${tokens.border.topLeft}${tokens.border.horizontal.repeat(tokens.panelInnerWidth + 2)}${tokens.border.topRight}`
+  );
+  const bottom = border(
+    `${tokens.border.bottomLeft}${tokens.border.horizontal.repeat(tokens.panelInnerWidth + 2)}${tokens.border.bottomRight}`
+  );
   const body = wrappedLines
     .map((line) => {
-      const content = padRight(styleLegacyLine(line, colorEnabled), innerWidth);
-      return `${border('│')} ${content} ${border('│')}`;
+      const content = padRight(styleLegacyLine(line, tokens), tokens.panelInnerWidth);
+      return `${border(tokens.border.vertical)} ${content} ${border(tokens.border.vertical)}`;
     })
     .join('\n');
   return [top, body, bottom].join('\n');
@@ -841,6 +962,14 @@ export const formatLegacyAuditReport = (
   const actionLine = commitStatus.includes('BLOCKED')
     ? 'Action: clean entire repository before committing.'
     : 'Action: proceed with commit flow.';
+  const affectedRatio = summary.filesScanned > 0
+    ? Math.round((summary.filesAffected / Math.max(1, summary.filesScanned)) * 100)
+    : 0;
+  const nextAction = commitStatus.includes('BLOCKED')
+    ? 'Next action: fix CRITICAL/HIGH findings and rerun full audit.'
+    : summary.bySeverity.MEDIUM > 0 || summary.bySeverity.LOW > 0
+      ? 'Next action: schedule MEDIUM/LOW cleanup without blocking delivery.'
+      : 'Next action: maintain baseline and continue with regular checks.';
 
   const metricsPanel = renderPanel([
     'METRICS',
@@ -849,10 +978,12 @@ export const formatLegacyAuditReport = (
     `Critical issues: ${summary.bySeverity.CRITICAL}`,
     `High priority issues: ${summary.bySeverity.HIGH}`,
     `Files scanned: ${summary.filesScanned}`,
+    `Affected ratio: ${affectedRatio}%`,
     '',
     `Code Health Score: ${summary.codeHealthScore}% (${codeHealthLabel(summary.codeHealthScore)})`,
     '',
     blockedMessage,
+    nextAction,
     '',
     'FINAL SUMMARY — VIOLATIONS BY SEVERITY',
     `● CRITICAL: ${summary.bySeverity.CRITICAL}`,

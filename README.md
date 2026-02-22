@@ -240,6 +240,11 @@ Consumer menu notes:
 - options `1/2/3/4` execute a pre-flight check before running gates
 - pre-flight validates repo-state, git-flow constraints, and AI gate chain (`pumuki -> mcp -> ai_gate -> ai_evidence`)
 - option `31` in advanced menu toggles macOS system notifications (persisted in `.pumuki/system-notifications.json`)
+- `PUMUKI_MENU_UI_V2` controls modern menu UI rollout:
+  - `0`/unset: classic renderer (default)
+  - `1`/`true`/`on`: modern renderer (grouped sections + status badges)
+- if modern renderer fails, Pumuki falls back automatically to classic renderer
+- existing controls remain compatible: `PUMUKI_MENU_COLOR`, `PUMUKI_MENU_WIDTH`, `PUMUKI_MENU_MODE`
 
 Consumer repositories typically run:
 

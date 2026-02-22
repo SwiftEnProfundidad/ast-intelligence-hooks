@@ -8,6 +8,7 @@ import {
   formatLegacyAuditReport,
   formatLegacyFileDiagnostics,
   renderLegacyPanel,
+  resolveLegacyMenuDesignTokens,
   resolveLegacyPanelOuterWidth,
   readLegacyAuditSummary,
 } from '../framework-menu-legacy-audit-lib';
@@ -353,6 +354,20 @@ test('formatLegacyAuditReport ajusta lineas al ancho de panel solicitado', async
   });
 });
 
+test('formatLegacyAuditReport soporta anchos pequeño/medio/grande sin overflow', async () => {
+  await withTempDir('pumuki-legacy-audit-width-matrix-', async (repoRoot) => {
+    writeEvidenceFixture(repoRoot);
+    const summary = readLegacyAuditSummary(repoRoot);
+
+    for (const width of [56, 72, 100]) {
+      const rendered = formatLegacyAuditReport(summary, { panelWidth: width });
+      for (const line of rendered.split('\n')) {
+        assert.ok(line.length <= width, `line exceeds panel width (${width}): ${line}`);
+      }
+    }
+  });
+});
+
 test('formatLegacyFileDiagnostics lista top de ficheros violados', async () => {
   await withTempDir('pumuki-legacy-file-diagnostics-', async (repoRoot) => {
     writeEvidenceFixture(repoRoot);
@@ -362,6 +377,17 @@ test('formatLegacyFileDiagnostics lista top de ficheros violados', async () => {
     assert.match(rendered, /FILE DIAGNOSTICS — TOP VIOLATED FILES/);
     assert.match(rendered, /apps\/backend\/src\/domain\/service\.ts: 1/);
     assert.match(rendered, /apps\/ios\/App\/Feature\.swift: 1/);
+  });
+});
+
+test('formatLegacyAuditReport añade metricas de impacto y siguiente accion', async () => {
+  await withTempDir('pumuki-legacy-audit-impact-metrics-', async (repoRoot) => {
+    writeEvidenceFixture(repoRoot);
+    const summary = readLegacyAuditSummary(repoRoot);
+    const rendered = formatLegacyAuditReport(summary);
+
+    assert.match(rendered, /Affected ratio:/);
+    assert.match(rendered, /Next action:/);
   });
 });
 
@@ -490,6 +516,55 @@ test('renderLegacyPanel mantiene todas las lineas dentro del ancho solicitado', 
   for (const line of panel.split('\n')) {
     assert.ok(line.length <= 70, `line exceeds panel width (70): ${line}`);
   }
+});
+
+test('resolveLegacyMenuDesignTokens aplica fallback no-color cuando NO_COLOR=1', () => {
+  const previous = process.env.NO_COLOR;
+  process.env.NO_COLOR = '1';
+  try {
+    const tokens = resolveLegacyMenuDesignTokens();
+    assert.equal(tokens.colorEnabled, false);
+  } finally {
+    if (typeof previous === 'string') {
+      process.env.NO_COLOR = previous;
+    } else {
+      delete process.env.NO_COLOR;
+    }
+  }
+});
+
+test('renderLegacyPanel usa bordes ASCII cuando PUMUKI_MENU_ASCII=1', () => {
+  const previous = process.env.PUMUKI_MENU_ASCII;
+  process.env.PUMUKI_MENU_ASCII = '1';
+  try {
+    const panel = renderLegacyPanel(
+      [
+        'PUMUKI — Hook-System (run: npx ast-hooks)',
+        'AST Intelligence System Overview',
+      ],
+      { width: 70, color: false }
+    );
+    const lines = panel.split('\n');
+    assert.match(lines[0] ?? '', /^\+-+\+$/);
+    assert.match(lines[lines.length - 1] ?? '', /^\+-+\+$/);
+    assert.equal(lines[1]?.startsWith('| '), true);
+  } finally {
+    if (typeof previous === 'string') {
+      process.env.PUMUKI_MENU_ASCII = previous;
+    } else {
+      delete process.env.PUMUKI_MENU_ASCII;
+    }
+  }
+});
+
+test('renderLegacyPanel respeta ancho solicitado sin doble reduccion', () => {
+  const panel = renderLegacyPanel(
+    ['PUMUKI — Hook-System (run: npx ast-hooks)'],
+    { width: 70, color: false }
+  );
+  const lines = panel.split('\n');
+  const top = lines[0] ?? '';
+  assert.equal(top.length, 70);
 });
 
 test('readLegacyAuditSummary en repo mixto prioriza path apps/* frente a fallback heuristics.ts.*', async () => {

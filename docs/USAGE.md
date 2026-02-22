@@ -85,12 +85,24 @@ npx --yes pumuki-framework
 
 Menu starts in `Consumer` mode by default (focused operational options).
 Use `A` to switch to `Advanced` mode (full options), and `C` to return to `Consumer`.
-Each option now includes a short inline description in the interactive list.
+Advanced mode options include short inline contextual help.
 If needed, you can start directly in advanced mode:
 
 ```bash
 PUMUKI_MENU_MODE=advanced npm run framework:menu
 ```
+
+UI renderer rollout:
+
+```bash
+# Classic renderer (default)
+PUMUKI_MENU_UI_V2=0 npm run framework:menu
+
+# Modern renderer (grouped sections + status badges)
+PUMUKI_MENU_UI_V2=1 npm run framework:menu
+```
+
+If v2 rendering fails at runtime, Pumuki automatically falls back to classic renderer.
 
 To avoid host-specific defaults for consumer diagnostics prompts, set:
 
@@ -112,7 +124,7 @@ Adapter readiness diagnostics are available from the interactive menu as:
 For deterministic validation without interactive prompts, run the matrix helper:
 
 ```bash
-node --import tsx -e "const { runConsumerMenuMatrix } = await import('./scripts/framework-menu-matrix-runner-lib.ts'); const report = await runConsumerMenuMatrix({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
+node --import tsx -e "const mod = await import('./scripts/framework-menu-matrix-runner-lib.ts'); const report = await mod.default.runConsumerMenuMatrix({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
 ```
 
 Expected output shape:
@@ -139,7 +151,7 @@ Diagnosis semantics:
 Optional canary execution (controlled temporary violation + cleanup):
 
 ```bash
-node --import tsx -e "const { runConsumerMenuCanary } = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
+node --import tsx -e "const mod = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await mod.default.runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
 ```
 
 ### 1.2) Consumer pre-flight (legacy parity)

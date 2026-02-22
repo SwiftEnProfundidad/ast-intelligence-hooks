@@ -216,11 +216,19 @@ npm run typecheck
 npm run test:deterministic
 ```
 
+Menu UI rollout controls:
+
+- `PUMUKI_MENU_UI_V2=0|1` (`0` default = classic, `1` = modern grouped renderer)
+- `PUMUKI_MENU_MODE=consumer|advanced`
+- `PUMUKI_MENU_COLOR`, `PUMUKI_MENU_WIDTH`
+- v2 renderer failures auto-fallback to classic renderer
+
 Consumer menu pre-flight:
 
 - options `1/2/3/4` execute pre-flight before gate evaluation
 - pre-flight checks `repo_state`, stale/missing evidence, git-flow protected branches, and AI gate chain consistency
 - stage mapping is deterministic: `1/3 -> PRE_COMMIT`, `2/4 -> PRE_PUSH`
+- in modern UI mode (`PUMUKI_MENU_UI_V2=1`) options are grouped by domains while preserving IDs and execution wiring
 
 ## Optional diagnostics adapters
 

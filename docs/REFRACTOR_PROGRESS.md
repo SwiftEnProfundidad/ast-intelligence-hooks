@@ -30,11 +30,24 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F5.T2` completada: validacion final ejecutada en verde (`npm run typecheck`, `npm test`).
 - ✅ `F5.T3` completada: Git Flow cerrado end-to-end (commits atomicos, PR/merge a `develop`, sync `develop -> main`).
 - ✅ Ciclo `ENTERPRISE_RULE_COVERAGE_CYCLE` cerrado.
-- 🚧 Tarea activa del nuevo ciclo UI/UX: `F1.T1` (design tokens CLI, contraste, fallback y ancho dinamico).
+- ✅ `F1.T1` (UI/UX menu) completada: design tokens CLI, fallback no-color/ascii y ancho dinamico sin doble reduccion.
+- ✅ `F1.T2` (UI/UX menu) completada: componentes reutilizables de render (`Panel`, `Badge`, `SectionHeader`, `MetricRow`, `ActionRow`, `HintBlock`) con test unitario dedicado.
+- ✅ `F1.T3` (UI/UX menu) completada: layout canónico definido para menús Consumer/Advanced con cobertura de orden y jerarquía por dominio.
+- ✅ `F1.T4` (UI/UX menu) completada: utilidades de legibilidad terminal implementadas y conectadas al renderer base.
+- ✅ Fase 2 completada: menú consumer modernizado por flujos, badge de estado (`PASS/WARN/BLOCK`) y mensajes de alcance vacío clarificados sin regresión de IDs.
+- ✅ Fase 3 completada: menú advanced alineado visualmente, agrupado por dominios con ayuda contextual corta y sin romper wiring de acciones.
+- ✅ Fase 4 completada: reporte de auditoría modernizado con matriz multi-plataforma estable, métricas de impacto y robustez de ancho.
+- ✅ Fase 5 completada: feature flag `PUMUKI_MENU_UI_V2` (default OFF), fallback automático a menú clásico y compatibilidad de variables de entorno.
+- ✅ Fase 6 completada: TDD integral y matriz happy/sad/edge validada (suite `framework-menu-*` + runner/canary).
+- ✅ `F7.T1` completada: `README.md` actualizado con rollout de `PUMUKI_MENU_UI_V2` y compatibilidad de flags.
+- ✅ `F7.T2` completada: `docs/USAGE.md` y `docs/API_REFERENCE.md` actualizados (modo clásico/v2, fallback y comandos matrix/canary).
+- ✅ `F7.T3` completada: tracker y plan de ciclo sincronizados con cierre documental de fase.
+- ✅ `F7.T4` completada: cierre Git Flow end-to-end ejecutado (commit, PR/merge y sync de ramas).
+- ✅ Ciclo `MENU_UIUX_MODERNIZATION_CYCLE` cerrado.
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F1.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
+- ⏳ Pendiente definir siguiente ciclo (fuera de este cierre UI/UX).
