@@ -8,6 +8,7 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ⏳ Pendiente
 
 ## Estado actual (plan activo)
+- ✅ Sincronización Git Flow final ejecutada tras el cierre documental de F4.T5 (`develop -> main`) con ramas remotas alineadas (`origin/main...origin/develop = 0 0`).
 - ✅ F4.T1 completada en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (inventario de cobertura por stage/perfil).
 - ✅ F4.T2 completada (telemetría de evidencia determinista para `files_scanned`, `files_affected` y `evaluation_metrics`).
 - ✅ F4.T3 completada (clasificación multi-plataforma determinista por `path` + `ruleId` y normalización de rutas para `files_affected`).
