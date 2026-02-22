@@ -547,8 +547,8 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ `docs/REFRACTOR_PROGRESS.md` se mantiene como histórico.
 - ✅ El seguimiento operativo del ciclo actual vive solo en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
 - ✅ Bloque `T8` cerrado en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (PR `#316` mergeada en `develop`).
-- ✅ `T9` cerrado: sincronización `main/develop` completada con ramas alineadas en `9f40eb9d1ae14bb32a72e696dd4fc72741a06af6`.
+- ✅ `T9` cerrado: sincronización `main/develop` completada con ramas alineadas (mismo SHA).
 - ✅ `T10` cerrado: checklist final de evidencias, estado de salud del repo y archivo del ciclo completados.
-- ✅ Estado final de sincronización post-cierre: `main/develop` en `9f40eb9d1ae14bb32a72e696dd4fc72741a06af6`.
+- ✅ Estado final de sincronización post-cierre: `main/develop` alineadas (mismo SHA).
 - ✅ Archivo de cierre consolidado en `docs/ENTERPRISE_AUDIT_CYCLE_CLOSED.md`.
 - 🚧 Estado operativo actual: espera de definición del siguiente ciclo (sin backlog activo).
