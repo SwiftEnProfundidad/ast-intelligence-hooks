@@ -40,10 +40,22 @@ const detectPlatformByPath = (
   };
 };
 
+const hasExtension = (path: string, extensions: ReadonlyArray<string>): boolean => {
+  const normalized = path.toLowerCase();
+  return extensions.some((extension) => normalized.endsWith(extension));
+};
+
+const collectFilePaths = (facts: ReadonlyArray<Fact>): string[] => {
+  return facts
+    .map((fact) => getFactPath(fact))
+    .filter((path): path is string => typeof path === 'string');
+};
+
 export const detectPlatformsFromFacts = (
   facts: ReadonlyArray<Fact>
 ): DetectedPlatforms => {
   const result: DetectedPlatforms = {};
+  const filePaths = collectFilePaths(facts);
 
   const ios = detectPlatformByPath(facts, (path) => path.endsWith('.swift'));
   if (ios) {
@@ -63,6 +75,31 @@ export const detectPlatformsFromFacts = (
   const android = detectAndroidFromFacts(facts);
   if (android.detected) {
     result.android = android;
+  }
+
+  const hasReactLikeSignals = filePaths.some((path) =>
+    hasExtension(path, ['.tsx', '.jsx'])
+  );
+  const hasTypeScriptOrJavaScriptSignals = filePaths.some((path) =>
+    hasExtension(path, ['.ts', '.js', '.mts', '.cts', '.mjs', '.cjs'])
+  );
+
+  if (!result.frontend && hasReactLikeSignals) {
+    result.frontend = {
+      detected: true,
+      confidence: 'MEDIUM',
+    };
+  }
+
+  if (!result.backend && !result.frontend && hasTypeScriptOrJavaScriptSignals) {
+    result.backend = {
+      detected: true,
+      confidence: 'MEDIUM',
+    };
+    result.frontend = {
+      detected: true,
+      confidence: 'MEDIUM',
+    };
   }
 
   return result;

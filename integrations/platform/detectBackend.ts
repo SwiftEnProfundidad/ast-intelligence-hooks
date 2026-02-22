@@ -2,7 +2,24 @@ import type { Fact } from '../../core/facts/Fact';
 import type { PlatformState } from '../evidence/schema';
 
 const isBackendTypeScriptPath = (path: string): boolean => {
-  return path.startsWith('apps/backend/') && path.endsWith('.ts');
+  const normalized = path.toLowerCase().replace(/\\/g, '/');
+  const isTypeScriptOrJavaScript =
+    normalized.endsWith('.ts') ||
+    normalized.endsWith('.js') ||
+    normalized.endsWith('.mts') ||
+    normalized.endsWith('.cts') ||
+    normalized.endsWith('.mjs') ||
+    normalized.endsWith('.cjs');
+
+  if (!isTypeScriptOrJavaScript) {
+    return false;
+  }
+
+  if (normalized.startsWith('apps/backend/')) {
+    return true;
+  }
+
+  return /(^|\/)(backend|server|api)(\/|$)/.test(normalized);
 };
 
 export const detectBackendFromFacts = (
