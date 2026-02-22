@@ -62,7 +62,10 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Commit atomico del hotfix UI v2 preparado (codigo + tests + tracker) para persistir correccion.
 - ✅ Recuperacion forense aplicada sobre hilos criticos (`RURALGO`, `AST-PUMUKI`, `CURSOS STACK ARCHITECTURE`): reinyeccion de respuestas reales disponibles desde `*.jsonl.bak.recovery2` y snapshots `*.bak.recovery3`.
 - ✅ Busqueda externa acotada en `/Volumes/Backup Plus` y metadatos Spotlight sin hallazgos adicionales de artefactos Codex fuera de `~/.codex`.
-- 🚧 En construccion: validacion manual post-reinicio en picker/resume para confirmar que los 3 hilos cargan contexto en UI.
+- ✅ README enterprise reescrito en ingles con cobertura funcional completa de Pumuki (onboarding + operacion).
+- ✅ Capturas de ejecucion del menu (opcion 1) generadas para README en escenarios BLOCK/PASS (`assets/readme/menu-option1`, 6 PNGs).
+- ✅ Revision editorial final y publicacion de cambios de documentacion enterprise completada.
+- 🚧 En construccion: definir siguiente ciclo operativo tras cierre documental enterprise.
 
 ## Siguiente paso operativo
 - ⏳ Pendiente definir siguiente ciclo (fuera de este cierre UI/UX).
