@@ -32,11 +32,12 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Ciclo `ENTERPRISE_RULE_COVERAGE_CYCLE` cerrado.
 - ✅ `F1.T1` (UI/UX menu) completada: design tokens CLI, fallback no-color/ascii y ancho dinamico sin doble reduccion.
 - ✅ `F1.T2` (UI/UX menu) completada: componentes reutilizables de render (`Panel`, `Badge`, `SectionHeader`, `MetricRow`, `ActionRow`, `HintBlock`) con test unitario dedicado.
-- 🚧 Tarea activa del nuevo ciclo UI/UX: `F1.T3` (layout canónico Consumer/Advanced con jerarquia visual).
+- ✅ `F1.T3` (UI/UX menu) completada: layout canónico definido para menús Consumer/Advanced con cobertura de orden y jerarquía por dominio.
+- 🚧 Tarea activa del nuevo ciclo UI/UX: `F1.T4` (reglas de legibilidad terminal: wrapping, truncado, densidad y espaciado).
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F1.T3` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
+- 🚧 Ejecutar `F1.T4` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.

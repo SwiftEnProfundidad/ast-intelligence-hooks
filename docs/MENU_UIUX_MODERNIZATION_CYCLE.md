@@ -22,8 +22,8 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 ## Fase 1 — Base visual y contratos de UI
 - ✅ F1.T1 Definir design tokens CLI (paleta semantica, contraste, fallback no-color, ancho dinamico).
 - ✅ F1.T2 Definir componentes de render reutilizables (`Panel`, `Badge`, `SectionHeader`, `MetricRow`, `ActionRow`, `HintBlock`).
-- 🚧 F1.T3 Definir layout canónico para Consumer y Advanced (jerarquia visual y orden de bloques).
-- ⏳ F1.T4 Definir reglas de legibilidad terminal (wrapping, truncado, densidad y espaciado).
+- ✅ F1.T3 Definir layout canónico para Consumer y Advanced (jerarquia visual y orden de bloques).
+- 🚧 F1.T4 Definir reglas de legibilidad terminal (wrapping, truncado, densidad y espaciado).
 
 ## Fase 2 — Consumer menu UX moderna
 - ⏳ F2.T1 Reestructurar visualmente opciones consumer por flujos (auditar, diagnosticar, exportar, salir).
