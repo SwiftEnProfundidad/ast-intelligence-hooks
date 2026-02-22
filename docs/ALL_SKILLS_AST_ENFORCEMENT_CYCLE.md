@@ -2,7 +2,7 @@
 
 Plan operativo unico para asegurar que Pumuki aplique SIEMPRE todas las skills del core con detectores AST reales, sin fallback declarativo silencioso.
 
-Estado del plan: `ACTIVO`
+Estado del plan: `CERRADO`
 
 ## Leyenda
 - ✅ Hecho
@@ -48,7 +48,11 @@ Garantizar que todas las reglas derivadas de skills se apliquen por plataforma y
 - ✅ F4.T1 RED/GREEN/REFACTOR de suites `skillsRuleSet`, `runPlatformGateEvaluation`, `runPlatformGate`.
 - ✅ F4.T2 Validacion funcional en menu opcion `1` y evidencia runtime con coverage consistente.
 - ✅ F4.T3 Auditoria full-repo de Pumuki con skills activas y reporte por severidad.
-- 🚧 F4.T4 Cierre Git Flow end-to-end (`feature -> develop -> main`) con tracker final actualizado.
+- ✅ F4.T4 Cierre Git Flow end-to-end (`feature -> develop -> main`) con tracker final actualizado.
+
+## Cierre del ciclo
+- Merge `feature -> develop`: PR `#346`
+- Merge `develop -> main`: PR `#347` (admin merge por policy de rama)
 
 ## Politica cerrada del ciclo
 - No se permite una regla de skill `AUTO` sin detector AST.
