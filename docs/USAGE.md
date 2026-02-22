@@ -27,6 +27,12 @@ npm ci
 
 Policy source: `integrations/gate/stagePolicies.ts`.
 
+Coverage guardrail:
+
+- In `PRE_COMMIT`, `PRE_PUSH` and `CI`, Pumuki requires complete rule evaluation coverage.
+- If any active rule is not evaluated (`unevaluated_rule_ids` not empty), gate emits `governance.rules.coverage.incomplete` and forces `BLOCK`.
+- Coverage telemetry is persisted in `.ai_evidence.json` under `snapshot.rules_coverage`.
+
 ## Mandatory SDD/OpenSpec flow
 
 Pumuki enforces OpenSpec policy/session before allowing normal gate execution.

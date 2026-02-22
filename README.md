@@ -27,10 +27,16 @@ Pumuki gives teams a single operational contract for AI-era code quality:
 Every stage can emit `.ai_evidence.json` with stable structure (`version: 2.1`) including:
 
 - `snapshot` (stage/outcome/findings)
+- `snapshot.rules_coverage` (active/evaluated/matched/unevaluated ids + ratio)
 - `ledger` (persistent open violations)
 - `rulesets` and `platforms`
 - `sdd_metrics`
 - `repo_state` (`git` + lifecycle + optional hard mode state)
+
+Coverage enforcement:
+
+- In `PRE_COMMIT`, `PRE_PUSH`, and `CI`, Pumuki emits `governance.rules.coverage.incomplete`
+  and blocks when any active rule remains unevaluated.
 
 Reference: `docs/evidence-v2.1.md`.
 

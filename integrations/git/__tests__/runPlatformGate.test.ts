@@ -79,9 +79,12 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
       projectRules: 0,
       matchedRules: 1,
       unmatchedRules: 0,
+      unevaluatedRules: 0,
+      activeRuleIds: ['rules.backend.no-console-log'],
       evaluatedRuleIds: ['rules.backend.no-console-log'],
       matchedRuleIds: ['rules.backend.no-console-log'],
       unmatchedRuleIds: [],
+      unevaluatedRuleIds: [],
     },
     findings,
   };
@@ -124,6 +127,20 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
         evaluated_rule_ids: string[];
         matched_rule_ids: string[];
         unmatched_rule_ids: string[];
+      };
+      rulesCoverage?: {
+        stage: string;
+        active_rule_ids: string[];
+        evaluated_rule_ids: string[];
+        matched_rule_ids: string[];
+        unevaluated_rule_ids: string[];
+        counts: {
+          active: number;
+          evaluated: number;
+          matched: number;
+          unevaluated: number;
+        };
+        coverage_ratio: number;
       };
       repoRoot: string;
       detectedPlatforms: typeof evaluationResult.detectedPlatforms;
@@ -208,6 +225,20 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
       evaluated_rule_ids: ['rules.backend.no-console-log'],
       matched_rule_ids: ['rules.backend.no-console-log'],
       unmatched_rule_ids: [],
+    },
+    rulesCoverage: {
+      stage: 'PRE_PUSH',
+      active_rule_ids: ['rules.backend.no-console-log'],
+      evaluated_rule_ids: ['rules.backend.no-console-log'],
+      matched_rule_ids: ['rules.backend.no-console-log'],
+      unevaluated_rule_ids: [],
+      counts: {
+        active: 1,
+        evaluated: 1,
+        matched: 1,
+        unevaluated: 0,
+      },
+      coverage_ratio: 1,
     },
     repoRoot: '/repo/root',
     detectedPlatforms: evaluationResult.detectedPlatforms,
@@ -671,4 +702,93 @@ test('runPlatformGate sin short-circuit SDD sigue evaluando findings de reglas y
     code: 'SDD_SESSION_MISSING',
     message: 'session missing',
   });
+});
+
+test('runPlatformGate bloquea por cobertura incompleta de reglas en PRE_COMMIT/PRE_PUSH/CI', async () => {
+  const stages: GatePolicy['stage'][] = ['PRE_COMMIT', 'PRE_PUSH', 'CI'];
+
+  for (const stage of stages) {
+    const policy: GatePolicy = {
+      stage,
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    };
+    const scope =
+      stage === 'CI'
+        ? ({ kind: 'range' as const, fromRef: 'origin/main', toRef: 'HEAD' })
+        : ({ kind: 'staged' as const });
+    const git = buildGitStub('/repo/root');
+    const evidence = buildEvidenceStub();
+
+    let emittedArgs:
+      | {
+        findings: ReadonlyArray<Finding>;
+        gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      }
+      | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope,
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => [],
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: {},
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: 0,
+            filesScanned: 0,
+            rulesTotal: 2,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 2,
+            projectRules: 0,
+            matchedRules: 1,
+            unmatchedRules: 0,
+            unevaluatedRules: 1,
+            activeRuleIds: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+            evaluatedRuleIds: ['skills.backend.no-empty-catch'],
+            matchedRuleIds: ['skills.backend.no-empty-catch'],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: ['skills.backend.no-console-log'],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedArgs = {
+            findings: paramsArg.findings,
+            gateOutcome: paramsArg.gateOutcome,
+          };
+        },
+        printGateFindings: () => {},
+      },
+    });
+
+    assert.equal(result, 1);
+    assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+    assert.equal(emittedArgs?.findings.some((finding) => finding.ruleId === 'governance.rules.coverage.incomplete'), true);
+    const coverageFinding = emittedArgs?.findings.find(
+      (finding) => finding.ruleId === 'governance.rules.coverage.incomplete'
+    );
+    assert.equal(coverageFinding?.severity, 'ERROR');
+    assert.match(coverageFinding?.message ?? '', /unevaluated_rule_ids/i);
+    assert.match(coverageFinding?.message ?? '', /coverage_ratio/i);
+  }
 });

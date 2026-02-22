@@ -17,6 +17,14 @@
     - `baseline_rules` | `heuristic_rules` | `skills_rules` | `project_rules`
     - `matched_rules` | `unmatched_rules`
     - `evaluated_rule_ids[]` | `matched_rule_ids[]` | `unmatched_rule_ids[]`
+  - `rules_coverage` (optional):
+    - `stage`
+    - `active_rule_ids[]`
+    - `evaluated_rule_ids[]`
+    - `matched_rule_ids[]`
+    - `unevaluated_rule_ids[]`
+    - `counts.active` | `counts.evaluated` | `counts.matched` | `counts.unevaluated`
+    - `coverage_ratio` (`0..1`)
   - `findings[]`: normalized findings for the current run
     - `file`: normalized path (or `unknown` when no deterministic trace exists)
     - `lines` (optional): deterministic line evidence when available
@@ -49,6 +57,7 @@
 
 - Findings are deduplicated by `ruleId + file + lines`.
 - `files_scanned` and `files_affected` are persisted independently to avoid telemetry drift.
+- `rules_coverage` is normalized with sorted+deduplicated ids and deterministic counts.
 - For selected semantic rule families, equivalent baseline/heuristic duplicates on the same file are consolidated to a single finding, keeping the highest-severity signal deterministically.
 - Consolidation scope is file-level in v2.1: repeated same-family findings (including same rule on different lines) collapse to one deterministic representative.
 - When consolidation removes findings, `consolidation.suppressed[]` keeps the trace (`ruleId`, `replacedByRuleId`, `reason`) for auditability.
@@ -57,6 +66,7 @@
 - Output JSON is written in stable key order.
 - Canonical writer path is `integrations/evidence/generateEvidence.ts` (`buildEvidence` + `writeEvidence`).
 - `pumuki install` bootstraps `.ai_evidence.json` when missing (`PRE_COMMIT`, `PASS`, empty findings).
+- When `rules_coverage.unevaluated_rule_ids` is non-empty in `PRE_COMMIT`, `PRE_PUSH` or `CI`, the gate emits `governance.rules.coverage.incomplete` and forces `BLOCK`.
 
 ## Overrides
 

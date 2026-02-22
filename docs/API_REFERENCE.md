@@ -49,6 +49,8 @@ Behavior:
 - Loads and merges baseline + project rules.
 - Applies optional heuristic rule-pack and stage-aware promotion.
 - Evaluates findings + gate decision.
+- Computes rules coverage telemetry (`active/evaluated/matched/unevaluated`) per stage.
+- Emits `governance.rules.coverage.incomplete` and forces `BLOCK` when active rules remain unevaluated in `PRE_COMMIT`, `PRE_PUSH`, or `CI`.
 - Writes `.ai_evidence.json` via `generateEvidence`.
 
 ## Git scope helpers
@@ -115,6 +117,12 @@ Contract:
 - Source of truth: `version: "2.1"`
 - Deterministic output order
 - Snapshot + ledger merge model
+- Snapshot includes deterministic `rules_coverage` contract:
+  - `active_rule_ids[]`
+  - `evaluated_rule_ids[]`
+  - `matched_rule_ids[]`
+  - `unevaluated_rule_ids[]`
+  - `counts` + `coverage_ratio`
 
 ## Rule packs
 

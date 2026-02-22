@@ -91,6 +91,20 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
           matched_rule_ids?: unknown[];
           unmatched_rule_ids?: unknown[];
         };
+        rules_coverage?: {
+          stage?: string;
+          active_rule_ids?: unknown[];
+          evaluated_rule_ids?: unknown[];
+          matched_rule_ids?: unknown[];
+          unevaluated_rule_ids?: unknown[];
+          counts?: {
+            active?: number;
+            evaluated?: number;
+            matched?: number;
+            unevaluated?: number;
+          };
+          coverage_ratio?: number;
+        };
         findings?: unknown[];
       };
       repo_state?: { repo_root?: string };
@@ -112,6 +126,20 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
       evaluated_rule_ids: [],
       matched_rule_ids: [],
       unmatched_rule_ids: [],
+    });
+    assert.deepEqual(evidence.snapshot?.rules_coverage, {
+      stage: 'PRE_COMMIT',
+      active_rule_ids: [],
+      evaluated_rule_ids: [],
+      matched_rule_ids: [],
+      unevaluated_rule_ids: [],
+      counts: {
+        active: 0,
+        evaluated: 0,
+        matched: 0,
+        unevaluated: 0,
+      },
+      coverage_ratio: 1,
     });
     assert.deepEqual(evidence.snapshot?.findings, []);
     assert.equal(realpathSync(evidence.repo_state?.repo_root ?? ''), realpathSync(repo));

@@ -43,6 +43,20 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
       matched_rule_ids: [],
       unmatched_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
     },
+    rules_coverage: {
+      stage: 'PRE_PUSH',
+      active_rule_ids: ['skills.backend.no-empty-catch', 'skills.backend.no-console-log'],
+      evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+      matched_rule_ids: ['skills.backend.no-empty-catch'],
+      unevaluated_rule_ids: ['skills.backend.no-console-log'],
+      counts: {
+        active: 2,
+        evaluated: 1,
+        matched: 1,
+        unevaluated: 1,
+      },
+      coverage_ratio: 0.5,
+    },
     findings: [
       {
         ruleId: 'z.rule',
@@ -164,6 +178,20 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
         evaluated_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
         matched_rule_ids: [],
         unmatched_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+      });
+      assert.deepEqual(written.snapshot.rules_coverage, {
+        stage: 'PRE_PUSH',
+        active_rule_ids: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+        evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+        matched_rule_ids: ['skills.backend.no-empty-catch'],
+        unevaluated_rule_ids: ['skills.backend.no-console-log'],
+        counts: {
+          active: 2,
+          evaluated: 1,
+          matched: 1,
+          unevaluated: 1,
+        },
+        coverage_ratio: 0.5,
       });
       assert.equal(written.snapshot.findings[0]?.ruleId, 'a.rule');
       assert.equal(written.snapshot.findings[0]?.file, 'apps/backend/A.ts');
