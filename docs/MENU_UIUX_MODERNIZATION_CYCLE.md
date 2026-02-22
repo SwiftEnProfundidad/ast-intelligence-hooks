@@ -50,14 +50,14 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 - ✅ F5.T4 Validar degradacion controlada en terminales sin color/Unicode.
 
 ## Fase 6 — TDD completo del ciclo
-- 🚧 F6.T1 RED/GREEN/REFACTOR de render components y formato de paneles.
-- ⏳ F6.T2 RED/GREEN/REFACTOR de runtime consumer/advanced (navegacion, opciones, ayudas).
-- ⏳ F6.T3 RED/GREEN/REFACTOR de reportes (matriz plataformas, severidades, diagnosticos).
-- ⏳ F6.T4 RED/GREEN/REFACTOR de feature flag/fallback.
-- ⏳ F6.T5 Ejecutar matriz happy/sad/edge para asegurar no-regresion UX/funcional.
+- ✅ F6.T1 RED/GREEN/REFACTOR de render components y formato de paneles.
+- ✅ F6.T2 RED/GREEN/REFACTOR de runtime consumer/advanced (navegacion, opciones, ayudas).
+- ✅ F6.T3 RED/GREEN/REFACTOR de reportes (matriz plataformas, severidades, diagnosticos).
+- ✅ F6.T4 RED/GREEN/REFACTOR de feature flag/fallback.
+- ✅ F6.T5 Ejecutar matriz happy/sad/edge para asegurar no-regresion UX/funcional.
 
 ## Fase 7 — Documentacion y cierre
-- ⏳ F7.T1 Actualizar `README.md` con nuevo flujo UI/UX y flags.
+- 🚧 F7.T1 Actualizar `README.md` con nuevo flujo UI/UX y flags.
 - ⏳ F7.T2 Actualizar `docs/USAGE.md` y `docs/API_REFERENCE.md` con nuevos comportamientos de menu.
 - ⏳ F7.T3 Actualizar `docs/REFRACTOR_PROGRESS.md` y dejar cierre del ciclo documentado.
 - ⏳ F7.T4 Cierre Git Flow end-to-end (commits atomicos, PR a `develop`, merge, sync `develop -> main`).
