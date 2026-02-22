@@ -12,7 +12,8 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - ✅ F4.T2 completada (telemetría de evidencia determinista para `files_scanned`, `files_affected` y `evaluation_metrics`).
 - ✅ F4.T3 completada (clasificación multi-plataforma determinista por `path` + `ruleId` y normalización de rutas para `files_affected`).
 - ✅ F4.T4 completada (regresión e2e de matriz `happy/sad/edge` + canarios por `stage/plataforma` en verde).
-- 🚧 F4.T5 en progreso (cierre Git Flow + handoff).
+- ✅ F4.T5 completada (commits atómicos + PR `#329` mergeada a `develop` + validación post-merge en verde).
+- 🚧 Espera de nuevo ciclo enterprise (siguiente bloque de roadmap pendiente de definición).
 
 ## Fase 0 — Arranque y Preflight
 - ✅ Ejecutar preflight obligatorio (`pwd`, `git rev-parse --show-toplevel`, `git status`).

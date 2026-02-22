@@ -3,7 +3,7 @@
 Plan operativo **único** del proyecto para este frente de trabajo.  
 Todas las fases y tareas están definidas por anticipación en este archivo.
 
-Estado del plan: `ACTIVO`
+Estado del plan: `CERRADO`
 
 ## Leyenda
 - ✅ Hecho
@@ -111,8 +111,21 @@ Objetivo: garantizar que la auditoría enterprise refleje reglas evaluadas/match
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-baseline.test.ts scripts/__tests__/framework-menu-matrix-evidence.test.ts scripts/__tests__/framework-menu-matrix-runner.test.ts scripts/__tests__/framework-menu-matrix-canary.test.ts scripts/__tests__/framework-menu-consumer-runtime.test.ts`
     - `npm run typecheck`
 
-- 🚧 F4.T5 Cierre Git Flow y handoff.
+- ✅ F4.T5 Cierre Git Flow y handoff.
   - Commits atómicos por bloque funcional.
   - PR a `develop`, merge y validación post-merge.
   - Actualizar documentación de uso si cambia el contrato de evidencia/auditoría.
   - Criterio de salida: ciclo cerrado sin tareas huérfanas.
+  - Resultado:
+    - Commits atómicos ejecutados:
+      - `2bd3482` `feat(evidence): normalize deterministic telemetry defaults across scopes`
+      - `69ff301` `feat(evidence): harden platform classification for framework and mixed repos`
+      - `e015d9d` `test(matrix): extend stage-platform canaries for ios and android`
+      - `b4dab66` `docs(plan): close F4.T2-F4.T4 and activate F4.T5 handoff`
+    - PR a `develop` mergeada:
+      - `#329` `feat: stabilize enterprise audit telemetry, platform matrix, and canaries`
+      - merge commit: `19ab4107855161ceb2cb75443df62eaf4ab6be20`
+    - Validación post-merge en `develop`:
+      - `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts integrations/evidence/platformSummary.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateEvidence.test.ts integrations/lifecycle/__tests__/install.test.ts scripts/__tests__/framework-menu-matrix-canary.test.ts scripts/__tests__/framework-menu-consumer-runtime.test.ts scripts/__tests__/framework-menu-matrix-baseline.test.ts scripts/__tests__/framework-menu-matrix-evidence.test.ts scripts/__tests__/framework-menu-matrix-runner.test.ts`
+      - `npm run typecheck`
+    - Resultado de validación: verde (`57/57` tests + typecheck OK).
