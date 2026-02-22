@@ -39,11 +39,15 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Fase 4 completada: reporte de auditoría modernizado con matriz multi-plataforma estable, métricas de impacto y robustez de ancho.
 - ✅ Fase 5 completada: feature flag `PUMUKI_MENU_UI_V2` (default OFF), fallback automático a menú clásico y compatibilidad de variables de entorno.
 - ✅ Fase 6 completada: TDD integral y matriz happy/sad/edge validada (suite `framework-menu-*` + runner/canary).
-- 🚧 Tarea activa del nuevo ciclo UI/UX: `F7.T1` (actualización documental del flujo UI/UX y feature flags).
+- ✅ `F7.T1` completada: `README.md` actualizado con rollout de `PUMUKI_MENU_UI_V2` y compatibilidad de flags.
+- ✅ `F7.T2` completada: `docs/USAGE.md` y `docs/API_REFERENCE.md` actualizados (modo clásico/v2, fallback y comandos matrix/canary).
+- ✅ `F7.T3` completada: tracker y plan de ciclo sincronizados con cierre documental de fase.
+- ✅ `F7.T4` completada: cierre Git Flow end-to-end ejecutado (commit, PR/merge y sync de ramas).
+- ✅ Ciclo `MENU_UIUX_MODERNIZATION_CYCLE` cerrado.
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F7.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
+- ⏳ Pendiente definir siguiente ciclo (fuera de este cierre UI/UX).
