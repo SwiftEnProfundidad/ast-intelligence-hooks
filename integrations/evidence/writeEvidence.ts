@@ -11,6 +11,7 @@ import type {
 } from './schema';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { normalizeHumanIntent } from './humanIntent';
+import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
 
 export type WriteEvidenceResult = {
   ok: boolean;
@@ -122,36 +123,6 @@ const deriveFilesAffected = (findings: ReadonlyArray<SnapshotFinding>): number =
   return files.size;
 };
 
-const normalizeStringArray = (values: ReadonlyArray<string>): string[] => {
-  return Array.from(
-    new Set(values.map((value) => value.trim()).filter((value) => value.length > 0))
-  ).sort();
-};
-
-const normalizeEvaluationMetrics = (
-  value: SnapshotEvaluationMetrics | undefined
-): SnapshotEvaluationMetrics | undefined => {
-  if (!value) {
-    return undefined;
-  }
-  const normalizeCount = (input: number): number =>
-    Number.isFinite(input) ? Math.max(0, Math.trunc(input)) : 0;
-
-  return {
-    facts_total: normalizeCount(value.facts_total),
-    rules_total: normalizeCount(value.rules_total),
-    baseline_rules: normalizeCount(value.baseline_rules),
-    heuristic_rules: normalizeCount(value.heuristic_rules),
-    skills_rules: normalizeCount(value.skills_rules),
-    project_rules: normalizeCount(value.project_rules),
-    matched_rules: normalizeCount(value.matched_rules),
-    unmatched_rules: normalizeCount(value.unmatched_rules),
-    evaluated_rule_ids: normalizeStringArray(value.evaluated_rule_ids),
-    matched_rule_ids: normalizeStringArray(value.matched_rule_ids),
-    unmatched_rule_ids: normalizeStringArray(value.unmatched_rule_ids),
-  };
-};
-
 const normalizeRepoState = (
   repoState: RepoState | undefined,
   repoRoot: string
@@ -234,12 +205,12 @@ const toStableEvidence = (
   const normalizedFilesScanned =
     typeof evidence.snapshot.files_scanned === 'number' && Number.isFinite(evidence.snapshot.files_scanned)
       ? Math.max(0, Math.trunc(evidence.snapshot.files_scanned))
-      : undefined;
+      : 0;
   const normalizedFilesAffected =
     typeof evidence.snapshot.files_affected === 'number' && Number.isFinite(evidence.snapshot.files_affected)
       ? Math.max(0, Math.trunc(evidence.snapshot.files_affected))
       : deriveFilesAffected(normalizedFindings);
-  const normalizedEvaluationMetrics = normalizeEvaluationMetrics(
+  const normalizedEvaluationMetrics = normalizeSnapshotEvaluationMetrics(
     evidence.snapshot.evaluation_metrics
   );
 
@@ -249,15 +220,11 @@ const toStableEvidence = (
     snapshot: {
       stage: evidence.snapshot.stage,
       outcome: evidence.snapshot.outcome,
-      ...(typeof normalizedFilesScanned === 'number'
-        ? { files_scanned: normalizedFilesScanned }
-        : {}),
+      files_scanned: normalizedFilesScanned,
       ...(typeof normalizedFilesAffected === 'number'
         ? { files_affected: normalizedFilesAffected }
         : {}),
-      ...(normalizedEvaluationMetrics
-        ? { evaluation_metrics: normalizedEvaluationMetrics }
-        : {}),
+      evaluation_metrics: normalizedEvaluationMetrics,
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({

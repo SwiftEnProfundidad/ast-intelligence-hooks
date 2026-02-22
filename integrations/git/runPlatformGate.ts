@@ -16,6 +16,8 @@ import {
 import { emitPlatformGateEvidence } from './runPlatformGateEvidence';
 import { printGateFindings } from './runPlatformGateOutput';
 import { evaluateSddPolicy, type SddDecision } from '../sdd';
+import type { SnapshotEvaluationMetrics } from '../evidence/schema';
+import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 
 export type GateServices = {
   git: IGitService;
@@ -109,6 +111,7 @@ export async function runPlatformGate(params: {
           findings: [sddBlockingFinding],
           gateOutcome: 'BLOCK',
           filesScanned: 0,
+          evaluationMetrics: createEmptyEvaluationMetrics(),
           repoRoot,
           detectedPlatforms: emptyDetectedPlatforms,
           skillsRuleSet: emptySkillsRuleSet,
@@ -140,7 +143,7 @@ export async function runPlatformGate(params: {
     stage: params.policy.stage,
     repoRoot,
   });
-  const evaluationMetrics = coverage
+  const evaluationMetrics: SnapshotEvaluationMetrics = coverage
     ? {
       facts_total: coverage.factsTotal,
       rules_total: coverage.rulesTotal,
@@ -154,7 +157,7 @@ export async function runPlatformGate(params: {
       matched_rule_ids: [...coverage.matchedRuleIds],
       unmatched_rule_ids: [...coverage.unmatchedRuleIds],
     }
-    : undefined;
+    : createEmptyEvaluationMetrics();
   const effectiveFindings = sddBlockingFinding
     ? [sddBlockingFinding, ...findings]
     : findings;
@@ -167,7 +170,7 @@ export async function runPlatformGate(params: {
     findings: effectiveFindings,
     gateOutcome,
     filesScanned,
-    ...(evaluationMetrics ? { evaluationMetrics } : {}),
+    evaluationMetrics,
     repoRoot,
     detectedPlatforms,
     skillsRuleSet,

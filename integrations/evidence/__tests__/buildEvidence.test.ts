@@ -230,6 +230,32 @@ test('persiste snapshot.evaluation_metrics con inventario evaluado/matcheado', (
   });
 });
 
+test('normaliza telemetria por defecto cuando no se informa filesScanned ni evaluationMetrics', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    gateOutcome: 'PASS',
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.files_scanned, 0);
+  assert.equal(result.snapshot.files_affected, 0);
+  assert.deepEqual(result.snapshot.evaluation_metrics, {
+    facts_total: 0,
+    rules_total: 0,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 0,
+    project_rules: 0,
+    matched_rules: 0,
+    unmatched_rules: 0,
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unmatched_rule_ids: [],
+  });
+});
+
 test('incluye snapshot.platforms con las cinco plataformas y severidades legacy', () => {
   const result = buildEvidence({
     stage: 'PRE_COMMIT',

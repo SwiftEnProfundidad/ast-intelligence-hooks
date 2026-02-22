@@ -302,6 +302,19 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
       filesScanned: number;
+      evaluationMetrics?: {
+        facts_total: number;
+        rules_total: number;
+        baseline_rules: number;
+        heuristic_rules: number;
+        skills_rules: number;
+        project_rules: number;
+        matched_rules: number;
+        unmatched_rules: number;
+        evaluated_rule_ids: string[];
+        matched_rule_ids: string[];
+        unmatched_rule_ids: string[];
+      };
       sddDecision?: {
         allowed: boolean;
         code: string;
@@ -351,6 +364,19 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
   assert.equal(resolveFactsCalled, false);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
   assert.equal(emittedArgs?.filesScanned, 0);
+  assert.deepEqual(emittedArgs?.evaluationMetrics, {
+    facts_total: 0,
+    rules_total: 0,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 0,
+    project_rules: 0,
+    matched_rules: 0,
+    unmatched_rules: 0,
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unmatched_rule_ids: [],
+  });
   assert.equal(emittedArgs?.findings.length, 1);
   assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
   assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
@@ -377,6 +403,19 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_PUSH', async () => {
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
       filesScanned: number;
+      evaluationMetrics?: {
+        facts_total: number;
+        rules_total: number;
+        baseline_rules: number;
+        heuristic_rules: number;
+        skills_rules: number;
+        project_rules: number;
+        matched_rules: number;
+        unmatched_rules: number;
+        evaluated_rule_ids: string[];
+        matched_rule_ids: string[];
+        unmatched_rule_ids: string[];
+      };
       sddDecision?: {
         allowed: boolean;
         code: string;
@@ -426,6 +465,19 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_PUSH', async () => {
   assert.equal(resolveFactsCalled, false);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
   assert.equal(emittedArgs?.filesScanned, 0);
+  assert.deepEqual(emittedArgs?.evaluationMetrics, {
+    facts_total: 0,
+    rules_total: 0,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 0,
+    project_rules: 0,
+    matched_rules: 0,
+    unmatched_rules: 0,
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unmatched_rule_ids: [],
+  });
   assert.equal(emittedArgs?.findings.length, 1);
   assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
   assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
@@ -452,6 +504,19 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
       filesScanned: number;
+      evaluationMetrics?: {
+        facts_total: number;
+        rules_total: number;
+        baseline_rules: number;
+        heuristic_rules: number;
+        skills_rules: number;
+        project_rules: number;
+        matched_rules: number;
+        unmatched_rules: number;
+        evaluated_rule_ids: string[];
+        matched_rule_ids: string[];
+        unmatched_rule_ids: string[];
+      };
       sddDecision?: {
         allowed: boolean;
         code: string;
@@ -501,6 +566,19 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
   assert.equal(resolveFactsCalled, false);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
   assert.equal(emittedArgs?.filesScanned, 0);
+  assert.deepEqual(emittedArgs?.evaluationMetrics, {
+    facts_total: 0,
+    rules_total: 0,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 0,
+    project_rules: 0,
+    matched_rules: 0,
+    unmatched_rules: 0,
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unmatched_rule_ids: [],
+  });
   assert.equal(emittedArgs?.findings.length, 1);
   assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
   assert.equal(emittedArgs?.findings[0]?.source, 'sdd-policy');
