@@ -2,7 +2,7 @@
 
 Plan operativo unico para el nuevo ciclo enterprise de cobertura real de reglas.
 
-Estado del plan: `ACTIVO`
+Estado del plan: `CERRADO`
 
 ## Leyenda
 - ✅ Hecho
@@ -45,9 +45,13 @@ Eliminar falsos verdes en auditoria garantizando trazabilidad completa por stage
 ## Fase 5 — Cierre de ciclo
 - ✅ F5.T1 Actualizar documentacion tecnica impactada (`USAGE`, `API_REFERENCE`, `evidence-v2.1`, etc.).
 - ✅ F5.T2 Ejecutar validacion final (tests + typecheck) y consolidar evidencia de cierre.
-- 🚧 F5.T3 Cierre Git Flow end-to-end: commits atomicos, PR a `develop`, merge y sync `develop -> main`.
+- ✅ F5.T3 Cierre Git Flow end-to-end: commits atomicos, PR a `develop`, merge y sync `develop -> main`.
 
 ## Politica cerrada del ciclo
 - Bloqueo por cobertura incompleta en: `PRE_COMMIT`, `PRE_PUSH`, `CI`.
 - Severidad del bloqueo: `HIGH`.
 - Fuera de alcance: rediseño UX de menu legacy++ (se tratara en ciclo posterior).
+
+## Cierre
+- Ciclo completado con contrato de cobertura de reglas estable en runtime/evidence.
+- `main` y `develop` sincronizadas en remoto (`origin/main...origin/develop = 0 0`).
