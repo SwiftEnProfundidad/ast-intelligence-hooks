@@ -73,12 +73,46 @@ test('runLifecycleInstall instala hooks y persiste estado lifecycle', () => {
     assert.equal(existsSync(evidencePath), true);
     const evidence = JSON.parse(readFileSync(evidencePath, 'utf8')) as {
       version: string;
-      snapshot?: { stage?: string; outcome?: string; findings?: unknown[] };
+      snapshot?: {
+        stage?: string;
+        outcome?: string;
+        files_scanned?: number;
+        files_affected?: number;
+        evaluation_metrics?: {
+          facts_total?: number;
+          rules_total?: number;
+          baseline_rules?: number;
+          heuristic_rules?: number;
+          skills_rules?: number;
+          project_rules?: number;
+          matched_rules?: number;
+          unmatched_rules?: number;
+          evaluated_rule_ids?: unknown[];
+          matched_rule_ids?: unknown[];
+          unmatched_rule_ids?: unknown[];
+        };
+        findings?: unknown[];
+      };
       repo_state?: { repo_root?: string };
     };
     assert.equal(evidence.version, '2.1');
     assert.equal(evidence.snapshot?.stage, 'PRE_COMMIT');
     assert.equal(evidence.snapshot?.outcome, 'PASS');
+    assert.equal(evidence.snapshot?.files_scanned, 0);
+    assert.equal(evidence.snapshot?.files_affected, 0);
+    assert.deepEqual(evidence.snapshot?.evaluation_metrics, {
+      facts_total: 0,
+      rules_total: 0,
+      baseline_rules: 0,
+      heuristic_rules: 0,
+      skills_rules: 0,
+      project_rules: 0,
+      matched_rules: 0,
+      unmatched_rules: 0,
+      evaluated_rule_ids: [],
+      matched_rule_ids: [],
+      unmatched_rule_ids: [],
+    });
     assert.deepEqual(evidence.snapshot?.findings, []);
     assert.equal(realpathSync(evidence.repo_state?.repo_root ?? ''), realpathSync(repo));
   } finally {

@@ -9,6 +9,7 @@ import { getCurrentPumukiVersion } from './packageInfo';
 import { generateEvidence } from '../evidence/generateEvidence';
 import { readEvidence } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
+import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { readOpenSpecManagedArtifacts, writeLifecycleState } from './state';
 
 export type LifecycleInstallResult = {
@@ -26,6 +27,8 @@ const writeBootstrapEvidence = (repoRoot: string): void => {
     stage: 'PRE_COMMIT',
     findings: [],
     gateOutcome: 'PASS',
+    filesScanned: 0,
+    evaluationMetrics: createEmptyEvaluationMetrics(),
     previousEvidence: readEvidence(repoRoot),
     detectedPlatforms: {},
     loadedRulesets: [],

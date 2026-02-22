@@ -49,6 +49,19 @@ const toLegacySeverity = (severity: Severity): LegacySeverityBand => {
   return 'LOW';
 };
 
+const normalizePath = (filePath: string): string => filePath.replace(/\\/g, '/').trim();
+
+const hasPathSegment = (filePath: string, segment: string): boolean => {
+  const normalized = filePath.toLowerCase();
+  const token = `/${segment.toLowerCase()}/`;
+  return (
+    normalized === segment.toLowerCase()
+    || normalized.startsWith(`${segment.toLowerCase()}/`)
+    || normalized.endsWith(`/${segment.toLowerCase()}`)
+    || normalized.includes(token)
+  );
+};
+
 const detectPlatformByRuleId = (ruleId: string): LegacyPlatformName | undefined => {
   const normalized = ruleId.toLowerCase();
   if (
@@ -95,23 +108,30 @@ const detectPlatformByRuleId = (ruleId: string): LegacyPlatformName | undefined 
 };
 
 const detectPlatform = (filePath: string, ruleId: string): LegacyPlatformName => {
-  const normalized = filePath.toLowerCase();
-  if (normalized.startsWith('apps/ios/') || normalized.endsWith('.swift')) {
+  const normalized = normalizePath(filePath).toLowerCase();
+  if (
+    normalized.startsWith('apps/ios/')
+    || hasPathSegment(normalized, 'ios')
+    || normalized.endsWith('.swift')
+  ) {
     return 'iOS';
   }
   if (
     normalized.startsWith('apps/android/')
+    || hasPathSegment(normalized, 'android')
     || normalized.endsWith('.kt')
     || normalized.endsWith('.kts')
   ) {
     return 'Android';
   }
-  if (normalized.startsWith('apps/backend/')) {
+  if (normalized.startsWith('apps/backend/') || hasPathSegment(normalized, 'backend')) {
     return 'Backend';
   }
   if (
     normalized.startsWith('apps/web/')
     || normalized.startsWith('apps/frontend/')
+    || hasPathSegment(normalized, 'web')
+    || hasPathSegment(normalized, 'frontend')
     || normalized.endsWith('.tsx')
     || normalized.endsWith('.jsx')
   ) {
@@ -153,7 +173,7 @@ export const buildSnapshotPlatformSummaries = (
     const files = new Set<string>();
     for (const finding of platformFindings) {
       bySeverity[toLegacySeverity(finding.severity)] += 1;
-      files.add(finding.file);
+      files.add(normalizePath(finding.file));
     }
     return {
       platform,

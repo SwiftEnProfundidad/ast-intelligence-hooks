@@ -179,3 +179,60 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
     },
   });
 });
+
+test('emitPlatformGateEvidence inyecta evaluationMetrics vacio cuando no se informa cobertura', () => {
+  const findings: ReadonlyArray<Finding> = [];
+  const detectedPlatforms: DetectedPlatforms = {};
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: false,
+  };
+  const projectRules: RuleSet = [];
+  const heuristicRules: RuleSet = [];
+  const evidenceService: IEvidenceService = {
+    loadPreviousEvidence: () => undefined,
+    toDetectedPlatformsRecord: () => ({}),
+    buildRulesetState: () => [],
+  };
+
+  let capturedGenerateEvidenceParams: GenerateEvidenceParams | undefined;
+  emitPlatformGateEvidence(
+    {
+      stage: 'PRE_COMMIT',
+      findings,
+      gateOutcome: 'PASS',
+      repoRoot: '/repo/root',
+      detectedPlatforms,
+      skillsRuleSet,
+      projectRules,
+      heuristicRules,
+      filesScanned: 0,
+      evidenceService,
+    },
+    {
+      generateEvidence: (params: GenerateEvidenceParams) => {
+        capturedGenerateEvidenceParams = params;
+        return {
+          evidence: { version: '2.1' },
+          write: { ok: true, path: '/tmp/.ai_evidence.json' },
+        };
+      },
+    }
+  );
+
+  assert.deepEqual(capturedGenerateEvidenceParams?.evaluationMetrics, {
+    facts_total: 0,
+    rules_total: 0,
+    baseline_rules: 0,
+    heuristic_rules: 0,
+    skills_rules: 0,
+    project_rules: 0,
+    matched_rules: 0,
+    unmatched_rules: 0,
+    evaluated_rule_ids: [],
+    matched_rule_ids: [],
+    unmatched_rule_ids: [],
+  });
+});

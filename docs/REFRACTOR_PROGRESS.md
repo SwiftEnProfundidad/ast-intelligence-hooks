@@ -7,6 +7,13 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 - 🚧 En progreso (única activa)
 - ⏳ Pendiente
 
+## Estado actual (plan activo)
+- ✅ F4.T1 completada en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (inventario de cobertura por stage/perfil).
+- ✅ F4.T2 completada (telemetría de evidencia determinista para `files_scanned`, `files_affected` y `evaluation_metrics`).
+- ✅ F4.T3 completada (clasificación multi-plataforma determinista por `path` + `ruleId` y normalización de rutas para `files_affected`).
+- ✅ F4.T4 completada (regresión e2e de matriz `happy/sad/edge` + canarios por `stage/plataforma` en verde).
+- 🚧 F4.T5 en progreso (cierre Git Flow + handoff).
+
 ## Fase 0 — Arranque y Preflight
 - ✅ Ejecutar preflight obligatorio (`pwd`, `git rev-parse --show-toplevel`, `git status`).
 - ✅ Verificar skills disponibles y aplicar skills relevantes para backend/integrations.
@@ -545,10 +552,11 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 
 ## Estado de referencia (sin fases nuevas)
 - ✅ `docs/REFRACTOR_PROGRESS.md` se mantiene como histórico.
-- ✅ El seguimiento operativo del ciclo actual vive solo en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
-- ✅ Bloque `T8` cerrado en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (PR `#316` mergeada en `develop`).
-- ✅ `T9` cerrado: sincronización `main/develop` completada con ramas alineadas (mismo SHA).
-- ✅ `T10` cerrado: checklist final de evidencias, estado de salud del repo y archivo del ciclo completados.
+- ✅ El seguimiento operativo del ciclo actual vive solo en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (plan único).
+- ✅ Bloque `F2.T3` cerrado en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (PR `#316` mergeada en `develop`).
+- ✅ `F3.T1` cerrado: sincronización `main/develop` completada con ramas alineadas (mismo SHA).
+- ✅ `F3.T2` cerrado: checklist final de evidencias, estado de salud del repo y archivo del ciclo completados.
 - ✅ Estado final de sincronización post-cierre: `main/develop` alineadas (mismo SHA).
-- ✅ Archivo de cierre consolidado en `docs/ENTERPRISE_AUDIT_CYCLE_CLOSED.md`.
-- 🚧 Estado operativo actual: espera de definición del siguiente ciclo (sin backlog activo).
+- ✅ Planes duplicados eliminados y backlog consolidado en un único MD.
+- ✅ `F4.T1` cerrado: inventario por stage ejecutado con trazabilidad `evaluated/matched/unmatched` en perfiles `default` y `heuristics-on`.
+- 🚧 Estado operativo actual: `F4.T2` en construcción en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.

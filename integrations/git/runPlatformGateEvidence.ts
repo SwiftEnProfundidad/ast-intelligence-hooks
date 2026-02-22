@@ -12,6 +12,7 @@ import type { IEvidenceService } from './EvidenceService';
 import type { SddDecision } from '../sdd';
 import { captureRepoState } from '../evidence/repoState';
 import type { SnapshotEvaluationMetrics } from '../evidence/schema';
+import { normalizeSnapshotEvaluationMetrics } from '../evidence/evaluationMetrics';
 
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
@@ -40,13 +41,14 @@ export const emitPlatformGateEvidence = (params: {
     ...defaultDependencies,
     ...dependencies,
   };
+  const evaluationMetrics = normalizeSnapshotEvaluationMetrics(params.evaluationMetrics);
 
   activeDependencies.generateEvidence({
     stage: params.stage,
     findings: params.findings,
     gateOutcome: params.gateOutcome,
     filesScanned: params.filesScanned,
-    evaluationMetrics: params.evaluationMetrics,
+    evaluationMetrics,
     repoRoot: params.repoRoot,
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),
