@@ -10,7 +10,7 @@ import {
 import { readMatrixOptionReport, type MatrixOptionId } from './framework-menu-matrix-evidence-lib';
 
 export type ConsumerMenuCanaryStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
-export type ConsumerMenuCanaryPlatform = 'backend' | 'frontend';
+export type ConsumerMenuCanaryPlatform = 'ios' | 'android' | 'backend' | 'frontend';
 
 export type ConsumerMenuCanaryResult = {
   option: MatrixOptionId;
@@ -54,6 +54,46 @@ export const resolveConsumerMenuCanaryScenario = (params?: {
         '  const risky: any = {};',
         '  void risky;',
         '};',
+        '',
+      ].join('\n'),
+    };
+  }
+
+  if (platform === 'ios') {
+    return {
+      stage,
+      platform,
+      option: stage === 'PRE_COMMIT' ? '1' : '2',
+      expectedRuleId: 'skills.ios.no-force-unwrap',
+      canaryRelativePath: `apps/ios/App/__pumuki_matrix_canary_ios_${suffix}.swift`,
+      canarySource: [
+        'import Foundation',
+        '',
+        'func __pumukiMatrixCanaryIOS() {',
+        '  let value: String? = "canary"',
+        '  _ = value!',
+        '}',
+        '',
+      ].join('\n'),
+    };
+  }
+
+  if (platform === 'android') {
+    return {
+      stage,
+      platform,
+      option: stage === 'PRE_COMMIT' ? '1' : '2',
+      expectedRuleId: 'skills.android.no-runblocking',
+      canaryRelativePath: `apps/android/app/src/main/java/com/pumuki/__pumuki_matrix_canary_android_${suffix}.kt`,
+      canarySource: [
+        'package com.pumuki',
+        '',
+        'import kotlinx.coroutines.runBlocking',
+        '',
+        'fun pumukiMatrixCanaryAndroid() {',
+        '  runBlocking {',
+        '  }',
+        '}',
         '',
       ].join('\n'),
     };
