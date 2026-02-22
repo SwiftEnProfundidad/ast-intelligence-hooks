@@ -123,6 +123,20 @@ const collectHeuristicPrefixes = (
   return [];
 };
 
+const serializeRuleSetForParity = (
+  result: ReturnType<typeof loadSkillsRuleSetForStage>
+): {
+  rules: ReturnType<typeof loadSkillsRuleSetForStage>['rules'];
+  mappedHeuristicRuleIds: string[];
+  unsupportedAutoRuleIds: string[];
+} => {
+  return {
+    rules: result.rules,
+    mappedHeuristicRuleIds: [...result.mappedHeuristicRuleIds].sort(),
+    unsupportedAutoRuleIds: [...(result.unsupportedAutoRuleIds ?? [])].sort(),
+  };
+};
+
 test('loads and transforms active bundles into heuristic-driven rules', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-', async (tempRoot) => {
     mkdirSync(join(tempRoot, 'apps/ios'), { recursive: true });
@@ -130,8 +144,10 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(samplePolicy, null, 2));
 
     const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
-    assert.equal(preCommit.rules.length, 0);
-    assert.equal(preCommit.requiresHeuristicFacts, false);
+    assert.equal(preCommit.rules.length, 2);
+    assert.equal(preCommit.activeBundles.length, 1);
+    assert.equal(preCommit.activeBundles[0]?.name, 'ios-guidelines');
+    assert.equal(preCommit.requiresHeuristicFacts, true);
 
     const prePush = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
     assert.equal(prePush.rules.length, 2);
@@ -158,6 +174,7 @@ test('falls back gracefully when lock/policy files are missing', async () => {
     assert.equal(result.activeBundles.length, 0);
     assert.equal(result.requiresHeuristicFacts, false);
     assert.equal(result.mappedHeuristicRuleIds.size, 0);
+    assert.deepEqual(result.unsupportedAutoRuleIds, []);
   }));
 });
 
@@ -183,10 +200,11 @@ test('returns empty result when defaultBundleEnabled is false and no bundle over
     assert.equal(result.activeBundles.length, 0);
     assert.equal(result.mappedHeuristicRuleIds.size, 0);
     assert.equal(result.requiresHeuristicFacts, false);
+    assert.deepEqual(result.unsupportedAutoRuleIds, []);
   }));
 });
 
-test('preserva reglas no mapeadas como declarativas y promueve solo reglas mapeadas en PRE_PUSH/CI', async () => {
+test('marca reglas AUTO no mapeadas como unsupported y mantiene reglas mapeadas activas', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-promotion-', async (tempRoot) => {
     const lock = {
       version: '1.0',
@@ -211,11 +229,12 @@ test('preserva reglas no mapeadas como declarativas y promueve solo reglas mapea
             },
             {
               id: 'skills.ios.custom-non-mapped-rule',
-              description: 'Rule without heuristic mapping must be ignored.',
+              description: 'Rule without heuristic mapping must be blocked.',
               severity: 'CRITICAL',
               platform: 'ios',
               sourceSkill: 'ios-guidelines',
               sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+              evaluationMode: 'AUTO',
               locked: true,
               confidence: 'HIGH',
             },
@@ -240,26 +259,18 @@ test('preserva reglas no mapeadas como declarativas y promueve solo reglas mapea
     writeFileSync(join(tempRoot, 'skills.policy.json'), JSON.stringify(policy, null, 2));
 
     const preCommit = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot);
-    assert.equal(preCommit.rules.length, 2);
+    assert.equal(preCommit.rules.length, 1);
     const preCommitMapped = preCommit.rules.find((rule) => rule.id === 'skills.ios.no-force-try');
-    const preCommitDeclarative = preCommit.rules.find(
-      (rule) => rule.id === 'skills.ios.custom-non-mapped-rule'
-    );
     assert.ok(preCommitMapped);
-    assert.ok(preCommitDeclarative);
-    assert.equal(preCommitMapped.severity, 'WARN');
-    assert.equal(preCommitDeclarative.then.code.endsWith('_DECLARATIVE'), true);
+    assert.deepEqual(preCommit.unsupportedAutoRuleIds, ['skills.ios.custom-non-mapped-rule']);
+    assert.equal(preCommitMapped.severity, 'ERROR');
 
     const prePush = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
-    assert.equal(prePush.rules.length, 2);
+    assert.equal(prePush.rules.length, 1);
     const prePushMapped = prePush.rules.find((rule) => rule.id === 'skills.ios.no-force-try');
-    const prePushDeclarative = prePush.rules.find(
-      (rule) => rule.id === 'skills.ios.custom-non-mapped-rule'
-    );
     assert.ok(prePushMapped);
-    assert.ok(prePushDeclarative);
+    assert.deepEqual(prePush.unsupportedAutoRuleIds, ['skills.ios.custom-non-mapped-rule']);
     assert.equal(prePushMapped.severity, 'ERROR');
-    assert.equal(prePushDeclarative.then.code.endsWith('_DECLARATIVE'), true);
   }));
 });
 
@@ -324,6 +335,64 @@ test('scopes backend/frontend heuristic rules to platform file prefixes', async 
     const frontendPrefixes = collectHeuristicPrefixes(frontendRule.when).sort();
     assert.deepEqual(frontendPrefixes, ['apps/frontend/', 'apps/web/']);
   }));
+});
+
+test('mapea reglas SOLID y God Class a detectores AST heuristics en backend', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-solid-god-class-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            hash: 'd'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.no-solid-violations',
+                description: 'Verificar que NO viole SOLID (SRP, OCP, LSP, ISP, DIP).',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+              {
+                id: 'skills.backend.no-god-classes',
+                description: 'God classes - Servicios con >500 lineas.',
+                severity: 'ERROR',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                evaluationMode: 'AUTO',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const result = loadSkillsRuleSetForStage('PRE_PUSH', tempRoot);
+      assert.equal(result.rules.length, 2);
+      assert.deepEqual(result.unsupportedAutoRuleIds, []);
+      const solidRule = result.rules.find((rule) => rule.id === 'skills.backend.no-solid-violations');
+      const godClassRule = result.rules.find((rule) => rule.id === 'skills.backend.no-god-classes');
+      assert.ok(solidRule);
+      assert.ok(godClassRule);
+      assert.equal(solidRule.when.kind, 'Any');
+      assert.equal(solidRule.when.conditions.length >= 2, true);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.solid.srp.class-command-query-mix.ast'), true);
+      assert.equal(result.mappedHeuristicRuleIds.has('heuristics.ts.god-class-large-class.ast'), true);
+    })
+  );
 });
 
 test('falls back to unscoped heuristic conditions when platform folders are not present', async () => {
@@ -471,4 +540,160 @@ test('keeps only generic/text rules when no platform is detected', async () => {
     const ruleIds = result.rules.map((rule) => rule.id).sort();
     assert.deepEqual(ruleIds, ['skills.generic.architecture-note']);
   }));
+});
+
+test('scopes backend and ios heuristic rules using observed file paths when default folders are absent', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-observed-paths-', async (tempRoot) => {
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'ios-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.ios.no-force-try',
+                description: 'Disallow force try in production iOS code.',
+                severity: 'WARN',
+                platform: 'ios',
+                sourceSkill: 'ios-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+                locked: true,
+              },
+            ],
+          },
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            hash: 'b'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.no-empty-catch',
+                description: 'Disallow empty catch blocks in backend runtime code.',
+                severity: 'CRITICAL',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const detectedPlatforms: DetectedPlatforms = {
+        ios: { detected: true, confidence: 'HIGH' },
+        backend: { detected: true, confidence: 'HIGH' },
+      };
+      const observedPaths = [
+        'mobile/ios/MainView.swift',
+        'server/src/orders.service.ts',
+      ];
+
+      const result = (
+        loadSkillsRuleSetForStage as unknown as (
+          stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI',
+          repoRoot?: string,
+          detectedPlatforms?: DetectedPlatforms,
+          observedFilePaths?: ReadonlyArray<string>
+        ) => ReturnType<typeof loadSkillsRuleSetForStage>
+      )('PRE_COMMIT', tempRoot, detectedPlatforms, observedPaths);
+
+      const iosRule = result.rules.find((rule) => rule.id === 'skills.ios.no-force-try');
+      const backendRule = result.rules.find((rule) => rule.id === 'skills.backend.no-empty-catch');
+      assert.ok(iosRule);
+      assert.ok(backendRule);
+      assert.deepEqual(collectHeuristicPrefixes(iosRule.when), ['mobile/ios/']);
+      assert.deepEqual(collectHeuristicPrefixes(backendRule.when), ['server/']);
+    })
+  );
+});
+
+test('keeps stage semantics aligned across PRE_COMMIT, PRE_PUSH and CI for scoped skill rules', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-stage-parity-', async (tempRoot) => {
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'ios-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.ios.no-force-try',
+                description: 'Disallow force try in production iOS code.',
+                severity: 'WARN',
+                platform: 'ios',
+                sourceSkill: 'ios-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-ios.md',
+                stage: 'PRE_PUSH',
+                locked: true,
+              },
+            ],
+          },
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            hash: 'b'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.no-empty-catch',
+                description: 'Disallow empty catch blocks in backend runtime code.',
+                severity: 'CRITICAL',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                stage: 'PRE_PUSH',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const detectedPlatforms: DetectedPlatforms = {
+        ios: { detected: true, confidence: 'HIGH' },
+        backend: { detected: true, confidence: 'HIGH' },
+      };
+      const observedPaths = [
+        'mobile/ios/MainView.swift',
+        'server/src/orders.service.ts',
+      ];
+
+      const preCommit = loadSkillsRuleSetForStage(
+        'PRE_COMMIT',
+        tempRoot,
+        detectedPlatforms,
+        observedPaths
+      );
+      const prePush = loadSkillsRuleSetForStage(
+        'PRE_PUSH',
+        tempRoot,
+        detectedPlatforms,
+        observedPaths
+      );
+      const ci = loadSkillsRuleSetForStage('CI', tempRoot, detectedPlatforms, observedPaths);
+
+      assert.deepEqual(
+        serializeRuleSetForParity(preCommit),
+        serializeRuleSetForParity(prePush)
+      );
+      assert.deepEqual(serializeRuleSetForParity(prePush), serializeRuleSetForParity(ci));
+    })
+  );
 });

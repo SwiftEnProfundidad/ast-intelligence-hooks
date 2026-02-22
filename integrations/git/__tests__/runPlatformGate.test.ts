@@ -792,3 +792,92 @@ test('runPlatformGate bloquea por cobertura incompleta de reglas en PRE_COMMIT/P
     assert.match(coverageFinding?.message ?? '', /coverage_ratio/i);
   }
 });
+
+test('runPlatformGate bloquea cuando existen reglas AUTO de skills sin detector AST mapeado', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [
+            'skills.backend.guideline.backend.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip',
+          ],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 0,
+          filesScanned: 0,
+          rulesTotal: 0,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 0,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: [],
+          evaluatedRuleIds: [],
+          matchedRuleIds: [],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(
+    emittedArgs?.findings.some(
+      (finding) => finding.ruleId === 'governance.skills.detector-mapping.incomplete'
+    ),
+    true
+  );
+  const mappingFinding = emittedArgs?.findings.find(
+    (finding) => finding.ruleId === 'governance.skills.detector-mapping.incomplete'
+  );
+  assert.equal(mappingFinding?.severity, 'ERROR');
+  assert.match(mappingFinding?.message ?? '', /unsupported_auto_rule_ids/i);
+});

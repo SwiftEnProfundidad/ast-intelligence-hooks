@@ -94,15 +94,19 @@ const extractFactPath = (fact: Fact): string | null => {
 };
 
 const countFilesScanned = (facts: ReadonlyArray<Fact>): number => {
-  const files = new Set<string>();
+  return collectObservedFilePaths(facts).length;
+};
+
+const collectObservedFilePaths = (facts: ReadonlyArray<Fact>): ReadonlyArray<string> => {
+  const filePaths = new Set<string>();
   for (const fact of facts) {
     const path = extractFactPath(fact);
     if (!path || path.trim().length === 0) {
       continue;
     }
-    files.add(path.replace(/\\/g, '/'));
+    filePaths.add(path.replace(/\\/g, '/'));
   }
-  return files.size;
+  return [...filePaths].sort();
 };
 
 export const evaluatePlatformGateFindings = (
@@ -117,13 +121,15 @@ export const evaluatePlatformGateFindings = (
     ...defaultDependencies,
     ...dependencies,
   };
+  const observedFilePaths = collectObservedFilePaths(params.facts);
   const detectedPlatforms = activeDependencies.detectPlatformsFromFacts(params.facts);
   const heuristicsConfig = activeDependencies.loadHeuristicsConfig();
   const stageForSkills = normalizeStageForSkills(params.stage);
   const skillsRuleSet = activeDependencies.loadSkillsRuleSetForStage(
     stageForSkills,
     params.repoRoot,
-    detectedPlatforms
+    detectedPlatforms,
+    observedFilePaths
   );
   const baselineRules = activeDependencies.buildCombinedBaselineRules(detectedPlatforms);
   const shouldExtractHeuristicFacts =

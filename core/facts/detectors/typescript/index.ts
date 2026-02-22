@@ -19,6 +19,7 @@ const concreteDependencyNames = new Set<string>([
   'ApolloClient',
   'Axios',
 ]);
+const GOD_CLASS_MAX_LINES = 500;
 
 const methodNameFromNode = (node: unknown): string | undefined => {
   if (!isObject(node)) {
@@ -451,5 +452,26 @@ export const hasConcreteDependencyInstantiation = (node: unknown): boolean => {
     }
     const calleeName = methodNameFromNode(value.callee) ?? memberExpressionPropertyName(value.callee);
     return typeof calleeName === 'string' && concreteDependencyNames.has(calleeName);
+  });
+};
+
+const nodeLineSpan = (node: unknown): number => {
+  if (!isObject(node) || !isObject(node.loc)) {
+    return 0;
+  }
+  const start = isObject(node.loc.start) ? node.loc.start.line : undefined;
+  const end = isObject(node.loc.end) ? node.loc.end.line : undefined;
+  if (typeof start !== 'number' || typeof end !== 'number') {
+    return 0;
+  }
+  return Math.max(0, end - start + 1);
+};
+
+export const hasLargeClassDeclaration = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'ClassDeclaration' && value.type !== 'ClassExpression') {
+      return false;
+    }
+    return nodeLineSpan(value) >= GOD_CLASS_MAX_LINES;
   });
 };

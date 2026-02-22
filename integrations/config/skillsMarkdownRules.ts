@@ -224,6 +224,21 @@ const normalizeKnownRuleTarget = (
 
   if (platform === 'backend' || platform === 'frontend') {
     const prefix = platform === 'backend' ? 'skills.backend' : 'skills.frontend';
+    if (includes('solid') || includes('single responsibility') || includes('srp')) {
+      return `${prefix}.no-solid-violations`;
+    }
+    if (includes('clean architecture')) {
+      return `${prefix}.enforce-clean-architecture`;
+    }
+    if (
+      includes('god classes') ||
+      includes('god class') ||
+      includes('500 lineas') ||
+      includes('500 li neas') ||
+      includes('500 lines')
+    ) {
+      return `${prefix}.no-god-classes`;
+    }
     if (includes('empty catch')) {
       return `${prefix}.no-empty-catch`;
     }
@@ -288,17 +303,22 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     }
 
     const knownRuleId = normalizeKnownRuleTarget(platform, normalizeForLookup(description));
-    const nextId =
-      knownRuleId && !usedIds.has(knownRuleId)
-        ? knownRuleId
-        : buildGeneratedRuleId(
-            {
-              platform,
-              sourceSkill: params.sourceSkill,
-              description,
-            },
-            usedIds
-          );
+    let nextId: string;
+    if (knownRuleId) {
+      if (usedIds.has(knownRuleId)) {
+        continue;
+      }
+      nextId = knownRuleId;
+    } else {
+      nextId = buildGeneratedRuleId(
+        {
+          platform,
+          sourceSkill: params.sourceSkill,
+          description,
+        },
+        usedIds
+      );
+    }
 
     if (usedIds.has(nextId)) {
       continue;

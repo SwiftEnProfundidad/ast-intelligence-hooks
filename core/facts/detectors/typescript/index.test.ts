@@ -15,6 +15,7 @@ import {
   hasMixedCommandQueryClass,
   hasMixedCommandQueryInterface,
   hasOverrideMethodThrowingNotImplemented,
+  hasLargeClassDeclaration,
   hasSetIntervalStringCallback,
   hasSetTimeoutStringCallback,
   hasTypeDiscriminatorSwitch,
@@ -375,4 +376,24 @@ test('hasConcreteDependencyInstantiation detecta instanciacion directa de depend
 
   assert.equal(hasConcreteDependencyInstantiation(concreteAst), true);
   assert.equal(hasConcreteDependencyInstantiation(localAst), false);
+});
+
+test('hasLargeClassDeclaration detecta clases con mas de 500 lineas', () => {
+  const oversizedClassAst = {
+    type: 'ClassDeclaration',
+    loc: {
+      start: { line: 10 },
+      end: { line: 520 },
+    },
+  };
+  const compactClassAst = {
+    type: 'ClassDeclaration',
+    loc: {
+      start: { line: 10 },
+      end: { line: 80 },
+    },
+  };
+
+  assert.equal(hasLargeClassDeclaration(oversizedClassAst), true);
+  assert.equal(hasLargeClassDeclaration(compactClassAst), false);
 });
