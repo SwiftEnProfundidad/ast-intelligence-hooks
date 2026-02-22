@@ -67,3 +67,7 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 - Activacion inicial por defecto: `OFF` (estable actual).
 - Activacion controlada: `PUMUKI_MENU_UI_V2=1`.
 - Fuera de alcance en este ciclo: cambios de logica de negocio del gate (solo UX/presentacion/ergonomia).
+
+## Continuidad de ciclos
+- Este ciclo permanece `CERRADO`.
+- La continuidad activa pasa a `docs/RULES_ENGINE_UNIFICATION_CYCLE.md`.

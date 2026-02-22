@@ -39,6 +39,7 @@ const ADVANCED_MENU_HELP: Readonly<Record<string, string>> = {
   '18': 'Configura hard mode/enforcement enterprise.',
   '31': 'Configura notificaciones del sistema (macOS) para eventos criticos.',
   '32': 'Diagnóstico de cobertura de reglas evaluadas por stage (repo completo).',
+  '33': 'Importa reglas custom desde AGENTS.md/SKILLS.md hacia .pumuki/custom-rules.json.',
   '19': 'Ejecuta startup triage bundle del consumidor.',
   '20': 'Genera reporte A/B del mock consumer.',
   '21': 'Genera reporte de blockers readiness (phase5).',

@@ -8,6 +8,8 @@ import type { Severity } from '../../core/rules/Severity';
 export type SkillsStage = Exclude<GateStage, 'STAGED'>;
 
 export type SkillsRuleConfidence = 'HIGH' | 'MEDIUM' | 'LOW';
+export type SkillsRuleEvaluationMode = 'AUTO' | 'DECLARATIVE';
+export type SkillsRuleOrigin = 'core' | 'custom';
 
 export type SkillsCompiledRule = {
   id: string;
@@ -19,6 +21,8 @@ export type SkillsCompiledRule = {
   stage?: SkillsStage;
   confidence?: SkillsRuleConfidence;
   locked?: boolean;
+  evaluationMode?: SkillsRuleEvaluationMode;
+  origin?: SkillsRuleOrigin;
 };
 
 export type SkillsLockBundle = {
@@ -43,6 +47,8 @@ const SHA256_PATTERN = /^[A-Fa-f0-9]{64}$/;
 const severityValues = new Set<Severity>(['INFO', 'WARN', 'ERROR', 'CRITICAL']);
 const stageValues = new Set<SkillsStage>(['PRE_COMMIT', 'PRE_PUSH', 'CI']);
 const confidenceValues = new Set<SkillsRuleConfidence>(['HIGH', 'MEDIUM', 'LOW']);
+const evaluationModeValues = new Set<SkillsRuleEvaluationMode>(['AUTO', 'DECLARATIVE']);
+const originValues = new Set<SkillsRuleOrigin>(['core', 'custom']);
 const platformValues = new Set<NonNullable<RuleDefinition['platform']>>([
   'ios',
   'android',
@@ -78,6 +84,14 @@ const isSkillsStage = (value: unknown): value is SkillsStage => {
 
 const isRuleConfidence = (value: unknown): value is SkillsRuleConfidence => {
   return typeof value === 'string' && confidenceValues.has(value as SkillsRuleConfidence);
+};
+
+const isRuleEvaluationMode = (value: unknown): value is SkillsRuleEvaluationMode => {
+  return typeof value === 'string' && evaluationModeValues.has(value as SkillsRuleEvaluationMode);
+};
+
+const isRuleOrigin = (value: unknown): value is SkillsRuleOrigin => {
+  return typeof value === 'string' && originValues.has(value as SkillsRuleOrigin);
 };
 
 const isRulePlatform = (
@@ -122,6 +136,17 @@ const isSkillsCompiledRule = (value: unknown): value is SkillsCompiledRule => {
   }
 
   if (typeof value.confidence !== 'undefined' && !isRuleConfidence(value.confidence)) {
+    return false;
+  }
+
+  if (
+    typeof value.evaluationMode !== 'undefined' &&
+    !isRuleEvaluationMode(value.evaluationMode)
+  ) {
+    return false;
+  }
+
+  if (typeof value.origin !== 'undefined' && !isRuleOrigin(value.origin)) {
     return false;
   }
 
@@ -194,6 +219,8 @@ const normalizedRuleForHash = (rule: SkillsCompiledRule): Record<string, unknown
     stage: rule.stage ?? null,
     confidence: rule.confidence ?? null,
     locked: rule.locked ?? false,
+    evaluationMode: rule.evaluationMode ?? null,
+    origin: rule.origin ?? null,
   };
 };
 

@@ -95,6 +95,24 @@ test('formatAdvancedMenuView conserva ayuda de opcion 8 sin truncar .ai_evidence
   assert.match(rendered, /Read current \.ai_evidence\.json[\s\S]*Lee el \.ai_evidence\.json actual/i);
 });
 
+test('formatAdvancedMenuView muestra ayuda contextual de opcion 33 para importar custom rules', () => {
+  const rendered = formatAdvancedMenuView(buildAdvancedActions(), {
+    evidenceSummary: {
+      status: 'ok',
+      stage: 'PRE_PUSH',
+      outcome: 'PASS',
+      totalFindings: 0,
+      bySeverity: { CRITICAL: 0, ERROR: 0, WARN: 0, INFO: 0 },
+      topFiles: [],
+    },
+  });
+
+  assert.match(
+    rendered,
+    /33\)\s+Import custom skills rules[\s\S]*Importa reglas custom[\s\S]*AGENTS\.md\/SKILLS\.md/i
+  );
+});
+
 test('formatAdvancedMenuClassicView conserva formato legacy sin panel agrupado', () => {
   const rendered = formatAdvancedMenuClassicView(buildAdvancedActions(), {
     evidenceSummary: {

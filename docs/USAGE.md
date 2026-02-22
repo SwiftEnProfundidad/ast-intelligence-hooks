@@ -33,6 +33,21 @@ Coverage guardrail:
 - If any active rule is not evaluated (`unevaluated_rule_ids` not empty), gate emits `governance.rules.coverage.incomplete` and forces `BLOCK`.
 - Coverage telemetry is persisted in `.ai_evidence.json` under `snapshot.rules_coverage`.
 
+## Skills rules engine (effective lock)
+
+Skills are resolved in deterministic precedence order:
+
+1. Core embedded lock (package snapshot, runtime-safe)
+2. Repo lock (`skills.lock.json`, optional)
+3. Custom local rules (`/.pumuki/custom-rules.json`, optional)
+
+Conflict policy: `custom > repo > core` by `ruleId`.
+
+Platform activation:
+
+- `ios/android/backend/frontend` rules activate only when platform is detected.
+- `generic/text` rules remain active as cross-platform constraints.
+
 ## Mandatory SDD/OpenSpec flow
 
 Pumuki enforces OpenSpec policy/session before allowing normal gate execution.
@@ -174,6 +189,7 @@ Stage mapping:
 If a scope is empty, the menu prints an explicit operational hint (`Scope vacío`), so `PASS` with zero findings is distinguishable from a clean repository scan.
 
 System notifications (macOS) can be enabled from advanced menu option `31` (persisted in `.pumuki/system-notifications.json`).
+Custom skills import is available in advanced menu option `33` (writes `/.pumuki/custom-rules.json`).
 
 ### 2) Direct stage CLI execution
 
@@ -237,6 +253,12 @@ npx --yes pumuki remove
 npx --yes pumuki adapter install --agent=codex --dry-run
 npx --yes pumuki adapter install --agent=cursor
 npm run adapter:install -- --agent=claude
+
+# skills engine helpers
+npm run skills:compile
+npm run skills:lock:check
+npm run skills:import:custom
+npm run skills:import:custom -- --source /abs/path/to/SKILL.md --source ./skills/backend/SKILL.md
 ```
 
 `pumuki remove` is the enterprise-safe removal path because it performs lifecycle cleanup before package uninstall.
