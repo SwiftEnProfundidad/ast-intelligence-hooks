@@ -91,43 +91,6 @@ const padRight = (value: string, width: number): string => {
   return `${value}${' '.repeat(padding)}`;
 };
 
-const wrapLine = (line: string, width: number): string[] => {
-  if (visibleLength(line) <= width) {
-    return [line];
-  }
-  const leadingWhitespace = line.match(/^\s*/)?.[0] ?? '';
-  const words = line.trim().split(/\s+/);
-  if (words.length <= 1) {
-    const chunks: string[] = [];
-    let index = 0;
-    while (index < line.length) {
-      chunks.push(line.slice(index, index + width));
-      index += width;
-    }
-    return chunks;
-  }
-
-  const wrapped: string[] = [];
-  let current = leadingWhitespace;
-  for (const word of words) {
-    const candidate = current.trim().length === 0
-      ? `${leadingWhitespace}${word}`
-      : `${current} ${word}`;
-    if (visibleLength(candidate) <= width) {
-      current = candidate;
-      continue;
-    }
-    if (current.trim().length > 0) {
-      wrapped.push(current);
-    }
-    current = `${leadingWhitespace}${word}`;
-  }
-  if (current.trim().length > 0) {
-    wrapped.push(current);
-  }
-  return wrapped.length > 0 ? wrapped : [''];
-};
-
 export const buildCliDesignTokens = (options?: {
   width?: number;
   color?: boolean;
@@ -196,10 +159,12 @@ export const renderActionRow = (params: {
   label: string;
   hint?: string;
 }): string => {
+  const label = truncateTextForTerminal(params.label, 120);
   if (params.hint && params.hint.trim().length > 0) {
-    return `${params.id}) ${params.label} - ${params.hint}`;
+    const hint = truncateTextForTerminal(params.hint, 120);
+    return `${params.id}) ${label} - ${hint}`;
   }
-  return `${params.id}) ${params.label}`;
+  return `${params.id}) ${label}`;
 };
 
 export const renderHintBlock = (
@@ -231,7 +196,8 @@ export const renderPanel = (
   lines: ReadonlyArray<string>,
   tokens: CliDesignTokens
 ): string => {
-  const wrappedLines = lines.flatMap((line) => wrapLine(line, tokens.panelInnerWidth));
+  const wrappedLines = normalizeMenuDensity(lines, { maxConsecutiveBlankLines: 1 })
+    .flatMap((line) => wrapLineForTerminal(line, tokens.panelInnerWidth));
   const border = (value: string): string => color(value, tokens.palette.border, tokens.colorEnabled);
   const top = border(
     `${tokens.border.topLeft}${tokens.border.horizontal.repeat(tokens.panelInnerWidth + 2)}${tokens.border.topRight}`
@@ -247,3 +213,8 @@ export const renderPanel = (
     .join('\n');
   return [top, body, bottom].join('\n');
 };
+import {
+  normalizeMenuDensity,
+  truncateTextForTerminal,
+  wrapLineForTerminal,
+} from './framework-menu-legibility-lib';
