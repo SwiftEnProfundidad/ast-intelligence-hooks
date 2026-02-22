@@ -527,7 +527,7 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
   - Validación post-merge en `develop`:
     - `npm run typecheck` (verde).
     - matriz `framework-menu-matrix*` (`11/11` verde).
-- ✅ Estado actual: ciclo activo (`docs/ENTERPRISE_AUDIT_CYCLE_ACTIVE.md`) cerrado, sin tarea en construcción.
+- ✅ Estado actual: el ciclo operativo activo está en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
 
 ## Fase 27 — Release Flow (`develop` -> `main`)
 - ✅ PR de release abierta desde `develop` hacia `main`.
@@ -546,5 +546,5 @@ Estado operativo del plan activo para restaurar capacidades enterprise sin rompe
 ## Estado de referencia (sin fases nuevas)
 - ✅ `docs/REFRACTOR_PROGRESS.md` se mantiene como histórico.
 - ✅ El seguimiento operativo del ciclo actual vive solo en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
-- ✅ `docs/ENTERPRISE_AUDIT_CYCLE_ACTIVE.md` queda cerrado y sin uso operativo.
-- 🚧 Tarea activa actual: `T8` en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
+- ✅ Bloque `T8` cerrado en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md` (PR `#316` mergeada en `develop`).
+- 🚧 Tarea activa actual: `T9` en `docs/ENTERPRISE_AUDIT_STABILIZATION_CYCLE.md`.
