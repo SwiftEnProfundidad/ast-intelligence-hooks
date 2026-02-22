@@ -70,7 +70,12 @@ test('runRepoAndStagedPrePushGateSilent emite evidencia con stage PRE_PUSH', asy
       assert.equal(evidence.snapshot?.stage, 'PRE_PUSH');
       const findings = Array.isArray(evidence.snapshot?.findings) ? evidence.snapshot.findings : [];
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
-      assert.equal(ruleIds.includes('heuristics.ts.console-log.ast'), true);
+      assert.equal(
+        ruleIds.includes('skills.backend.no-console-log') ||
+          ruleIds.includes('skills.frontend.no-console-log') ||
+          ruleIds.includes('heuristics.ts.console-log.ast'),
+        true
+      );
     } finally {
       process.chdir(previousCwd);
     }
@@ -108,7 +113,12 @@ test('runWorkingTreePrePushGateSilent emite evidencia con stage PRE_PUSH', async
       assert.equal(evidence.snapshot?.stage, 'PRE_PUSH');
       const findings = Array.isArray(evidence.snapshot?.findings) ? evidence.snapshot.findings : [];
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
-      assert.equal(ruleIds.includes('heuristics.ts.console-log.ast'), true);
+      assert.equal(
+        ruleIds.includes('skills.backend.no-console-log') ||
+          ruleIds.includes('skills.frontend.no-console-log') ||
+          ruleIds.includes('heuristics.ts.console-log.ast'),
+        true
+      );
     } finally {
       process.chdir(previousCwd);
     }

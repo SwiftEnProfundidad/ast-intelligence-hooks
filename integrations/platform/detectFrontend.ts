@@ -2,14 +2,29 @@ import type { Fact } from '../../core/facts/Fact';
 import type { PlatformState } from '../evidence/schema';
 
 const isFrontendPath = (path: string): boolean => {
-  const inFrontendApp = path.startsWith('apps/frontend/');
-  const inWebApp = path.startsWith('apps/web/');
-  const isFrontendExtension =
-    path.endsWith('.ts') ||
-    path.endsWith('.tsx') ||
-    path.endsWith('.js') ||
-    path.endsWith('.jsx');
-  return (inFrontendApp || inWebApp) && isFrontendExtension;
+  const normalized = path.toLowerCase().replace(/\\/g, '/');
+  const isReactExtension = normalized.endsWith('.tsx') || normalized.endsWith('.jsx');
+  if (isReactExtension) {
+    return true;
+  }
+
+  const isTypeScriptOrJavaScript =
+    normalized.endsWith('.ts') ||
+    normalized.endsWith('.js') ||
+    normalized.endsWith('.mts') ||
+    normalized.endsWith('.cts') ||
+    normalized.endsWith('.mjs') ||
+    normalized.endsWith('.cjs');
+
+  if (!isTypeScriptOrJavaScript) {
+    return false;
+  }
+
+  if (normalized.startsWith('apps/frontend/') || normalized.startsWith('apps/web/')) {
+    return true;
+  }
+
+  return /(^|\/)(frontend|web|client)(\/|$)/.test(normalized);
 };
 
 export const detectFrontendFromFacts = (
