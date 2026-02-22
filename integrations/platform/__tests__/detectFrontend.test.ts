@@ -59,6 +59,28 @@ test('detectFrontendFromFacts detects frontend files under apps/web with support
   });
 });
 
+test('detectFrontendFromFacts detects React-like extensions in generic paths', () => {
+  const detected = detectFrontendFromFacts([
+    fileChange('packages/ui/src/Button.tsx'),
+  ]);
+
+  assert.deepEqual(detected, {
+    detected: true,
+    confidence: 'HIGH',
+  });
+});
+
+test('detectFrontendFromFacts detects client/web folder hints outside apps/*', () => {
+  const detected = detectFrontendFromFacts([
+    fileContent('src/client/main.ts', 'export {}'),
+  ]);
+
+  assert.deepEqual(detected, {
+    detected: true,
+    confidence: 'HIGH',
+  });
+});
+
 test('detectFrontendFromFacts ignores non frontend paths or unsupported extensions', () => {
   const detected = detectFrontendFromFacts([
     fileChange('apps/web/src/styles/main.css'),

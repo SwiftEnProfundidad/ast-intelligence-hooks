@@ -78,9 +78,49 @@ test('detectPlatformsFromFacts detecta backend/frontend/android por rutas soport
   });
 });
 
+test('detectPlatformsFromFacts detecta plataformas en estructuras genéricas sin apps/*', () => {
+  const detected = detectPlatformsFromFacts([
+    fileChange('src/server/health.ts'),
+    fileChange('packages/ui/src/App.tsx'),
+    fileChange('mobile/android/src/main/kotlin/com/example/Main.kt'),
+  ]);
+
+  assert.deepEqual(detected, {
+    backend: {
+      detected: true,
+      confidence: 'HIGH',
+    },
+    frontend: {
+      detected: true,
+      confidence: 'HIGH',
+    },
+    android: {
+      detected: true,
+      confidence: 'HIGH',
+    },
+  });
+});
+
+test('detectPlatformsFromFacts aplica fallback ambigüo para repos TS/JS sin señales claras', () => {
+  const detected = detectPlatformsFromFacts([
+    fileChange('src/main.ts'),
+  ]);
+
+  assert.deepEqual(detected, {
+    backend: {
+      detected: true,
+      confidence: 'MEDIUM',
+    },
+    frontend: {
+      detected: true,
+      confidence: 'MEDIUM',
+    },
+  });
+});
+
 test('detectPlatformsFromFacts no marca plataformas cuando las extensiones no aplican', () => {
   const detected = detectPlatformsFromFacts([
-    fileChange('apps/backend/src/service.js'),
+    fileChange('apps/backend/src/service.json'),
     fileChange('apps/android/app/src/main/java/com/example/Main.java'),
     fileChange('apps/web/src/styles/main.css'),
   ]);

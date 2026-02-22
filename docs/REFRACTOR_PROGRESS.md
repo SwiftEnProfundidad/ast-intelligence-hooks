@@ -71,6 +71,10 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F6.T2` completada: `docs/USAGE.md` y `docs/API_REFERENCE.md` actualizados con comandos/contratos de custom rules.
 - ✅ `F6.T3` completada: `docs/evidence-v2.1.md` actualizado para reflejar trazabilidad de bundles efectivos y reglas declarativas.
 - ✅ `F6.T4` completada: cierre Git Flow end-to-end (`feature -> develop -> main`) con PR #339 y PR #340 mergeadas.
+- ✅ Post-cierre: auditoría de consistencia skills local/vendorizado completada (`MATCH` por hash en Android/Backend/Frontend/iOS/Concurrency/SwiftUI).
+- ✅ Post-cierre: hardening multi-repo aplicado en detección de plataformas (soporte fuera de `apps/*` + fallback ambiguo TS/JS).
+- ✅ Post-cierre: TDD ampliado (`detect*`/`detectPlatforms`/`coreSkillsLock`) y suites de regresión en verde.
+- 🚧 Post-cierre: preparar cierre Git Flow del hardening multi-repo (commit + PR + merge).
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
@@ -103,7 +107,8 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Validación consolidada: 21 tests config + 12 tests git + 113 tests framework menu en verde.
 - ✅ Documentación enterprise alineada al motor unificado (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
 - ✅ Cierre de release ejecutado: `feature/rules-engine-unification -> develop` (#339) y `develop -> main` (#340).
-- Estado activo: ciclo `RULES_ENGINE_UNIFICATION_CYCLE` cerrado.
+- ✅ Verificación runtime: core lock embebido con 6 bundles y 759 reglas totales cargadas.
+- Estado activo: hardening post-cierre para garantizar cobertura de reglas en repos genéricos.
 
 ## Siguiente paso operativo
-- ⏳ N/A — ciclo cerrado.
+- ⏳ Completar cierre Git Flow del hardening multi-repo.

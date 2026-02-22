@@ -59,9 +59,21 @@ test('detectBackendFromFacts detects backend TypeScript from file content facts'
   });
 });
 
+test('detectBackendFromFacts detects backend files in generic server/api structures', () => {
+  const detected = detectBackendFromFacts([
+    fileChange('src/server/health.ts'),
+    fileChange('api/orders/controller.js'),
+  ]);
+
+  assert.deepEqual(detected, {
+    detected: true,
+    confidence: 'HIGH',
+  });
+});
+
 test('detectBackendFromFacts ignores unsupported extensions or non-backend paths', () => {
   const detected = detectBackendFromFacts([
-    fileChange('apps/backend/src/health.js'),
+    fileChange('apps/backend/src/health.json'),
     fileChange('apps/frontend/src/app.ts'),
     fileContent('apps/android/app/src/main/java/com/example/Main.kt', 'class Main'),
   ]);

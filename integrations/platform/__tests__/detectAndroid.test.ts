@@ -59,10 +59,20 @@ test('detectAndroidFromFacts detects Kotlin script files under apps/android', ()
   });
 });
 
-test('detectAndroidFromFacts ignores paths outside apps/android or unsupported extensions', () => {
+test('detectAndroidFromFacts detects Kotlin files in generic repo structures', () => {
+  const detected = detectAndroidFromFacts([
+    fileChange('mobile/android/src/main/kotlin/com/example/MainActivity.kt'),
+  ]);
+
+  assert.deepEqual(detected, {
+    detected: true,
+    confidence: 'HIGH',
+  });
+});
+
+test('detectAndroidFromFacts ignores unsupported extensions', () => {
   const detected = detectAndroidFromFacts([
     fileChange('apps/android/app/src/main/java/com/example/Main.java'),
-    fileChange('apps/backend/src/service.kt'),
     fileContent('apps/web/src/main.ts', 'export {}'),
   ]);
 
