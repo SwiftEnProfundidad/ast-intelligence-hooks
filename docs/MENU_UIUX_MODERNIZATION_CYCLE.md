@@ -38,13 +38,13 @@ Modernizar la experiencia CLI del menu (Consumer + Advanced) con una UX clara, v
 - ✅ F3.T4 Mantener compatibilidad de acciones y wiring existentes.
 
 ## Fase 4 — Reporte de auditoria moderno
-- 🚧 F4.T1 Modernizar render del reporte legacy conservando contenido funcional.
-- ⏳ F4.T2 Mostrar siempre matriz por plataforma (`iOS`, `Android`, `Backend`, `Frontend`, `Other`) aunque esten a cero.
-- ⏳ F4.T3 Mejorar bloque de metricas, top violaciones y recomendaciones accionables.
-- ⏳ F4.T4 Asegurar salida robusta en anchos pequeños/medios/grandes.
+- ✅ F4.T1 Modernizar render del reporte legacy conservando contenido funcional.
+- ✅ F4.T2 Mostrar siempre matriz por plataforma (`iOS`, `Android`, `Backend`, `Frontend`, `Other`) aunque esten a cero.
+- ✅ F4.T3 Mejorar bloque de metricas, top violaciones y recomendaciones accionables.
+- ✅ F4.T4 Asegurar salida robusta en anchos pequeños/medios/grandes.
 
 ## Fase 5 — Feature flag y fallback seguro
-- ⏳ F5.T1 Implementar `PUMUKI_MENU_UI_V2=1|0` (default inicial `0`).
+- 🚧 F5.T1 Implementar `PUMUKI_MENU_UI_V2=1|0` (default inicial `0`).
 - ⏳ F5.T2 Implementar fallback automatico a renderer actual ante error de v2.
 - ⏳ F5.T3 Mantener compatibilidad con `PUMUKI_MENU_COLOR`, `PUMUKI_MENU_WIDTH`, `PUMUKI_MENU_MODE`.
 - ⏳ F5.T4 Validar degradacion controlada en terminales sin color/Unicode.

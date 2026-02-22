@@ -354,6 +354,20 @@ test('formatLegacyAuditReport ajusta lineas al ancho de panel solicitado', async
   });
 });
 
+test('formatLegacyAuditReport soporta anchos pequeño/medio/grande sin overflow', async () => {
+  await withTempDir('pumuki-legacy-audit-width-matrix-', async (repoRoot) => {
+    writeEvidenceFixture(repoRoot);
+    const summary = readLegacyAuditSummary(repoRoot);
+
+    for (const width of [56, 72, 100]) {
+      const rendered = formatLegacyAuditReport(summary, { panelWidth: width });
+      for (const line of rendered.split('\n')) {
+        assert.ok(line.length <= width, `line exceeds panel width (${width}): ${line}`);
+      }
+    }
+  });
+});
+
 test('formatLegacyFileDiagnostics lista top de ficheros violados', async () => {
   await withTempDir('pumuki-legacy-file-diagnostics-', async (repoRoot) => {
     writeEvidenceFixture(repoRoot);
@@ -363,6 +377,17 @@ test('formatLegacyFileDiagnostics lista top de ficheros violados', async () => {
     assert.match(rendered, /FILE DIAGNOSTICS — TOP VIOLATED FILES/);
     assert.match(rendered, /apps\/backend\/src\/domain\/service\.ts: 1/);
     assert.match(rendered, /apps\/ios\/App\/Feature\.swift: 1/);
+  });
+});
+
+test('formatLegacyAuditReport añade metricas de impacto y siguiente accion', async () => {
+  await withTempDir('pumuki-legacy-audit-impact-metrics-', async (repoRoot) => {
+    writeEvidenceFixture(repoRoot);
+    const summary = readLegacyAuditSummary(repoRoot);
+    const rendered = formatLegacyAuditReport(summary);
+
+    assert.match(rendered, /Affected ratio:/);
+    assert.match(rendered, /Next action:/);
   });
 });
 

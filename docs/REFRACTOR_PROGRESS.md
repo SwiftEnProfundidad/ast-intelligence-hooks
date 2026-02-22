@@ -36,11 +36,12 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F1.T4` (UI/UX menu) completada: utilidades de legibilidad terminal implementadas y conectadas al renderer base.
 - ✅ Fase 2 completada: menú consumer modernizado por flujos, badge de estado (`PASS/WARN/BLOCK`) y mensajes de alcance vacío clarificados sin regresión de IDs.
 - ✅ Fase 3 completada: menú advanced alineado visualmente, agrupado por dominios con ayuda contextual corta y sin romper wiring de acciones.
-- 🚧 Tarea activa del nuevo ciclo UI/UX: `F4.T1` (modernizar render del reporte de auditoría conservando funcionalidad).
+- ✅ Fase 4 completada: reporte de auditoría modernizado con matriz multi-plataforma estable, métricas de impacto y robustez de ancho.
+- 🚧 Tarea activa del nuevo ciclo UI/UX: `F5.T1` (feature flag `PUMUKI_MENU_UI_V2` y fallback seguro).
 
 ## Hitos recientes
 - ✅ Sync Git Flow cerrado en ciclo anterior (`develop -> main`) con ramas remotas alineadas.
 - ✅ Limpieza de documentacion de seguimiento cerrada (quedan solo tracker + plan activo).
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F4.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.
+- 🚧 Ejecutar `F5.T1` en `docs/MENU_UIUX_MODERNIZATION_CYCLE.md` y avanzar secuencialmente por fases.

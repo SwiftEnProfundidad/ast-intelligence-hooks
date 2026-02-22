@@ -962,6 +962,14 @@ export const formatLegacyAuditReport = (
   const actionLine = commitStatus.includes('BLOCKED')
     ? 'Action: clean entire repository before committing.'
     : 'Action: proceed with commit flow.';
+  const affectedRatio = summary.filesScanned > 0
+    ? Math.round((summary.filesAffected / Math.max(1, summary.filesScanned)) * 100)
+    : 0;
+  const nextAction = commitStatus.includes('BLOCKED')
+    ? 'Next action: fix CRITICAL/HIGH findings and rerun full audit.'
+    : summary.bySeverity.MEDIUM > 0 || summary.bySeverity.LOW > 0
+      ? 'Next action: schedule MEDIUM/LOW cleanup without blocking delivery.'
+      : 'Next action: maintain baseline and continue with regular checks.';
 
   const metricsPanel = renderPanel([
     'METRICS',
@@ -970,10 +978,12 @@ export const formatLegacyAuditReport = (
     `Critical issues: ${summary.bySeverity.CRITICAL}`,
     `High priority issues: ${summary.bySeverity.HIGH}`,
     `Files scanned: ${summary.filesScanned}`,
+    `Affected ratio: ${affectedRatio}%`,
     '',
     `Code Health Score: ${summary.codeHealthScore}% (${codeHealthLabel(summary.codeHealthScore)})`,
     '',
     blockedMessage,
+    nextAction,
     '',
     'FINAL SUMMARY — VIOLATIONS BY SEVERITY',
     `● CRITICAL: ${summary.bySeverity.CRITICAL}`,
