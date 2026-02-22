@@ -25,16 +25,22 @@ Todas las fases/tareas están definidas por anticipación; no se añaden tareas 
 ## Fase 2 — Hardening legacy scripts
 - ✅ T6. Hardening de comandos Git Flow (`npm run gitflow*`) con contrato TDD.
 - ✅ T7. Saneamiento de aliases legacy rotos de `package.json` (sin targets locales inexistentes).
-- 🚧 T8. Cierre Git Flow del bloque T6+T7.
-  - Preparar commits atómicos del bloque.
-  - Push de feature.
-  - PR a `develop`, merge y validación post-merge (`typecheck` + tests del bloque).
-  - Criterio de salida: bloque integrado end-to-end sin drift.
+- ✅ T8. Cierre Git Flow del bloque T6+T7.
+  - ✅ Commits atómicos del bloque:
+    - `06e2bc2` feat(gitflow): add deterministic gitflow CLI with contract tests
+    - `d9bec69` chore(scripts): fix legacy aliases with missing local targets
+    - `9a0feb1` docs(plan): set stabilization cycle as sole active tracker
+  - ✅ Push de feature ejecutado.
+  - ✅ PR a `develop` mergeada:
+    - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/316`
+  - ✅ Validación post-merge en `develop`:
+    - `npm run typecheck` (verde)
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/gitflow-cli.test.ts scripts/__tests__/package-script-targets.test.ts` (`6/6` verde)
+  - ✅ Criterio de salida cumplido: bloque integrado end-to-end sin drift.
 
 ## Fase 3 — Cierre del ciclo
-- ⏳ T9. Sincronización final `main/develop` y verificación de ramas limpias.
+- 🚧 T9. Sincronización final `main/develop` y verificación de ramas limpias.
 - ⏳ T10. Cierre formal del ciclo:
   - checklist final de evidencias,
   - estado final de salud del repo,
   - archivo del ciclo en documento de cierre.
-
