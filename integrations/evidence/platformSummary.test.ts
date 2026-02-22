@@ -95,3 +95,49 @@ test('buildSnapshotPlatformSummaries es determinista sin depender del orden de f
 
   assert.deepEqual(first, second);
 });
+
+test('buildSnapshotPlatformSummaries prioriza segmentos de path fuera de apps para clasificar plataforma', () => {
+  const summaries = buildSnapshotPlatformSummaries([
+    {
+      ruleId: 'heuristics.ts.child-process-spawn.ast',
+      severity: 'WARN',
+      file: 'packages/frontend/src/main.ts',
+    },
+    {
+      ruleId: 'heuristics.ts.inner-html.ast',
+      severity: 'WARN',
+      file: 'services/backend/src/renderer.ts',
+    },
+  ]);
+
+  const backend = summaries.find((item) => item.platform === 'Backend');
+  const frontend = summaries.find((item) => item.platform === 'Frontend');
+
+  assert.ok(backend);
+  assert.ok(frontend);
+  assert.equal(backend?.files_affected, 1);
+  assert.equal(frontend?.files_affected, 1);
+  assert.equal(backend?.top_violations[0]?.rule_id, 'heuristics.ts.inner-html.ast');
+  assert.equal(frontend?.top_violations[0]?.rule_id, 'heuristics.ts.child-process-spawn.ast');
+});
+
+test('buildSnapshotPlatformSummaries normaliza separadores de ruta para files_affected', () => {
+  const summaries = buildSnapshotPlatformSummaries([
+    {
+      ruleId: 'skills.backend.no-empty-catch',
+      severity: 'ERROR',
+      file: 'apps\\backend\\src\\service.ts',
+    },
+    {
+      ruleId: 'skills.backend.no-console-log',
+      severity: 'WARN',
+      file: 'apps/backend/src/service.ts',
+    },
+  ]);
+
+  const backend = summaries.find((item) => item.platform === 'Backend');
+  assert.ok(backend);
+  assert.equal(backend?.files_affected, 1);
+  assert.equal(backend?.by_severity.HIGH, 1);
+  assert.equal(backend?.by_severity.MEDIUM, 1);
+});
