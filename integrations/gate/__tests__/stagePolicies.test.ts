@@ -68,7 +68,7 @@ test('applyHeuristicSeverityForStage promueve heurísticas a ERROR en PRE_COMMIT
     },
     {
       id: 'heuristics.ts.empty-catch.ast',
-      description: 'ignored promoted rule',
+      description: 'promoted rule',
       severity: 'WARN',
       platform: 'backend',
       stage: 'PRE_COMMIT',
@@ -76,7 +76,7 @@ test('applyHeuristicSeverityForStage promueve heurísticas a ERROR en PRE_COMMIT
         kind: 'Heuristic',
         where: { ruleId: 'heuristics.ts.empty-catch.ast' },
       },
-      then: { kind: 'Finding', message: 'ignored' },
+      then: { kind: 'Finding', message: 'promoted' },
     },
     {
       id: 'custom.rule.keep-warn',
@@ -96,10 +96,10 @@ test('applyHeuristicSeverityForStage promueve heurísticas a ERROR en PRE_COMMIT
   const preCommit = applyHeuristicSeverityForStage(rules, 'PRE_COMMIT');
 
   assert.equal(promoted[0]?.severity, 'ERROR');
-  assert.equal(promoted[1]?.severity, 'WARN');
+  assert.equal(promoted[1]?.severity, 'ERROR');
   assert.equal(promoted[2]?.severity, 'WARN');
   assert.equal(preCommit[0]?.severity, 'ERROR');
-  assert.equal(preCommit[1]?.severity, 'WARN');
+  assert.equal(preCommit[1]?.severity, 'ERROR');
   assert.equal(preCommit[2]?.severity, 'WARN');
   assert.equal(rules[0]?.severity, 'WARN');
   assert.notEqual(promoted, rules);
