@@ -2,7 +2,7 @@
 
 Plan operativo unico para llevar Pumuki a deteccion enterprise de violaciones superando siempre a legacy y aplicando TODAS las skills sin excepcion.
 
-Estado del plan: `ACTIVO`
+Estado del plan: `CERRADO`
 
 ## Leyenda
 - ✅ Hecho
@@ -51,4 +51,9 @@ Garantizar que Pumuki aplique siempre TODAS las skills (core + custom de develop
 - ✅ F5.T1 Completar TDD RED/GREEN/REFACTOR de los cambios del motor.
 - ✅ F5.T2 Ejecutar validacion funcional (gate, menu, evidencia, stages) y revisar salida visual.
 - ✅ F5.T3 Actualizar documentacion de uso/arquitectura/contratos.
-- 🚧 F5.T4 Cierre Git Flow end-to-end (PR a `develop`, merge, sync `develop -> main`).
+- ✅ F5.T4 Cierre Git Flow end-to-end (PR `#350` a `develop`, merge, sync `develop -> main` con PR `#351`).
+
+## Cierre del ciclo
+- ✅ Objetivo cumplido: enforcement ejecutable de skills `AUTO`, SDD estricto visible por stage y trazabilidad de cobertura con reglas no soportadas.
+- ✅ Dominancia sobre baseline legacy documentada en `docs/LEGACY_PARITY_REPORT.md`.
+- ✅ Flujo Git completado: `feature -> develop -> main`.
