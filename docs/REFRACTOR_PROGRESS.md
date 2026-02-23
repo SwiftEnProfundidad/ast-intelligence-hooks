@@ -94,10 +94,10 @@ Estado operativo activo del repositorio.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `P-ADHOC-LINES-012` para cierre final del ciclo enterprise.
+- 🚧 Ejecutar `P-ADHOC-LINES-014` para saneamiento CI post-merge en `main`.
 
 ## Backlog global restante
-- 🚧 `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
+- ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
   - ✅ revalidación integral ejecutada:
     - tests focales `48/48` en `.audit_tmp/p-adhoc-lines-012-tests.out`
     - `typecheck` `OK` en `.audit_tmp/p-adhoc-lines-012-typecheck.out`
@@ -117,5 +117,39 @@ Estado operativo activo del repositorio.
   - ✅ paridad legacy por severidad cerrada:
     - `CRITICAL 42 >= 9`, `HIGH 43 >= 41`, `MEDIUM 59 >= 21`, `LOW 0 = 0`
     - reporte: `.audit-reports/p-adhoc-lines-012-legacy-parity-v2.md`
-  - ⏳ cierre operativo pendiente:
-    - cierre Git Flow end-to-end del ciclo de remediación
+  - ✅ cierre Git Flow end-to-end completado:
+    - PR `#360` (feature -> `develop`) merged
+    - PR `#361` (`develop` -> `main`) merged (admin)
+    - ramas locales y remotas sincronizadas con solo `develop` y `main`
+- ✅ `P-ADHOC-LINES-013` Verificación post-merge de estabilidad:
+  - estado post-merge de `PR #361` verificado (`MERGED`, commit `cedaf08f93d70ad7d820556f2574becf8ed03f6b`)
+  - baseline de checks no verdes consolidado en:
+    - `.audit_tmp/p-adhoc-lines-013-main-pr-checks.tsv`
+    - `.audit_tmp/p-adhoc-lines-013-main-pr-checks-unique.tsv`
+  - nota oficial de riesgo residual y plan de saneamiento publicada:
+    - `docs/validation/post-merge-main-stability-note.md`
+  - índice documental actualizado en `docs/validation/README.md`
+- 🚧 `P-ADHOC-LINES-014` Saneamiento CI post-merge en `main`:
+  - ✅ baseline de fallos post-merge recopilado:
+    - `.audit_tmp/p-adhoc-lines-013-main-pr-checks.tsv`
+    - `.audit_tmp/p-adhoc-lines-013-main-pr-checks-unique.tsv`
+    - `.audit_tmp/p-adhoc-lines-014-ci-failure-map.md`
+  - ✅ plan incremental por dominios documentado:
+    - `docs/validation/ci-sanitization-plan-cycle-014.md`
+  - ✅ reproducidos checks fallidos y causas raíz confirmadas (lote A):
+    - `check-package-manifest`: crash por API legacy `npm-packlist` v10
+    - `package-smoke`: módulo no incluido en paquete (`integrations/notifications/emitAuditSummaryNotification.ts`)
+  - ✅ corrección lote A implementada y validada localmente:
+    - `scripts/check-package-manifest.ts`
+    - `scripts/__tests__/check-package-manifest.test.ts`
+    - `scripts/package-manifest-lib.ts`
+    - `package.json` (`files`)
+    - reproducción CI local completa en verde: `.audit_tmp/ci-repro-014/summary.tsv`
+  - ✅ lote A publicado en PR incremental:
+    - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/363`
+  - ⏳ validar checks remotos del lote A
+    - bloqueo externo detectado: GitHub Actions no inicia jobs por billing lock de cuenta
+    - documentación de bloqueo:
+      - `docs/validation/post-merge-main-stability-note.md`
+      - `docs/validation/ci-sanitization-plan-cycle-014.md`
+  - ⏳ objetivo de salida: checks críticos en verde en `main` sin bypass admin

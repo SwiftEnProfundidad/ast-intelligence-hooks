@@ -191,6 +191,7 @@
     "integrations/lifecycle/*.json",
     "integrations/sdd/*.ts",
     "integrations/mcp/*.ts",
+    "integrations/notifications/*.ts",
     "integrations/platform/*.ts",
     "scripts/*.ts",
     "scripts/adapters/*.ts",

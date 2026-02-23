@@ -11,6 +11,7 @@ export const REQUIRED_PACKAGE_PATHS = [
   'scripts/package-install-smoke.ts',
   'integrations/git/runPlatformGate.ts',
   'integrations/lifecycle/cli.ts',
+  'integrations/notifications/emitAuditSummaryNotification.ts',
   'integrations/evidence/buildEvidence.ts',
 ];
 
