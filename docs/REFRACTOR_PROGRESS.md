@@ -269,6 +269,9 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - restablecer billing de GitHub Actions;
     - ejecutar revalidación estricta sin admin con checks críticos en verde.
 - 🚧 `P-ADHOC-LINES-015` Seguimiento externo del cierre administrativo 014:
+  - ✅ playbook operativo de seguimiento externo publicado:
+    - `docs/validation/ci-sanitization-cycle-014-external-follow-up.md`
+    - índice actualizado: `docs/validation/README.md`
   - vigilar restablecimiento de billing en GitHub Actions y estado de `security/snyk`;
   - al restablecerse, abrir PR de control `develop -> main` sin admin y capturar nueva evidencia remota;
   - cerrar con actualización de documentación si la ejecución remota estricta queda en verde.
