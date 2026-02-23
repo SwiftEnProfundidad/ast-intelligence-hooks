@@ -186,8 +186,9 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F4.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: verificación visual runtime de menú consumer/advanced v2 con severidad enterprise+legacy.
 - ✅ `F5.T1` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: documentación sincronizada (`README`, `docs/USAGE.md`, `docs/API_REFERENCE.md`, `docs/evidence-v2.1.md`).
 - ✅ `F5.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: informe reproducible publicado en `docs/SKILLS_ENGINE_FORENSIC_COMPLIANCE_REPORT.md`.
-- 🚧 `F5.T3` en construccion en `SKILLS_ENGINE_FORENSIC_RECOVERY`: cierre Git Flow end-to-end (`feature -> develop -> main`).
-- Estado activo: ciclo `SKILLS_ENGINE_FORENSIC_RECOVERY` en ejecucion.
+- ✅ `F5.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: cierre Git Flow end-to-end (`feature -> develop` PR `#354`, `develop -> main` PR `#355`).
+- ✅ Ciclo `SKILLS_ENGINE_FORENSIC_RECOVERY` cerrado con validación técnica, funcional y visual en verde.
+- Estado activo: sin ciclo en construcción.
 
 ## Siguiente paso operativo
-- ⏳ Ejecutar cierre de ciclo: abrir PR a `develop`, merge y sincronizar `develop -> main`.
+- ⏳ Definir próximo ciclo operativo y crear su plan de fase con una única tarea activa.
