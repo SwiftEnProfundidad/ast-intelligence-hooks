@@ -8,6 +8,31 @@ Estado operativo activo del repositorio.
 - ⏳ Pendiente
 - ⛔ Bloqueado
 
+## Plan Por Fases (Ciclo 014)
+Plan base visible para seguimiento previo y durante la implementacion.
+
+### Fase A — Estabilizacion Base CI
+- ✅ `F014.A.T1` Baseline de fallos post-merge consolidado.
+- ✅ `F014.A.T2` Causa raiz lote A identificada (manifest + package smoke).
+- ✅ `F014.A.T3` Correccion lote A implementada y validada en local.
+- ✅ `F014.A.T4` Cierre Git Flow lote A (`PR #363` y `PR #364`).
+
+### Fase B — Quality Suites
+- ✅ `F014.B.T1` Validacion local `test:deterministic`.
+- ✅ `F014.B.T2` Validacion local `test:heuristics`.
+- ✅ `F014.B.T3` Cierre Git Flow lote B (`PR #367` y `PR #368`).
+
+### Fase C — Platform Gates
+- ✅ `F014.C.T1` Correccion de contrato workflow (`runner_path` a `ci*.cli.ts`).
+- ✅ `F014.C.T2` TDD contrato platform gates (red/green).
+- ✅ `F014.C.T3` Validacion local gates con y sin bypass SDD.
+- ✅ `F014.C.T4` Cierre Git Flow lote C (`PR #370` y `PR #371`).
+
+### Fase D — Package Smoke + Security
+- 🚧 `F014.D.T1` Consolidar validacion final de package smoke y estado security/snyk.
+- ⏳ `F014.D.T2` Publicar cierre documental incremental del ciclo 014.
+- ⏳ `F014.D.T3` Cierre Git Flow final de fase D (`develop -> main`) y sincronizacion.
+
 ## Estado actual
 - ✅ `HYG.T1` Inventario completo de markdowns, artefactos y carpetas huérfanas.
 - ✅ `HYG.T2` Unificación documental oficial creada: `docs/validation/detection-audit-baseline.md`.
