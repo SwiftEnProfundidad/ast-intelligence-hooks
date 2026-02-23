@@ -340,3 +340,9 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `P-ADHOC-LINES-017` Standby manual de operación cerrado:
   - no ejecutar sondeos automáticos ni checks remotos como criterio de salida;
   - repositorio queda en espera de nuevas instrucciones explícitas del usuario.
+
+## Ciclo activo (018)
+- ✅ `P-ADHOC-LINES-018A` Cierre documental de ciclos previos consolidado.
+- ✅ `P-ADHOC-LINES-018B` Nuevo ciclo oficial creado en `docs/ENTERPRISE_EXECUTION_CYCLE_018.md` con fases, tareas y leyenda.
+- 🚧 `P-ADHOC-LINES-018C` Preparar primera entrega atomica del ciclo 018 con rama `feature/*`, TDD estricto y actualizacion incremental del tracker.
+- ⏳ `P-ADHOC-LINES-018D` Ejecutar primer lote tecnico del ciclo 018 y cerrar su Git Flow end-to-end.
