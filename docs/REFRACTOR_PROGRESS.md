@@ -317,6 +317,11 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `security/snyk (swiftenprofundidad)` en `ERROR`
     - muestreo de jobs confirma patrón externo (`runner_id=0`, `steps=[]`) en CI/gate/package
     - evidencia en `.audit_tmp/p-adhoc-lines-015-pr-390-*.json` y `.audit_tmp/p-adhoc-lines-015-pr390-*.json`
-  - vigilar restablecimiento de billing en GitHub Actions y estado de `security/snyk`;
-  - al restablecerse, abrir PR de control `develop -> main` sin admin y capturar nueva evidencia remota;
-  - cerrar con actualización de documentación si la ejecución remota estricta queda en verde.
+  - 🚧 tarea restante `T015.R1`: ejecutar sondeo externo #10 y registrar evidencia.
+  - ⏳ tarea restante `T015.R2`: evaluar condición de desbloqueo externo:
+    - `runner_id != 0`
+    - `steps` no vacío
+    - `security/snyk` fuera de `ERROR`
+  - ⏳ tarea restante `T015.R3`: si `T015.R2` cumple, abrir PR de control `develop -> main` sin admin y capturar evidencia de checks reales.
+  - ⏳ tarea restante `T015.R4`: cerrar `F014.E.T3` y `P-ADHOC-LINES-015` con actualización documental final.
+  - ⏳ tarea restante `T015.R5`: si `T015.R2` no cumple tras `T015.R1`, marcar `P-ADHOC-LINES-015` como `⛔ BLOQUEADO (externo)` y pausar sondeos automáticos hasta cambio real.
