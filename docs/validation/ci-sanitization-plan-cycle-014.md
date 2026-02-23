@@ -142,6 +142,35 @@ Estado: ✅ completado en local (con corrección de contrato de workflow).
   - `.audit_tmp/p-adhoc-lines-014-lotC-gates-exit-codes.txt`
   - `.audit_tmp/p-adhoc-lines-014-lotC-gates-bypass-exit-codes.txt`
 
+## Ejecución actual (Lote D — Package Smoke + Security)
+
+Estado: ✅ consolidado (validación local final + estado remoto documentado).
+
+### Validación local final
+
+- `npm run validation:package-manifest` => `0` (manifiesto correcto, `files scanned: 847`)
+- `npm run validation:package-smoke` => `0`
+- `npm run validation:package-smoke:minimal` => `0`
+- Evidencia:
+  - `.audit_tmp/p-adhoc-lines-014-lotD/package-manifest.out`
+  - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-block.out`
+  - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-minimal.out`
+  - `.audit-reports/package-smoke/block/summary.md`
+  - `.audit-reports/package-smoke/minimal/summary.md`
+
+### Estado remoto consolidado (último promote `PR #373`)
+
+- `package-smoke (block)` y `package-smoke (minimal)` en `FAILURE` remoto con patrón de bloqueo externo:
+  - jobs finalizan sin steps (`runner_id=0`, `steps=[]`)
+  - evidencias:
+    - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-block-job.json`
+    - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-minimal-job.json`
+- `security/snyk (swiftenprofundidad)` en `ERROR` (dependencia externa de proveedor Snyk).
+- Evidencia agregada:
+  - `.audit_tmp/p-adhoc-lines-014-lotD/pr-373-status.json`
+  - `.audit_tmp/p-adhoc-lines-014-lotD/remote-status.txt`
+  - `.audit_tmp/p-adhoc-lines-014-lotD/remote-status-check-runs.json`
+
 ## Cierre pendiente del ciclo 014
 
 Dependencia externa no resuelta:
