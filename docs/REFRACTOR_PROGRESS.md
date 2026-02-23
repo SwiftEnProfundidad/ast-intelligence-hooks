@@ -370,4 +370,11 @@ Plan base visible para seguimiento previo y durante la implementacion.
       - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts`
       - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
       - `npm run -s typecheck`
-  - 🚧 `C018.C.T1` En curso: preparar commit atómico del lote con evidencia local consolidada.
+  - ✅ `C018.C.T1` Commit atómico de lote preparado con evidencia local consolidada.
+    - bundle versionado: `docs/validation/c018-c1-local-evidence.md`
+    - artefactos locales:
+      - `.audit_tmp/c018-c1/stagePolicies-config-and-severity.out`
+      - `.audit_tmp/c018-c1/stagePolicies.out`
+      - `.audit_tmp/c018-c1/stagePolicies-promotions-third-platform-heuristics.out`
+      - `.audit_tmp/c018-c1/typecheck.out`
+  - 🚧 `C018.C.T2` En curso: abrir/cerrar PR `feature -> develop` con merge del lote C018.
