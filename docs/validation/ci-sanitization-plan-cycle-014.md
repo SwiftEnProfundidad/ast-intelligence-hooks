@@ -102,3 +102,23 @@ Implicación:
   - desbloquear billing/cuenta de Actions;
   - re-ejecutar checks del PR 363;
   - continuar lotes B/C/D sobre base remota ejecutable.
+
+## Estado tras cierre Git Flow del lote A
+
+- PR `#363` merged a `develop`:  
+  `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/363`
+- PR `#364` merged a `main` con admin (bloqueo externo persistente):  
+  `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/364`
+- Ramas sincronizadas tras promote: `origin/main...origin/develop = 0/0`.
+
+## Cierre pendiente del ciclo 014
+
+Dependencia externa no resuelta:
+
+- desbloqueo de billing en GitHub Actions.
+
+Validación final requerida al desbloquear:
+
+1. lanzar PR de control `develop -> main` sin bypass admin;
+2. verificar ejecución real de jobs (sin `runner_id=0`, con `steps` poblados);
+3. exigir checks críticos en verde para dar cierre definitivo al ciclo.
