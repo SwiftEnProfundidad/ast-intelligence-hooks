@@ -340,3 +340,45 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `P-ADHOC-LINES-017` Standby manual de operación cerrado:
   - no ejecutar sondeos automáticos ni checks remotos como criterio de salida;
   - repositorio queda en espera de nuevas instrucciones explícitas del usuario.
+
+## Ciclo activo (018)
+- ✅ `P-ADHOC-LINES-018A` Cierre documental de ciclos previos consolidado.
+- ✅ `P-ADHOC-LINES-018B` Nuevo ciclo oficial creado en `docs/ENTERPRISE_EXECUTION_CYCLE_018.md` con fases, tareas y leyenda.
+- ✅ `P-ADHOC-LINES-018C` Preparar primera entrega atomica del ciclo 018 con rama `feature/*`, TDD estricto y actualizacion incremental del tracker.
+- 🚧 `P-ADHOC-LINES-018D` Ejecutar primer lote tecnico del ciclo 018 y cerrar su Git Flow end-to-end.
+  - ✅ `C018.B.T1` RED definida para severidad unificada de `heuristics.ts.empty-catch.ast`:
+    - test añadido en `integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+    - evidencia RED: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+    - fallo esperado confirmado: `WARN !== ERROR` en PRE_COMMIT/PRE_PUSH/CI
+  - ✅ `C018.B.T2` GREEN aplicado: `empty-catch` ya escala a `ERROR` en `PRE_COMMIT/PRE_PUSH/CI`.
+    - cambio mínimo en política: `integrations/gate/stagePolicies.ts`
+    - contratos actualizados:
+      - `integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+      - `integrations/gate/__tests__/stagePolicies.test.ts`
+      - `integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
+    - validación GREEN:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
+      - `npm run -s typecheck`
+  - ✅ `C018.B.T3` REFACTOR completado: simplificación interna de política sin cambios de comportamiento.
+    - refactor aplicado en `integrations/gate/stagePolicies.ts`:
+      - extracción de helpers internos para promoción heurística por stage/rule id
+      - normalización de comparación explícita `severityOverride === null`
+    - no-regresión confirmada:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
+      - `npm run -s typecheck`
+  - ✅ `C018.C.T1` Commit atómico de lote preparado con evidencia local consolidada.
+    - bundle versionado: `docs/validation/c018-c1-local-evidence.md`
+    - artefactos locales:
+      - `.audit_tmp/c018-c1/stagePolicies-config-and-severity.out`
+      - `.audit_tmp/c018-c1/stagePolicies.out`
+      - `.audit_tmp/c018-c1/stagePolicies-promotions-third-platform-heuristics.out`
+      - `.audit_tmp/c018-c1/typecheck.out`
+  - ✅ `C018.C.T2` PR `feature -> develop` cerrada con merge del lote C018:
+    - PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/396`
+    - rama origen: `feature/p-adhoc-lines-018-cycle-kickoff`
+    - rama destino: `develop`
+  - 🚧 `C018.C.T3` En curso: promover `develop -> main` y sincronizar ramas protegidas.
