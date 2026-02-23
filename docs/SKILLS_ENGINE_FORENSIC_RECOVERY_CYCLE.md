@@ -2,7 +2,7 @@
 
 Plan operativo para recuperar el motor de skills con analisis forense previo, eliminacion de regresiones y contrato enterprise estable.
 
-Estado del plan: `ACTIVO`
+Estado del plan: `CERRADO`
 
 ## Leyenda
 - ✅ Hecho
@@ -49,4 +49,4 @@ Restaurar el comportamiento enterprise del motor para que audite skills sin caja
 ## Fase 5 - Cierre de ciclo
 - ✅ F5.T1 Actualizar documentacion (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
 - ✅ F5.T2 Generar informe final de cumplimiento con resultados reproducibles.
-- 🚧 F5.T3 Cierre Git Flow end-to-end (PR a `develop`, merge, sync `develop -> main`).
+- ✅ F5.T3 Cierre Git Flow end-to-end (PR a `develop`, merge, sync `develop -> main`).
