@@ -62,6 +62,11 @@ test('runConsumerPreflight genera hints operativos y eventos de notificación en
             severity: 'ERROR',
           },
           {
+            code: 'EVIDENCE_GATE_BLOCKED',
+            message: 'Evidence AI gate status is BLOCKED.',
+            severity: 'ERROR',
+          },
+          {
             code: 'GITFLOW_PROTECTED_BRANCH',
             message: 'Direct work on protected branch "main" is not allowed.',
             severity: 'ERROR',
@@ -77,8 +82,83 @@ test('runConsumerPreflight genera hints operativos y eventos de notificación en
 
   assert.equal(result.status, 'BLOCKED');
   assert.equal(result.hints.some((hint) => /Evidence stale/i.test(hint)), true);
+  assert.equal(result.hints.some((hint) => /EVIDENCE_GATE_BLOCKED/i.test(hint)), true);
   assert.equal(result.hints.some((hint) => /Git-flow/i.test(hint)), true);
   assert.deepEqual(events, ['evidence.stale', 'gitflow.violation', 'gate.blocked']);
+});
+
+test('formatConsumerPreflight incluye causas accionables cuando gate está bloqueado', () => {
+  const result = runConsumerPreflight(
+    {
+      repoRoot: '/tmp/repo',
+      stage: 'PRE_COMMIT',
+    },
+    {
+      evaluateAiGate: () => ({
+        stage: 'PRE_COMMIT',
+        status: 'BLOCKED',
+        allowed: false,
+        policy: {
+          stage: 'PRE_COMMIT',
+          resolved_stage: 'PRE_COMMIT',
+          block_on_or_above: 'ERROR',
+          warn_on_or_above: 'WARN',
+          trace: {
+            source: 'default',
+            bundle: 'gate-policy.default.PRE_COMMIT',
+            hash: 'hash',
+          },
+        },
+        evidence: {
+          kind: 'valid',
+          max_age_seconds: 900,
+          age_seconds: 120,
+        },
+        repo_state: {
+          repo_root: '/tmp/repo',
+          git: {
+            available: true,
+            branch: 'feature/preflight',
+            upstream: 'origin/feature/preflight',
+            ahead: 0,
+            behind: 0,
+            dirty: true,
+            staged: 1,
+            unstaged: 0,
+          },
+          lifecycle: {
+            installed: true,
+            package_version: '6.3.17',
+            lifecycle_version: '6.3.17',
+            hooks: {
+              pre_commit: 'managed',
+              pre_push: 'managed',
+            },
+          },
+        },
+        violations: [
+          {
+            code: 'EVIDENCE_GATE_BLOCKED',
+            message: 'Evidence AI gate status is BLOCKED.',
+            severity: 'ERROR',
+          },
+        ],
+      }),
+      emitSystemNotification: () => ({ delivered: false, reason: 'disabled' }),
+    }
+  );
+
+  const rendered = formatConsumerPreflight(result, {
+    panelWidth: 140,
+    color: false,
+  });
+
+  assert.match(rendered, /Blocking causes:/);
+  assert.match(rendered, /EVIDENCE_GATE_BLOCKED: Evidence AI gate status is BLOCKED\./);
+  assert.match(
+    rendered,
+    /Action: corrige primero las violaciones bloqueantes y vuelve a auditar\./
+  );
 });
 
 test('formatConsumerPreflight renderiza panel legacy con estado de repo e hints', () => {

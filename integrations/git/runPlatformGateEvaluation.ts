@@ -109,6 +109,35 @@ const collectObservedFilePaths = (facts: ReadonlyArray<Fact>): ReadonlyArray<str
   return [...filePaths].sort();
 };
 
+const hasObservedTypeScriptPlatformPaths = (
+  observedFilePaths: ReadonlyArray<string>
+): boolean => {
+  return observedFilePaths.some((path) => {
+    const normalized = path.replace(/\\/g, '/');
+    return (
+      normalized.startsWith('apps/backend/') ||
+      normalized.startsWith('apps/frontend/') ||
+      normalized.startsWith('apps/web/')
+    );
+  });
+};
+
+const resolveTypeScriptHeuristicScope = (params: {
+  configuredScope: 'platform' | 'all';
+  requiresHeuristicFacts: boolean;
+  observedFilePaths: ReadonlyArray<string>;
+}): 'platform' | 'all' => {
+  if (params.configuredScope === 'all') {
+    return 'all';
+  }
+  if (!params.requiresHeuristicFacts) {
+    return params.configuredScope;
+  }
+  return hasObservedTypeScriptPlatformPaths(params.observedFilePaths)
+    ? 'platform'
+    : 'all';
+};
+
 export const evaluatePlatformGateFindings = (
   params: {
     facts: ReadonlyArray<Fact>;
@@ -134,11 +163,16 @@ export const evaluatePlatformGateFindings = (
   const baselineRules = activeDependencies.buildCombinedBaselineRules(detectedPlatforms);
   const shouldExtractHeuristicFacts =
     heuristicsConfig.astSemanticEnabled || skillsRuleSet.requiresHeuristicFacts;
+  const typeScriptScope = resolveTypeScriptHeuristicScope({
+    configuredScope: heuristicsConfig.typeScriptScope,
+    requiresHeuristicFacts: skillsRuleSet.requiresHeuristicFacts,
+    observedFilePaths,
+  });
   const heuristicFacts = shouldExtractHeuristicFacts
     ? activeDependencies.extractHeuristicFacts({
       facts: params.facts,
       detectedPlatforms,
-      typeScriptScope: heuristicsConfig.typeScriptScope,
+      typeScriptScope,
     })
     : [];
   const evaluationFacts: ReadonlyArray<Fact> =

@@ -1,102 +1,72 @@
-# Full Repo Rules Audit Report
+# Full Repository Rules Audit Report
 
-## Scope
-- Repository: `ast-intelligence-hooks`
-- Execution date (UTC): `2026-02-22T22:37:55.560Z`
-- Command used (menu option 1): `printf '1\n10\n' | npx ast-hooks audit --scope repo`
-- Audit mode: `PRE_COMMIT` full repository snapshot
+Fecha: `2026-02-23`  
+Repositorio: `ast-intelligence-hooks`  
+Scope: `full repo` (`opción 1` del menú consumer)  
+Stage policy: `PRE_COMMIT`  
+Audit mode: `engine`
 
-## Rules Loading Verification
+## Evidencia de ejecución
 
-### 1) Skills source parity (local vs vendorizado)
-All configured skill sources are synchronized (`SHA-256` identical):
+- Log visual runtime: `assets/readme/forensics-violations/20260223-042030/refactor-option1-final.log`
+- Evidencia estructurada: `.ai_evidence.json`
 
-- `windsurf-rules-android` -> `docs/codex-skills/windsurf-rules-android.md`
-- `windsurf-rules-backend` -> `docs/codex-skills/windsurf-rules-backend.md`
-- `windsurf-rules-frontend` -> `docs/codex-skills/windsurf-rules-frontend.md`
-- `windsurf-rules-ios` -> `docs/codex-skills/windsurf-rules-ios.md`
-- `swift-concurrency` -> `docs/codex-skills/swift-concurrency.md`
-- `swiftui-expert-skill` -> `docs/codex-skills/swiftui-expert-skill.md`
+## Resumen ejecutivo
 
-Hashes checked:
+- Outcome gate: `BLOCK`
+- Violaciones totales: `70`
+- Violaciones de código (sin SDD): `69`
+- Violaciones gobernanza/SDD: `1` (`OPENSPEC_MISSING`)
 
-- `windsurf-rules-android`: `c4d24bcf258af21bcfc7ae17276683ba802f7eac429dd35b15fa2e11356a339f`
-- `windsurf-rules-backend`: `5129e38ac9214d8f506c29ecf6d6bda742a43786d29baeac01f872a561196172`
-- `windsurf-rules-frontend`: `f6977fa8f4c18b3957e080701705440f15cc4c9eb2de634b72434bb000c99d7a`
-- `windsurf-rules-ios`: `d56ea2aee3eab1768937d8913363e805e70dc9213a3dda43e2d6551b0872ef19`
-- `swift-concurrency`: `62e81a46dc206ab6c4b3c5e7555e6007bb4d40db063f135eab263a4a0b9060b3`
-- `swiftui-expert-skill`: `dc785e71742a9c215c0d70b2e7bfb1c4dd41553061663f7cf0a748018664b141`
+Severidad canónica enterprise:
+- `CRITICAL`: `41`
+- `HIGH`: `25`
+- `MEDIUM`: `4`
+- `LOW`: `0`
 
-### 2) Bundles loaded by runtime evidence
-Loaded in `.AI_EVIDENCE.json` (`rulesets[*].bundle`):
+Cobertura de reglas:
+- `active=417`
+- `evaluated=417`
+- `matched=11`
+- `unevaluated=0`
+- `unsupported_auto=0`
+- `coverage_ratio=1`
 
-- `backendRuleSet@1.0.0`
-- `frontendRuleSet@1.0.0`
-- `astHeuristicsRuleSet@0.5.0`
-- `gate-policy.default.PRE_COMMIT`
-- `android-guidelines@1.0.0`
-- `backend-guidelines@1.0.0`
-- `frontend-guidelines@1.0.0`
-- `ios-concurrency-guidelines@1.0.0`
-- `ios-guidelines@1.0.0`
-- `ios-swiftui-expert-guidelines@1.0.0`
+## Top violaciones detectadas
 
-Lock compilation snapshot (`skills.lock.json`):
+1. `common.types.undefined_in_base_type` → `32`
+2. `common.types.record_unknown_requires_type` → `16`
+3. `common.error.empty_catch` → `4`
+4. `common.types.unknown_without_guard` → `4`
+5. `skills.backend.no-empty-catch` → `4`
+6. `skills.frontend.no-empty-catch` → `4`
+7. `heuristics.ts.child-process-exec-file-sync.ast` → `1`
+8. `heuristics.ts.child-process-exec-file-untrusted-args.ast` → `1`
+9. `sdd.policy.blocked` (`OPENSPEC_MISSING`) → `1`
 
-- Skill bundles in lock: `6`
-- Rules compiled from those bundles: `25`
+## Hallazgos clave de cierre
 
-### 3) Coverage integrity
-From `.AI_EVIDENCE.json` -> `snapshot.rules_coverage`:
+- La auditoría full-repo sí está evaluando todo el set activo (`417/417`) sin reglas AUTO sin mapear (`unsupported_auto=0`).
+- El bloqueo actual no es por cobertura, sino por violaciones reales de reglas y por precondición SDD no satisfecha.
+- El resultado final del menú opción `1` y la evidencia `.ai_evidence.json` están alineados en stage (`PRE_COMMIT`) y outcome (`BLOCK`).
 
-- Active rules: `409`
-- Evaluated rules: `409`
-- Matched rules: `3`
-- Unevaluated rules: `0`
-- Coverage ratio: `1.0` (100%)
-- Files scanned (menu summary): `972`
+## Comandos usados
 
-From `snapshot.evaluation_metrics`:
+```bash
+printf '1\n10\n' | node bin/pumuki-framework.js > assets/readme/forensics-violations/20260223-042030/refactor-option1-final.log
+```
 
-- Baseline rules: `6`
-- Heuristic rules: `165`
-- Skills rules: `238`
-- Project custom rules: `0`
-
-### 4) Platform detection during this audit
-From `.AI_EVIDENCE.json` -> `platforms`:
-
-- `backend`: detected (`MEDIUM`)
-- `frontend`: detected (`MEDIUM`)
-
-## Findings (Complete Repo)
-
-### Severity summary
-Note: en métricas internas aparece `ERROR`; en UI del menú v2 se representa como `HIGH`.
-
-- `CRITICAL`: 0
-- `ERROR/HIGH`: 3
-- `WARN/MEDIUM`: 0
-- `INFO/LOW`: 0
-- Gate status: `BLOCKED`
-
-### Violations detail
-1. Rule: `heuristics.ts.child-process-exec-file-sync.ast`
-   - Severity: `ERROR` (`HIGH` en UI)
-   - File: `scripts/framework-menu-matrix-canary-lib.ts`
-   - Message: `AST heuristic detected execFileSync usage.`
-
-2. Rule: `heuristics.ts.child-process-exec-file-untrusted-args.ast`
-   - Severity: `ERROR` (`HIGH` en UI)
-   - File: `scripts/framework-menu-matrix-canary-lib.ts`
-   - Message: `AST heuristic detected execFile/execFileSync with non-literal args array.`
-
-3. Rule: `heuristics.ts.process-exit.ast`
-   - Severity: `ERROR` (`HIGH` en UI)
-   - File: `scripts/import-custom-skills.ts`
-   - Message: `AST heuristic detected process.exit usage.`
-
-## Audit Conclusion
-- The repository audit completed with full rule coverage (`409/409` evaluated, `unevaluated=0`).
-- Current gate result is `BLOCKED` by 3 high-severity (`ERROR`) findings.
-- No `CRITICAL` violations detected.
+```bash
+node --input-type=module - <<'NODE'
+import { readFileSync } from 'node:fs';
+const evidence = JSON.parse(readFileSync('.ai_evidence.json', 'utf8'));
+console.log(JSON.stringify({
+  stage: evidence.snapshot?.stage,
+  audit_mode: evidence.snapshot?.audit_mode,
+  outcome: evidence.snapshot?.outcome,
+  total_violations: evidence.severity_metrics?.total_violations,
+  by_enterprise_severity: evidence.severity_metrics?.by_enterprise_severity,
+  rules_coverage: evidence.snapshot?.rules_coverage,
+}, null, 2));
+NODE
+```

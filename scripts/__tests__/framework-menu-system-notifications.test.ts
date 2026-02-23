@@ -3,8 +3,10 @@ import test from 'node:test';
 import {
   buildSystemNotificationPayload,
   emitSystemNotification,
+  readSystemNotificationsConfig,
   type PumukiCriticalNotificationEvent,
 } from '../framework-menu-system-notifications-lib';
+import { withTempDir } from '../../integrations/__tests__/helpers/tempDir';
 
 test('buildSystemNotificationPayload construye payload para gate BLOCK', () => {
   const payload = buildSystemNotificationPayload({
@@ -43,6 +45,36 @@ test('buildSystemNotificationPayload construye payload para violación git-flow'
   assert.match(payload.title, /git[- ]?flow/i);
   assert.match(payload.message, /\bmain\b/i);
   assert.match(payload.message, /commits-direct-to-main/i);
+});
+
+test('buildSystemNotificationPayload mantiene contrato legacy para audit summary', () => {
+  const blocked = buildSystemNotificationPayload({
+    kind: 'audit.summary',
+    totalViolations: 12,
+    criticalViolations: 3,
+    highViolations: 4,
+  });
+  assert.equal(blocked.title, 'AST Audit Complete');
+  assert.match(blocked.message, /3 CRITICAL, 4 HIGH/i);
+
+  const pass = buildSystemNotificationPayload({
+    kind: 'audit.summary',
+    totalViolations: 0,
+    criticalViolations: 0,
+    highViolations: 0,
+  });
+  assert.equal(pass.title, 'AST Audit Complete');
+  assert.match(pass.message, /No violations found/i);
+});
+
+test('readSystemNotificationsConfig habilita notificaciones por defecto cuando no hay config', async () => {
+  await withTempDir('pumuki-notifications-defaults-', async (repoRoot) => {
+    const config = readSystemNotificationsConfig(repoRoot);
+    assert.deepEqual(config, {
+      enabled: true,
+      channel: 'macos',
+    });
+  });
 });
 
 test('emitSystemNotification aplica fallback no-macOS y no ejecuta osascript', () => {

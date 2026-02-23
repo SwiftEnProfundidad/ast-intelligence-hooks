@@ -22,6 +22,11 @@ import {
   renderBadge,
 } from './framework-menu-ui-components-lib';
 import { isMenuUiV2Enabled } from './framework-menu-ui-version-lib';
+import {
+  emitSystemNotification,
+  type PumukiCriticalNotificationEvent,
+  type SystemNotificationEmitResult,
+} from './framework-menu-system-notifications-lib';
 
 type ConsumerAction = {
   id: string;
@@ -37,11 +42,20 @@ export const createConsumerMenuRuntime = (params: {
   runPreflight?: (
     stage: 'PRE_COMMIT' | 'PRE_PUSH'
   ) => Promise<string | void> | string | void;
+  emitSystemNotification?: (params: {
+    event: PumukiCriticalNotificationEvent;
+    repoRoot: string;
+  }) => SystemNotificationEmitResult;
   write: (text: string) => void;
 }): {
   actions: ReadonlyArray<ConsumerAction>;
   printMenu: () => void;
 } => {
+  const emitNotification =
+    params.emitSystemNotification
+    ?? ((payload: { event: PumukiCriticalNotificationEvent; repoRoot: string }) =>
+      emitSystemNotification(payload));
+
   const useColor = (): boolean => {
     if (process.env.NO_COLOR === '1') {
       return false;
@@ -94,27 +108,44 @@ export const createConsumerMenuRuntime = (params: {
     );
   };
 
+  const notifyAuditSummary = (summary: LegacyAuditSummary): void => {
+    if (summary.status !== 'ok') {
+      return;
+    }
+    emitNotification({
+      event: {
+        kind: 'audit.summary',
+        totalViolations: summary.totalViolations,
+        criticalViolations: summary.bySeverity.CRITICAL,
+        highViolations: summary.bySeverity.HIGH,
+      },
+      repoRoot: process.cwd(),
+    });
+  };
+
   const actions = createConsumerLegacyMenuActions({
     runFullAudit: async () => {
       await runPreflight('PRE_COMMIT');
       await params.runRepoGate();
-      renderSummary();
+      notifyAuditSummary(renderSummary());
     },
     runStrictRepoAndStaged: async () => {
       await runPreflight('PRE_PUSH');
       await params.runRepoAndStagedGate();
-      renderSummary();
+      notifyAuditSummary(renderSummary());
     },
     runStrictStagedOnly: async () => {
       await runPreflight('PRE_COMMIT');
       await params.runStagedGate();
       const summary = renderSummary();
+      notifyAuditSummary(summary);
       printEmptyScopeHint(summary, 'staged');
     },
     runStandardCriticalHigh: async () => {
       await runPreflight('PRE_PUSH');
       await params.runWorkingTreeGate();
       const summary = renderSummary();
+      notifyAuditSummary(summary);
       printEmptyScopeHint(summary, 'workingTree');
     },
     runPatternChecks: async () => {

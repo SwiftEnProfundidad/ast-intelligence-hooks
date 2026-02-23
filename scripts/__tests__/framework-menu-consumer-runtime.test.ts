@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { createConsumerMenuRuntime } from '../framework-menu-consumer-runtime-lib';
+import type { PumukiCriticalNotificationEvent } from '../framework-menu-system-notifications-lib';
 
 const writeEmptyEvidence = (dir: string, stage: 'PRE_COMMIT' | 'PRE_PUSH'): void => {
   writeFileSync(
@@ -111,6 +112,83 @@ test('consumer runtime ejecuta preflight con stage correcto por opción', async 
   await runtime.actions.find((item) => item.id === '4')?.execute();
 
   assert.deepEqual(stages, ['PRE_COMMIT', 'PRE_PUSH', 'PRE_COMMIT', 'PRE_PUSH']);
+});
+
+test('consumer runtime emite notificación audit summary tras opción 1', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-notify-'));
+  process.chdir(temp);
+  try {
+    const events: PumukiCriticalNotificationEvent[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {
+        writeFileSync(
+          join(temp, '.ai_evidence.json'),
+          JSON.stringify(
+            {
+              snapshot: {
+                stage: 'PRE_COMMIT',
+                outcome: 'BLOCK',
+                files_scanned: 8,
+                files_affected: 3,
+                findings: [
+                  {
+                    ruleId: 'backend.solid.srp.class-too-many-responsibilities',
+                    severity: 'CRITICAL',
+                    filePath: 'src/a.ts',
+                  },
+                  {
+                    ruleId: 'backend.solid.ocp.closed-for-modification',
+                    severity: 'ERROR',
+                    filePath: 'src/b.ts',
+                  },
+                  {
+                    ruleId: 'backend.clean.layers.boundary',
+                    severity: 'WARN',
+                    filePath: 'src/c.ts',
+                  },
+                ],
+              },
+              severity_metrics: {
+                by_severity: {
+                  CRITICAL: 1,
+                  ERROR: 1,
+                  WARN: 1,
+                  INFO: 0,
+                },
+              },
+            },
+            null,
+            2
+          )
+        );
+      },
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      emitSystemNotification: ({ event }) => {
+        events.push(event);
+        return { delivered: false, reason: 'disabled' };
+      },
+      write: () => {},
+    });
+
+    const action = runtime.actions.find((item) => item.id === '1');
+    assert.ok(action, 'Expected consumer action id=1');
+    await action.execute();
+
+    assert.equal(events.length, 1);
+    assert.equal(events[0]?.kind, 'audit.summary');
+    if (events[0]?.kind !== 'audit.summary') {
+      assert.fail('Expected audit.summary notification event');
+    }
+    assert.equal(events[0].totalViolations, 3);
+    assert.equal(events[0].criticalViolations, 1);
+    assert.equal(events[0].highViolations, 1);
+  } finally {
+    process.chdir(previous);
+  }
 });
 
 test('consumer runtime printMenu agrupa opciones por flujos canónicos', async () => {

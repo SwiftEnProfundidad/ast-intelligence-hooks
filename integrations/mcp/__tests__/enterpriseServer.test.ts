@@ -269,6 +269,20 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
       snapshot: {
         stage: 'PRE_COMMIT',
         outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_COMMIT',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
         findings: [],
       },
       ledger: [],
@@ -374,6 +388,20 @@ test('enterprise server ai_gate_check propaga policy trace hard mode persistida 
       snapshot: {
         stage: 'PRE_COMMIT',
         outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_COMMIT',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
         findings: [],
       },
       ledger: [],

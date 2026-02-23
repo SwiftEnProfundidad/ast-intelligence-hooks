@@ -6,6 +6,12 @@ export type PumukiNotificationStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI' | 'PRE_WR
 
 export type PumukiCriticalNotificationEvent =
   | {
+      kind: 'audit.summary';
+      totalViolations: number;
+      criticalViolations: number;
+      highViolations: number;
+    }
+  | {
       kind: 'gate.blocked';
       stage: PumukiNotificationStage;
       totalViolations: number;
@@ -85,7 +91,7 @@ export const persistSystemNotificationsConfig = (repoRoot: string, enabled: bool
 export const readSystemNotificationsConfig = (repoRoot: string): SystemNotificationsConfig => {
   const configPath = join(repoRoot, SYSTEM_NOTIFICATIONS_CONFIG_PATH);
   if (!existsSync(configPath)) {
-    return buildSystemNotificationsConfigFromSelection(false);
+    return buildSystemNotificationsConfigFromSelection(true);
   }
 
   try {
@@ -98,13 +104,38 @@ export const readSystemNotificationsConfig = (repoRoot: string): SystemNotificat
       channel: 'macos',
     };
   } catch {
-    return buildSystemNotificationsConfigFromSelection(false);
+    return buildSystemNotificationsConfigFromSelection(true);
   }
 };
 
 export const buildSystemNotificationPayload = (
   event: PumukiCriticalNotificationEvent
 ): SystemNotificationPayload => {
+  if (event.kind === 'audit.summary') {
+    if (event.criticalViolations > 0) {
+      return {
+        title: 'AST Audit Complete',
+        message: `🔴 ${event.criticalViolations} CRITICAL, ${event.highViolations} HIGH violations`,
+      };
+    }
+    if (event.highViolations > 0) {
+      return {
+        title: 'AST Audit Complete',
+        message: `🟡 ${event.highViolations} HIGH violations found`,
+      };
+    }
+    if (event.totalViolations > 0) {
+      return {
+        title: 'AST Audit Complete',
+        message: `🔵 ${event.totalViolations} violations (no blockers)`,
+      };
+    }
+    return {
+      title: 'AST Audit Complete',
+      message: '✅ No violations found',
+    };
+  }
+
   if (event.kind === 'gate.blocked') {
     return {
       title: 'Pumuki · Gate BLOCK',

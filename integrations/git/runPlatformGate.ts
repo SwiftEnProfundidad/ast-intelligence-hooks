@@ -133,7 +133,7 @@ export async function runPlatformGate(params: {
   };
   const repoRoot = git.resolveRepoRoot();
   const auditMode = params.auditMode ?? 'gate';
-  const shouldShortCircuitSdd = params.sddShortCircuit ?? auditMode !== 'engine';
+  const shouldShortCircuitSdd = params.sddShortCircuit ?? false;
   let sddDecision:
     | Pick<SddDecision, 'allowed' | 'code' | 'message'>
     | undefined;

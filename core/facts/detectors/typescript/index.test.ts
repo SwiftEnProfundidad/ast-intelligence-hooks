@@ -12,13 +12,17 @@ import {
   hasExplicitAnyType,
   hasFrameworkDependencyImport,
   hasFunctionConstructorUsage,
+  hasNetworkCallWithoutErrorHandling,
   hasMixedCommandQueryClass,
   hasMixedCommandQueryInterface,
+  hasRecordStringUnknownType,
   hasOverrideMethodThrowingNotImplemented,
   hasLargeClassDeclaration,
   hasSetIntervalStringCallback,
   hasSetTimeoutStringCallback,
   hasTypeDiscriminatorSwitch,
+  hasUndefinedInBaseTypeUnion,
+  hasUnknownTypeAssertion,
   hasWithStatement,
 } from './index';
 
@@ -396,4 +400,99 @@ test('hasLargeClassDeclaration detecta clases con mas de 500 lineas', () => {
 
   assert.equal(hasLargeClassDeclaration(oversizedClassAst), true);
   assert.equal(hasLargeClassDeclaration(compactClassAst), false);
+});
+
+test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {
+  const recordUnknownAst = {
+    type: 'TSTypeReference',
+    typeName: { type: 'Identifier', name: 'Record' },
+    typeParameters: {
+      params: [{ type: 'TSStringKeyword' }, { type: 'TSUnknownKeyword' }],
+    },
+  };
+  const recordStringAst = {
+    type: 'TSTypeReference',
+    typeName: { type: 'Identifier', name: 'Record' },
+    typeParameters: {
+      params: [{ type: 'TSStringKeyword' }, { type: 'TSStringKeyword' }],
+    },
+  };
+
+  assert.equal(hasRecordStringUnknownType(recordUnknownAst), true);
+  assert.equal(hasRecordStringUnknownType(recordStringAst), false);
+});
+
+test('hasUnknownTypeAssertion detecta as unknown', () => {
+  const unknownAssertionAst = {
+    type: 'TSAsExpression',
+    expression: { type: 'Identifier', name: 'value' },
+    typeAnnotation: { type: 'TSUnknownKeyword' },
+  };
+  const stringAssertionAst = {
+    type: 'TSAsExpression',
+    expression: { type: 'Identifier', name: 'value' },
+    typeAnnotation: { type: 'TSStringKeyword' },
+  };
+
+  assert.equal(hasUnknownTypeAssertion(unknownAssertionAst), true);
+  assert.equal(hasUnknownTypeAssertion(stringAssertionAst), false);
+});
+
+test('hasUndefinedInBaseTypeUnion detecta uniones base con undefined', () => {
+  const unionWithUndefinedAst = {
+    type: 'TSUnionType',
+    types: [{ type: 'TSStringKeyword' }, { type: 'TSUndefinedKeyword' }],
+  };
+  const unionWithoutUndefinedAst = {
+    type: 'TSUnionType',
+    types: [{ type: 'TSStringKeyword' }, { type: 'TSNullKeyword' }],
+  };
+
+  assert.equal(hasUndefinedInBaseTypeUnion(unionWithUndefinedAst), true);
+  assert.equal(hasUndefinedInBaseTypeUnion(unionWithoutUndefinedAst), false);
+});
+
+test('hasNetworkCallWithoutErrorHandling detecta llamadas de red sin try/catch ni .catch', () => {
+  const unhandledNetworkAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'CallExpression',
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'axios' },
+            property: { type: 'Identifier', name: 'get' },
+          },
+          arguments: [],
+        },
+      },
+    ],
+  };
+  const handledNetworkAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'TryStatement',
+        block: { type: 'BlockStatement', body: [] },
+        handler: { type: 'CatchClause', body: { type: 'BlockStatement', body: [] } },
+      },
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'CallExpression',
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'axios' },
+            property: { type: 'Identifier', name: 'get' },
+          },
+          arguments: [],
+        },
+      },
+    ],
+  };
+
+  assert.equal(hasNetworkCallWithoutErrorHandling(unhandledNetworkAst), true);
+  assert.equal(hasNetworkCallWithoutErrorHandling(handledNetworkAst), false);
 });

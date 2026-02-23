@@ -22,7 +22,7 @@ const makeRule = (id: string, severity: 'INFO' | 'WARN' | 'ERROR' | 'CRITICAL' =
   };
 };
 
-test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic facts cuando skills lo requiere', () => {
+test('evaluatePlatformGateFindings normaliza stage STAGED y eleva scope TS a all cuando skills lo requiere fuera de apps/*', () => {
   const inputFacts: ReadonlyArray<Fact> = [
     {
       kind: 'FileChange',
@@ -138,7 +138,7 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic fac
   assert.deepEqual(capturedExtractHeuristicFactsInput, {
     facts: inputFacts,
     detectedPlatforms,
-    typeScriptScope: 'platform',
+    typeScriptScope: 'all',
   });
   assert.deepEqual(
     capturedMergeRuleSetsInput?.baselineRules.map((rule) => rule.id),
@@ -178,6 +178,65 @@ test('evaluatePlatformGateFindings normaliza stage STAGED y agrega heuristic fac
     unevaluatedRuleIds: [],
   });
   assert.deepEqual(result.findings, findings);
+});
+
+test('evaluatePlatformGateFindings mantiene scope TS platform cuando hay archivos en apps/*', () => {
+  const inputFacts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/backend/src/orders.service.ts',
+      content: 'export const x = 1;',
+      source: 'test',
+    },
+  ];
+  const detectedPlatforms: DetectedPlatforms = {
+    backend: { detected: true, confidence: 'HIGH' },
+  };
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [makeRule('skills.rule')],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: true,
+  };
+
+  let capturedExtractHeuristicFactsInput:
+    | {
+      facts: ReadonlyArray<Fact>;
+      detectedPlatforms: DetectedPlatforms;
+      typeScriptScope?: 'platform' | 'all';
+    }
+    | undefined;
+
+  const deps: Partial<PlatformGateEvaluationDependencies> = {
+    detectPlatformsFromFacts: () => detectedPlatforms,
+    loadHeuristicsConfig: () => ({ astSemanticEnabled: false, typeScriptScope: 'platform' }),
+    loadSkillsRuleSetForStage: () => skillsRuleSet,
+    buildCombinedBaselineRules: () => [],
+    extractHeuristicFacts: (input) => {
+      capturedExtractHeuristicFactsInput = input;
+      return [];
+    },
+    applyHeuristicSeverityForStage: () => [],
+    loadProjectRules: () => undefined,
+    mergeRuleSets: (baselineRules, projectRules) => [...baselineRules, ...projectRules],
+    evaluateRules: () => [],
+    attachFindingTraceability: (input) => input.findings,
+  };
+
+  evaluatePlatformGateFindings(
+    {
+      facts: inputFacts,
+      stage: 'PRE_COMMIT',
+      repoRoot: '/repo',
+    },
+    deps
+  );
+
+  assert.deepEqual(capturedExtractHeuristicFactsInput, {
+    facts: inputFacts,
+    detectedPlatforms,
+    typeScriptScope: 'platform',
+  });
 });
 
 test('evaluatePlatformGateFindings filtra heuristicas mapeadas y permite downgrade cuando projectRules lo habilita', () => {

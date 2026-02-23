@@ -14,6 +14,7 @@ import { processRules } from './heuristics/process';
 import { securityRules } from './heuristics/security';
 import { typescriptRules } from './heuristics/typescript';
 import { vmRules } from './heuristics/vm';
+import { commonLegacyRules } from './heuristics/commonLegacy';
 
 test('astHeuristicsRuleSet compone y normaliza reglas heurísticas esperadas', () => {
   const heuristicsRuleGroups: RuleSet[] = [
@@ -27,6 +28,7 @@ test('astHeuristicsRuleSet compone y normaliza reglas heurísticas esperadas', (
     fsCallbacksRules,
     iosRules,
     androidRules,
+    commonLegacyRules,
   ];
 
   const expected = heuristicsRuleGroups.reduce(
@@ -39,6 +41,7 @@ test('astHeuristicsRuleSet compone y normaliza reglas heurísticas esperadas', (
   const ids = astHeuristicsRuleSet.map((rule) => rule.id);
   assert.equal(new Set(ids).size, ids.length);
   assert.ok(ids.includes('heuristics.ts.empty-catch.ast'));
+  assert.ok(ids.includes('common.error.empty_catch'));
   assert.ok(ids.includes('heuristics.ios.anyview.ast'));
   assert.ok(ids.includes('heuristics.android.thread-sleep.ast'));
 

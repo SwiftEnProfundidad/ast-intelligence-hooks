@@ -20,6 +20,7 @@ const concreteDependencyNames = new Set<string>([
   'Axios',
 ]);
 const GOD_CLASS_MAX_LINES = 500;
+const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
 
 const methodNameFromNode = (node: unknown): string | undefined => {
   if (!isObject(node)) {
@@ -474,4 +475,148 @@ export const hasLargeClassDeclaration = (node: unknown): boolean => {
     }
     return nodeLineSpan(value) >= GOD_CLASS_MAX_LINES;
   });
+};
+
+const isRecordTypeName = (node: unknown): boolean => {
+  return (
+    isObject(node) &&
+    node.type === 'Identifier' &&
+    typeof node.name === 'string' &&
+    node.name === 'Record'
+  );
+};
+
+const typeReferenceParams = (node: unknown): ReadonlyArray<unknown> => {
+  if (!isObject(node) || !isObject(node.typeParameters) || !Array.isArray(node.typeParameters.params)) {
+    return [];
+  }
+  return node.typeParameters.params;
+};
+
+export const hasRecordStringUnknownType = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'TSTypeReference') {
+      return false;
+    }
+    if (!isRecordTypeName(value.typeName)) {
+      return false;
+    }
+    const params = typeReferenceParams(value);
+    if (params.length !== 2) {
+      return false;
+    }
+    const keyType = params[0];
+    const valueType = params[1];
+    if (!isObject(keyType) || !isObject(valueType)) {
+      return false;
+    }
+    const isStringKey =
+      keyType.type === 'TSStringKeyword' ||
+      (keyType.type === 'TSLiteralType' &&
+        isObject(keyType.literal) &&
+        keyType.literal.type === 'StringLiteral');
+    return isStringKey && valueType.type === 'TSUnknownKeyword';
+  });
+};
+
+export const hasUnknownTypeAssertion = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'TSAsExpression' && value.type !== 'TSTypeAssertion') {
+      return false;
+    }
+    return isObject(value.typeAnnotation) && value.typeAnnotation.type === 'TSUnknownKeyword';
+  });
+};
+
+const hasUndefinedUnionMember = (members: ReadonlyArray<unknown>): boolean => {
+  return members.some(
+    (member) => isObject(member) && member.type === 'TSUndefinedKeyword'
+  );
+};
+
+const hasBaseScalarUnionMember = (members: ReadonlyArray<unknown>): boolean => {
+  return members.some((member) => {
+    return (
+      isObject(member) &&
+      (member.type === 'TSStringKeyword' ||
+        member.type === 'TSNumberKeyword' ||
+        member.type === 'TSBooleanKeyword' ||
+        member.type === 'TSObjectKeyword')
+    );
+  });
+};
+
+export const hasUndefinedInBaseTypeUnion = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (!isObject(value) || value.type !== 'TSUnionType' || !Array.isArray(value.types)) {
+      return false;
+    }
+    return hasUndefinedUnionMember(value.types) && hasBaseScalarUnionMember(value.types);
+  });
+};
+
+const hasNetworkCallExpression = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    const identifierName = methodNameFromNode(callee);
+    if (identifierName && networkCallCalleePattern.test(identifierName)) {
+      return true;
+    }
+    if (!isObject(callee) || callee.type !== 'MemberExpression') {
+      return false;
+    }
+    const propertyName = methodNameFromNode(callee.property);
+    if (!propertyName || !networkCallCalleePattern.test(propertyName)) {
+      return false;
+    }
+    const objectName = methodNameFromNode(callee.object);
+    if (
+      objectName &&
+      (objectName.toLowerCase() === 'http' || objectName.toLowerCase() === 'axios')
+    ) {
+      return true;
+    }
+    if (
+      isObject(callee.object) &&
+      callee.object.type === 'MemberExpression' &&
+      methodNameFromNode(callee.object.property)?.toLowerCase() === 'http'
+    ) {
+      return true;
+    }
+    return propertyName.toLowerCase() === 'fetch';
+  });
+};
+
+const hasTryCatchStatement = (node: unknown): boolean => {
+  return hasNode(node, (value) => value.type === 'TryStatement' || value.type === 'CatchClause');
+};
+
+const hasPromiseCatchCall = (node: unknown): boolean => {
+  return hasNode(node, (value) => {
+    if (value.type !== 'CallExpression') {
+      return false;
+    }
+    const callee = value.callee;
+    return (
+      isObject(callee) &&
+      callee.type === 'MemberExpression' &&
+      methodNameFromNode(callee.property)?.toLowerCase() === 'catch'
+    );
+  });
+};
+
+export const hasNetworkCallWithoutErrorHandling = (node: unknown): boolean => {
+  if (!hasNetworkCallExpression(node)) {
+    return false;
+  }
+  if (hasTryCatchStatement(node)) {
+    return false;
+  }
+  if (hasPromiseCatchCall(node)) {
+    return false;
+  }
+  return true;
 };

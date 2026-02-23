@@ -9,12 +9,14 @@ type Args = {
   legacyPath: string;
   enterprisePath: string;
   outputPath: string;
+  strictScope: boolean;
 };
 
 const parseArgs = (argv: ReadonlyArray<string>): Args => {
   let legacyPath = '';
   let enterprisePath = '';
   let outputPath = 'docs/LEGACY_PARITY_REPORT.md';
+  let strictScope = true;
 
   for (const arg of argv) {
     if (arg.startsWith('--legacy=')) {
@@ -27,12 +29,16 @@ const parseArgs = (argv: ReadonlyArray<string>): Args => {
     }
     if (arg.startsWith('--out=')) {
       outputPath = arg.slice('--out='.length).trim();
+      continue;
+    }
+    if (arg === '--allow-scope-mismatch') {
+      strictScope = false;
     }
   }
 
   if (legacyPath.length === 0 || enterprisePath.length === 0) {
     throw new Error(
-      'Usage: node --import tsx scripts/build-legacy-parity-report.ts --legacy=<path> --enterprise=<path> [--out=<path>]'
+      'Usage: node --import tsx scripts/build-legacy-parity-report.ts --legacy=<path> --enterprise=<path> [--out=<path>] [--allow-scope-mismatch]'
     );
   }
 
@@ -40,6 +46,7 @@ const parseArgs = (argv: ReadonlyArray<string>): Args => {
     legacyPath,
     enterprisePath,
     outputPath,
+    strictScope,
   };
 };
 
@@ -48,6 +55,7 @@ const main = (): void => {
   const report = buildLegacyParityReport({
     legacyPath: args.legacyPath,
     enterprisePath: args.enterprisePath,
+    strictScope: args.strictScope,
   });
   const markdown = formatLegacyParityReportMarkdown(report);
   const outputPath = resolve(args.outputPath);
