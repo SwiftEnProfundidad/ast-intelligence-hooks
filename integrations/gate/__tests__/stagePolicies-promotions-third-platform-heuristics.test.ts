@@ -394,7 +394,7 @@ test('gate promotes SOLID DIP concrete-instantiation heuristic to blocking in PR
   assert.equal(ciDecision.outcome, 'BLOCK');
 });
 
-test('gate keeps non-promoted heuristic rules as non-blocking warnings', () => {
+test('gate promotes empty-catch heuristic to blocking in PRE_PUSH', () => {
   const emptyCatchFact = {
     kind: 'Heuristic' as const,
     ruleId: 'heuristics.ts.empty-catch.ast',
@@ -409,7 +409,7 @@ test('gate keeps non-promoted heuristic rules as non-blocking warnings', () => {
     [emptyCatchFact]
   );
   const prePushDecision = evaluateGate([...prePushFindings], policyForPrePush());
-  assert.equal(prePushDecision.outcome, 'WARN');
-  assert.equal(prePushDecision.blocking.length, 0);
-  assert.equal(prePushDecision.warnings.length, 1);
+  assert.equal(prePushDecision.outcome, 'BLOCK');
+  assert.equal(prePushDecision.blocking.length, 1);
+  assert.equal(prePushDecision.warnings.length, 0);
 });

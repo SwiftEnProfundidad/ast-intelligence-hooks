@@ -16,9 +16,6 @@ const heuristicsPromotionStageAllowList = new Set<GateStage>([
   'PRE_PUSH',
   'CI',
 ]);
-const heuristicsPromotionIgnoreSet = new Set<string>([
-  'heuristics.ts.empty-catch.ast',
-]);
 
 const heuristicSeverityOverrideForStage = (
   ruleId: string,
@@ -28,9 +25,6 @@ const heuristicSeverityOverrideForStage = (
     return null;
   }
   if (!ruleId.startsWith('heuristics.')) {
-    return null;
-  }
-  if (heuristicsPromotionIgnoreSet.has(ruleId)) {
     return null;
   }
   return 'ERROR';

@@ -350,4 +350,15 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - test añadido en `integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
     - evidencia RED: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
     - fallo esperado confirmado: `WARN !== ERROR` en PRE_COMMIT/PRE_PUSH/CI
-  - 🚧 `C018.B.T2` GREEN en curso: aplicar cambio mínimo de política para que `empty-catch` escale a `ERROR` en gates enterprise.
+  - ✅ `C018.B.T2` GREEN aplicado: `empty-catch` ya escala a `ERROR` en `PRE_COMMIT/PRE_PUSH/CI`.
+    - cambio mínimo en política: `integrations/gate/stagePolicies.ts`
+    - contratos actualizados:
+      - `integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+      - `integrations/gate/__tests__/stagePolicies.test.ts`
+      - `integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
+    - validación GREEN:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
+      - `npm run -s typecheck`
+  - 🚧 `C018.B.T3` REFACTOR en curso: limpiar estructura de tests/política sin cambiar comportamiento validado.
