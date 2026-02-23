@@ -224,7 +224,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - documento oficial: `docs/validation/ci-sanitization-cycle-014-incremental-closure.md`
     - índice actualizado: `docs/validation/README.md`
   - ✅ cierre Git Flow final de fase D ejecutado:
-    - promote final `develop -> main` realizado para consolidar Fase D en ramas protegidas.
+    - promote final `develop -> main` realizado para consolidar Fase D en ramas protegidas (`PR #377`).
   - ✅ cierre Git Flow de lote C ejecutado end-to-end:
     - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
     - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
