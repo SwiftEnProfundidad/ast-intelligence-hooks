@@ -381,4 +381,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/396`
     - rama origen: `feature/p-adhoc-lines-018-cycle-kickoff`
     - rama destino: `develop`
-  - 🚧 `C018.C.T3` En curso: promover `develop -> main` y sincronizar ramas protegidas.
+  - ✅ `C018.C.T3` Promote `develop -> main` ejecutado para cierre de fase C:
+    - PR de promote: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/397`
+    - rama origen: `develop`
+    - rama destino: `main`
+  - 🚧 `C018.D.T1` En curso: revalidación funcional/visual local del lote ya promovido.
