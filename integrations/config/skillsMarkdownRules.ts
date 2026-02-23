@@ -325,9 +325,7 @@ export const extractCompiledRulesFromSkillMarkdown = (params: {
     }
     usedIds.add(nextId);
 
-    const evaluationMode: SkillsRuleEvaluationMode = knownRuleId
-      ? 'AUTO'
-      : 'DECLARATIVE';
+    const evaluationMode: SkillsRuleEvaluationMode = 'AUTO';
 
     rules.push({
       id: nextId,

@@ -145,7 +145,29 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ⏳ Post-cierre anterior pendiente: exponer `PRE_WRITE` de forma visible en la matriz de diagnostico del menu sin romper contratos existentes.
 - ✅ `F0.T2` completada en `ALL_SKILLS_AST_ENFORCEMENT`: tracker sincronizado y tarea activa unica garantizada.
 - ✅ Ciclo `ALL_SKILLS_AST_ENFORCEMENT` cerrado con trazabilidad completa de reglas, evidencia y merge a `main`.
-- Estado activo: ciclo `ALL_SKILLS_AST_ENFORCEMENT` cerrado.
+- ✅ Operacion ad-hoc completada: auditoria full-repo solicitada por usuario ejecutada (menu opcion `1`, scope `repo`) con informe actualizado en `docs/FULL_REPO_RULES_AUDIT_REPORT.md`.
+- ✅ Nuevo plan activo creado: `docs/ENTERPRISE_AST_DETECTION_SUPERIORITY_CYCLE.md`.
+- ✅ `F0.T1` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: plan operativo enterprise creado con fases/tareas/leyenda.
+- ✅ `F0.T2` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: tracker sincronizado y tarea activa unica garantizada.
+- ✅ `F0.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: rama del ciclo creada (`feature/enterprise-ast-detection-superiority`).
+- ✅ `F1.T1` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: registro central de detectores para skills `AUTO` (`skillsDetectorRegistry`).
+- ✅ `F1.T2` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: eliminacion de fallback declarativo silencioso en import/custom rules (`AUTO` por defecto).
+- ✅ `F1.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: bloqueo de gate por skill `AUTO` sin detector mapeado.
+- ✅ `F1.T4` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: trazabilidad de cobertura ampliada con `unsupported_auto_rule_ids`.
+- ✅ `F2.T1` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: bypass SDD eliminado en menu de auditoria.
+- ✅ `F2.T2` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: diagnostico de cobertura expone estado SDD por stage.
+- ✅ `F2.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: `PRE_WRITE` visible y trazado en matriz operativa del menu.
+- ✅ `F3.T1` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: import custom endurecido para exigir evaluacion ejecutable.
+- ✅ `F3.T2` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: merge `core + custom` trazado en diagnosticos y contratos.
+- ✅ `F3.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: pruebas de regresion de carga externa añadidas.
+- ✅ `F4.T1` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: harness `legacy vs enterprise` implementado.
+- ✅ `F4.T2` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: criterio de dominancia `enterprise >= legacy` validado.
+- ✅ `F4.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: reporte determinista generado en `docs/LEGACY_PARITY_REPORT.md`.
+- ✅ `F5.T1` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: TDD RED/GREEN/REFACTOR completado en motor/config/gate.
+- ✅ `F5.T2` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: validacion funcional/menu/evidencia en verde.
+- ✅ `F5.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: documentacion enterprise sincronizada (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
+- 🚧 `F5.T4` en construccion en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: cierre Git Flow end-to-end (`feature -> develop -> main`).
+- Estado activo: ciclo `ENTERPRISE_AST_DETECTION_SUPERIORITY` en ejecucion.
 
 ## Siguiente paso operativo
-- ⏳ Retomar post-cierre previo: exponer `PRE_WRITE` de forma visible en la matriz de diagnostico del menu sin romper contratos existentes.
+- ⏳ Completar `F5.T4`: cerrar PR `feature -> develop` y PR `develop -> main`, y dejar ramas sincronizadas.

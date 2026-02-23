@@ -31,7 +31,9 @@ const withStageRunnerRepo = async (
   callback: (repoRoot: string) => Promise<void>
 ): Promise<void> => {
   const previousBypass = process.env.PUMUKI_SDD_BYPASS;
+  const previousDisableCore = process.env.PUMUKI_DISABLE_CORE_SKILLS;
   process.env.PUMUKI_SDD_BYPASS = '1';
+  process.env.PUMUKI_DISABLE_CORE_SKILLS = '1';
   try {
     await withTempRepo(callback, { tempPrefix: 'pumuki-stage-runner-' });
   } finally {
@@ -39,6 +41,11 @@ const withStageRunnerRepo = async (
       delete process.env.PUMUKI_SDD_BYPASS;
     } else {
       process.env.PUMUKI_SDD_BYPASS = previousBypass;
+    }
+    if (typeof previousDisableCore === 'undefined') {
+      delete process.env.PUMUKI_DISABLE_CORE_SKILLS;
+    } else {
+      process.env.PUMUKI_DISABLE_CORE_SKILLS = previousDisableCore;
     }
   }
 };

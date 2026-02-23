@@ -83,7 +83,7 @@ test('resolveSkillImportSources discovers SKILL.md paths from AGENTS.md', async 
   });
 });
 
-test('importCustomSkillsRules writes .pumuki/custom-rules.json and extracts declarative + auto rules', async () => {
+test('importCustomSkillsRules writes .pumuki/custom-rules.json and forces AUTO evaluation mode for extracted rules', async () => {
   await withTempDir('pumuki-skills-custom-import-', async (tempRoot) => {
     const backendSkillPath = join(tempRoot, 'skills/backend/SKILL.md');
     const frontendSkillPath = join(tempRoot, 'skills/frontend/SKILL.md');
@@ -184,5 +184,54 @@ test('custom rules override repo lock rules by id when building effective skills
     assert.equal(onlyRule.id, 'skills.backend.no-empty-catch');
     assert.equal(onlyRule.severity, 'CRITICAL');
     assert.equal(onlyRule.description, 'Custom override for backend no-empty-catch.');
+  }));
+});
+
+test('import custom con reglas no canonicas deja trazabilidad unsupported_auto_rule_ids en gate', async () => {
+  await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-custom-unsupported-auto-', async (tempRoot) => {
+    writeFileSync(
+      join(tempRoot, 'skills.lock.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          compilerVersion: '1.0.0',
+          generatedAt: '2026-02-23T10:00:00.000Z',
+          bundles: [
+            {
+              name: 'repo-local-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/repo-local/SKILL.md',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+          ],
+        },
+        null,
+        2
+      )
+    );
+
+    const backendSkillPath = join(tempRoot, 'skills/backend/SKILL.md');
+    mkdirSync(join(tempRoot, 'skills/backend'), { recursive: true });
+    writeFileSync(
+      backendSkillPath,
+      '- Must avoid transaction scripts crossing auth, orders and payments bounded contexts.\n'
+    );
+
+    const importResult = importCustomSkillsRules({
+      repoRoot: tempRoot,
+      sourceFiles: [backendSkillPath],
+    });
+
+    assert.equal(importResult.importedRules.length, 1);
+    const importedRuleId = importResult.importedRules[0]?.id;
+    assert.ok(importedRuleId);
+
+    const detectedPlatforms = {
+      backend: { detected: true, confidence: 'HIGH' as const },
+    };
+    const ruleSet = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot, detectedPlatforms);
+    assert.equal(ruleSet.rules.length, 0);
+    assert.deepEqual(ruleSet.unsupportedAutoRuleIds, [importedRuleId]);
   }));
 });
