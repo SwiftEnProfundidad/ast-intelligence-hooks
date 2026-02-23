@@ -9,5 +9,5 @@ jobs:
     uses: ./.github/workflows/pumuki-gate-template.yml
     with:
       gate_name: Frontend Gate
-      runner_path: integrations/git/ciFrontend.ts
+      runner_path: integrations/git/ciFrontend.cli.ts
       artifact_name: ai-evidence-frontend

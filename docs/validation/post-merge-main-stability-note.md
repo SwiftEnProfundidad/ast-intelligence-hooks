@@ -106,3 +106,18 @@ Implicación:
 
 - El código de saneamiento de packaging está promovido en `main`.
 - El cierre estricto "sin bypass admin" sigue bloqueado hasta resolver billing de Actions.
+
+## Actualización operativa (Cycle 014 / Lote C Platform Gates)
+
+Corrección aplicada para evitar falso verde/fallo silencioso en workflows de platform gate:
+
+- Los workflows `pumuki-ios/android/backend/frontend.yml` pasaron de `runner_path: integrations/git/ci*.ts` a `runner_path: integrations/git/ci*.cli.ts`.
+- Motivo: `ci*.ts` solo re-exporta runner; `ci*.cli.ts` ejecuta `runCliCommand(...)`.
+
+Validación local:
+
+- test de contrato workflow en verde:
+  - `scripts/__tests__/platform-gates-workflow-contract.test.ts`
+- ejecución local de gates:
+  - sin bypass SDD (`PUMUKI_SDD_BYPASS` ausente): `OPENSPEC_MISSING` en los 4 gates.
+  - con bypass (`PUMUKI_SDD_BYPASS=1`): `ios/android/backend/frontend` en exit code `0`.

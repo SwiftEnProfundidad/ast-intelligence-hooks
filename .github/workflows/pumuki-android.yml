@@ -9,5 +9,5 @@ jobs:
     uses: ./.github/workflows/pumuki-gate-template.yml
     with:
       gate_name: Android Gate
-      runner_path: integrations/git/ciAndroid.ts
+      runner_path: integrations/git/ciAndroid.cli.ts
       artifact_name: ai-evidence-android

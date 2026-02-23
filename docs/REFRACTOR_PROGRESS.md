@@ -94,7 +94,7 @@ Estado operativo activo del repositorio.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar Fase C de `P-ADHOC-LINES-014` (rule gates por plataforma) con validación local + PR incremental.
+- 🚧 Ejecutar Fase D de `P-ADHOC-LINES-014` (package smoke + security/snyk) con cierre documental incremental.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -156,6 +156,21 @@ Estado operativo activo del repositorio.
   - ✅ fase B (quality suites) validada en local:
     - `npm run test:deterministic` OK (salida: `.audit_tmp/p-adhoc-lines-014-lotB-deterministic.out`)
     - `npm run test:heuristics` OK (salida: `.audit_tmp/p-adhoc-lines-014-lotB-heuristics.out`)
+  - ✅ fase C (platform gates) corregida y validada:
+    - fix de contrato CI: workflows de gates ahora usan entrypoints ejecutables `integrations/git/ci*.cli.ts` (antes `ci*.ts` solo exportaba).
+    - TDD red/green de contrato:
+      - nuevo test `scripts/__tests__/platform-gates-workflow-contract.test.ts`
+      - red inicial confirmada y green tras fix.
+    - ejecución local de gates:
+      - sin bypass SDD: bloquea por `OPENSPEC_MISSING` en los 4 runners (`openspec/changes:1`)
+      - con `PUMUKI_SDD_BYPASS=1`: `ios=0`, `android=0`, `backend=0`, `frontend=0`
+      - evidencias:
+        - `.audit_tmp/p-adhoc-lines-014-lotC-ios-gate.out`
+        - `.audit_tmp/p-adhoc-lines-014-lotC-android-gate.out`
+        - `.audit_tmp/p-adhoc-lines-014-lotC-backend-gate.out`
+        - `.audit_tmp/p-adhoc-lines-014-lotC-frontend-gate.out`
+        - `.audit_tmp/p-adhoc-lines-014-lotC-gates-exit-codes.txt`
+        - `.audit_tmp/p-adhoc-lines-014-lotC-gates-bypass-exit-codes.txt`
   - ✅ cierre Git Flow de lote B ejecutado end-to-end:
     - PR `#367` (`feature/p-adhoc-lines-014-lotB-quality-validation` -> `develop`) merged.
     - PR `#368` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
