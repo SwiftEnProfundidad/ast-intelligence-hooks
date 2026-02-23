@@ -29,8 +29,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `F014.C.T4` Cierre Git Flow lote C (`PR #370` y `PR #371`).
 
 ### Fase D — Package Smoke + Security
-- 🚧 `F014.D.T1` Consolidar validacion final de package smoke y estado security/snyk.
-- ⏳ `F014.D.T2` Publicar cierre documental incremental del ciclo 014.
+- ✅ `F014.D.T1` Consolidar validacion final de package smoke y estado security/snyk.
+- 🚧 `F014.D.T2` Publicar cierre documental incremental del ciclo 014.
 - ⏳ `F014.D.T3` Cierre Git Flow final de fase D (`develop -> main`) y sincronizacion.
 
 ## Estado actual
@@ -119,7 +119,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar Fase D de `P-ADHOC-LINES-014` (package smoke + security/snyk) con cierre documental incremental.
+- 🚧 Ejecutar `F014.D.T2` para publicar cierre documental incremental del ciclo 014.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -192,10 +192,30 @@ Plan base visible para seguimiento previo y durante la implementacion.
       - evidencias:
         - `.audit_tmp/p-adhoc-lines-014-lotC-ios-gate.out`
         - `.audit_tmp/p-adhoc-lines-014-lotC-android-gate.out`
-        - `.audit_tmp/p-adhoc-lines-014-lotC-backend-gate.out`
+      - `.audit_tmp/p-adhoc-lines-014-lotC-backend-gate.out`
       - `.audit_tmp/p-adhoc-lines-014-lotC-frontend-gate.out`
       - `.audit_tmp/p-adhoc-lines-014-lotC-gates-exit-codes.txt`
       - `.audit_tmp/p-adhoc-lines-014-lotC-gates-bypass-exit-codes.txt`
+  - ✅ fase D (package smoke + security) consolidada:
+    - validación local final de packaging:
+      - `npm run validation:package-manifest` OK (`files scanned: 847`)
+      - `npm run validation:package-smoke` OK (modo `block`)
+      - `npm run validation:package-smoke:minimal` OK (modo `minimal`)
+      - evidencia:
+        - `.audit_tmp/p-adhoc-lines-014-lotD/package-manifest.out`
+        - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-block.out`
+        - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-minimal.out`
+        - `.audit-reports/package-smoke/block/summary.md`
+        - `.audit-reports/package-smoke/minimal/summary.md`
+    - estado remoto consolidado en último promote (`PR #373`):
+      - `package-smoke (block|minimal)` en `FAILURE` remoto con patrón de bloqueo externo (`runner_id=0`, `steps=[]`)
+      - `security/snyk (swiftenprofundidad)` en `ERROR` (dependencia externa Snyk)
+      - evidencia:
+        - `.audit_tmp/p-adhoc-lines-014-lotD/pr-373-status.json`
+        - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-block-job.json`
+        - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-minimal-job.json`
+        - `.audit_tmp/p-adhoc-lines-014-lotD/remote-status.txt`
+        - `.audit_tmp/p-adhoc-lines-014-lotD/remote-status-check-runs.json`
   - ✅ cierre Git Flow de lote C ejecutado end-to-end:
     - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
     - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
