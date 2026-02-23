@@ -190,6 +190,7 @@ If a scope is empty, the menu prints an explicit operational hint (`Scope vacío
 
 System notifications (macOS) can be enabled from advanced menu option `31` (persisted in `.pumuki/system-notifications.json`).
 Custom skills import is available in advanced menu option `33` (writes `/.pumuki/custom-rules.json`).
+Menu-driven audits apply SDD guardrails with the same strict semantics as stage runners (no bypass).
 
 ### 2) Direct stage CLI execution
 
@@ -377,6 +378,7 @@ Schema and behavior:
 - `platforms` and `rulesets` tracking
 - `snapshot.sdd_metrics` tracks stage-level SDD enforcement metadata
 - SDD blocks emit finding `sdd.policy.blocked` with `source: "sdd-policy"`
+- Rule coverage may include `unsupported_auto_rule_ids` when AUTO skills still lack detector mapping; this forces governance block in gated stages.
 - `repo_state` captures deterministic git/lifecycle runtime snapshot
 - stable JSON ordering for deterministic diffs
 

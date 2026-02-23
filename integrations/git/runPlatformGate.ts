@@ -238,11 +238,21 @@ export async function runPlatformGate(params: {
       evaluated_rule_ids: [...coverage.evaluatedRuleIds],
       matched_rule_ids: [...coverage.matchedRuleIds],
       unevaluated_rule_ids: [...coverage.unevaluatedRuleIds],
+      ...((skillsRuleSet.unsupportedAutoRuleIds?.length ?? 0) > 0
+        ? {
+          unsupported_auto_rule_ids: [...(skillsRuleSet.unsupportedAutoRuleIds ?? [])],
+        }
+        : {}),
       counts: {
         active: coverage.activeRuleIds.length,
         evaluated: coverage.evaluatedRuleIds.length,
         matched: coverage.matchedRuleIds.length,
         unevaluated: coverage.unevaluatedRuleIds.length,
+        ...((skillsRuleSet.unsupportedAutoRuleIds?.length ?? 0) > 0
+          ? {
+            unsupported_auto: (skillsRuleSet.unsupportedAutoRuleIds ?? []).length,
+          }
+          : {}),
       },
       coverage_ratio:
         coverage.activeRuleIds.length === 0

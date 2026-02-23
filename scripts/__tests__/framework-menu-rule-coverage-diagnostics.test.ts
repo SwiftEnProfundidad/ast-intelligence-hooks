@@ -7,7 +7,7 @@ import {
 
 test('buildRuleCoverageDiagnostics consolida cobertura por stage', async () => {
   const result = await buildRuleCoverageDiagnostics({
-    stages: ['PRE_COMMIT', 'PRE_PUSH'],
+    stages: ['PRE_WRITE', 'PRE_COMMIT', 'PRE_PUSH'],
     repoRoot: '/repo',
     dependencies: {
       resolvePolicyForStage: (stage) => ({
@@ -67,18 +67,48 @@ test('buildRuleCoverageDiagnostics consolida cobertura por stage', async () => {
           },
         ],
       }),
+      evaluateSddPolicy: ({ stage }) => ({
+        stage,
+        decision: {
+          allowed: stage !== 'PRE_WRITE',
+          code: stage === 'PRE_WRITE' ? 'SDD_SESSION_MISSING' : 'ALLOWED',
+          message: 'ok',
+        },
+        status: {
+          repoRoot: '/repo',
+          openspec: {
+            installed: true,
+            version: '1.0.0',
+            projectInitialized: true,
+            minimumVersion: '1.0.0',
+            recommendedVersion: '1.0.0',
+            compatible: true,
+            parsedVersion: '1.0.0',
+          },
+          session: {
+            repoRoot: '/repo',
+            active: true,
+            valid: true,
+          },
+        },
+      }),
       createGitService: () => ({
         resolveRepoRoot: () => '/repo',
       }),
     },
   });
 
-  assert.equal(result.stages.length, 2);
-  assert.equal(result.stages[0].stage, 'PRE_COMMIT');
+  assert.equal(result.stages.length, 3);
+  assert.equal(result.stages[0].stage, 'PRE_WRITE');
+  assert.equal(result.stages[0].evaluationStage, 'PRE_COMMIT');
+  assert.equal(result.stages[0].sdd.allowed, false);
+  assert.equal(result.stages[0].sdd.code, 'SDD_SESSION_MISSING');
+  assert.match(result.stages[0].policyTraceBundle, /PRE_WRITE->gate-policy\.test\.PRE_COMMIT/);
+  assert.equal(result.stages[1].stage, 'PRE_COMMIT');
   assert.equal(result.stages[0].rulesTotal, 100);
   assert.equal(result.stages[0].matchedRules, 5);
   assert.equal(result.stages[0].findingsTotal, 1);
-  assert.equal(result.stages[0].policyTraceBundle, 'gate-policy.test.PRE_COMMIT');
+  assert.equal(result.stages[1].policyTraceBundle, 'gate-policy.test.PRE_COMMIT');
 });
 
 test('formatRuleCoverageDiagnostics renderiza resumen legible', () => {
@@ -89,6 +119,7 @@ test('formatRuleCoverageDiagnostics renderiza resumen legible', () => {
       {
         stage: 'PRE_COMMIT',
         policyTraceBundle: 'gate-policy.test.PRE_COMMIT',
+        evaluationStage: 'PRE_COMMIT',
         factsTotal: 10,
         filesScanned: 3,
         rulesTotal: 100,
@@ -111,12 +142,18 @@ test('formatRuleCoverageDiagnostics renderiza resumen legible', () => {
         ],
         matchedRuleIds: ['skills.backend.no-empty-catch'],
         unmatchedRuleIds: ['skills.backend.avoid-explicit-any'],
+        sdd: {
+          allowed: true,
+          code: 'ALLOWED',
+        },
       },
     ],
   });
 
   assert.match(rendered, /RULE COVERAGE DIAGNOSTICS/);
   assert.match(rendered, /PRE_COMMIT/);
+  assert.match(rendered, /evaluation_stage=PRE_COMMIT/);
+  assert.match(rendered, /sdd_code=ALLOWED/);
   assert.match(rendered, /rules_total=100/);
   assert.match(rendered, /matched_rules=5/);
   assert.match(rendered, /evaluated_rule_ids=skills.backend.no-empty-catch,skills.backend.avoid-explicit-any/);

@@ -146,6 +146,7 @@ Contract:
   - `evaluated_rule_ids[]`
   - `matched_rule_ids[]`
   - `unevaluated_rule_ids[]`
+  - `unsupported_auto_rule_ids[]` (optional; present when AUTO skills have no detector mapping)
   - `counts` + `coverage_ratio`
 
 ## Rule packs
@@ -254,6 +255,7 @@ Consumer menu pre-flight:
 - stage mapping is deterministic: `1/3 -> PRE_COMMIT`, `2/4 -> PRE_PUSH`
 - in modern UI mode (`PUMUKI_MENU_UI_V2=1`) options are grouped by domains while preserving IDs and execution wiring
 - advanced maintenance option `33` imports custom rules from `AGENTS.md/SKILLS.md` to `/.pumuki/custom-rules.json`
+- menu audits no longer bypass SDD; `sdd.policy.blocked` can be emitted in menu-driven runs
 
 ## Optional diagnostics adapters
 

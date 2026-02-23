@@ -2,7 +2,7 @@
 
 ## Scope
 - Repository: `ast-intelligence-hooks`
-- Execution date (UTC): `2026-02-22T22:18:56.584Z`
+- Execution date (UTC): `2026-02-22T22:37:55.560Z`
 - Command used (menu option 1): `printf '1\n10\n' | npx ast-hooks audit --scope repo`
 - Audit mode: `PRE_COMMIT` full repository snapshot
 
@@ -54,6 +54,7 @@ From `.AI_EVIDENCE.json` -> `snapshot.rules_coverage`:
 - Matched rules: `3`
 - Unevaluated rules: `0`
 - Coverage ratio: `1.0` (100%)
+- Files scanned (menu summary): `972`
 
 From `snapshot.evaluation_metrics`:
 

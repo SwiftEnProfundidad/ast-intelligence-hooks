@@ -23,7 +23,9 @@
     - `evaluated_rule_ids[]`
     - `matched_rule_ids[]`
     - `unevaluated_rule_ids[]`
+    - `unsupported_auto_rule_ids[]` (optional; AUTO skills without mapped detector)
     - `counts.active` | `counts.evaluated` | `counts.matched` | `counts.unevaluated`
+    - `counts.unsupported_auto` (optional)
     - `coverage_ratio` (`0..1`)
   - `findings[]`: normalized findings for the current run
     - `file`: normalized path (or `unknown` when no deterministic trace exists)
@@ -69,6 +71,7 @@
 - Canonical writer path is `integrations/evidence/generateEvidence.ts` (`buildEvidence` + `writeEvidence`).
 - `pumuki install` bootstraps `.ai_evidence.json` when missing (`PRE_COMMIT`, `PASS`, empty findings).
 - When `rules_coverage.unevaluated_rule_ids` is non-empty in `PRE_COMMIT`, `PRE_PUSH` or `CI`, the gate emits `governance.rules.coverage.incomplete` and forces `BLOCK`.
+- When `rules_coverage.unsupported_auto_rule_ids` is non-empty in `PRE_COMMIT`, `PRE_PUSH` or `CI`, the gate emits `governance.skills.detector-mapping.incomplete` and forces `BLOCK`.
 
 ## Overrides
 
