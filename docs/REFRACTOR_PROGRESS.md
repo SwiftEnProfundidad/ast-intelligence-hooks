@@ -94,7 +94,7 @@ Estado operativo activo del repositorio.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `P-ADHOC-LINES-014` para saneamiento CI post-merge en `main`.
+- 🚧 Ejecutar revalidación remota de `P-ADHOC-LINES-014` tras desbloqueo de billing en GitHub Actions.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -147,9 +147,16 @@ Estado operativo activo del repositorio.
     - reproducción CI local completa en verde: `.audit_tmp/ci-repro-014/summary.tsv`
   - ✅ lote A publicado en PR incremental:
     - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/363`
-  - ⏳ validar checks remotos del lote A
-    - bloqueo externo detectado: GitHub Actions no inicia jobs por billing lock de cuenta
+  - ✅ checks remotos del lote A validados:
+    - Jobs completan en fallo sin steps (`runner_id=0`, `steps=[]`) por bloqueo externo.
+    - evidencia de runs: `22308930219`, `22309368527`, `22309369410`.
     - documentación de bloqueo:
       - `docs/validation/post-merge-main-stability-note.md`
       - `docs/validation/ci-sanitization-plan-cycle-014.md`
-  - ⏳ objetivo de salida: checks críticos en verde en `main` sin bypass admin
+  - ✅ cierre Git Flow de lote A ejecutado end-to-end:
+    - PR `#363` (`feature/p-adhoc-lines-014-lotA-packaging-fixes` -> `develop`) merged.
+    - PR `#364` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
+    - sincronización final de ramas: `origin/main...origin/develop = 0/0`.
+  - 🚧 objetivo de salida pendiente (dependencia externa):
+    - desbloquear billing de GitHub Actions;
+    - revalidar PR de control sin bypass admin con checks críticos en verde.

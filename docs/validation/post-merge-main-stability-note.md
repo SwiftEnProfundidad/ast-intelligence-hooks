@@ -85,3 +85,24 @@ Estado observado en GitHub Actions:
 Conclusión:
 
 - El estado rojo remoto actual no se atribuye al lote A de código, sino a un bloqueo externo de cuenta/billing en Actions.
+
+## Actualización operativa (Cycle 014 / Promote #364)
+
+Se ejecutó cierre Git Flow del lote A:
+
+- PR `#363` merged a `develop`.
+- PR `#364` merged de `develop` a `main` (admin por bloqueo externo persistente).
+- Ramas remotas alineadas tras sync final:
+  - `origin/main...origin/develop = 0/0`.
+
+Evidencia del bloqueo externo tras nuevo promote:
+
+- runs `22309368527` y `22309369410` con jobs en `failure` sin steps.
+- API de jobs devuelve patrón uniforme:
+  - `runner_id=0`
+  - `steps=[]`
+
+Implicación:
+
+- El código de saneamiento de packaging está promovido en `main`.
+- El cierre estricto "sin bypass admin" sigue bloqueado hasta resolver billing de Actions.
