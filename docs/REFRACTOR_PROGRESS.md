@@ -166,8 +166,9 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F5.T1` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: TDD RED/GREEN/REFACTOR completado en motor/config/gate.
 - ✅ `F5.T2` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: validacion funcional/menu/evidencia en verde.
 - ✅ `F5.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: documentacion enterprise sincronizada (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
-- 🚧 `F5.T4` en construccion en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: cierre Git Flow end-to-end (`feature -> develop -> main`).
-- Estado activo: ciclo `ENTERPRISE_AST_DETECTION_SUPERIORITY` en ejecucion.
+- ✅ `F5.T4` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: cierre Git Flow end-to-end (`feature -> develop` PR `#350`, `develop -> main` PR `#351`).
+- ✅ Ciclo `ENTERPRISE_AST_DETECTION_SUPERIORITY` cerrado con verificacion tecnica, funcional y visual en verde.
+- Estado activo: sin tareas en construccion (ciclo cerrado).
 
 ## Siguiente paso operativo
-- ⏳ Completar `F5.T4`: cerrar PR `feature -> develop` y PR `develop -> main`, y dejar ramas sincronizadas.
+- ⏳ Definir proximo ciclo activo y reabrir seguimiento con una unica tarea `🚧`.
