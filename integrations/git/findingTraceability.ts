@@ -185,8 +185,10 @@ const traceDependency = (
 
 const traceHeuristic = (
   condition: Extract<Condition, { kind: 'Heuristic' }>,
-  facts: ReadonlyArray<Fact>
+  facts: ReadonlyArray<Fact>,
+  preferredFilePath?: string
 ): Trace => {
+  const normalizedPreferredPath = preferredFilePath ? normalizePath(preferredFilePath) : null;
   const matches = facts
     .filter((fact): fact is Extract<Fact, { kind: 'Heuristic' }> => fact.kind === 'Heuristic')
     .filter((fact) => {
@@ -206,7 +208,11 @@ const traceHeuristic = (
     })
     .sort((left, right) => (left.filePath ?? '').localeCompare(right.filePath ?? ''));
 
-  const selected = matches[0];
+  const selected =
+    (normalizedPreferredPath
+      ? matches.find((fact) => normalizePath(fact.filePath ?? '') === normalizedPreferredPath)
+      : undefined)
+    ?? matches[0];
   if (!selected) {
     return { matched: false };
   }
@@ -222,7 +228,8 @@ const traceHeuristic = (
 const traceCondition = (
   condition: Condition,
   facts: ReadonlyArray<Fact>,
-  scope?: RuleScope
+  scope?: RuleScope,
+  preferredFilePath?: string
 ): Trace => {
   if (condition.kind === 'FileChange') {
     return traceFileChange(condition, facts);
@@ -234,10 +241,12 @@ const traceCondition = (
     return traceDependency(condition, facts);
   }
   if (condition.kind === 'Heuristic') {
-    return traceHeuristic(condition, facts);
+    return traceHeuristic(condition, facts, preferredFilePath);
   }
   if (condition.kind === 'All') {
-    const childTraces = condition.conditions.map((child) => traceCondition(child, facts, scope));
+    const childTraces = condition.conditions.map((child) =>
+      traceCondition(child, facts, scope, preferredFilePath)
+    );
     if (childTraces.some((trace) => !trace.matched)) {
       return { matched: false };
     }
@@ -267,7 +276,7 @@ const traceCondition = (
   }
   if (condition.kind === 'Any') {
     for (const child of condition.conditions) {
-      const trace = traceCondition(child, facts, scope);
+      const trace = traceCondition(child, facts, scope, preferredFilePath);
       if (trace.matched) {
         return trace;
       }
@@ -275,7 +284,7 @@ const traceCondition = (
     return { matched: false };
   }
 
-  const childTrace = traceCondition(condition.condition, facts, scope);
+  const childTrace = traceCondition(condition.condition, facts, scope, preferredFilePath);
   return {
     matched: !childTrace.matched,
     matchedBy: !childTrace.matched ? 'Not' : undefined,
@@ -298,7 +307,7 @@ export const attachFindingTraceability = (params: {
       return finding;
     }
 
-    const trace = traceCondition(rule.when, params.facts, rule.scope);
+    const trace = traceCondition(rule.when, params.facts, rule.scope, finding.filePath);
     if (!trace.matched) {
       return finding;
     }

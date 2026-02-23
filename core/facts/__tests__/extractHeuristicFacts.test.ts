@@ -384,6 +384,31 @@ test('skips TypeScript heuristics for test files', () => {
   assert.equal(findings.length, 0);
 });
 
+test('detects common.network.missing_error_handling in test files while keeping generic TS heuristics skipped', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/__tests__/network.test.ts',
+        'const payload: any = 1; axios.get("/health");'
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'common.network.missing_error_handling'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ts.explicit-any.ast'),
+    false
+  );
+});
+
 test('detects iOS heuristics and skips bridge callback rule', () => {
   const extracted = extractHeuristicFacts({
     facts: [
@@ -572,6 +597,50 @@ test('detects legacy common type/network families from AST facts', () => {
   assert.deepEqual(recordUnknownFact?.lines, [1]);
   assert.deepEqual(undefinedUnionFact?.lines, [2]);
   assert.deepEqual(unknownAssertionFact?.lines, [3]);
+});
+
+test('preserva lineas por fichero para common.network.missing_error_handling', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/application/unhandled.ts',
+        [
+          'async function load() {',
+          '  return axios.get("/health");',
+          '}',
+        ].join('\n')
+      ),
+      fileContentFact(
+        'apps/backend/src/application/handled.ts',
+        [
+          'async function load() {',
+          '  return axios.get("/health").catch(() => null);',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted).filter(
+    (finding) => finding.ruleId === 'common.network.missing_error_handling'
+  );
+  const unhandledFact = extracted.find(
+    (fact) =>
+      fact.ruleId === 'common.network.missing_error_handling'
+      && fact.filePath === 'apps/backend/src/application/unhandled.ts'
+  );
+  const handledFact = extracted.find(
+    (fact) =>
+      fact.ruleId === 'common.network.missing_error_handling'
+      && fact.filePath === 'apps/backend/src/application/handled.ts'
+  );
+
+  assert.equal(findings.length, 1);
+  assert.deepEqual(unhandledFact?.lines, [2]);
+  assert.equal(handledFact, undefined);
 });
 
 test('maps empty catch heuristic to legacy common.error.empty_catch finding', () => {

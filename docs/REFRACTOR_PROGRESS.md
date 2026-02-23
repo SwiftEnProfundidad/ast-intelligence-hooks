@@ -57,7 +57,65 @@ Estado operativo activo del repositorio.
   - validación previa de calidad ejecutada (`tsx --test` focal + `npm run typecheck`)
   - lote consolidado para commit atómico del ciclo de recuperación
   - cierre previsto por PR con merge a `develop` y sincronización de ramas protegidas
-- 🚧 `P-ADHOC-LINES-008` Ejecutar auditoría full-repo post-cierre y emitir informe final de violaciones por severidad con rutas clicables.
+- ✅ `P-ADHOC-LINES-008` Ejecutar auditoría full-repo post-cierre y emitir informe final de violaciones por severidad con rutas clicables.
+  - auditoría full-repo ejecutada en menú consumer (`1`) con evidencia en `.audit_tmp/p-adhoc-lines-008-menu.out`
+  - export markdown clicable ejecutado (`8`) en `.audit-reports/pumuki-legacy-audit.md`
+  - informe final por severidad con rutas clicables generado en `.audit-reports/p-adhoc-lines-008-full-repo-audit.md`
+  - resumen de severidad post-cierre: `CRITICAL 42`, `HIGH 37`, `MEDIUM 4`, `LOW 0`
+- ✅ `P-ADHOC-LINES-009` Publicar informe consolidado post-merge en `docs/validation` con:
+  - resumen por severidad (`CRITICAL/HIGH/MEDIUM/LOW`)
+  - top reglas y top ficheros con `file:line`
+  - cobertura de reglas (`active/evaluated/unevaluated/ratio`)
+  - informe publicado en `docs/validation/post-merge-detection-audit-report.md`
+  - documento registrado en `docs/validation/README.md` como referencia versionada
+- ✅ `P-ADHOC-LINES-010` Verificar paridad/superación respecto a baseline legacy en detección:
+  - comparar conteos y distribución por severidad
+  - documentar brechas de detección por familia de reglas
+  - dejar plan de corrección priorizado por impacto
+  - comparativa reproducible generada en `.audit-reports/p-adhoc-lines-010-legacy-parity.md`
+  - análisis oficial publicado en `docs/validation/legacy-parity-gap-analysis.md`
+  - resultado actual: superación en `CRITICAL`, brecha pendiente en `HIGH` (`-4`) y `MEDIUM` (`-17`)
+- ✅ `P-ADHOC-LINES-011` Remediar brechas críticas de detección identificadas en la comparación:
+  - TDD aplicado en detectores TypeScript para:
+    - `common.types.unknown_without_guard` (detección por AST de `unknown` fuera de `Record<*, unknown>`)
+    - `common.network.missing_error_handling` (detección por nodo de red sin `try/catch` local ni cadena `.catch`)
+  - trazabilidad corregida en heurísticas multi-fichero para respetar `filePath` del finding al resolver `lines`
+  - validación técnica ejecutada:
+    - tests focales (`47/47` OK) en detectores/extracción/trazabilidad
+    - compilación TypeScript (`npx tsc --noEmit`) OK
+    - smoke runtime hooks+menú con evidencia en:
+      - `.audit_tmp/p-adhoc-lines-011-prewrite.out`
+      - `.audit_tmp/p-adhoc-lines-011-precommit.out`
+      - `.audit_tmp/p-adhoc-lines-011-prepush.out`
+      - `.audit_tmp/p-adhoc-lines-011-menu.out`
+  - resultado funcional:
+    - `common.types.unknown_without_guard` pasa de 4 a 59 hallazgos en evidencia full-repo
+    - trazabilidad `file:line` deja de colapsar en una línea repetida global
+    - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `P-ADHOC-LINES-008` para validar el estado post-cierre con auditoría full-repo.
+- 🚧 Ejecutar `P-ADHOC-LINES-012` para cierre final del ciclo enterprise.
+
+## Backlog global restante
+- 🚧 `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
+  - ✅ revalidación integral ejecutada:
+    - tests focales `48/48` en `.audit_tmp/p-adhoc-lines-012-tests.out`
+    - `typecheck` `OK` en `.audit_tmp/p-adhoc-lines-012-typecheck.out`
+    - smoke hooks+menú en:
+      - `.audit_tmp/p-adhoc-lines-012-prewrite.out`
+      - `.audit_tmp/p-adhoc-lines-012-precommit.out`
+      - `.audit_tmp/p-adhoc-lines-012-prepush.out`
+      - `.audit_tmp/p-adhoc-lines-012-menu.out`
+      - iteración v2:
+        - `.audit_tmp/p-adhoc-lines-012-prewrite-v2.out`
+        - `.audit_tmp/p-adhoc-lines-012-precommit-v2.out`
+        - `.audit_tmp/p-adhoc-lines-012-prepush-v2.out`
+        - `.audit_tmp/p-adhoc-lines-012-menu-v2.out`
+  - ✅ documentación oficial de revalidación publicada:
+    - `docs/validation/enterprise-detection-revalidation-cycle-012.md`
+    - índice actualizado en `docs/validation/README.md`
+  - ✅ paridad legacy por severidad cerrada:
+    - `CRITICAL 42 >= 9`, `HIGH 43 >= 41`, `MEDIUM 59 >= 21`, `LOW 0 = 0`
+    - reporte: `.audit-reports/p-adhoc-lines-012-legacy-parity-v2.md`
+  - ⏳ cierre operativo pendiente:
+    - cierre Git Flow end-to-end del ciclo de remediación
