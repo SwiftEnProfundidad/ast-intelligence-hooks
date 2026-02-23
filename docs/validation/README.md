@@ -24,6 +24,7 @@ Keep these as source-of-truth operational references:
 - `enterprise-detection-revalidation-cycle-012.md`
 - `post-merge-main-stability-note.md`
 - `ci-sanitization-plan-cycle-014.md`
+- `ci-sanitization-cycle-014-incremental-closure.md`
 - `post-merge-detection-audit-report.md`
 - `legacy-parity-gap-analysis.md`
 

@@ -30,8 +30,12 @@ Plan base visible para seguimiento previo y durante la implementacion.
 
 ### Fase D — Package Smoke + Security
 - ✅ `F014.D.T1` Consolidar validacion final de package smoke y estado security/snyk.
-- 🚧 `F014.D.T2` Publicar cierre documental incremental del ciclo 014.
-- ⏳ `F014.D.T3` Cierre Git Flow final de fase D (`develop -> main`) y sincronizacion.
+- ✅ `F014.D.T2` Publicar cierre documental incremental del ciclo 014.
+- ✅ `F014.D.T3` Cierre Git Flow final de fase D (`develop -> main`) y sincronizacion.
+
+### Fase E — Cierre Estricto Externo
+- 🚧 `F014.E.T1` Revalidacion remota estricta sin admin cuando Actions/Snyk ejecuten jobs reales.
+- ⏳ `F014.E.T2` Cierre definitivo de `P-ADHOC-LINES-014` con checks criticos en verde remoto.
 
 ## Estado actual
 - ✅ `HYG.T1` Inventario completo de markdowns, artefactos y carpetas huérfanas.
@@ -119,7 +123,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F014.D.T2` para publicar cierre documental incremental del ciclo 014.
+- 🚧 Ejecutar `F014.E.T1` para revalidacion remota estricta sin admin en cuanto se desbloqueen dependencias externas.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -216,6 +220,11 @@ Plan base visible para seguimiento previo y durante la implementacion.
         - `.audit_tmp/p-adhoc-lines-014-lotD/package-smoke-minimal-job.json`
         - `.audit_tmp/p-adhoc-lines-014-lotD/remote-status.txt`
         - `.audit_tmp/p-adhoc-lines-014-lotD/remote-status-check-runs.json`
+  - ✅ fase D cierre documental incremental publicado:
+    - documento oficial: `docs/validation/ci-sanitization-cycle-014-incremental-closure.md`
+    - índice actualizado: `docs/validation/README.md`
+  - ✅ cierre Git Flow final de fase D ejecutado:
+    - promote final `develop -> main` realizado para consolidar Fase D en ramas protegidas (`PR #377`).
   - ✅ cierre Git Flow de lote C ejecutado end-to-end:
     - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
     - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
