@@ -136,6 +136,14 @@ Estado operativo activo del repositorio.
     - `.audit_tmp/p-adhoc-lines-014-ci-failure-map.md`
   - ✅ plan incremental por dominios documentado:
     - `docs/validation/ci-sanitization-plan-cycle-014.md`
-  - ⏳ reproducir fallos clave de checks en local (por lote) y confirmar causas raíz
-  - ⏳ ejecutar correcciones por lotes con PR incremental sin bypass admin
-  - ⏳ objetivo de salida: checks críticos en verde en `main`
+  - ✅ reproducidos checks fallidos y causas raíz confirmadas (lote A):
+    - `check-package-manifest`: crash por API legacy `npm-packlist` v10
+    - `package-smoke`: módulo no incluido en paquete (`integrations/notifications/emitAuditSummaryNotification.ts`)
+  - ✅ corrección lote A implementada y validada localmente:
+    - `scripts/check-package-manifest.ts`
+    - `scripts/__tests__/check-package-manifest.test.ts`
+    - `scripts/package-manifest-lib.ts`
+    - `package.json` (`files`)
+    - reproducción CI local completa en verde: `.audit_tmp/ci-repro-014/summary.tsv`
+  - ⏳ publicar lote A por PR incremental y validar checks remotos
+  - ⏳ objetivo de salida: checks críticos en verde en `main` sin bypass admin

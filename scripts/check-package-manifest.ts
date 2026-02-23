@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import packlist from 'npm-packlist';
+import { spawnSync } from 'node:child_process';
 import { inspectPackageManifestPaths } from './package-manifest-lib';
 
 export type PackFile = {
@@ -27,13 +27,62 @@ type CheckDeps = {
   writeStderr: (message: string) => void;
 };
 
+type NpmPackDryRunFile = {
+  path?: string;
+};
+
+type NpmPackDryRunPayload = {
+  files?: NpmPackDryRunFile[];
+};
+
+const parseNpmPackDryRunFiles = (stdout: string): ReadonlyArray<string> => {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(stdout);
+  } catch {
+    throw new Error('npm pack --json --dry-run returned invalid JSON output');
+  }
+
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error('npm pack --json --dry-run returned an empty payload');
+  }
+
+  const entry = parsed[0] as NpmPackDryRunPayload;
+  if (!Array.isArray(entry.files)) {
+    throw new Error('npm pack --json --dry-run payload does not include files');
+  }
+
+  return entry.files
+    .map((file) => (typeof file.path === 'string' ? file.path : ''))
+    .filter((path) => path.length > 0);
+};
+
+const listPackFilesWithNpmPackDryRun = (cwd: string): ReadonlyArray<string> => {
+  const result = spawnSync('npm', ['pack', '--json', '--dry-run'], {
+    cwd,
+    encoding: 'utf8',
+    env: process.env,
+  });
+  const exitCode =
+    typeof result.status === 'number'
+      ? result.status
+      : result.error
+        ? 1
+        : 0;
+  if (exitCode !== 0) {
+    const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
+    throw new Error(
+      `npm pack --json --dry-run failed with exit code ${exitCode}${output.length > 0 ? `\n${output}` : ''}`
+    );
+  }
+
+  return parseNpmPackDryRunFiles(result.stdout ?? '');
+};
+
 const createDefaultDeps = (): CheckDeps => ({
   cwd: process.cwd(),
   readTextFile: (path, encoding) => readFileSync(path, encoding),
-  listPackFiles: (cwd) =>
-    packlist({
-      path: cwd,
-    }),
+  listPackFiles: async (cwd) => listPackFilesWithNpmPackDryRun(cwd),
   writeStdout: (message) => {
     process.stdout.write(message);
   },
@@ -53,6 +102,8 @@ export const readPackageId = (deps: Pick<CheckDeps, 'cwd' | 'readTextFile'>): st
   }
   return `${name}@${version}`;
 };
+
+export { parseNpmPackDryRunFiles, listPackFilesWithNpmPackDryRun };
 
 export const runPackDryRun = async (deps: Pick<CheckDeps, 'cwd' | 'readTextFile' | 'listPackFiles'>): Promise<PackPayload> => {
   const files = await deps.listPackFiles(deps.cwd);

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  listPackFilesWithNpmPackDryRun,
+  parseNpmPackDryRunFiles,
   readPackageId,
   runPackDryRun,
   runPackageManifestCheck,
@@ -72,4 +74,29 @@ test('runPackageManifestCheck falla cuando hay rutas prohibidas', async () => {
       }),
     /Package manifest includes forbidden paths/
   );
+});
+
+test('parseNpmPackDryRunFiles extrae rutas del payload json', () => {
+  const paths = parseNpmPackDryRunFiles(
+    JSON.stringify([
+      {
+        files: [{ path: 'bin/pumuki.js' }, { path: 'integrations/lifecycle/cli.ts' }],
+      },
+    ])
+  );
+
+  assert.deepEqual(paths, ['bin/pumuki.js', 'integrations/lifecycle/cli.ts']);
+});
+
+test('parseNpmPackDryRunFiles falla con payload sin files', () => {
+  assert.throws(
+    () => parseNpmPackDryRunFiles(JSON.stringify([{ id: 'pkg@1.0.0' }])),
+    /does not include files/
+  );
+});
+
+test('listPackFilesWithNpmPackDryRun devuelve listado real de paquete', () => {
+  const paths = listPackFilesWithNpmPackDryRun(process.cwd());
+  assert.ok(paths.includes('package.json'));
+  assert.ok(paths.includes('integrations/lifecycle/cli.ts'));
 });
