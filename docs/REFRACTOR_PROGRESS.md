@@ -345,7 +345,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `P-ADHOC-LINES-018A` Cierre documental de ciclos previos consolidado.
 - ✅ `P-ADHOC-LINES-018B` Nuevo ciclo oficial creado en `docs/ENTERPRISE_EXECUTION_CYCLE_018.md` con fases, tareas y leyenda.
 - ✅ `P-ADHOC-LINES-018C` Preparar primera entrega atomica del ciclo 018 con rama `feature/*`, TDD estricto y actualizacion incremental del tracker.
-- 🚧 `P-ADHOC-LINES-018D` Ejecutar primer lote tecnico del ciclo 018 y cerrar su Git Flow end-to-end.
+- ✅ `P-ADHOC-LINES-018D` Ejecutar primer lote tecnico del ciclo 018 y cerrar su Git Flow end-to-end.
   - ✅ `C018.B.T1` RED definida para severidad unificada de `heuristics.ts.empty-catch.ast`:
     - test añadido en `integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
     - evidencia RED: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
@@ -401,4 +401,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - evidencias versionadas registradas:
       - `docs/validation/c018-c1-local-evidence.md`
       - `docs/validation/c018-d1-local-revalidation.md`
-  - 🚧 `C018.D.T3` En curso: cierre final del ciclo 018 y estado listo para siguientes instrucciones.
+  - ✅ `C018.D.T3` Cierre final completado:
+    - PR `#398` (`feature -> develop`) merged:
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/398`
+      - merge commit: `68b4a071c8fcab199dd608e6f72700a923c7af56`
+    - PR `#399` (`develop -> main`) merged:
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/399`
+      - merge commit: `0bc37cbe9f458f995eaeab74df3396061e79422a`
+    - sincronización final de ramas protegidas:
+      - `origin/main...origin/develop = 0/0`
+
+- 🚧 `P-ADHOC-LINES-019A` Standby operativo: esperar nuevas instrucciones explícitas del usuario para abrir ciclo siguiente.

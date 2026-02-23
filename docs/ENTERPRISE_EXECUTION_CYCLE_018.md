@@ -1,6 +1,6 @@
 # Enterprise Execution Cycle 018
 
-Estado del ciclo: 🚧 En construccion  
+Estado del ciclo: ✅ Cerrado (con standby operativo)  
 Rama base: `develop`  
 Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 
@@ -35,7 +35,10 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 ### Fase D - Verificacion final y control operativo
 - ✅ `C018.D.T1` Revalidacion funcional/visual del lote en local.
 - ✅ `C018.D.T2` Actualizar documentacion oficial de validacion.
-- 🚧 `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
+- ✅ `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
+
+### Post-Cierre (operativo)
+- 🚧 `C018.POST.T1` Standby operativo hasta apertura del siguiente ciclo.
 
 ## Siguiente tarea activa
-- `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
+- `C018.POST.T1` Standby operativo hasta apertura del siguiente ciclo.
