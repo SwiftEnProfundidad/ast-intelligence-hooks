@@ -188,6 +188,7 @@ const createHeuristicFact = (params: {
   code: string;
   message: string;
   filePath?: string;
+  lines?: readonly number[];
   severity?: HeuristicFact['severity'];
 }): ExtractedHeuristicFact => {
   return {
@@ -198,6 +199,7 @@ const createHeuristicFact = (params: {
     code: params.code,
     message: params.message,
     filePath: params.filePath,
+    lines: params.lines,
   };
 };
 
@@ -205,6 +207,7 @@ const createHeuristicFact = (params: {
 
 type ASTDetectorRegistryEntry = {
   readonly detect: (ast: unknown) => boolean;
+  readonly locateLines?: (ast: unknown) => readonly number[];
   readonly ruleId: string;
   readonly code: string;
   readonly message: string;
@@ -213,8 +216,8 @@ type ASTDetectorRegistryEntry = {
 
 const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   // TypeScript
-  { detect: TS.hasEmptyCatchClause, ruleId: 'heuristics.ts.empty-catch.ast', code: 'HEURISTICS_EMPTY_CATCH_AST', message: 'AST heuristic detected an empty catch block.' },
-  { detect: TS.hasEmptyCatchClause, ruleId: 'common.error.empty_catch', code: 'COMMON_ERROR_EMPTY_CATCH_AST', message: 'AST heuristic detected empty catch block without handling.' },
+  { detect: TS.hasEmptyCatchClause, locateLines: TS.findEmptyCatchClauseLines, ruleId: 'heuristics.ts.empty-catch.ast', code: 'HEURISTICS_EMPTY_CATCH_AST', message: 'AST heuristic detected an empty catch block.' },
+  { detect: TS.hasEmptyCatchClause, locateLines: TS.findEmptyCatchClauseLines, ruleId: 'common.error.empty_catch', code: 'COMMON_ERROR_EMPTY_CATCH_AST', message: 'AST heuristic detected empty catch block without handling.' },
   { detect: TS.hasExplicitAnyType, ruleId: 'heuristics.ts.explicit-any.ast', code: 'HEURISTICS_EXPLICIT_ANY_AST', message: 'AST heuristic detected explicit any usage.' },
   { detect: TS.hasConsoleLogCall, ruleId: 'heuristics.ts.console-log.ast', code: 'HEURISTICS_CONSOLE_LOG_AST', message: 'AST heuristic detected console.log usage.' },
   { detect: TS.hasConsoleErrorCall, ruleId: 'heuristics.ts.console-error.ast', code: 'HEURISTICS_CONSOLE_ERROR_AST', message: 'AST heuristic detected console.error usage.' },
@@ -233,9 +236,9 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: TS.hasFrameworkDependencyImport, ruleId: 'heuristics.ts.solid.dip.framework-import.ast', code: 'HEURISTICS_SOLID_DIP_FRAMEWORK_IMPORT_AST', message: 'AST heuristic detected DIP risk: framework dependency imported in domain/application code.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasConcreteDependencyInstantiation, ruleId: 'heuristics.ts.solid.dip.concrete-instantiation.ast', code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST', message: 'AST heuristic detected DIP risk: direct instantiation of concrete framework dependency.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasLargeClassDeclaration, ruleId: 'heuristics.ts.god-class-large-class.ast', code: 'HEURISTICS_GOD_CLASS_LARGE_CLASS_AST', message: 'AST heuristic detected God Class candidate (>500 lines in a single class declaration).' },
-  { detect: TS.hasRecordStringUnknownType, ruleId: 'common.types.record_unknown_requires_type', code: 'COMMON_TYPES_RECORD_UNKNOWN_REQUIRES_TYPE_AST', message: 'AST heuristic detected Record<string, unknown> without explicit value union.' },
-  { detect: TS.hasUnknownTypeAssertion, ruleId: 'common.types.unknown_without_guard', code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST', message: 'AST heuristic detected unknown assertion without explicit guard evidence.' },
-  { detect: TS.hasUndefinedInBaseTypeUnion, ruleId: 'common.types.undefined_in_base_type', code: 'COMMON_TYPES_UNDEFINED_IN_BASE_TYPE_AST', message: 'AST heuristic detected undefined inside base-type unions.' },
+  { detect: TS.hasRecordStringUnknownType, locateLines: TS.findRecordStringUnknownTypeLines, ruleId: 'common.types.record_unknown_requires_type', code: 'COMMON_TYPES_RECORD_UNKNOWN_REQUIRES_TYPE_AST', message: 'AST heuristic detected Record<string, unknown> without explicit value union.' },
+  { detect: TS.hasUnknownTypeAssertion, locateLines: TS.findUnknownTypeAssertionLines, ruleId: 'common.types.unknown_without_guard', code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST', message: 'AST heuristic detected unknown assertion without explicit guard evidence.' },
+  { detect: TS.hasUndefinedInBaseTypeUnion, locateLines: TS.findUndefinedInBaseTypeUnionLines, ruleId: 'common.types.undefined_in_base_type', code: 'COMMON_TYPES_UNDEFINED_IN_BASE_TYPE_AST', message: 'AST heuristic detected undefined inside base-type unions.' },
   { detect: TS.hasNetworkCallWithoutErrorHandling, ruleId: 'common.network.missing_error_handling', code: 'COMMON_NETWORK_MISSING_ERROR_HANDLING_AST', message: 'AST heuristic detected network calls without explicit error handling.', pathCheck: isTypeScriptNetworkResiliencePath },
 
   // Process
@@ -530,12 +533,14 @@ export const extractHeuristicFacts = (
           continue;
         }
         if (entry.detect(ast)) {
+          const lines = entry.locateLines?.(ast);
           heuristicFacts.push(
             createHeuristicFact({
               ruleId: entry.ruleId,
               code: entry.code,
               message: entry.message,
               filePath: fileFact.path,
+              lines,
             })
           );
         }

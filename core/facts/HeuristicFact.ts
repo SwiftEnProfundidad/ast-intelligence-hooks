@@ -7,4 +7,5 @@ export interface HeuristicFact {
   code: string;
   message: string;
   filePath?: string;
+  lines?: readonly number[];
 }

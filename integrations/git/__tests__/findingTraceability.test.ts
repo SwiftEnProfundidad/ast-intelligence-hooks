@@ -90,6 +90,7 @@ test('attachFindingTraceability agrega filePath para reglas Heuristic', () => {
       code: 'HEURISTICS_SOLID_SRP_CLASS_COMMAND_QUERY_MIX_AST',
       message: 'AST heuristic detected class-level SRP/CQS mix.',
       filePath: 'apps/backend/src/application/OrderService.ts',
+      lines: [48, 12, 48],
       source: 'heuristics:ast',
     },
   ];
@@ -110,6 +111,7 @@ test('attachFindingTraceability agrega filePath para reglas Heuristic', () => {
   });
 
   assert.equal(traced[0]?.filePath, 'apps/backend/src/application/OrderService.ts');
+  assert.deepEqual(traced[0]?.lines, [12, 48]);
   assert.equal(traced[0]?.matchedBy, 'Heuristic');
   assert.equal(traced[0]?.source, 'heuristics:ast');
 });

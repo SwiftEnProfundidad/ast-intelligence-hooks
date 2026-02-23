@@ -213,6 +213,7 @@ const traceHeuristic = (
   return {
     matched: true,
     filePath: selected.filePath ? normalizePath(selected.filePath) : undefined,
+    lines: sortedUniqueLines(selected.lines ?? []),
     matchedBy: 'Heuristic',
     source: selected.source,
   };
