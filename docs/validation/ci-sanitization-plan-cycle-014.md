@@ -111,6 +111,37 @@ Implicación:
   `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/364`
 - Ramas sincronizadas tras promote: `origin/main...origin/develop = 0/0`.
 
+## Ejecución actual (Lote C — Platform Gates)
+
+Estado: ✅ completado en local (con corrección de contrato de workflow).
+
+### Causa raíz confirmada
+
+1. Los workflows de platform gate (`pumuki-ios/android/backend/frontend.yml`) apuntaban a `integrations/git/ci*.ts`.
+2. Esos entrypoints `ci*.ts` solo re-exportan funciones y no ejecutan `runCliCommand`, por lo que el runner de gate no se lanzaba realmente.
+
+### Correcciones aplicadas
+
+- Workflows actualizados a entrypoints ejecutables:
+  - `integrations/git/ciIOS.cli.ts`
+  - `integrations/git/ciAndroid.cli.ts`
+  - `integrations/git/ciBackend.cli.ts`
+  - `integrations/git/ciFrontend.cli.ts`
+- TDD de contrato añadido:
+  - `scripts/__tests__/platform-gates-workflow-contract.test.ts`
+
+### Validación local
+
+- Contrato workflow red/green:
+  - red inicial: 4/4 fallos (runner_path incorrecto)
+  - green final: 4/4 OK tras fix
+- Gates ejecutados localmente:
+  - sin bypass: `ios=1`, `android=1`, `backend=1`, `frontend=1` por `OPENSPEC_MISSING`
+  - con bypass (`PUMUKI_SDD_BYPASS=1`): `ios=0`, `android=0`, `backend=0`, `frontend=0`
+- Evidencia:
+  - `.audit_tmp/p-adhoc-lines-014-lotC-gates-exit-codes.txt`
+  - `.audit_tmp/p-adhoc-lines-014-lotC-gates-bypass-exit-codes.txt`
+
 ## Cierre pendiente del ciclo 014
 
 Dependencia externa no resuelta:
