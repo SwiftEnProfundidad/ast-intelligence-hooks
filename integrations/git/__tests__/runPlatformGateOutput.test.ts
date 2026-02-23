@@ -20,7 +20,7 @@ test('printGateFindings no emite logs cuando no hay findings', () => {
   assert.deepEqual(captured, []);
 });
 
-test('printGateFindings imprime ruleId y message por cada finding', () => {
+test('printGateFindings imprime severidad, ruleId, message y ubicación clicable', () => {
   const findings: ReadonlyArray<Finding> = [
     {
       ruleId: 'R1',
@@ -28,6 +28,7 @@ test('printGateFindings imprime ruleId y message por cada finding', () => {
       code: 'sample-1',
       message: 'Primera alerta',
       filePath: 'src/a.ts',
+      lines: [42, 60],
     },
     {
       ruleId: 'R2',
@@ -35,6 +36,13 @@ test('printGateFindings imprime ruleId y message por cada finding', () => {
       code: 'sample-2',
       message: 'Segunda alerta',
       filePath: 'src/b.ts',
+      lines: '17',
+    },
+    {
+      ruleId: 'R3',
+      severity: 'CRITICAL',
+      code: 'sample-3',
+      message: 'Tercera alerta',
     },
   ];
   const captured: string[] = [];
@@ -50,5 +58,9 @@ test('printGateFindings imprime ruleId y message por cada finding', () => {
     process.stdout.write = originalWrite;
   }
 
-  assert.deepEqual(captured, ['R1: Primera alerta', 'R2: Segunda alerta']);
+  assert.deepEqual(captured, [
+    '[ERROR] R1: Primera alerta -> src/a.ts:42',
+    '[WARN] R2: Segunda alerta -> src/b.ts:17',
+    '[CRITICAL] R3: Tercera alerta',
+  ]);
 });

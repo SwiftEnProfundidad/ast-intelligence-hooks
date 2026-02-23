@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findTlsEnvRejectUnauthorizedZeroOverrideLines,
+  findTlsRejectUnauthorizedFalseOptionLines,
   hasTlsEnvRejectUnauthorizedZeroOverride,
   hasTlsRejectUnauthorizedFalseOption,
 } from './securityTls';
@@ -118,4 +120,37 @@ test('hasTlsEnvRejectUnauthorizedZeroOverride detecta process.env.NODE_TLS_REJEC
   assert.equal(hasTlsEnvRejectUnauthorizedZeroOverride(templateLiteralZeroAst), true);
   assert.equal(hasTlsEnvRejectUnauthorizedZeroOverride(safeValueAst), false);
   assert.equal(hasTlsEnvRejectUnauthorizedZeroOverride(otherEnvAst), false);
+});
+
+test('find*Lines de securityTls retornan lineas de coincidencia', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ObjectProperty',
+        loc: { start: { line: 5 } },
+        key: { type: 'Identifier', name: 'rejectUnauthorized' },
+        value: { type: 'BooleanLiteral', value: false },
+      },
+      {
+        type: 'AssignmentExpression',
+        loc: { start: { line: 11 } },
+        left: {
+          type: 'MemberExpression',
+          computed: false,
+          object: {
+            type: 'MemberExpression',
+            computed: false,
+            object: { type: 'Identifier', name: 'process' },
+            property: { type: 'Identifier', name: 'env' },
+          },
+          property: { type: 'Identifier', name: 'NODE_TLS_REJECT_UNAUTHORIZED' },
+        },
+        right: { type: 'StringLiteral', value: '0' },
+      },
+    ],
+  };
+
+  assert.deepEqual(findTlsRejectUnauthorizedFalseOptionLines(ast), [5]);
+  assert.deepEqual(findTlsEnvRejectUnauthorizedZeroOverrideLines(ast), [11]);
 });

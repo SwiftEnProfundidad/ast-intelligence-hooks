@@ -1133,7 +1133,54 @@ export const exportLegacyAuditMarkdown = (params?: {
   const outputPath = params?.outputPath
     ?? join(repoRoot, '.audit-reports', 'pumuki-legacy-audit.md');
   mkdirSync(join(outputPath, '..'), { recursive: true });
-  const markdown = `# PUMUKI Audit Report\n\n\`\`\`text\n${report}\n\`\`\`\n`;
+
+  const normalizeMarkdownPath = (file: string): string => {
+    const normalized = file.replace(/\\/g, '/').replace(/^\.\//, '');
+    return normalized;
+  };
+
+  const toMarkdownFileLink = (file: string, line: number): string => {
+    const normalized = normalizeMarkdownPath(file);
+    const safePath = encodeURI(normalized);
+    return `[${normalized}:${line}](./${safePath}#L${line})`;
+  };
+
+  const topFindingsSection = (summary.topFindings ?? []).length === 0
+    ? '- none'
+    : (summary.topFindings ?? [])
+      .map((finding) =>
+        `- [${finding.severity}] ${finding.ruleId} -> ${toMarkdownFileLink(finding.file, finding.line)}`
+      )
+      .join('\n');
+
+  const topFilesByLocationSection = (summary.topFileLocations ?? []).length === 0
+    ? '- none'
+    : (summary.topFileLocations ?? [])
+      .map((entry) => `- ${toMarkdownFileLink(entry.file, entry.line)}`)
+      .join('\n');
+
+  const markdown = [
+    '# PUMUKI Audit Report',
+    '',
+    '## Snapshot',
+    `- Stage: \`${summary.stage}\``,
+    `- Outcome: \`${summary.outcome}\``,
+    `- Total violations: \`${summary.totalViolations}\``,
+    `- Severity: \`CRITICAL ${summary.bySeverity.CRITICAL} | HIGH ${summary.bySeverity.HIGH} | MEDIUM ${summary.bySeverity.MEDIUM} | LOW ${summary.bySeverity.LOW}\``,
+    '',
+    '## Clickable Top Files',
+    topFilesByLocationSection,
+    '',
+    '## Clickable Findings',
+    topFindingsSection,
+    '',
+    '## Legacy Panel',
+    '```text',
+    report,
+    '```',
+    '',
+  ].join('\n');
+
   writeFileSync(outputPath, markdown, 'utf8');
   return outputPath;
 };

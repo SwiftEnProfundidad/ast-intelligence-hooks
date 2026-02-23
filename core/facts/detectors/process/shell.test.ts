@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findChildProcessShellTrueCallLines,
+  findDynamicShellInvocationCallLines,
+  findExecFileUntrustedArgsCallLines,
   hasChildProcessShellTrueCall,
   hasDynamicShellInvocationCall,
   hasExecFileUntrustedArgsCall,
@@ -134,4 +137,50 @@ test('hasExecFileUntrustedArgsCall detecta args no confiables y descarta arrays 
   assert.equal(hasExecFileUntrustedArgsCall(untrustedAst), true);
   assert.equal(hasExecFileUntrustedArgsCall(safeAst), false);
   assert.equal(hasExecFileUntrustedArgsCall(dynamicFileAst), false);
+});
+
+test('find*Lines de shell retornan lineas de coincidencia', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 5 } },
+        callee: { type: 'Identifier', name: 'exec' },
+        arguments: [{ type: 'Identifier', name: 'dynamicCommand' }],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 9 } },
+        callee: { type: 'Identifier', name: 'spawn' },
+        arguments: [
+          { type: 'StringLiteral', value: 'node' },
+          { type: 'ArrayExpression', elements: [] },
+          {
+            type: 'ObjectExpression',
+            properties: [
+              {
+                type: 'ObjectProperty',
+                key: { type: 'Identifier', name: 'shell' },
+                value: { type: 'BooleanLiteral', value: true },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 13 } },
+        callee: { type: 'Identifier', name: 'execFile' },
+        arguments: [
+          { type: 'StringLiteral', value: '/usr/bin/git' },
+          { type: 'Identifier', name: 'userArgs' },
+        ],
+      },
+    ],
+  };
+
+  assert.deepEqual(findDynamicShellInvocationCallLines(ast), [5]);
+  assert.deepEqual(findChildProcessShellTrueCallLines(ast), [9]);
+  assert.deepEqual(findExecFileUntrustedArgsCallLines(ast), [13]);
 });

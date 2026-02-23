@@ -14,6 +14,7 @@ import * as FsPromises from './detectors/fs/promises';
 import * as FsCallbacks from './detectors/fs/callbacks';
 import * as TextIOS from './detectors/text/ios';
 import * as TextAndroid from './detectors/text/android';
+import { collectNodeLineMatches, isObject } from './detectors/utils/astHelpers';
 
 export type HeuristicExtractionParams = {
   facts: ReadonlyArray<Fact>;
@@ -205,8 +206,148 @@ const createHeuristicFact = (params: {
 
 // --- Registries ---
 
+type ASTDetectorFunction = (ast: unknown) => boolean;
+type ASTLineLocator = (ast: unknown) => readonly number[];
+
+const lowerFirst = (value: string): string => {
+  if (value.length === 0) {
+    return value;
+  }
+  return value.charAt(0).toLowerCase() + value.slice(1);
+};
+
+const isIdentifierPropertyMatch = (node: unknown, expectedName: string): boolean => {
+  return isObject(node) && node.type === 'Identifier' && node.name === expectedName;
+};
+
+const isStringLiteralPropertyMatch = (node: unknown, expectedName: string): boolean => {
+  return isObject(node) && node.type === 'StringLiteral' && node.value === expectedName;
+};
+
+const createFsSyncMethodLineLocator = (methodName: string): ASTLineLocator => {
+  return (ast: unknown): readonly number[] => {
+    return collectNodeLineMatches(ast, (value) => {
+      if (value.type !== 'CallExpression') {
+        return false;
+      }
+      const callee = value.callee;
+      if (!isObject(callee) || callee.type !== 'MemberExpression' || callee.computed === true) {
+        return false;
+      }
+      return isIdentifierPropertyMatch(callee.object, 'fs') && isIdentifierPropertyMatch(callee.property, methodName);
+    });
+  };
+};
+
+const createFsPromisesMethodLineLocator = (methodName: string): ASTLineLocator => {
+  return (ast: unknown): readonly number[] => {
+    return collectNodeLineMatches(ast, (value) => {
+      if (value.type !== 'CallExpression') {
+        return false;
+      }
+      const callee = value.callee;
+      if (!isObject(callee) || callee.type !== 'MemberExpression') {
+        return false;
+      }
+
+      const methodMatches =
+        (callee.computed === true && isStringLiteralPropertyMatch(callee.property, methodName)) ||
+        (callee.computed !== true && isIdentifierPropertyMatch(callee.property, methodName));
+      if (!methodMatches) {
+        return false;
+      }
+
+      const objectNode = callee.object;
+      if (!isObject(objectNode) || objectNode.type !== 'MemberExpression') {
+        return false;
+      }
+      const promisesMatches =
+        (objectNode.computed === true && isStringLiteralPropertyMatch(objectNode.property, 'promises')) ||
+        (objectNode.computed !== true && isIdentifierPropertyMatch(objectNode.property, 'promises'));
+      if (!promisesMatches) {
+        return false;
+      }
+
+      return isIdentifierPropertyMatch(objectNode.object, 'fs');
+    });
+  };
+};
+
+const createFsCallbackMethodLineLocator = (methodName: string): ASTLineLocator => {
+  return (ast: unknown): readonly number[] => {
+    return collectNodeLineMatches(ast, (value) => {
+      if (value.type !== 'CallExpression') {
+        return false;
+      }
+      const callee = value.callee;
+      if (!isObject(callee) || callee.type !== 'MemberExpression') {
+        return false;
+      }
+
+      const methodMatches =
+        (callee.computed === true && isStringLiteralPropertyMatch(callee.property, methodName)) ||
+        (callee.computed !== true && isIdentifierPropertyMatch(callee.property, methodName));
+      if (!methodMatches || !isIdentifierPropertyMatch(callee.object, 'fs')) {
+        return false;
+      }
+
+      const args = value.arguments as unknown[];
+      if (!Array.isArray(args)) {
+        return false;
+      }
+      return args.some(
+        (argument) =>
+          isObject(argument) &&
+          (argument.type === 'ArrowFunctionExpression' || argument.type === 'FunctionExpression')
+      );
+    });
+  };
+};
+
+const inferFsLineLocatorFromDetectorExportName = (exportName: string): ASTLineLocator | undefined => {
+  const fsSyncMatch = /^hasFs(.+)SyncCall$/.exec(exportName);
+  if (fsSyncMatch?.[1]) {
+    return createFsSyncMethodLineLocator(`${lowerFirst(fsSyncMatch[1])}Sync`);
+  }
+
+  const fsPromisesMatch = /^hasFsPromises(.+)Call$/.exec(exportName);
+  if (fsPromisesMatch?.[1]) {
+    return createFsPromisesMethodLineLocator(lowerFirst(fsPromisesMatch[1]));
+  }
+
+  const fsCallbackMatch = /^hasFs(.+)CallbackCall$/.exec(exportName);
+  if (fsCallbackMatch?.[1]) {
+    return createFsCallbackMethodLineLocator(lowerFirst(fsCallbackMatch[1]));
+  }
+
+  return undefined;
+};
+
+const astDetectorLineLocatorRegistry = new Map<ASTDetectorFunction, ASTLineLocator>();
+
+const registerAstDetectorLineLocators = (moduleExports: Record<string, unknown>): void => {
+  for (const [exportName, exportValue] of Object.entries(moduleExports)) {
+    if (!exportName.startsWith('has') || typeof exportValue !== 'function') {
+      continue;
+    }
+
+    const detect = exportValue as ASTDetectorFunction;
+    const lineLocatorExportName = `find${exportName.slice(3)}Lines`;
+    const locatorExport = moduleExports[lineLocatorExportName];
+    if (typeof locatorExport === 'function') {
+      astDetectorLineLocatorRegistry.set(detect, locatorExport as ASTLineLocator);
+      continue;
+    }
+
+    const inferredLocator = inferFsLineLocatorFromDetectorExportName(exportName);
+    if (inferredLocator) {
+      astDetectorLineLocatorRegistry.set(detect, inferredLocator);
+    }
+  }
+};
+
 type ASTDetectorRegistryEntry = {
-  readonly detect: (ast: unknown) => boolean;
+  readonly detect: ASTDetectorFunction;
   readonly locateLines?: (ast: unknown) => readonly number[];
   readonly ruleId: string;
   readonly code: string;
@@ -393,6 +534,15 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: FsCallbacks.hasFsLutimesCallbackCall, ruleId: 'heuristics.ts.fs-lutimes-callback.ast', code: 'HEURISTICS_FS_LUTIMES_CALLBACK_AST', message: 'AST heuristic detected fs.lutimes callback usage.' },
 ];
 
+registerAstDetectorLineLocators(TS as Record<string, unknown>);
+registerAstDetectorLineLocators(Process as Record<string, unknown>);
+registerAstDetectorLineLocators(Security as Record<string, unknown>);
+registerAstDetectorLineLocators(Browser as Record<string, unknown>);
+registerAstDetectorLineLocators(FsSync as Record<string, unknown>);
+registerAstDetectorLineLocators(FsPromises as Record<string, unknown>);
+registerAstDetectorLineLocators(FsCallbacks as Record<string, unknown>);
+registerAstDetectorLineLocators(VM as Record<string, unknown>);
+
 type TextDetectorRegistryEntry = {
   readonly platform: 'ios' | 'android';
   readonly pathCheck: (path: string) => boolean;
@@ -533,7 +683,8 @@ export const extractHeuristicFacts = (
           continue;
         }
         if (entry.detect(ast)) {
-          const lines = entry.locateLines?.(ast);
+          const lineLocator = entry.locateLines ?? astDetectorLineLocatorRegistry.get(entry.detect);
+          const lines = lineLocator?.(ast);
           heuristicFacts.push(
             createHeuristicFact({
               ruleId: entry.ruleId,
