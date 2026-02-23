@@ -21,6 +21,131 @@ const concreteDependencyNames = new Set<string>([
 ]);
 const GOD_CLASS_MAX_LINES = 500;
 const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
+type AstNode = Record<string, unknown>;
+
+const toPositiveLine = (node: AstNode): number | null => {
+  const loc = node.loc;
+  if (!isObject(loc)) {
+    return null;
+  }
+  const start = loc.start;
+  if (!isObject(start) || typeof start.line !== 'number' || !Number.isFinite(start.line)) {
+    return null;
+  }
+  const line = Math.trunc(start.line);
+  return line > 0 ? line : null;
+};
+
+const sortedUniqueLines = (lines: ReadonlyArray<number>): readonly number[] => {
+  return Array.from(
+    new Set(lines.filter((line) => Number.isFinite(line)).map((line) => Math.trunc(line)))
+  )
+    .filter((line) => line > 0)
+    .sort((left, right) => left - right);
+};
+
+const containsNode = (root: unknown, target: AstNode): boolean => {
+  if (!isObject(root)) {
+    return false;
+  }
+  if (root === target) {
+    return true;
+  }
+  for (const child of Object.values(root)) {
+    if (Array.isArray(child)) {
+      for (const entry of child) {
+        if (containsNode(entry, target)) {
+          return true;
+        }
+      }
+      continue;
+    }
+    if (containsNode(child, target)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const collectLineMatchesWithAncestors = (
+  node: unknown,
+  predicate: (value: AstNode, ancestors: ReadonlyArray<AstNode>) => boolean,
+  options?: { max?: number }
+): readonly number[] => {
+  const max = Math.max(1, Math.trunc(options?.max ?? 8));
+  const matches: number[] = [];
+
+  const walk = (value: unknown, ancestors: ReadonlyArray<AstNode>): void => {
+    if (!isObject(value) || matches.length >= max) {
+      return;
+    }
+
+    if (predicate(value, ancestors)) {
+      const line = toPositiveLine(value);
+      if (typeof line === 'number') {
+        matches.push(line);
+      }
+    }
+
+    const nextAncestors = [...ancestors, value];
+    for (const child of Object.values(value)) {
+      if (matches.length >= max) {
+        return;
+      }
+      if (Array.isArray(child)) {
+        for (const entry of child) {
+          if (matches.length >= max) {
+            return;
+          }
+          walk(entry, nextAncestors);
+        }
+        continue;
+      }
+      walk(child, nextAncestors);
+    }
+  };
+
+  walk(node, []);
+  return sortedUniqueLines(matches);
+};
+
+const hasNodeWithAncestors = (
+  node: unknown,
+  predicate: (value: AstNode, ancestors: ReadonlyArray<AstNode>) => boolean
+): boolean => {
+  let matched = false;
+
+  const walk = (value: unknown, ancestors: ReadonlyArray<AstNode>): void => {
+    if (!isObject(value) || matched) {
+      return;
+    }
+
+    if (predicate(value, ancestors)) {
+      matched = true;
+      return;
+    }
+
+    const nextAncestors = [...ancestors, value];
+    for (const child of Object.values(value)) {
+      if (matched) {
+        return;
+      }
+      if (Array.isArray(child)) {
+        for (const entry of child) {
+          if (matched) {
+            return;
+          }
+          walk(entry, nextAncestors);
+        }
+        continue;
+      }
+      walk(child, nextAncestors);
+    }
+  };
+
+  walk(node, []);
+  return matched;
+};
 
 const methodNameFromNode = (node: unknown): string | undefined => {
   if (!isObject(node)) {
@@ -546,6 +671,49 @@ export const findUnknownTypeAssertionLines = (node: unknown): readonly number[] 
   return collectNodeLineMatches(node, isUnknownTypeAssertionNode);
 };
 
+const isUnknownKeywordNode = (value: Record<string, unknown>): boolean => {
+  return value.type === 'TSUnknownKeyword';
+};
+
+const isRecordUnknownValueTypeNode = (unknownNode: AstNode, ancestors: ReadonlyArray<AstNode>): boolean => {
+  for (let index = ancestors.length - 1; index >= 0; index -= 1) {
+    const ancestor = ancestors[index];
+    if (ancestor.type !== 'TSTypeReference' || !isRecordTypeName(ancestor.typeName)) {
+      continue;
+    }
+    const params = typeReferenceParams(ancestor);
+    if (params.length !== 2) {
+      continue;
+    }
+    const valueType = params[1];
+    if (containsNode(valueType, unknownNode)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const isUnknownWithoutGuardNode = (
+  value: AstNode,
+  ancestors: ReadonlyArray<AstNode>
+): boolean => {
+  if (isUnknownTypeAssertionNode(value)) {
+    return true;
+  }
+  if (!isUnknownKeywordNode(value)) {
+    return false;
+  }
+  return !isRecordUnknownValueTypeNode(value, ancestors);
+};
+
+export const hasUnknownWithoutGuard = (node: unknown): boolean => {
+  return hasNodeWithAncestors(node, isUnknownWithoutGuardNode);
+};
+
+export const findUnknownWithoutGuardLines = (node: unknown): readonly number[] => {
+  return collectLineMatchesWithAncestors(node, isUnknownWithoutGuardNode);
+};
+
 const hasUndefinedUnionMember = (members: ReadonlyArray<unknown>): boolean => {
   return members.some(
     (member) => isObject(member) && member.type === 'TSUndefinedKeyword'
@@ -579,68 +747,113 @@ export const findUndefinedInBaseTypeUnionLines = (node: unknown): readonly numbe
   return collectNodeLineMatches(node, isUndefinedInBaseTypeUnionNode);
 };
 
+const isNetworkCallExpressionNode = (value: Record<string, unknown>): boolean => {
+  if (value.type !== 'CallExpression') {
+    return false;
+  }
+  const callee = value.callee;
+  const identifierName = methodNameFromNode(callee);
+  if (identifierName && networkCallCalleePattern.test(identifierName)) {
+    return true;
+  }
+  if (!isObject(callee) || callee.type !== 'MemberExpression') {
+    return false;
+  }
+  const propertyName = methodNameFromNode(callee.property);
+  if (!propertyName || !networkCallCalleePattern.test(propertyName)) {
+    return false;
+  }
+  const objectName = methodNameFromNode(callee.object);
+  if (
+    objectName &&
+    (objectName.toLowerCase() === 'http' || objectName.toLowerCase() === 'axios')
+  ) {
+    return true;
+  }
+  if (
+    isObject(callee.object) &&
+    callee.object.type === 'MemberExpression' &&
+    methodNameFromNode(callee.object.property)?.toLowerCase() === 'http'
+  ) {
+    return true;
+  }
+  return propertyName.toLowerCase() === 'fetch';
+};
+
 const hasNetworkCallExpression = (node: unknown): boolean => {
-  return hasNode(node, (value) => {
-    if (value.type !== 'CallExpression') {
-      return false;
+  return hasNode(node, isNetworkCallExpressionNode);
+};
+
+const isNetworkCallHandledInsideTryCatch = (ancestors: ReadonlyArray<AstNode>): boolean => {
+  for (let index = 0; index < ancestors.length; index += 1) {
+    const ancestor = ancestors[index];
+    if (ancestor.type !== 'TryStatement') {
+      continue;
     }
-    const callee = value.callee;
-    const identifierName = methodNameFromNode(callee);
-    if (identifierName && networkCallCalleePattern.test(identifierName)) {
+    const nextNode = ancestors[index + 1];
+    if (!isObject(ancestor.block) || !isObject(ancestor.handler)) {
+      continue;
+    }
+    if (nextNode === ancestor.block) {
       return true;
     }
+  }
+  return false;
+};
+
+const isCatchCallForNetworkNode = (
+  node: AstNode,
+  ancestors: ReadonlyArray<AstNode>
+): boolean => {
+  for (let index = ancestors.length - 1; index >= 0; index -= 1) {
+    const ancestor = ancestors[index];
+    if (ancestor.type !== 'CallExpression') {
+      continue;
+    }
+    const callee = ancestor.callee;
     if (!isObject(callee) || callee.type !== 'MemberExpression') {
-      return false;
+      continue;
     }
-    const propertyName = methodNameFromNode(callee.property);
-    if (!propertyName || !networkCallCalleePattern.test(propertyName)) {
-      return false;
+    const property = methodNameFromNode(callee.property)?.toLowerCase();
+    if (property !== 'catch') {
+      continue;
     }
-    const objectName = methodNameFromNode(callee.object);
-    if (
-      objectName &&
-      (objectName.toLowerCase() === 'http' || objectName.toLowerCase() === 'axios')
-    ) {
+    if (containsNode(callee.object, node)) {
       return true;
     }
-    if (
-      isObject(callee.object) &&
-      callee.object.type === 'MemberExpression' &&
-      methodNameFromNode(callee.object.property)?.toLowerCase() === 'http'
-    ) {
-      return true;
-    }
-    return propertyName.toLowerCase() === 'fetch';
-  });
-};
-
-const hasTryCatchStatement = (node: unknown): boolean => {
-  return hasNode(node, (value) => value.type === 'TryStatement' || value.type === 'CatchClause');
-};
-
-const hasPromiseCatchCall = (node: unknown): boolean => {
-  return hasNode(node, (value) => {
-    if (value.type !== 'CallExpression') {
-      return false;
-    }
-    const callee = value.callee;
-    return (
-      isObject(callee) &&
-      callee.type === 'MemberExpression' &&
-      methodNameFromNode(callee.property)?.toLowerCase() === 'catch'
-    );
-  });
+  }
+  return false;
 };
 
 export const hasNetworkCallWithoutErrorHandling = (node: unknown): boolean => {
+  return hasNodeWithAncestors(node, (value, ancestors) => {
+    if (!isNetworkCallExpressionNode(value)) {
+      return false;
+    }
+    if (isNetworkCallHandledInsideTryCatch(ancestors)) {
+      return false;
+    }
+    if (isCatchCallForNetworkNode(value, ancestors)) {
+      return false;
+    }
+    return true;
+  });
+};
+
+export const findNetworkCallWithoutErrorHandlingLines = (node: unknown): readonly number[] => {
   if (!hasNetworkCallExpression(node)) {
-    return false;
+    return [];
   }
-  if (hasTryCatchStatement(node)) {
-    return false;
-  }
-  if (hasPromiseCatchCall(node)) {
-    return false;
-  }
-  return true;
+  return collectLineMatchesWithAncestors(node, (value, ancestors) => {
+    if (!isNetworkCallExpressionNode(value)) {
+      return false;
+    }
+    if (isNetworkCallHandledInsideTryCatch(ancestors)) {
+      return false;
+    }
+    if (isCatchCallForNetworkNode(value, ancestors)) {
+      return false;
+    }
+    return true;
+  });
 };

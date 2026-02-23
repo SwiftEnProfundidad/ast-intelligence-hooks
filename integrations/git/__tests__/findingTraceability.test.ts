@@ -116,6 +116,78 @@ test('attachFindingTraceability agrega filePath para reglas Heuristic', () => {
   assert.equal(traced[0]?.source, 'heuristics:ast');
 });
 
+test('attachFindingTraceability respeta lineas del fichero del finding para reglas Heuristic', () => {
+  const rules: RuleSet = [
+    {
+      id: 'common.types.unknown_without_guard',
+      description: 'Unknown sin guardas',
+      severity: 'WARN',
+      when: {
+        kind: 'Heuristic',
+        where: {
+          ruleId: 'common.types.unknown_without_guard',
+        },
+      },
+      then: {
+        kind: 'Finding',
+        code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD',
+        message: 'Unknown sin guard',
+      },
+    },
+  ];
+
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'Heuristic',
+      ruleId: 'common.types.unknown_without_guard',
+      severity: 'WARN',
+      code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST',
+      message: 'Unknown usage',
+      filePath: 'src/a.ts',
+      lines: [11],
+      source: 'heuristics:ast',
+    },
+    {
+      kind: 'Heuristic',
+      ruleId: 'common.types.unknown_without_guard',
+      severity: 'WARN',
+      code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST',
+      message: 'Unknown usage',
+      filePath: 'src/b.ts',
+      lines: [29],
+      source: 'heuristics:ast',
+    },
+  ];
+
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'common.types.unknown_without_guard',
+      severity: 'WARN',
+      code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD',
+      message: 'Unknown sin guard',
+      filePath: 'src/a.ts',
+    },
+    {
+      ruleId: 'common.types.unknown_without_guard',
+      severity: 'WARN',
+      code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD',
+      message: 'Unknown sin guard',
+      filePath: 'src/b.ts',
+    },
+  ];
+
+  const traced = attachFindingTraceability({
+    findings,
+    rules,
+    facts,
+  });
+
+  assert.deepEqual(
+    traced.map((finding) => finding.lines),
+    [[11], [29]]
+  );
+});
+
 test('attachFindingTraceability mantiene finding sin contexto cuando la regla es Not pura', () => {
   const rules: RuleSet = [
     {

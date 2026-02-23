@@ -2,8 +2,10 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
   findEmptyCatchClauseLines,
+  findNetworkCallWithoutErrorHandlingLines,
   findRecordStringUnknownTypeLines,
   findUndefinedInBaseTypeUnionLines,
+  findUnknownWithoutGuardLines,
   findUnknownTypeAssertionLines,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
@@ -19,6 +21,7 @@ import {
   hasNetworkCallWithoutErrorHandling,
   hasMixedCommandQueryClass,
   hasMixedCommandQueryInterface,
+  hasUnknownWithoutGuard,
   hasRecordStringUnknownType,
   hasOverrideMethodThrowingNotImplemented,
   hasLargeClassDeclaration,
@@ -544,7 +547,96 @@ test('findUndefinedInBaseTypeUnionLines devuelve lineas de union base con undefi
   assert.deepEqual(findUndefinedInBaseTypeUnionLines(ast), [5]);
 });
 
-test('hasNetworkCallWithoutErrorHandling detecta llamadas de red sin try/catch ni .catch', () => {
+test('hasUnknownWithoutGuard detecta unknown fuera de Record<string, unknown>', () => {
+  const unsafeUnknownAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'VariableDeclaration',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            id: {
+              type: 'Identifier',
+              name: 'payload',
+              typeAnnotation: {
+                type: 'TSTypeAnnotation',
+                typeAnnotation: { type: 'TSUnknownKeyword' },
+              },
+            },
+            init: { type: 'Identifier', name: 'raw' },
+          },
+        ],
+      },
+    ],
+  };
+  const recordUnknownAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'TSTypeAliasDeclaration',
+        id: { type: 'Identifier', name: 'Payload' },
+        typeAnnotation: {
+          type: 'TSTypeReference',
+          typeName: { type: 'Identifier', name: 'Record' },
+          typeParameters: {
+            params: [{ type: 'TSStringKeyword' }, { type: 'TSUnknownKeyword' }],
+          },
+        },
+      },
+    ],
+  };
+
+  assert.equal(hasUnknownWithoutGuard(unsafeUnknownAst), true);
+  assert.equal(hasUnknownWithoutGuard(recordUnknownAst), false);
+});
+
+test('findUnknownWithoutGuardLines devuelve lineas de unknown sin guardas explicitas', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'VariableDeclaration',
+        declarations: [
+          {
+            type: 'VariableDeclarator',
+            loc: { start: { line: 4 }, end: { line: 4 } },
+            id: {
+              type: 'Identifier',
+              name: 'payload',
+              typeAnnotation: {
+                type: 'TSTypeAnnotation',
+                typeAnnotation: {
+                  type: 'TSUnknownKeyword',
+                  loc: { start: { line: 4 }, end: { line: 4 } },
+                },
+              },
+            },
+            init: { type: 'Identifier', name: 'raw' },
+          },
+        ],
+      },
+      {
+        type: 'TSTypeAliasDeclaration',
+        id: { type: 'Identifier', name: 'Payload' },
+        typeAnnotation: {
+          type: 'TSTypeReference',
+          typeName: { type: 'Identifier', name: 'Record' },
+          typeParameters: {
+            params: [
+              { type: 'TSStringKeyword' },
+              { type: 'TSUnknownKeyword', loc: { start: { line: 10 }, end: { line: 10 } } },
+            ],
+          },
+        },
+      },
+    ],
+  };
+
+  assert.deepEqual(findUnknownWithoutGuardLines(ast), [4]);
+});
+
+test('hasNetworkCallWithoutErrorHandling detecta solo llamadas de red realmente sin manejo local', () => {
   const unhandledNetworkAst = {
     type: 'Program',
     body: [
@@ -584,7 +676,78 @@ test('hasNetworkCallWithoutErrorHandling detecta llamadas de red sin try/catch n
       },
     ],
   };
+  const chainedCatchAst = {
+    type: 'Program',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'CallExpression',
+          callee: {
+            type: 'MemberExpression',
+            object: {
+              type: 'CallExpression',
+              callee: {
+                type: 'MemberExpression',
+                object: { type: 'Identifier', name: 'axios' },
+                property: { type: 'Identifier', name: 'get' },
+              },
+              arguments: [],
+            },
+            property: { type: 'Identifier', name: 'catch' },
+          },
+          arguments: [{ type: 'ArrowFunctionExpression', body: { type: 'Identifier', name: 'err' } }],
+        },
+      },
+    ],
+  };
 
   assert.equal(hasNetworkCallWithoutErrorHandling(unhandledNetworkAst), true);
-  assert.equal(hasNetworkCallWithoutErrorHandling(handledNetworkAst), false);
+  assert.equal(hasNetworkCallWithoutErrorHandling(handledNetworkAst), true);
+  assert.equal(hasNetworkCallWithoutErrorHandling(chainedCatchAst), false);
+});
+
+test('findNetworkCallWithoutErrorHandlingLines devuelve lineas de llamadas sin manejo', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'TryStatement',
+        block: {
+          type: 'BlockStatement',
+          body: [
+            {
+              type: 'ExpressionStatement',
+              expression: {
+                type: 'CallExpression',
+                loc: { start: { line: 5 }, end: { line: 5 } },
+                callee: {
+                  type: 'MemberExpression',
+                  object: { type: 'Identifier', name: 'axios' },
+                  property: { type: 'Identifier', name: 'get' },
+                },
+                arguments: [],
+              },
+            },
+          ],
+        },
+        handler: { type: 'CatchClause', body: { type: 'BlockStatement', body: [] } },
+      },
+      {
+        type: 'ExpressionStatement',
+        expression: {
+          type: 'CallExpression',
+          loc: { start: { line: 12 }, end: { line: 12 } },
+          callee: {
+            type: 'MemberExpression',
+            object: { type: 'Identifier', name: 'axios' },
+            property: { type: 'Identifier', name: 'get' },
+          },
+          arguments: [],
+        },
+      },
+    ],
+  };
+
+  assert.deepEqual(findNetworkCallWithoutErrorHandlingLines(ast), [12]);
 });
