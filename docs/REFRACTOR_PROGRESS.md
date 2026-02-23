@@ -35,7 +35,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
 
 ### Fase E — Cierre Estricto Externo
 - ✅ `F014.E.T1` Revalidacion remota estricta ejecutada hasta limite externo (billing), con promote admin `PR #378`.
-- 🚧 `F014.E.T2` Cierre definitivo de `P-ADHOC-LINES-014` en modo administrativo con riesgo externo documentado.
+- ✅ `F014.E.T2` Cierre definitivo de `P-ADHOC-LINES-014` en modo administrativo con riesgo externo documentado.
+- 🚧 `F014.E.T3` Seguimiento externo post-cierre para convertir cierre administrativo en cierre estricto remoto cuando billing/Snyk se restablezcan.
 
 ## Estado actual
 - ✅ `HYG.T1` Inventario completo de markdowns, artefactos y carpetas huérfanas.
@@ -123,7 +124,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F014.E.T2` y publicar cierre administrativo final del ciclo 014 con riesgo externo explícito.
+- 🚧 Ejecutar `F014.E.T3` de seguimiento externo y revalidación estricta no administrativa en cuanto haya ejecución remota real.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -158,7 +159,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - nota oficial de riesgo residual y plan de saneamiento publicada:
     - `docs/validation/post-merge-main-stability-note.md`
   - índice documental actualizado en `docs/validation/README.md`
-- 🚧 `P-ADHOC-LINES-014` Saneamiento CI post-merge en `main`:
+- ✅ `P-ADHOC-LINES-014` Saneamiento CI post-merge en `main`:
   - ✅ baseline de fallos post-merge recopilado:
     - `.audit_tmp/p-adhoc-lines-013-main-pr-checks.tsv`
     - `.audit_tmp/p-adhoc-lines-013-main-pr-checks-unique.tsv`
@@ -247,6 +248,9 @@ Plan base visible para seguimiento previo y durante la implementacion.
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-android-job.json`
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-package-minimal-job-v2.json`
     - ✅ `F014.E.T1.b` seguimiento de evidencia remota consolidado: se mantiene patrón externo (`runner_id=0`) por dependencia de billing.
+  - ✅ `F014.E.T2` cierre administrativo final publicado:
+    - documento oficial: `docs/validation/ci-sanitization-cycle-014-administrative-closure.md`
+    - índice actualizado: `docs/validation/README.md`
   - ✅ cierre Git Flow de lote C ejecutado end-to-end:
     - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
     - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
@@ -261,6 +265,10 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - sincronización final de ramas: `origin/main...origin/develop = 0/0`.
   - ✅ promote manual adicional solicitado por usuario:
     - ejecutar `develop -> main` sin depender del desbloqueo de billing para continuar flujo operativo.
-  - ⏳ objetivo de salida pendiente (dependencia externa):
-    - desbloquear billing de GitHub Actions;
-    - revalidar PR de control sin bypass admin con checks críticos en verde.
+  - ⏳ seguimiento externo post-cierre (fuera del alcance técnico local):
+    - restablecer billing de GitHub Actions;
+    - ejecutar revalidación estricta sin admin con checks críticos en verde.
+- 🚧 `P-ADHOC-LINES-015` Seguimiento externo del cierre administrativo 014:
+  - vigilar restablecimiento de billing en GitHub Actions y estado de `security/snyk`;
+  - al restablecerse, abrir PR de control `develop -> main` sin admin y capturar nueva evidencia remota;
+  - cerrar con actualización de documentación si la ejecución remota estricta queda en verde.
