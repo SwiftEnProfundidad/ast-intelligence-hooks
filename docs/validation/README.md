@@ -30,6 +30,9 @@ Keep these as source-of-truth operational references:
 - `ci-sanitization-cycle-014-local-ci-closure.md`
 - `post-merge-detection-audit-report.md`
 - `legacy-parity-gap-analysis.md`
+- `c018-c1-local-evidence.md`
+- `c018-d1-local-revalidation.md`
+- `c018-cycle-validation-closure.md`
 
 ## Generated Outputs (Do Not Keep as Baseline Docs)
 

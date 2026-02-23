@@ -395,4 +395,10 @@ Plan base visible para seguimiento previo y durante la implementacion.
       - `typecheck` (`OK`)
     - validación visual:
       - `framework-menu-consumer-runtime` (`9/9`) con badges y trazabilidad clicable en menú/export.
-  - 🚧 `C018.D.T2` En curso: consolidar cierre documental oficial del ciclo 018.
+  - ✅ `C018.D.T2` Documentación oficial consolidada:
+    - nuevo cierre oficial: `docs/validation/c018-cycle-validation-closure.md`
+    - índice actualizado: `docs/validation/README.md`
+    - evidencias versionadas registradas:
+      - `docs/validation/c018-c1-local-evidence.md`
+      - `docs/validation/c018-d1-local-revalidation.md`
+  - 🚧 `C018.D.T3` En curso: cierre final del ciclo 018 y estado listo para siguientes instrucciones.
