@@ -222,7 +222,8 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F4.T1` completada en `ENTERPRISE_DETECTION_RECOVERY`: ciclo TDD ampliado en gate con caso multi-incoherencia PRE_WRITE (`EVIDENCE_*`) y cobertura de bloqueo consolidada.
 - ✅ `F4.T2` completada en `ENTERPRISE_DETECTION_RECOVERY`: pruebas técnicas finales en verde (`npm run test:stage-gates` = `795 pass`, `0 fail`; `npm run typecheck` OK).
 - ✅ `F4.T3` completada en `ENTERPRISE_DETECTION_RECOVERY`: auditoría full repo final ejecutada (menú opción `1`) y reporte consolidado actualizado en `docs/FULL_REPO_RULES_AUDIT_REPORT.md` (`70` violaciones, cobertura `417/417`, `unsupported_auto=0`).
-- 🚧 `F4.T4` en construcción en `ENTERPRISE_DETECTION_RECOVERY`: cierre Git Flow end-to-end y documentación final del ciclo.
+- ✅ `F4.T4` completada en `ENTERPRISE_DETECTION_RECOVERY`: cierre Git Flow local end-to-end ejecutado (`feature/enterprise-detection-recovery -> develop -> main`) y documentación del ciclo sincronizada.
+- ✅ Ciclo `ENTERPRISE_DETECTION_RECOVERY` cerrado.
 
 ## Siguiente paso operativo
-- ⏳ Implementar `F4.T4` cerrando Git Flow completo (`feature -> develop -> main`) y dejando documentación final sincronizada.
+- ⏳ Publicar ramas (`develop` y `main`) al remoto y abrir PRs si se requiere trazabilidad en GitHub.
