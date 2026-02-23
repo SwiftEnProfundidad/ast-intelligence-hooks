@@ -36,7 +36,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
 ### Fase E — Cierre Estricto Externo
 - ✅ `F014.E.T1` Revalidacion remota estricta ejecutada hasta limite externo (billing), con promote admin `PR #378`.
 - ✅ `F014.E.T2` Cierre definitivo de `P-ADHOC-LINES-014` en modo administrativo con riesgo externo documentado.
-- 🚧 `F014.E.T3` Seguimiento externo post-cierre para convertir cierre administrativo en cierre estricto remoto cuando billing/Snyk se restablezcan.
+- ⛔ `F014.E.T3` Seguimiento externo post-cierre bloqueado por dependencia externa (billing Actions + Snyk en ERROR).
+- 🚧 `F014.E.T4` Reactivación manual del cierre estricto remoto cuando exista evidencia de desbloqueo externo real.
 
 ## Estado actual
 - ✅ `HYG.T1` Inventario completo de markdowns, artefactos y carpetas huérfanas.
@@ -124,7 +125,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F014.E.T3` de seguimiento externo y revalidación estricta no administrativa en cuanto haya ejecución remota real.
+- 🚧 Ejecutar `F014.E.T4` solo tras trigger manual de desbloqueo externo; sin sondeos automáticos en bucle.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -268,7 +269,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ⏳ seguimiento externo post-cierre (fuera del alcance técnico local):
     - restablecer billing de GitHub Actions;
     - ejecutar revalidación estricta sin admin con checks críticos en verde.
-- 🚧 `P-ADHOC-LINES-015` Seguimiento externo del cierre administrativo 014:
+- ⛔ `P-ADHOC-LINES-015` Seguimiento externo del cierre administrativo 014 (bloqueada por dependencias externas):
   - ✅ playbook operativo de seguimiento externo publicado:
     - `docs/validation/ci-sanitization-cycle-014-external-follow-up.md`
     - índice actualizado: `docs/validation/README.md`
@@ -317,11 +318,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `security/snyk (swiftenprofundidad)` en `ERROR`
     - muestreo de jobs confirma patrón externo (`runner_id=0`, `steps=[]`) en CI/gate/package
     - evidencia en `.audit_tmp/p-adhoc-lines-015-pr-390-*.json` y `.audit_tmp/p-adhoc-lines-015-pr390-*.json`
-  - 🚧 tarea restante `T015.R1`: ejecutar sondeo externo #10 y registrar evidencia.
-  - ⏳ tarea restante `T015.R2`: evaluar condición de desbloqueo externo:
+  - ✅ tarea ejecutada `T015.R1`: sondeo externo #10 registrado.
+  - ✅ tarea ejecutada `T015.R2`: condición de desbloqueo externo evaluada como `BLOCKED`:
     - `runner_id != 0`
     - `steps` no vacío
     - `security/snyk` fuera de `ERROR`
-  - ⏳ tarea restante `T015.R3`: si `T015.R2` cumple, abrir PR de control `develop -> main` sin admin y capturar evidencia de checks reales.
-  - ⏳ tarea restante `T015.R4`: cerrar `F014.E.T3` y `P-ADHOC-LINES-015` con actualización documental final.
-  - ⏳ tarea restante `T015.R5`: si `T015.R2` no cumple tras `T015.R1`, marcar `P-ADHOC-LINES-015` como `⛔ BLOQUEADO (externo)` y pausar sondeos automáticos hasta cambio real.
+  - ✅ tarea ejecutada `T015.R5`: pausa de sondeos automáticos aplicada; seguimiento queda bloqueado hasta cambio real.
+  - ⏳ tarea pendiente `T015.R3`: abrir PR de control `develop -> main` sin admin cuando `T015.R2` pase a `UNBLOCKED`.
+  - ⏳ tarea pendiente `T015.R4`: cerrar `F014.E.T4` y reabrir cierre estricto remoto con actualización documental final.
+- 🚧 `P-ADHOC-LINES-016` Reactivación manual post-bloqueo externo (sin bucles):
+  - esperar trigger manual de desbloqueo real (billing Actions restablecido + `security/snyk` fuera de `ERROR`);
+  - al trigger, ejecutar una sola corrida de revalidación estricta sin admin y actualizar cierre final.

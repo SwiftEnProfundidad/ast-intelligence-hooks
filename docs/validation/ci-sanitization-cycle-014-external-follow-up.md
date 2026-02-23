@@ -266,3 +266,36 @@ Evidencia:
 - `.audit_tmp/p-adhoc-lines-015-pr390-ci-job.json`
 - `.audit_tmp/p-adhoc-lines-015-pr390-android-job.json`
 - `.audit_tmp/p-adhoc-lines-015-pr390-package-minimal-job.json`
+
+## Sondeo #10 de seguimiento externo (2026-02-23)
+
+PR usada para muestra más reciente:
+
+- `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/392`
+
+Resultado agregado:
+
+- `37/37` checks no verdes.
+- `security/snyk (swiftenprofundidad)` continúa en `ERROR`.
+
+Muestreo API de jobs (dominios distintos):
+
+- CI (`job 64566949224`) -> `runner_id=0`, `steps=[]`
+- Android gate (`job 64566943369`) -> `runner_id=0`, `steps=[]`
+- package-smoke minimal (`job 64566950534`) -> `runner_id=0`, `steps=[]`
+
+Evidencia:
+
+- `.audit_tmp/p-adhoc-lines-015-pr-392-status.json`
+- `.audit_tmp/p-adhoc-lines-015-pr-392-checks.json`
+- `.audit_tmp/p-adhoc-lines-015-pr392-ci-job.json`
+- `.audit_tmp/p-adhoc-lines-015-pr392-android-job.json`
+- `.audit_tmp/p-adhoc-lines-015-pr392-package-minimal-job.json`
+- `.audit_tmp/p-adhoc-lines-015-pr392-snyk.json`
+- `.audit_tmp/p-adhoc-lines-015-r2-evaluation.txt` (`BLOCKED`)
+
+## Estado operativo tras sondeo #10
+
+- condición de desbloqueo externo no cumplida (`T015.R2 = BLOCKED`);
+- se pausa el sondeo automático para evitar bucles;
+- la reactivación pasa a trigger manual en `P-ADHOC-LINES-016`.
