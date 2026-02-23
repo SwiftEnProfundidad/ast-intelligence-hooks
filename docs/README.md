@@ -38,16 +38,12 @@ Canonical index for active Pumuki documentation.
 
 ## Validation Runbooks
 
-- `docs/validation/README.md`: validation docs policy.
-- `docs/validation/consumer-ci-startup-failure-playbook.md`
-- `docs/validation/github-support-ticket-template-startup-failure.md`
-- `docs/validation/skills-rollout-consumer-repositories.md`
+- `docs/validation/README.md`: enterprise minimal validation index.
 - `docs/validation/adapter-hook-runtime-validation.md`
-- `docs/validation/adapter-hook-runtime-local-report.md`
-- `docs/validation/adapter-real-session-report-template.md`
 - `docs/validation/enterprise-consumer-isolation-policy.md`
 - `docs/validation/mock-consumer-integration-runbook.md`
 - `docs/validation/detection-audit-baseline.md`
+- `docs/validation/skills-rollout-consumer-repositories.md`
 
 ## Vendored Codex Skills
 

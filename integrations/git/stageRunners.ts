@@ -40,6 +40,16 @@ const getDependencies = (
   ...dependencies,
 });
 
+const notifyAuditSummaryForStage = (
+  dependencies: StageRunnerDependencies,
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI'
+): void => {
+  dependencies.notifyAuditSummaryFromEvidence({
+    repoRoot: dependencies.resolveRepoRoot(),
+    stage,
+  });
+};
+
 export async function runPreCommitStage(
   dependencies: Partial<StageRunnerDependencies> = {}
 ): Promise<number> {
@@ -52,10 +62,7 @@ export async function runPreCommitStage(
       kind: 'staged',
     },
   });
-  activeDependencies.notifyAuditSummaryFromEvidence({
-    repoRoot: activeDependencies.resolveRepoRoot(),
-    stage: 'PRE_COMMIT',
-  });
+  notifyAuditSummaryForStage(activeDependencies, 'PRE_COMMIT');
   return exitCode;
 }
 
@@ -66,6 +73,7 @@ export async function runPrePushStage(
   const upstreamRef = activeDependencies.resolveUpstreamRef();
   if (!upstreamRef) {
     process.stderr.write(`${PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE}\n`);
+    notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
     return 1;
   }
 
@@ -79,10 +87,7 @@ export async function runPrePushStage(
       toRef: 'HEAD',
     },
   });
-  activeDependencies.notifyAuditSummaryFromEvidence({
-    repoRoot: activeDependencies.resolveRepoRoot(),
-    stage: 'PRE_PUSH',
-  });
+  notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
   return exitCode;
 }
 
@@ -100,9 +105,6 @@ export async function runCiStage(
       toRef: 'HEAD',
     },
   });
-  activeDependencies.notifyAuditSummaryFromEvidence({
-    repoRoot: activeDependencies.resolveRepoRoot(),
-    stage: 'CI',
-  });
+  notifyAuditSummaryForStage(activeDependencies, 'CI');
   return exitCode;
 }
