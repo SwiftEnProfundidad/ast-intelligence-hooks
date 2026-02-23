@@ -2,7 +2,7 @@
 
 Plan operativo unico para recuperar y superar legacy en deteccion real de violaciones, con enforcement estricto por stage y trazabilidad completa.
 
-Estado del plan: `ACTIVO`
+Estado del plan: `CERRADO`
 
 ## Leyenda
 - ✅ Hecho
@@ -48,4 +48,4 @@ Garantizar `enterprise >= legacy` en deteccion de violaciones para cualquier rep
 - ✅ F4.T1 RED/GREEN/REFACTOR en config/gate/facts/evidence para nuevas reglas y detectores.
 - ✅ F4.T2 Ejecutar pruebas tecnicas (`test:stage-gates`, `typecheck`) en verde.
 - ✅ F4.T3 Auditoria full repo final y reporte consolidado de violaciones.
-- 🚧 F4.T4 Cierre Git Flow end-to-end (`feature -> develop -> main`) y documentacion final.
+- ✅ F4.T4 Cierre Git Flow end-to-end (`feature -> develop -> main`) y documentacion final.
