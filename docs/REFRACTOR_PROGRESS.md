@@ -188,7 +188,41 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F5.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: informe reproducible publicado en `docs/SKILLS_ENGINE_FORENSIC_COMPLIANCE_REPORT.md`.
 - ✅ `F5.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: cierre Git Flow end-to-end (`feature -> develop` PR `#354`, `develop -> main` PR `#355`).
 - ✅ Ciclo `SKILLS_ENGINE_FORENSIC_RECOVERY` cerrado con validación técnica, funcional y visual en verde.
-- Estado activo: sin ciclo en construcción.
+- ✅ Operación ad-hoc completada: auditoría full-repo en `PRE_COMMIT`/`auditMode=engine` con cobertura completa (`245/245`, `unsupported_auto=0`) e informe actualizado en `docs/FULL_REPO_RULES_AUDIT_REPORT.md`.
+- ✅ Operación ad-hoc completada: re-auditoría full-repo tras corrección de scope dinámico (`apps/*` vs rutas observadas) con resultado real `8` violaciones de código (`CRITICAL:4`, `ERROR:4`) + `1` bloqueo SDD.
+- ✅ Operación ad-hoc completada: verificación TDD del fix de scope dinámico en verde (`17/17` tests) sobre `skillsRuleSet` y `runPlatformGateEvaluation`.
+- ✅ Operación ad-hoc completada: restaurada notificación macOS de cierre de auditoría `AST Audit Complete` (contrato legacy de mensaje y severidad) en menú consumer (`1/2/3/4`) con cobertura TDD.
+- ✅ Operación ad-hoc completada: validación funcional del emisor real en macOS (`emitSystemNotification` -> `delivered=true`) para evento `audit.summary`.
+- ✅ Operación ad-hoc completada: preflight de permisos de captura validado; Screen Recording habilitado por usuario para evidencias visuales.
+- ✅ Operación ad-hoc completada: forense de baja detección ejecutado con comparativa refactor vs legacy (`12` vs `71` violaciones) y familias de reglas faltantes identificadas.
+- ✅ Operación ad-hoc completada: limpieza de planes cerrados en `docs/*CYCLE.md` para reducir ruido documental.
+- ✅ Nuevo plan activo creado: `docs/ENTERPRISE_DETECTION_RECOVERY_CYCLE.md`.
+- ✅ `F0.T2` completada en `ENTERPRISE_DETECTION_RECOVERY`: tracker sincronizado con ciclo activo y tarea unica en construccion.
+- ✅ `F0.T3` completada en `ENTERPRISE_DETECTION_RECOVERY`: baseline `legacy vs enterprise` publicado en `docs/LEGACY_VS_ENTERPRISE_PARITY_REPORT.md`.
+- ✅ `F1.T1` completada en `ENTERPRISE_DETECTION_RECOVERY`: inventario `legacy common/workflow` cerrado con mapa de cobertura en runtime enterprise.
+- ✅ `F1.T2` completada en `ENTERPRISE_DETECTION_RECOVERY`: nuevo pack `core/rules/presets/heuristics/commonLegacy.ts` integrado en el ruleset AST enterprise.
+- ✅ `F1.T3` completada en `ENTERPRISE_DETECTION_RECOVERY`: pipeline `extractHeuristicFacts` ampliado con detectores `common.*` y `workflow.*`.
+- ✅ `F1.T4` completada en `ENTERPRISE_DETECTION_RECOVERY`: trazabilidad consolidada (`active/evaluated/matched`) y regresión de canary opción `1` corregida.
+- ✅ Validación técnica F1 completada: `framework-menu-matrix-canary` y `npm run test:stage-gates` en verde (`787 pass`, `0 fail`).
+- ✅ `F2.T1` completada en `ENTERPRISE_DETECTION_RECOVERY`: `PRE_WRITE` endurecido con validación de coherencia (`repo_root`, `branch`, `gate_status`, `rules_coverage`, timestamp) y bloqueo estricto por incoherencias.
+- ✅ Validación técnica F2.T1 completada: `npm run test:stage-gates` (`789 pass`, `0 fail`) + `npm run typecheck` en verde.
+- ✅ `F2.T2` completada en `ENTERPRISE_DETECTION_RECOVERY`: `PRE_COMMIT/PRE_PUSH/CI` alineados sin bypass SDD por defecto y manteniendo evaluación de reglas activas.
+- ✅ Validación técnica F2.T2 completada: `runPlatformGate.test.ts` en verde (`10/10`) + `npm run test:stage-gates` (`790 pass`, `0 fail`) + `npm run typecheck`.
+- ✅ `F2.T3` completada en `ENTERPRISE_DETECTION_RECOVERY`: preflight consumer reforzado con causas de bloqueo (`code + message`) y acción recomendada por violación.
+- ✅ Validación técnica F2.T3 completada: `framework-menu-consumer-preflight.test.ts` en verde (`3/3`) + `npm run test:stage-gates` (`791 pass`, `0 fail`) + `npm run typecheck`.
+- ✅ `F2.T4` completada en `ENTERPRISE_DETECTION_RECOVERY`: validación por stage en modo gate (`PRE_COMMIT/PRE_PUSH/CI`) con `unevaluated=0`, `coverage_ratio=1`, `unsupported_auto=0`.
+- ✅ Validación técnica F2.T4 completada: `runPlatformGate.test.ts` en verde (`11/11`) + `npm run test:stage-gates` (`792 pass`, `0 fail`) + `npm run typecheck`.
+- ✅ `F3.T1` completada en `ENTERPRISE_DETECTION_RECOVERY`: harness de paridad reforzado con validación estricta de scope (`stage`, `files_scanned`, `repo_root`) y bypass controlado (`strictScope=false` / `--allow-scope-mismatch`).
+- ✅ Validación técnica F3.T1 completada: `legacy-parity-report-lib.test.ts` en verde (`4/4`) + `npm run test:stage-gates` (`794 pass`, `0 fail`) + `npm run typecheck`.
+- ✅ `F3.T2` completada en `ENTERPRISE_DETECTION_RECOVERY`: hard-block de paridad basado en severidad canonizada (`CRITICAL/HIGH/MEDIUM/LOW`) y `dominance` vinculada a esa matriz.
+- ✅ Validación técnica F3.T2 completada: `legacy-parity-report-lib.test.ts` en verde (`4/4`) + `npm run test:stage-gates` (`794 pass`, `0 fail`) + `npm run typecheck`.
+- ✅ `F3.T3` completada en `ENTERPRISE_DETECTION_RECOVERY`: reporte de paridad publicado en `docs/LEGACY_VS_ENTERPRISE_PARITY_REPORT.md` con baseline normalizado desde logs legacy/refactor y matriz de severidad en hard-block.
+- ✅ Validación técnica F3.T3 completada: generación reproducible de reporte vía `scripts/build-legacy-parity-report.ts` (resultado esperado `dominance=FAIL`) + `npm run test:stage-gates` (`794 pass`, `0 fail`) + `npm run typecheck`.
+- ✅ `F3.T4` completada en `ENTERPRISE_DETECTION_RECOVERY`: verificación runtime real de opción `1` (`assets/readme/forensics-violations/20260223-031139/refactor-option1-f3t4.log`) y confirmación de notificación macOS entregada (`{\"delivered\":true,\"reason\":\"delivered\"}`).
+- ✅ `F4.T1` completada en `ENTERPRISE_DETECTION_RECOVERY`: ciclo TDD ampliado en gate con caso multi-incoherencia PRE_WRITE (`EVIDENCE_*`) y cobertura de bloqueo consolidada.
+- ✅ `F4.T2` completada en `ENTERPRISE_DETECTION_RECOVERY`: pruebas técnicas finales en verde (`npm run test:stage-gates` = `795 pass`, `0 fail`; `npm run typecheck` OK).
+- ✅ `F4.T3` completada en `ENTERPRISE_DETECTION_RECOVERY`: auditoría full repo final ejecutada (menú opción `1`) y reporte consolidado actualizado en `docs/FULL_REPO_RULES_AUDIT_REPORT.md` (`70` violaciones, cobertura `417/417`, `unsupported_auto=0`).
+- 🚧 `F4.T4` en construcción en `ENTERPRISE_DETECTION_RECOVERY`: cierre Git Flow end-to-end y documentación final del ciclo.
 
 ## Siguiente paso operativo
-- ⏳ Definir próximo ciclo operativo y crear su plan de fase con una única tarea activa.
+- ⏳ Implementar `F4.T4` cerrando Git Flow completo (`feature -> develop -> main`) y dejando documentación final sincronizada.

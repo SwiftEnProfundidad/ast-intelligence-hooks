@@ -1,5 +1,5 @@
 import { execFileSync as runBinarySync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Fact } from '../../core/facts/Fact';
 import { parseNameStatus, hasAllowedExtension, buildFactsFromChanges } from './gitDiffUtils';
@@ -46,14 +46,17 @@ export class GitService implements IGitService {
       .filter((line) => line.length > 0)
       .filter((path) => hasAllowedExtension(path, extensions));
     const repoRoot = this.resolveRepoRoot();
+    const existingTrackedFiles = trackedFiles.filter((filePath) =>
+      existsSync(join(repoRoot, filePath))
+    );
 
-    const changes = trackedFiles.map((path) => ({
+    const changes = existingTrackedFiles.map((path) => ({
       path,
       changeType: 'modified' as const,
     }));
 
     return buildFactsFromChanges(changes, 'git:repo:working-tree', (filePath) =>
-      readFileSync(join(repoRoot, filePath), 'utf8')
+      this.readWorkingTreeFile(repoRoot, filePath)
     );
   }
 
@@ -93,8 +96,20 @@ export class GitService implements IGitService {
     const mergedChanges = [...trackedChanges, ...untrackedChanges];
 
     return buildFactsFromChanges(mergedChanges, 'git:working-tree', (filePath) =>
-      readFileSync(join(repoRoot, filePath), 'utf8')
+      this.readWorkingTreeFile(repoRoot, filePath)
     );
+  }
+
+  private readWorkingTreeFile(repoRoot: string, filePath: string): string {
+    try {
+      return readFileSync(join(repoRoot, filePath), 'utf8');
+    } catch (error) {
+      const asErrno = error as NodeJS.ErrnoException;
+      if (asErrno?.code === 'ENOENT') {
+        return '';
+      }
+      throw error;
+    }
   }
 
   resolveRepoRoot(): string {

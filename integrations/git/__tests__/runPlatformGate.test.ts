@@ -393,7 +393,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
   });
 
   assert.equal(result, 1);
-  assert.equal(resolveFactsCalled, false);
+  assert.equal(resolveFactsCalled, true);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
   assert.equal(emittedArgs?.filesScanned, 0);
   assert.deepEqual(emittedArgs?.evaluationMetrics, {
@@ -494,7 +494,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_PUSH', async () => {
   });
 
   assert.equal(result, 1);
-  assert.equal(resolveFactsCalled, false);
+  assert.equal(resolveFactsCalled, true);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
   assert.equal(emittedArgs?.filesScanned, 0);
   assert.deepEqual(emittedArgs?.evaluationMetrics, {
@@ -595,7 +595,7 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
   });
 
   assert.equal(result, 1);
-  assert.equal(resolveFactsCalled, false);
+  assert.equal(resolveFactsCalled, true);
   assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
   assert.equal(emittedArgs?.filesScanned, 0);
   assert.deepEqual(emittedArgs?.evaluationMetrics, {
@@ -619,6 +619,71 @@ test('runPlatformGate devuelve 1 cuando SDD bloquea CI', async () => {
     code: 'SDD_VALIDATION_FAILED',
     message: 'ci validate failed',
   });
+});
+
+test('runPlatformGate permite short-circuit SDD explícito cuando sddShortCircuit=true', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let resolveFactsCalled = false;
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      filesScanned: number;
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    sddShortCircuit: true,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: false,
+        code: 'SDD_SESSION_MISSING',
+        message: 'session missing',
+      }),
+      resolveFactsForGateScope: async () => {
+        resolveFactsCalled = true;
+        return [];
+      },
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = paramsArg;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(resolveFactsCalled, false);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(emittedArgs?.filesScanned, 0);
+  assert.equal(emittedArgs?.findings.length, 1);
+  assert.equal(emittedArgs?.findings[0]?.ruleId, 'sdd.policy.blocked');
 });
 
 test('runPlatformGate sin short-circuit SDD sigue evaluando findings de reglas y conserva bloqueo', async () => {
@@ -860,6 +925,123 @@ test('runPlatformGate bloquea por cobertura incompleta de reglas en PRE_COMMIT/P
     assert.equal(coverageFinding?.severity, 'ERROR');
     assert.match(coverageFinding?.message ?? '', /unevaluated_rule_ids/i);
     assert.match(coverageFinding?.message ?? '', /coverage_ratio/i);
+  }
+});
+
+test('runPlatformGate mantiene cobertura completa por stage en modo gate', async () => {
+  const stages: GatePolicy['stage'][] = ['PRE_COMMIT', 'PRE_PUSH', 'CI'];
+
+  for (const stage of stages) {
+    const policy: GatePolicy = {
+      stage,
+      blockOnOrAbove: 'ERROR',
+      warnOnOrAbove: 'WARN',
+    };
+    const scope =
+      stage === 'CI'
+        ? ({ kind: 'range' as const, fromRef: 'origin/main', toRef: 'HEAD' })
+        : ({ kind: 'staged' as const });
+    const git = buildGitStub('/repo/root');
+    const evidence = buildEvidenceStub();
+
+    let emittedArgs:
+      | {
+        findings: ReadonlyArray<Finding>;
+        gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+        rulesCoverage?: {
+          stage: string;
+          unevaluated_rule_ids: string[];
+          coverage_ratio: number;
+          unsupported_auto_rule_ids?: string[];
+          counts: {
+            unevaluated: number;
+            unsupported_auto?: number;
+          };
+        };
+      }
+      | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope,
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => [],
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+            unsupportedAutoRuleIds: [],
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: 0,
+            filesScanned: 0,
+            rulesTotal: 2,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 2,
+            projectRules: 0,
+            matchedRules: 0,
+            unmatchedRules: 2,
+            unevaluatedRules: 0,
+            activeRuleIds: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+            evaluatedRuleIds: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+            matchedRuleIds: [],
+            unmatchedRuleIds: ['skills.backend.no-console-log', 'skills.backend.no-empty-catch'],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedArgs = {
+            findings: paramsArg.findings,
+            gateOutcome: paramsArg.gateOutcome,
+            rulesCoverage: paramsArg.rulesCoverage as {
+              stage: string;
+              unevaluated_rule_ids: string[];
+              coverage_ratio: number;
+              unsupported_auto_rule_ids?: string[];
+              counts: {
+                unevaluated: number;
+                unsupported_auto?: number;
+              };
+            },
+          };
+        },
+        printGateFindings: () => {},
+      },
+    });
+
+    assert.equal(result, 0);
+    assert.equal(emittedArgs?.gateOutcome, 'ALLOW');
+    assert.equal(emittedArgs?.rulesCoverage?.stage, stage);
+    assert.deepEqual(emittedArgs?.rulesCoverage?.unevaluated_rule_ids, []);
+    assert.equal(emittedArgs?.rulesCoverage?.counts.unevaluated, 0);
+    assert.equal(emittedArgs?.rulesCoverage?.coverage_ratio, 1);
+    assert.equal(emittedArgs?.rulesCoverage?.unsupported_auto_rule_ids, undefined);
+    assert.equal(emittedArgs?.rulesCoverage?.counts.unsupported_auto, undefined);
+    assert.equal(
+      emittedArgs?.findings.some(
+        (finding) =>
+          finding.ruleId === 'governance.rules.coverage.incomplete'
+          || finding.ruleId === 'governance.skills.detector-mapping.incomplete'
+      ),
+      false
+    );
   }
 });
 
