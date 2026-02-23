@@ -409,7 +409,7 @@ Legacy dominance report (strict parity comparator):
 node --import tsx scripts/build-legacy-parity-report.ts \
   --legacy <legacy-evidence.json> \
   --enterprise .ai_evidence.json \
-  --out docs/LEGACY_PARITY_REPORT.md
+  --out .audit-reports/legacy-parity-report.md
 ```
 
 ### Enterprise diagnostics and readiness reports

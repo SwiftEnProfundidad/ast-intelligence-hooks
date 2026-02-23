@@ -106,6 +106,31 @@ test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cu
   }
 });
 
+test('runLifecycleCli PRE_WRITE emite resumen de auditoría para notificación macOS', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  process.chdir(repo);
+  const notifications: Array<{ stage: string; violations: number }> = [];
+  try {
+    const exitCode = await runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE'], {
+      emitAuditSummaryNotificationFromAiGate: ({ stage, aiGateResult }) => {
+        notifications.push({
+          stage,
+          violations: aiGateResult.violations.length,
+        });
+        return { delivered: true, reason: 'delivered' };
+      },
+    });
+    assert.equal(exitCode, 1);
+    assert.equal(notifications.length, 1);
+    assert.equal(notifications[0]?.stage, 'PRE_WRITE');
+    assert.equal((notifications[0]?.violations ?? 0) > 0, true);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleInstall and runLifecycleUninstall manage hooks and artifacts cleanly', () => {
   const repo = createGitRepo();
   try {

@@ -19,6 +19,7 @@ Keep these as source-of-truth operational references:
 - `adapter-real-session-report-template.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
+- `detection-audit-baseline.md`
 
 ## Generated Outputs (Do Not Keep as Baseline Docs)
 

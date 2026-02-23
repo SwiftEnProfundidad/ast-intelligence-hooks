@@ -50,7 +50,8 @@ test('createConsumerLegacyMenuActions expone opciones 1..9 con labels legacy esp
   assert.match(actions[0]?.label ?? '', /Full audit.*PRE_COMMIT/i);
   assert.match(actions[1]?.label ?? '', /Strict REPO\+STAGING.*PRE_PUSH/i);
   assert.match(actions[2]?.label ?? '', /Strict STAGING only.*PRE_COMMIT/i);
-  assert.match(actions[3]?.label ?? '', /Standard CRITICAL\/HIGH.*PRE_PUSH/i);
+  assert.match(actions[3]?.label ?? '', /Audit STAGED\+UNSTAGED working tree.*PRE_PUSH/i);
+  assert.match(actions[5]?.label ?? '', /ESLint diagnostics.*evidence snapshot/i);
 
   for (const action of actions.slice(0, 9)) {
     await action.execute();

@@ -47,6 +47,7 @@ Canonical index for active Pumuki documentation.
 - `docs/validation/adapter-real-session-report-template.md`
 - `docs/validation/enterprise-consumer-isolation-policy.md`
 - `docs/validation/mock-consumer-integration-runbook.md`
+- `docs/validation/detection-audit-baseline.md`
 
 ## Vendored Codex Skills
 

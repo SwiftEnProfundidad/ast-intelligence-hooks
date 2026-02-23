@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findEmptyCatchClauseLines,
+  findRecordStringUnknownTypeLines,
+  findUndefinedInBaseTypeUnionLines,
+  findUnknownTypeAssertionLines,
   hasAsyncPromiseExecutor,
   hasConcreteDependencyInstantiation,
   hasConsoleErrorCall,
@@ -41,6 +45,26 @@ test('hasEmptyCatchClause detecta catch vacio y descarta catch con cuerpo', () =
 
   assert.equal(hasEmptyCatchClause(emptyCatchAst), true);
   assert.equal(hasEmptyCatchClause(nonEmptyCatchAst), false);
+});
+
+test('findEmptyCatchClauseLines devuelve lineas ancla para catch vacio', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'CatchClause',
+        loc: { start: { line: 7 }, end: { line: 7 } },
+        body: { type: 'BlockStatement', body: [] },
+      },
+      {
+        type: 'CatchClause',
+        loc: { start: { line: 12 }, end: { line: 12 } },
+        body: { type: 'BlockStatement', body: [{ type: 'ExpressionStatement' }] },
+      },
+    ],
+  };
+
+  assert.deepEqual(findEmptyCatchClauseLines(ast), [7]);
 });
 
 test('hasExplicitAnyType detecta TSAnyKeyword', () => {
@@ -422,6 +446,32 @@ test('hasRecordStringUnknownType detecta Record<string, unknown>', () => {
   assert.equal(hasRecordStringUnknownType(recordStringAst), false);
 });
 
+test('findRecordStringUnknownTypeLines devuelve lineas de Record<string, unknown>', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'TSTypeReference',
+        loc: { start: { line: 3 }, end: { line: 3 } },
+        typeName: { type: 'Identifier', name: 'Record' },
+        typeParameters: {
+          params: [{ type: 'TSStringKeyword' }, { type: 'TSUnknownKeyword' }],
+        },
+      },
+      {
+        type: 'TSTypeReference',
+        loc: { start: { line: 9 }, end: { line: 9 } },
+        typeName: { type: 'Identifier', name: 'Record' },
+        typeParameters: {
+          params: [{ type: 'TSStringKeyword' }, { type: 'TSStringKeyword' }],
+        },
+      },
+    ],
+  };
+
+  assert.deepEqual(findRecordStringUnknownTypeLines(ast), [3]);
+});
+
 test('hasUnknownTypeAssertion detecta as unknown', () => {
   const unknownAssertionAst = {
     type: 'TSAsExpression',
@@ -438,6 +488,28 @@ test('hasUnknownTypeAssertion detecta as unknown', () => {
   assert.equal(hasUnknownTypeAssertion(stringAssertionAst), false);
 });
 
+test('findUnknownTypeAssertionLines devuelve lineas de as unknown', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'TSAsExpression',
+        loc: { start: { line: 11 }, end: { line: 11 } },
+        expression: { type: 'Identifier', name: 'value' },
+        typeAnnotation: { type: 'TSUnknownKeyword' },
+      },
+      {
+        type: 'TSAsExpression',
+        loc: { start: { line: 20 }, end: { line: 20 } },
+        expression: { type: 'Identifier', name: 'value' },
+        typeAnnotation: { type: 'TSStringKeyword' },
+      },
+    ],
+  };
+
+  assert.deepEqual(findUnknownTypeAssertionLines(ast), [11]);
+});
+
 test('hasUndefinedInBaseTypeUnion detecta uniones base con undefined', () => {
   const unionWithUndefinedAst = {
     type: 'TSUnionType',
@@ -450,6 +522,26 @@ test('hasUndefinedInBaseTypeUnion detecta uniones base con undefined', () => {
 
   assert.equal(hasUndefinedInBaseTypeUnion(unionWithUndefinedAst), true);
   assert.equal(hasUndefinedInBaseTypeUnion(unionWithoutUndefinedAst), false);
+});
+
+test('findUndefinedInBaseTypeUnionLines devuelve lineas de union base con undefined', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'TSUnionType',
+        loc: { start: { line: 5 }, end: { line: 5 } },
+        types: [{ type: 'TSStringKeyword' }, { type: 'TSUndefinedKeyword' }],
+      },
+      {
+        type: 'TSUnionType',
+        loc: { start: { line: 9 }, end: { line: 9 } },
+        types: [{ type: 'TSNullKeyword' }, { type: 'TSUndefinedKeyword' }],
+      },
+    ],
+  };
+
+  assert.deepEqual(findUndefinedInBaseTypeUnionLines(ast), [5]);
 });
 
 test('hasNetworkCallWithoutErrorHandling detecta llamadas de red sin try/catch ni .catch', () => {
