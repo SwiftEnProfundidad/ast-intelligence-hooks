@@ -33,9 +33,9 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 - ✅ `C018.C.T3` PR `develop -> main`, merge y sincronizacion de ramas protegidas.
 
 ### Fase D - Verificacion final y control operativo
-- 🚧 `C018.D.T1` Revalidacion funcional/visual del lote en local.
-- ⏳ `C018.D.T2` Actualizar documentacion oficial de validacion.
-- ⏳ `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
+- ✅ `C018.D.T1` Revalidacion funcional/visual del lote en local.
+- ✅ `C018.D.T2` Actualizar documentacion oficial de validacion.
+- 🚧 `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
 
 ## Siguiente tarea activa
-- `C018.D.T1` Revalidacion funcional/visual del lote en local.
+- `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
