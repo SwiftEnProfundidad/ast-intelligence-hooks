@@ -166,3 +166,17 @@ Conclusión operativa:
 
 - no hay evidencia de ejecución real remota del pipeline (`runner_id=0` y sin `steps`) en la PR de control;
 - la fase E no puede cerrarse hasta que se observe ejecución remota efectiva sin ese patrón.
+
+## Actualización operativa (Cycle 014 / Promote administrativo PR #378)
+
+Por instrucción explícita del usuario (sin esperar desbloqueo de billing), se ejecutó promote administrativo:
+
+- PR `#378` (`develop -> main`) merged.
+- merge commit: `47984b3498df7f4c5dac677cdce2640ee192062c`
+- ramas sincronizadas tras merge:
+  - `origin/main...origin/develop = 0/0`
+
+Nota:
+
+- este promote no invalida el diagnóstico externo observado en la fase E (jobs sin ejecución real remota);
+- la revalidación estricta sin admin queda pendiente de disponibilidad operativa de Actions/Snyk.
