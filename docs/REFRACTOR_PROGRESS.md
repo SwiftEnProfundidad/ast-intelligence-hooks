@@ -157,6 +157,8 @@ Estado operativo activo del repositorio.
     - PR `#363` (`feature/p-adhoc-lines-014-lotA-packaging-fixes` -> `develop`) merged.
     - PR `#364` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
     - sincronización final de ramas: `origin/main...origin/develop = 0/0`.
+  - ✅ promote manual adicional solicitado por usuario:
+    - ejecutar `develop -> main` sin depender del desbloqueo de billing para continuar flujo operativo.
   - 🚧 objetivo de salida pendiente (dependencia externa):
     - desbloquear billing de GitHub Actions;
     - revalidar PR de control sin bypass admin con checks críticos en verde.
