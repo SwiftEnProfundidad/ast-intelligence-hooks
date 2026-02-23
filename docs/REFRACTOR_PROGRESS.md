@@ -153,6 +153,9 @@ Estado operativo activo del repositorio.
     - documentación de bloqueo:
       - `docs/validation/post-merge-main-stability-note.md`
       - `docs/validation/ci-sanitization-plan-cycle-014.md`
+  - ✅ fase B (quality suites) validada en local:
+    - `npm run test:deterministic` OK (salida: `.audit_tmp/p-adhoc-lines-014-lotB-deterministic.out`)
+    - `npm run test:heuristics` OK (salida: `.audit_tmp/p-adhoc-lines-014-lotB-heuristics.out`)
   - ✅ cierre Git Flow de lote A ejecutado end-to-end:
     - PR `#363` (`feature/p-adhoc-lines-014-lotA-packaging-fixes` -> `develop`) merged.
     - PR `#364` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
