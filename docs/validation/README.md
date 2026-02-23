@@ -1,81 +1,17 @@
-# Validation Docs Policy
+# Validation Docs (Enterprise Minimal Set)
 
-This folder mixes two categories:
+Este directorio contiene solo documentación oficial y estable de validación para Pumuki.
 
-1. Versioned runbooks/playbooks (kept in git).
-2. Generated execution reports (local outputs, not baseline documentation).
+## Documentación oficial vigente
 
-Validation runbooks in this folder are operational adapters. They support rollout diagnostics and incident handling, but they are not required inputs for deterministic PRE_COMMIT/PRE_PUSH/CI gate decisions.
-
-## Versioned Documents
-
-Keep these as source-of-truth operational references:
-
-- `consumer-ci-startup-failure-playbook.md`
-- `github-support-ticket-template-startup-failure.md`
-- `skills-rollout-consumer-repositories.md`
 - `adapter-hook-runtime-validation.md`
-- `adapter-hook-runtime-local-report.md`
-- `adapter-real-session-report-template.md`
+- `detection-audit-baseline.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
-- `detection-audit-baseline.md`
-- `enterprise-detection-recovery-closure.md`
-- `enterprise-detection-revalidation-cycle-012.md`
-- `post-merge-main-stability-note.md`
-- `ci-sanitization-plan-cycle-014.md`
-- `ci-sanitization-cycle-014-incremental-closure.md`
-- `ci-sanitization-cycle-014-administrative-closure.md`
-- `ci-sanitization-cycle-014-external-follow-up.md`
-- `ci-sanitization-cycle-014-local-ci-closure.md`
-- `post-merge-detection-audit-report.md`
-- `legacy-parity-gap-analysis.md`
-- `c018-c1-local-evidence.md`
-- `c018-d1-local-revalidation.md`
-- `c018-cycle-validation-closure.md`
+- `skills-rollout-consumer-repositories.md`
 
-## Generated Outputs (Do Not Keep as Baseline Docs)
+## Política de higiene
 
-These files are command outputs and should be generated per execution context:
-
-- `consumer-ci-auth-check.md`
-- `consumer-ci-artifacts-report.md`
-- `consumer-workflow-lint-report.md`
-- `consumer-startup-failure-support-bundle.md`
-- `consumer-support-ticket-draft.md`
-- `consumer-startup-unblock-status.md`
-- `consumer-startup-triage-report.md`
-- `phase5-blockers-readiness.md`
-- `phase5-execution-closure-status.md`
-- `adapter-readiness.md`
-- `adapter-session-status.md`
-- `adapter-real-session-report.md`
-
-Generate them on demand with:
-
-- `npm run validation:consumer-ci-auth-check -- --repo <owner>/<repo>`
-- `npm run validation:consumer-ci-artifacts -- --repo <owner>/<repo>`
-- `npm run validation:consumer-workflow-lint -- --repo-path <path>`
-- `npm run validation:consumer-support-bundle -- --repo <owner>/<repo>`
-- `npm run validation:consumer-support-ticket-draft -- --repo <owner>/<repo>`
-- `npm run validation:consumer-startup-unblock-status -- --repo <owner>/<repo>`
-- `npm run validation:consumer-startup-triage -- --repo <owner>/<repo> --skip-workflow-lint`
-- `npm run validation:phase5-blockers-readiness`
-- optional strict mode:
-  - `npm run validation:phase5-blockers-readiness -- --require-adapter-report --adapter-report .audit-reports/adapter/adapter-real-session-report.md --consumer-triage-report .audit-reports/consumer-triage/consumer-startup-triage-report.md`
-- `npm run validation:phase5-execution-closure-status`
-- one-shot orchestrator:
-  - `npm run validation:phase5-execution-closure -- --repo <owner>/<repo> --out-dir .audit-reports/phase5 --skip-workflow-lint`
-- optional strict adapter mode:
-  - `npm run validation:phase5-execution-closure-status -- --require-adapter-readiness --phase5-blockers-report .audit-reports/phase5/phase5-blockers-readiness.md --consumer-unblock-report .audit-reports/consumer-triage/consumer-startup-unblock-status.md --adapter-readiness-report .audit-reports/adapter/adapter-readiness.md`
-- `npm run validation:adapter-readiness`
-- `npm run validation:adapter-session-status`
-- `npm run validation:adapter-real-session-report`
-
-## Hygiene Check
-
-For repository skills drift protection, run:
-
-- `npm run skills:lock:check`
-
-That lock-freshness check is also available in `npm run framework:menu`.
+- Los reportes de ejecución/cierre de ciclos se generan en `.audit_tmp` o `.audit-reports`.
+- No se versionan reportes históricos ad-hoc en `docs/validation/`.
+- Si hace falta conservar evidencia operativa, se referencia desde `docs/REFRACTOR_PROGRESS.md`.
