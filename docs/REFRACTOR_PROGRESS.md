@@ -38,7 +38,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `F014.E.T2` Cierre definitivo de `P-ADHOC-LINES-014` en modo administrativo con riesgo externo documentado.
 - ✅ `F014.E.T3` Seguimiento externo post-cierre pausado por decisión operativa del usuario (sin dependencia de checks remotos).
 - ✅ `F014.E.T4` Cierre estricto en modo local (CI local autoritativo; checks remotos informativos).
-- 🚧 `F014.E.T5` Standby manual post-cierre (sin ejecución automática; reactivar solo por solicitud explícita).
+- ✅ `F014.E.T5` Standby manual cerrado por instrucción del usuario (estado final: esperando nuevas instrucciones).
 
 ## Estado actual
 - ✅ `HYG.T1` Inventario completo de markdowns, artefactos y carpetas huérfanas.
@@ -126,7 +126,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Mantener `F014.E.T5` en standby manual; sin sondeos automáticos ni tareas en bucle.
+- ⏳ Esperar nuevas instrucciones explícitas del usuario; sin ejecución automática.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -337,6 +337,6 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ cierre documental publicado:
     - `docs/validation/ci-sanitization-cycle-014-local-ci-closure.md`
     - índice actualizado: `docs/validation/README.md`
-- 🚧 `P-ADHOC-LINES-017` Standby manual de operación (sin bucles):
+- ✅ `P-ADHOC-LINES-017` Standby manual de operación cerrado:
   - no ejecutar sondeos automáticos ni checks remotos como criterio de salida;
-  - reactivar solo por instrucción explícita del usuario.
+  - repositorio queda en espera de nuevas instrucciones explícitas del usuario.
