@@ -94,7 +94,7 @@ Estado operativo activo del repositorio.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar revalidación remota de `P-ADHOC-LINES-014` tras desbloqueo de billing en GitHub Actions.
+- 🚧 Ejecutar Fase C de `P-ADHOC-LINES-014` (rule gates por plataforma) con validación local + PR incremental.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -156,12 +156,16 @@ Estado operativo activo del repositorio.
   - ✅ fase B (quality suites) validada en local:
     - `npm run test:deterministic` OK (salida: `.audit_tmp/p-adhoc-lines-014-lotB-deterministic.out`)
     - `npm run test:heuristics` OK (salida: `.audit_tmp/p-adhoc-lines-014-lotB-heuristics.out`)
+  - ✅ cierre Git Flow de lote B ejecutado end-to-end:
+    - PR `#367` (`feature/p-adhoc-lines-014-lotB-quality-validation` -> `develop`) merged.
+    - PR `#368` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
+    - sincronización final de ramas tras lote B: `origin/main...origin/develop = 0/0`.
   - ✅ cierre Git Flow de lote A ejecutado end-to-end:
     - PR `#363` (`feature/p-adhoc-lines-014-lotA-packaging-fixes` -> `develop`) merged.
     - PR `#364` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
     - sincronización final de ramas: `origin/main...origin/develop = 0/0`.
   - ✅ promote manual adicional solicitado por usuario:
     - ejecutar `develop -> main` sin depender del desbloqueo de billing para continuar flujo operativo.
-  - 🚧 objetivo de salida pendiente (dependencia externa):
+  - ⏳ objetivo de salida pendiente (dependencia externa):
     - desbloquear billing de GitHub Actions;
     - revalidar PR de control sin bypass admin con checks críticos en verde.
