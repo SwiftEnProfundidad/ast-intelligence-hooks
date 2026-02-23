@@ -400,6 +400,12 @@ test('keeps ignored heuristic severities unchanged and still promotes PRE_COMMIT
   assert.equal(findSeverity('heuristics.ios.callback-style.ast', 'PRE_COMMIT'), 'ERROR');
 });
 
+test('promotes empty-catch to ERROR across PRE_COMMIT, PRE_PUSH y CI under unified enterprise policy', () => {
+  assert.equal(findSeverity('heuristics.ts.empty-catch.ast', 'PRE_COMMIT'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.empty-catch.ast', 'PRE_PUSH'), 'ERROR');
+  assert.equal(findSeverity('heuristics.ts.empty-catch.ast', 'CI'), 'ERROR');
+});
+
 test('does not mutate the source heuristic ruleset', () => {
   const original = astHeuristicsRuleSet.find(
     (rule) => rule.id === 'heuristics.android.thread-sleep.ast'

@@ -346,3 +346,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `P-ADHOC-LINES-018B` Nuevo ciclo oficial creado en `docs/ENTERPRISE_EXECUTION_CYCLE_018.md` con fases, tareas y leyenda.
 - ✅ `P-ADHOC-LINES-018C` Preparar primera entrega atomica del ciclo 018 con rama `feature/*`, TDD estricto y actualizacion incremental del tracker.
 - 🚧 `P-ADHOC-LINES-018D` Ejecutar primer lote tecnico del ciclo 018 y cerrar su Git Flow end-to-end.
+  - ✅ `C018.B.T1` RED definida para severidad unificada de `heuristics.ts.empty-catch.ast`:
+    - test añadido en `integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+    - evidencia RED: `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+    - fallo esperado confirmado: `WARN !== ERROR` en PRE_COMMIT/PRE_PUSH/CI
+  - 🚧 `C018.B.T2` GREEN en curso: aplicar cambio mínimo de política para que `empty-catch` escale a `ERROR` en gates enterprise.

@@ -23,8 +23,8 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 - ✅ `C018.A.T3` Preparar la primera entrega atomica del ciclo con rama de feature dedicada.
 
 ### Fase B - Ejecucion tecnica guiada por TDD
-- 🚧 `C018.B.T1` Definir prueba roja del primer objetivo tecnico del ciclo.
-- ⏳ `C018.B.T2` Implementar minimo cambio para pasar a verde.
+- ✅ `C018.B.T1` Definir prueba roja del primer objetivo tecnico del ciclo.
+- 🚧 `C018.B.T2` Implementar minimo cambio para pasar a verde.
 - ⏳ `C018.B.T3` Refactor seguro y verificacion de no regresion.
 
 ### Fase C - Cierre Git Flow por lote
@@ -38,4 +38,4 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 - ⏳ `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
 
 ## Siguiente tarea activa
-- `C018.B.T1` Definir prueba roja del primer objetivo tecnico del ciclo.
+- `C018.B.T2` Implementar minimo cambio para pasar a verde.
