@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findJwtDecodeWithoutVerifyCallLines,
+  findJwtSignWithoutExpirationCallLines,
+  findJwtVerifyIgnoreExpirationCallLines,
   hasJwtDecodeWithoutVerifyCall,
   hasJwtSignWithoutExpirationCall,
   hasJwtVerifyIgnoreExpirationCall,
@@ -184,4 +187,68 @@ test('hasJwtSignWithoutExpirationCall detecta sign sin exp ni expiresIn', () => 
   assert.equal(hasJwtSignWithoutExpirationCall(insecureSignAst), true);
   assert.equal(hasJwtSignWithoutExpirationCall(payloadWithExpAst), false);
   assert.equal(hasJwtSignWithoutExpirationCall(optionsWithExpiresInAst), false);
+});
+
+test('find*Lines de securityJwt retornan lineas de coincidencia', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 4 } },
+        callee: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'jwt' },
+          property: { type: 'Identifier', name: 'decode' },
+        },
+        arguments: [{ type: 'Identifier', name: 'token' }],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 8 } },
+        callee: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'jsonwebtoken' },
+          property: { type: 'Identifier', name: 'verify' },
+        },
+        arguments: [
+          { type: 'Identifier', name: 'token' },
+          { type: 'Identifier', name: 'secret' },
+          {
+            type: 'ObjectExpression',
+            properties: [
+              {
+                type: 'ObjectProperty',
+                key: { type: 'Identifier', name: 'ignoreExpiration' },
+                value: { type: 'BooleanLiteral', value: true },
+              },
+            ],
+          },
+        ],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 12 } },
+        callee: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'jwt' },
+          property: { type: 'Identifier', name: 'sign' },
+        },
+        arguments: [
+          {
+            type: 'ObjectExpression',
+            properties: [],
+          },
+          { type: 'Identifier', name: 'secret' },
+        ],
+      },
+    ],
+  };
+
+  assert.deepEqual(findJwtDecodeWithoutVerifyCallLines(ast), [4]);
+  assert.deepEqual(findJwtVerifyIgnoreExpirationCallLines(ast), [8]);
+  assert.deepEqual(findJwtSignWithoutExpirationCallLines(ast), [12]);
 });

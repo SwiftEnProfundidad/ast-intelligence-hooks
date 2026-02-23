@@ -612,6 +612,52 @@ test('maps empty catch heuristic to legacy common.error.empty_catch finding', ()
   assert.deepEqual(commonEmptyCatchFact?.lines, [4]);
 });
 
+test('propagates AST line metadata for process, security, browser y fs', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/feature/line-locators.ts',
+        [
+          'const fs = require("fs");',
+          'process.exit(1);',
+          'const apiToken = "super-secret-token-123";',
+          'document.write(apiToken);',
+          'fs.writeFileSync("/tmp/demo.txt", apiToken);',
+          'fs.promises.readFile("/tmp/demo.txt", "utf8");',
+          'fs.readFile("/tmp/demo.txt", "utf8", () => {});',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  });
+
+  const processExitFact = extracted.find((finding) => finding.ruleId === 'heuristics.ts.process-exit.ast');
+  const hardcodedSecretFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.hardcoded-secret-token.ast'
+  );
+  const documentWriteFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.document-write.ast'
+  );
+  const fsWriteSyncFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.fs-write-file-sync.ast'
+  );
+  const fsPromisesReadFileFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.fs-promises-read-file.ast'
+  );
+  const fsReadFileCallbackFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.fs-read-file-callback.ast'
+  );
+
+  assert.deepEqual(processExitFact?.lines, [2]);
+  assert.deepEqual(hardcodedSecretFact?.lines, [3]);
+  assert.deepEqual(documentWriteFact?.lines, [4]);
+  assert.deepEqual(fsWriteSyncFact?.lines, [5]);
+  assert.deepEqual(fsPromisesReadFileFact?.lines, [6]);
+  assert.deepEqual(fsReadFileCallbackFact?.lines, [7]);
+});
+
 test('emits workflow BDD findings for repos with high implementation volume and low feature coverage', () => {
   const implementationFacts: Fact[] = Array.from({ length: 55 }, (_, index) =>
     fileContentFact(`apps/backend/src/module-${index}.ts`, `export const value${index} = ${index};`)

@@ -60,6 +60,32 @@ test('runLifecycleCli bloquea PRE_WRITE cuando SDD está en bypass pero falta ai
   }
 });
 
+test('runLifecycleCli PRE_WRITE en modo texto imprime anchors clicables para SDD y AI gate', async () => {
+  const repo = createGitRepo();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousCwd = process.cwd();
+  process.chdir(repo);
+  process.stdout.write = ((chunk: unknown): boolean => {
+    printed.push(String(chunk).trimEnd());
+    return true;
+  }) as typeof process.stdout.write;
+  try {
+    const exitCode = await runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE']);
+    assert.equal(exitCode, 1);
+    const rendered = printed.join('\n');
+    assert.match(rendered, /\[pumuki\]\[sdd\].*-> openspec\/changes:1/);
+    assert.match(
+      rendered,
+      /\[pumuki\]\[ai-gate\] EVIDENCE_MISSING: .*-> \.ai_evidence\.json:1/
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cuando SDD bloquea', async () => {
   const repo = createGitRepo();
   const printed: string[] = [];

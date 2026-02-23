@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findChildProcessImportLines,
+  findExecCallLines,
+  findExecSyncCallLines,
+  findProcessEnvMutationLines,
+  findProcessExitCallLines,
   hasChildProcessImport,
   hasExecCall,
   hasExecSyncCall,
@@ -144,4 +149,63 @@ test('hasExecCall detecta exec directo y por member expression', () => {
   assert.equal(hasExecCall(identifierAst), true);
   assert.equal(hasExecCall(memberAst), true);
   assert.equal(hasExecCall(otherAst), false);
+});
+
+test('find*Lines de core retornan lineas de coincidencia', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 3 } },
+        callee: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'process' },
+          property: { type: 'Identifier', name: 'exit' },
+        },
+        arguments: [],
+      },
+      {
+        type: 'ImportDeclaration',
+        loc: { start: { line: 7 } },
+        source: { type: 'StringLiteral', value: 'child_process' },
+      },
+      {
+        type: 'AssignmentExpression',
+        loc: { start: { line: 11 } },
+        operator: '=',
+        left: {
+          type: 'MemberExpression',
+          computed: false,
+          object: {
+            type: 'MemberExpression',
+            computed: false,
+            object: { type: 'Identifier', name: 'process' },
+            property: { type: 'Identifier', name: 'env' },
+          },
+          property: { type: 'Identifier', name: 'NODE_ENV' },
+        },
+        right: { type: 'StringLiteral', value: 'production' },
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 15 } },
+        callee: { type: 'Identifier', name: 'execSync' },
+        arguments: [{ type: 'StringLiteral', value: 'ls' }],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 18 } },
+        callee: { type: 'Identifier', name: 'exec' },
+        arguments: [{ type: 'StringLiteral', value: 'ls' }],
+      },
+    ],
+  };
+
+  assert.deepEqual(findProcessExitCallLines(ast), [3]);
+  assert.deepEqual(findChildProcessImportLines(ast), [7]);
+  assert.deepEqual(findProcessEnvMutationLines(ast), [11]);
+  assert.deepEqual(findExecSyncCallLines(ast), [15]);
+  assert.deepEqual(findExecCallLines(ast), [18]);
 });

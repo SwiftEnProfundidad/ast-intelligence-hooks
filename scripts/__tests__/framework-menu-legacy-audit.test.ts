@@ -336,6 +336,12 @@ test('exportLegacyAuditMarkdown genera reporte markdown en .audit-reports', asyn
     assert.equal(existsSync(filePath), true);
     const markdown = readFileSync(filePath, 'utf8');
     assert.match(markdown, /# PUMUKI Audit Report/);
+    assert.match(markdown, /## Clickable Top Files/);
+    assert.match(markdown, /## Clickable Findings/);
+    assert.match(
+      markdown,
+      /\[apps\/ios\/App\/Feature\.swift:18\]\(\.\/apps\/ios\/App\/Feature\.swift#L18\)/
+    );
     assert.match(markdown, /FINAL SUMMARY — VIOLATIONS BY SEVERITY/);
   });
 });

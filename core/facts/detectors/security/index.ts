@@ -1,4 +1,8 @@
 export {
+  findHardcodedSecretTokenLiteralLines,
+  findInsecureTokenGenerationWithDateNowLines,
+  findInsecureTokenGenerationWithMathRandomLines,
+  findWeakTokenGenerationWithCryptoRandomUuidLines,
   hasHardcodedSecretTokenLiteral,
   hasInsecureTokenGenerationWithMathRandom,
   hasInsecureTokenGenerationWithDateNow,
@@ -6,11 +10,26 @@ export {
 } from './securityCredentials';
 
 export {
+  findBufferAllocUnsafeCallLines,
+  findBufferAllocUnsafeSlowCallLines,
+  findWeakCryptoHashCreateHashCallLines,
   hasWeakCryptoHashCreateHashCall,
   hasBufferAllocUnsafeCall,
   hasBufferAllocUnsafeSlowCall,
 } from './securityCrypto';
 
-export { hasJwtDecodeWithoutVerifyCall, hasJwtVerifyIgnoreExpirationCall, hasJwtSignWithoutExpirationCall } from './securityJwt';
+export {
+  findJwtDecodeWithoutVerifyCallLines,
+  findJwtSignWithoutExpirationCallLines,
+  findJwtVerifyIgnoreExpirationCallLines,
+  hasJwtDecodeWithoutVerifyCall,
+  hasJwtVerifyIgnoreExpirationCall,
+  hasJwtSignWithoutExpirationCall,
+} from './securityJwt';
 
-export { hasTlsRejectUnauthorizedFalseOption, hasTlsEnvRejectUnauthorizedZeroOverride } from './securityTls';
+export {
+  findTlsEnvRejectUnauthorizedZeroOverrideLines,
+  findTlsRejectUnauthorizedFalseOptionLines,
+  hasTlsRejectUnauthorizedFalseOption,
+  hasTlsEnvRejectUnauthorizedZeroOverride,
+} from './securityTls';

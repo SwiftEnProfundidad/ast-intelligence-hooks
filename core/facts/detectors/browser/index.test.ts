@@ -1,6 +1,9 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findDocumentWriteCallLines,
+  findInnerHtmlAssignmentLines,
+  findInsertAdjacentHtmlCallLines,
   hasDocumentWriteCall,
   hasInnerHtmlAssignment,
   hasInsertAdjacentHtmlCall,
@@ -128,4 +131,49 @@ test('hasInsertAdjacentHtmlCall no detecta metodos distintos', () => {
   };
 
   assert.equal(hasInsertAdjacentHtmlCall(ast), false);
+});
+
+test('find*Lines de browser retornan lineas de coincidencia', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'AssignmentExpression',
+        loc: { start: { line: 6 } },
+        left: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'element' },
+          property: { type: 'Identifier', name: 'innerHTML' },
+        },
+        right: { type: 'Identifier', name: 'payload' },
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 10 } },
+        callee: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'document' },
+          property: { type: 'Identifier', name: 'write' },
+        },
+        arguments: [],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 14 } },
+        callee: {
+          type: 'MemberExpression',
+          computed: false,
+          object: { type: 'Identifier', name: 'target' },
+          property: { type: 'Identifier', name: 'insertAdjacentHTML' },
+        },
+        arguments: [],
+      },
+    ],
+  };
+
+  assert.deepEqual(findInnerHtmlAssignmentLines(ast), [6]);
+  assert.deepEqual(findDocumentWriteCallLines(ast), [10]);
+  assert.deepEqual(findInsertAdjacentHtmlCallLines(ast), [14]);
 });

@@ -70,6 +70,13 @@ const writeError = (message: string): void => {
   process.stderr.write(`${message}\n`);
 };
 
+const withOptionalLocation = (message: string, location?: string): string => {
+  if (!location || location.trim().length === 0) {
+    return message;
+  }
+  return `${message} -> ${location}`;
+};
+
 const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'install' ||
   value === 'uninstall' ||
@@ -318,6 +325,43 @@ const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
 };
 
+const resolveSddDecisionLocation = (
+  result: ReturnType<typeof evaluateSddPolicy>
+): string | undefined => {
+  const changeId = result.status.session.changeId;
+  switch (result.decision.code) {
+    case 'OPENSPEC_MISSING':
+    case 'OPENSPEC_VERSION_UNSUPPORTED':
+    case 'OPENSPEC_PROJECT_MISSING':
+    case 'SDD_VALIDATION_FAILED':
+    case 'SDD_VALIDATION_ERROR':
+      return 'openspec/changes:1';
+    case 'SDD_CHANGE_MISSING':
+      return changeId && changeId.trim().length > 0
+        ? `openspec/changes/${changeId.trim()}:1`
+        : 'openspec/changes:1';
+    case 'SDD_CHANGE_ARCHIVED':
+      return changeId && changeId.trim().length > 0
+        ? `openspec/changes/archive/${changeId.trim()}:1`
+        : 'openspec/changes/archive:1';
+    case 'SDD_SESSION_MISSING':
+    case 'SDD_SESSION_INVALID':
+      return '.git/config:1';
+    default:
+      return undefined;
+  }
+};
+
+const resolveAiGateViolationLocation = (code: string): string | undefined => {
+  if (code.startsWith('EVIDENCE_')) {
+    return '.ai_evidence.json:1';
+  }
+  if (code === 'GITFLOW_PROTECTED_BRANCH') {
+    return '.git/HEAD:1';
+  }
+  return undefined;
+};
+
 const buildPreWriteValidationEnvelope = (
   result: ReturnType<typeof evaluateSddPolicy>,
   aiGate: ReturnType<typeof evaluateAiGate>
@@ -469,7 +513,12 @@ export const runLifecycleCli = async (
             writeInfo(
               `[pumuki][sdd] stage=${result.stage} allowed=${result.decision.allowed ? 'yes' : 'no'} code=${result.decision.code}`
             );
-            writeInfo(`[pumuki][sdd] ${result.decision.message}`);
+            writeInfo(
+              withOptionalLocation(
+                `[pumuki][sdd] ${result.decision.message}`,
+                resolveSddDecisionLocation(result)
+              )
+            );
             if (result.validation) {
               writeInfo(
                 `[pumuki][sdd] validation: ok=${result.validation.ok ? 'yes' : 'no'} failed=${result.validation.totals.failed} errors=${result.validation.issues.errors}`
@@ -481,7 +530,10 @@ export const runLifecycleCli = async (
               );
               for (const violation of aiGate.violations) {
                 writeInfo(
-                  `[pumuki][ai-gate] ${violation.code}: ${violation.message}`
+                  withOptionalLocation(
+                    `[pumuki][ai-gate] ${violation.code}: ${violation.message}`,
+                    resolveAiGateViolationLocation(violation.code)
+                  )
                 );
               }
             }
