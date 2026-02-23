@@ -20,6 +20,10 @@ Keep these as source-of-truth operational references:
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
 - `detection-audit-baseline.md`
+- `enterprise-detection-recovery-closure.md`
+- `enterprise-detection-revalidation-cycle-012.md`
+- `post-merge-detection-audit-report.md`
+- `legacy-parity-gap-analysis.md`
 
 ## Generated Outputs (Do Not Keep as Baseline Docs)
 

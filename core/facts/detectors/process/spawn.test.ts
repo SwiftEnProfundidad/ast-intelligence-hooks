@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  findExecFileCallLines,
+  findExecFileSyncCallLines,
+  findForkCallLines,
+  findSpawnCallLines,
+  findSpawnSyncCallLines,
   hasExecFileCall,
   hasExecFileSyncCall,
   hasForkCall,
@@ -152,4 +157,48 @@ test('hasExecFileCall detecta execFile y descarta execFileSync', () => {
   assert.equal(hasExecFileCall(directAst), true);
   assert.equal(hasExecFileCall(memberAst), true);
   assert.equal(hasExecFileCall(otherAst), false);
+});
+
+test('find*Lines de spawn retornan lineas de coincidencia', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 4 } },
+        callee: { type: 'Identifier', name: 'spawnSync' },
+        arguments: [],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 8 } },
+        callee: { type: 'Identifier', name: 'spawn' },
+        arguments: [],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 12 } },
+        callee: { type: 'Identifier', name: 'fork' },
+        arguments: [],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 16 } },
+        callee: { type: 'Identifier', name: 'execFileSync' },
+        arguments: [],
+      },
+      {
+        type: 'CallExpression',
+        loc: { start: { line: 20 } },
+        callee: { type: 'Identifier', name: 'execFile' },
+        arguments: [],
+      },
+    ],
+  };
+
+  assert.deepEqual(findSpawnSyncCallLines(ast), [4]);
+  assert.deepEqual(findSpawnCallLines(ast), [8]);
+  assert.deepEqual(findForkCallLines(ast), [12]);
+  assert.deepEqual(findExecFileSyncCallLines(ast), [16]);
+  assert.deepEqual(findExecFileCallLines(ast), [20]);
 });

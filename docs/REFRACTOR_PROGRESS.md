@@ -20,7 +20,102 @@ Estado operativo activo del repositorio.
   - referencias rotas críticas: `0`
   - compilación TypeScript: `OK` (`npm run typecheck`)
   - inventario de `.md` normalizado y sin reportes/ciclos forenses en `docs/` root
-- 🚧 `P-ADHOC-LINES-002` Extender extracción de líneas AST al resto de familias heurísticas (`process/security/browser/fs`) para minimizar anchors por fallback.
+- ✅ `P-ADHOC-LINES-002` Extender extracción de líneas AST al resto de familias heurísticas (`process/security/browser/fs`) para minimizar anchors por fallback.
+  - detectores `process/security/browser` con `find*Lines` y pruebas dedicadas
+  - autolocalización de líneas AST por convención `has*/find*Lines`
+  - inferencia para familia `fs` (`sync/promises/callbacks`) sin hardcode por regla
+  - validación: tests heurísticos focales `OK` + `npm run typecheck` `OK`
+- ✅ `P-ADHOC-LINES-003` Verificar trazabilidad clicable end-to-end en menú/reportes usando `lines` de todas las familias AST.
+  - salida de bloqueo en gate (`runPlatformGateOutput`) enriquecida con `severity + ruleId + message + file:line`
+  - `exportLegacyAuditMarkdown` ahora incluye secciones markdown con rutas clicables `./path#Lline`
+  - cobertura de tests para salida clicable y export markdown
+  - validación: tests focales `OK` + `npm run typecheck` `OK`
+- ✅ `P-ADHOC-LINES-004` Ejecutar smoke e2e de trazabilidad (`pre-write`, `pre-commit`, `pre-push`, menú opción 1/8/9) y registrar evidencias finales.
+  - tests runtime menú para opción `9` (diagnóstico clicable) y opción `8` (export markdown clicable)
+  - tests de salida gate (`runPlatformGateOutput`) con `lines` array/string/sin líneas
+  - validación: suite focal `OK` (29 tests) + `npm run typecheck` `OK`
+- ✅ `P-ADHOC-LINES-005` Ejecutar auditoría funcional completa y verificar visualmente trazabilidad clicable en salida real de hooks + menú.
+  - hooks reales ejecutados con evidencia en:
+    - `.audit_tmp/prewrite-functional.out`
+    - `.audit_tmp/precommit-functional.out`
+    - `.audit_tmp/prepush-functional.out`
+  - validado `file:line` en bloqueos de hooks:
+    - `pre-write`: `openspec/changes:1`, `.ai_evidence.json:1`, `.git/HEAD:1`
+    - `pre-commit` / `pre-push`: `openspec/changes:1`
+  - flujo menú consumer validado en TTY real (`1 -> 8 -> 9 -> 10`) con evidencia en:
+    - `.audit_tmp/menu-functional-tty.out`
+    - export markdown: `.audit-reports/pumuki-legacy-audit.md`
+  - comprobadas secciones clicables en markdown:
+    - `## Clickable Top Files`
+    - `## Clickable Findings` con enlaces `./path#Lline`
+- ✅ `P-ADHOC-LINES-006` Consolidar reporte final de recuperación de detección enterprise (resumen funcional + evidencias clave) para cierre operativo del ciclo.
+  - reporte oficial creado en `docs/validation/enterprise-detection-recovery-closure.md`
+  - incluye estado consolidado del gate, severidades, cobertura y evidencias de hooks/menú/export markdown
+  - `docs/validation/README.md` actualizado para registrar el documento como referencia versionada
+- ✅ `P-ADHOC-LINES-007` Preparar cierre Git Flow end-to-end (commit atómico, PR, merge y sincronización) sin pérdida de cambios.
+  - rama de trabajo dedicada `feature/p-adhoc-lines-007-gitflow-closure`
+  - validación previa de calidad ejecutada (`tsx --test` focal + `npm run typecheck`)
+  - lote consolidado para commit atómico del ciclo de recuperación
+  - cierre previsto por PR con merge a `develop` y sincronización de ramas protegidas
+- ✅ `P-ADHOC-LINES-008` Ejecutar auditoría full-repo post-cierre y emitir informe final de violaciones por severidad con rutas clicables.
+  - auditoría full-repo ejecutada en menú consumer (`1`) con evidencia en `.audit_tmp/p-adhoc-lines-008-menu.out`
+  - export markdown clicable ejecutado (`8`) en `.audit-reports/pumuki-legacy-audit.md`
+  - informe final por severidad con rutas clicables generado en `.audit-reports/p-adhoc-lines-008-full-repo-audit.md`
+  - resumen de severidad post-cierre: `CRITICAL 42`, `HIGH 37`, `MEDIUM 4`, `LOW 0`
+- ✅ `P-ADHOC-LINES-009` Publicar informe consolidado post-merge en `docs/validation` con:
+  - resumen por severidad (`CRITICAL/HIGH/MEDIUM/LOW`)
+  - top reglas y top ficheros con `file:line`
+  - cobertura de reglas (`active/evaluated/unevaluated/ratio`)
+  - informe publicado en `docs/validation/post-merge-detection-audit-report.md`
+  - documento registrado en `docs/validation/README.md` como referencia versionada
+- ✅ `P-ADHOC-LINES-010` Verificar paridad/superación respecto a baseline legacy en detección:
+  - comparar conteos y distribución por severidad
+  - documentar brechas de detección por familia de reglas
+  - dejar plan de corrección priorizado por impacto
+  - comparativa reproducible generada en `.audit-reports/p-adhoc-lines-010-legacy-parity.md`
+  - análisis oficial publicado en `docs/validation/legacy-parity-gap-analysis.md`
+  - resultado actual: superación en `CRITICAL`, brecha pendiente en `HIGH` (`-4`) y `MEDIUM` (`-17`)
+- ✅ `P-ADHOC-LINES-011` Remediar brechas críticas de detección identificadas en la comparación:
+  - TDD aplicado en detectores TypeScript para:
+    - `common.types.unknown_without_guard` (detección por AST de `unknown` fuera de `Record<*, unknown>`)
+    - `common.network.missing_error_handling` (detección por nodo de red sin `try/catch` local ni cadena `.catch`)
+  - trazabilidad corregida en heurísticas multi-fichero para respetar `filePath` del finding al resolver `lines`
+  - validación técnica ejecutada:
+    - tests focales (`47/47` OK) en detectores/extracción/trazabilidad
+    - compilación TypeScript (`npx tsc --noEmit`) OK
+    - smoke runtime hooks+menú con evidencia en:
+      - `.audit_tmp/p-adhoc-lines-011-prewrite.out`
+      - `.audit_tmp/p-adhoc-lines-011-precommit.out`
+      - `.audit_tmp/p-adhoc-lines-011-prepush.out`
+      - `.audit_tmp/p-adhoc-lines-011-menu.out`
+  - resultado funcional:
+    - `common.types.unknown_without_guard` pasa de 4 a 59 hallazgos en evidencia full-repo
+    - trazabilidad `file:line` deja de colapsar en una línea repetida global
+    - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- ⏳ Mantener `P-ADHOC-LINES-002` como único trabajo en construcción hasta cierre técnico.
+- 🚧 Ejecutar `P-ADHOC-LINES-012` para cierre final del ciclo enterprise.
+
+## Backlog global restante
+- 🚧 `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
+  - ✅ revalidación integral ejecutada:
+    - tests focales `48/48` en `.audit_tmp/p-adhoc-lines-012-tests.out`
+    - `typecheck` `OK` en `.audit_tmp/p-adhoc-lines-012-typecheck.out`
+    - smoke hooks+menú en:
+      - `.audit_tmp/p-adhoc-lines-012-prewrite.out`
+      - `.audit_tmp/p-adhoc-lines-012-precommit.out`
+      - `.audit_tmp/p-adhoc-lines-012-prepush.out`
+      - `.audit_tmp/p-adhoc-lines-012-menu.out`
+      - iteración v2:
+        - `.audit_tmp/p-adhoc-lines-012-prewrite-v2.out`
+        - `.audit_tmp/p-adhoc-lines-012-precommit-v2.out`
+        - `.audit_tmp/p-adhoc-lines-012-prepush-v2.out`
+        - `.audit_tmp/p-adhoc-lines-012-menu-v2.out`
+  - ✅ documentación oficial de revalidación publicada:
+    - `docs/validation/enterprise-detection-revalidation-cycle-012.md`
+    - índice actualizado en `docs/validation/README.md`
+  - ✅ paridad legacy por severidad cerrada:
+    - `CRITICAL 42 >= 9`, `HIGH 43 >= 41`, `MEDIUM 59 >= 21`, `LOW 0 = 0`
+    - reporte: `.audit-reports/p-adhoc-lines-012-legacy-parity-v2.md`
+  - ⏳ cierre operativo pendiente:
+    - cierre Git Flow end-to-end del ciclo de remediación

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -26,6 +26,46 @@ const writeEmptyEvidence = (dir: string, stage: 'PRE_COMMIT' | 'PRE_PUSH'): void
               WARN: 0,
               INFO: 0,
             },
+          },
+        },
+      },
+      null,
+      2
+    )
+  );
+};
+
+const writeEvidenceWithLines = (dir: string): void => {
+  writeFileSync(
+    join(dir, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        snapshot: {
+          stage: 'PRE_COMMIT',
+          outcome: 'BLOCK',
+          files_scanned: 12,
+          files_affected: 2,
+          findings: [
+            {
+              ruleId: 'heuristics.ts.process-exit.ast',
+              severity: 'CRITICAL',
+              filePath: 'apps/backend/src/runtime/process.ts',
+              lines: [27, 32],
+            },
+            {
+              ruleId: 'heuristics.ts.document-write.ast',
+              severity: 'ERROR',
+              filePath: 'apps/web/src/ui/banner.tsx',
+              lines: 14,
+            },
+          ],
+        },
+        severity_metrics: {
+          by_severity: {
+            CRITICAL: 1,
+            ERROR: 1,
+            WARN: 0,
+            INFO: 0,
           },
         },
       },
@@ -309,5 +349,71 @@ test('consumer runtime printMenu usa vista clásica por defecto cuando PUMUKI_ME
     if (typeof previousUiV2 === 'string') {
       process.env.PUMUKI_MENU_UI_V2 = previousUiV2;
     }
+  }
+});
+
+test('consumer runtime opción 9 muestra trazabilidad clicable file:line', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-file-diagnostics-'));
+  process.chdir(temp);
+  try {
+    writeEvidenceWithLines(temp);
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    const action = runtime.actions.find((item) => item.id === '9');
+    assert.ok(action, 'Expected consumer action id=9');
+    await action.execute();
+
+    const rendered = output.join('\n');
+    assert.match(rendered, /VIOLATIONS — CLICKABLE LOCATIONS/);
+    assert.match(rendered, /apps\/backend\/src\/runtime\/process\.ts:27/);
+    assert.match(rendered, /apps\/web\/src\/ui\/banner\.tsx:14/);
+  } finally {
+    process.chdir(previous);
+  }
+});
+
+test('consumer runtime opción 8 exporta markdown con enlaces clicables', { concurrency: false }, async () => {
+  const previous = process.cwd();
+  const temp = mkdtempSync(join(tmpdir(), 'pumuki-menu-runtime-export-markdown-'));
+  process.chdir(temp);
+  try {
+    writeEvidenceWithLines(temp);
+    const output: string[] = [];
+    const runtime = createConsumerMenuRuntime({
+      runRepoGate: async () => {},
+      runRepoAndStagedGate: async () => {},
+      runStagedGate: async () => {},
+      runWorkingTreeGate: async () => {},
+      runPreflight: async () => {},
+      write: (text) => {
+        output.push(text);
+      },
+    });
+
+    const action = runtime.actions.find((item) => item.id === '8');
+    assert.ok(action, 'Expected consumer action id=8');
+    await action.execute();
+
+    const exportedPath = join(temp, '.audit-reports', 'pumuki-legacy-audit.md');
+    const markdown = readFileSync(exportedPath, 'utf8');
+    assert.match(output.join('\n'), /Markdown exported:/);
+    assert.match(markdown, /## Clickable Findings/);
+    assert.match(
+      markdown,
+      /\[apps\/backend\/src\/runtime\/process\.ts:27\]\(\.\/apps\/backend\/src\/runtime\/process\.ts#L27\)/
+    );
+  } finally {
+    process.chdir(previous);
   }
 });
