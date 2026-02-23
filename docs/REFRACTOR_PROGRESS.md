@@ -168,7 +168,26 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ `F5.T3` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: documentacion enterprise sincronizada (`README`, `USAGE`, `API_REFERENCE`, `evidence-v2.1`).
 - ✅ `F5.T4` completada en `ENTERPRISE_AST_DETECTION_SUPERIORITY`: cierre Git Flow end-to-end (`feature -> develop` PR `#350`, `develop -> main` PR `#351`).
 - ✅ Ciclo `ENTERPRISE_AST_DETECTION_SUPERIORITY` cerrado con verificacion tecnica, funcional y visual en verde.
-- Estado activo: sin tareas en construccion (ciclo cerrado).
+- ✅ Nuevo plan activo creado: `docs/SKILLS_ENGINE_FORENSIC_RECOVERY_CYCLE.md`.
+- ✅ `F0.T1` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: plan forense creado con fases/tareas/leyenda.
+- ✅ `F0.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: tracker sincronizado y tarea activa unica garantizada.
+- ✅ `F0.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: rama del ciclo creada (`feature/skills-engine-forensic-recovery`).
+- ✅ `F1.T1` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: RCA forense documentado en `docs/SKILLS_ENGINE_FORENSIC_RCA_REPORT.md` (744 reglas, 705 `guideline.*`, 705 `unsupportedAuto`).
+- ✅ `F1.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: contrato dual `audit-engine` vs `audit-gate` operativo y trazado en evidencia (`snapshot.audit_mode`).
+- ✅ `F1.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: diagnostico por stage alineado con el motor real (heuristicas forzadas AST/TypeScript) y validado por tests.
+- ✅ `F2.T1` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: reglas no canónicas de markdown degradadas a `DECLARATIVE`, eliminando `AUTO` no mapeadas.
+- ✅ `F2.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: catálogo core SOLID/Clean/God Class consolidado para backend/frontend en lock efectivo.
+- ✅ `F2.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: validación runtime `scope=repo` con `unsupported_auto=0` y `unevaluated=0` en `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI`.
+- ✅ `F3.T1` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: persistencia de `snapshot.audit_mode` (`engine|gate`) verificada en runtime y tests.
+- ✅ `F3.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: `severity_metrics.by_enterprise_severity` añadido sin romper `by_severity` legacy.
+- ✅ `F3.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: menú/diagnósticos homologados con severidad enterprise canónica y fallback legacy.
+- ✅ `F4.T1` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: suite `npm run test:stage-gates` en verde (`781 pass`, `0 fail`).
+- ✅ `F4.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: matriz runtime stage/mode generada en `docs/SKILLS_ENGINE_RUNTIME_MATRIX.md`.
+- ✅ `F4.T3` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: verificación visual runtime de menú consumer/advanced v2 con severidad enterprise+legacy.
+- ✅ `F5.T1` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: documentación sincronizada (`README`, `docs/USAGE.md`, `docs/API_REFERENCE.md`, `docs/evidence-v2.1.md`).
+- ✅ `F5.T2` completada en `SKILLS_ENGINE_FORENSIC_RECOVERY`: informe reproducible publicado en `docs/SKILLS_ENGINE_FORENSIC_COMPLIANCE_REPORT.md`.
+- 🚧 `F5.T3` en construccion en `SKILLS_ENGINE_FORENSIC_RECOVERY`: cierre Git Flow end-to-end (`feature -> develop -> main`).
+- Estado activo: ciclo `SKILLS_ENGINE_FORENSIC_RECOVERY` en ejecucion.
 
 ## Siguiente paso operativo
-- ⏳ Definir proximo ciclo activo y reabrir seguimiento con una unica tarea `🚧`.
+- ⏳ Ejecutar cierre de ciclo: abrir PR a `develop`, merge y sincronizar `develop -> main`.

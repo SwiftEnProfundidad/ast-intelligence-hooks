@@ -209,6 +209,7 @@ test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna 
   assert.deepEqual(capturedEvaluateGateArgs?.policy, policy);
   assert.deepEqual(capturedEmitArgs, {
     stage: 'PRE_PUSH',
+    auditMode: 'gate',
     policyTrace,
     findings,
     gateOutcome: 'BLOCK',
@@ -702,6 +703,75 @@ test('runPlatformGate sin short-circuit SDD sigue evaluando findings de reglas y
     code: 'SDD_SESSION_MISSING',
     message: 'session missing',
   });
+});
+
+test('runPlatformGate en auditMode=engine no hace short-circuit por SDD y persiste auditMode', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let resolveFactsCalled = false;
+  let emittedAuditMode: 'gate' | 'engine' | undefined;
+  let emittedFindings: ReadonlyArray<Finding> = [];
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    auditMode: 'engine',
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: false,
+        code: 'SDD_SESSION_MISSING',
+        message: 'session missing',
+      }),
+      resolveFactsForGateScope: async () => {
+        resolveFactsCalled = true;
+        return [];
+      },
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [
+          {
+            ruleId: 'backend.avoid-explicit-any',
+            severity: 'ERROR',
+            code: 'NO_ANY',
+            message: 'Avoid any',
+            filePath: 'integrations/x.ts',
+          },
+        ],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedAuditMode = paramsArg.auditMode;
+        emittedFindings = paramsArg.findings;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(resolveFactsCalled, true);
+  assert.equal(emittedAuditMode, 'engine');
+  assert.equal(emittedFindings.length, 2);
+  assert.equal(emittedFindings[0]?.ruleId, 'sdd.policy.blocked');
+  assert.equal(emittedFindings[1]?.ruleId, 'backend.avoid-explicit-any');
 });
 
 test('runPlatformGate bloquea por cobertura incompleta de reglas en PRE_COMMIT/PRE_PUSH/CI', async () => {

@@ -101,6 +101,12 @@ test('AiEvidenceV2_1 soporta snapshot/ledger/platforms/rulesets con contrato 2.1
         ERROR: 1,
         CRITICAL: 0,
       },
+      by_enterprise_severity: {
+        CRITICAL: 0,
+        HIGH: 1,
+        MEDIUM: 0,
+        LOW: 0,
+      },
     },
     repo_state: {
       repo_root: '/repo',
@@ -134,6 +140,7 @@ test('AiEvidenceV2_1 soporta snapshot/ledger/platforms/rulesets con contrato 2.1
   assert.equal(evidence.snapshot.rules_coverage?.counts.active, 1);
   assert.equal(evidence.snapshot.findings[0]?.ruleId, 'backend.no-console-log');
   assert.equal(evidence.ai_gate.violations[0]?.level, 'ERROR');
+  assert.equal(evidence.severity_metrics.by_enterprise_severity?.HIGH, 1);
   assert.equal(evidence.repo_state?.git.branch, 'feature/evidence');
   assert.equal(evidence.repo_state?.lifecycle.hooks.pre_commit, 'managed');
 });
