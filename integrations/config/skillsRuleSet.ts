@@ -13,6 +13,7 @@ import {
 import { loadSkillsPolicy, type SkillsBundlePolicy } from './skillsPolicy';
 import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { loadEffectiveSkillsLock } from './skillsEffectiveLock';
+import { resolveMappedHeuristicRuleIds } from './skillsDetectorRegistry';
 
 export type SkillsRuleSetLoadResult = {
   rules: RuleSet;
@@ -35,59 +36,6 @@ const PLATFORM_KEYS: ReadonlyArray<keyof DetectedPlatforms> = [
   'frontend',
 ];
 
-const SKILL_TO_HEURISTIC_RULE_IDS: Record<string, ReadonlyArray<string>> = {
-  'skills.ios.no-force-unwrap': ['heuristics.ios.force-unwrap.ast'],
-  'skills.ios.no-force-try': ['heuristics.ios.force-try.ast'],
-  'skills.ios.no-anyview': ['heuristics.ios.anyview.ast'],
-  'skills.ios.no-force-cast': ['heuristics.ios.force-cast.ast'],
-  'skills.ios.no-callback-style-outside-bridges': ['heuristics.ios.callback-style.ast'],
-  'skills.ios.no-dispatchqueue': ['heuristics.ios.dispatchqueue.ast'],
-  'skills.ios.no-dispatchgroup': ['heuristics.ios.dispatchgroup.ast'],
-  'skills.ios.no-dispatchsemaphore': ['heuristics.ios.dispatchsemaphore.ast'],
-  'skills.ios.no-operation-queue': ['heuristics.ios.operation-queue.ast'],
-  'skills.ios.no-task-detached': ['heuristics.ios.task-detached.ast'],
-  'skills.ios.no-unchecked-sendable': ['heuristics.ios.unchecked-sendable.ast'],
-  'skills.ios.no-observable-object': ['heuristics.ios.observable-object.ast'],
-  'skills.ios.no-navigation-view': ['heuristics.ios.navigation-view.ast'],
-  'skills.ios.no-on-tap-gesture': ['heuristics.ios.on-tap-gesture.ast'],
-  'skills.ios.no-string-format': ['heuristics.ios.string-format.ast'],
-  'skills.ios.no-uiscreen-main-bounds': ['heuristics.ios.uiscreen-main-bounds.ast'],
-  'skills.backend.no-empty-catch': ['heuristics.ts.empty-catch.ast'],
-  'skills.backend.no-console-log': ['heuristics.ts.console-log.ast'],
-  'skills.backend.avoid-explicit-any': ['heuristics.ts.explicit-any.ast'],
-  'skills.backend.no-solid-violations': [
-    'heuristics.ts.solid.srp.class-command-query-mix.ast',
-    'heuristics.ts.solid.isp.interface-command-query-mix.ast',
-    'heuristics.ts.solid.ocp.discriminator-switch.ast',
-    'heuristics.ts.solid.lsp.override-not-implemented.ast',
-    'heuristics.ts.solid.dip.framework-import.ast',
-    'heuristics.ts.solid.dip.concrete-instantiation.ast',
-  ],
-  'skills.backend.enforce-clean-architecture': [
-    'heuristics.ts.solid.dip.framework-import.ast',
-    'heuristics.ts.solid.dip.concrete-instantiation.ast',
-  ],
-  'skills.backend.no-god-classes': ['heuristics.ts.god-class-large-class.ast'],
-  'skills.frontend.no-empty-catch': ['heuristics.ts.empty-catch.ast'],
-  'skills.frontend.no-console-log': ['heuristics.ts.console-log.ast'],
-  'skills.frontend.avoid-explicit-any': ['heuristics.ts.explicit-any.ast'],
-  'skills.frontend.no-solid-violations': [
-    'heuristics.ts.solid.srp.class-command-query-mix.ast',
-    'heuristics.ts.solid.isp.interface-command-query-mix.ast',
-    'heuristics.ts.solid.ocp.discriminator-switch.ast',
-    'heuristics.ts.solid.lsp.override-not-implemented.ast',
-    'heuristics.ts.solid.dip.framework-import.ast',
-    'heuristics.ts.solid.dip.concrete-instantiation.ast',
-  ],
-  'skills.frontend.enforce-clean-architecture': [
-    'heuristics.ts.solid.dip.framework-import.ast',
-    'heuristics.ts.solid.dip.concrete-instantiation.ast',
-  ],
-  'skills.frontend.no-god-classes': ['heuristics.ts.god-class-large-class.ast'],
-  'skills.android.no-thread-sleep': ['heuristics.android.thread-sleep.ast'],
-  'skills.android.no-globalscope': ['heuristics.android.globalscope.ast'],
-  'skills.android.no-runblocking': ['heuristics.android.run-blocking.ast'],
-};
 
 const PLATFORM_HEURISTIC_FILE_PREFIXES: Record<
   NonNullable<RuleDefinition['platform']>,
@@ -354,10 +302,6 @@ const resolveRuleEvaluationMode = (
   rule: SkillsCompiledRule
 ): SkillsRuleEvaluationMode => {
   return rule.evaluationMode ?? 'AUTO';
-};
-
-const resolveMappedHeuristicRuleIds = (ruleId: string): ReadonlyArray<string> => {
-  return SKILL_TO_HEURISTIC_RULE_IDS[ruleId] ?? [];
 };
 
 const toRuleDefinition = (params: {

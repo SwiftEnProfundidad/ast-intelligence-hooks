@@ -46,8 +46,8 @@ Conflict policy is deterministic:
 
 Rule evaluation modes:
 
-- `AUTO`: mapped to deterministic detectors/heuristics.
-- `DECLARATIVE`: kept active for coverage/traceability without emitting findings until a detector exists.
+- `AUTO`: mapped to deterministic detectors/heuristics through the central detector registry.
+- `DECLARATIVE`: only valid when explicitly declared in lock/custom payload (no fallback silencioso para reglas extraidas desde skills markdown).
 
 ## Core Capabilities
 
@@ -70,11 +70,13 @@ Pumuki emits deterministic evidence with stable ordering and rich telemetry:
   - `evaluated_rule_ids`
   - `matched_rule_ids`
   - `unevaluated_rule_ids`
+  - `unsupported_auto_rule_ids` (optional; emitted when AUTO skills lack detector mapping)
   - `counts` and `coverage_ratio`
 - `ledger` (persistent open violations)
 - `rulesets`, `platforms`, `sdd_metrics`, `repo_state`
 
 In `PRE_COMMIT`, `PRE_PUSH`, and `CI`, incomplete rules coverage forces block via `governance.rules.coverage.incomplete`.
+If any AUTO skill rule has no mapped detector, the gate forces block via `governance.skills.detector-mapping.incomplete`.
 
 Reference: `docs/evidence-v2.1.md`.
 
@@ -111,6 +113,7 @@ Interactive governance menu with:
 - Consumer mode focused on day-to-day auditing workflows
 - Advanced mode grouped by domains (Gates, Diagnostics, Maintenance, Validation, System)
 - Runtime fallback to classic renderer if v2 rendering fails
+- Menu audits apply SDD guardrails without bypass (same policy semantics as stage runners)
 
 Controls:
 
@@ -389,6 +392,15 @@ Optional controlled canary execution:
 
 ```bash
 node --import tsx -e "const mod = await import('./scripts/framework-menu-matrix-canary-lib.ts'); const report = await mod.default.runConsumerMenuCanary({ repoRoot: process.cwd() }); console.log(JSON.stringify(report, null, 2));"
+```
+
+Legacy dominance report (strict parity comparator):
+
+```bash
+node --import tsx scripts/build-legacy-parity-report.ts \
+  --legacy <legacy-evidence.json> \
+  --enterprise .ai_evidence.json \
+  --out docs/LEGACY_PARITY_REPORT.md
 ```
 
 ### Enterprise diagnostics and readiness reports

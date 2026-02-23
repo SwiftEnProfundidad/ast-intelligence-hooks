@@ -807,6 +807,12 @@ test('runPlatformGate bloquea cuando existen reglas AUTO de skills sin detector 
     | {
       findings: ReadonlyArray<Finding>;
       gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      rulesCoverage?: {
+        unsupported_auto_rule_ids?: string[];
+        counts?: {
+          unsupported_auto?: number;
+        };
+      };
     }
     | undefined;
 
@@ -861,6 +867,12 @@ test('runPlatformGate bloquea cuando existen reglas AUTO de skills sin detector 
         emittedArgs = {
           findings: paramsArg.findings,
           gateOutcome: paramsArg.gateOutcome,
+          rulesCoverage: paramsArg.rulesCoverage as {
+            unsupported_auto_rule_ids?: string[];
+            counts?: {
+              unsupported_auto?: number;
+            };
+          },
         };
       },
       printGateFindings: () => {},
@@ -880,4 +892,8 @@ test('runPlatformGate bloquea cuando existen reglas AUTO de skills sin detector 
   );
   assert.equal(mappingFinding?.severity, 'ERROR');
   assert.match(mappingFinding?.message ?? '', /unsupported_auto_rule_ids/i);
+  assert.deepEqual(emittedArgs?.rulesCoverage?.unsupported_auto_rule_ids, [
+    'skills.backend.guideline.backend.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip',
+  ]);
+  assert.equal(emittedArgs?.rulesCoverage?.counts?.unsupported_auto, 1);
 });

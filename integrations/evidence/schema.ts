@@ -36,11 +36,13 @@ export type SnapshotRulesCoverage = {
   evaluated_rule_ids: string[];
   matched_rule_ids: string[];
   unevaluated_rule_ids: string[];
+  unsupported_auto_rule_ids?: string[];
   counts: {
     active: number;
     evaluated: number;
     matched: number;
     unevaluated: number;
+    unsupported_auto?: number;
   };
   coverage_ratio: number;
 };

@@ -31,3 +31,15 @@ test('normaliza regla frontend SOLID a id canonico', () => {
 
   assert.deepEqual(rules.map((rule) => rule.id), ['skills.frontend.no-solid-violations']);
 });
+
+test('reglas no canonicas extraidas desde markdown se fuerzan a AUTO para exigir detector', () => {
+  const rules = extractCompiledRulesFromSkillMarkdown({
+    sourceSkill: 'backend-guidelines',
+    sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+    sourceContent: '- Must avoid long transaction scripts across three bounded contexts.',
+  });
+
+  assert.equal(rules.length, 1);
+  assert.equal(rules[0]?.id.startsWith('skills.backend.guideline.'), true);
+  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+});

@@ -195,7 +195,7 @@ const toCustomRulesFile = (
       stage: rule.stage,
       confidence: rule.confidence,
       locked: rule.locked ?? false,
-      evaluationMode: rule.evaluationMode ?? 'DECLARATIVE',
+      evaluationMode: rule.evaluationMode ?? 'AUTO',
     }))
     .sort((left, right) => left.id.localeCompare(right.id));
 
@@ -241,7 +241,7 @@ export const loadCustomSkillsLock = (
     ...rule,
     sourceSkill: 'custom-guidelines',
     sourcePath: '.pumuki/custom-rules.json',
-    evaluationMode: rule.evaluationMode ?? 'DECLARATIVE',
+    evaluationMode: rule.evaluationMode ?? 'AUTO',
     origin: 'custom',
   }));
 

@@ -13,7 +13,7 @@ import {
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
 
-test('runRepoGateSilent no inyecta sdd.policy.blocked en modo auditoria de menu', async () => {
+test('runRepoGateSilent aplica SDD estricto e inyecta sdd.policy.blocked cuando faltan precondiciones', async () => {
   await withTempDir('pumuki-menu-gate-sdd-bypass-', async (repoRoot) => {
     const previousCwd = process.cwd();
     try {
@@ -37,7 +37,7 @@ test('runRepoGateSilent no inyecta sdd.policy.blocked en modo auditoria de menu'
       const findings = Array.isArray(evidence.snapshot?.findings) ? evidence.snapshot.findings : [];
       const ruleIds = findings.map((finding) => finding.ruleId ?? '');
 
-      assert.equal(ruleIds.includes('sdd.policy.blocked'), false);
+      assert.equal(ruleIds.includes('sdd.policy.blocked'), true);
       assert.equal(
         ruleIds.includes('skills.backend.no-console-log') ||
           ruleIds.includes('skills.frontend.no-console-log') ||

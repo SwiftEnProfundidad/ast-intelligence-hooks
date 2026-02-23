@@ -1,15 +1,19 @@
 import type { Fact } from '../core/facts/Fact';
+import type { GateStage } from '../core/gate/GateStage';
 import type { Severity } from '../core/rules/Severity';
 import { resolvePolicyForStage } from '../integrations/gate/stagePolicies';
 import { evaluatePlatformGateFindings } from '../integrations/git/runPlatformGateEvaluation';
 import { resolveFactsForGateScope } from '../integrations/git/runPlatformGateFacts';
 import { GitService } from '../integrations/git/GitService';
+import { evaluateSddPolicy } from '../integrations/sdd/policy';
+import type { SddDecisionCode } from '../integrations/sdd/types';
 
-type RuleCoverageStage = 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+type RuleCoverageStage = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
 type RuleCoverageStageDiagnostics = {
   stage: RuleCoverageStage;
   policyTraceBundle: string;
+  evaluationStage: GateStage;
   factsTotal: number;
   filesScanned: number;
   rulesTotal: number;
@@ -24,6 +28,10 @@ type RuleCoverageStageDiagnostics = {
   evaluatedRuleIds: ReadonlyArray<string>;
   matchedRuleIds: ReadonlyArray<string>;
   unmatchedRuleIds: ReadonlyArray<string>;
+  sdd: {
+    allowed: boolean;
+    code: SddDecisionCode;
+  };
 };
 
 export type RuleCoverageDiagnosticsReport = {
@@ -36,6 +44,7 @@ type RuleCoverageDiagnosticsDependencies = {
   resolvePolicyForStage: typeof resolvePolicyForStage;
   resolveFactsForGateScope: typeof resolveFactsForGateScope;
   evaluatePlatformGateFindings: typeof evaluatePlatformGateFindings;
+  evaluateSddPolicy: typeof evaluateSddPolicy;
   createGitService: () => Pick<GitService, 'resolveRepoRoot'>;
 };
 
@@ -43,6 +52,7 @@ const defaultDependencies: RuleCoverageDiagnosticsDependencies = {
   resolvePolicyForStage,
   resolveFactsForGateScope,
   evaluatePlatformGateFindings,
+  evaluateSddPolicy,
   createGitService: () => new GitService(),
 };
 
@@ -70,26 +80,35 @@ export const buildRuleCoverageDiagnostics = async (params?: {
     ...defaultDependencies,
     ...params?.dependencies,
   };
-  const stages = params?.stages ?? ['PRE_COMMIT', 'PRE_PUSH', 'CI'];
+  const stages = params?.stages ?? ['PRE_WRITE', 'PRE_COMMIT', 'PRE_PUSH', 'CI'];
   const git = dependencies.createGitService();
   const repoRoot = params?.repoRoot ?? git.resolveRepoRoot();
   const diagnostics: RuleCoverageStageDiagnostics[] = [];
 
   for (const stage of stages) {
-    const policy = dependencies.resolvePolicyForStage(stage, repoRoot);
+    const evaluationStage: GateStage = stage === 'PRE_WRITE' ? 'PRE_COMMIT' : stage;
+    const policy = dependencies.resolvePolicyForStage(evaluationStage, repoRoot);
+    const sdd = dependencies.evaluateSddPolicy({
+      stage,
+      repoRoot,
+    }).decision;
     const facts = await dependencies.resolveFactsForGateScope({
       scope: { kind: 'repo' },
       git: git as never,
     });
     const evaluation = dependencies.evaluatePlatformGateFindings({
       facts: facts as ReadonlyArray<Fact>,
-      stage,
+      stage: evaluationStage,
       repoRoot,
     });
 
     diagnostics.push({
       stage,
-      policyTraceBundle: policy.trace.bundle,
+      policyTraceBundle:
+        stage === 'PRE_WRITE'
+          ? `gate-policy.synthetic.PRE_WRITE->${policy.trace.bundle}`
+          : policy.trace.bundle,
+      evaluationStage,
       factsTotal: evaluation.coverage.factsTotal,
       filesScanned: evaluation.coverage.filesScanned,
       rulesTotal: evaluation.coverage.rulesTotal,
@@ -104,6 +123,10 @@ export const buildRuleCoverageDiagnostics = async (params?: {
       evaluatedRuleIds: evaluation.coverage.evaluatedRuleIds,
       matchedRuleIds: evaluation.coverage.matchedRuleIds,
       unmatchedRuleIds: evaluation.coverage.unmatchedRuleIds,
+      sdd: {
+        allowed: sdd.allowed,
+        code: sdd.code,
+      },
     });
   }
 
@@ -126,6 +149,9 @@ export const formatRuleCoverageDiagnostics = (
 
   for (const stage of report.stages) {
     lines.push(`[${stage.stage}] policy=${stage.policyTraceBundle}`);
+    lines.push(
+      `evaluation_stage=${stage.evaluationStage} sdd_allowed=${stage.sdd.allowed} sdd_code=${stage.sdd.code}`
+    );
     lines.push(
       `facts_total=${stage.factsTotal} files_scanned=${stage.filesScanned} rules_total=${stage.rulesTotal}`
     );

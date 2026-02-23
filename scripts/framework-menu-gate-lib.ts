@@ -139,11 +139,6 @@ const runMenuAuditGate = async (
     sddShortCircuit: false,
     dependencies: {
       printGateFindings: () => {},
-      evaluateSddForStage: () => ({
-        allowed: true,
-        code: 'MENU_AUDIT_SDD_BYPASS',
-        message: 'Menu audit bypasses SDD blocking and keeps findings-only evaluation.',
-      }),
       evaluatePlatformGateFindings: (params) =>
         evaluatePlatformGateFindings(params, {
           loadHeuristicsConfig: () => ({
