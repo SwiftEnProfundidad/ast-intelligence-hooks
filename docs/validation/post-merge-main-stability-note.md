@@ -69,3 +69,19 @@ Fuente: `.audit_tmp/p-adhoc-lines-013-main-pr-checks-unique.tsv`
 ## Siguiente paso recomendado
 
 - Ejecutar un ciclo dedicado de saneamiento CI por lotes (`lint/typecheck/tests/gates/package smoke/snyk`) con PR incremental y reglas de salida: checks críticos en verde antes del siguiente merge administrativo.
+
+## Actualización operativa (Cycle 014 / PR #363)
+
+Se abrió PR incremental de saneamiento:
+
+- `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/363`
+
+Estado observado en GitHub Actions:
+
+- Los jobs fallan en ~3-4s sin ejecutar pasos.
+- Anotación uniforme de GitHub:
+  - `The job was not started because your account is locked due to a billing issue.`
+
+Conclusión:
+
+- El estado rojo remoto actual no se atribuye al lote A de código, sino a un bloqueo externo de cuenta/billing en Actions.

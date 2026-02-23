@@ -57,3 +57,48 @@ Workflows con fallo detectados:
 - `main` sin merge administrativo para cambios funcionales de este ciclo.
 - Todos los checks críticos en verde en PR `develop -> main`.
 - Evidencia consolidada en `docs/validation/post-merge-main-stability-note.md`.
+
+## Ejecución actual (Lote A — Packaging)
+
+Estado: ✅ completado en local.
+
+### Causa raíz confirmada
+
+1. `check-package-manifest` usaba API legacy de `npm-packlist` (`packlist({path})`) no compatible con v10 (requiere árbol Arborist), provocando crash en CI/local.
+2. El paquete publicado omitía `integrations/notifications/emitAuditSummaryNotification.ts`, rompiendo lifecycle install en package smoke por `Cannot find module`.
+
+### Correcciones aplicadas
+
+- `scripts/check-package-manifest.ts`
+  - migrado a `npm pack --json --dry-run` como fuente de verdad de archivos empaquetados.
+  - parser robusto para payload JSON de `npm pack`.
+- `scripts/__tests__/check-package-manifest.test.ts`
+  - tests añadidos para parser dry-run y listado real de paquete.
+- `package.json`
+  - añadido `integrations/notifications/*.ts` en `files`.
+- `scripts/package-manifest-lib.ts`
+  - añadido `integrations/notifications/emitAuditSummaryNotification.ts` como path requerido.
+
+### Validación local
+
+- reproducción completa de comandos CI:
+  - `.audit_tmp/ci-repro-014/summary.tsv` => todos los comandos en `0`.
+- validación específica de packaging (Node local + Node 20):
+  - `.audit_tmp/ci-repro-014-fix/package_manifest*.log`
+  - `.audit_tmp/ci-repro-014-fix/package_smoke_block*.log`
+  - `.audit_tmp/ci-repro-014-fix/package_smoke_minimal*.log`
+  - todos con exit `0`.
+
+### Estado remoto de la PR incremental
+
+- PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/363`
+- Resultado remoto actual: `UNSTABLE` por bloqueo externo de GitHub Actions.
+- Evidencia: jobs no iniciados con anotación:
+  - `The job was not started because your account is locked due to a billing issue.`
+
+Implicación:
+
+- El siguiente paso no es técnico de código, sino operativo:
+  - desbloquear billing/cuenta de Actions;
+  - re-ejecutar checks del PR 363;
+  - continuar lotes B/C/D sobre base remota ejecutable.
