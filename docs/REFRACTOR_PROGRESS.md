@@ -145,5 +145,11 @@ Estado operativo activo del repositorio.
     - `scripts/package-manifest-lib.ts`
     - `package.json` (`files`)
     - reproducción CI local completa en verde: `.audit_tmp/ci-repro-014/summary.tsv`
-  - ⏳ publicar lote A por PR incremental y validar checks remotos
+  - ✅ lote A publicado en PR incremental:
+    - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/363`
+  - ⏳ validar checks remotos del lote A
+    - bloqueo externo detectado: GitHub Actions no inicia jobs por billing lock de cuenta
+    - documentación de bloqueo:
+      - `docs/validation/post-merge-main-stability-note.md`
+      - `docs/validation/ci-sanitization-plan-cycle-014.md`
   - ⏳ objetivo de salida: checks críticos en verde en `main` sin bypass admin

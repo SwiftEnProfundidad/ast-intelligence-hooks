@@ -88,3 +88,17 @@ Estado: ✅ completado en local.
   - `.audit_tmp/ci-repro-014-fix/package_smoke_block*.log`
   - `.audit_tmp/ci-repro-014-fix/package_smoke_minimal*.log`
   - todos con exit `0`.
+
+### Estado remoto de la PR incremental
+
+- PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/363`
+- Resultado remoto actual: `UNSTABLE` por bloqueo externo de GitHub Actions.
+- Evidencia: jobs no iniciados con anotación:
+  - `The job was not started because your account is locked due to a billing issue.`
+
+Implicación:
+
+- El siguiente paso no es técnico de código, sino operativo:
+  - desbloquear billing/cuenta de Actions;
+  - re-ejecutar checks del PR 363;
+  - continuar lotes B/C/D sobre base remota ejecutable.
