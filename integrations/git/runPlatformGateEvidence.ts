@@ -25,6 +25,7 @@ const defaultDependencies: PlatformGateEvidenceDependencies = {
 
 export const emitPlatformGateEvidence = (params: {
   stage: GateStage;
+  auditMode?: 'gate' | 'engine';
   policyTrace?: ResolvedStagePolicy['trace'];
   findings: ReadonlyArray<Finding>;
   gateOutcome: GateOutcome;
@@ -48,6 +49,7 @@ export const emitPlatformGateEvidence = (params: {
 
   activeDependencies.generateEvidence({
     stage: params.stage,
+    auditMode: params.auditMode ?? 'gate',
     findings: params.findings,
     gateOutcome: params.gateOutcome,
     filesScanned: params.filesScanned,

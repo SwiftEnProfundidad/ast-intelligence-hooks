@@ -48,6 +48,12 @@ test('readEvidenceSummaryForMenu agrega severidades y top de ficheros', async ()
       WARN: 1,
       INFO: 0,
     });
+    assert.deepEqual(summary.byEnterpriseSeverity, {
+      CRITICAL: 1,
+      HIGH: 2,
+      MEDIUM: 1,
+      LOW: 0,
+    });
     assert.deepEqual(summary.topFiles, [
       { file: 'apps/backend/src/a.ts', count: 2 },
       { file: 'apps/ios/App/Feature.swift', count: 1 },
@@ -68,6 +74,12 @@ test('formatEvidenceSummaryForMenu renderiza bloque operativo', () => {
       WARN: 1,
       INFO: 0,
     },
+    byEnterpriseSeverity: {
+      CRITICAL: 1,
+      HIGH: 1,
+      MEDIUM: 1,
+      LOW: 0,
+    },
     topFiles: [
       { file: 'apps/backend/src/a.ts', count: 2 },
       { file: 'apps/ios/App/B.swift', count: 1 },
@@ -75,6 +87,7 @@ test('formatEvidenceSummaryForMenu renderiza bloque operativo', () => {
   });
 
   assert.match(rendered, /Evidence: status=ok stage=CI outcome=BLOCKED findings=3/);
+  assert.match(rendered, /Severities \(enterprise\): critical=1 high=1 medium=1 low=0/);
   assert.match(rendered, /Top files: apps\/backend\/src\/a\.ts \(2\), apps\/ios\/App\/B\.swift \(1\)/);
 });
 
@@ -89,6 +102,12 @@ test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => 
       ERROR: 0,
       WARN: 0,
       INFO: 0,
+    },
+    byEnterpriseSeverity: {
+      CRITICAL: 0,
+      HIGH: 0,
+      MEDIUM: 0,
+      LOW: 0,
     },
     topFiles: [],
   });

@@ -32,7 +32,7 @@ test('normaliza regla frontend SOLID a id canonico', () => {
   assert.deepEqual(rules.map((rule) => rule.id), ['skills.frontend.no-solid-violations']);
 });
 
-test('reglas no canonicas extraidas desde markdown se fuerzan a AUTO para exigir detector', () => {
+test('reglas no canonicas extraidas desde markdown se degradan a DECLARATIVE para evitar AUTO no mapeado', () => {
   const rules = extractCompiledRulesFromSkillMarkdown({
     sourceSkill: 'backend-guidelines',
     sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
@@ -41,5 +41,5 @@ test('reglas no canonicas extraidas desde markdown se fuerzan a AUTO para exigir
 
   assert.equal(rules.length, 1);
   assert.equal(rules[0]?.id.startsWith('skills.backend.guideline.'), true);
-  assert.equal(rules[0]?.evaluationMode, 'AUTO');
+  assert.equal(rules[0]?.evaluationMode, 'DECLARATIVE');
 });

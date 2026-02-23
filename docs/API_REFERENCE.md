@@ -40,7 +40,7 @@ File: `integrations/git/runPlatformGate.ts`
 
 Primary function:
 
-- `runPlatformGate(params: { policy: GatePolicy; scope: GateScope }): Promise<number>`
+- `runPlatformGate(params: { policy: GatePolicy; scope: GateScope; auditMode?: 'gate' | 'engine'; sddShortCircuit?: boolean }): Promise<number>`
 
 Behavior:
 
@@ -49,8 +49,12 @@ Behavior:
 - Loads and merges baseline + project rules.
 - Applies optional heuristic rule-pack and stage-aware promotion.
 - Evaluates findings + gate decision.
+- Supports dual runtime contract:
+  - `auditMode='gate'`: strict enforcement (SDD short-circuit by default)
+  - `auditMode='engine'`: full diagnostics (no SDD short-circuit by default)
 - Computes rules coverage telemetry (`active/evaluated/matched/unevaluated`) per stage.
 - Emits `governance.rules.coverage.incomplete` and forces `BLOCK` when active rules remain unevaluated in `PRE_COMMIT`, `PRE_PUSH`, or `CI`.
+- Emits `governance.skills.detector-mapping.incomplete` and forces `BLOCK` when AUTO skills rules have no mapped detector.
 - Writes `.ai_evidence.json` via `generateEvidence`.
 
 ## Skills rules engine APIs
@@ -141,6 +145,7 @@ Contract:
 - Source of truth: `version: "2.1"`
 - Deterministic output order
 - Snapshot + ledger merge model
+- Snapshot persists `audit_mode` (`gate` | `engine`) for runtime traceability.
 - Snapshot includes deterministic `rules_coverage` contract:
   - `active_rule_ids[]`
   - `evaluated_rule_ids[]`
@@ -148,6 +153,9 @@ Contract:
   - `unevaluated_rule_ids[]`
   - `unsupported_auto_rule_ids[]` (optional; present when AUTO skills have no detector mapping)
   - `counts` + `coverage_ratio`
+- Severity metrics include dual projections:
+  - legacy: `severity_metrics.by_severity` (`CRITICAL/ERROR/WARN/INFO`)
+  - enterprise: `severity_metrics.by_enterprise_severity` (`CRITICAL/HIGH/MEDIUM/LOW`)
 
 ## Rule packs
 

@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 type EvidenceSeverity = 'CRITICAL' | 'ERROR' | 'WARN' | 'INFO';
+type EnterpriseEvidenceSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
 type EvidenceFinding = {
   file?: unknown;
@@ -14,12 +15,17 @@ type EvidenceSnapshot = {
   findings?: unknown;
 };
 
+type EvidenceSeverityMetrics = {
+  by_enterprise_severity?: unknown;
+};
+
 export type FrameworkMenuEvidenceSummary = {
   status: 'ok' | 'missing' | 'invalid';
   stage: string | null;
   outcome: string | null;
   totalFindings: number;
   bySeverity: Record<EvidenceSeverity, number>;
+  byEnterpriseSeverity?: Record<EnterpriseEvidenceSeverity, number>;
   topFiles: ReadonlyArray<{ file: string; count: number }>;
 };
 
@@ -30,6 +36,13 @@ const emptySeverityCount = (): Record<EvidenceSeverity, number> => ({
   ERROR: 0,
   WARN: 0,
   INFO: 0,
+});
+
+const emptyEnterpriseSeverityCount = (): Record<EnterpriseEvidenceSeverity, number> => ({
+  CRITICAL: 0,
+  HIGH: 0,
+  MEDIUM: 0,
+  LOW: 0,
 });
 
 const toStringOrNull = (value: unknown): string | null => {
@@ -79,6 +92,38 @@ const normalizeSeverity = (value: unknown): EvidenceSeverity | null => {
   return null;
 };
 
+const toEnterpriseFromLegacy = (
+  bySeverity: Readonly<Record<EvidenceSeverity, number>>
+): Record<EnterpriseEvidenceSeverity, number> => {
+  return {
+    CRITICAL: bySeverity.CRITICAL,
+    HIGH: bySeverity.ERROR,
+    MEDIUM: bySeverity.WARN,
+    LOW: bySeverity.INFO,
+  };
+};
+
+const normalizeEnterpriseSeverityCounts = (
+  value: unknown
+): Record<EnterpriseEvidenceSeverity, number> | null => {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const record = value as Record<string, unknown>;
+  const parse = (entry: unknown): number => {
+    if (typeof entry !== 'number' || !Number.isFinite(entry)) {
+      return 0;
+    }
+    return Math.max(0, Math.trunc(entry));
+  };
+  return {
+    CRITICAL: parse(record.CRITICAL),
+    HIGH: parse(record.HIGH),
+    MEDIUM: parse(record.MEDIUM),
+    LOW: parse(record.LOW),
+  };
+};
+
 export const readEvidenceSummaryForMenu = (
   repoRoot: string = process.cwd()
 ): FrameworkMenuEvidenceSummary => {
@@ -90,6 +135,7 @@ export const readEvidenceSummaryForMenu = (
       outcome: null,
       totalFindings: 0,
       bySeverity: emptySeverityCount(),
+      byEnterpriseSeverity: emptyEnterpriseSeverityCount(),
       topFiles: [],
     };
   }
@@ -97,6 +143,7 @@ export const readEvidenceSummaryForMenu = (
   try {
     const parsed = JSON.parse(readFileSync(evidencePath, 'utf8')) as {
       snapshot?: EvidenceSnapshot;
+      severity_metrics?: EvidenceSeverityMetrics;
     };
     const snapshot = (parsed?.snapshot ?? {}) as EvidenceSnapshot;
     const findings = asFindings(snapshot.findings);
@@ -109,6 +156,9 @@ export const readEvidenceSummaryForMenu = (
       }
       bySeverity[severity] += 1;
     }
+    const byEnterpriseSeverity =
+      normalizeEnterpriseSeverityCounts(parsed?.severity_metrics?.by_enterprise_severity) ??
+      toEnterpriseFromLegacy(bySeverity);
 
     return {
       status: 'ok',
@@ -116,6 +166,7 @@ export const readEvidenceSummaryForMenu = (
       outcome: toStringOrNull(snapshot.outcome),
       totalFindings: findings.length,
       bySeverity,
+      byEnterpriseSeverity,
       topFiles: toTopFiles(findings),
     };
   } catch {
@@ -125,6 +176,7 @@ export const readEvidenceSummaryForMenu = (
       outcome: null,
       totalFindings: 0,
       bySeverity: emptySeverityCount(),
+      byEnterpriseSeverity: emptyEnterpriseSeverityCount(),
       topFiles: [],
     };
   }
@@ -158,9 +210,12 @@ export const formatEvidenceSummaryForMenu = (
 
   const stage = summary.stage ?? 'unknown';
   const outcome = summary.outcome ?? 'unknown';
+  const byEnterpriseSeverity =
+    summary.byEnterpriseSeverity ?? toEnterpriseFromLegacy(summary.bySeverity);
   return [
     `Evidence: status=ok stage=${stage} outcome=${outcome} findings=${summary.totalFindings}`,
-    `Severities: critical=${summary.bySeverity.CRITICAL} error=${summary.bySeverity.ERROR} warn=${summary.bySeverity.WARN} info=${summary.bySeverity.INFO}`,
+    `Severities (enterprise): critical=${byEnterpriseSeverity.CRITICAL} high=${byEnterpriseSeverity.HIGH} medium=${byEnterpriseSeverity.MEDIUM} low=${byEnterpriseSeverity.LOW}`,
+    `Severities (legacy): critical=${summary.bySeverity.CRITICAL} error=${summary.bySeverity.ERROR} warn=${summary.bySeverity.WARN} info=${summary.bySeverity.INFO}`,
     formatTopFiles(summary.topFiles),
   ].join('\n');
 };

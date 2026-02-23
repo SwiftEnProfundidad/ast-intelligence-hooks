@@ -118,6 +118,7 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
 
 export async function runPlatformGate(params: {
   policy: GatePolicy;
+  auditMode?: 'gate' | 'engine';
   policyTrace?: ResolvedStagePolicy['trace'];
   scope: GateScope;
   sddShortCircuit?: boolean;
@@ -131,6 +132,8 @@ export async function runPlatformGate(params: {
     ...params.dependencies,
   };
   const repoRoot = git.resolveRepoRoot();
+  const auditMode = params.auditMode ?? 'gate';
+  const shouldShortCircuitSdd = params.sddShortCircuit ?? auditMode !== 'engine';
   let sddDecision:
     | Pick<SddDecision, 'allowed' | 'code' | 'message'>
     | undefined;
@@ -148,7 +151,7 @@ export async function runPlatformGate(params: {
     if (!sddDecision.allowed) {
       process.stdout.write(`[pumuki][sdd] ${sddDecision.code}: ${sddDecision.message}\n`);
       sddBlockingFinding = toSddBlockingFinding(sddDecision);
-      if (params.sddShortCircuit !== false) {
+      if (shouldShortCircuitSdd) {
         const emptyDetectedPlatforms: DetectedPlatforms = {};
         const emptySkillsRuleSet: SkillsRuleSetLoadResult = {
           rules: [],
@@ -159,6 +162,7 @@ export async function runPlatformGate(params: {
         const emptyRuleSet: RuleSet = [];
         dependencies.emitPlatformGateEvidence({
           stage: params.policy.stage,
+          auditMode,
           policyTrace: params.policyTrace,
           findings: [sddBlockingFinding],
           gateOutcome: 'BLOCK',
@@ -282,6 +286,7 @@ export async function runPlatformGate(params: {
 
   dependencies.emitPlatformGateEvidence({
     stage: params.policy.stage,
+    auditMode,
     policyTrace: params.policyTrace,
     findings: effectiveFindings,
     gateOutcome,

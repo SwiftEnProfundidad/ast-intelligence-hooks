@@ -110,6 +110,35 @@ test('uses explicit human intent input as source of truth without incrementing c
   assert.deepEqual(result.ai_gate.human_intent, result.human_intent);
 });
 
+test('defaults snapshot.audit_mode to gate', () => {
+  const result = buildEvidence({
+    stage: 'PRE_COMMIT',
+    findings: [],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.audit_mode, 'gate');
+  assert.deepEqual(result.severity_metrics.by_enterprise_severity, {
+    CRITICAL: 0,
+    HIGH: 0,
+    MEDIUM: 0,
+    LOW: 0,
+  });
+});
+
+test('persists snapshot.audit_mode=engine when provided by runtime', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    auditMode: 'engine',
+    findings: [],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+  });
+
+  assert.equal(result.snapshot.audit_mode, 'engine');
+});
+
 test('respects explicit gate outcome for stage-aware blocking decisions', () => {
   const result = buildEvidence({
     stage: 'PRE_PUSH',
@@ -476,6 +505,12 @@ test('suppresses duplicated iOS heuristic findings shadowed by stronger baseline
   assert.equal(result.consolidation.suppressed[0]?.platform, 'ios');
   assert.equal(result.severity_metrics.by_severity.CRITICAL, 1);
   assert.equal(result.severity_metrics.by_severity.ERROR, 0);
+  assert.deepEqual(result.severity_metrics.by_enterprise_severity, {
+    CRITICAL: 1,
+    HIGH: 0,
+    MEDIUM: 0,
+    LOW: 0,
+  });
 });
 
 test('keeps only strongest iOS finding when mapped baseline severity is lower', () => {
@@ -553,6 +588,12 @@ test('keeps strongest finding in backend explicit-any family and drops weaker du
   assert.equal(result.consolidation.suppressed[0]?.platform, 'backend');
   assert.equal(result.severity_metrics.by_severity.ERROR, 1);
   assert.equal(result.severity_metrics.by_severity.WARN, 0);
+  assert.deepEqual(result.severity_metrics.by_enterprise_severity, {
+    CRITICAL: 0,
+    HIGH: 1,
+    MEDIUM: 0,
+    LOW: 0,
+  });
 });
 
 test('prefers baseline finding on equal severity tie within same semantic family', () => {

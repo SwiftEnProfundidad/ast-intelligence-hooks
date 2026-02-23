@@ -301,11 +301,20 @@ What this shows:
 | Stage | Typical scope | Block threshold | Exit code behavior |
 |---|---|---|---|
 | `PRE_WRITE` | write-time + SDD/OpenSpec policy | `ERROR` (policy-driven) | `0` pass/warn, `1` block/error |
-| `PRE_COMMIT` | staged/repo audit | `CRITICAL` | `0` pass/warn, `1` block/error |
+| `PRE_COMMIT` | staged/repo audit | `ERROR` | `0` pass/warn, `1` block/error |
 | `PRE_PUSH` | upstream/range audit | `ERROR` | `0` pass/warn, `1` block/error |
 | `CI` | baseRef..HEAD audit | `ERROR` | `0` pass/warn, `1` block/error |
 
 For stage runners and wrappers see `integrations/git/stageRunners.ts` and `integrations/git/index.ts`.
+
+### Audit Modes (`gate` vs `engine`)
+
+- `gate` mode: default enforcement behavior, including SDD short-circuit when policy preconditions fail.
+- `engine` mode: full diagnostic behavior, continues rule evaluation even when SDD blocks.
+- Evidence persists mode trace in `snapshot.audit_mode` (`gate` | `engine`).
+- Severity metrics are persisted in both contracts:
+  - legacy: `severity_metrics.by_severity` (`CRITICAL/ERROR/WARN/INFO`)
+  - enterprise: `severity_metrics.by_enterprise_severity` (`CRITICAL/HIGH/MEDIUM/LOW`)
 
 ## Command Reference
 

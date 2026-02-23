@@ -136,7 +136,7 @@ const runMenuAuditGate = async (
 ): Promise<void> => {
   await runPlatformGate({
     ...gateParams,
-    sddShortCircuit: false,
+    auditMode: 'engine',
     dependencies: {
       printGateFindings: () => {},
       evaluatePlatformGateFindings: (params) =>
