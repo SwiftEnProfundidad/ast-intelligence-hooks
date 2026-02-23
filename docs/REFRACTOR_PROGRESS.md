@@ -34,8 +34,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `F014.D.T3` Cierre Git Flow final de fase D (`develop -> main`) y sincronizacion.
 
 ### Fase E — Cierre Estricto Externo
-- 🚧 `F014.E.T1` Revalidacion remota estricta sin admin cuando Actions/Snyk ejecuten jobs reales.
-- ⏳ `F014.E.T2` Cierre definitivo de `P-ADHOC-LINES-014` con checks criticos en verde remoto.
+- ✅ `F014.E.T1` Revalidacion remota estricta ejecutada hasta limite externo (billing), con promote admin `PR #378`.
+- 🚧 `F014.E.T2` Cierre definitivo de `P-ADHOC-LINES-014` en modo administrativo con riesgo externo documentado.
 
 ## Estado actual
 - ✅ `HYG.T1` Inventario completo de markdowns, artefactos y carpetas huérfanas.
@@ -123,7 +123,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Ejecutar `F014.E.T1` para revalidacion remota estricta sin admin en cuanto se desbloqueen dependencias externas.
+- 🚧 Ejecutar `F014.E.T2` y publicar cierre administrativo final del ciclo 014 con riesgo externo explícito.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -225,7 +225,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - índice actualizado: `docs/validation/README.md`
   - ✅ cierre Git Flow final de fase D ejecutado:
     - promote final `develop -> main` realizado para consolidar Fase D en ramas protegidas (`PR #377`).
-  - 🚧 fase E revalidación estricta en curso:
+  - ✅ fase E revalidación estricta ejecutada con límite externo:
     - ✅ `F014.E.T1.a` refresco de evidencia remota de PR de control completado.
     - ✅ `F014.E.T1.c` promote administrativo ejecutado por instrucción de usuario:
       - PR `#378` merged (`develop -> main`) por bloqueo externo de billing/checks.
@@ -246,7 +246,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-ci-job.json`
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-android-job.json`
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-package-minimal-job-v2.json`
-    - 🚧 `F014.E.T1.b` en curso: mantener fase E en seguimiento hasta ejecución remota real (sin patrón `runner_id=0`) cuando billing externo esté resuelto.
+    - ✅ `F014.E.T1.b` seguimiento de evidencia remota consolidado: se mantiene patrón externo (`runner_id=0`) por dependencia de billing.
   - ✅ cierre Git Flow de lote C ejecutado end-to-end:
     - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
     - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
