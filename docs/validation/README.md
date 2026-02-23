@@ -27,6 +27,7 @@ Keep these as source-of-truth operational references:
 - `ci-sanitization-cycle-014-incremental-closure.md`
 - `ci-sanitization-cycle-014-administrative-closure.md`
 - `ci-sanitization-cycle-014-external-follow-up.md`
+- `ci-sanitization-cycle-014-local-ci-closure.md`
 - `post-merge-detection-audit-report.md`
 - `legacy-parity-gap-analysis.md`
 
