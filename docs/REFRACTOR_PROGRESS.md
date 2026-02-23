@@ -226,6 +226,7 @@ Estado operativo consolidado del repositorio y del ciclo activo.
 - ✅ Ciclo `ENTERPRISE_DETECTION_RECOVERY` cerrado.
 
 ## Siguiente paso operativo
-- ⏳ Publicar ramas (`develop` y `main`) al remoto y abrir PRs si se requiere trazabilidad en GitHub.
+- ✅ Ramas publicadas al remoto (`feature/enterprise-detection-recovery`, `develop`, `main`).
+- ⏳ Opcional: abrir PRs retrospectivos si se requiere trazabilidad adicional en GitHub.
 
 Estado final del tracker: sin tareas en `🚧` para el ciclo activo (cerrado).
