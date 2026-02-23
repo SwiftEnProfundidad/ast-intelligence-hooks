@@ -29,8 +29,8 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 
 ### Fase C - Cierre Git Flow por lote
 - ✅ `C018.C.T1` Commit atomico de lote con evidencia local.
-- 🚧 `C018.C.T2` PR `feature -> develop` y merge.
-- ⏳ `C018.C.T3` PR `develop -> main`, merge y sincronizacion de ramas protegidas.
+- ✅ `C018.C.T2` PR `feature -> develop` y merge.
+- 🚧 `C018.C.T3` PR `develop -> main`, merge y sincronizacion de ramas protegidas.
 
 ### Fase D - Verificacion final y control operativo
 - ⏳ `C018.D.T1` Revalidacion funcional/visual del lote en local.
@@ -38,4 +38,4 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 - ⏳ `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
 
 ## Siguiente tarea activa
-- `C018.C.T2` PR `feature -> develop` y merge.
+- `C018.C.T3` PR `develop -> main`, merge y sincronizacion de ramas protegidas.

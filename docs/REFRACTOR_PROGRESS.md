@@ -377,4 +377,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
       - `.audit_tmp/c018-c1/stagePolicies.out`
       - `.audit_tmp/c018-c1/stagePolicies-promotions-third-platform-heuristics.out`
       - `.audit_tmp/c018-c1/typecheck.out`
-  - 🚧 `C018.C.T2` En curso: abrir/cerrar PR `feature -> develop` con merge del lote C018.
+  - ✅ `C018.C.T2` PR `feature -> develop` cerrada con merge del lote C018:
+    - PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/396`
+    - rama origen: `feature/p-adhoc-lines-018-cycle-kickoff`
+    - rama destino: `develop`
+  - 🚧 `C018.C.T3` En curso: promover `develop -> main` y sincronizar ramas protegidas.
