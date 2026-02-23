@@ -225,6 +225,8 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - índice actualizado: `docs/validation/README.md`
   - ✅ cierre Git Flow final de fase D ejecutado:
     - promote final `develop -> main` realizado para consolidar Fase D en ramas protegidas (`PR #377`).
+  - 🚧 fase E revalidación estricta en curso:
+    - apertura de PR de control `develop -> main` sin admin para verificar ejecución remota real de checks.
   - ✅ cierre Git Flow de lote C ejecutado end-to-end:
     - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
     - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
