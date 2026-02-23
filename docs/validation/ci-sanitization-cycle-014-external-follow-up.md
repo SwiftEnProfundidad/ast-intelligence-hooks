@@ -66,3 +66,28 @@ Evidencia:
 - `.audit_tmp/p-adhoc-lines-015-pr382-ci-job.json`
 - `.audit_tmp/p-adhoc-lines-015-pr382-android-job.json`
 - `.audit_tmp/p-adhoc-lines-015-pr382-package-minimal-job.json`
+
+## Sondeo #2 de seguimiento externo (2026-02-23)
+
+PR usada para muestra más reciente:
+
+- `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/383`
+
+Resultado agregado:
+
+- `37/37` checks no verdes.
+- `security/snyk (swiftenprofundidad)` continúa en `ERROR`.
+
+Muestreo API de jobs (dominios distintos):
+
+- CI (`job 64557374543`) -> `runner_id=0`, `steps=[]`
+- Android gate (`job 64557374375`) -> `runner_id=0`, `steps=[]`
+- package-smoke minimal (`job 64557365834`) -> `runner_id=0`, `steps=[]`
+
+Evidencia:
+
+- `.audit_tmp/p-adhoc-lines-015-pr-383-status.json`
+- `.audit_tmp/p-adhoc-lines-015-pr-383-checks.json`
+- `.audit_tmp/p-adhoc-lines-015-pr383-ci-job.json`
+- `.audit_tmp/p-adhoc-lines-015-pr383-android-job.json`
+- `.audit_tmp/p-adhoc-lines-015-pr383-package-minimal-job.json`
