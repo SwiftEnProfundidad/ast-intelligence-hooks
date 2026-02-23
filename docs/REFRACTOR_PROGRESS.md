@@ -168,9 +168,13 @@ Estado operativo activo del repositorio.
         - `.audit_tmp/p-adhoc-lines-014-lotC-ios-gate.out`
         - `.audit_tmp/p-adhoc-lines-014-lotC-android-gate.out`
         - `.audit_tmp/p-adhoc-lines-014-lotC-backend-gate.out`
-        - `.audit_tmp/p-adhoc-lines-014-lotC-frontend-gate.out`
-        - `.audit_tmp/p-adhoc-lines-014-lotC-gates-exit-codes.txt`
-        - `.audit_tmp/p-adhoc-lines-014-lotC-gates-bypass-exit-codes.txt`
+      - `.audit_tmp/p-adhoc-lines-014-lotC-frontend-gate.out`
+      - `.audit_tmp/p-adhoc-lines-014-lotC-gates-exit-codes.txt`
+      - `.audit_tmp/p-adhoc-lines-014-lotC-gates-bypass-exit-codes.txt`
+  - ✅ cierre Git Flow de lote C ejecutado end-to-end:
+    - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
+    - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
+    - sincronización final de ramas tras lote C: `origin/main...origin/develop = 0/0`.
   - ✅ cierre Git Flow de lote B ejecutado end-to-end:
     - PR `#367` (`feature/p-adhoc-lines-014-lotB-quality-validation` -> `develop`) merged.
     - PR `#368` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
