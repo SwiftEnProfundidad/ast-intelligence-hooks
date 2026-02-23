@@ -1,5 +1,5 @@
-import { writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import {
   buildLegacyParityReport,
   formatLegacyParityReportMarkdown,
@@ -15,7 +15,7 @@ type Args = {
 const parseArgs = (argv: ReadonlyArray<string>): Args => {
   let legacyPath = '';
   let enterprisePath = '';
-  let outputPath = 'docs/LEGACY_PARITY_REPORT.md';
+  let outputPath = '.audit-reports/legacy-parity-report.md';
   let strictScope = true;
 
   for (const arg of argv) {
@@ -59,6 +59,7 @@ const main = (): void => {
   });
   const markdown = formatLegacyParityReportMarkdown(report);
   const outputPath = resolve(args.outputPath);
+  mkdirSync(dirname(outputPath), { recursive: true });
   writeFileSync(outputPath, `${markdown}\n`, 'utf8');
   process.stdout.write(
     `[pumuki][legacy-parity] dominance=${report.dominance} compared_rules=${report.totals.comparedRules} output=${outputPath}\n`
