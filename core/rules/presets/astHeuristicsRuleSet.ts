@@ -11,6 +11,7 @@ import { fsPromisesRules } from './heuristics/fsPromises';
 import { fsCallbacksRules } from './heuristics/fsCallbacks';
 import { iosRules } from './heuristics/ios';
 import { androidRules } from './heuristics/android';
+import { commonLegacyRules } from './heuristics/commonLegacy';
 
 const heuristicsRuleGroups: RuleSet[] = [
   typescriptRules,
@@ -23,6 +24,7 @@ const heuristicsRuleGroups: RuleSet[] = [
   fsCallbacksRules,
   iosRules,
   androidRules,
+  commonLegacyRules,
 ];
 
 export const astHeuristicsRuleSet: RuleSet = heuristicsRuleGroups.reduce(

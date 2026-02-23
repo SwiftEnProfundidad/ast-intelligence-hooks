@@ -122,6 +122,48 @@ const isKotlinTestPath = (path: string): boolean => {
   );
 };
 
+const isExcludedProjectScanPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/').toLowerCase();
+  return (
+    normalized.includes('/node_modules/') ||
+    normalized.includes('/dist/') ||
+    normalized.includes('/build/') ||
+    normalized.includes('/coverage/') ||
+    normalized.includes('/.git/')
+  );
+};
+
+const isTypeScriptNetworkResiliencePath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/').toLowerCase();
+  if (isExcludedProjectScanPath(normalized)) {
+    return false;
+  }
+  return !/\/(infrastructure\/ast|analyzers?|detectors?|scanner)\//i.test(normalized);
+};
+
+const isWorkflowImplementationPath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/');
+  const lower = normalized.toLowerCase();
+  if (isExcludedProjectScanPath(lower)) {
+    return false;
+  }
+  if (!/\.(swift|kt|kts|ts|tsx|js|jsx)$/i.test(normalized)) {
+    return false;
+  }
+  if (isTestPath(normalized) || isSwiftTestPath(normalized) || isKotlinTestPath(normalized)) {
+    return false;
+  }
+  return true;
+};
+
+const isWorkflowFeaturePath = (path: string): boolean => {
+  const normalized = path.replace(/\\/g, '/').toLowerCase();
+  if (isExcludedProjectScanPath(normalized)) {
+    return false;
+  }
+  return normalized.endsWith('.feature');
+};
+
 const asFileContentFact = (fact: Fact): FileContentFact | undefined => {
   if (fact.kind !== 'FileContent') {
     return undefined;
@@ -172,6 +214,7 @@ type ASTDetectorRegistryEntry = {
 const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   // TypeScript
   { detect: TS.hasEmptyCatchClause, ruleId: 'heuristics.ts.empty-catch.ast', code: 'HEURISTICS_EMPTY_CATCH_AST', message: 'AST heuristic detected an empty catch block.' },
+  { detect: TS.hasEmptyCatchClause, ruleId: 'common.error.empty_catch', code: 'COMMON_ERROR_EMPTY_CATCH_AST', message: 'AST heuristic detected empty catch block without handling.' },
   { detect: TS.hasExplicitAnyType, ruleId: 'heuristics.ts.explicit-any.ast', code: 'HEURISTICS_EXPLICIT_ANY_AST', message: 'AST heuristic detected explicit any usage.' },
   { detect: TS.hasConsoleLogCall, ruleId: 'heuristics.ts.console-log.ast', code: 'HEURISTICS_CONSOLE_LOG_AST', message: 'AST heuristic detected console.log usage.' },
   { detect: TS.hasConsoleErrorCall, ruleId: 'heuristics.ts.console-error.ast', code: 'HEURISTICS_CONSOLE_ERROR_AST', message: 'AST heuristic detected console.error usage.' },
@@ -190,6 +233,10 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: TS.hasFrameworkDependencyImport, ruleId: 'heuristics.ts.solid.dip.framework-import.ast', code: 'HEURISTICS_SOLID_DIP_FRAMEWORK_IMPORT_AST', message: 'AST heuristic detected DIP risk: framework dependency imported in domain/application code.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasConcreteDependencyInstantiation, ruleId: 'heuristics.ts.solid.dip.concrete-instantiation.ast', code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST', message: 'AST heuristic detected DIP risk: direct instantiation of concrete framework dependency.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasLargeClassDeclaration, ruleId: 'heuristics.ts.god-class-large-class.ast', code: 'HEURISTICS_GOD_CLASS_LARGE_CLASS_AST', message: 'AST heuristic detected God Class candidate (>500 lines in a single class declaration).' },
+  { detect: TS.hasRecordStringUnknownType, ruleId: 'common.types.record_unknown_requires_type', code: 'COMMON_TYPES_RECORD_UNKNOWN_REQUIRES_TYPE_AST', message: 'AST heuristic detected Record<string, unknown> without explicit value union.' },
+  { detect: TS.hasUnknownTypeAssertion, ruleId: 'common.types.unknown_without_guard', code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST', message: 'AST heuristic detected unknown assertion without explicit guard evidence.' },
+  { detect: TS.hasUndefinedInBaseTypeUnion, ruleId: 'common.types.undefined_in_base_type', code: 'COMMON_TYPES_UNDEFINED_IN_BASE_TYPE_AST', message: 'AST heuristic detected undefined inside base-type unions.' },
+  { detect: TS.hasNetworkCallWithoutErrorHandling, ruleId: 'common.network.missing_error_handling', code: 'COMMON_NETWORK_MISSING_ERROR_HANDLING_AST', message: 'AST heuristic detected network calls without explicit error handling.', pathCheck: isTypeScriptNetworkResiliencePath },
 
   // Process
   { detect: Process.hasProcessExitCall, ruleId: 'heuristics.ts.process-exit.ast', code: 'HEURISTICS_PROCESS_EXIT_AST', message: 'AST heuristic detected process.exit usage.' },
@@ -378,6 +425,52 @@ const textDetectorRegistry: ReadonlyArray<TextDetectorRegistryEntry> = [
   { platform: 'android', pathCheck: isAndroidKotlinPath, excludePaths: [isKotlinTestPath], detect: TextAndroid.hasKotlinRunBlockingUsage, ruleId: 'heuristics.android.run-blocking.ast', code: 'HEURISTICS_ANDROID_RUN_BLOCKING_AST', message: 'AST heuristic detected runBlocking usage in production Kotlin code.' },
 ];
 
+const extractWorkflowHeuristicFacts = (
+  params: HeuristicExtractionParams
+): ReadonlyArray<ExtractedHeuristicFact> => {
+  const fileFacts = params.facts
+    .map((fact) => asFileContentFact(fact))
+    .filter((fact): fact is FileContentFact => Boolean(fact));
+
+  if (fileFacts.length === 0) {
+    return [];
+  }
+
+  const featureFiles = fileFacts.filter((fact) => isWorkflowFeaturePath(fact.path));
+  const implementationFiles = fileFacts.filter((fact) =>
+    isWorkflowImplementationPath(fact.path)
+  );
+  const workflowFacts: ExtractedHeuristicFact[] = [];
+
+  if (implementationFiles.length > 50 && featureFiles.length === 0) {
+    workflowFacts.push(
+      createHeuristicFact({
+        ruleId: 'workflow.bdd.missing_feature_files',
+        code: 'WORKFLOW_BDD_MISSING_FEATURE_FILES_AST',
+        message:
+          'Project has implementation files without feature files (.feature). BDD -> TDD -> Implementation flow is not being enforced.',
+        filePath: 'PROJECT_ROOT',
+        severity: 'CRITICAL',
+      })
+    );
+  }
+
+  if (implementationFiles.length > 20 && featureFiles.length < 3) {
+    workflowFacts.push(
+      createHeuristicFact({
+        ruleId: 'workflow.bdd.insufficient_features',
+        code: 'WORKFLOW_BDD_INSUFFICIENT_FEATURES_AST',
+        message:
+          'Feature coverage is insufficient for implementation volume. Increase BDD feature files before adding more implementation code.',
+        filePath: 'PROJECT_ROOT',
+        severity: 'ERROR',
+      })
+    );
+  }
+
+  return workflowFacts;
+};
+
 export const extractHeuristicFacts = (
   params: HeuristicExtractionParams
 ): ReadonlyArray<ExtractedHeuristicFact> => {
@@ -451,6 +544,8 @@ export const extractHeuristicFacts = (
       continue;
     }
   }
+
+  heuristicFacts.push(...extractWorkflowHeuristicFacts(params));
 
   return heuristicFacts;
 };

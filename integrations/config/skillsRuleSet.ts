@@ -192,8 +192,30 @@ const resolvePlatformHeuristicPrefixes = (params: {
       observedFilePaths: params.observedFilePaths,
     });
   }
+  if (!params.observedFilePaths || params.observedFilePaths.length === 0) {
+    return prefixes;
+  }
 
-  return prefixes;
+  const normalizedObservedPaths = params.observedFilePaths.map((path) =>
+    normalizeObservedPath(path)
+  );
+  const hasObservedFilesUnderDefaultPrefixes = normalizedObservedPaths.some((path) =>
+    prefixes.some((prefix) => path.startsWith(prefix))
+  );
+
+  if (hasObservedFilesUnderDefaultPrefixes) {
+    return prefixes;
+  }
+
+  const observedPrefixes = resolveObservedPlatformPrefixes({
+    platform: params.platform,
+    observedFilePaths: params.observedFilePaths,
+  });
+  if (observedPrefixes.length > 0) {
+    return observedPrefixes;
+  }
+
+  return [];
 };
 
 const resolveScopeForPlatform = (

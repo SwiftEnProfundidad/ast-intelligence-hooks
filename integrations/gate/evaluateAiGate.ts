@@ -3,6 +3,7 @@ import { readEvidenceResult } from '../evidence/readEvidence';
 import { captureRepoState } from '../evidence/repoState';
 import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
+import { realpathSync } from 'node:fs';
 import type { SkillsStage } from '../config/skillsLock';
 
 export type AiGateStage = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
@@ -78,8 +79,134 @@ const toTimestampAgeSeconds = (
   return raw >= 0 ? raw : 0;
 };
 
+const isTimestampFuture = (timestamp: string, nowMs: number): boolean => {
+  const parsed = Date.parse(timestamp);
+  if (!Number.isFinite(parsed)) {
+    return false;
+  }
+  return parsed > nowMs;
+};
+
+const toCanonicalPath = (value: string): string => {
+  const normalized = value.replace(/\\/g, '/').toLowerCase();
+  try {
+    return realpathSync(value).replace(/\\/g, '/').toLowerCase();
+  } catch {
+    return normalized;
+  }
+};
+
+const collectPreWriteCoherenceViolations = (params: {
+  evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
+  repoRoot: string;
+  repoState: RepoState;
+  nowMs: number;
+}): AiGateViolation[] => {
+  const violations: AiGateViolation[] = [];
+  const evidenceRepoRoot = params.evidence.repo_state?.repo_root;
+  if (
+    typeof evidenceRepoRoot === 'string' &&
+    evidenceRepoRoot.trim().length > 0 &&
+    toCanonicalPath(evidenceRepoRoot) !== toCanonicalPath(params.repoRoot)
+  ) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_REPO_ROOT_MISMATCH',
+        `Evidence repo root mismatch (${evidenceRepoRoot} != ${params.repoRoot}).`
+      )
+    );
+  }
+
+  const evidenceBranch = params.evidence.repo_state?.git?.branch;
+  const currentBranch = params.repoState.git.branch;
+  if (
+    typeof evidenceBranch === 'string' &&
+    evidenceBranch.trim().length > 0 &&
+    typeof currentBranch === 'string' &&
+    currentBranch.trim().length > 0 &&
+    evidenceBranch !== currentBranch
+  ) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_BRANCH_MISMATCH',
+        `Evidence branch mismatch (${evidenceBranch} != ${currentBranch}).`
+      )
+    );
+  }
+
+  if (params.evidence.severity_metrics.gate_status !== params.evidence.ai_gate.status) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_GATE_STATUS_INCOHERENT',
+        `Evidence gate status mismatch (severity_metrics=${params.evidence.severity_metrics.gate_status} ai_gate=${params.evidence.ai_gate.status}).`
+      )
+    );
+  }
+
+  if (params.evidence.ai_gate.status === 'BLOCKED' && params.evidence.snapshot.outcome !== 'BLOCK') {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_OUTCOME_INCOHERENT',
+        `Evidence outcome mismatch (ai_gate=BLOCKED snapshot.outcome=${params.evidence.snapshot.outcome}).`
+      )
+    );
+  }
+
+  const coverage = params.evidence.snapshot.rules_coverage;
+  if (!coverage) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_RULES_COVERAGE_MISSING',
+        'Evidence rules_coverage is missing for PRE_WRITE validation.'
+      )
+    );
+  } else {
+    if (coverage.stage !== params.evidence.snapshot.stage) {
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_RULES_COVERAGE_STAGE_MISMATCH',
+          `rules_coverage stage mismatch (${coverage.stage} != ${params.evidence.snapshot.stage}).`
+        )
+      );
+    }
+    if (coverage.counts.unevaluated > 0 || coverage.coverage_ratio < 1) {
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_RULES_COVERAGE_INCOMPLETE',
+          `rules_coverage incomplete (unevaluated=${coverage.counts.unevaluated}, ratio=${coverage.coverage_ratio}).`
+        )
+      );
+    }
+    const unsupportedAutoCount =
+      coverage.counts.unsupported_auto
+      ?? coverage.unsupported_auto_rule_ids?.length
+      ?? 0;
+    if (unsupportedAutoCount > 0) {
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_UNSUPPORTED_AUTO_RULES',
+          `rules_coverage has unsupported auto rules (${unsupportedAutoCount}).`
+        )
+      );
+    }
+  }
+
+  if (isTimestampFuture(params.evidence.timestamp, params.nowMs)) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_TIMESTAMP_FUTURE',
+        'Evidence timestamp is in the future.'
+      )
+    );
+  }
+
+  return violations;
+};
+
 const collectEvidenceViolations = (
   result: EvidenceReadResult,
+  repoRoot: string,
+  repoState: RepoState,
   stage: AiGateStage,
   nowMs: number,
   maxAgeSecondsByStage: Readonly<Record<AiGateStage, number>>
@@ -119,6 +246,17 @@ const collectEvidenceViolations = (
 
   if (result.evidence.ai_gate.status === 'BLOCKED') {
     violations.push(toErrorViolation('EVIDENCE_GATE_BLOCKED', 'Evidence AI gate status is BLOCKED.'));
+  }
+
+  if (stage === 'PRE_WRITE') {
+    violations.push(
+      ...collectPreWriteCoherenceViolations({
+        evidence: result.evidence,
+        repoRoot,
+        repoState,
+        nowMs,
+      })
+    );
   }
 
   return { violations, ageSeconds };
@@ -175,6 +313,8 @@ export const evaluateAiGate = (
   );
   const evidenceAssessment = collectEvidenceViolations(
     evidenceResult,
+    params.repoRoot,
+    repoState,
     params.stage,
     nowMs,
     maxAgeSecondsByStage

@@ -33,6 +33,7 @@ test('detects frontend TypeScript heuristic findings in production path', () => 
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.deepEqual(toRuleIds(findings), [
+    'common.error.empty_catch',
     'heuristics.ts.buffer-alloc-unsafe-slow.ast',
     'heuristics.ts.buffer-alloc-unsafe.ast',
     'heuristics.ts.child-process-exec-file-sync.ast',
@@ -206,6 +207,7 @@ test('detects backend TypeScript heuristic findings in production path', () => {
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
   assert.deepEqual(toRuleIds(findings), [
+    'common.error.empty_catch',
     'heuristics.ts.buffer-alloc-unsafe-slow.ast',
     'heuristics.ts.buffer-alloc-unsafe.ast',
     'heuristics.ts.child-process-exec-file-sync.ast',
@@ -523,6 +525,95 @@ test('detects TypeScript heuristics outside apps scope when PUMUKI_HEURISTICS_TS
   }
 });
 
+test('detects legacy common type/network families from AST facts', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/backend/src/application/types/contract.ts',
+        [
+          'type Payload = Record<string, unknown>',
+          'type Base = string | undefined',
+          'const parsed = input as unknown',
+          'const response = axios.get("/health")',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'common.types.record_unknown_requires_type'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'common.types.unknown_without_guard'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'common.types.undefined_in_base_type'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'common.network.missing_error_handling'),
+    true
+  );
+});
+
+test('maps empty catch heuristic to legacy common.error.empty_catch finding', () => {
+  const extracted = extractHeuristicFacts({
+    facts: [
+      fileContentFact(
+        'apps/frontend/src/feature/catch.ts',
+        [
+          'async function loadData() {',
+          '  try {',
+          '    await fetch("/api/data");',
+          '  } catch {}',
+          '}',
+        ].join('\n')
+      ),
+    ],
+    detectedPlatforms: {
+      frontend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'heuristics.ts.empty-catch.ast'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'common.error.empty_catch'),
+    true
+  );
+});
+
+test('emits workflow BDD findings for repos with high implementation volume and low feature coverage', () => {
+  const implementationFacts: Fact[] = Array.from({ length: 55 }, (_, index) =>
+    fileContentFact(`apps/backend/src/module-${index}.ts`, `export const value${index} = ${index};`)
+  );
+  const extracted = extractHeuristicFacts({
+    facts: implementationFacts,
+    detectedPlatforms: {
+      backend: { detected: true },
+    },
+  });
+
+  const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'workflow.bdd.missing_feature_files'),
+    true
+  );
+  assert.equal(
+    findings.some((finding) => finding.ruleId === 'workflow.bdd.insufficient_features'),
+    true
+  );
+});
+
 test('extracts typed heuristic facts with expected metadata', () => {
   const extracted = extractHeuristicFacts({
     facts: [
@@ -536,7 +627,7 @@ test('extracts typed heuristic facts with expected metadata', () => {
     },
   });
 
-  assert.equal(extracted.length, 149);
+  assert.equal(extracted.length, 150);
   assert.equal(extracted.every((fact) => fact.kind === 'Heuristic'), true);
   assert.equal(extracted.every((fact) => fact.source === 'heuristics:ast'), true);
 });

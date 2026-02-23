@@ -156,6 +156,43 @@ test('GitService.getRepoFacts carga snapshot del working tree filtrado por exten
   });
 });
 
+test('GitService.getRepoFacts ignora paths trackeados que ya no existen en working tree', async () => {
+  await withTempDir('pumuki-git-repo-facts-missing-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, 'src'), { recursive: true });
+    writeFileSync(join(repoRoot, 'src', 'present.ts'), 'const present = true;', 'utf8');
+    const service = new GitService();
+    const mutableService = service as GitService & {
+      runGit(args: ReadonlyArray<string>, cwd?: string): string;
+      resolveRepoRoot(): string;
+    };
+    mutableService.runGit = (args: ReadonlyArray<string>): string => {
+      const command = args.join(' ');
+      if (command === 'ls-files') {
+        return ['src/present.ts', 'src/missing.ts'].join('\n');
+      }
+      throw new Error(`comando git no esperado: ${command}`);
+    };
+    mutableService.resolveRepoRoot = () => repoRoot;
+
+    const result = service.getRepoFacts(['.ts']);
+
+    assert.deepEqual(result, [
+      {
+        kind: 'FileChange',
+        path: 'src/present.ts',
+        changeType: 'modified',
+        source: 'git:repo:working-tree',
+      },
+      {
+        kind: 'FileContent',
+        path: 'src/present.ts',
+        content: 'const present = true;',
+        source: 'git:repo:working-tree',
+      },
+    ]);
+  });
+});
+
 test('GitService.getRepoAndStagedFacts carga snapshot del index', () => {
   const service = new GitService();
   const calls: string[] = [];

@@ -432,6 +432,63 @@ test('falls back to unscoped heuristic conditions when platform folders are not 
   }));
 });
 
+test('falls back to unscoped heuristic conditions when platform folders exist but observed paths are outside apps/*', async () => {
+  await withCoreSkillsDisabled(async () =>
+    withTempDir('pumuki-skills-ruleset-empty-platform-tree-', async (tempRoot) => {
+      mkdirSync(join(tempRoot, 'apps/backend'), { recursive: true });
+
+      const lock = {
+        version: '1.0',
+        compilerVersion: '1.0.0',
+        generatedAt: '2026-02-07T23:15:00.000Z',
+        bundles: [
+          {
+            name: 'backend-guidelines',
+            version: '1.0.0',
+            source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+            hash: 'a'.repeat(64),
+            rules: [
+              {
+                id: 'skills.backend.no-empty-catch',
+                description: 'Disallow empty catch blocks in backend runtime code.',
+                severity: 'CRITICAL',
+                platform: 'backend',
+                sourceSkill: 'backend-guidelines',
+                sourcePath: 'docs/codex-skills/windsurf-rules-backend.md',
+                locked: true,
+              },
+            ],
+          },
+        ],
+      } as const;
+
+      writeFileSync(join(tempRoot, 'skills.lock.json'), JSON.stringify(lock, null, 2));
+
+      const detectedPlatforms: DetectedPlatforms = {
+        backend: { detected: true, confidence: 'HIGH' },
+      };
+      const observedPaths = [
+        'integrations/git/runPlatformGate.ts',
+        'scripts/framework-menu-gate-lib.ts',
+      ];
+
+      const result = (
+        loadSkillsRuleSetForStage as unknown as (
+          stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI',
+          repoRoot?: string,
+          detectedPlatforms?: DetectedPlatforms,
+          observedFilePaths?: ReadonlyArray<string>
+        ) => ReturnType<typeof loadSkillsRuleSetForStage>
+      )('PRE_COMMIT', tempRoot, detectedPlatforms, observedPaths);
+
+      const backendRule = result.rules.find((rule) => rule.id === 'skills.backend.no-empty-catch');
+      assert.ok(backendRule);
+      assert.equal(backendRule.when.kind, 'Heuristic');
+      assert.equal(backendRule.when.where?.filePathPrefix, undefined);
+    })
+  );
+});
+
 test('filters platform-specific rules using detectedPlatforms from gate evaluation', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-ruleset-detected-platforms-', async (tempRoot) => {
     const lock = {
