@@ -38,7 +38,7 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 - ✅ `C018.D.T3` Cerrar ciclo o dejar siguiente tarea explicitamente en construccion.
 
 ### Post-Cierre (operativo)
-- 🚧 `C018.POST.T1` Standby operativo hasta apertura del siguiente ciclo.
+- ✅ `C018.POST.T1` Standby operativo atendido; se abre ciclo `019`.
 
 ## Siguiente tarea activa
-- `C018.POST.T1` Standby operativo hasta apertura del siguiente ciclo.
+- `C019.A.T2` en `docs/ENTERPRISE_EXECUTION_CYCLE_019.md`.
