@@ -29,6 +29,7 @@ type BuildFindingInput = Finding & {
 
 export type BuildEvidenceParams = {
   stage: GateStage;
+  auditMode?: 'gate' | 'engine';
   findings: ReadonlyArray<BuildFindingInput>;
   gateOutcome?: GateOutcome;
   filesScanned?: number;
@@ -481,6 +482,17 @@ const bySeverity = (findings: ReadonlyArray<SnapshotFinding>): Record<Severity, 
   return counts;
 };
 
+const toEnterpriseBySeverity = (
+  severity: Readonly<Record<Severity, number>>
+): Record<'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW', number> => {
+  return {
+    CRITICAL: severity.CRITICAL,
+    HIGH: severity.ERROR,
+    MEDIUM: severity.WARN,
+    LOW: severity.INFO,
+  };
+};
+
 const toCompatibilityViolations = (
   findings: ReadonlyArray<SnapshotFinding>
 ): CompatibilityViolation[] => {
@@ -612,6 +624,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
     timestamp: now,
     snapshot: {
       stage: params.stage,
+      audit_mode: params.auditMode ?? 'gate',
       outcome,
       files_scanned: normalizedFilesScanned,
       files_affected: normalizedFilesAffected,
@@ -643,6 +656,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       gate_status: gateStatus,
       total_violations: normalizedFindings.length,
       by_severity: severity,
+      by_enterprise_severity: toEnterpriseBySeverity(severity),
     },
     sdd_metrics: params.sddMetrics
       ? {

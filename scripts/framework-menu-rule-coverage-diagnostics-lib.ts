@@ -2,7 +2,7 @@ import type { Fact } from '../core/facts/Fact';
 import type { GateStage } from '../core/gate/GateStage';
 import type { Severity } from '../core/rules/Severity';
 import { resolvePolicyForStage } from '../integrations/gate/stagePolicies';
-import { evaluatePlatformGateFindings } from '../integrations/git/runPlatformGateEvaluation';
+import { evaluatePlatformGateFindings as evaluatePlatformGateFindingsBase } from '../integrations/git/runPlatformGateEvaluation';
 import { resolveFactsForGateScope } from '../integrations/git/runPlatformGateFacts';
 import { GitService } from '../integrations/git/GitService';
 import { evaluateSddPolicy } from '../integrations/sdd/policy';
@@ -25,6 +25,12 @@ type RuleCoverageStageDiagnostics = {
   unmatchedRules: number;
   findingsTotal: number;
   findingsBySeverity: Record<Severity, number>;
+  findingsByEnterpriseSeverity: {
+    CRITICAL: number;
+    HIGH: number;
+    MEDIUM: number;
+    LOW: number;
+  };
   evaluatedRuleIds: ReadonlyArray<string>;
   matchedRuleIds: ReadonlyArray<string>;
   unmatchedRuleIds: ReadonlyArray<string>;
@@ -43,7 +49,7 @@ export type RuleCoverageDiagnosticsReport = {
 type RuleCoverageDiagnosticsDependencies = {
   resolvePolicyForStage: typeof resolvePolicyForStage;
   resolveFactsForGateScope: typeof resolveFactsForGateScope;
-  evaluatePlatformGateFindings: typeof evaluatePlatformGateFindings;
+  evaluatePlatformGateFindings: typeof evaluatePlatformGateFindingsBase;
   evaluateSddPolicy: typeof evaluateSddPolicy;
   createGitService: () => Pick<GitService, 'resolveRepoRoot'>;
 };
@@ -51,7 +57,13 @@ type RuleCoverageDiagnosticsDependencies = {
 const defaultDependencies: RuleCoverageDiagnosticsDependencies = {
   resolvePolicyForStage,
   resolveFactsForGateScope,
-  evaluatePlatformGateFindings,
+  evaluatePlatformGateFindings: (params) =>
+    evaluatePlatformGateFindingsBase(params, {
+      loadHeuristicsConfig: () => ({
+        astSemanticEnabled: true,
+        typeScriptScope: 'all',
+      }),
+    }),
   evaluateSddPolicy,
   createGitService: () => new GitService(),
 };
@@ -69,6 +81,17 @@ const bySeverity = (findings: ReadonlyArray<{ severity: Severity }>): Record<Sev
     output[finding.severity] += 1;
   }
   return output;
+};
+
+const toEnterpriseBySeverity = (
+  severity: Readonly<Record<Severity, number>>
+): { CRITICAL: number; HIGH: number; MEDIUM: number; LOW: number } => {
+  return {
+    CRITICAL: severity.CRITICAL,
+    HIGH: severity.ERROR,
+    MEDIUM: severity.WARN,
+    LOW: severity.INFO,
+  };
 };
 
 export const buildRuleCoverageDiagnostics = async (params?: {
@@ -101,6 +124,7 @@ export const buildRuleCoverageDiagnostics = async (params?: {
       stage: evaluationStage,
       repoRoot,
     });
+    const findingsBySeverity = bySeverity(evaluation.findings);
 
     diagnostics.push({
       stage,
@@ -119,7 +143,8 @@ export const buildRuleCoverageDiagnostics = async (params?: {
       matchedRules: evaluation.coverage.matchedRules,
       unmatchedRules: evaluation.coverage.unmatchedRules,
       findingsTotal: evaluation.findings.length,
-      findingsBySeverity: bySeverity(evaluation.findings),
+      findingsBySeverity,
+      findingsByEnterpriseSeverity: toEnterpriseBySeverity(findingsBySeverity),
       evaluatedRuleIds: evaluation.coverage.evaluatedRuleIds,
       matchedRuleIds: evaluation.coverage.matchedRuleIds,
       unmatchedRuleIds: evaluation.coverage.unmatchedRuleIds,
@@ -162,7 +187,10 @@ export const formatRuleCoverageDiagnostics = (
       `matched_rules=${stage.matchedRules} unmatched_rules=${stage.unmatchedRules} findings_total=${stage.findingsTotal}`
     );
     lines.push(
-      `findings_by_severity=CRITICAL:${stage.findingsBySeverity.CRITICAL}|ERROR:${stage.findingsBySeverity.ERROR}|WARN:${stage.findingsBySeverity.WARN}|INFO:${stage.findingsBySeverity.INFO}`
+      `findings_by_severity_enterprise=CRITICAL:${stage.findingsByEnterpriseSeverity.CRITICAL}|HIGH:${stage.findingsByEnterpriseSeverity.HIGH}|MEDIUM:${stage.findingsByEnterpriseSeverity.MEDIUM}|LOW:${stage.findingsByEnterpriseSeverity.LOW}`
+    );
+    lines.push(
+      `findings_by_severity_legacy=CRITICAL:${stage.findingsBySeverity.CRITICAL}|ERROR:${stage.findingsBySeverity.ERROR}|WARN:${stage.findingsBySeverity.WARN}|INFO:${stage.findingsBySeverity.INFO}`
     );
     lines.push(
       `evaluated_rule_ids=${stage.evaluatedRuleIds.length > 0 ? stage.evaluatedRuleIds.join(',') : 'none'}`

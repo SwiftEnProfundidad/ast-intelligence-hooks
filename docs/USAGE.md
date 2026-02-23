@@ -21,7 +21,7 @@ npm ci
 | Stage | Input scope | blockOnOrAbove | warnOnOrAbove |
 |---|---|---|---|
 | `PRE_WRITE` | local write-time check | `ERROR` (SDD policy) | `WARN` |
-| `PRE_COMMIT` | `git diff --cached` | `CRITICAL` | `ERROR` |
+| `PRE_COMMIT` | `git diff --cached` | `ERROR` | `WARN` |
 | `PRE_PUSH` | `upstream..HEAD` | `ERROR` | `WARN` |
 | `CI` | `baseRef..HEAD` | `ERROR` | `WARN` |
 
@@ -31,7 +31,16 @@ Coverage guardrail:
 
 - In `PRE_COMMIT`, `PRE_PUSH` and `CI`, Pumuki requires complete rule evaluation coverage.
 - If any active rule is not evaluated (`unevaluated_rule_ids` not empty), gate emits `governance.rules.coverage.incomplete` and forces `BLOCK`.
+- If any AUTO skills rule is active without mapped detector (`unsupported_auto_rule_ids` not empty), gate emits `governance.skills.detector-mapping.incomplete` and forces `BLOCK`.
 - Coverage telemetry is persisted in `.ai_evidence.json` under `snapshot.rules_coverage`.
+
+Audit mode telemetry:
+
+- `snapshot.audit_mode = gate` for strict enforcement runs.
+- `snapshot.audit_mode = engine` for full-diagnostics runs.
+- Severity metrics are persisted in both legacy and enterprise projections:
+  - `severity_metrics.by_severity` (`CRITICAL/ERROR/WARN/INFO`)
+  - `severity_metrics.by_enterprise_severity` (`CRITICAL/HIGH/MEDIUM/LOW`)
 
 ## Skills rules engine (effective lock)
 

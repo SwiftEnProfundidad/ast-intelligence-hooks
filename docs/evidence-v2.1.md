@@ -8,6 +8,7 @@
 - `timestamp`: ISO timestamp of generation
 - `snapshot`:
   - `stage`: `PRE_WRITE` | `PRE_COMMIT` | `PRE_PUSH` | `CI`
+  - `audit_mode`: `gate` | `engine` (runtime execution mode traceability)
   - `outcome`: `PASS` | `WARN` | `BLOCK`
   - `files_scanned` (optional): files evaluated by gate scope (`repo`, `staged`, etc.)
   - `files_affected` (optional): unique files with findings in this snapshot
@@ -48,7 +49,9 @@
   - mirrors `human_intent` to avoid state drift
   - violations carry the same traceability fields as snapshot findings (`file`, `lines`, `matchedBy`, `source`)
 - `severity_metrics`:
-  - gate status + totals by severity
+  - `gate_status` + `total_violations`
+  - legacy projection: `by_severity` (`CRITICAL` | `ERROR` | `WARN` | `INFO`)
+  - enterprise projection: `by_enterprise_severity` (`CRITICAL` | `HIGH` | `MEDIUM` | `LOW`)
 - `repo_state` (optional):
   - repository operational snapshot captured at evidence generation time
   - `git`: branch/upstream/ahead-behind/dirty/staged/unstaged
@@ -72,6 +75,8 @@
 - `pumuki install` bootstraps `.ai_evidence.json` when missing (`PRE_COMMIT`, `PASS`, empty findings).
 - When `rules_coverage.unevaluated_rule_ids` is non-empty in `PRE_COMMIT`, `PRE_PUSH` or `CI`, the gate emits `governance.rules.coverage.incomplete` and forces `BLOCK`.
 - When `rules_coverage.unsupported_auto_rule_ids` is non-empty in `PRE_COMMIT`, `PRE_PUSH` or `CI`, the gate emits `governance.skills.detector-mapping.incomplete` and forces `BLOCK`.
+- `audit_mode=gate` keeps strict enforcement semantics (SDD short-circuit when preconditions fail).
+- `audit_mode=engine` keeps full-diagnostics semantics (continues rule evaluation even if SDD blocks).
 
 ## Overrides
 

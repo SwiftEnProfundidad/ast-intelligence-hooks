@@ -3,6 +3,8 @@ import type { GateStage } from '../../core/gate/GateStage';
 import type { Severity } from '../../core/rules/Severity';
 import type { SnapshotPlatformSummary } from './platformSummary';
 
+export type EnterpriseSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+
 export type EvidenceLines = string | number | readonly number[];
 
 export type SnapshotFinding = {
@@ -49,6 +51,7 @@ export type SnapshotRulesCoverage = {
 
 export type Snapshot = {
   stage: GateStage;
+  audit_mode?: 'gate' | 'engine';
   outcome: GateOutcome;
   files_scanned?: number;
   files_affected?: number;
@@ -173,6 +176,7 @@ export type AiEvidenceV2_1 = {
     gate_status: 'ALLOWED' | 'BLOCKED';
     total_violations: number;
     by_severity: Record<Severity, number>;
+    by_enterprise_severity?: Record<EnterpriseSeverity, number>;
   };
   sdd_metrics?: SddMetrics;
   repo_state?: RepoState;

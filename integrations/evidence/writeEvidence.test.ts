@@ -29,6 +29,7 @@ const sampleEvidence = (repoRoot: string): AiEvidenceV2_1 => ({
   timestamp: '2026-02-17T00:00:00.000Z',
   snapshot: {
     stage: 'PRE_PUSH',
+    audit_mode: 'engine',
     outcome: 'BLOCK',
     evaluation_metrics: {
       facts_total: 1878,
@@ -165,6 +166,7 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
       const written = JSON.parse(readFileSync(result.path, 'utf8')) as AiEvidenceV2_1;
 
       assert.equal(written.snapshot.findings.length, 2);
+      assert.equal(written.snapshot.audit_mode, 'engine');
       assert.equal(written.snapshot.files_affected, 2);
       assert.deepEqual(written.snapshot.evaluation_metrics, {
         facts_total: 1878,
@@ -215,6 +217,12 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
         'backend:a-bundle',
         'ios:z-bundle',
       ]);
+      assert.deepEqual(written.severity_metrics.by_enterprise_severity, {
+        CRITICAL: 0,
+        HIGH: 1,
+        MEDIUM: 1,
+        LOW: 0,
+      });
       assert.deepEqual(written.ai_gate.violations.map((item) => item.ruleId), ['a.rule', 'z.rule']);
       assert.deepEqual(
         written.ai_gate.violations.map((item) => [item.ruleId, item.matchedBy, item.source]),
@@ -234,6 +242,21 @@ test('writeEvidence escribe archivo estable y normaliza paths/orden/lineas', asy
       });
       assert.equal(written.repo_state?.git.branch, 'feature/write-evidence');
       assert.equal(written.repo_state?.lifecycle.hooks.pre_commit, 'managed');
+    });
+  });
+});
+
+test('writeEvidence aplica snapshot.audit_mode=gate por defecto cuando no viene en entrada', async () => {
+  await withTempDir('pumuki-write-evidence-audit-mode-default-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const evidence = sampleEvidence(tempRoot);
+      delete evidence.snapshot.audit_mode;
+
+      const result = writeEvidence(evidence);
+      assert.equal(result.ok, true);
+      const written = JSON.parse(readFileSync(result.path, 'utf8')) as AiEvidenceV2_1;
+      assert.equal(written.snapshot.audit_mode, 'gate');
     });
   });
 });

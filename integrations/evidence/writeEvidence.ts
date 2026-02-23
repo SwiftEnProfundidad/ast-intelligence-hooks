@@ -201,6 +201,12 @@ const toStableEvidence = (
     WARN: evidence.severity_metrics.by_severity.WARN,
     INFO: evidence.severity_metrics.by_severity.INFO,
   };
+  const byEnterpriseSeverity = {
+    CRITICAL: bySeverity.CRITICAL,
+    HIGH: bySeverity.ERROR,
+    MEDIUM: bySeverity.WARN,
+    LOW: bySeverity.INFO,
+  };
   const normalizedHumanIntent = normalizeHumanIntent(evidence.human_intent);
   const normalizedRepoState = normalizeRepoState(evidence.repo_state, repoRoot);
   const normalizedFilesScanned =
@@ -218,12 +224,14 @@ const toStableEvidence = (
     evidence.snapshot.stage,
     evidence.snapshot.rules_coverage
   );
+  const normalizedAuditMode = evidence.snapshot.audit_mode === 'engine' ? 'engine' : 'gate';
 
   return {
     version: '2.1',
     timestamp: evidence.timestamp,
     snapshot: {
       stage: evidence.snapshot.stage,
+      audit_mode: normalizedAuditMode,
       outcome: evidence.snapshot.outcome,
       files_scanned: normalizedFilesScanned,
       ...(typeof normalizedFilesAffected === 'number'
@@ -253,6 +261,7 @@ const toStableEvidence = (
       gate_status: evidence.severity_metrics.gate_status,
       total_violations: evidence.severity_metrics.total_violations,
       by_severity: bySeverity,
+      by_enterprise_severity: byEnterpriseSeverity,
     },
     sdd_metrics: evidence.sdd_metrics
       ? {

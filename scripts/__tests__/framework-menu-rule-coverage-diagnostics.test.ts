@@ -136,6 +136,12 @@ test('formatRuleCoverageDiagnostics renderiza resumen legible', () => {
           WARN: 0,
           INFO: 0,
         },
+        findingsByEnterpriseSeverity: {
+          CRITICAL: 0,
+          HIGH: 1,
+          MEDIUM: 0,
+          LOW: 0,
+        },
         evaluatedRuleIds: [
           'skills.backend.no-empty-catch',
           'skills.backend.avoid-explicit-any',
@@ -156,6 +162,7 @@ test('formatRuleCoverageDiagnostics renderiza resumen legible', () => {
   assert.match(rendered, /sdd_code=ALLOWED/);
   assert.match(rendered, /rules_total=100/);
   assert.match(rendered, /matched_rules=5/);
+  assert.match(rendered, /findings_by_severity_enterprise=CRITICAL:0\|HIGH:1\|MEDIUM:0\|LOW:0/);
   assert.match(rendered, /evaluated_rule_ids=skills.backend.no-empty-catch,skills.backend.avoid-explicit-any/);
   assert.match(rendered, /matched_rule_ids=skills.backend.no-empty-catch/);
   assert.match(rendered, /unmatched_rule_ids=skills.backend.avoid-explicit-any/);

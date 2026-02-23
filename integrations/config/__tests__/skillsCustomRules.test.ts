@@ -83,7 +83,7 @@ test('resolveSkillImportSources discovers SKILL.md paths from AGENTS.md', async 
   });
 });
 
-test('importCustomSkillsRules writes .pumuki/custom-rules.json and forces AUTO evaluation mode for extracted rules', async () => {
+test('importCustomSkillsRules writes .pumuki/custom-rules.json preserving AUTO canonicas y DECLARATIVE no canonicas', async () => {
   await withTempDir('pumuki-skills-custom-import-', async (tempRoot) => {
     const backendSkillPath = join(tempRoot, 'skills/backend/SKILL.md');
     const frontendSkillPath = join(tempRoot, 'skills/frontend/SKILL.md');
@@ -118,8 +118,16 @@ test('importCustomSkillsRules writes .pumuki/custom-rules.json and forces AUTO e
       .filter((rule) => rule.evaluationMode === 'AUTO')
       .map((rule) => rule.id)
       .sort();
+    const declarativeRuleIds = result.importedRules
+      .filter((rule) => rule.evaluationMode === 'DECLARATIVE')
+      .map((rule) => rule.id)
+      .sort();
     assert.equal(autoRuleIds.includes('skills.backend.no-empty-catch'), true);
     assert.equal(autoRuleIds.includes('skills.frontend.avoid-explicit-any'), true);
+    assert.equal(
+      declarativeRuleIds.some((ruleId) => ruleId.startsWith('skills.backend.guideline.')),
+      true
+    );
   });
 });
 
@@ -187,7 +195,7 @@ test('custom rules override repo lock rules by id when building effective skills
   }));
 });
 
-test('import custom con reglas no canonicas deja trazabilidad unsupported_auto_rule_ids en gate', async () => {
+test('import custom con reglas no canonicas usa DECLARATIVE y evita unsupported_auto_rule_ids', async () => {
   await withCoreSkillsDisabled(async () => withTempDir('pumuki-skills-custom-unsupported-auto-', async (tempRoot) => {
     writeFileSync(
       join(tempRoot, 'skills.lock.json'),
@@ -231,7 +239,9 @@ test('import custom con reglas no canonicas deja trazabilidad unsupported_auto_r
       backend: { detected: true, confidence: 'HIGH' as const },
     };
     const ruleSet = loadSkillsRuleSetForStage('PRE_COMMIT', tempRoot, detectedPlatforms);
-    assert.equal(ruleSet.rules.length, 0);
-    assert.deepEqual(ruleSet.unsupportedAutoRuleIds, [importedRuleId]);
+    assert.equal(ruleSet.rules.length, 1);
+    assert.equal(ruleSet.rules[0]?.id, importedRuleId);
+    assert.equal(ruleSet.rules[0]?.then.code.endsWith('_DECLARATIVE'), true);
+    assert.deepEqual(ruleSet.unsupportedAutoRuleIds, []);
   }));
 });
