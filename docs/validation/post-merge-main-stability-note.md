@@ -121,3 +121,17 @@ Validación local:
 - ejecución local de gates:
   - sin bypass SDD (`PUMUKI_SDD_BYPASS` ausente): `OPENSPEC_MISSING` en los 4 gates.
   - con bypass (`PUMUKI_SDD_BYPASS=1`): `ios/android/backend/frontend` en exit code `0`.
+
+## Actualización operativa (Cycle 014 / Lote D Package Smoke + Security)
+
+Consolidación final de estado para `package-smoke` y `security/snyk`:
+
+- local (framework repo): package manifest + smoke `block`/`minimal` en PASS.
+- remoto (último promote `PR #373`):
+  - `package-smoke (block|minimal)` en `FAILURE` con jobs sin ejecución real (`runner_id=0`, `steps=[]`).
+  - `security/snyk (swiftenprofundidad)` en `ERROR` (servicio externo Snyk).
+
+Implicación:
+
+- la validación técnica local de packaging queda cerrada;
+- el estado rojo remoto de package smoke/security sigue dependiente de bloqueos externos.
