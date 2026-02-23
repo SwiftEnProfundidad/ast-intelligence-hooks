@@ -227,7 +227,11 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - promote final `develop -> main` realizado para consolidar Fase D en ramas protegidas (`PR #377`).
   - 🚧 fase E revalidación estricta en curso:
     - ✅ `F014.E.T1.a` refresco de evidencia remota de PR de control completado.
-    - PR de control abierto sin admin: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/378`
+    - ✅ `F014.E.T1.c` promote administrativo ejecutado por instrucción de usuario:
+      - PR `#378` merged (`develop -> main`) por bloqueo externo de billing/checks.
+      - merge commit: `47984b3498df7f4c5dac677cdce2640ee192062c`
+      - ramas sincronizadas tras promote: `origin/main...origin/develop = 0/0`
+    - PR de control usada en fase E: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/378`
     - estado actual del probe:
       - `37/37` checks en rojo (`FAILURE`/`ERROR`) en la PR de control.
       - afecta a `CI`, `platform gates`, `quality suites`, `package-smoke` y `security/snyk`.
@@ -242,7 +246,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-ci-job.json`
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-android-job.json`
         - `.audit_tmp/p-adhoc-lines-014-lotE-pr378-package-minimal-job-v2.json`
-    - 🚧 `F014.E.T1.b` en curso: mantener fase E abierta hasta ejecución remota real (sin patrón `runner_id=0`).
+    - 🚧 `F014.E.T1.b` en curso: mantener fase E en seguimiento hasta ejecución remota real (sin patrón `runner_id=0`) cuando billing externo esté resuelto.
   - ✅ cierre Git Flow de lote C ejecutado end-to-end:
     - PR `#370` (`feature/p-adhoc-lines-014-lotC-platform-gates` -> `develop`) merged.
     - PR `#371` (`develop` -> `main`) merged (admin por bloqueo externo de Actions).
