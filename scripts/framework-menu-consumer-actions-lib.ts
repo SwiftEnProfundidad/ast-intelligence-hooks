@@ -37,7 +37,7 @@ export const createConsumerLegacyMenuActions = (
     },
     {
       id: '4',
-      label: 'Standard CRITICAL/HIGH (working tree · PRE_PUSH)',
+      label: 'Audit STAGED+UNSTAGED working tree (PRE_PUSH policy)',
       execute: params.runStandardCriticalHigh,
     },
     {
@@ -47,7 +47,7 @@ export const createConsumerLegacyMenuActions = (
     },
     {
       id: '6',
-      label: 'ESLint Admin+Web',
+      label: 'ESLint diagnostics (evidence snapshot)',
       execute: params.runEslintAudit,
     },
     {

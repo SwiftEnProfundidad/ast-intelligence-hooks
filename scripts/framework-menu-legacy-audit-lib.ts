@@ -14,12 +14,14 @@ type EvidenceFinding = {
   severity?: unknown;
   filePath?: unknown;
   file?: unknown;
+  lines?: unknown;
 };
 
 type NormalizedFinding = {
   ruleId: string;
   severity: GateSeverity;
   file: string;
+  line: number;
 };
 
 type PlatformSummary = {
@@ -88,6 +90,8 @@ export type LegacyAuditSummary = {
   rulesets: ReadonlyArray<RulesetSummary>;
   topViolations: ReadonlyArray<{ ruleId: string; count: number }>;
   topFiles: ReadonlyArray<{ file: string; count: number }>;
+  topFileLocations?: ReadonlyArray<{ file: string; line: number }>;
+  topFindings?: ReadonlyArray<{ severity: LegacySeverity; ruleId: string; file: string; line: number }>;
   codeHealthScore: number;
 };
 
@@ -172,6 +176,40 @@ const asPlatformName = (value: unknown): PlatformName | null => {
   return null;
 };
 
+const asPositiveLineNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    const line = Math.trunc(value);
+    return line > 0 ? line : null;
+  }
+  if (typeof value === 'string') {
+    const matches = value.match(/\d+/g);
+    if (!matches || matches.length === 0) {
+      return null;
+    }
+    const numbers = matches
+      .map((token) => Number.parseInt(token, 10))
+      .filter((line) => Number.isFinite(line) && line > 0);
+    if (numbers.length === 0) {
+      return null;
+    }
+    return Math.min(...numbers);
+  }
+  return null;
+};
+
+const normalizeFindingAnchorLine = (lines: unknown): number => {
+  if (Array.isArray(lines)) {
+    const parsed = lines
+      .map((line) => asPositiveLineNumber(line))
+      .filter((line): line is number => line !== null);
+    if (parsed.length > 0) {
+      return Math.min(...parsed);
+    }
+    return 1;
+  }
+  return asPositiveLineNumber(lines) ?? 1;
+};
+
 const parseSnapshotPlatformSummaries = (value: unknown): PlatformSummary[] => {
   if (!Array.isArray(value)) {
     return [];
@@ -253,6 +291,7 @@ const toNormalizedFindings = (findings: ReadonlyArray<EvidenceFinding>): Normali
       ruleId,
       severity: normalizeGateSeverity(finding.severity),
       file: filePath,
+      line: normalizeFindingAnchorLine(finding.lines),
     };
   });
 };
@@ -269,14 +308,63 @@ const countViolations = (findings: ReadonlyArray<NormalizedFinding>): ReadonlyAr
 
 const countFiles = (
   findings: ReadonlyArray<NormalizedFinding>
-): ReadonlyArray<{ file: string; count: number }> => {
-  const buckets = new Map<string, number>();
+): ReadonlyArray<{ file: string; count: number; line: number }> => {
+  const buckets = new Map<string, { count: number; line: number }>();
   for (const finding of findings) {
-    buckets.set(finding.file, (buckets.get(finding.file) ?? 0) + 1);
+    const current = buckets.get(finding.file);
+    if (!current) {
+      buckets.set(finding.file, { count: 1, line: finding.line });
+      continue;
+    }
+    buckets.set(finding.file, {
+      count: current.count + 1,
+      line: Math.min(current.line, finding.line),
+    });
   }
   return [...buckets.entries()]
-    .sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))
-    .map(([file, count]) => ({ file, count }));
+    .sort((left, right) => right[1].count - left[1].count || left[0].localeCompare(right[0]))
+    .map(([file, entry]) => ({ file, count: entry.count, line: entry.line }));
+};
+
+const findingSeverityRank = (severity: GateSeverity): number => {
+  if (severity === 'CRITICAL') {
+    return 0;
+  }
+  if (severity === 'ERROR') {
+    return 1;
+  }
+  if (severity === 'WARN') {
+    return 2;
+  }
+  return 3;
+};
+
+const buildTopFindings = (
+  findings: ReadonlyArray<NormalizedFinding>,
+  maxItems: number
+): ReadonlyArray<{ severity: LegacySeverity; ruleId: string; file: string; line: number }> => {
+  return [...findings]
+    .sort((left, right) => {
+      const severityDelta = findingSeverityRank(left.severity) - findingSeverityRank(right.severity);
+      if (severityDelta !== 0) {
+        return severityDelta;
+      }
+      const fileDelta = left.file.localeCompare(right.file);
+      if (fileDelta !== 0) {
+        return fileDelta;
+      }
+      if (left.line !== right.line) {
+        return left.line - right.line;
+      }
+      return left.ruleId.localeCompare(right.ruleId);
+    })
+    .slice(0, maxItems)
+    .map((finding) => ({
+      severity: mapLegacySeverity(finding.severity),
+      ruleId: finding.ruleId,
+      file: finding.file,
+      line: finding.line,
+    }));
 };
 
 const inferRulesetBundle = (
@@ -735,6 +823,8 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
       rulesets: [],
       topViolations: [],
       topFiles: [],
+      topFileLocations: [],
+      topFindings: [],
       codeHealthScore: 100,
     };
   }
@@ -772,6 +862,7 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
     const bySeverity = computeLegacySeverity(normalizedFindings, parsed.severity_metrics);
     const totalViolations = normalizedFindings.length;
     const snapshotPlatforms = parseSnapshotPlatformSummaries(parsed.snapshot?.platforms);
+    const topFilesWithLocations = countFiles(normalizedFindings).slice(0, 10);
     return {
       status: 'ok',
       stage: asString(parsed.snapshot?.stage, 'unknown'),
@@ -787,7 +878,9 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
         : buildPlatformSummaries(normalizedFindings),
       rulesets: buildRulesetSummaries(normalizedFindings, availableBundles),
       topViolations: countViolations(normalizedFindings).slice(0, 7),
-      topFiles: countFiles(normalizedFindings).slice(0, 10),
+      topFiles: topFilesWithLocations.map((entry) => ({ file: entry.file, count: entry.count })),
+      topFileLocations: topFilesWithLocations.map((entry) => ({ file: entry.file, line: entry.line })),
+      topFindings: buildTopFindings(normalizedFindings, 10),
       codeHealthScore: computeCodeHealthScore(bySeverity, filesScanned, totalViolations),
     };
   } catch {
@@ -805,6 +898,8 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
       rulesets: [],
       topViolations: [],
       topFiles: [],
+      topFileLocations: [],
+      topFindings: [],
       codeHealthScore: 0,
     };
   }
@@ -863,6 +958,9 @@ export const formatLegacyRulesetBreakdown = (summary: LegacyAuditSummary): strin
 };
 
 export const formatLegacyFileDiagnostics = (summary: LegacyAuditSummary): string => {
+  const topFileLocations = summary.topFileLocations ?? [];
+  const topFindings = summary.topFindings ?? [];
+  const topFileLineByPath = new Map(topFileLocations.map((entry) => [entry.file, entry.line]));
   const lines = [
     'FILE DIAGNOSTICS — TOP VIOLATED FILES',
   ];
@@ -870,7 +968,16 @@ export const formatLegacyFileDiagnostics = (summary: LegacyAuditSummary): string
     lines.push('• none');
   } else {
     for (const file of summary.topFiles) {
+      const line = topFileLineByPath.get(file.file) ?? 1;
       lines.push(`• ${file.file}: ${file.count}`);
+      lines.push(`  ↳ ${file.file}:${line}`);
+    }
+  }
+  if (topFindings.length > 0) {
+    lines.push('');
+    lines.push('VIOLATIONS — CLICKABLE LOCATIONS');
+    for (const finding of topFindings) {
+      lines.push(`• [${finding.severity}] ${finding.ruleId} -> ${finding.file}:${finding.line}`);
     }
   }
   return lines.join('\n');
@@ -893,6 +1000,12 @@ export const formatLegacyAuditReport = (
       `• ${violation.ruleId} (${violation.count} violations)`,
       '  → Review and fix violations.',
     ]);
+  const topFindings = summary.topFindings ?? [];
+  const topFindingLocations = topFindings.length === 0
+    ? ['• none']
+    : topFindings.map((finding) => (
+      `• [${finding.severity}] ${finding.ruleId} → ${finding.file}:${finding.line}`
+    ));
 
   const commitStatus = summary.bySeverity.CRITICAL > 0 || summary.bySeverity.HIGH > 0
     ? 'COMMIT BLOCKED — STRICT REPO+STAGING'
@@ -952,6 +1065,9 @@ export const formatLegacyAuditReport = (
     '5) TOP VIOLATIONS & REMEDIATION',
     '',
     ...topViolations,
+    '',
+    'Clickable locations (file:line)',
+    ...topFindingLocations,
     '',
     '6) EXECUTIVE SUMMARY',
   ], { width: options?.panelWidth, color: options?.color });

@@ -29,9 +29,6 @@ Before taking any action:
 4) Decide if one or more skills apply to the current user request.
    - If a skill applies, invoke it and follow its `SKILL.md` instructions.
    - If no skill applies, proceed normally.
-5) Actaulizar /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks/docs/REFRACTOR_PROGRESS.md:
-   - con el estado actual del proyecto, siguiendo el formato de ese documento.
-   - cada vez que terminies una tarea la marcas como hecha con su emoji y marcas la siguiente que vas a hacer como en construcción, no es negociable
 
 ---
 

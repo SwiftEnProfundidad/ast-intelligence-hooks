@@ -24,11 +24,13 @@ const writeEvidenceFixture = (repoRoot: string): void => {
           ruleId: 'ios.quality.long-function',
           severity: 'CRITICAL',
           filePath: 'apps/ios/App/Feature.swift',
+          lines: [18, 22],
         },
         {
           ruleId: 'backend.avoid-explicit-any',
           severity: 'ERROR',
           filePath: 'apps/backend/src/domain/service.ts',
+          lines: 44,
         },
         {
           ruleId: 'frontend.no-console-log',
@@ -376,7 +378,14 @@ test('formatLegacyFileDiagnostics lista top de ficheros violados', async () => {
 
     assert.match(rendered, /FILE DIAGNOSTICS — TOP VIOLATED FILES/);
     assert.match(rendered, /apps\/backend\/src\/domain\/service\.ts: 1/);
+    assert.match(rendered, /↳ apps\/backend\/src\/domain\/service\.ts:44/);
     assert.match(rendered, /apps\/ios\/App\/Feature\.swift: 1/);
+    assert.match(rendered, /↳ apps\/ios\/App\/Feature\.swift:18/);
+    assert.match(rendered, /VIOLATIONS — CLICKABLE LOCATIONS/);
+    assert.match(
+      rendered,
+      /\[CRITICAL\] ios\.quality\.long-function -> apps\/ios\/App\/Feature\.swift:18/
+    );
   });
 });
 

@@ -1,4 +1,4 @@
-import { hasNode, isObject } from '../utils/astHelpers';
+import { collectNodeLineMatches, hasNode, isObject } from '../utils/astHelpers';
 
 const commandNamePattern =
   /^(create|update|delete|remove|save|insert|upsert|set|write|patch|post|put)/i;
@@ -100,14 +100,20 @@ const hasMixedCommandAndQueryNames = (methodNames: ReadonlyArray<string>): boole
   return false;
 };
 
+const isEmptyCatchClauseNode = (value: Record<string, unknown>): boolean => {
+  if (value.type !== 'CatchClause') {
+    return false;
+  }
+  const body = value.body;
+  return isObject(body) && Array.isArray(body.body) && body.body.length === 0;
+};
+
 export const hasEmptyCatchClause = (node: unknown): boolean => {
-  return hasNode(node, (value) => {
-    if (value.type !== 'CatchClause') {
-      return false;
-    }
-    const body = value.body;
-    return isObject(body) && Array.isArray(body.body) && body.body.length === 0;
-  });
+  return hasNode(node, isEmptyCatchClauseNode);
+};
+
+export const findEmptyCatchClauseLines = (node: unknown): readonly number[] => {
+  return collectNodeLineMatches(node, isEmptyCatchClauseNode);
 };
 
 export const hasExplicitAnyType = (node: unknown): boolean => {
@@ -493,39 +499,51 @@ const typeReferenceParams = (node: unknown): ReadonlyArray<unknown> => {
   return node.typeParameters.params;
 };
 
+const isRecordStringUnknownTypeNode = (value: Record<string, unknown>): boolean => {
+  if (value.type !== 'TSTypeReference') {
+    return false;
+  }
+  if (!isRecordTypeName(value.typeName)) {
+    return false;
+  }
+  const params = typeReferenceParams(value);
+  if (params.length !== 2) {
+    return false;
+  }
+  const keyType = params[0];
+  const valueType = params[1];
+  if (!isObject(keyType) || !isObject(valueType)) {
+    return false;
+  }
+  const isStringKey =
+    keyType.type === 'TSStringKeyword' ||
+    (keyType.type === 'TSLiteralType' &&
+      isObject(keyType.literal) &&
+      keyType.literal.type === 'StringLiteral');
+  return isStringKey && valueType.type === 'TSUnknownKeyword';
+};
+
 export const hasRecordStringUnknownType = (node: unknown): boolean => {
-  return hasNode(node, (value) => {
-    if (value.type !== 'TSTypeReference') {
-      return false;
-    }
-    if (!isRecordTypeName(value.typeName)) {
-      return false;
-    }
-    const params = typeReferenceParams(value);
-    if (params.length !== 2) {
-      return false;
-    }
-    const keyType = params[0];
-    const valueType = params[1];
-    if (!isObject(keyType) || !isObject(valueType)) {
-      return false;
-    }
-    const isStringKey =
-      keyType.type === 'TSStringKeyword' ||
-      (keyType.type === 'TSLiteralType' &&
-        isObject(keyType.literal) &&
-        keyType.literal.type === 'StringLiteral');
-    return isStringKey && valueType.type === 'TSUnknownKeyword';
-  });
+  return hasNode(node, isRecordStringUnknownTypeNode);
+};
+
+export const findRecordStringUnknownTypeLines = (node: unknown): readonly number[] => {
+  return collectNodeLineMatches(node, isRecordStringUnknownTypeNode);
+};
+
+const isUnknownTypeAssertionNode = (value: Record<string, unknown>): boolean => {
+  if (value.type !== 'TSAsExpression' && value.type !== 'TSTypeAssertion') {
+    return false;
+  }
+  return isObject(value.typeAnnotation) && value.typeAnnotation.type === 'TSUnknownKeyword';
 };
 
 export const hasUnknownTypeAssertion = (node: unknown): boolean => {
-  return hasNode(node, (value) => {
-    if (value.type !== 'TSAsExpression' && value.type !== 'TSTypeAssertion') {
-      return false;
-    }
-    return isObject(value.typeAnnotation) && value.typeAnnotation.type === 'TSUnknownKeyword';
-  });
+  return hasNode(node, isUnknownTypeAssertionNode);
+};
+
+export const findUnknownTypeAssertionLines = (node: unknown): readonly number[] => {
+  return collectNodeLineMatches(node, isUnknownTypeAssertionNode);
 };
 
 const hasUndefinedUnionMember = (members: ReadonlyArray<unknown>): boolean => {
@@ -546,13 +564,19 @@ const hasBaseScalarUnionMember = (members: ReadonlyArray<unknown>): boolean => {
   });
 };
 
+const isUndefinedInBaseTypeUnionNode = (value: Record<string, unknown>): boolean => {
+  if (value.type !== 'TSUnionType' || !Array.isArray(value.types)) {
+    return false;
+  }
+  return hasUndefinedUnionMember(value.types) && hasBaseScalarUnionMember(value.types);
+};
+
 export const hasUndefinedInBaseTypeUnion = (node: unknown): boolean => {
-  return hasNode(node, (value) => {
-    if (!isObject(value) || value.type !== 'TSUnionType' || !Array.isArray(value.types)) {
-      return false;
-    }
-    return hasUndefinedUnionMember(value.types) && hasBaseScalarUnionMember(value.types);
-  });
+  return hasNode(node, isUndefinedInBaseTypeUnionNode);
+};
+
+export const findUndefinedInBaseTypeUnionLines = (node: unknown): readonly number[] => {
+  return collectNodeLineMatches(node, isUndefinedInBaseTypeUnionNode);
 };
 
 const hasNetworkCallExpression = (node: unknown): boolean => {

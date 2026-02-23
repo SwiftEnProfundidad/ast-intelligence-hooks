@@ -388,3 +388,37 @@ test('runCiStage falls back gracefully when GITHUB_BASE_REF is invalid', async (
     assertPolicyTrace(evidence, 'gate-policy.default.CI');
   });
 });
+
+test('runPreCommitStage dispara notificación de resumen tras evaluar el gate', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    const notifications: Array<{ repoRoot: string; stage: StageName }> = [];
+
+    const exitCode = await runPreCommitStage({
+      notifyAuditSummaryFromEvidence: (params) => {
+        notifications.push(params);
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_COMMIT' }]);
+  });
+});
+
+test('runPrePushStage dispara notificación de resumen tras evaluar el gate', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    const notifications: Array<{ repoRoot: string; stage: StageName }> = [];
+
+    const exitCode = await runPrePushStage({
+      notifyAuditSummaryFromEvidence: (params) => {
+        notifications.push(params);
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 0);
+    assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_PUSH' }]);
+  });
+});

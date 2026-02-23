@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { hasNode, isObject } from './astHelpers';
+import { collectNodeLineMatches, hasNode, isObject } from './astHelpers';
 
 test('isObject devuelve true para objetos y arrays, false para null y primitivos', () => {
   assert.equal(isObject({ key: 'value' }), true);
@@ -75,5 +75,47 @@ test('hasNode recorre arrays y objetos anidados y descarta cuando no hay match',
   assert.equal(
     hasNode(ast, (value) => value.type === 'Identifier' && value.name === 'missing'),
     false
+  );
+});
+
+test('collectNodeLineMatches devuelve lineas ordenadas y unicas para nodos coincidentes', () => {
+  const ast = {
+    type: 'Program',
+    loc: { start: { line: 1 }, end: { line: 6 } },
+    body: [
+      {
+        type: 'CatchClause',
+        loc: { start: { line: 2 }, end: { line: 2 } },
+      },
+      {
+        type: 'CatchClause',
+        loc: { start: { line: 4 }, end: { line: 4 } },
+      },
+      {
+        type: 'CatchClause',
+        loc: { start: { line: 4 }, end: { line: 4 } },
+      },
+    ],
+  };
+
+  assert.deepEqual(
+    collectNodeLineMatches(ast, (value) => value.type === 'CatchClause'),
+    [2, 4]
+  );
+});
+
+test('collectNodeLineMatches respeta maximo de lineas', () => {
+  const ast = {
+    type: 'Program',
+    body: [
+      { type: 'CallExpression', loc: { start: { line: 10 }, end: { line: 10 } } },
+      { type: 'CallExpression', loc: { start: { line: 20 }, end: { line: 20 } } },
+      { type: 'CallExpression', loc: { start: { line: 30 }, end: { line: 30 } } },
+    ],
+  };
+
+  assert.deepEqual(
+    collectNodeLineMatches(ast, (value) => value.type === 'CallExpression', { max: 2 }),
+    [10, 20]
   );
 });

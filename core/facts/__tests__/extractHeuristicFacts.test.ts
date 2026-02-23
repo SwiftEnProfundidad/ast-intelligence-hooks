@@ -544,6 +544,15 @@ test('detects legacy common type/network families from AST facts', () => {
   });
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  const recordUnknownFact = extracted.find(
+    (finding) => finding.ruleId === 'common.types.record_unknown_requires_type'
+  );
+  const unknownAssertionFact = extracted.find(
+    (finding) => finding.ruleId === 'common.types.unknown_without_guard'
+  );
+  const undefinedUnionFact = extracted.find(
+    (finding) => finding.ruleId === 'common.types.undefined_in_base_type'
+  );
   assert.equal(
     findings.some((finding) => finding.ruleId === 'common.types.record_unknown_requires_type'),
     true
@@ -560,6 +569,9 @@ test('detects legacy common type/network families from AST facts', () => {
     findings.some((finding) => finding.ruleId === 'common.network.missing_error_handling'),
     true
   );
+  assert.deepEqual(recordUnknownFact?.lines, [1]);
+  assert.deepEqual(undefinedUnionFact?.lines, [2]);
+  assert.deepEqual(unknownAssertionFact?.lines, [3]);
 });
 
 test('maps empty catch heuristic to legacy common.error.empty_catch finding', () => {
@@ -582,6 +594,12 @@ test('maps empty catch heuristic to legacy common.error.empty_catch finding', ()
   });
 
   const findings = evaluateRules(astHeuristicsRuleSet, extracted);
+  const emptyCatchFact = extracted.find(
+    (finding) => finding.ruleId === 'heuristics.ts.empty-catch.ast'
+  );
+  const commonEmptyCatchFact = extracted.find(
+    (finding) => finding.ruleId === 'common.error.empty_catch'
+  );
   assert.equal(
     findings.some((finding) => finding.ruleId === 'heuristics.ts.empty-catch.ast'),
     true
@@ -590,6 +608,8 @@ test('maps empty catch heuristic to legacy common.error.empty_catch finding', ()
     findings.some((finding) => finding.ruleId === 'common.error.empty_catch'),
     true
   );
+  assert.deepEqual(emptyCatchFact?.lines, [4]);
+  assert.deepEqual(commonEmptyCatchFact?.lines, [4]);
 });
 
 test('emits workflow BDD findings for repos with high implementation volume and low feature coverage', () => {

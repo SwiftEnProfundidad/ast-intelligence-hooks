@@ -15,6 +15,7 @@ import {
 } from '../sdd';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
 import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
+import { emitAuditSummaryNotificationFromAiGate } from '../notifications/emitAuditSummaryNotification';
 
 type LifecycleCommand =
   | 'install'
@@ -309,6 +310,14 @@ type PreWriteValidationEnvelope = {
   };
 };
 
+type LifecycleCliDependencies = {
+  emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
+};
+
+const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
+  emitAuditSummaryNotificationFromAiGate,
+};
+
 const buildPreWriteValidationEnvelope = (
   result: ReturnType<typeof evaluateSddPolicy>,
   aiGate: ReturnType<typeof evaluateAiGate>
@@ -323,9 +332,14 @@ const buildPreWriteValidationEnvelope = (
 });
 
 export const runLifecycleCli = async (
-  argv: ReadonlyArray<string>
+  argv: ReadonlyArray<string>,
+  dependencies: Partial<LifecycleCliDependencies> = {}
 ): Promise<number> => {
   try {
+    const activeDependencies: LifecycleCliDependencies = {
+      ...defaultLifecycleCliDependencies,
+      ...dependencies,
+    };
     const parsed = parseLifecycleCliArgs(argv);
 
     switch (parsed.command) {
@@ -471,6 +485,13 @@ export const runLifecycleCli = async (
                 );
               }
             }
+          }
+          if (result.stage === 'PRE_WRITE' && aiGate) {
+            activeDependencies.emitAuditSummaryNotificationFromAiGate({
+              repoRoot: process.cwd(),
+              stage: result.stage,
+              aiGateResult: aiGate,
+            });
           }
           if (!result.decision.allowed) {
             return 1;
