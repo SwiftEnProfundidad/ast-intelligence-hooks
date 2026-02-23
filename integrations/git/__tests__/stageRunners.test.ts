@@ -422,3 +422,48 @@ test('runPrePushStage dispara notificación de resumen tras evaluar el gate', as
     assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_PUSH' }]);
   });
 });
+
+test('runCiStage dispara notificación de resumen tras evaluar el gate', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    const notifications: Array<{ repoRoot: string; stage: StageName }> = [];
+
+    await withGithubBaseRef('main', async () => {
+      const exitCode = await runCiStage({
+        notifyAuditSummaryFromEvidence: (params) => {
+          notifications.push(params);
+        },
+        resolveRepoRoot: () => repoRoot,
+      });
+      assert.equal(exitCode, 0);
+    });
+
+    assert.deepEqual(notifications, [{ repoRoot, stage: 'CI' }]);
+  });
+});
+
+test('runPrePushStage sin upstream mantiene paridad de notificación de resumen', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const notifications: Array<{ repoRoot: string; stage: StageName }> = [];
+
+    const messages = await withCapturedStderr(async () => {
+      const exitCode = await runPrePushStage({
+        notifyAuditSummaryFromEvidence: (params) => {
+          notifications.push(params);
+        },
+        resolveRepoRoot: () => repoRoot,
+      });
+      assert.equal(exitCode, 1);
+    });
+
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), false);
+    assert.equal(
+      messages.some((message) =>
+        message.includes('pumuki pre-push blocked: branch has no upstream tracking reference.')
+      ),
+      true
+    );
+    assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_PUSH' }]);
+  });
+});
