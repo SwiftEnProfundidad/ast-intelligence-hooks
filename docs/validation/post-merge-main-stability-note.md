@@ -135,3 +135,34 @@ Implicación:
 
 - la validación técnica local de packaging queda cerrada;
 - el estado rojo remoto de package smoke/security sigue dependiente de bloqueos externos.
+
+## Actualización operativa (Cycle 014 / Fase E Revalidación estricta PR #378)
+
+PR de control sin admin abierta para validar ejecución remota real:
+
+- `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/378`
+
+Estado observado:
+
+- `37/37` checks no verdes (`FAILURE` o `ERROR`).
+- el rojo afecta a dominios completos: `CI`, `platform gates`, `quality suites`, `package-smoke`.
+- `security/snyk (swiftenprofundidad)` permanece en `ERROR`.
+
+Evidencia de patrón externo en jobs de dominios distintos (API Actions):
+
+- CI (`job 64552897258`): `runner_id=0`, `steps=[]`
+- Android Gate (`job 64552916088`): `runner_id=0`, `steps=[]`
+- Package Smoke minimal (`job 64552916681`): `runner_id=0`, `steps=[]`
+
+Artefactos:
+
+- `.audit_tmp/p-adhoc-lines-014-lotE-pr-378-status.json`
+- `.audit_tmp/p-adhoc-lines-014-lotE-pr378-key-checks.json`
+- `.audit_tmp/p-adhoc-lines-014-lotE-pr378-ci-job.json`
+- `.audit_tmp/p-adhoc-lines-014-lotE-pr378-android-job.json`
+- `.audit_tmp/p-adhoc-lines-014-lotE-pr378-package-minimal-job-v2.json`
+
+Conclusión operativa:
+
+- no hay evidencia de ejecución real remota del pipeline (`runner_id=0` y sin `steps`) en la PR de control;
+- la fase E no puede cerrarse hasta que se observe ejecución remota efectiva sin ese patrón.
