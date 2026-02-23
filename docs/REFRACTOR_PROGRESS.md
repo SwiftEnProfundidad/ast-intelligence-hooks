@@ -361,4 +361,13 @@ Plan base visible para seguimiento previo y durante la implementacion.
       - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts`
       - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
       - `npm run -s typecheck`
-  - 🚧 `C018.B.T3` REFACTOR en curso: limpiar estructura de tests/política sin cambiar comportamiento validado.
+  - ✅ `C018.B.T3` REFACTOR completado: simplificación interna de política sin cambios de comportamiento.
+    - refactor aplicado en `integrations/gate/stagePolicies.ts`:
+      - extracción de helpers internos para promoción heurística por stage/rule id
+      - normalización de comparación explícita `severityOverride === null`
+    - no-regresión confirmada:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies-promotions-third-platform-heuristics.test.ts`
+      - `npm run -s typecheck`
+  - 🚧 `C018.C.T1` En curso: preparar commit atómico del lote con evidencia local consolidada.

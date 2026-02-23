@@ -17,14 +17,22 @@ const heuristicsPromotionStageAllowList = new Set<GateStage>([
   'CI',
 ]);
 
+const isHeuristicRuleId = (ruleId: string): boolean => {
+  return ruleId.startsWith('heuristics.');
+};
+
+const canPromoteHeuristicForStage = (stage: GateStage): boolean => {
+  return heuristicsPromotionStageAllowList.has(stage);
+};
+
 const heuristicSeverityOverrideForStage = (
   ruleId: string,
   stage: GateStage
 ): Severity | null => {
-  if (!heuristicsPromotionStageAllowList.has(stage)) {
+  if (!canPromoteHeuristicForStage(stage)) {
     return null;
   }
-  if (!ruleId.startsWith('heuristics.')) {
+  if (!isHeuristicRuleId(ruleId)) {
     return null;
   }
   return 'ERROR';
@@ -357,7 +365,7 @@ export const applyHeuristicSeverityForStage = (
 ): RuleSet => {
   return rules.map((rule) => {
     const severityOverride = heuristicSeverityOverrideForStage(rule.id, stage);
-    if (!severityOverride || severityOverride === rule.severity) {
+    if (severityOverride === null || severityOverride === rule.severity) {
       return rule;
     }
     return {
