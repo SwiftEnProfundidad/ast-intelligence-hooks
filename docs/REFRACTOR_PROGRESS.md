@@ -297,6 +297,11 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `security/snyk (swiftenprofundidad)` en `ERROR`
     - muestreo de jobs confirma patrón externo (`runner_id=0`, `steps=[]`) en CI/gate/package
     - evidencia en `.audit_tmp/p-adhoc-lines-015-pr-386-*.json` y `.audit_tmp/p-adhoc-lines-015-pr386-*.json`
+  - ✅ sondeo externo #6 registrado:
+    - PR muestra: `#387` (`37/37` checks no verdes)
+    - `security/snyk (swiftenprofundidad)` en `ERROR`
+    - muestreo de jobs confirma patrón externo (`runner_id=0`, `steps=[]`) en CI/gate/package
+    - evidencia en `.audit_tmp/p-adhoc-lines-015-pr-387-*.json` y `.audit_tmp/p-adhoc-lines-015-pr387-*.json`
   - vigilar restablecimiento de billing en GitHub Actions y estado de `security/snyk`;
   - al restablecerse, abrir PR de control `develop -> main` sin admin y capturar nueva evidencia remota;
   - cerrar con actualización de documentación si la ejecución remota estricta queda en verde.
