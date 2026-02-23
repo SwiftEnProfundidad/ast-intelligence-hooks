@@ -385,4 +385,20 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - PR de promote: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/397`
     - rama origen: `develop`
     - rama destino: `main`
-  - 🚧 `C018.D.T1` En curso: revalidación funcional/visual local del lote ya promovido.
+  - ✅ `C018.D.T1` Revalidación funcional/visual local completada sobre lote promovido:
+    - reporte versionado: `docs/validation/c018-d1-local-revalidation.md`
+    - validación funcional:
+      - `stagePolicies-config-and-severity` (`8/8`)
+      - `stagePolicies` (`8/8`)
+      - `stagePolicies-promotions-third-platform-heuristics` (`13/13`)
+      - `lifecycle` (`16/16`)
+      - `typecheck` (`OK`)
+    - validación visual:
+      - `framework-menu-consumer-runtime` (`9/9`) con badges y trazabilidad clicable en menú/export.
+  - ✅ `C018.D.T2` Documentación oficial consolidada:
+    - nuevo cierre oficial: `docs/validation/c018-cycle-validation-closure.md`
+    - índice actualizado: `docs/validation/README.md`
+    - evidencias versionadas registradas:
+      - `docs/validation/c018-c1-local-evidence.md`
+      - `docs/validation/c018-d1-local-revalidation.md`
+  - 🚧 `C018.D.T3` En curso: cierre final del ciclo 018 y estado listo para siguientes instrucciones.
