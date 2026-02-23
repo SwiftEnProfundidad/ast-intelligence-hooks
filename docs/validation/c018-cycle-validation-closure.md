@@ -19,6 +19,9 @@ Official validation closure for cycle `018`, covering:
   - merge commit: `d25bbf9ce3a22f29bc770ea7528562b4d3c55bf9`
 - Phase D validation updates:
   - PR `#398`: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/398`
+- Final phase D promote and protected branches sync:
+  - PR `#399`: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/399`
+  - merge commit: `0bc37cbe9f458f995eaeab74df3396061e79422a`
 
 ## Technical Outcomes
 
