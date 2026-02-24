@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createEvidencePayload, test, withEvidenceServer, withTempDir } from './evidenceContextServerFixtures';
+import {
+  createEvidencePayload,
+  safeFetchRequest,
+  test,
+  withEvidenceServer,
+  withTempDir,
+} from './evidenceContextServerFixtures';
 
 test('returns evidence payload when version is v2.1', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
@@ -12,7 +18,7 @@ test('returns evidence payload when version is v2.1', async () => {
     );
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/ai-evidence`);
+      const response = await safeFetchRequest(`${baseUrl}/ai-evidence`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         version?: string;
@@ -61,7 +67,7 @@ test('returns summary payload from dedicated summary endpoint', async () => {
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/ai-evidence/summary`);
+      const response = await safeFetchRequest(`${baseUrl}/ai-evidence/summary`);
       assert.equal(response.status, 200);
       const summary = (await response.json()) as {
         version?: string;

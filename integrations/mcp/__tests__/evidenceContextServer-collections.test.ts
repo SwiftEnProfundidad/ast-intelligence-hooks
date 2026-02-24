@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createEvidencePayload, test, withEvidenceServer, withTempDir } from './evidenceContextServerFixtures';
+import {
+  createEvidencePayload,
+  safeFetchRequest,
+  test,
+  withEvidenceServer,
+  withTempDir,
+} from './evidenceContextServerFixtures';
 
 test('returns rulesets endpoint sorted deterministically', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
@@ -14,7 +20,7 @@ test('returns rulesets endpoint sorted deterministically', async () => {
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/ai-evidence/rulesets`);
+      const response = await safeFetchRequest(`${baseUrl}/ai-evidence/rulesets`);
       assert.equal(response.status, 200);
       const body = (await response.json()) as {
         version?: string;
@@ -43,7 +49,7 @@ test('returns rulesets endpoint sorted deterministically', async () => {
         { platform: 'ios', bundle: 'shared', hash: 'zzz' },
       ]);
 
-      const filteredResponse = await fetch(`${baseUrl}/ai-evidence/rulesets?platform=ios&bundle=shared`);
+      const filteredResponse = await safeFetchRequest(`${baseUrl}/ai-evidence/rulesets?platform=ios&bundle=shared`);
       assert.equal(filteredResponse.status, 200);
       const filteredBody = (await filteredResponse.json()) as {
         total_count?: number;
@@ -68,7 +74,7 @@ test('returns rulesets endpoint sorted deterministically', async () => {
         { platform: 'ios', bundle: 'shared', hash: 'zzz' },
       ]);
 
-      const pagedResponse = await fetch(`${baseUrl}/ai-evidence/rulesets?limit=1&offset=1`);
+      const pagedResponse = await safeFetchRequest(`${baseUrl}/ai-evidence/rulesets?limit=1&offset=1`);
       assert.equal(pagedResponse.status, 200);
       const pagedBody = (await pagedResponse.json()) as {
         total_count?: number;
@@ -90,7 +96,7 @@ test('returns rulesets endpoint sorted deterministically', async () => {
       });
       assert.deepEqual(pagedBody.rulesets, [{ platform: 'ios', bundle: 'ios', hash: 'aaa' }]);
 
-      const cappedResponse = await fetch(`${baseUrl}/ai-evidence/rulesets?limit=9999`);
+      const cappedResponse = await safeFetchRequest(`${baseUrl}/ai-evidence/rulesets?limit=9999`);
       assert.equal(cappedResponse.status, 200);
       const cappedBody = (await cappedResponse.json()) as {
         pagination?: {
@@ -122,7 +128,7 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const detectedOnlyResponse = await fetch(`${baseUrl}/ai-evidence/platforms`);
+      const detectedOnlyResponse = await safeFetchRequest(`${baseUrl}/ai-evidence/platforms`);
       assert.equal(detectedOnlyResponse.status, 200);
       const detectedOnly = (await detectedOnlyResponse.json()) as {
         filters?: { detectedOnly?: boolean; confidence?: string | null };
@@ -148,7 +154,7 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
         { platform: 'ios', detected: true, confidence: 'MEDIUM' },
       ]);
 
-      const allPlatformsResponse = await fetch(`${baseUrl}/ai-evidence/platforms?detectedOnly=false`);
+      const allPlatformsResponse = await safeFetchRequest(`${baseUrl}/ai-evidence/platforms?detectedOnly=false`);
       assert.equal(allPlatformsResponse.status, 200);
       const allPlatforms = (await allPlatformsResponse.json()) as {
         filters?: { detectedOnly?: boolean; confidence?: string | null };
@@ -175,7 +181,7 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
         { platform: 'ios', detected: true, confidence: 'MEDIUM' },
       ]);
 
-      const confidenceResponse = await fetch(`${baseUrl}/ai-evidence/platforms?detectedOnly=false&confidence=LOW`);
+      const confidenceResponse = await safeFetchRequest(`${baseUrl}/ai-evidence/platforms?detectedOnly=false&confidence=LOW`);
       assert.equal(confidenceResponse.status, 200);
       const confidenceFiltered = (await confidenceResponse.json()) as {
         filters?: { detectedOnly?: boolean; confidence?: string | null };
@@ -200,7 +206,7 @@ test('returns platforms endpoint with detectedOnly toggle', async () => {
         { platform: 'android', detected: false, confidence: 'LOW' },
       ]);
 
-      const pagedResponse = await fetch(
+      const pagedResponse = await safeFetchRequest(
         `${baseUrl}/ai-evidence/platforms?detectedOnly=false&limit=1&offset=1`
       );
       assert.equal(pagedResponse.status, 200);
@@ -257,7 +263,7 @@ test('returns ledger endpoint sorted deterministically', async () => {
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/ai-evidence/ledger`);
+      const response = await safeFetchRequest(`${baseUrl}/ai-evidence/ledger`);
       assert.equal(response.status, 200);
       const body = (await response.json()) as {
         version?: string;
@@ -303,7 +309,7 @@ test('returns ledger endpoint sorted deterministically', async () => {
         },
       ]);
 
-      const filteredResponse = await fetch(
+      const filteredResponse = await safeFetchRequest(
         `${baseUrl}/ai-evidence/ledger?lastSeenAfter=2026-02-02t10:00:00.000z`
       );
       assert.equal(filteredResponse.status, 200);
@@ -346,7 +352,7 @@ test('returns ledger endpoint sorted deterministically', async () => {
         },
       ]);
 
-      const pagedResponse = await fetch(`${baseUrl}/ai-evidence/ledger?limit=1&offset=1`);
+      const pagedResponse = await safeFetchRequest(`${baseUrl}/ai-evidence/ledger?limit=1&offset=1`);
       assert.equal(pagedResponse.status, 200);
       const pagedBody = (await pagedResponse.json()) as {
         total_count?: number;
@@ -402,7 +408,7 @@ test('returns snapshot endpoint with deterministic findings ordering', async () 
     writeFileSync(join(repoRoot, '.ai_evidence.json'), `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/ai-evidence/snapshot`);
+      const response = await safeFetchRequest(`${baseUrl}/ai-evidence/snapshot`);
       assert.equal(response.status, 200);
       const body = (await response.json()) as {
         version?: string;
@@ -437,4 +443,3 @@ test('returns snapshot endpoint with deterministic findings ordering', async () 
     });
   });
 });
-

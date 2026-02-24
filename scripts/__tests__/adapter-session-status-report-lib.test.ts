@@ -42,7 +42,7 @@ test('deriveAdapterSessionVerdictFromCommands returns PASS when strict assessmen
   assert.equal(exitCodeForAdapterSessionVerdict(verdict), 0);
 });
 
-test('filterHookLogLinesForRepo keeps repo and simulated lines only', () => {
+test('filterHookLogLinesForRepo keeps repo-scoped lines and normalizes absolute paths', () => {
   const lines = filterHookLogLinesForRepo({
     repoRoot: '/repo',
     content: [
@@ -53,7 +53,15 @@ test('filterHookLogLinesForRepo keeps repo and simulated lines only', () => {
     ].join('\n'),
   });
 
-  assert.equal(lines.length, 2);
+  assert.equal(lines.length, 3);
+  assert.equal(
+    lines.some((line) => line.includes('ANALYZING: apps/backend/src/main.ts (1 edits)')),
+    true
+  );
+  assert.equal(
+    lines.some((line) => line.includes('/repo/apps/backend/src/main.ts')),
+    false
+  );
   assert.equal(
     lines.some((line) => line.includes('apps/backend/src/example.ts')),
     true
@@ -64,7 +72,7 @@ test('filterHookLogLinesForRepo keeps repo and simulated lines only', () => {
   );
 });
 
-test('filterWritesLogLinesForRepo keeps JSON lines inside repo root', () => {
+test('filterWritesLogLinesForRepo keeps JSON lines inside repo root and normalizes file path', () => {
   const lines = filterWritesLogLinesForRepo({
     repoRoot: '/repo',
     content: [
@@ -74,7 +82,7 @@ test('filterWritesLogLinesForRepo keeps JSON lines inside repo root', () => {
     ].join('\n'),
   });
 
-  assert.deepEqual(lines, [JSON.stringify({ file: '/repo/apps/backend/src/main.ts' })]);
+  assert.deepEqual(lines, [JSON.stringify({ file: 'apps/backend/src/main.ts' })]);
 });
 
 test('buildAdapterSessionStatusMarkdown renders deterministic PASS summary', () => {

@@ -13,6 +13,9 @@ import {
   readLegacyAuditSummary,
 } from '../framework-menu-legacy-audit-lib';
 
+const escapeRegExp = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 const writeEvidenceFixture = (repoRoot: string): void => {
   const payload = {
     version: '2.1',
@@ -53,6 +56,39 @@ const writeEvidenceFixture = (repoRoot: string): void => {
         CRITICAL: 1,
         ERROR: 1,
         WARN: 2,
+        INFO: 0,
+      },
+    },
+  };
+  writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(payload, null, 2), 'utf8');
+};
+
+const writeEvidenceAbsolutePathsFixture = (repoRoot: string): void => {
+  const payload = {
+    version: '2.1',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'BLOCK',
+      findings: [
+        {
+          ruleId: 'skills.backend.no-empty-catch',
+          severity: 'CRITICAL',
+          filePath: `${repoRoot}/apps/backend/src/runtime/process.ts`,
+          lines: 27,
+        },
+        {
+          ruleId: 'skills.frontend.avoid-explicit-any',
+          severity: 'ERROR',
+          filePath: `${repoRoot}/apps/web/src/ui/banner.tsx`,
+          lines: [14, 22],
+        },
+      ],
+    },
+    severity_metrics: {
+      by_severity: {
+        CRITICAL: 1,
+        ERROR: 1,
+        WARN: 0,
         INFO: 0,
       },
     },
@@ -392,6 +428,34 @@ test('formatLegacyFileDiagnostics lista top de ficheros violados', async () => {
       rendered,
       /\[CRITICAL\] ios\.quality\.long-function -> apps\/ios\/App\/Feature\.swift:18/
     );
+  });
+});
+
+test('menu/export normalizan paths absolutos a repo-relative para trazabilidad clicable consistente', async () => {
+  await withTempDir('pumuki-legacy-audit-absolute-paths-', async (repoRoot) => {
+    writeEvidenceAbsolutePathsFixture(repoRoot);
+    const summary = readLegacyAuditSummary(repoRoot);
+    const diagnostics = formatLegacyFileDiagnostics(summary);
+
+    assert.match(diagnostics, /apps\/backend\/src\/runtime\/process\.ts:27/);
+    assert.match(diagnostics, /apps\/web\/src\/ui\/banner\.tsx:14/);
+    assert.doesNotMatch(diagnostics, new RegExp(escapeRegExp(repoRoot)));
+
+    const outputPath = exportLegacyAuditMarkdown({
+      repoRoot,
+      outputPath: join(repoRoot, '.audit-reports', 'legacy-absolute-paths.md'),
+    });
+    const markdown = readFileSync(outputPath, 'utf8');
+
+    assert.match(
+      markdown,
+      /\[apps\/backend\/src\/runtime\/process\.ts:27\]\(\.\/apps\/backend\/src\/runtime\/process\.ts#L27\)/
+    );
+    assert.match(
+      markdown,
+      /\[apps\/web\/src\/ui\/banner\.tsx:14\]\(\.\/apps\/web\/src\/ui\/banner\.tsx#L14\)/
+    );
+    assert.doesNotMatch(markdown, new RegExp(escapeRegExp(repoRoot)));
   });
 });
 

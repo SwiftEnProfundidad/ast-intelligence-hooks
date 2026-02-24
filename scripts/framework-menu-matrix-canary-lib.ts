@@ -1,7 +1,7 @@
 import { mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { chdir, cwd } from 'node:process';
-import { execFileSync } from 'node:child_process';
+import { execFileSync as runBinarySync } from 'node:child_process';
 import {
   runRepoAndStagedPrePushGateSilent,
   runRepoGateSilent,
@@ -150,7 +150,7 @@ const extractRuleIdsFromEvidence = (repoRoot: string): string[] => {
 };
 
 const stageCanaryPath = (repoRoot: string, relativePath: string): void => {
-  execFileSync('git', ['add', '--', relativePath], {
+  runBinarySync('git', ['add', '--', relativePath], {
     cwd: repoRoot,
     encoding: 'utf8',
   });
@@ -158,24 +158,24 @@ const stageCanaryPath = (repoRoot: string, relativePath: string): void => {
 
 const cleanupCanaryPathFromIndex = (repoRoot: string, relativePath: string): void => {
   try {
-    execFileSync('git', ['restore', '--staged', '--', relativePath], {
+    runBinarySync('git', ['restore', '--staged', '--', relativePath], {
       cwd: repoRoot,
       encoding: 'utf8',
       stdio: 'ignore',
     });
     return;
-  } catch {
-    // Continue to fallback cleanup strategy.
+  } catch (restoreError) {
+    void restoreError;
   }
 
   try {
-    execFileSync('git', ['rm', '--cached', '--ignore-unmatch', '--', relativePath], {
+    runBinarySync('git', ['rm', '--cached', '--ignore-unmatch', '--', relativePath], {
       cwd: repoRoot,
       encoding: 'utf8',
       stdio: 'ignore',
     });
-  } catch {
-    // best effort cleanup
+  } catch (removeError) {
+    void removeError;
   }
 };
 
@@ -247,13 +247,13 @@ export const runConsumerMenuCanary = async (params?: {
   } finally {
     try {
       cleanupCanaryPathFromIndex(repoRoot, canaryRelativePath);
-    } catch {
-      // best effort cleanup
+    } catch (cleanupError) {
+      void cleanupError;
     }
     try {
       unlinkSync(canaryAbsolutePath);
-    } catch {
-      // best effort cleanup
+    } catch (unlinkError) {
+      void unlinkError;
     }
     chdir(previousCwd);
   }

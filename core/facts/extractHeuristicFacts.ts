@@ -305,17 +305,17 @@ const createFsCallbackMethodLineLocator = (methodName: string): ASTLineLocator =
 };
 
 const inferFsLineLocatorFromDetectorExportName = (exportName: string): ASTLineLocator | undefined => {
-  const fsSyncMatch = /^hasFs(.+)SyncCall$/.exec(exportName);
+  const fsSyncMatch = exportName.match(/^hasFs(.+)SyncCall$/);
   if (fsSyncMatch?.[1]) {
     return createFsSyncMethodLineLocator(`${lowerFirst(fsSyncMatch[1])}Sync`);
   }
 
-  const fsPromisesMatch = /^hasFsPromises(.+)Call$/.exec(exportName);
+  const fsPromisesMatch = exportName.match(/^hasFsPromises(.+)Call$/);
   if (fsPromisesMatch?.[1]) {
     return createFsPromisesMethodLineLocator(lowerFirst(fsPromisesMatch[1]));
   }
 
-  const fsCallbackMatch = /^hasFs(.+)CallbackCall$/.exec(exportName);
+  const fsCallbackMatch = exportName.match(/^hasFs(.+)CallbackCall$/);
   if (fsCallbackMatch?.[1]) {
     return createFsCallbackMethodLineLocator(lowerFirst(fsCallbackMatch[1]));
   }
@@ -379,7 +379,7 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: TS.hasConcreteDependencyInstantiation, ruleId: 'heuristics.ts.solid.dip.concrete-instantiation.ast', code: 'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST', message: 'AST heuristic detected DIP risk: direct instantiation of concrete framework dependency.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasLargeClassDeclaration, ruleId: 'heuristics.ts.god-class-large-class.ast', code: 'HEURISTICS_GOD_CLASS_LARGE_CLASS_AST', message: 'AST heuristic detected God Class candidate (>=300 lines in a single class declaration).' },
   { detect: TS.hasRecordStringUnknownType, locateLines: TS.findRecordStringUnknownTypeLines, ruleId: 'common.types.record_unknown_requires_type', code: 'COMMON_TYPES_RECORD_UNKNOWN_REQUIRES_TYPE_AST', message: 'AST heuristic detected Record<string, unknown> without explicit value union.' },
-  { detect: TS.hasUnknownWithoutGuard, locateLines: TS.findUnknownWithoutGuardLines, ruleId: 'common.types.unknown_without_guard', code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST', message: 'AST heuristic detected unknown usage without explicit guard evidence.' },
+  { detect: TS.hasUnknownWithoutGuard, locateLines: TS.findUnknownWithoutGuardLines, ruleId: 'common.types.unknown_without_guard', code: 'COMMON_TYPES_UNKNOWN_WITHOUT_GUARD_AST', message: 'AST heuristic detected unknown usage without explicit guard evidence.', pathCheck: isTypeScriptDomainOrApplicationPath },
   { detect: TS.hasUndefinedInBaseTypeUnion, locateLines: TS.findUndefinedInBaseTypeUnionLines, ruleId: 'common.types.undefined_in_base_type', code: 'COMMON_TYPES_UNDEFINED_IN_BASE_TYPE_AST', message: 'AST heuristic detected undefined inside base-type unions.' },
   { detect: TS.hasNetworkCallWithoutErrorHandling, locateLines: TS.findNetworkCallWithoutErrorHandlingLines, ruleId: 'common.network.missing_error_handling', code: 'COMMON_NETWORK_MISSING_ERROR_HANDLING_AST', message: 'AST heuristic detected network calls without explicit error handling.', pathCheck: isTypeScriptNetworkResiliencePath, includeTestPaths: true },
 

@@ -5,6 +5,15 @@ import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { startEnterpriseMcpServer } from '../enterpriseServer';
 
+const safeFetchRequest = async (url: string, init?: RequestInit): Promise<Response> => {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`[mcp-test] request failed: ${url} (${message})`);
+  }
+};
+
 const runGit = (cwd: string, args: ReadonlyArray<string>): void => {
   execFileSync('git', args, {
     cwd,
@@ -52,7 +61,7 @@ const withEnterpriseServer = async (
 test('enterprise server exposes health endpoint', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/health`);
+      const response = await safeFetchRequest(`${baseUrl}/health`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as { status?: string };
       assert.equal(payload.status, 'ok');
@@ -72,7 +81,7 @@ test('enterprise server enforces method checks for health/status/resources/resou
         { path: '/tool', method: 'GET' },
       ];
       for (const check of checks) {
-        const response = await fetch(`${baseUrl}${check.path}`, {
+        const response = await safeFetchRequest(`${baseUrl}${check.path}`, {
           method: check.method,
         });
         assert.equal(response.status, 405);
@@ -84,7 +93,7 @@ test('enterprise server enforces method checks for health/status/resources/resou
 test('enterprise server exposes baseline status payload with capabilities', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/status`);
+      const response = await safeFetchRequest(`${baseUrl}/status`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         status?: string;
@@ -120,7 +129,7 @@ test('enterprise server exposes baseline status payload with capabilities', asyn
 test('enterprise server exposes enterprise resources catalog', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/resources`);
+      const response = await safeFetchRequest(`${baseUrl}/resources`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         resources?: Array<{ uri?: string }>;
@@ -140,7 +149,7 @@ test('enterprise server exposes enterprise resources catalog', async () => {
 test('enterprise server exposes enterprise tools catalog', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/tools`);
+      const response = await safeFetchRequest(`${baseUrl}/tools`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         tools?: Array<{ name?: string; mutating?: boolean }>;
@@ -166,7 +175,7 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     runGit(repoRoot, ['init']);
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const aiGateResponse = await fetch(`${baseUrl}/tool`, {
+      const aiGateResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -187,7 +196,7 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
       assert.equal(aiGatePayload.dryRun, true);
       assert.equal(aiGatePayload.executed, true);
 
-      const sddStatusResponse = await fetch(`${baseUrl}/tool`, {
+      const sddStatusResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -214,7 +223,7 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
         'OPENSPEC_MISSING'
       );
 
-      const cleanupResponse = await fetch(`${baseUrl}/tool`, {
+      const cleanupResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -339,7 +348,7 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
     );
 
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const aiGateResponse = await fetch(`${baseUrl}/tool`, {
+      const aiGateResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -463,7 +472,7 @@ test('enterprise server ai_gate_check propaga policy trace hard mode persistida 
     );
 
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const aiGateResponse = await fetch(`${baseUrl}/tool`, {
+      const aiGateResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -500,7 +509,7 @@ test('enterprise server ai_gate_check propaga policy trace hard mode persistida 
 test('enterprise server blocks critical tools with SDD_VALIDATION_ERROR outside git repositories', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/tool`, {
+      const response = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -538,7 +547,7 @@ test('enterprise server executes validate_and_fix in baseline dry-run when SDD b
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
       await withSddBypass(async () => {
-        const response = await fetch(`${baseUrl}/tool`, {
+        const response = await safeFetchRequest(`${baseUrl}/tool`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -591,7 +600,7 @@ test('enterprise server keeps sync_branches in dry-run even when dryRun=false is
     runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
       await withSddBypass(async () => {
-        const response = await fetch(`${baseUrl}/tool`, {
+        const response = await safeFetchRequest(`${baseUrl}/tool`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -632,7 +641,7 @@ test('enterprise server keeps sync_branches in dry-run even when dryRun=false is
 test('enterprise server rejects invalid tool invocations', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const invalidToolResponse = await fetch(`${baseUrl}/tool`, {
+      const invalidToolResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -643,7 +652,7 @@ test('enterprise server rejects invalid tool invocations', async () => {
       });
       assert.equal(invalidToolResponse.status, 404);
 
-      const invalidJsonResponse = await fetch(`${baseUrl}/tool`, {
+      const invalidJsonResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -652,7 +661,7 @@ test('enterprise server rejects invalid tool invocations', async () => {
       });
       assert.equal(invalidJsonResponse.status, 400);
 
-      const invalidBodyResponse = await fetch(`${baseUrl}/tool`, {
+      const invalidBodyResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -667,7 +676,7 @@ test('enterprise server rejects invalid tool invocations', async () => {
 test('enterprise server exposes resource payloads and handles unknown uri', async () => {
   await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
     await withEnterpriseServer(repoRoot, async (baseUrl) => {
-      const evidenceResponse = await fetch(
+      const evidenceResponse = await safeFetchRequest(
         `${baseUrl}/resource?uri=${encodeURIComponent('evidence://status')}`
       );
       assert.equal(evidenceResponse.status, 200);
@@ -678,7 +687,7 @@ test('enterprise server exposes resource payloads and handles unknown uri', asyn
       assert.equal(evidencePayload.uri, 'evidence://status');
       assert.equal(typeof evidencePayload.payload?.status, 'string');
 
-      const contextResponse = await fetch(
+      const contextResponse = await safeFetchRequest(
         `${baseUrl}/resource?uri=${encodeURIComponent('context://active')}`
       );
       assert.equal(contextResponse.status, 200);
@@ -687,7 +696,7 @@ test('enterprise server exposes resource payloads and handles unknown uri', asyn
       };
       assert.equal(contextPayload.payload?.repoRoot, repoRoot);
 
-      const activeChangeResponse = await fetch(
+      const activeChangeResponse = await safeFetchRequest(
         `${baseUrl}/resource?uri=${encodeURIComponent('sdd://active-change')}`
       );
       assert.equal(activeChangeResponse.status, 200);
@@ -697,7 +706,7 @@ test('enterprise server exposes resource payloads and handles unknown uri', asyn
       assert.equal(activeChangePayload.payload?.active, false);
       assert.equal(activeChangePayload.payload?.changeId, null);
 
-      const sddStatusResponse = await fetch(
+      const sddStatusResponse = await safeFetchRequest(
         `${baseUrl}/resource?uri=${encodeURIComponent('sdd://status')}`
       );
       assert.equal(sddStatusResponse.status, 200);
@@ -706,7 +715,7 @@ test('enterprise server exposes resource payloads and handles unknown uri', asyn
       };
       assert.equal(sddStatusPayload.payload?.available, false);
 
-      const missingResponse = await fetch(
+      const missingResponse = await safeFetchRequest(
         `${baseUrl}/resource?uri=${encodeURIComponent('unknown://resource')}`
       );
       assert.equal(missingResponse.status, 404);

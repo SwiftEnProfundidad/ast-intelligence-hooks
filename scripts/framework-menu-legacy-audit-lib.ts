@@ -115,6 +115,35 @@ const asString = (value: unknown, fallback: string): string => {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
 };
 
+const normalizePath = (value: string): string => {
+  return value.replace(/\\/g, '/');
+};
+
+const normalizeRepoRoot = (repoRoot: string): string => {
+  const normalized = normalizePath(repoRoot.trim());
+  if (normalized.endsWith('/')) {
+    return normalized.slice(0, -1);
+  }
+  return normalized;
+};
+
+const toRepoRelativePath = (params: { repoRoot: string; filePath: string }): string => {
+  const candidate = normalizePath(params.filePath).replace(/^\.\//, '');
+  if (!candidate.startsWith('/')) {
+    return candidate;
+  }
+  const repoRoot = normalizeRepoRoot(params.repoRoot);
+  const repoPrefix = `${repoRoot}/`;
+  if (candidate === repoRoot) {
+    return '.';
+  }
+  if (candidate.startsWith(repoPrefix)) {
+    const relativePath = candidate.slice(repoPrefix.length);
+    return relativePath.length > 0 ? relativePath : '.';
+  }
+  return candidate;
+};
+
 const normalizeGateSeverity = (value: unknown): GateSeverity => {
   const normalized = asString(value, 'INFO').toUpperCase();
   if (normalized === 'CRITICAL') {
@@ -283,9 +312,15 @@ const parseSnapshotPlatformSummaries = (value: unknown): PlatformSummary[] => {
   });
 };
 
-const toNormalizedFindings = (findings: ReadonlyArray<EvidenceFinding>): NormalizedFinding[] => {
+const toNormalizedFindings = (
+  findings: ReadonlyArray<EvidenceFinding>,
+  repoRoot: string
+): NormalizedFinding[] => {
   return findings.map((finding) => {
-    const filePath = asString(finding.filePath, asString(finding.file, 'unknown')).replace(/\\/g, '/');
+    const filePath = toRepoRelativePath({
+      repoRoot,
+      filePath: asString(finding.filePath, asString(finding.file, 'unknown')),
+    });
     const ruleId = asString(finding.ruleId, 'unknown.rule');
     return {
       ruleId,
@@ -844,7 +879,10 @@ export const readLegacyAuditSummary = (repoRoot: string = process.cwd()): Legacy
       rulesets?: unknown;
       severity_metrics?: unknown;
     };
-    const normalizedFindings = toNormalizedFindings(asFindings(parsed.snapshot?.findings));
+    const normalizedFindings = toNormalizedFindings(
+      asFindings(parsed.snapshot?.findings),
+      repoRoot
+    );
     const availableBundles = asRulesets(parsed.rulesets)
       .map((ruleset) => asString(ruleset.bundle, ''))
       .filter((bundle) => bundle.length > 0);

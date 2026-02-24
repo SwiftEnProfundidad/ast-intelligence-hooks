@@ -1,4 +1,7 @@
-import { isPathInsideRepo } from './adapter-session-status-log-utils-lib';
+import {
+  isPathInsideRepo,
+  toRepoRelativePath,
+} from './adapter-session-status-log-utils-lib';
 
 export const filterWritesLogLinesForRepo = (params: {
   content: string;
@@ -16,9 +19,16 @@ export const filterWritesLogLinesForRepo = (params: {
       const parsed = JSON.parse(line) as { file?: string };
       const filePath = typeof parsed.file === 'string' ? parsed.file : '';
       if (isPathInsideRepo({ repoRoot: params.repoRoot, filePath })) {
-        filtered.push(line);
+        const normalizedPath = toRepoRelativePath({
+          repoRoot: params.repoRoot,
+          filePath,
+        });
+        parsed.file = normalizedPath;
+        filtered.push(JSON.stringify(parsed));
       }
-    } catch {}
+    } catch {
+      continue;
+    }
   }
 
   return filtered;

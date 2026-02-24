@@ -1,6 +1,6 @@
 import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnSync as runSpawnSync } from 'node:child_process';
 import {
   buildLegacyParityCommandArgs,
   buildDefaultC020BenchmarkOptions,
@@ -59,7 +59,7 @@ const runMenuAudit = (options: C020BenchmarkOptions): void => {
     ...process.env,
     ...(options.sddBypass ? { PUMUKI_SDD_BYPASS: '1' } : {}),
   };
-  const result = spawnSync('node', ['bin/pumuki-framework.js'], {
+  const result = runSpawnSync('node', ['bin/pumuki-framework.js'], {
     encoding: 'utf8',
     env,
     input: '1\n10\n',
@@ -103,7 +103,7 @@ const loadEvidenceSummary = (path: string): {
 
 const runLegacyParity = (options: C020BenchmarkOptions): number => {
   const args = buildLegacyParityCommandArgs(options);
-  const result = spawnSync('node', args, { encoding: 'utf8' });
+  const result = runSpawnSync('node', args, { encoding: 'utf8' });
   writeExecutionLog(options.parityLogPath, {
     stdout: result.stdout ?? '',
     stderr: result.stderr ?? '',

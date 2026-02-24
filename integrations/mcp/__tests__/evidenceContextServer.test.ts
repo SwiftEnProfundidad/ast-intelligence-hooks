@@ -4,6 +4,15 @@ import test from 'node:test';
 import { startEvidenceContextServer } from '../evidenceContextServer';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 
+const safeFetchRequest = async (url: string, init?: RequestInit): Promise<Response> => {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`[mcp-test] request failed: ${url} (${message})`);
+  }
+};
+
 const withStartedServer = async (
   repoRoot: string,
   options: { route?: string } = {},
@@ -49,7 +58,7 @@ test('normalizes custom route and keeps host/port contract', async () => {
 test('returns 405 for non-GET requests', async () => {
   await withTempDir('pumuki-evidence-server-direct-', async (repoRoot) => {
     await withStartedServer(repoRoot, {}, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/health`, { method: 'POST' });
+      const response = await safeFetchRequest(`${baseUrl}/health`, { method: 'POST' });
       assert.equal(response.status, 405);
       const payload = (await response.json()) as { error?: string };
       assert.equal(payload.error, 'Method not allowed');
@@ -62,7 +71,7 @@ test('returns degraded status and 404 on normalized custom evidence route when f
     await withStartedServer(repoRoot, { route: 'evidence///' }, async (baseUrl, route) => {
       assert.equal(route, '/evidence');
 
-      const statusResponse = await fetch(`${baseUrl}/status`);
+      const statusResponse = await safeFetchRequest(`${baseUrl}/status`);
       assert.equal(statusResponse.status, 200);
       const statusPayload = (await statusResponse.json()) as {
         status?: string;
@@ -79,7 +88,7 @@ test('returns degraded status and 404 on normalized custom evidence route when f
       assert.equal(statusPayload.evidence?.valid, false);
       assert.equal(statusPayload.evidence?.findings_count, 0);
 
-      const evidenceResponse = await fetch(`${baseUrl}${route}`);
+      const evidenceResponse = await safeFetchRequest(`${baseUrl}${route}`);
       assert.equal(evidenceResponse.status, 404);
       const evidencePayload = (await evidenceResponse.json()) as { error?: string };
       assert.equal(evidencePayload.error, 'Evidence file not found or invalid');

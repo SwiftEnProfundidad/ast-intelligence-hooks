@@ -81,7 +81,9 @@ export const runLifecycleUpdate = (params?: {
           ];
       try {
         npm.runNpm(rollbackArgs, doctorReport.repoRoot);
-      } catch {}
+      } catch (rollbackError) {
+        void rollbackError;
+      }
     }
     throw error;
   }

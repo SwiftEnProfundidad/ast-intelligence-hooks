@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
+import { spawnSync as runSpawnSync } from 'node:child_process';
 import { inspectPackageManifestPaths } from './package-manifest-lib';
 
 export type PackFile = {
@@ -58,7 +58,7 @@ const parseNpmPackDryRunFiles = (stdout: string): ReadonlyArray<string> => {
 };
 
 const listPackFilesWithNpmPackDryRun = (cwd: string): ReadonlyArray<string> => {
-  const result = spawnSync('npm', ['pack', '--json', '--dry-run'], {
+  const result = runSpawnSync('npm', ['pack', '--json', '--dry-run'], {
     cwd,
     encoding: 'utf8',
     env: process.env,

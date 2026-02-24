@@ -68,4 +68,13 @@ const withEvidenceServer = async (
   }
 };
 
-export { createEvidencePayload, withEvidenceServer, test, withTempDir };
+const safeFetchRequest = async (url: string, init?: RequestInit): Promise<Response> => {
+  try {
+    return await fetch(url, init);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`[mcp-test] request failed: ${url} (${message})`);
+  }
+};
+
+export { createEvidencePayload, safeFetchRequest, withEvidenceServer, test, withTempDir };

@@ -1,12 +1,18 @@
 import assert from 'node:assert/strict';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { createEvidencePayload, test, withEvidenceServer, withTempDir } from './evidenceContextServerFixtures';
+import {
+  createEvidencePayload,
+  safeFetchRequest,
+  test,
+  withEvidenceServer,
+  withTempDir,
+} from './evidenceContextServerFixtures';
 
 test('serves health endpoint', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/health`);
+      const response = await safeFetchRequest(`${baseUrl}/health`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as { status?: string };
       assert.equal(payload.status, 'ok');
@@ -17,7 +23,7 @@ test('serves health endpoint', async () => {
 test('returns 404 when evidence file is missing', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/ai-evidence`);
+      const response = await safeFetchRequest(`${baseUrl}/ai-evidence`);
       assert.equal(response.status, 404);
     });
   });
@@ -26,7 +32,7 @@ test('returns 404 when evidence file is missing', async () => {
 test('returns degraded status when evidence file is missing', async () => {
   await withTempDir('pumuki-evidence-server-', async (repoRoot) => {
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/status`);
+      const response = await safeFetchRequest(`${baseUrl}/status`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         status?: string;
@@ -84,7 +90,7 @@ test('returns summary status payload when evidence file is valid v2.1', async ()
     );
 
     await withEvidenceServer(repoRoot, async (baseUrl) => {
-      const response = await fetch(`${baseUrl}/status`);
+      const response = await safeFetchRequest(`${baseUrl}/status`);
       assert.equal(response.status, 200);
       const payload = (await response.json()) as {
         status?: string;

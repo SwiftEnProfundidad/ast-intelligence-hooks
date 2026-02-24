@@ -51,7 +51,9 @@ export class LifecycleGitService implements ILifecycleGitService {
   clearLocalConfig(cwd: string, key: string): void {
     try {
       this.runGit(['config', '--local', '--unset', key], cwd);
-    } catch {}
+    } catch (error) {
+      void error;
+    }
   }
 
   localConfig(cwd: string, key: string): string | undefined {

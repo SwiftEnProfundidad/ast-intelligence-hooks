@@ -1,0 +1,145 @@
+{
+  "stage": "PRE_COMMIT",
+  "audit_mode": "engine",
+  "outcome": "BLOCK",
+  "files_scanned": 987,
+  "total_violations": 146,
+  "by_enterprise_severity": {
+    "CRITICAL": 42,
+    "HIGH": 44,
+    "MEDIUM": 60,
+    "LOW": 0
+  },
+  "rules_coverage": {
+    "active": 417,
+    "evaluated": 417,
+    "unevaluated": 0,
+    "coverage_ratio": 1
+  },
+  "top_rules": [
+    {
+      "ruleId": "common.types.unknown_without_guard",
+      "count": 60
+    },
+    {
+      "ruleId": "common.types.undefined_in_base_type",
+      "count": 33
+    },
+    {
+      "ruleId": "common.types.record_unknown_requires_type",
+      "count": 26
+    },
+    {
+      "ruleId": "common.network.missing_error_handling",
+      "count": 6
+    },
+    {
+      "ruleId": "common.error.empty_catch",
+      "count": 4
+    },
+    {
+      "ruleId": "skills.backend.no-empty-catch",
+      "count": 4
+    },
+    {
+      "ruleId": "skills.frontend.no-empty-catch",
+      "count": 4
+    },
+    {
+      "ruleId": "heuristics.ts.child-process-spawn-sync.ast",
+      "count": 2
+    },
+    {
+      "ruleId": "heuristics.ts.child-process-exec-file-sync.ast",
+      "count": 1
+    },
+    {
+      "ruleId": "heuristics.ts.child-process-exec-file-untrusted-args.ast",
+      "count": 1
+    },
+    {
+      "ruleId": "heuristics.ts.child-process-exec.ast",
+      "count": 1
+    },
+    {
+      "ruleId": "heuristics.ts.dynamic-shell-invocation.ast",
+      "count": 1
+    },
+    {
+      "ruleId": "heuristics.ts.process-exit.ast",
+      "count": 1
+    },
+    {
+      "ruleId": "workflow.bdd.insufficient_features",
+      "count": 1
+    },
+    {
+      "ruleId": "workflow.bdd.missing_feature_files",
+      "count": 1
+    }
+  ],
+  "top_files": [
+    {
+      "file": "scripts/framework-menu-matrix-canary-lib.ts",
+      "count": 6
+    },
+    {
+      "file": "core/facts/extractHeuristicFacts.ts",
+      "count": 4
+    },
+    {
+      "file": "integrations/lifecycle/gitService.ts",
+      "count": 4
+    },
+    {
+      "file": "core/facts/detectors/typescript/index.ts",
+      "count": 3
+    },
+    {
+      "file": "integrations/config/skillsCustomRules.ts",
+      "count": 3
+    },
+    {
+      "file": "integrations/lifecycle/update.ts",
+      "count": 3
+    },
+    {
+      "file": "integrations/mcp/enterpriseServer.ts",
+      "count": 3
+    },
+    {
+      "file": "scripts/adapter-session-status-writes-log-filter-lib.ts",
+      "count": 3
+    },
+    {
+      "file": "PROJECT_ROOT",
+      "count": 2
+    },
+    {
+      "file": "core/facts/detectors/browser/index.ts",
+      "count": 2
+    },
+    {
+      "file": "core/facts/detectors/process/core.ts",
+      "count": 2
+    },
+    {
+      "file": "core/facts/detectors/process/shell.ts",
+      "count": 2
+    },
+    {
+      "file": "core/facts/detectors/process/spawn.ts",
+      "count": 2
+    },
+    {
+      "file": "core/facts/detectors/security/securityCredentials.ts",
+      "count": 2
+    },
+    {
+      "file": "core/facts/detectors/security/securityCrypto.ts",
+      "count": 2
+    }
+  ],
+  "source": ".audit_tmp/c021-0-t2/enterprise-menu1.json",
+  "generated_at": "2026-02-24T09:18:27Z"
+}

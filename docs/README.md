@@ -4,7 +4,7 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- No hay ciclo activo abierto en este momento.
+- `docs/ENTERPRISE_EXECUTION_CYCLE_021.md`: ciclo activo en ejecucion.
 - Ultimo cierre oficial: `docs/validation/c020-enterprise-certification-report.md`.
 - Politica: abrir solo 1 ciclo temporal a la vez y retirarlo al cerrar.
 
@@ -46,6 +46,20 @@ Canonical index for active Pumuki documentation.
 
 - `docs/validation/README.md`: enterprise minimal validation index.
 - `docs/validation/adapter-hook-runtime-validation.md`
+- `docs/validation/c021-critical-batch-a1-remediation.md`
+- `docs/validation/c021-critical-batch-a1-severity-delta.md`
+- `docs/validation/c021-critical-batch-selection.md`
+- `docs/validation/c021-full-repo-baseline.md`
+- `docs/validation/c021-high-batch-b1-remediation.md`
+- `docs/validation/c021-high-batch-b1-severity-delta.md`
+- `docs/validation/c021-high-batch-selection.md`
+- `docs/validation/c021-clickable-consistency-c2-remediation.md`
+- `docs/validation/c021-medium-quick-wins-c1-remediation.md`
+- `docs/validation/c021-stage-parity-c3-validation.md`
+- `docs/validation/c021-d1-local-revalidation.md`
+- `docs/validation/c021-d3-gitflow-close.md`
+- `docs/validation/c021-enterprise-certification-report.md`
+- `docs/validation/c021-phase-acceptance-contract.md`
 - `docs/validation/c020-ast-detector-contract.md`
 - `docs/validation/c020-enterprise-certification-report.md`
 - `docs/validation/c020-legacy-refactor-benchmark.md`
