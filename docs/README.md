@@ -4,8 +4,9 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- `docs/ENTERPRISE_EXECUTION_CYCLE_020.md`: unico ciclo activo en ejecucion.
-- Politica: al cerrar ciclo, este MD de seguimiento se retira y se conserva solo resumen oficial estable.
+- No hay ciclo activo abierto en este momento.
+- Ultimo cierre oficial: `docs/validation/c020-enterprise-certification-report.md`.
+- Politica: abrir solo 1 ciclo temporal a la vez y retirarlo al cerrar.
 
 ## Product and Architecture
 

@@ -64,6 +64,14 @@ Interpretacion:
 - **Framework status**: `READY_FOR_GITFLOW_CLOSE`
 - **Repo quality status**: `BLOCKED_BY_REAL_FINDINGS` (comportamiento esperado del gate)
 
-## 6) NEXT
+## 6) Cierre Git Flow y sincronizacion final
 
-NEXT: `C020.E.T3` cerrar Git Flow end-to-end (`feature -> develop -> main`) y sincronizar ramas en `0/0`.
+- PR `#417`: `feature/c020-phase0-doc-hygiene` -> `develop` (merge completado)
+- PR `#418`: `develop` -> `main` (promote completado)
+- PR `#419`: `main` -> `develop` (sync-back operativo)
+- PR `#420`: `develop` -> `main` (sync final)
+- sincronizacion final de ramas protegidas: `origin/main...origin/develop = 0/0`
+
+## 7) NEXT
+
+NEXT: esperar nueva instrucción del usuario para abrir el siguiente ciclo enterprise.
