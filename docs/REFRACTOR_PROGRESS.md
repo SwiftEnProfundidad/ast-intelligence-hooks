@@ -804,4 +804,16 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - sync final protegido: `origin/main...origin/develop = 0/0`
   - ✅ reporte oficial publicado:
     - `docs/validation/c021-d3-gitflow-close.md`
-- 🚧 `P-ADHOC-LINES-021P` Ejecutar `C021.D.T4`: retirar MD temporal del ciclo C021 y consolidar cierre en documentacion estable.
+- ✅ `P-ADHOC-LINES-021P` Ejecutar `C021.D.T4`: retirar MD temporal del ciclo C021 y consolidar cierre en documentacion estable.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c021-d-t4-red.out` (`exit_code=1`, ciclo temporal aun activo al inicio)
+    - `GREEN`: `.audit_tmp/c021-d-t4-green.out` (`status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental estable + una sola tarea activa.
+  - ✅ retiro de tracking temporal:
+    - eliminado `docs/ENTERPRISE_EXECUTION_CYCLE_021.md`
+  - ✅ consolidacion oficial publicada:
+    - `docs/validation/c021-d4-cycle-retirement.md`
+  - ✅ indices oficiales ajustados:
+    - `docs/README.md` (sin ciclo activo, ultimo cierre `C021`)
+    - `docs/validation/README.md` (incluye `c021-d4-cycle-retirement.md`)
+- 🚧 `P-ADHOC-LINES-021Q` Standby operativo post-cierre C021: esperar nueva instruccion explicita del usuario.

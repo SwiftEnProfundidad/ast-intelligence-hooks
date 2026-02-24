@@ -86,4 +86,4 @@ Contrato operativo del ciclo `021` para garantizar salida enterprise por fase, c
 
 ## NEXT
 
-NEXT: ejecutar `C021.D.T4` para retiro del MD temporal de ciclo y consolidacion documental estable.
+NEXT: contrato completado en `C021.D.T4`; esperar nueva instruccion explicita para apertura de siguiente ciclo.

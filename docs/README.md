@@ -4,8 +4,8 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- `docs/ENTERPRISE_EXECUTION_CYCLE_021.md`: ciclo activo en ejecucion.
-- Ultimo cierre oficial: `docs/validation/c020-enterprise-certification-report.md`.
+- No hay ciclo activo abierto en este momento.
+- Ultimo cierre oficial: `docs/validation/c021-enterprise-certification-report.md`.
 - Politica: abrir solo 1 ciclo temporal a la vez y retirarlo al cerrar.
 
 ## Product and Architecture
@@ -58,6 +58,7 @@ Canonical index for active Pumuki documentation.
 - `docs/validation/c021-stage-parity-c3-validation.md`
 - `docs/validation/c021-d1-local-revalidation.md`
 - `docs/validation/c021-d3-gitflow-close.md`
+- `docs/validation/c021-d4-cycle-retirement.md`
 - `docs/validation/c021-enterprise-certification-report.md`
 - `docs/validation/c021-phase-acceptance-contract.md`
 - `docs/validation/c020-ast-detector-contract.md`

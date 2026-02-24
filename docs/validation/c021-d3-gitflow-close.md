@@ -51,4 +51,4 @@ git pull --ff-only origin develop
 
 ## NEXT
 
-NEXT: ejecutar `C021.D.T4` para retirar el MD temporal del ciclo y consolidar la documentación estable.
+NEXT: esperar nueva instrucción del usuario; `C021.D.T4` completa el retiro del MD temporal y la consolidación estable del ciclo.

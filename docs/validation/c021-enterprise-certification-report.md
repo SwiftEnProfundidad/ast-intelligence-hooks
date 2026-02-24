@@ -81,14 +81,14 @@ Delta final (`.audit_tmp/c021-d-t2-delta.json`):
 
 - **Framework status**: `READY_FOR_GITFLOW_CLOSE`
 - **Repo quality status**: `BLOCKED_BY_REAL_FINDINGS` (comportamiento esperado del gate)
-- **Ciclo status (documental/tecnico)**: `READY_FOR_D3_D4`
+- **Ciclo status (documental/tecnico)**: `CLOSED_D4`
 
 ## 7) Estado de cierre Git Flow
 
-- `D.T2` deja certificado el estado tecnico y documental del ciclo.
-- El cierre Git Flow formal (`feature -> develop -> main`) y la sincronizacion `0/0` quedan en `C021.D.T3`.
-- El retiro del md temporal de ciclo y consolidacion final quedan en `C021.D.T4`.
+- `D.T2` certifica el estado tecnico y documental base del ciclo.
+- `D.T3` completa el cierre Git Flow formal (`feature -> develop -> main`) y la sincronizacion `0/0`.
+- `D.T4` retira el md temporal de ciclo y consolida el cierre documental estable.
 
 ## 8) NEXT
 
-NEXT: ejecutar `C021.D.T3` para cierre Git Flow end-to-end y sincronizacion final de ramas protegidas.
+NEXT: esperar nueva instruccion del usuario para apertura de un nuevo ciclo enterprise.

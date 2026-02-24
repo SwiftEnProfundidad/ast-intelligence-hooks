@@ -17,6 +17,7 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - `c021-stage-parity-c3-validation.md`
 - `c021-d1-local-revalidation.md`
 - `c021-d3-gitflow-close.md`
+- `c021-d4-cycle-retirement.md`
 - `c021-enterprise-certification-report.md`
 - `c021-phase-acceptance-contract.md`
 - `c020-ast-detector-contract.md`
