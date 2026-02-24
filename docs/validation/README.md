@@ -21,6 +21,7 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - `c021-enterprise-certification-report.md`
 - `c021-phase-acceptance-contract.md`
 - `c022-full-repo-baseline.md`
+- `c022-phase-acceptance-contract.md`
 - `c020-ast-detector-contract.md`
 - `c020-enterprise-certification-report.md`
 - `c020-legacy-refactor-benchmark.md`

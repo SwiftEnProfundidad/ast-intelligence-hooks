@@ -34,10 +34,15 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
   - snapshot:
     - `total_violations=61` (`CRITICAL 34`, `HIGH 27`, `MEDIUM 0`, `LOW 0`)
     - `rules_coverage active=417 evaluated=417 unevaluated=0 ratio=1.0`
-- 🚧 `C022.0.T3` Contrato de aceptacion por fases (KPI, evidencia y condiciones de cierre).
+- ✅ `C022.0.T3` Contrato de aceptacion por fases (KPI, evidencia y condiciones de cierre).
+  - contrato oficial publicado:
+    - `docs/validation/c022-phase-acceptance-contract.md`
+  - índices oficiales actualizados:
+    - `docs/validation/README.md`
+    - `docs/README.md`
 
 ### Fase A - Remediacion prioritaria CRITICAL
-- ⏳ `C022.A.T1` Seleccionar lote `CRITICAL` priorizado por impacto.
+- 🚧 `C022.A.T1` Seleccionar lote `CRITICAL` priorizado por impacto.
 - ⏳ `C022.A.T2` Aplicar TDD por lote (red/green/refactor) sin romper trazabilidad AST.
 - ⏳ `C022.A.T3` Revalidar full-repo y publicar delta de severidad.
 
@@ -58,4 +63,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.0.T3` Contrato de aceptacion por fases (KPI, evidencia y condiciones de cierre).
+- `C022.A.T1` Seleccionar lote `CRITICAL` priorizado por impacto.

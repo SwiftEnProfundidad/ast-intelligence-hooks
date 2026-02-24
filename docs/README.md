@@ -62,6 +62,7 @@ Canonical index for active Pumuki documentation.
 - `docs/validation/c021-enterprise-certification-report.md`
 - `docs/validation/c021-phase-acceptance-contract.md`
 - `docs/validation/c022-full-repo-baseline.md`
+- `docs/validation/c022-phase-acceptance-contract.md`
 - `docs/validation/c020-ast-detector-contract.md`
 - `docs/validation/c020-enterprise-certification-report.md`
 - `docs/validation/c020-legacy-refactor-benchmark.md`

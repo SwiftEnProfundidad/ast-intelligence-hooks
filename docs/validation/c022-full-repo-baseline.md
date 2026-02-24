@@ -60,4 +60,4 @@ node --import tsx scripts/run-c020-benchmark.ts \
 
 ## NEXT
 
-NEXT: ejecutar `C022.0.T3` y fijar contrato de aceptación/KPI por fases para la remediación `CRITICAL` y `HIGH`.
+NEXT: ejecutar `C022.A.T1` y seleccionar lote `CRITICAL` priorizado por impacto.

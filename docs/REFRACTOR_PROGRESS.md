@@ -847,4 +847,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ snapshot baseline:
     - `total_violations=61` (`CRITICAL 34`, `HIGH 27`, `MEDIUM 0`, `LOW 0`)
     - `rules_coverage active=417 evaluated=417 unevaluated=0 ratio=1.0`
-- 🚧 `P-ADHOC-LINES-022C` Ejecutar `C022.0.T3`: contrato de aceptación por fases (KPI, evidencia y criterios de salida).
+- ✅ `P-ADHOC-LINES-022C` Ejecutar `C022.0.T3`: contrato de aceptación por fases (KPI, evidencia y criterios de salida).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-0-t3-red.out` (`exit_code=1`, contrato C022 aún no publicado al inicio)
+    - `GREEN`: `.audit_tmp/c022-0-t3-green.out` (`status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
+  - ✅ contrato oficial publicado:
+    - `docs/validation/c022-phase-acceptance-contract.md`
+  - ✅ índices oficiales actualizados:
+    - `docs/validation/README.md`
+    - `docs/README.md`
+- 🚧 `P-ADHOC-LINES-022D` Ejecutar `C022.A.T1`: seleccionar lote `CRITICAL` priorizado por impacto.
