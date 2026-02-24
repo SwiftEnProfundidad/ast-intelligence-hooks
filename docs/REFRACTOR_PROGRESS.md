@@ -828,4 +828,23 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`
   - ✅ indice oficial actualizado:
     - `docs/README.md`
-- 🚧 `P-ADHOC-LINES-022B` Ejecutar `C022.0.T2`: baseline full-repo versionada (severidad, top reglas/ficheros y cobertura).
+- ✅ `P-ADHOC-LINES-022B` Ejecutar `C022.0.T2`: baseline full-repo versionada (severidad, top reglas/ficheros y cobertura).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-0-t2-red.out` (`exit_code=1`, baseline C022 aun no versionada al inicio)
+    - `GREEN`: `.audit_tmp/c022-0-t2-green.out` (`status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
+  - ✅ ejecución baseline:
+    - `.audit_tmp/c022-0-t2/benchmark.out`
+    - `.audit_tmp/c022-0-t2/enterprise-menu1.json`
+    - `.audit-reports/c022-legacy-parity-menu1.md`
+  - ✅ baseline versionada:
+    - `assets/benchmarks/c022-baseline-precommit-v001.json`
+    - `assets/benchmarks/c022-baseline-precommit-v001-baseline.json`
+  - ✅ documentación oficial publicada:
+    - `docs/validation/c022-full-repo-baseline.md`
+    - `docs/validation/README.md`
+    - `docs/README.md`
+  - ✅ snapshot baseline:
+    - `total_violations=61` (`CRITICAL 34`, `HIGH 27`, `MEDIUM 0`, `LOW 0`)
+    - `rules_coverage active=417 evaluated=417 unevaluated=0 ratio=1.0`
+- 🚧 `P-ADHOC-LINES-022C` Ejecutar `C022.0.T3`: contrato de aceptación por fases (KPI, evidencia y criterios de salida).

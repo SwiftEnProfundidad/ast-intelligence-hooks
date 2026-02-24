@@ -25,8 +25,16 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 
 ### Fase 0 - Arranque y baseline del ciclo
 - ✅ `C022.0.T1` Apertura formal del ciclo `022` con fases, tareas, criterios de salida y una sola tarea activa.
-- 🚧 `C022.0.T2` Baseline full-repo versionada: severidades, top reglas, top ficheros y cobertura.
-- ⏳ `C022.0.T3` Contrato de aceptacion por fases (KPI, evidencia y condiciones de cierre).
+- ✅ `C022.0.T2` Baseline full-repo versionada: severidades, top reglas, top ficheros y cobertura.
+  - baseline versionada:
+    - `assets/benchmarks/c022-baseline-precommit-v001.json`
+    - `assets/benchmarks/c022-baseline-precommit-v001-baseline.json`
+  - reporte oficial:
+    - `docs/validation/c022-full-repo-baseline.md`
+  - snapshot:
+    - `total_violations=61` (`CRITICAL 34`, `HIGH 27`, `MEDIUM 0`, `LOW 0`)
+    - `rules_coverage active=417 evaluated=417 unevaluated=0 ratio=1.0`
+- 🚧 `C022.0.T3` Contrato de aceptacion por fases (KPI, evidencia y condiciones de cierre).
 
 ### Fase A - Remediacion prioritaria CRITICAL
 - ⏳ `C022.A.T1` Seleccionar lote `CRITICAL` priorizado por impacto.
@@ -50,4 +58,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.0.T2` Baseline full-repo versionada: severidades, top reglas, top ficheros y cobertura.
+- `C022.0.T3` Contrato de aceptacion por fases (KPI, evidencia y condiciones de cierre).
