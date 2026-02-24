@@ -54,10 +54,16 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
   - resultado A1:
     - `common.types.undefined_in_base_type` en `core/integrations`: `16 -> 0`
     - full audit post-T2: `total_violations=45` (`CRITICAL 18`, `HIGH 27`)
-- 🚧 `C022.A.T3` Revalidar full-repo y publicar delta de severidad.
+- ✅ `C022.A.T3` Revalidar full-repo y publicar delta de severidad.
+  - delta oficial publicado:
+    - `docs/validation/c022-critical-batch-a1-severity-delta.md`
+  - resultado fase A:
+    - baseline `total_violations=61` (`CRITICAL 34`, `HIGH 27`)
+    - post A1 `total_violations=45` (`CRITICAL 18`, `HIGH 27`)
+    - delta: `CRITICAL=-16`, `HIGH=0`, `total=-16`, `coverage_ratio=1`
 
 ### Fase B - Remediacion estructural HIGH
-- ⏳ `C022.B.T1` Seleccionar lote `HIGH` por riesgo técnico.
+- 🚧 `C022.B.T1` Seleccionar lote `HIGH` por riesgo técnico.
 - ⏳ `C022.B.T2` Refactor incremental con pruebas y sin degradar cobertura de reglas.
 - ⏳ `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.
 
@@ -73,4 +79,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.A.T3` Revalidar full-repo y publicar delta de severidad.
+- `C022.B.T1` Seleccionar lote `HIGH` por riesgo técnico.

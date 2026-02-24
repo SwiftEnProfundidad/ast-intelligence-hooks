@@ -877,4 +877,20 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ resultado de fase:
     - `common.types.undefined_in_base_type` en lote `A1` (`core/integrations`) remediado (`16 -> 0`).
     - pendiente para siguiente tarea: `17` hallazgos de la misma regla en `scripts/*`.
-- 🚧 `P-ADHOC-LINES-022F` Ejecutar `C022.A.T3`: revalidar full-repo y publicar delta de severidad de `CRITICAL`.
+- ✅ `P-ADHOC-LINES-022F` Ejecutar `C022.A.T3`: revalidar full-repo y publicar delta de severidad de `CRITICAL`.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-a-t3-red.out` (`has_delta_doc_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-a-t3-green.out` (`critical_reduced_rc=0`, `high_no_increase_rc=0`, `coverage_ratio_ok_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + ajuste tipado en `skillsCustomRules` para mantener compilacion global.
+  - ✅ evidencia de revalidacion:
+    - `.audit_tmp/c022-a-t3/benchmark.out`
+    - `.audit_tmp/c022-a-t3/enterprise-menu1.json`
+    - `.audit_tmp/c022-a-t3-diff.json`
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-critical-batch-a1-severity-delta.md`
+  - ✅ resultado de fase A:
+    - baseline C022 `CRITICAL 34`, `HIGH 27`, `total 61`
+    - post A1 `CRITICAL 18`, `HIGH 27`, `total 45`
+    - delta: `CRITICAL -16`, `HIGH 0`, `total -16`, `coverage_ratio=1`
+    - `npm run typecheck` restablecido a verde.
+- 🚧 `P-ADHOC-LINES-022G` Ejecutar `C022.B.T1`: seleccionar lote `HIGH` priorizado por riesgo técnico.

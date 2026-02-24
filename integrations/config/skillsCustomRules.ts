@@ -231,7 +231,7 @@ export const loadCustomSkillsRulesFile = (
 
 export const loadCustomSkillsLock = (
   repoRoot: string = process.cwd()
-) => {
+): SkillsLockV1 | undefined => {
   const payload = loadCustomSkillsRulesFile(repoRoot);
   if (!payload || payload.rules.length === 0) {
     return undefined;
