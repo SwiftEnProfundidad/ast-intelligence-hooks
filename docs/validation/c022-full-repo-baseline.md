@@ -60,4 +60,4 @@ node --import tsx scripts/run-c020-benchmark.ts \
 
 ## NEXT
 
-NEXT: ejecutar `C022.A.T1` y seleccionar lote `CRITICAL` priorizado por impacto.
+NEXT: ejecutar `C022.A.T2` y aplicar remediacion TDD del lote `CRITICAL` A1.

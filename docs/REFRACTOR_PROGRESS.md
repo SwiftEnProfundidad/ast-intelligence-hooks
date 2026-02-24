@@ -857,4 +857,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ índices oficiales actualizados:
     - `docs/validation/README.md`
     - `docs/README.md`
-- 🚧 `P-ADHOC-LINES-022D` Ejecutar `C022.A.T1`: seleccionar lote `CRITICAL` priorizado por impacto.
+- ✅ `P-ADHOC-LINES-022D` Ejecutar `C022.A.T1`: seleccionar lote `CRITICAL` priorizado por impacto.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-a-t1-red.out` (`exit_code=1`, selección `CRITICAL` C022 aún no publicada al inicio)
+    - `GREEN`: `.audit_tmp/c022-a-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
+  - ✅ selección oficial publicada:
+    - `docs/validation/c022-critical-batch-selection.md`
+  - ✅ lote inicial `A1` priorizado:
+    - `common.types.undefined_in_base_type` (`16`)
+    - objetivo: `16` `CRITICAL` en capa `core/integrations`.
+- 🚧 `P-ADHOC-LINES-022E` Ejecutar `C022.A.T2`: aplicar TDD del lote `CRITICAL` `A1` sin romper trazabilidad AST.

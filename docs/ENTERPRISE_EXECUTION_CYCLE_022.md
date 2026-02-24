@@ -42,8 +42,13 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - `docs/README.md`
 
 ### Fase A - Remediacion prioritaria CRITICAL
-- 🚧 `C022.A.T1` Seleccionar lote `CRITICAL` priorizado por impacto.
-- ⏳ `C022.A.T2` Aplicar TDD por lote (red/green/refactor) sin romper trazabilidad AST.
+- ✅ `C022.A.T1` Seleccionar lote `CRITICAL` priorizado por impacto.
+  - lote inicial `A1` definido y versionado:
+    - `docs/validation/c022-critical-batch-selection.md`
+  - alcance A1:
+    - regla: `common.types.undefined_in_base_type` (`16` hallazgos)
+    - ficheros: capa `core/integrations` (`16` ficheros objetivo)
+- 🚧 `C022.A.T2` Aplicar TDD por lote (red/green/refactor) sin romper trazabilidad AST.
 - ⏳ `C022.A.T3` Revalidar full-repo y publicar delta de severidad.
 
 ### Fase B - Remediacion estructural HIGH
@@ -63,4 +68,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.A.T1` Seleccionar lote `CRITICAL` priorizado por impacto.
+- `C022.A.T2` Aplicar TDD por lote (red/green/refactor) sin romper trazabilidad AST.
