@@ -2,6 +2,11 @@
 
 Canonical index for active Pumuki documentation.
 
+## Ciclo Activo (Seguimiento Temporal)
+
+- `docs/ENTERPRISE_EXECUTION_CYCLE_020.md`: unico ciclo activo en ejecucion.
+- Politica: al cerrar ciclo, este MD de seguimiento se retira y se conserva solo resumen oficial estable.
+
 ## Product and Architecture
 
 - `docs/ARCHITECTURE.md`: normative architecture contract.
@@ -40,6 +45,11 @@ Canonical index for active Pumuki documentation.
 
 - `docs/validation/README.md`: enterprise minimal validation index.
 - `docs/validation/adapter-hook-runtime-validation.md`
+- `docs/validation/c020-ast-detector-contract.md`
+- `docs/validation/c020-enterprise-certification-report.md`
+- `docs/validation/c020-legacy-refactor-benchmark.md`
+- `docs/validation/c020-skills-engine-stage-coverage.md`
+- `docs/validation/c020-stage-parity-and-ux.md`
 - `docs/validation/enterprise-consumer-isolation-policy.md`
 - `docs/validation/mock-consumer-integration-runbook.md`
 - `docs/validation/detection-audit-baseline.md`
