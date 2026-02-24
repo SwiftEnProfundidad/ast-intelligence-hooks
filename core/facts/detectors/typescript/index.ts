@@ -19,7 +19,7 @@ const concreteDependencyNames = new Set<string>([
   'ApolloClient',
   'Axios',
 ]);
-const GOD_CLASS_MAX_LINES = 500;
+const GOD_CLASS_MAX_LINES = 300;
 const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
 type AstNode = Record<string, unknown>;
 

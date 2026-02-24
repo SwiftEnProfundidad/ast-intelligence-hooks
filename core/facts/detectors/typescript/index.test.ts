@@ -409,12 +409,19 @@ test('hasConcreteDependencyInstantiation detecta instanciacion directa de depend
   assert.equal(hasConcreteDependencyInstantiation(localAst), false);
 });
 
-test('hasLargeClassDeclaration detecta clases con mas de 500 lineas', () => {
+test('hasLargeClassDeclaration detecta clases con 300 lineas o mas', () => {
   const oversizedClassAst = {
     type: 'ClassDeclaration',
     loc: {
       start: { line: 10 },
-      end: { line: 520 },
+      end: { line: 320 },
+    },
+  };
+  const thresholdClassAst = {
+    type: 'ClassDeclaration',
+    loc: {
+      start: { line: 10 },
+      end: { line: 309 },
     },
   };
   const compactClassAst = {
@@ -426,6 +433,7 @@ test('hasLargeClassDeclaration detecta clases con mas de 500 lineas', () => {
   };
 
   assert.equal(hasLargeClassDeclaration(oversizedClassAst), true);
+  assert.equal(hasLargeClassDeclaration(thresholdClassAst), true);
   assert.equal(hasLargeClassDeclaration(compactClassAst), false);
 });
 

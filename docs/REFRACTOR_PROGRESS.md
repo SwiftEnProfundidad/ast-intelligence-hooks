@@ -413,11 +413,11 @@ Plan base visible para seguimiento previo y durante la implementacion.
 
 - ✅ `P-ADHOC-LINES-019A` Standby operativo atendido por instrucción explícita del usuario (`continúa`).
 - ✅ `P-ADHOC-LINES-019B` Apertura formal de ciclo `019`:
-  - nuevo MD de ciclo: `docs/ENTERPRISE_EXECUTION_CYCLE_019.md`
+  - nuevo MD de ciclo: `ENTERPRISE_EXECUTION_CYCLE_019` (retirado tras cierre)
   - handoff explícito desde `C018.POST.T1` a `C019`
 - ✅ `P-ADHOC-LINES-019C` Preparar ejecución TDD del primer lote técnico del ciclo `019`.
-  - ✅ `C019.A.T2` Baseline operativo consolidado en `docs/ENTERPRISE_EXECUTION_CYCLE_019.md` (anexo de fase A).
-  - ✅ `C019.A.T3` Contrato del primer lote técnico consolidado en `docs/ENTERPRISE_EXECUTION_CYCLE_019.md` (anexo de fase A).
+  - ✅ `C019.A.T2` Baseline operativo consolidado en `ENTERPRISE_EXECUTION_CYCLE_019` (retirado tras cierre).
+  - ✅ `C019.A.T3` Contrato del primer lote técnico consolidado en `ENTERPRISE_EXECUTION_CYCLE_019` (retirado tras cierre).
 - ✅ `P-ADHOC-LINES-019D` Ejecutar fase RED (`C019.B.T1`) del lote `C019-L1` con evidencia local.
   - ✅ Higiene de seguimiento: eliminado `docs/ENTERPRISE_EXECUTION_CYCLE_018.md` por cierre completo del ciclo.
   - ✅ Poda documental enterprise aplicada en `docs/validation/`:
@@ -471,10 +471,10 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `npm run -s typecheck` (`exit=0`)
     - evidencia en `.audit_tmp/c019-d1/*`
 - ✅ `P-ADHOC-LINES-019K` Ejecutar `C019.D.T2`: cierre documental oficial del ciclo `019`.
-  - ✅ cierre consolidado en `docs/ENTERPRISE_EXECUTION_CYCLE_019.md` (sin nuevos MDs de cierre).
+  - ✅ cierre consolidado en `ENTERPRISE_EXECUTION_CYCLE_019` (retirado tras cierre, resumen estable conservado).
   - ✅ trazabilidad final de ejecución y evidencia local unificada en el propio ciclo.
 - ✅ `P-ADHOC-LINES-019L` Ejecutar `C019.D.T3`: cierre final del ciclo o standby explícito.
-  - ✅ ciclo `019` cerrado oficialmente en `docs/ENTERPRISE_EXECUTION_CYCLE_019.md`.
+  - ✅ ciclo `019` cerrado oficialmente y retirado del inventario activo de seguimiento.
   - ✅ estado final: standby operativo explícito.
 - ✅ `P-ADHOC-LINES-019M` Standby operativo: esperar nueva instrucción explícita del usuario.
   - ✅ health-check de standby ejecutado:
@@ -496,4 +496,84 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - sincronización remota confirmada: `origin/main...origin/develop = 0/0`
     - diferencia de archivos entre ramas protegidas: `0`
     - PRs abiertas en ramas protegidas: `0`
-- 🚧 `P-ADHOC-LINES-019N` Standby operativo: esperar nueva instrucción explícita del usuario.
+- ✅ `P-ADHOC-LINES-019N` Standby operativo: esperar nueva instrucción explícita del usuario.
+  - ✅ atendido por instrucción explícita: `Implement the plan`.
+  - ✅ transición documental ejecutada: apertura `docs/ENTERPRISE_EXECUTION_CYCLE_020.md` y retiro de `019`.
+- ✅ `P-ADHOC-LINES-020A` Ejecutar Fase 0 del plan enterprise (higiene documental bloqueante).
+  - ✅ inventario y clasificación de markdowns en `docs/`.
+  - ✅ política activa definida: 1 ciclo activo y retiro de ciclos cerrados.
+  - ✅ índices alineados:
+    - `docs/README.md`
+    - `docs/validation/README.md`
+- ✅ `P-ADHOC-LINES-020B` Ejecutar fase A del ciclo `020` (benchmark legacy vs refactor).
+  - ✅ `C020.A.T1` contrato/corpus publicados:
+    - `assets/benchmarks/legacy-baseline-precommit-v012.json`
+    - `docs/validation/c020-legacy-refactor-benchmark.md`
+  - ✅ `C020.A.T2` baseline ejecutado por runner canónico:
+    - `npm run validation:c020-benchmark`
+    - evidencia enterprise: `.audit_tmp/c020-a/enterprise-menu1.json`
+    - resultado enterprise: `total_violations=144` (`CRITICAL 42`, `HIGH 43`, `MEDIUM 59`, `LOW 0`)
+  - ✅ `C020.A.T3` diff reproducible publicado:
+    - parity report: `.audit-reports/c020-a-legacy-parity-menu1.md`
+    - severidad: `dominance=PASS`
+    - cobertura enterprise: `active=417`, `evaluated=417`, `unevaluated=0`, `ratio=1`
+- ✅ `P-ADHOC-LINES-020C` Ejecutar fase B del ciclo `020` (skills engine siempre-on + trazabilidad).
+  - ✅ `C020.B.T1` validado en tests de stage:
+    - `integrations/git/__tests__/runPlatformGateEvaluation.test.ts`
+    - `integrations/git/__tests__/runPlatformGate.test.ts`
+    - `integrations/git/__tests__/stageRunners.test.ts`
+    - `integrations/gate/__tests__/evaluateAiGate.test.ts`
+  - ✅ `C020.B.T2` matriz de cobertura publicada:
+    - `.audit_tmp/c020-a/rule-coverage-summary.json`
+    - `docs/validation/c020-skills-engine-stage-coverage.md`
+  - ✅ `C020.B.T3` bloqueo de gobernanza validado:
+    - `.audit_tmp/c020-a/skills-governance-auto-rule-test.out`
+    - `governance.skills.detector-mapping.incomplete`
+- ✅ `P-ADHOC-LINES-020D` Ejecutar fase C del ciclo `020` (AST intelligence real).
+  - ✅ `C020.C.T1` contrato de detectores AST por lenguaje normalizado:
+    - `core/facts/detectors/contract.ts`
+    - `core/facts/detectors/contract.test.ts`
+  - ✅ `C020.C.T2` hardening semántico aplicado:
+    - God Class `>=500` -> `>=300` líneas por clase
+    - validación en:
+      - `core/facts/detectors/typescript/index.test.ts`
+      - `core/facts/__tests__/extractHeuristicFacts.test.ts`
+  - ✅ `C020.C.T3` severidad unificada validada en entrypoints:
+    - `integrations/gate/__tests__/stagePolicies-config-and-severity.test.ts`
+    - `integrations/gate/__tests__/stagePolicies.test.ts`
+  - ✅ documentación oficial publicada:
+    - `docs/validation/c020-ast-detector-contract.md`
+- ✅ `P-ADHOC-LINES-020E` Ejecutar fase D del ciclo `020` (paridad operativa + UX enterprise).
+  - ✅ `C020.D.T1` paridad runtime validada:
+    - `.audit_tmp/c020-d1/stage-summary.json`
+    - `.audit_tmp/c020-d1/exits.txt`
+  - ✅ `C020.D.T2` clicables validados en export:
+    - `.audit-reports/pumuki-legacy-audit.md`
+  - ✅ `C020.D.T3` notificaciones audit summary validadas en tests:
+    - `scripts/__tests__/framework-menu-consumer-runtime.test.ts`
+    - `integrations/git/__tests__/stageRunners.test.ts`
+    - `integrations/notifications/__tests__/emitAuditSummaryNotification.test.ts`
+  - ✅ `C020.D.T4` opción worktree completa validada:
+    - `Audit STAGED+UNSTAGED working tree (PRE_PUSH policy)` en menú
+  - ✅ documentación oficial publicada:
+    - `docs/validation/c020-stage-parity-and-ux.md`
+- ✅ `P-ADHOC-LINES-020F` Ejecutar `C020.E.T1`: revalidación local integral y consolidación final de evidencia.
+  - ✅ evidencia fresca generada en:
+    - `.audit_tmp/c020-e1/test-stage-gates.out`
+    - `.audit_tmp/c020-e1/test-deterministic.out`
+    - `.audit_tmp/c020-e1/typecheck.out`
+    - `.audit_tmp/c020-e1/benchmark.out`
+    - `.audit_tmp/c020-e1/menu-option1.out`
+    - `.audit_tmp/c020-e1/evidence-summary.json`
+  - ✅ resultados consolidados:
+    - `test:stage-gates`: `tests=823`, `pass=819`, `fail=0`, `skipped=4`
+    - `test:deterministic`: `tests=15`, `pass=15`, `fail=0`, `skipped=0`
+    - `typecheck`: `OK`
+    - benchmark: `parity_exit=0`, `total_violations=144`, `coverage_ratio=1`
+- ✅ `P-ADHOC-LINES-020G` Ejecutar `C020.E.T2`: publicar informe enterprise final de certificación y registrarlo en índices oficiales.
+  - ✅ informe oficial publicado:
+    - `docs/validation/c020-enterprise-certification-report.md`
+  - ✅ índices oficiales actualizados:
+    - `docs/validation/README.md`
+    - `docs/README.md`
+- 🚧 `P-ADHOC-LINES-020H` Ejecutar `C020.E.T3`: cierre Git Flow end-to-end (`feature -> develop -> main`) con ramas sincronizadas.
