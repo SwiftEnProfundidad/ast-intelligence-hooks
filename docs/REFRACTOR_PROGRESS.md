@@ -816,4 +816,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ indices oficiales ajustados:
     - `docs/README.md` (sin ciclo activo, ultimo cierre `C021`)
     - `docs/validation/README.md` (incluye `c021-d4-cycle-retirement.md`)
-- 🚧 `P-ADHOC-LINES-021Q` Standby operativo post-cierre C021: esperar nueva instruccion explicita del usuario.
+- ✅ `P-ADHOC-LINES-021Q` Standby operativo post-cierre C021: esperar nueva instruccion explicita del usuario.
+  - ✅ atendido por instrucción explícita del usuario: `ok ,sigue con ella`.
+  - ✅ continuidad de ejecución confirmada para arrancar el siguiente ciclo.
+- 🚧 `P-ADHOC-LINES-022A` Ejecutar `C022.0.T1`: apertura formal del ciclo `022` y activacion del seguimiento temporal.
