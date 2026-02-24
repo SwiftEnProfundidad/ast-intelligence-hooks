@@ -19,4 +19,4 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 
 - Los reportes de ejecución/cierre de ciclos se generan en `.audit_tmp` o `.audit-reports`.
 - No se versionan reportes históricos ad-hoc en `docs/validation/`.
-- Si hace falta conservar evidencia operativa de ejecucion, se referencia desde el ciclo activo `docs/ENTERPRISE_EXECUTION_CYCLE_020.md` y/o desde reportes en `.audit_tmp` / `.audit-reports`.
+- Si hace falta conservar evidencia operativa de ejecución, se referencia desde el ciclo temporal activo (si existe) y/o desde reportes en `.audit_tmp` / `.audit-reports`.
