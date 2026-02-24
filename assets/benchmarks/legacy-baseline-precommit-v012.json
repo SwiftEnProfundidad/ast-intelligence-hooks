@@ -1,0 +1,367 @@
+{
+  "timestamp": "2026-02-23T02:56:40.000Z",
+  "snapshot": {
+    "stage": "PRE_COMMIT",
+    "files_scanned": 978,
+    "findings": [
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-1.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-2.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-3.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-4.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-5.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-6.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-7.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-8.ts"
+      },
+      {
+        "ruleId": "baseline.critical",
+        "severity": "CRITICAL",
+        "file": "apps/backend/synthetic/critical-9.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-1.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-2.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-3.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-4.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-5.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-6.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-7.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-8.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-9.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-10.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-11.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-12.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-13.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-14.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-15.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-16.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-17.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-18.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-19.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-20.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-21.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-22.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-23.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-24.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-25.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-26.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-27.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-28.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-29.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-30.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-31.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-32.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-33.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-34.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-35.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-36.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-37.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-38.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-39.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-40.ts"
+      },
+      {
+        "ruleId": "baseline.high",
+        "severity": "HIGH",
+        "file": "apps/frontend/synthetic/high-41.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-1.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-2.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-3.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-4.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-5.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-6.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-7.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-8.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-9.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-10.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-11.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-12.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-13.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-14.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-15.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-16.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-17.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-18.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-19.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-20.ts"
+      },
+      {
+        "ruleId": "baseline.medium",
+        "severity": "MEDIUM",
+        "file": "apps/backend/synthetic/medium-21.ts"
+      }
+    ]
+  },
+  "repo_state": {
+    "repo_root": "/Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks"
+  }
+}

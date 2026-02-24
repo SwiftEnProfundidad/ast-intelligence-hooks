@@ -5,6 +5,11 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 ## Documentación oficial vigente
 
 - `adapter-hook-runtime-validation.md`
+- `c020-ast-detector-contract.md`
+- `c020-enterprise-certification-report.md`
+- `c020-legacy-refactor-benchmark.md`
+- `c020-skills-engine-stage-coverage.md`
+- `c020-stage-parity-and-ux.md`
 - `detection-audit-baseline.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
@@ -14,4 +19,4 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 
 - Los reportes de ejecución/cierre de ciclos se generan en `.audit_tmp` o `.audit-reports`.
 - No se versionan reportes históricos ad-hoc en `docs/validation/`.
-- Si hace falta conservar evidencia operativa, se referencia desde `docs/REFRACTOR_PROGRESS.md`.
+- Si hace falta conservar evidencia operativa de ejecucion, se referencia desde el ciclo activo `docs/ENTERPRISE_EXECUTION_CYCLE_020.md` y/o desde reportes en `.audit_tmp` / `.audit-reports`.
