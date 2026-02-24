@@ -13,7 +13,7 @@ const stableStringify = (value: unknown): string => {
     return `[${value.map((item) => stableStringify(item)).join(',')}]`;
   }
   if (typeof value === 'object' && value !== null) {
-    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
+    const entries = Object.entries(value as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>).sort(([a], [b]) =>
       a.localeCompare(b)
     );
     return `{${entries

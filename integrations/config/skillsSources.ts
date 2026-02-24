@@ -18,7 +18,7 @@ export type SkillsSourcesV1 = {
 const SKILLS_SOURCES_FILE = 'skills.sources.json';
 const SEMVER_PATTERN = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
 
-const isObject = (value: unknown): value is Record<string, unknown> => {
+const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return typeof value === 'object' && value !== null;
 };
 

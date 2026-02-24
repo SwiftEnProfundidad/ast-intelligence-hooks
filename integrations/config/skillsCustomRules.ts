@@ -56,7 +56,7 @@ const platformValues = new Set<NonNullable<RuleDefinition['platform']>>([
   'generic',
 ]);
 
-const isObject = (value: unknown): value is Record<string, unknown> => {
+const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return typeof value === 'object' && value !== null;
 };
 

@@ -98,7 +98,7 @@ const containsCryptoRandomUuidCall = (candidate: unknown): boolean => {
   });
 };
 
-const isHardcodedSecretTokenLiteralNode = (value: Record<string, unknown>): boolean => {
+const isHardcodedSecretTokenLiteralNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'VariableDeclarator') {
     return false;
   }
@@ -112,7 +112,7 @@ const isHardcodedSecretTokenLiteralNode = (value: Record<string, unknown>): bool
   return hasStrongLiteralValue(value.init);
 };
 
-const isInsecureTokenGenerationWithMathRandomNode = (value: Record<string, unknown>): boolean => {
+const isInsecureTokenGenerationWithMathRandomNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type === 'VariableDeclarator') {
     const idNode = value.id;
     if (!isObject(idNode) || idNode.type !== 'Identifier') {
@@ -135,7 +135,7 @@ const isInsecureTokenGenerationWithMathRandomNode = (value: Record<string, unkno
   return false;
 };
 
-const isInsecureTokenGenerationWithDateNowNode = (value: Record<string, unknown>): boolean => {
+const isInsecureTokenGenerationWithDateNowNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type === 'VariableDeclarator') {
     const idNode = value.id;
     if (!isObject(idNode) || idNode.type !== 'Identifier') {
@@ -158,7 +158,7 @@ const isInsecureTokenGenerationWithDateNowNode = (value: Record<string, unknown>
   return false;
 };
 
-const isWeakTokenGenerationWithCryptoRandomUuidNode = (value: Record<string, unknown>): boolean => {
+const isWeakTokenGenerationWithCryptoRandomUuidNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type === 'VariableDeclarator') {
     const idNode = value.id;
     if (!isObject(idNode) || idNode.type !== 'Identifier') {

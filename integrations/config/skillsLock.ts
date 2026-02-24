@@ -58,7 +58,7 @@ const platformValues = new Set<NonNullable<RuleDefinition['platform']>>([
   'generic',
 ]);
 
-const isObject = (value: unknown): value is Record<string, unknown> => {
+const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return typeof value === 'object' && value !== null;
 };
 
@@ -208,7 +208,7 @@ const stableStringify = (value: unknown): string => {
   return JSON.stringify(value) ?? 'null';
 };
 
-const normalizedRuleForHash = (rule: SkillsCompiledRule): Record<string, unknown> => {
+const normalizedRuleForHash = (rule: SkillsCompiledRule): Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return {
     id: rule.id,
     description: rule.description,
@@ -224,7 +224,7 @@ const normalizedRuleForHash = (rule: SkillsCompiledRule): Record<string, unknown
   };
 };
 
-const normalizedBundleForHash = (bundle: SkillsLockBundle): Record<string, unknown> => {
+const normalizedBundleForHash = (bundle: SkillsLockBundle): Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   const sortedRules = [...bundle.rules].sort((left, right) => left.id.localeCompare(right.id));
   return {
     name: bundle.name,
@@ -235,7 +235,7 @@ const normalizedBundleForHash = (bundle: SkillsLockBundle): Record<string, unkno
   };
 };
 
-const normalizedLockForHash = (lock: SkillsLockV1): Record<string, unknown> => {
+const normalizedLockForHash = (lock: SkillsLockV1): Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   const sortedBundles = [...lock.bundles].sort((left, right) => {
     const byName = left.name.localeCompare(right.name);
     if (byName !== 0) {

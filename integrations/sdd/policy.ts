@@ -33,7 +33,7 @@ const buildStatus = (repoRoot: string): SddStatusPayload => {
   };
 };
 
-const allowed = (message: string, details?: Record<string, unknown>): SddDecision => ({
+const allowed = (message: string, details?: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): SddDecision => ({
   allowed: true,
   code: 'ALLOWED',
   message,
@@ -43,7 +43,7 @@ const allowed = (message: string, details?: Record<string, unknown>): SddDecisio
 const blocked = (
   code: Exclude<SddDecision['code'], 'ALLOWED'>,
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>
 ): SddDecision => ({
   allowed: false,
   code,

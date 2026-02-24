@@ -903,4 +903,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ lote inicial `B1` priorizado:
     - `common.types.record_unknown_requires_type` (`22`) en `core/integrations`.
     - backlog restante `HIGH`: `4` en `scripts/*` + `1` `workflow.bdd.insufficient_features`.
-- 🚧 `P-ADHOC-LINES-022H` Ejecutar `C022.B.T2`: aplicar TDD del lote `HIGH` `B1` sin degradar cobertura.
+- ✅ `P-ADHOC-LINES-022H` Ejecutar `C022.B.T2`: aplicar TDD del lote `HIGH` `B1` sin degradar cobertura.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-b-t2-red.out` (`baseline_selected_findings=22`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-b-t2-green.out` (`focused_tests_pass_108_rc=0`, `typecheck_clean_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + avance de tracking a `B.T3`.
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-high-batch-b1-remediation.md`
+  - ✅ resultado de fase:
+    - lote `HIGH` `B1` remediado en `core/integrations` para `common.types.record_unknown_requires_type`.
+    - backlog `HIGH` pendiente para siguiente paso: `4` en `scripts/*` + `workflow.bdd.insufficient_features` (`1`).
+- 🚧 `P-ADHOC-LINES-022I` Ejecutar `C022.B.T3`: revalidar full-repo y publicar diff reproducible contra baseline C022.

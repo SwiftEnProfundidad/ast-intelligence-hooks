@@ -69,8 +69,14 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
   - alcance B1:
     - regla: `common.types.record_unknown_requires_type` (`22` hallazgos `HIGH`)
     - ficheros: capa `core/integrations` (`22` ficheros objetivo)
-- 🚧 `C022.B.T2` Refactor incremental con pruebas y sin degradar cobertura de reglas.
-- ⏳ `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.
+- ✅ `C022.B.T2` Refactor incremental con pruebas y sin degradar cobertura de reglas.
+  - remediacion oficial publicada:
+    - `docs/validation/c022-high-batch-b1-remediation.md`
+  - verificacion B2:
+    - tests focales `108/108`
+    - `typecheck` global en verde
+    - sin ocurrencias `Record<string, unknown>` en lote `B1` (`22` ficheros).
+- 🚧 `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.
 
 ### Fase C - Endurecimiento MEDIUM/LOW + DX
 - ⏳ `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
@@ -84,4 +90,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.B.T2` Refactor incremental con pruebas y sin degradar cobertura de reglas.
+- `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.

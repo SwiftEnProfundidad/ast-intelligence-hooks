@@ -1,6 +1,6 @@
 import { collectNodeLineMatches, hasNode, isObject } from '../utils/astHelpers';
 
-const isCallByName = (value: Record<string, unknown>, expectedName: string): boolean => {
+const isCallByName = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>, expectedName: string): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -22,23 +22,23 @@ const isCallByName = (value: Record<string, unknown>, expectedName: string): boo
   return propertyNode.type === 'Identifier' && propertyNode.name === expectedName;
 };
 
-const isSpawnSyncCallNode = (value: Record<string, unknown>): boolean => {
+const isSpawnSyncCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   return isCallByName(value, 'spawnSync');
 };
 
-const isSpawnCallNode = (value: Record<string, unknown>): boolean => {
+const isSpawnCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   return isCallByName(value, 'spawn');
 };
 
-const isForkCallNode = (value: Record<string, unknown>): boolean => {
+const isForkCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   return isCallByName(value, 'fork');
 };
 
-const isExecFileSyncCallNode = (value: Record<string, unknown>): boolean => {
+const isExecFileSyncCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   return isCallByName(value, 'execFileSync');
 };
 
-const isExecFileCallNode = (value: Record<string, unknown>): boolean => {
+const isExecFileCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   return isCallByName(value, 'execFile');
 };
 

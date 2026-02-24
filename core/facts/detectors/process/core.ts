@@ -1,6 +1,6 @@
 import { collectNodeLineMatches, hasNode, isObject } from '../utils/astHelpers';
 
-const isProcessExitCallNode = (value: Record<string, unknown>): boolean => {
+const isProcessExitCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -22,7 +22,7 @@ const isProcessExitCallNode = (value: Record<string, unknown>): boolean => {
   );
 };
 
-const isChildProcessImportNode = (value: Record<string, unknown>): boolean => {
+const isChildProcessImportNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type === 'ImportDeclaration') {
     const source = value.source;
     return (
@@ -48,7 +48,7 @@ const isChildProcessImportNode = (value: Record<string, unknown>): boolean => {
   );
 };
 
-const isProcessEnvMutationNode = (value: Record<string, unknown>): boolean => {
+const isProcessEnvMutationNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'AssignmentExpression') {
     return false;
   }
@@ -72,7 +72,7 @@ const isProcessEnvMutationNode = (value: Record<string, unknown>): boolean => {
   );
 };
 
-const isExecSyncCallNode = (value: Record<string, unknown>): boolean => {
+const isExecSyncCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -89,7 +89,7 @@ const isExecSyncCallNode = (value: Record<string, unknown>): boolean => {
   return callee.type === 'Identifier' && callee.name === 'execSync';
 };
 
-const isExecCallNode = (value: Record<string, unknown>): boolean => {
+const isExecCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }

@@ -325,7 +325,7 @@ const inferFsLineLocatorFromDetectorExportName = (exportName: string): ASTLineLo
 
 const astDetectorLineLocatorRegistry = new Map<ASTDetectorFunction, ASTLineLocator>();
 
-const registerAstDetectorLineLocators = (moduleExports: Record<string, unknown>): void => {
+const registerAstDetectorLineLocators = (moduleExports: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): void => {
   for (const [exportName, exportValue] of Object.entries(moduleExports)) {
     if (!exportName.startsWith('has') || typeof exportValue !== 'function') {
       continue;
@@ -535,14 +535,14 @@ const astDetectorRegistry: ReadonlyArray<ASTDetectorRegistryEntry> = [
   { detect: FsCallbacks.hasFsLutimesCallbackCall, ruleId: 'heuristics.ts.fs-lutimes-callback.ast', code: 'HEURISTICS_FS_LUTIMES_CALLBACK_AST', message: 'AST heuristic detected fs.lutimes callback usage.' },
 ];
 
-registerAstDetectorLineLocators(TS as Record<string, unknown>);
-registerAstDetectorLineLocators(Process as Record<string, unknown>);
-registerAstDetectorLineLocators(Security as Record<string, unknown>);
-registerAstDetectorLineLocators(Browser as Record<string, unknown>);
-registerAstDetectorLineLocators(FsSync as Record<string, unknown>);
-registerAstDetectorLineLocators(FsPromises as Record<string, unknown>);
-registerAstDetectorLineLocators(FsCallbacks as Record<string, unknown>);
-registerAstDetectorLineLocators(VM as Record<string, unknown>);
+registerAstDetectorLineLocators(TS as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
+registerAstDetectorLineLocators(Process as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
+registerAstDetectorLineLocators(Security as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
+registerAstDetectorLineLocators(Browser as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
+registerAstDetectorLineLocators(FsSync as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
+registerAstDetectorLineLocators(FsPromises as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
+registerAstDetectorLineLocators(FsCallbacks as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
+registerAstDetectorLineLocators(VM as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>);
 
 type TextDetectorRegistryEntry = {
   readonly platform: 'ios' | 'android';

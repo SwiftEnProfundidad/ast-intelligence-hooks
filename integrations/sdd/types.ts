@@ -16,7 +16,7 @@ export type SddDecision = {
   allowed: boolean;
   code: SddDecisionCode;
   message: string;
-  details?: Record<string, unknown>;
+  details?: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>;
 };
 
 export type OpenSpecValidationSummary = {

@@ -108,7 +108,7 @@ const isTrustedArgsArrayLiteral = (candidate: unknown): boolean => {
   return candidate.elements.every((element) => isStaticStringLike(element));
 };
 
-const isDynamicShellInvocationCallNode = (value: Record<string, unknown>): boolean => {
+const isDynamicShellInvocationCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -124,7 +124,7 @@ const isDynamicShellInvocationCallNode = (value: Record<string, unknown>): boole
   return isDynamicCommandArgument(args[0]);
 };
 
-const isChildProcessShellTrueCallNode = (value: Record<string, unknown>): boolean => {
+const isChildProcessShellTrueCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -138,7 +138,7 @@ const isChildProcessShellTrueCallNode = (value: Record<string, unknown>): boolea
   return args.some((arg) => hasShellTrueOption(arg));
 };
 
-const isExecFileUntrustedArgsCallNode = (value: Record<string, unknown>): boolean => {
+const isExecFileUntrustedArgsCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }

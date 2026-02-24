@@ -1,10 +1,10 @@
-export const isObject = (value: unknown): value is Record<string, unknown> => {
+export const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return typeof value === 'object' && value !== null;
 };
 
 export const hasNode = (
   node: unknown,
-  predicate: (value: Record<string, unknown>) => boolean
+  predicate: (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>) => boolean
 ): boolean => {
   if (!isObject(node)) {
     return false;
@@ -32,7 +32,7 @@ export const hasNode = (
   return false;
 };
 
-const extractStartLine = (node: Record<string, unknown>): number | null => {
+const extractStartLine = (node: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): number | null => {
   const loc = node.loc;
   if (!isObject(loc)) {
     return null;
@@ -47,7 +47,7 @@ const extractStartLine = (node: Record<string, unknown>): number | null => {
 
 export const collectNodeLineMatches = (
   node: unknown,
-  predicate: (value: Record<string, unknown>) => boolean,
+  predicate: (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>) => boolean,
   options?: { max?: number }
 ): readonly number[] => {
   const max = Math.max(1, Math.trunc(options?.max ?? 8));

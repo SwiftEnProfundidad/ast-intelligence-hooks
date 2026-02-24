@@ -41,7 +41,7 @@ const hasExpiresInOption = (candidate: unknown): boolean => {
   });
 };
 
-const isJwtDecodeWithoutVerifyCallNode = (value: Record<string, unknown>): boolean => {
+const isJwtDecodeWithoutVerifyCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -63,7 +63,7 @@ const isJwtDecodeWithoutVerifyCallNode = (value: Record<string, unknown>): boole
   );
 };
 
-const isJwtVerifyIgnoreExpirationCallNode = (value: Record<string, unknown>): boolean => {
+const isJwtVerifyIgnoreExpirationCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -94,7 +94,7 @@ const isJwtVerifyIgnoreExpirationCallNode = (value: Record<string, unknown>): bo
   return hasIgnoreExpirationTrueOption(args[2]);
 };
 
-const isJwtSignWithoutExpirationCallNode = (value: Record<string, unknown>): boolean => {
+const isJwtSignWithoutExpirationCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }

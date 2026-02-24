@@ -1,4 +1,4 @@
-const isRecord = (value: unknown): value is Record<string, unknown> => {
+const isRecord = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 };
 

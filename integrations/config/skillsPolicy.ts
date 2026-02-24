@@ -24,7 +24,7 @@ const SKILLS_POLICY_FILE = 'skills.policy.json';
 const severityValues = new Set<Severity>(['INFO', 'WARN', 'ERROR', 'CRITICAL']);
 const stageValues = new Set<SkillsStage>(['PRE_COMMIT', 'PRE_PUSH', 'CI']);
 
-const isObject = (value: unknown): value is Record<string, unknown> => {
+const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return typeof value === 'object' && value !== null;
 };
 
@@ -125,14 +125,14 @@ const stableStringify = (value: unknown): string => {
   return JSON.stringify(value) ?? 'null';
 };
 
-const normalizedBundlePolicy = (value: SkillsBundlePolicy): Record<string, unknown> => {
+const normalizedBundlePolicy = (value: SkillsBundlePolicy): Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   return {
     enabled: value.enabled,
     promoteToErrorRuleIds: [...(value.promoteToErrorRuleIds ?? [])].sort(),
   };
 };
 
-const normalizedPolicyForHash = (policy: SkillsPolicyV1): Record<string, unknown> => {
+const normalizedPolicyForHash = (policy: SkillsPolicyV1): Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
   const bundleEntries = Object.entries(policy.bundles).sort(([left], [right]) =>
     left.localeCompare(right)
   );

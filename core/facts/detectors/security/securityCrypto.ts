@@ -1,6 +1,6 @@
 import { collectNodeLineMatches, hasNode, isObject } from '../utils/astHelpers';
 
-const isWeakCryptoHashCreateHashCallNode = (value: Record<string, unknown>): boolean => {
+const isWeakCryptoHashCreateHashCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -37,7 +37,7 @@ const isWeakCryptoHashCreateHashCallNode = (value: Record<string, unknown>): boo
   return algorithm === 'md5' || algorithm === 'sha1';
 };
 
-const isBufferAllocUnsafeCallNode = (value: Record<string, unknown>): boolean => {
+const isBufferAllocUnsafeCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -59,7 +59,7 @@ const isBufferAllocUnsafeCallNode = (value: Record<string, unknown>): boolean =>
   );
 };
 
-const isBufferAllocUnsafeSlowCallNode = (value: Record<string, unknown>): boolean => {
+const isBufferAllocUnsafeSlowCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }

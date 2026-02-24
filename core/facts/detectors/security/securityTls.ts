@@ -63,7 +63,7 @@ const isNodeTlsEnvMember = (candidate: unknown): boolean => {
   );
 };
 
-const isTlsRejectUnauthorizedFalseOptionNode = (value: Record<string, unknown>): boolean => {
+const isTlsRejectUnauthorizedFalseOptionNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'ObjectProperty') {
     return false;
   }
@@ -76,7 +76,7 @@ const isTlsRejectUnauthorizedFalseOptionNode = (value: Record<string, unknown>):
   return keyMatches && isObject(valueNode) && valueNode.type === 'BooleanLiteral' && valueNode.value === false;
 };
 
-const isTlsEnvRejectUnauthorizedZeroOverrideNode = (value: Record<string, unknown>): boolean => {
+const isTlsEnvRejectUnauthorizedZeroOverrideNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
   if (value.type !== 'AssignmentExpression') {
     return false;
   }
