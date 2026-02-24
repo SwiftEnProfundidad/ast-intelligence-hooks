@@ -893,4 +893,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - post A1 `CRITICAL 18`, `HIGH 27`, `total 45`
     - delta: `CRITICAL -16`, `HIGH 0`, `total -16`, `coverage_ratio=1`
     - `npm run typecheck` restablecido a verde.
-- 🚧 `P-ADHOC-LINES-022G` Ejecutar `C022.B.T1`: seleccionar lote `HIGH` priorizado por riesgo técnico.
+- ✅ `P-ADHOC-LINES-022G` Ejecutar `C022.B.T1`: seleccionar lote `HIGH` priorizado por riesgo técnico.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-b-t1-red.out` (`has_selection_doc_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-b-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
+  - ✅ seleccion oficial publicada:
+    - `docs/validation/c022-high-batch-selection.md`
+  - ✅ lote inicial `B1` priorizado:
+    - `common.types.record_unknown_requires_type` (`22`) en `core/integrations`.
+    - backlog restante `HIGH`: `4` en `scripts/*` + `1` `workflow.bdd.insufficient_features`.
+- 🚧 `P-ADHOC-LINES-022H` Ejecutar `C022.B.T2`: aplicar TDD del lote `HIGH` `B1` sin degradar cobertura.

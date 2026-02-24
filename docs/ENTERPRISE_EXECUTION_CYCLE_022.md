@@ -63,8 +63,13 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - delta: `CRITICAL=-16`, `HIGH=0`, `total=-16`, `coverage_ratio=1`
 
 ### Fase B - Remediacion estructural HIGH
-- 🚧 `C022.B.T1` Seleccionar lote `HIGH` por riesgo técnico.
-- ⏳ `C022.B.T2` Refactor incremental con pruebas y sin degradar cobertura de reglas.
+- ✅ `C022.B.T1` Seleccionar lote `HIGH` por riesgo técnico.
+  - lote inicial `B1` definido y versionado:
+    - `docs/validation/c022-high-batch-selection.md`
+  - alcance B1:
+    - regla: `common.types.record_unknown_requires_type` (`22` hallazgos `HIGH`)
+    - ficheros: capa `core/integrations` (`22` ficheros objetivo)
+- 🚧 `C022.B.T2` Refactor incremental con pruebas y sin degradar cobertura de reglas.
 - ⏳ `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.
 
 ### Fase C - Endurecimiento MEDIUM/LOW + DX
@@ -79,4 +84,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.B.T1` Seleccionar lote `HIGH` por riesgo técnico.
+- `C022.B.T2` Refactor incremental con pruebas y sin degradar cobertura de reglas.
