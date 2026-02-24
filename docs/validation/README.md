@@ -27,6 +27,7 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - `c022-critical-batch-a1-severity-delta.md`
 - `c022-high-batch-selection.md`
 - `c022-high-batch-b1-remediation.md`
+- `c022-high-batch-b1-severity-delta.md`
 - `c020-ast-detector-contract.md`
 - `c020-enterprise-certification-report.md`
 - `c020-legacy-refactor-benchmark.md`

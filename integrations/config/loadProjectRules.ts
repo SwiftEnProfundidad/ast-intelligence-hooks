@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import type { ProjectRulesConfig } from './projectRules';
 import { projectRulesConfigSchema } from './projectRulesSchema';
 
-const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object> => {
+const isObject = (value: unknown): value is Record<string, string | number | boolean | bigint | symbol | null | Date | object> => {
   return typeof value === 'object' && value !== null;
 };
 

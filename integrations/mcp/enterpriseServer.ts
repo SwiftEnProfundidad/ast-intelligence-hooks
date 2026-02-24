@@ -300,14 +300,14 @@ type CriticalToolGuardResult = {
     allowed: boolean;
     code: string;
     message: string;
-    details?: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>;
+    details?: Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
   };
 };
 
 const evaluateCriticalToolGuard = (
   repoRoot: string,
   toolName: EnterpriseToolName,
-  args: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>
+  args: Record<string, string | number | boolean | bigint | symbol | null | Date | object>
 ): CriticalToolGuardResult => {
   if (!CRITICAL_ENTERPRISE_TOOLS.has(toolName)) {
     return {
@@ -347,7 +347,7 @@ const evaluateCriticalToolGuard = (
 const executeEnterpriseTool = (
   repoRoot: string,
   toolName: EnterpriseToolName,
-  args: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>,
+  args: Record<string, string | number | boolean | bigint | symbol | null | Date | object>,
   dryRun: boolean
 ): EnterpriseToolExecution => {
   switch (toolName) {
@@ -673,7 +673,7 @@ export const startEnterpriseMcpServer = (
           }
           const toolName = toolNameCandidate;
           const args = typeof payload.args === 'object' && payload.args !== null
-            ? (payload.args as Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>)
+            ? (payload.args as Record<string, string | number | boolean | bigint | symbol | null | Date | object>)
             : {};
           const requestedDryRun = typeof payload.dryRun === 'boolean' ? payload.dryRun : true;
           const forcedDryRun = requestedDryRun || MUTATING_ENTERPRISE_TOOLS.has(toolName);

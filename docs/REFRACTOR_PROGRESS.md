@@ -913,4 +913,20 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ resultado de fase:
     - lote `HIGH` `B1` remediado en `core/integrations` para `common.types.record_unknown_requires_type`.
     - backlog `HIGH` pendiente para siguiente paso: `4` en `scripts/*` + `workflow.bdd.insufficient_features` (`1`).
-- 🚧 `P-ADHOC-LINES-022I` Ejecutar `C022.B.T3`: revalidar full-repo y publicar diff reproducible contra baseline C022.
+- ✅ `P-ADHOC-LINES-022I` Ejecutar `C022.B.T3`: revalidar full-repo y publicar diff reproducible contra baseline C022.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-b-t3-red.out` (`has_post_enterprise_evidence_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-b-t3-green.out` (`high_reduced_rc=0`, `critical_no_increase_rc=0`, `coverage_ratio_ok_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + ajuste de contencion tipada sin degradar `CRITICAL`.
+  - ✅ evidencia de revalidacion:
+    - `.audit_tmp/c022-b-t3/benchmark.out`
+    - `.audit_tmp/c022-b-t3/enterprise-menu1.json`
+    - `.audit_tmp/c022-b-t3-diff.json`
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-high-batch-b1-severity-delta.md`
+  - ✅ resultado de fase B:
+    - baseline C022 `CRITICAL 34`, `HIGH 27`, `total 61`
+    - post B1 `CRITICAL 18`, `HIGH 5`, `total 23`
+    - delta: `CRITICAL -16`, `HIGH -22`, `total -38`, `coverage_ratio=1`
+    - delta vs cierre fase A: `CRITICAL 0`, `HIGH -22`, `total -22`
+- 🚧 `P-ADHOC-LINES-022J` Ejecutar `C022.C.T1`: reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.

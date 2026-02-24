@@ -1,6 +1,6 @@
 import { collectNodeLineMatches, hasNode, isObject } from '../utils/astHelpers';
 
-const isInnerHtmlAssignmentNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isInnerHtmlAssignmentNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'AssignmentExpression') {
     return false;
   }
@@ -18,7 +18,7 @@ const isInnerHtmlAssignmentNode = (value: Record<string, string | number | boole
   return propertyNode.type === 'Identifier' && propertyNode.name === 'innerHTML';
 };
 
-const isDocumentWriteCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isDocumentWriteCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }
@@ -40,7 +40,7 @@ const isDocumentWriteCallNode = (value: Record<string, string | number | boolean
   );
 };
 
-const isInsertAdjacentHtmlCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isInsertAdjacentHtmlCallNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }

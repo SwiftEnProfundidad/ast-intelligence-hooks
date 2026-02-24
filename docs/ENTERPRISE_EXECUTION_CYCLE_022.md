@@ -76,10 +76,17 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - tests focales `108/108`
     - `typecheck` global en verde
     - sin ocurrencias `Record<string, unknown>` en lote `B1` (`22` ficheros).
-- 🚧 `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.
+- ✅ `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.
+  - diff oficial publicado:
+    - `docs/validation/c022-high-batch-b1-severity-delta.md`
+  - resultado fase B:
+    - baseline `total_violations=61` (`CRITICAL 34`, `HIGH 27`)
+    - post B1 `total_violations=23` (`CRITICAL 18`, `HIGH 5`)
+    - delta: `CRITICAL=-16`, `HIGH=-22`, `total=-38`, `coverage_ratio=1`
+    - no regresion de `CRITICAL` vs cierre fase A (`18 -> 18`)
 
 ### Fase C - Endurecimiento MEDIUM/LOW + DX
-- ⏳ `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+- 🚧 `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
 - ⏳ `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
 - ⏳ `C022.C.T3` Verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
 
@@ -90,4 +97,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.B.T3` Revalidacion y diff reproducible contra baseline C022.
+- `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.

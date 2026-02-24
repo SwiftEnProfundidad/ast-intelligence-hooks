@@ -21,7 +21,7 @@ const concreteDependencyNames = new Set<string>([
 ]);
 const GOD_CLASS_MAX_LINES = 300;
 const networkCallCalleePattern = /^(fetch|axios|get|post|put|patch|delete|request)$/i;
-type AstNode = Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>;
+type AstNode = Record<string, string | number | boolean | bigint | symbol | null | Date | object>;
 
 const toPositiveLine = (node: AstNode): number | null => {
   const loc = node.loc;
@@ -225,7 +225,7 @@ const hasMixedCommandAndQueryNames = (methodNames: ReadonlyArray<string>): boole
   return false;
 };
 
-const isEmptyCatchClauseNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isEmptyCatchClauseNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'CatchClause') {
     return false;
   }
@@ -624,7 +624,7 @@ const typeReferenceParams = (node: unknown): ReadonlyArray<unknown> => {
   return node.typeParameters.params;
 };
 
-const isRecordStringUnknownTypeNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isRecordStringUnknownTypeNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'TSTypeReference') {
     return false;
   }
@@ -656,7 +656,7 @@ export const findRecordStringUnknownTypeLines = (node: unknown): readonly number
   return collectNodeLineMatches(node, isRecordStringUnknownTypeNode);
 };
 
-const isUnknownTypeAssertionNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isUnknownTypeAssertionNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'TSAsExpression' && value.type !== 'TSTypeAssertion') {
     return false;
   }
@@ -671,7 +671,7 @@ export const findUnknownTypeAssertionLines = (node: unknown): readonly number[] 
   return collectNodeLineMatches(node, isUnknownTypeAssertionNode);
 };
 
-const isUnknownKeywordNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isUnknownKeywordNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   return value.type === 'TSUnknownKeyword';
 };
 
@@ -732,7 +732,7 @@ const hasBaseScalarUnionMember = (members: ReadonlyArray<unknown>): boolean => {
   });
 };
 
-const isUndefinedInBaseTypeUnionNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isUndefinedInBaseTypeUnionNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'TSUnionType' || !Array.isArray(value.types)) {
     return false;
   }
@@ -747,7 +747,7 @@ export const findUndefinedInBaseTypeUnionLines = (node: unknown): readonly numbe
   return collectNodeLineMatches(node, isUndefinedInBaseTypeUnionNode);
 };
 
-const isNetworkCallExpressionNode = (value: Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>): boolean => {
+const isNetworkCallExpressionNode = (value: Record<string, string | number | boolean | bigint | symbol | null | Date | object>): boolean => {
   if (value.type !== 'CallExpression') {
     return false;
   }

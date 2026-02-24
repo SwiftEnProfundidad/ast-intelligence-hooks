@@ -48,7 +48,7 @@ Objetivo: validar que el refactor incremental aplicado mantiene comportamiento y
 
 - Refactor mecanico controlado sobre `22` ficheros de `core/integrations`:
   - reemplazo de `Record<string, unknown>` por unión explicita:
-    - `Record<string, string | number | boolean | bigint | symbol | null | undefined | Date | object>`
+    - `Record<string, string | number | boolean | bigint | symbol | null | Date | object>`
 - Alcance exacto del cambio:
   - `core/facts/detectors/browser/index.ts`
   - `core/facts/detectors/process/core.ts`
