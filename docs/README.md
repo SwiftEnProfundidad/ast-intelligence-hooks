@@ -4,7 +4,7 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- No hay ciclo activo abierto en este momento.
+- `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`: ciclo activo en ejecucion.
 - Ultimo cierre oficial: `docs/validation/c021-enterprise-certification-report.md`.
 - Politica: abrir solo 1 ciclo temporal a la vez y retirarlo al cerrar.
 

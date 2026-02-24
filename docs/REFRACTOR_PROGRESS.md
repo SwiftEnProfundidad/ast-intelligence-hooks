@@ -819,4 +819,13 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `P-ADHOC-LINES-021Q` Standby operativo post-cierre C021: esperar nueva instruccion explicita del usuario.
   - ✅ atendido por instrucción explícita del usuario: `ok ,sigue con ella`.
   - ✅ continuidad de ejecución confirmada para arrancar el siguiente ciclo.
-- 🚧 `P-ADHOC-LINES-022A` Ejecutar `C022.0.T1`: apertura formal del ciclo `022` y activacion del seguimiento temporal.
+- ✅ `P-ADHOC-LINES-022A` Ejecutar `C022.0.T1`: apertura formal del ciclo `022` y activacion del seguimiento temporal.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-0-t1-red.out` (`exit_code=1`, ciclo `022` aun no abierto al inicio)
+    - `GREEN`: `.audit_tmp/c022-0-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion de tracking con una sola tarea activa.
+  - ✅ documento de ciclo creado:
+    - `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`
+  - ✅ indice oficial actualizado:
+    - `docs/README.md`
+- 🚧 `P-ADHOC-LINES-022B` Ejecutar `C022.0.T2`: baseline full-repo versionada (severidad, top reglas/ficheros y cobertura).
