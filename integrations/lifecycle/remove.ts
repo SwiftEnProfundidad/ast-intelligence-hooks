@@ -47,7 +47,7 @@ const resolveInstalledDependencyDirectory = (params: {
   dependencyName: string;
   fromPackageDirectory: string;
   nodeModulesPath: string;
-}): string | undefined => {
+}) => {
   const repoRoot = dirname(params.nodeModulesPath);
   let currentDirectory = params.fromPackageDirectory;
 

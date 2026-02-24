@@ -6,7 +6,7 @@ export type HeuristicsConfig = {
 const TRUE_VALUES = new Set(['1', 'true', 'yes', 'on']);
 const TS_SCOPE_ALL_VALUES = new Set(['all', 'repo', 'full']);
 
-const parseBooleanFlag = (value: string | undefined): boolean => {
+const parseBooleanFlag = (value?: string): boolean => {
   if (!value) {
     return false;
   }

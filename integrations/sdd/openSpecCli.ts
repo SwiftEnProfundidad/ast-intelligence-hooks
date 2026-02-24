@@ -40,7 +40,7 @@ const runOpenSpecCommand = (
   };
 };
 
-const extractSemver = (raw: string | undefined): string | undefined => {
+const extractSemver = (raw?: string) => {
   if (typeof raw !== 'string') {
     return undefined;
   }

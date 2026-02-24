@@ -11,7 +11,7 @@ export type DetectedPlatforms = {
   android?: PlatformState;
 };
 
-const getFactPath = (fact: Fact): string | undefined => {
+const getFactPath = (fact: Fact) => {
   if (fact.kind !== 'FileChange' && fact.kind !== 'FileContent') {
     return undefined;
   }

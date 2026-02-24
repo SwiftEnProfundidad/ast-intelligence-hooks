@@ -163,7 +163,7 @@ const readJsonBody = async (req: IncomingMessage): Promise<unknown> => {
 const safeRunGit = (
   repoRoot: string,
   args: ReadonlyArray<string>
-): string | undefined => {
+) => {
   if (!existsSync(join(repoRoot, '.git'))) {
     return undefined;
   }

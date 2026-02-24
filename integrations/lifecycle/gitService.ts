@@ -1,5 +1,7 @@
 import { execFileSync as runBinarySync } from 'node:child_process';
 
+type LocalConfigValue = { value?: string }['value'];
+
 export interface ILifecycleGitService {
   runGit(args: ReadonlyArray<string>, cwd: string): string;
   resolveRepoRoot(cwd: string): string;
@@ -8,7 +10,7 @@ export interface ILifecycleGitService {
   pathTracked(cwd: string, path: string): boolean;
   applyLocalConfig(cwd: string, key: string, value: string): void;
   clearLocalConfig(cwd: string, key: string): void;
-  localConfig(cwd: string, key: string): string | undefined;
+  localConfig(cwd: string, key: string): LocalConfigValue;
 }
 
 const splitNonEmptyLines = (value: string): ReadonlyArray<string> =>
@@ -56,7 +58,7 @@ export class LifecycleGitService implements ILifecycleGitService {
     }
   }
 
-  localConfig(cwd: string, key: string): string | undefined {
+  localConfig(cwd: string, key: string): LocalConfigValue {
     try {
       return this.runGit(['config', '--local', '--get', key], cwd).trim();
     } catch {

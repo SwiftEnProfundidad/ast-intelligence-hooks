@@ -147,7 +147,7 @@ const hasNodeWithAncestors = (
   return matched;
 };
 
-const methodNameFromNode = (node: unknown): string | undefined => {
+const methodNameFromNode = (node: unknown) => {
   if (!isObject(node)) {
     return undefined;
   }
@@ -170,14 +170,14 @@ const methodNameFromNode = (node: unknown): string | undefined => {
   return undefined;
 };
 
-const memberExpressionPropertyName = (node: unknown): string | undefined => {
+const memberExpressionPropertyName = (node: unknown) => {
   if (!isObject(node) || node.type !== 'MemberExpression') {
     return undefined;
   }
   return methodNameFromNode(node.property);
 };
 
-const literalTextFromNode = (node: unknown): string | undefined => {
+const literalTextFromNode = (node: unknown) => {
   if (!isObject(node)) {
     return undefined;
   }

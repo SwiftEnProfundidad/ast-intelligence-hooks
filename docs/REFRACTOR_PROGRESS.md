@@ -867,4 +867,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ lote inicial `A1` priorizado:
     - `common.types.undefined_in_base_type` (`16`)
     - objetivo: `16` `CRITICAL` en capa `core/integrations`.
-- 🚧 `P-ADHOC-LINES-022E` Ejecutar `C022.A.T2`: aplicar TDD del lote `CRITICAL` `A1` sin romper trazabilidad AST.
+- ✅ `P-ADHOC-LINES-022E` Ejecutar `C022.A.T2`: aplicar TDD del lote `CRITICAL` `A1` sin romper trazabilidad AST.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-a-t2-red.out` (`baseline_selected_findings=16`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-a-t2-green.out` (`selected_rule_findings=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion de firmas tipadas en `core/integrations` sin romper trazabilidad AST.
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-critical-batch-a1-remediation.md`
+  - ✅ resultado de fase:
+    - `common.types.undefined_in_base_type` en lote `A1` (`core/integrations`) remediado (`16 -> 0`).
+    - pendiente para siguiente tarea: `17` hallazgos de la misma regla en `scripts/*`.
+- 🚧 `P-ADHOC-LINES-022F` Ejecutar `C022.A.T3`: revalidar full-repo y publicar delta de severidad de `CRITICAL`.

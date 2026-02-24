@@ -87,7 +87,7 @@ const ledgerKey = (entry: Pick<LedgerEntry, 'ruleId' | 'file' | 'lines'>): strin
   return `${entry.ruleId}::${entry.file}::${linesKey(entry.lines)}`;
 };
 
-const normalizeOptionalString = (value: unknown): string | undefined => {
+const normalizeOptionalString = (value: unknown) => {
   if (typeof value !== 'string') {
     return undefined;
   }
@@ -95,7 +95,7 @@ const normalizeOptionalString = (value: unknown): string | undefined => {
   return trimmed.length > 0 ? trimmed : undefined;
 };
 
-const normalizeOptionalNonNegativeInt = (value: unknown): number | undefined => {
+const normalizeOptionalNonNegativeInt = (value: unknown) => {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return undefined;
   }

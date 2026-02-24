@@ -48,8 +48,13 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
   - alcance A1:
     - regla: `common.types.undefined_in_base_type` (`16` hallazgos)
     - ficheros: capa `core/integrations` (`16` ficheros objetivo)
-- 🚧 `C022.A.T2` Aplicar TDD por lote (red/green/refactor) sin romper trazabilidad AST.
-- ⏳ `C022.A.T3` Revalidar full-repo y publicar delta de severidad.
+- ✅ `C022.A.T2` Aplicar TDD por lote (red/green/refactor) sin romper trazabilidad AST.
+  - remediacion oficial publicada:
+    - `docs/validation/c022-critical-batch-a1-remediation.md`
+  - resultado A1:
+    - `common.types.undefined_in_base_type` en `core/integrations`: `16 -> 0`
+    - full audit post-T2: `total_violations=45` (`CRITICAL 18`, `HIGH 27`)
+- 🚧 `C022.A.T3` Revalidar full-repo y publicar delta de severidad.
 
 ### Fase B - Remediacion estructural HIGH
 - ⏳ `C022.B.T1` Seleccionar lote `HIGH` por riesgo técnico.
@@ -68,4 +73,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.A.T2` Aplicar TDD por lote (red/green/refactor) sin romper trazabilidad AST.
+- `C022.A.T3` Revalidar full-repo y publicar delta de severidad.

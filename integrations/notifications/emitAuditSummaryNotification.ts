@@ -26,7 +26,7 @@ const defaultDependencies: AuditSummaryNotificationDependencies = {
   env: process.env,
 };
 
-const isTruthyEnvValue = (value: string | undefined): boolean => {
+const isTruthyEnvValue = (value?: string): boolean => {
   if (!value) {
     return false;
   }

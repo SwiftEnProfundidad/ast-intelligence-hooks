@@ -20,7 +20,7 @@ type LifecycleStatusShape = {
 
 const hasGitRepo = (repoRoot: string): boolean => existsSync(join(repoRoot, '.git'));
 
-const safeRunGit = (repoRoot: string, args: ReadonlyArray<string>): string | undefined => {
+const safeRunGit = (repoRoot: string, args: ReadonlyArray<string>) => {
   if (!hasGitRepo(repoRoot)) {
     return undefined;
   }
@@ -52,7 +52,10 @@ const toStatusLines = (statusShort: string): string[] =>
     .map((line) => line.trimEnd())
     .filter((line) => line.length > 0);
 
-const toAheadBehind = (repoRoot: string, upstream: string | undefined): { ahead: number; behind: number } => {
+const toAheadBehind = (
+  repoRoot: string,
+  upstream?: string
+): { ahead: number; behind: number } => {
   if (!upstream) {
     return { ahead: 0, behind: 0 };
   }

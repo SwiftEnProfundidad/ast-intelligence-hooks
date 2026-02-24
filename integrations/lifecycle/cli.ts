@@ -87,7 +87,7 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'sdd' ||
   value === 'adapter';
 
-const parseAdapterAgent = (value: string | undefined): AdapterAgent => {
+const parseAdapterAgent = (value?: string): AdapterAgent => {
   const normalized = (value ?? '').trim();
   if (/^[a-z0-9._-]+$/i.test(normalized)) {
     return normalized;
@@ -95,7 +95,7 @@ const parseAdapterAgent = (value: string | undefined): AdapterAgent => {
   throw new Error(`Unsupported adapter agent "${value}". Use an alphanumeric id.`);
 };
 
-const parseSddStage = (value: string | undefined): SddStage => {
+const parseSddStage = (value?: string): SddStage => {
   const normalized = (value ?? 'PRE_COMMIT').trim().toUpperCase();
   if (
     normalized === 'PRE_WRITE' ||
@@ -118,15 +118,15 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   }
 
   let purgeArtifacts = false;
-  let updateSpec: string | undefined;
+  let updateSpec: ParsedArgs['updateSpec'];
   let json = false;
-  let sddCommand: SddCommand | undefined;
-  let sddStage: SddStage | undefined;
-  let sddSessionAction: SddSessionAction | undefined;
-  let sddChangeId: string | undefined;
-  let sddTtlMinutes: number | undefined;
-  let adapterCommand: 'install' | undefined;
-  let adapterAgent: AdapterAgent | undefined;
+  let sddCommand: ParsedArgs['sddCommand'];
+  let sddStage: ParsedArgs['sddStage'];
+  let sddSessionAction: ParsedArgs['sddSessionAction'];
+  let sddChangeId: ParsedArgs['sddChangeId'];
+  let sddTtlMinutes: ParsedArgs['sddTtlMinutes'];
+  let adapterCommand: ParsedArgs['adapterCommand'];
+  let adapterAgent: ParsedArgs['adapterAgent'];
   let adapterDryRun = false;
 
   if (commandRaw === 'sdd') {
@@ -327,7 +327,7 @@ const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
 
 const resolveSddDecisionLocation = (
   result: ReturnType<typeof evaluateSddPolicy>
-): string | undefined => {
+) => {
   const changeId = result.status.session.changeId;
   switch (result.decision.code) {
     case 'OPENSPEC_MISSING':
@@ -352,7 +352,7 @@ const resolveSddDecisionLocation = (
   }
 };
 
-const resolveAiGateViolationLocation = (code: string): string | undefined => {
+const resolveAiGateViolationLocation = (code: string) => {
   if (code.startsWith('EVIDENCE_')) {
     return '.ai_evidence.json:1';
   }

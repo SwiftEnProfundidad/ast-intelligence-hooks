@@ -33,7 +33,7 @@ export const CONTEXT_API_CAPABILITIES = {
 } as const;
 
 
-export const parseBooleanQuery = (value: string | null): boolean | undefined => {
+export const parseBooleanQuery = (value: string | null) => {
   if (!value) {
     return undefined;
   }
@@ -47,7 +47,7 @@ export const parseBooleanQuery = (value: string | null): boolean | undefined => 
   return undefined;
 };
 
-export const parseNonNegativeIntQuery = (value: string | null): number | undefined => {
+export const parseNonNegativeIntQuery = (value: string | null) => {
   if (!value) {
     return undefined;
   }
@@ -70,7 +70,7 @@ export const includeSuppressedFromQuery = (requestUrl: URL): boolean => {
   return parsed ?? true;
 };
 
-export const normalizeQueryToken = (value: string | null): string | undefined => {
+export const normalizeQueryToken = (value: string | null) => {
   if (!value) {
     return undefined;
   }

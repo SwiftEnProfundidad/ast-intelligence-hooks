@@ -9,7 +9,7 @@ export type LifecycleState = {
   openSpecManagedArtifacts?: string;
 };
 
-const parseManagedArtifacts = (raw: string | undefined): string[] => {
+const parseManagedArtifacts = (raw?: string): string[] => {
   if (typeof raw !== 'string' || raw.trim().length === 0) {
     return [];
   }
@@ -19,7 +19,7 @@ const parseManagedArtifacts = (raw: string | undefined): string[] => {
     .filter((value) => value.length > 0);
 };
 
-const serializeManagedArtifacts = (artifacts: ReadonlyArray<string>): string | undefined => {
+const serializeManagedArtifacts = (artifacts: ReadonlyArray<string>) => {
   const unique = Array.from(new Set(artifacts.map((value) => value.trim()).filter((value) => value.length > 0)))
     .sort();
   if (unique.length === 0) {

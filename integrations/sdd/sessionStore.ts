@@ -24,7 +24,7 @@ const nowIso = (): string => new Date().toISOString();
 const addMinutesIso = (minutes: number): string =>
   new Date(Date.now() + minutes * 60_000).toISOString();
 
-const parsePositiveMinutes = (value: number | undefined): number =>
+const parsePositiveMinutes = (value?: number): number =>
   Number.isFinite(value) && (value as number) > 0
     ? Math.floor(value as number)
     : DEFAULT_TTL_MINUTES;

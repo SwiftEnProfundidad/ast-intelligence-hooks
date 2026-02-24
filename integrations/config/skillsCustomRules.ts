@@ -172,7 +172,7 @@ const computeBundleHash = (rules: ReadonlyArray<SkillsCompiledRule>): string => 
   return createHash('sha256').update(stableStringify(normalized)).digest('hex');
 };
 
-const resolveCustomRulesFilePath = (repoRoot: string): string | undefined => {
+const resolveCustomRulesFilePath = (repoRoot: string) => {
   for (const candidate of CUSTOM_RULES_FILE_CANDIDATES) {
     const absolute = resolve(repoRoot, candidate);
     if (existsSync(absolute)) {
@@ -217,7 +217,7 @@ const readJson = (absolutePath: string): unknown => {
 
 export const loadCustomSkillsRulesFile = (
   repoRoot: string = process.cwd()
-): CustomSkillsRulesFileV1 | undefined => {
+) => {
   const path = resolveCustomRulesFilePath(repoRoot);
   if (!path) {
     return undefined;
@@ -231,7 +231,7 @@ export const loadCustomSkillsRulesFile = (
 
 export const loadCustomSkillsLock = (
   repoRoot: string = process.cwd()
-): SkillsLockV1 | undefined => {
+) => {
   const payload = loadCustomSkillsRulesFile(repoRoot);
   if (!payload || payload.rules.length === 0) {
     return undefined;

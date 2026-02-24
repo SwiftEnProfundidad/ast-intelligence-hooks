@@ -1,7 +1,9 @@
+type OptionalLimit = { limit?: number }['limit'];
+
 export const capRequestedLimit = (
-  requestedLimit: number | undefined,
+  requestedLimit: OptionalLimit,
   maxLimit: number
-): number | undefined => {
+): OptionalLimit => {
   if (requestedLimit === undefined) {
     return undefined;
   }
@@ -11,7 +13,7 @@ export const capRequestedLimit = (
 export const sliceByOffsetAndLimit = <T>(
   values: T[],
   offset: number,
-  limit: number | undefined
+  limit: OptionalLimit
 ): T[] => {
   if (limit === undefined) {
     return values.slice(offset);
@@ -20,9 +22,9 @@ export const sliceByOffsetAndLimit = <T>(
 };
 
 export const toPaginationPayload = (params: {
-  requestedLimit: number | undefined;
+  requestedLimit: OptionalLimit;
   maxLimit: number;
-  limit: number | undefined;
+  limit: OptionalLimit;
   offset: number;
   pageSize: number;
   totalCount: number;
