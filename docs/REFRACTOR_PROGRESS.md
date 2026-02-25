@@ -1035,4 +1035,17 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `origin/main...origin/develop = 0/0`
     - `origin/main = 7472c8f`
     - `origin/develop = 7472c8f`
-- 🚧 `P-ADHOC-LINES-022P` Ejecutar `C022.D.T4`: retirar MD temporal del ciclo C022 y consolidar cierre en documentacion estable.
+- ✅ `P-ADHOC-LINES-022P` Ejecutar `C022.D.T4`: retirar MD temporal del ciclo C022 y consolidar cierre en documentacion estable.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-d-t4-red.out` (`has_cycle_file_rc=0`, `readme_no_active_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t4-green.out` (`has_cycle_file_rc=1`, `readme_no_active_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: retiro del tracking temporal + consolidacion en docs estables + una sola tarea activa.
+  - ✅ retiro de tracking temporal:
+    - eliminado `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`
+  - ✅ consolidacion oficial en documentacion estable:
+    - `docs/validation/c022-phase-acceptance-contract.md` (cierre final `D3+D4`)
+    - `docs/README.md` (sin ciclo activo; ultimo cierre `C022`)
+    - `docs/validation/README.md` (cierre `C022` consolidado)
+  - ✅ backlog post-MVP fijado:
+    - `NO_MVP_SAAS_MULTI_REPO`: no se añade SaaS ni multi-repo en MVP; diferido a fase posterior.
+- 🚧 `P-ADHOC-LINES-023A` Iniciar fase 0 del MVP hotspots post-cierre C022 (baseline T0 + contrato operativo, alcance sin SaaS ni multi-repo).

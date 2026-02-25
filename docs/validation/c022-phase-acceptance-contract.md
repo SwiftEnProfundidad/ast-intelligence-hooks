@@ -146,13 +146,27 @@ Delta final vs baseline C022 (`assets/benchmarks/c022-baseline-precommit-v001.js
 
 - `framework_status=READY_FOR_GITFLOW_CLOSE`
 - `repo_quality_status=BLOCKED_BY_REAL_FINDINGS` (bloqueo esperado por deuda residual real)
-- `cycle_status=READY_FOR_D3`
+- `cycle_status=CLOSED_D4`
 
 Condicionantes no bloqueantes del contrato:
 - `parity_exit=1` en benchmark legacy (informativo frente a baseline legacy externo).
 - `pre_write=1` por `OPENSPEC_MISSING` + `EVIDENCE_GATE_BLOCKED` en entorno local.
 - `pre_push=1` por rama local sin upstream.
 
+### Cierre final de ciclo C022 (D.T3 + D.T4)
+
+- `D.T3` completado: promote Git Flow `feature -> develop -> main` y sincronizacion protegida `origin/main...origin/develop = 0/0`.
+- `D.T4` completado: retiro del tracking temporal `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`.
+- consolidacion estable de cierre:
+  - `docs/README.md` (sin ciclo activo abierto, ultimo cierre oficial `C022`)
+  - `docs/validation/README.md` (trazabilidad de consolidacion `C022`)
+  - este documento como fuente de verdad del cierre oficial de `C022`.
+
+### Backlog post-MVP (diferido)
+
+- `NO_MVP_SAAS_MULTI_REPO`: no se añade SaaS ni multi-repo en MVP.
+- alcance diferido para fase posterior a MVP validado en monorepo local.
+
 ## NEXT
 
-NEXT: ejecutar `C022.D.T3` para cierre Git Flow (`feature -> develop -> main`) y verificacion de sincronizacion `0/0`.
+NEXT: esperar instruccion explicita del usuario para apertura del MVP de hotspots post-cierre `C022`.

@@ -4,8 +4,8 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`: ciclo activo en ejecucion.
-- Ultimo cierre oficial: ciclo `021` consolidado y archivado fuera del set minimo activo.
+- No hay ciclo activo abierto en este momento.
+- Ultimo cierre oficial: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
 - Politica: abrir solo 1 ciclo temporal a la vez y retirarlo al cerrar.
 
 ## Product and Architecture
