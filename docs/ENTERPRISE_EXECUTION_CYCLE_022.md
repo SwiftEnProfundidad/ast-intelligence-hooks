@@ -109,10 +109,27 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - benchmark full-repo: `total_violations=19`, `coverage_ratio=1`, `parity_exit=1` (informativo).
 
 ### Fase D - Certificacion final del ciclo
-- 🚧 `C022.D.T1` Revalidacion local integral final (`tests`, `typecheck`, `benchmark`, smoke menu/hooks).
+- ✅ `C022.D.T1` Revalidacion local integral final (`tests`, `typecheck`, `benchmark`, smoke menu/hooks).
+  - contrato TDD:
+    - `RED`: `.audit_tmp/c022-d-t1-red.out` (`has_summary_rc=1`, `has_benchmark_rc=1`, `has_typecheck_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
+  - bateria integral:
+    - `test:stage-gates=0`
+    - `test:deterministic=0`
+    - `typecheck=0`
+  - benchmark full-repo:
+    - `total_violations=19`
+    - `coverage_ratio=1`
+    - `parity_exit=1` (informativo)
+  - smoke menu/hooks:
+    - `menu=0`
+    - `pre_write=1`
+    - `pre_commit=0`
+    - `pre_push=1`
+    - `ci=0`
 - ⏳ `C022.D.T2` Informe oficial de cierre C022 en `docs/validation`.
 - ⏳ `C022.D.T3` Cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.D.T1` Revalidacion local integral final (`tests`, `typecheck`, `benchmark`, smoke menu/hooks).
+- `C022.D.T2` Informe oficial de cierre C022 en `docs/validation`.

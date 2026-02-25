@@ -971,4 +971,29 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ resultado de C3:
     - paridad operativa validada entre `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI local` y flujo menu.
     - fase C cerrada con cobertura mantenida (`coverage_ratio=1`).
-- 🚧 `P-ADHOC-LINES-022M` Ejecutar `C022.D.T1`: revalidacion local integral final (`tests`, `typecheck`, `benchmark`, `smoke menu/hooks`).
+- ✅ `P-ADHOC-LINES-022M` Ejecutar `C022.D.T1`: revalidacion local integral final (`tests`, `typecheck`, `benchmark`, `smoke menu/hooks`).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-d-t1-red.out` (`has_summary_rc=1`, `has_benchmark_rc=1`, `has_typecheck_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t1-green.out` (`stage_gates=0`, `deterministic=0`, `typecheck=0`, `benchmark=1`, `menu=0`, `pre_write=1`, `pre_commit=0`, `pre_push=1`, `ci=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion de evidencia D1 + actualizacion de tracking a `C022.D.T2`.
+  - ✅ bateria integral de validacion:
+    - `.audit_tmp/c022-d-t1/test-stage-gates.out` (`exit_code=0`)
+    - `.audit_tmp/c022-d-t1/test-deterministic.out` (`exit_code=0`)
+    - `.audit_tmp/c022-d-t1/typecheck.out` (`exit_code=0`)
+  - ✅ benchmark full-repo D.T1:
+    - `.audit_tmp/c022-d-t1/benchmark.out`
+    - `.audit_tmp/c022-d-t1/enterprise-menu1.json`
+    - `.audit-reports/c022-d-t1-legacy-parity-menu1.md`
+    - resultado: `total_violations=19`, `coverage_ratio=1`, `parity_exit=1` (informativo)
+  - ✅ smoke menu/hooks:
+    - `.audit_tmp/c022-d-t1/menu-option1.out`
+    - `.audit_tmp/c022-d-t1/pre-write.out`
+    - `.audit_tmp/c022-d-t1/pre-commit.out`
+    - `.audit_tmp/c022-d-t1/pre-push.out`
+    - `.audit_tmp/c022-d-t1/ci.out`
+    - `.audit_tmp/c022-d-t1/exits.txt`
+    - `.audit_tmp/c022-d-t1/summary.json`
+  - ✅ resultado de severidad/cobertura:
+    - vs cierre C.T3: `CRITICAL 0`, `HIGH 0`, `MEDIUM 0`, `LOW 0`, `total 0`
+    - `coverage_ratio=1`
+- 🚧 `P-ADHOC-LINES-022N` Ejecutar `C022.D.T2`: informe oficial de cierre C022 en `docs/validation`.
