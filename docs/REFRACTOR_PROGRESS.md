@@ -1068,4 +1068,17 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit-reports/c023-hotspots-t0-legacy-parity-menu1.md`
   - ✅ backlog post-MVP mantenido:
     - `NO_MVP_SAAS_MULTI_REPO` (diferido fuera de MVP).
-- 🚧 `P-ADHOC-LINES-023B` Ejecutar `C023.1.T1`: implementar colector local de churn/autoria por fichero (sin SaaS ni multi-repo).
+- ✅ `P-ADHOC-LINES-023B` Ejecutar `C023.1.T1`: implementar colector local de churn/autoria por fichero (sin SaaS ni multi-repo).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-1-t1-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-1-t1-green.out` (`tests_exit_code=0`, `has_collector_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del seguimiento en el plan `C023` y avance a `C023.1.T2`.
+  - ✅ implementacion aplicada:
+    - `integrations/git/collectFileChurnOwnership.ts`
+    - `integrations/git/index.ts`
+  - ✅ pruebas focales:
+    - `integrations/git/__tests__/collectFileChurnOwnership.test.ts`
+    - salida: `.audit_tmp/c023-1-t1-green-tests.out` (`pass=4`, `fail=0`)
+  - ✅ alcance respetado:
+    - colector 100% local sobre `git log --numstat`, sin SaaS y sin multi-repo.
+- 🚧 `P-ADHOC-LINES-023C` Ejecutar `C023.1.T2`: componer senales de riesgo tecnico por fichero a partir del colector local (sin red externa).

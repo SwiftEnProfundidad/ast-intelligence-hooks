@@ -11,3 +11,4 @@ export { runPrePushAndroid } from './prePushAndroid';
 export { runPrePushBackend } from './prePushBackend';
 export { runPrePushFrontend } from './prePushFrontend';
 export { runPrePushIOS } from './prePushIOS';
+export { collectFileChurnOwnership } from './collectFileChurnOwnership';
