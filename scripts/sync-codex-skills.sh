@@ -1,40 +1,34 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-set -u
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+dest_dir="$repo_root/docs/codex-skills"
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DEST_DIR="$ROOT_DIR/docs/codex-skills"
+mkdir -p "$dest_dir"
 
-mkdir -p "$DEST_DIR"
+declare -a mappings=(
+  "windsurf-rules-android:/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-android/SKILL.md"
+  "windsurf-rules-backend:/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-backend/SKILL.md"
+  "windsurf-rules-frontend:/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-frontend/SKILL.md"
+  "windsurf-rules-ios:/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-ios/SKILL.md"
+  "swift-concurrency:/Users/juancarlosmerlosalbarracin/.codex/skills/swift-concurrency/SKILL.md"
+  "swiftui-expert-skill:/Users/juancarlosmerlosalbarracin/.codex/skills/swiftui-expert-skill/SKILL.md"
+)
 
-synced_count=0
+echo "Sincronizando skills en: $dest_dir"
 
-sync_one() {
-  local source_path="$1"
-  local dest_path="$2"
+for mapping in "${mappings[@]}"; do
+  name="${mapping%%:*}"
+  src="${mapping#*:}"
+  dst="$dest_dir/$name.md"
 
-  if [[ -f "$source_path" ]]; then
-    cp "$source_path" "$dest_path"
-    echo "synced: $source_path -> $dest_path"
-    synced_count=$((synced_count + 1))
-    return
+  if [[ ! -f "$src" ]]; then
+    echo "ERROR: no existe la skill origen: $src" >&2
+    exit 1
   fi
 
-  echo "warning: missing source: $source_path" >&2
-  printf 'TODO: sincronizar desde %s\n' "$source_path" > "$dest_path"
-}
+  cp "$src" "$dst"
+  echo "OK  $name -> $dst"
+done
 
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-android/SKILL.md" "$DEST_DIR/windsurf-rules-android.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-backend/SKILL.md" "$DEST_DIR/windsurf-rules-backend.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-frontend/SKILL.md" "$DEST_DIR/windsurf-rules-frontend.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/public/windsurf-rules-ios/SKILL.md" "$DEST_DIR/windsurf-rules-ios.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/swift-concurrency/SKILL.md" "$DEST_DIR/swift-concurrency.md"
-sync_one "/Users/juancarlosmerlosalbarracin/.codex/skills/swiftui-expert-skill/SKILL.md" "$DEST_DIR/swiftui-expert-skill.md"
-
-if [[ "$synced_count" -ge 1 ]]; then
-  echo "done: synchronized $synced_count skill file(s) into $DEST_DIR"
-  exit 0
-fi
-
-echo "error: no skill files synchronized" >&2
-exit 1
+echo "Sincronizacion completada."
