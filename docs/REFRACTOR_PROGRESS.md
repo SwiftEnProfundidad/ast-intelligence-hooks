@@ -944,4 +944,15 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - post B1 `CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`, `total 23`
     - post C1 `CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`, `total 19`
     - delta C1: `CRITICAL 0`, `HIGH -4`, `MEDIUM 0`, `LOW 0`, `total -4`, `coverage_ratio=1`
-- 🚧 `P-ADHOC-LINES-022K` Ejecutar `C022.C.T2`: normalizar reportes clicables y consistencia de salida en hooks/menu/export.
+- ✅ `P-ADHOC-LINES-022K` Ejecutar `C022.C.T2`: normalizar reportes clicables y consistencia de salida en hooks/menu/export.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-c-t2-red.out` (`tests=5`, `pass=4`, `fail=1`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-c-t2-green.out` (`tests=5`, `pass=5`, `fail=0`, `exit_code=0`)
+    - `GREEN ampliado`: `.audit_tmp/c022-c-t2-green-expanded.out` (`tests=24`, `pass=24`, `fail=0`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.C.T3`.
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-clickable-consistency-c2-remediation.md`
+  - ✅ resultado de C2:
+    - normalizacion de paths absolutos a repo-relative en `topFiles` de `readEvidenceSummaryForMenu`.
+    - consistencia clicable alineada entre menu y export legacy para diagnostico operativo.
+- 🚧 `P-ADHOC-LINES-022L` Ejecutar `C022.C.T3`: verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.

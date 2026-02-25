@@ -93,8 +93,14 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - post B1 `total_violations=23` (`CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`)
     - post C1 `total_violations=19` (`CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`)
     - delta C1: `CRITICAL=0`, `HIGH=-4`, `MEDIUM=0`, `LOW=0`, `total=-4`, `coverage_ratio=1`
-- 🚧 `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
-- ⏳ `C022.C.T3` Verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
+- ✅ `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
+  - validacion oficial publicada:
+    - `docs/validation/c022-clickable-consistency-c2-remediation.md`
+  - resultado C2:
+    - contrato RED/GREEN cerrado para normalizacion de paths absolutos a repo-relative en `topFiles` del resumen de evidencia de menu.
+    - validacion focal: `5/5` en `framework-menu-evidence-summary`.
+    - validacion ampliada de consistencia menu/export: `24/24` (`framework-menu-evidence-summary` + `framework-menu-legacy-audit`).
+- 🚧 `C022.C.T3` Verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
 
 ### Fase D - Certificacion final del ciclo
 - ⏳ `C022.D.T1` Revalidacion local integral final (`tests`, `typecheck`, `benchmark`, smoke menu/hooks).
@@ -103,4 +109,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
+- `C022.C.T3` Verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
