@@ -115,3 +115,30 @@ test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => 
   assert.match(rendered, /Evidence: status=missing/);
   assert.match(rendered, /Run `npx --yes pumuki-pre-commit` to generate fresh evidence\./);
 });
+
+test('readEvidenceSummaryForMenu normaliza topFiles absolutos a repo-relative', async () => {
+  await withTempDir('pumuki-menu-evidence-absolute-paths-', async (repoRoot) => {
+    const absoluteFile = join(repoRoot, 'apps', 'backend', 'src', 'runtime', 'process.ts');
+    const evidence = {
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'BLOCKED',
+        findings: [
+          { file: absoluteFile, severity: 'ERROR' },
+          { file: absoluteFile, severity: 'ERROR' },
+        ],
+      },
+    };
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(evidence, null, 2),
+      'utf8'
+    );
+
+    const summary = readEvidenceSummaryForMenu(repoRoot);
+    assert.equal(summary.status, 'ok');
+    assert.deepEqual(summary.topFiles, [
+      { file: 'apps/backend/src/runtime/process.ts', count: 2 },
+    ]);
+  });
+});

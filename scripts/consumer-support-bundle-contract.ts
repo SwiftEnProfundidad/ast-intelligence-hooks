@@ -46,7 +46,11 @@ export type ConsumerSupportBundleRepoActionsPermissionsResponse = {
   sha_pinning_required: boolean;
 };
 
-export type ConsumerSupportBundleUserActionsBillingResponse = Record<string, unknown>;
+type ConsumerSupportBundleUserActionsBillingValue = string | number | boolean | null | Date;
+export type ConsumerSupportBundleUserActionsBillingResponse = Record<
+  string,
+  ConsumerSupportBundleUserActionsBillingValue
+>;
 
 export type ConsumerSupportBundleRunDiagnostic = {
   run: ConsumerSupportBundleWorkflowRun;

@@ -929,4 +929,89 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - post B1 `CRITICAL 18`, `HIGH 5`, `total 23`
     - delta: `CRITICAL -16`, `HIGH -22`, `total -38`, `coverage_ratio=1`
     - delta vs cierre fase A: `CRITICAL 0`, `HIGH -22`, `total -22`
-- 🚧 `P-ADHOC-LINES-022J` Ejecutar `C022.C.T1`: reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+- ✅ `P-ADHOC-LINES-022J` Ejecutar `C022.C.T1`: reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-c-t1-red.out` (`has_doc_rc=1`, `has_evidence_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-c-t1-green.out` (`high_reduced_rc=0`, `critical_no_increase_rc=0`, `medium_no_regression_rc=0`, `low_no_regression_rc=0`, `coverage_ratio_ok_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.C.T2`.
+  - ✅ evidencia de revalidacion:
+    - `.audit_tmp/c022-c-t1/benchmark.out`
+    - `.audit_tmp/c022-c-t1/enterprise-menu1.json`
+    - `.audit_tmp/c022-c-t1-diff.json`
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-medium-quick-wins-c1-remediation.md`
+  - ✅ resultado de C1:
+    - post B1 `CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`, `total 23`
+    - post C1 `CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`, `total 19`
+    - delta C1: `CRITICAL 0`, `HIGH -4`, `MEDIUM 0`, `LOW 0`, `total -4`, `coverage_ratio=1`
+- ✅ `P-ADHOC-LINES-022K` Ejecutar `C022.C.T2`: normalizar reportes clicables y consistencia de salida en hooks/menu/export.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-c-t2-red.out` (`tests=5`, `pass=4`, `fail=1`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-c-t2-green.out` (`tests=5`, `pass=5`, `fail=0`, `exit_code=0`)
+    - `GREEN ampliado`: `.audit_tmp/c022-c-t2-green-expanded.out` (`tests=24`, `pass=24`, `fail=0`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.C.T3`.
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-clickable-consistency-c2-remediation.md`
+  - ✅ resultado de C2:
+    - normalizacion de paths absolutos a repo-relative en `topFiles` de `readEvidenceSummaryForMenu`.
+    - consistencia clicable alineada entre menu y export legacy para diagnostico operativo.
+- ✅ `P-ADHOC-LINES-022L` Ejecutar `C022.C.T3`: verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-c-t3-red.out` (`has_stage_summary_rc=1`, `has_exits_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-c-t3-green.out` (`menu=0`, `pre_write=1`, `pre_commit=0`, `pre_push=1`, `ci=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `GREEN estatico`: `.audit_tmp/c022-c-t3-static.out` (`tests=26`, `pass=26`, `fail=0`, `exit_code=0`)
+    - `GREEN benchmark`: `.audit_tmp/c022-c-t3-benchmark.out` (`total_violations=19`, `coverage_ratio=1`, `parity_exit=1` informativo)
+    - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.D.T1`.
+  - ✅ evidencia operativa publicada:
+    - `.audit_tmp/c022-c-t3/exits.txt`
+    - `.audit_tmp/c022-c-t3/stage-summary.json`
+    - `.audit_tmp/c022-c-t3/evidence-hashes.json`
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-stage-parity-c3-validation.md`
+  - ✅ resultado de C3:
+    - paridad operativa validada entre `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI local` y flujo menu.
+    - fase C cerrada con cobertura mantenida (`coverage_ratio=1`).
+- ✅ `P-ADHOC-LINES-022M` Ejecutar `C022.D.T1`: revalidacion local integral final (`tests`, `typecheck`, `benchmark`, `smoke menu/hooks`).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-d-t1-red.out` (`has_summary_rc=1`, `has_benchmark_rc=1`, `has_typecheck_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t1-green.out` (`stage_gates=0`, `deterministic=0`, `typecheck=0`, `benchmark=1`, `menu=0`, `pre_write=1`, `pre_commit=0`, `pre_push=1`, `ci=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion de evidencia D1 + actualizacion de tracking a `C022.D.T2`.
+  - ✅ bateria integral de validacion:
+    - `.audit_tmp/c022-d-t1/test-stage-gates.out` (`exit_code=0`)
+    - `.audit_tmp/c022-d-t1/test-deterministic.out` (`exit_code=0`)
+    - `.audit_tmp/c022-d-t1/typecheck.out` (`exit_code=0`)
+  - ✅ benchmark full-repo D.T1:
+    - `.audit_tmp/c022-d-t1/benchmark.out`
+    - `.audit_tmp/c022-d-t1/enterprise-menu1.json`
+    - `.audit-reports/c022-d-t1-legacy-parity-menu1.md`
+    - resultado: `total_violations=19`, `coverage_ratio=1`, `parity_exit=1` (informativo)
+  - ✅ smoke menu/hooks:
+    - `.audit_tmp/c022-d-t1/menu-option1.out`
+    - `.audit_tmp/c022-d-t1/pre-write.out`
+    - `.audit_tmp/c022-d-t1/pre-commit.out`
+    - `.audit_tmp/c022-d-t1/pre-push.out`
+    - `.audit_tmp/c022-d-t1/ci.out`
+    - `.audit_tmp/c022-d-t1/exits.txt`
+    - `.audit_tmp/c022-d-t1/summary.json`
+  - ✅ resultado de severidad/cobertura:
+    - vs cierre C.T3: `CRITICAL 0`, `HIGH 0`, `MEDIUM 0`, `LOW 0`, `total 0`
+    - `coverage_ratio=1`
+- ✅ `P-ADHOC-LINES-022N` Ejecutar `C022.D.T2`: informe oficial de cierre C022 en `docs/validation`.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-d-t2-red.out` (`has_report_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t2-green.out` (`has_report_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del informe D2 en doc estable existente + tracking actualizado a `C022.D.T3`.
+  - ✅ informe oficial consolidado:
+    - `docs/validation/c022-phase-acceptance-contract.md` (seccion "Informe Oficial de Cierre C022 (D.T2)")
+    - `docs/validation/README.md` actualizado para trazabilidad de cierre.
+  - ✅ delta consolidado baseline C022 vs cierre D.T1:
+    - `.audit_tmp/c022-d-t2-delta.json`
+    - `total: 61 -> 19 (-42)`
+    - `CRITICAL: 34 -> 18 (-16)`
+    - `HIGH: 27 -> 1 (-26)`
+    - `coverage_ratio: 1 -> 1`
+  - ✅ veredicto D2:
+    - `framework_status=READY_FOR_GITFLOW_CLOSE`
+    - `repo_quality_status=BLOCKED_BY_REAL_FINDINGS` (esperado por deuda residual real)
+    - `cycle_status=READY_FOR_D3`
+- 🚧 `P-ADHOC-LINES-022O` Ejecutar `C022.D.T3`: cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.

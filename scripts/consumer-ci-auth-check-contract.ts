@@ -9,7 +9,8 @@ export type RepoActionsPermissionsResponse = {
   sha_pinning_required: boolean;
 };
 
-export type UserActionsBillingResponse = Record<string, unknown>;
+type UserActionsBillingValue = string | number | boolean | null | Date;
+export type UserActionsBillingResponse = Record<string, UserActionsBillingValue>;
 
 export type CommandResult = {
   ok: boolean;
