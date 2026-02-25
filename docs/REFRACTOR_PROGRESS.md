@@ -996,4 +996,22 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ resultado de severidad/cobertura:
     - vs cierre C.T3: `CRITICAL 0`, `HIGH 0`, `MEDIUM 0`, `LOW 0`, `total 0`
     - `coverage_ratio=1`
-- 🚧 `P-ADHOC-LINES-022N` Ejecutar `C022.D.T2`: informe oficial de cierre C022 en `docs/validation`.
+- ✅ `P-ADHOC-LINES-022N` Ejecutar `C022.D.T2`: informe oficial de cierre C022 en `docs/validation`.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-d-t2-red.out` (`has_report_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t2-green.out` (`has_report_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del informe D2 en doc estable existente + tracking actualizado a `C022.D.T3`.
+  - ✅ informe oficial consolidado:
+    - `docs/validation/c022-phase-acceptance-contract.md` (seccion "Informe Oficial de Cierre C022 (D.T2)")
+    - `docs/validation/README.md` actualizado para trazabilidad de cierre.
+  - ✅ delta consolidado baseline C022 vs cierre D.T1:
+    - `.audit_tmp/c022-d-t2-delta.json`
+    - `total: 61 -> 19 (-42)`
+    - `CRITICAL: 34 -> 18 (-16)`
+    - `HIGH: 27 -> 1 (-26)`
+    - `coverage_ratio: 1 -> 1`
+  - ✅ veredicto D2:
+    - `framework_status=READY_FOR_GITFLOW_CLOSE`
+    - `repo_quality_status=BLOCKED_BY_REAL_FINDINGS` (esperado por deuda residual real)
+    - `cycle_status=READY_FOR_D3`
+- 🚧 `P-ADHOC-LINES-022O` Ejecutar `C022.D.T3`: cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
