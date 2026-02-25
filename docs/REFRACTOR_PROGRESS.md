@@ -841,7 +841,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `assets/benchmarks/c022-baseline-precommit-v001.json`
     - `assets/benchmarks/c022-baseline-precommit-v001-baseline.json`
   - ✅ documentación oficial publicada:
-    - `docs/validation/c022-full-repo-baseline.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
     - `docs/validation/README.md`
     - `docs/README.md`
   - ✅ snapshot baseline:
@@ -863,7 +863,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-a-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
   - ✅ selección oficial publicada:
-    - `docs/validation/c022-critical-batch-selection.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ lote inicial `A1` priorizado:
     - `common.types.undefined_in_base_type` (`16`)
     - objetivo: `16` `CRITICAL` en capa `core/integrations`.
@@ -873,7 +873,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-a-t2-green.out` (`selected_rule_findings=0`, `status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion de firmas tipadas en `core/integrations` sin romper trazabilidad AST.
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-critical-batch-a1-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase:
     - `common.types.undefined_in_base_type` en lote `A1` (`core/integrations`) remediado (`16 -> 0`).
     - pendiente para siguiente tarea: `17` hallazgos de la misma regla en `scripts/*`.
@@ -887,7 +887,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-a-t3/enterprise-menu1.json`
     - `.audit_tmp/c022-a-t3-diff.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-critical-batch-a1-severity-delta.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase A:
     - baseline C022 `CRITICAL 34`, `HIGH 27`, `total 61`
     - post A1 `CRITICAL 18`, `HIGH 27`, `total 45`
@@ -899,7 +899,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-b-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
   - ✅ seleccion oficial publicada:
-    - `docs/validation/c022-high-batch-selection.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ lote inicial `B1` priorizado:
     - `common.types.record_unknown_requires_type` (`22`) en `core/integrations`.
     - backlog restante `HIGH`: `4` en `scripts/*` + `1` `workflow.bdd.insufficient_features`.
@@ -909,7 +909,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-b-t2-green.out` (`focused_tests_pass_108_rc=0`, `typecheck_clean_rc=0`, `status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + avance de tracking a `B.T3`.
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-high-batch-b1-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase:
     - lote `HIGH` `B1` remediado en `core/integrations` para `common.types.record_unknown_requires_type`.
     - backlog `HIGH` pendiente para siguiente paso: `4` en `scripts/*` + `workflow.bdd.insufficient_features` (`1`).
@@ -923,7 +923,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-b-t3/enterprise-menu1.json`
     - `.audit_tmp/c022-b-t3-diff.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-high-batch-b1-severity-delta.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase B:
     - baseline C022 `CRITICAL 34`, `HIGH 27`, `total 61`
     - post B1 `CRITICAL 18`, `HIGH 5`, `total 23`
@@ -939,7 +939,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-c-t1/enterprise-menu1.json`
     - `.audit_tmp/c022-c-t1-diff.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-medium-quick-wins-c1-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de C1:
     - post B1 `CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`, `total 23`
     - post C1 `CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`, `total 19`
@@ -951,7 +951,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN ampliado`: `.audit_tmp/c022-c-t2-green-expanded.out` (`tests=24`, `pass=24`, `fail=0`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.C.T3`.
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-clickable-consistency-c2-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de C2:
     - normalizacion de paths absolutos a repo-relative en `topFiles` de `readEvidenceSummaryForMenu`.
     - consistencia clicable alineada entre menu y export legacy para diagnostico operativo.
@@ -967,7 +967,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-c-t3/stage-summary.json`
     - `.audit_tmp/c022-c-t3/evidence-hashes.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-stage-parity-c3-validation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de C3:
     - paridad operativa validada entre `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI local` y flujo menu.
     - fase C cerrada con cobertura mantenida (`coverage_ratio=1`).
@@ -1048,4 +1048,24 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `docs/validation/README.md` (cierre `C022` consolidado)
   - ✅ backlog post-MVP fijado:
     - `NO_MVP_SAAS_MULTI_REPO`: no se añade SaaS ni multi-repo en MVP; diferido a fase posterior.
-- 🚧 `P-ADHOC-LINES-023A` Iniciar fase 0 del MVP hotspots post-cierre C022 (baseline T0 + contrato operativo, alcance sin SaaS ni multi-repo).
+- ✅ `P-ADHOC-LINES-023A` Iniciar fase 0 del MVP hotspots post-cierre C022 (baseline T0 + contrato operativo, alcance sin SaaS ni multi-repo).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-0-t1-red.out` (`has_t0_baseline_rc=1`, `has_t0_baseline_snapshot_rc=1`, `has_plan_doc_rc=2`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-0-t1-green.out` (`has_t0_baseline_rc=0`, `has_t0_baseline_snapshot_rc=0`, `has_plan_doc_rc=0`, `single_active_task_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: limpieza de docs de detalle C022 cerrados + consolidacion del seguimiento en un unico MD de plan C023.
+  - ✅ baseline `T0` versionada:
+    - `assets/benchmarks/c023-hotspots-mvp-t0-v001.json`
+    - `assets/benchmarks/c023-hotspots-mvp-t0-v001-baseline.json`
+    - snapshot: `total=19`, `CRITICAL=18`, `HIGH=1`, `MEDIUM=0`, `LOW=0`, `coverage_ratio=1`.
+  - ✅ plan operativo oficial publicado:
+    - `docs/validation/c023-mvp-hotspots-plan.md`
+  - ✅ evidencias fase 0:
+    - `.audit_tmp/c023-0-t1/benchmark.out`
+    - `.audit_tmp/c023-0-t1/menu-option1.out`
+    - `.audit_tmp/c023-0-t1/parity-menu1.out`
+    - `.audit_tmp/c023-0-t1/enterprise-menu1.json`
+    - `.audit_tmp/c023-0-t1/summary.json`
+    - `.audit-reports/c023-hotspots-t0-legacy-parity-menu1.md`
+  - ✅ backlog post-MVP mantenido:
+    - `NO_MVP_SAAS_MULTI_REPO` (diferido fuera de MVP).
+- 🚧 `P-ADHOC-LINES-023B` Ejecutar `C023.1.T1`: implementar colector local de churn/autoria por fichero (sin SaaS ni multi-repo).

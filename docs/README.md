@@ -4,9 +4,10 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- No hay ciclo activo abierto en este momento.
-- Ultimo cierre oficial: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
-- Politica: abrir solo 1 ciclo temporal a la vez y retirarlo al cerrar.
+- Ciclo activo: `C023` (MVP hotspots) en `docs/validation/c023-mvp-hotspots-plan.md`.
+- Alcance actual: monorepo local, sin SaaS ni multi-repo en MVP.
+- Ultimo cierre oficial previo: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
+- Politica: una sola tarea en construccion (`🚧`) en todo momento.
 
 ## Product and Architecture
 
@@ -46,17 +47,8 @@ Canonical index for active Pumuki documentation.
 
 - `docs/validation/README.md`: enterprise minimal validation index.
 - `docs/validation/adapter-hook-runtime-validation.md`
-- `docs/validation/c022-full-repo-baseline.md`
 - `docs/validation/c022-phase-acceptance-contract.md`
-- `docs/validation/c022-critical-batch-selection.md`
-- `docs/validation/c022-critical-batch-a1-remediation.md`
-- `docs/validation/c022-critical-batch-a1-severity-delta.md`
-- `docs/validation/c022-high-batch-selection.md`
-- `docs/validation/c022-high-batch-b1-remediation.md`
-- `docs/validation/c022-high-batch-b1-severity-delta.md`
-- `docs/validation/c022-medium-quick-wins-c1-remediation.md`
-- `docs/validation/c022-clickable-consistency-c2-remediation.md`
-- `docs/validation/c022-stage-parity-c3-validation.md`
+- `docs/validation/c023-mvp-hotspots-plan.md`
 - `docs/validation/enterprise-consumer-isolation-policy.md`
 - `docs/validation/mock-consumer-integration-runbook.md`
 - `docs/validation/detection-audit-baseline.md`

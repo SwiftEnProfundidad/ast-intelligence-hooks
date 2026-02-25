@@ -169,4 +169,4 @@ Condicionantes no bloqueantes del contrato:
 
 ## NEXT
 
-NEXT: esperar instruccion explicita del usuario para apertura del MVP de hotspots post-cierre `C022`.
+NEXT: ciclo `C022` cerrado; continuidad operativa en `docs/validation/c023-mvp-hotspots-plan.md`.
