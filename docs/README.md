@@ -5,7 +5,7 @@ Canonical index for active Pumuki documentation.
 ## Ciclo Activo (Seguimiento Temporal)
 
 - `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`: ciclo activo en ejecucion.
-- Ultimo cierre oficial: `docs/validation/c021-enterprise-certification-report.md`.
+- Ultimo cierre oficial: ciclo `021` consolidado y archivado fuera del set minimo activo.
 - Politica: abrir solo 1 ciclo temporal a la vez y retirarlo al cerrar.
 
 ## Product and Architecture
@@ -46,21 +46,6 @@ Canonical index for active Pumuki documentation.
 
 - `docs/validation/README.md`: enterprise minimal validation index.
 - `docs/validation/adapter-hook-runtime-validation.md`
-- `docs/validation/c021-critical-batch-a1-remediation.md`
-- `docs/validation/c021-critical-batch-a1-severity-delta.md`
-- `docs/validation/c021-critical-batch-selection.md`
-- `docs/validation/c021-full-repo-baseline.md`
-- `docs/validation/c021-high-batch-b1-remediation.md`
-- `docs/validation/c021-high-batch-b1-severity-delta.md`
-- `docs/validation/c021-high-batch-selection.md`
-- `docs/validation/c021-clickable-consistency-c2-remediation.md`
-- `docs/validation/c021-medium-quick-wins-c1-remediation.md`
-- `docs/validation/c021-stage-parity-c3-validation.md`
-- `docs/validation/c021-d1-local-revalidation.md`
-- `docs/validation/c021-d3-gitflow-close.md`
-- `docs/validation/c021-d4-cycle-retirement.md`
-- `docs/validation/c021-enterprise-certification-report.md`
-- `docs/validation/c021-phase-acceptance-contract.md`
 - `docs/validation/c022-full-repo-baseline.md`
 - `docs/validation/c022-phase-acceptance-contract.md`
 - `docs/validation/c022-critical-batch-selection.md`
@@ -71,11 +56,7 @@ Canonical index for active Pumuki documentation.
 - `docs/validation/c022-high-batch-b1-severity-delta.md`
 - `docs/validation/c022-medium-quick-wins-c1-remediation.md`
 - `docs/validation/c022-clickable-consistency-c2-remediation.md`
-- `docs/validation/c020-ast-detector-contract.md`
-- `docs/validation/c020-enterprise-certification-report.md`
-- `docs/validation/c020-legacy-refactor-benchmark.md`
-- `docs/validation/c020-skills-engine-stage-coverage.md`
-- `docs/validation/c020-stage-parity-and-ux.md`
+- `docs/validation/c022-stage-parity-c3-validation.md`
 - `docs/validation/enterprise-consumer-isolation-policy.md`
 - `docs/validation/mock-consumer-integration-runbook.md`
 - `docs/validation/detection-audit-baseline.md`

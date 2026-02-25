@@ -955,4 +955,20 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ resultado de C2:
     - normalizacion de paths absolutos a repo-relative en `topFiles` de `readEvidenceSummaryForMenu`.
     - consistencia clicable alineada entre menu y export legacy para diagnostico operativo.
-- 🚧 `P-ADHOC-LINES-022L` Ejecutar `C022.C.T3`: verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
+- ✅ `P-ADHOC-LINES-022L` Ejecutar `C022.C.T3`: verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-c-t3-red.out` (`has_stage_summary_rc=1`, `has_exits_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-c-t3-green.out` (`menu=0`, `pre_write=1`, `pre_commit=0`, `pre_push=1`, `ci=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `GREEN estatico`: `.audit_tmp/c022-c-t3-static.out` (`tests=26`, `pass=26`, `fail=0`, `exit_code=0`)
+    - `GREEN benchmark`: `.audit_tmp/c022-c-t3-benchmark.out` (`total_violations=19`, `coverage_ratio=1`, `parity_exit=1` informativo)
+    - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.D.T1`.
+  - ✅ evidencia operativa publicada:
+    - `.audit_tmp/c022-c-t3/exits.txt`
+    - `.audit_tmp/c022-c-t3/stage-summary.json`
+    - `.audit_tmp/c022-c-t3/evidence-hashes.json`
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-stage-parity-c3-validation.md`
+  - ✅ resultado de C3:
+    - paridad operativa validada entre `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI local` y flujo menu.
+    - fase C cerrada con cobertura mantenida (`coverage_ratio=1`).
+- 🚧 `P-ADHOC-LINES-022M` Ejecutar `C022.D.T1`: revalidacion local integral final (`tests`, `typecheck`, `benchmark`, `smoke menu/hooks`).
