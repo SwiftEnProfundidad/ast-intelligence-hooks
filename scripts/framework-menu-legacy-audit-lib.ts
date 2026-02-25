@@ -5,6 +5,11 @@ import { buildSnapshotPlatformSummaries } from '../integrations/evidence/platfor
 type GateSeverity = 'CRITICAL' | 'ERROR' | 'WARN' | 'INFO';
 type LegacySeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 type PlatformName = 'iOS' | 'Android' | 'Backend' | 'Frontend' | 'Other';
+type LegacyMetricValue = string | number | boolean | null | Date;
+type LegacyMetricRecord = Record<string, LegacyMetricValue>;
+type LegacySeverityMetricsPayload = {
+  by_severity?: LegacyMetricRecord;
+};
 type EvidenceRulesetState = {
   bundle?: unknown;
 };
@@ -271,7 +276,7 @@ const parseSnapshotPlatformSummaries = (value: unknown): PlatformSummary[] => {
     }
     const bySeverityRaw =
       typeof current.by_severity === 'object' && current.by_severity !== null
-        ? current.by_severity as Record<string, unknown>
+        ? current.by_severity as LegacyMetricRecord
         : {};
     const topViolations = Array.isArray(current.top_violations)
       ? current.top_violations
@@ -545,10 +550,10 @@ const computeLegacySeverity = (
   severityMetrics: unknown
 ): Record<LegacySeverity, number> => {
   const metrics = typeof severityMetrics === 'object' && severityMetrics
-    ? severityMetrics as Record<string, unknown>
-    : {};
+    ? severityMetrics as LegacySeverityMetricsPayload
+    : {} as LegacySeverityMetricsPayload;
   const rawBySeverity = typeof metrics.by_severity === 'object' && metrics.by_severity
-    ? metrics.by_severity as Record<string, unknown>
+    ? metrics.by_severity
     : {};
   const critical = Number(rawBySeverity.CRITICAL ?? 0);
   const high = Number(rawBySeverity.ERROR ?? 0);

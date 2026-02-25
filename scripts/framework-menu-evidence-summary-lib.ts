@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 type EvidenceSeverity = 'CRITICAL' | 'ERROR' | 'WARN' | 'INFO';
 type EnterpriseEvidenceSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+type EvidenceMetricValue = string | number | boolean | null | Date;
 
 type EvidenceFinding = {
   file?: unknown;
@@ -56,13 +57,49 @@ const asFindings = (value: unknown): EvidenceFinding[] => {
   return value as EvidenceFinding[];
 };
 
-const toTopFiles = (findings: EvidenceFinding[]): ReadonlyArray<{ file: string; count: number }> => {
+const normalizePath = (value: string): string => {
+  return value.replace(/\\/g, '/');
+};
+
+const normalizeRepoRoot = (repoRoot: string): string => {
+  const normalized = normalizePath(repoRoot.trim());
+  if (normalized.endsWith('/')) {
+    return normalized.slice(0, -1);
+  }
+  return normalized;
+};
+
+const toRepoRelativePath = (params: { repoRoot: string; filePath: string }): string => {
+  const candidate = normalizePath(params.filePath).replace(/^\.\//, '');
+  if (!candidate.startsWith('/')) {
+    return candidate;
+  }
+  const repoRoot = normalizeRepoRoot(params.repoRoot);
+  const repoPrefix = `${repoRoot}/`;
+  if (candidate === repoRoot) {
+    return '.';
+  }
+  if (candidate.startsWith(repoPrefix)) {
+    const relativePath = candidate.slice(repoPrefix.length);
+    return relativePath.length > 0 ? relativePath : '.';
+  }
+  return candidate;
+};
+
+const toTopFiles = (params: {
+  findings: EvidenceFinding[];
+  repoRoot: string;
+}): ReadonlyArray<{ file: string; count: number }> => {
   const filesMap = new Map<string, number>();
-  for (const finding of findings) {
-    const file = toStringOrNull(finding.file);
-    if (!file) {
+  for (const finding of params.findings) {
+    const rawFile = toStringOrNull(finding.file);
+    if (!rawFile) {
       continue;
     }
+    const file = toRepoRelativePath({
+      repoRoot: params.repoRoot,
+      filePath: rawFile,
+    });
     filesMap.set(file, (filesMap.get(file) ?? 0) + 1);
   }
 
@@ -109,8 +146,8 @@ const normalizeEnterpriseSeverityCounts = (
   if (typeof value !== 'object' || value === null) {
     return null;
   }
-  const record = value as Record<string, unknown>;
-  const parse = (entry: unknown): number => {
+  const record = value as Record<string, EvidenceMetricValue>;
+  const parse = (entry: EvidenceMetricValue | undefined): number => {
     if (typeof entry !== 'number' || !Number.isFinite(entry)) {
       return 0;
     }
@@ -167,7 +204,7 @@ export const readEvidenceSummaryForMenu = (
       totalFindings: findings.length,
       bySeverity,
       byEnterpriseSeverity,
-      topFiles: toTopFiles(findings),
+      topFiles: toTopFiles({ findings, repoRoot }),
     };
   } catch {
     return {

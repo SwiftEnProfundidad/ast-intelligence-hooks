@@ -12,7 +12,7 @@ Modelo de entrega: Git Flow end-to-end + TDD (red/green/refactor)
 
 ## Contexto de entrada
 - ✅ Ciclo `021` cerrado y retirado de tracking temporal.
-- ✅ Cierre oficial consolidado en `docs/validation/c021-enterprise-certification-report.md`.
+- ✅ Cierre oficial de `C021` consolidado y archivado fuera del set minimo activo.
 - ✅ Ramas protegidas sincronizadas (`origin/main...origin/develop = 0/0`).
 
 ## Objetivo del ciclo
@@ -86,15 +86,56 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - no regresion de `CRITICAL` vs cierre fase A (`18 -> 18`)
 
 ### Fase C - Endurecimiento MEDIUM/LOW + DX
-- 🚧 `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
-- ⏳ `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
-- ⏳ `C022.C.T3` Verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
+- ✅ `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+  - validacion oficial publicada:
+    - `docs/validation/c022-medium-quick-wins-c1-remediation.md`
+  - resultado C1:
+    - post B1 `total_violations=23` (`CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`)
+    - post C1 `total_violations=19` (`CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`)
+    - delta C1: `CRITICAL=0`, `HIGH=-4`, `MEDIUM=0`, `LOW=0`, `total=-4`, `coverage_ratio=1`
+- ✅ `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
+  - validacion oficial publicada:
+    - `docs/validation/c022-clickable-consistency-c2-remediation.md`
+  - resultado C2:
+    - contrato RED/GREEN cerrado para normalizacion de paths absolutos a repo-relative en `topFiles` del resumen de evidencia de menu.
+    - validacion focal: `5/5` en `framework-menu-evidence-summary`.
+    - validacion ampliada de consistencia menu/export: `24/24` (`framework-menu-evidence-summary` + `framework-menu-legacy-audit`).
+- ✅ `C022.C.T3` Verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
+  - validacion oficial publicada:
+    - `docs/validation/c022-stage-parity-c3-validation.md`
+  - resultado C3:
+    - paridad por entrypoint validada: `menu=0`, `pre_write=1`, `pre_commit=0`, `pre_push=1`, `ci=0`.
+    - validacion estatica ampliada: `26/26` en verde (`stageRunners` + `framework-menu-consumer-runtime`).
+    - benchmark full-repo: `total_violations=19`, `coverage_ratio=1`, `parity_exit=1` (informativo).
 
 ### Fase D - Certificacion final del ciclo
-- ⏳ `C022.D.T1` Revalidacion local integral final (`tests`, `typecheck`, `benchmark`, smoke menu/hooks).
-- ⏳ `C022.D.T2` Informe oficial de cierre C022 en `docs/validation`.
+- ✅ `C022.D.T1` Revalidacion local integral final (`tests`, `typecheck`, `benchmark`, smoke menu/hooks).
+  - contrato TDD:
+    - `RED`: `.audit_tmp/c022-d-t1-red.out` (`has_summary_rc=1`, `has_benchmark_rc=1`, `has_typecheck_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
+  - bateria integral:
+    - `test:stage-gates=0`
+    - `test:deterministic=0`
+    - `typecheck=0`
+  - benchmark full-repo:
+    - `total_violations=19`
+    - `coverage_ratio=1`
+    - `parity_exit=1` (informativo)
+  - smoke menu/hooks:
+    - `menu=0`
+    - `pre_write=1`
+    - `pre_commit=0`
+    - `pre_push=1`
+    - `ci=0`
+- ✅ `C022.D.T2` Informe oficial de cierre C022 en `docs/validation`.
+  - consolidado en:
+    - `docs/validation/c022-phase-acceptance-contract.md` (seccion "Informe Oficial de Cierre C022 (D.T2)").
+  - veredicto:
+    - `framework_status=READY_FOR_GITFLOW_CLOSE`
+    - `repo_quality_status=BLOCKED_BY_REAL_FINDINGS` (esperado por deuda residual real)
+    - `cycle_status=READY_FOR_D3`
 - ⏳ `C022.D.T3` Cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+- `C022.D.T3` Cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
