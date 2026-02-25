@@ -134,8 +134,19 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - `framework_status=READY_FOR_GITFLOW_CLOSE`
     - `repo_quality_status=BLOCKED_BY_REAL_FINDINGS` (esperado por deuda residual real)
     - `cycle_status=READY_FOR_D3`
-- ⏳ `C022.D.T3` Cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
+- ✅ `C022.D.T3` Cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
+  - contrato TDD:
+    - `RED`: `.audit_tmp/c022-d-t3-red.out` (`has_on_develop_rc=1`, `has_on_main_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t3-green.out` (`sync_after_fix=0 0`, `feature_on_origin_develop=1`, `feature_on_origin_main=1`, `status=GREEN_OK`, `exit_code=0`)
+  - promote aplicado:
+    - `feature -> develop`: merge `79f98a8`
+    - `develop -> main`: merge `7472c8f`
+    - ajuste de sincronizacion final: fast-forward `develop` a `origin/main` para cerrar `0/0`
+  - estado final ramas protegidas:
+    - `origin/main...origin/develop = 0/0`
+    - `origin/main = 7472c8f`
+    - `origin/develop = 7472c8f`
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.D.T3` Cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
+- `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
