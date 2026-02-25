@@ -127,7 +127,6 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - `pre_commit=0`
     - `pre_push=1`
     - `ci=0`
-- ⏳ `C022.D.T2` Informe oficial de cierre C022 en `docs/validation`.
 - ✅ `C022.D.T2` Informe oficial de cierre C022 en `docs/validation`.
   - consolidado en:
     - `docs/validation/c022-phase-acceptance-contract.md` (seccion "Informe Oficial de Cierre C022 (D.T2)").
