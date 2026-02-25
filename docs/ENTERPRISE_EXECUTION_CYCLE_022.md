@@ -86,8 +86,14 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
     - no regresion de `CRITICAL` vs cierre fase A (`18 -> 18`)
 
 ### Fase C - Endurecimiento MEDIUM/LOW + DX
-- 🚧 `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
-- ⏳ `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
+- ✅ `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+  - validacion oficial publicada:
+    - `docs/validation/c022-medium-quick-wins-c1-remediation.md`
+  - resultado C1:
+    - post B1 `total_violations=23` (`CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`)
+    - post C1 `total_violations=19` (`CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`)
+    - delta C1: `CRITICAL=0`, `HIGH=-4`, `MEDIUM=0`, `LOW=0`, `total=-4`, `coverage_ratio=1`
+- 🚧 `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.
 - ⏳ `C022.C.T3` Verificar paridad operativa `PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI local`.
 
 ### Fase D - Certificacion final del ciclo
@@ -97,4 +103,4 @@ Continuar el endurecimiento enterprise operativo del repo con foco en:
 - ⏳ `C022.D.T4` Retiro del MD de ciclo temporal y consolidacion en documentacion estable.
 
 ## Siguiente tarea activa
-- `C022.C.T1` Reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+- `C022.C.T2` Normalizar reportes clicables y consistencia de salida en hooks/menu/export.

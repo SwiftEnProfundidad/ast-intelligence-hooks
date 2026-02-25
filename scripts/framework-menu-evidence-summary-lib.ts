@@ -3,6 +3,7 @@ import { join } from 'node:path';
 
 type EvidenceSeverity = 'CRITICAL' | 'ERROR' | 'WARN' | 'INFO';
 type EnterpriseEvidenceSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+type EvidenceMetricValue = string | number | boolean | null | Date;
 
 type EvidenceFinding = {
   file?: unknown;
@@ -109,8 +110,8 @@ const normalizeEnterpriseSeverityCounts = (
   if (typeof value !== 'object' || value === null) {
     return null;
   }
-  const record = value as Record<string, unknown>;
-  const parse = (entry: unknown): number => {
+  const record = value as Record<string, EvidenceMetricValue>;
+  const parse = (entry: EvidenceMetricValue | undefined): number => {
     if (typeof entry !== 'number' || !Number.isFinite(entry)) {
       return 0;
     }

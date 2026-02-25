@@ -69,6 +69,7 @@ Canonical index for active Pumuki documentation.
 - `docs/validation/c022-high-batch-selection.md`
 - `docs/validation/c022-high-batch-b1-remediation.md`
 - `docs/validation/c022-high-batch-b1-severity-delta.md`
+- `docs/validation/c022-medium-quick-wins-c1-remediation.md`
 - `docs/validation/c020-ast-detector-contract.md`
 - `docs/validation/c020-enterprise-certification-report.md`
 - `docs/validation/c020-legacy-refactor-benchmark.md`

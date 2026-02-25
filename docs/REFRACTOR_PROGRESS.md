@@ -929,4 +929,19 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - post B1 `CRITICAL 18`, `HIGH 5`, `total 23`
     - delta: `CRITICAL -16`, `HIGH -22`, `total -38`, `coverage_ratio=1`
     - delta vs cierre fase A: `CRITICAL 0`, `HIGH -22`, `total -22`
-- 🚧 `P-ADHOC-LINES-022J` Ejecutar `C022.C.T1`: reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+- ✅ `P-ADHOC-LINES-022J` Ejecutar `C022.C.T1`: reducir `MEDIUM` con quick wins de arquitectura y mantenibilidad.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-c-t1-red.out` (`has_doc_rc=1`, `has_evidence_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-c-t1-green.out` (`high_reduced_rc=0`, `critical_no_increase_rc=0`, `medium_no_regression_rc=0`, `low_no_regression_rc=0`, `coverage_ratio_ok_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.C.T2`.
+  - ✅ evidencia de revalidacion:
+    - `.audit_tmp/c022-c-t1/benchmark.out`
+    - `.audit_tmp/c022-c-t1/enterprise-menu1.json`
+    - `.audit_tmp/c022-c-t1-diff.json`
+  - ✅ validacion oficial publicada:
+    - `docs/validation/c022-medium-quick-wins-c1-remediation.md`
+  - ✅ resultado de C1:
+    - post B1 `CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`, `total 23`
+    - post C1 `CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`, `total 19`
+    - delta C1: `CRITICAL 0`, `HIGH -4`, `MEDIUM 0`, `LOW 0`, `total -4`, `coverage_ratio=1`
+- 🚧 `P-ADHOC-LINES-022K` Ejecutar `C022.C.T2`: normalizar reportes clicables y consistencia de salida en hooks/menu/export.
