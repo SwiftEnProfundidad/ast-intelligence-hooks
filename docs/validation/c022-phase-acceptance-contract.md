@@ -169,4 +169,4 @@ Condicionantes no bloqueantes del contrato:
 
 ## NEXT
 
-NEXT: ciclo `C022` cerrado; continuidad operativa en `docs/validation/c023-mvp-hotspots-plan.md`.
+NEXT: ciclo `C022` cerrado; continuidad operativa en `docs/REFRACTOR_PROGRESS.md` (tareas `C023`).

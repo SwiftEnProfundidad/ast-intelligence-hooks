@@ -1052,13 +1052,12 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ TDD formal ejecutado:
     - `RED`: `.audit_tmp/c023-0-t1-red.out` (`has_t0_baseline_rc=1`, `has_t0_baseline_snapshot_rc=1`, `has_plan_doc_rc=2`, `phase_status=RED_OK`, `exit_code=1`)
     - `GREEN`: `.audit_tmp/c023-0-t1-green.out` (`has_t0_baseline_rc=0`, `has_t0_baseline_snapshot_rc=0`, `has_plan_doc_rc=0`, `single_active_task_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
-    - `REFACTOR`: limpieza de docs de detalle C022 cerrados + consolidacion del seguimiento en un unico MD de plan C023.
+    - `REFACTOR`: limpieza de docs de detalle C022 cerrados + consolidacion del seguimiento temporal en este fichero.
   - ✅ baseline `T0` versionada:
     - `assets/benchmarks/c023-hotspots-mvp-t0-v001.json`
     - `assets/benchmarks/c023-hotspots-mvp-t0-v001-baseline.json`
     - snapshot: `total=19`, `CRITICAL=18`, `HIGH=1`, `MEDIUM=0`, `LOW=0`, `coverage_ratio=1`.
-  - ✅ plan operativo oficial publicado:
-    - `docs/validation/c023-mvp-hotspots-plan.md`
+  - ✅ plan operativo de fase 0 consolidado en este tracker (sin versionar md temporal de seguimiento).
   - ✅ evidencias fase 0:
     - `.audit_tmp/c023-0-t1/benchmark.out`
     - `.audit_tmp/c023-0-t1/menu-option1.out`
@@ -1072,7 +1071,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ TDD formal ejecutado:
     - `RED`: `.audit_tmp/c023-1-t1-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
     - `GREEN`: `.audit_tmp/c023-1-t1-green.out` (`tests_exit_code=0`, `has_collector_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
-    - `REFACTOR`: consolidacion del seguimiento en el plan `C023` y avance a `C023.1.T2`.
+    - `REFACTOR`: consolidacion del seguimiento temporal en este tracker y avance a `C023.1.T2`.
   - ✅ implementacion aplicada:
     - `integrations/git/collectFileChurnOwnership.ts`
     - `integrations/git/index.ts`

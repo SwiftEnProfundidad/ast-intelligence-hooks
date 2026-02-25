@@ -4,7 +4,7 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- Ciclo activo: `C023` (MVP hotspots) en `docs/validation/c023-mvp-hotspots-plan.md`.
+- Ciclo activo: `C023` (MVP hotspots), seguimiento operativo en `docs/REFRACTOR_PROGRESS.md`.
 - Alcance actual: monorepo local, sin SaaS ni multi-repo en MVP.
 - Ultimo cierre oficial previo: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
 - Politica: una sola tarea en construccion (`🚧`) en todo momento.
@@ -48,7 +48,6 @@ Canonical index for active Pumuki documentation.
 - `docs/validation/README.md`: enterprise minimal validation index.
 - `docs/validation/adapter-hook-runtime-validation.md`
 - `docs/validation/c022-phase-acceptance-contract.md`
-- `docs/validation/c023-mvp-hotspots-plan.md`
 - `docs/validation/enterprise-consumer-isolation-policy.md`
 - `docs/validation/mock-consumer-integration-runbook.md`
 - `docs/validation/detection-audit-baseline.md`

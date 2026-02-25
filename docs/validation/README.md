@@ -6,7 +6,6 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 
 - `adapter-hook-runtime-validation.md`
 - `c022-phase-acceptance-contract.md`
-- `c023-mvp-hotspots-plan.md`
 - `detection-audit-baseline.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
@@ -18,4 +17,3 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - No se versionan reportes históricos ad-hoc en `docs/validation/`.
 - Si hace falta conservar evidencia operativa de ejecución, se referencia desde el ciclo temporal activo (si existe) y/o desde reportes en `.audit_tmp` / `.audit-reports`.
 - El cierre oficial de `C022` (`D.T2` + `D.T4`) está consolidado en `c022-phase-acceptance-contract.md`.
-- El seguimiento activo del MVP hotspots (`C023`) está en `c023-mvp-hotspots-plan.md`.
