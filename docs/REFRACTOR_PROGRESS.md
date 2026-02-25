@@ -1093,4 +1093,17 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - salida: `.audit_tmp/c023-1-t2-green-tests.out` (`pass=2`, `fail=0`)
   - ✅ alcance respetado:
     - composicion sobre datos locales (`churnSignals` + findings locales), sin SaaS y sin multi-repo.
-- 🚧 `P-ADHOC-LINES-023D` Ejecutar `C023.1.T3`: definir formula de score/ranking `top_n` determinista para hotspots locales.
+- ✅ `P-ADHOC-LINES-023D` Ejecutar `C023.1.T3`: definir formula de score/ranking `top_n` determinista para hotspots locales.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-1-t3-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-1-t3-green.out` (`tests_exit_code=0`, `has_ranker_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del tracking temporal y avance a `C023.2.T1`.
+  - ✅ implementacion aplicada:
+    - `integrations/git/rankFileHotspots.ts`
+    - `integrations/git/index.ts`
+  - ✅ pruebas focales:
+    - `integrations/git/__tests__/rankFileHotspots.test.ts`
+    - salida: `.audit_tmp/c023-1-t3-green-tests.out` (`pass=3`, `fail=0`)
+  - ✅ alcance respetado:
+    - ranking determinista local por score (`rawScore`, `normalizedScore`, `topN`) sin SaaS y sin multi-repo.
+- 🚧 `P-ADHOC-LINES-023E` Ejecutar `C023.2.T1`: exponer comando local para reporte de hotspots (`pumuki analytics hotspots report`).
