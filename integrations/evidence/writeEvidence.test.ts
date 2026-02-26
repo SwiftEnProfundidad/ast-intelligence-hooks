@@ -314,3 +314,50 @@ test('writeEvidence conserva paths externos y elimina lines no finitas', async (
     });
   });
 });
+
+test('writeEvidence preserva snapshot.tdd_bdd cuando viene en evidencia', async () => {
+  await withTempDir('pumuki-write-evidence-tdd-bdd-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const evidence = sampleEvidence(tempRoot);
+      evidence.snapshot.tdd_bdd = {
+        status: 'waived',
+        scope: {
+          in_scope: true,
+          is_new_feature: true,
+          is_complex_change: false,
+          reasons: ['new_feature'],
+          metrics: {
+            changed_files: 1,
+            estimated_loc: 20,
+            critical_path_files: 0,
+            public_interface_files: 1,
+          },
+        },
+        evidence: {
+          path: '.pumuki/artifacts/pumuki-evidence-v1.json',
+          state: 'not_required',
+          slices_total: 0,
+          slices_valid: 0,
+          slices_invalid: 0,
+          integrity_ok: true,
+          errors: [],
+        },
+        waiver: {
+          applied: true,
+          approver: 'tech-lead',
+          reason: 'incident',
+          expires_at: '2026-02-27T10:00:00.000Z',
+        },
+      };
+
+      const result = writeEvidence(evidence);
+      assert.equal(result.ok, true);
+
+      const written = JSON.parse(readFileSync(result.path, 'utf8')) as AiEvidenceV2_1;
+      assert.equal(written.snapshot.tdd_bdd?.status, 'waived');
+      assert.equal(written.snapshot.tdd_bdd?.waiver.approver, 'tech-lead');
+      assert.deepEqual(written.snapshot.tdd_bdd?.scope.reasons, ['new_feature']);
+    });
+  });
+});

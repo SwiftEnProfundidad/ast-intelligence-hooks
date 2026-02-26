@@ -2,9 +2,16 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
+import type { LocalHotspotsReport } from '../analyticsHotspots';
 import { getCurrentPumukiPackageName } from '../packageInfo';
+import { resolveHotspotsSaasIngestionAuditPath } from '../saasIngestionAudit';
+import {
+  createHotspotsSaasIngestionPayload,
+  resolveHotspotsSaasIngestionPayloadPath,
+} from '../saasIngestionContract';
+import { resolveHotspotsSaasIngestionMetricsPath } from '../saasIngestionMetrics';
 import { parseLifecycleCliArgs, runLifecycleCli } from '../cli';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -42,6 +49,23 @@ const withSilentConsole = async <T>(callback: () => Promise<T>): Promise<T> => {
     console.log = originalLog;
     console.error = originalError;
   }
+};
+
+const createEmptyHotspotsReport = (repoRoot: string): LocalHotspotsReport => {
+  return {
+    generatedAt: '2026-02-26T12:00:00+00:00',
+    repoRoot,
+    options: {
+      topN: 1,
+      sinceDays: 90,
+    },
+    totals: {
+      churnSignals: 0,
+      technicalSignals: 0,
+      ranked: 0,
+    },
+    hotspots: [],
+  };
 };
 
 test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
@@ -129,6 +153,16 @@ test('parseLifecycleCliArgs soporta analytics hotspots report', () => {
   );
 });
 
+test('parseLifecycleCliArgs soporta analytics hotspots diagnose', () => {
+  assert.deepEqual(parseLifecycleCliArgs(['analytics', 'hotspots', 'diagnose', '--json']), {
+    command: 'analytics',
+    purgeArtifacts: false,
+    json: true,
+    analyticsCommand: 'hotspots',
+    analyticsHotspotsCommand: 'diagnose',
+  });
+});
+
 test('parseLifecycleCliArgs soporta exportes locales json/markdown para hotspots', () => {
   assert.deepEqual(
     parseLifecycleCliArgs([
@@ -162,6 +196,10 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['analytics', 'hotspots']),
     /Unsupported analytics hotspots action/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['analytics', 'hotspots', 'diagnose', '--top=1']),
+    /Unsupported argument/i
   );
   assert.throws(
     () => parseLifecycleCliArgs(['install', '--bad-flag']),
@@ -366,6 +404,78 @@ test('runLifecycleCli analytics hotspots report exporta json y markdown en rutas
     assert.match(markdownPayload, /# Pumuki Hotspots Report/i);
     assert.match(markdownPayload, /src\/a\.ts/);
   } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métricas de ingesta', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    const payloadPath = resolveHotspotsSaasIngestionPayloadPath(repo);
+    mkdirSync(dirname(payloadPath), { recursive: true });
+    const payload = createHotspotsSaasIngestionPayload({
+      tenantId: 'tenant-alpha',
+      repositoryId: 'repo-alpha',
+      repositoryName: 'ast-intelligence-hooks',
+      report: createEmptyHotspotsReport(repo),
+      producerVersion: '0.0.0-test',
+      sourceMode: 'local',
+      generatedAt: '2026-02-26T12:00:00+00:00',
+      repositoryDefaultBranch: 'main',
+    });
+    writeFileSync(payloadPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+
+    const auditPath = resolveHotspotsSaasIngestionAuditPath(repo);
+    mkdirSync(dirname(auditPath), { recursive: true });
+    writeFileSync(
+      auditPath,
+      `${JSON.stringify({
+        event_id: 'event-1',
+        event_at: '2026-02-26T12:01:00+00:00',
+        tenant_id: 'tenant-alpha',
+        repository_id: 'repo-alpha',
+        endpoint: 'https://example.com/ingestion',
+        idempotency_key: 'idem-1',
+        payload_hash: payload.integrity.payload_hash,
+        outcome: 'success',
+        attempts: 1,
+        latency_ms: 140,
+        status: 200,
+      })}\n`,
+      'utf8'
+    );
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const exitCode = await runLifecycleCli(['analytics', 'hotspots', 'diagnose', '--json']);
+
+    assert.equal(exitCode, 0);
+    const diagnostics = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      status?: string;
+      issues?: ReadonlyArray<unknown>;
+      contract?: { status?: string };
+      audit?: { events?: number };
+      metrics?: { snapshot?: { totals?: { success?: number; error?: number } } };
+    };
+    assert.equal(diagnostics.status, 'healthy');
+    assert.equal(Array.isArray(diagnostics.issues), true);
+    assert.equal(diagnostics.issues?.length, 0);
+    assert.equal(diagnostics.contract?.status, 'valid');
+    assert.equal(diagnostics.audit?.events, 1);
+    assert.equal(diagnostics.metrics?.snapshot?.totals?.success, 1);
+    assert.equal(diagnostics.metrics?.snapshot?.totals?.error, 0);
+    assert.equal(existsSync(resolveHotspotsSaasIngestionMetricsPath(repo)), true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });
   }

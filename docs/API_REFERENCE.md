@@ -122,6 +122,18 @@ File: `integrations/lifecycle/cli.ts`
   - `telemetry.chain = "pumuki->ai_gate->ai_evidence"`
   - `telemetry.stage`
 
+## SaaS diagnostics CLI
+
+File: `integrations/lifecycle/cli.ts`
+
+- `pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json]`
+- `pumuki analytics hotspots diagnose [--json]`
+
+Exit code contract:
+
+- `0` when diagnostics status is `healthy` or `degraded`
+- `1` when diagnostics status is `blocked`
+
 ## Evidence API
 
 Files:

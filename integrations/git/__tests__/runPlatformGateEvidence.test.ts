@@ -6,6 +6,7 @@ import type { RuleSet } from '../../../core/rules/RuleSet';
 import type { SkillsRuleSetLoadResult } from '../../config/skillsRuleSet';
 import type { ResolvedStagePolicy } from '../../gate/stagePolicies';
 import type { DetectedPlatforms } from '../../platform/detectPlatforms';
+import type { TddBddSnapshot } from '../../tdd/types';
 import type { IEvidenceService } from '../EvidenceService';
 import { emitPlatformGateEvidence } from '../runPlatformGateEvidence';
 
@@ -41,6 +42,7 @@ type GenerateEvidenceParams = {
     };
     coverage_ratio: number;
   };
+  tddBdd?: TddBddSnapshot;
   previousEvidence: unknown;
   detectedPlatforms: unknown;
   loadedRulesets: unknown;

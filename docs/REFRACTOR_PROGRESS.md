@@ -126,7 +126,23 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
 ## Siguiente paso operativo
-- 🚧 Esperar nuevas instrucciones explícitas del usuario tras cierre del bloque `C023`; sin ejecución automática.
+- ✅ `C023.D.T4` Cierre documental final del enforcement TDD/BDD vertical e indexación estable (tracking temporal retirado de `docs/validation`).
+- ✅ `C023.NMVP.A.T1` Definir contrato de ingesta SaaS multi-tenant para `hotspots` + cumplimiento TDD/BDD (`integrations/lifecycle/saasIngestionContract.ts` + tests).
+- ✅ `C023.NMVP.A.T2` Implementar validador determinista del contrato de ingesta (lectura/parseo/hash determinista con path configurable + tests).
+- ✅ `C023.NMVP.A.T3` Versionar contrato y compatibilidad hacia atrás (`v1` canónica + lectura compatible `v1.0`).
+- ✅ `C023.NMVP.B.T1` Implementar constructor de payload multi-tenant desde señales locales (`buildHotspotsSaasIngestionPayloadFromLocalSignals` + tests).
+- ✅ `C023.NMVP.B.T2` Implementar transporte HTTP resiliente (timeout, reintentos, errores tipados) (`sendHotspotsSaasIngestionPayload` + tests).
+- ✅ `C023.NMVP.B.T3` Implementar idempotencia de publicación (clave determinista por lote) (`createHotspotsSaasIngestionIdempotencyKey` + header `idempotency-key` + tests).
+- ✅ `C023.NMVP.C.T1` Aislamiento estricto por `tenant_id` y `repository_id` (headers obligatorios + bloqueo de override inconsistente).
+- ✅ `C023.NMVP.C.T2` Política de autenticación de publicación (token rotado + validación de scope) (`validateHotspotsSaasIngestionAuthPolicy` + bloqueo preventivo en transporte).
+- ✅ `C023.NMVP.C.T3` Trazabilidad auditable de publicación por evento (`saasIngestionAudit` + persistencia NDJSON + tests).
+- ✅ `C023.NMVP.D.T1` Métricas de éxito/fallo/latencia de publicación (`saasIngestionMetrics` + percentiles + persistencia JSON + tests).
+- ✅ `C023.NMVP.D.T2` Comando operativo para diagnóstico de publicación multi-tenant (`pumuki analytics hotspots diagnose` + test CLI).
+- ✅ `C023.NMVP.D.T3` Runbook de operación y rollback sin impacto al modo local (consolidado en `docs/USAGE.md` + `docs/CONFIGURATION.md`).
+- ✅ `C023.NMVP.E.T1` Suite TDD/BDD en verde para contrato + pipeline + aislamiento (`npm run test:saas-ingestion`).
+- ✅ `C023.NMVP.E.T2` Revalidación integral del bloque No-MVP (`npm run test:saas-ingestion` + `npm run typecheck`).
+- ✅ `C023.NMVP.E.T3` Cierre documental y retiro del MD temporal de seguimiento (`docs/validation/c023-nmvp-saas-multitenant-plan.md` eliminado y consolidado).
+- 🚧 Esperar nuevas instrucciones explícitas del usuario (bloque C023 No-MVP cerrado).
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:

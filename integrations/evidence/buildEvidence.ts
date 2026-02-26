@@ -17,6 +17,7 @@ import type {
   SddMetrics,
   SnapshotFinding,
 } from './schema';
+import type { TddBddSnapshot } from '../tdd/types';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { resolveHumanIntent } from './humanIntent';
 import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
@@ -39,6 +40,7 @@ export type BuildEvidenceParams = {
   loadedRulesets: ReadonlyArray<RulesetState>;
   evaluationMetrics?: SnapshotEvaluationMetrics;
   rulesCoverage?: SnapshotRulesCoverage;
+  tddBdd?: TddBddSnapshot;
   sddMetrics?: SddMetrics;
   repoState?: RepoState;
 };
@@ -630,6 +632,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       files_affected: normalizedFilesAffected,
       evaluation_metrics: normalizedEvaluationMetrics,
       rules_coverage: normalizedRulesCoverage,
+      ...(params.tddBdd ? { tdd_bdd: params.tddBdd } : {}),
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({
