@@ -142,7 +142,17 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - ✅ `C023.NMVP.E.T1` Suite TDD/BDD en verde para contrato + pipeline + aislamiento (`npm run test:saas-ingestion`).
 - ✅ `C023.NMVP.E.T2` Revalidación integral del bloque No-MVP (`npm run test:saas-ingestion` + `npm run typecheck`).
 - ✅ `C023.NMVP.E.T3` Cierre documental y retiro del MD temporal de seguimiento (`docs/validation/c023-nmvp-saas-multitenant-plan.md` eliminado y consolidado).
-- 🚧 Esperar nuevas instrucciones explícitas del usuario (bloque C023 No-MVP cerrado).
+- ✅ rama publicada en remoto y PR operativo abierto:
+  - branch: `refactor/c023-tdd-bdd-vertical-enforcement`
+  - commit: `f32991d`
+  - PR: `#423` `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/423`
+- 🚧 seguimiento externo de checks remotos para `PR #423` (fuera de alcance técnico local):
+  - estado observado: fallos masivos en ~3-4s con `runner_id=0`, `steps=[]`, `log not found`.
+  - ejemplo verificado: job `Type Check` `65052660930` en run `22460353482`.
+  - local sigue en verde (`test:saas-ingestion`, `typecheck`) y no hay regresión funcional detectada.
+  - TODO cuando vuelvas:
+    - `TODO-C023-REMOTE-001`: re-disparar checks al restablecer runner/billing.
+    - `TODO-C023-REMOTE-002`: validar `security/snyk (swiftenprofundidad)` hasta estado no `pending/error`.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
