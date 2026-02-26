@@ -931,3 +931,44 @@ test('preserves firstSeen from previous ledger and refreshes lastSeen timestamp'
   assert.equal(result.ledger[0]?.firstSeen, '2026-01-01T00:00:00.000Z');
   assert.equal(result.ledger[0]?.lastSeen, result.timestamp);
 });
+
+test('persiste snapshot.tdd_bdd cuando se informa enforcement vertical', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    findings: [],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+    tddBdd: {
+      status: 'blocked',
+      scope: {
+        in_scope: true,
+        is_new_feature: true,
+        is_complex_change: false,
+        reasons: ['new_feature'],
+        metrics: {
+          changed_files: 2,
+          estimated_loc: 80,
+          critical_path_files: 0,
+          public_interface_files: 1,
+        },
+      },
+      evidence: {
+        path: '/tmp/repo/.pumuki/artifacts/pumuki-evidence-v1.json',
+        state: 'invalid',
+        version: '1',
+        slices_total: 1,
+        slices_valid: 0,
+        slices_invalid: 1,
+        integrity_ok: false,
+        errors: ['integrity_hash_mismatch'],
+      },
+      waiver: {
+        applied: false,
+      },
+    },
+  });
+
+  assert.equal(result.snapshot.tdd_bdd?.status, 'blocked');
+  assert.equal(result.snapshot.tdd_bdd?.scope.in_scope, true);
+  assert.equal(result.snapshot.tdd_bdd?.evidence.state, 'invalid');
+});

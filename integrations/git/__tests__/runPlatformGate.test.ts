@@ -5,6 +5,7 @@ import type { Finding } from '../../../core/gate/Finding';
 import type { GatePolicy } from '../../../core/gate/GatePolicy';
 import type { RuleSet } from '../../../core/rules/RuleSet';
 import type { SkillsRuleSetLoadResult } from '../../config/skillsRuleSet';
+import { withTempDir } from '../../__tests__/helpers/tempDir';
 import type { IEvidenceService } from '../EvidenceService';
 import type { IGitService } from '../GitService';
 import { runPlatformGate } from '../runPlatformGate';
@@ -1148,4 +1149,95 @@ test('runPlatformGate bloquea cuando existen reglas AUTO de skills sin detector 
     'skills.backend.guideline.backend.verificar-que-no-viole-solid-srp-ocp-lsp-isp-dip',
   ]);
   assert.equal(emittedArgs?.rulesCoverage?.counts?.unsupported_auto, 1);
+});
+
+test('runPlatformGate bloquea por policy TDD/BDD en cambios nuevos sin contrato de evidencia', async () => {
+  await withTempDir('pumuki-run-platform-gate-tdd-missing-', async (repoRoot) => {
+    const policy: GatePolicy = {
+      stage: 'PRE_PUSH',
+      blockOnOrAbove: 'CRITICAL',
+      warnOnOrAbove: 'ERROR',
+    };
+    const scope = { kind: 'staged' as const };
+    const git = buildGitStub(repoRoot);
+    const evidence = buildEvidenceStub();
+    const facts: ReadonlyArray<Fact> = [
+      {
+        kind: 'FileChange',
+        path: 'apps/backend/src/orders/create-order.ts',
+        changeType: 'added',
+        source: 'git:staged',
+      },
+      {
+        kind: 'FileContent',
+        path: 'apps/backend/src/orders/create-order.ts',
+        content: 'export function createOrder() { return { ok: true }; }',
+        source: 'git:staged',
+      },
+    ];
+
+    let emittedFindings: ReadonlyArray<Finding> = [];
+    let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+
+    const result = await runPlatformGate({
+      policy,
+      scope,
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => facts,
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: facts.length,
+            filesScanned: 1,
+            rulesTotal: 0,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 0,
+            projectRules: 0,
+            matchedRules: 0,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: [],
+            evaluatedRuleIds: [],
+            matchedRuleIds: [],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedFindings = paramsArg.findings;
+          emittedOutcome = paramsArg.gateOutcome;
+        },
+        printGateFindings: () => {},
+      },
+    });
+
+    assert.equal(result, 1);
+    assert.equal(emittedOutcome, 'BLOCK');
+    assert.equal(
+      emittedFindings.some(
+        (finding) => finding.ruleId === 'generic_evidence_integrity_required'
+      ),
+      true
+    );
+  });
 });

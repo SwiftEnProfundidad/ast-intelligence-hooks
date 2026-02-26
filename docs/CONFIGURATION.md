@@ -130,3 +130,53 @@ Configuration outcomes are reflected in `.ai_evidence.json`:
 - `ledger` continuity
 
 Schema reference: `docs/evidence-v2.1.md`.
+
+## TDD/BDD Vertical Enforcement Contract
+
+For new/complex changes, Pumuki enforces a neutral TDD/BDD evidence contract.
+
+Default evidence path:
+
+- `.pumuki/artifacts/pumuki-evidence-v1.json`
+
+Optional overrides:
+
+- `PUMUKI_TDD_BDD_EVIDENCE_PATH`
+- `PUMUKI_TDD_BDD_WAIVER_PATH`
+- `PUMUKI_TDD_COMPLEX_MAX_FILES` (default: `5`)
+- `PUMUKI_TDD_COMPLEX_MAX_LOC` (default: `120`)
+
+Waiver contract (optional, incident-only):
+
+- `.pumuki/waivers/tdd-bdd.json`
+- Requires one explicit approver, reason, and non-expired `expires_at`.
+
+## SaaS Ingestion Contract (No-MVP)
+
+Optional payload path override for local validation of SaaS ingestion contract `v1`:
+
+- `PUMUKI_SAAS_INGESTION_PAYLOAD_PATH`
+
+Default path when unset:
+
+- `.pumuki/artifacts/hotspots-saas-ingestion-v1.json`
+
+Optional audit and metrics paths for publication diagnostics:
+
+- `PUMUKI_SAAS_INGESTION_AUDIT_PATH`
+- `PUMUKI_SAAS_INGESTION_METRICS_PATH`
+
+Default paths when unset:
+
+- `.pumuki/artifacts/saas-ingestion-audit.ndjson`
+- `.pumuki/artifacts/saas-ingestion-metrics.json`
+
+Rollback to local-only defaults:
+
+- Remove these overrides from environment to return to repo-local defaults.
+- If needed, remove local artifacts under `.pumuki/artifacts/` to reset diagnostics state.
+
+Supported versions:
+
+- Canonical write: `1`
+- Backward-compatible read: `1`, `1.0`

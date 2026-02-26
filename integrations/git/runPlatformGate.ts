@@ -19,6 +19,8 @@ import { evaluateSddPolicy, type SddDecision } from '../sdd';
 import type { SnapshotEvaluationMetrics } from '../evidence/schema';
 import { createEmptyEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
+import { enforceTddBddPolicy } from '../tdd/enforcement';
+import type { TddBddSnapshot } from '../tdd/types';
 
 export type GateServices = {
   git: IGitService;
@@ -31,6 +33,7 @@ export type GateDependencies = {
   resolveFactsForGateScope: typeof resolveFactsForGateScope;
   emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
   printGateFindings: typeof printGateFindings;
+  enforceTddBddPolicy: typeof enforceTddBddPolicy;
   evaluateSddForStage: (
     stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI',
     repoRoot: string
@@ -48,11 +51,24 @@ const defaultDependencies: GateDependencies = {
   resolveFactsForGateScope,
   emitPlatformGateEvidence,
   printGateFindings,
+  enforceTddBddPolicy,
   evaluateSddForStage: (stage, repoRoot) =>
     evaluateSddPolicy({
       stage,
       repoRoot,
     }).decision,
+};
+
+const resolveCurrentBranch = (git: IGitService, repoRoot: string): string | null => {
+  try {
+    const branch = git.runGit(['rev-parse', '--abbrev-ref', 'HEAD'], repoRoot).trim();
+    if (branch.length === 0 || branch === 'HEAD') {
+      return null;
+    }
+    return branch;
+  } catch {
+    return null;
+  }
 };
 
 const toSddBlockingFinding = (decision: Pick<SddDecision, 'code' | 'message'>): Finding => ({
@@ -264,23 +280,40 @@ export async function runPlatformGate(params: {
           : Number((coverage.evaluatedRuleIds.length / coverage.activeRuleIds.length).toFixed(6)),
     }
     : createEmptySnapshotRulesCoverage(params.policy.stage);
+  const currentBranch = resolveCurrentBranch(git, repoRoot);
+  const tddBddEvaluation = dependencies.enforceTddBddPolicy({
+    facts,
+    repoRoot,
+    branch: currentBranch,
+  });
+  const tddBddSnapshot: TddBddSnapshot | undefined = tddBddEvaluation.snapshot.scope.in_scope
+    ? tddBddEvaluation.snapshot
+    : undefined;
+  const hasTddBddBlockingFinding = tddBddEvaluation.findings.some(
+    (finding) => finding.severity === 'ERROR' || finding.severity === 'CRITICAL'
+  );
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+      ...tddBddEvaluation.findings,
       ...findings,
     ]
-    : unsupportedSkillsMappingFinding || coverageBlockingFinding
+    : unsupportedSkillsMappingFinding || coverageBlockingFinding || tddBddEvaluation.findings.length > 0
       ? [
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
+        ...tddBddEvaluation.findings,
         ...findings,
       ]
       : findings;
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
   const gateOutcome =
-    sddBlockingFinding || unsupportedSkillsMappingFinding || coverageBlockingFinding
+    sddBlockingFinding ||
+    unsupportedSkillsMappingFinding ||
+    coverageBlockingFinding ||
+    hasTddBddBlockingFinding
       ? 'BLOCK'
       : decision.outcome;
 
@@ -293,6 +326,7 @@ export async function runPlatformGate(params: {
     filesScanned,
     evaluationMetrics,
     rulesCoverage,
+    ...(tddBddSnapshot ? { tddBdd: tddBddSnapshot } : {}),
     repoRoot,
     detectedPlatforms,
     skillsRuleSet,

@@ -9,6 +9,7 @@ npm run typecheck
 npm run test:evidence
 npm run test:mcp
 npm run test:heuristics
+npm run test:saas-ingestion
 npm run test:deterministic
 npm run validation:package-manifest
 npm run validation:package-smoke
@@ -29,6 +30,17 @@ npm run validation:lifecycle-smoke
 
 - `npm run test:heuristics`
   - Typed AST heuristic fact extraction coverage across platforms.
+
+- `npm run test:saas-ingestion`
+  - Contract + pipeline + isolation suite for No-MVP SaaS ingestion:
+    - contract versioning/integrity
+    - payload builder
+    - transport resilience
+    - idempotency
+    - auth policy
+    - audit traceability
+    - metrics generation
+    - diagnostics CLI (`analytics hotspots diagnose`)
 
 - `npm run test:deterministic`
   - Aggregated deterministic suite (`evidence + mcp + heuristics`).
@@ -64,6 +76,7 @@ npm run validation:lifecycle-smoke
 
 ```bash
 npm run typecheck
+npm run test:saas-ingestion
 npm run test:deterministic
 ```
 

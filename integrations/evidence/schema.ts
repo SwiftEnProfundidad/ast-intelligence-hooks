@@ -2,6 +2,7 @@ import type { GateOutcome } from '../../core/gate/GateOutcome';
 import type { GateStage } from '../../core/gate/GateStage';
 import type { Severity } from '../../core/rules/Severity';
 import type { SnapshotPlatformSummary } from './platformSummary';
+import type { TddBddSnapshot } from '../tdd/types';
 
 export type EnterpriseSeverity = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 
@@ -57,6 +58,7 @@ export type Snapshot = {
   files_affected?: number;
   evaluation_metrics?: SnapshotEvaluationMetrics;
   rules_coverage?: SnapshotRulesCoverage;
+  tdd_bdd?: TddBddSnapshot;
   findings: SnapshotFinding[];
   platforms?: SnapshotPlatformSummary[];
 };

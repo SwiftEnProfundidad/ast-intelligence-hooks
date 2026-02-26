@@ -17,3 +17,10 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - No se versionan reportes históricos ad-hoc en `docs/validation/`.
 - Si hace falta conservar evidencia operativa de ejecución, se referencia desde el ciclo temporal activo (si existe) y/o desde reportes en `.audit_tmp` / `.audit-reports`.
 - El cierre oficial de `C022` (`D.T2` + `D.T4`) está consolidado en `c022-phase-acceptance-contract.md`.
+- El cierre de `C023` (incluyendo No-MVP SaaS ingestion diagnostics) está consolidado en documentación estable:
+  - `docs/REFRACTOR_PROGRESS.md`
+  - `docs/USAGE.md`
+  - `docs/CONFIGURATION.md`
+  - `docs/TESTING.md`
+  - `docs/API_REFERENCE.md`
+  - `docs/evidence-v2.1.md`
