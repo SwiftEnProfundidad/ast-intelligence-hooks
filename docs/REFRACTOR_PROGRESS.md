@@ -1178,5 +1178,5 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c023-3-t3-green.exit`
   - ✅ resultado de sincronizacion:
     - `develop...origin/develop = 0/0`
-    - `origin/main...origin/develop = 0/9` (pendiente promote final a `main`).
+    - `origin/main...origin/develop != 0/0` (pendiente promote final a `main`).
 - 🚧 `P-ADHOC-LINES-023J` Ejecutar `C023.3.T4`: cierre GitFlow final del lote (`develop -> main`) y sincronizacion protegida.
