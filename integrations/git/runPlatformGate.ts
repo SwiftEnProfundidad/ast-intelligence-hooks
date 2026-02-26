@@ -1,5 +1,6 @@
 import { evaluateGate } from '../../core/gate/evaluateGate';
 import type { Finding } from '../../core/gate/Finding';
+import type { GateOutcome } from '../../core/gate/GateOutcome';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
 import type { RuleSet } from '../../core/rules/RuleSet';
 import type { SkillsRuleSetLoadResult } from '../config/skillsRuleSet';
@@ -22,6 +23,12 @@ import { createEmptySnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import { enforceTddBddPolicy } from '../tdd/enforcement';
 import type { TddBddSnapshot } from '../tdd/types';
 
+export type OperationalMemoryShadowRecommendation = {
+  recommendedOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+  confidence: number;
+  reasonCodes: ReadonlyArray<string>;
+};
+
 export type GateServices = {
   git: IGitService;
   evidence: IEvidenceService;
@@ -34,6 +41,10 @@ export type GateDependencies = {
   emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
   printGateFindings: typeof printGateFindings;
   enforceTddBddPolicy: typeof enforceTddBddPolicy;
+  buildMemoryShadowRecommendation: (params: {
+    findings: ReadonlyArray<Finding>;
+    tddBddSnapshot?: TddBddSnapshot;
+  }) => OperationalMemoryShadowRecommendation | undefined;
   evaluateSddForStage: (
     stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI',
     repoRoot: string
@@ -45,6 +56,50 @@ const defaultServices: GateServices = {
   evidence: new EvidenceService(),
 };
 
+const buildDefaultMemoryShadowRecommendation = (params: {
+  findings: ReadonlyArray<Finding>;
+  tddBddSnapshot?: TddBddSnapshot;
+}): OperationalMemoryShadowRecommendation | undefined => {
+  const hasCritical = params.findings.some((finding) => finding.severity === 'CRITICAL');
+  const hasError = params.findings.some((finding) => finding.severity === 'ERROR');
+  const hasWarn = params.findings.some((finding) => finding.severity === 'WARN');
+  const reasonCodes: string[] = [];
+
+  if (hasCritical || hasError) {
+    reasonCodes.push('severity.error_or_critical');
+  } else if (hasWarn) {
+    reasonCodes.push('severity.warn');
+  } else {
+    reasonCodes.push('severity.clean');
+  }
+
+  if (params.tddBddSnapshot?.status === 'blocked') {
+    reasonCodes.push('tdd_bdd.blocked');
+  } else if (params.tddBddSnapshot?.status === 'passed') {
+    reasonCodes.push('tdd_bdd.passed');
+  }
+
+  if (hasCritical || hasError || params.tddBddSnapshot?.status === 'blocked') {
+    return {
+      recommendedOutcome: 'BLOCK',
+      confidence: 0.9,
+      reasonCodes,
+    };
+  }
+  if (hasWarn) {
+    return {
+      recommendedOutcome: 'WARN',
+      confidence: 0.75,
+      reasonCodes,
+    };
+  }
+  return {
+    recommendedOutcome: 'ALLOW',
+    confidence: 0.65,
+    reasonCodes,
+  };
+};
+
 const defaultDependencies: GateDependencies = {
   evaluateGate,
   evaluatePlatformGateFindings,
@@ -52,6 +107,7 @@ const defaultDependencies: GateDependencies = {
   emitPlatformGateEvidence,
   printGateFindings,
   enforceTddBddPolicy,
+  buildMemoryShadowRecommendation: buildDefaultMemoryShadowRecommendation,
   evaluateSddForStage: (stage, repoRoot) =>
     evaluateSddPolicy({
       stage,
@@ -316,6 +372,50 @@ export async function runPlatformGate(params: {
     hasTddBddBlockingFinding
       ? 'BLOCK'
       : decision.outcome;
+  const shadowFlagRaw = process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED?.trim().toLowerCase();
+  const isMemoryShadowEnabled = shadowFlagRaw === '1' || shadowFlagRaw === 'true';
+  let memoryShadowRecommendation: OperationalMemoryShadowRecommendation | undefined;
+  if (isMemoryShadowEnabled) {
+    try {
+      memoryShadowRecommendation = dependencies.buildMemoryShadowRecommendation({
+        findings: effectiveFindings,
+        ...(tddBddSnapshot ? { tddBddSnapshot } : {}),
+      });
+    } catch (error) {
+      const rawReason = error instanceof Error ? error.message : String(error);
+      const reason = rawReason.trim().replace(/\s+/g, ' ');
+      process.stdout.write(
+        `[pumuki][memory-shadow] unavailable reason=${reason.length > 0 ? reason : 'unknown_error'}\n`
+      );
+    }
+  }
+  const memoryShadow:
+    | {
+      recommended_outcome: GateOutcome;
+      actual_outcome: GateOutcome;
+      confidence: number;
+      reason_codes: string[];
+    }
+    | undefined =
+    memoryShadowRecommendation
+      ? {
+        recommended_outcome:
+          memoryShadowRecommendation.recommendedOutcome === 'ALLOW'
+            ? 'PASS'
+            : memoryShadowRecommendation.recommendedOutcome,
+        actual_outcome: gateOutcome,
+        confidence: memoryShadowRecommendation.confidence,
+        reason_codes: [...memoryShadowRecommendation.reasonCodes],
+      }
+      : undefined;
+
+  if (memoryShadowRecommendation) {
+    process.stdout.write(
+      `[pumuki][memory-shadow] recommended=${memoryShadowRecommendation.recommendedOutcome}` +
+      ` confidence=${memoryShadowRecommendation.confidence.toFixed(2)}` +
+      ` reasons=${memoryShadowRecommendation.reasonCodes.join(',')}\n`
+    );
+  }
 
   dependencies.emitPlatformGateEvidence({
     stage: params.policy.stage,
@@ -327,6 +427,7 @@ export async function runPlatformGate(params: {
     evaluationMetrics,
     rulesCoverage,
     ...(tddBddSnapshot ? { tddBdd: tddBddSnapshot } : {}),
+    ...(memoryShadow ? { memoryShadow } : {}),
     repoRoot,
     detectedPlatforms,
     skillsRuleSet,

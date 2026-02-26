@@ -38,6 +38,26 @@ export {
   readHotspotsSaasIngestionPayload,
   resolveHotspotsSaasIngestionPayloadPath,
 } from './saasIngestionContract';
+export {
+  OPERATIONAL_MEMORY_CONTRACT_CANONICAL_VERSION,
+  OPERATIONAL_MEMORY_CONTRACT_SUPPORTED_VERSIONS,
+  createOperationalMemoryContract,
+  createOperationalMemoryContractHash,
+  createOperationalMemorySignalFingerprint,
+  dedupeOperationalMemoryRecords,
+  parseOperationalMemoryContract,
+  readOperationalMemoryContract,
+  resolveOperationalMemoryContractPath,
+  writeOperationalMemoryContract,
+} from './operationalMemoryContract';
+export {
+  buildOperationalMemoryRecordsFromLocalSignals,
+  normalizeOperationalMemoryPathIdentity,
+} from './operationalMemorySignals';
+export {
+  appendOperationalMemorySnapshotFromLocalSignals,
+  resolveOperationalMemorySnapshotsPath,
+} from './operationalMemorySnapshot';
 export type {
   CreateHotspotsSaasIngestionPayloadParams,
   HotspotsSaasIngestionPayloadBodyCompat,
@@ -48,6 +68,29 @@ export type {
   HotspotsSaasIngestionSourceMode,
   HotspotsSaasIngestionSupportedVersion,
 } from './saasIngestionContract';
+export type {
+  CreateOperationalMemoryContractParams,
+  CreateOperationalMemoryRecordParams,
+  OperationalMemoryContractBodyCompat,
+  OperationalMemoryContractBodyV1,
+  OperationalMemoryContractParseResult,
+  OperationalMemoryContractReadResult,
+  OperationalMemoryContractSupportedVersion,
+  OperationalMemoryContractV1,
+  OperationalMemoryRecordV1,
+  OperationalMemorySignalFingerprintParams,
+  OperationalMemorySourceMode,
+  WriteOperationalMemoryContractResult,
+} from './operationalMemoryContract';
+export type {
+  BuildOperationalMemoryRecordsFromLocalSignalsParams,
+  BuildOperationalMemoryRecordsFromLocalSignalsResult,
+} from './operationalMemorySignals';
+export type {
+  AppendOperationalMemorySnapshotFromLocalSignalsParams,
+  AppendOperationalMemorySnapshotFromLocalSignalsResult,
+  OperationalMemorySnapshotV1,
+} from './operationalMemorySnapshot';
 export type { BuildHotspotsSaasIngestionPayloadFromLocalParams } from './saasIngestionBuilder';
 export type {
   HotspotsSaasIngestionAuthPolicy,

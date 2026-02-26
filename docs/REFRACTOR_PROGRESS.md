@@ -8,6 +8,71 @@ Estado operativo activo del repositorio.
 - ⏳ Pendiente
 - ⛔ Bloqueado
 
+## Plan maestro activo (post-MVP)
+Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de tracking.
+
+### Fase P0 — Cierre operativo externo
+- ⛔ `P0.T1` Rehabilitar checks remotos de GitHub Actions (runner/billing) y confirmar ejecucion real.
+  - ✅ `P0.T1.a` Verificacion de provision de runners (GitHub-hosted/self-hosted) completada.
+    - `self-hosted` a nivel repo: `total_count=0` (`gh api /actions/runners`).
+    - workflows configurados con `runs-on` GitHub-hosted (`ubuntu-latest` y `macos-latest`).
+    - evidencia de indisponibilidad real: jobs en `failure` con `runner_id=0` y `steps=0` (sin asignacion efectiva de runner).
+  - ✅ `P0.T1.b` Re-ejecucion de matriz minima (`CI`, `backend-gate`, `package-smoke`) completada con evidencia.
+    - `CI` run `22461366992` re-ejecutado: jobs `65067139120/125/140/143/145/150/157/158/168` en `failure`, `runner_id=0`, `steps=0`.
+    - `backend-gate` run `22461366970` re-ejecutado: job `65067139029` en `failure`, `runner_id=0`, `steps=0`.
+    - `package-smoke` run `22461366975` re-ejecutado: jobs `65067138989` (minimal) y `65067139083` (block) en `failure`, `runner_id=0`, `steps=0`.
+  - ✅ `P0.T1.c` Confirmacion de `steps` y logs descargables en jobs criticos completada.
+    - jobs criticos re-ejecutados (`65067139145`, `65067139029`, `65067139083`) con `steps=0`.
+    - `gh run view --log-failed` devuelve `log not found` en runs `22461366992`, `22461366970`, `22461366975`.
+    - endpoint de logs por job (`/actions/jobs/<id>/logs`) responde `HTTP 404 Not Found`.
+  - estado 2026-02-26: reproducido bloqueo externo en `main` y `develop`.
+  - evidencia actual:
+    - run `22461366992` (`CI`, `develop`) relanzado: jobs en `failure/cancelled` con `runner_id=0`, `steps=0`, `log not found`.
+    - job ejemplo: `Type Check` `65064931298` (`runner_id=0`).
+    - run `22461349641` (`CI`, `main`) mismo patron (`runner_id=0`, `steps=0`).
+- ✅ `P0.T2` Snyk excluido del flujo actual por decision operativa (post-MVP, sin reactivacion en este bloque).
+  - estado 2026-02-26: no hay checks `snyk/security` activos en el head actual (`f3d1c4b`) y no existe workflow local de Snyk en `.github/workflows`.
+  - reactivacion futura: mover a backlog post-MVP cuando se reabra seguridad SaaS.
+- ✅ `P0.T3` Cierre operativo final del bloque post-MVP en este tracker.
+  - ✅ `P0.T3.a` Veredicto final de P0 publicado (`bloqueo externo aceptado`) con fecha `2026-02-26`.
+    - motivo: indisponibilidad de ejecucion remota verificable (`runner_id=0`, `steps=0`, `log not found/404`) en `CI`, `backend-gate`, `package-smoke`.
+  - ✅ `P0.T3.b` Check-list de reintento definido para rehabilitacion externa:
+    - validar `Actions > Runners` con asignacion efectiva (no `runner_id=0`);
+    - relanzar `CI`, `backend-gate`, `package-smoke` y comprobar `steps>0`;
+    - descargar logs de jobs criticos (`gh run view --log-failed` sin `log not found`);
+    - verificar estado final en `main` y `develop` sin fallos por infraestructura;
+    - registrar evidencia y fecha de rehabilitacion en este tracker.
+  - ✅ `P0.T3.c` Fase P0 cerrada y consolidada en este tracker como cierre operativo externo aceptado.
+
+### Fase P1 — Post-MVP (`C024`)
+- ✅ `P1.T1` `C024` Memoria operativa en core completada (contrato, señales, snapshots, shadow gate, evidencia y fallback).
+- ✅ `P1.A.T1` Contrato neutral `operational_memory` v1 implementado (`integrations/lifecycle/operationalMemoryContract.ts` + export público).
+- ✅ `P1.A.T2` Persistencia local determinista implementada (`writeOperationalMemoryContract` + `readOperationalMemoryContract` + test de roundtrip).
+- ✅ `P1.A.T3` Reglas de deduplicacion/hash determinista por señal implementadas (`createOperationalMemorySignalFingerprint` + `dedupeOperationalMemoryRecords` + dedupe en `createOperationalMemoryContract`).
+- ✅ `P1.B.T1` Ingesta local de señales internas implementada (`buildOperationalMemoryRecordsFromLocalSignals` con `diff/tests/typecheck` + tests dedicados).
+- ✅ `P1.B.T2` Normalizacion de rutas/identidades implementada (`normalizeOperationalMemoryPathIdentity` + dedupe por `path_identity` en señales diff).
+- ✅ `P1.B.T3` Snapshots auditables por ejecucion implementados (`appendOperationalMemorySnapshotFromLocalSignals` + NDJSON + test de persistencia).
+- ✅ `P1.C.T1` Recomendacion de memoria en `shadow mode` integrada en gate (`runPlatformGate` + recomendacion informativa sin alterar decision bloqueante).
+- ✅ `P1.C.T2` Comparativa `memory_vs_actual` emitida en evidencia estable (`snapshot.memory_shadow`) con propagacion gate→evidence y normalizacion determinista.
+- ✅ `P1.C.T3` Fallback seguro aplicado cuando la recomendacion de memoria no esta disponible (gate no se interrumpe; shadow queda opcional).
+- ✅ `P1.D.T1` Suite de validacion definida (`npm run test:operational-memory`) para no-regresion y trazabilidad end-to-end.
+- ✅ `P1.D.T2` Revalidacion integral ejecutada y delta publicado: `test:operational-memory` (`70/70`) + `typecheck` en verde.
+- ✅ `P1.D.T3` Decision `go` para activacion progresiva en modo `shadow` (informativo y opt-in por `PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED`).
+
+### Fase P2 — No-MVP explícito
+- ⏳ `P2.T1` SaaS multi-tenant de metricas y cumplimiento (epica).
+- ⏳ `P2.A.T1` Definir contrato SaaS multi-tenant (`tenant_id`, `repo_id`, idempotencia, auth).
+- ⏳ `P2.A.T2` Definir pipeline de ingesta remota con retries, timeouts y trazabilidad auditable.
+- ⏳ `P2.A.T3` Definir politicas de aislamiento, retencion y privacidad por tenant.
+- ⏳ `P2.T2` Orquestacion multi-repo/organizacional (epica).
+- ⏳ `P2.B.T1` Definir agregacion de señales cross-repo con limites de cardinalidad.
+- ⏳ `P2.B.T2` Definir scoring federado y priorizacion por riesgo organizacional.
+- ⏳ `P2.B.T3` Definir controles de consistencia y reconciliacion entre repositorios.
+- ⏳ `P2.T3` Analitica avanzada y dashboard enterprise distribuido (epica).
+- ⏳ `P2.C.T1` Definir KPI ejecutivos y tecnicos (precision, drift, lead-time, debt-risk).
+- ⏳ `P2.C.T2` Definir modelo de reportes distribuidos y export enterprise.
+- ⏳ `P2.C.T3` Definir criterios de adopcion gradual por equipos y unidades de negocio.
+
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
 
@@ -125,7 +190,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - trazabilidad `file:line` deja de colapsar en una línea repetida global
     - menú `1` refleja severidad y top violaciones con rutas clicables actualizadas
 
-## Siguiente paso operativo
+## Histórico de cierre C023 (archivado)
 - ✅ `C023.D.T4` Cierre documental final del enforcement TDD/BDD vertical e indexación estable (tracking temporal retirado de `docs/validation`).
 - ✅ `C023.NMVP.A.T1` Definir contrato de ingesta SaaS multi-tenant para `hotspots` + cumplimiento TDD/BDD (`integrations/lifecycle/saasIngestionContract.ts` + tests).
 - ✅ `C023.NMVP.A.T2` Implementar validador determinista del contrato de ingesta (lectura/parseo/hash determinista con path configurable + tests).
@@ -146,7 +211,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - branch: `refactor/c023-tdd-bdd-vertical-enforcement`
   - commit: `f32991d`
   - PR: `#423` `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/423`
-- 🚧 seguimiento externo de checks remotos para `PR #423` (fuera de alcance técnico local):
+- ⛔ seguimiento externo de checks remotos para `PR #423` (fuera de alcance técnico local, movido a `P0.T1/P0.T2`):
   - estado observado: fallos masivos en ~3-4s con `runner_id=0`, `steps=[]`, `log not found`.
   - ejemplo verificado: job `Type Check` `65052660930` en run `22460353482`.
   - revalidación tras nuevo push: mismo patrón en run `22460399657` (ej. job `Type Check` `65052820560`, `runner_id=0`, `steps=0`).

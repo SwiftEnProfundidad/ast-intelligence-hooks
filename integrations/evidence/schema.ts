@@ -59,6 +59,12 @@ export type Snapshot = {
   evaluation_metrics?: SnapshotEvaluationMetrics;
   rules_coverage?: SnapshotRulesCoverage;
   tdd_bdd?: TddBddSnapshot;
+  memory_shadow?: {
+    recommended_outcome: GateOutcome;
+    actual_outcome: GateOutcome;
+    confidence: number;
+    reason_codes: string[];
+  };
   findings: SnapshotFinding[];
   platforms?: SnapshotPlatformSummary[];
 };
