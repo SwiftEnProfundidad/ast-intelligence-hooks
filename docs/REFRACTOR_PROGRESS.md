@@ -60,7 +60,7 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P1.D.T3` Decision `go` para activacion progresiva en modo `shadow` (informativo y opt-in por `PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED`).
 
 ### Fase P2 — No-MVP explícito
-- ⏳ `P2.T1` SaaS multi-tenant de metricas y cumplimiento (epica).
+- 🚧 `P2.T1` SaaS multi-tenant de metricas y cumplimiento (epica, backlog activo sin ejecucion en este bloque).
 - ⏳ `P2.A.T1` Definir contrato SaaS multi-tenant (`tenant_id`, `repo_id`, idempotencia, auth).
 - ⏳ `P2.A.T2` Definir pipeline de ingesta remota con retries, timeouts y trazabilidad auditable.
 - ⏳ `P2.A.T3` Definir politicas de aislamiento, retencion y privacidad por tenant.
