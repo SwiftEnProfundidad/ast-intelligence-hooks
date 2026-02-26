@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
@@ -107,10 +107,62 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
   );
 });
 
+test('parseLifecycleCliArgs soporta analytics hotspots report', () => {
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'analytics',
+      'hotspots',
+      'report',
+      '--top=5',
+      '--since-days=30',
+      '--json',
+    ]),
+    {
+      command: 'analytics',
+      purgeArtifacts: false,
+      json: true,
+      analyticsCommand: 'hotspots',
+      analyticsHotspotsCommand: 'report',
+      analyticsTopN: 5,
+      analyticsSinceDays: 30,
+    }
+  );
+});
+
+test('parseLifecycleCliArgs soporta exportes locales json/markdown para hotspots', () => {
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'analytics',
+      'hotspots',
+      'report',
+      '--top=3',
+      '--since-days=120',
+      '--output-json=.audit-reports/hotspots-report.json',
+      '--output-markdown=.audit-reports/hotspots-report.md',
+    ]),
+    {
+      command: 'analytics',
+      purgeArtifacts: false,
+      json: false,
+      analyticsCommand: 'hotspots',
+      analyticsHotspotsCommand: 'report',
+      analyticsTopN: 3,
+      analyticsSinceDays: 120,
+      analyticsJsonOutputPath: '.audit-reports/hotspots-report.json',
+      analyticsMarkdownOutputPath: '.audit-reports/hotspots-report.md',
+    }
+  );
+});
+
 test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () => {
   assert.throws(() => parseLifecycleCliArgs([]), /Pumuki lifecycle commands/i);
   assert.throws(() => parseLifecycleCliArgs(['-h']), /Pumuki lifecycle commands/i);
   assert.throws(() => parseLifecycleCliArgs(['unknown']), /Unknown command/i);
+  assert.throws(() => parseLifecycleCliArgs(['analytics']), /Unsupported analytics command/i);
+  assert.throws(
+    () => parseLifecycleCliArgs(['analytics', 'hotspots']),
+    /Unsupported analytics hotspots action/i
+  );
   assert.throws(
     () => parseLifecycleCliArgs(['install', '--bad-flag']),
     /Unsupported argument/i
@@ -162,6 +214,157 @@ test('runLifecycleCli retorna 1 para update cuando doctor bloquea baseline inseg
       runLifecycleCli(['update', `--spec=${packageName}@next`])
     );
     assert.equal(code, 1);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli analytics hotspots report devuelve ranking local en json', async () => {
+  const repo = createGitRepo();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousCwd = process.cwd();
+
+  try {
+    mkdirSync(join(repo, 'src'), { recursive: true });
+    writeFileSync(join(repo, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
+    writeFileSync(join(repo, 'src', 'b.ts'), 'export const b = 1;\n', 'utf8');
+    runGit(repo, ['add', 'src/a.ts', 'src/b.ts']);
+    runGit(repo, ['commit', '-m', 'feat: add files for hotspots']);
+    writeFileSync(join(repo, 'src', 'a.ts'), 'export const a = 2;\nexport const aa = 3;\n', 'utf8');
+    runGit(repo, ['add', 'src/a.ts']);
+    runGit(repo, ['commit', '-m', 'feat: increase churn on a.ts']);
+
+    writeFileSync(
+      join(repo, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          snapshot: {
+            findings: [
+              {
+                file: join(repo, 'src', 'a.ts'),
+                ruleId: 'rule.critical',
+                severity: 'CRITICAL',
+                code: 'RULE_CRITICAL',
+                message: 'critical finding',
+                lines: [2],
+              },
+              {
+                file: join(repo, 'src', 'b.ts'),
+                ruleId: 'rule.low',
+                severity: 'INFO',
+                code: 'RULE_LOW',
+                message: 'low finding',
+              },
+            ],
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const exitCode = await runLifecycleCli([
+      'analytics',
+      'hotspots',
+      'report',
+      '--json',
+      '--top=2',
+      '--since-days=365',
+    ]);
+
+    assert.equal(exitCode, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      options?: { topN?: number; sinceDays?: number };
+      hotspots?: Array<{ path?: string; rank?: number }>;
+    };
+    assert.equal(payload.options?.topN, 2);
+    assert.equal(payload.options?.sinceDays, 365);
+    assert.equal(Array.isArray(payload.hotspots), true);
+    assert.equal((payload.hotspots?.length ?? 0) > 0, true);
+    assert.equal(payload.hotspots?.[0]?.rank, 1);
+    assert.equal(payload.hotspots?.[0]?.path, 'src/a.ts');
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli analytics hotspots report exporta json y markdown en rutas locales', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+
+  try {
+    mkdirSync(join(repo, 'src'), { recursive: true });
+    writeFileSync(join(repo, 'src', 'a.ts'), 'export const a = 1;\n', 'utf8');
+    runGit(repo, ['add', 'src/a.ts']);
+    runGit(repo, ['commit', '-m', 'feat: add a.ts for export report']);
+    writeFileSync(join(repo, 'src', 'a.ts'), 'export const a = 2;\nexport const aa = 3;\n', 'utf8');
+    runGit(repo, ['add', 'src/a.ts']);
+    runGit(repo, ['commit', '-m', 'feat: increase churn for export report']);
+    writeFileSync(
+      join(repo, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          snapshot: {
+            findings: [
+              {
+                file: join(repo, 'src', 'a.ts'),
+                ruleId: 'rule.critical',
+                severity: 'CRITICAL',
+                code: 'RULE_CRITICAL',
+                message: 'critical finding',
+                lines: [2],
+              },
+            ],
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    process.chdir(repo);
+    const exitCode = await withSilentConsole(() =>
+      runLifecycleCli([
+        'analytics',
+        'hotspots',
+        'report',
+        '--top=1',
+        '--since-days=365',
+        '--output-json=.audit-reports/hotspots-report.json',
+        '--output-markdown=.audit-reports/hotspots-report.md',
+      ])
+    );
+    assert.equal(exitCode, 0);
+    assert.equal(existsSync(join(repo, '.audit-reports', 'hotspots-report.json')), true);
+    assert.equal(existsSync(join(repo, '.audit-reports', 'hotspots-report.md')), true);
+
+    const jsonPayload = JSON.parse(
+      readFileSync(join(repo, '.audit-reports', 'hotspots-report.json'), 'utf8')
+    ) as { hotspots?: Array<{ path?: string }>; options?: { topN?: number; sinceDays?: number } };
+    assert.equal(jsonPayload.options?.topN, 1);
+    assert.equal(jsonPayload.options?.sinceDays, 365);
+    assert.equal(Array.isArray(jsonPayload.hotspots), true);
+    assert.equal((jsonPayload.hotspots?.length ?? 0) > 0, true);
+    assert.equal(jsonPayload.hotspots?.[0]?.path, 'src/a.ts');
+
+    const markdownPayload = readFileSync(
+      join(repo, '.audit-reports', 'hotspots-report.md'),
+      'utf8'
+    );
+    assert.match(markdownPayload, /# Pumuki Hotspots Report/i);
+    assert.match(markdownPayload, /src\/a\.ts/);
   } finally {
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });

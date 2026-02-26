@@ -5,17 +5,7 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 ## Documentación oficial vigente
 
 - `adapter-hook-runtime-validation.md`
-- `c022-full-repo-baseline.md`
 - `c022-phase-acceptance-contract.md`
-- `c022-critical-batch-selection.md`
-- `c022-critical-batch-a1-remediation.md`
-- `c022-critical-batch-a1-severity-delta.md`
-- `c022-high-batch-selection.md`
-- `c022-high-batch-b1-remediation.md`
-- `c022-high-batch-b1-severity-delta.md`
-- `c022-medium-quick-wins-c1-remediation.md`
-- `c022-clickable-consistency-c2-remediation.md`
-- `c022-stage-parity-c3-validation.md`
 - `detection-audit-baseline.md`
 - `enterprise-consumer-isolation-policy.md`
 - `mock-consumer-integration-runbook.md`
@@ -26,4 +16,4 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - Los reportes de ejecución/cierre de ciclos se generan en `.audit_tmp` o `.audit-reports`.
 - No se versionan reportes históricos ad-hoc en `docs/validation/`.
 - Si hace falta conservar evidencia operativa de ejecución, se referencia desde el ciclo temporal activo (si existe) y/o desde reportes en `.audit_tmp` / `.audit-reports`.
-- El informe oficial `D.T2` de `C022` está consolidado en `c022-phase-acceptance-contract.md` (sección "Informe Oficial de Cierre C022 (D.T2)").
+- El cierre oficial de `C022` (`D.T2` + `D.T4`) está consolidado en `c022-phase-acceptance-contract.md`.

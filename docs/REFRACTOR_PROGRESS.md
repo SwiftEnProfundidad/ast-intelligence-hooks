@@ -841,7 +841,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `assets/benchmarks/c022-baseline-precommit-v001.json`
     - `assets/benchmarks/c022-baseline-precommit-v001-baseline.json`
   - ✅ documentación oficial publicada:
-    - `docs/validation/c022-full-repo-baseline.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
     - `docs/validation/README.md`
     - `docs/README.md`
   - ✅ snapshot baseline:
@@ -863,7 +863,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-a-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
   - ✅ selección oficial publicada:
-    - `docs/validation/c022-critical-batch-selection.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ lote inicial `A1` priorizado:
     - `common.types.undefined_in_base_type` (`16`)
     - objetivo: `16` `CRITICAL` en capa `core/integrations`.
@@ -873,7 +873,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-a-t2-green.out` (`selected_rule_findings=0`, `status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion de firmas tipadas en `core/integrations` sin romper trazabilidad AST.
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-critical-batch-a1-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase:
     - `common.types.undefined_in_base_type` en lote `A1` (`core/integrations`) remediado (`16 -> 0`).
     - pendiente para siguiente tarea: `17` hallazgos de la misma regla en `scripts/*`.
@@ -887,7 +887,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-a-t3/enterprise-menu1.json`
     - `.audit_tmp/c022-a-t3-diff.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-critical-batch-a1-severity-delta.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase A:
     - baseline C022 `CRITICAL 34`, `HIGH 27`, `total 61`
     - post A1 `CRITICAL 18`, `HIGH 27`, `total 45`
@@ -899,7 +899,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-b-t1-green.out` (`status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + tracking con una sola tarea activa.
   - ✅ seleccion oficial publicada:
-    - `docs/validation/c022-high-batch-selection.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ lote inicial `B1` priorizado:
     - `common.types.record_unknown_requires_type` (`22`) en `core/integrations`.
     - backlog restante `HIGH`: `4` en `scripts/*` + `1` `workflow.bdd.insufficient_features`.
@@ -909,7 +909,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN`: `.audit_tmp/c022-b-t2-green.out` (`focused_tests_pass_108_rc=0`, `typecheck_clean_rc=0`, `status=GREEN_OK`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + avance de tracking a `B.T3`.
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-high-batch-b1-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase:
     - lote `HIGH` `B1` remediado en `core/integrations` para `common.types.record_unknown_requires_type`.
     - backlog `HIGH` pendiente para siguiente paso: `4` en `scripts/*` + `workflow.bdd.insufficient_features` (`1`).
@@ -923,7 +923,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-b-t3/enterprise-menu1.json`
     - `.audit_tmp/c022-b-t3-diff.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-high-batch-b1-severity-delta.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de fase B:
     - baseline C022 `CRITICAL 34`, `HIGH 27`, `total 61`
     - post B1 `CRITICAL 18`, `HIGH 5`, `total 23`
@@ -939,7 +939,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-c-t1/enterprise-menu1.json`
     - `.audit_tmp/c022-c-t1-diff.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-medium-quick-wins-c1-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de C1:
     - post B1 `CRITICAL 18`, `HIGH 5`, `MEDIUM 0`, `LOW 0`, `total 23`
     - post C1 `CRITICAL 18`, `HIGH 1`, `MEDIUM 0`, `LOW 0`, `total 19`
@@ -951,7 +951,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `GREEN ampliado`: `.audit_tmp/c022-c-t2-green-expanded.out` (`tests=24`, `pass=24`, `fail=0`, `exit_code=0`)
     - `REFACTOR`: consolidacion documental + actualizacion de tracking a `C022.C.T3`.
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-clickable-consistency-c2-remediation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de C2:
     - normalizacion de paths absolutos a repo-relative en `topFiles` de `readEvidenceSummaryForMenu`.
     - consistencia clicable alineada entre menu y export legacy para diagnostico operativo.
@@ -967,7 +967,7 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `.audit_tmp/c022-c-t3/stage-summary.json`
     - `.audit_tmp/c022-c-t3/evidence-hashes.json`
   - ✅ validacion oficial publicada:
-    - `docs/validation/c022-stage-parity-c3-validation.md`
+    - `docs/validation/c022-phase-acceptance-contract.md` (consolidado)
   - ✅ resultado de C3:
     - paridad operativa validada entre `PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI local` y flujo menu.
     - fase C cerrada con cobertura mantenida (`coverage_ratio=1`).
@@ -1014,4 +1014,150 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - `framework_status=READY_FOR_GITFLOW_CLOSE`
     - `repo_quality_status=BLOCKED_BY_REAL_FINDINGS` (esperado por deuda residual real)
     - `cycle_status=READY_FOR_D3`
-- 🚧 `P-ADHOC-LINES-022O` Ejecutar `C022.D.T3`: cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
+- ✅ `P-ADHOC-LINES-022O` Ejecutar `C022.D.T3`: cierre Git Flow end-to-end (`feature -> develop -> main`) y sync `0/0`.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-d-t3-red.out` (`has_on_develop_rc=1`, `has_on_main_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t3-green.out` (`sync_before_fix=1 0`, `sync_after_fix=0 0`, `feature_on_origin_develop=1`, `feature_on_origin_main=1`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion de evidencia D3 + tracking actualizado a `C022.D.T4`.
+  - ✅ cierre Git Flow aplicado:
+    - rama de trabajo: `feature/p-adhoc-lines-022j-c-t1-medium-quick-wins`
+    - promote `feature -> develop` completado (`79f98a8`)
+    - promote `develop -> main` completado (`7472c8f`)
+    - alineacion final `develop` con `main` por fast-forward
+  - ✅ evidencia operativa de D3:
+    - `.audit_tmp/c022-d-t3/gitflow.out`
+    - `.audit_tmp/c022-d-t3/gitflow-sync-fix.out`
+    - `.audit_tmp/c022-d-t3-red.out`
+    - `.audit_tmp/c022-d-t3-red.exit`
+    - `.audit_tmp/c022-d-t3-green.out`
+    - `.audit_tmp/c022-d-t3-green.exit`
+  - ✅ resultado de sincronizacion protegida:
+    - `origin/main...origin/develop = 0/0`
+    - `origin/main = 7472c8f`
+    - `origin/develop = 7472c8f`
+- ✅ `P-ADHOC-LINES-022P` Ejecutar `C022.D.T4`: retirar MD temporal del ciclo C022 y consolidar cierre en documentacion estable.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c022-d-t4-red.out` (`has_cycle_file_rc=0`, `readme_no_active_rc=1`, `status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c022-d-t4-green.out` (`has_cycle_file_rc=1`, `readme_no_active_rc=0`, `status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: retiro del tracking temporal + consolidacion en docs estables + una sola tarea activa.
+  - ✅ retiro de tracking temporal:
+    - eliminado `docs/ENTERPRISE_EXECUTION_CYCLE_022.md`
+  - ✅ consolidacion oficial en documentacion estable:
+    - `docs/validation/c022-phase-acceptance-contract.md` (cierre final `D3+D4`)
+    - `docs/README.md` (sin ciclo activo; ultimo cierre `C022`)
+    - `docs/validation/README.md` (cierre `C022` consolidado)
+  - ✅ backlog post-MVP fijado:
+    - `NO_MVP_SAAS_MULTI_REPO`: no se añade SaaS ni multi-repo en MVP; diferido a fase posterior.
+- ✅ `P-ADHOC-LINES-023A` Iniciar fase 0 del MVP hotspots post-cierre C022 (baseline T0 + contrato operativo, alcance sin SaaS ni multi-repo).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-0-t1-red.out` (`has_t0_baseline_rc=1`, `has_t0_baseline_snapshot_rc=1`, `has_plan_doc_rc=2`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-0-t1-green.out` (`has_t0_baseline_rc=0`, `has_t0_baseline_snapshot_rc=0`, `has_plan_doc_rc=0`, `single_active_task_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: limpieza de docs de detalle C022 cerrados + consolidacion del seguimiento temporal en este fichero.
+  - ✅ baseline `T0` versionada:
+    - `assets/benchmarks/c023-hotspots-mvp-t0-v001.json`
+    - `assets/benchmarks/c023-hotspots-mvp-t0-v001-baseline.json`
+    - snapshot: `total=19`, `CRITICAL=18`, `HIGH=1`, `MEDIUM=0`, `LOW=0`, `coverage_ratio=1`.
+  - ✅ plan operativo de fase 0 consolidado en este tracker (sin versionar md temporal de seguimiento).
+  - ✅ evidencias fase 0:
+    - `.audit_tmp/c023-0-t1/benchmark.out`
+    - `.audit_tmp/c023-0-t1/menu-option1.out`
+    - `.audit_tmp/c023-0-t1/parity-menu1.out`
+    - `.audit_tmp/c023-0-t1/enterprise-menu1.json`
+    - `.audit_tmp/c023-0-t1/summary.json`
+    - `.audit-reports/c023-hotspots-t0-legacy-parity-menu1.md`
+  - ✅ backlog post-MVP mantenido:
+    - `NO_MVP_SAAS_MULTI_REPO` (diferido fuera de MVP).
+- ✅ `P-ADHOC-LINES-023B` Ejecutar `C023.1.T1`: implementar colector local de churn/autoria por fichero (sin SaaS ni multi-repo).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-1-t1-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-1-t1-green.out` (`tests_exit_code=0`, `has_collector_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del seguimiento temporal en este tracker y avance a `C023.1.T2`.
+  - ✅ implementacion aplicada:
+    - `integrations/git/collectFileChurnOwnership.ts`
+    - `integrations/git/index.ts`
+  - ✅ pruebas focales:
+    - `integrations/git/__tests__/collectFileChurnOwnership.test.ts`
+    - salida: `.audit_tmp/c023-1-t1-green-tests.out` (`pass=4`, `fail=0`)
+  - ✅ alcance respetado:
+    - colector 100% local sobre `git log --numstat`, sin SaaS y sin multi-repo.
+- ✅ `P-ADHOC-LINES-023C` Ejecutar `C023.1.T2`: componer senales de riesgo tecnico por fichero a partir del colector local (sin red externa).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-1-t2-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-1-t2-green.out` (`tests_exit_code=0`, `has_composer_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del tracking temporal y avance a `C023.1.T3`.
+  - ✅ implementacion aplicada:
+    - `integrations/git/composeFileTechnicalRiskSignals.ts`
+    - `integrations/git/index.ts`
+  - ✅ pruebas focales:
+    - `integrations/git/__tests__/composeFileTechnicalRiskSignals.test.ts`
+    - salida: `.audit_tmp/c023-1-t2-green-tests.out` (`pass=2`, `fail=0`)
+  - ✅ alcance respetado:
+    - composicion sobre datos locales (`churnSignals` + findings locales), sin SaaS y sin multi-repo.
+- ✅ `P-ADHOC-LINES-023D` Ejecutar `C023.1.T3`: definir formula de score/ranking `top_n` determinista para hotspots locales.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-1-t3-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-1-t3-green.out` (`tests_exit_code=0`, `has_ranker_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del tracking temporal y avance a `C023.2.T1`.
+  - ✅ implementacion aplicada:
+    - `integrations/git/rankFileHotspots.ts`
+    - `integrations/git/index.ts`
+  - ✅ pruebas focales:
+    - `integrations/git/__tests__/rankFileHotspots.test.ts`
+    - salida: `.audit_tmp/c023-1-t3-green-tests.out` (`pass=3`, `fail=0`)
+  - ✅ alcance respetado:
+    - ranking determinista local por score (`rawScore`, `normalizedScore`, `topN`) sin SaaS y sin multi-repo.
+- ✅ `P-ADHOC-LINES-023E` Ejecutar `C023.2.T1`: exponer comando local para reporte de hotspots (`pumuki analytics hotspots report`).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-2-t1-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-2-t1-green.out` (`tests_exit_code=0`, `has_analytics_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del tracking temporal en este fichero y avance a `C023.2.T2`.
+  - ✅ implementacion aplicada:
+    - `integrations/lifecycle/analyticsHotspots.ts`
+    - `integrations/lifecycle/cli.ts`
+    - `integrations/lifecycle/__tests__/cli.test.ts`
+    - `integrations/git/composeFileTechnicalRiskSignals.ts` (normalizacion de rutas canonicas para findings locales).
+  - ✅ pruebas focales:
+    - salida: `.audit_tmp/c023-2-t1-green-tests.out` (`pass=8`, `fail=0`)
+    - cobertura CLI: parseo y ejecucion runtime de `analytics hotspots report` en `--json`.
+  - ✅ evidencia runtime:
+    - `.audit_tmp/c023-2-t1-runtime.out`
+    - `.audit_tmp/c023-2-t1-runtime.exit`
+    - `.audit_tmp/c023-2-t1-runtime-json.out`
+    - `.audit_tmp/c023-2-t1-runtime-json.exit`
+- ✅ `P-ADHOC-LINES-023F` Ejecutar `C023.2.T2`: extender salida de hotspots con exportes locales versionables (json/markdown) sin SaaS ni multi-repo.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-2-t2-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-2-t2-green.out` (`tests_exit_code=0`, `has_output_json_flag_rc=0`, `has_output_markdown_flag_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del tracking temporal en este fichero.
+  - ✅ implementacion aplicada:
+    - `integrations/lifecycle/cli.ts` (`--output-json`, `--output-markdown`, escritura local y render markdown)
+    - `integrations/lifecycle/__tests__/cli.test.ts` (parseo + runtime export)
+  - ✅ pruebas focales:
+    - salida: `.audit_tmp/c023-2-t2-green-tests.out` (`pass=10`, `fail=0`)
+  - ✅ evidencia runtime:
+    - `.audit_tmp/c023-2-t2-runtime.out`
+    - `.audit_tmp/c023-2-t2-runtime.exit`
+    - `.audit_tmp/c023-2-t2-runtime-report.json`
+    - `.audit_tmp/c023-2-t2-runtime-report.md`
+- ✅ `P-ADHOC-LINES-023G` Ejecutar `C023.3.T1`: revalidacion final del lote `023E+023F` y preparacion de cierre de commit atomico.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-3-t1-red.out` (`has_tests_out_rc=0`, `has_typecheck_out_rc=0`, `has_runtime_out_rc=0`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-3-t1-green.out` (`tests_exit_code=0`, `typecheck_exit_code=0`, `runtime_exit_code=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion de evidencia final del lote en tracking estable y avance a cierre de commit atomico.
+  - ✅ revalidacion final del lote:
+    - pruebas focales: `.audit_tmp/c023-3-t1-tests.out` (`tests=19`, `pass=19`, `fail=0`)
+    - typecheck: `.audit_tmp/c023-3-t1-typecheck.out` (`tsc --noEmit`, `exit_code=0`)
+    - smoke runtime analytics export:
+      - `.audit_tmp/c023-3-t1-runtime.out`
+      - `.audit_tmp/c023-3-t1-runtime.exit`
+      - `.audit_tmp/c023-3-t1-runtime-report.json`
+      - `.audit_tmp/c023-3-t1-runtime-report.md`
+- ✅ `P-ADHOC-LINES-023H` Ejecutar `C023.3.T2`: preparar commit atomico del lote `023E+023F` con cierre documental consolidado.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-3-t2-red.out` (`has_target_commit_on_head_rc=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-3-t2-green.out` (`commit_created_rc=0`, `working_tree_clean_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: cierre documental consolidado del bloque `023E+023F+023G` en tracker estable.
+  - ✅ commit atomico del lote preparado:
+    - alcance: `integrations/git`, `integrations/lifecycle`, `docs/REFRACTOR_PROGRESS.md`
+    - sin artefactos efimeros versionados (`.audit_tmp/**` fuera de commit).
+- 🚧 `P-ADHOC-LINES-023I` Ejecutar `C023.3.T3`: cierre GitFlow del lote (`feature -> develop`) y verificacion de sincronizacion operativa.
