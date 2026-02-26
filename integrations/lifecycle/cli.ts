@@ -1,3 +1,5 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { runLifecycleDoctor, type LifecycleDoctorReport } from './doctor';
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
@@ -16,6 +18,7 @@ import {
 import { evaluateAiGate } from '../gate/evaluateAiGate';
 import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
 import { emitAuditSummaryNotificationFromAiGate } from '../notifications/emitAuditSummaryNotification';
+import { buildLocalHotspotsReport, type LocalHotspotsReport } from './analyticsHotspots';
 
 type LifecycleCommand =
   | 'install'
@@ -25,9 +28,12 @@ type LifecycleCommand =
   | 'doctor'
   | 'status'
   | 'sdd'
-  | 'adapter';
+  | 'adapter'
+  | 'analytics';
 
 type SddCommand = 'status' | 'validate' | 'session';
+type AnalyticsCommand = 'hotspots';
+type AnalyticsHotspotsCommand = 'report';
 
 type SddSessionAction = 'open' | 'refresh' | 'close';
 
@@ -44,6 +50,12 @@ type ParsedArgs = {
   adapterCommand?: 'install';
   adapterAgent?: AdapterAgent;
   adapterDryRun?: boolean;
+  analyticsCommand?: AnalyticsCommand;
+  analyticsHotspotsCommand?: AnalyticsHotspotsCommand;
+  analyticsTopN?: number;
+  analyticsSinceDays?: number;
+  analyticsJsonOutputPath?: string;
+  analyticsMarkdownOutputPath?: string;
 };
 
 const HELP_TEXT = `
@@ -55,6 +67,7 @@ Pumuki lifecycle commands:
   pumuki doctor
   pumuki status
   pumuki adapter install --agent=<name> [--dry-run] [--json]
+  pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
   pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
@@ -85,7 +98,8 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'doctor' ||
   value === 'status' ||
   value === 'sdd' ||
-  value === 'adapter';
+  value === 'adapter' ||
+  value === 'analytics';
 
 const parseAdapterAgent = (value?: string): AdapterAgent => {
   const normalized = (value ?? '').trim();
@@ -108,6 +122,50 @@ const parseSddStage = (value?: string): SddStage => {
   throw new Error(`Unsupported SDD stage "${value}". Use PRE_WRITE, PRE_COMMIT, PRE_PUSH or CI.`);
 };
 
+const parseOutputPathFlag = (value: string, flagName: '--output-json' | '--output-markdown'): string => {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error(`Invalid ${flagName} value "${value}".`);
+  }
+  return normalized;
+};
+
+const toLocalOutputAbsolutePath = (repoRoot: string, candidatePath: string): string => {
+  const repoRootAbsolute = resolve(repoRoot);
+  const resolved = isAbsolute(candidatePath) ? resolve(candidatePath) : resolve(repoRootAbsolute, candidatePath);
+  const rel = relative(repoRootAbsolute, resolved);
+  if (rel === '..' || rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) || isAbsolute(rel)) {
+    throw new Error(`Output path "${candidatePath}" must stay inside repo root.`);
+  }
+  return resolved;
+};
+
+const formatHotspotsMarkdownReport = (report: LocalHotspotsReport): string => {
+  const lines: string[] = [];
+  lines.push('# Pumuki Hotspots Report');
+  lines.push('');
+  lines.push(`- Generated At: ${report.generatedAt}`);
+  lines.push(`- Repo Root: ${report.repoRoot}`);
+  lines.push(`- Top N: ${report.options.topN}`);
+  lines.push(`- Since Days: ${report.options.sinceDays}`);
+  lines.push(`- Ranked: ${report.totals.ranked}`);
+  lines.push('');
+  if (report.hotspots.length === 0) {
+    lines.push('No hotspots found.');
+    lines.push('');
+    return lines.join('\n');
+  }
+  lines.push('| Rank | Path | Raw Score | Normalized | Findings | C | H | M | L | Commits | Churn Lines | Authors |');
+  lines.push('| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |');
+  for (const hotspot of report.hotspots) {
+    lines.push(
+      `| ${hotspot.rank} | ${hotspot.path} | ${hotspot.rawScore} | ${hotspot.normalizedScore} | ${hotspot.findingsTotal} | ${hotspot.findingsByEnterpriseSeverity.CRITICAL} | ${hotspot.findingsByEnterpriseSeverity.HIGH} | ${hotspot.findingsByEnterpriseSeverity.MEDIUM} | ${hotspot.findingsByEnterpriseSeverity.LOW} | ${hotspot.churnCommits} | ${hotspot.churnTotalLines} | ${hotspot.churnDistinctAuthors} |`
+    );
+  }
+  lines.push('');
+  return lines.join('\n');
+};
+
 export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   const commandRaw = argv[0];
   if (!commandRaw || commandRaw === '--help' || commandRaw === '-h') {
@@ -128,6 +186,80 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let adapterCommand: ParsedArgs['adapterCommand'];
   let adapterAgent: ParsedArgs['adapterAgent'];
   let adapterDryRun = false;
+  let analyticsCommand: ParsedArgs['analyticsCommand'];
+  let analyticsHotspotsCommand: ParsedArgs['analyticsHotspotsCommand'];
+  let analyticsTopN: ParsedArgs['analyticsTopN'];
+  let analyticsSinceDays: ParsedArgs['analyticsSinceDays'];
+  let analyticsJsonOutputPath: ParsedArgs['analyticsJsonOutputPath'];
+  let analyticsMarkdownOutputPath: ParsedArgs['analyticsMarkdownOutputPath'];
+
+  if (commandRaw === 'analytics') {
+    const subcommandRaw = argv[1] ?? '';
+    if (subcommandRaw !== 'hotspots') {
+      throw new Error(`Unsupported analytics command "${subcommandRaw}".\n\n${HELP_TEXT}`);
+    }
+    analyticsCommand = 'hotspots';
+    const hotspotsActionRaw = argv[2] ?? '';
+    if (hotspotsActionRaw !== 'report') {
+      throw new Error(
+        `Unsupported analytics hotspots action "${hotspotsActionRaw}".\n\n${HELP_TEXT}`
+      );
+    }
+    analyticsHotspotsCommand = 'report';
+    for (const arg of argv.slice(3)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg.startsWith('--top=')) {
+        const parsedTop = Number.parseInt(arg.slice('--top='.length), 10);
+        if (!Number.isInteger(parsedTop) || parsedTop <= 0) {
+          throw new Error(`Invalid --top value "${arg}".`);
+        }
+        analyticsTopN = parsedTop;
+        continue;
+      }
+      if (arg.startsWith('--since-days=')) {
+        const parsedSinceDays = Number.parseInt(arg.slice('--since-days='.length), 10);
+        if (!Number.isInteger(parsedSinceDays) || parsedSinceDays <= 0) {
+          throw new Error(`Invalid --since-days value "${arg}".`);
+        }
+        analyticsSinceDays = parsedSinceDays;
+        continue;
+      }
+      if (arg.startsWith('--output-json=')) {
+        analyticsJsonOutputPath = parseOutputPathFlag(
+          arg.slice('--output-json='.length),
+          '--output-json'
+        );
+        continue;
+      }
+      if (arg.startsWith('--output-markdown=')) {
+        analyticsMarkdownOutputPath = parseOutputPathFlag(
+          arg.slice('--output-markdown='.length),
+          '--output-markdown'
+        );
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+    const parsedAnalyticsArgs: ParsedArgs = {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      analyticsCommand,
+      analyticsHotspotsCommand,
+      analyticsTopN: analyticsTopN ?? 10,
+      analyticsSinceDays: analyticsSinceDays ?? 90,
+    };
+    if (analyticsJsonOutputPath) {
+      parsedAnalyticsArgs.analyticsJsonOutputPath = analyticsJsonOutputPath;
+    }
+    if (analyticsMarkdownOutputPath) {
+      parsedAnalyticsArgs.analyticsMarkdownOutputPath = analyticsMarkdownOutputPath;
+    }
+    return parsedAnalyticsArgs;
+  }
 
   if (commandRaw === 'sdd') {
     const subcommandRaw = argv[1] ?? 'status';
@@ -460,6 +592,48 @@ export const runLifecycleCli = async (
           );
         }
         return 0;
+      }
+      case 'analytics': {
+        if (parsed.analyticsCommand === 'hotspots' && parsed.analyticsHotspotsCommand === 'report') {
+          const repoRoot = process.cwd();
+          const report = buildLocalHotspotsReport({
+            repoRoot,
+            topN: parsed.analyticsTopN ?? 10,
+            sinceDays: parsed.analyticsSinceDays ?? 90,
+          });
+          if (parsed.analyticsJsonOutputPath) {
+            const outputPath = toLocalOutputAbsolutePath(repoRoot, parsed.analyticsJsonOutputPath);
+            mkdirSync(dirname(outputPath), { recursive: true });
+            writeFileSync(outputPath, `${JSON.stringify(report, null, 2)}\n`, 'utf8');
+            writeInfo(`[pumuki][analytics] json report exported -> ${parsed.analyticsJsonOutputPath}`);
+          }
+          if (parsed.analyticsMarkdownOutputPath) {
+            const outputPath = toLocalOutputAbsolutePath(repoRoot, parsed.analyticsMarkdownOutputPath);
+            mkdirSync(dirname(outputPath), { recursive: true });
+            writeFileSync(outputPath, formatHotspotsMarkdownReport(report), 'utf8');
+            writeInfo(
+              `[pumuki][analytics] markdown report exported -> ${parsed.analyticsMarkdownOutputPath}`
+            );
+          }
+          if (parsed.json) {
+            writeInfo(JSON.stringify(report, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][analytics] hotspots report: top=${report.options.topN} since_days=${report.options.sinceDays} ranked=${report.totals.ranked}`
+            );
+            if (report.hotspots.length === 0) {
+              writeInfo('[pumuki][analytics] no hotspots matched current local signals.');
+            } else {
+              for (const hotspot of report.hotspots) {
+                writeInfo(
+                  `[pumuki][analytics] #${hotspot.rank} ${hotspot.path} score=${hotspot.rawScore} normalized=${hotspot.normalizedScore} findings=${hotspot.findingsTotal} c=${hotspot.findingsByEnterpriseSeverity.CRITICAL} h=${hotspot.findingsByEnterpriseSeverity.HIGH} m=${hotspot.findingsByEnterpriseSeverity.MEDIUM} l=${hotspot.findingsByEnterpriseSeverity.LOW} churn_commits=${hotspot.churnCommits} churn_lines=${hotspot.churnTotalLines} authors=${hotspot.churnDistinctAuthors}`
+                );
+              }
+            }
+          }
+          return 0;
+        }
+        return 1;
       }
       case 'sdd': {
         if (parsed.sddCommand === 'status') {

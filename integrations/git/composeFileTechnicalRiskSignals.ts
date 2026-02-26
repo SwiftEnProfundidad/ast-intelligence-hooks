@@ -1,3 +1,4 @@
+import { existsSync, realpathSync } from 'node:fs';
 import { hasAllowedExtension } from './gitDiffUtils';
 import type { FileChurnOwnershipSignal } from './collectFileChurnOwnership';
 
@@ -38,8 +39,20 @@ const emptyFindingsByEnterpriseSeverity = (): Record<EnterpriseRiskSeverity, num
 
 const normalizePath = (value: string): string => value.replace(/\\/g, '/');
 
+const toCanonicalPathIfExists = (value: string): string => {
+  const normalized = normalizePath(value);
+  if (!existsSync(normalized)) {
+    return normalized;
+  }
+  try {
+    return normalizePath(realpathSync(normalized));
+  } catch {
+    return normalized;
+  }
+};
+
 const normalizeRepoRoot = (repoRoot: string): string => {
-  const normalized = normalizePath(repoRoot.trim());
+  const normalized = toCanonicalPathIfExists(repoRoot.trim());
   if (normalized.endsWith('/')) {
     return normalized.slice(0, -1);
   }
@@ -58,16 +71,17 @@ const toRepoRelativePath = (params: { repoRoot: string; filePath: string }): str
   if (!isAbsolutePath(candidate)) {
     return candidate;
   }
+  const canonicalCandidate = toCanonicalPathIfExists(candidate);
   const repoRoot = normalizeRepoRoot(params.repoRoot);
   const repoPrefix = `${repoRoot}/`;
-  if (candidate === repoRoot) {
+  if (canonicalCandidate === repoRoot) {
     return '.';
   }
-  if (candidate.startsWith(repoPrefix)) {
-    const relativePath = candidate.slice(repoPrefix.length);
+  if (canonicalCandidate.startsWith(repoPrefix)) {
+    const relativePath = canonicalCandidate.slice(repoPrefix.length);
     return relativePath.length > 0 ? relativePath : '.';
   }
-  return candidate;
+  return canonicalCandidate;
 };
 
 const normalizeEnterpriseSeverity = (value: unknown): EnterpriseRiskSeverity | null => {

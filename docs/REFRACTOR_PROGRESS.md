@@ -1106,4 +1106,58 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - salida: `.audit_tmp/c023-1-t3-green-tests.out` (`pass=3`, `fail=0`)
   - ✅ alcance respetado:
     - ranking determinista local por score (`rawScore`, `normalizedScore`, `topN`) sin SaaS y sin multi-repo.
-- 🚧 `P-ADHOC-LINES-023E` Ejecutar `C023.2.T1`: exponer comando local para reporte de hotspots (`pumuki analytics hotspots report`).
+- ✅ `P-ADHOC-LINES-023E` Ejecutar `C023.2.T1`: exponer comando local para reporte de hotspots (`pumuki analytics hotspots report`).
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-2-t1-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-2-t1-green.out` (`tests_exit_code=0`, `has_analytics_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del tracking temporal en este fichero y avance a `C023.2.T2`.
+  - ✅ implementacion aplicada:
+    - `integrations/lifecycle/analyticsHotspots.ts`
+    - `integrations/lifecycle/cli.ts`
+    - `integrations/lifecycle/__tests__/cli.test.ts`
+    - `integrations/git/composeFileTechnicalRiskSignals.ts` (normalizacion de rutas canonicas para findings locales).
+  - ✅ pruebas focales:
+    - salida: `.audit_tmp/c023-2-t1-green-tests.out` (`pass=8`, `fail=0`)
+    - cobertura CLI: parseo y ejecucion runtime de `analytics hotspots report` en `--json`.
+  - ✅ evidencia runtime:
+    - `.audit_tmp/c023-2-t1-runtime.out`
+    - `.audit_tmp/c023-2-t1-runtime.exit`
+    - `.audit_tmp/c023-2-t1-runtime-json.out`
+    - `.audit_tmp/c023-2-t1-runtime-json.exit`
+- ✅ `P-ADHOC-LINES-023F` Ejecutar `C023.2.T2`: extender salida de hotspots con exportes locales versionables (json/markdown) sin SaaS ni multi-repo.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-2-t2-red.out` (`tests_exit_code=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-2-t2-green.out` (`tests_exit_code=0`, `has_output_json_flag_rc=0`, `has_output_markdown_flag_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del tracking temporal en este fichero.
+  - ✅ implementacion aplicada:
+    - `integrations/lifecycle/cli.ts` (`--output-json`, `--output-markdown`, escritura local y render markdown)
+    - `integrations/lifecycle/__tests__/cli.test.ts` (parseo + runtime export)
+  - ✅ pruebas focales:
+    - salida: `.audit_tmp/c023-2-t2-green-tests.out` (`pass=10`, `fail=0`)
+  - ✅ evidencia runtime:
+    - `.audit_tmp/c023-2-t2-runtime.out`
+    - `.audit_tmp/c023-2-t2-runtime.exit`
+    - `.audit_tmp/c023-2-t2-runtime-report.json`
+    - `.audit_tmp/c023-2-t2-runtime-report.md`
+- ✅ `P-ADHOC-LINES-023G` Ejecutar `C023.3.T1`: revalidacion final del lote `023E+023F` y preparacion de cierre de commit atomico.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-3-t1-red.out` (`has_tests_out_rc=0`, `has_typecheck_out_rc=0`, `has_runtime_out_rc=0`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-3-t1-green.out` (`tests_exit_code=0`, `typecheck_exit_code=0`, `runtime_exit_code=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion de evidencia final del lote en tracking estable y avance a cierre de commit atomico.
+  - ✅ revalidacion final del lote:
+    - pruebas focales: `.audit_tmp/c023-3-t1-tests.out` (`tests=19`, `pass=19`, `fail=0`)
+    - typecheck: `.audit_tmp/c023-3-t1-typecheck.out` (`tsc --noEmit`, `exit_code=0`)
+    - smoke runtime analytics export:
+      - `.audit_tmp/c023-3-t1-runtime.out`
+      - `.audit_tmp/c023-3-t1-runtime.exit`
+      - `.audit_tmp/c023-3-t1-runtime-report.json`
+      - `.audit_tmp/c023-3-t1-runtime-report.md`
+- ✅ `P-ADHOC-LINES-023H` Ejecutar `C023.3.T2`: preparar commit atomico del lote `023E+023F` con cierre documental consolidado.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-3-t2-red.out` (`has_target_commit_on_head_rc=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-3-t2-green.out` (`commit_created_rc=0`, `working_tree_clean_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: cierre documental consolidado del bloque `023E+023F+023G` en tracker estable.
+  - ✅ commit atomico del lote preparado:
+    - alcance: `integrations/git`, `integrations/lifecycle`, `docs/REFRACTOR_PROGRESS.md`
+    - sin artefactos efimeros versionados (`.audit_tmp/**` fuera de commit).
+- 🚧 `P-ADHOC-LINES-023I` Ejecutar `C023.3.T3`: cierre GitFlow del lote (`feature -> develop`) y verificacion de sincronizacion operativa.
