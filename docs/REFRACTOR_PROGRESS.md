@@ -149,10 +149,12 @@ Plan base visible para seguimiento previo y durante la implementacion.
 - 🚧 seguimiento externo de checks remotos para `PR #423` (fuera de alcance técnico local):
   - estado observado: fallos masivos en ~3-4s con `runner_id=0`, `steps=[]`, `log not found`.
   - ejemplo verificado: job `Type Check` `65052660930` en run `22460353482`.
+  - revalidación tras nuevo push: mismo patrón en run `22460399657` (ej. job `Type Check` `65052820560`, `runner_id=0`, `steps=0`).
+  - `security/snyk (swiftenprofundidad)` ahora falla por cuota: `You have used your limit of private tests`.
   - local sigue en verde (`test:saas-ingestion`, `typecheck`) y no hay regresión funcional detectada.
   - TODO cuando vuelvas:
     - `TODO-C023-REMOTE-001`: re-disparar checks al restablecer runner/billing.
-    - `TODO-C023-REMOTE-002`: validar `security/snyk (swiftenprofundidad)` hasta estado no `pending/error`.
+    - `TODO-C023-REMOTE-002`: ampliar/restablecer cuota Snyk y validar `security/snyk (swiftenprofundidad)` en verde.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
