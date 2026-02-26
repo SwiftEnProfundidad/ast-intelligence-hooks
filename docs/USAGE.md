@@ -250,6 +250,10 @@ npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd session --refresh
 npx --yes pumuki sdd session --close
 
+# local hotspots analytics and SaaS publication diagnostics
+npx --yes pumuki analytics hotspots report --top=10 --since-days=90 --json
+npx --yes pumuki analytics hotspots diagnose --json
+
 # update dependency to latest and re-apply hooks
 npx --yes pumuki update --latest
 
@@ -287,6 +291,41 @@ Notes:
 - CLI wrappers call shared stage runners via `integrations/git/runCliCommand.ts`.
 - Execution path is centralized in `integrations/git/runPlatformGate.ts`.
 - Platform detection is multi-platform and combined per run.
+
+### 2.2) SaaS ingestion diagnostics runbook (operacion + rollback local)
+
+Operación estándar:
+
+```bash
+# 1) generar reporte local de hotspots (fuente para contrato SaaS)
+npx --yes pumuki analytics hotspots report --top=10 --since-days=90 --json
+
+# 2) ejecutar diagnóstico SaaS multi-tenant
+npx --yes pumuki analytics hotspots diagnose --json
+```
+
+Interpretación de estado (`diagnose`):
+- `healthy`: contrato válido, sin errores de publicación en auditoría.
+- `degraded`: falta contrato/auditoría o hay señales parciales no bloqueantes.
+- `blocked`: contrato inválido o existen errores de publicación; el comando retorna `exit 1`.
+
+Rollback seguro al modo local (sin impacto en gate local):
+
+```bash
+# restaurar configuración por defecto (si había overrides)
+unset PUMUKI_SAAS_INGESTION_PAYLOAD_PATH
+unset PUMUKI_SAAS_INGESTION_AUDIT_PATH
+unset PUMUKI_SAAS_INGESTION_METRICS_PATH
+
+# limpiar artefactos de publicación SaaS local
+rm -f .pumuki/artifacts/hotspots-saas-ingestion-v1.json
+rm -f .pumuki/artifacts/saas-ingestion-audit.ndjson
+rm -f .pumuki/artifacts/saas-ingestion-metrics.json
+```
+
+Verificación post-rollback:
+- `npx --yes pumuki analytics hotspots diagnose --json` puede quedar en `degraded` por artefactos ausentes.
+- El flujo local de gate (`pre-write/pre-commit/pre-push/ci`) sigue operativo y no depende de publicación SaaS.
 
 ### 3) Diagnostics reports (optional adapters)
 

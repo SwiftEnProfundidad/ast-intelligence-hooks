@@ -1,3 +1,4 @@
+import { resolve } from 'node:path';
 import type { IGitService } from './GitService';
 import { GitService } from './GitService';
 import { hasAllowedExtension } from './gitDiffUtils';
@@ -96,6 +97,7 @@ const shouldIncludePath = (path: string, extensions: ReadonlyArray<string>): boo
 
 export const collectFileChurnOwnership = (params?: {
   git?: IGitService;
+  repoRoot?: string;
   sinceDays?: number;
   extensions?: ReadonlyArray<string>;
 }): ReadonlyArray<FileChurnOwnershipSignal> => {
@@ -105,7 +107,7 @@ export const collectFileChurnOwnership = (params?: {
     throw new Error('sinceDays must be a positive integer');
   }
   const extensions = params?.extensions ?? [];
-  const repoRoot = git.resolveRepoRoot();
+  const repoRoot = params?.repoRoot ? resolve(params.repoRoot) : git.resolveRepoRoot();
   const logOutput = git.runGit(
     [
       'log',

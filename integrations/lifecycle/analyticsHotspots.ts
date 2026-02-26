@@ -82,6 +82,7 @@ export const buildLocalHotspotsReport = (params?: {
   const topN = toPositiveInteger(params?.topN ?? 10, 'topN');
   const sinceDays = toPositiveInteger(params?.sinceDays ?? 90, 'sinceDays');
   const churnSignals = collectFileChurnOwnership({
+    repoRoot,
     sinceDays,
   });
   const findings = readEvidenceFindings(repoRoot);

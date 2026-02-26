@@ -28,6 +28,11 @@
     - `counts.active` | `counts.evaluated` | `counts.matched` | `counts.unevaluated`
     - `counts.unsupported_auto` (optional)
     - `coverage_ratio` (`0..1`)
+  - `tdd_bdd` (optional):
+    - `status`: `skipped` | `passed` | `blocked` | `waived`
+    - `scope`: `in_scope`, `is_new_feature`, `is_complex_change`, `reasons[]`, `metrics`
+    - `evidence`: `path`, `state`, `version`, `slices_total`, `slices_valid`, `slices_invalid`, `integrity_ok`, `errors[]`
+    - `waiver`: `applied`, `path`, `approver`, `reason`, `expires_at`, `invalid_reason`
   - `findings[]`: normalized findings for the current run
     - `file`: normalized path (or `unknown` when no deterministic trace exists)
     - `lines` (optional): deterministic line evidence when available
@@ -75,6 +80,11 @@
 - `pumuki install` bootstraps `.ai_evidence.json` when missing (`PRE_COMMIT`, `PASS`, empty findings).
 - When `rules_coverage.unevaluated_rule_ids` is non-empty in `PRE_COMMIT`, `PRE_PUSH` or `CI`, the gate emits `governance.rules.coverage.incomplete` and forces `BLOCK`.
 - When `rules_coverage.unsupported_auto_rule_ids` is non-empty in `PRE_COMMIT`, `PRE_PUSH` or `CI`, the gate emits `governance.skills.detector-mapping.incomplete` and forces `BLOCK`.
+- When `tdd_bdd.status=blocked` for a new/complex change, the gate forces `BLOCK` with generic rule ids:
+  - `generic_evidence_integrity_required`
+  - `generic_bdd_feature_required`
+  - `generic_tdd_vertical_required`
+  - `generic_red_green_refactor_enforced`
 - `audit_mode=gate` keeps strict enforcement semantics (SDD short-circuit when preconditions fail).
 - `audit_mode=engine` keeps full-diagnostics semantics (continues rule evaluation even if SDD blocks).
 

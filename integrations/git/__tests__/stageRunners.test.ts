@@ -35,7 +35,10 @@ const withStageRunnerRepo = async (
   process.env.PUMUKI_SDD_BYPASS = '1';
   process.env.PUMUKI_DISABLE_CORE_SKILLS = '1';
   try {
-    await withTempRepo(callback, { tempPrefix: 'pumuki-stage-runner-' });
+    await withTempRepo(async (repoRoot) => {
+      seedTddBddEvidenceContract(repoRoot);
+      await callback(repoRoot);
+    }, { tempPrefix: 'pumuki-stage-runner-' });
   } finally {
     if (typeof previousBypass === 'undefined') {
       delete process.env.PUMUKI_SDD_BYPASS;
@@ -48,6 +51,37 @@ const withStageRunnerRepo = async (
       process.env.PUMUKI_DISABLE_CORE_SKILLS = previousDisableCore;
     }
   }
+};
+
+const seedTddBddEvidenceContract = (repoRoot: string): void => {
+  mkdirSync(join(repoRoot, '.pumuki', 'artifacts'), { recursive: true });
+  mkdirSync(join(repoRoot, 'features'), { recursive: true });
+  writeFileSync(
+    join(repoRoot, 'features', 'core.feature'),
+    'Feature: Core flow\n  Scenario: baseline vertical slice\n',
+    'utf8'
+  );
+  writeFileSync(
+    join(repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json'),
+    JSON.stringify(
+      {
+        version: '1',
+        generated_at: '2026-02-26T10:00:00.000Z',
+        slices: [
+          {
+            id: 'slice-seed-1',
+            scenario_ref: 'features/core.feature:2',
+            red: { status: 'failed', timestamp: '2026-02-26T10:00:00.000Z' },
+            green: { status: 'passed', timestamp: '2026-02-26T10:01:00.000Z' },
+            refactor: { status: 'passed', timestamp: '2026-02-26T10:02:00.000Z' },
+          },
+        ],
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
 };
 
 const readEvidence = (repoRoot: string): EvidenceShape => {

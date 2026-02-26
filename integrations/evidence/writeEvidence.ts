@@ -9,6 +9,7 @@ import type {
   SnapshotEvaluationMetrics,
   SnapshotFinding,
 } from './schema';
+import type { TddBddSnapshot } from '../tdd/types';
 import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { normalizeHumanIntent } from './humanIntent';
 import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
@@ -164,6 +165,45 @@ const normalizeRepoState = (
   };
 };
 
+const normalizeTddBddSnapshot = (snapshot: TddBddSnapshot | undefined): TddBddSnapshot | undefined => {
+  if (!snapshot) {
+    return undefined;
+  }
+  return {
+    status: snapshot.status,
+    scope: {
+      in_scope: snapshot.scope.in_scope,
+      is_new_feature: snapshot.scope.is_new_feature,
+      is_complex_change: snapshot.scope.is_complex_change,
+      reasons: [...snapshot.scope.reasons],
+      metrics: {
+        changed_files: snapshot.scope.metrics.changed_files,
+        estimated_loc: snapshot.scope.metrics.estimated_loc,
+        critical_path_files: snapshot.scope.metrics.critical_path_files,
+        public_interface_files: snapshot.scope.metrics.public_interface_files,
+      },
+    },
+    evidence: {
+      path: snapshot.evidence.path,
+      state: snapshot.evidence.state,
+      version: snapshot.evidence.version,
+      slices_total: snapshot.evidence.slices_total,
+      slices_valid: snapshot.evidence.slices_valid,
+      slices_invalid: snapshot.evidence.slices_invalid,
+      integrity_ok: snapshot.evidence.integrity_ok,
+      errors: [...snapshot.evidence.errors],
+    },
+    waiver: {
+      applied: snapshot.waiver.applied,
+      path: snapshot.waiver.path,
+      approver: snapshot.waiver.approver,
+      reason: snapshot.waiver.reason,
+      expires_at: snapshot.waiver.expires_at,
+      invalid_reason: snapshot.waiver.invalid_reason,
+    },
+  };
+};
+
 const toStableEvidence = (
   evidence: AiEvidenceV2_1,
   repoRoot: string
@@ -224,6 +264,7 @@ const toStableEvidence = (
     evidence.snapshot.stage,
     evidence.snapshot.rules_coverage
   );
+  const normalizedTddBdd = normalizeTddBddSnapshot(evidence.snapshot.tdd_bdd);
   const normalizedAuditMode = evidence.snapshot.audit_mode === 'engine' ? 'engine' : 'gate';
 
   return {
@@ -239,6 +280,7 @@ const toStableEvidence = (
         : {}),
       evaluation_metrics: normalizedEvaluationMetrics,
       rules_coverage: normalizedRulesCoverage,
+      ...(normalizedTddBdd ? { tdd_bdd: normalizedTddBdd } : {}),
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({

@@ -14,6 +14,7 @@ import { captureRepoState } from '../evidence/repoState';
 import type { SnapshotEvaluationMetrics, SnapshotRulesCoverage } from '../evidence/schema';
 import { normalizeSnapshotEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { normalizeSnapshotRulesCoverage } from '../evidence/rulesCoverage';
+import type { TddBddSnapshot } from '../tdd/types';
 
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
@@ -32,6 +33,7 @@ export const emitPlatformGateEvidence = (params: {
   filesScanned: number;
   evaluationMetrics?: SnapshotEvaluationMetrics;
   rulesCoverage?: SnapshotRulesCoverage;
+  tddBdd?: TddBddSnapshot;
   repoRoot: string;
   detectedPlatforms: DetectedPlatforms;
   skillsRuleSet: SkillsRuleSetLoadResult;
@@ -55,6 +57,7 @@ export const emitPlatformGateEvidence = (params: {
     filesScanned: params.filesScanned,
     evaluationMetrics,
     rulesCoverage,
+    ...(params.tddBdd ? { tddBdd: params.tddBdd } : {}),
     repoRoot: params.repoRoot,
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),

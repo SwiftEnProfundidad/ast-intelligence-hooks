@@ -19,6 +19,13 @@ import { evaluateAiGate } from '../gate/evaluateAiGate';
 import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
 import { emitAuditSummaryNotificationFromAiGate } from '../notifications/emitAuditSummaryNotification';
 import { buildLocalHotspotsReport, type LocalHotspotsReport } from './analyticsHotspots';
+import { resolveHotspotsSaasIngestionAuditPath } from './saasIngestionAudit';
+import { readHotspotsSaasIngestionPayload } from './saasIngestionContract';
+import {
+  buildHotspotsSaasIngestionMetrics,
+  readHotspotsSaasIngestionAuditEvents,
+  writeHotspotsSaasIngestionMetrics,
+} from './saasIngestionMetrics';
 
 type LifecycleCommand =
   | 'install'
@@ -33,7 +40,7 @@ type LifecycleCommand =
 
 type SddCommand = 'status' | 'validate' | 'session';
 type AnalyticsCommand = 'hotspots';
-type AnalyticsHotspotsCommand = 'report';
+type AnalyticsHotspotsCommand = 'report' | 'diagnose';
 
 type SddSessionAction = 'open' | 'refresh' | 'close';
 
@@ -68,6 +75,7 @@ Pumuki lifecycle commands:
   pumuki status
   pumuki adapter install --agent=<name> [--dry-run] [--json]
   pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
+  pumuki analytics hotspots diagnose [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
   pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
@@ -166,6 +174,180 @@ const formatHotspotsMarkdownReport = (report: LocalHotspotsReport): string => {
   return lines.join('\n');
 };
 
+type HotspotsPublishDiagnosticsIssue = {
+  severity: 'warning' | 'error';
+  code: string;
+  message: string;
+};
+
+type HotspotsPublishDiagnostics = {
+  generated_at: string;
+  repo_root: string;
+  status: 'healthy' | 'degraded' | 'blocked';
+  contract: {
+    status: 'missing' | 'invalid' | 'valid';
+    path: string;
+    reason?: string;
+    source_version?: string;
+    tenant_id?: string;
+    repository_id?: string;
+    payload_hash?: string;
+  };
+  audit: {
+    path: string;
+    events: number;
+    latest_event?: {
+      event_id: string;
+      event_at: string;
+      outcome: 'success' | 'error';
+      attempts: number;
+      latency_ms: number;
+      status?: number;
+      error_code?: string;
+      retryable?: boolean;
+    };
+  };
+  metrics: {
+    path: string;
+    snapshot: ReturnType<typeof buildHotspotsSaasIngestionMetrics>;
+  };
+  issues: ReadonlyArray<HotspotsPublishDiagnosticsIssue>;
+};
+
+const buildHotspotsPublishDiagnostics = (repoRoot: string): HotspotsPublishDiagnostics => {
+  const generatedAt = new Date().toISOString();
+  const contractRead = readHotspotsSaasIngestionPayload(repoRoot);
+  const auditEvents = readHotspotsSaasIngestionAuditEvents(repoRoot);
+  const auditPath = resolveHotspotsSaasIngestionAuditPath(repoRoot);
+  const latestEvent =
+    auditEvents.length === 0 ? undefined : auditEvents[auditEvents.length - 1];
+  const metricsSnapshot = buildHotspotsSaasIngestionMetrics({
+    repoRoot,
+    generatedAt,
+  });
+  const metricsPath = writeHotspotsSaasIngestionMetrics({
+    repoRoot,
+    metrics: metricsSnapshot,
+  });
+  const issues: HotspotsPublishDiagnosticsIssue[] = [];
+  if (contractRead.kind === 'missing') {
+    issues.push({
+      severity: 'warning',
+      code: 'CONTRACT_MISSING',
+      message: 'No contract payload found for SaaS ingestion diagnostics.',
+    });
+  } else if (contractRead.kind === 'invalid') {
+    issues.push({
+      severity: 'error',
+      code: 'CONTRACT_INVALID',
+      message: contractRead.reason,
+    });
+  }
+  if (auditEvents.length === 0) {
+    issues.push({
+      severity: 'warning',
+      code: 'AUDIT_EMPTY',
+      message: 'No SaaS ingestion audit events were found.',
+    });
+  }
+  if (metricsSnapshot.totals.error > 0) {
+    issues.push({
+      severity: 'error',
+      code: 'PUBLISH_ERRORS_PRESENT',
+      message: `Detected ${metricsSnapshot.totals.error} failed publish events.`,
+    });
+  }
+  const hasBlockingIssues = issues.some((issue) => issue.severity === 'error');
+  const status: HotspotsPublishDiagnostics['status'] = hasBlockingIssues
+    ? 'blocked'
+    : issues.length > 0
+      ? 'degraded'
+      : 'healthy';
+  const contract: HotspotsPublishDiagnostics['contract'] =
+    contractRead.kind === 'valid'
+      ? {
+        status: 'valid',
+        path: contractRead.path,
+        source_version: contractRead.integrity.source_version,
+        tenant_id: contractRead.contract.tenant_id,
+        repository_id: contractRead.contract.repository.repository_id,
+        payload_hash: contractRead.contract.integrity.payload_hash,
+      }
+      : contractRead.kind === 'missing'
+        ? {
+          status: 'missing',
+          path: contractRead.path,
+        }
+        : {
+          status: 'invalid',
+          path: contractRead.path,
+          reason: contractRead.reason,
+        };
+
+  return {
+    generated_at: generatedAt,
+    repo_root: repoRoot,
+    status,
+    contract,
+    audit: {
+      path: auditPath,
+      events: auditEvents.length,
+      latest_event: latestEvent
+        ? {
+          event_id: latestEvent.event_id,
+          event_at: latestEvent.event_at,
+          outcome: latestEvent.outcome,
+          attempts: latestEvent.attempts,
+          latency_ms: latestEvent.latency_ms,
+          status: latestEvent.status,
+          error_code: latestEvent.error_code,
+          retryable: latestEvent.retryable,
+        }
+        : undefined,
+    },
+    metrics: {
+      path: metricsPath,
+      snapshot: metricsSnapshot,
+    },
+    issues,
+  };
+};
+
+const printHotspotsPublishDiagnostics = (diagnostics: HotspotsPublishDiagnostics): void => {
+  writeInfo(
+    `[pumuki][analytics][saas] status=${diagnostics.status} issues=${diagnostics.issues.length}`
+  );
+  writeInfo(
+    `[pumuki][analytics][saas] contract: status=${diagnostics.contract.status} path=${diagnostics.contract.path}`
+  );
+  if (diagnostics.contract.status === 'valid') {
+    writeInfo(
+      `[pumuki][analytics][saas] contract tenant=${diagnostics.contract.tenant_id} repo=${diagnostics.contract.repository_id} version=${diagnostics.contract.source_version}`
+    );
+  }
+  if (diagnostics.contract.status === 'invalid') {
+    writeInfo(
+      `[pumuki][analytics][saas] contract reason=${diagnostics.contract.reason ?? 'invalid'}`
+    );
+  }
+  writeInfo(
+    `[pumuki][analytics][saas] audit: path=${diagnostics.audit.path} events=${diagnostics.audit.events}`
+  );
+  if (diagnostics.audit.latest_event) {
+    writeInfo(
+      `[pumuki][analytics][saas] latest_event outcome=${diagnostics.audit.latest_event.outcome} attempts=${diagnostics.audit.latest_event.attempts} latency_ms=${diagnostics.audit.latest_event.latency_ms} status=${diagnostics.audit.latest_event.status ?? 'n/a'}`
+    );
+  }
+  writeInfo(
+    `[pumuki][analytics][saas] metrics: path=${diagnostics.metrics.path} success=${diagnostics.metrics.snapshot.totals.success} error=${diagnostics.metrics.snapshot.totals.error} success_rate=${diagnostics.metrics.snapshot.totals.success_rate} p95_latency_ms=${diagnostics.metrics.snapshot.latency_ms.p95}`
+  );
+  for (const issue of diagnostics.issues) {
+    writeInfo(
+      `[pumuki][analytics][saas] ${issue.severity.toUpperCase()} ${issue.code}: ${issue.message}`
+    );
+  }
+};
+
 export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   const commandRaw = argv[0];
   if (!commandRaw || commandRaw === '--help' || commandRaw === '-h') {
@@ -200,46 +382,48 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     }
     analyticsCommand = 'hotspots';
     const hotspotsActionRaw = argv[2] ?? '';
-    if (hotspotsActionRaw !== 'report') {
+    if (hotspotsActionRaw !== 'report' && hotspotsActionRaw !== 'diagnose') {
       throw new Error(
         `Unsupported analytics hotspots action "${hotspotsActionRaw}".\n\n${HELP_TEXT}`
       );
     }
-    analyticsHotspotsCommand = 'report';
+    analyticsHotspotsCommand = hotspotsActionRaw;
     for (const arg of argv.slice(3)) {
       if (arg === '--json') {
         json = true;
         continue;
       }
-      if (arg.startsWith('--top=')) {
-        const parsedTop = Number.parseInt(arg.slice('--top='.length), 10);
-        if (!Number.isInteger(parsedTop) || parsedTop <= 0) {
-          throw new Error(`Invalid --top value "${arg}".`);
+      if (analyticsHotspotsCommand === 'report') {
+        if (arg.startsWith('--top=')) {
+          const parsedTop = Number.parseInt(arg.slice('--top='.length), 10);
+          if (!Number.isInteger(parsedTop) || parsedTop <= 0) {
+            throw new Error(`Invalid --top value "${arg}".`);
+          }
+          analyticsTopN = parsedTop;
+          continue;
         }
-        analyticsTopN = parsedTop;
-        continue;
-      }
-      if (arg.startsWith('--since-days=')) {
-        const parsedSinceDays = Number.parseInt(arg.slice('--since-days='.length), 10);
-        if (!Number.isInteger(parsedSinceDays) || parsedSinceDays <= 0) {
-          throw new Error(`Invalid --since-days value "${arg}".`);
+        if (arg.startsWith('--since-days=')) {
+          const parsedSinceDays = Number.parseInt(arg.slice('--since-days='.length), 10);
+          if (!Number.isInteger(parsedSinceDays) || parsedSinceDays <= 0) {
+            throw new Error(`Invalid --since-days value "${arg}".`);
+          }
+          analyticsSinceDays = parsedSinceDays;
+          continue;
         }
-        analyticsSinceDays = parsedSinceDays;
-        continue;
-      }
-      if (arg.startsWith('--output-json=')) {
-        analyticsJsonOutputPath = parseOutputPathFlag(
-          arg.slice('--output-json='.length),
-          '--output-json'
-        );
-        continue;
-      }
-      if (arg.startsWith('--output-markdown=')) {
-        analyticsMarkdownOutputPath = parseOutputPathFlag(
-          arg.slice('--output-markdown='.length),
-          '--output-markdown'
-        );
-        continue;
+        if (arg.startsWith('--output-json=')) {
+          analyticsJsonOutputPath = parseOutputPathFlag(
+            arg.slice('--output-json='.length),
+            '--output-json'
+          );
+          continue;
+        }
+        if (arg.startsWith('--output-markdown=')) {
+          analyticsMarkdownOutputPath = parseOutputPathFlag(
+            arg.slice('--output-markdown='.length),
+            '--output-markdown'
+          );
+          continue;
+        }
       }
       throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
     }
@@ -249,14 +433,16 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       json,
       analyticsCommand,
       analyticsHotspotsCommand,
-      analyticsTopN: analyticsTopN ?? 10,
-      analyticsSinceDays: analyticsSinceDays ?? 90,
     };
-    if (analyticsJsonOutputPath) {
-      parsedAnalyticsArgs.analyticsJsonOutputPath = analyticsJsonOutputPath;
-    }
-    if (analyticsMarkdownOutputPath) {
-      parsedAnalyticsArgs.analyticsMarkdownOutputPath = analyticsMarkdownOutputPath;
+    if (analyticsHotspotsCommand === 'report') {
+      parsedAnalyticsArgs.analyticsTopN = analyticsTopN ?? 10;
+      parsedAnalyticsArgs.analyticsSinceDays = analyticsSinceDays ?? 90;
+      if (analyticsJsonOutputPath) {
+        parsedAnalyticsArgs.analyticsJsonOutputPath = analyticsJsonOutputPath;
+      }
+      if (analyticsMarkdownOutputPath) {
+        parsedAnalyticsArgs.analyticsMarkdownOutputPath = analyticsMarkdownOutputPath;
+      }
     }
     return parsedAnalyticsArgs;
   }
@@ -632,6 +818,18 @@ export const runLifecycleCli = async (
             }
           }
           return 0;
+        }
+        if (
+          parsed.analyticsCommand === 'hotspots' &&
+          parsed.analyticsHotspotsCommand === 'diagnose'
+        ) {
+          const diagnostics = buildHotspotsPublishDiagnostics(process.cwd());
+          if (parsed.json) {
+            writeInfo(JSON.stringify(diagnostics, null, 2));
+          } else {
+            printHotspotsPublishDiagnostics(diagnostics);
+          }
+          return diagnostics.status === 'blocked' ? 1 : 0;
         }
         return 1;
       }
