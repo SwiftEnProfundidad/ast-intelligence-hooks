@@ -41,6 +41,12 @@ export type BuildEvidenceParams = {
   evaluationMetrics?: SnapshotEvaluationMetrics;
   rulesCoverage?: SnapshotRulesCoverage;
   tddBdd?: TddBddSnapshot;
+  memoryShadow?: {
+    recommended_outcome: GateOutcome;
+    actual_outcome: GateOutcome;
+    confidence: number;
+    reason_codes: string[];
+  };
   sddMetrics?: SddMetrics;
   repoState?: RepoState;
 };
@@ -604,6 +610,39 @@ const normalizeRepoState = (repoState?: RepoState): RepoState | undefined => {
   };
 };
 
+const normalizeMemoryShadow = (
+  memoryShadow:
+    | {
+      recommended_outcome: GateOutcome;
+      actual_outcome: GateOutcome;
+      confidence: number;
+      reason_codes: string[];
+    }
+    | undefined
+): {
+  recommended_outcome: GateOutcome;
+  actual_outcome: GateOutcome;
+  confidence: number;
+  reason_codes: string[];
+} | undefined => {
+  if (!memoryShadow) {
+    return undefined;
+  }
+  const confidence = Number.isFinite(memoryShadow.confidence)
+    ? Math.max(0, Math.min(1, Number(memoryShadow.confidence.toFixed(6))))
+    : 0;
+  const reasonCodes = Array.from(
+    new Set(memoryShadow.reason_codes.map((code) => code.trim()).filter((code) => code.length > 0))
+  ).sort((a, b) => a.localeCompare(b));
+
+  return {
+    recommended_outcome: memoryShadow.recommended_outcome,
+    actual_outcome: memoryShadow.actual_outcome,
+    confidence,
+    reason_codes: reasonCodes,
+  };
+};
+
 export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const now = new Date().toISOString();
   const consolidatedFindings = normalizeAndDedupeFindings(params.stage, params.findings);
@@ -612,6 +651,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
   const normalizedFilesAffected = countFilesAffected(normalizedFindings);
   const normalizedEvaluationMetrics = normalizeSnapshotEvaluationMetrics(params.evaluationMetrics);
   const normalizedRulesCoverage = normalizeSnapshotRulesCoverage(params.stage, params.rulesCoverage);
+  const normalizedMemoryShadow = normalizeMemoryShadow(params.memoryShadow);
   const outcome = params.gateOutcome ?? toGateOutcome(normalizedFindings);
   const gateStatus = outcome === 'BLOCK' ? 'BLOCKED' : 'ALLOWED';
   const severity = bySeverity(normalizedFindings);
@@ -633,6 +673,7 @@ export function buildEvidence(params: BuildEvidenceParams): AiEvidenceV2_1 {
       evaluation_metrics: normalizedEvaluationMetrics,
       rules_coverage: normalizedRulesCoverage,
       ...(params.tddBdd ? { tdd_bdd: params.tddBdd } : {}),
+      ...(normalizedMemoryShadow ? { memory_shadow: normalizedMemoryShadow } : {}),
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({

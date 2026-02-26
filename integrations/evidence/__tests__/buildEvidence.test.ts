@@ -972,3 +972,25 @@ test('persiste snapshot.tdd_bdd cuando se informa enforcement vertical', () => {
   assert.equal(result.snapshot.tdd_bdd?.scope.in_scope, true);
   assert.equal(result.snapshot.tdd_bdd?.evidence.state, 'invalid');
 });
+
+test('persiste snapshot.memory_shadow con normalizacion determinista', () => {
+  const result = buildEvidence({
+    stage: 'PRE_PUSH',
+    findings: [],
+    detectedPlatforms: {},
+    loadedRulesets: [],
+    memoryShadow: {
+      recommended_outcome: 'BLOCK',
+      actual_outcome: 'ALLOW',
+      confidence: 1.2345678,
+      reason_codes: [' shadow.diff ', 'shadow.diff', '', 'tdd_bdd.blocked'],
+    },
+  });
+
+  assert.deepEqual(result.snapshot.memory_shadow, {
+    recommended_outcome: 'BLOCK',
+    actual_outcome: 'ALLOW',
+    confidence: 1,
+    reason_codes: ['shadow.diff', 'tdd_bdd.blocked'],
+  });
+});
