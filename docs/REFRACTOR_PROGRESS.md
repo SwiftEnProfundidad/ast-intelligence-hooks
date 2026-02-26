@@ -1160,4 +1160,23 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - ✅ commit atomico del lote preparado:
     - alcance: `integrations/git`, `integrations/lifecycle`, `docs/REFRACTOR_PROGRESS.md`
     - sin artefactos efimeros versionados (`.audit_tmp/**` fuera de commit).
-- 🚧 `P-ADHOC-LINES-023I` Ejecutar `C023.3.T3`: cierre GitFlow del lote (`feature -> develop`) y verificacion de sincronizacion operativa.
+- ✅ `P-ADHOC-LINES-023I` Ejecutar `C023.3.T3`: cierre GitFlow del lote (`feature -> develop`) y verificacion de sincronizacion operativa.
+  - ✅ TDD formal ejecutado:
+    - `RED`: `.audit_tmp/c023-3-t3-red.out` (`feature_head=27c9c9f`, `has_on_origin_develop_rc=1`, `phase_status=RED_OK`, `exit_code=1`)
+    - `GREEN`: `.audit_tmp/c023-3-t3-green.out` (`feature_on_origin_develop_rc=0`, `sync_develop_vs_origin_develop=0 0`, `sync_develop_vs_origin_develop_rc=0`, `phase_status=GREEN_OK`, `exit_code=0`)
+    - `REFACTOR`: consolidacion del cierre de promote en tracking estable y avance a `develop -> main`.
+  - ✅ cierre GitFlow aplicado:
+    - push de `feature/p-adhoc-lines-022j-c-t1-medium-quick-wins` a remoto.
+    - merge `feature -> develop` completado y publicado en `origin/develop`.
+    - commit de promote en `develop`: `1066b5b`.
+  - ✅ evidencia operativa:
+    - `.audit_tmp/c023-3-t3-gitflow.out`
+    - `.audit_tmp/c023-3-t3-gitflow.exit`
+    - `.audit_tmp/c023-3-t3-red.out`
+    - `.audit_tmp/c023-3-t3-red.exit`
+    - `.audit_tmp/c023-3-t3-green.out`
+    - `.audit_tmp/c023-3-t3-green.exit`
+  - ✅ resultado de sincronizacion:
+    - `develop...origin/develop = 0/0`
+    - `origin/main...origin/develop = 0/9` (pendiente promote final a `main`).
+- 🚧 `P-ADHOC-LINES-023J` Ejecutar `C023.3.T4`: cierre GitFlow final del lote (`develop -> main`) y sincronizacion protegida.
