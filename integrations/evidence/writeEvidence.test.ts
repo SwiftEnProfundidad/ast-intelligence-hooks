@@ -361,3 +361,29 @@ test('writeEvidence preserva snapshot.tdd_bdd cuando viene en evidencia', async 
     });
   });
 });
+
+test('writeEvidence preserva snapshot.memory_shadow con orden estable', async () => {
+  await withTempDir('pumuki-write-evidence-memory-shadow-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const evidence = sampleEvidence(tempRoot);
+      evidence.snapshot.memory_shadow = {
+        recommended_outcome: 'BLOCK',
+        actual_outcome: 'ALLOW',
+        confidence: 0.987654321,
+        reason_codes: [' tdd_bdd.blocked ', 'shadow.diff', 'shadow.diff'],
+      };
+
+      const result = writeEvidence(evidence);
+      assert.equal(result.ok, true);
+
+      const written = JSON.parse(readFileSync(result.path, 'utf8')) as AiEvidenceV2_1;
+      assert.deepEqual(written.snapshot.memory_shadow, {
+        recommended_outcome: 'BLOCK',
+        actual_outcome: 'ALLOW',
+        confidence: 0.987654,
+        reason_codes: ['shadow.diff', 'tdd_bdd.blocked'],
+      });
+    });
+  });
+});

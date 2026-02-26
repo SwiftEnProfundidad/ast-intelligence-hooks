@@ -34,6 +34,12 @@ export const emitPlatformGateEvidence = (params: {
   evaluationMetrics?: SnapshotEvaluationMetrics;
   rulesCoverage?: SnapshotRulesCoverage;
   tddBdd?: TddBddSnapshot;
+  memoryShadow?: {
+    recommended_outcome: GateOutcome;
+    actual_outcome: GateOutcome;
+    confidence: number;
+    reason_codes: string[];
+  };
   repoRoot: string;
   detectedPlatforms: DetectedPlatforms;
   skillsRuleSet: SkillsRuleSetLoadResult;
@@ -58,6 +64,7 @@ export const emitPlatformGateEvidence = (params: {
     evaluationMetrics,
     rulesCoverage,
     ...(params.tddBdd ? { tddBdd: params.tddBdd } : {}),
+    ...(params.memoryShadow ? { memoryShadow: params.memoryShadow } : {}),
     repoRoot: params.repoRoot,
     previousEvidence: params.evidenceService.loadPreviousEvidence(params.repoRoot),
     detectedPlatforms: params.evidenceService.toDetectedPlatformsRecord(params.detectedPlatforms),

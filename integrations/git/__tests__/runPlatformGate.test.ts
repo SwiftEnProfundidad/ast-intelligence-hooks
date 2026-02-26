@@ -1241,3 +1241,198 @@ test('runPlatformGate bloquea por policy TDD/BDD en cambios nuevos sin contrato 
     );
   });
 });
+
+test('runPlatformGate aplica memory shadow sin alterar decision bloqueante actual', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'CRITICAL',
+    warnOnOrAbove: 'ERROR',
+  };
+  const scope = { kind: 'staged' as const, extensions: ['.ts'] };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let shadowCalled = false;
+  let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+  let emittedMemoryShadow:
+    | {
+      recommended_outcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      actual_outcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      confidence: number;
+      reason_codes: string[];
+    }
+    | undefined;
+
+  const previousShadowFlag = process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED;
+  process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED = '1';
+  try {
+    const result = await runPlatformGate({
+      policy,
+      scope,
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => [],
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: {},
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: 0,
+            filesScanned: 0,
+            rulesTotal: 0,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 0,
+            projectRules: 0,
+            matchedRules: 0,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: [],
+            evaluatedRuleIds: [],
+            matchedRuleIds: [],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        buildMemoryShadowRecommendation: () => {
+          shadowCalled = true;
+          return {
+            recommendedOutcome: 'BLOCK',
+            confidence: 0.99,
+            reasonCodes: ['shadow.test'],
+          };
+        },
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedOutcome = paramsArg.gateOutcome;
+          emittedMemoryShadow = paramsArg.memoryShadow;
+        },
+        printGateFindings: () => {},
+      },
+    });
+
+    assert.equal(shadowCalled, true);
+    assert.equal(result, 0);
+    assert.equal(emittedOutcome, 'ALLOW');
+    assert.deepEqual(emittedMemoryShadow, {
+      recommended_outcome: 'BLOCK',
+      actual_outcome: 'ALLOW',
+      confidence: 0.99,
+      reason_codes: ['shadow.test'],
+    });
+  } finally {
+    if (typeof previousShadowFlag === 'string') {
+      process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED = previousShadowFlag;
+    } else {
+      delete process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED;
+    }
+  }
+});
+
+test('runPlatformGate aplica fallback seguro cuando falla memory shadow', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'CRITICAL',
+    warnOnOrAbove: 'ERROR',
+  };
+  const scope = { kind: 'staged' as const, extensions: ['.ts'] };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let shadowCalled = false;
+  let emittedOutcome: 'ALLOW' | 'WARN' | 'BLOCK' | undefined;
+  let emittedMemoryShadow:
+    | {
+      recommended_outcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      actual_outcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      confidence: number;
+      reason_codes: string[];
+    }
+    | undefined;
+
+  const previousShadowFlag = process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED;
+  process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED = '1';
+  try {
+    const result = await runPlatformGate({
+      policy,
+      scope,
+      services: {
+        git,
+        evidence,
+      },
+      dependencies: {
+        evaluateSddForStage: () => ({
+          allowed: true,
+          code: 'ALLOWED',
+          message: 'ok',
+        }),
+        resolveFactsForGateScope: async () => [],
+        evaluatePlatformGateFindings: () => ({
+          detectedPlatforms: {},
+          skillsRuleSet: {
+            rules: [],
+            activeBundles: [],
+            mappedHeuristicRuleIds: new Set<string>(),
+            requiresHeuristicFacts: false,
+          },
+          projectRules: [] as RuleSet,
+          heuristicRules: [] as RuleSet,
+          coverage: {
+            factsTotal: 0,
+            filesScanned: 0,
+            rulesTotal: 0,
+            baselineRules: 0,
+            heuristicRules: 0,
+            skillsRules: 0,
+            projectRules: 0,
+            matchedRules: 0,
+            unmatchedRules: 0,
+            unevaluatedRules: 0,
+            activeRuleIds: [],
+            evaluatedRuleIds: [],
+            matchedRuleIds: [],
+            unmatchedRuleIds: [],
+            unevaluatedRuleIds: [],
+          },
+          findings: [],
+        }),
+        evaluateGate: () => ({ outcome: 'ALLOW' }),
+        buildMemoryShadowRecommendation: () => {
+          shadowCalled = true;
+          throw new Error('shadow_unavailable');
+        },
+        emitPlatformGateEvidence: (paramsArg) => {
+          emittedOutcome = paramsArg.gateOutcome;
+          emittedMemoryShadow = paramsArg.memoryShadow;
+        },
+        printGateFindings: () => {},
+      },
+    });
+
+    assert.equal(shadowCalled, true);
+    assert.equal(result, 0);
+    assert.equal(emittedOutcome, 'ALLOW');
+    assert.equal(emittedMemoryShadow, undefined);
+  } finally {
+    if (typeof previousShadowFlag === 'string') {
+      process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED = previousShadowFlag;
+    } else {
+      delete process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED;
+    }
+  }
+});

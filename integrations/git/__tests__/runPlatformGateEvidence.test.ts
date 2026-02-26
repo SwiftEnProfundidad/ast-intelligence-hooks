@@ -43,6 +43,12 @@ type GenerateEvidenceParams = {
     coverage_ratio: number;
   };
   tddBdd?: TddBddSnapshot;
+  memoryShadow?: {
+    recommended_outcome: string;
+    actual_outcome: string;
+    confidence: number;
+    reason_codes: string[];
+  };
   previousEvidence: unknown;
   detectedPlatforms: unknown;
   loadedRulesets: unknown;
@@ -145,6 +151,12 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
         },
         coverage_ratio: 0.5,
       },
+      memoryShadow: {
+        recommended_outcome: 'BLOCK',
+        actual_outcome: 'ALLOW',
+        confidence: 0.9,
+        reason_codes: ['shadow.diff'],
+      },
       evidenceService,
       sddDecision: {
         allowed: true,
@@ -209,6 +221,12 @@ test('emitPlatformGateEvidence construye payload y delega en generateEvidence', 
       unevaluated: 1,
     },
     coverage_ratio: 0.5,
+  });
+  assert.deepEqual(capturedGenerateEvidenceParams?.memoryShadow, {
+    recommended_outcome: 'BLOCK',
+    actual_outcome: 'ALLOW',
+    confidence: 0.9,
+    reason_codes: ['shadow.diff'],
   });
   assert.deepEqual(capturedGenerateEvidenceParams?.previousEvidence, previousEvidence);
   assert.deepEqual(capturedGenerateEvidenceParams?.detectedPlatforms, detectedPlatformsRecord);

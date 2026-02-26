@@ -265,6 +265,22 @@ const toStableEvidence = (
     evidence.snapshot.rules_coverage
   );
   const normalizedTddBdd = normalizeTddBddSnapshot(evidence.snapshot.tdd_bdd);
+  const normalizedMemoryShadow = evidence.snapshot.memory_shadow
+    ? {
+      recommended_outcome: evidence.snapshot.memory_shadow.recommended_outcome,
+      actual_outcome: evidence.snapshot.memory_shadow.actual_outcome,
+      confidence: Number.isFinite(evidence.snapshot.memory_shadow.confidence)
+        ? Math.max(0, Math.min(1, Number(evidence.snapshot.memory_shadow.confidence.toFixed(6))))
+        : 0,
+      reason_codes: Array.from(
+        new Set(
+          evidence.snapshot.memory_shadow.reason_codes
+            .map((code) => code.trim())
+            .filter((code) => code.length > 0)
+        )
+      ).sort((a, b) => a.localeCompare(b)),
+    }
+    : undefined;
   const normalizedAuditMode = evidence.snapshot.audit_mode === 'engine' ? 'engine' : 'gate';
 
   return {
@@ -281,6 +297,7 @@ const toStableEvidence = (
       evaluation_metrics: normalizedEvaluationMetrics,
       rules_coverage: normalizedRulesCoverage,
       ...(normalizedTddBdd ? { tdd_bdd: normalizedTddBdd } : {}),
+      ...(normalizedMemoryShadow ? { memory_shadow: normalizedMemoryShadow } : {}),
       findings: normalizedFindings,
       platforms: buildSnapshotPlatformSummaries(
         normalizedFindings.map((finding) => ({
