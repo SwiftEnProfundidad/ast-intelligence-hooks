@@ -1,6 +1,6 @@
 # Pumuki
 
-![Pumuki](assets/logo_banner.svg)
+![Pumuki](assets/logo.png)
 
 [![npm version](https://img.shields.io/npm/v/pumuki?color=1d4ed8)](https://www.npmjs.com/package/pumuki)
 [![CI](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
@@ -318,3 +318,9 @@ Contributions are welcome. For high-quality collaboration:
 ## License
 
 MIT. See `LICENSE`.
+
+## If Pumuki Helped You
+
+If this project was useful for your team, please consider leaving a GitHub star:
+
+[Star Pumuki on GitHub](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks)
