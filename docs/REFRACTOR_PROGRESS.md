@@ -161,7 +161,20 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - PR `#462` merged (`feature/p4-loop-runner-core` -> `develop`).
   - PR `#463` merged (`develop` -> `main`, merge admin por policy de rama).
   - sincronización final completada con `main` y `develop` alineadas.
-- 🚧 `P4.T9` Standby post-cierre P4 (espera de instrucción explícita para siguiente bloque).
+- ✅ `P4.T9` Release de cierre post-P4 (`v6.3.24`) completado.
+  - bump de versión aplicado:
+    - `package.json` -> `6.3.24`
+    - `VERSION` -> `v6.3.24`
+  - documentación de release actualizada:
+    - `CHANGELOG.md`
+    - `docs/RELEASE_NOTES.md`
+  - validación final en verde:
+    - `npm run typecheck`
+    - `npm test`
+  - publicación npm en verde:
+    - `npm publish --access public`
+    - `npm view pumuki version dist-tags --json` => `latest: 6.3.24`
+- 🚧 `P4.T10` Standby post-release `6.3.24` (espera de instrucción explícita para siguiente bloque).
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

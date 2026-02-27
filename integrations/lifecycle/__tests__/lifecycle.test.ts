@@ -226,7 +226,7 @@ test('runLifecycleRemove purges lifecycle state and requests package uninstall',
     runGit(repo, ['add', 'package.json']);
     runGit(repo, ['commit', '-m', 'test: add dependency']);
 
-    runLifecycleInstall({ cwd: repo });
+    runLifecycleInstall({ cwd: repo, bootstrapOpenSpec: false });
     writeFileSync(join(repo, '.ai_evidence.json'), '{}\n', 'utf8');
 
     const removeResult = runLifecycleRemove({
