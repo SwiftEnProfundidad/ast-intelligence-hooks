@@ -24,6 +24,22 @@ export {
   createHotspotsSaasIngestionIdempotencyKey,
 } from './saasIngestionIdempotency';
 export {
+  applyHotspotsSaasGovernancePrivacy,
+  createHotspotsSaasGovernancePolicy,
+  createHotspotsSaasGovernancePolicyHash,
+  validateHotspotsSaasGovernancePolicy,
+} from './saasIngestionGovernance';
+export {
+  aggregateSaasFederationSignals,
+  buildSaasFederationRiskScores,
+  reconcileSaasFederationSnapshots,
+} from './saasFederation';
+export {
+  buildSaasEnterpriseDistributedReport,
+  buildSaasEnterpriseKpiSnapshot,
+  evaluateSaasEnterpriseAdoptionDecision,
+} from './saasEnterpriseAnalytics';
+export {
   DEFAULT_SAAS_INGESTION_MAX_RETRIES,
   DEFAULT_SAAS_INGESTION_RETRY_BASE_DELAY_MS,
   DEFAULT_SAAS_INGESTION_TIMEOUT_MS,
@@ -99,6 +115,28 @@ export type {
 } from './saasIngestionAuth';
 export type { HotspotsSaasIngestionAuditEvent } from './saasIngestionAudit';
 export type { HotspotsSaasIngestionMetrics } from './saasIngestionMetrics';
+export type {
+  CreateHotspotsSaasGovernancePolicyParams,
+  HotspotsSaasGovernancePolicyV1,
+  HotspotsSaasGovernancePolicyValidationResult,
+} from './saasIngestionGovernance';
+export type {
+  SaasFederationAggregateLimits,
+  SaasFederationAggregateResult,
+  SaasFederationReconciliationIssue,
+  SaasFederationRepositoryAggregate,
+  SaasFederationRiskScore,
+  SaasFederationSignal,
+  SaasFederationSnapshot,
+} from './saasFederation';
+export type {
+  SaasEnterpriseAdoptionDecision,
+  SaasEnterpriseAdoptionThresholds,
+  SaasEnterpriseDistributedReport,
+  SaasEnterpriseKpiInput,
+  SaasEnterpriseKpiSnapshot,
+  SaasEnterpriseUnitReport,
+} from './saasEnterpriseAnalytics';
 export type {
   HotspotsSaasIngestionTransportError,
   HotspotsSaasIngestionTransportErrorCode,
