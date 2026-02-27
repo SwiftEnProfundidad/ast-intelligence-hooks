@@ -60,18 +60,19 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P1.D.T3` Decision `go` para activacion progresiva en modo `shadow` (informativo y opt-in por `PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED`).
 
 ### Fase P2 — No-MVP explícito
-- 🚧 `P2.T1` SaaS multi-tenant de metricas y cumplimiento (epica, backlog activo sin ejecucion en este bloque).
-- ⏳ `P2.A.T1` Definir contrato SaaS multi-tenant (`tenant_id`, `repo_id`, idempotencia, auth).
-- ⏳ `P2.A.T2` Definir pipeline de ingesta remota con retries, timeouts y trazabilidad auditable.
-- ⏳ `P2.A.T3` Definir politicas de aislamiento, retencion y privacidad por tenant.
-- ⏳ `P2.T2` Orquestacion multi-repo/organizacional (epica).
-- ⏳ `P2.B.T1` Definir agregacion de señales cross-repo con limites de cardinalidad.
-- ⏳ `P2.B.T2` Definir scoring federado y priorizacion por riesgo organizacional.
-- ⏳ `P2.B.T3` Definir controles de consistencia y reconciliacion entre repositorios.
-- ⏳ `P2.T3` Analitica avanzada y dashboard enterprise distribuido (epica).
-- ⏳ `P2.C.T1` Definir KPI ejecutivos y tecnicos (precision, drift, lead-time, debt-risk).
-- ⏳ `P2.C.T2` Definir modelo de reportes distribuidos y export enterprise.
-- ⏳ `P2.C.T3` Definir criterios de adopcion gradual por equipos y unidades de negocio.
+- ✅ `P2.T1` SaaS multi-tenant de metricas y cumplimiento definido e implementado con contrato/pipeline/politicas validadas.
+- ✅ `P2.A.T1` Contrato SaaS multi-tenant definido (`saasIngestionContract` + idempotencia + auth scope por tenant/repo).
+- ✅ `P2.A.T2` Pipeline de ingesta remota definido con retries/timeouts/trazabilidad (`saasIngestionTransport` + `saasIngestionAudit` + tests).
+- ✅ `P2.A.T3` Politicas de aislamiento/retencion/privacidad por tenant definidas (`saasIngestionGovernance.ts` + tests).
+- ✅ `P2.T2` Orquestacion multi-repo/organizacional definida e implementada a nivel de agregacion y reconciliacion.
+- ✅ `P2.B.T1` Agregacion cross-repo con limites de cardinalidad definida (`aggregateSaasFederationSignals`).
+- ✅ `P2.B.T2` Scoring federado y priorizacion por riesgo definidos (`buildSaasFederationRiskScores`).
+- ✅ `P2.B.T3` Controles de consistencia y reconciliacion definidos (`reconcileSaasFederationSnapshots`).
+- ✅ `P2.T3` Analitica avanzada enterprise distribuida definida con KPI/reporting/adopcion gradual.
+- ✅ `P2.C.T1` KPI ejecutivos y tecnicos definidos (`buildSaasEnterpriseKpiSnapshot`).
+- ✅ `P2.C.T2` Modelo de reportes distribuidos y export enterprise definido (`buildSaasEnterpriseDistributedReport`).
+- ✅ `P2.C.T3` Criterios de adopcion gradual definidos (`evaluateSaasEnterpriseAdoptionDecision`).
+- ✅ `P2.V.T1` Revalidacion final bloque No-MVP en verde (`npm run test:saas-ingestion` 48/48 + `npm run typecheck`).
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
