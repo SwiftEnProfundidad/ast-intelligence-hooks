@@ -119,8 +119,19 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - PR `#451` (`docs/readme-enterprise-reliability-followup` -> `develop`) merged.
     - PR `#452` (`release/6.3.21` -> `develop`) merged.
     - PR `#453` (`develop` -> `main`) merged.
-- 🚧 `P3.T17` Hotfix visual definitivo de hero + bump `6.3.22` + cierre GitFlow + publicación npm.
-  - objetivo: forzar render full-width estable en GitHub y npm usando asset raster (`assets/logo_banner.png`) y referencia directa en README.
+- ✅ `P3.T17` Hotfix visual definitivo de hero + bump `6.3.22` + cierre GitFlow + publicación npm completados.
+  - render hero estabilizado para npm/GitHub con asset raster (`assets/logo_banner.png`) y referencia directa markdown en `README.md`.
+  - versión publicada: `pumuki@6.3.22`
+  - evidencia npm: `npm publish --access public` en verde; `npm view pumuki version dist-tags --json` => `latest: 6.3.22`
+  - cierre GitFlow:
+    - PR `#456` (`docs/readme-banner-fullwidth-png-6-3-22` -> `develop`) merged.
+    - PR `#457` (`develop` -> `main`) merged.
+  - sincronización final: `main`, `develop`, `origin/main`, `origin/develop` alineadas en `40a6872`.
+- ✅ `P3.T18` Restauración visual del hero al estilo previo estable del grafo y publicación `v6.3.23` completadas.
+  - hero raíz restaurado a imagen clásica full-width: `<img src="assets/logo.png" alt="Pumuki" width="100%" />`.
+  - versión publicada: `pumuki@6.3.23`
+  - evidencia npm: `npm publish --access public` en verde; `npm view pumuki version dist-tags --json` => `latest: 6.3.23`
+- 🚧 `P3.T19` Standby post-release `6.3.23` en espera de validación visual final del usuario.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
