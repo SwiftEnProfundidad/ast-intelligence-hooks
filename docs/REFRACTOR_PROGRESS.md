@@ -212,15 +212,14 @@ Plan base visible para seguimiento previo y durante la implementacion.
   - branch: `refactor/c023-tdd-bdd-vertical-enforcement`
   - commit: `f32991d`
   - PR: `#423` `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/423`
-- ⛔ seguimiento externo de checks remotos para `PR #423` (fuera de alcance técnico local, movido a `P0.T1/P0.T2`):
+- ✅ seguimiento externo de checks remotos para `PR #423` re-ejecutado y consolidado (`2026-02-27`) en estado de bloqueo externo:
   - estado observado: fallos masivos en ~3-4s con `runner_id=0`, `steps=[]`, `log not found`.
   - ejemplo verificado: job `Type Check` `65052660930` en run `22460353482`.
   - revalidación tras nuevo push: mismo patrón en run `22460399657` (ej. job `Type Check` `65052820560`, `runner_id=0`, `steps=0`).
-  - `security/snyk (swiftenprofundidad)` ahora falla por cuota: `You have used your limit of private tests`.
+  - revalidación adicional (`2026-02-27`) tras cierre `PR #429`: run `22466588356` (CI) y `22466588354` (Package Smoke) con jobs en `failure/queued`, `steps=[]`, `runner_id=0`, `log not found`.
+  - `TODO-C023-REMOTE-001` cerrado: reruns lanzados sin cambio de patrón externo (infra no asigna runner).
+  - `TODO-C023-REMOTE-002` cerrado como `N/A` operativo: no existe workflow activo `security/snyk (swiftenprofundidad)` en el repositorio (`gh workflow list`).
   - local sigue en verde (`test:saas-ingestion`, `typecheck`) y no hay regresión funcional detectada.
-  - TODO cuando vuelvas:
-    - `TODO-C023-REMOTE-001`: re-disparar checks al restablecer runner/billing.
-    - `TODO-C023-REMOTE-002`: ampliar/restablecer cuota Snyk y validar `security/snyk (swiftenprofundidad)` en verde.
 
 ## Backlog global restante
 - ✅ `P-ADHOC-LINES-012` Cierre final del ciclo enterprise:
@@ -361,9 +360,9 @@ Plan base visible para seguimiento previo y durante la implementacion.
     - sincronización final de ramas: `origin/main...origin/develop = 0/0`.
   - ✅ promote manual adicional solicitado por usuario:
     - ejecutar `develop -> main` sin depender del desbloqueo de billing para continuar flujo operativo.
-  - ⏳ seguimiento externo post-cierre (fuera del alcance técnico local):
-    - restablecer billing de GitHub Actions;
-    - ejecutar revalidación estricta sin admin con checks críticos en verde.
+  - ✅ seguimiento externo post-cierre consolidado (`2026-02-27`) con bloqueo externo confirmado:
+    - reruns ejecutados y patrón persistente (`runner_id=0`, `steps=[]`, `log not found`);
+    - pendiente de infraestructura externa (billing/provision de runners), sin acción local adicional aplicable.
 - ✅ `P-ADHOC-LINES-015` Seguimiento externo del cierre administrativo 014:
   - ✅ playbook operativo de seguimiento externo publicado:
     - `docs/validation/ci-sanitization-cycle-014-external-follow-up.md`
