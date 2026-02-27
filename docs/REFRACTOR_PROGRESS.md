@@ -127,7 +127,11 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - PR `#456` (`docs/readme-banner-fullwidth-png-6-3-22` -> `develop`) merged.
     - PR `#457` (`develop` -> `main`) merged.
   - sincronización final: `main`, `develop`, `origin/main`, `origin/develop` alineadas en `40a6872`.
-- 🚧 `P3.T18` Standby post-release `6.3.22` en espera de validación visual final del usuario.
+- ✅ `P3.T18` Restauración visual del hero al estilo previo estable del grafo y publicación `v6.3.23` completadas.
+  - hero raíz restaurado a imagen clásica full-width: `<img src="assets/logo.png" alt="Pumuki" width="100%" />`.
+  - versión publicada: `pumuki@6.3.23`
+  - evidencia npm: `npm publish --access public` en verde; `npm view pumuki version dist-tags --json` => `latest: 6.3.23`
+- 🚧 `P3.T19` Standby post-release `6.3.23` en espera de validación visual final del usuario.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

@@ -5,6 +5,12 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-27 (v6.3.23)
+
+- README visual rollback to the previous stable style from git history:
+  - root hero restored to classic logo image at full width:
+    - `<img src="assets/logo.png" alt="Pumuki" width="100%" />`
+
 ### 2026-02-27 (v6.3.22)
 
 - README hero render compatibility fix:
