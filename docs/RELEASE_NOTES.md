@@ -5,6 +5,12 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-27 (v6.3.21)
+
+- README render hardening for npm/GitHub parity:
+  - replaced markdown hero image syntax with explicit HTML image tag:
+    - `<img src="assets/logo_banner.svg" alt="Pumuki" width="100%" />`
+
 ### 2026-02-27 (v6.3.20)
 
 - README visual adjustment:

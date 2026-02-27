@@ -109,7 +109,10 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - PR `#445` (`docs/readme-restore-fullwidth-banner` -> `develop`) merged.
     - PR `#446` (`release/6.3.20` -> `develop`) merged.
     - PR `#447` (`develop` -> `main`) merged.
-- 🚧 `P3.T14` Standby post-release `6.3.20`: esperar nueva instrucción explícita del usuario.
+- ✅ `P3.T14` Standby post-release `6.3.20` cerrado por instrucción explícita del usuario.
+- ✅ `P3.T15` Hardening visual de README aplicado:
+  - hero banner forzado a ancho completo mediante tag HTML con `width="100%"`.
+- 🚧 `P3.T16` Bump `6.3.21` + cierre GitFlow + publicación npm.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

@@ -8,6 +8,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.21] - 2026-02-27
+
+### Changed
+
+- Forced root `README.md` hero banner to explicit full-width rendering using HTML:
+  - `<img src=\"assets/logo_banner.svg\" alt=\"Pumuki\" width=\"100%\" />`
+
 ## [6.3.20] - 2026-02-27
 
 ### Changed
