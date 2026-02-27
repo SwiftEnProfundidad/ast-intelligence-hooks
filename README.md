@@ -1,5 +1,7 @@
 # Pumuki
 
+![Pumuki](assets/logo_banner.svg)
+
 [![npm version](https://img.shields.io/npm/v/pumuki?color=1d4ed8)](https://www.npmjs.com/package/pumuki)
 [![CI](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)
 [![License](https://img.shields.io/badge/license-MIT-16a34a)](LICENSE)
@@ -226,7 +228,31 @@ Important:
 
 ## Menu Walkthrough and Screenshots
 
-Detailed Option 1 walkthrough with captures moved to:
+### Capture 1 — Consumer Menu (v2)
+
+![Consumer Menu v2](assets/readme/menu-option1/01-menu-consumer-v2.png)
+
+### Capture 2 — Option 1 Pre-flight (BLOCK context)
+
+![Option 1 Pre-flight Block](assets/readme/menu-option1/02-option1-preflight-block.png)
+
+### Capture 3 — Option 1 Final Summary (BLOCK)
+
+![Option 1 Final Summary Block](assets/readme/menu-option1/03-option1-final-summary-block.png)
+
+### Capture 4 — Option 1 Pre-flight (PASS scenario)
+
+![Option 1 Pre-flight Pass Scenario](assets/readme/menu-option1/04-option1-preflight-pass.png)
+
+### Capture 5 — Option 1 Final Summary (PASS)
+
+![Option 1 Final Summary Pass](assets/readme/menu-option1/05-option1-final-summary-pass.png)
+
+### Capture 6 — Menu Status After PASS Run
+
+![Menu After Pass Run](assets/readme/menu-option1/06-menu-after-run-pass.png)
+
+Extended annotated walkthrough:
 
 - `docs/README_MENU_WALKTHROUGH.md`
 
