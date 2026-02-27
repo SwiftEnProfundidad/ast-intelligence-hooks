@@ -8,6 +8,39 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.18] - 2026-02-27
+
+### Added
+
+- Added production operations policy document at `docs/OPERATIONS.md` with:
+  - SaaS operation scope
+  - minimum SLO/SLA targets
+  - incident severity and response expectations
+  - alerting baseline and go-live checklist
+- Added dedicated README walkthrough document at `docs/README_MENU_WALKTHROUGH.md` for menu Option 1 captures.
+- Added explicit collaboration section in root `README.md` with contributor expectations and minimum validation commands.
+
+### Changed
+
+- Root `README.md` was rebuilt with enterprise-first structure:
+  - audience split (consumer, maintainers, platform owners)
+  - 5-minute consumer quick start moved to top
+  - framework-only commands separated from consumer commands
+  - troubleshooting expanded with validated failure modes and required flags
+  - documentation index expanded and normalized
+- Updated docs index and usage/install guides to include operations policy and walkthrough references:
+  - `docs/README.md`
+  - `docs/USAGE.md`
+  - `docs/INSTALLATION.md`
+- Validation command documentation now reflects real prerequisites and execution semantics:
+  - required flags for `validation:*` scripts (`--repo`, `--repo-path`, `--skip-workflow-lint`)
+  - non-zero diagnostic verdict behavior documented (`BLOCKED`, `PENDING`, `MISSING_INPUTS`).
+
+### Fixed
+
+- Corrected legacy parity report command syntax in docs to required `--legacy=<path>` and `--enterprise=<path>` argument format.
+- Corrected custom skills import documentation to use real absolute `SKILL.md` source paths instead of placeholder pseudo-paths.
+
 ## [6.3.17] - 2026-02-20
 
 ### Added

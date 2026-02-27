@@ -3,6 +3,12 @@
 This guide describes the deterministic gate flow implemented in this repository.
 From v2.x, SDD with OpenSpec is mandatory for enterprise gate execution.
 
+Production operations baseline (SLA/SLO, incident response and alerting):
+- `docs/OPERATIONS.md`
+
+Visual walkthrough for menu Option 1 captures:
+- `docs/README_MENU_WALKTHROUGH.md`
+
 ## Prerequisites
 
 - Node.js `>=18`
