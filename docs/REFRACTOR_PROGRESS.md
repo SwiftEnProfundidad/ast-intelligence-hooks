@@ -82,7 +82,11 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - versión publicada: `pumuki@6.3.18`
   - evidencia local: `npm publish --access public` en verde; `npm view pumuki dist-tags` => `latest: 6.3.18`
   - validación release: `npm run typecheck`, `npm run test:operational-memory` (`70/70`), `npm run test:saas-ingestion` (`48/48`)
-- 🚧 `P3.T5` Cierre GitFlow end-to-end de release `6.3.18` (branch -> PR -> merge a `develop` y `main` + sincronización) en ejecución.
+- ✅ `P3.T5` Cierre GitFlow end-to-end de release `6.3.18` completado.
+  - PR `#432` (`docs/readme-enterprise-release-6-3-18` -> `develop`) merged.
+  - PR `#433` (`develop` -> `main`) merged.
+  - sincronización final: `main`, `develop`, `origin/main`, `origin/develop` alineadas.
+- 🚧 `P3.T6` Standby post-release: esperar nueva instrucción explícita del usuario.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
