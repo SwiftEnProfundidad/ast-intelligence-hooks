@@ -8,6 +8,14 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.23] - 2026-02-27
+
+### Changed
+
+- Restored README hero behavior to the prior full-width classic brand rendering:
+  - `<img src="assets/logo.png" alt="Pumuki" width="100%" />`
+- Keeps a deterministic, simple image path for npm and GitHub renderers.
+
 ## [6.3.22] - 2026-02-27
 
 ### Changed
