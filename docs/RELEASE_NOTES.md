@@ -5,6 +5,19 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-27 (v6.3.24)
+
+- Lifecycle loop runner (local deterministic mode):
+  - Added `pumuki loop` command surface (`run/status/stop/resume/list/export`).
+  - Added session contract + store for deterministic state transitions and persistence.
+- Gate integration:
+  - `loop run` now executes one strict fail-fast gate attempt on `workingTree`.
+  - Per-attempt evidence is emitted to `.pumuki/loop-sessions/<session-id>.attempt-<n>.json`.
+- Stability and governance:
+  - Fixed time-based flake in waiver enforcement test by using stable future expiry.
+  - Synced `VERSION` to package release line.
+  - Documentation updated in `README.md` and `docs/USAGE.md`.
+
 ### 2026-02-27 (v6.3.23)
 
 - README visual rollback to the previous stable style from git history:
