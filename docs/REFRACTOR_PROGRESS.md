@@ -74,7 +74,7 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P2.C.T3` Criterios de adopcion gradual definidos (`evaluateSaasEnterpriseAdoptionDecision`).
 - ✅ `P2.V.T1` Revalidacion final bloque No-MVP en verde (`npm run test:saas-ingestion` 48/48 + `npm run typecheck`).
 
-### Fase P3 — Release documental + npm (`v6.3.19`)
+### Fase P3 — Release documental + npm (`v6.3.20`)
 - ✅ `P3.T1` Auditoría end-to-end de comandos documentados en README ejecutada (consumer + framework + validaciones) con hallazgos de prerequisitos y sintaxis.
 - ✅ `P3.T2` Reestructuración enterprise de README completada (audiencia por perfil, quick-start-first, separación consumer/framework, troubleshooting y colaboración).
 - ✅ `P3.T3` Consolidación documental estable completada (`docs/OPERATIONS.md`, `docs/README_MENU_WALKTHROUGH.md`, `docs/README.md`, `docs/USAGE.md`, `docs/INSTALLATION.md`, `docs/RELEASE_NOTES.md`, `CHANGELOG.md`).
@@ -99,7 +99,10 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - PR `#438` (`docs/readme-logo-star-reminder` -> `develop`) merged.
     - PR `#439` (`release/6.3.19` -> `develop`) merged.
     - PR `#440` (`develop` -> `main`) merged.
-- 🚧 `P3.T11` Standby post-release `6.3.19`: esperar nueva instrucción explícita del usuario.
+- ✅ `P3.T11` Standby post-release `6.3.19` cerrado por instrucción explícita del usuario.
+- ✅ `P3.T12` Ajuste visual de README aplicado:
+  - hero banner restaurado en ancho completo (`assets/logo_banner.svg`).
+- 🚧 `P3.T13` Bump `6.3.20` + cierre GitFlow + publicación npm.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

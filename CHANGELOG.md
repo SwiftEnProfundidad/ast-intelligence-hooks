@@ -8,6 +8,12 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.20] - 2026-02-27
+
+### Changed
+
+- Restored root `README.md` hero image to full-width banner rendering (`assets/logo_banner.svg`).
+
 ## [6.3.19] - 2026-02-27
 
 ### Changed
