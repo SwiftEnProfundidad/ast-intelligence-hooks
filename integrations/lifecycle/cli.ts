@@ -1,5 +1,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
+import type { GatePolicy } from '../../core/gate/GatePolicy';
+import { runPlatformGate } from '../git/runPlatformGate';
 import { runLifecycleDoctor, type LifecycleDoctorReport } from './doctor';
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
@@ -7,6 +9,13 @@ import { readLifecycleStatus } from './status';
 import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
 import { runLifecycleAdapterInstall, type AdapterAgent } from './adapter';
+import { createLoopSessionContract, isLoopSessionTransitionAllowed } from './loopSessionContract';
+import {
+  createLoopSession,
+  listLoopSessions,
+  readLoopSession,
+  updateLoopSession,
+} from './loopSessionStore';
 import {
   closeSddSession,
   evaluateSddPolicy,
@@ -34,11 +43,13 @@ type LifecycleCommand =
   | 'update'
   | 'doctor'
   | 'status'
+  | 'loop'
   | 'sdd'
   | 'adapter'
   | 'analytics';
 
 type SddCommand = 'status' | 'validate' | 'session';
+type LoopCommand = 'run' | 'status' | 'stop' | 'resume' | 'list' | 'export';
 type AnalyticsCommand = 'hotspots';
 type AnalyticsHotspotsCommand = 'report' | 'diagnose';
 
@@ -50,6 +61,11 @@ type ParsedArgs = {
   updateSpec?: string;
   json: boolean;
   sddCommand?: SddCommand;
+  loopCommand?: LoopCommand;
+  loopSessionId?: string;
+  loopObjective?: string;
+  loopMaxAttempts?: number;
+  loopOutputJsonPath?: string;
   sddStage?: SddStage;
   sddSessionAction?: SddSessionAction;
   sddChangeId?: string;
@@ -73,6 +89,12 @@ Pumuki lifecycle commands:
   pumuki update [--latest|--spec=<package-spec>]
   pumuki doctor
   pumuki status
+  pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
+  pumuki loop status --session=<session-id> [--json]
+  pumuki loop stop --session=<session-id> [--json]
+  pumuki loop resume --session=<session-id> [--json]
+  pumuki loop list [--json]
+  pumuki loop export --session=<session-id> [--output-json=<path>] [--json]
   pumuki adapter install --agent=<name> [--dry-run] [--json]
   pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
   pumuki analytics hotspots diagnose [--json]
@@ -82,6 +104,12 @@ Pumuki lifecycle commands:
   pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
   pumuki sdd session --close [--json]
 `.trim();
+
+const LOOP_RUN_POLICY: GatePolicy = {
+  stage: 'STAGED',
+  blockOnOrAbove: 'ERROR',
+  warnOnOrAbove: 'WARN',
+};
 
 const writeInfo = (message: string): void => {
   process.stdout.write(`${message}\n`);
@@ -105,6 +133,7 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'update' ||
   value === 'doctor' ||
   value === 'status' ||
+  value === 'loop' ||
   value === 'sdd' ||
   value === 'adapter' ||
   value === 'analytics';
@@ -361,6 +390,11 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let updateSpec: ParsedArgs['updateSpec'];
   let json = false;
   let sddCommand: ParsedArgs['sddCommand'];
+  let loopCommand: ParsedArgs['loopCommand'];
+  let loopSessionId: ParsedArgs['loopSessionId'];
+  let loopObjective: ParsedArgs['loopObjective'];
+  let loopMaxAttempts: ParsedArgs['loopMaxAttempts'];
+  let loopOutputJsonPath: ParsedArgs['loopOutputJsonPath'];
   let sddStage: ParsedArgs['sddStage'];
   let sddSessionAction: ParsedArgs['sddSessionAction'];
   let sddChangeId: ParsedArgs['sddChangeId'];
@@ -445,6 +479,96 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       }
     }
     return parsedAnalyticsArgs;
+  }
+
+  if (commandRaw === 'loop') {
+    const subcommandRaw = argv[1] ?? '';
+    if (
+      subcommandRaw !== 'run' &&
+      subcommandRaw !== 'status' &&
+      subcommandRaw !== 'stop' &&
+      subcommandRaw !== 'resume' &&
+      subcommandRaw !== 'list' &&
+      subcommandRaw !== 'export'
+    ) {
+      throw new Error(`Unsupported loop subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
+    }
+    loopCommand = subcommandRaw;
+    for (const arg of argv.slice(2)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      if (arg.startsWith('--session=')) {
+        loopSessionId = arg.slice('--session='.length).trim();
+        continue;
+      }
+      if (arg.startsWith('--objective=')) {
+        loopObjective = arg.slice('--objective='.length).trim();
+        continue;
+      }
+      if (arg.startsWith('--max-attempts=')) {
+        const parsedAttempts = Number.parseInt(arg.slice('--max-attempts='.length), 10);
+        if (!Number.isInteger(parsedAttempts) || parsedAttempts <= 0) {
+          throw new Error(`Invalid --max-attempts value "${arg}".`);
+        }
+        loopMaxAttempts = parsedAttempts;
+        continue;
+      }
+      if (arg.startsWith('--output-json=')) {
+        loopOutputJsonPath = parseOutputPathFlag(
+          arg.slice('--output-json='.length),
+          '--output-json'
+        );
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+
+    if (loopCommand === 'run') {
+      if (!loopObjective || loopObjective.length === 0) {
+        throw new Error(`Missing --objective=<text> for "pumuki loop run".\n\n${HELP_TEXT}`);
+      }
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        loopCommand,
+        loopObjective,
+        loopMaxAttempts: loopMaxAttempts ?? 3,
+      };
+    }
+    if (loopCommand === 'list') {
+      if (loopSessionId || loopObjective || typeof loopMaxAttempts === 'number' || loopOutputJsonPath) {
+        throw new Error(`"pumuki loop list" only supports [--json].\n\n${HELP_TEXT}`);
+      }
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        loopCommand,
+      };
+    }
+    if (!loopSessionId || loopSessionId.length === 0) {
+      throw new Error(`Missing --session=<session-id> for "pumuki loop ${loopCommand}".\n\n${HELP_TEXT}`);
+    }
+    if (loopObjective || typeof loopMaxAttempts === 'number') {
+      throw new Error(`Unsupported run-only flags for "pumuki loop ${loopCommand}".\n\n${HELP_TEXT}`);
+    }
+    if (loopCommand !== 'export' && loopOutputJsonPath) {
+      throw new Error(`--output-json is only supported with "pumuki loop export".\n\n${HELP_TEXT}`);
+    }
+    const parsedLoopArgs: ParsedArgs = {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      loopCommand,
+      loopSessionId,
+    };
+    if (loopOutputJsonPath) {
+      parsedLoopArgs.loopOutputJsonPath = loopOutputJsonPath;
+    }
+    return parsedLoopArgs;
   }
 
   if (commandRaw === 'sdd') {
@@ -637,10 +761,12 @@ type PreWriteValidationEnvelope = {
 
 type LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
+  runPlatformGate: typeof runPlatformGate;
 };
 
 const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
+  runPlatformGate,
 };
 
 const resolveSddDecisionLocation = (
@@ -692,6 +818,29 @@ const buildPreWriteValidationEnvelope = (
     mcp_tool: 'ai_gate_check',
   },
 });
+
+const writeLoopAttemptEvidence = (params: {
+  repoRoot: string;
+  sessionId: string;
+  attempt: number;
+  payload: {
+    session_id: string;
+    attempt: number;
+    started_at: string;
+    finished_at: string;
+    gate_exit_code: number;
+    gate_allowed: boolean;
+    gate_code: string;
+    policy: GatePolicy;
+    scope: 'workingTree';
+  };
+}): string => {
+  const relativePath = `.pumuki/loop-sessions/${params.sessionId}.attempt-${params.attempt}.json`;
+  const absolutePath = resolve(params.repoRoot, relativePath);
+  mkdirSync(dirname(absolutePath), { recursive: true });
+  writeFileSync(absolutePath, `${JSON.stringify(params.payload, null, 2)}\n`, 'utf8');
+  return relativePath;
+};
 
 export const runLifecycleCli = async (
   argv: ReadonlyArray<string>,
@@ -775,6 +924,173 @@ export const runLifecycleCli = async (
           );
           writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
+          );
+        }
+        return 0;
+      }
+      case 'loop': {
+        const repoRoot = process.cwd();
+        if (parsed.loopCommand === 'run') {
+          const session = createLoopSessionContract({
+            objective: parsed.loopObjective ?? '',
+            maxAttempts: parsed.loopMaxAttempts ?? 3,
+          });
+          createLoopSession({
+            repoRoot,
+            session,
+          });
+          const attemptNumber = session.current_attempt + 1;
+          const startedAt = new Date().toISOString();
+          const gateExitCode = await activeDependencies.runPlatformGate({
+            policy: LOOP_RUN_POLICY,
+            scope: {
+              kind: 'workingTree',
+            },
+            auditMode: 'engine',
+          });
+          const finishedAt = new Date().toISOString();
+          const gateAllowed = gateExitCode === 0;
+          const gateCode = gateAllowed ? 'ALLOW' : 'BLOCK';
+          const evidencePath = writeLoopAttemptEvidence({
+            repoRoot,
+            sessionId: session.session_id,
+            attempt: attemptNumber,
+            payload: {
+              session_id: session.session_id,
+              attempt: attemptNumber,
+              started_at: startedAt,
+              finished_at: finishedAt,
+              gate_exit_code: gateExitCode,
+              gate_allowed: gateAllowed,
+              gate_code: gateCode,
+              policy: LOOP_RUN_POLICY,
+              scope: 'workingTree',
+            },
+          });
+          const updatedSession: typeof session = {
+            ...session,
+            status: gateAllowed ? 'running' : 'blocked',
+            updated_at: finishedAt,
+            current_attempt: attemptNumber,
+            attempts: [
+              ...session.attempts,
+              {
+                attempt: attemptNumber,
+                started_at: startedAt,
+                finished_at: finishedAt,
+                outcome: gateAllowed ? 'pass' : 'block',
+                gate_allowed: gateAllowed,
+                gate_code: gateCode,
+                evidence_path: evidencePath,
+              },
+            ],
+          };
+          updateLoopSession({
+            repoRoot,
+            session: updatedSession,
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(updatedSession, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][loop] session created: id=${updatedSession.session_id} status=${updatedSession.status} attempt=${updatedSession.current_attempt}/${updatedSession.max_attempts}`
+            );
+            writeInfo(
+              `[pumuki][loop] attempt #${attemptNumber} gate=${gateCode} evidence=${evidencePath}`
+            );
+          }
+          return gateAllowed ? 0 : 1;
+        }
+        if (parsed.loopCommand === 'list') {
+          const sessions = listLoopSessions(repoRoot);
+          if (parsed.json) {
+            writeInfo(JSON.stringify(sessions, null, 2));
+          } else {
+            writeInfo(`[pumuki][loop] sessions=${sessions.length}`);
+            for (const session of sessions) {
+              writeInfo(
+                `[pumuki][loop] ${session.session_id} status=${session.status} attempt=${session.current_attempt}/${session.max_attempts} updated_at=${session.updated_at}`
+              );
+            }
+          }
+          return 0;
+        }
+
+        const sessionRead = readLoopSession({
+          repoRoot,
+          sessionId: parsed.loopSessionId ?? '',
+        });
+        if (sessionRead.kind === 'missing') {
+          writeError(`[pumuki][loop] session not found: ${parsed.loopSessionId}`);
+          return 1;
+        }
+        if (sessionRead.kind === 'invalid') {
+          writeError(
+            `[pumuki][loop] invalid session "${parsed.loopSessionId}": ${sessionRead.reason}`
+          );
+          return 1;
+        }
+        if (parsed.loopCommand === 'status') {
+          if (parsed.json) {
+            writeInfo(JSON.stringify(sessionRead.session, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][loop] ${sessionRead.session.session_id} status=${sessionRead.session.status} attempt=${sessionRead.session.current_attempt}/${sessionRead.session.max_attempts} updated_at=${sessionRead.session.updated_at}`
+            );
+          }
+          return 0;
+        }
+        if (parsed.loopCommand === 'export') {
+          const outputPath = toLocalOutputAbsolutePath(
+            repoRoot,
+            parsed.loopOutputJsonPath ??
+              `.audit-reports/loop-session-${sessionRead.session.session_id}.json`
+          );
+          mkdirSync(dirname(outputPath), { recursive: true });
+          writeFileSync(outputPath, `${JSON.stringify(sessionRead.session, null, 2)}\n`, 'utf8');
+          if (parsed.json) {
+            writeInfo(
+              JSON.stringify(
+                {
+                  session_id: sessionRead.session.session_id,
+                  output_json: parsed.loopOutputJsonPath ??
+                    `.audit-reports/loop-session-${sessionRead.session.session_id}.json`,
+                },
+                null,
+                2
+              )
+            );
+          } else {
+            writeInfo(
+              `[pumuki][loop] export completed: session=${sessionRead.session.session_id} path=${parsed.loopOutputJsonPath ??
+                `.audit-reports/loop-session-${sessionRead.session.session_id}.json`}`
+            );
+          }
+          return 0;
+        }
+
+        const nextStatus: 'stopped' | 'running' =
+          parsed.loopCommand === 'stop' ? 'stopped' : 'running';
+        if (!isLoopSessionTransitionAllowed(sessionRead.session.status, nextStatus)) {
+          writeError(
+            `[pumuki][loop] invalid transition ${sessionRead.session.status} -> ${nextStatus} for ${sessionRead.session.session_id}`
+          );
+          return 1;
+        }
+        const updated: typeof sessionRead.session = {
+          ...sessionRead.session,
+          status: nextStatus,
+          updated_at: new Date().toISOString(),
+        };
+        updateLoopSession({
+          repoRoot,
+          session: updated,
+        });
+        if (parsed.json) {
+          writeInfo(JSON.stringify(updated, null, 2));
+        } else {
+          writeInfo(
+            `[pumuki][loop] session ${updated.session_id} status=${updated.status}`
           );
         }
         return 0;

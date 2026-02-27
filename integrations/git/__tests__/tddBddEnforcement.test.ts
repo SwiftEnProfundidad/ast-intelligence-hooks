@@ -177,7 +177,7 @@ test('enforceTddBddPolicy aplica waiver auditable con un aprobador y no bloquea'
               reason: 'incident hotfix',
               approved_by: 'tech-lead',
               approved_at: '2026-02-26T10:00:00.000Z',
-              expires_at: '2026-02-27T10:00:00.000Z',
+              expires_at: '2099-12-31T23:59:59.000Z',
             },
           ],
         },

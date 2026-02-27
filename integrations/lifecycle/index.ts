@@ -74,6 +74,20 @@ export {
   appendOperationalMemorySnapshotFromLocalSignals,
   resolveOperationalMemorySnapshotsPath,
 } from './operationalMemorySnapshot';
+export {
+  createLoopSessionContract,
+  createLoopSessionId,
+  isLoopSessionTransitionAllowed,
+  parseLoopSessionContract,
+} from './loopSessionContract';
+export {
+  createLoopSession,
+  listLoopSessions,
+  readLoopSession,
+  resolveLoopSessionPath,
+  resolveLoopSessionsDirectory,
+  updateLoopSession,
+} from './loopSessionStore';
 export type {
   CreateHotspotsSaasIngestionPayloadParams,
   HotspotsSaasIngestionPayloadBodyCompat,
@@ -107,6 +121,20 @@ export type {
   AppendOperationalMemorySnapshotFromLocalSignalsResult,
   OperationalMemorySnapshotV1,
 } from './operationalMemorySnapshot';
+export type {
+  CreateLoopSessionContractParams,
+  LoopSessionAttemptOutcome,
+  LoopSessionAttemptV1,
+  LoopSessionContractV1,
+  LoopSessionStatus,
+  ParseLoopSessionContractResult,
+} from './loopSessionContract';
+export type {
+  ReadLoopSessionParams,
+  ReadLoopSessionResult,
+  UpsertLoopSessionParams,
+  WriteLoopSessionResult,
+} from './loopSessionStore';
 export type { BuildHotspotsSaasIngestionPayloadFromLocalParams } from './saasIngestionBuilder';
 export type {
   HotspotsSaasIngestionAuthPolicy,

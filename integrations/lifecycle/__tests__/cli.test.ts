@@ -188,6 +188,49 @@ test('parseLifecycleCliArgs soporta exportes locales json/markdown para hotspots
   );
 });
 
+test('parseLifecycleCliArgs soporta subcomandos loop', () => {
+  assert.deepEqual(
+    parseLifecycleCliArgs(['loop', 'run', '--objective=stabilize loop runner', '--max-attempts=4']),
+    {
+      command: 'loop',
+      purgeArtifacts: false,
+      json: false,
+      loopCommand: 'run',
+      loopObjective: 'stabilize loop runner',
+      loopMaxAttempts: 4,
+    }
+  );
+  assert.deepEqual(parseLifecycleCliArgs(['loop', 'status', '--session=loop-001', '--json']), {
+    command: 'loop',
+    purgeArtifacts: false,
+    json: true,
+    loopCommand: 'status',
+    loopSessionId: 'loop-001',
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['loop', 'list', '--json']), {
+    command: 'loop',
+    purgeArtifacts: false,
+    json: true,
+    loopCommand: 'list',
+  });
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'loop',
+      'export',
+      '--session=loop-001',
+      '--output-json=.audit-reports/loop-001.json',
+    ]),
+    {
+      command: 'loop',
+      purgeArtifacts: false,
+      json: false,
+      loopCommand: 'export',
+      loopSessionId: 'loop-001',
+      loopOutputJsonPath: '.audit-reports/loop-001.json',
+    }
+  );
+});
+
 test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () => {
   assert.throws(() => parseLifecycleCliArgs([]), /Pumuki lifecycle commands/i);
   assert.throws(() => parseLifecycleCliArgs(['-h']), /Pumuki lifecycle commands/i);
@@ -200,6 +243,14 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['analytics', 'hotspots', 'diagnose', '--top=1']),
     /Unsupported argument/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['loop', 'run']),
+    /Missing --objective/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['loop', 'status']),
+    /Missing --session/i
   );
   assert.throws(
     () => parseLifecycleCliArgs(['install', '--bad-flag']),
@@ -474,6 +525,134 @@ test('runLifecycleCli analytics hotspots diagnose genera diagnóstico y métrica
     assert.equal(diagnostics.metrics?.snapshot?.totals?.success, 1);
     assert.equal(diagnostics.metrics?.snapshot?.totals?.error, 0);
     assert.equal(existsSync(resolveHotspotsSaasIngestionMetricsPath(repo)), true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli loop run/status/list/stop/resume/export opera sobre store local', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const runCode = await runLifecycleCli([
+      'loop',
+      'run',
+      '--objective=validate gate in loop mode',
+      '--max-attempts=3',
+      '--json',
+    ], {
+      runPlatformGate: async () => 0,
+    });
+    assert.equal(runCode, 0);
+    const runPayload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      session_id?: string;
+      status?: string;
+      current_attempt?: number;
+      attempts?: Array<{ outcome?: string; evidence_path?: string }>;
+    };
+    assert.equal(runPayload.status, 'running');
+    assert.equal(runPayload.current_attempt, 1);
+    assert.equal(runPayload.attempts?.[0]?.outcome, 'pass');
+    assert.match(runPayload.attempts?.[0]?.evidence_path ?? '', /\.attempt-1\.json$/);
+    assert.equal(typeof runPayload.session_id, 'string');
+    const sessionId = runPayload.session_id ?? '';
+
+    const statusCode = await runLifecycleCli(['loop', 'status', `--session=${sessionId}`, '--json']);
+    assert.equal(statusCode, 0);
+    const statusPayload = JSON.parse(printed[printed.length - 1] ?? '{}') as { session_id?: string };
+    assert.equal(statusPayload.session_id, sessionId);
+
+    const listCode = await runLifecycleCli(['loop', 'list', '--json']);
+    assert.equal(listCode, 0);
+    const listPayload = JSON.parse(printed[printed.length - 1] ?? '[]') as Array<{ session_id?: string }>;
+    assert.equal(Array.isArray(listPayload), true);
+    assert.equal(listPayload.some((item) => item.session_id === sessionId), true);
+
+    const stopCode = await runLifecycleCli(['loop', 'stop', `--session=${sessionId}`, '--json']);
+    assert.equal(stopCode, 0);
+    const stopPayload = JSON.parse(printed[printed.length - 1] ?? '{}') as { status?: string };
+    assert.equal(stopPayload.status, 'stopped');
+
+    const resumeCode = await runLifecycleCli(['loop', 'resume', `--session=${sessionId}`, '--json']);
+    assert.equal(resumeCode, 0);
+    const resumePayload = JSON.parse(printed[printed.length - 1] ?? '{}') as { status?: string };
+    assert.equal(resumePayload.status, 'running');
+
+    const exportCode = await runLifecycleCli([
+      'loop',
+      'export',
+      `--session=${sessionId}`,
+      '--output-json=.audit-reports/loop-export.json',
+    ]);
+    assert.equal(exportCode, 0);
+    assert.equal(existsSync(join(repo, '.audit-reports', 'loop-export.json')), true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli loop run aplica fail-fast cuando gate bloquea y deja evidencia por intento', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const runCode = await runLifecycleCli([
+      'loop',
+      'run',
+      '--objective=fail fast smoke',
+      '--max-attempts=2',
+      '--json',
+    ], {
+      runPlatformGate: async () => 1,
+    });
+    assert.equal(runCode, 1);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      session_id?: string;
+      status?: string;
+      current_attempt?: number;
+      attempts?: Array<{ outcome?: string; gate_allowed?: boolean; evidence_path?: string }>;
+    };
+    assert.equal(payload.status, 'blocked');
+    assert.equal(payload.current_attempt, 1);
+    assert.equal(payload.attempts?.[0]?.outcome, 'block');
+    assert.equal(payload.attempts?.[0]?.gate_allowed, false);
+    assert.equal(typeof payload.session_id, 'string');
+    const evidencePath = payload.attempts?.[0]?.evidence_path ?? '';
+    assert.match(evidencePath, /\.attempt-1\.json$/);
+    assert.equal(existsSync(join(repo, evidencePath)), true);
+
+    const statusCode = await runLifecycleCli([
+      'loop',
+      'status',
+      `--session=${payload.session_id ?? ''}`,
+      '--json',
+    ]);
+    assert.equal(statusCode, 0);
+    const statusPayload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      status?: string;
+    };
+    assert.equal(statusPayload.status, 'blocked');
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
