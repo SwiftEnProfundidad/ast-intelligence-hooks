@@ -8,6 +8,36 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.24] - 2026-02-27
+
+### Added
+
+- New deterministic local loop runner workflow in lifecycle CLI:
+  - `pumuki loop run --objective=<text> [--max-attempts=<n>]`
+  - `pumuki loop status --session=<id>`
+  - `pumuki loop stop --session=<id>`
+  - `pumuki loop resume --session=<id>`
+  - `pumuki loop list`
+  - `pumuki loop export --session=<id> --output-json=<path>`
+- Session contract and local deterministic store for loop execution:
+  - `integrations/lifecycle/loopSessionContract.ts`
+  - `integrations/lifecycle/loopSessionStore.ts`
+- Per-attempt loop evidence snapshots:
+  - `.pumuki/loop-sessions/<session-id>.attempt-<n>.json`
+
+### Changed
+
+- `pumuki loop run` now executes one strict fail-fast gate attempt (`workingTree` scope) and persists outcome/evidence atomically.
+- Documentation updated with loop commands and runtime semantics:
+  - `README.md`
+  - `docs/USAGE.md`
+
+### Fixed
+
+- Stabilized waiver test against clock drift by using a future deterministic expiry in:
+  - `integrations/git/__tests__/tddBddEnforcement.test.ts`
+- Aligned `VERSION` file with active package line (`v6.3.24`).
+
 ## [6.3.23] - 2026-02-27
 
 ### Changed
