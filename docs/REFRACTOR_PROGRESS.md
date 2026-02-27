@@ -86,7 +86,9 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - PR `#432` (`docs/readme-enterprise-release-6-3-18` -> `develop`) merged.
   - PR `#433` (`develop` -> `main`) merged.
   - sincronización final: `main`, `develop`, `origin/main`, `origin/develop` alineadas.
-- 🚧 `P3.T6` Standby post-release: esperar nueva instrucción explícita del usuario.
+- ✅ `P3.T6` Standby post-release atendido por instrucción explícita del usuario.
+- ✅ `P3.T7` Restauración de capturas en README raíz completada (`assets/readme/menu-option1/01..06` visibles en portada).
+- 🚧 `P3.T8` Standby post-hotfix: esperar nueva instrucción explícita del usuario.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
