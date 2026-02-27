@@ -5,6 +5,11 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-27 (v6.3.20)
+
+- README visual adjustment:
+  - restored full-width hero banner in root `README.md` (`assets/logo_banner.svg`).
+
 ### 2026-02-27 (v6.3.19)
 
 - README visual hotfix:
