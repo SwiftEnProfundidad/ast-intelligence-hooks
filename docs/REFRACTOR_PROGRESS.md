@@ -74,6 +74,16 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P2.C.T3` Criterios de adopcion gradual definidos (`evaluateSaasEnterpriseAdoptionDecision`).
 - ✅ `P2.V.T1` Revalidacion final bloque No-MVP en verde (`npm run test:saas-ingestion` 48/48 + `npm run typecheck`).
 
+### Fase P3 — Release documental + npm (`v6.3.18`)
+- ✅ `P3.T1` Auditoría end-to-end de comandos documentados en README ejecutada (consumer + framework + validaciones) con hallazgos de prerequisitos y sintaxis.
+- ✅ `P3.T2` Reestructuración enterprise de README completada (audiencia por perfil, quick-start-first, separación consumer/framework, troubleshooting y colaboración).
+- ✅ `P3.T3` Consolidación documental estable completada (`docs/OPERATIONS.md`, `docs/README_MENU_WALKTHROUGH.md`, `docs/README.md`, `docs/USAGE.md`, `docs/INSTALLATION.md`, `docs/RELEASE_NOTES.md`, `CHANGELOG.md`).
+- ✅ `P3.T4` Bump de versión + validación + publicación npm completados.
+  - versión publicada: `pumuki@6.3.18`
+  - evidencia local: `npm publish --access public` en verde; `npm view pumuki dist-tags` => `latest: 6.3.18`
+  - validación release: `npm run typecheck`, `npm run test:operational-memory` (`70/70`), `npm run test:saas-ingestion` (`48/48`)
+- 🚧 `P3.T5` Cierre GitFlow end-to-end de release `6.3.18` (branch -> PR -> merge a `develop` y `main` + sincronización) en ejecución.
+
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
 

@@ -5,6 +5,28 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-27 (v6.3.18)
+
+- Enterprise documentation baseline refresh:
+  - Root `README.md` rewritten with audience segmentation and quick-start-first onboarding.
+  - Consumer vs framework-maintainer command surfaces are now explicitly separated.
+  - Added collaboration and support/security guidance sections.
+- New stable operations policy:
+  - `docs/OPERATIONS.md` introduces SaaS production operation baseline:
+    - SLO/SLA minimums
+    - incident severity and response windows
+    - alerting thresholds and mandatory operational controls
+    - go-live and rollback requirements
+- README walkthrough extraction:
+  - detailed menu Option 1 capture narrative moved to `docs/README_MENU_WALKTHROUGH.md`.
+  - root README now remains concise while preserving deep visual guidance by reference.
+- Command documentation hardening from end-to-end execution audit:
+  - fixed legacy parity command argument format to `--legacy=<path> --enterprise=<path>`.
+  - documented required flags and expected non-zero verdict semantics for `validation:*` scripts.
+  - documented OpenSpec/SDD session prerequisites (`openspec/changes/<change-id>` required before `sdd session --open`).
+- Documentation index alignment:
+  - `docs/README.md`, `docs/USAGE.md`, and `docs/INSTALLATION.md` updated to include operations and walkthrough references.
+
 ### 2026-02-20 (v6.3.17)
 
 - Evidence and hard-mode state:

@@ -20,12 +20,14 @@ Canonical index for active Pumuki documentation.
 
 - `docs/INSTALLATION.md`: installation and bootstrap guidance.
 - `docs/USAGE.md`: day-to-day usage.
+- `docs/OPERATIONS.md`: production operations baseline (SLA/SLO, incident severity, alerts).
 - `docs/CONFIGURATION.md`: runtime and repository configuration.
 - `docs/CODE_STANDARDS.md`: coding standards for framework contributors.
 - `docs/CONTRIBUTING.md`: contribution workflow.
 - `docs/DEPENDENCIES.md`: dependency policy and maintenance.
 - `docs/TESTING.md`: test strategy and validation commands.
 - `docs/BRANCH_PROTECTION_GUIDE.md`: branch protection baseline.
+- `docs/README_MENU_WALKTHROUGH.md`: visual walkthrough of menu Option 1 flow.
 
 ## Evidence and MCP
 
@@ -66,6 +68,7 @@ Canonical index for active Pumuki documentation.
 ## Releases
 
 - `docs/RELEASE_NOTES.md`
+- `CHANGELOG.md`
 
 ## Root-Level Governance Docs
 

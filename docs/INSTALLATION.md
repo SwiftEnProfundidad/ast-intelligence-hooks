@@ -3,6 +3,9 @@
 This guide covers the active setup for the deterministic framework implementation in this repository.
 From v2.x, SDD with OpenSpec is part of the default enterprise installation path.
 
+For production SaaS operation requirements (SLO/SLA, incident model, alerting), see:
+- `docs/OPERATIONS.md`
+
 ## Prerequisites
 
 - Node.js `>=18`
