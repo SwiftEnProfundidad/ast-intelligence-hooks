@@ -1,6 +1,6 @@
 {
   "name": "pumuki",
-  "version": "6.3.20",
+  "version": "6.3.21",
   "description": "Enterprise-grade AST Intelligence System with multi-platform support (iOS, Android, Backend, Frontend) and Feature-First + DDD + Clean Architecture enforcement. Includes dynamic violations API for intelligent querying.",
   "main": "index.js",
   "bin": {
