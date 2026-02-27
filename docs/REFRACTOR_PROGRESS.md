@@ -92,7 +92,14 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P3.T9` Hotfix visual de README aplicado:
   - logo clásico restaurado en portada (`assets/logo.png`).
   - bloque amable de estrella añadido al final del README raíz.
-- 🚧 `P3.T10` Bump `6.3.19` + cierre GitFlow + publicación npm.
+- ✅ `P3.T10` Bump `6.3.19` + cierre GitFlow + publicación npm completados.
+  - versión publicada: `pumuki@6.3.19`
+  - evidencia npm: `npm publish --access public` en verde; `npm view pumuki dist-tags` => `latest: 6.3.19`
+  - cierre GitFlow:
+    - PR `#438` (`docs/readme-logo-star-reminder` -> `develop`) merged.
+    - PR `#439` (`release/6.3.19` -> `develop`) merged.
+    - PR `#440` (`develop` -> `main`) merged.
+- 🚧 `P3.T11` Standby post-release `6.3.19`: esperar nueva instrucción explícita del usuario.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
