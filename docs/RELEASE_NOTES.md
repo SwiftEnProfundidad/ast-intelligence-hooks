@@ -5,6 +5,12 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-27 (v6.3.22)
+
+- README hero render compatibility fix:
+  - moved root README hero to PNG banner (`assets/logo_banner.png`) to ensure stable full-width render parity in npm and GitHub viewers.
+  - kept wide hero composition and centered logo while avoiding SVG renderer variability.
+
 ### 2026-02-27 (v6.3.21)
 
 - README render hardening for npm/GitHub parity:

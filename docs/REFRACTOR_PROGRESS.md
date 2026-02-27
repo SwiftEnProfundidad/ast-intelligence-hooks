@@ -112,7 +112,15 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P3.T14` Standby post-release `6.3.20` cerrado por instrucción explícita del usuario.
 - ✅ `P3.T15` Hardening visual de README aplicado:
   - hero banner forzado a ancho completo mediante tag HTML con `width="100%"`.
-- 🚧 `P3.T16` Bump `6.3.21` + cierre GitFlow + publicación npm.
+- ✅ `P3.T16` Bump `6.3.21` + cierre GitFlow + publicación npm completados.
+  - versión publicada: `pumuki@6.3.21`
+  - evidencia npm: `npm publish --access public` en verde; `npm view pumuki dist-tags` => `latest: 6.3.21`
+  - cierre GitFlow:
+    - PR `#451` (`docs/readme-enterprise-reliability-followup` -> `develop`) merged.
+    - PR `#452` (`release/6.3.21` -> `develop`) merged.
+    - PR `#453` (`develop` -> `main`) merged.
+- 🚧 `P3.T17` Hotfix visual definitivo de hero + bump `6.3.22` + cierre GitFlow + publicación npm.
+  - objetivo: forzar render full-width estable en GitHub y npm usando asset raster (`assets/logo_banner.png`) y referencia directa en README.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

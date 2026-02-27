@@ -1,6 +1,6 @@
 # Pumuki
 
-<img src="assets/logo_banner.svg" alt="Pumuki" width="100%" />
+![Pumuki](assets/logo_banner.png)
 
 [![npm version](https://img.shields.io/npm/v/pumuki?color=1d4ed8)](https://www.npmjs.com/package/pumuki)
 [![CI](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/actions/workflows/ci.yml)

@@ -8,6 +8,15 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.22] - 2026-02-27
+
+### Changed
+
+- Final README hero render fix for npm/GitHub consistency:
+  - switched hero asset reference from SVG to raster banner PNG:
+    - `![Pumuki](assets/logo_banner.png)`
+  - added generated `assets/logo_banner.png` (2400x720) to avoid npm SVG rendering differences.
+
 ## [6.3.21] - 2026-02-27
 
 ### Changed
