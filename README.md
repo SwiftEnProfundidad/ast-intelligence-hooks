@@ -46,6 +46,13 @@ npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd validate --stage=PRE_COMMIT
 ```
 
+Optional loop runner session (local, deterministic):
+
+```bash
+npx --yes pumuki loop run --objective="stabilize gate before commit" --max-attempts=3 --json
+npx --yes pumuki loop list --json
+```
+
 Run local gates:
 
 ```bash
@@ -178,6 +185,17 @@ npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd session --refresh
 npx --yes pumuki sdd session --close
 npx --yes pumuki sdd validate --stage=PRE_COMMIT
+```
+
+### Loop Runner (Consumer)
+
+```bash
+npx --yes pumuki loop run --objective="stabilize gate before commit" --max-attempts=3 --json
+npx --yes pumuki loop status --session=<session-id> --json
+npx --yes pumuki loop stop --session=<session-id> --json
+npx --yes pumuki loop resume --session=<session-id> --json
+npx --yes pumuki loop list --json
+npx --yes pumuki loop export --session=<session-id> --output-json=.audit-reports/loop-session.json
 ```
 
 ### Stage Gates (Consumer)

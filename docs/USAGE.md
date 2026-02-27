@@ -223,7 +223,7 @@ npx --yes pumuki-ci
 npx --yes pumuki-pre-write
 ```
 
-### 2.1) Lifecycle + SDD CLI (install / uninstall / remove / update / doctor / status / sdd)
+### 2.1) Lifecycle + SDD + Loop CLI (install / uninstall / remove / update / doctor / status / sdd / loop)
 
 Canonical npm package commands:
 
@@ -260,6 +260,14 @@ npx --yes pumuki sdd session --close
 npx --yes pumuki analytics hotspots report --top=10 --since-days=90 --json
 npx --yes pumuki analytics hotspots diagnose --json
 
+# local deterministic loop sessions (fail-fast gate per attempt)
+npx --yes pumuki loop run --objective="stabilize gate before commit" --max-attempts=3 --json
+npx --yes pumuki loop status --session=<session-id> --json
+npx --yes pumuki loop stop --session=<session-id> --json
+npx --yes pumuki loop resume --session=<session-id> --json
+npx --yes pumuki loop list --json
+npx --yes pumuki loop export --session=<session-id> --output-json=.audit-reports/loop-session.json
+
 # update dependency to latest and re-apply hooks
 npx --yes pumuki update --latest
 
@@ -284,6 +292,12 @@ npm run skills:import:custom -- --source /abs/path/to/SKILL.md --source ./skills
 `pumuki remove` is the enterprise-safe removal path because it performs lifecycle cleanup before package uninstall.
 When no modules remain, it also prunes orphan `node_modules/.package-lock.json` residue.
 Plain `npm uninstall pumuki` removes only the dependency; it does not remove managed hooks or lifecycle state.
+
+Loop runtime behavior:
+- `pumuki loop run` creates a session in `.pumuki/loop-sessions/`.
+- Each run executes one gate attempt on `workingTree`.
+- Gate policy is strict fail-fast: a blocked attempt returns exit code `1` and status `blocked`.
+- Per-attempt evidence is persisted as `.pumuki/loop-sessions/<session-id>.attempt-<n>.json`.
 
 OpenSpec integration behavior:
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.
