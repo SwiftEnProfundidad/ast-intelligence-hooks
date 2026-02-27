@@ -74,7 +74,7 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P2.C.T3` Criterios de adopcion gradual definidos (`evaluateSaasEnterpriseAdoptionDecision`).
 - ✅ `P2.V.T1` Revalidacion final bloque No-MVP en verde (`npm run test:saas-ingestion` 48/48 + `npm run typecheck`).
 
-### Fase P3 — Release documental + npm (`v6.3.18`)
+### Fase P3 — Release documental + npm (`v6.3.19`)
 - ✅ `P3.T1` Auditoría end-to-end de comandos documentados en README ejecutada (consumer + framework + validaciones) con hallazgos de prerequisitos y sintaxis.
 - ✅ `P3.T2` Reestructuración enterprise de README completada (audiencia por perfil, quick-start-first, separación consumer/framework, troubleshooting y colaboración).
 - ✅ `P3.T3` Consolidación documental estable completada (`docs/OPERATIONS.md`, `docs/README_MENU_WALKTHROUGH.md`, `docs/README.md`, `docs/USAGE.md`, `docs/INSTALLATION.md`, `docs/RELEASE_NOTES.md`, `CHANGELOG.md`).
@@ -88,7 +88,11 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - sincronización final: `main`, `develop`, `origin/main`, `origin/develop` alineadas.
 - ✅ `P3.T6` Standby post-release atendido por instrucción explícita del usuario.
 - ✅ `P3.T7` Restauración de capturas en README raíz completada (`assets/readme/menu-option1/01..06` visibles en portada).
-- 🚧 `P3.T8` Standby post-hotfix: esperar nueva instrucción explícita del usuario.
+- ✅ `P3.T8` Standby post-hotfix cerrado por instrucción explícita del usuario.
+- ✅ `P3.T9` Hotfix visual de README aplicado:
+  - logo clásico restaurado en portada (`assets/logo.png`).
+  - bloque amable de estrella añadido al final del README raíz.
+- 🚧 `P3.T10` Bump `6.3.19` + cierre GitFlow + publicación npm.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
