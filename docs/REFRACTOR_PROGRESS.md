@@ -102,7 +102,14 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
 - ✅ `P3.T11` Standby post-release `6.3.19` cerrado por instrucción explícita del usuario.
 - ✅ `P3.T12` Ajuste visual de README aplicado:
   - hero banner restaurado en ancho completo (`assets/logo_banner.svg`).
-- 🚧 `P3.T13` Bump `6.3.20` + cierre GitFlow + publicación npm.
+- ✅ `P3.T13` Bump `6.3.20` + cierre GitFlow + publicación npm completados.
+  - versión publicada: `pumuki@6.3.20`
+  - evidencia npm: `npm publish --access public` en verde; `npm view pumuki dist-tags` => `latest: 6.3.20`
+  - cierre GitFlow:
+    - PR `#445` (`docs/readme-restore-fullwidth-banner` -> `develop`) merged.
+    - PR `#446` (`release/6.3.20` -> `develop`) merged.
+    - PR `#447` (`develop` -> `main`) merged.
+- 🚧 `P3.T14` Standby post-release `6.3.20`: esperar nueva instrucción explícita del usuario.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
