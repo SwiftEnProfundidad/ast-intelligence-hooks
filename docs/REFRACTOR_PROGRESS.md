@@ -132,7 +132,32 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - versión publicada: `pumuki@6.3.23`
   - evidencia npm: `npm publish --access public` en verde; `npm view pumuki version dist-tags --json` => `latest: 6.3.23`
 - ✅ `P3.T19` Standby post-release `6.3.23` cerrado por validación explícita del usuario.
-- 🚧 `P3.T20` Cierre administrativo final del bloque `P3` en modo espera operativa (sin cambios funcionales pendientes).
+- ✅ `P3.T20` Cierre administrativo final del bloque `P3` en modo espera operativa (sin cambios funcionales pendientes).
+
+### Fase P4 — Integración `loop runner` local (inspiración Ralph Loop, tool-agnostic)
+- ✅ `P4.T1` Definir contrato local de sesión de loop (estado, intentos, límites y transiciones) y sus fixtures de test.
+  - implementación: `integrations/lifecycle/loopSessionContract.ts` (`create/parse/transition`).
+  - tests RED->GREEN: `integrations/lifecycle/__tests__/loopSessionContract.test.ts`.
+- ✅ `P4.T2` Implementar store determinista local de sesiones loop (`.pumuki/loop-sessions`) con operaciones `create/read/update/list`.
+  - implementación: `integrations/lifecycle/loopSessionStore.ts`.
+  - validación: `integrations/lifecycle/__tests__/loopSessionStore.test.ts` en verde.
+- ✅ `P4.T3` Integrar comando CLI `pumuki loop` (`run|status|stop|resume|list|export`) con parseo estricto.
+  - implementación: `integrations/lifecycle/cli.ts` (`parseLifecycleCliArgs` + `runLifecycleCli` loop commands).
+  - validación: `integrations/lifecycle/__tests__/cli.test.ts` (subcomandos loop parse/runtime).
+- ✅ `P4.T4` Acoplar ejecución de `loop run` al gate (`runPlatformGate`) con política fail-fast y evidencia por intento.
+  - implementación: `integrations/lifecycle/cli.ts` (`LOOP_RUN_POLICY`, intento gate por `workingTree`, evidencia `.attempt-<n>.json`).
+  - validación: test de bloqueo fail-fast en `integrations/lifecycle/__tests__/cli.test.ts`.
+- ✅ `P4.T5` Completar suite TDD end-to-end (`parse + store + runtime`) y validación de typecheck.
+  - tests en verde: `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/loopSessionContract.test.ts integrations/lifecycle/__tests__/loopSessionStore.test.ts integrations/lifecycle/__tests__/cli.test.ts`.
+  - typecheck en verde: `npm run typecheck`.
+- ✅ `P4.T6` Consolidar documentación estable (`README/docs`) y cierre técnico del bloque P4.
+  - documentación actualizada: `README.md`, `docs/USAGE.md` (sección `loop` + semántica fail-fast + evidencia).
+- ✅ `P4.T7` Revalidación global post-P4 ejecutada y fix de no-determinismo temporal en waiver TDD/BDD aplicado.
+  - fix aplicado: `integrations/git/__tests__/tddBddEnforcement.test.ts` (`expires_at` en futuro estable).
+  - validación en verde:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/tddBddEnforcement.test.ts`
+    - `npm test`
+- 🚧 `P4.T8` Cierre GitFlow post-P4 (feature -> develop -> main) y sincronización final.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
