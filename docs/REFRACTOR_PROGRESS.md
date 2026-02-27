@@ -157,7 +157,11 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - validación en verde:
     - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/tddBddEnforcement.test.ts`
     - `npm test`
-- 🚧 `P4.T8` Cierre GitFlow post-P4 (feature -> develop -> main) y sincronización final.
+- ✅ `P4.T8` Cierre GitFlow post-P4 (feature -> develop -> main) y sincronización final.
+  - PR `#462` merged (`feature/p4-loop-runner-core` -> `develop`).
+  - PR `#463` merged (`develop` -> `main`, merge admin por policy de rama).
+  - sincronización final completada con `main` y `develop` alineadas.
+- 🚧 `P4.T9` Standby post-cierre P4 (espera de instrucción explícita para siguiente bloque).
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
