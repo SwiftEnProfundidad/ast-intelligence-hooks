@@ -5,6 +5,13 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-02 (enterprise-refactor updates)
 
+### 2026-02-27 (v6.3.19)
+
+- README visual hotfix:
+  - restored classic top image in root `README.md` using `assets/logo.png`.
+- README collaboration CTA:
+  - added a short, friendly "leave a star" reminder at the end of root `README.md`.
+
 ### 2026-02-27 (v6.3.18)
 
 - Enterprise documentation baseline refresh:

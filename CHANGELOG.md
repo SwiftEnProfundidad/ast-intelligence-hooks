@@ -8,6 +8,16 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 No changes yet.
 
+## [6.3.19] - 2026-02-27
+
+### Changed
+
+- Restored root `README.md` hero image to classic `assets/logo.png` rendering.
+
+### Added
+
+- Added a friendly GitHub star reminder section at the end of root `README.md`.
+
 ## [6.3.18] - 2026-02-27
 
 ### Added
