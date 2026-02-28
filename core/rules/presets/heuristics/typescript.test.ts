@@ -3,7 +3,7 @@ import test from 'node:test';
 import { typescriptRules } from './typescript';
 
 test('typescriptRules define reglas heurísticas locked para plataforma generic', () => {
-  assert.equal(typescriptRules.length, 18);
+  assert.equal(typescriptRules.length, 19);
 
   const ids = typescriptRules.map((rule) => rule.id);
   assert.deepEqual(ids, [
@@ -25,6 +25,7 @@ test('typescriptRules define reglas heurísticas locked para plataforma generic'
     'heuristics.ts.solid.lsp.override-not-implemented.ast',
     'heuristics.ts.solid.dip.framework-import.ast',
     'heuristics.ts.solid.dip.concrete-instantiation.ast',
+    'heuristics.ts.god-class-large-class.ast',
   ]);
 
   const byId = new Map(typescriptRules.map((rule) => [rule.id, rule]));
@@ -44,10 +45,18 @@ test('typescriptRules define reglas heurísticas locked para plataforma generic'
     byId.get('heuristics.ts.solid.dip.concrete-instantiation.ast')?.then.code,
     'HEURISTICS_SOLID_DIP_CONCRETE_INSTANTIATION_AST'
   );
+  assert.equal(
+    byId.get('heuristics.ts.god-class-large-class.ast')?.then.code,
+    'HEURISTICS_GOD_CLASS_LARGE_CLASS_AST'
+  );
 
   for (const rule of typescriptRules) {
     assert.equal(rule.platform, 'generic');
-    assert.equal(rule.severity, 'WARN');
+    if (rule.id === 'heuristics.ts.god-class-large-class.ast') {
+      assert.equal(rule.severity, 'ERROR');
+    } else {
+      assert.equal(rule.severity, 'WARN');
+    }
     assert.equal(rule.locked, true);
     assert.equal(rule.when.kind, 'Heuristic');
     assert.equal(rule.then.kind, 'Finding');
