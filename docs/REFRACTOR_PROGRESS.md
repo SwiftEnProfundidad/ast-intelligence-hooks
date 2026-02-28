@@ -174,7 +174,81 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - publicación npm en verde:
     - `npm publish --access public`
     - `npm view pumuki version dist-tags --json` => `latest: 6.3.24`
-- 🚧 `P4.T10` Standby post-release `6.3.24` (espera de instrucción explícita para siguiente bloque).
+- ✅ `P4.T10` Standby post-release `6.3.24` cerrado por inicio de bloque `C025`.
+
+### Fase P5 — Auditoría exhaustiva C025 (funcionalidades + reglas)
+- ✅ `P5.T1` Inicializar tracking estable de C025 con índice maestro y catálogos exhaustivos.
+  - documentos creados e indexados:
+    - `docs/validation/pumuki-audit-master-index.md` (temporal, retirado en `P5.T9`)
+    - `docs/validation/pumuki-functionalities-audit.md` (temporal, retirado en `P5.T9`)
+    - `docs/validation/pumuki-rules-audit.md` (temporal, retirado en `P5.T9`)
+  - inventario funcional inicial cargado:
+    - `10` bins, `98` scripts, `20` comandos lifecycle, `33` exports modulares, `1022` funciones exportadas.
+  - inventario de reglas inicial cargado:
+    - `234` rule IDs (`227` activas, `7` deprecadas), reconciliadas con `docs/rule-packs/*`.
+- ✅ `P5.T2` Ejecutar lote inicial de validación funcional externa crítica (lifecycle/sdd/loop/analytics/mcp) con evidencia reproducible.
+  - evidencia ejecutada:
+    - `node bin/pumuki.js status --json` (`PASS`)
+    - `node bin/pumuki.js doctor --json` (`PASS`)
+    - `node bin/pumuki.js sdd status --json` (`PASS`, OpenSpec ausente reportado)
+    - `node bin/pumuki.js sdd validate --stage=PRE_COMMIT --json` (`BLOCK esperado`: `OPENSPEC_MISSING`)
+    - `node bin/pumuki.js loop list --json` (`PASS`: `[]`)
+    - `node bin/pumuki.js analytics hotspots diagnose --json` (`PASS`: `degraded` esperado por ausencia de contrato/audit)
+    - `npm run test:mcp` (`PASS`: `130/130`)
+- ✅ `P5.T3` Ejecutar lote inicial de violaciones de reglas críticas y reglas `skills.*`.
+  - evidencia de lote crítico/skills:
+    - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/skillsRuleSet.test.ts integrations/config/__tests__/skillsCustomRules.test.ts integrations/config/__tests__/skillsContracts.test.ts integrations/gate/__tests__/stagePolicies.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/gate/evaluateRules.test.ts core/rules/presets/backendRuleSet.test.ts core/rules/presets/frontendRuleSet.test.ts core/rules/presets/iosEnterpriseRuleSet.test.ts core/rules/presets/androidRuleSet.test.ts` => `55/55 PASS`.
+    - `npx jest --runInBand --coverage=false core/gate/__tests__/evaluateRules.spec.ts` => `11/11 PASS`.
+- ✅ `P5.T4` Publicar delta #1 de hallazgos y remediaciones priorizadas.
+  - delta #1:
+    - cobertura inicial validada: crítico/alto (`55/55`), spec focal (`11/11`), medium/low (`46/46`).
+    - hallazgo y corrección TDD aplicados:
+      - fallo RED en `core/rules/presets/heuristics/typescript.test.ts` (`19 !== 18`) tras introducir `heuristics.ts.god-class-large-class.ast`.
+      - GREEN: actualización de expectativas (conteo, id y severidad `ERROR` para la nueva regla).
+    - validación de cierre: `npm run typecheck` `PASS`.
+- ✅ `P5.T5` Ejecutar validación representativa de reglas en repo real (`ast-intelligence-hooks`) y levantar primer informe de falsos positivos/negativos.
+  - evidencia:
+    - `node bin/pumuki.js analytics hotspots report --top=20 --since-days=30 --json` (`PASS`)
+    - `node bin/pumuki.js analytics hotspots diagnose --json` (`PASS`, `degraded` esperado por falta de contrato/audit SaaS)
+    - `node bin/pumuki.js sdd status --json` (`PASS`)
+    - `npm run test:stage-gates` (`PASS`: `904/908`, `4 skipped`)
+  - veredicto del corte:
+    - sin falsos positivos/falsos negativos nuevos detectados en esta muestra representativa.
+    - hallazgo corregido previamente era de expectativas de test (`typescript.test.ts`), no de motor de reglas.
+- ✅ `P5.T6` Completar cobertura regla-a-regla restante (100%) y consolidar backlog final de ajustes por prioridad.
+  - cobertura consolidada:
+    - matriz de reglas `234/234` consolidada y cerrada en este tracker (tracking temporal C025 retirado en `P5.T9`).
+    - validación de suites de reglas:
+      - `npx --yes tsx@4.21.0 --test core/rules/presets/*.test.ts core/rules/presets/heuristics/*.test.ts integrations/config/__tests__/*.test.ts integrations/gate/__tests__/*.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/gate/evaluateRules.test.ts` (`268/268 PASS`)
+      - `npx jest --runInBand --coverage=false core/gate/__tests__/evaluateRules.spec.ts` (`11/11 PASS`)
+    - estabilidad global durante ejecución:
+      - `npm test` (`PASS`)
+- ✅ `P5.T7` Completar validación funcional interna por función exportada (lotes C1..C4) y consolidar backlog funcional final.
+  - evidencia por lotes:
+    - `npx --yes tsx@4.21.0 --test core/facts/__tests__/extractHeuristicFacts.test.ts core/gate/*.test.ts` => `37/37 PASS`
+    - `npx --yes tsx@4.21.0 --test integrations/config/__tests__/*.test.ts integrations/gate/__tests__/*.test.ts integrations/git/__tests__/*.test.ts` => `365/365 PASS`
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/*.test.ts integrations/sdd/__tests__/*.test.ts integrations/mcp/__tests__/*.test.ts` => `348/348 PASS`
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/*.test.ts` => `321/325 PASS` (`4 skipped`, `0 failed`)
+- ✅ `P5.T8` Completar validación funcional externa pendiente (bins críticos y subcomandos restantes) y cerrar validación técnica C025.
+  - evidencia de cierre:
+    - `npm run validation:package-smoke:minimal` => `PASS` (`pre-commit/pre-push/ci` en `0`).
+    - `npm run validation:package-smoke` => `PASS` (`pre-commit/pre-push/ci` en `1/BLOCK` esperado para modo block).
+    - `npm run typecheck` => `PASS`.
+    - `npm test` => `PASS` (`906/906`, `0 failed`, `4 skipped` en lote tsx + `23/23` en jest specs).
+  - remediación aplicada:
+    - ajuste TDD en fixtures de smoke minimal para evitar falso bloqueo por `new_feature` en pre-commit:
+      - `scripts/package-install-smoke-fixtures-content-lib.ts`
+      - `scripts/__tests__/package-install-smoke-fixtures-content-lib.test.ts`
+- ✅ `P5.T9` Consolidar cierre documental C025 en documentos estables y retirar tracking temporal redundante.
+  - consolidación estable:
+    - `docs/REFRACTOR_PROGRESS.md` (estado y evidencia final C025).
+    - `docs/README.md` (índice canónico sin tracking temporal activo).
+    - `docs/validation/README.md` (índice mínimo de validación estable).
+  - retiro tracking temporal:
+    - eliminados `docs/validation/pumuki-audit-master-index.md`
+    - eliminados `docs/validation/pumuki-functionalities-audit.md`
+    - eliminados `docs/validation/pumuki-rules-audit.md`
+- 🚧 `P5.T10` Standby operativo post-C025 (espera de siguiente bloque de trabajo, sin deuda técnica abierta en este ciclo).
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

@@ -4,8 +4,8 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- Ciclo activo: sin tracking temporal abierto en `docs/validation/`.
-- Cierre más reciente: `C023` (MVP hotspots + No-MVP SaaS ingestion diagnostics) consolidado en `docs/REFRACTOR_PROGRESS.md`.
+- Ciclo activo: `P5.T10` (standby operativo post-C025, sin deuda técnica abierta en este ciclo).
+- Cierre más reciente previo: `C023` (MVP hotspots + No-MVP SaaS ingestion diagnostics) consolidado en `docs/REFRACTOR_PROGRESS.md`.
 - Alcance actual: monorepo local, sin SaaS ni multi-repo en MVP.
 - Ultimo cierre oficial previo: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
 - Politica: una sola tarea en construccion (`🚧`) en todo momento.
