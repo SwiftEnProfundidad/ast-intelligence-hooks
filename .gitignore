@@ -47,6 +47,9 @@ ANNOUNCEMENTS.md
 
 # AST Intelligence configuration (user-specific, similar to .cursor/rules/)
 .ast-intelligence/
+.hook-system/
+.pumuki/
+.ai_evidence.json
 
 scripts/hooks-system/.hook-system/
 
