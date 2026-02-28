@@ -322,7 +322,9 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
       - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` (bloqueo esperado)
     - fix lifecycle aplicado:
       - `pumuki remove` ahora desinstala `@fission-ai/openspec` cuando fue bootstrap gestionado por Pumuki.
+      - `runOpenSpecBootstrap` ahora vuelve a registrar artefactos OpenSpec gestionados en estado incluso en repos legacy con `openspec/` preexistente.
       - tests en verde: `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/consumerPackage.test.ts integrations/lifecycle/__tests__/remove.test.ts`
+      - tests en verde (regresión legacy): `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/openSpecBootstrap.test.ts integrations/lifecycle/__tests__/install.test.ts integrations/lifecycle/__tests__/remove.test.ts`
       - typecheck en verde: `npm run -s typecheck`
     - evidencia: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json`
   - pendiente para cerrar `P6.T8`:

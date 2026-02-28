@@ -19,6 +19,7 @@
 - Baseline limpio + reinstall desde cero: ✅ (sin hooks previos, sin artefactos previos, install nuevo)
 - Matriz mock E2E: ✅ `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`
 - Lifecycle remove (managed OpenSpec): ✅ fix aplicado + test dedicado en verde (`integrations/lifecycle/__tests__/remove.test.ts`)
+- Lifecycle remove (legacy bootstrap state): ✅ fix aplicado para registrar `openSpecManagedArtifacts` incluso cuando `openspec/` ya existía antes de `install` (`integrations/lifecycle/openSpecBootstrap.ts`)
 - Evidencia principal: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json`
 - Nota: `P6.T8` sigue en construcción hasta completar repo real externo + relleno completo checklist.
 
