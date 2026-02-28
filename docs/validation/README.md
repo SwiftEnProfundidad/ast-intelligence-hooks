@@ -24,3 +24,5 @@ Este directorio contiene solo documentación oficial y estable de validación pa
   - `docs/TESTING.md`
   - `docs/API_REFERENCE.md`
   - `docs/evidence-v2.1.md`
+- El cierre de `C025` (auditoría exhaustiva de funcionalidades + reglas) quedó consolidado en:
+  - `docs/REFRACTOR_PROGRESS.md` (estado, evidencia y cierre del bloque P5).
