@@ -11,6 +11,10 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - `mock-consumer-integration-runbook.md`
 - `skills-rollout-consumer-repositories.md`
 
+## Estado operativo actual
+
+- Ciclo activo de seguimiento diario: `docs/EXECUTION_BOARD.md`.
+
 ## Política de higiene
 
 - Los reportes de ejecución/cierre de ciclos se generan en `.audit_tmp` o `.audit-reports`.

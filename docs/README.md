@@ -4,14 +4,15 @@ Canonical index for active Pumuki documentation.
 
 ## Ciclo Activo (Seguimiento Temporal)
 
-- Ciclo activo: `P5.T10` (standby operativo post-C025, sin deuda técnica abierta en este ciclo).
-- Cierre más reciente previo: `C023` (MVP hotspots + No-MVP SaaS ingestion diagnostics) consolidado en `docs/REFRACTOR_PROGRESS.md`.
-- Alcance actual: monorepo local, sin SaaS ni multi-repo en MVP.
+- Seguimiento diario (único y simplificado): `docs/EXECUTION_BOARD.md`.
+- Cierre más reciente previo: `P5` (auditoría exhaustiva C025 consolidada) en `docs/REFRACTOR_PROGRESS.md`.
+- Alcance actual: validar funcionamiento real de capacidades públicas y auditoría completa de reglas en repo real y/o mock.
 - Ultimo cierre oficial previo: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
 - Politica: una sola tarea en construccion (`🚧`) en todo momento.
 
 ## Product and Architecture
 
+- `docs/EXECUTION_BOARD.md`: tablero activo de seguimiento (simple).
 - `docs/ARCHITECTURE.md`: normative architecture contract.
 - `docs/HOW_IT_WORKS.md`: facts-to-gate execution flow.
 - `docs/API_REFERENCE.md`: public APIs, binaries, and command surfaces.

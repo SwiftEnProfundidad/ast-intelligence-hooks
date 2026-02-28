@@ -8,7 +8,7 @@ if [[ ! -f "${FILE}" ]]; then
   exit 1
 fi
 
-ACTIVE_PATTERN="^- 🚧 \`P[0-9A-Za-z-]+\` "
+ACTIVE_PATTERN="^- 🚧 \`P[0-9A-Za-z.-]+\` "
 ACTIVE_COUNT="$(rg -n "${ACTIVE_PATTERN}" "${FILE}" | wc -l | tr -d ' ')"
 
 echo "[progress-single-active] file=${FILE}"

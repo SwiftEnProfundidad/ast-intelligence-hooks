@@ -8,6 +8,10 @@ Estado operativo activo del repositorio.
 - ⏳ Pendiente
 - ⛔ Bloqueado
 
+## Seguimiento activo
+El seguimiento operativo diario vive en `docs/EXECUTION_BOARD.md`.
+Este archivo se mantiene como histórico auditable de fases y evidencias.
+
 ## Plan maestro activo (post-MVP)
 Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de tracking.
 
@@ -248,7 +252,62 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - eliminados `docs/validation/pumuki-audit-master-index.md`
     - eliminados `docs/validation/pumuki-functionalities-audit.md`
     - eliminados `docs/validation/pumuki-rules-audit.md`
-- 🚧 `P5.T10` Standby operativo post-C025 (espera de siguiente bloque de trabajo, sin deuda técnica abierta en este ciclo).
+- ✅ `P5.T10` Standby operativo post-C025 cerrado por apertura de bloque `P6` de verificación exhaustiva real/mock.
+
+### Fase P6 — Verificación exhaustiva real/mock (funcionalidades + reglas)
+- ✅ `P6.T1` Definir matriz explícita de verificación total (funcionalidades + reglas) con trazabilidad por entorno (`real/mock`) y evidencia ejecutable.
+  - objetivo no negociable:
+    - comprobar funcionamiento real de todas las capacidades públicas de Pumuki;
+    - comprobar auditoría/cobertura de todas las reglas, sin excepción, en repo real y/o mock.
+  - alcance inicial de matriz:
+    - superficies funcionales públicas: bins, comandos lifecycle/sdd/loop/analytics/mcp, scripts de validación y exports operativos;
+    - catálogo de reglas: `ruleId` activas + deprecadas con estado explícito por entorno de validación.
+- ✅ `P6.T2` Ejecutar matriz funcional end-to-end en repo real (`ast-intelligence-hooks`) y registrar evidencia por comando/capacidad.
+  - evidencia real ejecutada:
+    - `node bin/pumuki.js status --json`
+    - `node bin/pumuki.js doctor --json`
+    - `node bin/pumuki.js sdd status --json`
+    - `node bin/pumuki.js loop list --json`
+    - `node bin/pumuki.js analytics hotspots report --top=20 --since-days=90 --json`
+    - `node bin/pumuki.js analytics hotspots diagnose --json`
+    - `npm run typecheck`
+    - `npm run test:stage-gates`
+    - `npm run test:deterministic`
+  - resultado:
+    - todas las ejecuciones en verde (`exit_code=0`).
+    - evidencia consolidada en `.audit_tmp/p6-t2-real-mock/*`.
+- ✅ `P6.T3` Ejecutar matriz funcional end-to-end en repo mock de consumidor (aislado) para validar flujos de instalación/gates/lifecycle.
+  - evidencia mock ejecutada:
+    - `npm run validation:package-smoke:minimal`
+    - `npm run validation:package-smoke`
+  - resultado:
+    - ambos flujos en verde (`exit_code=0`), incluyendo modo block esperado.
+    - evidencia consolidada en `.audit_tmp/p6-t2-real-mock/*`.
+- ✅ `P6.T4` Ejecutar auditoría regla-a-regla (100%) en mock controlado y confirmación de muestra representativa en repo real.
+  - evidencia de reglas:
+    - `npx --yes tsx@4.21.0 --test core/rules/presets/*.test.ts core/rules/presets/heuristics/*.test.ts integrations/config/__tests__/*.test.ts integrations/gate/__tests__/*.test.ts core/facts/__tests__/extractHeuristicFacts.test.ts core/gate/evaluateRules.test.ts`
+    - `npx jest --runInBand --coverage=false core/gate/__tests__/evaluateRules.spec.ts`
+  - resultado:
+    - suites en verde (`exit_code=0`) y cobertura de catálogo de reglas mantenida.
+    - confirmación de runtime real en comandos analytics/sdd/gates del mismo lote P6.
+- ✅ `P6.T5` Migración del seguimiento activo a tablero corto (`docs/EXECUTION_BOARD.md`) completada.
+- ✅ `P6.T6` Auditoría de higiene enterprise aplicada y purga de basura no oficial.
+  - limpieza local aplicada:
+    - eliminados artefactos efímeros: `.audit_tmp/`, `.audit-reports/`, `.coverage/`, `.pumuki/`, `.claude/`, `.ai_evidence.json`.
+    - eliminado archivo trackeado huérfano: `.hook-system/config.json`.
+    - eliminados PNGs huérfanos sin referencias internas:
+      - `assets/ast_intelligence_01.png`
+      - `assets/ast_intelligence_02.png`
+      - `assets/ast_intelligence_03.png`
+      - `assets/ast_intelligence_04.png`
+      - `assets/ast_intelligence_05.png`
+      - `assets/Hook_01.png`
+      - `assets/Hook_02.png`
+      - `assets/ai_gate.png`
+      - `assets/ai-start.png`
+      - `assets/pre-flight-check.png`
+- 🚧 `P6.T7` Ejecutar validación end-to-end en repo real externo consumidor (fuera de Pumuki) y registrar evidencia.
+- ⏳ `P6.T8` Consolidar cierre final P6 en documentación estable.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
