@@ -306,8 +306,28 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
       - `assets/ai_gate.png`
       - `assets/ai-start.png`
       - `assets/pre-flight-check.png`
-- 🚧 `P6.T7` Ejecutar validación end-to-end en repo real externo consumidor (fuera de Pumuki) y registrar evidencia.
-- ⏳ `P6.T8` Consolidar cierre final P6 en documentación estable.
+- ✅ `P6.T7` Checklist exhaustiva unificada creada en MD único (`docs/EXECUTION_BOARD.md`) con funcionalidades + reglas AST sin omisiones.
+  - cobertura checklist:
+    - funcionalidades inventariadas: `136` (`bin=10`, `lifecycle_commands=20`, `scripts=98`, `exports=8`).
+    - reglas AST inventariadas: `235` (`core_rules + skills_rules` en catálogo único).
+- 🚧 `P6.T8` Ejecutar checklist completa en repo mock + repo real externo y rellenar evidencia item por item.
+  - progreso actual (mock):
+    - repo mock validado: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`.
+    - baseline sin SDD confirmado (`openspec/`, `.ai_evidence.json`, `.pumuki/`, `pumuki.rules.ts`, `skills.lock.json`, `skills.sources.json` ausentes).
+    - baseline reiniciado desde cero (uninstall/remove + purge + reinstall `pumuki@6.3.24`).
+    - matriz E2E mock ejecutada en verde:
+      - run_id: `pumuki-matrix-20260228T110809Z-85568`
+      - `clean`: `pre-commit=0`, `pre-push=0`, `ci=0`
+      - `violations`: `pre-commit=1`, `pre-push=1`, `ci=1` (bloqueo esperado)
+      - `mixed`: `pre-commit=1`, `pre-push=1`, `ci=1` (bloqueo esperado)
+    - fix lifecycle aplicado:
+      - `pumuki remove` ahora desinstala `@fission-ai/openspec` cuando fue bootstrap gestionado por Pumuki.
+      - tests en verde: `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/consumerPackage.test.ts integrations/lifecycle/__tests__/remove.test.ts`
+      - typecheck en verde: `npm run -s typecheck`
+    - evidencia: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json`
+  - pendiente para cerrar `P6.T8`:
+    - ejecutar lote equivalente en repo real externo y completar relleno checklist item-por-item.
+- ⏳ `P6.T9` Consolidar cierre final P6 en documentación estable.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

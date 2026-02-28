@@ -1,6 +1,6 @@
-# Execution Board (Seguimiento Claro)
+# Execution Board (Simple)
 
-Estado operativo de lectura rápida. Este es el único tablero activo para seguimiento diario.
+Único MD activo para seguimiento operativo diario.
 
 ## Leyenda
 - ✅ Hecho
@@ -8,18 +8,413 @@ Estado operativo de lectura rápida. Este es el único tablero activo para segui
 - ⏳ Pendiente
 - ⛔ Bloqueado
 
-## Estado actual
-- Bloque activo: `P6` (verificación exhaustiva real/mock).
-- Estado de higiene: limpieza profunda aplicada (artefactos efímeros purgados).
-- Evidencia consolidada actual: se regenera en la tarea activa.
+## Estado Actual
+- Objetivo: validación completa de funcionalidades + reglas AST en repo mock y repo real externo.
+- Fuente de checklist: inventario automático desde `package.json`, `integrations/lifecycle/cli.ts`, `core/rules/presets/**` e `integrations/config/skillsCompilerTemplates.ts`.
 - Política: una sola tarea en construcción.
 
-## Bloque P6 — Verificación exhaustiva real/mock
-- ✅ `P6.T1` Matriz explícita de verificación total definida (funcionalidades + reglas).
-- ✅ `P6.T2` Matriz funcional ejecutada en repo real interno (`ast-intelligence-hooks`).
-- ✅ `P6.T3` Matriz funcional ejecutada en repo mock (package smoke minimal + block).
-- ✅ `P6.T4` Auditoría de reglas ejecutada (suites completas en verde).
-- ✅ `P6.T5` Migración del seguimiento activo a tablero corto (claridad y visibilidad).
-- ✅ `P6.T6` Auditoría de higiene enterprise aplicada: purga de basura no oficial (artefactos efímeros, PNGs huérfanos y config local huérfana).
-- 🚧 `P6.T7` Ejecutar validación end-to-end en repo real externo consumidor (fuera de Pumuki) y registrar evidencia.
-- ⏳ `P6.T8` Consolidar cierre final P6 en documentación estable.
+## Evidencia Mock (actual)
+- Repo: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`
+- Baseline sin SDD previo: ✅ (`openspec/`, `.ai_evidence.json`, `.pumuki/`, `pumuki.rules.ts`, `skills.lock.json`, `skills.sources.json` ausentes antes de instalar)
+- Baseline limpio + reinstall desde cero: ✅ (sin hooks previos, sin artefactos previos, install nuevo)
+- Matriz mock E2E: ✅ `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`
+- Lifecycle remove (managed OpenSpec): ✅ fix aplicado + test dedicado en verde (`integrations/lifecycle/__tests__/remove.test.ts`)
+- Evidencia principal: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json`
+- Nota: `P6.T8` sigue en construcción hasta completar repo real externo + relleno completo checklist.
+
+## Fase P6 (Seguimiento)
+- ✅ `P6.T1` Matriz explícita de verificación total definida.
+- ✅ `P6.T2` Validación funcional en repo real interno (`ast-intelligence-hooks`) ejecutada.
+- ✅ `P6.T3` Validación funcional en repo mock (smoke minimal + block) ejecutada.
+- ✅ `P6.T4` Auditoría de reglas ejecutada en suites internas.
+- ✅ `P6.T5` Seguimiento simplificado en MD único (`docs/EXECUTION_BOARD.md`).
+- ✅ `P6.T6` Higiene enterprise aplicada (basura y huérfanos purgados).
+- ✅ `P6.T7` Checklist exhaustiva unificada creada (funcionalidades + reglas AST sin omisiones).
+- 🚧 `P6.T8` Ejecutar checklist completa en repo mock + repo real externo y rellenar evidencia item por item.
+- ⏳ `P6.T9` Consolidar cierre final y veredicto enterprise del bloque P6.
+
+## Checklist A — Funcionalidades (sin omisiones)
+Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
+
+### A.1 Binaries (`package.json#bin`)
+- [ ] `bin:ast-hooks` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `bin:pumuki` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [ ] `bin:pumuki-ast-hooks` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `bin:pumuki-ci` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [ ] `bin:pumuki-framework` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `bin:pumuki-mcp-enterprise` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `bin:pumuki-mcp-evidence` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `bin:pumuki-pre-commit` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [x] `bin:pumuki-pre-push` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [ ] `bin:pumuki-pre-write` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+
+### A.2 Comandos Lifecycle (`integrations/lifecycle/cli.ts#HELP_TEXT`)
+- [x] `cmd:pumuki install` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [x] `cmd:pumuki uninstall [--purge-artifacts]` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [x] `cmd:pumuki remove` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [ ] `cmd:pumuki update [--latest|--spec=<package-spec>]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `cmd:pumuki doctor` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [x] `cmd:pumuki status` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
+- [ ] `cmd:pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki loop status --session=<session-id> [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki loop stop --session=<session-id> [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki loop resume --session=<session-id> [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki loop list [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki loop export --session=<session-id> [--output-json=<path>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki adapter install --agent=<name> [--dry-run] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki analytics hotspots diagnose [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki sdd status [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `cmd:pumuki sdd session --close [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+
+### A.3 Scripts (`package.json#scripts`)
+- [ ] `script:adapter:install` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:audit` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:check-version` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:gitflow` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:guard:logs` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:guard:restart` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:guard:start` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:guard:status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:guard:stop` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:refresh` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:ast:release` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:audit` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:audit-library` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:build:ts` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:check-version` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:framework:menu` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:gitflow` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:gitflow:reset` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:gitflow:status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:gitflow:workflow` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:install-hooks` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:lint` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:maintenance:library` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:mcp:enterprise` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:mcp:evidence` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:pumuki:doctor` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:pumuki:install` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:pumuki:remove` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:pumuki:sdd:pre-write` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:pumuki:status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:pumuki:uninstall` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:pumuki:update` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:skills:compile` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:skills:import:custom` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:skills:lock:check` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test:deterministic` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test:evidence` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test:heuristics` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test:mcp` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test:operational-memory` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test:saas-ingestion` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:test:stage-gates` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:typecheck` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validate:adapter-hooks-local` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:adapter-readiness` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:adapter-real-session-report` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:adapter-session-status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:architecture-guardrails` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:c020-benchmark` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:clean-artifacts` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:consumer-ci-artifacts` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:consumer-ci-auth-check` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:consumer-startup-triage` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:consumer-startup-unblock-status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:consumer-support-bundle` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:consumer-support-ticket-draft` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:consumer-workflow-lint` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:lifecycle-smoke` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:mock-consumer-ab-report` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:package-manifest` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:package-smoke` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:package-smoke:minimal` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-blockers-readiness` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-escalation:close-submission` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-escalation:mark-submitted` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-escalation:payload` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-escalation:prepare` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-escalation:ready-to-submit` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-execution-closure` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-execution-closure-status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-external-handoff` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-latest:ready-check` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-latest:refresh` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-latest:sync-docs` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase5-post-support:refresh` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:autopilot` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:close-ready` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:doctor` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:loop-guard` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:loop-guard-coverage` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:mark-followup-posted-now` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:mark-followup-replied-now` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:mark-followup-state` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:next-step` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:ready-handoff` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:resume-after-billing` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:status-pack` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:phase8:tick` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:validation:progress-single-active` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:verify:adapter-hooks-runtime` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:violations` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:violations:demo` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:violations:list` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:violations:show` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:violations:summary` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `script:violations:top` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+
+### A.4 Exports (`package.json#exports`)
+- [ ] `export:.` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `export:./core/gate/evaluateGate` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `export:./core/gate/evaluateRules` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `export:./integrations/git` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `export:./integrations/lifecycle` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `export:./integrations/mcp` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `export:./integrations/sdd` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `export:./package.json` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+
+## Checklist B — Reglas AST (sin omisiones)
+Total reglas AST inventariadas: 235.
+
+- [ ] `rule:android.no-global-scope` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:android.no-run-blocking` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:android.no-thread-sleep` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:backend.avoid-explicit-any` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:backend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:backend.no-empty-catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:common.error.empty_catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:common.network.missing_error_handling` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:common.types.record_unknown_requires_type` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:common.types.undefined_in_base_type` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:common.types.unknown_without_guard` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:domain-change-without-tests` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:frontend.avoid-single-letter-variables` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:frontend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:frontend.no-debugger` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.android.globalscope.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.android.run-blocking.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.android.thread-sleep.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.anyview.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.callback-style.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.dispatchgroup.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.dispatchqueue.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.dispatchsemaphore.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.force-cast.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.force-try.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.force-unwrap.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.navigation-view.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.observable-object.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.on-tap-gesture.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.operation-queue.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.string-format.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.task-detached.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.uiscreen-main-bounds.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ios.unchecked-sendable.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.buffer-alloc-unsafe-slow.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.buffer-alloc-unsafe.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-exec-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-exec-file-untrusted-args.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-exec-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-exec-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-exec.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-fork.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-import.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-shell-true.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-spawn-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.child-process-spawn.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.console-error.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.console-log.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.debugger.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.delete-operator.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.document-write.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.dynamic-shell-invocation.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.empty-catch.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.eval.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.explicit-any.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-access-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-access-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-append-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-append-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-chmod-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-chmod-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-chown-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-chown-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-close-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-close-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-copy-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-copy-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-cp-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-cp-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-exists-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-exists-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fchmod-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fchmod-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fchown-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fchown-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fdatasync-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fdatasync-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fstat-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fstat-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fsync-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-fsync-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-ftruncate-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-ftruncate-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-futimes-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-futimes-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-lchmod-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-lchown-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-link-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-link-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-lstat-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-lstat-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-lutimes-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-lutimes-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-mkdir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-mkdir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-mkdtemp-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-mkdtemp-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-open-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-open-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-opendir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-opendir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-access.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-append-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-chmod.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-chown.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-copy-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-cp.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-link.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-lstat.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-mkdir.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-mkdtemp.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-open.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-opendir.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-read-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-readdir.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-readlink.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-realpath.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-rename.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-rm.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-stat.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-symlink.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-unlink.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-utimes.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-promises-write-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-read-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-read-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-read-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-read-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-readdir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-readdir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-readlink-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-readlink-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-readv-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-readv-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-realpath-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-realpath-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-rename-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-rename-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-rm-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-rm-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-rmdir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-rmdir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-stat-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-stat-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-statfs-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-statfs-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-symlink-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-symlink-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-truncate-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-truncate-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-unlink-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-unlink-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-unwatch-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-utimes-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-utimes-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-watch-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-watch-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-write-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-write-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-write-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-write-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-writev-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.fs-writev-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.function-constructor.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.god-class-large-class.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.hardcoded-secret-token.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.inner-html.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.insecure-token-date-now.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.insecure-token-math-random.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.insert-adjacent-html.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.jwt-decode-without-verify.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.jwt-sign-no-expiration.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.jwt-verify-ignore-expiration.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.new-promise-async.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.process-env-mutation.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.process-exit.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.set-interval-string.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.set-timeout-string.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.solid.dip.concrete-instantiation.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.solid.dip.framework-import.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.solid.isp.interface-command-query-mix.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.solid.lsp.override-not-implemented.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.solid.ocp.discriminator-switch.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.solid.srp.class-command-query-mix.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.tls-env-override.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.tls-reject-unauthorized-false.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.vm-dynamic-code-execution.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.weak-crypto-hash.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.weak-token-randomuuid.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:heuristics.ts.with-statement.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no-alamofire` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no-anyview` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no-completion-handlers-outside-bridges` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no-force-unwrap` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no-gcd` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no-jsonserialization` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no-print` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no_anyview` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no_completion_handlers` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no_dispatchqueue` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.no_print` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:ios.tdd.domain-changes-require-tests` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.android.no-globalscope` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.android.no-runblocking` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.android.no-thread-sleep` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.backend.avoid-explicit-any` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.backend.enforce-clean-architecture` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.backend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.backend.no-empty-catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.backend.no-god-classes` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.backend.no-solid-violations` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.frontend.avoid-explicit-any` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.frontend.enforce-clean-architecture` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.frontend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.frontend.no-empty-catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.frontend.no-god-classes` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.frontend.no-solid-violations` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-anyview` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-callback-style-outside-bridges` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-dispatchgroup` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-dispatchqueue` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-dispatchsemaphore` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-force-cast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-force-try` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-force-unwrap` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-navigation-view` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-observable-object` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-on-tap-gesture` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-operation-queue` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-string-format` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-task-detached` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-uiscreen-main-bounds` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:skills.ios.no-unchecked-sendable` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:workflow.bdd.insufficient_features` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [ ] `rule:workflow.bdd.missing_feature_files` | mock: ⏳ | real: ⏳ | evidencia: ⏳
