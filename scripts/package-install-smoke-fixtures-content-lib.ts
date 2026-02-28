@@ -1,6 +1,6 @@
 export const SMOKE_BASELINE_FILE = {
   path: 'apps/backend/src/baseline.ts',
-  content: ["export const baseline = (): string => 'ok';", ''].join('\n'),
+  content: ["const baseline = (): string => 'ok';", ''].join('\n'),
 };
 
 export const SMOKE_RANGE_PAYLOAD_FILES: Record<string, string> = {
@@ -41,8 +41,8 @@ export const SMOKE_RANGE_PAYLOAD_FILES: Record<string, string> = {
 };
 
 export const SMOKE_STAGED_ONLY_FILE = {
-  path: 'apps/backend/src/staged-smoke.ts',
-  content: ['export const stagedSmoke = (): string => "ok";', ''].join('\n'),
+  path: 'apps/backend/src/baseline.ts',
+  content: ['const baseline = (): string => "ok-minimal";', ''].join('\n'),
 };
 
 export const SMOKE_STAGED_ONLY_VIOLATION_FILE = {
