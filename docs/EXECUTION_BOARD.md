@@ -178,7 +178,17 @@
     - `gh run list --branch develop --limit 10`
     - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/actions/runners --jq '.total_count'`
     - `gh run view <run-id> --json jobs`
-- 🚧 `P8.T4` Ejecutar reintento remoto de `P0.T1` en cuanto haya runners/capacidad Snyk y consolidar cierre.
+- ✅ `P8.T4` Ejecutar reintento remoto de `P0.T1` en cuanto haya runners/capacidad Snyk y consolidar cierre.
+  - reintento ejecutado:
+    - `gh run rerun 22533289915` (`CI`) -> `attempt=2`, `conclusion=failure`.
+    - `gh run rerun 22533289937` (`Pumuki Backend Gate`) -> `attempt=2`, `conclusion=failure`.
+    - `gh run rerun 22533289926` (`Pumuki Package Smoke`) -> `attempt=2`, `conclusion=failure`.
+  - evidencia de bloqueo persistente:
+    - jobs del reintento con `runner=null` y `steps=0`:
+      - `65276351978` (`Build Verification`)
+      - `65276351958` (`backend-gate / Backend Gate`)
+      - `65276351949` (`package-smoke minimal`)
+- 🚧 `P8.T5` Mantener espera operativa hasta habilitación externa (runner/billing + cuota Snyk) para poder cerrar `P0.T1`.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.

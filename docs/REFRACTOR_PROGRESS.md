@@ -575,7 +575,17 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - `gh workflow run pumuki-package-smoke.yml --ref develop`
     - `gh run list --branch develop --limit 10`
     - `gh run view <run-id> --json jobs`
-- 🚧 `P8.T4` Ejecutar reintento remoto de `P0.T1` en cuanto haya runners/capacidad Snyk y consolidar cierre.
+- ✅ `P8.T4` Ejecutar reintento remoto de `P0.T1` en cuanto haya runners/capacidad Snyk y consolidar cierre.
+  - reintento remoto ejecutado:
+    - `CI` run `22533289915` -> `attempt=2`, `failure`.
+    - `Pumuki Backend Gate` run `22533289937` -> `attempt=2`, `failure`.
+    - `Pumuki Package Smoke` run `22533289926` -> `attempt=2`, `failure`.
+  - bloqueo persistente validado:
+    - jobs del segundo intento sin runner y sin pasos (`runner=null`, `steps=0`), p. ej.:
+      - `65276351978` (`Build Verification`)
+      - `65276351958` (`backend-gate / Backend Gate`)
+      - `65276351949` (`package-smoke minimal`)
+- 🚧 `P8.T5` Mantener espera operativa hasta habilitación externa (runner/billing + cuota Snyk) para poder cerrar `P0.T1`.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
