@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { once } from 'node:events';
+import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { startEnterpriseMcpServer } from '../enterpriseServer';
@@ -375,6 +376,121 @@ test('enterprise server ai_gate_check bloquea branch protegida aunque evidencia 
         true
       );
     });
+  });
+});
+
+test('enterprise server ai_gate_check persiste recibo MCP auditable', async () => {
+  await withTempDir('pumuki-mcp-enterprise-', async (repoRoot) => {
+    runGit(repoRoot, ['init', '-b', 'feature/mcp-receipt']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    const evidence = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_COMMIT',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_COMMIT',
+          active_rule_ids: ['skills.backend.no-empty-catch'],
+          evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      ledger: [],
+      platforms: {},
+      rulesets: [],
+      human_intent: null,
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+      repo_state: {
+        repo_root: repoRoot,
+        git: {
+          available: true,
+          branch: 'feature/mcp-receipt',
+          upstream: null,
+          ahead: 0,
+          behind: 0,
+          dirty: false,
+          staged: 0,
+          unstaged: 0,
+        },
+        lifecycle: {
+          installed: true,
+          package_version: '6.3.16',
+          lifecycle_version: '6.3.16',
+          hooks: {
+            pre_commit: 'managed',
+            pre_push: 'managed',
+          },
+        },
+      },
+    };
+    execFileSync(
+      'node',
+      [
+        '-e',
+        `require('node:fs').writeFileSync(${JSON.stringify(`${repoRoot}/.ai_evidence.json`)}, ${JSON.stringify(
+          JSON.stringify(evidence, null, 2)
+        )})`,
+      ],
+      { stdio: 'ignore' }
+    );
+
+    await withEnterpriseServer(repoRoot, async (baseUrl) => {
+      const aiGateResponse = await safeFetchRequest(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'ai_gate_check',
+          args: {
+            stage: 'PRE_WRITE',
+          },
+        }),
+      });
+      assert.equal(aiGateResponse.status, 200);
+      const aiGatePayload = (await aiGateResponse.json()) as {
+        success?: boolean;
+      };
+      assert.equal(aiGatePayload.success, true);
+    });
+
+    const receipt = JSON.parse(
+      readFileSync(`${repoRoot}/.pumuki/artifacts/mcp-ai-gate-receipt.json`, 'utf8')
+    ) as {
+      tool?: string;
+      stage?: string;
+      status?: string;
+      allowed?: boolean;
+    };
+    assert.equal(receipt.tool, 'ai_gate_check');
+    assert.equal(receipt.stage, 'PRE_WRITE');
+    assert.equal(receipt.status, 'ALLOWED');
+    assert.equal(receipt.allowed, true);
   });
 });
 

@@ -1,9 +1,11 @@
 # MCP Servers (v2.x)
 
-Pumuki expone dos servidores MCP HTTP opcionales:
+Pumuki expone dos servidores MCP HTTP opcionales y bridges MCP stdio para IDEs:
 
 - `pumuki-mcp-evidence`: API read-only para `.ai_evidence.json`.
 - `pumuki-mcp-enterprise`: superficie enterprise consolidada (resources + tools) con guardrails fail-safe.
+- `pumuki-mcp-evidence-stdio`: bridge MCP stdio para consumir evidencia desde clientes MCP de IDE/CLI.
+- `pumuki-mcp-enterprise-stdio`: bridge MCP sobre stdio para clientes MCP de IDE/CLI (Windsurf/Codex/Cursor/Claude).
 
 El enforcement de gates (`pre-commit`, `pre-push`, `ci`) no depende de MCP.
 
@@ -20,7 +22,8 @@ npm run mcp:enterprise
 
 ```bash
 npx --yes pumuki-mcp-evidence
-npx --yes pumuki-mcp-enterprise
+npx --yes --package pumuki@latest pumuki-mcp-enterprise
+npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio
 ```
 
 ## 1) Evidence Context Server (`pumuki-mcp-evidence`)
@@ -89,6 +92,32 @@ Variables de entorno:
 
 - `PUMUKI_ENTERPRISE_MCP_HOST`
 - `PUMUKI_ENTERPRISE_MCP_PORT`
+
+Nota operativa:
+
+- Si el host MCP (IDE/CLI) inicia múltiples instancias y aparece `EADDRINUSE`, usar `PUMUKI_ENTERPRISE_MCP_PORT=0` para puerto dinámico por proceso.
+
+## 3) Enterprise MCP Stdio Bridge (`pumuki-mcp-enterprise-stdio`)
+
+### Implementación
+
+- `integrations/mcp/enterpriseStdioServer.cli.ts`
+- `bin/pumuki-mcp-enterprise-stdio.js`
+
+### Purpose
+
+Exponer capacidades MCP por stdio para clientes MCP de IDE/CLI, reutilizando el servidor HTTP enterprise por debajo.
+
+## 4) Evidence MCP Stdio Bridge (`pumuki-mcp-evidence-stdio`)
+
+### Implementación
+
+- `integrations/mcp/evidenceStdioServer.cli.ts`
+- `bin/pumuki-mcp-evidence-stdio.js`
+
+### Purpose
+
+Exponer recursos de evidencia por stdio (`resources/list`, `resources/read`) para clientes MCP de IDE/CLI.
 
 ### Endpoints
 
@@ -171,7 +200,17 @@ URI no soportada devuelve `404`.
 - `stage`
 - `violations[]`
 - `evidence` (kind + age/max-age)
+- `mcp_receipt` (required/kind/path/age para enforcement de PRE_WRITE)
 - `repo_state` (git + lifecycle snapshot)
+
+Además, cada ejecución de `ai_gate_check` persiste un recibo auditable en:
+
+- `.pumuki/artifacts/mcp-ai-gate-receipt.json`
+
+Ese recibo se usa en `pumuki sdd validate --stage=PRE_WRITE` para enforcement no cosmético:
+
+- sin recibo MCP válido/fresco: `BLOCK` (`MCP_ENTERPRISE_RECEIPT_*`);
+- con recibo válido/fresco: evaluación PRE_WRITE continúa por gate/evidence normal.
 
 ### Guardrails enterprise (baseline fail-safe)
 

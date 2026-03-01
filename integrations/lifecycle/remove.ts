@@ -1,9 +1,11 @@
 import { existsSync, readFileSync, readdirSync, rmSync, unlinkSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { resolveCurrentPumukiDependency } from './consumerPackage';
+import { resolveCurrentPumukiDependency, resolveDeclaredDependency } from './consumerPackage';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { LifecycleNpmService, type ILifecycleNpmService } from './npmService';
 import { getCurrentPumukiPackageName } from './packageInfo';
+import { OPENSPEC_NPM_PACKAGE_NAME } from '../sdd/openSpecCli';
+import { readOpenSpecManagedArtifacts } from './state';
 import { runLifecycleUninstall } from './uninstall';
 
 export type LifecycleRemoveResult = {
@@ -218,6 +220,11 @@ export const runLifecycleRemove = (params?: {
   const git = params?.git ?? new LifecycleGitService();
   const npm = params?.npm ?? new LifecycleNpmService();
   const repoRoot = git.resolveRepoRoot(params?.cwd ?? process.cwd());
+  const openSpecManagedArtifacts = readOpenSpecManagedArtifacts(git, repoRoot);
+  const openSpecDependency = resolveDeclaredDependency({
+    repoRoot,
+    dependencyName: OPENSPEC_NPM_PACKAGE_NAME,
+  });
 
   const uninstallResult = runLifecycleUninstall({
     cwd: repoRoot,
@@ -231,6 +238,12 @@ export const runLifecycleRemove = (params?: {
     repoRoot,
     packageName,
   });
+  const shouldUninstallManagedOpenSpecDependency =
+    openSpecManagedArtifacts.length > 0 && openSpecDependency.source !== 'none';
+
+  if (shouldUninstallManagedOpenSpecDependency) {
+    npm.runNpm(['uninstall', OPENSPEC_NPM_PACKAGE_NAME], repoRoot);
+  }
 
   if (currentDependency.source === 'none') {
     cleanupPumukiTraceDirectories({

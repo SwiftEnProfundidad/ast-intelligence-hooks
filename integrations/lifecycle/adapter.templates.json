@@ -19,7 +19,10 @@
         },
         "mcp": {
           "enterprise": {
-            "command": "npx --yes pumuki-mcp-enterprise"
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
+          },
+          "evidence": {
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
           }
         }
       }
@@ -50,7 +53,18 @@
             "command": "npx",
             "args": [
               "--yes",
-              "pumuki-mcp-enterprise"
+              "--package",
+              "pumuki@latest",
+              "pumuki-mcp-enterprise-stdio"
+            ]
+          },
+          "pumuki-evidence": {
+            "command": "npx",
+            "args": [
+              "--yes",
+              "--package",
+              "pumuki@latest",
+              "pumuki-mcp-evidence-stdio"
             ]
           }
         }
@@ -66,7 +80,18 @@
             "command": "npx",
             "args": [
               "--yes",
-              "pumuki-mcp-enterprise"
+              "--package",
+              "pumuki@latest",
+              "pumuki-mcp-enterprise-stdio"
+            ]
+          },
+          "pumuki-evidence": {
+            "command": "npx",
+            "args": [
+              "--yes",
+              "--package",
+              "pumuki@latest",
+              "pumuki-mcp-evidence-stdio"
             ]
           }
         },
@@ -95,7 +120,46 @@
         "postCommand": "npx --yes pumuki-pre-commit",
         "pushCommand": "npx --yes pumuki-pre-push",
         "ciCommand": "npx --yes pumuki-ci",
-        "mcpCommand": "npx --yes pumuki-mcp-enterprise"
+        "mcpCommand": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
+      }
+    },
+    {
+      "path": "$HOME/.codeium/windsurf/mcp_config.json",
+      "mode": "json-merge",
+      "payload": {
+        "mcpServers": {
+          "pumuki-enterprise": {
+            "command": "npx",
+            "args": [
+              "--yes",
+              "--package",
+              "pumuki@latest",
+              "pumuki-mcp-enterprise-stdio"
+            ],
+            "disabledTools": [],
+            "env": {
+              "PUMUKI_ENTERPRISE_MCP_PORT": "0",
+              "PUMUKI_ENTERPRISE_MCP_HOST": "127.0.0.1"
+            },
+            "disabled": false
+          },
+          "pumuki-evidence": {
+            "command": "npx",
+            "args": [
+              "--yes",
+              "--package",
+              "pumuki@latest",
+              "pumuki-mcp-evidence-stdio"
+            ],
+            "disabledTools": [],
+            "env": {
+              "PUMUKI_EVIDENCE_PORT": "0",
+              "PUMUKI_EVIDENCE_HOST": "127.0.0.1",
+              "PUMUKI_EVIDENCE_ROUTE": "/ai-evidence"
+            },
+            "disabled": false
+          }
+        }
       }
     }
   ],
@@ -119,7 +183,10 @@
         },
         "mcp": {
           "enterprise": {
-            "command": "npx --yes pumuki-mcp-enterprise"
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
+          },
+          "evidence": {
+            "command": "npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio"
           }
         }
       }

@@ -5,8 +5,8 @@ Canonical index for active Pumuki documentation.
 ## Ciclo Activo (Seguimiento Temporal)
 
 - Seguimiento diario (único y simplificado): `docs/EXECUTION_BOARD.md`.
-- Cierre más reciente previo: `P5` (auditoría exhaustiva C025 consolidada) en `docs/REFRACTOR_PROGRESS.md`.
-- Alcance actual: validar funcionamiento real de capacidades públicas y auditoría completa de reglas en repo real y/o mock.
+- Cierre más reciente: `P6` (verificación exhaustiva real/mock de funcionalidades + reglas, `371/371`) consolidado en `docs/REFRACTOR_PROGRESS.md`.
+- Alcance actual: hardening post-verificación y estabilización operativa incremental (`P7`).
 - Ultimo cierre oficial previo: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
 - Politica: una sola tarea en construccion (`🚧`) en todo momento.
 

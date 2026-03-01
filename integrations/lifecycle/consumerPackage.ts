@@ -21,12 +21,15 @@ const readPackageJson = (repoRoot: string): ConsumerPackageJson => {
   return JSON.parse(raw) as ConsumerPackageJson;
 };
 
-export const resolveCurrentPumukiDependency = (repoRoot: string): {
+export const resolveDeclaredDependency = (params: {
+  repoRoot: string;
+  dependencyName: string;
+}): {
   source: ConsumerDependencySource;
   spec?: string;
 } => {
-  const pkg = readPackageJson(repoRoot);
-  const dependencyName = getCurrentPumukiPackageName();
+  const pkg = readPackageJson(params.repoRoot);
+  const dependencyName = params.dependencyName;
 
   const dependencySpec = pkg.dependencies?.[dependencyName];
   if (typeof dependencySpec === 'string') {
@@ -48,6 +51,15 @@ export const resolveCurrentPumukiDependency = (repoRoot: string): {
     source: 'none',
   };
 };
+
+export const resolveCurrentPumukiDependency = (repoRoot: string): {
+  source: ConsumerDependencySource;
+  spec?: string;
+} =>
+  resolveDeclaredDependency({
+    repoRoot,
+    dependencyName: getCurrentPumukiPackageName(),
+  });
 
 export const hasDeclaredDependenciesBeyondPumuki = (repoRoot: string): boolean => {
   const pkg = readPackageJson(repoRoot);

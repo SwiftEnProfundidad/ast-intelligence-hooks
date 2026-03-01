@@ -211,7 +211,9 @@ npx --yes pumuki-ci
 
 ```bash
 npx --yes pumuki-mcp-evidence
-npx --yes pumuki-mcp-enterprise
+npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio
+npx --yes --package pumuki@latest pumuki-mcp-enterprise
+npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio
 ```
 
 ## Validation and Diagnostics (Framework-Only)
