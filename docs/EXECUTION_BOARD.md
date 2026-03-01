@@ -129,7 +129,13 @@
     - `gh pr checks 475` (fallos masivos 2-4s en CI/gates y `security/snyk` en fail por límite de tests privados).
     - job `65275890393` (`Build Verification`) => `runner_id=0`, `steps_count=0`.
     - `npm run -s validation:progress-single-active` (`in_progress_count=1`).
-- 🚧 `P7.T11` Espera operativa de instrucción explícita de merge para ejecutar el cierre final inmediato de PR #475.
+- ✅ `P7.T11` Espera operativa de instrucción explícita de merge para ejecutar el cierre final inmediato de PR #475.
+  - evidencia de cierre:
+    - `gh pr view 475` => `state=OPEN`, `mergeStateStatus=UNSTABLE`.
+    - `gh pr checks 475` mantiene fallos rápidos (2-4s) en CI/gates.
+    - job `65275945400` (`Build Verification`) => `runner_id=0`, `steps_count=0`.
+    - `npm run -s validation:progress-single-active` (`in_progress_count=1`).
+- 🚧 `P7.T12` Ejecutar merge final de PR #475 inmediatamente cuando llegue instrucción explícita del usuario.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.

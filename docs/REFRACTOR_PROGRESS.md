@@ -525,7 +525,13 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - `gh pr checks 475`: fallos rápidos (2-4s) en CI/gates; `security/snyk` en fail por límite de tests privados.
     - job `65275890393` (`Build Verification`) con `runner_id=0`, `steps_count=0`.
     - `validation:progress-single-active` mantiene invariante (`in_progress_count=1`).
-- 🚧 `P7.T11` Espera operativa de instrucción explícita de merge para ejecutar cierre inmediato de PR #475.
+- ✅ `P7.T11` Espera operativa de instrucción explícita de merge para ejecutar cierre inmediato de PR #475.
+  - tick remoto de cierre:
+    - `gh pr view 475`: `state=OPEN`, `mergeStateStatus=UNSTABLE`.
+    - `gh pr checks 475`: fallos rápidos (2-4s) persistentes.
+    - job `65275945400` (`Build Verification`) con `runner_id=0`, `steps_count=0`.
+    - `validation:progress-single-active` mantiene invariante (`in_progress_count=1`).
+- 🚧 `P7.T12` Ejecutar merge final de PR #475 inmediatamente cuando llegue instrucción explícita del usuario.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
