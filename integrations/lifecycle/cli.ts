@@ -27,6 +27,10 @@ import {
 import { evaluateAiGate } from '../gate/evaluateAiGate';
 import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
 import { emitAuditSummaryNotificationFromAiGate } from '../notifications/emitAuditSummaryNotification';
+import {
+  buildPreWriteAutomationTrace,
+  type PreWriteAutomationTrace,
+} from './preWriteAutomation';
 import { buildLocalHotspotsReport, type LocalHotspotsReport } from './analyticsHotspots';
 import { resolveHotspotsSaasIngestionAuditPath } from './saasIngestionAudit';
 import { readHotspotsSaasIngestionPayload } from './saasIngestionContract';
@@ -752,6 +756,14 @@ const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
   ai_gate: ReturnType<typeof evaluateAiGate>;
+  automation: {
+    attempted: boolean;
+    actions: Array<{
+      action: 'refresh_evidence' | 'refresh_mcp_receipt';
+      status: 'OK' | 'FAILED';
+      details: string;
+    }>;
+  };
   telemetry: {
     chain: typeof PRE_WRITE_TELEMETRY_CHAIN;
     stage: SddStage;
@@ -767,6 +779,106 @@ type LifecycleCliDependencies = {
 const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
   runPlatformGate,
+};
+
+const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
+  EVIDENCE_MISSING: 'Regenera evidencia ejecutando una auditoría completa antes de continuar.',
+  EVIDENCE_INVALID: 'Corrige el contrato de .ai_evidence.json y vuelve a ejecutar el gate.',
+  EVIDENCE_STALE: 'Refresca evidencia para este repo y rama.',
+  EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este repositorio.',
+  EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual.',
+  EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
+  EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura unevaluated=0 y coverage_ratio=1.',
+  GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
+  MCP_ENTERPRISE_RECEIPT_MISSING: 'Invoca ai_gate_check desde pumuki-enterprise MCP antes de PRE_WRITE.',
+  MCP_ENTERPRISE_RECEIPT_INVALID: 'Corrige recibo MCP y vuelve a invocar ai_gate_check.',
+  MCP_ENTERPRISE_RECEIPT_STALE: 'Vuelve a ejecutar ai_gate_check para emitir recibo fresco.',
+  MCP_ENTERPRISE_RECEIPT_STAGE_MISMATCH: 'Reejecuta ai_gate_check con stage PRE_WRITE.',
+  MCP_ENTERPRISE_RECEIPT_REPO_ROOT_MISMATCH: 'Genera el recibo MCP en este mismo repositorio.',
+};
+
+const wrapPreWritePanelLine = (value: string, width: number): string[] => {
+  if (width < 20 || value.length <= width) {
+    return [value];
+  }
+  const words = value.split(/\s+/);
+  const lines: string[] = [];
+  let current = '';
+  for (const word of words) {
+    if (current.length === 0) {
+      current = word;
+      continue;
+    }
+    if (`${current} ${word}`.length <= width) {
+      current = `${current} ${word}`;
+      continue;
+    }
+    lines.push(current);
+    current = word;
+  }
+  if (current.length > 0) {
+    lines.push(current);
+  }
+  return lines;
+};
+
+const renderPreWritePanel = (lines: ReadonlyArray<string>): string => {
+  const terminalWidth = Number.isFinite(process.stdout.columns ?? NaN)
+    ? Number(process.stdout.columns)
+    : 110;
+  const width = Math.min(140, Math.max(86, terminalWidth - 2));
+  const innerWidth = width - 4;
+  const normalized = lines.flatMap((line) => wrapPreWritePanelLine(line, innerWidth));
+  const top = `╔${'═'.repeat(width - 2)}╗`;
+  const bottom = `╚${'═'.repeat(width - 2)}╝`;
+  const body = normalized.map((line) => `║ ${line.padEnd(innerWidth, ' ')} ║`);
+  return [top, ...body, bottom].join('\n');
+};
+
+const buildPreWriteValidationPanel = (params: {
+  sdd: ReturnType<typeof evaluateSddPolicy>;
+  aiGate: ReturnType<typeof evaluateAiGate>;
+  automation: PreWriteAutomationTrace;
+}): string => {
+  const git = params.aiGate.repo_state.git;
+  const receipt = params.aiGate.mcp_receipt;
+  const lines: string[] = [
+    'PRE-FLIGHT CHECK',
+    `Stage: ${params.sdd.stage} · SDD: ${params.sdd.decision.code} · AI Gate: ${params.aiGate.status}`,
+    `Branch: ${git.branch ?? 'unknown'} · Upstream: ${git.upstream ?? 'none'}`,
+    `Worktree: dirty=${git.dirty ? 'yes' : 'no'} staged=${git.staged} unstaged=${git.unstaged} ahead=${git.ahead} behind=${git.behind}`,
+    `Evidence: kind=${params.aiGate.evidence.kind} age=${params.aiGate.evidence.age_seconds ?? 'n/a'}s max=${params.aiGate.evidence.max_age_seconds}s`,
+    `MCP receipt: required=${receipt.required ? 'yes' : 'no'} kind=${receipt.kind} age=${receipt.age_seconds ?? 'n/a'}s max=${receipt.max_age_seconds ?? 'n/a'}s`,
+    `Auto-heal: attempted=${params.automation.attempted ? 'yes' : 'no'} actions=${params.automation.actions.length}`,
+    `Violations: ${params.aiGate.violations.length}`,
+  ];
+
+  if (params.automation.actions.length > 0) {
+    lines.push('');
+    lines.push('Auto-heal actions:');
+    for (const action of params.automation.actions) {
+      lines.push(`- ${action.action}: ${action.status} (${action.details})`);
+    }
+  }
+
+  if (params.aiGate.violations.length > 0) {
+    lines.push('');
+    lines.push('Blocking causes:');
+    for (const violation of params.aiGate.violations) {
+      lines.push(`- ${violation.code}: ${violation.message}`);
+    }
+    lines.push('');
+    lines.push('Operational hints:');
+    for (const violation of params.aiGate.violations) {
+      const hint = PRE_WRITE_HINTS_BY_CODE[violation.code];
+      if (!hint) {
+        continue;
+      }
+      lines.push(`- ${violation.code}: ${hint}`);
+    }
+  }
+
+  return renderPreWritePanel(lines);
 };
 
 const resolveSddDecisionLocation = (
@@ -808,10 +920,15 @@ const resolveAiGateViolationLocation = (code: string) => {
 
 const buildPreWriteValidationEnvelope = (
   result: ReturnType<typeof evaluateSddPolicy>,
-  aiGate: ReturnType<typeof evaluateAiGate>
+  aiGate: ReturnType<typeof evaluateAiGate>,
+  automation: PreWriteAutomationTrace
 ): PreWriteValidationEnvelope => ({
   sdd: result,
   ai_gate: aiGate,
+  automation: {
+    attempted: automation.attempted,
+    actions: [...automation.actions],
+  },
   telemetry: {
     chain: PRE_WRITE_TELEMETRY_CHAIN,
     stage: result.stage,
@@ -1181,17 +1298,33 @@ export const runLifecycleCli = async (
             stage: parsed.sddStage ?? 'PRE_COMMIT',
           });
           const shouldEvaluateAiGate = result.stage === 'PRE_WRITE';
-          const aiGate = shouldEvaluateAiGate
+          let aiGate = shouldEvaluateAiGate
             ? runEnterpriseAiGateCheck({
               repoRoot: process.cwd(),
               stage: result.stage,
+              requireMcpReceipt: true,
             }).result
             : null;
+          const automationTrace: PreWriteAutomationTrace = {
+            attempted: false,
+            actions: [],
+          };
+          if (result.stage === 'PRE_WRITE' && aiGate) {
+            const auto = await buildPreWriteAutomationTrace({
+              repoRoot: process.cwd(),
+              sdd: result,
+              aiGate,
+              runPlatformGate: activeDependencies.runPlatformGate,
+            });
+            aiGate = auto.aiGate;
+            automationTrace.attempted = auto.trace.attempted;
+            automationTrace.actions = auto.trace.actions;
+          }
           if (parsed.json) {
             writeInfo(
               JSON.stringify(
                 aiGate
-                  ? buildPreWriteValidationEnvelope(result, aiGate)
+                  ? buildPreWriteValidationEnvelope(result, aiGate, automationTrace)
                   : result,
                 null,
                 2
@@ -1213,6 +1346,11 @@ export const runLifecycleCli = async (
               );
             }
             if (aiGate) {
+              writeInfo(buildPreWriteValidationPanel({
+                sdd: result,
+                aiGate,
+                automation: automationTrace,
+              }));
               writeInfo(
                 `[pumuki][ai-gate] stage=${aiGate.stage} status=${aiGate.status} violations=${aiGate.violations.length}`
               );

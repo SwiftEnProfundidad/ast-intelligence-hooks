@@ -30,3 +30,6 @@ Este directorio contiene solo documentación oficial y estable de validación pa
   - `docs/evidence-v2.1.md`
 - El cierre de `C025` (auditoría exhaustiva de funcionalidades + reglas) quedó consolidado en:
   - `docs/REFRACTOR_PROGRESS.md` (estado, evidencia y cierre del bloque P5).
+- El cierre de `P6` (verificación exhaustiva real/mock) quedó consolidado en:
+  - `docs/EXECUTION_BOARD.md` (checklist unificada con evidencia `371/371`).
+  - `docs/REFRACTOR_PROGRESS.md` (veredicto y transición a bloque `P7`).

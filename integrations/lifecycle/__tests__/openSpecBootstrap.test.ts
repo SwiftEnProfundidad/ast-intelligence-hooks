@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
@@ -84,6 +84,50 @@ test('runOpenSpecBootstrap no instala npm sin package.json y deja traza de skip'
     assert.equal(result.projectInitialized, true);
     assert.equal(result.actions.includes('scaffold:openspec-project'), true);
     assert.equal(existsSync(join(repoRoot, 'openspec', 'project.md')), true);
+    assert.deepEqual(result.managedArtifacts, [
+      'openspec/project.md',
+      'openspec/changes/archive/.gitkeep',
+      'openspec/specs/.gitkeep',
+    ]);
+  });
+});
+
+test('runOpenSpecBootstrap conserva managedArtifacts cuando openspec ya existe', async () => {
+  await withTempDir('pumuki-openspec-bootstrap-preexisting-', async (repoRoot) => {
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+          devDependencies: {
+            '@fission-ai/openspec': '1.2.0',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    mkdirSync(join(repoRoot, 'openspec', 'changes', 'archive'), { recursive: true });
+    mkdirSync(join(repoRoot, 'openspec', 'specs'), { recursive: true });
+    writeFileSync(join(repoRoot, 'openspec', 'project.md'), '# OpenSpec Project\n', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'changes', 'archive', '.gitkeep'), '', 'utf8');
+    writeFileSync(join(repoRoot, 'openspec', 'specs', '.gitkeep'), '', 'utf8');
+
+    const npm = new FakeLifecycleNpmService();
+    const result = runOpenSpecBootstrap({
+      repoRoot,
+      npm,
+    });
+
+    assert.equal(npm.calls.length, 1);
+    assert.equal(
+      result.actions.includes('npm-install:@fission-ai/openspec@latest'),
+      true
+    );
+    assert.equal(result.actions.includes('scaffold:openspec-project'), false);
+    assert.equal(result.projectInitialized, true);
     assert.deepEqual(result.managedArtifacts, [
       'openspec/project.md',
       'openspec/changes/archive/.gitkeep',

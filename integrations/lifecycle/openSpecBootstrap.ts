@@ -52,6 +52,14 @@ const OPENSPEC_LEGACY_NPM_PACKAGE_NAME = 'openspec';
 const OPENSPEC_PROJECT_MD = 'openspec/project.md';
 const OPENSPEC_ARCHIVE_GITKEEP = 'openspec/changes/archive/.gitkeep';
 const OPENSPEC_SPECS_GITKEEP = 'openspec/specs/.gitkeep';
+const OPENSPEC_MANAGED_ARTIFACTS = [
+  OPENSPEC_PROJECT_MD,
+  OPENSPEC_ARCHIVE_GITKEEP,
+  OPENSPEC_SPECS_GITKEEP,
+] as const;
+
+const resolvePresentManagedArtifacts = (repoRoot: string): ReadonlyArray<string> =>
+  OPENSPEC_MANAGED_ARTIFACTS.filter((relativePath) => existsSync(join(repoRoot, relativePath)));
 
 export type OpenSpecCompatibilityMigrationResult = {
   repoRoot: string;
@@ -172,10 +180,11 @@ export const runOpenSpecBootstrap = (params: {
   }
 
   const projectInitializedBefore = isOpenSpecProjectInitialized(params.repoRoot);
-  const managedArtifacts = !projectInitializedBefore
-    ? scaffoldOpenSpecProject(params.repoRoot)
-    : [];
-  if (managedArtifacts.length > 0) {
+  if (!projectInitializedBefore) {
+    scaffoldOpenSpecProject(params.repoRoot);
+  }
+  const managedArtifacts = resolvePresentManagedArtifacts(params.repoRoot);
+  if (!projectInitializedBefore && managedArtifacts.length > 0) {
     actions.push('scaffold:openspec-project');
   }
 

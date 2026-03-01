@@ -4,11 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
 import { installPumukiHooks } from '../hookManager';
 import type { ILifecycleNpmService } from '../npmService';
 import { getCurrentPumukiPackageName } from '../packageInfo';
 import { runLifecycleRemove } from '../remove';
+import { OPENSPEC_NPM_PACKAGE_NAME } from '../../sdd/openSpecCli';
 
 const withCwd = <T>(cwd: string, fn: () => T): T => {
   const previous = process.cwd();
@@ -27,7 +29,8 @@ class FakeLifecycleGitService implements ILifecycleGitService {
 
   constructor(
     private readonly repoRoot: string,
-    private readonly trackedPaths: ReadonlySet<string> = new Set()
+    private readonly trackedPaths: ReadonlySet<string> = new Set(),
+    private readonly localConfigValues: Readonly<Record<string, string | undefined>> = {}
   ) {}
 
   runGit(_args: ReadonlyArray<string>, _cwd: string): string {
@@ -61,8 +64,8 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     this.unsetCalls.push({ cwd, key });
   }
 
-  localConfig(): string | undefined {
-    return undefined;
+  localConfig(_cwd: string, key: string): string | undefined {
+    return this.localConfigValues[key];
   }
 }
 
@@ -262,5 +265,48 @@ test('runLifecycleRemove usa process.cwd cuando no recibe cwd explícito', async
     assert.equal(result.repoRoot, repoRoot);
     assert.equal(git.resolveRepoRootCalls.length >= 1, true);
     assert.equal(realpathSync(git.resolveRepoRootCalls[0] ?? defaultCwd), realpathSync(defaultCwd));
+  });
+});
+
+test('runLifecycleRemove desinstala openspec cuando fue bootstrap gestionado por pumuki', async () => {
+  await withTempDir('pumuki-remove-managed-openspec-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), '{}\n', 'utf8');
+    writeFileSync(
+      join(repoRoot, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'fixture',
+          version: '1.0.0',
+          devDependencies: {
+            [OPENSPEC_NPM_PACKAGE_NAME]: '1.2.0',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      new Set(),
+      {
+        [PUMUKI_CONFIG_KEYS.openSpecManagedArtifacts]:
+          'openspec/project.md,openspec/changes/archive/.gitkeep,openspec/specs/.gitkeep',
+      }
+    );
+    const npm = new FakeLifecycleNpmService();
+    const result = runLifecycleRemove({
+      cwd: repoRoot,
+      git,
+      npm,
+    });
+
+    assert.equal(result.packageRemoved, false);
+    assert.equal(npm.calls.length, 1);
+    assert.deepEqual(npm.calls[0]?.args, ['uninstall', OPENSPEC_NPM_PACKAGE_NAME]);
+    assert.equal(npm.calls[0]?.cwd, repoRoot);
   });
 });
