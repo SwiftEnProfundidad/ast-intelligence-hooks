@@ -125,6 +125,12 @@
       - `65275776729` (`package-smoke minimal`) => `runner_id=0`, `steps_count=0`
     - `security/snyk (swiftenprofundidad)` en `ERROR` externo.
 - 🚧 `P7.T10` Mantener PR #475 monitorizada y lista para merge inmediato en cuanto llegue instrucción explícita.
+  - último tick:
+    - `gh pr checks 475` (fallos masivos de 2-4s; `security/snyk` en fail por límite de tests privados).
+    - job `65275863237` (`Build Verification`) => `runner_id=0`, `steps_count=0`.
+  - estado operativo:
+    - rama release limpia y publicada.
+    - PR lista para merge inmediato cuando llegue instrucción explícita del usuario.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
