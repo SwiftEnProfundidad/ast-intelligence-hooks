@@ -591,7 +591,15 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - últimos runs en `develop` continúan en `failure` sin mejora de infraestructura.
   - conclusión operativa:
     - bloqueo externo vigente, sin remediación local adicional viable por ahora.
-- 🚧 `P8.T6` Espera activa y monitorización ligera del desbloqueo externo (runner/billing + cuota Snyk) con ejecución inmediata en cuanto cambie el estado.
+- ✅ `P8.T6` Espera activa y monitorización ligera del desbloqueo externo (runner/billing + cuota Snyk) con ejecución inmediata en cuanto cambie el estado.
+  - monitorización actual:
+    - `actions/runners total_count=0`.
+    - runs recientes de `develop` siguen en `failure`.
+    - reintentos remotos previos se mantienen con `runner=null` y `steps=0`:
+      - `CI` (`run=22533289915`, `attempt=2`)
+      - `Pumuki Backend Gate` (`run=22533289937`, `attempt=2`)
+      - `Pumuki Package Smoke` (`run=22533289926`, `attempt=2`)
+- 🚧 `P8.T7` Mantener espera operativa y relanzar matriz mínima remota en cuanto haya señal de capacidad externa.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

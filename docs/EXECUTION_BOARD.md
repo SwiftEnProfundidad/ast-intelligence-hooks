@@ -194,7 +194,12 @@
     - últimos runs de `develop` continúan en `failure` (sin señal de capacidad remota recuperada).
   - conclusión:
     - no hay acciones locales adicionales efectivas hasta habilitación externa.
-- 🚧 `P8.T6` Espera activa y monitorización ligera del desbloqueo externo (runner/billing + cuota Snyk) con ejecución inmediata en cuanto cambie el estado.
+- ✅ `P8.T6` Espera activa y monitorización ligera del desbloqueo externo (runner/billing + cuota Snyk) con ejecución inmediata en cuanto cambie el estado.
+  - tick de monitorización:
+    - `actions/runners total_count=0` (sin cambio).
+    - últimos runs en `develop` se mantienen en `failure`.
+    - reintentos `attempt=2` siguen sin ejecución real (`runner=null`, `steps=0`) en `CI`, `Backend Gate` y `Package Smoke`.
+- 🚧 `P8.T7` Mantener espera operativa y relanzar matriz mínima remota en cuanto haya señal de capacidad externa.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
