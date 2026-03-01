@@ -510,16 +510,9 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - evidencia:
     - `gh pr checks 475` con fallos/pending de corta duración.
     - muestreo API job `65275754526` (`runner_id=0`, `steps_count=0`).
-- ⛔ `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
-  - `STATUS: BLOCKED` por política hard:
-    - `AGENTS.md` exige instrucción explícita para ejecutar merge.
-  - evidencia remota actual:
-    - PR `#475` en `mergeStateStatus=UNSTABLE`.
-    - jobs muestreados con `runner_id=0` y `steps_count=0`:
-      - `65275776736` (`CI`)
-      - `65275776811` (`android-gate`)
-      - `65275776729` (`package-smoke minimal`)
-    - `security/snyk (swiftenprofundidad)` en `ERROR` externo.
+- ✅ `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
+  - bloqueo inicial documentado por política hard y checks externos.
+  - resolución completada en `P7.T12` tras instrucción explícita de merge (PR `#475` mergeada).
 - ✅ `P7.T10` Mantener PR #475 monitorizada y lista para merge inmediato en cuanto llegue instrucción explícita.
   - tick remoto de cierre:
     - `gh pr checks 475`: fallos rápidos (2-4s) en CI/gates; `security/snyk` en fail por límite de tests privados.
@@ -556,7 +549,22 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - `origin/develop` y `origin/main` con paridad de contenido por árbol.
 
 ### Fase P8 — Post-P7
-- 🚧 `P8.T1` Preparar bloque siguiente post-P7 (cierre de release y definición de objetivo operativo siguiente).
+- ✅ `P8.T1` Preparar bloque siguiente post-P7 (cierre de release y definición de objetivo operativo siguiente).
+  - objetivo siguiente fijado:
+    - atacar deuda operativa residual en desbloqueo externo (`P0.T1`: runners/checks/Snyk remoto).
+- ✅ `P8.T2` Preparar paquete de desbloqueo externo (`P0.T1`) con estado actual y ruta de rehabilitación.
+  - paquete de desbloqueo consolidado:
+    - `gh api /actions/runners` => `total_count=0`.
+    - patrón remoto repetido en `PR #477`: checks con fallos de 2-4s.
+    - muestras de jobs con `runner_id=0` y `steps_count=0`:
+      - `65276132628` (`Build Verification`)
+      - `65276132645` (`android-gate`)
+      - `65276132648` (`package-smoke minimal`)
+    - `security/snyk` en fail por límite de tests privados.
+  - plan listo:
+    - rehabilitar capacidad remota (runner/billing) y cuota/config Snyk.
+    - reintentar matriz mínima remota para cerrar `P0.T1`.
+- 🚧 `P8.T3` Mantener readiness para reintento remoto de `P0.T1` cuando se habilite infraestructura externa.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

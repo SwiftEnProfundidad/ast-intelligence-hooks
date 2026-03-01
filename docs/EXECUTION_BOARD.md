@@ -115,15 +115,10 @@
   - evidencia remota fresca:
     - `gh pr checks 475` (fallos masivos de 3-4s y pendientes por infraestructura externa).
     - job `65275754526` (`Build Verification`) => `runner_id=0`, `steps_count=0`.
-- ⛔ `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
-  - estado: `BLOCKED` por contrato `AGENTS.md` (merge prohibido sin instrucción explícita).
-  - evidencia:
-    - `gh pr view 475` => `mergeStateStatus=UNSTABLE`.
-    - jobs muestreados con fallo infra:
-      - `65275776736` (`CI`) => `runner_id=0`, `steps_count=0`
-      - `65275776811` (`android-gate`) => `runner_id=0`, `steps_count=0`
-      - `65275776729` (`package-smoke minimal`) => `runner_id=0`, `steps_count=0`
-    - `security/snyk (swiftenprofundidad)` en `ERROR` externo.
+- ✅ `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
+  - resolución:
+    - bloqueo inicial documentado por política de merge y checks externos.
+    - cierre ejecutado finalmente en `P7.T12` tras instrucción explícita del usuario (PR `#475` mergeada).
 - ✅ `P7.T10` Mantener PR #475 monitorizada y lista para merge inmediato en cuanto llegue instrucción explícita.
   - evidencia de cierre:
     - `gh pr checks 475` (fallos masivos 2-4s en CI/gates y `security/snyk` en fail por límite de tests privados).
@@ -157,7 +152,21 @@
     - ramas protegidas con paridad de contenido validada por árbol (`origin/develop^{tree} == origin/main^{tree}`).
 
 ## Fase P8 (Seguimiento)
-- 🚧 `P8.T1` Preparar bloque siguiente post-P7 (cierre de release y definición de objetivo operativo siguiente).
+- ✅ `P8.T1` Preparar bloque siguiente post-P7 (cierre de release y definición de objetivo operativo siguiente).
+  - objetivo definido:
+    - priorizar desbloqueo externo histórico de `P0.T1` (runners/checks remotos/Snyk) para cerrar deuda operativa residual.
+- ✅ `P8.T2` Preparar paquete de desbloqueo externo (`P0.T1`) con estado actual y ruta de rehabilitación.
+  - evidencia consolidada:
+    - `gh api /actions/runners` => `total_count=0` (sin self-hosted runners en repo).
+    - PR `#477` muestra patrón externo repetido en checks (fallos 2-4s + `security/snyk` por límite de tests privados).
+    - muestras API de jobs:
+      - `65276132628` (`Build Verification`) => `runner_id=0`, `steps_count=0`
+      - `65276132645` (`android-gate`) => `runner_id=0`, `steps_count=0`
+      - `65276132648` (`package-smoke minimal`) => `runner_id=0`, `steps_count=0`
+  - ruta de rehabilitación lista:
+    - habilitar capacidad real de ejecución remota (runner/billing) y reintentar checks de referencia.
+    - restablecer cuota/configuración de Snyk para eliminar `limit of private tests`.
+- 🚧 `P8.T3` Mantener readiness para reintento remoto de `P0.T1` cuando se habilite infraestructura externa.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
