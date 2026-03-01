@@ -115,7 +115,16 @@
   - evidencia remota fresca:
     - `gh pr checks 475` (fallos masivos de 3-4s y pendientes por infraestructura externa).
     - job `65275754526` (`Build Verification`) => `runner_id=0`, `steps_count=0`.
-- 🚧 `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
+- ⛔ `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
+  - estado: `BLOCKED` por contrato `AGENTS.md` (merge prohibido sin instrucción explícita).
+  - evidencia:
+    - `gh pr view 475` => `mergeStateStatus=UNSTABLE`.
+    - jobs muestreados con fallo infra:
+      - `65275776736` (`CI`) => `runner_id=0`, `steps_count=0`
+      - `65275776811` (`android-gate`) => `runner_id=0`, `steps_count=0`
+      - `65275776729` (`package-smoke minimal`) => `runner_id=0`, `steps_count=0`
+    - `security/snyk (swiftenprofundidad)` en `ERROR` externo.
+- 🚧 `P7.T10` Mantener PR #475 monitorizada y lista para merge inmediato en cuanto llegue instrucción explícita.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.

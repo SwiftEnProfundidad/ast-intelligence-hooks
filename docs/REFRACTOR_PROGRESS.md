@@ -510,7 +510,17 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - evidencia:
     - `gh pr checks 475` con fallos/pending de corta duración.
     - muestreo API job `65275754526` (`runner_id=0`, `steps_count=0`).
-- 🚧 `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
+- ⛔ `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
+  - `STATUS: BLOCKED` por política hard:
+    - `AGENTS.md` exige instrucción explícita para ejecutar merge.
+  - evidencia remota actual:
+    - PR `#475` en `mergeStateStatus=UNSTABLE`.
+    - jobs muestreados con `runner_id=0` y `steps_count=0`:
+      - `65275776736` (`CI`)
+      - `65275776811` (`android-gate`)
+      - `65275776729` (`package-smoke minimal`)
+    - `security/snyk (swiftenprofundidad)` en `ERROR` externo.
+- 🚧 `P7.T10` Mantener PR #475 monitorizada y lista para merge inmediato en cuanto llegue instrucción explícita.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
