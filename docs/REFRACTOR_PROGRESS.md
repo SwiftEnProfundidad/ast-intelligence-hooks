@@ -503,7 +503,14 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - `mergeStateStatus=UNSTABLE` por checks externos.
     - jobs muestreados con patrón de infraestructura no asignada: `runner_id=0`, `steps_count=0` en `CI`, `android-gate`, `package-smoke minimal`.
     - `security/snyk (swiftenprofundidad)` en `ERROR` (dependencia externa fuera de alcance MVP).
-- 🚧 `P7.T8` Preparar cierre final del bloque P7 con estrategia de merge según política remota (checks externos bloqueados).
+- ✅ `P7.T8` Preparar cierre final del bloque P7 con estrategia de merge según política remota (checks externos bloqueados).
+  - estrategia de cierre documentada:
+    - merge normal si checks remotos pasan.
+    - merge administrativo solo bajo instrucción explícita del usuario si se mantiene bloqueo externo.
+  - evidencia:
+    - `gh pr checks 475` con fallos/pending de corta duración.
+    - muestreo API job `65275754526` (`runner_id=0`, `steps_count=0`).
+- 🚧 `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

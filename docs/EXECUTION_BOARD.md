@@ -108,7 +108,14 @@
       - `65275715181` (`android-gate`) => `runner_id=0`, `steps_count=0`
       - `65275715143` (`package-smoke minimal`) => `runner_id=0`, `steps_count=0`
     - `security/snyk (swiftenprofundidad)` en `ERROR` (dependencia externa no-MVP).
-- 🚧 `P7.T8` Preparar cierre final del bloque P7 con estrategia de merge según política remota (checks externos bloqueados).
+- ✅ `P7.T8` Preparar cierre final del bloque P7 con estrategia de merge según política remota (checks externos bloqueados).
+  - estrategia preparada:
+    - ruta normal: merge cuando `statusCheckRollup` esté en verde.
+    - ruta administrativa: merge por instrucción explícita del usuario si persiste bloqueo externo.
+  - evidencia remota fresca:
+    - `gh pr checks 475` (fallos masivos de 3-4s y pendientes por infraestructura externa).
+    - job `65275754526` (`Build Verification`) => `runner_id=0`, `steps_count=0`.
+- 🚧 `P7.T9` Ejecutar cierre final del bloque P7 según decisión de merge (normal o administrativa).
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
