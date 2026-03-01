@@ -9,6 +9,7 @@ import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
 import { toStatusPayload } from './evidencePayloads';
 import { runEnterpriseAiGateCheck } from './aiGateCheck';
+import { writeMcpAiGateReceipt } from './aiGateReceipt';
 
 export interface EnterpriseServerOptions {
   host?: string;
@@ -357,12 +358,24 @@ const executeEnterpriseTool = (
         repoRoot,
         stage,
       });
+      const receiptWrite = writeMcpAiGateReceipt({
+        repoRoot,
+        stage: execution.result.stage,
+        status: execution.result.status,
+        allowed: execution.result.allowed,
+      });
       return {
         name: toolName,
         success: execution.success,
         dryRun: execution.dryRun,
         executed: execution.executed,
-        data: execution.result,
+        data: {
+          ...execution.result,
+          receipt: {
+            path: receiptWrite.path,
+            issued_at: receiptWrite.receipt.issued_at,
+          },
+        },
       };
     }
     case 'check_sdd_status': {

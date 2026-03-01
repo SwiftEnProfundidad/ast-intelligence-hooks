@@ -1,5 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { homedir } from 'node:os';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 
 export type AdapterAgent = string;
@@ -15,6 +16,7 @@ export type LifecycleAdapterInstallResult = {
 type AdapterTemplate = {
   path: string;
   payload: unknown;
+  mode?: 'replace' | 'json-merge';
 };
 
 type AdapterTemplatesManifest = Record<string, ReadonlyArray<AdapterTemplate>>;
@@ -53,6 +55,76 @@ const readFileOrEmpty = (path: string): string => {
   }
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const mergeObjects = (base: unknown, incoming: unknown): unknown => {
+  if (!isRecord(base) || !isRecord(incoming)) {
+    return incoming;
+  }
+  const merged: Record<string, unknown> = { ...base };
+  for (const [key, value] of Object.entries(incoming)) {
+    merged[key] = key in base ? mergeObjects(base[key], value) : value;
+  }
+  return merged;
+};
+
+const resolveHomeDir = (): string => process.env.HOME ?? homedir();
+
+const resolveTemplatePath = (repoRoot: string, templatePath: string): string => {
+  if (templatePath.startsWith('$HOME/')) {
+    return resolve(resolveHomeDir(), templatePath.slice('$HOME/'.length));
+  }
+  if (templatePath.startsWith('~/')) {
+    return resolve(resolveHomeDir(), templatePath.slice(2));
+  }
+  if (isAbsolute(templatePath)) {
+    return templatePath;
+  }
+  return join(repoRoot, templatePath);
+};
+
+const buildTemplateContents = (params: {
+  template: AdapterTemplate;
+  absolutePath: string;
+}): { currentContents: string; nextContents: string } => {
+  const currentContents = readFileOrEmpty(params.absolutePath);
+  if (params.template.mode !== 'json-merge') {
+    return {
+      currentContents,
+      nextContents: toJson(params.template.payload),
+    };
+  }
+
+  if (!isRecord(params.template.payload)) {
+    throw new Error(`Invalid adapter template payload for JSON merge: "${params.template.path}".`);
+  }
+
+  let baseObject: Record<string, unknown> = {};
+  if (currentContents.trim().length > 0) {
+    let parsedCurrent: unknown;
+    try {
+      parsedCurrent = JSON.parse(currentContents) as unknown;
+    } catch {
+      throw new Error(
+        `Cannot merge adapter template into invalid JSON file: "${params.template.path}" (${params.absolutePath}).`
+      );
+    }
+    if (!isRecord(parsedCurrent)) {
+      throw new Error(
+        `Cannot merge adapter template into non-object JSON file: "${params.template.path}" (${params.absolutePath}).`
+      );
+    }
+    baseObject = parsedCurrent;
+  }
+
+  const merged = mergeObjects(baseObject, params.template.payload);
+  return {
+    currentContents,
+    nextContents: toJson(merged),
+  };
+};
+
 export const runLifecycleAdapterInstall = (params: {
   cwd?: string;
   git?: ILifecycleGitService;
@@ -66,9 +138,11 @@ export const runLifecycleAdapterInstall = (params: {
   const changedFiles: string[] = [];
 
   for (const template of templates) {
-    const absolutePath = join(repoRoot, template.path);
-    const nextContents = toJson(template.payload);
-    const currentContents = readFileOrEmpty(absolutePath);
+    const absolutePath = resolveTemplatePath(repoRoot, template.path);
+    const { currentContents, nextContents } = buildTemplateContents({
+      template,
+      absolutePath,
+    });
     if (currentContents === nextContents) {
       continue;
     }

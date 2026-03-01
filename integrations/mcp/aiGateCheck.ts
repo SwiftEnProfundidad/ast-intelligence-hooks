@@ -12,6 +12,7 @@ export type EnterpriseAiGateCheckResult = {
     policy: ReturnType<typeof evaluateAiGate>['policy'];
     violations: ReturnType<typeof evaluateAiGate>['violations'];
     evidence: ReturnType<typeof evaluateAiGate>['evidence'];
+    mcp_receipt: ReturnType<typeof evaluateAiGate>['mcp_receipt'];
     repo_state: ReturnType<typeof evaluateAiGate>['repo_state'];
   };
 };
@@ -19,10 +20,12 @@ export type EnterpriseAiGateCheckResult = {
 export const runEnterpriseAiGateCheck = (params: {
   repoRoot: string;
   stage: AiGateStage;
+  requireMcpReceipt?: boolean;
 }): EnterpriseAiGateCheckResult => {
   const evaluation = evaluateAiGate({
     repoRoot: params.repoRoot,
     stage: params.stage,
+    requireMcpReceipt: params.requireMcpReceipt ?? false,
   });
 
   return {
@@ -37,6 +40,7 @@ export const runEnterpriseAiGateCheck = (params: {
       policy: evaluation.policy,
       violations: evaluation.violations,
       evidence: evaluation.evidence,
+      mcp_receipt: evaluation.mcp_receipt,
       repo_state: evaluation.repo_state,
     },
   };

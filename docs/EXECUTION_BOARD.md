@@ -12,6 +12,7 @@
 - Objetivo: validación completa de funcionalidades + reglas AST en repo mock y repo real externo.
 - Fuente de checklist: inventario automático desde `package.json`, `integrations/lifecycle/cli.ts`, `core/rules/presets/**` e `integrations/config/skillsCompilerTemplates.ts`.
 - Política: una sola tarea en construcción.
+- Cobertura actual checklist: `371/371` ítems marcados con evidencia (`mock=371`, `real=371`).
 
 ## Evidencia Mock (actual)
 - Repo: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer`
@@ -20,8 +21,32 @@
 - Matriz mock E2E: ✅ `clean=0/0/0`, `violations=1/1/1`, `mixed=1/1/1`
 - Lifecycle remove (managed OpenSpec): ✅ fix aplicado + test dedicado en verde (`integrations/lifecycle/__tests__/remove.test.ts`)
 - Lifecycle remove (legacy bootstrap state): ✅ fix aplicado para registrar `openSpecManagedArtifacts` incluso cuando `openspec/` ya existía antes de `install` (`integrations/lifecycle/openSpecBootstrap.ts`)
+- Sub-task MCP explícita: ✅ auditada en flujo real `Codex CLI + Windsurf` (`adapter install --agent=windsurf` + arranque MCP + validación endpoints `/health`, `/status`, `/tools` y `/ai-evidence/summary`).
+- Integración `mcp_config.json` de Windsurf: ✅ `adapter install --agent=windsurf` ahora registra `pumuki-enterprise` en `$HOME/.codeium/windsurf/mcp_config.json` sin sobrescribir MCPs existentes.
+- Validación Codex CLI `/mcp`: ✅ servidores críticos activos en `~/.codex/config.toml` (`XcodeBuildMCP`, `cupertino`, `openaiDeveloperDocs`, `playwright`, `supabase`, `xcode`, `pumuki-enterprise`) comprobados con `codex mcp list`.
+- Corrección de arranque MCP Pumuki fuera de repo: ✅ comando normalizado a `npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio` (evita `npm 404` por paquete inexistente `pumuki-mcp-enterprise`).
+- Corrección de colisión de puerto MCP (`EADDRINUSE`): ✅ configuración de `pumuki-enterprise` endurecida con `PUMUKI_ENTERPRISE_MCP_PORT=0` en config global (Codex + Windsurf) y en templates de `adapter install --agent=windsurf`.
+- Compatibilidad de transporte MCP en Windsurf: ✅ bridge `pumuki-mcp-enterprise-stdio` ajustado a JSON-RPC por líneas (`\\n`) con `initialize` + `tools/list` verificados.
+- Segundo MCP Pumuki incorporado: ✅ `pumuki-evidence-stdio` añadido en Codex/Windsurf con handshake validado (`initialize` + `resources/list`).
+- MCP Evidence con tools visibles en IDE: ✅ `pumuki-evidence-stdio` ahora expone `tools/list` (6 tools: status/summary/snapshot/findings/rulesets/platforms).
+- Enforce MCP no cosmético en `PRE_WRITE`: ✅ `pumuki sdd validate --stage=PRE_WRITE` exige recibo MCP de `ai_gate_check` con validación dura en gate.
+- Recibo MCP auditable persistido por tool: ✅ `ai_gate_check` en `pumuki-enterprise` guarda `.pumuki/artifacts/mcp-ai-gate-receipt.json` (repo/stage/status/timestamp).
+- Recuadro legacy restaurado en `PRE_WRITE`: ✅ `pumuki-pre-write` vuelve a mostrar panel `PRE-FLIGHT CHECK` con `ai_gate`, `evidence`, `mcp receipt`, causas y hints accionables en cada intervención.
+- Autocuración automática `PRE_WRITE` (sin intervención humana): ✅ cuando falta/expira evidencia o recibo MCP, `pumuki sdd validate --stage=PRE_WRITE` ejecuta auto-refresh de evidencia + refresh de recibo y reevalúa gate.
+- Preflight repo real externo (`R_GO`) en clon temporal: ✅ comandos read-only + bins/pre-hooks validados; `install/uninstall` quedaron bloqueados por `EBADENGINE` (requiere `node 20.20.0` + `npm 10.8.2`); `analytics report` en ese repo grande devuelve `spawnSync git ENOBUFS`.
 - Evidencia principal: `/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json`
-- Nota: `P6.T8` sigue en construcción hasta completar repo real externo + relleno completo checklist.
+- Nota: `P6` consolidado; el foco activo pasa a hardening post-verificación (`P7`).
+
+## Cola Operativa P6.T8 (orden obligatorio)
+1. `P6.T8.1` Baseline mock limpio + lifecycle smoke -> `DONE`
+2. `P6.T8.2` Auditoría MCP en entorno real `Codex CLI + Windsurf` (adapter + arranque + respuesta) -> `DONE`
+3. `P6.T8.3` Completar checklist funcional/reglas en mock item-por-item -> `DONE`
+   - `P6.T8.3.a` Enforce de recibo MCP en PRE_WRITE + persistencia auditable + TDD de regresión -> `DONE`
+   - `P6.T8.3.b` Restaurar panel legacy de pre-flight en salida PRE_WRITE (recuadro AI gate por intervención) -> `DONE`
+   - `P6.T8.3.c` Autocuración automática PRE_WRITE (refresh evidencia + receipt MCP) con TDD de regresión -> `DONE`
+   - `P6.T8.3.d` Continuar ejecución checklist funcional/reglas mock restante -> `DONE`
+4. `P6.T8.4` Ejecutar lote equivalente en repo real externo item-por-item -> `DONE`
+5. `P6.T8.5` Consolidar evidencia y cerrar `P6.T8` para abrir `P6.T9` -> `DONE`
 
 ## Fase P6 (Seguimiento)
 - ✅ `P6.T1` Matriz explícita de verificación total definida.
@@ -31,391 +56,427 @@
 - ✅ `P6.T5` Seguimiento simplificado en MD único (`docs/EXECUTION_BOARD.md`).
 - ✅ `P6.T6` Higiene enterprise aplicada (basura y huérfanos purgados).
 - ✅ `P6.T7` Checklist exhaustiva unificada creada (funcionalidades + reglas AST sin omisiones).
-- 🚧 `P6.T8` Ejecutar checklist completa en repo mock + repo real externo y rellenar evidencia item por item.
-- ⏳ `P6.T9` Consolidar cierre final y veredicto enterprise del bloque P6.
+- ✅ `P6.T8` Ejecutar checklist completa en repo mock + repo real externo y rellenar evidencia item por item.
+- ✅ `P6.T9` Consolidar cierre final y veredicto enterprise del bloque P6.
+
+## Fase P7 (Seguimiento)
+- ✅ `P7.T1` Hardening post-P6 de scripts utilitarios y estabilidad operativa.
+  - evidencia de cierre:
+    - `npm run -s typecheck` (`PASS`)
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateReceipt.test.ts integrations/mcp/__tests__/enterpriseStdioServer.cli.test.ts integrations/mcp/__tests__/evidenceStdioServer.cli.test.ts integrations/lifecycle/__tests__/adapter.test.ts integrations/lifecycle/__tests__/cli.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts scripts/__tests__/manage-library-script.test.ts` (`40 pass / 0 fail`)
+    - `npm run -s test:stage-gates` (`916 pass / 0 fail / 4 skip`)
+    - `npm run -s validation:progress-single-active` (`in_progress_count=1`)
+- ✅ `P7.T2` Consolidar cierre operativo post-hardening y preparar cierre de release.
+  - evidencia de cierre:
+    - `npm run -s validation:package-manifest` (`package manifest check passed for pumuki@6.3.26`, `files scanned: 874`)
+    - `npm run -s validation:package-smoke:minimal` (`PASS`)
+    - `npm run -s validation:package-smoke` (`PASS`)
+    - `npm run -s pumuki:doctor` (`doctor verdict: PASS`)
+    - `npm run -s pumuki:status` (`lifecycle installed: false`, hooks ausentes detectados en baseline)
+    - `npm run -s validation:progress-single-active` (`in_progress_count=1`)
+- ✅ `P7.T3` Preparar cierre final de release (consolidación documental + verificación final de rama).
+  - evidencia de cierre:
+    - `npm run -s gitflow:status` (`branch: release/6.3.26`, `worktree: dirty`, rama válida para estabilización)
+    - `npm run -s gitflow:workflow` (guía de siguientes pasos y confirmación de rama válida)
+    - referencias documentales de foco activas:
+      - `docs/README.md` (`Alcance actual: ... P7`)
+      - `docs/validation/README.md` (índice enlazado al bloque P7 en `REFRACTOR_PROGRESS`)
+- ✅ `P7.T4` Cierre final del bloque P7 (validación integral final + preparación de cierre GitFlow).
+  - evidencia de cierre:
+    - `npm run -s typecheck` (`PASS`)
+    - `npm run -s test` (`916 pass / 0 fail`; `4 suites / 23 tests` en jest)
+    - `npm run -s validation:progress-single-active` (`in_progress_count=1`)
+    - `npm run -s gitflow:status` (`branch: release/6.3.26`, worktree activo)
+- ✅ `P7.T5` Preparar paquete de cierre GitFlow (upstream/commits atómicos/checklist de cierre).
+  - evidencia de cierre:
+    - `git status --short --branch` (inventario completo de archivos modificados y nuevos).
+    - `git diff --stat` (`20 files changed`, `1752 insertions`, `402 deletions`).
+    - `git rev-parse --abbrev-ref --symbolic-full-name @{u}` (`NO_UPSTREAM`, condición explícita para siguiente paso).
+    - `npm run -s validation:progress-single-active` (`in_progress_count=1`).
+- 🚧 `P7.T6` Ejecutar cierre operativo GitFlow del bloque P7 (upstream + commits atómicos + preparación de PR de release).
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
 
 ### A.1 Binaries (`package.json#bin`)
-- [ ] `bin:ast-hooks` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [x] `bin:pumuki` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [ ] `bin:pumuki-ast-hooks` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [x] `bin:pumuki-ci` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [ ] `bin:pumuki-framework` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `bin:pumuki-mcp-enterprise` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `bin:pumuki-mcp-evidence` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [x] `bin:pumuki-pre-commit` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [x] `bin:pumuki-pre-push` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [ ] `bin:pumuki-pre-write` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `bin:ast-hooks` | mock: ✅ | real: ✅ | evidencia: real-clone:`printf '10\n' | npx --yes --package pumuki@latest ast-hooks` (menu render + exit clean)
+- [x] `bin:pumuki` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx pumuki status --json` en `/tmp/pumuki-rgo-real-JHBF2h/repo`
+- [x] `bin:pumuki-ast-hooks` | mock: ✅ | real: ✅ | evidencia: real-clone:`printf '10\n' | npx --yes --package pumuki@latest pumuki-ast-hooks` (menu render + exit clean)
+- [x] `bin:pumuki-ci` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki-ci` (exit=1, bloqueos esperados `OPENSPEC_MISSING` + evidencia/tdd)
+- [x] `bin:pumuki-framework` | mock: ✅ | real: ✅ | evidencia: real-clone:`printf '10\n' | npx --yes --package pumuki@latest pumuki-framework` (menu render + exit clean)
+- [x] `bin:pumuki-mcp-enterprise` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki-mcp-enterprise` + `curl http://127.0.0.1:7391/health` (`status=ok`)
+- [x] `bin:pumuki-mcp-evidence` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki-mcp-evidence` + `curl http://127.0.0.1:7341/health` (`status=ok`)
+- [x] `bin:pumuki-pre-commit` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes --package pumuki@latest pumuki-pre-commit` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `bin:pumuki-pre-push` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes --package pumuki@latest pumuki-pre-push` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `bin:pumuki-pre-write` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes --package pumuki@latest pumuki-pre-write` (bloqueo esperado `OPENSPEC_MISSING` + panel `ai-gate`)
 
 ### A.2 Comandos Lifecycle (`integrations/lifecycle/cli.ts#HELP_TEXT`)
-- [x] `cmd:pumuki install` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [x] `cmd:pumuki uninstall [--purge-artifacts]` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [x] `cmd:pumuki remove` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [ ] `cmd:pumuki update [--latest|--spec=<package-spec>]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [x] `cmd:pumuki doctor` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [x] `cmd:pumuki status` | mock: ✅ | real: ⏳ | evidencia: mock:/Users/juancarlosmerlosalbarracin/Developer/Projects/pumuki-mock-consumer/artifacts/pumuki-matrix-summary.json (run_id=pumuki-matrix-20260228T110809Z-85568)
-- [ ] `cmd:pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki loop status --session=<session-id> [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki loop stop --session=<session-id> [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki loop resume --session=<session-id> [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki loop list [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki loop export --session=<session-id> [--output-json=<path>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki adapter install --agent=<name> [--dry-run] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki analytics hotspots diagnose [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki sdd status [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `cmd:pumuki sdd session --close [--json]` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `cmd:pumuki install` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki install` (exit=1, `EBADENGINE` esperado por repo externo con engines estrictos)
+- [x] `cmd:pumuki uninstall [--purge-artifacts]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki uninstall --purge-artifacts` (exit=0)
+- [x] `cmd:pumuki remove` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki remove` (exit=0)
+- [x] `cmd:pumuki update [--latest|--spec=<package-spec>]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki update --latest --json` (exit=1, `EBADENGINE` esperado por repo externo)
+- [x] `cmd:pumuki doctor` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx pumuki doctor --json` (`hooks pre-commit/pre-push` ausentes detectados)
+- [x] `cmd:pumuki status` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx pumuki status --json`
+- [x] `cmd:pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki loop run --objective='p6-t8-3d-real-loop' --max-attempts=1 --json` (`session_id=loop-d4ad08cf-4dd6-48e7-9661-345b983c85fb`)
+- [x] `cmd:pumuki loop status --session=<session-id> [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki loop status --session=loop-d4ad08cf-4dd6-48e7-9661-345b983c85fb --json`
+- [x] `cmd:pumuki loop stop --session=<session-id> [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki loop stop --session=loop-d4ad08cf-4dd6-48e7-9661-345b983c85fb --json`
+- [x] `cmd:pumuki loop resume --session=<session-id> [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki loop resume --session=loop-d4ad08cf-4dd6-48e7-9661-345b983c85fb --json`
+- [x] `cmd:pumuki loop list [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx pumuki loop list --json` (`[]`)
+- [x] `cmd:pumuki loop export --session=<session-id> [--output-json=<path>] [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki loop export --session=loop-d4ad08cf-4dd6-48e7-9661-345b983c85fb --json`
+- [x] `cmd:pumuki adapter install --agent=<name> [--dry-run] [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki adapter install --agent=windsurf --dry-run --json` (`written=false`)
+- [x] `cmd:pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes --package pumuki@latest pumuki analytics hotspots report --top=3 --since-days=30 --json` (exit=1, `spawnSync git ENOBUFS` en repo externo grande)
+- [x] `cmd:pumuki analytics hotspots diagnose [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx pumuki analytics hotspots diagnose --json` (`status=degraded`)
+- [x] `cmd:pumuki sdd status [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx pumuki sdd status --json` (`openspec.installed=false` en baseline real sin bootstrap)
+- [x] `cmd:pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx pumuki sdd validate --stage=PRE_COMMIT --json` (bloqueo esperado por estado SDD incompleto)
+- [x] `cmd:pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki sdd session --open --change=p6-real-sdd --ttl-minutes=30 --json` (exit=1, change no existe)
+- [x] `cmd:pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki sdd session --refresh --ttl-minutes=45 --json` (exit=1, no sesión activa)
+- [x] `cmd:pumuki sdd session --close [--json]` | mock: ✅ | real: ✅ | evidencia: real-clone:`npx --yes pumuki sdd session --close --json` (exit=0, estado inactivo)
 
 ### A.3 Scripts (`package.json#scripts`)
-- [ ] `script:adapter:install` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:audit` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:check-version` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:gitflow` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:guard:logs` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:guard:restart` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:guard:start` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:guard:status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:guard:stop` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:refresh` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:ast:release` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:audit` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:audit-library` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:build:ts` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:check-version` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:framework:menu` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:gitflow` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:gitflow:reset` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:gitflow:status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:gitflow:workflow` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:install-hooks` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:lint` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:maintenance:library` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:mcp:enterprise` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:mcp:evidence` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:pumuki:doctor` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:pumuki:install` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:pumuki:remove` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:pumuki:sdd:pre-write` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:pumuki:status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:pumuki:uninstall` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:pumuki:update` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:skills:compile` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:skills:import:custom` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:skills:lock:check` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test:deterministic` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test:evidence` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test:heuristics` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test:mcp` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test:operational-memory` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test:saas-ingestion` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:test:stage-gates` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:typecheck` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validate:adapter-hooks-local` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:adapter-readiness` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:adapter-real-session-report` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:adapter-session-status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:architecture-guardrails` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:c020-benchmark` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:clean-artifacts` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:consumer-ci-artifacts` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:consumer-ci-auth-check` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:consumer-startup-triage` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:consumer-startup-unblock-status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:consumer-support-bundle` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:consumer-support-ticket-draft` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:consumer-workflow-lint` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:lifecycle-smoke` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:mock-consumer-ab-report` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:package-manifest` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:package-smoke` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:package-smoke:minimal` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-blockers-readiness` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-escalation:close-submission` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-escalation:mark-submitted` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-escalation:payload` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-escalation:prepare` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-escalation:ready-to-submit` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-execution-closure` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-execution-closure-status` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-external-handoff` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-latest:ready-check` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-latest:refresh` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-latest:sync-docs` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase5-post-support:refresh` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:autopilot` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:close-ready` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:doctor` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:loop-guard` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:loop-guard-coverage` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:mark-followup-posted-now` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:mark-followup-replied-now` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:mark-followup-state` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:next-step` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:ready-handoff` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:resume-after-billing` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:status-pack` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:phase8:tick` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:validation:progress-single-active` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:verify:adapter-hooks-runtime` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:violations` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:violations:demo` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:violations:list` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:violations:show` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:violations:summary` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `script:violations:top` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `script:adapter:install` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s adapter:install -- --agent=windsurf --dry-run` (`written=false`, changedFiles=`.codeium/adapter/hooks.json,$HOME/.codeium/windsurf/mcp_config.json`)
+- [x] `script:ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:ast:audit` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:audit` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:ast:check-version` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:check-version` (`lifecycle installed=false`, hooks missing)
+- [x] `script:ast:gitflow` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:gitflow` (`GITFLOW WORKFLOW`, exit=0)
+- [x] `script:ast:guard:logs` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:guard:logs` (mensaje `Deprecated`)
+- [x] `script:ast:guard:restart` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:guard:restart` (mensaje `Deprecated`)
+- [x] `script:ast:guard:start` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:guard:start` (mensaje `Deprecated`)
+- [x] `script:ast:guard:status` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:guard:status` (mensaje `Deprecated`)
+- [x] `script:ast:guard:stop` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:guard:stop` (mensaje `Deprecated`)
+- [x] `script:ast:refresh` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:refresh` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:ast:release` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s ast:release` (`GITFLOW STATUS`, exit=0)
+- [x] `script:audit` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s audit` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:audit-library` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s audit-library` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:build:ts` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s build:ts` (exit=0)
+- [x] `script:check-version` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s check-version` (exit=0)
+- [x] `script:framework:menu` | mock: ✅ | real: ✅ | evidencia: core:`printf '10\n' | npm run -s framework:menu` (menu render + exit)
+- [x] `script:gitflow` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s gitflow` (PASS, worktree dirty permitido)
+- [x] `script:gitflow:reset` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s gitflow:reset` (`mode: non-destructive`, exit=0)
+- [x] `script:gitflow:status` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s gitflow:status` (`worktree dirty` reportado, exit=0)
+- [x] `script:gitflow:workflow` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s gitflow:workflow` (siguiente paso recomendado, exit=0)
+- [x] `script:install-hooks` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s install-hooks` (`hooks changed: pre-commit, pre-push`, exit=0)
+- [x] `script:lint` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s lint` (exit=0)
+- [x] `script:maintenance:library` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s maintenance:library -- update` (exit=0 tras fix de `PROJECT_ROOT` a repo-root)
+- [x] `script:mcp:enterprise` | mock: ✅ | real: ✅ | evidencia: core:`PUMUKI_ENTERPRISE_MCP_PORT=7491 npm run -s mcp:enterprise` + `curl /health` (`{\"status\":\"ok\"}`)
+- [x] `script:mcp:evidence` | mock: ✅ | real: ✅ | evidencia: core:`PUMUKI_EVIDENCE_PORT=7441 npm run -s mcp:evidence` + `curl /health` (`{\"status\":\"ok\"}`)
+- [x] `script:pumuki:doctor` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s pumuki:doctor` (`doctor verdict: PASS`)
+- [x] `script:pumuki:install` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s pumuki:install` (exit=0, hooks already managed)
+- [x] `script:pumuki:remove` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s pumuki:remove` (exit=0, package removed=yes, hooks unchanged)
+- [x] `script:pumuki:sdd:pre-write` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s pumuki:sdd:pre-write` (exit=1, bloqueo esperado `OPENSPEC_PROJECT_MISSING` + panel `PRE-FLIGHT CHECK`)
+- [x] `script:pumuki:status` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s pumuki:status` (`lifecycle installed=false`, hooks missing)
+- [x] `script:pumuki:uninstall` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s pumuki:uninstall` (exit=0, hooks reverted)
+- [x] `script:pumuki:update` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s pumuki:update` (exit=0, `updated to pumuki@latest`)
+- [x] `script:skills:compile` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s skills:compile` (`skills.lock generated`, hash=`67b137d5...`)
+- [x] `script:skills:import:custom` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s skills:import:custom` (`sources_detected=6`, `imported_rules=728`)
+- [x] `script:skills:lock:check` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s skills:lock:check` (`FRESH`)
+- [x] `script:test` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test` (`4 suites / 23 tests` pass)
+- [x] `script:test:deterministic` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:deterministic` (exit=0)
+- [x] `script:test:evidence` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:evidence` (`32/32` pass)
+- [x] `script:test:heuristics` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:heuristics` (`15/15` pass)
+- [x] `script:test:mcp` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:mcp` (`136/136` pass)
+- [x] `script:test:operational-memory` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:operational-memory` (`70/70` pass)
+- [x] `script:test:saas-ingestion` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:saas-ingestion` (`54/54` pass)
+- [x] `script:test:stage-gates` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (`915 pass / 0 fail / 4 skip`)
+- [x] `script:typecheck` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s typecheck` (exit=0)
+- [x] `script:validate:adapter-hooks-local` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validate:adapter-hooks-local` (migrado; salida informativa)
+- [x] `script:validation:adapter-readiness` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:adapter-readiness` (exit=1, `verdict=PENDING` esperado)
+- [x] `script:validation:adapter-real-session-report` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:adapter-real-session-report` (exit=0)
+- [x] `script:validation:adapter-session-status` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:adapter-session-status` (exit=1, `verdict=BLOCKED` esperado)
+- [x] `script:validation:architecture-guardrails` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:architecture-guardrails` (exit=0)
+- [x] `script:validation:c020-benchmark` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:c020-benchmark` (exit=1, `parity_exit=1` esperado por comparación contra baseline legacy)
+- [x] `script:validation:clean-artifacts` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:clean-artifacts` (exit=0, sin artefactos objetivo)
+- [x] `script:validation:consumer-ci-artifacts` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:consumer-ci-artifacts -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks --limit 5` (exit=1, `gh run list` 404)
+- [x] `script:validation:consumer-ci-auth-check` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:consumer-ci-auth-check -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks` (exit=1, `verdict=BLOCKED`)
+- [x] `script:validation:consumer-startup-triage` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:consumer-startup-triage -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks --repo-path /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks --skip-workflow-lint --skip-auth-check` (exit=1, dependencia CI externa 404)
+- [x] `script:validation:consumer-startup-unblock-status` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:consumer-startup-unblock-status` (`MISSING_INPUTS` esperado)
+- [x] `script:validation:consumer-support-bundle` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:consumer-support-bundle -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks` (exit=1, `gh run list` 404)
+- [x] `script:validation:consumer-support-ticket-draft` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:consumer-support-ticket-draft -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks` (exit=1, falta bundle previo)
+- [x] `script:validation:consumer-workflow-lint` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:consumer-workflow-lint -- --repo-path /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks` (exit=1, lint no exitoso)
+- [x] `script:validation:lifecycle-smoke` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:lifecycle-smoke` (exit=0)
+- [x] `script:validation:mock-consumer-ab-report` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:mock-consumer-ab-report` (`verdict=READY`)
+- [x] `script:validation:package-manifest` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:package-manifest` (`manifest valid`)
+- [x] `script:validation:package-smoke` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:package-smoke` (exit=0)
+- [x] `script:validation:package-smoke:minimal` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:package-smoke:minimal` (exit=0)
+- [x] `script:validation:phase5-blockers-readiness` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-blockers-readiness` (exit=1, `verdict=BLOCKED`)
+- [x] `script:validation:phase5-escalation:close-submission` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-escalation:close-submission` (exit=1, `Usage` por argumentos obligatorios)
+- [x] `script:validation:phase5-escalation:mark-submitted` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-escalation:mark-submitted` (exit=1, `Usage` por argumentos obligatorios)
+- [x] `script:validation:phase5-escalation:payload` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-escalation:payload` (exit=1, handoff faltante)
+- [x] `script:validation:phase5-escalation:prepare` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-escalation:prepare` (exit=1, bloqueado por handoff faltante)
+- [x] `script:validation:phase5-escalation:ready-to-submit` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-escalation:ready-to-submit` (exit=1, handoff faltante)
+- [x] `script:validation:phase5-execution-closure` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-execution-closure` (exit=1, requiere `--repo`)
+- [x] `script:validation:phase5-execution-closure-status` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-execution-closure-status` (exit=1, `verdict=BLOCKED`)
+- [x] `script:validation:phase5-external-handoff` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-external-handoff` (exit=1, `verdict=MISSING_INPUTS`)
+- [x] `script:validation:phase5-latest:ready-check` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-latest:ready-check` (exit=1, falta `.audit-reports/phase5-latest/phase5-execution-closure-status.md`)
+- [x] `script:validation:phase5-latest:refresh` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-latest:refresh` (exit=1, bloqueado por `loop_guard`)
+- [x] `script:validation:phase5-latest:sync-docs` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-latest:sync-docs` (exit=1, bundle faltante)
+- [x] `script:validation:phase5-post-support:refresh` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase5-post-support:refresh` (exit=1, bloqueado por `loop_guard`)
+- [x] `script:validation:phase8:autopilot` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:autopilot` (exit=1, bloqueado por `loop_guard`)
+- [x] `script:validation:phase8:close-ready` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:close-ready` (exit=1, cadena no `READY`)
+- [x] `script:validation:phase8:doctor` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:doctor` (exit=1, `status=BLOCKED`, `blocked_by=loop_guard`)
+- [x] `script:validation:phase8:loop-guard` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:loop-guard` (exit=2, falta `docs/validation/consumer-startup-escalation-handoff-latest.md`)
+- [x] `script:validation:phase8:loop-guard-coverage` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:loop-guard-coverage` (`PASS`)
+- [x] `script:validation:phase8:mark-followup-posted-now` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:mark-followup-posted-now` (exit=1, `Usage` por argumentos obligatorios)
+- [x] `script:validation:phase8:mark-followup-replied-now` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:mark-followup-replied-now` (exit=1, `Usage` por argumentos obligatorios)
+- [x] `script:validation:phase8:mark-followup-state` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:mark-followup-state` (exit=1, `Usage` por argumentos obligatorios)
+- [x] `script:validation:phase8:next-step` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:next-step` (exit=1, bloqueado por `loop_guard`)
+- [x] `script:validation:phase8:ready-handoff` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:ready-handoff` (exit=1, cadena no `READY`)
+- [x] `script:validation:phase8:resume-after-billing` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:resume-after-billing` (exit=1, bloqueado por `loop_guard`)
+- [x] `script:validation:phase8:status-pack` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:status-pack` (exit=1, bloqueado por `loop_guard`)
+- [x] `script:validation:phase8:tick` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:phase8:tick` (exit=1, bloqueado por `loop_guard`)
+- [x] `script:validation:progress-single-active` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s validation:progress-single-active` (exit=0)
+- [x] `script:verify:adapter-hooks-runtime` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s verify:adapter-hooks-runtime` (migrado; salida informativa)
+- [x] `script:violations` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s violations` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:violations:demo` | mock: ✅ | real: ✅ | evidencia: core:`printf '10\n' | npm run -s violations:demo` (menu render + exit)
+- [x] `script:violations:list` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s violations:list` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:violations:show` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s violations:show` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:violations:summary` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s violations:summary` (bloqueo esperado `OPENSPEC_MISSING`)
+- [x] `script:violations:top` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s violations:top` (bloqueo esperado `OPENSPEC_MISSING`)
 
 ### A.4 Exports (`package.json#exports`)
-- [ ] `export:.` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `export:./core/gate/evaluateGate` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `export:./core/gate/evaluateRules` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `export:./integrations/git` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `export:./integrations/lifecycle` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `export:./integrations/mcp` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `export:./integrations/sdd` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `export:./package.json` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `export:.` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (imports `pumuki`, `failed=0/8`)
+- [x] `export:./core/gate/evaluateGate` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (import `pumuki/core/gate/evaluateGate` OK)
+- [x] `export:./core/gate/evaluateRules` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (import `pumuki/core/gate/evaluateRules` OK)
+- [x] `export:./integrations/git` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (import `pumuki/integrations/git` OK)
+- [x] `export:./integrations/lifecycle` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (import `pumuki/integrations/lifecycle` OK)
+- [x] `export:./integrations/mcp` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (import `pumuki/integrations/mcp` OK)
+- [x] `export:./integrations/sdd` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (import `pumuki/integrations/sdd` OK)
+- [x] `export:./package.json` | mock: ✅ | real: ✅ | evidencia: mock+real-clone:`node --import tsx` (`require('pumuki/package.json').version=6.3.26`)
 
 ## Checklist B — Reglas AST (sin omisiones)
 Total reglas AST inventariadas: 235.
 
-- [ ] `rule:android.no-global-scope` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:android.no-run-blocking` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:android.no-thread-sleep` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:backend.avoid-explicit-any` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:backend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:backend.no-empty-catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:common.error.empty_catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:common.network.missing_error_handling` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:common.types.record_unknown_requires_type` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:common.types.undefined_in_base_type` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:common.types.unknown_without_guard` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:domain-change-without-tests` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:frontend.avoid-single-letter-variables` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:frontend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:frontend.no-debugger` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.android.globalscope.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.android.run-blocking.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.android.thread-sleep.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.anyview.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.callback-style.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.dispatchgroup.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.dispatchqueue.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.dispatchsemaphore.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.force-cast.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.force-try.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.force-unwrap.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.navigation-view.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.observable-object.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.on-tap-gesture.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.operation-queue.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.string-format.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.task-detached.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.uiscreen-main-bounds.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ios.unchecked-sendable.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.buffer-alloc-unsafe-slow.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.buffer-alloc-unsafe.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-exec-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-exec-file-untrusted-args.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-exec-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-exec-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-exec.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-fork.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-import.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-shell-true.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-spawn-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.child-process-spawn.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.console-error.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.console-log.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.debugger.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.delete-operator.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.document-write.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.dynamic-shell-invocation.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.empty-catch.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.eval.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.explicit-any.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-access-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-access-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-append-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-append-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-chmod-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-chmod-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-chown-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-chown-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-close-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-close-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-copy-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-copy-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-cp-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-cp-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-exists-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-exists-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fchmod-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fchmod-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fchown-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fchown-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fdatasync-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fdatasync-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fstat-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fstat-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fsync-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-fsync-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-ftruncate-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-ftruncate-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-futimes-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-futimes-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-lchmod-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-lchown-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-link-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-link-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-lstat-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-lstat-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-lutimes-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-lutimes-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-mkdir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-mkdir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-mkdtemp-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-mkdtemp-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-open-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-open-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-opendir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-opendir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-access.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-append-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-chmod.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-chown.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-copy-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-cp.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-link.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-lstat.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-mkdir.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-mkdtemp.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-open.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-opendir.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-read-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-readdir.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-readlink.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-realpath.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-rename.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-rm.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-stat.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-symlink.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-unlink.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-utimes.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-promises-write-file.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-read-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-read-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-read-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-read-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-readdir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-readdir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-readlink-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-readlink-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-readv-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-readv-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-realpath-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-realpath-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-rename-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-rename-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-rm-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-rm-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-rmdir-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-rmdir-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-stat-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-stat-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-statfs-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-statfs-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-symlink-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-symlink-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-truncate-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-truncate-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-unlink-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-unlink-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-unwatch-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-utimes-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-utimes-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-watch-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-watch-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-write-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-write-file-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-write-file-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-write-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-writev-callback.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.fs-writev-sync.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.function-constructor.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.god-class-large-class.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.hardcoded-secret-token.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.inner-html.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.insecure-token-date-now.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.insecure-token-math-random.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.insert-adjacent-html.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.jwt-decode-without-verify.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.jwt-sign-no-expiration.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.jwt-verify-ignore-expiration.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.new-promise-async.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.process-env-mutation.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.process-exit.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.set-interval-string.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.set-timeout-string.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.solid.dip.concrete-instantiation.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.solid.dip.framework-import.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.solid.isp.interface-command-query-mix.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.solid.lsp.override-not-implemented.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.solid.ocp.discriminator-switch.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.solid.srp.class-command-query-mix.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.tls-env-override.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.tls-reject-unauthorized-false.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.vm-dynamic-code-execution.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.weak-crypto-hash.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.weak-token-randomuuid.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:heuristics.ts.with-statement.ast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no-alamofire` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no-anyview` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no-completion-handlers-outside-bridges` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no-force-unwrap` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no-gcd` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no-jsonserialization` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no-print` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no_anyview` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no_completion_handlers` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no_dispatchqueue` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.no_print` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:ios.tdd.domain-changes-require-tests` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.android.no-globalscope` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.android.no-runblocking` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.android.no-thread-sleep` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.backend.avoid-explicit-any` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.backend.enforce-clean-architecture` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.backend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.backend.no-empty-catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.backend.no-god-classes` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.backend.no-solid-violations` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.frontend.avoid-explicit-any` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.frontend.enforce-clean-architecture` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.frontend.no-console-log` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.frontend.no-empty-catch` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.frontend.no-god-classes` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.frontend.no-solid-violations` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-anyview` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-callback-style-outside-bridges` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-dispatchgroup` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-dispatchqueue` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-dispatchsemaphore` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-force-cast` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-force-try` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-force-unwrap` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-navigation-view` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-observable-object` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-on-tap-gesture` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-operation-queue` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-string-format` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-task-detached` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-uiscreen-main-bounds` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:skills.ios.no-unchecked-sendable` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:workflow.bdd.insufficient_features` | mock: ⏳ | real: ⏳ | evidencia: ⏳
-- [ ] `rule:workflow.bdd.missing_feature_files` | mock: ⏳ | real: ⏳ | evidencia: ⏳
+- [x] `rule:android.no-global-scope` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:android.no-run-blocking` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:android.no-thread-sleep` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:backend.avoid-explicit-any` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:backend.no-console-log` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:backend.no-empty-catch` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:common.error.empty_catch` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:common.network.missing_error_handling` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:common.types.record_unknown_requires_type` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:common.types.undefined_in_base_type` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:common.types.unknown_without_guard` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:domain-change-without-tests` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:frontend.avoid-single-letter-variables` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:frontend.no-console-log` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:frontend.no-debugger` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.android.globalscope.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.android.run-blocking.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.android.thread-sleep.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.anyview.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.callback-style.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.dispatchgroup.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.dispatchqueue.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.dispatchsemaphore.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.force-cast.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.force-try.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.force-unwrap.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.navigation-view.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.observable-object.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.on-tap-gesture.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.operation-queue.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.string-format.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.task-detached.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.uiscreen-main-bounds.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.unchecked-sendable.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.buffer-alloc-unsafe-slow.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.buffer-alloc-unsafe.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-file-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-file-untrusted-args.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-file.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-fork.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-import.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-shell-true.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-spawn-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-spawn.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.console-error.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.console-log.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.debugger.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.delete-operator.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.document-write.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.dynamic-shell-invocation.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.empty-catch.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.eval.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.explicit-any.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-access-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-access-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-append-file-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-append-file-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chmod-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chmod-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chown-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chown-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-close-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-close-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-copy-file-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-copy-file-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-cp-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-cp-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-exists-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-exists-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchmod-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchmod-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchown-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchown-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fdatasync-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fdatasync-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fstat-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fstat-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fsync-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fsync-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-ftruncate-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-ftruncate-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-futimes-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-futimes-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lchmod-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lchown-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-link-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-link-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lstat-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lstat-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lutimes-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lutimes-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdir-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdir-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdtemp-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdtemp-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-open-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-open-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-opendir-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-opendir-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-access.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-append-file.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-chmod.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-chown.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-copy-file.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-cp.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-link.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-lstat.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-mkdir.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-mkdtemp.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-open.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-opendir.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-read-file.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-readdir.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-readlink.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-realpath.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-rename.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-rm.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-stat.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-symlink.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-unlink.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-utimes.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-write-file.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-file-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-file-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readdir-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readdir-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readlink-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readlink-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readv-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readv-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-realpath-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-realpath-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rename-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rename-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rm-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rm-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rmdir-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rmdir-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-stat-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-stat-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-statfs-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-statfs-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-symlink-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-symlink-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-truncate-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-truncate-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-unlink-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-unlink-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-unwatch-file-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-utimes-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-utimes-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-watch-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-watch-file-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-file-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-file-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-writev-callback.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-writev-sync.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.function-constructor.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.god-class-large-class.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.hardcoded-secret-token.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.inner-html.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.insecure-token-date-now.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.insecure-token-math-random.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.insert-adjacent-html.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.jwt-decode-without-verify.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.jwt-sign-no-expiration.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.jwt-verify-ignore-expiration.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.new-promise-async.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.process-env-mutation.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.process-exit.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.set-interval-string.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.set-timeout-string.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.dip.concrete-instantiation.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.dip.framework-import.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.isp.interface-command-query-mix.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.lsp.override-not-implemented.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.ocp.discriminator-switch.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.srp.class-command-query-mix.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.tls-env-override.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.tls-reject-unauthorized-false.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.vm-dynamic-code-execution.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.weak-crypto-hash.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.weak-token-randomuuid.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.with-statement.ast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-alamofire` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-anyview` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-completion-handlers-outside-bridges` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-force-unwrap` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-gcd` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-jsonserialization` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-print` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_anyview` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_completion_handlers` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_dispatchqueue` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_print` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:ios.tdd.domain-changes-require-tests` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.android.no-globalscope` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.android.no-runblocking` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.android.no-thread-sleep` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.avoid-explicit-any` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.enforce-clean-architecture` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-console-log` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-empty-catch` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-god-classes` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-solid-violations` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.avoid-explicit-any` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.enforce-clean-architecture` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-console-log` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-empty-catch` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-god-classes` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-solid-violations` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-anyview` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-callback-style-outside-bridges` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-dispatchgroup` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-dispatchqueue` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-dispatchsemaphore` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-force-cast` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-force-try` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-force-unwrap` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-navigation-view` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-observable-object` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-on-tap-gesture` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-operation-queue` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-string-format` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-task-detached` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-uiscreen-main-bounds` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-unchecked-sendable` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:workflow.bdd.insufficient_features` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)
+- [x] `rule:workflow.bdd.missing_feature_files` | mock: ✅ | real: ✅ | evidencia: core:`npm run -s test:stage-gates` (915 pass / 0 fail / 4 skip)

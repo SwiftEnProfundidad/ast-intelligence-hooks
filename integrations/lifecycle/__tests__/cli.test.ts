@@ -13,6 +13,7 @@ import {
 } from '../saasIngestionContract';
 import { resolveHotspotsSaasIngestionMetricsPath } from '../saasIngestionMetrics';
 import { parseLifecycleCliArgs, runLifecycleCli } from '../cli';
+import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
@@ -48,6 +49,20 @@ const withSilentConsole = async <T>(callback: () => Promise<T>): Promise<T> => {
   } finally {
     console.log = originalLog;
     console.error = originalError;
+  }
+};
+
+const withSddBypass = async <T>(callback: () => Promise<T>): Promise<T> => {
+  const previous = process.env.PUMUKI_SDD_BYPASS;
+  process.env.PUMUKI_SDD_BYPASS = '1';
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'undefined') {
+      delete process.env.PUMUKI_SDD_BYPASS;
+    } else {
+      process.env.PUMUKI_SDD_BYPASS = previous;
+    }
   }
 };
 
@@ -261,6 +276,329 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
 test('runLifecycleCli retorna 1 ante argumentos inválidos', async () => {
   const code = await withSilentConsole(() => runLifecycleCli(['--bad']));
   assert.equal(code, 1);
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y permite continuar', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-mcp-enforcement']);
+    writeFileSync(
+      join(repo, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          version: '2.1',
+          timestamp: new Date().toISOString(),
+          snapshot: {
+            stage: 'PRE_COMMIT',
+            outcome: 'PASS',
+            rules_coverage: {
+              stage: 'PRE_COMMIT',
+              active_rule_ids: ['skills.backend.no-empty-catch'],
+              evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+            findings: [],
+          },
+          ledger: [],
+          platforms: {},
+          rulesets: [],
+          human_intent: null,
+          ai_gate: {
+            status: 'ALLOWED',
+            violations: [],
+            human_intent: null,
+          },
+          severity_metrics: {
+            gate_status: 'ALLOWED',
+            total_violations: 0,
+            by_severity: {
+              CRITICAL: 0,
+              ERROR: 0,
+              WARN: 0,
+              INFO: 0,
+            },
+          },
+          repo_state: {
+            repo_root: repo,
+            git: {
+              available: true,
+              branch: 'feature/prewrite-mcp-enforcement',
+              upstream: null,
+              ahead: 0,
+              behind: 0,
+              dirty: false,
+              staged: 0,
+              unstaged: 0,
+            },
+            lifecycle: {
+              installed: true,
+              package_version: '6.3.26',
+              lifecycle_version: '6.3.26',
+              hooks: {
+                pre_commit: 'managed',
+                pre_push: 'managed',
+              },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withSddBypass(() =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'])
+    );
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      ai_gate?: {
+        allowed?: boolean;
+        violations?: Array<{ code?: string }>;
+      };
+    };
+    assert.equal(payload.ai_gate?.allowed, true);
+    assert.equal(
+      (payload.ai_gate?.violations ?? []).some(
+        (violation) => violation.code === 'MCP_ENTERPRISE_RECEIPT_MISSING'
+      ),
+      false
+    );
+    assert.equal(existsSync(resolveMcpAiGateReceiptPath(repo)), true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP válido', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-mcp-ready']);
+    writeFileSync(
+      join(repo, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          version: '2.1',
+          timestamp: new Date().toISOString(),
+          snapshot: {
+            stage: 'PRE_COMMIT',
+            outcome: 'PASS',
+            rules_coverage: {
+              stage: 'PRE_COMMIT',
+              active_rule_ids: ['skills.backend.no-empty-catch'],
+              evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+            findings: [],
+          },
+          ledger: [],
+          platforms: {},
+          rulesets: [],
+          human_intent: null,
+          ai_gate: {
+            status: 'ALLOWED',
+            violations: [],
+            human_intent: null,
+          },
+          severity_metrics: {
+            gate_status: 'ALLOWED',
+            total_violations: 0,
+            by_severity: {
+              CRITICAL: 0,
+              ERROR: 0,
+              WARN: 0,
+              INFO: 0,
+            },
+          },
+          repo_state: {
+            repo_root: repo,
+            git: {
+              available: true,
+              branch: 'feature/prewrite-mcp-ready',
+              upstream: null,
+              ahead: 0,
+              behind: 0,
+              dirty: false,
+              staged: 0,
+              unstaged: 0,
+            },
+            lifecycle: {
+              installed: true,
+              package_version: '6.3.26',
+              lifecycle_version: '6.3.26',
+              hooks: {
+                pre_commit: 'managed',
+                pre_push: 'managed',
+              },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withSddBypass(() =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'])
+    );
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      ai_gate?: {
+        allowed?: boolean;
+      };
+    };
+    assert.equal(payload.ai_gate?.allowed, true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy de pre-flight', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-panel']);
+    writeFileSync(
+      join(repo, '.ai_evidence.json'),
+      JSON.stringify(
+        {
+          version: '2.1',
+          timestamp: new Date().toISOString(),
+          snapshot: {
+            stage: 'PRE_COMMIT',
+            outcome: 'PASS',
+            rules_coverage: {
+              stage: 'PRE_COMMIT',
+              active_rule_ids: ['skills.backend.no-empty-catch'],
+              evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+            findings: [],
+          },
+          ledger: [],
+          platforms: {},
+          rulesets: [],
+          human_intent: null,
+          ai_gate: {
+            status: 'ALLOWED',
+            violations: [],
+            human_intent: null,
+          },
+          severity_metrics: {
+            gate_status: 'ALLOWED',
+            total_violations: 0,
+            by_severity: {
+              CRITICAL: 0,
+              ERROR: 0,
+              WARN: 0,
+              INFO: 0,
+            },
+          },
+          repo_state: {
+            repo_root: repo,
+            git: {
+              available: true,
+              branch: 'feature/prewrite-panel',
+              upstream: null,
+              ahead: 0,
+              behind: 0,
+              dirty: false,
+              staged: 0,
+              unstaged: 0,
+            },
+            lifecycle: {
+              installed: true,
+              package_version: '6.3.26',
+              lifecycle_version: '6.3.26',
+              hooks: {
+                pre_commit: 'managed',
+                pre_push: 'managed',
+              },
+            },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk));
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withSddBypass(() =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE'])
+    );
+    assert.equal(code, 0);
+    const output = printed.join('\n');
+    assert.match(output, /PRE-FLIGHT CHECK/);
+    assert.match(output, /MCP receipt: required=yes kind=valid/);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
 
 test('runLifecycleCli ejecuta flujo install/doctor/status/remove/uninstall en repo válido', async () => {

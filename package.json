@@ -13,7 +13,9 @@
     "pumuki-pre-push": "bin/pumuki-pre-push.js",
     "pumuki-ci": "bin/pumuki-ci.js",
     "pumuki-mcp-evidence": "bin/pumuki-mcp-evidence.js",
-    "pumuki-mcp-enterprise": "bin/pumuki-mcp-enterprise.js"
+    "pumuki-mcp-evidence-stdio": "bin/pumuki-mcp-evidence-stdio.js",
+    "pumuki-mcp-enterprise": "bin/pumuki-mcp-enterprise.js",
+    "pumuki-mcp-enterprise-stdio": "bin/pumuki-mcp-enterprise-stdio.js"
   },
   "scripts": {
     "install-hooks": "node bin/pumuki.js install",
@@ -111,7 +113,9 @@
     "skills:lock:check": "npx --yes tsx@4.21.0 scripts/compile-skills-lock.ts --check",
     "skills:import:custom": "npx --yes tsx@4.21.0 scripts/import-custom-skills.ts",
     "mcp:evidence": "node bin/pumuki-mcp-evidence.js",
+    "mcp:evidence:stdio": "node bin/pumuki-mcp-evidence-stdio.js",
     "mcp:enterprise": "node bin/pumuki-mcp-enterprise.js",
+    "mcp:enterprise:stdio": "node bin/pumuki-mcp-enterprise-stdio.js",
     "validate:adapter-hooks-local": "echo 'Migrated to modern TS scripts — use validation:adapter-readiness instead'",
     "verify:adapter-hooks-runtime": "echo 'Migrated to modern TS scripts — use validation:adapter-readiness instead'"
   },

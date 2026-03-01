@@ -5,6 +5,11 @@ import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
 import { realpathSync } from 'node:fs';
 import type { SkillsStage } from '../config/skillsLock';
+import {
+  readMcpAiGateReceipt,
+  resolveMcpAiGateReceiptPath,
+  type McpAiGateReceiptReadResult,
+} from '../mcp/aiGateReceipt';
 
 export type AiGateStage = 'PRE_WRITE' | 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
 
@@ -34,6 +39,13 @@ export type AiGateCheckResult = {
     max_age_seconds: number;
     age_seconds: number | null;
   };
+  mcp_receipt: {
+    required: boolean;
+    kind: 'disabled' | McpAiGateReceiptReadResult['kind'];
+    path: string;
+    max_age_seconds: number | null;
+    age_seconds: number | null;
+  };
   repo_state: RepoState;
   violations: AiGateViolation[];
 };
@@ -41,6 +53,7 @@ export type AiGateCheckResult = {
 type AiGateDependencies = {
   now: () => number;
   readEvidenceResult: (repoRoot: string) => EvidenceReadResult;
+  readMcpAiGateReceipt: (repoRoot: string) => McpAiGateReceiptReadResult;
   captureRepoState: (repoRoot: string) => RepoState;
   resolvePolicyForStage: (stage: SkillsStage, repoRoot: string) => ReturnType<typeof resolvePolicyForStage>;
 };
@@ -48,6 +61,7 @@ type AiGateDependencies = {
 const defaultDependencies: AiGateDependencies = {
   now: () => Date.now(),
   readEvidenceResult,
+  readMcpAiGateReceipt,
   captureRepoState,
   resolvePolicyForStage,
 };
@@ -288,12 +302,126 @@ const toPolicyStage = (stage: AiGateStage): SkillsStage => {
   return stage;
 };
 
+const collectMcpReceiptViolations = (params: {
+  required: boolean;
+  stage: AiGateStage;
+  repoRoot: string;
+  nowMs: number;
+  maxAgeSecondsByStage: Readonly<Record<AiGateStage, number>>;
+  readMcpAiGateReceipt: (repoRoot: string) => McpAiGateReceiptReadResult;
+}): {
+  required: boolean;
+  kind: 'disabled' | McpAiGateReceiptReadResult['kind'];
+  path: string;
+  maxAgeSeconds: number | null;
+  ageSeconds: number | null;
+  violations: AiGateViolation[];
+} => {
+  const path = resolveMcpAiGateReceiptPath(params.repoRoot);
+  if (!params.required || params.stage !== 'PRE_WRITE') {
+    return {
+      required: params.required,
+      kind: 'disabled',
+      path,
+      maxAgeSeconds: null,
+      ageSeconds: null,
+      violations: [],
+    };
+  }
+
+  const maxAgeSeconds = params.maxAgeSecondsByStage[params.stage];
+  const receiptRead = params.readMcpAiGateReceipt(params.repoRoot);
+  if (receiptRead.kind === 'missing') {
+    return {
+      required: true,
+      kind: 'missing',
+      path: receiptRead.path,
+      maxAgeSeconds,
+      ageSeconds: null,
+      violations: [
+        toErrorViolation(
+          'MCP_ENTERPRISE_RECEIPT_MISSING',
+          'MCP receipt is missing. Call tool ai_gate_check in pumuki-enterprise MCP before PRE_WRITE.'
+        ),
+      ],
+    };
+  }
+
+  if (receiptRead.kind === 'invalid') {
+    return {
+      required: true,
+      kind: 'invalid',
+      path: receiptRead.path,
+      maxAgeSeconds,
+      ageSeconds: null,
+      violations: [
+        toErrorViolation(
+          'MCP_ENTERPRISE_RECEIPT_INVALID',
+          `MCP receipt is invalid: ${receiptRead.reason}`
+        ),
+      ],
+    };
+  }
+
+  const violations: AiGateViolation[] = [];
+  if (toCanonicalPath(receiptRead.receipt.repo_root) !== toCanonicalPath(params.repoRoot)) {
+    violations.push(
+      toErrorViolation(
+        'MCP_ENTERPRISE_RECEIPT_REPO_ROOT_MISMATCH',
+        `MCP receipt repo root mismatch (${receiptRead.receipt.repo_root} != ${params.repoRoot}).`
+      )
+    );
+  }
+  if (receiptRead.receipt.stage !== params.stage) {
+    violations.push(
+      toErrorViolation(
+        'MCP_ENTERPRISE_RECEIPT_STAGE_MISMATCH',
+        `MCP receipt stage mismatch (${receiptRead.receipt.stage} != ${params.stage}).`
+      )
+    );
+  }
+  const ageSeconds = toTimestampAgeSeconds(receiptRead.receipt.issued_at, params.nowMs);
+  if (ageSeconds === null) {
+    violations.push(
+      toErrorViolation(
+        'MCP_ENTERPRISE_RECEIPT_TIMESTAMP_INVALID',
+        'MCP receipt issued_at timestamp is invalid.'
+      )
+    );
+  } else if (ageSeconds > maxAgeSeconds) {
+    violations.push(
+      toErrorViolation(
+        'MCP_ENTERPRISE_RECEIPT_STALE',
+        `MCP receipt is stale (${ageSeconds}s > ${maxAgeSeconds}s for ${params.stage}).`
+      )
+    );
+  }
+  if (isTimestampFuture(receiptRead.receipt.issued_at, params.nowMs)) {
+    violations.push(
+      toErrorViolation(
+        'MCP_ENTERPRISE_RECEIPT_TIMESTAMP_FUTURE',
+        'MCP receipt timestamp is in the future.'
+      )
+    );
+  }
+
+  return {
+    required: true,
+    kind: 'valid',
+    path: receiptRead.path,
+    maxAgeSeconds,
+    ageSeconds,
+    violations,
+  };
+};
+
 export const evaluateAiGate = (
   params: {
     repoRoot: string;
     stage: AiGateStage;
     maxAgeSecondsByStage?: Readonly<Record<AiGateStage, number>>;
     protectedBranches?: ReadonlyArray<string>;
+    requireMcpReceipt?: boolean;
   },
   dependencies: Partial<AiGateDependencies> = {}
 ): AiGateCheckResult => {
@@ -319,8 +447,20 @@ export const evaluateAiGate = (
     nowMs,
     maxAgeSecondsByStage
   );
+  const mcpReceiptAssessment = collectMcpReceiptViolations({
+    required: params.requireMcpReceipt ?? false,
+    stage: params.stage,
+    repoRoot: params.repoRoot,
+    nowMs,
+    maxAgeSecondsByStage,
+    readMcpAiGateReceipt: activeDependencies.readMcpAiGateReceipt,
+  });
   const gitflowViolations = collectGitflowViolations(repoState, protectedBranches);
-  const violations = [...evidenceAssessment.violations, ...gitflowViolations];
+  const violations = [
+    ...evidenceAssessment.violations,
+    ...gitflowViolations,
+    ...mcpReceiptAssessment.violations,
+  ];
   const blocked = violations.some((violation) => violation.severity === 'ERROR');
 
   return {
@@ -338,6 +478,13 @@ export const evaluateAiGate = (
       kind: evidenceResult.kind,
       max_age_seconds: maxAgeSecondsByStage[params.stage],
       age_seconds: evidenceAssessment.ageSeconds,
+    },
+    mcp_receipt: {
+      required: mcpReceiptAssessment.required,
+      kind: mcpReceiptAssessment.kind,
+      path: mcpReceiptAssessment.path,
+      max_age_seconds: mcpReceiptAssessment.maxAgeSeconds,
+      age_seconds: mcpReceiptAssessment.ageSeconds,
     },
     repo_state: repoState,
     violations,
