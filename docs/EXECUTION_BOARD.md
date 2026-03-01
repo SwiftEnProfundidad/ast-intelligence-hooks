@@ -98,7 +98,17 @@
     - commit: `ee1a78c` (`feat(mcp): add stdio bridges, pre-write automation and hardening`)
     - `git status --short --branch` tras commit (`worktree clean`)
     - `git push --set-upstream origin release/6.3.26` (`branch created`, upstream configurado)
-- 🚧 `P7.T7` Abrir PR de release/6.3.26 y preparar cierre final del bloque P7.
+- ✅ `P7.T7` Abrir PR de release/6.3.26 y preparar cierre final del bloque P7.
+  - evidencia de cierre:
+    - PR abierta: `#475` (`release/6.3.26` -> `develop`)
+    - URL: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/475`
+    - estado PR: `OPEN`, `mergeStateStatus=UNSTABLE` por checks remotos.
+    - muestreo jobs remotos:
+      - `65275715222` (`CI`) => `runner_id=0`, `steps_count=0`
+      - `65275715181` (`android-gate`) => `runner_id=0`, `steps_count=0`
+      - `65275715143` (`package-smoke minimal`) => `runner_id=0`, `steps_count=0`
+    - `security/snyk (swiftenprofundidad)` en `ERROR` (dependencia externa no-MVP).
+- 🚧 `P7.T8` Preparar cierre final del bloque P7 con estrategia de merge según política remota (checks externos bloqueados).
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.

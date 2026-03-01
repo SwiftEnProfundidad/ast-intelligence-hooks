@@ -495,7 +495,15 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - commit atómico aplicado: `ee1a78c` (`feat(mcp): add stdio bridges, pre-write automation and hardening`).
     - `git status --short --branch` en limpio tras commit.
     - upstream configurado y rama publicada: `git push --set-upstream origin release/6.3.26`.
-- 🚧 `P7.T7` Abrir PR de release/6.3.26 y preparar cierre final del bloque P7.
+- ✅ `P7.T7` Abrir PR de release/6.3.26 y preparar cierre final del bloque P7.
+  - PR operativa publicada:
+    - `#475` `release/6.3.26` -> `develop`.
+    - URL: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/475`.
+  - estado remoto observado:
+    - `mergeStateStatus=UNSTABLE` por checks externos.
+    - jobs muestreados con patrón de infraestructura no asignada: `runner_id=0`, `steps_count=0` en `CI`, `android-gate`, `package-smoke minimal`.
+    - `security/snyk (swiftenprofundidad)` en `ERROR` (dependencia externa fuera de alcance MVP).
+- 🚧 `P7.T8` Preparar cierre final del bloque P7 con estrategia de merge según política remota (checks externos bloqueados).
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
