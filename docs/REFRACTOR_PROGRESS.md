@@ -490,7 +490,12 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - `git diff --stat` (`20 files changed`, `1752 insertions`, `402 deletions`).
     - `git rev-parse --abbrev-ref --symbolic-full-name @{u}` => `NO_UPSTREAM` (pendiente operativo explícito).
     - `npm run -s validation:progress-single-active` (`in_progress_count=1`).
-- 🚧 `P7.T6` Ejecutar cierre operativo GitFlow del bloque P7 (upstream + commits atómicos + preparación de PR de release).
+- ✅ `P7.T6` Ejecutar cierre operativo GitFlow del bloque P7 (upstream + commits atómicos + preparación de PR de release).
+  - cierre GitFlow de rama:
+    - commit atómico aplicado: `ee1a78c` (`feat(mcp): add stdio bridges, pre-write automation and hardening`).
+    - `git status --short --branch` en limpio tras commit.
+    - upstream configurado y rama publicada: `git push --set-upstream origin release/6.3.26`.
+- 🚧 `P7.T7` Abrir PR de release/6.3.26 y preparar cierre final del bloque P7.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

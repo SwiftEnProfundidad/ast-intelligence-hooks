@@ -93,7 +93,12 @@
     - `git diff --stat` (`20 files changed`, `1752 insertions`, `402 deletions`).
     - `git rev-parse --abbrev-ref --symbolic-full-name @{u}` (`NO_UPSTREAM`, condición explícita para siguiente paso).
     - `npm run -s validation:progress-single-active` (`in_progress_count=1`).
-- 🚧 `P7.T6` Ejecutar cierre operativo GitFlow del bloque P7 (upstream + commits atómicos + preparación de PR de release).
+- ✅ `P7.T6` Ejecutar cierre operativo GitFlow del bloque P7 (upstream + commits atómicos + preparación de PR de release).
+  - evidencia de cierre:
+    - commit: `ee1a78c` (`feat(mcp): add stdio bridges, pre-write automation and hardening`)
+    - `git status --short --branch` tras commit (`worktree clean`)
+    - `git push --set-upstream origin release/6.3.26` (`branch created`, upstream configurado)
+- 🚧 `P7.T7` Abrir PR de release/6.3.26 y preparar cierre final del bloque P7.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
