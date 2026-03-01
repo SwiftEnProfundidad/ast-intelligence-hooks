@@ -585,7 +585,13 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
       - `65276351978` (`Build Verification`)
       - `65276351958` (`backend-gate / Backend Gate`)
       - `65276351949` (`package-smoke minimal`)
-- 🚧 `P8.T5` Mantener espera operativa hasta habilitación externa (runner/billing + cuota Snyk) para poder cerrar `P0.T1`.
+- ✅ `P8.T5` Mantener espera operativa hasta habilitación externa (runner/billing + cuota Snyk) para poder cerrar `P0.T1`.
+  - estado confirmado:
+    - `actions/runners total_count=0` se mantiene.
+    - últimos runs en `develop` continúan en `failure` sin mejora de infraestructura.
+  - conclusión operativa:
+    - bloqueo externo vigente, sin remediación local adicional viable por ahora.
+- 🚧 `P8.T6` Espera activa y monitorización ligera del desbloqueo externo (runner/billing + cuota Snyk) con ejecución inmediata en cuanto cambie el estado.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.

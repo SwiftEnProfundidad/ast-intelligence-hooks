@@ -188,7 +188,13 @@
       - `65276351978` (`Build Verification`)
       - `65276351958` (`backend-gate / Backend Gate`)
       - `65276351949` (`package-smoke minimal`)
-- 🚧 `P8.T5` Mantener espera operativa hasta habilitación externa (runner/billing + cuota Snyk) para poder cerrar `P0.T1`.
+- ✅ `P8.T5` Mantener espera operativa hasta habilitación externa (runner/billing + cuota Snyk) para poder cerrar `P0.T1`.
+  - verificación de estado:
+    - `gh api /actions/runners` sigue en `total_count=0`.
+    - últimos runs de `develop` continúan en `failure` (sin señal de capacidad remota recuperada).
+  - conclusión:
+    - no hay acciones locales adicionales efectivas hasta habilitación externa.
+- 🚧 `P8.T6` Espera activa y monitorización ligera del desbloqueo externo (runner/billing + cuota Snyk) con ejecución inmediata en cuanto cambie el estado.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.
