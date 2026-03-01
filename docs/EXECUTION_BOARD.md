@@ -199,7 +199,14 @@
     - `actions/runners total_count=0` (sin cambio).
     - últimos runs en `develop` se mantienen en `failure`.
     - reintentos `attempt=2` siguen sin ejecución real (`runner=null`, `steps=0`) en `CI`, `Backend Gate` y `Package Smoke`.
-- 🚧 `P8.T7` Mantener espera operativa y relanzar matriz mínima remota en cuanto haya señal de capacidad externa.
+- ✅ `P8.T7` Mantener espera operativa y relanzar matriz mínima remota en cuanto haya señal de capacidad externa.
+  - reintento adicional ejecutado:
+    - `CI` run `22533289915` -> `attempt=3`, `failure`.
+    - `Pumuki Backend Gate` run `22533289937` -> `attempt=3`, `failure`.
+    - `Pumuki Package Smoke` run `22533289926` -> `attempt=3`, `failure`.
+  - evidencia:
+    - jobs del intento 3 en `runner=null` y `steps=0` (`65276544612`, `65276550128`, `65276549789`).
+- 🚧 `P8.T8` Mantener ciclo de espera activa y disparar reintento inmediato en cuanto cambie capacidad externa.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.

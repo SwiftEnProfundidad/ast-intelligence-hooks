@@ -599,7 +599,14 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
       - `CI` (`run=22533289915`, `attempt=2`)
       - `Pumuki Backend Gate` (`run=22533289937`, `attempt=2`)
       - `Pumuki Package Smoke` (`run=22533289926`, `attempt=2`)
-- 🚧 `P8.T7` Mantener espera operativa y relanzar matriz mínima remota en cuanto haya señal de capacidad externa.
+- ✅ `P8.T7` Mantener espera operativa y relanzar matriz mínima remota en cuanto haya señal de capacidad externa.
+  - reintento remoto de control ejecutado:
+    - `CI` (`run=22533289915`) -> `attempt=3`, `failure`.
+    - `Pumuki Backend Gate` (`run=22533289937`) -> `attempt=3`, `failure`.
+    - `Pumuki Package Smoke` (`run=22533289926`) -> `attempt=3`, `failure`.
+  - bloqueo sigue confirmado:
+    - jobs en `runner=null` y `steps=0` (`65276544612`, `65276550128`, `65276549789`).
+- 🚧 `P8.T8` Mantener ciclo de espera activa y disparar reintento inmediato en cuanto cambie capacidad externa.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
