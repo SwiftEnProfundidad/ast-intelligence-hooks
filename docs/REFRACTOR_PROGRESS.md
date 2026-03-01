@@ -520,12 +520,12 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
       - `65275776811` (`android-gate`)
       - `65275776729` (`package-smoke minimal`)
     - `security/snyk (swiftenprofundidad)` en `ERROR` externo.
-- 🚧 `P7.T10` Mantener PR #475 monitorizada y lista para merge inmediato en cuanto llegue instrucción explícita.
-  - tick remoto más reciente:
-    - `gh pr checks 475`: fallos rápidos (2-4s) y `security/snyk` fallando por límite de tests privados.
-    - job `65275863237` (`Build Verification`) con `runner_id=0`, `steps_count=0`.
-  - condición para cierre:
-    - instrucción explícita de merge del usuario (normal o administrativa).
+- ✅ `P7.T10` Mantener PR #475 monitorizada y lista para merge inmediato en cuanto llegue instrucción explícita.
+  - tick remoto de cierre:
+    - `gh pr checks 475`: fallos rápidos (2-4s) en CI/gates; `security/snyk` en fail por límite de tests privados.
+    - job `65275890393` (`Build Verification`) con `runner_id=0`, `steps_count=0`.
+    - `validation:progress-single-active` mantiene invariante (`in_progress_count=1`).
+- 🚧 `P7.T11` Espera operativa de instrucción explícita de merge para ejecutar cierre inmediato de PR #475.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
