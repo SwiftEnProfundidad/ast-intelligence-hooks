@@ -135,7 +135,29 @@
     - `gh pr checks 475` mantiene fallos rápidos (2-4s) en CI/gates.
     - job `65275945400` (`Build Verification`) => `runner_id=0`, `steps_count=0`.
     - `npm run -s validation:progress-single-active` (`in_progress_count=1`).
-- 🚧 `P7.T12` Ejecutar merge final de PR #475 inmediatamente cuando llegue instrucción explícita del usuario.
+- ✅ `P7.T12` Ejecutar merge final de PR #475 inmediatamente cuando llegue instrucción explícita del usuario.
+  - evidencia de cierre:
+    - PR `#475` mergeada (`state=MERGED`) en `2026-03-01T01:29:26Z`.
+    - merge commit: `07c97f2433b3eb8ed12d33fecb9d9c37943453bc`.
+    - sincronización remota: `origin/develop` actualizado al merge commit.
+- ✅ `P7.T13` Ejecutar promote final `develop -> main` para cerrar el bloque P7 en ramas protegidas.
+  - evidencia de cierre:
+    - PR `#476` (`develop` -> `main`) mergeada en `2026-03-01T01:30:37Z`.
+    - merge commit: `8a2531da51524c92caa141b8a255c97b76f544eb`.
+- ✅ `P7.T14` Sincronizar `main -> develop` post-promote para mantener ramas protegidas alineadas.
+  - evidencia de cierre:
+    - PR `#477` (`main` -> `develop`) mergeada en `2026-03-01T01:32:18Z`.
+    - merge commit: `ef82f69083968fb6ba8fa9d186e97737d251db54`.
+    - paridad de contenido entre ramas protegidas:
+      - `origin/develop^{tree} == origin/main^{tree}` (`d4695b9eb1496f07f45f42f9fb1a968ffe7c4484`).
+- ✅ `P7.T15` Cierre administrativo final del bloque P7 y traspaso limpio al siguiente bloque.
+  - evidencia de cierre:
+    - `npm run -s validation:progress-single-active` en verde (`in_progress_count=1` durante el cierre).
+    - `npm run -s gitflow:status` confirma rama release publicada y sin drift (`ahead=0`, `behind=0`).
+    - ramas protegidas con paridad de contenido validada por árbol (`origin/develop^{tree} == origin/main^{tree}`).
+
+## Fase P8 (Seguimiento)
+- 🚧 `P8.T1` Preparar bloque siguiente post-P7 (cierre de release y definición de objetivo operativo siguiente).
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.

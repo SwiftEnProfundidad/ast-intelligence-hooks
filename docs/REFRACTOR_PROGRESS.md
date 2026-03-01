@@ -531,7 +531,32 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
     - `gh pr checks 475`: fallos rápidos (2-4s) persistentes.
     - job `65275945400` (`Build Verification`) con `runner_id=0`, `steps_count=0`.
     - `validation:progress-single-active` mantiene invariante (`in_progress_count=1`).
-- 🚧 `P7.T12` Ejecutar merge final de PR #475 inmediatamente cuando llegue instrucción explícita del usuario.
+- ✅ `P7.T12` Ejecutar merge final de PR #475 inmediatamente cuando llegue instrucción explícita del usuario.
+  - cierre ejecutado:
+    - PR `#475` (`release/6.3.26` -> `develop`) mergeada.
+    - `mergedAt=2026-03-01T01:29:26Z`.
+    - merge commit: `07c97f2433b3eb8ed12d33fecb9d9c37943453bc`.
+    - `origin/develop` alineado al merge commit.
+- ✅ `P7.T13` Ejecutar promote final `develop -> main` para cerrar el bloque P7 en ramas protegidas.
+  - promote ejecutado:
+    - PR `#476` (`develop` -> `main`) mergeada.
+    - `mergedAt=2026-03-01T01:30:37Z`.
+    - merge commit: `8a2531da51524c92caa141b8a255c97b76f544eb`.
+- ✅ `P7.T14` Sincronizar `main -> develop` post-promote para mantener ramas protegidas alineadas.
+  - sincronización ejecutada:
+    - PR `#477` (`main` -> `develop`) mergeada.
+    - `mergedAt=2026-03-01T01:32:18Z`.
+    - merge commit: `ef82f69083968fb6ba8fa9d186e97737d251db54`.
+    - paridad de contenido confirmada por árbol:
+      - `origin/develop^{tree} == origin/main^{tree}`.
+- ✅ `P7.T15` Cierre administrativo final del bloque P7 y traspaso limpio al siguiente bloque.
+  - cierre administrativo validado:
+    - `validation:progress-single-active` en verde durante el cierre.
+    - `gitflow:status` en `release/6.3.26` con upstream y sin drift (`ahead=0`, `behind=0`).
+    - `origin/develop` y `origin/main` con paridad de contenido por árbol.
+
+### Fase P8 — Post-P7
+- 🚧 `P8.T1` Preparar bloque siguiente post-P7 (cierre de release y definición de objetivo operativo siguiente).
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
