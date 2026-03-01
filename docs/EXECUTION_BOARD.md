@@ -166,7 +166,19 @@
   - ruta de rehabilitación lista:
     - habilitar capacidad real de ejecución remota (runner/billing) y reintentar checks de referencia.
     - restablecer cuota/configuración de Snyk para eliminar `limit of private tests`.
-- 🚧 `P8.T3` Mantener readiness para reintento remoto de `P0.T1` cuando se habilite infraestructura externa.
+- ✅ `P8.T3` Mantener readiness para reintento remoto de `P0.T1` cuando se habilite infraestructura externa.
+  - readiness validada:
+    - checks de referencia siguen reproduciendo patrón externo (`gh pr checks 477` con fallos rápidos 2-4s).
+    - runners repo continúan en `0` (`gh api /actions/runners`).
+    - `security/snyk` sigue bloqueando por cuota de tests privados.
+  - pack de reintento listo (ejecución inmediata cuando habiliten infraestructura):
+    - `gh workflow run CI --ref develop`
+    - `gh workflow run pumuki-platform-gates.yml --ref develop`
+    - `gh workflow run pumuki-package-smoke.yml --ref develop`
+    - `gh run list --branch develop --limit 10`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/actions/runners --jq '.total_count'`
+    - `gh run view <run-id> --json jobs`
+- 🚧 `P8.T4` Ejecutar reintento remoto de `P0.T1` en cuanto haya runners/capacidad Snyk y consolidar cierre.
 
 ## Checklist A — Funcionalidades (sin omisiones)
 Totales: bins=10, lifecycle_commands=20, npm_scripts=98, exports=8, total_items=136.

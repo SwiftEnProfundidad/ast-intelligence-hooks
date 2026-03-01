@@ -564,7 +564,18 @@ Fuente unica de seguimiento operativo. No se abren nuevos MDs temporales de trac
   - plan listo:
     - rehabilitar capacidad remota (runner/billing) y cuota/config Snyk.
     - reintentar matriz mínima remota para cerrar `P0.T1`.
-- 🚧 `P8.T3` Mantener readiness para reintento remoto de `P0.T1` cuando se habilite infraestructura externa.
+- ✅ `P8.T3` Mantener readiness para reintento remoto de `P0.T1` cuando se habilite infraestructura externa.
+  - readiness consolidada:
+    - `gh pr checks 477` mantiene patrón externo (fallos rápidos).
+    - `actions/runners total_count=0` en repo.
+    - `security/snyk` sigue bloqueado por límite de tests privados.
+  - paquete de comandos preparado para reintento inmediato:
+    - `gh workflow run CI --ref develop`
+    - `gh workflow run pumuki-platform-gates.yml --ref develop`
+    - `gh workflow run pumuki-package-smoke.yml --ref develop`
+    - `gh run list --branch develop --limit 10`
+    - `gh run view <run-id> --json jobs`
+- 🚧 `P8.T4` Ejecutar reintento remoto de `P0.T1` en cuanto haya runners/capacidad Snyk y consolidar cierre.
 
 ## Plan Por Fases (Ciclo 014)
 Plan base visible para seguimiento previo y durante la implementacion.
