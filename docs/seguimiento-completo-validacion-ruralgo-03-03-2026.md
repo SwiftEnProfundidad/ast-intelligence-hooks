@@ -1213,7 +1213,101 @@ Criterio de salida F5:
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
     - `npx --yes --package pumuki@latest pumuki-pre-commit` (hook gate `ALLOW/PASS` durante commit en `R_GO`)
     - `npx --yes --package pumuki@latest pumuki-pre-push` (hook gate `ALLOW/PASS` durante push en `R_GO`)
-- 🚧 `P12.F1.T38` Crear issue de mejora estratégica pendiente: policy-as-code versionada/firmada (backlog enterprise) y dejarla trazada en canónico + master plan.
+- ✅ `P12.F1.T38` Crear issue de mejora estratégica pendiente: policy-as-code versionada/firmada (backlog enterprise) y dejarla trazada en canónico + master plan.
+  - cierre ejecutado:
+    - issue creada en `ast-intelligence-hooks`: `#543` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/543`.
+    - canónico RuralGO actualizado:
+      - `PUMUKI-INC-055` añadido como `REPORTED (#543)`.
+      - consolidación por causa raíz extendida con fila `policy-as-code`.
+      - trazabilidad de ejecución extendida con fila `REPORTED` para issue `#543`.
+    - master plan RuralGO actualizado:
+      - `ruralgo-master-plan.md` con `Issue #538` en `✅`.
+      - mejora estratégica `policy-as-code` promovida a `🚧` con referencia a `#543`.
+  - evidencia:
+    - `gh issue create --title "feature: policy-as-code versionada y firmada para gates enterprise" ...`
+    - edición de `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+    - edición de `R_GO/ruralgo-master-plan.md`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m "docs(validation): sync canonical feedback for issue 538"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+- ✅ `P12.F1.T39` Ejecutar siguiente mejora estratégica: crear issue de telemetría estructurada exportable (JSONL/OTel) y trazarla en canónico + master plan.
+  - cierre ejecutado:
+    - issue creada en `ast-intelligence-hooks`: `#544` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/544`.
+    - canónico RuralGO actualizado:
+      - `PUMUKI-INC-056` añadido como `⏳ REPORTED (#544)`.
+      - consolidación por causa raíz extendida con fila `telemetría estructurada exportable`.
+      - trazabilidad de ejecución extendida con fila `REPORTED` para issue `#544`.
+    - master plan RuralGO actualizado:
+      - `ruralgo-master-plan.md` mantiene `#543` como única `🚧`.
+      - mejora estratégica `telemetría` mantiene estado `⏳` y añade referencia a `Issue #544`.
+  - evidencia:
+    - `gh issue create --title "[P2][OPS] Telemetría estructurada exportable (JSONL/OTel) para auditoría enterprise" ...`
+    - edición de `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+    - edición de `R_GO/ruralgo-master-plan.md`
+- ⛔ `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
+  - avance en curso:
+    - rama de implementación: `feature/543-policy-as-code-signed`.
+    - commits técnicos:
+      - `a24bf6c` (`feat(gate): add policy-as-code trace metadata and strict validation guard`).
+      - `594a83c` (`feat(policy): add contract expiry validation and strict blocking coverage`).
+    - PR abierta: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/545`.
+    - tests/verificación ejecutados en verde:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/hookGateSummary.test.ts integrations/git/__tests__/EvidenceService.test.ts`
+      - `npm run -s typecheck`
+    - alcance DoD cubierto en branch:
+      - contrato `policy-as-code` con validación runtime `valid/invalid/expired/unknown-source`.
+      - bloqueo strict (`PUMUKI_POLICY_STRICT=1`) con códigos explícitos de policy.
+      - documentación operativa mínima añadida en `README.md`.
+  - bloqueo actual:
+    - checks remotos de GitHub Actions en `#545` fallan de forma sistémica y sin logs recuperables (`log not found` en `gh run view --log`).
+    - `security/snyk` reporta límite de cuota privada (`You have used your limit of private tests`).
+    - pendiente decisión de merge cuando se desbloquee infraestructura/checks remotos.
+  - evidencia:
+    - `gh pr view 545 --json state,mergeStateStatus,statusCheckRollup,headRefOid,url`
+    - `gh pr checks 545 --json name,state,bucket,link,description`
+    - `gh run view 22647944444 --job 65640392393 --log`
+
+- ⛔ `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
+  - issue operativa de soporte creada: `#546` (`ops: unblock remote PR checks (snyk quota + missing job logs)`).
+  - avance ejecutado:
+    - reintento de runs fallidos lanzado en lote (`gh run rerun <run_id> --failed`) para descartar flake.
+    - resultados tras rerun: `run_attempt=2` y estado `completed/failure` en todos los workflows afectados (sin recuperación automática).
+    - diagnóstico estructural confirmado en GitHub Actions:
+      - jobs de `CI` con `steps_count=0` en attempt 2.
+      - ZIP de logs del run disponible, pero solo contiene `system.txt` (sin logs de pasos de ejecución).
+    - issue `#543`, issue `#546` y PR `#545` actualizadas con comentario de progreso y bloqueo remoto.
+  - bloqueo reproducido (comando/error):
+    - comando: `gh run view 22648051050`
+    - error observado: `The job was not started because your account is locked due to a billing issue.` (anotación repetida en todos los jobs de `CI`).
+    - comando: `gh pr checks 545 --json name,state,bucket,link,description`
+    - error observado: `security/snyk (swiftenprofundidad) => ERROR: You have used your limit of private tests`.
+    - comando: `gh run view 22647944444 --job 65640392393 --log`
+    - error observado: `log not found: 65640392393`.
+  - corrección mínima propuesta:
+    - desbloquear billing de la cuenta/organización de GitHub Actions (el run no inicia jobs por lock de facturación).
+    - restaurar cuota/permisos de `Snyk` para checks de PR o desactivar temporalmente ese check como requerido.
+    - asegurar retención/publicación de logs de Actions para permitir diagnóstico de fallos reales.
+
+- 🚧 `P12.F1.T43` Ejecutar implementación técnica de `#544` (telemetría estructurada exportable JSONL/OTel) con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
+  - avance en curso:
+    - rama de implementación: `feature/544-telemetry-structured-export` (desde `develop`).
+    - implementación añadida:
+      - `integrations/telemetry/gateTelemetry.ts` (`telemetry_event_v1`, export JSONL y OTLP HTTP opcional).
+      - integración en runner de evidencia:
+        - `integrations/git/runPlatformGateEvidence.ts`.
+      - tests añadidos/actualizados:
+        - `integrations/telemetry/__tests__/gateTelemetry.test.ts`
+        - `integrations/git/__tests__/runPlatformGateEvidence.test.ts`
+      - documentación mínima:
+        - `README.md` (sección `Telemetry Export (Enterprise)`).
+        - `docs/CONFIGURATION.md` (env vars de export).
+    - verificación local en verde:
+      - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts integrations/git/__tests__/runPlatformGateEvidence.test.ts`
+      - `npm run -s typecheck`
+
+- ⏳ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+  - salida esperada:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-055`.
+    - `R_GO/ruralgo-master-plan.md` con leyenda actualizada (solo 1 `🚧` activa) y referencia de issue/PR/commit.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
