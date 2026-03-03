@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T38` (crear issue de policy-as-code versionada/firmada y trazarla en canónicos).
+- Task activa (`🚧`): `P12.F1.T39` (crear issue de telemetría JSONL/OTel y trazarla en canónicos).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
