@@ -1127,10 +1127,22 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 533 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 532 --comment "Closed via merged PR #533..."`
-- 🚧 `P12.F1.T31` Sincronizar canónico RuralGO tras fix `#532` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+- ✅ `P12.F1.T31` Sincronizar canónico RuralGO tras fix `#532` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO`: `docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - entrada incremental añadida: `PUMUKI-INC-052` (`FIXED #532/#533`).
+    - trazabilidad consolidada en matriz de ejecución (`issue #532`, `PR #533`, `commit f479ad6`).
+    - commit en RuralGO: `5a909c126` (`docs(validation): sync canonical feedback for issue 532`).
+  - evidencia:
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m \"docs(validation): sync canonical feedback for issue 532\"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+- 🚧 `P12.F1.T32` Ejecutar issue `#534` (waivers formales de gate con TTL, owner y reason).
+  - estado actual:
+    - issue creada: `#534` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/534`.
   - objetivo inmediato:
-    - actualizar `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
-    - dejar trazabilidad cruzada completa (`MD ID -> ISSUE -> BRANCH -> PR -> COMMIT -> EVIDENCIA`).
+    - definir esquema de waiver auditable para gates (`PRE_COMMIT/PRE_PUSH/CI`).
+    - bloquear waivers inválidos/expirados y reflejar estado en evidencia.
+    - cubrir RED/GREEN con tests de waiver válido, expirado y malformado.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
