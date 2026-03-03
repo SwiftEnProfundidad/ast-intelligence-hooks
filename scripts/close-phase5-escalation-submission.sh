@@ -19,7 +19,7 @@ FOLLOW_UP_ETA="$3"
 SUBMITTED_AT_UTC="${4:-$(date -u +"%Y-%m-%dT%H:%M:%SZ")}"
 
 HANDOFF_FILE="docs/validation/consumer-startup-escalation-handoff-latest.md"
-PROGRESS_FILE="docs/REFRACTOR_PROGRESS.md"
+PROGRESS_FILE="docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md"
 TODO_FILE="docs/TODO.md"
 
 if [[ ! -f "${HANDOFF_FILE}" || ! -f "${PROGRESS_FILE}" || ! -f "${TODO_FILE}" ]]; then
