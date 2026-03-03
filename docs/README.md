@@ -2,17 +2,14 @@
 
 Canonical index for active Pumuki documentation.
 
-## Ciclo Activo (Seguimiento Temporal)
+## Seguimiento Activo (único)
 
-- Seguimiento diario (único y simplificado): `docs/EXECUTION_BOARD.md`.
-- Cierre más reciente: `P6` (verificación exhaustiva real/mock de funcionalidades + reglas, `371/371`) consolidado en `docs/REFRACTOR_PROGRESS.md`.
-- Alcance actual: hardening post-verificación y estabilización operativa incremental (`P7`).
-- Ultimo cierre oficial previo: ciclo `022` consolidado en `docs/validation/c022-phase-acceptance-contract.md`.
-- Politica: una sola tarea en construccion (`🚧`) en todo momento.
+- Maestro: `docs/registro-maestro-de-seguimiento.md`
+- Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
+- Política: una sola tarea en construcción (`🚧`) en el plan activo.
 
 ## Product and Architecture
 
-- `docs/EXECUTION_BOARD.md`: tablero activo de seguimiento (simple).
 - `docs/ARCHITECTURE.md`: normative architecture contract.
 - `docs/HOW_IT_WORKS.md`: facts-to-gate execution flow.
 - `docs/API_REFERENCE.md`: public APIs, binaries, and command surfaces.

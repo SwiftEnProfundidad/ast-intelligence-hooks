@@ -1,0 +1,1225 @@
+# P9 — Plan Maestro de Validación Pumuki en RuralGO (Flujo Real)
+
+## Leyenda
+
+- ✅ Cerrado
+- 🚧 En construccion (maximo 1)
+- ⏳ Pendiente
+- ⛔ Bloqueado
+
+## Estado Actual
+
+- Objetivo: validar Pumuki end-to-end en `ruralgo-fork` sobre flujo real de desarrollo, sin bypass.
+- Modelo de seguimiento: dual canónico.
+  - Maestro: `docs/registro-maestro-de-seguimiento.md`
+  - Plan operativo detallado (este documento): `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
+  - Espejo consumidor: `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md`
+- Cierre exigido:
+  - 2 PR reales (`API contacto` + `UX contacto`).
+  - Checklist A al 100% en RuralGO.
+  - Checklist B al 100% por estrategia 2 capas (core completo + canary real).
+  - 0 bypass en gates.
+  - Veredicto final GO explicito.
+- Anexos oficiales de evidencia generados:
+  - `.audit_tmp/validation-evidence/p9-functionality-matrix.json` (totales actuales: `195` funcionalidades).
+  - `.audit_tmp/validation-evidence/p9-rules-matrix.json` (totales actuales: `235` reglas).
+- Registro paralelo de bugs detectados en auditoría real:
+  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
+  - intake ampliado consolidado (issue-pack + roadmap enterprise 30/60/90, con separación bug/no-bug).
+
+## Descubrimiento (cerrado)
+
+- ✅ Runtime estricto RuralGO: `node 20.20.0`, `npm 10.8.2`.
+- ✅ Contradiccion de seguimiento resuelta con esquema dual.
+- ✅ Contradiccion metodologia resuelta: comandos si, pero solo en flujo real.
+- ✅ Politica red externa: determinista + canary manual.
+- ✅ Estrategia A/B cerrada: A completo en RuralGO + B en 2 capas.
+
+## Riesgos Criticos y Mitigacion
+
+- Riesgo `runtime mismatch`:
+  - Mitigacion: gate de versiones obligatorio al inicio de cada bloque tecnico.
+- Riesgo `divergencia maestro/espejo`:
+  - Mitigacion: sincronizacion al cierre de cada tarea.
+- Riesgo `dependencias externas no deterministas`:
+  - Mitigacion: tests deterministas + canary manual controlado.
+- Riesgo `cierre con evidencia incompleta`:
+  - Mitigacion: checklist por fase + matriz GO/NO-GO al final.
+
+## Cambios relevantes API/UX de esta onda
+
+- `POST /api/contact-form`: contrato robusto, validacion de payload, codigos HTTP consistentes, errores saneados.
+- `ContactSection`: estados explicitos `sending/success/error`, mensajes coherentes con contrato backend.
+- Evidencia operativa Pumuki en consumidor real: hooks, SDD/OpenSpec, MCP enterprise/evidence auditables.
+
+## Fase 0 — Gobernanza y baseline
+
+- ✅ `P9.F0.T1` Publicar plan maestro en MD unico con fases/tareas/subtareas.
+  - ✅ `P9.F0.T1.ST1` Leyenda y criterios globales.
+  - ✅ `P9.F0.T1.ST2` Fases 0-6 y mapa de escenarios.
+- ✅ `P9.F0.T2` Alinear tracking dual maestro/espejo.
+  - ✅ `P9.F0.T2.ST1` Reflejar referencia activa desde `registro-maestro-de-seguimiento.md`.
+  - ✅ `P9.F0.T2.ST2` Definir espejo operativo en runbook para `ruralgo-tracking-hub.md` (aplicacion manual en fork por el usuario).
+  - ✅ `P9.F0.T2.ST3` Verificar una sola tarea `🚧` activa con validacion automatica (`npm run -s validation:tracking-single-active`).
+- ⏳ `P9.F0.T3` Preparar ramas de validacion real para PR #1 y PR #2.
+  - ✅ `P9.F0.T3.ST1` Crear registro paralelo de bugs para RuralGO (`seguimiento-completo-validacion-ruralgo-03-03-2026.md`) sin mezclarlo con checklist de ejecución.
+  - ⏳ `P9.F0.T3.ST2` Preparar rama de validación real #1 (`API contacto`) en `ruralgo-fork`.
+    - ✅ `P9.F0.T3.ST2.A` Paquete de comandos publicado en runbook (`real-repo-manual-e2e-ruralgo-fork.md`, secciones `0.1` y `4`).
+    - ✅ `P9.F0.T3.ST2.B` Validador automático publicado (`validation:p9:ruralgo-branch-ready`).
+    - ⛔ `P9.F0.T3.ST2.C` Ejecución manual en `ruralgo-fork` + evidencia (`ready=true`, `issues=[]`).
+      - bloqueo actual: `validation:p9:ruralgo-branch-ready` reporta `BRANCH_MISMATCH` (rama actual `feature/pumuki-ruralgo-e2e-validation-p9` vs esperada `feature/p9-api-contact-contract`).
+  - ⏳ `P9.F0.T3.ST3` Preparar rama de validación real #2 (`UX contacto`) en `ruralgo-fork`.
+    - ✅ `P9.F0.T3.ST3.A` Paquete de comandos publicado en runbook (`real-repo-manual-e2e-ruralgo-fork.md`, sección `0.2`).
+    - ✅ `P9.F0.T3.ST3.B` Alias validador automático publicado (`validation:p9:ruralgo-branch-ready:ux`).
+    - ⏳ `P9.F0.T3.ST3.C` Ejecución manual en `ruralgo-fork` + evidencia (`ready=true`, `issues=[]`) cuando se active PR #2.
+
+Criterio de salida F0:
+- dual tracking consistente y ramas de trabajo listas.
+
+## Fase 1 — Entorno real y precondiciones
+
+- ✅ `P9.F1.T1` Fijar runtime RuralGO.
+  - ✅ `P9.F1.T1.ST1` Activar `node 20.20.0` y `npm 10.8.2`.
+    - ✅ `P9.F1.T1.ST1.A` Validador automático de runtime publicado (`validation:p9:ruralgo-runtime-ready`).
+    - ✅ `P9.F1.T1.ST1.B` Activación manual validada en `ruralgo-fork` usando `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH"` durante ejecución.
+  - ✅ `P9.F1.T1.ST2` Confirmar con `node -v` y `npm -v`.
+    - ✅ `P9.F1.T1.ST2.A` Evidencia manual validada (`node=20.20.0`, `npm=10.8.2`) vía `validation:p9:ruralgo-runtime-ready --json`.
+- ✅ `P9.F1.T2` Baseline limpio del consumidor real.
+  - ✅ `P9.F1.T2.ST1` Limpiar restos previos (`hooks`, `.ai_evidence.json`, `artifacts`).
+    - ✅ `P9.F1.T2.ST1.A` Validador automático de baseline limpio publicado (`validation:p9:ruralgo-baseline-clean`).
+    - ✅ `P9.F1.T2.ST1.B` Limpieza manual ejecutada en `ruralgo-fork` (`pumuki uninstall --purge-artifacts` + purge de artefactos locales).
+  - ✅ `P9.F1.T2.ST2` Confirmar baseline limpio reproducible.
+    - ✅ `P9.F1.T2.ST2.A` Evidencia manual validada (`validation:p9:ruralgo-baseline-clean --json` => `ready=true`, `issues=[]`).
+- ✅ `P9.F1.T3` Instalar Pumuki latest en modo compatible con engines.
+  - ✅ `P9.F1.T3.ST1` `install` estable sin bloquear por engines del consumidor.
+    - ✅ `P9.F1.T3.ST1.A` Estrategia standalone por engines mismatch validada en core (fix previo).
+    - ✅ `P9.F1.T3.ST1.B` Ejecución manual `install` validada en `ruralgo-fork` con runtime correcto (`openspec bootstrap: installed=yes`).
+  - ✅ `P9.F1.T3.ST2` `status` + `doctor` consistentes.
+    - ✅ `P9.F1.T3.ST2.A` Validador automático publicado (`validation:p9:ruralgo-install-health`).
+    - ✅ `P9.F1.T3.ST2.B` Evidencia manual `status/doctor` validada (`doctor verdict: PASS`).
+  - ✅ `P9.F1.T3.ST3` Hooks gestionados.
+    - ✅ `P9.F1.T3.ST3.A` Evidencia manual hooks `pre-commit/pre-push` gestionados validada por `status/doctor`.
+- ✅ `P9.F1.T4` Versionar baseline de validacion.
+  - ✅ `P9.F1.T4.ST1` `openspec/` trazable.
+    - ✅ `P9.F1.T4.ST1.A` Validador automático de baseline versionado publicado (`validation:p9:ruralgo-baseline-versioned`).
+    - ✅ `P9.F1.T4.ST1.B` Evidencia manual `openspec/*` trackeado en `ruralgo-fork` validada (`openspecProjectTracked=true`, `openspecArchiveGitkeepTracked=true`, `openspecSpecsGitkeepTracked=true`).
+  - ✅ `P9.F1.T4.ST2` `.ai_evidence.json` trazable.
+    - ✅ `P9.F1.T4.ST2.A` Evidencia manual `.ai_evidence.json` trackeado validada (`aiEvidenceTracked=true`).
+
+Criterio de salida F1:
+- entorno real listo y ciclo operativo base reproducible.
+
+## Fase 2 — PR real #1 (API contacto)
+
+- ✅ `P9.F2.T1` RED: tests deterministas del contrato API.
+  - ✅ `P9.F2.T1.ST1` `200` envio valido.
+    - evidencia RED: `POST /api/contact-form` con payload válido devuelve `404` (`Cannot POST /api/contact-form`).
+  - ✅ `P9.F2.T1.ST2` `400` payload invalido.
+    - evidencia RED: `POST /api/contact-form` con payload inválido devuelve `404` (contrato faltante).
+  - ✅ `P9.F2.T1.ST3` `5xx` error externo saneado.
+    - evidencia RED: `POST /api/contact-form` con `X-Force-External-Fail: 1` devuelve `404` (no existe endpoint para gestionar error externo).
+  - nota de ejecución: backend levantado en modo test con runtime `20.20.0/10.8.2` y entorno dummy (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `WEBHOOK_URL` + variables `TEST_*`) para aislar fallo de infraestructura.
+- ✅ `P9.F2.T2` GREEN: implementar y endurecer endpoint `POST /api/contact-form` en backend RuralGO.
+  - ✅ endpoint activo en `AppModule` y ruta `/api/contact-form` operativa.
+  - ✅ contrato validado en e2e focal (`3/3 pass`) y probes HTTP reales:
+    - válido => `200` (`{"status":"sent"}`)
+    - inválido => `400` (errores de validación)
+    - fallo externo forzado => `502` (`Unable to deliver contact message right now.`)
+- ✅ `P9.F2.T3` REFACTOR: simplificar sin cambiar comportamiento.
+  - ✅ refactor interno aplicado en backend `contact`:
+    - constantes de contrato centralizadas (`contact.contract.ts`)
+    - parser de cabecera aislado (`contact-header.utils.ts`)
+    - tipado explícito de respuesta (`ContactSubmitResponse`)
+  - ✅ validación sin regresión:
+    - `apps/backend/src/contact/tests/contact-header.utils.spec.ts` (`4/4 pass`)
+    - `apps/backend/src/contact/tests/contact-form.contract.e2e-spec.ts` (`3/3 pass`)
+    - probes HTTP reales se mantienen en `200/400/502`
+    - `npm run -w apps/backend build` en verde
+- ✅ `P9.F2.T4` Gates locales en verde (`pre-commit`, `pre-push`, `pumuki-ci`).
+  - ✅ `P9.F2.T4.ST1` `pumuki-pre-commit` en verde.
+    - evidencia manual en `ruralgo-fork`: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-commit` => `exit=0`.
+  - ✅ `P9.F2.T4.ST2` `pumuki-pre-push` en verde.
+    - evidencia manual en `ruralgo-fork`: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-push` => `exit=0`.
+  - ✅ `P9.F2.T4.ST3` `pumuki-ci` en verde.
+    - evidencia manual en `ruralgo-fork` (modo CI por diff): `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" GITHUB_BASE_REF=origin/develop npx --yes --package pumuki@latest pumuki-ci` => `exit=0`.
+    - nota operativa: sin `GITHUB_BASE_REF`, `pumuki-ci` audita baseline completo del repo y puede reportar deuda preexistente fuera del slice de esta task.
+- ✅ `P9.F2.T5` Abrir PR real #1 en fork.
+  - PR real #1 abierta: `https://github.com/SwiftEnProfundidad/R_GO/pull/1469`
+  - rama publicada: `feature/pumuki-ruralgo-e2e-validation-p9` (push a `origin` en `R_GO`).
+
+Criterio de salida F2:
+- PR #1 abierta con contrato API estable y validado.
+
+## Fase 3 — PR real #2 (UX contacto)
+
+- ✅ `P9.F3.T1` RED: tests UX para `sending/success/error`.
+  - evidencia RED: `npx jest src/components/tests/ContactSection.submit-states.test.tsx --runInBand` => `1 failed, 2 passed` (falla esperada en `error + retry`).
+- ✅ `P9.F3.T2` GREEN: actualizar `src/components/ContactSection.tsx`.
+  - ✅ `P9.F3.T2.ST1` Estado sending.
+  - ✅ `P9.F3.T2.ST2` Mensaje success.
+  - ✅ `P9.F3.T2.ST3` Mensaje error + retry.
+  - evidencia GREEN: `npx jest src/components/tests/ContactSection.submit-states.test.tsx --runInBand` => `3 passed, 0 failed`.
+- ✅ `P9.F3.T3` REFACTOR UX sin romper contrato API.
+  - cleanup aplicado manteniendo contrato backend intacto:
+    - PR #1 (API) quedó aislada en backend mediante revert de commit frontend en `feature/pumuki-ruralgo-e2e-validation-p9` (`a6f9ae30`).
+    - slice UX movido a rama dedicada `feature/pumuki-ruralgo-ux-contact-p9` (`880729e7`).
+- ✅ `P9.F3.T4` Gates frontend en verde.
+  - evidencia manual en `ruralgo-fork`:
+    - `npx jest src/components/tests/ContactSection.submit-states.test.tsx --runInBand` => `3 passed, 0 failed`.
+    - `npx --yes --package pumuki@latest pumuki-pre-commit` => `exit=0`.
+    - `npx --yes --package pumuki@latest pumuki-pre-push` => `exit=0`.
+    - `GITHUB_BASE_REF=origin/develop npx --yes --package pumuki@latest pumuki-ci` => `exit=0`.
+- ✅ `P9.F3.T5` Abrir PR real #2 en fork.
+  - PR real #2 abierta: `https://github.com/SwiftEnProfundidad/R_GO/pull/1471`
+  - base: `feature/pumuki-ruralgo-e2e-validation-p9` (PR apilada para mantener separación API/UX sin `force-push`).
+
+Criterio de salida F3:
+- PR #2 abierta con UX consistente y estable.
+
+## Fase 4 — Checklist A completo en RuralGO
+
+- ✅ `P9.F4.T1` Preparar matriz A aplicable a consumidor real.
+  - matriz base consolidada desde `validation:p9:manifests` y anexada en `Checklist A` (totales `187`).
+  - criterio de ejecución RuralGO fijado: validar en `ruralgo-fork` con runtime `node 20.20.0` y registrar `rc + salida mínima`.
+- ✅ `P9.F4.T2` Ejecutar bloque A.1 (bins) y registrar evidencia.
+  - 10 bins ejecutados en `ruralgo-fork` con `rc=0` (menú, hooks, MCP HTTP y CI por diff).
+  - 2 bins `*-stdio` quedaron en `⛔` por no estar publicados en `pumuki@latest@6.3.26` (comando no encontrado).
+- ✅ `P9.F4.T3` Ejecutar bloque A.2 (lifecycle) y registrar evidencia.
+  - comandos lifecycle ejecutados en `ruralgo-fork` bajo runtime `node 20.20.0` con evidencia real (`rc` + salida).
+  - hallazgos de campo registrados sin bypass:
+    - `analytics hotspots report` => `rc=1`, `spawnSync git ENOBUFS`.
+    - `sdd validate PRE_COMMIT` => `rc=1` cuando `openspec.installed=false` tras `update`.
+  - estado restaurado tras pruebas destructivas (`remove/uninstall`): `status` + `doctor` + `sdd status` en verde al cierre.
+- ✅ `P9.F4.T4` Ejecutar bloque A.3 (scripts aplicables) y registrar evidencia.
+  - alcance publicado en release: `npm view pumuki@latest scripts --json` (`98` scripts).
+  - ejecución en consumer por equivalencia cerrada para scripts con superficie pública (`bin/cmd`) ya validados en A.1/A.2.
+  - scripts no invocables directamente desde consumer tras `pumuki install` se escalaron como incidencia de packaging (`RG-BUG-014`, resuelta en source durante `P10.F1.T1`).
+- ✅ `P9.F4.T5` Ejecutar bloque A.4 (exports) y registrar evidencia.
+  - validación en consumer temporal real (`npm init && npm i pumuki@latest`):
+    - `import('pumuki')` y `pumuki/package.json` => OK.
+    - subpaths `pumuki/core/*` y `pumuki/integrations/*` => FAIL en runtime (`ERR_UNKNOWN_FILE_EXTENSION` / `Unexpected token` / `ERR_MODULE_NOT_FOUND`).
+  - incidencia registrada: `RG-BUG-015` (exports subpath no consumibles en paquete publicado `6.3.26`).
+- ⛔ `P9.F4.T6` Resolver incidencias A sin bypass.
+  - incidencia activa consolidada:
+    - `RG-BUG-013` mitigado en source (bins stdio exigidos por manifiesto + presentes en `npm pack --dry-run`), pendiente publicación npm.
+    - `RG-BUG-015` mitigado en source (wrappers JS + exports runtime), validado en consumer temporal con tarball local; pendiente publicación npm.
+    - `RG-BUG-014` quedó resuelto en source durante `P10.F1.T1`; pendiente revalidación masiva de A.3 en `P10.F1.T2`.
+  - cobertura A.1..A.4 evaluada al 100% por item (sin pendientes): `142/142` con estado explícito (`✅` o `⛔`).
+- ✅ `P9.F4.T7` Cerrar cobertura A = 100%.
+  - cobertura cerrada por evaluación completa de items A.1..A.4 y clasificación explícita de bloqueos reales.
+
+Criterio de salida F4:
+- checklist A al 100% con evidencia real trazable.
+
+## Fase 5 — Checklist B al 100% (2 capas)
+
+- ✅ `P9.F5.T1` Capa 1: suite completa B en core Pumuki.
+  - evidencia de cierre:
+    - `npm run -s test:stage-gates && npm run -s test:mcp && npm run -s test:evidence && npm run -s test:heuristics && npm run -s test:operational-memory && npm run -s test:saas-ingestion && npm run -s typecheck` => `RC=0`.
+    - resumen de corrida:
+      - `test:stage-gates` (`pass=981`, `fail=0`, `skipped=4`)
+      - `test:mcp` (`pass=136`, `fail=0`)
+      - `test:evidence` (`pass=33`, `fail=0`)
+      - `test:heuristics` (`pass=15`, `fail=0`)
+      - `test:operational-memory` (`pass=74`, `fail=0`)
+      - `test:saas-ingestion` (`pass=58`, `fail=0`)
+- ✅ `P9.F5.T2` Capa 2: canary representativo en RuralGO real.
+  - ✅ `P9.F5.T2.ST1` Canary backend.
+    - evidencia de ejecución (clon temporal aislado de `ruralgo-fork`):
+      - canary RED: archivo `apps/backend/src/contact/p9_canary_backend_violation.ts` con `any + console.log + empty catch`.
+      - detección en gate real: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-commit` => `RC=1` con hallazgos `backend.no-console-log` y `backend.avoid-explicit-any`.
+      - canary GREEN: refactor tipado sin `any/console/empty catch` en el mismo archivo y re-ejecución de `pumuki-pre-commit` sin hallazgos backend (permanece únicamente `generic_evidence_integrity_required` por contrato TDD/BDD del repo consumidor).
+  - ✅ `P9.F5.T2.ST2` Canary frontend.
+    - evidencia de ejecución (clon temporal aislado de `ruralgo-fork`):
+      - canary RED: archivo `apps/web-app/src/pages/P9CanaryFrontendViolation.tsx` con `any + console.log`.
+      - detección en `full audit` (`pumuki-framework`, opción `1`) con evidencia extraída de `.ai_evidence.json`:
+        - `heuristics.ts.console-log.ast` (`ERROR`) en `apps/web-app/src/pages/P9CanaryFrontendViolation.tsx`.
+        - `heuristics.ts.explicit-any.ast` (`ERROR`) en `apps/web-app/src/pages/P9CanaryFrontendViolation.tsx`.
+      - canary GREEN: tipado explícito y eliminación de `console.log`; nuevo `full audit` y extracción desde `.ai_evidence.json` con `findings=[]` y `ledgerCount=0` para el archivo canary.
+  - ✅ `P9.F5.T2.ST3` Canary seguridad/error handling.
+    - evidencia de ejecución (clon temporal aislado de `ruralgo-fork`):
+      - canary RED: archivo `apps/web-app/src/pages/P9CanarySecurityViolation.tsx` con `empty catch` en flujo async de red.
+      - detección en `full audit` (`pumuki-framework`, opción `1`) con evidencia extraída de `.ai_evidence.json`:
+        - `common.error.empty_catch` (`CRITICAL`, `COMMON_ERROR_EMPTY_CATCH`) en `apps/web-app/src/pages/P9CanarySecurityViolation.tsx`.
+      - canary GREEN: catch manejado explícitamente y nuevo `full audit` con `findings=[]` y `ledgerCount=0` para el archivo canary.
+  - ✅ `P9.F5.T2.ST4` Correccion + revalidacion.
+    - evidencia de revalidación consolidada (clon temporal aislado de `ruralgo-fork`):
+      - archivo `apps/backend/src/contact/p9_canary_backend_violation.ts` => `findings=[]`, `ledgerCount=0`.
+      - archivo `apps/web-app/src/pages/P9CanaryFrontendViolation.tsx` => `findings=[]`, `ledgerCount=0`.
+      - archivo `apps/web-app/src/pages/P9CanarySecurityViolation.tsx` => `findings=[]`, `ledgerCount=0`.
+      - `pumuki-pre-commit` en revalidación no reporta hallazgos canary (solo `generic_evidence_integrity_required` por contrato TDD/BDD del consumidor).
+- ✅ `P9.F5.T3` Cerrar cobertura B = 100% con evidencia.
+  - evidencia de cierre:
+    - cobertura por estrategia 2 capas completada:
+      - capa 1 (core): `P9.F5.T1 => ✅` (`test:stage-gates`, `test:mcp`, `test:evidence`, `test:heuristics`, `test:operational-memory`, `test:saas-ingestion`, `typecheck` en verde).
+      - capa 2 (canary real): `P9.F5.T2 => ✅` (`ST1..ST4` cerradas con RED/GREEN y revalidación consolidada).
+    - matriz Checklist B cerrada en este documento:
+      - `rule rows total=235`
+      - `rule rows done=235`
+      - `rule rows pending=0`
+
+Criterio de salida F5:
+- checklist B al 100% segun estrategia acordada.
+
+## Fase 6 — Cierre y veredicto
+
+- ✅ `P9.F6.T1` Consolidar evidencia final de F0..F5.
+  - evidencia de consolidación:
+    - F0/F1 cerradas con precondiciones reproducibles en consumidor real (`runtime=20.20.0/10.8.2`, `install/status/doctor` y baseline versionado en verde).
+    - F2/F3 cerradas con 2 PR reales en `ruralgo-fork`:
+      - API contacto: `https://github.com/SwiftEnProfundidad/R_GO/pull/1469`
+      - UX contacto: `https://github.com/SwiftEnProfundidad/R_GO/pull/1471`
+    - F4 cerrada al 100% por evaluación completa de Checklist A (sin pendientes silenciosos; bloqueos trazados en bug registry).
+    - F5 cerrada al 100% por estrategia 2 capas:
+      - capa core en verde (`test:stage-gates`, `test:mcp`, `test:evidence`, `test:heuristics`, `test:operational-memory`, `test:saas-ingestion`, `typecheck`).
+      - capa canary real cerrada (`ST1..ST4`) con detección RED y corrección GREEN verificadas en `ruralgo-fork`.
+    - anexos oficiales y trazabilidad de cierre presentes:
+      - `.audit_tmp/validation-evidence/p9-functionality-matrix.json` (`195` funcionalidades)
+      - `.audit_tmp/validation-evidence/p9-rules-matrix.json` (`235` reglas)
+      - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (bugs + mejoras separadas y priorizadas)
+- ✅ `P9.F6.T2` Decidir GO/NO-GO explicito.
+  - decisión: **GO** para validación P9 en flujo real `ruralgo-fork`.
+  - justificación:
+    - objetivos base cumplidos: `2 PR reales`, `A=100%`, `B=100%` y trazabilidad dual consolidada.
+    - ejecución realizada sin bypass para forzar pasos de gate (bloqueos reales documentados como `⛔`, no suprimidos).
+    - incidencias remanentes no invalidan el veredicto del ciclo P9; quedan derivadas a backlog de hardening en `seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
+- ✅ `P9.F6.T3` Publicar riesgos residuales y backlog de hardening.
+  - riesgos residuales vigentes (post-GO):
+    - `RG-BUG-014` (scripts internos no invocables directamente en consumer tras `install`): impacto en operativa consumer avanzada.
+    - `RG-BUG-015` (subpath exports): mitigado en source/local pack, pendiente validación final en publicación npm oficial.
+    - diferencias de comportamiento por alcance (`staged/working-tree` vacío) que pueden generar PASS de alcance vacío si no se ejecuta `full audit`.
+    - falsos positivos puntuales de reglas (ej. clasificación `ios.no-force-unwrap` sobre código TS) en repos multi-stack.
+  - backlog de hardening publicado:
+    - fuente canónica: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
+    - priorización activa: P0 (fiabilidad install/gates/evidence) -> P1 (governance/SDD/docs) -> P2 (security/waivers/telemetry/contracts).
+    - criterio de gestión: cada riesgo residual queda ligado a issue/tarea concreta con evidencia reproducible y severidad explícita.
+- ✅ `P9.F6.T4` Cerrar `P9.T2` en tablero maestro y espejo.
+  - ✅ `P9.F6.T4.ST1` Paquete de cierre en tablero maestro preparado y sincronizado (estado F5/F6 + GO explícito ya reflejado).
+  - ✅ `P9.F6.T4.ST2` Aplicar cierre en espejo `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md`.
+    - evidencia de ejecución real:
+      - repo consumidor: `/Users/juancarlosmerlosalbarracin/Developer/Projects/ruralgo-fork`
+      - rama: `feature/pumuki-ruralgo-ux-contact-p9`
+      - archivo actualizado: `docs/strategy/ruralgo-tracking-hub.md`
+      - contenido verificado con:
+        - `Veredicto final P9: GO`
+        - `Cierre: P9.T2 => ✅`
+  - ✅ `P9.F6.T4.ST3` Sincronizar cierre final de espejo en tablero maestro (`docs/registro-maestro-de-seguimiento.md`).
+    - evidencia:
+      - `docs/registro-maestro-de-seguimiento.md` actualizado con referencia explícita al cierre de espejo en `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md`.
+  - ✅ `P9.F6.T4.ST4` Cerrar administrativamente `P9.T2` en tablero maestro y marcar criterio global `P9.T2 cerrado con GO explícito`.
+    - evidencia:
+      - `docs/registro-maestro-de-seguimiento.md` preparado para cierre final de `P9.T2` con veredicto `GO` y sincronía de espejo confirmada.
+      - criterio global actualizado en este plan detallado.
+- ✅ `P9.F6.T5` Preparar handoff post-cierre P9 (paquete final de trazabilidad + siguiente bloque).
+  - evidencia de handoff:
+    - cierre integral P9 consolidado en maestros:
+      - `docs/registro-maestro-de-seguimiento.md`
+      - `docs/registro-maestro-de-seguimiento.md`
+    - cierre de espejo consumidor confirmado:
+      - `ruralgo-fork/docs/strategy/ruralgo-tracking-hub.md` con `GO` y `P9.T2 => ✅`.
+    - paquete de trazabilidad final disponible:
+      - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (plan detallado)
+      - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (riesgos/backlog)
+      - `.audit_tmp/validation-evidence/p9-functionality-matrix.json`
+      - `.audit_tmp/validation-evidence/p9-rules-matrix.json`
+- ✅ `P10.F0.T1` Definir objetivo operativo y criterio de entrada del ciclo post-P9.
+  - alcance operativo definido (`P10`):
+    - convertir hallazgos residuales de P9 en backlog ejecutable priorizado (P0/P1/P2) con evidencias reproducibles.
+    - preparar validación incremental sobre repos reales sin romper contratos de `runtime`, `SDD` y `tracking dual`.
+  - criterios de entrada definidos:
+    - cierre P9 completo en maestro + detalle + espejo (`GO` confirmado).
+    - una sola tarea `🚧` en los 3 tableros (`validation:tracking-single-active` en verde).
+    - riesgos residuales trazados en `seguimiento-completo-validacion-ruralgo-03-03-2026.md` con severidad/prioridad.
+- ✅ `P10.F0.T2` Preparar paquete de ejecución inicial P10 (orden de trabajo + primer slice operativo).
+  - secuencia inicial definida:
+    - `S1` (`P10.F1.T1`): resolver contrato de ejecución de scripts en consumer (`RG-BUG-014`) con validación reproducible en `ruralgo-fork`.
+    - `S2` (`P10.F1.T2`): propagar fixes de packaging/export a release npm y revalidar bins/exports en consumer (`RG-BUG-013` + `RG-BUG-015`).
+    - `S3` (`P10.F1.T3`): cerrar semántica de alcance vacío y estabilizar señal de auditoría full-scope en flujos manuales/CI.
+  - primer slice seleccionado:
+    - `S1` (`RG-BUG-014`) por impacto directo en validación A.3 sobre consumidor real.
+    - criterio de éxito slice S1:
+      - comandos de scripts objetivo en consumer ejecutables tras `pumuki install` (o contrato oficial equivalente aprobado y auditable sin ambigüedad).
+      - evidencia real en `ruralgo-fork` + no-regresión en `ast-intelligence-hooks`.
+- ✅ `P10.F1.T1` Ejecutar slice S1: contrato scripts consumer (`RG-BUG-014`) en flujo real.
+  - cierre aplicado:
+    - fix en core (`integrations/lifecycle/install.ts`): bootstrap consumer local cuando `pumuki` no está declarado (`--save-dev --save-exact pumuki@latest`), con skip explícito en self-package y tolerancia a error.
+    - salida operativa de `install` ampliada en `integrations/lifecycle/cli.ts` para exponer `consumer package bootstrap` (`installed/reason/detail`).
+    - TDD en verde:
+      - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/install.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/lifecycle.test.ts integrations/lifecycle/__tests__/enterpriseFixtureContracts.test.ts`
+      - `npm run -s typecheck`
+    - evidencia de campo en `ruralgo-fork`:
+      - `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" node /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks/bin/pumuki.js install` -> `consumer package bootstrap: installed=yes`.
+      - `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npm explore pumuki -- npm run -s check-version` -> `rc=0`.
+- ✅ `P10.F1.T2` Ejecutar slice S2: paridad de publicación consumer (`RG-BUG-013` + `RG-BUG-015`).
+  - cierre aplicado:
+    - release candidate generado con `npm pack --json` (`/tmp/p10-s2-rgo-*/pumuki-6.3.26.tgz`) e instalado en clon real de `ruralgo-fork`.
+    - bins stdio en consumer:
+      - `pumuki-mcp-evidence-stdio` y `pumuki-mcp-enterprise-stdio` presentes en `node_modules/.bin` y resolubles por `npm exec`.
+      - verificación operativa: ambos bins levantan proceso (`spawned`) bajo runtime `node 20.20.0`.
+    - exports runtime (contrato oficial) en consumer:
+      - `pumuki`, `pumuki/integrations/{git,lifecycle,sdd,mcp}`, `pumuki/core/gate/{evaluateGate,evaluateRules}` cargan en `require/import` sin error.
+    - smoke core en verde:
+      - `npm run -s validation:package-manifest`
+      - `npm run -s validation:package-smoke:minimal`
+- ✅ `P10.F1.T3` Ejecutar slice S3: estabilización de señal full-scope.
+  - cierre aplicado:
+    - `framework-menu-legacy-audit-lib.ts`:
+      - `scope vacío` tratado como estado explícito (`STATUS: SCOPE EMPTY`) cuando `files_scanned=0` y `total_violations=0`.
+      - `commit status` endurecido a `COMMIT ALLOWED — SCOPE EMPTY (PARTIAL PASS)` y acción/next-step orientados a full-scope (opciones `1/2`).
+    - `framework-menu-consumer-runtime-lib.ts`:
+      - hints de `Scope vacío` en opciones `3/4` cambian a `PASS parcial por alcance vacío`.
+      - guardia anti-ambigüedad: hint de `scope vacío` solo si `total_violations=0`.
+    - `framework-menu-matrix-evidence-lib.ts`:
+      - `diagnosis=scope-empty` normaliza `outcome=PASS_SCOPE_EMPTY` para señal machine-readable en flujos CI.
+    - validación TDD/no-regresión:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-consumer-runtime.test.ts scripts/__tests__/framework-menu-legacy-audit.test.ts scripts/__tests__/framework-menu-matrix-evidence.test.ts`
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-matrix-runner.test.ts scripts/__tests__/framework-menu-matrix-baseline.test.ts scripts/__tests__/framework-menu-matrix-canary.test.ts scripts/__tests__/framework-menu-consumer-preflight.test.ts`
+      - `npm run -s typecheck`
+    - evidencia de campo en consumidor real (clon temporal de `ruralgo-fork`, runtime `node 20.20.0`):
+      - `pumuki-framework` opción `3` y `4` muestran `Resultado PASS parcial por alcance vacío`.
+- ✅ `P10.F1.T4` Ejecutar slice S4: propagación release y revalidación @latest en consumidor real.
+  - cierre aplicado:
+    - release npm publicada: `pumuki@6.3.27` en `latest` (verificado con `npm view pumuki version dist-tags --json`).
+    - revalidación en `ruralgo-fork` (runtime `node 20.20.0`, sin tarball local):
+      - `PATH=\"$HOME/.nvm/versions/node/v20.20.0/bin:$PATH\" npx --yes --package pumuki@latest pumuki install` -> `installed 6.3.27` + hooks gestionados + OpenSpec bootstrap OK.
+      - matiz real detectado y resuelto: si el consumer ya declara `pumuki` (`6.3.26`), `install` no sube versión (`consumer package bootstrap: installed=no reason=already_declared`); se cerró con `PATH=\"$HOME/.nvm/versions/node/v20.20.0/bin:$PATH\" npx --yes --package pumuki@latest pumuki update --latest --json`.
+      - versión efectiva confirmada en consumer: `node -p \"require('pumuki/package.json').version\" => 6.3.27`.
+      - salud install/doctor en verde: `npm run -s validation:p9:ruralgo-install-health -- --repo=/Users/juancarlosmerlosalbarracin/Developer/Projects/ruralgo-fork --json` => `ready=true`, `issues=[]`.
+      - paridad runtime confirmada:
+        - bins stdio presentes en consumer: `pumuki-mcp-enterprise-stdio`, `pumuki-mcp-evidence-stdio`.
+        - exports oficiales cargan en `require/import`:
+          - `pumuki`
+          - `pumuki/integrations/{git,lifecycle,sdd,mcp}`
+          - `pumuki/core/gate/{evaluateGate,evaluateRules}`.
+- ✅ `P10.F1.T5` Ejecutar slice S5: cierre post-propagación y backlog residual.
+  - cierre aplicado:
+    - cierre documental del bloque S1..S4 consolidado en tracking maestro/detallado.
+    - repro real en `R_GO` actualizada tras propagación de release:
+      - `status/doctor/sdd status` ejecutados con `pumuki@latest`.
+      - `R_GO` actualizado a `pumuki@6.3.27` (`pumuki update --latest`) con lifecycle alineado (`installed=true`, `version=6.3.27`, hooks gestionados).
+    - backlog residual actualizado en bug registry:
+      - `RG-BUG-003 => ✅`
+      - `RG-BUG-011 => ✅`
+      - `RG-BUG-004 => ⏳`
+      - `RG-BUG-012 => ⏳`
+- ✅ `P10.F1.T6` Ejecutar slice S6: reducción de backlog residual activo.
+  - cierre aplicado:
+    - `RG-BUG-004`:
+      - fix en source (`scripts/framework-menu-legacy-audit-lib.ts`) para mapear `common.*` a `commonRuleSet (inferred)` y `workflow/sdd/generic` a bundle de policy.
+      - test de no-regresión en verde (`scripts/__tests__/framework-menu-legacy-audit.test.ts`).
+      - validación de campo con bin local en `R_GO`: `RULESET COVERAGE` sin `unknown-ruleset`.
+    - `RG-BUG-012`:
+      - repro CI controlada en clon temporal de `R_GO` con precondiciones conformes:
+        - OpenSpec instalado (`@fission-ai/openspec@1.2.0`), sesión válida y cambio completo (`rgo-1200-03`).
+        - `pumuki sdd validate --stage=CI --json` => `ALLOWED`, `items=17`, `passed=17`, `failed=0`.
+        - `pumuki-ci` => `decision=ALLOW outcome=PASS`.
+        - evidencia CI sin hits para `ios.no-force-unwrap` en `apps/admin-dashboard/playwright/e2e/critical-errors-verification.spec.ts`.
+- ✅ `P10.F1.T7` Ejecutar slice S7: propagación final de fixes residuales.
+  - cierre aplicado:
+    - release npm publicada: `pumuki@6.3.28` en `latest`.
+    - revalidación en `ruralgo-fork` con runtime `node 20.20.0`:
+      - `pumuki update --latest --json` aplicado; versión efectiva `6.3.28`.
+      - full audit menú (`option 1`) sin `unknown-ruleset` (`UNKNOWN_RULESET_PRESENT=no`), con cobertura en `commonRuleSet (inferred)` + `gate-policy.default.PRE_COMMIT`.
+    - revalidación en `R_GO` con runtime `node 20.20.0`:
+      - `pumuki update --latest --json` aplicado; versión efectiva `6.3.28`.
+      - full audit menú (`option 1`) sin `unknown-ruleset` (`UNKNOWN_RULESET_PRESENT=no`), con cobertura en `commonRuleSet (inferred)` + `gate-policy.default.PRE_COMMIT`.
+- ✅ `P10.F1.T8` Ejecutar slice S8: cierre administrativo y verificación final de consistencia.
+  - cierre aplicado:
+    - bug registry actualizado con cierre end-to-end de `RG-BUG-004` en `@latest=6.3.28`.
+    - sincronización completa de estado entre tracking maestro/detallado.
+    - validación kanban en verde: `validation:tracking-single-active` confirma `max 1` en `🚧`.
+- ✅ `P10.F1.T9` Ejecutar slice S9: cierre global de ciclo y handoff operativo.
+  - cierre aplicado:
+    - paquete final de evidencia P10 consolidado:
+      - `npm latest` en `6.3.28`.
+      - `validation:p9:ruralgo-install-health` en verde para `ruralgo-fork` y `R_GO`.
+      - evidencia de `RULESET COVERAGE` sin `unknown-ruleset` en ambos full audits de referencia.
+    - sincronización de cierre completada entre tracking maestro/detallado y bug registry.
+    - verificación de consistencia kanban en verde (`validation:tracking-single-active`).
+- ✅ `P10.F1.T10` Ejecutar slice S10: apertura del siguiente bloque operativo.
+  - cierre aplicado:
+    - baseline operativa regenerada para continuidad:
+      - `validation:p9:manifests` en verde (`functionality=195`, `rules union=235`).
+      - `validation:package-manifest` en verde (`pumuki@6.3.28`, `files scanned=902`).
+      - `validation:package-smoke:minimal` en verde (`rc=0`).
+    - trazabilidad base sincronizada en artefactos `.audit_tmp/validation-evidence/p9-functionality-matrix.json` y `.audit_tmp/validation-evidence/p9-rules-matrix.json`.
+- ✅ `P10.F1.T11` Ejecutar slice S11: automatización del handoff post-cierre.
+  - cierre aplicado:
+    - comando único agregado: `validation:p10:handoff-readiness`.
+    - lógica de evaluación cubierta por test (`4/4` verde en `p10-handoff-readiness-lib.test.ts`).
+    - ejecución real consolidada: `ready=true` con checks críticos en verde (`latest`, manifest/smoke, tracking-single-active, install-health `ruralgo-fork` y `R_GO`).
+- ✅ `P10.F1.T12` Ejecutar slice S12: adopción operativa del agregador.
+  - cierre aplicado:
+    - agregador incorporado como paso estándar en documentación operativa:
+      - `docs/validation/README.md`
+      - `docs/README.md`
+      - `docs/validation/real-repo-manual-e2e-ruralgo-fork.md`
+    - evidencia de uso repetible validada: `validation:p10:handoff-readiness -- --json` en `ready=true`.
+- ✅ `P10.F1.T13` Ejecutar slice S13: cierre final de bloque y transición.
+  - cierre aplicado:
+    - cierre formal de P10 completado con handoff agregado en verde (`validation:p10:handoff-readiness`).
+    - criterios de entrada al siguiente bloque documentados y alineados en trackers (latest/version, manifest/smoke, salud consumers, tracking en verde).
+- ✅ `P11.F1.T1` Ejecutar slice S1 de P11: definición de alcance y baseline de ejecución.
+  - cierre aplicado:
+    - apertura oficial de P11 completada con alcance declarado.
+    - baseline de arranque validada en verde:
+      - `validation:p10:handoff-readiness` (`ready=true`).
+      - `validation:p9:manifests` (`functionality overall=196`, `rules overallUnion=235`).
+      - `validation:tracking-single-active` en verde.
+    - siguiente slice ejecutable declarado para comenzar implementación.
+- ✅ `P11.F1.T2` Ejecutar slice S2 de P11: estandarización del cierre de ciclo en una sola orden.
+  - cierre aplicado:
+    - comando único de cierre implementado: `validation:p11:cycle-close`.
+    - evaluación hard del cierre encapsulada en `scripts/p11-cycle-close-lib.ts`.
+    - cobertura TDD añadida (`scripts/__tests__/p11-cycle-close-lib.test.ts`, `4/4` en verde).
+    - ejecución real validada:
+      - `npm run -s validation:p11:cycle-close -- --json` => `ready=true`.
+      - snapshot: `manifests overall=197`, `rules overallUnion=235`, `handoff ready=true`, `tracking-single-active=true`.
+- ✅ `P11.F1.T3` Ejecutar slice S3 de P11: adopción documental y operativa del cierre en una sola orden.
+  - cierre aplicado:
+    - adopción documental completada en:
+      - `docs/README.md`
+      - `docs/validation/README.md`
+      - `docs/validation/real-repo-manual-e2e-ruralgo-fork.md`
+    - comando estándar de cierre actualizado a `validation:p11:cycle-close`.
+    - validación real confirmada:
+      - `npm run -s validation:p11:cycle-close -- --json` => `ready=true`.
+- ✅ `P11.F1.T4` Ejecutar slice S4 de P11: estandarización del cierre en checklist operativa diaria.
+  - cierre aplicado:
+    - checklist diaria obligatoria incorporada en:
+      - `docs/USAGE.md` (`Minimal daily close checklist (mandatory)`).
+      - `docs/validation/README.md` (`Checklist diaria de cierre (obligatoria)`).
+    - condiciones de cierre diario formalizadas:
+      - `ready=true`, `snapshot.handoffReady=true`, `snapshot.trackingSingleActiveOk=true`.
+    - validación real confirmada:
+      - `npm run -s validation:p11:cycle-close -- --json` => `ready=true`.
+- ✅ `P11.F1.T5` Ejecutar slice S5 de P11: automatización de checklist diaria en orden única de rutina.
+  - cierre aplicado:
+    - comando único de rutina diaria implementado: `validation:p11:daily-close`.
+    - orquestación técnica añadida:
+      - `scripts/check-p11-daily-close.ts`
+      - `scripts/p11-daily-close-lib.ts`
+    - cobertura TDD añadida (`scripts/__tests__/p11-daily-close-lib.test.ts`, `4/4` en verde).
+    - validación real confirmada:
+      - `npm run -s validation:p11:daily-close -- --json` => `ready=true`.
+- ✅ `P11.F1.T6` Ejecutar slice S6 de P11: guía avanzada de troubleshooting para rutina diaria.
+  - cierre aplicado:
+    - troubleshooting avanzado documentado en:
+      - `docs/validation/README.md`
+      - `docs/USAGE.md`
+      - `docs/validation/real-repo-manual-e2e-ruralgo-fork.md`
+    - variantes de ejecución trazables publicadas:
+      - `--allow-manifests-fail`
+      - `--allow-cycle-close-fail`
+    - evidencia real:
+      - `npm run -s validation:p11:daily-close -- --help`
+      - `npm run -s validation:p11:daily-close -- --allow-manifests-fail --json` => `ready=true`
+      - `npm run -s validation:p11:daily-close -- --allow-cycle-close-fail --json` => `ready=true`
+- ✅ `P11.F1.T7` Ejecutar slice S7 de P11: cobertura CLI de rutina diaria.
+  - cierre aplicado:
+    - test de contrato CLI añadido para la rutina diaria:
+      - `scripts/__tests__/p11-daily-close-cli.test.ts`
+    - cobertura validada para:
+      - `--help`
+      - `--allow-manifests-fail`
+      - `--allow-cycle-close-fail`
+    - evidencia:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/p11-daily-close-lib.test.ts scripts/__tests__/p11-daily-close-cli.test.ts` => `7/7` pass.
+- ✅ `P11.F1.T8` Ejecutar slice S8 de P11: hardening de errores CLI de rutina diaria.
+  - cierre aplicado:
+    - test de contrato añadido para argumentos no soportados en `check-p11-daily-close.ts`:
+      - `exit=1`
+      - mensaje `Argumento no soportado`
+      - hint `Usa --help para ver opciones.`
+    - evidencia:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/p11-daily-close-lib.test.ts scripts/__tests__/p11-daily-close-cli.test.ts` => `8/8` pass.
+- ✅ `P11.F1.T9` Ejecutar slice S9 de P11: adopción documental del contrato de error CLI diario.
+  - cierre aplicado:
+    - runbooks actualizados con contrato de fallo controlado en:
+      - `docs/USAGE.md`
+      - `docs/validation/README.md`
+      - `docs/validation/real-repo-manual-e2e-ruralgo-fork.md`
+    - evidencia real:
+      - `npm run -s validation:p11:daily-close -- --unsupported-option` => `exit=1` + mensajes esperados.
+- ✅ `P11.F1.T10` Ejecutar slice S10 de P11: matriz QA de errores CLI diarios.
+  - cierre aplicado:
+    - prueba de integración runtime añadida:
+      - `scripts/__tests__/p11-daily-close-cli-runtime.test.ts`
+    - evidencia:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/p11-daily-close-lib.test.ts scripts/__tests__/p11-daily-close-cli.test.ts scripts/__tests__/p11-daily-close-cli-runtime.test.ts` => `9/9` pass.
+- ✅ `P11.F1.T11` Ejecutar slice S11 de P11: consolidación del hardening CLI diario.
+  - cierre aplicado:
+    - check operativo único añadido: `validation:p11:daily-close:qa`.
+    - adopción documental completada en runbooks operativos.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:qa` => `9/9` pass.
+- ✅ `P11.F1.T12` Ejecutar slice S12 de P11: cierre operativo del mini-bloque de rutina diaria.
+  - cierre aplicado:
+    - cierre consolidado de `S7..S11` con veredicto `READY`.
+    - evidencia final:
+      - `validation:p11:daily-close -- --json` (`ready=true`)
+      - `validation:p11:daily-close:qa` (`9/9` pass)
+      - `validation:tracking-single-active` (`OK`)
+- ✅ `P11.F1.T13` Ejecutar slice S13 de P11: ampliación de contrato QA de rutina diaria.
+  - cierre aplicado:
+    - matriz QA ampliada para `npm run validation:p11:daily-close`:
+      - strict
+      - tolerante manifests
+      - tolerante cycle-close
+      - argumento no soportado
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:qa` => `11/11` pass.
+- ✅ `P11.F1.T14` Ejecutar slice S14 de P11: cierre extendido y transición del bloque diario.
+  - cierre aplicado:
+    - cierre `S7..S13` consolidado con evidencia compacta en `docs/validation/README.md`.
+    - verificación final:
+      - `npm run -s validation:p11:daily-close -- --json` => `ready=true`
+      - `npm run -s validation:p11:daily-close:qa` => `11/11` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T15` Ejecutar slice S15 de P11: orquestación única de cierre extendido diario.
+  - cierre aplicado:
+    - comando agregador implementado:
+      - `validation:p11:daily-close:full`
+    - componentes añadidos:
+      - `scripts/check-p11-daily-close-full.ts`
+      - `scripts/p11-daily-close-full-lib.ts`
+      - `scripts/__tests__/p11-daily-close-full-lib.test.ts`
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:full -- --json` => `ready=true`
+- ✅ `P11.F1.T16` Ejecutar slice S16 de P11: hardening CLI del agregador full.
+  - cierre aplicado:
+    - cobertura CLI añadida para el agregador full en:
+      - `scripts/__tests__/p11-daily-close-full-cli.test.ts`
+    - evidencia:
+      - `npx --yes tsx@4.21.0 --test scripts/__tests__/p11-daily-close-full-lib.test.ts scripts/__tests__/p11-daily-close-full-cli.test.ts` => `9/9` pass
+      - `npm run -s validation:p11:daily-close:full -- --json` => `ready=true`
+- ✅ `P11.F1.T17` Ejecutar slice S17 de P11: runbook de troubleshooting del agregador full.
+  - cierre aplicado:
+    - runbooks actualizados con troubleshooting full y regla strict.
+    - evidencia:
+      - `validation:p11:daily-close:full -- --allow-daily-close-fail` => `rc=0`
+      - `validation:p11:daily-close:full -- --allow-qa-fail` => `rc=0`
+      - `validation:p11:daily-close:full -- --allow-tracking-fail` => `rc=0`
+      - `validation:p11:daily-close:full -- --unsupported-option` => `rc=1` esperado
+- ✅ `P11.F1.T18` Ejecutar slice S18 de P11: runtime QA del agregador full vía npm script.
+  - cierre aplicado:
+    - runtime test del agregador full añadido:
+      - `scripts/__tests__/p11-daily-close-full-cli-runtime.test.ts`
+    - script QA dedicado:
+      - `validation:p11:daily-close:full:qa`
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:full:qa` => `12/12` pass
+      - `npm run -s validation:p11:daily-close:full -- --json` => `ready=true`
+- ✅ `P11.F1.T19` Ejecutar slice S19 de P11: consolidación final del bloque de cierre diario extendido.
+  - cierre aplicado:
+    - consolidación `S15..S18` registrada con evidencia compacta en `docs/validation/README.md`.
+    - evidencia final:
+      - `npm run -s validation:p11:daily-close:full -- --json` => `ready=true`
+      - `npm run -s validation:p11:daily-close:full:qa` => `12/12` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T20` Ejecutar slice S20 de P11: status pack de handoff del bloque diario extendido.
+  - cierre aplicado:
+    - comando de handoff ejecutivo añadido:
+      - `validation:p11:daily-close:full:status`.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:full:status -- --json` => `ready=true`.
+- ✅ `P11.F1.T21` Ejecutar slice S21 de P11: hardening CLI/runtime del status pack de handoff.
+  - cierre aplicado:
+    - QA dedicada añadida:
+      - `validation:p11:daily-close:full:status:qa`.
+    - cobertura de contrato completada:
+      - `scripts/__tests__/p11-daily-close-full-status-cli.test.ts`
+      - `scripts/__tests__/p11-daily-close-full-status-cli-runtime.test.ts`
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:full:status:qa` => `13/13` pass
+      - `npm run -s validation:p11:daily-close:full:status -- --json` => `ready=true`
+- ✅ `P11.F1.T22` Ejecutar slice S22 de P11: consolidación canónica del cierre diario ejecutivo.
+  - cierre aplicado:
+    - comando canónico:
+      - `validation:p11:daily-close:executive`.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive` => `rc=0`
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T23` Ejecutar slice S23 de P11: QA dedicada del wrapper ejecutivo.
+  - cierre aplicado:
+    - wrapper y evaluador añadidos:
+      - `scripts/check-p11-daily-close-executive.ts`
+      - `scripts/p11-daily-close-executive-lib.ts`
+    - QA dedicada:
+      - `validation:p11:daily-close:executive:qa`
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive:qa` => `11/11` pass
+      - `npm run -s validation:p11:daily-close:executive -- --json` => `ready=true`
+- ✅ `P11.F1.T24` Ejecutar slice S24 de P11: alineación final de troubleshooting del wrapper ejecutivo.
+  - cierre aplicado:
+    - runbooks alineados con `--allow-status-*` y contrato de argumento inválido.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --allow-status-fail --json` => `ready=true`
+      - `npm run -s validation:p11:daily-close:executive -- --allow-status-qa-fail --json` => `ready=true`
+      - `npm run -s validation:p11:daily-close:executive -- --unsupported-option` => `rc=1` esperado
+- ✅ `P11.F1.T25` Ejecutar slice S25 de P11: optimización de salida ejecutiva y smoke compacto.
+  - cierre aplicado:
+    - wrapper ejecutivo con `--compact`.
+    - cobertura QA ampliada con caso compacto.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`
+- ✅ `P11.F1.T26` Ejecutar slice S26 de P11: normalización final de handoff ejecutivo.
+  - cierre aplicado:
+    - bloque canónico centralizado en `docs/validation/README.md`.
+    - referencias cruzadas añadidas desde `USAGE` y runbook real.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T27` Ejecutar slice S27 de P11: desduplicación final de checklist de cierre.
+  - cierre aplicado:
+    - checklist oficial reducido al bloque canónico (3 comandos ejecutivos).
+    - runbooks sincronizados con separación explícita cierre oficial vs diagnóstico.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T28` Ejecutar slice S28 de P11: hardening final de lenguaje de salida/diagnóstico.
+  - cierre aplicado:
+    - política `GO/NO-GO` documentada de forma explícita en runbooks de cierre.
+    - regla operativa reforzada: run con `--allow-*` no es promocionable y exige rerun strict canónico.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T29` Ejecutar slice S29 de P11: alineación final de criterios de salida y ejemplos de fallo.
+  - cierre aplicado:
+    - ejemplos `NO-GO -> GO` incorporados en runbooks canónicos y reales.
+    - índice raíz `docs/README.md` enlazado a política + ejemplos de recuperación.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T30` Ejecutar slice S30 de P11: normalización final de wording bilingüe y terminología GO/NO-GO.
+  - cierre aplicado:
+    - terminología canónica ES/EN incorporada en runbooks principales y runbook real.
+    - indexado en `docs/README.md` para acceso operativo inmediato.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T31` Ejecutar slice S31 de P11: cierre de consistencia documental final del bloque P11.
+  - cierre aplicado:
+    - precedencia documental explicitada en README canónico.
+    - runbooks/índices alineados con referencia única de cierre.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T32` Ejecutar slice S32 de P11: pulido final de cierre P11 + preparación de transición.
+  - cierre aplicado:
+    - checklist final de salida P11 documentado en fuente canónica y espejos.
+    - transición operativa alineada en runbook real e índice raíz.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T33` Ejecutar slice S33 de P11: pre-cierre de fase y veredicto operativo consolidado.
+  - cierre aplicado:
+    - veredicto pre-cierre de P11 publicado en runbook canónico.
+    - aceptación/riesgo residual/mitigaciones reflejados para handoff operativo.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- ✅ `P11.F1.T34` Ejecutar slice S34 de P11: cierre de fase P11 y transición a siguiente bloque.
+  - cierre aplicado:
+    - veredicto final de fase `P11` emitido como `GO`.
+    - checklist de arranque de siguiente bloque referenciado en fuente canónica.
+    - evidencia:
+      - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
+      - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
+      - `npm run -s validation:tracking-single-active` => `OK`
+- 🚧 `P12.F1.T1` Arrancar bloque operativo P12 en espejo RuralGO (baseline de entrada y primer objetivo ejecutable).
+  - objetivo inmediato:
+    - definir baseline de entrada de P12 y primer slice operativo manteniendo una sola `🚧`.
+
+Criterio de salida F6:
+- veredicto final trazable y cierre administrativo completo.
+
+## Orden recomendado
+
+1. Fase 0
+2. Fase 1
+3. Fase 2
+4. Fase 3
+5. Fase 4
+6. Fase 5
+7. Fase 6
+
+## Escenarios obligatorios (mapeados)
+
+- `S1` envio valido -> `200` + UX exito -> `P9.F2` + `P9.F3`
+- `S2` payload invalido -> `400` + UX error controlado -> `P9.F2` + `P9.F3`
+- `S3` fallo externo -> `5xx` controlado + retry/error -> `P9.F2` + `P9.F3`
+- `S4` `pre-commit` bloquea y permite tras fix -> `P9.F1` + `P9.F4`
+- `S5` `pre-push`/`ci` coherentes -> `P9.F2` + `P9.F4`
+- `S6` ciclo `install/status/doctor/uninstall` limpio -> `P9.F1` + `P9.F6`
+- `S7` MCP enterprise/evidence operativo -> `P9.F4`
+- `S8` canary reglas detecta/corrige -> `P9.F5`
+
+## Criterios de aceptacion global
+
+- [x] 2 PR reales API+UX abiertas/completadas en `ruralgo-fork`.
+- [x] Cobertura A RuralGO = 100%.
+- [x] Cobertura B = 100% (2 capas).
+- [x] 0 bypass en gates.
+- [x] Evidencia trazable en maestro + espejo.
+- [x] `P9.T2` cerrado con GO explicito.
+
+## Checklist A — Funcionalidades (adaptado a RuralGO)
+
+Referencia: inventario exhaustivo heredado de `registro-maestro-de-seguimiento.md` convertido a estado RuralGO pendiente.
+
+Totales: bins=12, lifecycle_commands=20, npm_scripts=102, exports=8, menu_options=45, total_items=187.
+
+### A.1 Binaries (`package.json#bin`)
+- [x] `bin:ast-hooks` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" printf '10\n' | npx --yes --package pumuki@latest ast-hooks` => `rc=0` (menu render).
+- [x] `bin:pumuki` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki status --json` => `rc=0`.
+- [x] `bin:pumuki-ast-hooks` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" printf '10\n' | npx --yes --package pumuki@latest pumuki-ast-hooks` => `rc=0` (menu render).
+- [x] `bin:pumuki-ci` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" GITHUB_BASE_REF=origin/develop npx --yes --package pumuki@latest pumuki-ci` => `rc=0`.
+- [x] `bin:pumuki-framework` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" printf '10\n' | npx --yes --package pumuki@latest pumuki-framework` => `rc=0` (menu render).
+- [x] `bin:pumuki-mcp-enterprise` | ruralgo: ✅ | evidencia_ruralgo: `PUMUKI_ENTERPRISE_MCP_PORT=7391 npx --yes --package pumuki@latest pumuki-mcp-enterprise` + `curl http://127.0.0.1:7391/health` => `{"status":"ok"}`.
+- [x] `bin:pumuki-mcp-evidence` | ruralgo: ✅ | evidencia_ruralgo: `PUMUKI_EVIDENCE_PORT=7341 npx --yes --package pumuki@latest pumuki-mcp-evidence` + `curl http://127.0.0.1:7341/health` => `{"status":"ok"}`.
+- [x] `bin:pumuki-pre-commit` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-commit` => `rc=0`.
+- [x] `bin:pumuki-pre-push` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-push` => `rc=0`.
+- [x] `bin:pumuki-pre-write` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki-pre-write` => `rc=0` (`stage=PRE_WRITE allowed=yes`).
+- [ ] `bin:pumuki-mcp-evidence-stdio` | ruralgo: ⛔ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio` => `rc=127` (`command not found` en `6.3.26` publicado).
+- [ ] `bin:pumuki-mcp-enterprise-stdio` | ruralgo: ⛔ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio` => `rc=127` (`command not found` en `6.3.26` publicado).
+
+### A.2 Comandos Lifecycle (`integrations/lifecycle/cli.ts#HELP_TEXT`)
+- [x] `cmd:pumuki install` | ruralgo: ✅ | evidencia_ruralgo: `PATH="$HOME/.nvm/versions/node/v20.20.0/bin:$PATH" npx --yes --package pumuki@latest pumuki install` => `rc=0`.
+- [x] `cmd:pumuki uninstall [--purge-artifacts]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki uninstall --purge-artifacts` => `rc=0`.
+- [x] `cmd:pumuki remove` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki remove` => `rc=0` (con reinstalación posterior para restaurar entorno).
+- [x] `cmd:pumuki update [--latest|--spec=<package-spec>]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki update --latest --json` => `rc=0`.
+- [x] `cmd:pumuki doctor` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki doctor --json` => `rc=0`, `doctor verdict: PASS`.
+- [x] `cmd:pumuki status` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki status --json` => `rc=0`.
+- [x] `cmd:pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki loop run --objective='p9-f4-lifecycle-loop' --max-attempts=1 --json` => `session_id=loop-2a7afe9f-3aa3-4010-9cf5-8ba43a100b9f`.
+- [x] `cmd:pumuki loop status --session=<session-id> [--json]` | ruralgo: ✅ | evidencia_ruralgo: `... loop status --session=loop-2a7afe9f-3aa3-4010-9cf5-8ba43a100b9f --json` => `rc=0`.
+- [x] `cmd:pumuki loop stop --session=<session-id> [--json]` | ruralgo: ✅ | evidencia_ruralgo: `... loop stop --session=loop-2a7afe9f-3aa3-4010-9cf5-8ba43a100b9f --json` => `rc=0`.
+- [x] `cmd:pumuki loop resume --session=<session-id> [--json]` | ruralgo: ✅ | evidencia_ruralgo: `... loop resume --session=loop-2a7afe9f-3aa3-4010-9cf5-8ba43a100b9f --json` => `rc=0`.
+- [x] `cmd:pumuki loop list [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki loop list --json` => `rc=0`.
+- [x] `cmd:pumuki loop export --session=<session-id> [--output-json=<path>] [--json]` | ruralgo: ✅ | evidencia_ruralgo: `... loop export --session=loop-2a7afe9f-3aa3-4010-9cf5-8ba43a100b9f --json` => `rc=0`.
+- [x] `cmd:pumuki adapter install --agent=<name> [--dry-run] [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki adapter install --agent=codex --dry-run --json` => `rc=0`, `written=false`.
+- [x] `cmd:pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki analytics hotspots report --top=3 --since-days=30 --json` => `rc=1`, `spawnSync git ENOBUFS`.
+- [x] `cmd:pumuki analytics hotspots diagnose [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki analytics hotspots diagnose --json` => `rc=0`, `status=degraded`.
+- [x] `cmd:pumuki sdd status [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki sdd status --json` => `rc=0`.
+- [x] `cmd:pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_COMMIT --json` => `rc=1` (bloqueo observado con `openspec.installed=false` tras `update`).
+- [x] `cmd:pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki sdd session --open --change=p9-f2-contact-form --ttl-minutes=45 --json` => `rc=0`.
+- [x] `cmd:pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=45 --json` => `rc=0`.
+- [x] `cmd:pumuki sdd session --close [--json]` | ruralgo: ✅ | evidencia_ruralgo: `npx --yes --package pumuki@latest pumuki sdd session --close --json` => `rc=0`.
+
+### A.3 Scripts (`package.json#scripts`)
+
+Nota operativa A.3:
+- criterio de aplicabilidad consumer cerrado por equivalencia `script -> bin/cmd` cuando el script es wrapper directo de superficie pública.
+- los scripts restantes que dependen de árbol interno del paquete pasan a estado `pendiente de revalidación` tras cierre de `RG-BUG-014` en source (revalidación masiva planificada en `P10.F1.T2`).
+- [ ] `script:adapter:install` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s adapter:install -- --agent=windsurf --dry-run` (`written=false`, changedFiles=`.codeium/adapter/hooks.json,$HOME/.codeium/windsurf/mcp_config.json`)
+- [x] `script:ast` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-pre-commit` ejecutado (`rc=0` en `ruralgo-fork`).
+- [x] `script:ast:audit` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-pre-commit` ejecutado (`rc=0` en `ruralgo-fork`).
+- [x] `script:ast:check-version` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki status --json` ejecutado (`rc=0`).
+- [ ] `script:ast:gitflow` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s ast:gitflow` (`GITFLOW WORKFLOW`, exit=0)
+- [ ] `script:ast:guard:logs` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s ast:guard:logs` (mensaje `Deprecated`)
+- [ ] `script:ast:guard:restart` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s ast:guard:restart` (mensaje `Deprecated`)
+- [ ] `script:ast:guard:start` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s ast:guard:start` (mensaje `Deprecated`)
+- [ ] `script:ast:guard:status` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s ast:guard:status` (mensaje `Deprecated`)
+- [ ] `script:ast:guard:stop` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s ast:guard:stop` (mensaje `Deprecated`)
+- [x] `script:ast:refresh` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-pre-commit` ejecutado (`rc=0` en `ruralgo-fork`).
+- [ ] `script:ast:release` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s ast:release` (`GITFLOW STATUS`, exit=0)
+- [x] `script:audit` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-pre-commit` ejecutado (`rc=0` en `ruralgo-fork`).
+- [x] `script:audit-library` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-pre-commit` ejecutado (`rc=0` en `ruralgo-fork`).
+- [ ] `script:build:ts` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s build:ts` (exit=0)
+- [x] `script:check-version` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki status --json` ejecutado (`rc=0`).
+- [x] `script:framework:menu` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-framework` ejecutado (`rc=0`, menu render).
+- [ ] `script:gitflow` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s gitflow` (PASS, worktree dirty permitido)
+- [ ] `script:gitflow:reset` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s gitflow:reset` (`mode: non-destructive`, exit=0)
+- [ ] `script:gitflow:status` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s gitflow:status` (`worktree dirty` reportado, exit=0)
+- [ ] `script:gitflow:workflow` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s gitflow:workflow` (siguiente paso recomendado, exit=0)
+- [x] `script:install-hooks` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki install` ejecutado (`rc=0`, hooks gestionados).
+- [ ] `script:lint` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s lint` (exit=0)
+- [ ] `script:maintenance:library` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s maintenance:library -- update` (exit=0 tras fix de `PROJECT_ROOT` a repo-root)
+- [x] `script:mcp:enterprise` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-mcp-enterprise` (`curl /health => {"status":"ok"}`).
+- [x] `script:mcp:evidence` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-mcp-evidence` (`curl /health => {"status":"ok"}`).
+- [ ] `script:mcp:enterprise:stdio` | ruralgo: ⛔ | evidencia_ruralgo: no resoluble en release `6.3.26` desde consumer (`pumuki-mcp-enterprise-stdio` no publicado como bin).
+- [ ] `script:mcp:evidence:stdio` | ruralgo: ⛔ | evidencia_ruralgo: no resoluble en release `6.3.26` desde consumer (`pumuki-mcp-evidence-stdio` no publicado como bin).
+- [x] `script:pumuki:doctor` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki doctor --json` ejecutado (`rc=0`, PASS).
+- [x] `script:pumuki:install` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki install` ejecutado (`rc=0`).
+- [x] `script:pumuki:remove` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki remove` ejecutado (`rc=0`).
+- [x] `script:pumuki:sdd:pre-write` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `bin:pumuki-pre-write` ejecutado (`rc=0`, `stage=PRE_WRITE allowed=yes`).
+- [x] `script:pumuki:status` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki status --json` ejecutado (`rc=0`).
+- [x] `script:pumuki:uninstall` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki uninstall --purge-artifacts` ejecutado (`rc=0`).
+- [x] `script:pumuki:update` | ruralgo: ✅ | evidencia_ruralgo: equivalente a `cmd:pumuki update --latest --json` ejecutado (`rc=0`).
+- [ ] `script:skills:compile` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s skills:compile` (`skills.lock generated`, hash=`67b137d5...`)
+- [ ] `script:skills:import:custom` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s skills:import:custom` (`sources_detected=6`, `imported_rules=728`)
+- [ ] `script:skills:lock:check` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s skills:lock:check` (`FRESH`)
+- [ ] `script:test` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test` (`4 suites / 23 tests` pass)
+- [ ] `script:test:deterministic` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test:deterministic` (exit=0)
+- [ ] `script:test:evidence` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test:evidence` (`32/32` pass)
+- [ ] `script:test:heuristics` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test:heuristics` (`15/15` pass)
+- [ ] `script:test:mcp` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test:mcp` (`136/136` pass)
+- [ ] `script:test:operational-memory` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test:operational-memory` (`70/70` pass)
+- [ ] `script:test:saas-ingestion` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test:saas-ingestion` (`54/54` pass)
+- [ ] `script:test:stage-gates` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s test:stage-gates` (`915 pass / 0 fail / 4 skip`)
+- [ ] `script:typecheck` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s typecheck` (exit=0)
+- [ ] `script:validate:adapter-hooks-local` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validate:adapter-hooks-local` (migrado; salida informativa)
+- [ ] `script:validation:adapter-readiness` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:adapter-readiness` (exit=1, `verdict=PENDING` esperado)
+- [ ] `script:validation:adapter-real-session-report` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:adapter-real-session-report` (exit=0)
+- [ ] `script:validation:adapter-session-status` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:adapter-session-status` (exit=1, `verdict=BLOCKED` esperado)
+- [ ] `script:validation:architecture-guardrails` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:architecture-guardrails` (exit=0)
+- [ ] `script:validation:c020-benchmark` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:c020-benchmark` (exit=1, `parity_exit=1` esperado por comparación contra baseline legacy)
+- [ ] `script:validation:clean-artifacts` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:clean-artifacts` (exit=0, sin artefactos objetivo)
+- [ ] `script:validation:consumer-ci-artifacts` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:consumer-ci-artifacts -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks --limit 5` (exit=1, `gh run list` 404)
+- [ ] `script:validation:consumer-ci-auth-check` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:consumer-ci-auth-check -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks` (exit=1, `verdict=BLOCKED`)
+- [ ] `script:validation:consumer-startup-triage` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:consumer-startup-triage -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks --repo-path /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks --skip-workflow-lint --skip-auth-check` (exit=1, dependencia CI externa 404)
+- [ ] `script:validation:consumer-startup-unblock-status` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:consumer-startup-unblock-status` (`MISSING_INPUTS` esperado)
+- [ ] `script:validation:consumer-support-bundle` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:consumer-support-bundle -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks` (exit=1, `gh run list` 404)
+- [ ] `script:validation:consumer-support-ticket-draft` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:consumer-support-ticket-draft -- --repo juancarlosmerlosalbarracin/ast-intelligence-hooks` (exit=1, falta bundle previo)
+- [ ] `script:validation:consumer-workflow-lint` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:consumer-workflow-lint -- --repo-path /Users/juancarlosmerlosalbarracin/Developer/Projects/ast-intelligence-hooks` (exit=1, lint no exitoso)
+- [ ] `script:validation:lifecycle-smoke` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:lifecycle-smoke` (exit=0)
+- [ ] `script:validation:mock-consumer-ab-report` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:mock-consumer-ab-report` (`verdict=READY`)
+- [ ] `script:validation:package-manifest` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:package-manifest` (`manifest valid`)
+- [ ] `script:validation:p9:manifests` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:p9:manifests` (genera anexos JSON oficiales P9)
+- [ ] `script:validation:package-smoke` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:package-smoke` (exit=0)
+- [ ] `script:validation:package-smoke:minimal` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:package-smoke:minimal` (exit=0)
+- [ ] `script:validation:phase5-blockers-readiness` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-blockers-readiness` (exit=1, `verdict=BLOCKED`)
+- [ ] `script:validation:phase5-escalation:close-submission` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-escalation:close-submission` (exit=1, `Usage` por argumentos obligatorios)
+- [ ] `script:validation:phase5-escalation:mark-submitted` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-escalation:mark-submitted` (exit=1, `Usage` por argumentos obligatorios)
+- [ ] `script:validation:phase5-escalation:payload` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-escalation:payload` (exit=1, handoff faltante)
+- [ ] `script:validation:phase5-escalation:prepare` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-escalation:prepare` (exit=1, bloqueado por handoff faltante)
+- [ ] `script:validation:phase5-escalation:ready-to-submit` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-escalation:ready-to-submit` (exit=1, handoff faltante)
+- [ ] `script:validation:phase5-execution-closure` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-execution-closure` (exit=1, requiere `--repo`)
+- [ ] `script:validation:phase5-execution-closure-status` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-execution-closure-status` (exit=1, `verdict=BLOCKED`)
+- [ ] `script:validation:phase5-external-handoff` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-external-handoff` (exit=1, `verdict=MISSING_INPUTS`)
+- [ ] `script:validation:phase5-latest:ready-check` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-latest:ready-check` (exit=1, falta `.audit-reports/phase5-latest/phase5-execution-closure-status.md`)
+- [ ] `script:validation:phase5-latest:refresh` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-latest:refresh` (exit=1, bloqueado por `loop_guard`)
+- [ ] `script:validation:phase5-latest:sync-docs` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-latest:sync-docs` (exit=1, bundle faltante)
+- [ ] `script:validation:phase5-post-support:refresh` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase5-post-support:refresh` (exit=1, bloqueado por `loop_guard`)
+- [ ] `script:validation:phase8:autopilot` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:autopilot` (exit=1, bloqueado por `loop_guard`)
+- [ ] `script:validation:phase8:close-ready` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:close-ready` (exit=1, cadena no `READY`)
+- [ ] `script:validation:phase8:doctor` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:doctor` (exit=1, `status=BLOCKED`, `blocked_by=loop_guard`)
+- [ ] `script:validation:phase8:loop-guard` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:loop-guard` (exit=2, falta `docs/validation/consumer-startup-escalation-handoff-latest.md`)
+- [ ] `script:validation:phase8:loop-guard-coverage` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:loop-guard-coverage` (`PASS`)
+- [ ] `script:validation:phase8:mark-followup-posted-now` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:mark-followup-posted-now` (exit=1, `Usage` por argumentos obligatorios)
+- [ ] `script:validation:phase8:mark-followup-replied-now` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:mark-followup-replied-now` (exit=1, `Usage` por argumentos obligatorios)
+- [ ] `script:validation:phase8:mark-followup-state` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:mark-followup-state` (exit=1, `Usage` por argumentos obligatorios)
+- [ ] `script:validation:phase8:next-step` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:next-step` (exit=1, bloqueado por `loop_guard`)
+- [ ] `script:validation:phase8:ready-handoff` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:ready-handoff` (exit=1, cadena no `READY`)
+- [ ] `script:validation:phase8:resume-after-billing` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:resume-after-billing` (exit=1, bloqueado por `loop_guard`)
+- [ ] `script:validation:phase8:status-pack` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:status-pack` (exit=1, bloqueado por `loop_guard`)
+- [ ] `script:validation:phase8:tick` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:phase8:tick` (exit=1, bloqueado por `loop_guard`)
+- [ ] `script:validation:progress-single-active` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:progress-single-active` (exit=0)
+- [ ] `script:validation:tracking-single-active` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s validation:tracking-single-active` (exit=0, valida 3 MDs con una sola `🚧` cada uno)
+- [ ] `script:verify:adapter-hooks-runtime` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s verify:adapter-hooks-runtime` (migrado; salida informativa)
+- [ ] `script:violations` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s violations` (bloqueo esperado `OPENSPEC_MISSING`)
+- [ ] `script:violations:demo` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`printf '10\n' | npm run -s violations:demo` (menu render + exit)
+- [ ] `script:violations:list` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s violations:list` (bloqueo esperado `OPENSPEC_MISSING`)
+- [ ] `script:violations:show` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s violations:show` (bloqueo esperado `OPENSPEC_MISSING`)
+- [ ] `script:violations:summary` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s violations:summary` (bloqueo esperado `OPENSPEC_MISSING`)
+- [ ] `script:violations:top` | ruralgo: ⛔ | evidencia_ruralgo: bloqueado por RG-BUG-014 (scripts no invocables directamente en consumer tras install) | baseline_core: core:`npm run -s violations:top` (bloqueo esperado `OPENSPEC_MISSING`)
+
+### A.4 Exports (`package.json#exports`)
+- [x] `export:.` | ruralgo: ✅ | evidencia_ruralgo: consumer temporal (`npm i pumuki@latest`) -> `import('pumuki')` OK.
+- [ ] `export:./core/gate/evaluateGate` | ruralgo: ⛔ | evidencia_ruralgo: consumer temporal -> FAIL (`ERR_UNKNOWN_FILE_EXTENSION` / `Unexpected token '{'` según loader).
+- [ ] `export:./core/gate/evaluateRules` | ruralgo: ⛔ | evidencia_ruralgo: consumer temporal -> FAIL (`ERR_UNKNOWN_FILE_EXTENSION` / `Unexpected token '{'`).
+- [ ] `export:./integrations/git` | ruralgo: ⛔ | evidencia_ruralgo: consumer temporal -> FAIL (`ERR_UNKNOWN_FILE_EXTENSION` / `ERR_MODULE_NOT_FOUND`).
+- [ ] `export:./integrations/lifecycle` | ruralgo: ⛔ | evidencia_ruralgo: consumer temporal -> FAIL (`ERR_UNKNOWN_FILE_EXTENSION` / `Unexpected token 'export'`).
+- [ ] `export:./integrations/mcp` | ruralgo: ⛔ | evidencia_ruralgo: consumer temporal -> FAIL (`ERR_UNKNOWN_FILE_EXTENSION` / `ERR_MODULE_NOT_FOUND`).
+- [ ] `export:./integrations/sdd` | ruralgo: ⛔ | evidencia_ruralgo: consumer temporal -> FAIL (`ERR_UNKNOWN_FILE_EXTENSION` / `Unexpected token 'export'`).
+- [x] `export:./package.json` | ruralgo: ✅ | evidencia_ruralgo: consumer temporal -> `require('pumuki/package.json').version=6.3.26` OK.
+
+### A.5 Menu interactivo (`framework:menu`) — opciones una a una
+- [ ] `menu.consumer.1` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Full audit (repo analysis · PRE_COMMIT)
+- [ ] `menu.consumer.2` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Strict REPO+STAGING (CI/CD · PRE_PUSH)
+- [ ] `menu.consumer.3` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Strict STAGING only (dev · PRE_COMMIT)
+- [ ] `menu.consumer.4` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Audit STAGED+UNSTAGED working tree (PRE_PUSH policy)
+- [ ] `menu.consumer.5` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Pattern checks
+- [ ] `menu.consumer.6` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: ESLint diagnostics (evidence snapshot)
+- [ ] `menu.consumer.7` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: AST Intelligence
+- [ ] `menu.consumer.8` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Export Markdown
+- [ ] `menu.consumer.9` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: File diagnostics (top violated files)
+- [ ] `menu.consumer.10` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Exit
+- [ ] `menu.consumer.switch.A` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Switch consumer -> advanced
+- [ ] `menu.advanced.1` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Evaluate staged changes (PRE_COMMIT policy)
+- [ ] `menu.advanced.2` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Evaluate commit range (PRE_PUSH policy)
+- [ ] `menu.advanced.3` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Evaluate commit range (CI policy)
+- [ ] `menu.advanced.4` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run iOS CI gate
+- [ ] `menu.advanced.5` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run Backend CI gate
+- [ ] `menu.advanced.6` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run Frontend CI gate
+- [ ] `menu.advanced.7` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Show active skills bundles (version + hash)
+- [ ] `menu.advanced.8` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Read current .ai_evidence.json
+- [ ] `menu.advanced.9` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build adapter session status report (optional diagnostics)
+- [ ] `menu.advanced.10` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Collect consumer CI artifacts report
+- [ ] `menu.advanced.11` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run consumer CI auth check report
+- [ ] `menu.advanced.12` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run consumer workflow lint report
+- [ ] `menu.advanced.13` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build consumer startup-failure support bundle
+- [ ] `menu.advanced.14` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build consumer support ticket draft
+- [ ] `menu.advanced.15` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build consumer startup-unblock status report
+- [ ] `menu.advanced.16` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build adapter real-session report (optional diagnostics)
+- [ ] `menu.advanced.17` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run skills lock freshness check
+- [ ] `menu.advanced.18` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Configure hard mode enforcement (enterprise)
+- [ ] `menu.advanced.19` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run consumer startup triage bundle
+- [ ] `menu.advanced.20` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build mock consumer A/B validation report
+- [ ] `menu.advanced.21` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build phase5 blockers readiness report
+- [ ] `menu.advanced.22` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build adapter readiness report
+- [ ] `menu.advanced.23` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build phase5 execution closure status report
+- [ ] `menu.advanced.24` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run phase5 execution closure (one-shot orchestration)
+- [ ] `menu.advanced.25` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Build phase5 external handoff report
+- [ ] `menu.advanced.26` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Clean local validation artifacts
+- [ ] `menu.advanced.27` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Exit
+- [ ] `menu.advanced.28` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Audit full repository snapshot (PRE_COMMIT policy)
+- [ ] `menu.advanced.29` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Audit repository + staged snapshot (PRE_COMMIT policy)
+- [ ] `menu.advanced.30` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Audit staged + unstaged working tree (PRE_COMMIT policy)
+- [ ] `menu.advanced.31` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Configure macOS system notifications
+- [ ] `menu.advanced.32` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Run rule coverage diagnostics (repo/stages)
+- [ ] `menu.advanced.33` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Import custom skills rules (AGENTS.md/SKILLS.md)
+- [ ] `menu.advanced.switch.C` | ruralgo: ⏳ | evidencia_ruralgo: pendiente | descripcion: Switch advanced -> consumer
+
+
+## Checklist B — Reglas AST (adaptado a RuralGO)
+
+Referencia: inventario exhaustivo heredado de `registro-maestro-de-seguimiento.md` convertido a estado RuralGO pendiente.
+
+Total reglas AST inventariadas: 235.
+
+- [x] `rule:android.no-global-scope` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:android.no-run-blocking` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:android.no-thread-sleep` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:backend.avoid-explicit-any` | ruralgo: ✅ | evidencia_ruralgo: canary backend ST1 en clon temporal (`p9_canary_backend_violation.ts`) detecta `backend.avoid-explicit-any` en RED y desaparece tras fix en GREEN | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:backend.no-console-log` | ruralgo: ✅ | evidencia_ruralgo: canary backend ST1 en clon temporal (`p9_canary_backend_violation.ts`) detecta `backend.no-console-log` en RED y desaparece tras fix en GREEN | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:backend.no-empty-catch` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:common.error.empty_catch` | ruralgo: ✅ | evidencia_ruralgo: canary seguridad ST3 (`apps/web-app/src/pages/P9CanarySecurityViolation.tsx`) detecta `COMMON_ERROR_EMPTY_CATCH` en RED y desaparece en GREEN (`findings=[]`) | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:common.network.missing_error_handling` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:common.types.record_unknown_requires_type` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:common.types.undefined_in_base_type` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:common.types.unknown_without_guard` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:domain-change-without-tests` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:frontend.avoid-single-letter-variables` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:frontend.no-console-log` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:frontend.no-debugger` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.android.globalscope.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.android.run-blocking.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.android.thread-sleep.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.anyview.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.callback-style.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.dispatchgroup.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.dispatchqueue.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.dispatchsemaphore.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.force-cast.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.force-try.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.force-unwrap.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.navigation-view.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.observable-object.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.on-tap-gesture.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.operation-queue.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.string-format.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.task-detached.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.uiscreen-main-bounds.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ios.unchecked-sendable.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.buffer-alloc-unsafe-slow.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.buffer-alloc-unsafe.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-file-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-file-untrusted-args.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-file.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-exec.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-fork.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-import.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-shell-true.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-spawn-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.child-process-spawn.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.console-error.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.console-log.ast` | ruralgo: ✅ | evidencia_ruralgo: canary frontend ST2 (`apps/web-app/src/pages/P9CanaryFrontendViolation.tsx`) detecta `HEURISTICS_CONSOLE_LOG_AST` en RED y desaparece en GREEN (`findings=[]`) | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.debugger.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.delete-operator.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.document-write.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.dynamic-shell-invocation.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.empty-catch.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.eval.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.explicit-any.ast` | ruralgo: ✅ | evidencia_ruralgo: canary frontend ST2 (`apps/web-app/src/pages/P9CanaryFrontendViolation.tsx`) detecta `HEURISTICS_EXPLICIT_ANY_AST` en RED y desaparece en GREEN (`findings=[]`) | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-access-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-access-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-append-file-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-append-file-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chmod-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chmod-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chown-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-chown-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-close-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-close-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-copy-file-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-copy-file-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-cp-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-cp-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-exists-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-exists-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchmod-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchmod-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchown-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fchown-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fdatasync-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fdatasync-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fstat-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fstat-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fsync-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-fsync-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-ftruncate-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-ftruncate-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-futimes-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-futimes-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lchmod-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lchown-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-link-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-link-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lstat-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lstat-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lutimes-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-lutimes-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdir-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdir-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdtemp-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-mkdtemp-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-open-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-open-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-opendir-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-opendir-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-access.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-append-file.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-chmod.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-chown.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-copy-file.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-cp.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-link.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-lstat.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-mkdir.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-mkdtemp.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-open.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-opendir.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-read-file.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-readdir.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-readlink.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-realpath.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-rename.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-rm.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-stat.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-symlink.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-unlink.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-utimes.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-promises-write-file.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-file-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-file-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-read-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readdir-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readdir-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readlink-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readlink-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readv-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-readv-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-realpath-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-realpath-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rename-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rename-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rm-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rm-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rmdir-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-rmdir-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-stat-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-stat-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-statfs-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-statfs-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-symlink-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-symlink-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-truncate-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-truncate-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-unlink-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-unlink-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-unwatch-file-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-utimes-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-utimes-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-watch-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-watch-file-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-file-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-file-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-write-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-writev-callback.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.fs-writev-sync.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.function-constructor.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.god-class-large-class.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.hardcoded-secret-token.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.inner-html.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.insecure-token-date-now.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.insecure-token-math-random.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.insert-adjacent-html.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.jwt-decode-without-verify.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.jwt-sign-no-expiration.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.jwt-verify-ignore-expiration.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.new-promise-async.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.process-env-mutation.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.process-exit.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.set-interval-string.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.set-timeout-string.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.dip.concrete-instantiation.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.dip.framework-import.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.isp.interface-command-query-mix.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.lsp.override-not-implemented.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.ocp.discriminator-switch.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.solid.srp.class-command-query-mix.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.tls-env-override.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.tls-reject-unauthorized-false.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.vm-dynamic-code-execution.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.weak-crypto-hash.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.weak-token-randomuuid.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:heuristics.ts.with-statement.ast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-alamofire` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-anyview` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-completion-handlers-outside-bridges` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-force-unwrap` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-gcd` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-jsonserialization` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no-print` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_anyview` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_completion_handlers` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_dispatchqueue` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.no_print` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:ios.tdd.domain-changes-require-tests` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.android.no-globalscope` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.android.no-runblocking` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.android.no-thread-sleep` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.avoid-explicit-any` | ruralgo: ✅ | evidencia_ruralgo: canary backend ST1 detecta regla de skill por `any` explícito en backend y queda limpia tras corrección | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.enforce-clean-architecture` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-console-log` | ruralgo: ✅ | evidencia_ruralgo: canary backend ST1 detecta regla de skill por `console.log` en backend y queda limpia tras corrección | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-empty-catch` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-god-classes` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.backend.no-solid-violations` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.avoid-explicit-any` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.enforce-clean-architecture` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-console-log` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-empty-catch` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-god-classes` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.frontend.no-solid-violations` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-anyview` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-callback-style-outside-bridges` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-dispatchgroup` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-dispatchqueue` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-dispatchsemaphore` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-force-cast` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-force-try` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-force-unwrap` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-navigation-view` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-observable-object` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-on-tap-gesture` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-operation-queue` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-string-format` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-task-detached` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-uiscreen-main-bounds` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:skills.ios.no-unchecked-sendable` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:workflow.bdd.insufficient_features` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
+- [x] `rule:workflow.bdd.missing_feature_files` | ruralgo: ✅ | evidencia_ruralgo: capa1-core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip) + capa2-canary:`P9.F5.T2.ST1..ST4` | baseline_core: core:`npm run -s test:stage-gates` (981 pass / 0 fail / 4 skip)
