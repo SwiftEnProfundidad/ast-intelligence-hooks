@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs';
+import { renameSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import type {
   AiEvidenceV2_1,
@@ -22,6 +22,7 @@ export type WriteEvidenceResult = {
 };
 
 const EVIDENCE_FILE_NAME = '.ai_evidence.json';
+const TEMP_EVIDENCE_PREFIX = '.ai_evidence.json.tmp-';
 
 const normalizeLines = (lines?: EvidenceLines): EvidenceLines | undefined => {
   if (typeof lines === 'undefined') {
@@ -341,21 +342,29 @@ const resolveRepoRoot = (): string => {
   return process.cwd();
 };
 
+const buildTempEvidencePath = (repoRoot: string): string => {
+  const uniqueSuffix = `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+  return join(repoRoot, `${TEMP_EVIDENCE_PREFIX}${uniqueSuffix}`);
+};
+
 export function writeEvidence(
   evidence: AiEvidenceV2_1,
   options?: { repoRoot?: string }
 ): WriteEvidenceResult {
   const repoRoot = options?.repoRoot ?? resolveRepoRoot();
   const outputPath = join(repoRoot, EVIDENCE_FILE_NAME);
+  const tempPath = buildTempEvidencePath(repoRoot);
 
   try {
     const stableEvidence = toStableEvidence(evidence, repoRoot);
-    writeFileSync(outputPath, `${JSON.stringify(stableEvidence, null, 2)}\n`, 'utf8');
+    writeFileSync(tempPath, `${JSON.stringify(stableEvidence, null, 2)}\n`, 'utf8');
+    renameSync(tempPath, outputPath);
     return {
       ok: true,
       path: outputPath,
     };
   } catch (error) {
+    rmSync(tempPath, { force: true });
     const message = error instanceof Error ? error.message : String(error);
     console.warn(`[ai-evidence] ${message}`);
     return {
