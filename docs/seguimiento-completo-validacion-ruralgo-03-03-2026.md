@@ -1010,6 +1010,19 @@ Criterio de salida F5:
     - monitorizar estado CI remota por billing lock.
     - mergear `#511` sin bypass cuando CI quede operativa.
     - actualizar canónico `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` de `REPORTED -> FIXED`.
+  - ejecución actual:
+    - `#510` y `#511` siguen en `mergeStateStatus=UNSTABLE` por fallo transversal de checks remotos.
+    - evidencia de bloqueo repetida (2026-03-03):
+      - PR `#510`: check-run `65623545770` -> `The job was not started because your account is locked due to a billing issue.`
+      - PR `#511`: check-run `65624109075` -> `The job was not started because your account is locked due to a billing issue.`
+    - comentarios de trazabilidad añadidos:
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/511#issuecomment-3993591432`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/488#issuecomment-3993592053`
+  - evidencia:
+    - `gh pr view 510 --json mergeStateStatus,statusCheckRollup`
+    - `gh pr view 511 --json mergeStateStatus,statusCheckRollup`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65623545770/annotations`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65624109075/annotations`
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
