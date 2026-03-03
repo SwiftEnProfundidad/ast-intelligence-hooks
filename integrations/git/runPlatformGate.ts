@@ -1,4 +1,5 @@
 import { evaluateGate } from '../../core/gate/evaluateGate';
+import type { Fact } from '../../core/facts/Fact';
 import type { Finding } from '../../core/gate/Finding';
 import type { GateOutcome } from '../../core/gate/GateOutcome';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
@@ -212,6 +213,121 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Record<
   frontend: ['frontend-guidelines'],
 };
 
+const toNormalizedPath = (value: string): string => value.replace(/\\/g, '/').trim();
+
+const collectObservedPathsFromFacts = (
+  facts: ReadonlyArray<Fact>
+): ReadonlyArray<string> => {
+  const observedPaths = new Set<string>();
+  for (const fact of facts) {
+    if (fact.kind === 'FileChange' || fact.kind === 'FileContent') {
+      const normalized = toNormalizedPath(fact.path);
+      if (normalized.length > 0) {
+        observedPaths.add(normalized);
+      }
+      continue;
+    }
+    if (fact.kind === 'Heuristic' && typeof fact.filePath === 'string') {
+      const normalized = toNormalizedPath(fact.filePath);
+      if (normalized.length > 0) {
+        observedPaths.add(normalized);
+      }
+    }
+  }
+  return [...observedPaths].sort();
+};
+
+const detectRequiredSkillsScopesFromPaths = (
+  observedPaths: ReadonlyArray<string>
+): Record<'ios' | 'android' | 'backend' | 'frontend', ReadonlyArray<string>> => {
+  const scopes: Record<'ios' | 'android' | 'backend' | 'frontend', string[]> = {
+    ios: [],
+    android: [],
+    backend: [],
+    frontend: [],
+  };
+
+  for (const observedPath of observedPaths) {
+    const normalized = observedPath.toLowerCase();
+    if (normalized.startsWith('apps/ios/') || normalized.endsWith('.swift')) {
+      scopes.ios.push(observedPath);
+    }
+    if (
+      normalized.startsWith('apps/android/')
+      || normalized.endsWith('.kt')
+      || normalized.endsWith('.kts')
+    ) {
+      scopes.android.push(observedPath);
+    }
+    if (normalized.startsWith('apps/backend/')) {
+      scopes.backend.push(observedPath);
+    }
+    if (
+      normalized.startsWith('apps/frontend/')
+      || normalized.startsWith('apps/web/')
+      || normalized.startsWith('apps/admin-dashboard/')
+    ) {
+      scopes.frontend.push(observedPath);
+    }
+  }
+
+  return {
+    ios: [...new Set(scopes.ios)].sort(),
+    android: [...new Set(scopes.android)].sort(),
+    backend: [...new Set(scopes.backend)].sort(),
+    frontend: [...new Set(scopes.frontend)].sort(),
+  };
+};
+
+const toSkillsScopeComplianceBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  facts: ReadonlyArray<Fact>;
+  activeRuleIds: ReadonlyArray<string>;
+  evaluatedRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  const observedPaths = collectObservedPathsFromFacts(params.facts);
+  const requiredScopes = detectRequiredSkillsScopesFromPaths(observedPaths);
+  const missingScopes: string[] = [];
+
+  for (const scope of ['ios', 'android', 'backend', 'frontend'] as const) {
+    const scopePaths = requiredScopes[scope];
+    if (scopePaths.length === 0) {
+      continue;
+    }
+    const prefix = PLATFORM_SKILLS_RULE_PREFIXES[scope];
+    const hasActiveRules = params.activeRuleIds.some((ruleId) => ruleId.startsWith(prefix));
+    const hasEvaluatedRules = params.evaluatedRuleIds.some((ruleId) => ruleId.startsWith(prefix));
+    if (hasActiveRules && hasEvaluatedRules) {
+      continue;
+    }
+    const reasons: string[] = [];
+    if (!hasActiveRules) {
+      reasons.push(`active_rules_prefix=${prefix} missing`);
+    }
+    if (!hasEvaluatedRules) {
+      reasons.push(`evaluated_rules_prefix=${prefix} missing`);
+    }
+    const samplePaths = scopePaths.slice(0, 3).join(', ');
+    missingScopes.push(`${scope}{${reasons.join('; ')} sample_paths=[${samplePaths}]}`);
+  }
+
+  if (missingScopes.length === 0) {
+    return undefined;
+  }
+
+  return {
+    ruleId: 'governance.skills.scope-compliance.incomplete',
+    severity: 'ERROR',
+    code: 'SKILLS_SCOPE_COMPLIANCE_INCOMPLETE_HIGH',
+    message:
+      `Skills scope compliance incomplete at ${params.stage}: ${missingScopes.join(' | ')}. ` +
+      'Map changed file scopes to required skill rules and ensure those prefixes are active/evaluated.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'SkillsScopeComplianceGuard',
+    source: 'skills-scope-compliance',
+  };
+};
+
 const toPlatformSkillsCoverageBlockingFinding = (params: {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   detectedPlatforms: DetectedPlatforms;
@@ -402,6 +518,17 @@ export async function runPlatformGate(params: {
           evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
         })
       : undefined;
+  const skillsScopeComplianceFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toSkillsScopeComplianceBlockingFinding({
+          stage: params.policy.stage,
+          facts,
+          activeRuleIds: coverage?.activeRuleIds ?? [],
+          evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
+        })
+      : undefined;
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
@@ -448,17 +575,20 @@ export async function runPlatformGate(params: {
       sddBlockingFinding,
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
       ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
+      ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
     ]
     : unsupportedSkillsMappingFinding
       || platformSkillsCoverageFinding
+      || skillsScopeComplianceFinding
       || coverageBlockingFinding
       || tddBddEvaluation.findings.length > 0
       ? [
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
         ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
+        ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
         ...findings,
@@ -469,6 +599,7 @@ export async function runPlatformGate(params: {
     sddBlockingFinding ||
     unsupportedSkillsMappingFinding ||
     platformSkillsCoverageFinding ||
+    skillsScopeComplianceFinding ||
     coverageBlockingFinding ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
