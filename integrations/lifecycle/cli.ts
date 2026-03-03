@@ -981,6 +981,7 @@ const buildPreWriteValidationPanel = (params: {
     `Branch: ${git.branch ?? 'unknown'} · Upstream: ${git.upstream ?? 'none'}`,
     `Worktree: dirty=${git.dirty ? 'yes' : 'no'} staged=${git.staged} unstaged=${git.unstaged} ahead=${git.ahead} behind=${git.behind}`,
     `Evidence: kind=${params.aiGate.evidence.kind} age=${params.aiGate.evidence.age_seconds ?? 'n/a'}s max=${params.aiGate.evidence.max_age_seconds}s`,
+    `Evidence source: source=${params.aiGate.evidence.source.source} path=${params.aiGate.evidence.source.path} digest=${params.aiGate.evidence.source.digest ?? 'null'} generated_at=${params.aiGate.evidence.source.generated_at ?? 'null'}`,
     `MCP receipt: required=${receipt.required ? 'yes' : 'no'} kind=${receipt.kind} age=${receipt.age_seconds ?? 'n/a'}s max=${receipt.max_age_seconds ?? 'n/a'}s`,
     `Auto-heal: attempted=${params.automation.attempted ? 'yes' : 'no'} actions=${params.automation.actions.length}`,
     `Violations: ${params.aiGate.violations.length}`,

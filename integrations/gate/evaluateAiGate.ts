@@ -4,6 +4,7 @@ import { captureRepoState } from '../evidence/repoState';
 import type { RepoState } from '../evidence/schema';
 import { resolvePolicyForStage } from './stagePolicies';
 import { realpathSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { SkillsStage } from '../config/skillsLock';
 import {
   readMcpAiGateReceipt,
@@ -38,6 +39,12 @@ export type AiGateCheckResult = {
     kind: EvidenceReadResult['kind'];
     max_age_seconds: number;
     age_seconds: number | null;
+    source: {
+      source: string;
+      path: string;
+      digest: string | null;
+      generated_at: string | null;
+    };
   };
   mcp_receipt: {
     required: boolean;
@@ -276,6 +283,27 @@ const collectEvidenceViolations = (
   return { violations, ageSeconds };
 };
 
+const toEvidenceSourceDescriptor = (
+  result: EvidenceReadResult,
+  repoRoot: string
+): AiGateCheckResult['evidence']['source'] => {
+  if ('source_descriptor' in result) {
+    return {
+      source: result.source_descriptor.source,
+      path: result.source_descriptor.path,
+      digest: result.source_descriptor.digest,
+      generated_at: result.source_descriptor.generated_at,
+    };
+  }
+
+  return {
+    source: 'local-file',
+    path: resolve(repoRoot, '.ai_evidence.json'),
+    digest: null,
+    generated_at: null,
+  };
+};
+
 const collectGitflowViolations = (
   repoState: RepoState,
   protectedBranches: ReadonlySet<string>
@@ -478,6 +506,7 @@ export const evaluateAiGate = (
       kind: evidenceResult.kind,
       max_age_seconds: maxAgeSecondsByStage[params.stage],
       age_seconds: evidenceAssessment.ageSeconds,
+      source: toEvidenceSourceDescriptor(evidenceResult, params.repoRoot),
     },
     mcp_receipt: {
       required: mcpReceiptAssessment.required,

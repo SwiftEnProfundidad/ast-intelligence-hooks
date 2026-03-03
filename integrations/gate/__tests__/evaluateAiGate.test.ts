@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
+import type { EvidenceSourceDescriptor } from '../../evidence/readEvidence';
 import { evaluateAiGate } from '../evaluateAiGate';
 
 const sampleEvidence = (overrides: Partial<AiEvidenceV2_1> = {}): AiEvidenceV2_1 => ({
@@ -69,6 +70,32 @@ const sampleEvidence = (overrides: Partial<AiEvidenceV2_1> = {}): AiEvidenceV2_1
   ...overrides,
 });
 
+const sampleSourceDescriptor = (
+  overrides: Partial<EvidenceSourceDescriptor> = {}
+): EvidenceSourceDescriptor => ({
+  source: 'local-file',
+  path: '/repo/.ai_evidence.json',
+  digest: 'sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+  generated_at: '2026-02-20T12:00:00.000Z',
+  ...overrides,
+});
+
+const missingEvidenceResult = () => ({
+  kind: 'missing' as const,
+  source_descriptor: sampleSourceDescriptor({
+    digest: null,
+    generated_at: null,
+  }),
+});
+
+const validEvidenceResult = (evidence: AiEvidenceV2_1) => ({
+  kind: 'valid' as const,
+  evidence,
+  source_descriptor: sampleSourceDescriptor({
+    generated_at: evidence.timestamp,
+  }),
+});
+
 test('evaluateAiGate bloquea cuando falta evidencia', () => {
   const result = evaluateAiGate(
     {
@@ -77,7 +104,7 @@ test('evaluateAiGate bloquea cuando falta evidencia', () => {
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({ kind: 'missing' }),
+      readEvidenceResult: () => missingEvidenceResult(),
       captureRepoState: () => sampleEvidence().repo_state!,
     }
   );
@@ -85,6 +112,12 @@ test('evaluateAiGate bloquea cuando falta evidencia', () => {
   assert.equal(result.status, 'BLOCKED');
   assert.equal(result.allowed, false);
   assert.equal(result.violations.some((item) => item.code === 'EVIDENCE_MISSING'), true);
+  assert.deepEqual((result.evidence as { source?: unknown }).source, {
+    source: 'local-file',
+    path: '/repo/.ai_evidence.json',
+    digest: null,
+    generated_at: null,
+  });
 });
 
 test('evaluateAiGate bloquea cuando evidencia está stale para PRE_WRITE', () => {
@@ -95,10 +128,7 @@ test('evaluateAiGate bloquea cuando evidencia está stale para PRE_WRITE', () =>
     },
     {
       now: () => Date.parse('2026-02-20T12:30:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: sampleEvidence({ timestamp: '2026-02-20T11:00:00.000Z' }),
-      }),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence({ timestamp: '2026-02-20T11:00:00.000Z' })),
       captureRepoState: () => sampleEvidence().repo_state!,
     }
   );
@@ -116,9 +146,9 @@ test('evaluateAiGate bloquea cuando evidencia válida ya está BLOCKED', () => {
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: sampleEvidence({
+      readEvidenceResult: () =>
+        validEvidenceResult(
+          sampleEvidence({
           snapshot: {
             stage: 'PRE_COMMIT',
             outcome: 'BLOCK',
@@ -155,8 +185,8 @@ test('evaluateAiGate bloquea cuando evidencia válida ya está BLOCKED', () => {
               INFO: 0,
             },
           },
-        }),
-      }),
+          })
+        ),
       captureRepoState: () => sampleEvidence().repo_state!,
     }
   );
@@ -177,10 +207,7 @@ test('evaluateAiGate bloquea en ramas protegidas por gitflow', () => {
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: sampleEvidence(),
-      }),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
       captureRepoState: () => repoState,
     }
   );
@@ -201,6 +228,12 @@ test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cump
       readEvidenceResult: () => ({
         kind: 'valid',
         evidence: sampleEvidence(),
+        source_descriptor: {
+          source: 'local-file',
+          path: '/repo/.ai_evidence.json',
+          digest: 'sha256:abc123',
+          generated_at: '2026-02-20T12:00:00.000Z',
+        },
       }),
       captureRepoState: () => sampleEvidence().repo_state!,
     }
@@ -209,6 +242,12 @@ test('evaluateAiGate permite continuar cuando evidencia está fresca y rama cump
   assert.equal(result.status, 'ALLOWED');
   assert.equal(result.allowed, true);
   assert.equal(result.violations.length, 0);
+  assert.deepEqual((result.evidence as { source?: unknown }).source, {
+    source: 'local-file',
+    path: '/repo/.ai_evidence.json',
+    digest: 'sha256:abc123',
+    generated_at: '2026-02-20T12:00:00.000Z',
+  });
 });
 
 test('evaluateAiGate bloquea PRE_WRITE cuando falta rules_coverage en evidencia válida', () => {
@@ -225,13 +264,11 @@ test('evaluateAiGate bloquea PRE_WRITE cuando falta rules_coverage en evidencia 
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: {
+      readEvidenceResult: () =>
+        validEvidenceResult({
           ...evidence,
           snapshot: snapshotWithoutCoverage,
-        },
-      }),
+        }),
       captureRepoState: () => sampleEvidence().repo_state!,
     }
   );
@@ -255,16 +292,14 @@ test('evaluateAiGate bloquea PRE_WRITE cuando repo root de evidencia no coincide
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: {
+      readEvidenceResult: () =>
+        validEvidenceResult({
           ...evidence,
           repo_state: {
             ...evidence.repo_state!,
             repo_root: '/other-repo',
           },
-        },
-      }),
+        }),
       captureRepoState: () => repoState,
     }
   );
@@ -289,9 +324,8 @@ test('evaluateAiGate bloquea PRE_WRITE ante incoherencias múltiples de evidenci
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: {
+      readEvidenceResult: () =>
+        validEvidenceResult({
           ...base,
           timestamp: '2026-02-20T13:00:00.000Z',
           snapshot: {
@@ -337,8 +371,7 @@ test('evaluateAiGate bloquea PRE_WRITE ante incoherencias múltiples de evidenci
               branch: 'feature/legacy-branch',
             },
           },
-        },
-      }),
+        }),
       captureRepoState: () => repoState,
     }
   );
@@ -363,10 +396,7 @@ test('evaluateAiGate bloquea PRE_WRITE cuando se requiere recibo MCP y no existe
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: sampleEvidence(),
-      }),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
       captureRepoState: () => sampleEvidence().repo_state!,
       readMcpAiGateReceipt: () => ({
         kind: 'missing',
@@ -392,10 +422,7 @@ test('evaluateAiGate permite PRE_WRITE cuando hay recibo MCP fresco y válido', 
     },
     {
       now: () => Date.parse('2026-02-20T12:05:00.000Z'),
-      readEvidenceResult: () => ({
-        kind: 'valid',
-        evidence: sampleEvidence(),
-      }),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
       captureRepoState: () => sampleEvidence().repo_state!,
       readMcpAiGateReceipt: () => ({
         kind: 'valid',

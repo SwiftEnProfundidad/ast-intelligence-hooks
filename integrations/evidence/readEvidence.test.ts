@@ -60,7 +60,15 @@ const sampleEvidence = (): AiEvidenceV2_1 => ({
 test('readEvidenceResult devuelve missing cuando no existe .ai_evidence.json', async () => {
   await withTempDir('pumuki-read-evidence-missing-', async (tempRoot) => {
     const result = readEvidenceResult(tempRoot);
-    assert.deepEqual(result, { kind: 'missing' });
+    assert.deepEqual(result, {
+      kind: 'missing',
+      source_descriptor: {
+        source: 'local-file',
+        path: join(tempRoot, '.ai_evidence.json'),
+        digest: null,
+        generated_at: null,
+      },
+    });
     assert.equal(readEvidence(tempRoot), undefined);
   });
 });
@@ -76,6 +84,10 @@ test('readEvidenceResult devuelve valid cuando el archivo tiene version 2.1', as
       assert.deepEqual(result.evidence, evidence);
       assert.equal(result.evidence.repo_state?.git.branch, 'feature/read-evidence');
       assert.equal(result.evidence.repo_state?.lifecycle.hooks.pre_push, 'managed');
+      assert.equal(result.source_descriptor.source, 'local-file');
+      assert.equal(result.source_descriptor.path, join(tempRoot, '.ai_evidence.json'));
+      assert.match(result.source_descriptor.digest ?? '', /^sha256:[0-9a-f]{64}$/);
+      assert.equal(result.source_descriptor.generated_at, evidence.timestamp);
     }
     assert.deepEqual(readEvidence(tempRoot), evidence);
   });
@@ -151,7 +163,14 @@ test('readEvidenceResult devuelve invalid y versión cuando el schema es de otra
     );
 
     const result = readEvidenceResult(tempRoot);
-    assert.deepEqual(result, { kind: 'invalid', version: '2.0' });
+    assert.equal(result.kind, 'invalid');
+    if (result.kind === 'invalid') {
+      assert.equal(result.version, '2.0');
+      assert.equal(result.source_descriptor.source, 'local-file');
+      assert.equal(result.source_descriptor.path, join(tempRoot, '.ai_evidence.json'));
+      assert.match(result.source_descriptor.digest ?? '', /^sha256:[0-9a-f]{64}$/);
+      assert.equal(result.source_descriptor.generated_at, null);
+    }
     assert.equal(readEvidence(tempRoot), undefined);
   });
 });
@@ -165,7 +184,14 @@ test('readEvidenceResult devuelve invalid sin versión cuando version no es stri
     );
 
     const result = readEvidenceResult(tempRoot);
-    assert.deepEqual(result, { kind: 'invalid', version: undefined });
+    assert.equal(result.kind, 'invalid');
+    if (result.kind === 'invalid') {
+      assert.equal(result.version, undefined);
+      assert.equal(result.source_descriptor.source, 'local-file');
+      assert.equal(result.source_descriptor.path, join(tempRoot, '.ai_evidence.json'));
+      assert.match(result.source_descriptor.digest ?? '', /^sha256:[0-9a-f]{64}$/);
+      assert.equal(result.source_descriptor.generated_at, null);
+    }
     assert.equal(readEvidence(tempRoot), undefined);
   });
 });
@@ -175,7 +201,14 @@ test('readEvidenceResult devuelve invalid sin versión cuando falta el campo ver
     writeFileSync(join(tempRoot, '.ai_evidence.json'), JSON.stringify({ payload: {} }, null, 2), 'utf8');
 
     const result = readEvidenceResult(tempRoot);
-    assert.deepEqual(result, { kind: 'invalid', version: undefined });
+    assert.equal(result.kind, 'invalid');
+    if (result.kind === 'invalid') {
+      assert.equal(result.version, undefined);
+      assert.equal(result.source_descriptor.source, 'local-file');
+      assert.equal(result.source_descriptor.path, join(tempRoot, '.ai_evidence.json'));
+      assert.match(result.source_descriptor.digest ?? '', /^sha256:[0-9a-f]{64}$/);
+      assert.equal(result.source_descriptor.generated_at, null);
+    }
     assert.equal(readEvidence(tempRoot), undefined);
   });
 });
@@ -185,7 +218,13 @@ test('readEvidenceResult devuelve invalid para JSON corrupto', async () => {
     writeFileSync(join(tempRoot, '.ai_evidence.json'), '{ invalid json', 'utf8');
 
     const result = readEvidenceResult(tempRoot);
-    assert.deepEqual(result, { kind: 'invalid' });
+    assert.equal(result.kind, 'invalid');
+    if (result.kind === 'invalid') {
+      assert.equal(result.source_descriptor.source, 'local-file');
+      assert.equal(result.source_descriptor.path, join(tempRoot, '.ai_evidence.json'));
+      assert.match(result.source_descriptor.digest ?? '', /^sha256:[0-9a-f]{64}$/);
+      assert.equal(result.source_descriptor.generated_at, null);
+    }
     assert.equal(readEvidence(tempRoot), undefined);
   });
 });

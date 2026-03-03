@@ -853,6 +853,7 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
     const output = printed.join('\n');
     assert.match(output, /PRE-FLIGHT CHECK/);
     assert.match(output, /MCP receipt: required=yes kind=valid/);
+    assert.match(output, /Evidence source: source=local-file/);
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);

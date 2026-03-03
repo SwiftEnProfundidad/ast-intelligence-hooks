@@ -212,6 +212,7 @@ export const formatConsumerPreflight = (
     `Branch: ${git.branch ?? 'unknown'} · Upstream: ${git.upstream ?? 'none'}`,
     `Worktree: dirty=${git.dirty ? 'yes' : 'no'} staged=${git.staged} unstaged=${git.unstaged} ahead=${git.ahead} behind=${git.behind}`,
     `Evidence: kind=${evidence.kind} age=${evidence.age_seconds ?? 'n/a'}s max=${evidence.max_age_seconds}s`,
+    `Evidence source: source=${evidence.source.source} path=${evidence.source.path} digest=${evidence.source.digest ?? 'null'} generated_at=${evidence.source.generated_at ?? 'null'}`,
     `Gate: ${preflight.status} (${preflight.result.violations.length} violations)`,
   ];
   lines.push(...buildBlockingCauseLines(preflight));
