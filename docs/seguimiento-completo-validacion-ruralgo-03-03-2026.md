@@ -1149,10 +1149,22 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 535 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 534 --comment "Closed via merged PR #535..."`
-- 🚧 `P12.F1.T33` Sincronizar canónico RuralGO tras fix `#534` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+- ✅ `P12.F1.T33` Sincronizar canónico RuralGO tras fix `#534` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO`: `docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - entrada incremental añadida: `PUMUKI-INC-053` (`FIXED #534/#535`).
+    - trazabilidad consolidada en matriz de ejecución (`issue #534`, `PR #535`, `commit 7eebf21`).
+    - commit en RuralGO: `e15d18ecb` (`docs(validation): sync canonical feedback for issue 534`).
+  - evidencia:
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m \"docs(validation): sync canonical feedback for issue 534\"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+- 🚧 `P12.F1.T34` Ejecutar issue `#536` (integridad criptográfica de evidence chain en snapshots de gate).
+  - estado actual:
+    - issue creada: `#536` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/536`.
   - objetivo inmediato:
-    - actualizar `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
-    - dejar trazabilidad cruzada completa (`MD ID -> ISSUE -> BRANCH -> PR -> COMMIT -> EVIDENCIA`).
+    - extender schema de evidencia con hash-chain verificable.
+    - detectar tampering/cadena rota y bloquear con salida explícita.
+    - cubrir RED/GREEN con tests de cadena válida, manipulada y predecesor roto.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
