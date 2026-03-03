@@ -1092,13 +1092,23 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 529 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 528 --comment \"Closed via merged PR #529...\"`
-- 🚧 `P12.F1.T28` Ejecutar issue `#530` (engine de compliance de skills por ámbito de archivo).
-  - estado actual:
-    - issue creada: `#530` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/530`.
+- ✅ `P12.F1.T28` Ejecutar issue `#530` (engine de compliance de skills por ámbito de archivo).
+  - cierre ejecutado:
+    - issue `#530` cerrada.
+    - rama `feature/530-skill-compliance-engine`.
+    - PR `#531` mergeada en `develop`.
+    - commit de merge: `b99f83b37566e470b2e3f508cc5fc7e1d3081f76`.
+    - guard `governance.skills.scope-compliance.incomplete` añadido para bloquear cuando el scope de archivos requiere skills no activas/evaluadas.
+    - fix adicional en `effectiveFindings` para asegurar trazabilidad del hallazgo en evidencia emitida.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 531 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 530 --comment "Closed via merged PR #531..."`
+- 🚧 `P12.F1.T29` Sincronizar canónico RuralGO tras fix `#530` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
   - objetivo inmediato:
-    - introducir mapeo determinista `file scope -> required skills`.
-    - bloquear `PRE_COMMIT/PRE_PUSH/CI` cuando falte evidencia de skills obligatorias.
-    - publicar salida machine-readable (`required/applied/missing`) en CLI y tests PASS/BLOCK.
+    - actualizar `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - dejar trazabilidad cruzada completa (`MD ID -> ISSUE -> BRANCH -> PR -> COMMIT -> EVIDENCIA`).
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
