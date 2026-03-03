@@ -906,9 +906,39 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark sync-docs root cause fixed via #504\"`
     - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
-- 🚧 `P12.F1.T14` Ejecutar siguiente issue prioritaria del backlog canónico (`#485`, auto-remediación en PRE_WRITE para OpenSpec/MCP receipt).
+- ✅ `P12.F1.T14` Ejecutar siguiente issue prioritaria del backlog canónico (`#485`, auto-remediación en PRE_WRITE para OpenSpec/MCP receipt).
+  - cierre ejecutado:
+    - rama: `feature/485-validate-auto-remediation`.
+    - fix aplicado:
+      - auto-bootstrap determinista de OpenSpec en `PRE_WRITE` antes de evaluar AI gate.
+      - flag de control `PUMUKI_PREWRITE_AUTO_BOOTSTRAP=0` para desactivar auto-bootstrap de forma explícita.
+      - salida `next_action.command` ejecutable en JSON cuando persisten bloqueos de bootstrap/receipt.
+      - salida textual con diagnóstico consistente de bootstrap (enabled/attempted/status/actions).
+    - tests de regresión añadidos:
+      - `integrations/lifecycle/__tests__/cli.test.ts` (casos enabled/disabled para PRE_WRITE bootstrap).
+    - PR: `#506` (mergeada en `develop`).
+    - commit de merge: `7348c675216c0e0809b89ca11f1d4e4b0ea3ff72`.
+    - issue: `#485` cerrada manualmente tras merge.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 506 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 485 --comment \"Closed via merged PR #506...\"`
+- ✅ `P12.F1.T15` Sincronizar canónico RuralGO tras fix `#485` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - `PUMUKI-INC-038` y `PUMUKI-INC-039` movidos a `FIXED (#485, #506)`.
+    - causa raíz consolidada de auto-remediación PRE_WRITE actualizada a `FIXED` con refs:
+      - issue: `#485`
+      - PR: `#506`
+      - commit: `7348c67`
+    - commit en RuralGO: `4671ab81e`.
+  - evidencia:
+    - `git commit -m \"docs(validation): mark prewrite auto-remediation issue fixed via #506\"`
+    - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
+- 🚧 `P12.F1.T16` Ejecutar siguiente issue prioritaria del backlog canónico (`#486`, expiración de sesión SDD en hooks).
   - objetivo inmediato:
-    - abrir rama `feature/485-validate-auto-remediation`, definir alcance mínimo y arrancar RED.
+    - abrir rama `feature/486-sdd-session-auto-refresh`, definir alcance mínimo y arrancar RED.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
