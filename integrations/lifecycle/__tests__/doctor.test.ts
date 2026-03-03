@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, realpathSync, unlinkSync } from 'node:fs';
+import { mkdirSync, realpathSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import type { AiEvidenceV2_1 } from '../../evidence/schema';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
@@ -26,10 +27,15 @@ class FakeLifecycleGitService implements ILifecycleGitService {
   constructor(
     private readonly repoRoot: string,
     private readonly trackedNodeModules: ReadonlyArray<string> = [],
-    private readonly state: Record<string, string | undefined> = {}
+    private readonly state: Record<string, string | undefined> = {},
+    private readonly runGitResponses: Record<string, string> = {}
   ) {}
 
-  runGit(_args: ReadonlyArray<string>, _cwd: string): string {
+  runGit(args: ReadonlyArray<string>, _cwd: string): string {
+    const key = args.join(' ');
+    if (key in this.runGitResponses) {
+      return this.runGitResponses[key] ?? '';
+    }
     return '';
   }
 
@@ -58,6 +64,62 @@ class FakeLifecycleGitService implements ILifecycleGitService {
     return this.state[key];
   }
 }
+
+const sampleEvidence = (params: {
+  repoRoot: string;
+  branch: string;
+  upstream: string | null;
+  timestamp?: string;
+}): AiEvidenceV2_1 => ({
+  version: '2.1',
+  timestamp: params.timestamp ?? new Date().toISOString(),
+  snapshot: {
+    stage: 'PRE_COMMIT',
+    outcome: 'PASS',
+    findings: [],
+  },
+  ledger: [],
+  platforms: {},
+  rulesets: [],
+  human_intent: null,
+  ai_gate: {
+    status: 'ALLOWED',
+    violations: [],
+    human_intent: null,
+  },
+  severity_metrics: {
+    gate_status: 'ALLOWED',
+    total_violations: 0,
+    by_severity: {
+      CRITICAL: 0,
+      ERROR: 0,
+      WARN: 0,
+      INFO: 0,
+    },
+  },
+  repo_state: {
+    repo_root: params.repoRoot,
+    git: {
+      available: true,
+      branch: params.branch,
+      upstream: params.upstream,
+      ahead: 0,
+      behind: 0,
+      dirty: false,
+      staged: 0,
+      unstaged: 0,
+    },
+    lifecycle: {
+      installed: true,
+      package_version: '6.3.26',
+      lifecycle_version: '6.3.26',
+      hooks: {
+        pre_commit: 'managed',
+        pre_push: 'managed',
+      },
+    },
+  },
+});
 
 test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en node_modules', async () => {
   await withTempDir('pumuki-doctor-tracked-', async (repoRoot) => {
@@ -181,5 +243,126 @@ test('runLifecycleDoctor reporta error y warning cuando hay tracked node_modules
     assert.equal(report.issues[0]?.severity, 'error');
     assert.equal(report.issues[1]?.severity, 'warning');
     assert.equal(doctorHasBlockingIssues(report), true);
+  });
+});
+
+test('runLifecycleDoctor --deep reporta fallo bloqueante cuando evidence está ausente', async () => {
+  await withTempDir('pumuki-doctor-deep-missing-evidence-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    installPumukiHooks(repoRoot);
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': '',
+        'rev-parse --abbrev-ref HEAD': 'feature/deep-evidence',
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    assert.equal(report.deep?.enabled, true);
+    assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift'), true);
+    assert.equal(report.deep?.checks.some((check) => check.id === 'evidence-source-drift' && check.status === 'fail'), true);
+    assert.equal(report.deep?.blocking, true);
+    assert.equal(doctorHasBlockingIssues(report), true);
+  });
+});
+
+test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evidence están alineados', async () => {
+  await withTempDir('pumuki-doctor-deep-pass-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'adapter.json'),
+      JSON.stringify(
+        {
+          hooks: {
+            pre_write: { command: 'npx --yes pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes pumuki-pre-push' },
+            ci: { command: 'npx --yes pumuki-ci' },
+          },
+          mcp: {
+            enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
+            evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(repoRoot, 'skills.policy.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          defaultBundleEnabled: true,
+          stages: {
+            PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          },
+          bundles: {},
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const branch = 'feature/doctor-deep-pass';
+    const upstream = 'origin/feature/doctor-deep-pass';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream,
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': upstream,
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    assert.equal(report.deep?.enabled, true);
+    assert.equal(report.deep?.checks.every((check) => check.status === 'pass'), true);
+    assert.equal(report.deep?.blocking, false);
+    assert.equal(doctorHasBlockingIssues(report), false);
   });
 });
