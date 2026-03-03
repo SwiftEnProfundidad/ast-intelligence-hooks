@@ -981,23 +981,34 @@ Criterio de salida F5:
     - gate: `npm run -s typecheck`
     - gate: `npm run -s validation:package-manifest`
     - PR: `gh pr create --base develop --head bugfix/487-legacy-surface-allowlist ...` => `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510`
-- ⛔ `P12.F1.T19` Completar cierre administrativo de `#487` y sincronización canónica RuralGO tras merge.
-  - bloqueo actual (externo):
-    - los checks de GitHub Actions no arrancan por bloqueo de facturación del repositorio.
-    - evidencia exacta (annotation check-run `65623298147`):
-      - `The job was not started because your account is locked due to a billing issue.`
-    - impacto: no se puede mergear PR `#510` sin bypassear gates.
-  - estado de implementación:
-    - fix ya listo en PR `#510`.
-    - issue `#487` pendiente de cierre administrativo tras merge.
-  - evidencia registrada:
-    - `gh pr view 510 --json mergeStateStatus,statusCheckRollup`
-    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65623298147/annotations`
-    - comentario de bloqueo en PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510#issuecomment-3993566439`
-- 🚧 `P12.F1.T20` Ejecutar issue `#488` (cobertura de guards AST/skills por plataforma) mientras se desbloquea CI de `#487`.
+- ✅ `P12.F1.T19` Completar cierre administrativo de `#487` y sincronización canónica RuralGO tras merge.
+  - cierre ejecutado:
+    - PR `#510` mergeada en `develop`.
+    - commit de merge: `855dc957fa1332cfe5eb6d22140db1f58d845fd4`.
+    - issue `#487` cerrada manualmente tras merge.
+    - canónico `R_GO` actualizado (`FP-027`: `REPORTED -> FIXED`).
+  - evidencia:
+    - `gh pr view 510 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 487 --comment \"Closed via merged PR #510...\"`
+    - `git commit -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO -m \"docs(validation): mark FP-027 and AST-GAP platform coverage fixed\"`
+    - `git push -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
+- ✅ `P12.F1.T20` Ejecutar issue `#488` (cobertura de guards AST/skills por plataforma).
+  - cierre ejecutado:
+    - PR `#511` mergeada en `develop`.
+    - commit de merge: `612f753623514b66c8aaf4d0a470d9f725839f93`.
+    - issue `#488` cerrada manualmente tras merge.
+    - canónico `R_GO` actualizado (`AST-GAP-001..004`: `REPORTED -> FIXED`).
+  - evidencia:
+    - `gh pr view 511 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 488 --comment \"Closed via merged PR #511...\"`
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts`
+    - `npm run -s typecheck`
+- 🚧 `P12.F1.T21` Hardening operativo: abrir issue para detección temprana de bloqueo remoto CI (billing/snyk) y remediación guiada.
+  - estado actual:
+    - issue creada: `#512` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/512`.
   - objetivo inmediato:
-    - abrir rama `feature/488-platform-coverage-guards`.
-    - arrancar RED con test que falle para cobertura incompleta iOS/web/backend/android.
+    - abrir rama `feature/512-remote-ci-blocker-diagnostics`.
+    - arrancar RED/GREEN para diagnóstico remoto explícito en `doctor`/`status` con mensajes accionables.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
