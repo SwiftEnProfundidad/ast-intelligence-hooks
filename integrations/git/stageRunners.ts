@@ -8,9 +8,14 @@ import { runPlatformGate } from './runPlatformGate';
 import { GitService } from './GitService';
 import { emitAuditSummaryNotificationFromEvidence } from '../notifications/emitAuditSummaryNotification';
 import { readFileSync } from 'node:fs';
+import { readEvidenceResult } from '../evidence/readEvidence';
+import type { EvidenceReadResult } from '../evidence/readEvidence';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
+
+const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
+const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
 
 type StageRunnerDependencies = {
   resolvePolicyForStage: typeof resolvePolicyForStage;
@@ -24,6 +29,10 @@ type StageRunnerDependencies = {
     repoRoot: string;
     stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   }) => void;
+  readEvidenceResult: (repoRoot: string) => EvidenceReadResult;
+  now: () => number;
+  writeHookGateSummary: (message: string) => void;
+  isQuietMode: () => boolean;
 };
 
 const defaultDependencies: StageRunnerDependencies = {
@@ -53,6 +62,12 @@ const defaultDependencies: StageRunnerDependencies = {
       stage,
     });
   },
+  readEvidenceResult,
+  now: () => Date.now(),
+  writeHookGateSummary: (message) => {
+    process.stdout.write(`${message}\n`);
+  },
+  isQuietMode: () => process.argv.includes('--quiet'),
 };
 
 const getDependencies = (
@@ -73,6 +88,45 @@ const notifyAuditSummaryForStage = (
 };
 
 const ZERO_HASH = /^0+$/;
+
+const toEvidenceAgeSeconds = (
+  result: EvidenceReadResult,
+  nowMs: number
+): number | null => {
+  if (result.kind !== 'valid') {
+    return null;
+  }
+  const parsed = Date.parse(result.evidence.timestamp);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+  const raw = Math.floor((nowMs - parsed) / 1000);
+  return raw >= 0 ? raw : 0;
+};
+
+const emitSuccessfulHookGateSummary = (params: {
+  dependencies: StageRunnerDependencies;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH';
+  policyTrace: {
+    bundle: string;
+    hash: string;
+  };
+  exitCode: number;
+}): void => {
+  if (params.exitCode !== 0 || params.dependencies.isQuietMode()) {
+    return;
+  }
+  const repoRoot = params.dependencies.resolveRepoRoot();
+  const evidence = params.dependencies.readEvidenceResult(repoRoot);
+  const evidenceAgeSeconds = toEvidenceAgeSeconds(evidence, params.dependencies.now());
+  const maxAgeSeconds =
+    params.stage === 'PRE_COMMIT'
+      ? PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS
+      : PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS;
+  params.dependencies.writeHookGateSummary(
+    `[pumuki][hook-gate] stage=${params.stage} policy_bundle=${params.policyTrace.bundle} policy_hash=${params.policyTrace.hash} decision=ALLOW evidence_kind=${evidence.kind} evidence_age_seconds=${evidenceAgeSeconds ?? 'n/a'} max_age_seconds=${maxAgeSeconds}`
+  );
+};
 
 const shouldAllowBootstrapPrePush = (rawInput: string): boolean => {
   const lines = rawInput
@@ -110,6 +164,15 @@ export async function runPreCommitStage(
       kind: 'staged',
     },
   });
+  emitSuccessfulHookGateSummary({
+    dependencies: activeDependencies,
+    stage: 'PRE_COMMIT',
+    policyTrace: {
+      bundle: resolved.trace.bundle,
+      hash: resolved.trace.hash,
+    },
+    exitCode,
+  });
   notifyAuditSummaryForStage(activeDependencies, 'PRE_COMMIT');
   return exitCode;
 }
@@ -132,6 +195,15 @@ export async function runPrePushStage(
           toRef: 'HEAD',
         },
       });
+      emitSuccessfulHookGateSummary({
+        dependencies: activeDependencies,
+        stage: 'PRE_PUSH',
+        policyTrace: {
+          bundle: resolved.trace.bundle,
+          hash: resolved.trace.hash,
+        },
+        exitCode,
+      });
       notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
       return exitCode;
     }
@@ -149,6 +221,15 @@ export async function runPrePushStage(
       fromRef: upstreamRef,
       toRef: 'HEAD',
     },
+  });
+  emitSuccessfulHookGateSummary({
+    dependencies: activeDependencies,
+    stage: 'PRE_PUSH',
+    policyTrace: {
+      bundle: resolved.trace.bundle,
+      hash: resolved.trace.hash,
+    },
+    exitCode,
   });
   notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
   return exitCode;
