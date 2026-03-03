@@ -12,7 +12,8 @@ test('buildPumukiManagedHookBlock genera comando correcto por hook', () => {
   const prePush = buildPumukiManagedHookBlock('pre-push');
 
   assert.match(preCommit, /npx --yes pumuki-pre-commit/);
-  assert.match(prePush, /npx --yes pumuki-pre-push/);
+  assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$\(cat\)"/);
+  assert.match(prePush, /PUMUKI_PRE_PUSH_STDIN="\$PUMUKI_PRE_PUSH_STDIN" npx --yes pumuki-pre-push "\$@"/);
   assert.match(preCommit, /PUMUKI MANAGED START/);
   assert.match(preCommit, /PUMUKI MANAGED END/);
 });

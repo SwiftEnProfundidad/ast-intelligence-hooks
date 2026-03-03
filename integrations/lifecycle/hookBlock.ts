@@ -26,11 +26,16 @@ const managedBlockPattern = new RegExp(
 
 export const buildPumukiManagedHookBlock = (hook: PumukiManagedHook): string => {
   const cli = HOOK_COMMANDS[hook];
+  const prePushCommand =
+    '  PUMUKI_PRE_PUSH_STDIN="$(cat)"\n' +
+    `  PUMUKI_PRE_PUSH_STDIN="$PUMUKI_PRE_PUSH_STDIN" npx --yes ${cli} "$@"`;
+  const hookCommand =
+    hook === 'pre-push' ? prePushCommand : `  npx --yes ${cli}`;
 
   return [
     PUMUKI_MANAGED_BLOCK_START,
     'if command -v npx >/dev/null 2>&1; then',
-    `  npx --yes ${cli}`,
+    hookCommand,
     '  status=$?',
     '  if [ "$status" -ne 0 ]; then',
     '    exit "$status"',
