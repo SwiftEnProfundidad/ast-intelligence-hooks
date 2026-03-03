@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T22` (issue `#515`: normalizar `--help` a exit code `0` sin romper manejo de errores reales).
+- Task activa (`🚧`): `P12.F1.T23` (issue `#518`: strict guard para `sdd validate` cuando `items=0`).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.

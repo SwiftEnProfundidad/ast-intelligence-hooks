@@ -1016,13 +1016,26 @@ Criterio de salida F5:
     - `gh pr view 514 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 512 --comment \"Closed via merged PR #514...\"`
     - `git push -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
-- 🚧 `P12.F1.T22` Ejecutar issue `#515` (normalizar `--help` a exit code `0`).
+- ✅ `P12.F1.T22` Ejecutar issue `#515` (normalizar `--help` a exit code `0`).
+  - cierre ejecutado:
+    - issue `#515` creada y cerrada.
+    - rama `bugfix/515-help-exit-code-zero`.
+    - PR `#517` mergeada en `develop`.
+    - commit de merge: `06e187faef5304e3d2db964b2ddb657dc61d5c16`.
+    - canónico RuralGO actualizado con `PUMUKI-INC-045` en `FIXED` y trazabilidad issue/PR/commit.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 517 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 515 --comment \"Closed via merged PR #517...\"`
+    - `git push -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
+- 🚧 `P12.F1.T23` Ejecutar issue `#518` (strict guard para `sdd validate` con `items=0`).
   - estado actual:
-    - issue creada: `#515` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/515`.
+    - issue creada: `#518` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/518`.
   - objetivo inmediato:
-    - abrir rama `bugfix/515-help-exit-code-zero`.
-    - ejecutar RED/GREEN para `parseLifecycleCliArgs` y `runLifecycleCli` con `--help`/`-h`.
-    - mantener no-regresión: comandos inválidos deben seguir en exit code no-cero.
+    - abrir rama `feature/518-sdd-items-zero-strict-guard`.
+    - ejecutar RED/GREEN para modo strict (block) y modo no-strict (compatibilidad).
+    - añadir mensaje operativo claro para diferenciar scope vacío vs scope validado.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
