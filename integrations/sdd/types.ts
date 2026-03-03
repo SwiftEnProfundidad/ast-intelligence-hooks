@@ -11,7 +11,8 @@ export type SddDecisionCode =
   | 'SDD_CHANGE_ARCHIVED'
   | 'SDD_VALIDATION_FAILED'
   | 'SDD_VALIDATION_ERROR'
-  | 'SDD_VALIDATION_EMPTY_SCOPE';
+  | 'SDD_VALIDATION_EMPTY_SCOPE'
+  | 'SDD_CHANGE_INCOMPLETE';
 
 export type SddDecision = {
   allowed: boolean;

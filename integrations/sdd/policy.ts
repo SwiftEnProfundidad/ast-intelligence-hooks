@@ -1,4 +1,4 @@
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   detectOpenSpecInstallation,
@@ -17,6 +17,7 @@ import type {
 
 const SDD_SESSION_REFRESH_COMMAND =
   'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90';
+const SDD_COMPLETENESS_CONTRACT_VERSION = '1.0';
 
 const buildStatus = (repoRoot: string): SddStatusPayload => {
   const openspec = detectOpenSpecInstallation(repoRoot);
@@ -60,6 +61,49 @@ const activeChangeExists = (repoRoot: string, changeId: string): boolean =>
 
 const activeChangeArchived = (repoRoot: string, changeId: string): boolean =>
   existsSync(resolve(repoRoot, 'openspec', 'changes', 'archive', changeId));
+
+const evaluateActiveChangeCompleteness = (params: {
+  repoRoot: string;
+  changeId: string;
+}): {
+  complete: boolean;
+  missingRequirements: string[];
+} => {
+  const changeRoot = resolve(params.repoRoot, 'openspec', 'changes', params.changeId);
+  const proposalPath = resolve(changeRoot, 'proposal.md');
+  const tasksPath = resolve(changeRoot, 'tasks.md');
+  const scenarioPath = resolve(changeRoot, 'scenario.feature');
+  const missingRequirements: string[] = [];
+
+  if (!existsSync(proposalPath)) {
+    missingRequirements.push('proposal.md');
+  }
+  if (!existsSync(tasksPath)) {
+    missingRequirements.push('tasks.md');
+  }
+  if (!existsSync(scenarioPath)) {
+    missingRequirements.push('scenario.feature');
+  } else {
+    try {
+      const scenarioContent = readFileSync(scenarioPath, 'utf8');
+      const hasFeatureHeader = /^\s*Feature:\s+/im.test(scenarioContent);
+      const hasScenarioBody = /^\s*Scenario(?: Outline)?:\s+/im.test(scenarioContent);
+      if (!hasFeatureHeader) {
+        missingRequirements.push('scenario.feature#Feature');
+      }
+      if (!hasScenarioBody) {
+        missingRequirements.push('scenario.feature#Scenario');
+      }
+    } catch {
+      missingRequirements.push('scenario.feature#readable');
+    }
+  }
+
+  return {
+    complete: missingRequirements.length === 0,
+    missingRequirements,
+  };
+};
 
 const evaluateSessionRequirements = (params: {
   status: SddStatusPayload;
@@ -145,6 +189,7 @@ export const evaluateSddPolicy = (params: {
   const bypassEnabled = process.env.PUMUKI_SDD_BYPASS === '1';
   const autoRefreshEnabled = process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION !== '0';
   const strictEmptyItemsEnabled = process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS !== '0';
+  const strictCompletenessEnabled = process.env.PUMUKI_SDD_ENFORCE_COMPLETENESS !== '0';
   let status = buildStatus(repoRoot);
   let autoRefreshAttempted = false;
   let autoRefreshError: string | undefined;
@@ -272,6 +317,38 @@ export const evaluateSddPolicy = (params: {
     };
   }
 
+  const activeChangeId = status.session.changeId;
+  if (
+    strictCompletenessEnabled &&
+    activeChangeId &&
+    (params.stage === 'PRE_PUSH' || params.stage === 'CI')
+  ) {
+    const completeness = evaluateActiveChangeCompleteness({
+      repoRoot,
+      changeId: activeChangeId,
+    });
+    if (!completeness.complete) {
+      return {
+        stage: params.stage,
+        status,
+        validation,
+        decision: blocked(
+          'SDD_CHANGE_INCOMPLETE',
+          'Active SDD change is incomplete for strict PRE_PUSH/CI enforcement. Ensure proposal/tasks/scenario contract is complete before continuing.',
+          {
+            command: OPENSPEC_VALIDATE_ALL_COMMAND,
+            stage: params.stage,
+            changeId: activeChangeId,
+            contractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
+            missingRequirements: completeness.missingRequirements,
+            strictCompletenessEnabled,
+            overrideEnv: 'PUMUKI_SDD_ENFORCE_COMPLETENESS=0',
+          }
+        ),
+      };
+    }
+  }
+
   return {
     stage: params.stage,
     status,
@@ -283,6 +360,8 @@ export const evaluateSddPolicy = (params: {
       warnings: validation.issues.warnings,
       emptyScope: validation.totals.items <= 0,
       strictEmptyItemsEnabled,
+      strictCompletenessEnabled,
+      completenessContractVersion: SDD_COMPLETENESS_CONTRACT_VERSION,
     }),
   };
 };

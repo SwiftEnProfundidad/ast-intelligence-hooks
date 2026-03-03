@@ -74,10 +74,24 @@ process.exit(0);
   }
 };
 
-const createOpenSpecChange = (repoRoot: string, changeId = 'add-auth-feature'): string => {
+const createOpenSpecChange = (
+  repoRoot: string,
+  changeId = 'add-auth-feature',
+  options?: {
+    withCompleteness?: boolean;
+  }
+): string => {
   const changePath = join(repoRoot, 'openspec', 'changes', changeId);
   mkdirSync(changePath, { recursive: true });
   writeFileSync(join(changePath, 'proposal.md'), '# proposal\n', 'utf8');
+  if (options?.withCompleteness !== false) {
+    writeFileSync(join(changePath, 'tasks.md'), '- [ ] implementar flujo\n', 'utf8');
+    writeFileSync(
+      join(changePath, 'scenario.feature'),
+      'Feature: SDD completeness contract\n  Scenario: baseline scenario\n    Given a valid change\n    Then the completeness contract should pass\n',
+      'utf8'
+    );
+  }
   return changeId;
 };
 
@@ -225,6 +239,30 @@ test('evaluateSddPolicy permite PRE_WRITE con sesión válida sin ejecutar valid
     assert.equal(result.decision.allowed, true);
     assert.equal(result.decision.code, 'ALLOWED');
     assert.equal(result.validation, undefined);
+  });
+});
+
+test('evaluateSddPolicy bloquea con SDD_CHANGE_INCOMPLETE en PRE_PUSH cuando falta contrato mínimo del change', () => {
+  return withFixtureRepo('pumuki-sdd-change-incomplete-', (repoRoot) => {
+    writeOpenSpecBinary(repoRoot, {
+      validateExitCode: 0,
+      totals: { items: 2, failed: 0, passed: 2 },
+      issues: { errors: 0, warnings: 0, infos: 0 },
+    });
+    const changeId = createOpenSpecChange(repoRoot, 'add-auth-feature', {
+      withCompleteness: false,
+    });
+    openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
+
+    const result = evaluateSddPolicy({ stage: 'PRE_PUSH', repoRoot });
+    assert.equal(result.decision.allowed, false);
+    assert.equal(result.decision.code, 'SDD_CHANGE_INCOMPLETE');
+    assert.equal(result.decision.details?.changeId, 'add-auth-feature');
+    assert.equal(result.decision.details?.contractVersion, '1.0');
+    assert.deepEqual(result.decision.details?.missingRequirements, [
+      'tasks.md',
+      'scenario.feature',
+    ]);
   });
 });
 
