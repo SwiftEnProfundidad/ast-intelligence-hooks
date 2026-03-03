@@ -4,6 +4,7 @@ import {
   detectOpenSpecInstallation,
   evaluateOpenSpecCompatibility,
   isOpenSpecProjectInitialized,
+  OPENSPEC_VALIDATE_ALL_COMMAND,
   validateOpenSpecChanges,
 } from './openSpecCli';
 import { readSddSession } from './sessionStore';
@@ -167,6 +168,7 @@ export const evaluateSddPolicy = (params: {
         validation.exitCode !== 0 ? 'SDD_VALIDATION_FAILED' : 'SDD_VALIDATION_ERROR',
         'OpenSpec validation failed for active changes. Resolve SDD issues before continuing.',
         {
+          command: OPENSPEC_VALIDATE_ALL_COMMAND,
           exitCode: validation.exitCode,
           failedItems: validation.totals.failed,
           errors: validation.issues.errors,
@@ -180,6 +182,7 @@ export const evaluateSddPolicy = (params: {
     status,
     validation,
     decision: allowed('SDD validation passed for active changes.', {
+      command: OPENSPEC_VALIDATE_ALL_COMMAND,
       passedItems: validation.totals.passed,
       warnings: validation.issues.warnings,
     }),

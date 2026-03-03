@@ -214,6 +214,10 @@ test('evaluateSddPolicy bloquea con SDD_VALIDATION_FAILED cuando OpenSpec devuel
     const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
     assert.equal(result.decision.allowed, false);
     assert.equal(result.decision.code, 'SDD_VALIDATION_FAILED');
+    assert.equal(
+      result.decision.details?.command,
+      'openspec validate --all --json --no-interactive'
+    );
     assert.equal(result.decision.details?.exitCode, 2);
     assert.equal(result.decision.details?.failedItems, 1);
     assert.equal(result.decision.details?.errors, 1);
@@ -250,6 +254,10 @@ test('evaluateSddPolicy permite CI cuando validación OpenSpec es satisfactoria'
     const result = evaluateSddPolicy({ stage: 'CI', repoRoot });
     assert.equal(result.decision.allowed, true);
     assert.equal(result.decision.code, 'ALLOWED');
+    assert.equal(
+      result.decision.details?.command,
+      'openspec validate --all --json --no-interactive'
+    );
     assert.equal(result.decision.details?.passedItems, 4);
     assert.equal(result.decision.details?.warnings, 2);
     assert.equal(result.validation?.ok, true);
