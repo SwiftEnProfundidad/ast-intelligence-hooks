@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import test from 'node:test';
 import { PUMUKI_CONFIG_KEYS } from '../constants';
 import { runLifecycleInstall } from '../install';
@@ -20,6 +20,11 @@ const withCwd = <T>(cwd: string, fn: () => T): T => {
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
+
+const resolveGitPath = (cwd: string, target: string): string => {
+  const gitPath = runGit(cwd, ['rev-parse', '--git-path', target]).trim();
+  return isAbsolute(gitPath) ? gitPath : resolve(cwd, gitPath);
+};
 
 const readLocalConfig = (cwd: string, key: string): string | undefined => {
   try {
@@ -205,6 +210,37 @@ test('runLifecycleInstall usa process.cwd cuando no recibe cwd explícito', () =
     assert.equal(realpathSync(result.repoRoot), realpathSync(repo));
     assert.deepEqual(result.changedHooks, ['pre-commit', 'pre-push']);
   } finally {
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleInstall instala hooks correctamente dentro de un git worktree', () => {
+  const repo = createGitRepo();
+  const worktree = join(
+    tmpdir(),
+    `pumuki-install-worktree-${Date.now()}-${Math.random().toString(16).slice(2)}`
+  );
+  const worktreeBranch = `feature/worktree-install-${Date.now().toString(36)}`;
+  try {
+    runGit(repo, ['worktree', 'add', '-b', worktreeBranch, worktree]);
+
+    const result = runLifecycleInstall({
+      cwd: worktree,
+      bootstrapOpenSpec: false,
+    });
+
+    assert.equal(realpathSync(result.repoRoot), realpathSync(worktree));
+    assert.deepEqual(result.changedHooks, ['pre-commit', 'pre-push']);
+
+    const hooksDir = resolveGitPath(worktree, 'hooks');
+    assert.equal(existsSync(join(hooksDir, 'pre-commit')), true);
+    assert.equal(existsSync(join(hooksDir, 'pre-push')), true);
+  } finally {
+    try {
+      runGit(repo, ['worktree', 'remove', '--force', worktree]);
+    } catch {
+      rmSync(worktree, { recursive: true, force: true });
+    }
     rmSync(repo, { recursive: true, force: true });
   }
 });
