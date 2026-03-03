@@ -1105,10 +1105,22 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 531 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 530 --comment "Closed via merged PR #531..."`
-- 🚧 `P12.F1.T29` Sincronizar canónico RuralGO tras fix `#530` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+- ✅ `P12.F1.T29` Sincronizar canónico RuralGO tras fix `#530` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO`: `docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - entrada incremental añadida: `PUMUKI-INC-051` (`FIXED #530/#531`).
+    - trazabilidad consolidada en matriz de ejecución (`issue #530`, `PR #531`, `commit b99f83b`).
+    - commit en RuralGO: `45c8b57de` (`docs(validation): sync canonical feedback for issue 530`).
+  - evidencia:
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m \"docs(validation): sync canonical feedback for issue 530\"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+- 🚧 `P12.F1.T30` Ejecutar issue `#532` (gate de completitud SDD por change con contrato mínimo determinista).
+  - estado actual:
+    - issue creada: `#532` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/532`.
   - objetivo inmediato:
-    - actualizar `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
-    - dejar trazabilidad cruzada completa (`MD ID -> ISSUE -> BRANCH -> PR -> COMMIT -> EVIDENCIA`).
+    - definir contrato de completitud SDD machine-readable por change.
+    - bloquear `PRE_PUSH/CI` cuando falten mínimos de completitud.
+    - cubrir RED/GREEN con tests de bloqueo y pase.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
