@@ -1198,9 +1198,22 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 540 --json state,mergedAt,mergeCommit,url`
     - `gh issue close 538 --comment \"Fixed by #540 ...\"`
-- 🚧 `P12.F1.T37` Sincronizar canónico RuralGO tras fix `#538` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
-  - alcance:
-    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` para `FP-029` y trazabilidad de ejecución.
+- ✅ `P12.F1.T37` Sincronizar canónico RuralGO tras fix `#538` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO`:
+      - `docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+      - `FP-029` actualizado a `FIXED (#538, #540)`.
+      - trazabilidad de ejecución extendida con fila de issue `#538` (branch/PR/commit/evidencia).
+    - master plan de RuralGO actualizado con inventario exhaustivo de bugs/mejoras y leyenda por item:
+      - `ruralgo-master-plan.md`.
+    - commit en `R_GO`: `069ef7371` (`docs(validation): sync canonical feedback for issue 538`).
+    - push remoto completado en rama `feature/rgo-1590-01-ios-physical-signoff`.
+  - evidencia:
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m "docs(validation): sync canonical feedback for issue 538"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+    - `npx --yes --package pumuki@latest pumuki-pre-commit` (hook gate `ALLOW/PASS` durante commit en `R_GO`)
+    - `npx --yes --package pumuki@latest pumuki-pre-push` (hook gate `ALLOW/PASS` durante push en `R_GO`)
+- 🚧 `P12.F1.T38` Crear issue de mejora estratégica pendiente: policy-as-code versionada/firmada (backlog enterprise) y dejarla trazada en canónico + master plan.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
