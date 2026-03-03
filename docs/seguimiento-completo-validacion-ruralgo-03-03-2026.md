@@ -776,9 +776,19 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark issue #481 block as fixed with PR #490 evidence\"`
     - `git push origin HEAD` (tras workaround operativo por bloqueo upstream en hook pre-push).
-- 🚧 `P12.F1.T5` Triar regresión observada en bootstrap de upstream (`pre-push`) durante push de RuralGO.
+- ✅ `P12.F1.T5` Triar regresión observada en bootstrap de upstream (`pre-push`) durante push de RuralGO.
+  - cierre ejecutado:
+    - decisión de triage: **no reabrir `#480`**; registrar regresión separada para conservar historial de fix previo.
+    - issue creada: `#493` (`Regression: pre-push upstream bootstrap deadlock still reproducible in 6.3.28`).
+    - canónico RuralGO actualizado con nueva incidencia `PUMUKI-INC-043`, falso positivo `FP-028` y causa raíz reabierta como `REPORTED`.
+    - commits en RuralGO: `8a62a0e20` + `43cd63088`.
+  - evidencia:
+    - `gh issue create --title \"Regression: pre-push upstream bootstrap deadlock still reproducible in 6.3.28\" ...`
+    - `git push --set-upstream origin feature/rgo-1590-01-ios-physical-signoff` (bloqueo reproducido)
+    - `git branch --set-upstream-to=origin/develop ... && git push origin HEAD` (workaround operativo)
+- 🚧 `P12.F1.T6` Ejecutar fix E2E de regresión `#493` en Pumuki (issue -> rama -> tests -> PR -> merge).
   - objetivo inmediato:
-    - decidir si corresponde reabrir `#480` o registrar incidencia nueva con reproducción reciente (`git push --set-upstream` bloqueado).
+    - reproducir en tests el escenario `pre-push` + `--set-upstream` y preparar patch sin romper casos con upstream ya configurado.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

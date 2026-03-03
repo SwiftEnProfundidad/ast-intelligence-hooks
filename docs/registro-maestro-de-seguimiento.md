@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T5` (triar regresión de bootstrap upstream `pre-push` observada en RuralGO).
+- Task activa (`🚧`): `P12.F1.T6` (ejecutar fix E2E de regresión `#493` en Pumuki).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
