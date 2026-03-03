@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T3` (publicar cierre E2E de `#481` y sincronizar trazabilidad canónica en RuralGO).
+- Task activa (`🚧`): `P12.F1.T4` (sincronizar estado `FIXED` del bloque `#481` en la fuente canónica de RuralGO).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
