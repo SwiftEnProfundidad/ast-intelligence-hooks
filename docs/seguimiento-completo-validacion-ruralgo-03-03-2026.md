@@ -965,9 +965,39 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark sdd session refresh issue fixed via #508\"`
     - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
-- 🚧 `P12.F1.T18` Ejecutar siguiente issue prioritaria del backlog canónico (`#487`, falso positivo de superficie legacy).
+- ✅ `P12.F1.T18` Ejecutar issue prioritaria `#487` (falso positivo de superficie legacy) en Pumuki.
+  - cierre ejecutado:
+    - rama creada: `bugfix/487-legacy-surface-allowlist`.
+    - fix aplicado en `scripts/package-manifest-lib.ts`:
+      - allowlist canónica para superficies runtime legacy oficiales.
+      - bloqueo mantenido para cualquier `legacy/*` no allowlisted.
+    - test de regresión RED/GREEN:
+      - `scripts/__tests__/package-manifest-lib.test.ts` (nuevo caso canónico legacy).
+    - PR abierta: `#510` (pendiente merge).
+    - commit: `1da8c60`.
+  - evidencia:
+    - RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts` (falla inicial en caso canónico legacy).
+    - GREEN: `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts scripts/__tests__/check-package-manifest.test.ts`
+    - gate: `npm run -s typecheck`
+    - gate: `npm run -s validation:package-manifest`
+    - PR: `gh pr create --base develop --head bugfix/487-legacy-surface-allowlist ...` => `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510`
+- ⛔ `P12.F1.T19` Completar cierre administrativo de `#487` y sincronización canónica RuralGO tras merge.
+  - bloqueo actual (externo):
+    - los checks de GitHub Actions no arrancan por bloqueo de facturación del repositorio.
+    - evidencia exacta (annotation check-run `65623298147`):
+      - `The job was not started because your account is locked due to a billing issue.`
+    - impacto: no se puede mergear PR `#510` sin bypassear gates.
+  - estado de implementación:
+    - fix ya listo en PR `#510`.
+    - issue `#487` pendiente de cierre administrativo tras merge.
+  - evidencia registrada:
+    - `gh pr view 510 --json mergeStateStatus,statusCheckRollup`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65623298147/annotations`
+    - comentario de bloqueo en PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510#issuecomment-3993566439`
+- 🚧 `P12.F1.T20` Ejecutar issue `#488` (cobertura de guards AST/skills por plataforma) mientras se desbloquea CI de `#487`.
   - objetivo inmediato:
-    - abrir rama `bugfix/487-legacy-surface-allowlist` y arrancar RED del checker `ci:no-legacy-surface`.
+    - abrir rama `feature/488-platform-coverage-guards`.
+    - arrancar RED con test que falle para cobertura incompleta iOS/web/backend/android.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
