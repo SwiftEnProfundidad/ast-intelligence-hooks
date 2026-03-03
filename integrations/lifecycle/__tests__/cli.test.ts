@@ -230,6 +230,13 @@ test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
     json: false,
     remoteChecks: true,
   });
+  assert.deepEqual(parseLifecycleCliArgs(['doctor', '--deep', '--json']), {
+    command: 'doctor',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: true,
+    doctorDeep: true,
+  });
   assert.deepEqual(parseLifecycleCliArgs(['status', '--json', '--remote-checks']), {
     command: 'status',
     purgeArtifacts: false,
@@ -417,6 +424,10 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
     () => parseLifecycleCliArgs(['install', '--remote-checks']),
     /only supported with "pumuki doctor" or "pumuki status"/i
   );
+  assert.throws(
+    () => parseLifecycleCliArgs(['status', '--deep']),
+    /only supported with "pumuki doctor"/i
+  );
 });
 
 test('runLifecycleCli retorna 1 ante argumentos inválidos', async () => {
@@ -530,6 +541,93 @@ test('runLifecycleCli doctor --remote-checks imprime resumen de bloqueadores rem
     assert.match(output, /\[pumuki\]\[remote-ci\] status=BLOCKED/i);
     assert.match(output, /REMOTE_CI_PROVIDER_QUOTA/i);
     assert.match(output, /remediation: increase quota/i);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli doctor --deep --json expone checks enterprise deterministas', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    await withSilentConsole(() => runLifecycleCli(['install']));
+    mkdirSync(join(repo, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repo, '.pumuki', 'adapter.json'),
+      JSON.stringify(
+        {
+          hooks: {
+            pre_write: { command: 'npx --yes pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes pumuki-pre-push' },
+            ci: { command: 'npx --yes pumuki-ci' },
+          },
+          mcp: {
+            enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
+            evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    writePreWriteEvidence(repo, 'main');
+
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['doctor', '--deep', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      deep?: {
+        enabled?: boolean;
+        checks?: Array<{ id?: string }>;
+      };
+    };
+    assert.equal(payload.deep?.enabled, true);
+    assert.equal(payload.deep?.checks?.some((check) => check.id === 'upstream-readiness'), true);
+    assert.equal(payload.deep?.checks?.some((check) => check.id === 'adapter-wiring'), true);
+    assert.equal(payload.deep?.checks?.some((check) => check.id === 'policy-drift'), true);
+    assert.equal(payload.deep?.checks?.some((check) => check.id === 'evidence-source-drift'), true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli doctor --deep retorna 1 cuando hay bloqueo crítico deep', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    await withSilentConsole(() => runLifecycleCli(['install']));
+    writeFileSync(join(repo, '.ai_evidence.json'), JSON.stringify({ version: '2.0' }, null, 2), 'utf8');
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['doctor', '--deep', '--json']);
+    assert.equal(code, 1);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      deep?: {
+        blocking?: boolean;
+      };
+    };
+    assert.equal(payload.deep?.blocking, true);
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);

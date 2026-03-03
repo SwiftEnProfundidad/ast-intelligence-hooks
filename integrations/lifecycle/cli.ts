@@ -2,7 +2,11 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import type { GatePolicy } from '../../core/gate/GatePolicy';
 import { runPlatformGate } from '../git/runPlatformGate';
-import { runLifecycleDoctor, type LifecycleDoctorReport } from './doctor';
+import {
+  doctorHasBlockingIssues,
+  runLifecycleDoctor,
+  type LifecycleDoctorReport,
+} from './doctor';
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
@@ -71,6 +75,7 @@ type ParsedArgs = {
   updateSpec?: string;
   json: boolean;
   remoteChecks?: boolean;
+  doctorDeep?: boolean;
   sddCommand?: SddCommand;
   loopCommand?: LoopCommand;
   loopSessionId?: string;
@@ -99,7 +104,7 @@ Pumuki lifecycle commands:
   pumuki uninstall [--purge-artifacts]
   pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
-  pumuki doctor [--remote-checks]
+  pumuki doctor [--remote-checks] [--deep] [--json]
   pumuki status [--json] [--remote-checks]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
   pumuki loop status --session=<session-id> [--json]
@@ -403,6 +408,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let updateSpec: ParsedArgs['updateSpec'];
   let json = false;
   let remoteChecks = false;
+  let doctorDeep = false;
   let sddCommand: ParsedArgs['sddCommand'];
   let loopCommand: ParsedArgs['loopCommand'];
   let loopSessionId: ParsedArgs['loopSessionId'];
@@ -757,6 +763,10 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       remoteChecks = true;
       continue;
     }
+    if (arg === '--deep') {
+      doctorDeep = true;
+      continue;
+    }
     if (arg === '--purge-artifacts') {
       purgeArtifacts = true;
       continue;
@@ -776,6 +786,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   if (remoteChecks && commandRaw !== 'doctor' && commandRaw !== 'status') {
     throw new Error(`--remote-checks is only supported with "pumuki doctor" or "pumuki status".\n\n${HELP_TEXT}`);
   }
+  if (doctorDeep && commandRaw !== 'doctor') {
+    throw new Error(`--deep is only supported with "pumuki doctor".\n\n${HELP_TEXT}`);
+  }
 
   return {
     command: commandRaw,
@@ -783,6 +796,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     updateSpec,
     json,
     ...(remoteChecks ? { remoteChecks: true } : {}),
+    ...(doctorDeep ? { doctorDeep: true } : {}),
   };
 };
 
@@ -822,13 +836,29 @@ const printDoctorReport = (
     `[pumuki] hook pre-push: ${report.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
   );
 
-  if (report.issues.length === 0) {
+  for (const issue of report.issues) {
+    writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
+  }
+
+  if (report.deep?.enabled) {
+    for (const check of report.deep.checks) {
+      writeInfo(
+        `[pumuki][doctor][deep] ${check.id}: status=${check.status.toUpperCase()} severity=${check.severity.toUpperCase()} ${check.message}`
+      );
+      if (check.status === 'fail' && check.remediation) {
+        writeInfo(`[pumuki][doctor][deep] remediation: ${check.remediation}`);
+      }
+    }
+  }
+
+  const hasBlocking = doctorHasBlockingIssues(report);
+  const hasWarnings =
+    report.issues.length > 0 ||
+    report.deep?.checks.some((check) => check.status === 'fail') === true;
+
+  if (!hasWarnings && !hasBlocking) {
     writeInfo('[pumuki] doctor verdict: PASS');
   } else {
-    for (const issue of report.issues) {
-      writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
-    }
-    const hasBlocking = report.issues.some((issue) => issue.severity === 'error');
     writeInfo(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
   }
 
@@ -1168,14 +1198,31 @@ export const runLifecycleCli = async (
         return 0;
       }
       case 'doctor': {
-        const report = runLifecycleDoctor();
+        const report = runLifecycleDoctor({
+          deep: parsed.doctorDeep === true,
+        });
         const remoteCiDiagnostics = parsed.remoteChecks
           ? activeDependencies.collectRemoteCiDiagnostics({
               repoRoot: report.repoRoot,
             })
           : undefined;
-        printDoctorReport(report, remoteCiDiagnostics);
-        return report.issues.some((issue) => issue.severity === 'error') ? 1 : 0;
+        if (parsed.json) {
+          writeInfo(
+            JSON.stringify(
+              remoteCiDiagnostics
+                ? {
+                    ...report,
+                    remoteCiDiagnostics,
+                  }
+                : report,
+              null,
+              2
+            )
+          );
+        } else {
+          printDoctorReport(report, remoteCiDiagnostics);
+        }
+        return doctorHasBlockingIssues(report) ? 1 : 0;
       }
       case 'status': {
         const status = readLifecycleStatus();
