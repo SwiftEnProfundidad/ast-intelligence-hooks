@@ -875,9 +875,40 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark ai_evidence concurrency issue fixed via #501\"`
     - `git push origin HEAD`
-- 🚧 `P12.F1.T12` Ejecutar siguiente issue prioritaria del backlog canónico (`#484`, autosync documental SDD/OpenSpec).
+- ✅ `P12.F1.T12` Ejecutar siguiente issue prioritaria del backlog canónico (`#484`, autosync documental SDD/OpenSpec).
+  - cierre ejecutado:
+    - rama: `feature/484-sdd-sync-docs`.
+    - fix aplicado:
+      - nuevo comando `pumuki sdd sync-docs [--dry-run] [--json]`.
+      - actualizador determinista de sección gestionada para canónico SDD/OpenSpec.
+      - modo `--dry-run` con previsualización de diff en JSON/markdown.
+      - comportamiento fail-safe: conflicto de marcadores aborta sin escrituras parciales.
+    - tests de regresión añadidos:
+      - `integrations/sdd/__tests__/syncDocs.test.ts`.
+      - `integrations/lifecycle/__tests__/cli.test.ts` (parse + ejecución dry-run).
+    - PR: `#504` (mergeada en `develop`).
+    - commit de merge: `f20e18967d2e434dc0d26a85630c8735a4d318ee`.
+    - issue: `#484` cerrada manualmente tras merge.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 504 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 484 --comment \"Closed via merged PR #504...\"`
+- ✅ `P12.F1.T13` Sincronizar canónico RuralGO tras fix `#484` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - `PUMUKI-INC-002`, `PUMUKI-INC-004`, `PUMUKI-INC-009` movidos a `FIXED (#484, #504)`.
+    - causa raíz consolidada de autosync documental actualizada a `FIXED` con refs:
+      - issue: `#484`
+      - PR: `#504`
+      - commit: `f20e189`
+    - commit en RuralGO: `b35ae02d0`.
+  - evidencia:
+    - `git commit -m \"docs(validation): mark sync-docs root cause fixed via #504\"`
+    - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
+- 🚧 `P12.F1.T14` Ejecutar siguiente issue prioritaria del backlog canónico (`#485`, auto-remediación en PRE_WRITE para OpenSpec/MCP receipt).
   - objetivo inmediato:
-    - abrir rama `feature/484-sdd-sync-docs`, definir alcance mínimo y arrancar RED de sincronización documental machine-readable.
+    - abrir rama `feature/485-validate-auto-remediation`, definir alcance mínimo y arrancar RED.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
