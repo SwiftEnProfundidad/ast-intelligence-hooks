@@ -343,6 +343,29 @@ const toSkillsScopeComplianceBlockingFinding = (params: {
   };
 };
 
+const toPolicyAsCodeBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  policyTrace?: ResolvedStagePolicy['trace'];
+}): Finding | undefined => {
+  const validation = params.policyTrace?.validation;
+  if (!validation || validation.status === 'valid' || !validation.strict) {
+    return undefined;
+  }
+
+  return {
+    ruleId: 'governance.policy-as-code.invalid',
+    severity: 'ERROR',
+    code: validation.code,
+    message:
+      `Policy-as-code validation failed at ${params.stage}: ${validation.message} ` +
+      `policy_source=${params.policyTrace?.policySource ?? 'n/a'} ` +
+      `policy_version=${params.policyTrace?.version ?? 'n/a'}.`,
+    filePath: '.pumuki/policy-as-code.json',
+    matchedBy: 'PolicyAsCodeGuard',
+    source: 'policy-as-code',
+  };
+};
+
 const toGateWaiverAppliedFinding = (params: {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   waiver: Extract<GateWaiverResult, { kind: 'applied' }>['waiver'];
@@ -586,7 +609,16 @@ export async function runPlatformGate(params: {
           stage: params.policy.stage,
           facts,
           activeRuleIds: coverage?.activeRuleIds ?? [],
-          evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
+        evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
+      })
+      : undefined;
+  const policyAsCodeBlockingFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toPolicyAsCodeBlockingFinding({
+          stage: params.policy.stage,
+          policyTrace: params.policyTrace,
         })
       : undefined;
   const rulesCoverage = coverage
@@ -633,6 +665,7 @@ export async function runPlatformGate(params: {
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,
+      ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
       ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
       ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
@@ -644,8 +677,10 @@ export async function runPlatformGate(params: {
       || platformSkillsCoverageFinding
       || skillsScopeComplianceFinding
       || coverageBlockingFinding
+      || policyAsCodeBlockingFinding
       || tddBddEvaluation.findings.length > 0
       ? [
+        ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
         ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
         ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
@@ -657,6 +692,7 @@ export async function runPlatformGate(params: {
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
   const baseGateOutcome =
     sddBlockingFinding ||
+    policyAsCodeBlockingFinding ||
     unsupportedSkillsMappingFinding ||
     platformSkillsCoverageFinding ||
     skillsScopeComplianceFinding ||

@@ -86,6 +86,11 @@ export type RulesetState = {
   platform: string;
   bundle: string;
   hash: string;
+  version?: string;
+  signature?: string;
+  source?: string;
+  validation_status?: 'valid' | 'invalid' | 'unknown-source';
+  validation_code?: string;
 };
 
 export type HumanIntentConfidence = 'high' | 'medium' | 'low' | 'unset';
