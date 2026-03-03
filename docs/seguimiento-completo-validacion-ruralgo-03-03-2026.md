@@ -846,9 +846,26 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark PRE_PUSH SDD completeness issue fixed via #498\"`
     - `git push origin HEAD`
-- 🚧 `P12.F1.T10` Ejecutar siguiente issue prioritaria del backlog canónico (`#482`, integridad concurrente de `.ai_evidence.json`).
+- ✅ `P12.F1.T10` Ejecutar siguiente issue prioritaria del backlog canónico (`#482`, integridad concurrente de `.ai_evidence.json`).
+  - cierre ejecutado:
+    - rama: `bugfix/482-evidence-atomic-write`.
+    - fix aplicado:
+      - persistencia atómica de evidencia (`tmp + rename`) en `writeEvidence`.
+      - limpieza de temporal en error para recuperación determinista.
+    - tests de regresión añadidos:
+      - `integrations/evidence/writeEvidence.test.ts` (limpieza de temp + stress de escrituras rápidas).
+    - PR: `#501` (mergeada en `develop`).
+    - commit de merge: `4c0a023236852b2d7160c13d86792f953a5001b4`.
+    - issue: `#482` cerrada manualmente tras merge.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/writeEvidence.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/generateEvidence.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 501 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 482 --comment \"Closed via merged PR #501...\"`
+- 🚧 `P12.F1.T11` Sincronizar canónico RuralGO tras fix `#482` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
   - objetivo inmediato:
-    - abrir rama `bugfix/482-evidence-atomic-write`, reproducir corrupción concurrente con RED y aplicar fix mínimo con evidencia reproducible.
+    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` con `FIXED (#482, #501)` en `PUMUKI-INC-007` y la causa raíz consolidada.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
