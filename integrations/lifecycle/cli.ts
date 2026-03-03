@@ -1692,9 +1692,10 @@ export const runLifecycleCli = async (
         return 1;
     }
   } catch (error) {
+    const isExplicitHelpInvocation = argv.some((arg) => arg === '--help' || arg === '-h');
     const message = error instanceof Error ? error.message : 'Unexpected lifecycle CLI error.';
     writeError(message);
-    return 1;
+    return isExplicitHelpInvocation ? 0 : 1;
   }
 };
 
