@@ -804,9 +804,21 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 495 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 493 --comment \"Closed via merged PR #495...\"`
-- 🚧 `P12.F1.T7` Sincronizar canónico RuralGO tras fix `#493` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+- ✅ `P12.F1.T7` Sincronizar canónico RuralGO tras fix `#493` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - `PUMUKI-INC-043` y `FP-028` movidos a `FIXED (#493, #495)`.
+    - causa raíz consolidada de deadlock upstream actualizada a `FIXED` con refs:
+      - issues: `#480` + `#493`
+      - PRs: `#489` + `#495`
+      - commits: `59c2871` + `d1311d7`
+    - commit en RuralGO: `de62f1bdf`.
+  - evidencia:
+    - `git commit -m \"docs(validation): mark upstream bootstrap regression fixed via #495\"`
+    - `git push origin HEAD`
+- 🚧 `P12.F1.T8` Ejecutar siguiente issue prioritaria del backlog canónico (`#483`, completitud SDD PRE_PUSH).
   - objetivo inmediato:
-    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` con `FIXED (#493, #495)` en IDs afectados y causa raíz consolidada.
+    - abrir rama `bugfix/483-prepush-sdd-completeness`, reproducir RED y preparar fix mínimo con evidencia reproducible.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
