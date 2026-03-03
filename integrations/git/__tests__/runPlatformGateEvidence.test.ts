@@ -312,3 +312,102 @@ test('emitPlatformGateEvidence inyecta evaluationMetrics vacio cuando no se info
     coverage_ratio: 1,
   });
 });
+
+test('emitPlatformGateEvidence delega telemetría estructurada con stage/outcome/policy', async () => {
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'governance.policy-as-code.invalid',
+      severity: 'ERROR',
+      code: 'POLICY_AS_CODE_SIGNATURE_MISMATCH',
+      message: 'mismatch',
+      filePath: '.pumuki/policy-as-code.json',
+    },
+  ];
+  const detectedPlatforms: DetectedPlatforms = {
+    backend: { detected: true, confidence: 'HIGH' },
+  };
+  const skillsRuleSet: SkillsRuleSetLoadResult = {
+    rules: [],
+    activeBundles: [],
+    mappedHeuristicRuleIds: new Set<string>(),
+    requiresHeuristicFacts: false,
+  };
+  const evidenceService: IEvidenceService = {
+    loadPreviousEvidence: () => undefined,
+    toDetectedPlatformsRecord: () => ({ backend: { detected: true, confidence: 'HIGH' } }),
+    buildRulesetState: () => [],
+  };
+  const policyTrace: ResolvedStagePolicy['trace'] = {
+    source: 'default',
+    bundle: 'gate-policy.default.PRE_PUSH',
+    hash: 'abc123',
+    version: 'policy-as-code/default@1.0',
+    signature: 'f'.repeat(64),
+    policySource: 'computed-local',
+    validation: {
+      status: 'valid',
+      code: 'POLICY_AS_CODE_VALID',
+      message: 'ok',
+      strict: false,
+    },
+  };
+
+  let telemetryCaptured:
+    | {
+      stage: string;
+      gateOutcome: string;
+      filesScanned: number;
+      findingsCount: number;
+      policyBundle: string | undefined;
+      repoBranch: string | null;
+    }
+    | undefined;
+
+  emitPlatformGateEvidence(
+    {
+      stage: 'PRE_PUSH',
+      findings,
+      gateOutcome: 'BLOCK',
+      filesScanned: 5,
+      repoRoot: '/repo/root',
+      detectedPlatforms,
+      skillsRuleSet,
+      projectRules: [],
+      heuristicRules: [],
+      evidenceService,
+      policyTrace,
+    },
+    {
+      generateEvidence: () => ({
+        evidence: { version: '2.1' },
+        write: { ok: true, path: '/tmp/.ai_evidence.json' },
+      }),
+      emitGateTelemetryEvent: async (params) => {
+        telemetryCaptured = {
+          stage: params.stage,
+          gateOutcome: params.gateOutcome,
+          filesScanned: params.filesScanned,
+          findingsCount: params.findings.length,
+          policyBundle: params.policyTrace?.bundle,
+          repoBranch: params.repoState.git.branch,
+        };
+        return {
+          skipped: true,
+          otel_dispatched: false,
+          event: {} as never,
+        };
+      },
+    }
+  );
+
+  await new Promise((resolve) => setImmediate(resolve));
+
+  assert.deepEqual(telemetryCaptured, {
+    stage: 'PRE_PUSH',
+    gateOutcome: 'BLOCK',
+    filesScanned: 5,
+    findingsCount: 1,
+    policyBundle: 'gate-policy.default.PRE_PUSH',
+    repoBranch: null,
+  });
+});

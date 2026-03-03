@@ -97,6 +97,26 @@ Defined in `integrations/gate/stagePolicies.ts`:
 - `PRE_PUSH`: block `ERROR`, warn from `WARN`
 - `CI`: block `ERROR`, warn from `WARN`
 
+## Gate telemetry export (optional)
+
+Structured telemetry output is disabled by default and can be enabled with environment variables:
+
+- `PUMUKI_TELEMETRY_JSONL_PATH`:
+  - JSONL file path for `telemetry_event_v1` records.
+  - Accepts absolute path or repo-relative path.
+- `PUMUKI_TELEMETRY_OTEL_ENDPOINT`:
+  - OTLP HTTP logs endpoint (`/v1/logs`).
+- `PUMUKI_TELEMETRY_OTEL_SERVICE_NAME`:
+  - Optional service name for OTel payload (`default: pumuki`).
+- `PUMUKI_TELEMETRY_OTEL_TIMEOUT_MS`:
+  - Optional timeout for OTel dispatch in milliseconds (`default: 1500`).
+
+Notes:
+
+- You can enable JSONL only, OTel only, or both.
+- If unset, no telemetry export is attempted.
+- Gate execution remains deterministic even when OTel endpoint is unavailable (best-effort dispatch).
+
 ## Heuristic pilot flag
 
 Enable semantic heuristic rules:

@@ -15,13 +15,16 @@ import type { SnapshotEvaluationMetrics, SnapshotRulesCoverage } from '../eviden
 import { normalizeSnapshotEvaluationMetrics } from '../evidence/evaluationMetrics';
 import { normalizeSnapshotRulesCoverage } from '../evidence/rulesCoverage';
 import type { TddBddSnapshot } from '../tdd/types';
+import { emitGateTelemetryEvent } from '../telemetry/gateTelemetry';
 
 export type PlatformGateEvidenceDependencies = {
   generateEvidence: typeof generateEvidence;
+  emitGateTelemetryEvent: typeof emitGateTelemetryEvent;
 };
 
 const defaultDependencies: PlatformGateEvidenceDependencies = {
   generateEvidence,
+  emitGateTelemetryEvent,
 };
 
 export const emitPlatformGateEvidence = (params: {
@@ -54,6 +57,7 @@ export const emitPlatformGateEvidence = (params: {
   };
   const evaluationMetrics = normalizeSnapshotEvaluationMetrics(params.evaluationMetrics);
   const rulesCoverage = normalizeSnapshotRulesCoverage(params.stage, params.rulesCoverage);
+  const repoState = captureRepoState(params.repoRoot);
 
   activeDependencies.generateEvidence({
     stage: params.stage,
@@ -77,7 +81,7 @@ export const emitPlatformGateEvidence = (params: {
       policyTrace: params.policyTrace,
       stage: params.stage,
     }),
-    repoState: captureRepoState(params.repoRoot),
+    repoState,
     sddMetrics: params.sddDecision
       ? {
         enforced: true,
@@ -89,5 +93,17 @@ export const emitPlatformGateEvidence = (params: {
         },
       }
       : undefined,
+  });
+
+  void activeDependencies.emitGateTelemetryEvent({
+    stage: params.stage,
+    auditMode: params.auditMode ?? 'gate',
+    gateOutcome: params.gateOutcome,
+    filesScanned: params.filesScanned,
+    findings: params.findings,
+    repoRoot: params.repoRoot,
+    repoState,
+    policyTrace: params.policyTrace,
+    sddDecision: params.sddDecision,
   });
 };

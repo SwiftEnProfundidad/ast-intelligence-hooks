@@ -124,6 +124,30 @@ Rule modes:
 9. Provider-agnostic adapter scaffolding (`codex`, `claude`, `cursor`, `windsurf`, `opencode`).
 10. Optional MCP servers for evidence and enterprise context.
 
+## Telemetry Export (Enterprise)
+
+Pumuki can export structured gate telemetry with a stable event schema (`telemetry_event_v1`) for SIEM/observability pipelines.
+
+Default behavior remains unchanged: telemetry export is disabled unless explicitly configured.
+
+Enable one or both outputs:
+
+- `PUMUKI_TELEMETRY_JSONL_PATH`: local JSONL target (absolute or repo-relative path)
+- `PUMUKI_TELEMETRY_OTEL_ENDPOINT`: OTLP HTTP logs endpoint (`/v1/logs`)
+- `PUMUKI_TELEMETRY_OTEL_SERVICE_NAME`: optional OTel service name (default: `pumuki`)
+- `PUMUKI_TELEMETRY_OTEL_TIMEOUT_MS`: optional OTel timeout in ms (default: `1500`)
+
+Example:
+
+```bash
+export PUMUKI_TELEMETRY_JSONL_PATH=".pumuki/artifacts/gate-telemetry.jsonl"
+export PUMUKI_TELEMETRY_OTEL_ENDPOINT="https://otel.example/v1/logs"
+export PUMUKI_TELEMETRY_OTEL_SERVICE_NAME="pumuki-enterprise"
+npx --yes pumuki-pre-commit
+```
+
+Each event captures deterministic stage/outcome/policy/repo context per gate execution.
+
 ## Framework Maintainer Flow (This Repo)
 
 Use this only when working in the Pumuki framework repository itself:
