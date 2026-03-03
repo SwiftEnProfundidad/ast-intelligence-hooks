@@ -757,9 +757,19 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/preWriteAutomation.test.ts`
     - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts`
     - `npm run -s typecheck`
-- 🚧 `P12.F1.T3` Publicar el cierre E2E de `#481` (commit + PR + merge) y sincronizar trazabilidad canónica en RuralGO.
+- ✅ `P12.F1.T3` Publicar el cierre E2E de `#481` (commit + PR + merge) y sincronizar trazabilidad canónica en RuralGO.
+  - cierre ejecutado:
+    - rama: `bugfix/481-prewrite-evidence-sync`
+    - PR: `#490` (mergeada en `develop`)
+    - commit de merge: `799fe1200cf4c86d3bf8859e07644c88012f8cf2`
+    - issue: `#481` cerrada manualmente tras merge
+  - evidencia:
+    - `gh pr view 490 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 481 --comment \"Closed via merged PR #490...\"`
+    - `git log --oneline -5`
+- 🚧 `P12.F1.T4` Sincronizar estado `FIXED` del bloque `#481` en la fuente canónica de RuralGO.
   - objetivo inmediato:
-    - enlazar `issue -> branch -> commit -> PR -> merge` y actualizar estado `REPORTED/FIXED` en el MD canónico de RuralGO.
+    - propagar trazabilidad `IDs -> issue #481 -> PR #490 -> commit 799fe120` en el MD canónico de RuralGO.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
