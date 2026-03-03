@@ -49,3 +49,14 @@ export const resolveCiBaseRef = (): string => {
 
   return resolveDefaultCiBaseRef();
 };
+
+export const resolvePrePushBootstrapBaseRef = (): string => {
+  const candidates = ['origin/develop', 'develop', resolveCiBaseRef()];
+  for (const candidate of candidates) {
+    if (isResolvableRef(candidate)) {
+      return candidate;
+    }
+  }
+
+  return 'HEAD';
+};
