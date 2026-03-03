@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T25` (issue `#524`: resumen mínimo de `ai_gate` en hooks exitosos).
+- Task activa (`🚧`): `P12.F1.T26` (issue `#526`: canonicalizar casing de `changeId` en ciclo SDD).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.

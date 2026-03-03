@@ -1054,13 +1054,26 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 523 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 521 --comment \"Closed via merged PR #523...\"`
-- 🚧 `P12.F1.T25` Ejecutar issue `#524` (emitir resumen mínimo de `ai_gate` en hooks exitosos).
+- ✅ `P12.F1.T25` Ejecutar issue `#524` (emitir resumen mínimo de `ai_gate` en hooks exitosos).
+  - cierre ejecutado:
+    - issue `#524` cerrada.
+    - rama `bugfix/524-hook-success-summary`.
+    - PR `#525` mergeada en `develop`.
+    - commit de merge: `f0c0892d4877898bd8da6ebe9ccb522d19919489`.
+    - hooks `pre-commit/pre-push` emiten resumen determinista `[pumuki][hook-gate]` en éxito.
+    - modo `--quiet` habilitado para suprimir salida en automatizaciones.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/hookGateSummary.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 525 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 524 --comment \"Closed via merged PR #525...\"`
+- 🚧 `P12.F1.T26` Ejecutar issue `#526` (canonicalizar casing de `changeId` en ciclo SDD).
   - estado actual:
-    - issue creada: `#524` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/524`.
+    - issue creada: `#526` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/526`.
   - objetivo inmediato:
-    - forzar salida mínima en éxito para `pumuki-pre-commit` y `pumuki-pre-push`.
-    - mantener modo silencioso opcional (`--quiet`) para automatizaciones.
-    - cubrir regresión con tests de salida por stage.
+    - normalizar `changeId` a formato canónico lowercase en `session --open`.
+    - garantizar salida consistente en `sdd status` y lifecycle hooks.
+    - cubrir regresión con tests de mixed-case input y persistencia estable.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
