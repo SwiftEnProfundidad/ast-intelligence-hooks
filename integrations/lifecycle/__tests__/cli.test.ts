@@ -144,6 +144,21 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       sddTtlMinutes: 60,
     }
   );
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'sdd',
+      'sync-docs',
+      '--dry-run',
+      '--json',
+    ]),
+    {
+      command: 'sdd',
+      purgeArtifacts: false,
+      json: true,
+      sddCommand: 'sync-docs',
+      sddSyncDocsDryRun: true,
+    }
+  );
 });
 
 test('parseLifecycleCliArgs soporta analytics hotspots report', () => {
@@ -594,6 +609,65 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
     const output = printed.join('\n');
     assert.match(output, /PRE-FLIGHT CHECK/);
     assert.match(output, /MCP receipt: required=yes kind=valid/);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archivo canónico', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const canonicalDoc = join(
+    repo,
+    'docs',
+    'technical',
+    '08-validation',
+    'refactor',
+    'pumuki-integration-feedback.md'
+  );
+
+  try {
+    mkdirSync(dirname(canonicalDoc), { recursive: true });
+    writeFileSync(
+      canonicalDoc,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    const before = readFileSync(canonicalDoc, 'utf8');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['sdd', 'sync-docs', '--dry-run', '--json']);
+    assert.equal(code, 0);
+    const after = readFileSync(canonicalDoc, 'utf8');
+    assert.equal(before, after);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      command?: string;
+      dryRun?: boolean;
+      updated?: boolean;
+      files?: Array<{ updated?: boolean; diffMarkdown?: string }>;
+    };
+    assert.equal(payload.command, 'pumuki sdd sync-docs');
+    assert.equal(payload.dryRun, true);
+    assert.equal(payload.updated, true);
+    assert.equal(payload.files?.[0]?.updated, true);
+    assert.match(payload.files?.[0]?.diffMarkdown ?? '', /sdd-status/i);
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
