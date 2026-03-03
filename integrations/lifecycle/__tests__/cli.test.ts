@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -13,6 +13,7 @@ import {
 } from '../saasIngestionContract';
 import { resolveHotspotsSaasIngestionMetricsPath } from '../saasIngestionMetrics';
 import { parseLifecycleCliArgs, runLifecycleCli } from '../cli';
+import { openSddSession } from '../../sdd/sessionStore';
 import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -37,6 +38,118 @@ const createGitRepo = (trackedNodeModules = false): string => {
   }
 
   return repo;
+};
+
+const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
+  writeFileSync(
+    join(repoRoot, '.ai_evidence.json'),
+    JSON.stringify(
+      {
+        version: '2.1',
+        timestamp: new Date().toISOString(),
+        snapshot: {
+          stage: 'PRE_COMMIT',
+          outcome: 'PASS',
+          rules_coverage: {
+            stage: 'PRE_COMMIT',
+            active_rule_ids: ['skills.backend.no-empty-catch'],
+            evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+            matched_rule_ids: [],
+            unevaluated_rule_ids: [],
+            counts: {
+              active: 1,
+              evaluated: 1,
+              matched: 0,
+              unevaluated: 0,
+            },
+            coverage_ratio: 1,
+          },
+          findings: [],
+        },
+        ledger: [],
+        platforms: {},
+        rulesets: [],
+        human_intent: null,
+        ai_gate: {
+          status: 'ALLOWED',
+          violations: [],
+          human_intent: null,
+        },
+        severity_metrics: {
+          gate_status: 'ALLOWED',
+          total_violations: 0,
+          by_severity: {
+            CRITICAL: 0,
+            ERROR: 0,
+            WARN: 0,
+            INFO: 0,
+          },
+        },
+        repo_state: {
+          repo_root: repoRoot,
+          git: {
+            available: true,
+            branch,
+            upstream: null,
+            ahead: 0,
+            behind: 0,
+            dirty: false,
+            staged: 0,
+            unstaged: 0,
+          },
+          lifecycle: {
+            installed: true,
+            package_version: '6.3.26',
+            lifecycle_version: '6.3.26',
+            hooks: {
+              pre_commit: 'managed',
+              pre_push: 'managed',
+            },
+          },
+        },
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
+const withFakeNpmOpenSpecInstaller = async <T>(
+  repoRoot: string,
+  callback: () => Promise<T>
+): Promise<T> => {
+  const previousPath = process.env.PATH ?? '';
+  const fakeBinDir = join(repoRoot, '.fake-bin');
+  mkdirSync(fakeBinDir, { recursive: true });
+  const npmPath = join(fakeBinDir, 'npm');
+  const script = `#!/usr/bin/env node
+const fs = require('node:fs');
+const path = require('node:path');
+const args = process.argv.slice(2);
+if (args[0] === 'install' && args.includes('@fission-ai/openspec@latest')) {
+  const cwd = process.cwd();
+  const binDir = path.join(cwd, 'node_modules', '.bin');
+  fs.mkdirSync(binDir, { recursive: true });
+  const openspecPath = path.join(binDir, 'openspec');
+  fs.writeFileSync(
+    openspecPath,
+    '#!/usr/bin/env node\\nconst args = process.argv.slice(2);\\nif (args.includes(\"--version\")) { process.stdout.write(\"OpenSpec CLI v1.2.0\\\\n\"); process.exit(0); }\\nif (args[0] === \"validate\") { process.stdout.write(JSON.stringify({ summary: { totals: { items: 1, failed: 0, passed: 1 }, byLevel: { ERROR: 0, WARNING: 0, INFO: 0 } } })); process.exit(0); }\\nprocess.exit(0);\\n',
+    'utf8'
+  );
+  fs.chmodSync(openspecPath, 0o755);
+  process.exit(0);
+}
+process.exit(0);
+`;
+  writeFileSync(npmPath, script, 'utf8');
+  chmodSync(npmPath, 0o755);
+  process.env.PATH = `${fakeBinDir}:${previousPath}`;
+  try {
+    return await callback();
+  } finally {
+    process.env.PATH = previousPath;
+  }
 };
 
 const withSilentConsole = async <T>(callback: () => Promise<T>): Promise<T> => {
@@ -610,6 +723,133 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
     assert.match(output, /PRE-FLIGHT CHECK/);
     assert.match(output, /MCP receipt: required=yes kind=valid/);
   } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE auto-bootstrap de OpenSpec y habilita flujo determinista', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const changeId = 'bootstrap-openspec-missing';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-openspec-bootstrap']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    writePreWriteEvidence(repo, 'feature/prewrite-openspec-bootstrap');
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => 0,
+      })
+    );
+    assert.equal(code, 0);
+    assert.equal(existsSync(join(repo, 'node_modules', '.bin', 'openspec')), true);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      sdd?: {
+        decision?: { code?: string; allowed?: boolean };
+        status?: { openspec?: { installed?: boolean; compatible?: boolean } };
+      };
+      bootstrap?: { enabled?: boolean; attempted?: boolean; status?: string; actions?: string[] };
+    };
+    assert.equal(payload.sdd?.decision?.allowed, true);
+    assert.equal(payload.sdd?.decision?.code, 'ALLOWED');
+    assert.equal(payload.sdd?.status?.openspec?.installed, true);
+    assert.equal(payload.sdd?.status?.openspec?.compatible, true);
+    assert.equal(payload.bootstrap?.enabled, true);
+    assert.equal(payload.bootstrap?.attempted, true);
+    assert.equal(payload.bootstrap?.status, 'OK');
+    assert.equal((payload.bootstrap?.actions ?? []).includes('npm-install:@fission-ai/openspec@latest'), true);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd validate PRE_WRITE con auto-bootstrap deshabilitado expone next_action ejecutable', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const previousAutoBootstrap = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
+  const changeId = 'bootstrap-disabled-openspec-missing';
+
+  try {
+    runGit(repo, ['checkout', '-b', 'feature/prewrite-openspec-bootstrap-disabled']);
+    writeFileSync(
+      join(repo, 'package.json'),
+      JSON.stringify({ name: 'fixture', version: '1.0.0' }, null, 2),
+      'utf8'
+    );
+    mkdirSync(join(repo, 'openspec', 'changes', changeId), { recursive: true });
+    writeFileSync(join(repo, 'openspec', 'changes', changeId, 'proposal.md'), '# proposal\n', 'utf8');
+    openSddSession({ cwd: repo, changeId, ttlMinutes: 60 });
+    writePreWriteEvidence(repo, 'feature/prewrite-openspec-bootstrap-disabled');
+    writeMcpAiGateReceipt({
+      repoRoot: repo,
+      stage: 'PRE_WRITE',
+      status: 'ALLOWED',
+      allowed: true,
+    });
+    process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = '0';
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await withFakeNpmOpenSpecInstaller(repo, async () =>
+      runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE', '--json'], {
+        runPlatformGate: async () => 0,
+      })
+    );
+    assert.equal(code, 1);
+    assert.equal(existsSync(join(repo, 'node_modules', '.bin', 'openspec')), false);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      sdd?: { decision?: { code?: string; allowed?: boolean } };
+      bootstrap?: { enabled?: boolean; attempted?: boolean; status?: string; details?: string };
+      next_action?: { reason?: string; command?: string };
+    };
+    assert.equal(payload.sdd?.decision?.allowed, false);
+    assert.equal(payload.sdd?.decision?.code, 'OPENSPEC_MISSING');
+    assert.equal(payload.bootstrap?.enabled, false);
+    assert.equal(payload.bootstrap?.attempted, false);
+    assert.equal(payload.bootstrap?.status, 'SKIPPED');
+    assert.match(payload.bootstrap?.details ?? '', /PUMUKI_PREWRITE_AUTO_BOOTSTRAP=0/);
+    assert.equal(payload.next_action?.reason, 'OPENSPEC_MISSING');
+    assert.equal(payload.next_action?.command, 'npx --yes --package pumuki@latest pumuki install');
+  } finally {
+    if (typeof previousAutoBootstrap === 'undefined') {
+      delete process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP;
+    } else {
+      process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP = previousAutoBootstrap;
+    }
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });

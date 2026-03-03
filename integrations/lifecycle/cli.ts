@@ -8,6 +8,7 @@ import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
 import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
+import { runOpenSpecBootstrap } from './openSpecBootstrap';
 import { runLifecycleAdapterInstall, type AdapterAgent } from './adapter';
 import { createLoopSessionContract, isLoopSessionTransitionAllowed } from './loopSessionContract';
 import {
@@ -796,16 +797,37 @@ const printDoctorReport = (report: LifecycleDoctorReport): void => {
 };
 
 const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
+const PRE_WRITE_INSTALL_REMEDIATION_COMMAND =
+  'npx --yes --package pumuki@latest pumuki install';
 
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
   ai_gate: ReturnType<typeof evaluateAiGate>;
   automation: PreWriteAutomationTrace;
+  bootstrap: {
+    enabled: boolean;
+    attempted: boolean;
+    status: 'SKIPPED' | 'OK' | 'FAILED';
+    actions: ReadonlyArray<string>;
+    details?: string;
+  };
+  next_action?: {
+    reason: string;
+    command: string;
+  };
   telemetry: {
     chain: typeof PRE_WRITE_TELEMETRY_CHAIN;
     stage: SddStage;
     mcp_tool: 'ai_gate_check';
   };
+};
+
+type PreWriteOpenSpecBootstrapTrace = {
+  enabled: boolean;
+  attempted: boolean;
+  status: 'SKIPPED' | 'OK' | 'FAILED';
+  actions: string[];
+  details?: string;
 };
 
 type LifecycleCliDependencies = {
@@ -832,6 +854,37 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   MCP_ENTERPRISE_RECEIPT_STALE: 'Vuelve a ejecutar ai_gate_check para emitir recibo fresco.',
   MCP_ENTERPRISE_RECEIPT_STAGE_MISMATCH: 'Reejecuta ai_gate_check con stage PRE_WRITE.',
   MCP_ENTERPRISE_RECEIPT_REPO_ROOT_MISMATCH: 'Genera el recibo MCP en este mismo repositorio.',
+};
+
+const PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES = new Set<string>([
+  'OPENSPEC_MISSING',
+  'OPENSPEC_VERSION_UNSUPPORTED',
+  'OPENSPEC_PROJECT_MISSING',
+]);
+
+const resolvePreWriteNextAction = (params: {
+  sdd: ReturnType<typeof evaluateSddPolicy>;
+  aiGate: ReturnType<typeof evaluateAiGate> | null;
+}): PreWriteValidationEnvelope['next_action'] | undefined => {
+  if (!params.sdd.decision.allowed && PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES.has(params.sdd.decision.code)) {
+    return {
+      reason: params.sdd.decision.code,
+      command: PRE_WRITE_INSTALL_REMEDIATION_COMMAND,
+    };
+  }
+  if (!params.aiGate || params.aiGate.allowed) {
+    return undefined;
+  }
+  const hasMcpViolation = params.aiGate.violations.some((violation) =>
+    violation.code.startsWith('MCP_ENTERPRISE_RECEIPT_')
+  );
+  if (!hasMcpViolation) {
+    return undefined;
+  }
+  return {
+    reason: 'MCP_ENTERPRISE_RECEIPT',
+    command: 'npx --yes --package pumuki@latest pumuki-pre-write',
+  };
 };
 
 const wrapPreWritePanelLine = (value: string, width: number): string[] => {
@@ -958,7 +1011,9 @@ const resolveAiGateViolationLocation = (code: string) => {
 const buildPreWriteValidationEnvelope = (
   result: ReturnType<typeof evaluateSddPolicy>,
   aiGate: ReturnType<typeof evaluateAiGate>,
-  automation: PreWriteAutomationTrace
+  automation: PreWriteAutomationTrace,
+  bootstrap: PreWriteOpenSpecBootstrapTrace,
+  nextAction: PreWriteValidationEnvelope['next_action']
 ): PreWriteValidationEnvelope => ({
   sdd: result,
   ai_gate: aiGate,
@@ -966,6 +1021,14 @@ const buildPreWriteValidationEnvelope = (
     attempted: automation.attempted,
     actions: [...automation.actions],
   },
+  bootstrap: {
+    enabled: bootstrap.enabled,
+    attempted: bootstrap.attempted,
+    status: bootstrap.status,
+    actions: [...bootstrap.actions],
+    details: bootstrap.details,
+  },
+  next_action: nextAction,
   telemetry: {
     chain: PRE_WRITE_TELEMETRY_CHAIN,
     stage: result.stage,
@@ -1331,9 +1394,46 @@ export const runLifecycleCli = async (
           return 0;
         }
         if (parsed.sddCommand === 'validate') {
-          const result = evaluateSddPolicy({
+          let result = evaluateSddPolicy({
             stage: parsed.sddStage ?? 'PRE_COMMIT',
           });
+          const preWriteAutoBootstrapEnabled = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP !== '0';
+          const preWriteBootstrapTrace: PreWriteOpenSpecBootstrapTrace = {
+            enabled: preWriteAutoBootstrapEnabled,
+            attempted: false,
+            status: 'SKIPPED',
+            actions: [],
+          };
+          if (
+            result.stage === 'PRE_WRITE'
+            && !result.decision.allowed
+            && PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES.has(result.decision.code)
+          ) {
+            if (preWriteAutoBootstrapEnabled) {
+              preWriteBootstrapTrace.attempted = true;
+              try {
+                const bootstrap = runOpenSpecBootstrap({
+                  repoRoot: process.cwd(),
+                });
+                preWriteBootstrapTrace.status = 'OK';
+                preWriteBootstrapTrace.actions = [...bootstrap.actions];
+                if (bootstrap.skippedReason) {
+                  preWriteBootstrapTrace.details = `skipped=${bootstrap.skippedReason}`;
+                }
+              } catch (error) {
+                preWriteBootstrapTrace.status = 'FAILED';
+                preWriteBootstrapTrace.details = error instanceof Error
+                  ? error.message
+                  : 'Unknown OpenSpec bootstrap error';
+              }
+              result = evaluateSddPolicy({
+                stage: parsed.sddStage ?? 'PRE_COMMIT',
+              });
+            } else {
+              preWriteBootstrapTrace.details =
+                'auto bootstrap disabled via PUMUKI_PREWRITE_AUTO_BOOTSTRAP=0';
+            }
+          }
           const shouldEvaluateAiGate = result.stage === 'PRE_WRITE';
           let aiGate = shouldEvaluateAiGate
             ? runEnterpriseAiGateCheck({
@@ -1357,11 +1457,21 @@ export const runLifecycleCli = async (
             automationTrace.attempted = auto.trace.attempted;
             automationTrace.actions = auto.trace.actions;
           }
+          const nextAction = resolvePreWriteNextAction({
+            sdd: result,
+            aiGate,
+          });
           if (parsed.json) {
             writeInfo(
               JSON.stringify(
                 aiGate
-                  ? buildPreWriteValidationEnvelope(result, aiGate, automationTrace)
+                  ? buildPreWriteValidationEnvelope(
+                    result,
+                    aiGate,
+                    automationTrace,
+                    preWriteBootstrapTrace,
+                    nextAction
+                  )
                   : result,
                 null,
                 2
@@ -1382,6 +1492,16 @@ export const runLifecycleCli = async (
                 `[pumuki][sdd] validation: ok=${result.validation.ok ? 'yes' : 'no'} failed=${result.validation.totals.failed} errors=${result.validation.issues.errors}`
               );
             }
+            if (result.stage === 'PRE_WRITE') {
+              writeInfo(
+                `[pumuki][sdd] openspec auto-bootstrap: enabled=${preWriteBootstrapTrace.enabled ? 'yes' : 'no'} attempted=${preWriteBootstrapTrace.attempted ? 'yes' : 'no'} status=${preWriteBootstrapTrace.status} actions=${preWriteBootstrapTrace.actions.join(',') || 'none'}`
+              );
+              if (preWriteBootstrapTrace.details) {
+                writeInfo(
+                  `[pumuki][sdd] openspec auto-bootstrap details: ${preWriteBootstrapTrace.details}`
+                );
+              }
+            }
             if (aiGate) {
               writeInfo(buildPreWriteValidationPanel({
                 sdd: result,
@@ -1399,6 +1519,9 @@ export const runLifecycleCli = async (
                   )
                 );
               }
+            }
+            if (nextAction) {
+              writeInfo(`[pumuki][sdd] next action (${nextAction.reason}): ${nextAction.command}`);
             }
           }
           if (result.stage === 'PRE_WRITE' && aiGate) {
