@@ -1114,13 +1114,23 @@ Criterio de salida F5:
   - evidencia:
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m \"docs(validation): sync canonical feedback for issue 530\"`
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
-- 🚧 `P12.F1.T30` Ejecutar issue `#532` (gate de completitud SDD por change con contrato mínimo determinista).
-  - estado actual:
-    - issue creada: `#532` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/532`.
+- ✅ `P12.F1.T30` Ejecutar issue `#532` (gate de completitud SDD por change con contrato mínimo determinista).
+  - cierre ejecutado:
+    - issue `#532` cerrada.
+    - rama `feature/532-sdd-completeness-gate`.
+    - PR `#533` mergeada en `develop`.
+    - commit de merge: `f479ad653586119b478500ca5bf781dc2f85b8a9`.
+    - contrato de completitud activo en `PRE_PUSH/CI` (`proposal.md`, `tasks.md`, `scenario.feature` con `Feature` + `Scenario`) con código de bloqueo `SDD_CHANGE_INCOMPLETE`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/policy.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts integrations/sdd/__tests__/types.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 533 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 532 --comment "Closed via merged PR #533..."`
+- 🚧 `P12.F1.T31` Sincronizar canónico RuralGO tras fix `#532` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
   - objetivo inmediato:
-    - definir contrato de completitud SDD machine-readable por change.
-    - bloquear `PRE_PUSH/CI` cuando falten mínimos de completitud.
-    - cubrir RED/GREEN con tests de bloqueo y pase.
+    - actualizar `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - dejar trazabilidad cruzada completa (`MD ID -> ISSUE -> BRANCH -> PR -> COMMIT -> EVIDENCIA`).
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
