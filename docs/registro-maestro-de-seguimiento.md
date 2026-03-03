@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T32` (issue `#534`: waivers formales de gate con TTL/owner/reason).
+- Task activa (`🚧`): `P12.F1.T33` (sincronización canónica RuralGO tras fix `#534`).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
