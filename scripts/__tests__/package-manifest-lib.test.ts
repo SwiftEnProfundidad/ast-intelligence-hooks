@@ -44,3 +44,15 @@ test('inspectPackageManifestPaths reports forbidden bundle entries', () => {
     '.audit-reports/package-smoke/summary.md',
   ]);
 });
+
+test('inspectPackageManifestPaths permite superficies legacy oficiales canónicas', () => {
+  const filePaths = [
+    ...REQUIRED_PACKAGE_PATHS,
+    'legacy/scripts/hooks-system/infrastructure/cascade-hooks/verify-adapter-hooks-runtime.sh',
+    'legacy/scripts/hooks-system/infrastructure/cascade-hooks/run-hook-with-node.sh',
+    'legacy/scripts/hooks-system/infrastructure/cascade-hooks/collect-runtime-diagnostics.sh',
+  ];
+
+  const report = inspectPackageManifestPaths(filePaths);
+  assert.deepEqual(report.forbiddenMatches, []);
+});
