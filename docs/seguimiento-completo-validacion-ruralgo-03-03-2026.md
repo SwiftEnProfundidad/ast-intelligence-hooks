@@ -1280,11 +1280,14 @@ Criterio de salida F5:
     - issue `#543` en estado `CLOSED` con referencia de PR/commit de merge.
     - trazabilidad actualizada en tracking activo.
   - bloqueo reproducido (comando/error):
+    - comando: `gh run view 22648051050`
+    - error observado: `The job was not started because your account is locked due to a billing issue.` (anotación repetida en todos los jobs de `CI`).
     - comando: `gh pr checks 545 --json name,state,bucket,link,description`
     - error observado: `security/snyk (swiftenprofundidad) => ERROR: You have used your limit of private tests`.
     - comando: `gh run view 22647944444 --job 65640392393 --log`
     - error observado: `log not found: 65640392393`.
   - corrección mínima propuesta:
+    - desbloquear billing de la cuenta/organización de GitHub Actions (el run no inicia jobs por lock de facturación).
     - restaurar cuota/permisos de `Snyk` para checks de PR o desactivar temporalmente ese check como requerido.
     - asegurar retención/publicación de logs de Actions para permitir diagnóstico de fallos reales.
   - evidencia adicional:
