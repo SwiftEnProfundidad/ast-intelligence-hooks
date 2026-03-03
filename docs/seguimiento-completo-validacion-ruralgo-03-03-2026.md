@@ -1268,6 +1268,13 @@ Criterio de salida F5:
 
 - 🚧 `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
   - issue operativa de soporte creada: `#546` (`ops: unblock remote PR checks (snyk quota + missing job logs)`).
+  - avance ejecutado:
+    - reintento de runs fallidos lanzado en lote (`gh run rerun <run_id> --failed`) para descartar flake.
+    - resultados tras rerun: `run_attempt=2` y estado `completed/failure` en todos los workflows afectados (sin recuperación automática).
+    - diagnóstico estructural confirmado en GitHub Actions:
+      - jobs de `CI` con `steps_count=0` en attempt 2.
+      - ZIP de logs del run disponible, pero solo contiene `system.txt` (sin logs de pasos de ejecución).
+    - issue `#543` y PR `#545` actualizadas con comentario de progreso y bloqueo remoto.
   - salida esperada:
     - PR `#545` mergeada en `develop`.
     - issue `#543` en estado `CLOSED` con referencia de PR/commit de merge.
@@ -1280,6 +1287,11 @@ Criterio de salida F5:
   - corrección mínima propuesta:
     - restaurar cuota/permisos de `Snyk` para checks de PR o desactivar temporalmente ese check como requerido.
     - asegurar retención/publicación de logs de Actions para permitir diagnóstico de fallos reales.
+  - evidencia adicional:
+    - `python3 /Users/juancarlosmerlosalbarracin/.codex/skills/gh-fix-ci/scripts/inspect_pr_checks.py --repo . --pr 545 --json`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/actions/runs/22648051050/jobs --jq '.jobs[] | {id,run_attempt,name,status,conclusion,steps_count:(.steps|length)}'`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/actions/runs/22648051050/logs > /tmp/gh-logs/run-22648051050.zip`
+    - `unzip -l /tmp/gh-logs/run-22648051050.zip`
 
 - ⏳ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
