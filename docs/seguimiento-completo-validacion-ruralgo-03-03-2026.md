@@ -786,9 +786,27 @@ Criterio de salida F5:
     - `gh issue create --title \"Regression: pre-push upstream bootstrap deadlock still reproducible in 6.3.28\" ...`
     - `git push --set-upstream origin feature/rgo-1590-01-ios-physical-signoff` (bloqueo reproducido)
     - `git branch --set-upstream-to=origin/develop ... && git push origin HEAD` (workaround operativo)
-- 🚧 `P12.F1.T6` Ejecutar fix E2E de regresión `#493` en Pumuki (issue -> rama -> tests -> PR -> merge).
+- ✅ `P12.F1.T6` Ejecutar fix E2E de regresión `#493` en Pumuki (issue -> rama -> tests -> PR -> merge).
+  - cierre ejecutado:
+    - rama: `bugfix/493-prepush-upstream-bootstrap-deadlock`.
+    - fix aplicado:
+      - hook `pre-push` captura `stdin` y lo propaga por `PUMUKI_PRE_PUSH_STDIN`.
+      - stage runner prioriza `PUMUKI_PRE_PUSH_STDIN` para detectar bootstrap sin upstream.
+    - tests de regresión añadidos:
+      - `integrations/lifecycle/__tests__/hookBlock.test.ts`
+      - `integrations/git/__tests__/stageRunners.test.ts`
+    - PR: `#495` (mergeada en `develop`).
+    - commit de merge: `d1311d738604b0a01a9a5d99010cc19722b7051e`.
+    - issue: `#493` cerrada manualmente tras merge.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/hookBlock.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 495 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 493 --comment \"Closed via merged PR #495...\"`
+- 🚧 `P12.F1.T7` Sincronizar canónico RuralGO tras fix `#493` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
   - objetivo inmediato:
-    - reproducir en tests el escenario `pre-push` + `--set-upstream` y preparar patch sin romper casos con upstream ya configurado.
+    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` con `FIXED (#493, #495)` en IDs afectados y causa raíz consolidada.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
