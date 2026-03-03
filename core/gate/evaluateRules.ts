@@ -7,6 +7,7 @@ import type { FileChangeFact } from '../facts/FileChangeFact';
 import type { FileContentFact } from '../facts/FileContentFact';
 import type { Finding } from './Finding';
 import { conditionMatches } from './conditionMatches';
+import { matchesScope } from './scopeMatcher';
 
 type FactInput = Fact | FileChangeFact | FileContentFact;
 
@@ -35,30 +36,6 @@ const toFinding = (
     matchedBy: target?.matchedBy,
     source: target?.source,
   };
-};
-
-const extractPrefix = (pattern: string): string => {
-  const wildcardIndex = pattern.indexOf('*');
-  return wildcardIndex === -1 ? pattern : pattern.slice(0, wildcardIndex);
-};
-
-const matchesAnyPrefix = (path: string, patterns: ReadonlyArray<string>): boolean => {
-  return patterns.some((pattern) => path.startsWith(extractPrefix(pattern)));
-};
-
-const matchesScope = (
-  path: string,
-  scope?: RuleDefinition['scope']
-): boolean => {
-  const include = scope?.include;
-  const exclude = scope?.exclude;
-  if (exclude && exclude.length > 0 && matchesAnyPrefix(path, exclude)) {
-    return false;
-  }
-  if (!include || include.length === 0) {
-    return true;
-  }
-  return matchesAnyPrefix(path, include);
 };
 
 const collectSimpleFindingTargets = (

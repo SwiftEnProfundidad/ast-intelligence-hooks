@@ -4,6 +4,7 @@ import type { Fact } from '../facts/Fact';
 import type { DependencyFact } from '../facts/DependencyFact';
 import type { FileChangeFact } from '../facts/FileChangeFact';
 import type { FileContentFact } from '../facts/FileContentFact';
+import { matchesScope } from './scopeMatcher';
 
 type RuleScope = RuleDefinition['scope'];
 
@@ -25,27 +26,6 @@ const isDependencyFact = (fact: FactInput): fact is DependencyFact =>
 
 const isHeuristicFact = (fact: FactInput): fact is Extract<Fact, { kind: 'Heuristic' }> =>
   fact.kind === 'Heuristic';
-
-const extractPrefix = (pattern: string): string => {
-  const wildcardIndex = pattern.indexOf('*');
-  return wildcardIndex === -1 ? pattern : pattern.slice(0, wildcardIndex);
-};
-
-const matchesAnyPrefix = (path: string, patterns: ReadonlyArray<string>): boolean => {
-  return patterns.some((pattern) => path.startsWith(extractPrefix(pattern)));
-};
-
-const matchesScope = (path: string, scope?: RuleScope): boolean => {
-  const include = scope?.include;
-  const exclude = scope?.exclude;
-  if (exclude && exclude.length > 0 && matchesAnyPrefix(path, exclude)) {
-    return false;
-  }
-  if (!include || include.length === 0) {
-    return true;
-  }
-  return matchesAnyPrefix(path, include);
-};
 
 const matchesFileChange = (
   condition: Extract<Condition, { kind: 'FileChange' }>,

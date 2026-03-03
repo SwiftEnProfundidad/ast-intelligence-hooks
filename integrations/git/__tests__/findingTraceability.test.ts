@@ -239,3 +239,66 @@ test('attachFindingTraceability mantiene finding sin contexto cuando la regla es
   assert.equal(traced[0]?.filePath, undefined);
   assert.equal(traced[0]?.lines, undefined);
 });
+
+test('attachFindingTraceability no adjunta contexto cuando scope iOS usa glob swift y el finding proviene de archivo TS', () => {
+  const rules: RuleSet = [
+    {
+      id: 'ios.no-force-unwrap',
+      description: 'Disallows force unwraps in iOS code.',
+      severity: 'CRITICAL',
+      when: {
+        kind: 'All',
+        conditions: [
+          {
+            kind: 'FileContent',
+            contains: ['!'],
+          },
+          {
+            kind: 'Not',
+            condition: {
+              kind: 'FileContent',
+              contains: ['IBOutlet'],
+            },
+          },
+        ],
+      },
+      then: {
+        kind: 'Finding',
+        code: 'IOS_NO_FORCE_UNWRAP',
+        message: 'Force unwraps are not allowed in iOS code.',
+      },
+      scope: {
+        include: ['**/*.swift'],
+      },
+    },
+  ];
+
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/admin-dashboard/middleware.ts',
+      content: 'if (token != null) { return NextResponse.next(); }',
+      source: 'git:staged',
+    },
+  ];
+
+  const findings: ReadonlyArray<Finding> = [
+    {
+      ruleId: 'ios.no-force-unwrap',
+      severity: 'CRITICAL',
+      code: 'IOS_NO_FORCE_UNWRAP',
+      message: 'Force unwraps are not allowed in iOS code.',
+      filePath: 'apps/admin-dashboard/middleware.ts',
+    },
+  ];
+
+  const traced = attachFindingTraceability({
+    findings,
+    rules,
+    facts,
+  });
+
+  assert.equal(traced[0]?.filePath, 'apps/admin-dashboard/middleware.ts');
+  assert.equal(traced[0]?.lines, undefined);
+  assert.equal(traced[0]?.matchedBy, undefined);
+});
