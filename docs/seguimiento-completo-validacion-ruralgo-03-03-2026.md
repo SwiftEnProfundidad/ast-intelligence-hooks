@@ -1244,6 +1244,13 @@ Criterio de salida F5:
     - edición de `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
     - edición de `R_GO/ruralgo-master-plan.md`
 - 🚧 `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
+  - avance en curso:
+    - rama de implementación: `feature/543-policy-as-code-signed`.
+    - commit técnico principal: `a24bf6c` (`feat(gate): add policy-as-code trace metadata and strict validation guard`).
+    - PR abierta: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/545`.
+    - tests/verificación ejecutados en verde:
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/hookGateSummary.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/EvidenceService.test.ts`
+      - `npm run -s typecheck`
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
