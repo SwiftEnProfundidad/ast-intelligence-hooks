@@ -936,9 +936,38 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark prewrite auto-remediation issue fixed via #506\"`
     - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
-- 🚧 `P12.F1.T16` Ejecutar siguiente issue prioritaria del backlog canónico (`#486`, expiración de sesión SDD en hooks).
+- ✅ `P12.F1.T16` Ejecutar siguiente issue prioritaria del backlog canónico (`#486`, expiración de sesión SDD en hooks).
+  - cierre ejecutado:
+    - rama: `feature/486-sdd-session-auto-refresh`.
+    - fix aplicado:
+      - auto-refresh seguro de sesión SDD expirada para `PRE_COMMIT/PRE_PUSH/CI` antes de bloqueo hard.
+      - fallback determinista con comando one-step en `SDD_SESSION_INVALID`.
+      - flag de control `PUMUKI_SDD_AUTO_REFRESH_SESSION=0` para desactivar auto-refresh cuando se requiera.
+    - tests de regresión añadidos/actualizados:
+      - `integrations/sdd/__tests__/policy.test.ts` (auto-refresh success + fallback con auto-refresh deshabilitado).
+    - PR: `#508` (mergeada en `develop`).
+    - commit de merge: `839745f676ea474c509f32e53a5f39cb9eb62afb`.
+    - issue: `#486` cerrada manualmente tras merge.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/policy.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 508 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 486 --comment \"Closed via merged PR #508...\"`
+- ✅ `P12.F1.T17` Sincronizar canónico RuralGO tras fix `#486` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - `PUMUKI-INC-041` movido a `FIXED (#486, #508)`.
+    - causa raíz consolidada de sesión SDD en hooks actualizada a `FIXED` con refs:
+      - issue: `#486`
+      - PR: `#508`
+      - commit: `839745f`
+    - commit en RuralGO: `8a644debc`.
+  - evidencia:
+    - `git commit -m \"docs(validation): mark sdd session refresh issue fixed via #508\"`
+    - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
+- 🚧 `P12.F1.T18` Ejecutar siguiente issue prioritaria del backlog canónico (`#487`, falso positivo de superficie legacy).
   - objetivo inmediato:
-    - abrir rama `feature/486-sdd-session-auto-refresh`, definir alcance mínimo y arrancar RED.
+    - abrir rama `bugfix/487-legacy-surface-allowlist` y arrancar RED del checker `ci:no-legacy-surface`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
