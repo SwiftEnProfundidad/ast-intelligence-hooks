@@ -1158,13 +1158,32 @@ Criterio de salida F5:
   - evidencia:
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m \"docs(validation): sync canonical feedback for issue 534\"`
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
-- 🚧 `P12.F1.T34` Ejecutar issue `#536` (integridad criptográfica de evidence chain en snapshots de gate).
+- ✅ `P12.F1.T34` Ejecutar issue `#536` (integridad criptográfica de evidence chain en snapshots de gate).
+  - cierre ejecutado:
+    - issue `#536` cerrada.
+    - rama `bugfix/536-evidence-chain-integrity`.
+    - PR `#537` mergeada en `develop`.
+    - commit de merge: `9cc30c59ac34f8f9cecbffb9539e646979eb7db0`.
+    - se añadió `evidence_chain` criptográfica con `payload_hash`, `previous_payload_hash` y `sequence` en escrituras de `.ai_evidence.json`.
+    - se añadió validación de integridad al leer evidencia y código explícito `EVIDENCE_CHAIN_INVALID` en gate.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/readEvidence.test.ts integrations/evidence/writeEvidence.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/preWriteAutomation.test.ts integrations/git/__tests__/hookGateSummary.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 537 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 536 --comment "Fixed in #537 ..."`
+- ✅ `P12.F1.T35` Sincronizar canónico RuralGO tras fix `#536` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO`: `docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - entrada incremental añadida: `PUMUKI-INC-054` (`FIXED #536/#537`).
+    - trazabilidad consolidada en matriz de ejecución (`issue #536`, `PR #537`, `commit 9cc30c5`).
+    - commit en RuralGO: `0402259b1` (`docs(validation): sync canonical feedback for issue 536`).
+  - evidencia:
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m \"docs(validation): sync canonical feedback for issue 536\"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+- 🚧 `P12.F1.T36` Ejecutar issue `#538` (eliminar falso positivo `ios.no-force-unwrap` sobre expresiones `!=` en TS/JS).
   - estado actual:
-    - issue creada: `#536` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/536`.
-  - objetivo inmediato:
-    - extender schema de evidencia con hash-chain verificable.
-    - detectar tampering/cadena rota y bloquear con salida explícita.
-    - cubrir RED/GREEN con tests de cadena válida, manipulada y predecesor roto.
+    - issue creada: `#538` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/538`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
