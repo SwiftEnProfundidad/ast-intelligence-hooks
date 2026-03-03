@@ -834,9 +834,21 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 498 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 483 --comment \"Closed via merged PR #498...\"`
-- 🚧 `P12.F1.T9` Sincronizar canónico RuralGO tras fix `#483` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+- ✅ `P12.F1.T9` Sincronizar canónico RuralGO tras fix `#483` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - `PUMUKI-INC-040` movido a `FIXED (#483, #498)`.
+    - causa raíz consolidada de completitud SDD PRE_PUSH actualizada a `FIXED` con refs:
+      - issue: `#483`
+      - PR: `#498`
+      - commit: `9a0dc13`
+    - commit en RuralGO: `d3685b475`.
+  - evidencia:
+    - `git commit -m \"docs(validation): mark PRE_PUSH SDD completeness issue fixed via #498\"`
+    - `git push origin HEAD`
+- 🚧 `P12.F1.T10` Ejecutar siguiente issue prioritaria del backlog canónico (`#482`, integridad concurrente de `.ai_evidence.json`).
   - objetivo inmediato:
-    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` con `FIXED (#483, #498)` en `PUMUKI-INC-040` y la causa raíz consolidada.
+    - abrir rama `bugfix/482-evidence-atomic-write`, reproducir corrupción concurrente con RED y aplicar fix mínimo con evidencia reproducible.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
