@@ -82,6 +82,12 @@ const buildAiGate = (violations: AiGateViolation[]): AiGateCheckResult => {
       kind: 'valid',
       max_age_seconds: 300,
       age_seconds: 5,
+      source: {
+        source: 'local-file',
+        path: '/repo/.ai_evidence.json',
+        digest: 'sha256:1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef',
+        generated_at: '2026-03-03T00:00:00.000Z',
+      },
     },
     mcp_receipt: {
       required: true,

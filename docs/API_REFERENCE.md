@@ -110,6 +110,11 @@ Contract:
   - evidence `ai_gate.status = BLOCKED`
   - protected branch use (`main/master/develop/dev` by default)
 - Returns deterministic payload: `status`, `allowed`, `violations[]`, `evidence`, `repo_state`.
+- Evidence source contract (auditability):
+  - `evidence.source.source`
+  - `evidence.source.path`
+  - `evidence.source.digest`
+  - `evidence.source.generated_at`
 
 ## PRE_WRITE JSON envelope
 
