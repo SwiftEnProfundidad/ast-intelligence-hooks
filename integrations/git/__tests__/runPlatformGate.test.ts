@@ -1449,7 +1449,7 @@ test('runPlatformGate bloquea cuando el scope de archivos exige skills activas/e
   let emittedArgs:
     | {
       findings: ReadonlyArray<Finding>;
-      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
     }
     | undefined;
 
@@ -1608,6 +1608,302 @@ test('runPlatformGate permite cuando el scope de archivos tiene prefijos de skil
       (finding) => finding.ruleId === 'governance.skills.scope-compliance.incomplete'
     ),
     false
+  );
+});
+
+test('runPlatformGate permite continuar cuando existe waiver de gate válido para stage bloqueante', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 0,
+          filesScanned: 0,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 0,
+          projectRules: 1,
+          matchedRules: 1,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: ['project.blocking.rule'],
+          evaluatedRuleIds: ['project.blocking.rule'],
+          matchedRuleIds: ['project.blocking.rule'],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [
+          {
+            ruleId: 'project.blocking.rule',
+            severity: 'ERROR',
+            code: 'PROJECT_BLOCKING_RULE',
+            message: 'blocking test rule',
+            filePath: 'src/blocking.ts',
+          },
+        ],
+      }),
+      evaluateGate: () => ({ outcome: 'BLOCK' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      resolveActiveGateWaiver: () => ({
+        kind: 'applied',
+        path: '.pumuki/waivers/gate.json',
+        waiver: {
+          id: 'waiver-1',
+          stage: 'PRE_PUSH',
+          reason: 'maintenance',
+          owner: 'tech-lead',
+          approved_at: '2026-03-03T20:00:00.000Z',
+          expires_at: '2099-12-31T23:59:59.000Z',
+        },
+      }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emittedArgs?.gateOutcome, 'PASS');
+  assert.equal(
+    emittedArgs?.findings.some((finding) => finding.ruleId === 'governance.waiver.applied'),
+    true
+  );
+});
+
+test('runPlatformGate bloquea cuando el waiver de gate está expirado', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 0,
+          filesScanned: 0,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 0,
+          projectRules: 1,
+          matchedRules: 1,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: ['project.blocking.rule'],
+          evaluatedRuleIds: ['project.blocking.rule'],
+          matchedRuleIds: ['project.blocking.rule'],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [
+          {
+            ruleId: 'project.blocking.rule',
+            severity: 'ERROR',
+            code: 'PROJECT_BLOCKING_RULE',
+            message: 'blocking test rule',
+            filePath: 'src/blocking.ts',
+          },
+        ],
+      }),
+      evaluateGate: () => ({ outcome: 'BLOCK' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      resolveActiveGateWaiver: () => ({
+        kind: 'expired',
+        path: '.pumuki/waivers/gate.json',
+        waiver: {
+          id: 'waiver-expired',
+          stage: 'PRE_PUSH',
+          reason: 'expired maintenance',
+          owner: 'tech-lead',
+          approved_at: '2024-01-01T00:00:00.000Z',
+          expires_at: '2024-01-15T00:00:00.000Z',
+        },
+      }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(
+    emittedArgs?.findings.some((finding) => finding.ruleId === 'governance.waiver.expired'),
+    true
+  );
+});
+
+test('runPlatformGate bloquea cuando el waiver de gate es inválido', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 0,
+          filesScanned: 0,
+          rulesTotal: 1,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 0,
+          projectRules: 1,
+          matchedRules: 1,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: ['project.blocking.rule'],
+          evaluatedRuleIds: ['project.blocking.rule'],
+          matchedRuleIds: ['project.blocking.rule'],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [
+          {
+            ruleId: 'project.blocking.rule',
+            severity: 'ERROR',
+            code: 'PROJECT_BLOCKING_RULE',
+            message: 'blocking test rule',
+            filePath: 'src/blocking.ts',
+          },
+        ],
+      }),
+      evaluateGate: () => ({ outcome: 'BLOCK' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      resolveActiveGateWaiver: () => ({
+        kind: 'invalid',
+        path: '.pumuki/waivers/gate.json',
+        reason: 'invalid schema: owner is required',
+      }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  assert.equal(
+    emittedArgs?.findings.some((finding) => finding.ruleId === 'governance.waiver.invalid'),
+    true
   );
 });
 

@@ -9,6 +9,10 @@ import type { ResolvedStagePolicy } from '../gate/stagePolicies';
 import type { DetectedPlatforms } from '../platform/detectPlatforms';
 import { GitService, type IGitService } from './GitService';
 import { EvidenceService, type IEvidenceService } from './EvidenceService';
+import {
+  resolveActiveGateWaiver,
+  type GateWaiverResult,
+} from './gateWaiver';
 import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
 import {
   countScannedFilesFromFacts,
@@ -50,6 +54,11 @@ export type GateDependencies = {
     stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI',
     repoRoot: string
   ) => Pick<SddDecision, 'allowed' | 'code' | 'message'>;
+  resolveActiveGateWaiver: (params: {
+    repoRoot: string;
+    stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+    branch: string | null;
+  }) => GateWaiverResult;
 };
 
 const defaultServices: GateServices = {
@@ -114,6 +123,12 @@ const defaultDependencies: GateDependencies = {
       stage,
       repoRoot,
     }).decision,
+  resolveActiveGateWaiver: ({ repoRoot, stage, branch }) =>
+    resolveActiveGateWaiver({
+      repoRoot,
+      stage,
+      branch,
+    }),
 };
 
 const resolveCurrentBranch = (git: IGitService, repoRoot: string): string | null => {
@@ -327,6 +342,51 @@ const toSkillsScopeComplianceBlockingFinding = (params: {
     source: 'skills-scope-compliance',
   };
 };
+
+const toGateWaiverAppliedFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  waiver: Extract<GateWaiverResult, { kind: 'applied' }>['waiver'];
+}): Finding => ({
+  ruleId: 'governance.waiver.applied',
+  severity: 'INFO',
+  code: 'GATE_WAIVER_APPLIED',
+  message:
+    `Gate waiver applied at ${params.stage}: waiver_id=${params.waiver.id} owner=${params.waiver.owner} ` +
+    `expires_at=${params.waiver.expires_at}.`,
+  filePath: '.pumuki/waivers/gate.json',
+  matchedBy: 'GateWaiverGuard',
+  source: 'gate-waiver',
+});
+
+const toGateWaiverExpiredFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  waiver: Extract<GateWaiverResult, { kind: 'expired' }>['waiver'];
+}): Finding => ({
+  ruleId: 'governance.waiver.expired',
+  severity: 'ERROR',
+  code: 'GATE_WAIVER_EXPIRED',
+  message:
+    `Gate waiver expired at ${params.stage}: waiver_id=${params.waiver.id} owner=${params.waiver.owner} ` +
+    `expired_at=${params.waiver.expires_at}. Provide a valid waiver or fix blocking findings.`,
+  filePath: '.pumuki/waivers/gate.json',
+  matchedBy: 'GateWaiverGuard',
+  source: 'gate-waiver',
+});
+
+const toGateWaiverInvalidFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  reason: string;
+}): Finding => ({
+  ruleId: 'governance.waiver.invalid',
+  severity: 'ERROR',
+  code: 'GATE_WAIVER_INVALID',
+  message:
+    `Gate waiver file is invalid at ${params.stage}: ${params.reason}. ` +
+    'Fix waiver schema or remove invalid waiver before continuing.',
+  filePath: '.pumuki/waivers/gate.json',
+  matchedBy: 'GateWaiverGuard',
+  source: 'gate-waiver',
+});
 
 const toPlatformSkillsCoverageBlockingFinding = (params: {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
@@ -595,7 +655,7 @@ export async function runPlatformGate(params: {
       ]
       : findings;
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
-  const gateOutcome =
+  const baseGateOutcome =
     sddBlockingFinding ||
     unsupportedSkillsMappingFinding ||
     platformSkillsCoverageFinding ||
@@ -604,13 +664,53 @@ export async function runPlatformGate(params: {
     hasTddBddBlockingFinding
       ? 'BLOCK'
       : decision.outcome;
+  const gateWaiverStage =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? params.policy.stage
+      : undefined;
+  const gateWaiverResult = gateWaiverStage
+    ? dependencies.resolveActiveGateWaiver({
+        repoRoot,
+        stage: gateWaiverStage,
+        branch: currentBranch,
+      })
+    : ({
+        kind: 'none',
+        path: '.pumuki/waivers/gate.json',
+      } as const);
+  let gateWaiverFinding: Finding | undefined;
+  let gateOutcome = baseGateOutcome;
+  if (baseGateOutcome === 'BLOCK' && gateWaiverStage) {
+    if (gateWaiverResult.kind === 'applied') {
+      gateWaiverFinding = toGateWaiverAppliedFinding({
+        stage: gateWaiverStage,
+        waiver: gateWaiverResult.waiver,
+      });
+      gateOutcome = 'PASS';
+    } else if (gateWaiverResult.kind === 'expired') {
+      gateWaiverFinding = toGateWaiverExpiredFinding({
+        stage: gateWaiverStage,
+        waiver: gateWaiverResult.waiver,
+      });
+    } else if (gateWaiverResult.kind === 'invalid') {
+      gateWaiverFinding = toGateWaiverInvalidFinding({
+        stage: gateWaiverStage,
+        reason: gateWaiverResult.reason,
+      });
+    }
+  }
+  const findingsWithWaiver = gateWaiverFinding
+    ? [...effectiveFindings, gateWaiverFinding]
+    : effectiveFindings;
   const shadowFlagRaw = process.env.PUMUKI_OPERATIONAL_MEMORY_SHADOW_ENABLED?.trim().toLowerCase();
   const isMemoryShadowEnabled = shadowFlagRaw === '1' || shadowFlagRaw === 'true';
   let memoryShadowRecommendation: OperationalMemoryShadowRecommendation | undefined;
   if (isMemoryShadowEnabled) {
     try {
       memoryShadowRecommendation = dependencies.buildMemoryShadowRecommendation({
-        findings: effectiveFindings,
+        findings: findingsWithWaiver,
         ...(tddBddSnapshot ? { tddBddSnapshot } : {}),
       });
     } catch (error) {
@@ -653,7 +753,7 @@ export async function runPlatformGate(params: {
     stage: params.policy.stage,
     auditMode,
     policyTrace: params.policyTrace,
-    findings: effectiveFindings,
+    findings: findingsWithWaiver,
     gateOutcome,
     filesScanned,
     evaluationMetrics,
@@ -670,7 +770,7 @@ export async function runPlatformGate(params: {
   });
 
   if (gateOutcome === 'BLOCK') {
-    dependencies.printGateFindings(effectiveFindings);
+    dependencies.printGateFindings(findingsWithWaiver);
     return 1;
   }
 
