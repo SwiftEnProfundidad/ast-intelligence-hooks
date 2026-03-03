@@ -749,9 +749,17 @@ Criterio de salida F5:
     - `git fetch origin --prune --tags`
     - análisis reachability/commit-diff de `backup/branches/*` contra `develop/main`
     - `git cherry develop <backup-head>` para validar equivalencia de fixes de lifecycle
-- 🚧 `P12.F1.T2` Priorizar y arrancar ejecución del bloque de bugs/mejoras de RuralGO reportados en Pumuki.
+- ✅ `P12.F1.T2` Priorizar y arrancar ejecución del bloque de bugs/mejoras de RuralGO reportados en Pumuki.
+  - resultado:
+    - slice priorizado y ejecutado: `#481 Stabilize PRE_WRITE evidence sync across branch/session switches`.
+    - fix aplicado con retry determinista/backoff único en PRE_WRITE (`retry_backoff`) y test dedicado de regresión.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/preWriteAutomation.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+- 🚧 `P12.F1.T3` Publicar el cierre E2E de `#481` (commit + PR + merge) y sincronizar trazabilidad canónica en RuralGO.
   - objetivo inmediato:
-    - seleccionar el siguiente slice ejecutable de mayor impacto del bug registry y dejar evidencia reproducible en runbook/validadores.
+    - enlazar `issue -> branch -> commit -> PR -> merge` y actualizar estado `REPORTED/FIXED` en el MD canónico de RuralGO.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
