@@ -1079,13 +1079,26 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 527 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 526 --comment \"Closed via merged PR #527...\"`
-- 🚧 `P12.F1.T27` Ejecutar issue `#528` (`doctor --deep` con diagnóstico enterprise).
+- ✅ `P12.F1.T27` Ejecutar issue `#528` (`doctor --deep` con diagnóstico enterprise).
+  - cierre ejecutado:
+    - issue `#528` cerrada.
+    - rama `bugfix/528-doctor-deep-enterprise-diagnostics`.
+    - PR `#529` mergeada en `develop`.
+    - commit de merge: `89b26a546ba9c35c7084bf41d4c6b05df7542ec5`.
+    - `doctor` incorpora `--deep` con checks deterministas: `upstream-readiness`, `adapter-wiring`, `policy-drift`, `evidence-source-drift`.
+    - `doctor --json` ahora devuelve payload machine-readable con bloque `deep`, y exit code no-cero solo en fallos críticos deep.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 529 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 528 --comment \"Closed via merged PR #529...\"`
+- 🚧 `P12.F1.T28` Ejecutar issue `#530` (engine de compliance de skills por ámbito de archivo).
   - estado actual:
-    - issue creada: `#528` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/528`.
+    - issue creada: `#530` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/530`.
   - objetivo inmediato:
-    - extender `doctor` con modo `--deep` y salida JSON de checks por severidad.
-    - cubrir drifts operativos (upstream/adapters/policy/evidence source) con hints accionables.
-    - añadir tests PASS/BLOCK para el nuevo modo profundo.
+    - introducir mapeo determinista `file scope -> required skills`.
+    - bloquear `PRE_COMMIT/PRE_PUSH/CI` cuando falte evidencia de skills obligatorias.
+    - publicar salida machine-readable (`required/applied/missing`) en CLI y tests PASS/BLOCK.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
