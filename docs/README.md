@@ -5,7 +5,8 @@ Canonical index for active Pumuki documentation.
 ## Seguimiento Activo (único)
 
 - Maestro: `docs/registro-maestro-de-seguimiento.md`
-- Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
+- Plan activo: `docs/seguimiento-activo-pumuki-backlog.md`
+- Referencia histórica (consulta): `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Política: una sola tarea en construcción (`🚧`) en el plan activo.
 
 ## Product and Architecture
