@@ -1243,7 +1243,7 @@ Criterio de salida F5:
     - `gh issue create --title "[P2][OPS] Telemetría estructurada exportable (JSONL/OTel) para auditoría enterprise" ...`
     - edición de `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
     - edición de `R_GO/ruralgo-master-plan.md`
-- 🚧 `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
+- ⛔ `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
   - avance en curso:
     - rama de implementación: `feature/543-policy-as-code-signed`.
     - commits técnicos:
@@ -1266,7 +1266,7 @@ Criterio de salida F5:
     - `gh pr checks 545 --json name,state,bucket,link,description`
     - `gh run view 22647944444 --job 65640392393 --log`
 
-- ⏳ `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
+- 🚧 `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
   - salida esperada:
     - PR `#545` mergeada en `develop`.
     - issue `#543` en estado `CLOSED` con referencia de PR/commit de merge.
