@@ -424,6 +424,16 @@ test('runLifecycleCli retorna 1 ante argumentos inválidos', async () => {
   assert.equal(code, 1);
 });
 
+test('runLifecycleCli retorna 0 para ayuda explícita en comando raíz', async () => {
+  const code = await withSilentConsole(() => runLifecycleCli(['--help']));
+  assert.equal(code, 0);
+});
+
+test('runLifecycleCli retorna 0 para ayuda explícita en subcomando', async () => {
+  const code = await withSilentConsole(() => runLifecycleCli(['sdd', '--help']));
+  assert.equal(code, 0);
+});
+
 test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto en payload', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
