@@ -140,16 +140,43 @@ test('evaluateSddPolicy bloquea con SDD_SESSION_MISSING cuando no existe sesión
   });
 });
 
-test('evaluateSddPolicy bloquea con SDD_SESSION_INVALID cuando la sesión está expirada', () => {
-  return withFixtureRepo('pumuki-sdd-session-invalid-', (repoRoot) => {
+test('evaluateSddPolicy auto-refresca sesión expirada en PRE_COMMIT cuando el cambio activo es válido', () => {
+  return withFixtureRepo('pumuki-sdd-session-autorefresh-', (repoRoot) => {
     writeOpenSpecBinary(repoRoot);
     const changeId = createOpenSpecChange(repoRoot);
     openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
     runGit(repoRoot, ['config', '--local', 'pumuki.sdd.session.expiresAt', '2000-01-01T00:00:00.000Z']);
 
     const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
-    assert.equal(result.decision.allowed, false);
-    assert.equal(result.decision.code, 'SDD_SESSION_INVALID');
+    assert.equal(result.decision.allowed, true);
+    assert.equal(result.decision.code, 'ALLOWED');
+    assert.equal(result.status.session.valid, true);
+  });
+});
+
+test('evaluateSddPolicy bloquea con SDD_SESSION_INVALID cuando la sesión está expirada', () => {
+  return withFixtureRepo('pumuki-sdd-session-invalid-', (repoRoot) => {
+    const previous = process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION;
+    process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION = '0';
+    writeOpenSpecBinary(repoRoot);
+    const changeId = createOpenSpecChange(repoRoot);
+    openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
+    runGit(repoRoot, ['config', '--local', 'pumuki.sdd.session.expiresAt', '2000-01-01T00:00:00.000Z']);
+    try {
+      const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
+      assert.equal(result.decision.allowed, false);
+      assert.equal(result.decision.code, 'SDD_SESSION_INVALID');
+      assert.equal(
+        result.decision.details?.command,
+        'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90'
+      );
+    } finally {
+      if (typeof previous === 'undefined') {
+        delete process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION;
+      } else {
+        process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION = previous;
+      }
+    }
   });
 });
 
