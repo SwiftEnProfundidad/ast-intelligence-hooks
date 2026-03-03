@@ -317,6 +317,25 @@ test('runPrePushStage fails safe with guidance when branch has no upstream', asy
   });
 });
 
+test('runPrePushStage allows bootstrap push without upstream when stdin indicates new remote branch', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const headOid = runGit(repoRoot, ['rev-parse', 'HEAD']).trim();
+    const remoteZero = '0'.repeat(40);
+
+    const exitCode = await runPrePushStage({
+      readPrePushStdin: () =>
+        `refs/heads/feature/no-upstream ${headOid} refs/heads/feature/no-upstream ${remoteZero}\n`,
+      resolvePrePushBootstrapBaseRef: () => 'main',
+    });
+
+    assert.equal(exitCode, 0);
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+  });
+});
+
 test('runCiStage uses skills policy override and writes CI policy trace', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
