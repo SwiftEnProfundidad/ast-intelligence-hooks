@@ -223,6 +223,20 @@ test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
     updateSpec: undefined,
     json: false,
   });
+  assert.deepEqual(parseLifecycleCliArgs(['doctor', '--remote-checks']), {
+    command: 'doctor',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: false,
+    remoteChecks: true,
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['status', '--json', '--remote-checks']), {
+    command: 'status',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: true,
+    remoteChecks: true,
+  });
 });
 
 test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
@@ -399,11 +413,118 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
     () => parseLifecycleCliArgs(['install', '--bad-flag']),
     /Unsupported argument/i
   );
+  assert.throws(
+    () => parseLifecycleCliArgs(['install', '--remote-checks']),
+    /only supported with "pumuki doctor" or "pumuki status"/i
+  );
 });
 
 test('runLifecycleCli retorna 1 ante argumentos inválidos', async () => {
   const code = await withSilentConsole(() => runLifecycleCli(['--bad']));
   assert.equal(code, 1);
+});
+
+test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto en payload', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['status', '--json', '--remote-checks'], {
+      collectRemoteCiDiagnostics: () => ({
+        enabled: true,
+        provider: 'github',
+        status: 'blocked',
+        repoRoot: repo,
+        checkedAt: '2026-03-03T12:00:00.000Z',
+        branch: 'feature/remote-ci',
+        pr: {
+          number: 512,
+          url: 'https://github.com/org/repo/pull/512',
+          headRefName: 'feature/remote-ci',
+        },
+        checks: {
+          total: 2,
+          failing: 2,
+        },
+        blockers: [
+          {
+            code: 'REMOTE_CI_BILLING_LOCK',
+            severity: 'error',
+            message: 'billing lock',
+            remediation: 'unlock billing',
+            affectedChecks: ['Type Check'],
+            evidence: ['Type Check: billing issue'],
+          },
+        ],
+      }),
+    });
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      remoteCiDiagnostics?: { status?: string; blockers?: Array<{ code?: string }> };
+    };
+    assert.equal(payload.remoteCiDiagnostics?.status, 'blocked');
+    assert.equal(payload.remoteCiDiagnostics?.blockers?.[0]?.code, 'REMOTE_CI_BILLING_LOCK');
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli doctor --remote-checks imprime resumen de bloqueadores remotos', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['doctor', '--remote-checks'], {
+      collectRemoteCiDiagnostics: () => ({
+        enabled: true,
+        provider: 'github',
+        status: 'blocked',
+        repoRoot: repo,
+        checkedAt: '2026-03-03T12:00:00.000Z',
+        checks: {
+          total: 1,
+          failing: 1,
+        },
+        blockers: [
+          {
+            code: 'REMOTE_CI_PROVIDER_QUOTA',
+            severity: 'error',
+            message: 'provider quota',
+            remediation: 'increase quota',
+            affectedChecks: ['security/snyk'],
+            evidence: ['security/snyk: quota reached'],
+          },
+        ],
+      }),
+    });
+    assert.equal(code, 0);
+    const output = printed.join('\n');
+    assert.match(output, /\[pumuki\]\[remote-ci\] status=BLOCKED/i);
+    assert.match(output, /REMOTE_CI_PROVIDER_QUOTA/i);
+    assert.match(output, /remediation: increase quota/i);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
 });
 
 test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y permite continuar', async () => {

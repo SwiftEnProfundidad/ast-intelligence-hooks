@@ -41,6 +41,10 @@ import {
   readHotspotsSaasIngestionAuditEvents,
   writeHotspotsSaasIngestionMetrics,
 } from './saasIngestionMetrics';
+import {
+  collectRemoteCiDiagnostics,
+  type RemoteCiDiagnostics,
+} from './remoteCiDiagnostics';
 
 type LifecycleCommand =
   | 'install'
@@ -66,6 +70,7 @@ type ParsedArgs = {
   purgeArtifacts: boolean;
   updateSpec?: string;
   json: boolean;
+  remoteChecks?: boolean;
   sddCommand?: SddCommand;
   loopCommand?: LoopCommand;
   loopSessionId?: string;
@@ -94,8 +99,8 @@ Pumuki lifecycle commands:
   pumuki uninstall [--purge-artifacts]
   pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
-  pumuki doctor
-  pumuki status
+  pumuki doctor [--remote-checks]
+  pumuki status [--json] [--remote-checks]
   pumuki loop run --objective=<text> [--max-attempts=<n>] [--json]
   pumuki loop status --session=<session-id> [--json]
   pumuki loop stop --session=<session-id> [--json]
@@ -397,6 +402,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let purgeArtifacts = false;
   let updateSpec: ParsedArgs['updateSpec'];
   let json = false;
+  let remoteChecks = false;
   let sddCommand: ParsedArgs['sddCommand'];
   let loopCommand: ParsedArgs['loopCommand'];
   let loopSessionId: ParsedArgs['loopSessionId'];
@@ -747,6 +753,10 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       json = true;
       continue;
     }
+    if (arg === '--remote-checks') {
+      remoteChecks = true;
+      continue;
+    }
     if (arg === '--purge-artifacts') {
       purgeArtifacts = true;
       continue;
@@ -763,15 +773,43 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
   }
 
+  if (remoteChecks && commandRaw !== 'doctor' && commandRaw !== 'status') {
+    throw new Error(`--remote-checks is only supported with "pumuki doctor" or "pumuki status".\n\n${HELP_TEXT}`);
+  }
+
   return {
     command: commandRaw,
     purgeArtifacts,
     updateSpec,
     json,
+    ...(remoteChecks ? { remoteChecks: true } : {}),
   };
 };
 
-const printDoctorReport = (report: LifecycleDoctorReport): void => {
+const printRemoteCiDiagnostics = (diagnostics: RemoteCiDiagnostics): void => {
+  writeInfo(
+    `[pumuki][remote-ci] status=${diagnostics.status.toUpperCase()} checks=${diagnostics.checks.total} failing=${diagnostics.checks.failing}`
+  );
+  if (diagnostics.pr) {
+    writeInfo(
+      `[pumuki][remote-ci] pr=#${diagnostics.pr.number} branch=${diagnostics.pr.headRefName} url=${diagnostics.pr.url}`
+    );
+  }
+  if (diagnostics.reason) {
+    writeInfo(`[pumuki][remote-ci] reason=${diagnostics.reason}`);
+  }
+  for (const blocker of diagnostics.blockers) {
+    writeInfo(
+      `[pumuki][remote-ci] ${blocker.severity.toUpperCase()} ${blocker.code}: ${blocker.message}`
+    );
+    writeInfo(`[pumuki][remote-ci] remediation: ${blocker.remediation}`);
+  }
+};
+
+const printDoctorReport = (
+  report: LifecycleDoctorReport,
+  remoteCiDiagnostics?: RemoteCiDiagnostics
+): void => {
   writeInfo(`[pumuki] repo: ${report.repoRoot}`);
   writeInfo(`[pumuki] package version: ${report.packageVersion}`);
   writeInfo(
@@ -786,14 +824,17 @@ const printDoctorReport = (report: LifecycleDoctorReport): void => {
 
   if (report.issues.length === 0) {
     writeInfo('[pumuki] doctor verdict: PASS');
-    return;
+  } else {
+    for (const issue of report.issues) {
+      writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
+    }
+    const hasBlocking = report.issues.some((issue) => issue.severity === 'error');
+    writeInfo(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
   }
 
-  for (const issue of report.issues) {
-    writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
+  if (remoteCiDiagnostics) {
+    printRemoteCiDiagnostics(remoteCiDiagnostics);
   }
-  const hasBlocking = report.issues.some((issue) => issue.severity === 'error');
-  writeInfo(`[pumuki] doctor verdict: ${hasBlocking ? 'BLOCKED' : 'WARN'}`);
 };
 
 const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
@@ -833,11 +874,13 @@ type PreWriteOpenSpecBootstrapTrace = {
 type LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
   runPlatformGate: typeof runPlatformGate;
+  collectRemoteCiDiagnostics: typeof collectRemoteCiDiagnostics;
 };
 
 const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
   runPlatformGate,
+  collectRemoteCiDiagnostics,
 };
 
 const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
@@ -1124,13 +1167,34 @@ export const runLifecycleCli = async (
       }
       case 'doctor': {
         const report = runLifecycleDoctor();
-        printDoctorReport(report);
+        const remoteCiDiagnostics = parsed.remoteChecks
+          ? activeDependencies.collectRemoteCiDiagnostics({
+              repoRoot: report.repoRoot,
+            })
+          : undefined;
+        printDoctorReport(report, remoteCiDiagnostics);
         return report.issues.some((issue) => issue.severity === 'error') ? 1 : 0;
       }
       case 'status': {
         const status = readLifecycleStatus();
+        const remoteCiDiagnostics = parsed.remoteChecks
+          ? activeDependencies.collectRemoteCiDiagnostics({
+              repoRoot: status.repoRoot,
+            })
+          : undefined;
         if (parsed.json) {
-          writeInfo(JSON.stringify(status, null, 2));
+          writeInfo(
+            JSON.stringify(
+              remoteCiDiagnostics
+                ? {
+                    ...status,
+                    remoteCiDiagnostics,
+                  }
+                : status,
+              null,
+              2
+            )
+          );
         } else {
           writeInfo(`[pumuki] repo: ${status.repoRoot}`);
           writeInfo(`[pumuki] package version: ${status.packageVersion}`);
@@ -1142,6 +1206,9 @@ export const runLifecycleCli = async (
           writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
           );
+          if (remoteCiDiagnostics) {
+            printRemoteCiDiagnostics(remoteCiDiagnostics);
+          }
         }
         return 0;
       }
