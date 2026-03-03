@@ -816,9 +816,27 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark upstream bootstrap regression fixed via #495\"`
     - `git push origin HEAD`
-- 🚧 `P12.F1.T8` Ejecutar siguiente issue prioritaria del backlog canónico (`#483`, completitud SDD PRE_PUSH).
+- ✅ `P12.F1.T8` Ejecutar siguiente issue prioritaria del backlog canónico (`#483`, completitud SDD PRE_PUSH).
+  - cierre ejecutado:
+    - rama: `bugfix/483-prepush-sdd-completeness`.
+    - fix aplicado:
+      - contrato SDD/OpenSpec alineado usando `openspec validate --all --json --no-interactive`.
+      - detalle diagnóstico explícito del comando en decisiones `ALLOWED` y `SDD_VALIDATION_*`.
+    - tests de regresión añadidos:
+      - `integrations/sdd/__tests__/openSpecCli.test.ts`
+      - `integrations/sdd/__tests__/policy.test.ts`
+    - PR: `#498` (mergeada en `develop`).
+    - commit de merge: `9a0dc130c069edb49716ee14ae936011ba8c4638`.
+    - issue: `#483` cerrada manualmente tras merge.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/openSpecCli.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/policy.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 498 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 483 --comment \"Closed via merged PR #498...\"`
+- 🚧 `P12.F1.T9` Sincronizar canónico RuralGO tras fix `#483` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
   - objetivo inmediato:
-    - abrir rama `bugfix/483-prepush-sdd-completeness`, reproducir RED y preparar fix mínimo con evidencia reproducible.
+    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` con `FIXED (#483, #498)` en `PUMUKI-INC-040` y la causa raíz consolidada.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

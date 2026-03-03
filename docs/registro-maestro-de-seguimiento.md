@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T8` (ejecutar issue prioritaria `#483` sobre completitud SDD en PRE_PUSH).
+- Task activa (`🚧`): `P12.F1.T9` (sincronizar canónico RuralGO tras fix `#483` con refs reales).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
