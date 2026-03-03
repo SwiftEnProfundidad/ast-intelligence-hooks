@@ -1246,11 +1246,36 @@ Criterio de salida F5:
 - 🚧 `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
   - avance en curso:
     - rama de implementación: `feature/543-policy-as-code-signed`.
-    - commit técnico principal: `a24bf6c` (`feat(gate): add policy-as-code trace metadata and strict validation guard`).
+    - commits técnicos:
+      - `a24bf6c` (`feat(gate): add policy-as-code trace metadata and strict validation guard`).
+      - `594a83c` (`feat(policy): add contract expiry validation and strict blocking coverage`).
     - PR abierta: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/545`.
     - tests/verificación ejecutados en verde:
-      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/hookGateSummary.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/EvidenceService.test.ts`
+      - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/hookGateSummary.test.ts integrations/git/__tests__/EvidenceService.test.ts`
       - `npm run -s typecheck`
+    - alcance DoD cubierto en branch:
+      - contrato `policy-as-code` con validación runtime `valid/invalid/expired/unknown-source`.
+      - bloqueo strict (`PUMUKI_POLICY_STRICT=1`) con códigos explícitos de policy.
+      - documentación operativa mínima añadida en `README.md`.
+  - bloqueo actual:
+    - checks remotos de GitHub Actions en `#545` fallan de forma sistémica y sin logs recuperables (`log not found` en `gh run view --log`).
+    - `security/snyk` reporta límite de cuota privada (`You have used your limit of private tests`).
+    - pendiente decisión de merge cuando se desbloquee infraestructura/checks remotos.
+  - evidencia:
+    - `gh pr view 545 --json state,mergeStateStatus,statusCheckRollup,headRefOid,url`
+    - `gh pr checks 545 --json name,state,bucket,link,description`
+    - `gh run view 22647944444 --job 65640392393 --log`
+
+- ⏳ `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
+  - salida esperada:
+    - PR `#545` mergeada en `develop`.
+    - issue `#543` en estado `CLOSED` con referencia de PR/commit de merge.
+    - trazabilidad actualizada en tracking activo.
+
+- ⏳ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+  - salida esperada:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-055`.
+    - `R_GO/ruralgo-master-plan.md` con leyenda actualizada (solo 1 `🚧` activa) y referencia de issue/PR/commit.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

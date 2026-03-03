@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T40` (ejecutar implementación técnica de `#543` policy-as-code versionada/firmada con RED->GREEN->REFACTOR).
+- Task activa (`🚧`): `P12.F1.T40` (ejecutar implementación técnica de `#543` policy-as-code versionada/firmada con RED->GREEN->REFACTOR; pendiente cierre por checks remotos).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
