@@ -268,6 +268,51 @@ test('evaluateSddPolicy bloquea con SDD_VALIDATION_ERROR cuando exit code es cer
   });
 });
 
+test('evaluateSddPolicy bloquea con SDD_VALIDATION_EMPTY_SCOPE cuando items=0 en modo estricto', () => {
+  return withFixtureRepo('pumuki-sdd-empty-scope-strict-', (repoRoot) => {
+    writeOpenSpecBinary(repoRoot, {
+      validateExitCode: 0,
+      totals: { items: 0, failed: 0, passed: 0 },
+      issues: { errors: 0, warnings: 0, infos: 0 },
+    });
+    const changeId = createOpenSpecChange(repoRoot);
+    openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
+
+    const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
+    assert.equal(result.decision.allowed, false);
+    assert.equal(result.decision.code, 'SDD_VALIDATION_EMPTY_SCOPE');
+    assert.equal(result.decision.details?.items, 0);
+  });
+});
+
+test('evaluateSddPolicy permite items=0 cuando strict empty scope está desactivado', () => {
+  return withFixtureRepo('pumuki-sdd-empty-scope-nonstrict-', (repoRoot) => {
+    const previous = process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS;
+    process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS = '0';
+    writeOpenSpecBinary(repoRoot, {
+      validateExitCode: 0,
+      totals: { items: 0, failed: 0, passed: 0 },
+      issues: { errors: 0, warnings: 0, infos: 0 },
+    });
+    const changeId = createOpenSpecChange(repoRoot);
+    openSddSession({ cwd: repoRoot, changeId, ttlMinutes: 30 });
+
+    try {
+      const result = evaluateSddPolicy({ stage: 'PRE_PUSH', repoRoot });
+      assert.equal(result.decision.allowed, true);
+      assert.equal(result.decision.code, 'ALLOWED');
+      assert.equal(result.decision.details?.validatedItems, 0);
+      assert.equal(result.decision.details?.emptyScope, true);
+    } finally {
+      if (typeof previous === 'undefined') {
+        delete process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS;
+      } else {
+        process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS = previous;
+      }
+    }
+  });
+});
+
 test('evaluateSddPolicy permite CI cuando validación OpenSpec es satisfactoria', () => {
   return withFixtureRepo('pumuki-sdd-validation-ok-', (repoRoot) => {
     writeOpenSpecBinary(repoRoot, {

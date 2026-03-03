@@ -1024,6 +1024,7 @@ const resolveSddDecisionLocation = (
     case 'OPENSPEC_PROJECT_MISSING':
     case 'SDD_VALIDATION_FAILED':
     case 'SDD_VALIDATION_ERROR':
+    case 'SDD_VALIDATION_EMPTY_SCOPE':
       return 'openspec/changes:1';
     case 'SDD_CHANGE_MISSING':
       return changeId && changeId.trim().length > 0

@@ -144,6 +144,7 @@ export const evaluateSddPolicy = (params: {
   const repoRoot = params.repoRoot ?? process.cwd();
   const bypassEnabled = process.env.PUMUKI_SDD_BYPASS === '1';
   const autoRefreshEnabled = process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION !== '0';
+  const strictEmptyItemsEnabled = process.env.PUMUKI_SDD_STRICT_EMPTY_ITEMS !== '0';
   let status = buildStatus(repoRoot);
   let autoRefreshAttempted = false;
   let autoRefreshError: string | undefined;
@@ -252,6 +253,25 @@ export const evaluateSddPolicy = (params: {
     };
   }
 
+  if (strictEmptyItemsEnabled && validation.totals.items <= 0) {
+    return {
+      stage: params.stage,
+      status,
+      validation,
+      decision: blocked(
+        'SDD_VALIDATION_EMPTY_SCOPE',
+        'OpenSpec validation returned an empty scope (items=0) in strict mode. This is blocked to avoid false-green SDD gates.',
+        {
+          command: OPENSPEC_VALIDATE_ALL_COMMAND,
+          stage: params.stage,
+          items: validation.totals.items,
+          strictEmptyItemsEnabled,
+          overrideEnv: 'PUMUKI_SDD_STRICT_EMPTY_ITEMS=0',
+        }
+      ),
+    };
+  }
+
   return {
     stage: params.stage,
     status,
@@ -259,7 +279,10 @@ export const evaluateSddPolicy = (params: {
     decision: allowed('SDD validation passed for active changes.', {
       command: OPENSPEC_VALIDATE_ALL_COMMAND,
       passedItems: validation.totals.passed,
+      validatedItems: validation.totals.items,
       warnings: validation.issues.warnings,
+      emptyScope: validation.totals.items <= 0,
+      strictEmptyItemsEnabled,
     }),
   };
 };
