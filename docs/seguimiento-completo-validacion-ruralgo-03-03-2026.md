@@ -965,9 +965,51 @@ Criterio de salida F5:
   - evidencia:
     - `git commit -m \"docs(validation): mark sdd session refresh issue fixed via #508\"`
     - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
-- 🚧 `P12.F1.T18` Ejecutar siguiente issue prioritaria del backlog canónico (`#487`, falso positivo de superficie legacy).
+- ✅ `P12.F1.T18` Ejecutar issue prioritaria `#487` (falso positivo de superficie legacy) en Pumuki.
+  - cierre ejecutado:
+    - rama: `bugfix/487-legacy-surface-allowlist`.
+    - fix en `scripts/package-manifest-lib.ts`:
+      - allowlist explícita para superficies legacy oficiales de runtime.
+      - bloqueo mantenido para cualquier `legacy/*` no allowlisted.
+    - test de regresión añadido en `scripts/__tests__/package-manifest-lib.test.ts`.
+    - PR: `#510` abierta.
+    - commit: `1da8c60`.
+  - evidencia:
+    - RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts` (falla inicial caso canónico legacy).
+    - GREEN: `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts scripts/__tests__/check-package-manifest.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:package-manifest`
+- ⛔ `P12.F1.T19` Completar merge/cierre de `#487` y sincronización canónica RuralGO.
+  - bloqueo actual (externo):
+    - GitHub Actions no inicia jobs por bloqueo de facturación del repositorio.
+    - annotation real (check-run `65623298147`):
+      - `The job was not started because your account is locked due to a billing issue.`
+    - impacto: no merge de `#510` sin bypass de gates (no permitido).
+  - evidencia:
+    - `gh pr view 510 --json mergeStateStatus,statusCheckRollup`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65623298147/annotations`
+    - comentario en PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510#issuecomment-3993566439`
+- ✅ `P12.F1.T20` Ejecutar issue prioritaria `#488` (guards de cobertura AST/skills por plataforma).
+  - cierre ejecutado:
+    - rama: `feature/488-platform-coverage-guards`.
+    - fix en `integrations/git/runPlatformGate.ts`:
+      - nuevo guard `governance.skills.platform-coverage.incomplete` para PRE_COMMIT/PRE_PUSH/CI.
+      - exige bundles mínimos por plataforma detectada (iOS triplete, backend, frontend, android).
+      - exige cobertura de reglas skills activas/evaluadas por prefijo `skills.<platform>.`.
+    - tests de regresión:
+      - bloquea cuando iOS detectado no cumple triplete/cobertura.
+      - permite cuando plataformas detectadas cumplen bundles + reglas.
+    - PR: `#511` abierta.
+    - commit: `6b0c6dd`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts`
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts`
+    - `npm run -s typecheck`
+- 🚧 `P12.F1.T21` Cerrar administrativamente `#488` y consolidar sync canónico en RuralGO tras merge.
   - objetivo inmediato:
-    - abrir rama `bugfix/487-legacy-surface-allowlist` y arrancar RED del checker `ci:no-legacy-surface`.
+    - monitorizar estado CI remota por billing lock.
+    - mergear `#511` sin bypass cuando CI quede operativa.
+    - actualizar canónico `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` de `REPORTED -> FIXED`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
