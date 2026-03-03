@@ -199,3 +199,49 @@ test('evaluateRules genera un finding por cada heuristica coincidente', () => {
   );
   assert.equal(findings.every((finding) => finding.matchedBy === 'Heuristic'), true);
 });
+
+test('evaluateRules no genera finding de iOS cuando el scope es swift y el archivo es TypeScript', () => {
+  const rules: RuleSet = [
+    {
+      id: 'ios.no-force-unwrap',
+      description: 'Disallows force unwraps in iOS code.',
+      severity: 'CRITICAL',
+      scope: {
+        include: ['**/*.swift'],
+      },
+      when: {
+        kind: 'All',
+        conditions: [
+          {
+            kind: 'FileContent',
+            contains: ['!'],
+          },
+          {
+            kind: 'Not',
+            condition: {
+              kind: 'FileContent',
+              contains: ['IBOutlet'],
+            },
+          },
+        ],
+      },
+      then: {
+        kind: 'Finding',
+        message: 'Force unwraps are not allowed in iOS code.',
+        code: 'IOS_NO_FORCE_UNWRAP',
+      },
+    },
+  ];
+  const facts = [
+    {
+      kind: 'FileContent',
+      path: 'apps/admin-dashboard/middleware.ts',
+      content: 'if (token != null) { return NextResponse.next(); }',
+      source: 'repo',
+    },
+  ] as const;
+
+  const findings = evaluateRules(rules, facts);
+
+  assert.deepEqual(findings, []);
+});

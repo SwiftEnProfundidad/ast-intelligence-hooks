@@ -108,3 +108,37 @@ test('conditionMatches soporta condiciones compuestas All, Any y Not', () => {
 
   assert.equal(conditionMatches(composedCondition, facts), true);
 });
+
+test('conditionMatches respeta include glob swift y no matchea archivos no swift', () => {
+  const scopedCondition: Condition = {
+    kind: 'All',
+    conditions: [
+      {
+        kind: 'FileContent',
+        contains: ['!'],
+      },
+      {
+        kind: 'Not',
+        condition: {
+          kind: 'FileContent',
+          contains: ['IBOutlet'],
+        },
+      },
+    ],
+  };
+  const scopedFacts = [
+    {
+      kind: 'FileContent' as const,
+      path: 'apps/admin-dashboard/middleware.ts',
+      content: 'if (token != null) { return NextResponse.next(); }',
+      source: 'repo',
+    },
+  ];
+
+  assert.equal(
+    conditionMatches(scopedCondition, scopedFacts, {
+      include: ['**/*.swift'],
+    }),
+    false
+  );
+});

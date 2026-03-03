@@ -3,6 +3,7 @@ import type { Finding } from '../../core/gate/Finding';
 import type { Condition } from '../../core/rules/Condition';
 import type { RuleDefinition } from '../../core/rules/RuleDefinition';
 import type { RuleSet } from '../../core/rules/RuleSet';
+import { matchesScope } from '../../core/gate/scopeMatcher';
 
 type Trace = {
   matched: boolean;
@@ -13,27 +14,6 @@ type Trace = {
 };
 
 type RuleScope = RuleDefinition['scope'];
-
-const extractPrefix = (pattern: string): string => {
-  const wildcardIndex = pattern.indexOf('*');
-  return wildcardIndex === -1 ? pattern : pattern.slice(0, wildcardIndex);
-};
-
-const matchesAnyPrefix = (path: string, patterns: ReadonlyArray<string>): boolean => {
-  return patterns.some((pattern) => path.startsWith(extractPrefix(pattern)));
-};
-
-const matchesScope = (path: string, scope?: RuleScope): boolean => {
-  const include = scope?.include;
-  const exclude = scope?.exclude;
-  if (exclude && exclude.length > 0 && matchesAnyPrefix(path, exclude)) {
-    return false;
-  }
-  if (!include || include.length === 0) {
-    return true;
-  }
-  return matchesAnyPrefix(path, include);
-};
 
 const normalizePath = (path: string): string => path.replace(/\\/g, '/');
 
