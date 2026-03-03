@@ -188,6 +188,89 @@ const toSkillsUnsupportedAutoRulesBlockingFinding = (params: {
   };
 };
 
+const PLATFORM_SKILLS_RULE_PREFIXES: Record<
+  'ios' | 'android' | 'backend' | 'frontend',
+  string
+> = {
+  ios: 'skills.ios.',
+  android: 'skills.android.',
+  backend: 'skills.backend.',
+  frontend: 'skills.frontend.',
+};
+
+const PLATFORM_REQUIRED_SKILLS_BUNDLES: Record<
+  'ios' | 'android' | 'backend' | 'frontend',
+  ReadonlyArray<string>
+> = {
+  ios: [
+    'ios-guidelines',
+    'ios-concurrency-guidelines',
+    'ios-swiftui-expert-guidelines',
+  ],
+  android: ['android-guidelines'],
+  backend: ['backend-guidelines'],
+  frontend: ['frontend-guidelines'],
+};
+
+const toPlatformSkillsCoverageBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  detectedPlatforms: DetectedPlatforms;
+  activeBundles: ReadonlyArray<SkillsRuleSetLoadResult['activeBundles'][number]>;
+  activeRuleIds: ReadonlyArray<string>;
+  evaluatedRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  const detectedPlatformKeys = (
+    ['ios', 'android', 'backend', 'frontend'] as const
+  ).filter((platform) => params.detectedPlatforms[platform]?.detected === true);
+
+  if (detectedPlatformKeys.length === 0) {
+    return undefined;
+  }
+
+  const activeBundleNames = new Set(params.activeBundles.map((bundle) => bundle.name));
+  const gaps: string[] = [];
+
+  for (const platform of detectedPlatformKeys) {
+    const requiredBundles = PLATFORM_REQUIRED_SKILLS_BUNDLES[platform];
+    const missingBundles = requiredBundles.filter((bundleName) => !activeBundleNames.has(bundleName));
+    const rulePrefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
+    const hasActiveRules = params.activeRuleIds.some((ruleId) => ruleId.startsWith(rulePrefix));
+    const hasEvaluatedRules = params.evaluatedRuleIds.some((ruleId) => ruleId.startsWith(rulePrefix));
+
+    if (missingBundles.length === 0 && hasActiveRules && hasEvaluatedRules) {
+      continue;
+    }
+
+    const reasons: string[] = [];
+    if (missingBundles.length > 0) {
+      reasons.push(`missing_bundles=[${missingBundles.join(', ')}]`);
+    }
+    if (!hasActiveRules) {
+      reasons.push(`active_rules_prefix=${rulePrefix} missing`);
+    }
+    if (!hasEvaluatedRules) {
+      reasons.push(`evaluated_rules_prefix=${rulePrefix} missing`);
+    }
+    gaps.push(`${platform}{${reasons.join('; ')}}`);
+  }
+
+  if (gaps.length === 0) {
+    return undefined;
+  }
+
+  return {
+    ruleId: 'governance.skills.platform-coverage.incomplete',
+    severity: 'ERROR',
+    code: 'SKILLS_PLATFORM_COVERAGE_INCOMPLETE_HIGH',
+    message:
+      `Platform skills coverage incomplete at ${params.stage}: ${gaps.join(' | ')}. ` +
+      'Activate required bundles and ensure platform skill rules are active/evaluated.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'SkillsPlatformCoverageGuard',
+    source: 'skills-platform-coverage',
+  };
+};
+
 export async function runPlatformGate(params: {
   policy: GatePolicy;
   auditMode?: 'gate' | 'engine';
@@ -307,6 +390,18 @@ export async function runPlatformGate(params: {
         unsupportedAutoRuleIds: skillsRuleSet.unsupportedAutoRuleIds ?? [],
       })
       : undefined;
+  const platformSkillsCoverageFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toPlatformSkillsCoverageBlockingFinding({
+          stage: params.policy.stage,
+          detectedPlatforms,
+          activeBundles: skillsRuleSet.activeBundles,
+          activeRuleIds: coverage?.activeRuleIds ?? [],
+          evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
+        })
+      : undefined;
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
@@ -352,13 +447,18 @@ export async function runPlatformGate(params: {
     ? [
       sddBlockingFinding,
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+      ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
     ]
-    : unsupportedSkillsMappingFinding || coverageBlockingFinding || tddBddEvaluation.findings.length > 0
+    : unsupportedSkillsMappingFinding
+      || platformSkillsCoverageFinding
+      || coverageBlockingFinding
+      || tddBddEvaluation.findings.length > 0
       ? [
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
+        ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
         ...findings,
@@ -368,6 +468,7 @@ export async function runPlatformGate(params: {
   const gateOutcome =
     sddBlockingFinding ||
     unsupportedSkillsMappingFinding ||
+    platformSkillsCoverageFinding ||
     coverageBlockingFinding ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
