@@ -44,7 +44,7 @@ test('open/read/refresh/close session persists state per repository', () => {
     process.chdir(repo);
 
     const opened = openSddSession({
-      changeId: 'add-auth-feature',
+      changeId: 'Add-Auth-Feature',
       ttlMinutes: 30,
     });
     assert.equal(opened.active, true);
@@ -67,6 +67,27 @@ test('open/read/refresh/close session persists state per repository', () => {
     assert.equal(closed.active, false);
     assert.equal(closed.valid, false);
     assert.equal(closed.changeId, undefined);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('readSddSession normaliza changeId legado en mayúsculas a lowercase canónico', () => {
+  const repo = createRepoWithOpenSpecChange();
+  const previousCwd = process.cwd();
+  try {
+    process.chdir(repo);
+    openSddSession({
+      changeId: 'add-auth-feature',
+      ttlMinutes: 30,
+    });
+    runGit(repo, ['config', '--local', 'pumuki.sdd.session.change', 'ADD-AUTH-FEATURE']);
+
+    const readBack = readSddSession();
+    assert.equal(readBack.active, true);
+    assert.equal(readBack.changeId, 'add-auth-feature');
+    assert.equal(readBack.valid, true);
   } finally {
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });

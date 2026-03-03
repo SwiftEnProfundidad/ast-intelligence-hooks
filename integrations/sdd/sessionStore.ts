@@ -29,6 +29,9 @@ const parsePositiveMinutes = (value?: number): number =>
     ? Math.floor(value as number)
     : DEFAULT_TTL_MINUTES;
 
+const normalizeChangeId = (value: string): string =>
+  value.trim().toLowerCase();
+
 const computeValidity = (expiresAt?: string): {
   valid: boolean;
   remainingSeconds?: number;
@@ -52,7 +55,11 @@ const readConfig = (
   git: ILifecycleGitService
 ): SddSessionState => {
   const active = git.localConfig(repoRoot, SDD_KEYS.active) === 'true';
-  const changeId = git.localConfig(repoRoot, SDD_KEYS.change) ?? undefined;
+  const rawChangeId = git.localConfig(repoRoot, SDD_KEYS.change);
+  const changeId =
+    typeof rawChangeId === 'string' && rawChangeId.trim().length > 0
+      ? normalizeChangeId(rawChangeId)
+      : undefined;
   const updatedAt = git.localConfig(repoRoot, SDD_KEYS.updatedAt) ?? undefined;
   const expiresAt = git.localConfig(repoRoot, SDD_KEYS.expiresAt) ?? undefined;
   const ttlRaw = git.localConfig(repoRoot, SDD_KEYS.ttlMinutes);
@@ -102,7 +109,10 @@ export const openSddSession = (params: {
 }): SddSessionState => {
   const git = params.git ?? new LifecycleGitService();
   const repoRoot = resolveRepoRoot(params.cwd ?? process.cwd(), git);
-  const changeId = params.changeId.trim();
+  const changeId = normalizeChangeId(params.changeId);
+  if (changeId.length === 0) {
+    throw new Error('OpenSpec change id is required.');
+  }
   const changeState = ensureChangePath(repoRoot, changeId);
   if (!changeState.exists) {
     throw new Error(`OpenSpec change "${changeId}" not found in openspec/changes.`);
