@@ -1271,6 +1271,14 @@ Criterio de salida F5:
     - PR `#545` mergeada en `develop`.
     - issue `#543` en estado `CLOSED` con referencia de PR/commit de merge.
     - trazabilidad actualizada en tracking activo.
+  - bloqueo reproducido (comando/error):
+    - comando: `gh pr checks 545 --json name,state,bucket,link,description`
+    - error observado: `security/snyk (swiftenprofundidad) => ERROR: You have used your limit of private tests`.
+    - comando: `gh run view 22647944444 --job 65640392393 --log`
+    - error observado: `log not found: 65640392393`.
+  - corrección mínima propuesta:
+    - restaurar cuota/permisos de `Snyk` para checks de PR o desactivar temporalmente ese check como requerido.
+    - asegurar retención/publicación de logs de Actions para permitir diagnóstico de fallos reales.
 
 - ⏳ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
