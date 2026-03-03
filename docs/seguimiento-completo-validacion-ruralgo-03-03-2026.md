@@ -737,9 +737,21 @@ Criterio de salida F5:
       - `npm run -s validation:p11:daily-close:executive -- --json --compact` => `ready=true`, `snapshot.statusReady=true`
       - `npm run -s validation:p11:daily-close:executive:qa` => `13/13` pass
       - `npm run -s validation:tracking-single-active` => `OK`
-- 🚧 `P12.F1.T1` Arrancar bloque operativo P12 en espejo RuralGO (baseline de entrada y primer objetivo ejecutable).
+- ✅ `P12.F1.T1` Analizar sincronización de backups contra `develop/main` y decidir absorción segura.
+  - resultado de análisis:
+    - `backup tags=44`; `heads fuera de develop/main=4` (8 refs contando espejo local/remoto).
+    - `fix(lifecycle): worktree hooks path` ya está absorbido en `develop` (equivalencia detectada con `git cherry`).
+    - los otros heads no absorbidos son trazabilidad histórica de docs/gobernanza, sin delta funcional crítico para runtime actual de Pumuki.
+  - decisión ejecutada:
+    - no se requiere `merge`/`cherry-pick` adicional hacia `develop` o `main`.
+    - se conservan los tags `backup/branches/*` como respaldo auditable.
+  - evidencia:
+    - `git fetch origin --prune --tags`
+    - análisis reachability/commit-diff de `backup/branches/*` contra `develop/main`
+    - `git cherry develop <backup-head>` para validar equivalencia de fixes de lifecycle
+- 🚧 `P12.F1.T2` Priorizar y arrancar ejecución del bloque de bugs/mejoras de RuralGO reportados en Pumuki.
   - objetivo inmediato:
-    - definir baseline de entrada de P12 y primer slice operativo manteniendo una sola `🚧`.
+    - seleccionar el siguiente slice ejecutable de mayor impacto del bug registry y dejar evidencia reproducible en runbook/validadores.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
