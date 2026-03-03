@@ -967,62 +967,37 @@ Criterio de salida F5:
     - `git push origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
 - ✅ `P12.F1.T18` Ejecutar issue prioritaria `#487` (falso positivo de superficie legacy) en Pumuki.
   - cierre ejecutado:
-    - rama: `bugfix/487-legacy-surface-allowlist`.
-    - fix en `scripts/package-manifest-lib.ts`:
-      - allowlist explícita para superficies legacy oficiales de runtime.
+    - rama creada: `bugfix/487-legacy-surface-allowlist`.
+    - fix aplicado en `scripts/package-manifest-lib.ts`:
+      - allowlist canónica para superficies runtime legacy oficiales.
       - bloqueo mantenido para cualquier `legacy/*` no allowlisted.
-    - test de regresión añadido en `scripts/__tests__/package-manifest-lib.test.ts`.
-    - PR: `#510` abierta.
+    - test de regresión RED/GREEN:
+      - `scripts/__tests__/package-manifest-lib.test.ts` (nuevo caso canónico legacy).
+    - PR abierta: `#510` (pendiente merge).
     - commit: `1da8c60`.
   - evidencia:
-    - RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts` (falla inicial caso canónico legacy).
+    - RED: `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts` (falla inicial en caso canónico legacy).
     - GREEN: `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts scripts/__tests__/check-package-manifest.test.ts`
-    - `npm run -s typecheck`
-    - `npm run -s validation:package-manifest`
-- ⛔ `P12.F1.T19` Completar merge/cierre de `#487` y sincronización canónica RuralGO.
+    - gate: `npm run -s typecheck`
+    - gate: `npm run -s validation:package-manifest`
+    - PR: `gh pr create --base develop --head bugfix/487-legacy-surface-allowlist ...` => `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510`
+- ⛔ `P12.F1.T19` Completar cierre administrativo de `#487` y sincronización canónica RuralGO tras merge.
   - bloqueo actual (externo):
-    - GitHub Actions no inicia jobs por bloqueo de facturación del repositorio.
-    - annotation real (check-run `65623298147`):
+    - los checks de GitHub Actions no arrancan por bloqueo de facturación del repositorio.
+    - evidencia exacta (annotation check-run `65623298147`):
       - `The job was not started because your account is locked due to a billing issue.`
-    - impacto: no merge de `#510` sin bypass de gates (no permitido).
-  - evidencia:
+    - impacto: no se puede mergear PR `#510` sin bypassear gates.
+  - estado de implementación:
+    - fix ya listo en PR `#510`.
+    - issue `#487` pendiente de cierre administrativo tras merge.
+  - evidencia registrada:
     - `gh pr view 510 --json mergeStateStatus,statusCheckRollup`
     - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65623298147/annotations`
-    - comentario en PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510#issuecomment-3993566439`
-- ✅ `P12.F1.T20` Ejecutar issue prioritaria `#488` (guards de cobertura AST/skills por plataforma).
-  - cierre ejecutado:
-    - rama: `feature/488-platform-coverage-guards`.
-    - fix en `integrations/git/runPlatformGate.ts`:
-      - nuevo guard `governance.skills.platform-coverage.incomplete` para PRE_COMMIT/PRE_PUSH/CI.
-      - exige bundles mínimos por plataforma detectada (iOS triplete, backend, frontend, android).
-      - exige cobertura de reglas skills activas/evaluadas por prefijo `skills.<platform>.`.
-    - tests de regresión:
-      - bloquea cuando iOS detectado no cumple triplete/cobertura.
-      - permite cuando plataformas detectadas cumplen bundles + reglas.
-    - PR: `#511` abierta.
-    - commit: `6b0c6dd`.
-  - evidencia:
-    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts`
-    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts`
-    - `npm run -s typecheck`
-- 🚧 `P12.F1.T21` Cerrar administrativamente `#488` y consolidar sync canónico en RuralGO tras merge.
+    - comentario de bloqueo en PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510#issuecomment-3993566439`
+- 🚧 `P12.F1.T20` Ejecutar issue `#488` (cobertura de guards AST/skills por plataforma) mientras se desbloquea CI de `#487`.
   - objetivo inmediato:
-    - monitorizar estado CI remota por billing lock.
-    - mergear `#511` sin bypass cuando CI quede operativa.
-    - actualizar canónico `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` de `REPORTED -> FIXED`.
-  - ejecución actual:
-    - `#510` y `#511` siguen en `mergeStateStatus=UNSTABLE` por fallo transversal de checks remotos.
-    - evidencia de bloqueo repetida (2026-03-03):
-      - PR `#510`: check-run `65623545770` -> `The job was not started because your account is locked due to a billing issue.`
-      - PR `#511`: check-run `65624109075` -> `The job was not started because your account is locked due to a billing issue.`
-    - comentarios de trazabilidad añadidos:
-      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/511#issuecomment-3993591432`
-      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/488#issuecomment-3993592053`
-  - evidencia:
-    - `gh pr view 510 --json mergeStateStatus,statusCheckRollup`
-    - `gh pr view 511 --json mergeStateStatus,statusCheckRollup`
-    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65623545770/annotations`
-    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65624109075/annotations`
+    - abrir rama `feature/488-platform-coverage-guards`.
+    - arrancar RED con test que falle para cobertura incompleta iOS/web/backend/android.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
