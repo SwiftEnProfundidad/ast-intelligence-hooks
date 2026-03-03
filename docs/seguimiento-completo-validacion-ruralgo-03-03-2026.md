@@ -1067,13 +1067,25 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 525 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 524 --comment \"Closed via merged PR #525...\"`
-- 🚧 `P12.F1.T26` Ejecutar issue `#526` (canonicalizar casing de `changeId` en ciclo SDD).
+- ✅ `P12.F1.T26` Ejecutar issue `#526` (canonicalizar casing de `changeId` en ciclo SDD).
+  - cierre ejecutado:
+    - issue `#526` cerrada.
+    - rama `bugfix/526-sdd-changeid-canonicalization`.
+    - PR `#527` mergeada en `develop`.
+    - commit de merge: `7ab53e6f5cc8e6b2cc7becf5019dd658b359334b`.
+    - `sessionStore` normaliza `changeId` en `open/read` y mantiene compatibilidad con valores legacy en mayúsculas.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/sessionStore.test.ts integrations/sdd/__tests__/policy.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 527 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 526 --comment \"Closed via merged PR #527...\"`
+- 🚧 `P12.F1.T27` Ejecutar issue `#528` (`doctor --deep` con diagnóstico enterprise).
   - estado actual:
-    - issue creada: `#526` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/526`.
+    - issue creada: `#528` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/528`.
   - objetivo inmediato:
-    - normalizar `changeId` a formato canónico lowercase en `session --open`.
-    - garantizar salida consistente en `sdd status` y lifecycle hooks.
-    - cubrir regresión con tests de mixed-case input y persistencia estable.
+    - extender `doctor` con modo `--deep` y salida JSON de checks por severidad.
+    - cubrir drifts operativos (upstream/adapters/policy/evidence source) con hints accionables.
+    - añadir tests PASS/BLOCK para el nuevo modo profundo.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
