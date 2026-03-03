@@ -916,6 +916,7 @@ const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
 const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_MISSING: 'Regenera evidencia ejecutando una auditoría completa antes de continuar.',
   EVIDENCE_INVALID: 'Corrige el contrato de .ai_evidence.json y vuelve a ejecutar el gate.',
+  EVIDENCE_CHAIN_INVALID: 'Regenera evidencia para restablecer la cadena criptográfica íntegra.',
   EVIDENCE_STALE: 'Refresca evidencia para este repo y rama.',
   EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este repositorio.',
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual.',

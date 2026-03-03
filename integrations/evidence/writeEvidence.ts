@@ -1,8 +1,9 @@
-import { renameSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import type {
   AiEvidenceV2_1,
   CompatibilityViolation,
+  EvidenceChain,
   EvidenceLines,
   LedgerEntry,
   RepoState,
@@ -14,6 +15,7 @@ import { buildSnapshotPlatformSummaries } from './platformSummary';
 import { normalizeHumanIntent } from './humanIntent';
 import { normalizeSnapshotEvaluationMetrics } from './evaluationMetrics';
 import { normalizeSnapshotRulesCoverage } from './rulesCoverage';
+import { buildEvidenceChain, isEvidenceChain } from './evidenceChain';
 
 export type WriteEvidenceResult = {
   ok: boolean;
@@ -347,6 +349,19 @@ const buildTempEvidencePath = (repoRoot: string): string => {
   return join(repoRoot, `${TEMP_EVIDENCE_PREFIX}${uniqueSuffix}`);
 };
 
+const resolvePreviousEvidenceChain = (outputPath: string): EvidenceChain | undefined => {
+  if (!existsSync(outputPath)) {
+    return undefined;
+  }
+  try {
+    const raw = readFileSync(outputPath, 'utf8');
+    const parsed = JSON.parse(raw) as { evidence_chain?: unknown };
+    return isEvidenceChain(parsed.evidence_chain) ? parsed.evidence_chain : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 export function writeEvidence(
   evidence: AiEvidenceV2_1,
   options?: { repoRoot?: string }
@@ -357,7 +372,15 @@ export function writeEvidence(
 
   try {
     const stableEvidence = toStableEvidence(evidence, repoRoot);
-    writeFileSync(tempPath, `${JSON.stringify(stableEvidence, null, 2)}\n`, 'utf8');
+    const previousChain = resolvePreviousEvidenceChain(outputPath);
+    const evidenceWithChain: AiEvidenceV2_1 = {
+      ...stableEvidence,
+      evidence_chain: buildEvidenceChain({
+        evidence: stableEvidence,
+        previousChain,
+      }),
+    };
+    writeFileSync(tempPath, `${JSON.stringify(evidenceWithChain, null, 2)}\n`, 'utf8');
     renameSync(tempPath, outputPath);
     return {
       ok: true,

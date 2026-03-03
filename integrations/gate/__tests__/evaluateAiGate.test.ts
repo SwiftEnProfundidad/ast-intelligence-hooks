@@ -413,6 +413,36 @@ test('evaluateAiGate bloquea PRE_WRITE cuando se requiere recibo MCP y no existe
   );
 });
 
+test('evaluateAiGate usa código específico cuando la evidence chain es inválida', () => {
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        ({
+          kind: 'invalid',
+          version: '2.1',
+          reason: 'evidence-chain-invalid',
+          detail: 'Evidence chain payload hash mismatch.',
+          source_descriptor: {
+            source: 'local-file',
+            path: '/repo/.ai_evidence.json',
+            digest: 'sha256:abc123',
+            generated_at: '2026-02-20T12:00:00.000Z',
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(result.allowed, false);
+  assert.equal(result.violations.some((item) => item.code === 'EVIDENCE_CHAIN_INVALID'), true);
+});
+
 test('evaluateAiGate permite PRE_WRITE cuando hay recibo MCP fresco y válido', () => {
   const result = evaluateAiGate(
     {

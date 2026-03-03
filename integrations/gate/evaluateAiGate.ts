@@ -241,10 +241,15 @@ const collectEvidenceViolations = (
   }
 
   if (result.kind === 'invalid') {
+    const invalidCode =
+      result.reason === 'evidence-chain-invalid'
+        ? 'EVIDENCE_CHAIN_INVALID'
+        : 'EVIDENCE_INVALID';
+    const detailSuffix = result.detail ? ` ${result.detail}` : '';
     violations.push(
       toErrorViolation(
-        'EVIDENCE_INVALID',
-        `.ai_evidence.json is invalid${result.version ? ` (version=${result.version})` : ''}.`
+        invalidCode,
+        `.ai_evidence.json is invalid${result.version ? ` (version=${result.version})` : ''}.${detailSuffix}`
       )
     );
     return { violations, ageSeconds: null };

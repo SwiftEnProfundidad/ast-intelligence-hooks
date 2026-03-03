@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { AiEvidenceV2_1 } from './schema';
+import { validateEvidenceChain } from './evidenceChain';
 
 export type EvidenceSourceDescriptor = {
   source: 'local-file';
@@ -12,7 +13,13 @@ export type EvidenceSourceDescriptor = {
 
 export type EvidenceReadResult =
   | { kind: 'missing'; source_descriptor: EvidenceSourceDescriptor }
-  | { kind: 'invalid'; version?: string; source_descriptor: EvidenceSourceDescriptor }
+  | {
+    kind: 'invalid';
+    reason: 'schema' | 'evidence-chain-invalid';
+    detail?: string;
+    version?: string;
+    source_descriptor: EvidenceSourceDescriptor;
+  }
   | { kind: 'valid'; evidence: AiEvidenceV2_1; source_descriptor: EvidenceSourceDescriptor };
 
 const toDigest = (value: string): string =>
@@ -38,6 +45,7 @@ export const readEvidenceResult = (repoRoot: string): EvidenceReadResult => {
   } catch {
     return {
       kind: 'invalid',
+      reason: 'schema',
       source_descriptor: {
         source: 'local-file',
         path: evidencePath,
@@ -61,6 +69,25 @@ export const readEvidenceResult = (repoRoot: string): EvidenceReadResult => {
       (parsed as { version?: unknown }).version === '2.1'
     ) {
       const evidence = parsed as AiEvidenceV2_1;
+      const chainValidation = validateEvidenceChain(evidence);
+      if (chainValidation.kind !== 'valid') {
+        const detail =
+          chainValidation.reason === 'missing'
+            ? 'Evidence chain is missing.'
+            : chainValidation.reason === 'malformed'
+              ? 'Evidence chain format is invalid.'
+              : 'Evidence chain payload hash mismatch.';
+        return {
+          kind: 'invalid',
+          reason: 'evidence-chain-invalid',
+          detail,
+          version: '2.1',
+          source_descriptor: {
+            ...sourceDescriptorBase,
+            generated_at: evidence.timestamp,
+          },
+        };
+      }
       return {
         kind: 'valid',
         evidence,
@@ -80,6 +107,7 @@ export const readEvidenceResult = (repoRoot: string): EvidenceReadResult => {
         : undefined;
     return {
       kind: 'invalid',
+      reason: 'schema',
       version: typeof versionCandidate === 'string' ? versionCandidate : undefined,
       source_descriptor: {
         ...sourceDescriptorBase,
@@ -89,6 +117,7 @@ export const readEvidenceResult = (repoRoot: string): EvidenceReadResult => {
   } catch {
     return {
       kind: 'invalid',
+      reason: 'schema',
       source_descriptor: {
         ...sourceDescriptorBase,
         generated_at: null,
