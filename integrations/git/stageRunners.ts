@@ -34,6 +34,10 @@ const defaultDependencies: StageRunnerDependencies = {
   runPlatformGate,
   resolveRepoRoot: () => new GitService().resolveRepoRoot(),
   readPrePushStdin: () => {
+    const envInput = process.env.PUMUKI_PRE_PUSH_STDIN;
+    if (typeof envInput === 'string' && envInput.trim().length > 0) {
+      return envInput;
+    }
     if (process.stdin.isTTY) {
       return '';
     }
