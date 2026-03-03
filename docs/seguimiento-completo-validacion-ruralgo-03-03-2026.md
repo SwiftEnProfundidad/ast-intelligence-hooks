@@ -1042,13 +1042,25 @@ Criterio de salida F5:
     - `gh pr view 520 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 518 --comment \"Closed via merged PR #520...\"`
     - `git push -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
-- 🚧 `P12.F1.T24` Ejecutar issue `#521` (exponer metadatos de fuente de evidencia en salidas de gate).
+- ✅ `P12.F1.T24` Ejecutar issue `#521` (exponer metadatos de fuente de evidencia en salidas de gate).
+  - cierre ejecutado:
+    - issue `#521` cerrada.
+    - rama `bugfix/521-evidence-source-metadata`.
+    - PR `#523` mergeada en `develop`.
+    - commit de merge: `29561bdb15d4dd524e43c118b08133ce292d8fb6`.
+    - contrato `source/path/digest/generated_at` añadido en `readEvidenceResult` + `evaluateAiGate` + paneles PRE_WRITE/consumer preflight.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/readEvidence.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts integrations/lifecycle/__tests__/preWriteAutomation.test.ts integrations/lifecycle/__tests__/lifecycle.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 523 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 521 --comment \"Closed via merged PR #523...\"`
+- 🚧 `P12.F1.T25` Ejecutar issue `#524` (emitir resumen mínimo de `ai_gate` en hooks exitosos).
   - estado actual:
-    - issue creada: `#521` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/521`.
+    - issue creada: `#524` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/524`.
   - objetivo inmediato:
-    - abrir rama `feature/521-evidence-source-metadata`.
-    - añadir contrato `source/path/digest/generated_at` en superficies JSON relevantes.
-    - cubrir regresión con tests de output en estados valid/degraded.
+    - forzar salida mínima en éxito para `pumuki-pre-commit` y `pumuki-pre-push`.
+    - mantener modo silencioso opcional (`--quiet`) para automatizaciones.
+    - cubrir regresión con tests de salida por stage.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
