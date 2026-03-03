@@ -981,11 +981,23 @@ Criterio de salida F5:
     - gate: `npm run -s typecheck`
     - gate: `npm run -s validation:package-manifest`
     - PR: `gh pr create --base develop --head bugfix/487-legacy-surface-allowlist ...` => `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510`
-- 🚧 `P12.F1.T19` Completar cierre administrativo de `#487` y sincronización canónica RuralGO tras merge.
+- ⛔ `P12.F1.T19` Completar cierre administrativo de `#487` y sincronización canónica RuralGO tras merge.
+  - bloqueo actual (externo):
+    - los checks de GitHub Actions no arrancan por bloqueo de facturación del repositorio.
+    - evidencia exacta (annotation check-run `65623298147`):
+      - `The job was not started because your account is locked due to a billing issue.`
+    - impacto: no se puede mergear PR `#510` sin bypassear gates.
+  - estado de implementación:
+    - fix ya listo en PR `#510`.
+    - issue `#487` pendiente de cierre administrativo tras merge.
+  - evidencia registrada:
+    - `gh pr view 510 --json mergeStateStatus,statusCheckRollup`
+    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/check-runs/65623298147/annotations`
+    - comentario de bloqueo en PR: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/510#issuecomment-3993566439`
+- 🚧 `P12.F1.T20` Ejecutar issue `#488` (cobertura de guards AST/skills por plataforma) mientras se desbloquea CI de `#487`.
   - objetivo inmediato:
-    - mergear PR `#510` cuando lo autorices.
-    - cerrar issue `#487` con referencia de merge.
-    - actualizar canónico `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` (`REPORTED -> FIXED`).
+    - abrir rama `feature/488-platform-coverage-guards`.
+    - arrancar RED con test que falle para cobertura incompleta iOS/web/backend/android.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
