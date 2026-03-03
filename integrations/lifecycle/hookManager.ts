@@ -1,5 +1,6 @@
+import { execFileSync } from 'node:child_process';
 import { chmodSync, existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { PUMUKI_MANAGED_HOOKS, type PumukiManagedHook } from './constants';
 import {
   hasPumukiManagedBlock,
@@ -17,7 +18,24 @@ export type HookUninstallResult = {
 
 const HOOK_FILE_MODE = 0o755;
 
-const resolveHooksDirectory = (repoRoot: string): string => join(repoRoot, '.git', 'hooks');
+const resolveGitPath = (repoRoot: string, gitPathTarget: string): string | null => {
+  try {
+    const resolvedPath = execFileSync('git', ['rev-parse', '--git-path', gitPathTarget], {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (resolvedPath.length === 0) {
+      return null;
+    }
+    return isAbsolute(resolvedPath) ? resolvedPath : resolve(repoRoot, resolvedPath);
+  } catch {
+    return null;
+  }
+};
+
+const resolveHooksDirectory = (repoRoot: string): string =>
+  resolveGitPath(repoRoot, 'hooks') ?? join(repoRoot, '.git', 'hooks');
 
 const resolveHookPath = (repoRoot: string, hook: PumukiManagedHook): string =>
   join(resolveHooksDirectory(repoRoot), hook);
