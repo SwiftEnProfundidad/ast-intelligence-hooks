@@ -48,10 +48,11 @@ export type ResolvedStagePolicy = {
     signature?: string;
     policySource?: string;
     validation?: {
-      status: 'valid' | 'invalid' | 'unknown-source';
+      status: 'valid' | 'invalid' | 'expired' | 'unknown-source';
       code:
         | 'POLICY_AS_CODE_VALID'
         | 'POLICY_AS_CODE_CONTRACT_INVALID'
+        | 'POLICY_AS_CODE_CONTRACT_EXPIRED'
         | 'POLICY_AS_CODE_SIGNATURE_MISMATCH'
         | 'POLICY_AS_CODE_UNKNOWN_SOURCE';
       message: string;
@@ -201,6 +202,7 @@ type PolicyAsCodeContract = {
   version: '1.0';
   source: 'default' | 'skills.policy' | 'hard-mode';
   signatures: Record<SkillsStage, string>;
+  expires_at?: string;
 };
 
 const isObject = (value: unknown): value is Record<string, unknown> => {
@@ -209,6 +211,13 @@ const isObject = (value: unknown): value is Record<string, unknown> => {
 
 const isSha256Hex = (value: unknown): value is string => {
   return typeof value === 'string' && /^[a-f0-9]{64}$/i.test(value);
+};
+
+const isIsoDateString = (value: unknown): value is string => {
+  if (typeof value !== 'string') {
+    return false;
+  }
+  return Number.isFinite(Date.parse(value));
 };
 
 const policyStrictModeFromEnv = (): boolean => {
@@ -234,6 +243,9 @@ const isPolicyAsCodeContract = (value: unknown): value is PolicyAsCodeContract =
     return false;
   }
   if (!isObject(value.signatures)) {
+    return false;
+  }
+  if (typeof value.expires_at !== 'undefined' && !isIsoDateString(value.expires_at)) {
     return false;
   }
   return (
@@ -353,6 +365,23 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
           strict,
         },
       };
+    }
+
+    if (typeof raw.expires_at === 'string') {
+      const expiresAtTimestamp = Date.parse(raw.expires_at);
+      if (Number.isFinite(expiresAtTimestamp) && Date.now() >= expiresAtTimestamp) {
+        return {
+          version: `policy-as-code/${raw.source}@${raw.version}`,
+          signature: stageSignature,
+          policySource: `file:${POLICY_AS_CODE_CONTRACT_PATH}`,
+          validation: {
+            status: 'expired',
+            code: 'POLICY_AS_CODE_CONTRACT_EXPIRED',
+            message: `Policy-as-code contract expired at ${raw.expires_at}.`,
+            strict,
+          },
+        };
+      }
     }
 
     return {

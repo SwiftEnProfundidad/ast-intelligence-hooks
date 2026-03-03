@@ -89,7 +89,7 @@ export type RulesetState = {
   version?: string;
   signature?: string;
   source?: string;
-  validation_status?: 'valid' | 'invalid' | 'unknown-source';
+  validation_status?: 'valid' | 'invalid' | 'expired' | 'unknown-source';
   validation_code?: string;
 };
 

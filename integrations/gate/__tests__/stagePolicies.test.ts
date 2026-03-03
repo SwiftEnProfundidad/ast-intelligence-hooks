@@ -94,6 +94,68 @@ test('resolvePolicyForStage marks unknown-source when policy-as-code contract so
   });
 });
 
+test('resolvePolicyForStage marks expired when policy-as-code contract is out of date', async () => {
+  await withTempDir('pumuki-stage-policy-contract-expired-', async (repoRoot) => {
+    const baseline = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    const prePushSignature = baseline.trace.signature;
+    assert.ok(prePushSignature);
+
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          expires_at: '2000-01-01T00:00:00.000Z',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: prePushSignature,
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.validation?.status, 'expired');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_CONTRACT_EXPIRED');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
+  });
+});
+
+test('resolvePolicyForStage marks invalid when policy-as-code contract expiry is malformed', async () => {
+  await withTempDir('pumuki-stage-policy-contract-invalid-expiry-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          expires_at: 'not-an-iso-date',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: 'b'.repeat(64),
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.validation?.status, 'invalid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_CONTRACT_INVALID');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
+  });
+});
+
 test('applyHeuristicSeverityForStage promueve heurísticas a ERROR en PRE_COMMIT/PRE_PUSH/CI', () => {
   const rules: RuleSet = [
     {
