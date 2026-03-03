@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T20` (ejecutar issue `#488` mientras `#487` queda bloqueada por billing lock en CI remota).
+- Task activa (`🚧`): `P12.F1.T21` (issue `#512`: hardening operativo para detectar temprano bloqueo remoto CI por billing/snyk y remediación guiada).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
