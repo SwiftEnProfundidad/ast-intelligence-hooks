@@ -863,9 +863,21 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 501 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 482 --comment \"Closed via merged PR #501...\"`
-- 🚧 `P12.F1.T11` Sincronizar canónico RuralGO tras fix `#482` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+- ✅ `P12.F1.T11` Sincronizar canónico RuralGO tras fix `#482` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - cierre ejecutado:
+    - canónico actualizado en `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - `PUMUKI-INC-007` movido a `FIXED (#482, #501)`.
+    - causa raíz consolidada de integridad de evidencia actualizada a `FIXED` con refs:
+      - issue: `#482`
+      - PR: `#501`
+      - commit: `4c0a023`
+    - commit en RuralGO: `bdcfef7bd`.
+  - evidencia:
+    - `git commit -m \"docs(validation): mark ai_evidence concurrency issue fixed via #501\"`
+    - `git push origin HEAD`
+- 🚧 `P12.F1.T12` Ejecutar siguiente issue prioritaria del backlog canónico (`#484`, autosync documental SDD/OpenSpec).
   - objetivo inmediato:
-    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` con `FIXED (#482, #501)` en `PUMUKI-INC-007` y la causa raíz consolidada.
+    - abrir rama `feature/484-sdd-sync-docs`, definir alcance mínimo y arrancar RED de sincronización documental machine-readable.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
