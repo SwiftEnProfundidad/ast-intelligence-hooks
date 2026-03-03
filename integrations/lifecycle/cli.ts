@@ -756,14 +756,7 @@ const PRE_WRITE_TELEMETRY_CHAIN = 'pumuki->mcp->ai_gate->ai_evidence';
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
   ai_gate: ReturnType<typeof evaluateAiGate>;
-  automation: {
-    attempted: boolean;
-    actions: Array<{
-      action: 'refresh_evidence' | 'refresh_mcp_receipt';
-      status: 'OK' | 'FAILED';
-      details: string;
-    }>;
-  };
+  automation: PreWriteAutomationTrace;
   telemetry: {
     chain: typeof PRE_WRITE_TELEMETRY_CHAIN;
     stage: SddStage;

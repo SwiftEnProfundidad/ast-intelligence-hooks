@@ -4,6 +4,8 @@ import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
 import { writeMcpAiGateReceipt } from '../mcp/aiGateReceipt';
 import { evaluateSddPolicy } from '../sdd';
 
+const PRE_WRITE_AUTOMATION_RETRY_BACKOFF_MS = 200;
+
 const PRE_WRITE_AUTOFIXABLE_EVIDENCE_CODES = new Set<string>([
   'EVIDENCE_MISSING',
   'EVIDENCE_INVALID',
@@ -29,7 +31,7 @@ const PRE_WRITE_AUTOFIXABLE_MCP_RECEIPT_CODES = new Set<string>([
 ]);
 
 export type PreWriteAutomationAction = {
-  action: 'refresh_evidence' | 'refresh_mcp_receipt';
+  action: 'refresh_evidence' | 'refresh_mcp_receipt' | 'retry_backoff';
   status: 'OK' | 'FAILED';
   details: string;
 };
@@ -39,15 +41,54 @@ export type PreWriteAutomationTrace = {
   actions: PreWriteAutomationAction[];
 };
 
+type PreWriteAutomationDependencies = {
+  evaluateAiGate: typeof evaluateAiGate;
+  runEnterpriseAiGateCheck: typeof runEnterpriseAiGateCheck;
+  writeMcpAiGateReceipt: typeof writeMcpAiGateReceipt;
+  sleep: (ms: number) => Promise<void>;
+  retryBackoffMs: number;
+};
+
+const defaultDependencies: PreWriteAutomationDependencies = {
+  evaluateAiGate,
+  runEnterpriseAiGateCheck,
+  writeMcpAiGateReceipt,
+  sleep: (ms: number) =>
+    new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    }),
+  retryBackoffMs: PRE_WRITE_AUTOMATION_RETRY_BACKOFF_MS,
+};
+
+const hasAutoFixableEvidenceViolation = (aiGate: ReturnType<typeof evaluateAiGate>): boolean =>
+  aiGate.violations.some((violation) => PRE_WRITE_AUTOFIXABLE_EVIDENCE_CODES.has(violation.code));
+
+const hasAutoFixableMcpReceiptViolation = (aiGate: ReturnType<typeof evaluateAiGate>): boolean =>
+  aiGate.violations.some((violation) => PRE_WRITE_AUTOFIXABLE_MCP_RECEIPT_CODES.has(violation.code));
+
+const collectAutoFixableViolationCodes = (aiGate: ReturnType<typeof evaluateAiGate>): string[] =>
+  aiGate.violations
+    .filter(
+      (violation) =>
+        PRE_WRITE_AUTOFIXABLE_EVIDENCE_CODES.has(violation.code)
+        || PRE_WRITE_AUTOFIXABLE_MCP_RECEIPT_CODES.has(violation.code)
+    )
+    .map((violation) => violation.code)
+    .sort((left, right) => left.localeCompare(right));
+
 export const buildPreWriteAutomationTrace = async (params: {
   repoRoot: string;
   sdd: ReturnType<typeof evaluateSddPolicy>;
   aiGate: ReturnType<typeof evaluateAiGate>;
   runPlatformGate: typeof runPlatformGate;
-}): Promise<{
+}, dependencies: Partial<PreWriteAutomationDependencies> = {}): Promise<{
   aiGate: ReturnType<typeof evaluateAiGate>;
   trace: PreWriteAutomationTrace;
 }> => {
+  const activeDependencies: PreWriteAutomationDependencies = {
+    ...defaultDependencies,
+    ...dependencies,
+  };
   const trace: PreWriteAutomationTrace = {
     attempted: false,
     actions: [],
@@ -60,10 +101,7 @@ export const buildPreWriteAutomationTrace = async (params: {
   }
 
   let aiGate = params.aiGate;
-  const hasEvidenceAutoFixableViolation = aiGate.violations.some((violation) =>
-    PRE_WRITE_AUTOFIXABLE_EVIDENCE_CODES.has(violation.code)
-  );
-  if (hasEvidenceAutoFixableViolation) {
+  if (hasAutoFixableEvidenceViolation(aiGate)) {
     trace.attempted = true;
     try {
       const gateExitCode = await params.runPlatformGate({
@@ -85,7 +123,7 @@ export const buildPreWriteAutomationTrace = async (params: {
         status: 'OK',
         details: `runPlatformGate exit_code=${gateExitCode}`,
       });
-      aiGate = runEnterpriseAiGateCheck({
+      aiGate = activeDependencies.runEnterpriseAiGateCheck({
         repoRoot: params.repoRoot,
         stage: 'PRE_WRITE',
         requireMcpReceipt: true,
@@ -99,18 +137,15 @@ export const buildPreWriteAutomationTrace = async (params: {
     }
   }
 
-  const hasReceiptAutoFixableViolation = aiGate.violations.some((violation) =>
-    PRE_WRITE_AUTOFIXABLE_MCP_RECEIPT_CODES.has(violation.code)
-  );
-  if (hasReceiptAutoFixableViolation) {
+  if (hasAutoFixableMcpReceiptViolation(aiGate)) {
     trace.attempted = true;
     try {
-      const aiGateWithoutReceiptRequirement = evaluateAiGate({
+      const aiGateWithoutReceiptRequirement = activeDependencies.evaluateAiGate({
         repoRoot: params.repoRoot,
         stage: 'PRE_WRITE',
         requireMcpReceipt: false,
       });
-      const receiptWrite = writeMcpAiGateReceipt({
+      const receiptWrite = activeDependencies.writeMcpAiGateReceipt({
         repoRoot: params.repoRoot,
         stage: 'PRE_WRITE',
         status: aiGateWithoutReceiptRequirement.status,
@@ -121,7 +156,7 @@ export const buildPreWriteAutomationTrace = async (params: {
         status: 'OK',
         details: `receipt=${receiptWrite.path}`,
       });
-      aiGate = runEnterpriseAiGateCheck({
+      aiGate = activeDependencies.runEnterpriseAiGateCheck({
         repoRoot: params.repoRoot,
         stage: 'PRE_WRITE',
         requireMcpReceipt: true,
@@ -131,6 +166,30 @@ export const buildPreWriteAutomationTrace = async (params: {
         action: 'refresh_mcp_receipt',
         status: 'FAILED',
         details: error instanceof Error ? error.message : 'Unknown MCP receipt refresh error',
+      });
+    }
+  }
+
+  const retryCodes = collectAutoFixableViolationCodes(aiGate);
+  if (!aiGate.allowed && retryCodes.length > 0) {
+    trace.attempted = true;
+    try {
+      await activeDependencies.sleep(activeDependencies.retryBackoffMs);
+      aiGate = activeDependencies.runEnterpriseAiGateCheck({
+        repoRoot: params.repoRoot,
+        stage: 'PRE_WRITE',
+        requireMcpReceipt: true,
+      }).result;
+      trace.actions.push({
+        action: 'retry_backoff',
+        status: 'OK',
+        details: `delay_ms=${activeDependencies.retryBackoffMs} codes=${retryCodes.join(',')}`,
+      });
+    } catch (error) {
+      trace.actions.push({
+        action: 'retry_backoff',
+        status: 'FAILED',
+        details: error instanceof Error ? error.message : 'Unknown PRE_WRITE retry error',
       });
     }
   }
