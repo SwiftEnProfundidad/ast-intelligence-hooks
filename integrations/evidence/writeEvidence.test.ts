@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../__tests__/helpers/tempDir';
@@ -384,6 +384,45 @@ test('writeEvidence preserva snapshot.memory_shadow con orden estable', async ()
         confidence: 0.987654,
         reason_codes: ['shadow.diff', 'tdd_bdd.blocked'],
       });
+    });
+  });
+});
+
+test('writeEvidence no deja temporales de evidencia tras escribir atómicamente', async () => {
+  await withTempDir('pumuki-write-evidence-atomic-cleanup-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const result = writeEvidence(sampleEvidence(tempRoot));
+      assert.equal(result.ok, true);
+      const tempArtifacts = readdirSync(tempRoot).filter((entry) =>
+        entry.startsWith('.ai_evidence.json.tmp-')
+      );
+      assert.deepEqual(tempArtifacts, []);
+    });
+  });
+});
+
+test('writeEvidence mantiene JSON válido bajo ráfaga de escrituras consecutivas', async () => {
+  await withTempDir('pumuki-write-evidence-atomic-stress-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const writes = Array.from({ length: 50 }, (_, index) =>
+        Promise.resolve().then(() => {
+          const evidence = sampleEvidence(tempRoot);
+          evidence.timestamp = `2026-02-17T00:00:${String(index).padStart(2, '0')}.000Z`;
+          const result = writeEvidence(evidence);
+          assert.equal(result.ok, true);
+        })
+      );
+
+      await Promise.all(writes);
+
+      const persisted = JSON.parse(
+        readFileSync(join(tempRoot, '.ai_evidence.json'), 'utf8')
+      ) as AiEvidenceV2_1;
+      assert.equal(persisted.version, '2.1');
+      assert.equal(typeof persisted.timestamp, 'string');
+      assert.equal(persisted.snapshot.findings.length > 0, true);
     });
   });
 });
