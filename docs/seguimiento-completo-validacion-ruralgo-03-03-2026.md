@@ -1267,6 +1267,7 @@ Criterio de salida F5:
     - `gh run view 22647944444 --job 65640392393 --log`
 
 - 🚧 `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
+  - issue operativa de soporte creada: `#546` (`ops: unblock remote PR checks (snyk quota + missing job logs)`).
   - salida esperada:
     - PR `#545` mergeada en `develop`.
     - issue `#543` en estado `CLOSED` con referencia de PR/commit de merge.
