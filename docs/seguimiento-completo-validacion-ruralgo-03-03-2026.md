@@ -1003,12 +1003,26 @@ Criterio de salida F5:
     - `gh issue close 488 --comment \"Closed via merged PR #511...\"`
     - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts`
     - `npm run -s typecheck`
-- 🚧 `P12.F1.T21` Hardening operativo: abrir issue para detección temprana de bloqueo remoto CI (billing/snyk) y remediación guiada.
+- ✅ `P12.F1.T21` Hardening operativo para detección temprana de bloqueo remoto CI (billing/snyk) y remediación guiada.
+  - cierre ejecutado:
+    - issue `#512` creada y cerrada.
+    - rama `feature/512-remote-ci-blocker-diagnostics`.
+    - PR `#514` mergeada en `develop`.
+    - commit de merge: `b887be7000a942e29d938bf51b7e3649b03768ed`.
+    - canónico RuralGO actualizado con `PUMUKI-INC-044` en `FIXED` y trazabilidad issue/PR/commit.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/remoteCiDiagnostics.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 514 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 512 --comment \"Closed via merged PR #514...\"`
+    - `git push -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
+- 🚧 `P12.F1.T22` Ejecutar issue `#515` (normalizar `--help` a exit code `0`).
   - estado actual:
-    - issue creada: `#512` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/512`.
+    - issue creada: `#515` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/515`.
   - objetivo inmediato:
-    - abrir rama `feature/512-remote-ci-blocker-diagnostics`.
-    - arrancar RED/GREEN para diagnóstico remoto explícito en `doctor`/`status` con mensajes accionables.
+    - abrir rama `bugfix/515-help-exit-code-zero`.
+    - ejecutar RED/GREEN para `parseLifecycleCliArgs` y `runLifecycleCli` con `--help`/`-h`.
+    - mantener no-regresión: comandos inválidos deben seguir en exit code no-cero.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
