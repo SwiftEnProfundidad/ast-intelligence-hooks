@@ -13,7 +13,8 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 
 ## Estado operativo actual
 
-- Ciclo activo de seguimiento diario: `docs/EXECUTION_BOARD.md`.
+- Master de seguimiento: `docs/registro-maestro-de-seguimiento.md`.
+- Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
 
 ## Política de higiene
 
@@ -22,14 +23,13 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - Si hace falta conservar evidencia operativa de ejecución, se referencia desde el ciclo temporal activo (si existe) y/o desde reportes en `.audit_tmp` / `.audit-reports`.
 - El cierre oficial de `C022` (`D.T2` + `D.T4`) está consolidado en `c022-phase-acceptance-contract.md`.
 - El cierre de `C023` (incluyendo No-MVP SaaS ingestion diagnostics) está consolidado en documentación estable:
-  - `docs/REFRACTOR_PROGRESS.md`
+  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
   - `docs/USAGE.md`
   - `docs/CONFIGURATION.md`
   - `docs/TESTING.md`
   - `docs/API_REFERENCE.md`
   - `docs/evidence-v2.1.md`
 - El cierre de `C025` (auditoría exhaustiva de funcionalidades + reglas) quedó consolidado en:
-  - `docs/REFRACTOR_PROGRESS.md` (estado, evidencia y cierre del bloque P5).
+  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (estado, evidencia y cierre del bloque P5).
 - El cierre de `P6` (verificación exhaustiva real/mock) quedó consolidado en:
-  - `docs/EXECUTION_BOARD.md` (checklist unificada con evidencia `371/371`).
-  - `docs/REFRACTOR_PROGRESS.md` (veredicto y transición a bloque `P7`).
+  - `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md` (checklist unificada, veredicto y transición).
