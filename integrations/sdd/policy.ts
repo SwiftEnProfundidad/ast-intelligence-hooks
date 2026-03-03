@@ -7,13 +7,16 @@ import {
   OPENSPEC_VALIDATE_ALL_COMMAND,
   validateOpenSpecChanges,
 } from './openSpecCli';
-import { readSddSession } from './sessionStore';
+import { readSddSession, refreshSddSession } from './sessionStore';
 import type {
   SddDecision,
   SddEvaluateResult,
   SddStage,
   SddStatusPayload,
 } from './types';
+
+const SDD_SESSION_REFRESH_COMMAND =
+  'npx --yes --package pumuki@latest pumuki sdd session --refresh --ttl-minutes=90';
 
 const buildStatus = (repoRoot: string): SddStatusPayload => {
   const openspec = detectOpenSpecInstallation(repoRoot);
@@ -58,7 +61,13 @@ const activeChangeExists = (repoRoot: string, changeId: string): boolean =>
 const activeChangeArchived = (repoRoot: string, changeId: string): boolean =>
   existsSync(resolve(repoRoot, 'openspec', 'changes', 'archive', changeId));
 
-const evaluateSessionRequirements = (status: SddStatusPayload): SddDecision | undefined => {
+const evaluateSessionRequirements = (params: {
+  status: SddStatusPayload;
+  autoRefreshEnabled: boolean;
+  autoRefreshAttempted: boolean;
+  autoRefreshError?: string;
+}): SddDecision | undefined => {
+  const { status } = params;
   if (!status.session.active) {
     return blocked(
       'SDD_SESSION_MISSING',
@@ -66,9 +75,22 @@ const evaluateSessionRequirements = (status: SddStatusPayload): SddDecision | un
     );
   }
   if (!status.session.valid || !status.session.changeId) {
+    const details: Record<string, string | boolean> = {
+      command: SDD_SESSION_REFRESH_COMMAND,
+      autoRefreshEnabled: params.autoRefreshEnabled,
+      autoRefreshAttempted: params.autoRefreshAttempted,
+    };
+    if (params.autoRefreshError) {
+      details.autoRefreshError = params.autoRefreshError;
+    }
+    const message =
+      params.autoRefreshAttempted && params.autoRefreshError
+        ? `SDD session is invalid or expired. Auto-refresh failed (${params.autoRefreshError}). Run \`${SDD_SESSION_REFRESH_COMMAND}\` or reopen it.`
+        : `SDD session is invalid or expired. Run \`${SDD_SESSION_REFRESH_COMMAND}\` or reopen it.`;
     return blocked(
       'SDD_SESSION_INVALID',
-      'SDD session is invalid or expired. Run `pumuki sdd session --refresh` or reopen it.'
+      message,
+      details
     );
   }
   if (activeChangeArchived(status.repoRoot, status.session.changeId)) {
@@ -86,13 +108,45 @@ const evaluateSessionRequirements = (status: SddStatusPayload): SddDecision | un
   return undefined;
 };
 
+const shouldAttemptSessionAutoRefresh = (params: {
+  stage: SddStage;
+  status: SddStatusPayload;
+  autoRefreshEnabled: boolean;
+}): boolean =>
+  params.stage !== 'PRE_WRITE'
+  && params.autoRefreshEnabled
+  && params.status.session.active
+  && !!params.status.session.changeId
+  && !params.status.session.valid;
+
+const trySessionAutoRefresh = (repoRoot: string): {
+  refreshed: boolean;
+  error?: string;
+} => {
+  try {
+    refreshSddSession({
+      cwd: repoRoot,
+      ttlMinutes: 90,
+    });
+    return { refreshed: true };
+  } catch (error) {
+    return {
+      refreshed: false,
+      error: error instanceof Error ? error.message : 'Unknown auto-refresh error',
+    };
+  }
+};
+
 export const evaluateSddPolicy = (params: {
   stage: SddStage;
   repoRoot?: string;
 }): SddEvaluateResult => {
   const repoRoot = params.repoRoot ?? process.cwd();
   const bypassEnabled = process.env.PUMUKI_SDD_BYPASS === '1';
-  const status = buildStatus(repoRoot);
+  const autoRefreshEnabled = process.env.PUMUKI_SDD_AUTO_REFRESH_SESSION !== '0';
+  let status = buildStatus(repoRoot);
+  let autoRefreshAttempted = false;
+  let autoRefreshError: string | undefined;
 
   if (bypassEnabled) {
     return {
@@ -141,7 +195,28 @@ export const evaluateSddPolicy = (params: {
     };
   }
 
-  const sessionDecision = evaluateSessionRequirements(status);
+  if (
+    shouldAttemptSessionAutoRefresh({
+      stage: params.stage,
+      status,
+      autoRefreshEnabled,
+    })
+  ) {
+    autoRefreshAttempted = true;
+    const refreshAttempt = trySessionAutoRefresh(repoRoot);
+    if (refreshAttempt.refreshed) {
+      status = buildStatus(repoRoot);
+    } else {
+      autoRefreshError = refreshAttempt.error;
+    }
+  }
+
+  const sessionDecision = evaluateSessionRequirements({
+    status,
+    autoRefreshEnabled,
+    autoRefreshAttempted,
+    autoRefreshError,
+  });
   if (sessionDecision) {
     return {
       stage: params.stage,
