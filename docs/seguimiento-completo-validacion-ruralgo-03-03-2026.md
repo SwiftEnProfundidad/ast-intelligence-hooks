@@ -1229,7 +1229,21 @@ Criterio de salida F5:
     - edición de `R_GO/ruralgo-master-plan.md`
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m "docs(validation): sync canonical feedback for issue 538"`
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
-- 🚧 `P12.F1.T39` Ejecutar siguiente mejora estratégica: crear issue de telemetría estructurada exportable (JSONL/OTel) y trazarla en canónico + master plan.
+- ✅ `P12.F1.T39` Ejecutar siguiente mejora estratégica: crear issue de telemetría estructurada exportable (JSONL/OTel) y trazarla en canónico + master plan.
+  - cierre ejecutado:
+    - issue creada en `ast-intelligence-hooks`: `#544` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/544`.
+    - canónico RuralGO actualizado:
+      - `PUMUKI-INC-056` añadido como `⏳ REPORTED (#544)`.
+      - consolidación por causa raíz extendida con fila `telemetría estructurada exportable`.
+      - trazabilidad de ejecución extendida con fila `REPORTED` para issue `#544`.
+    - master plan RuralGO actualizado:
+      - `ruralgo-master-plan.md` mantiene `#543` como única `🚧`.
+      - mejora estratégica `telemetría` mantiene estado `⏳` y añade referencia a `Issue #544`.
+  - evidencia:
+    - `gh issue create --title "[P2][OPS] Telemetría estructurada exportable (JSONL/OTel) para auditoría enterprise" ...`
+    - edición de `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
+    - edición de `R_GO/ruralgo-master-plan.md`
+- 🚧 `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
