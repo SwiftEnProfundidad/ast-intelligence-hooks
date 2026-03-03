@@ -1029,13 +1029,26 @@ Criterio de salida F5:
     - `gh pr view 517 --json number,state,mergedAt,mergeCommit,url`
     - `gh issue close 515 --comment \"Closed via merged PR #517...\"`
     - `git push -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
-- 🚧 `P12.F1.T23` Ejecutar issue `#518` (strict guard para `sdd validate` con `items=0`).
+- ✅ `P12.F1.T23` Ejecutar issue `#518` (strict guard para `sdd validate` con `items=0`).
+  - cierre ejecutado:
+    - issue `#518` creada y cerrada.
+    - rama `feature/518-sdd-items-zero-strict-guard`.
+    - PR `#520` mergeada en `develop`.
+    - commit de merge: `c6a441b196c4b3138491b04f252946d9417d46a3`.
+    - canónico RuralGO actualizado con `PUMUKI-INC-046` en `FIXED` y trazabilidad issue/PR/commit.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/policy.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 520 --json number,state,mergedAt,mergeCommit,url`
+    - `gh issue close 518 --comment \"Closed via merged PR #520...\"`
+    - `git push -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO origin HEAD:feature/rgo-1590-01-ios-physical-signoff`
+- 🚧 `P12.F1.T24` Ejecutar issue `#521` (exponer metadatos de fuente de evidencia en salidas de gate).
   - estado actual:
-    - issue creada: `#518` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/518`.
+    - issue creada: `#521` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/521`.
   - objetivo inmediato:
-    - abrir rama `feature/518-sdd-items-zero-strict-guard`.
-    - ejecutar RED/GREEN para modo strict (block) y modo no-strict (compatibilidad).
-    - añadir mensaje operativo claro para diferenciar scope vacío vs scope validado.
+    - abrir rama `feature/521-evidence-source-metadata`.
+    - añadir contrato `source/path/digest/generated_at` en superficies JSON relevantes.
+    - cubrir regresión con tests de output en estados valid/degraded.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
