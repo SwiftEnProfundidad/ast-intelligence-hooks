@@ -5,57 +5,64 @@ import test from 'node:test';
 import { withTempDir } from '../__tests__/helpers/tempDir';
 import type { AiEvidenceV2_1 } from './schema';
 import { readEvidence, readEvidenceResult } from './readEvidence';
+import { buildEvidenceChain } from './evidenceChain';
 
-const sampleEvidence = (): AiEvidenceV2_1 => ({
-  version: '2.1',
-  timestamp: '2026-02-17T00:00:00.000Z',
-  snapshot: {
-    stage: 'PRE_COMMIT',
-    outcome: 'PASS',
-    findings: [],
-  },
-  ledger: [],
-  platforms: {},
-  rulesets: [],
-  human_intent: null,
-  ai_gate: {
-    status: 'ALLOWED',
-    violations: [],
+const sampleEvidence = (): AiEvidenceV2_1 => {
+  const base: AiEvidenceV2_1 = {
+    version: '2.1',
+    timestamp: '2026-02-17T00:00:00.000Z',
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'PASS',
+      findings: [],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
     human_intent: null,
-  },
-  severity_metrics: {
-    gate_status: 'ALLOWED',
-    total_violations: 0,
-    by_severity: {
-      CRITICAL: 0,
-      ERROR: 0,
-      WARN: 0,
-      INFO: 0,
+    ai_gate: {
+      status: 'ALLOWED',
+      violations: [],
+      human_intent: null,
     },
-  },
-  repo_state: {
-    repo_root: '/tmp/pumuki-read-evidence',
-    git: {
-      available: true,
-      branch: 'feature/read-evidence',
-      upstream: 'origin/feature/read-evidence',
-      ahead: 0,
-      behind: 0,
-      dirty: false,
-      staged: 0,
-      unstaged: 0,
-    },
-    lifecycle: {
-      installed: true,
-      package_version: '6.3.16',
-      lifecycle_version: '6.3.16',
-      hooks: {
-        pre_commit: 'managed',
-        pre_push: 'managed',
+    severity_metrics: {
+      gate_status: 'ALLOWED',
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
       },
     },
-  },
-});
+    repo_state: {
+      repo_root: '/tmp/pumuki-read-evidence',
+      git: {
+        available: true,
+        branch: 'feature/read-evidence',
+        upstream: 'origin/feature/read-evidence',
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: '6.3.16',
+        lifecycle_version: '6.3.16',
+        hooks: {
+          pre_commit: 'managed',
+          pre_push: 'managed',
+        },
+      },
+    },
+  };
+  return {
+    ...base,
+    evidence_chain: buildEvidenceChain({ evidence: base }),
+  };
+};
 
 test('readEvidenceResult devuelve missing cuando no existe .ai_evidence.json', async () => {
   await withTempDir('pumuki-read-evidence-missing-', async (tempRoot) => {
@@ -141,6 +148,7 @@ test('readEvidenceResult preserva contrato SDD (sdd_metrics + source sdd-policy)
         message: 'OpenSpec validation failed',
       },
     };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
 
     writeFileSync(join(tempRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
 
@@ -225,6 +233,30 @@ test('readEvidenceResult devuelve invalid para JSON corrupto', async () => {
       assert.match(result.source_descriptor.digest ?? '', /^sha256:[0-9a-f]{64}$/);
       assert.equal(result.source_descriptor.generated_at, null);
     }
+    assert.equal(readEvidence(tempRoot), undefined);
+  });
+});
+
+test('readEvidenceResult devuelve invalid cuando evidence_chain no coincide con payload', async () => {
+  await withTempDir('pumuki-read-evidence-chain-mismatch-', async (tempRoot) => {
+    const evidence = sampleEvidence() as AiEvidenceV2_1 & {
+      evidence_chain?: {
+        algorithm: 'sha256';
+        previous_payload_hash: string | null;
+        payload_hash: string;
+        sequence: number;
+      };
+    };
+    evidence.evidence_chain = {
+      algorithm: 'sha256',
+      previous_payload_hash: null,
+      payload_hash: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      sequence: 1,
+    };
+    writeFileSync(join(tempRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const result = readEvidenceResult(tempRoot);
+    assert.equal(result.kind, 'invalid');
     assert.equal(readEvidence(tempRoot), undefined);
   });
 });

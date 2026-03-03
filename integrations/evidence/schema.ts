@@ -167,9 +167,17 @@ export type RepoState = {
   };
 };
 
+export type EvidenceChain = {
+  algorithm: 'sha256';
+  previous_payload_hash: string | null;
+  payload_hash: string;
+  sequence: number;
+};
+
 export type AiEvidenceV2_1 = {
   version: '2.1';
   timestamp: string;
+  evidence_chain?: EvidenceChain;
   snapshot: Snapshot;
   ledger: LedgerEntry[];
   platforms: Record<string, PlatformState>;

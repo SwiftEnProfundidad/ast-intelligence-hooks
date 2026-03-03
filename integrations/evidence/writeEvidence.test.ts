@@ -426,3 +426,45 @@ test('writeEvidence mantiene JSON válido bajo ráfaga de escrituras consecutiva
     });
   });
 });
+
+test('writeEvidence añade evidence_chain y encadena con la escritura previa', async () => {
+  await withTempDir('pumuki-write-evidence-chain-', async (tempRoot) => {
+    initGitRepo(tempRoot);
+    await withCwd(tempRoot, async () => {
+      const firstResult = writeEvidence(sampleEvidence(tempRoot));
+      assert.equal(firstResult.ok, true);
+
+      const firstPersisted = JSON.parse(readFileSync(firstResult.path, 'utf8')) as AiEvidenceV2_1 & {
+        evidence_chain?: {
+          algorithm: 'sha256';
+          previous_payload_hash: string | null;
+          payload_hash: string;
+          sequence: number;
+        };
+      };
+      assert.equal(typeof firstPersisted.evidence_chain?.payload_hash, 'string');
+      assert.equal(firstPersisted.evidence_chain?.previous_payload_hash, null);
+      assert.equal(firstPersisted.evidence_chain?.sequence, 1);
+
+      const secondEvidence = sampleEvidence(tempRoot);
+      secondEvidence.timestamp = '2026-02-17T00:10:00.000Z';
+      const secondResult = writeEvidence(secondEvidence);
+      assert.equal(secondResult.ok, true);
+
+      const secondPersisted = JSON.parse(readFileSync(secondResult.path, 'utf8')) as AiEvidenceV2_1 & {
+        evidence_chain?: {
+          algorithm: 'sha256';
+          previous_payload_hash: string | null;
+          payload_hash: string;
+          sequence: number;
+        };
+      };
+      assert.equal(secondPersisted.evidence_chain?.algorithm, 'sha256');
+      assert.equal(
+        secondPersisted.evidence_chain?.previous_payload_hash,
+        firstPersisted.evidence_chain?.payload_hash
+      );
+      assert.equal(secondPersisted.evidence_chain?.sequence, 2);
+    });
+  });
+});
