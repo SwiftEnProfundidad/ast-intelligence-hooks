@@ -1181,9 +1181,26 @@ Criterio de salida F5:
   - evidencia:
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m \"docs(validation): sync canonical feedback for issue 536\"`
     - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
-- 🚧 `P12.F1.T36` Ejecutar issue `#538` (eliminar falso positivo `ios.no-force-unwrap` sobre expresiones `!=` en TS/JS).
-  - estado actual:
-    - issue creada: `#538` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/538`.
+- ✅ `P12.F1.T36` Ejecutar issue `#538` (eliminar falso positivo `ios.no-force-unwrap` sobre expresiones `!=` en TS/JS).
+  - cierre ejecutado:
+    - issue cerrada: `#538` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/538`.
+    - PR mergeada: `#540` -> `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/540`.
+    - merge commit en `develop`: `321d9f04aa7fa8f4987c4f671baf48c421c18959`.
+    - fix aplicado:
+      - matcher de scope glob compartido (`core/gate/scopeMatcher.ts`) para respetar `**/*.swift` y evitar match en archivos no Swift.
+      - adopción del matcher en evaluación de reglas (`core/gate/evaluateRules.ts`), condiciones (`core/gate/conditionMatches.ts`) y trazabilidad (`integrations/git/findingTraceability.ts`).
+      - regresiones añadidas para caso TS `!=` sin falso positivo en:
+        - `core/gate/conditionMatches.test.ts`
+        - `core/gate/evaluateRules.test.ts`
+        - `integrations/git/__tests__/findingTraceability.test.ts`
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test core/gate/conditionMatches.test.ts core/gate/evaluateRules.test.ts integrations/git/__tests__/findingTraceability.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 540 --json state,mergedAt,mergeCommit,url`
+    - `gh issue close 538 --comment \"Fixed by #540 ...\"`
+- 🚧 `P12.F1.T37` Sincronizar canónico RuralGO tras fix `#538` (`REPORTED -> FIXED` con refs reales issue/PR/commit/evidencia).
+  - alcance:
+    - actualizar `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` para `FP-029` y trazabilidad de ejecución.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
