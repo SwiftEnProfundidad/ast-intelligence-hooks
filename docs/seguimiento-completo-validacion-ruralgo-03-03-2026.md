@@ -1907,11 +1907,24 @@ Criterio de salida F5:
   - evidencia:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `34 passed, 0 failed`.
 
-- 🚧 `P12.F2.T66` Continuar SDD pendiente enterprise: enriquecer `learning.json` con señales reales de gate/evidence (`#591`).
+- ✅ `P12.F2.T66` Continuar SDD pendiente enterprise: enriquecer `learning.json` con señales reales de gate/evidence (`#591`).
+  - cierre ejecutado:
+    - `runSddSyncDocs` incorpora señales deterministas de runtime para poblar:
+      - `failed_patterns`
+      - `successful_patterns`
+      - `gate_anomalies`
+    - el cálculo cubre casos `evidence missing/invalid/valid` y decisión SDD permitida/bloqueada.
+    - soporte explícito para inyectar lector de evidencia en tests (`evidenceReader`) sin romper contrato CLI.
+    - PR mergeada: `#593` (`commit 0da619a3804ec939bc33385cfc57032c195b4ee1`).
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `35 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+
+- 🚧 `P12.F2.T67` Continuar SDD pendiente enterprise: hacer `rule_updates` accionable en `learning.json` (`#594`).
   - salida esperada:
-    - arrays `failed_patterns`, `successful_patterns` y `gate_anomalies` poblados desde señales runtime cuando existan.
-    - orden determinista y comportamiento reproducible en dry-run/no dry-run.
-    - tests de casos poblados y fallback vacío en verde.
+    - `rule_updates` deja de ser siempre vacío y refleja recomendaciones deterministas derivadas de señales de gate/evidence.
+    - orden estable en dry-run/no dry-run y sin regresión del contrato actual.
+    - tests en verde para escenarios `missing`, `invalid`, `blocked`, `allowed`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
