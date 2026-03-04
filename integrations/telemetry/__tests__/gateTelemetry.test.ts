@@ -68,6 +68,11 @@ test('emitGateTelemetryEvent escribe JSONL determinista cuando está configurado
             strict: false,
           },
         },
+        sddDecision: {
+          allowed: false,
+          code: 'SDD_CHANGE_INCOMPLETE',
+          message: 'missing scenario.feature',
+        },
       },
       {
         env: {
@@ -88,16 +93,36 @@ test('emitGateTelemetryEvent escribe JSONL determinista cuando está configurado
     const line = readFileSync(result.jsonl_path, 'utf8').trim();
     const parsed = JSON.parse(line) as {
       schema: string;
+      schema_version: string;
       stage: string;
       gate_outcome: string;
       findings_total: number;
-      policy?: { bundle?: string };
+      policy?: {
+        bundle?: string;
+        version?: string;
+        signature?: string;
+        policy_source?: string;
+        validation_status?: string;
+        validation_code?: string;
+      };
+      sdd?: {
+        allowed?: boolean;
+        code?: string;
+      };
     };
     assert.equal(parsed.schema, 'telemetry_event_v1');
+    assert.equal(parsed.schema_version, '1.0');
     assert.equal(parsed.stage, 'PRE_PUSH');
     assert.equal(parsed.gate_outcome, 'BLOCK');
     assert.equal(parsed.findings_total, 1);
     assert.equal(parsed.policy?.bundle, 'gate-policy.default.PRE_PUSH');
+    assert.equal(parsed.policy?.version, 'policy-as-code/default@1.0');
+    assert.equal(parsed.policy?.signature, 'f'.repeat(64));
+    assert.equal(parsed.policy?.policy_source, 'computed-local');
+    assert.equal(parsed.policy?.validation_status, 'valid');
+    assert.equal(parsed.policy?.validation_code, 'POLICY_AS_CODE_VALID');
+    assert.equal(parsed.sdd?.allowed, false);
+    assert.equal(parsed.sdd?.code, 'SDD_CHANGE_INCOMPLETE');
   });
 });
 

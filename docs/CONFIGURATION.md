@@ -117,6 +117,20 @@ Notes:
 - If unset, no telemetry export is attempted.
 - Gate execution remains deterministic even when OTel endpoint is unavailable (best-effort dispatch).
 
+Quick verification (JSONL):
+
+```bash
+PUMUKI_TELEMETRY_JSONL_PATH=.pumuki/artifacts/gate-telemetry.jsonl \
+  npx --yes --package pumuki@latest pumuki-pre-commit
+```
+
+Expected JSONL keys for enterprise audit ingestion:
+
+- `schema=telemetry_event_v1` with `schema_version=1.0`
+- `stage`, `gate_outcome`, `severity_counts`
+- `policy.bundle`, `policy.hash`, `policy.version`, `policy.signature`, `policy.policy_source`
+- `policy.validation_status`, `policy.validation_code` (when policy-as-code validation is available)
+
 ## Heuristic pilot flag
 
 Enable semantic heuristic rules:
