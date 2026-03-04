@@ -132,6 +132,7 @@ test('runSddSyncDocs dry-run previsualiza diff y no modifica archivo', async () 
     assert.equal(result.context.change, null);
     assert.equal(result.context.stage, null);
     assert.equal(result.context.task, null);
+    assert.equal(result.context.fromEvidencePath, null);
     assert.equal(result.updated, true);
     assert.equal(result.files.length, 1);
     assert.equal(result.files[0]?.updated, true);
@@ -168,6 +169,7 @@ test('runSddSyncDocs aplica cambios deterministas y segunda ejecución no cambia
     assert.equal(first.context.change, null);
     assert.equal(first.context.stage, null);
     assert.equal(first.context.task, null);
+    assert.equal(first.context.fromEvidencePath, null);
     assert.match(synced, /openspec_installed:/);
     assert.equal(second.updated, false);
     assert.equal(second.files[0]?.updated, false);
@@ -200,6 +202,7 @@ test('runSddSyncDocs incluye contexto explícito change/stage/task en resultado'
     assert.equal(result.context.change, 'rgo-1700-01');
     assert.equal(result.context.stage, 'PRE_PUSH');
     assert.equal(result.context.task, 'P12.F2.T63');
+    assert.equal(result.context.fromEvidencePath, null);
     assert.equal(result.learning?.path, 'openspec/changes/rgo-1700-01/learning.json');
     assert.equal(result.learning?.written, false);
     assert.equal(result.learning?.artifact.version, '1.0');
@@ -211,10 +214,51 @@ test('runSddSyncDocs incluye contexto explícito change/stage/task en resultado'
     ]);
     assert.deepEqual(result.learning?.artifact.gate_anomalies, ['evidence.missing']);
     assert.deepEqual(result.learning?.artifact.rule_updates, ['evidence.bootstrap.required']);
+    assert.equal(result.learning?.artifact.scoring.profile, 'heuristic-v1');
+    assert.equal(result.learning?.artifact.scoring.score, 93);
+    assert.equal(result.learning?.artifact.scoring.successful_count, 2);
+    assert.equal(result.learning?.artifact.scoring.failed_count, 0);
+    assert.equal(result.learning?.artifact.scoring.anomaly_count, 1);
+    assert.equal(result.learning?.artifact.scoring.rule_update_count, 1);
     assert.equal(
       existsSync(join(repoRoot, 'openspec', 'changes', 'rgo-1700-01', 'learning.json')),
       false
     );
+  });
+});
+
+test('runSddSyncDocs permite leer evidencia desde --from-evidence (ruta alternativa)', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-from-evidence-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const customEvidencePath = join(repoRoot, '.pumuki', 'evidence', 'custom-invalid.json');
+    mkdirSync(dirname(customEvidencePath), { recursive: true });
+    writeFileSync(customEvidencePath, '{invalid-json', 'utf8');
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: true,
+      change: 'rgo-1700-01',
+      fromEvidencePath: '.pumuki/evidence/custom-invalid.json',
+      now: () => new Date('2026-03-04T10:00:00.000Z'),
+    });
+
+    assert.equal(result.context.fromEvidencePath, '.pumuki/evidence/custom-invalid.json');
+    assert.deepEqual(result.learning?.artifact.gate_anomalies, ['evidence.invalid.schema']);
+    assert.deepEqual(result.learning?.artifact.rule_updates, [
+      'evidence.rebuild.required',
+      'evidence.schema.repair',
+    ]);
   });
 });
 
@@ -270,6 +314,8 @@ test('runSddSyncDocs persiste learning artifact cuando change está presente y n
     assert.deepEqual(parsed.successful_patterns, ['sync-docs.completed', 'sync-docs.updated']);
     assert.deepEqual(parsed.rule_updates, ['evidence.bootstrap.required']);
     assert.deepEqual(parsed.gate_anomalies, ['evidence.missing']);
+    assert.equal(result.learning?.artifact.scoring.profile, 'heuristic-v1');
+    assert.equal(result.learning?.artifact.scoring.score, 93);
   });
 });
 
@@ -315,6 +361,8 @@ test('runSddSyncDocs agrega señales de gate cuando evidenceReader devuelve evid
       'sdd.SDD_CHANGE_INCOMPLETE.remediate',
       'snapshot.outcome.review',
     ]);
+    assert.equal(result.learning?.artifact.scoring.profile, 'heuristic-v1');
+    assert.equal(result.learning?.artifact.scoring.score, 18);
   });
 });
 
@@ -352,6 +400,7 @@ test('runSddSyncDocs genera rule_updates para evidencia inválida de schema', as
       'evidence.rebuild.required',
       'evidence.schema.repair',
     ]);
+    assert.equal(result.learning?.artifact.scoring.score, 88);
   });
 });
 
@@ -388,6 +437,7 @@ test('runSddSyncDocs mantiene rule_updates vacío cuando la evidencia válida es
     ]);
     assert.deepEqual(result.learning?.artifact.gate_anomalies, []);
     assert.deepEqual(result.learning?.artifact.rule_updates, []);
+    assert.equal(result.learning?.artifact.scoring.score, 100);
   });
 });
 
@@ -566,6 +616,7 @@ test('runSddAutoSync dry-run orquesta sync-docs + learning sin modificar archivo
     assert.equal(result.context.change, 'rgo-1700-06');
     assert.equal(result.context.stage, 'PRE_PUSH');
     assert.equal(result.context.task, 'P12.F2.T70');
+    assert.equal(result.context.fromEvidencePath, null);
     assert.equal(result.syncDocs.updated, true);
     assert.equal(result.syncDocs.files.length, 1);
     assert.equal(result.learning.path, 'openspec/changes/rgo-1700-06/learning.json');
@@ -599,6 +650,7 @@ test('runSddAutoSync aplica sync-docs y persiste learning en modo escritura', as
 
     assert.equal(result.command, 'pumuki sdd auto-sync');
     assert.equal(result.syncDocs.updated, true);
+    assert.equal(result.context.fromEvidencePath, null);
     assert.match(readFileSync(canonicalPath, 'utf8'), /openspec_installed:/);
     const learningPath = join(repoRoot, 'openspec', 'changes', 'rgo-1700-07', 'learning.json');
     assert.equal(existsSync(learningPath), true);

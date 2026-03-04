@@ -326,10 +326,33 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
   assert.deepEqual(
     parseLifecycleCliArgs([
       'sdd',
+      'sync',
+      '--change=rgo-1700-01',
+      '--stage=pre_push',
+      '--task=P12.F2.T63',
+      '--from-evidence=.pumuki/evidence/custom.json',
+      '--json',
+    ]),
+    {
+      command: 'sdd',
+      purgeArtifacts: false,
+      json: true,
+      sddCommand: 'sync-docs',
+      sddSyncDocsDryRun: false,
+      sddSyncDocsChange: 'rgo-1700-01',
+      sddSyncDocsStage: 'PRE_PUSH',
+      sddSyncDocsTask: 'P12.F2.T63',
+      sddSyncDocsFromEvidence: '.pumuki/evidence/custom.json',
+    }
+  );
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'sdd',
       'learn',
       '--change=rgo-1700-02',
       '--stage=pre_write',
       '--task=P12.F2.T68',
+      '--from-evidence=.pumuki/evidence/learn.json',
       '--dry-run',
       '--json',
     ]),
@@ -342,6 +365,7 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       sddLearnChange: 'rgo-1700-02',
       sddLearnStage: 'PRE_WRITE',
       sddLearnTask: 'P12.F2.T68',
+      sddLearnFromEvidence: '.pumuki/evidence/learn.json',
     }
   );
   assert.deepEqual(
@@ -351,6 +375,7 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       '--change=rgo-1700-04',
       '--stage=pre_push',
       '--task=P12.F2.T70',
+      '--from-evidence=.pumuki/evidence/auto-sync.json',
       '--dry-run',
       '--json',
     ]),
@@ -363,6 +388,7 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       sddAutoSyncChange: 'rgo-1700-04',
       sddAutoSyncStage: 'PRE_PUSH',
       sddAutoSyncTask: 'P12.F2.T70',
+      sddAutoSyncFromEvidence: '.pumuki/evidence/auto-sync.json',
     }
   );
 });
@@ -503,6 +529,10 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['sdd', 'learn']),
     /Missing --change=<change-id> for "pumuki sdd learn"/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['sdd', 'validate', '--from-evidence=.ai_evidence.json']),
+    /--from-evidence is only supported/i
   );
   assert.throws(
     () => parseLifecycleCliArgs(['sdd', 'auto-sync']),
@@ -1321,6 +1351,73 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
     assert.equal(payload.updated, true);
     assert.equal(payload.files?.[0]?.updated, true);
     assert.match(payload.files?.[0]?.diffMarkdown ?? '', /sdd-status/i);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd sync alias acepta --from-evidence y usa esa fuente para learning', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+  const canonicalDoc = join(
+    repo,
+    'docs',
+    'technical',
+    '08-validation',
+    'refactor',
+    'pumuki-integration-feedback.md'
+  );
+  const customEvidence = join(repo, '.pumuki', 'evidence', 'custom-invalid.json');
+
+  try {
+    mkdirSync(dirname(canonicalDoc), { recursive: true });
+    writeFileSync(
+      canonicalDoc,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+    mkdirSync(dirname(customEvidence), { recursive: true });
+    writeFileSync(customEvidence, '{invalid-json', 'utf8');
+
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli([
+      'sdd',
+      'sync',
+      '--change=rgo-1700-01',
+      '--from-evidence=.pumuki/evidence/custom-invalid.json',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(code, 0);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      context?: {
+        fromEvidencePath?: string | null;
+      };
+      learning?: {
+        artifact?: {
+          gate_anomalies?: string[];
+        };
+      };
+    };
+    assert.equal(payload.context?.fromEvidencePath, '.pumuki/evidence/custom-invalid.json');
+    assert.deepEqual(payload.learning?.artifact?.gate_anomalies, ['evidence.invalid.schema']);
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);

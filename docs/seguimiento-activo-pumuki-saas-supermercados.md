@@ -192,4 +192,14 @@
     - `npm run -s typecheck` -> `PASS`.
     - `npm run -s test:stage-gates` -> `1033 pass / 0 fail / 4 skip`.
 
-- 🚧 PUMUKI-026: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para aprendizaje/sync SDD desde evidencia operativa con flujo seguro `dry-run -> apply`.
+- ✅ PUMUKI-026: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para aprendizaje/sync SDD desde evidencia operativa con flujo seguro `dry-run -> apply`.
+  - Fix:
+    - Alias CLI `pumuki sdd sync` (equivalente a `sync-docs`).
+    - Nuevo flag `--from-evidence=<path>` en `sync-docs`, `sync`, `learn` y `auto-sync`.
+    - `sync-docs/learn/auto-sync` leen evidencia desde ruta alternativa y la exponen en contexto (`fromEvidencePath`).
+    - Learning artifact añade `scoring` determinista (`heuristic-v1`) para dry-run/apply.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-027: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo con notificaciones/alertas sin spam y controles de silencio.

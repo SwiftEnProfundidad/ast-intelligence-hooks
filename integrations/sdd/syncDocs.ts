@@ -48,6 +48,7 @@ export type SddSyncDocsResult = {
     change: string | null;
     stage: SddStage | null;
     task: string | null;
+    fromEvidencePath: string | null;
   };
   updated: boolean;
   files: ReadonlyArray<SddSyncDocsFileResult>;
@@ -65,6 +66,14 @@ export type SddSyncDocsResult = {
       successful_patterns: string[];
       rule_updates: string[];
       gate_anomalies: string[];
+      scoring: {
+        profile: 'heuristic-v1';
+        score: number;
+        successful_count: number;
+        failed_count: number;
+        anomaly_count: number;
+        rule_update_count: number;
+      };
       sync_docs: {
         updated: boolean;
         file_paths: string[];
@@ -81,6 +90,7 @@ export type SddLearnResult = {
     change: string;
     stage: SddStage | null;
     task: string | null;
+    fromEvidencePath: string | null;
   };
   learning: NonNullable<SddSyncDocsResult['learning']>;
 };
@@ -93,6 +103,7 @@ export type SddAutoSyncResult = {
     change: string;
     stage: SddStage | null;
     task: string | null;
+    fromEvidencePath: string | null;
   };
   syncDocs: {
     updated: boolean;
@@ -281,12 +292,42 @@ const collectLearningSignals = (params: {
   };
 };
 
+const toLearningScore = (params: {
+  successfulPatterns: string[];
+  failedPatterns: string[];
+  gateAnomalies: string[];
+  ruleUpdates: string[];
+}): {
+  profile: 'heuristic-v1';
+  score: number;
+  successful_count: number;
+  failed_count: number;
+  anomaly_count: number;
+  rule_update_count: number;
+} => {
+  const successfulCount = params.successfulPatterns.length;
+  const failedCount = params.failedPatterns.length;
+  const anomalyCount = params.gateAnomalies.length;
+  const ruleUpdateCount = params.ruleUpdates.length;
+  const rawScore = 100 + successfulCount * 4 - failedCount * 25 - anomalyCount * 10 - ruleUpdateCount * 5;
+  const score = Math.max(0, Math.min(100, rawScore));
+  return {
+    profile: 'heuristic-v1',
+    score,
+    successful_count: successfulCount,
+    failed_count: failedCount,
+    anomaly_count: anomalyCount,
+    rule_update_count: ruleUpdateCount,
+  };
+};
+
 export const runSddSyncDocs = (params?: {
   repoRoot?: string;
   dryRun?: boolean;
   change?: string;
   stage?: SddStage;
   task?: string;
+  fromEvidencePath?: string;
   targets?: ReadonlyArray<SddSyncDocsTarget>;
   now?: () => Date;
   evidenceReader?: (repoRoot: string) => EvidenceReadResult;
@@ -296,9 +337,18 @@ export const runSddSyncDocs = (params?: {
   const change = params?.change?.trim() ? params.change.trim() : null;
   const stage = params?.stage ?? null;
   const task = params?.task?.trim() ? params.task.trim() : null;
+  const fromEvidencePath = params?.fromEvidencePath?.trim()
+    ? params.fromEvidencePath.trim()
+    : null;
   const targets = params?.targets ?? DEFAULT_SYNC_DOCS_TARGETS;
   const now = params?.now ?? (() => new Date());
-  const evidenceReader = params?.evidenceReader ?? readEvidenceResult;
+  const evidenceReader =
+    params?.evidenceReader ??
+    ((candidateRepoRoot: string) =>
+      readEvidenceResult(
+        candidateRepoRoot,
+        fromEvidencePath ? { evidencePath: fromEvidencePath } : undefined
+      ));
 
   const updates = targets.map((target) => {
     const absolutePath = resolve(repoRoot, target.path);
@@ -362,6 +412,12 @@ export const runSddSyncDocs = (params?: {
       updated,
       evidenceResult: evidenceReader(repoRoot),
     });
+    const scoring = toLearningScore({
+      successfulPatterns: signals.successfulPatterns,
+      failedPatterns: signals.failedPatterns,
+      gateAnomalies: signals.gateAnomalies,
+      ruleUpdates: signals.ruleUpdates,
+    });
     const artifact = {
       version: '1.0' as const,
       change_id: change,
@@ -372,6 +428,7 @@ export const runSddSyncDocs = (params?: {
       successful_patterns: signals.successfulPatterns,
       rule_updates: signals.ruleUpdates,
       gate_anomalies: signals.gateAnomalies,
+      scoring,
       sync_docs: {
         updated,
         file_paths: files.map((file) => file.path),
@@ -401,6 +458,7 @@ export const runSddSyncDocs = (params?: {
       change,
       stage,
       task,
+      fromEvidencePath,
     },
     updated,
     files,
@@ -414,6 +472,7 @@ export const runSddLearn = (params?: {
   change?: string;
   stage?: SddStage;
   task?: string;
+  fromEvidencePath?: string;
   now?: () => Date;
   evidenceReader?: (repoRoot: string) => EvidenceReadResult;
 }): SddLearnResult => {
@@ -428,6 +487,7 @@ export const runSddLearn = (params?: {
     change,
     stage: params?.stage,
     task: params?.task,
+    fromEvidencePath: params?.fromEvidencePath,
     now: params?.now,
     evidenceReader: params?.evidenceReader,
     targets: [],
@@ -445,6 +505,7 @@ export const runSddLearn = (params?: {
       change,
       stage: result.context.stage,
       task: result.context.task,
+      fromEvidencePath: result.context.fromEvidencePath,
     },
     learning: result.learning,
   };
@@ -456,6 +517,7 @@ export const runSddAutoSync = (params?: {
   change?: string;
   stage?: SddStage;
   task?: string;
+  fromEvidencePath?: string;
   now?: () => Date;
   evidenceReader?: (repoRoot: string) => EvidenceReadResult;
   targets?: ReadonlyArray<SddSyncDocsTarget>;
@@ -471,6 +533,7 @@ export const runSddAutoSync = (params?: {
     change,
     stage: params?.stage,
     task: params?.task,
+    fromEvidencePath: params?.fromEvidencePath,
     now: params?.now,
     evidenceReader: params?.evidenceReader,
     targets: params?.targets,
@@ -488,6 +551,7 @@ export const runSddAutoSync = (params?: {
       change,
       stage: syncResult.context.stage,
       task: syncResult.context.task,
+      fromEvidencePath: syncResult.context.fromEvidencePath,
     },
     syncDocs: {
       updated: syncResult.updated,

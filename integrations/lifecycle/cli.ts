@@ -99,14 +99,17 @@ type ParsedArgs = {
   sddSyncDocsChange?: string;
   sddSyncDocsStage?: SddStage;
   sddSyncDocsTask?: string;
+  sddSyncDocsFromEvidence?: string;
   sddLearnDryRun?: boolean;
   sddLearnChange?: string;
   sddLearnStage?: SddStage;
   sddLearnTask?: string;
+  sddLearnFromEvidence?: string;
   sddAutoSyncDryRun?: boolean;
   sddAutoSyncChange?: string;
   sddAutoSyncStage?: SddStage;
   sddAutoSyncTask?: string;
+  sddAutoSyncFromEvidence?: string;
   adapterCommand?: 'install';
   adapterAgent?: AdapterAgent;
   adapterDryRun?: boolean;
@@ -140,9 +143,10 @@ Pumuki lifecycle commands:
   pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
   pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
   pumuki sdd session --close [--json]
-  pumuki sdd sync-docs [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json]
-  pumuki sdd learn --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json]
-  pumuki sdd auto-sync --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json]
+  pumuki sdd sync-docs [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd sync [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd learn --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd auto-sync --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
 `.trim();
 
 const LOOP_RUN_POLICY: GatePolicy = {
@@ -197,6 +201,14 @@ const parseSddStage = (value?: string): SddStage => {
     return normalized;
   }
   throw new Error(`Unsupported SDD stage "${value}". Use PRE_WRITE, PRE_COMMIT, PRE_PUSH or CI.`);
+};
+
+const parseSddEvidencePath = (value: string): string => {
+  const normalized = value.trim();
+  if (normalized.length === 0) {
+    throw new Error(`Invalid --from-evidence value "${value}".`);
+  }
+  return normalized;
 };
 
 const parseOutputPathFlag = (value: string, flagName: '--output-json' | '--output-markdown'): string => {
@@ -445,14 +457,17 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let sddSyncDocsChange: ParsedArgs['sddSyncDocsChange'];
   let sddSyncDocsStage: ParsedArgs['sddSyncDocsStage'];
   let sddSyncDocsTask: ParsedArgs['sddSyncDocsTask'];
+  let sddSyncDocsFromEvidence: ParsedArgs['sddSyncDocsFromEvidence'];
   let sddLearnDryRun = false;
   let sddLearnChange: ParsedArgs['sddLearnChange'];
   let sddLearnStage: ParsedArgs['sddLearnStage'];
   let sddLearnTask: ParsedArgs['sddLearnTask'];
+  let sddLearnFromEvidence: ParsedArgs['sddLearnFromEvidence'];
   let sddAutoSyncDryRun = false;
   let sddAutoSyncChange: ParsedArgs['sddAutoSyncChange'];
   let sddAutoSyncStage: ParsedArgs['sddAutoSyncStage'];
   let sddAutoSyncTask: ParsedArgs['sddAutoSyncTask'];
+  let sddAutoSyncFromEvidence: ParsedArgs['sddAutoSyncFromEvidence'];
   let adapterCommand: ParsedArgs['adapterCommand'];
   let adapterAgent: ParsedArgs['adapterAgent'];
   let adapterDryRun = false;
@@ -632,12 +647,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       subcommandRaw !== 'validate' &&
       subcommandRaw !== 'session' &&
       subcommandRaw !== 'sync-docs' &&
+      subcommandRaw !== 'sync' &&
       subcommandRaw !== 'learn' &&
       subcommandRaw !== 'auto-sync'
     ) {
       throw new Error(`Unsupported SDD subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
     }
-    sddCommand = subcommandRaw;
+    sddCommand = subcommandRaw === 'sync' ? 'sync-docs' : subcommandRaw;
 
     for (const arg of argv.slice(2)) {
       if (arg === '--json') {
@@ -757,6 +773,29 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         }
         throw new Error(`--task is only supported with "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
       }
+      if (arg.startsWith('--from-evidence=')) {
+        if (sddCommand === 'sync-docs') {
+          sddSyncDocsFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        if (sddCommand === 'learn') {
+          sddLearnFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        if (sddCommand === 'auto-sync') {
+          sddAutoSyncFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
+        throw new Error(
+          `--from-evidence is only supported with "pumuki sdd sync-docs", "pumuki sdd sync", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`
+        );
+      }
       if (arg.startsWith('--ttl-minutes=')) {
         if (sddCommand !== 'session') {
           throw new Error(`--ttl-minutes is only supported with "pumuki sdd session".\n\n${HELP_TEXT}`);
@@ -789,9 +828,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       };
     }
     if (sddCommand === 'sync-docs') {
-      if (sddSessionAction || sddChangeId || typeof sddTtlMinutes === 'number') {
+      if (
+        sddSessionAction ||
+        sddChangeId ||
+        typeof sddTtlMinutes === 'number'
+      ) {
         throw new Error(
-          `"pumuki sdd sync-docs" only supports [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json].\n\n${HELP_TEXT}`
+          `"pumuki sdd sync-docs" only supports [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json].\n\n${HELP_TEXT}`
         );
       }
       return {
@@ -803,12 +846,15 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         ...(sddSyncDocsChange ? { sddSyncDocsChange } : {}),
         ...(sddSyncDocsStage ? { sddSyncDocsStage } : {}),
         ...(sddSyncDocsTask ? { sddSyncDocsTask } : {}),
+        ...(sddSyncDocsFromEvidence
+          ? { sddSyncDocsFromEvidence }
+          : {}),
       };
     }
     if (sddCommand === 'learn') {
       if (sddSessionAction || sddChangeId || typeof sddTtlMinutes === 'number') {
         throw new Error(
-          `"pumuki sdd learn" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json].\n\n${HELP_TEXT}`
+          `"pumuki sdd learn" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json].\n\n${HELP_TEXT}`
         );
       }
       if (!sddLearnChange || sddLearnChange.length === 0) {
@@ -823,12 +869,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         sddLearnChange,
         ...(sddLearnStage ? { sddLearnStage } : {}),
         ...(sddLearnTask ? { sddLearnTask } : {}),
+        ...(sddLearnFromEvidence ? { sddLearnFromEvidence } : {}),
       };
     }
     if (sddCommand === 'auto-sync') {
       if (sddSessionAction || sddChangeId || typeof sddTtlMinutes === 'number') {
         throw new Error(
-          `"pumuki sdd auto-sync" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json].\n\n${HELP_TEXT}`
+          `"pumuki sdd auto-sync" only supports --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json].\n\n${HELP_TEXT}`
         );
       }
       if (!sddAutoSyncChange || sddAutoSyncChange.length === 0) {
@@ -843,6 +890,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         sddAutoSyncChange,
         ...(sddAutoSyncStage ? { sddAutoSyncStage } : {}),
         ...(sddAutoSyncTask ? { sddAutoSyncTask } : {}),
+        ...(sddAutoSyncFromEvidence ? { sddAutoSyncFromEvidence } : {}),
       };
     }
 
@@ -1917,12 +1965,13 @@ export const runLifecycleCli = async (
             change: parsed.sddSyncDocsChange,
             stage: parsed.sddSyncDocsStage,
             task: parsed.sddSyncDocsTask,
+            fromEvidencePath: parsed.sddSyncDocsFromEvidence,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(syncResult, null, 2));
           } else {
             writeInfo(
-              `[pumuki][sdd] sync-docs dry_run=${syncResult.dryRun ? 'yes' : 'no'} updated=${syncResult.updated ? 'yes' : 'no'} files=${syncResult.files.length} change=${syncResult.context.change ?? 'none'} stage=${syncResult.context.stage ?? 'none'} task=${syncResult.context.task ?? 'none'}`
+              `[pumuki][sdd] sync-docs dry_run=${syncResult.dryRun ? 'yes' : 'no'} updated=${syncResult.updated ? 'yes' : 'no'} files=${syncResult.files.length} change=${syncResult.context.change ?? 'none'} stage=${syncResult.context.stage ?? 'none'} task=${syncResult.context.task ?? 'none'} from_evidence=${syncResult.context.fromEvidencePath ?? 'default'}`
             );
             for (const file of syncResult.files) {
               writeInfo(
@@ -1942,12 +1991,13 @@ export const runLifecycleCli = async (
             change: parsed.sddLearnChange,
             stage: parsed.sddLearnStage,
             task: parsed.sddLearnTask,
+            fromEvidencePath: parsed.sddLearnFromEvidence,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(learnResult, null, 2));
           } else {
             writeInfo(
-              `[pumuki][sdd] learn dry_run=${learnResult.dryRun ? 'yes' : 'no'} change=${learnResult.context.change} stage=${learnResult.context.stage ?? 'none'} task=${learnResult.context.task ?? 'none'} written=${learnResult.learning.written ? 'yes' : 'no'} digest=${learnResult.learning.digest}`
+              `[pumuki][sdd] learn dry_run=${learnResult.dryRun ? 'yes' : 'no'} change=${learnResult.context.change} stage=${learnResult.context.stage ?? 'none'} task=${learnResult.context.task ?? 'none'} from_evidence=${learnResult.context.fromEvidencePath ?? 'default'} written=${learnResult.learning.written ? 'yes' : 'no'} digest=${learnResult.learning.digest}`
             );
             writeInfo(
               `[pumuki][sdd] learning_path=${learnResult.learning.path} failed=${learnResult.learning.artifact.failed_patterns.length} successful=${learnResult.learning.artifact.successful_patterns.length} anomalies=${learnResult.learning.artifact.gate_anomalies.length} updates=${learnResult.learning.artifact.rule_updates.length}`
@@ -1962,12 +2012,13 @@ export const runLifecycleCli = async (
             change: parsed.sddAutoSyncChange,
             stage: parsed.sddAutoSyncStage,
             task: parsed.sddAutoSyncTask,
+            fromEvidencePath: parsed.sddAutoSyncFromEvidence,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(autoSyncResult, null, 2));
           } else {
             writeInfo(
-              `[pumuki][sdd] auto-sync dry_run=${autoSyncResult.dryRun ? 'yes' : 'no'} change=${autoSyncResult.context.change} stage=${autoSyncResult.context.stage ?? 'none'} task=${autoSyncResult.context.task ?? 'none'} updated=${autoSyncResult.syncDocs.updated ? 'yes' : 'no'} files=${autoSyncResult.syncDocs.files.length} learning_written=${autoSyncResult.learning.written ? 'yes' : 'no'}`
+              `[pumuki][sdd] auto-sync dry_run=${autoSyncResult.dryRun ? 'yes' : 'no'} change=${autoSyncResult.context.change} stage=${autoSyncResult.context.stage ?? 'none'} task=${autoSyncResult.context.task ?? 'none'} from_evidence=${autoSyncResult.context.fromEvidencePath ?? 'default'} updated=${autoSyncResult.syncDocs.updated ? 'yes' : 'no'} files=${autoSyncResult.syncDocs.files.length} learning_written=${autoSyncResult.learning.written ? 'yes' : 'no'}`
             );
             writeInfo(
               `[pumuki][sdd] learning_path=${autoSyncResult.learning.path} digest=${autoSyncResult.learning.digest}`
