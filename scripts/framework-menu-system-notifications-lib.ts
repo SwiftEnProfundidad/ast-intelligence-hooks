@@ -40,18 +40,30 @@ export type SystemNotificationPayload = {
 export type SystemNotificationsConfig = {
   enabled: boolean;
   channel: 'macos';
+  muteUntil?: string;
 };
 
 export type SystemNotificationEmitResult =
   | { delivered: true; reason: 'delivered' }
-  | { delivered: false; reason: 'disabled' | 'unsupported-platform' | 'command-failed' };
+  | { delivered: false; reason: 'disabled' | 'muted' | 'unsupported-platform' | 'command-failed' };
 
 type SystemNotificationCommandRunner = (
   command: string,
   args: ReadonlyArray<string>
 ) => number;
 
+type SystemNotificationCommandRunnerWithOutput = (
+  command: string,
+  args: ReadonlyArray<string>
+) => {
+  exitCode: number;
+  stdout: string;
+};
+
 const SYSTEM_NOTIFICATIONS_CONFIG_PATH = '.pumuki/system-notifications.json';
+const BLOCKED_DIALOG_KEEP = 'Mantener activas';
+const BLOCKED_DIALOG_MUTE_30 = 'Silenciar 30 min';
+const BLOCKED_DIALOG_DISABLE = 'Desactivar';
 
 const escapeAppleScriptString = (value: string): string =>
   value.replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, ' ').trim();
@@ -77,7 +89,7 @@ const buildDisplayDialogScript = (params: {
   const cause = escapeAppleScriptString(params.cause);
   const remediation = escapeAppleScriptString(params.remediation);
   const message = escapeAppleScriptString(`Causa: ${cause}\n\nSolución: ${remediation}`);
-  return `display dialog "${message}" with title "${title}" buttons {"OK"} default button "OK" with icon stop`;
+  return `display dialog "${message}" with title "${title}" buttons {"${BLOCKED_DIALOG_DISABLE}", "${BLOCKED_DIALOG_MUTE_30}", "${BLOCKED_DIALOG_KEEP}"} default button "${BLOCKED_DIALOG_KEEP}" with icon stop giving up after 15`;
 };
 
 const normalizeNotificationText = (value: string): string =>
@@ -199,6 +211,43 @@ const runSystemCommand: SystemNotificationCommandRunner = (command, args) => {
   }
 };
 
+const runSystemCommandWithOutput: SystemNotificationCommandRunnerWithOutput = (
+  command,
+  args
+) => {
+  try {
+    const stdout = runBinarySync(command, [...args], {
+      encoding: 'utf8',
+    });
+    return {
+      exitCode: 0,
+      stdout: typeof stdout === 'string' ? stdout : '',
+    };
+  } catch (error: unknown) {
+    const fallbackStdout =
+      typeof error === 'object' &&
+      error !== null &&
+      'stdout' in error &&
+      typeof (error as { stdout?: unknown }).stdout === 'string'
+        ? (error as { stdout: string }).stdout
+        : '';
+    return {
+      exitCode: 1,
+      stdout: fallbackStdout,
+    };
+  }
+};
+
+const persistSystemNotificationsConfigFile = (
+  repoRoot: string,
+  config: SystemNotificationsConfig
+): string => {
+  const configPath = join(repoRoot, SYSTEM_NOTIFICATIONS_CONFIG_PATH);
+  mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+  writeFileSync(configPath, `${JSON.stringify(config, null, 2)}\n`, 'utf8');
+  return configPath;
+};
+
 export const buildSystemNotificationsConfigFromSelection = (
   enabled: boolean
 ): SystemNotificationsConfig => ({
@@ -207,14 +256,10 @@ export const buildSystemNotificationsConfigFromSelection = (
 });
 
 export const persistSystemNotificationsConfig = (repoRoot: string, enabled: boolean): string => {
-  const configPath = join(repoRoot, SYSTEM_NOTIFICATIONS_CONFIG_PATH);
-  mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
-  writeFileSync(
-    configPath,
-    `${JSON.stringify(buildSystemNotificationsConfigFromSelection(enabled), null, 2)}\n`,
-    'utf8'
+  return persistSystemNotificationsConfigFile(
+    repoRoot,
+    buildSystemNotificationsConfigFromSelection(enabled)
   );
-  return configPath;
 };
 
 export const readSystemNotificationsConfig = (repoRoot: string): SystemNotificationsConfig => {
@@ -227,13 +272,64 @@ export const readSystemNotificationsConfig = (repoRoot: string): SystemNotificat
     const parsed = JSON.parse(readFileSync(configPath, 'utf8')) as {
       enabled?: unknown;
       channel?: unknown;
+      muteUntil?: unknown;
     };
-    return {
+    const config: SystemNotificationsConfig = {
       enabled: parsed.enabled === true,
       channel: 'macos',
     };
+    if (typeof parsed.muteUntil === 'string' && parsed.muteUntil.trim().length > 0) {
+      config.muteUntil = parsed.muteUntil;
+    }
+    return config;
   } catch {
     return buildSystemNotificationsConfigFromSelection(true);
+  }
+};
+
+const isMutedAt = (config: SystemNotificationsConfig, nowMs: number): boolean => {
+  if (!config.muteUntil) {
+    return false;
+  }
+  const parsed = Date.parse(config.muteUntil);
+  if (!Number.isFinite(parsed)) {
+    return false;
+  }
+  return parsed > nowMs;
+};
+
+const extractDialogButton = (stdout: string): string | null => {
+  const match = stdout.match(/button returned:(.+)/i);
+  if (!match || !match[1]) {
+    return null;
+  }
+  return match[1].trim();
+};
+
+const applyDialogChoice = (params: {
+  repoRoot: string;
+  config: SystemNotificationsConfig;
+  button: string;
+  nowMs: number;
+}): void => {
+  if (params.button === BLOCKED_DIALOG_KEEP) {
+    return;
+  }
+  if (params.button === BLOCKED_DIALOG_DISABLE) {
+    persistSystemNotificationsConfigFile(params.repoRoot, {
+      enabled: false,
+      channel: params.config.channel,
+    });
+    return;
+  }
+  if (params.button === BLOCKED_DIALOG_MUTE_30) {
+    const minutes = 30;
+    const muteUntil = new Date(params.nowMs + minutes * 60_000).toISOString();
+    persistSystemNotificationsConfigFile(params.repoRoot, {
+      enabled: true,
+      channel: params.config.channel,
+      muteUntil,
+    });
   }
 };
 
@@ -297,9 +393,11 @@ export const emitSystemNotification = (params: {
   event: PumukiCriticalNotificationEvent;
   platform?: NodeJS.Platform;
   runCommand?: SystemNotificationCommandRunner;
+  runCommandWithOutput?: SystemNotificationCommandRunnerWithOutput;
   repoRoot?: string;
   config?: SystemNotificationsConfig;
   env?: NodeJS.ProcessEnv;
+  now?: () => number;
 }): SystemNotificationEmitResult => {
   const config =
     params.config ??
@@ -308,6 +406,10 @@ export const emitSystemNotification = (params: {
       : buildSystemNotificationsConfigFromSelection(true));
   if (!config.enabled) {
     return { delivered: false, reason: 'disabled' };
+  }
+  const nowMs = (params.now ?? Date.now)();
+  if (isMutedAt(config, nowMs)) {
+    return { delivered: false, reason: 'muted' };
   }
 
   const platform = params.platform ?? process.platform;
@@ -334,7 +436,19 @@ export const emitSystemNotification = (params: {
       cause,
       remediation,
     });
-    runner('osascript', ['-e', dialogScript]);
+    const dialogRunner = params.runCommandWithOutput ?? runSystemCommandWithOutput;
+    const dialogResult = dialogRunner('osascript', ['-e', dialogScript]);
+    if (dialogResult.exitCode === 0 && params.repoRoot) {
+      const selectedButton = extractDialogButton(dialogResult.stdout);
+      if (selectedButton) {
+        applyDialogChoice({
+          repoRoot: params.repoRoot,
+          config,
+          button: selectedButton,
+          nowMs,
+        });
+      }
+    }
   }
 
   return { delivered: true, reason: 'delivered' };

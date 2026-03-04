@@ -1,4 +1,6 @@
 import assert from 'node:assert/strict';
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import test from 'node:test';
 import {
   buildSystemNotificationPayload,
@@ -95,6 +97,24 @@ test('readSystemNotificationsConfig habilita notificaciones por defecto cuando n
   });
 });
 
+test('readSystemNotificationsConfig conserva muteUntil cuando existe', async () => {
+  await withTempDir('pumuki-notifications-mute-until-', async (repoRoot) => {
+    const muteUntil = '2026-03-05T10:00:00.000Z';
+    const configPath = join(repoRoot, '.pumuki', 'system-notifications.json');
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      configPath,
+      `${JSON.stringify({ enabled: true, channel: 'macos', muteUntil }, null, 2)}\n`,
+      'utf8'
+    );
+
+    const config = readSystemNotificationsConfig(repoRoot);
+    assert.equal(config.enabled, true);
+    assert.equal(config.channel, 'macos');
+    assert.equal(config.muteUntil, muteUntil);
+  });
+});
+
 test('emitSystemNotification aplica fallback no-macOS y no ejecuta osascript', () => {
   const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
   const result = emitSystemNotification({
@@ -115,7 +135,7 @@ test('emitSystemNotification aplica fallback no-macOS y no ejecuta osascript', (
   assert.equal(calls.length, 0);
 });
 
-test('emitSystemNotification en macOS abre diálogo completo opcional para bloqueos', () => {
+test('emitSystemNotification devuelve muted y no ejecuta comando cuando el silencio está activo', () => {
   const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
   const result = emitSystemNotification({
     platform: 'darwin',
@@ -123,24 +143,102 @@ test('emitSystemNotification en macOS abre diálogo completo opcional para bloqu
       kind: 'gate.blocked',
       stage: 'PRE_PUSH',
       totalViolations: 1,
-      causeCode: 'BACKEND_AVOID_EXPLICIT_ANY',
-      causeMessage: 'Avoid explicit any in backend code.',
-      remediation: 'Tipa el valor y elimina any explícito en backend.',
     },
-    env: {
-      PUMUKI_MACOS_BLOCKED_DIALOG: '1',
-    } as NodeJS.ProcessEnv,
+    config: {
+      enabled: true,
+      channel: 'macos',
+      muteUntil: '2099-01-01T00:00:00.000Z',
+    },
+    now: () => Date.parse('2026-03-04T12:00:00.000Z'),
     runCommand: (command, args) => {
       calls.push({ command, args });
       return 0;
     },
   });
 
-  assert.equal(result.delivered, true);
-  assert.equal(calls.length, 2);
-  assert.equal(calls[0]?.command, 'osascript');
-  assert.equal(calls[1]?.command, 'osascript');
-  assert.match(calls[0]?.args.join(' ') ?? '', /display notification/i);
-  assert.match(calls[1]?.args.join(' ') ?? '', /display dialog/i);
-  assert.match(calls[1]?.args.join(' ') ?? '', /solución/i);
+  assert.equal(result.delivered, false);
+  assert.equal(result.reason, 'muted');
+  assert.equal(calls.length, 0);
+});
+
+test('emitSystemNotification en macOS permite silenciar 30 min desde diálogo', async () => {
+  await withTempDir('pumuki-notifications-dialog-mute30-', async (repoRoot) => {
+    const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
+    const nowMs = Date.parse('2026-03-04T12:00:00.000Z');
+    const result = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      event: {
+        kind: 'gate.blocked',
+        stage: 'PRE_PUSH',
+        totalViolations: 1,
+        causeCode: 'BACKEND_AVOID_EXPLICIT_ANY',
+        causeMessage: 'Avoid explicit any in backend code.',
+        remediation: 'Tipa el valor y elimina any explícito en backend.',
+      },
+      env: {
+        PUMUKI_MACOS_BLOCKED_DIALOG: '1',
+      } as NodeJS.ProcessEnv,
+      now: () => nowMs,
+      runCommand: (command, args) => {
+        calls.push({ command, args });
+        return 0;
+      },
+      runCommandWithOutput: (command, args) => {
+        calls.push({ command, args });
+        return {
+          exitCode: 0,
+          stdout: 'button returned:Silenciar 30 min\n',
+        };
+      },
+    });
+
+    assert.equal(result.delivered, true);
+    assert.equal(calls.length, 2);
+    const config = readSystemNotificationsConfig(repoRoot);
+    assert.equal(config.enabled, true);
+    assert.ok(config.muteUntil);
+    assert.equal(
+      Date.parse(config.muteUntil ?? ''),
+      nowMs + 30 * 60_000
+    );
+  });
+});
+
+test('emitSystemNotification en macOS permite desactivar desde diálogo', async () => {
+  await withTempDir('pumuki-notifications-dialog-disable-', async (repoRoot) => {
+    const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
+    const result = emitSystemNotification({
+      platform: 'darwin',
+      repoRoot,
+      event: {
+        kind: 'gate.blocked',
+        stage: 'PRE_PUSH',
+        totalViolations: 1,
+        causeCode: 'BACKEND_AVOID_EXPLICIT_ANY',
+        causeMessage: 'Avoid explicit any in backend code.',
+        remediation: 'Tipa el valor y elimina any explícito en backend.',
+      },
+      env: {
+        PUMUKI_MACOS_BLOCKED_DIALOG: '1',
+      } as NodeJS.ProcessEnv,
+      runCommand: (command, args) => {
+        calls.push({ command, args });
+        return 0;
+      },
+      runCommandWithOutput: (command, args) => {
+        calls.push({ command, args });
+        return {
+          exitCode: 0,
+          stdout: 'button returned:Desactivar\n',
+        };
+      },
+    });
+
+    assert.equal(result.delivered, true);
+    assert.equal(calls.length, 2);
+    const config = readSystemNotificationsConfig(repoRoot);
+    assert.equal(config.enabled, false);
+    assert.equal(config.muteUntil, undefined);
+  });
 });

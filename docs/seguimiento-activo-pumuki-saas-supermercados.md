@@ -54,6 +54,7 @@
   - Ajuste UX (2026-03-04): mensaje corto y legible para humanos.
   - Nuevo formato: subtítulo con causa resumida + cuerpo iniciando por `Solución: ...` para que no se corte la remediación.
   - ✅ PoC (2026-03-04): modo opcional de diálogo completo para bloqueo en macOS con `PUMUKI_MACOS_BLOCKED_DIALOG=1` (banner corto + modal con causa/solución completas).
+  - ✅ PoC anti-spam (2026-03-04): diálogo con acciones de control (`Mantener activas`, `Silenciar 30 min`, `Desactivar`) + timeout automático de 15s para no bloquear flujo.
 
 ## Decisión de producto (hard)
 
