@@ -1736,11 +1736,21 @@ Criterio de salida F5:
     - `npm run -s validation:contract-suite:enterprise -- --json`
     - `npm run -s validation:package-manifest`
 
-- 🚧 `P12.F2.T51` Publicar release que incluya el hardening `#551` (suite contractual) y dejar trazabilidad final en canónico + master.
+- ✅ `P12.F2.T51` Publicar release que incluya el hardening `#551` (suite contractual) y dejar trazabilidad final en canónico + master.
+  - cierre ejecutado:
+    - rama release creada y mergeada: `release/6.3.31` -> `#555` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/555`).
+    - publicación npm completada: `pumuki@6.3.31`.
+    - issue `#551` cerrada tras merge de `#553` y release publicada.
+  - evidencia:
+    - `npm publish --access public`
+    - `npm view pumuki version` => `6.3.31`
+    - `gh pr view 555 --json state,mergeCommit,url`
+
+- 🚧 `P12.F2.T52` Ejecutar siguiente iteración técnica post-release `6.3.31`: ampliar la suite contractual multi-repo con fixture adicional y cobertura de regresión.
   - salida esperada:
-    - versión npm publicada con el MVP de suite contractual multi-repo.
-    - canónico RuralGO y master plan alineados con refs de release.
-    - estado operativo preparado para siguiente bloque de mejoras.
+    - issue de ampliación creada y priorizada con DoD verificable.
+    - implementación en rama propia con ciclo RED -> GREEN -> REFACTOR.
+    - PR mergeada con evidencia (`tests`, `typecheck`, `validation:contract-suite:enterprise`).
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

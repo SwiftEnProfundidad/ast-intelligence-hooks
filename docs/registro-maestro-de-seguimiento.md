@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F2.T51` (publicar release con el hardening `#551` y cerrar trazabilidad final en canónico + master).
+- Task activa (`🚧`): `P12.F2.T52` (ampliar suite contractual multi-repo post-release `6.3.31` con fixture adicional + cobertura de regresión).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
