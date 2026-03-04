@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-024 (issue `#615`, trazabilidad skills `.codex` -> runtime vía `skills-ir:*` con fusión de source fact+IR en findings).
-- Task activa (`🚧`): PUMUKI-025 (siguiente bug/mejora SAAS prioritaria: issue `#616`).
+- Última task cerrada (`✅`): PUMUKI-025 (issue `#616`, PoC AST dual mode `off/shadow/strict` + RFC/roadmap + integración en gate).
+- Task activa (`🚧`): PUMUKI-026 (siguiente mejora SAAS prioritaria: issue `#617`, `sdd learn/sync` desde evidencia operativa).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

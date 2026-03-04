@@ -20,6 +20,10 @@ import {
 import { extractHeuristicFacts } from '../../core/facts/extractHeuristicFacts';
 import { buildCombinedBaselineRules } from './baselineRuleSets';
 import { attachFindingTraceability } from './findingTraceability';
+export {
+  evaluateAstIntelligenceDualValidation,
+  type AstIntelligenceDualValidationResult,
+} from './astIntelligenceDualValidation';
 
 type PlatformGateEvaluationResult = {
   detectedPlatforms: DetectedPlatforms;

@@ -13,7 +13,11 @@ import {
   resolveActiveGateWaiver,
   type GateWaiverResult,
 } from './gateWaiver';
-import { evaluatePlatformGateFindings } from './runPlatformGateEvaluation';
+import {
+  evaluateAstIntelligenceDualValidation,
+  evaluatePlatformGateFindings,
+  type AstIntelligenceDualValidationResult,
+} from './runPlatformGateEvaluation';
 import {
   countScannedFilesFromFacts,
   resolveFactsForGateScope,
@@ -46,6 +50,7 @@ export type GateDependencies = {
   emitPlatformGateEvidence: typeof emitPlatformGateEvidence;
   printGateFindings: typeof printGateFindings;
   enforceTddBddPolicy: typeof enforceTddBddPolicy;
+  evaluateAstIntelligenceDualValidation: typeof evaluateAstIntelligenceDualValidation;
   buildMemoryShadowRecommendation: (params: {
     findings: ReadonlyArray<Finding>;
     tddBddSnapshot?: TddBddSnapshot;
@@ -117,6 +122,7 @@ const defaultDependencies: GateDependencies = {
   emitPlatformGateEvidence,
   printGateFindings,
   enforceTddBddPolicy,
+  evaluateAstIntelligenceDualValidation,
   buildMemoryShadowRecommendation: buildDefaultMemoryShadowRecommendation,
   evaluateSddForStage: (stage, repoRoot) =>
     evaluateSddPolicy({
@@ -729,6 +735,13 @@ const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
   };
 };
 
+const shouldBlockFromFinding = (finding: Finding | undefined): boolean => {
+  if (!finding) {
+    return false;
+  }
+  return finding.severity === 'ERROR' || finding.severity === 'CRITICAL';
+};
+
 export async function runPlatformGate(params: {
   policy: GatePolicy;
   auditMode?: 'gate' | 'engine';
@@ -807,6 +820,7 @@ export async function runPlatformGate(params: {
     projectRules,
     heuristicRules,
     coverage,
+    evaluationFacts = facts,
     findings,
   } = dependencies.evaluatePlatformGateFindings({
     facts,
@@ -919,6 +933,33 @@ export async function runPlatformGate(params: {
           policyTrace: params.policyTrace,
         })
       : undefined;
+  const astIntelligenceDualValidation:
+    | AstIntelligenceDualValidationResult
+    | undefined =
+    params.policy.stage === 'PRE_COMMIT'
+      || params.policy.stage === 'PRE_PUSH'
+      || params.policy.stage === 'CI'
+      ? dependencies.evaluateAstIntelligenceDualValidation({
+          stage: params.policy.stage,
+          skillsRules: skillsRuleSet.rules,
+          facts: evaluationFacts,
+          legacyFindings: findings,
+        })
+      : undefined;
+  const astIntelligenceDualFinding = astIntelligenceDualValidation?.finding;
+  if (astIntelligenceDualValidation && astIntelligenceDualValidation.mode !== 'off') {
+    const summary = astIntelligenceDualValidation.summary;
+    process.stdout.write(
+      `[pumuki][ast-intelligence] mode=${astIntelligenceDualValidation.mode}` +
+      ` mapped_rules=${summary.mapped_rules}` +
+      ` compared_rules=${summary.compared_rules}` +
+      ` divergences=${summary.divergences}` +
+      ` false_positives=${summary.false_positives}` +
+      ` false_negatives=${summary.false_negatives}` +
+      ` latency_ms=${summary.latency_ms}` +
+      ` languages=[${summary.languages.join(',') || 'none'}]\n`
+    );
+  }
   const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
   const rulesCoverage = coverage
     ? {
@@ -972,6 +1013,7 @@ export async function runPlatformGate(params: {
       ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
       ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
       ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+      ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
@@ -982,6 +1024,7 @@ export async function runPlatformGate(params: {
       || skillsScopeComplianceFinding
       || activeRulesEmptyForCodeChangesFinding
       || iosTestsQualityFinding
+      || astIntelligenceDualFinding
       || coverageBlockingFinding
       || policyAsCodeBlockingFinding
       || degradedModeFinding
@@ -995,11 +1038,13 @@ export async function runPlatformGate(params: {
         ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
         ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
         ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
+        ...(astIntelligenceDualFinding ? [astIntelligenceDualFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
         ...findings,
       ]
       : findings;
+  const hasAstIntelligenceBlockingFinding = shouldBlockFromFinding(astIntelligenceDualFinding);
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
   const baseGateOutcome =
     sddBlockingFinding ||
@@ -1011,6 +1056,7 @@ export async function runPlatformGate(params: {
     skillsScopeComplianceFinding ||
     activeRulesEmptyForCodeChangesFinding ||
     iosTestsQualityFinding ||
+    hasAstIntelligenceBlockingFinding ||
     coverageBlockingFinding ||
     hasTddBddBlockingFinding
       ? 'BLOCK'

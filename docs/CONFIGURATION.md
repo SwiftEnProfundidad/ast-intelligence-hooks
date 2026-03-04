@@ -241,6 +241,18 @@ PUMUKI_ENABLE_AST_HEURISTICS=true
 
 When enabled, stage-based heuristic severity maturity applies via `applyHeuristicSeverityForStage`.
 
+## AST Intelligence dual mode (legacy + nodos)
+
+Controla la validación dual entre findings legacy y evaluación AST por nodos compilados desde `skills-ir`.
+
+```bash
+PUMUKI_AST_INTELLIGENCE_DUAL_MODE=off|shadow|strict
+```
+
+- `off` (default): desactivado.
+- `shadow`: compara y reporta divergencias sin bloquear.
+- `strict`: bloquea si hay divergencias (`false_positive/false_negative`) entre legacy y AST.
+
 ## Rule packs
 
 Version map lives in `core/rules/presets/rulePackVersions.ts`.

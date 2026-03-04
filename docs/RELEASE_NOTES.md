@@ -5,6 +5,22 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-05 (next cut candidate, post v6.3.39)
+
+- AST Intelligence dual validation PoC (`#616`) integrado en gate:
+  - runtime mode: `PUMUKI_AST_INTELLIGENCE_DUAL_MODE=off|shadow|strict`.
+  - `shadow`: comparación legacy vs AST por nodos sin bloqueo.
+  - `strict`: bloqueo cuando hay divergencias.
+  - métricas en runtime: `mapped_rules`, `divergences`, `false_positives`, `false_negatives`, `latency_ms`, `languages`.
+- Señales de gate añadidas:
+  - `governance.ast-intelligence.dual-validation.shadow`
+  - `governance.ast-intelligence.dual-validation.mismatch`
+- RFC y plan de rollout/rollback:
+  - `docs/validation/ast-intelligence-roadmap.md`.
+- Evidencia de validación:
+  - `npm run -s typecheck` (`PASS`)
+  - `npm run -s test:stage-gates` (`1033 pass / 0 fail / 4 skip`)
+
 ### 2026-03-04 (next cut candidate, post v6.3.39)
 
 - Gate coverage hardening for SAAS backlog (`#622`):

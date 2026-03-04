@@ -180,4 +180,16 @@
     - `npm run -s test:stage-gates` -> `1027 pass / 0 fail / 4 skip`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-025: Ejecutar siguiente bug/mejora SAAS prioritaria (`#616`) para cerrar definición técnica del roadmap AST por nodos con entregable ejecutable y trazable.
+- ✅ PUMUKI-025: Ejecutar siguiente bug/mejora SAAS prioritaria (`#616`) para cerrar definición técnica del roadmap AST por nodos con entregable ejecutable y trazable.
+  - Fix:
+    - PoC runtime de validación dual legacy+AST: `integrations/git/astIntelligenceDualValidation.ts` (`off/shadow/strict`).
+    - Integración en gate principal: `integrations/git/runPlatformGate.ts`.
+    - Re-export para compatibilidad interna: `integrations/git/runPlatformGateEvaluation.ts`.
+    - RFC legible + roadmap 30/60/90 + rollout/rollback: `docs/validation/ast-intelligence-roadmap.md`.
+    - Documentación operativa de configuración/uso: `docs/CONFIGURATION.md`, `docs/USAGE.md`, `docs/validation/README.md`, `docs/README.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/astIntelligenceDualValidation.test.ts integrations/git/__tests__/runPlatformGateAstIntelligenceDualMode.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts scripts/__tests__/architecture-file-size-guardrails.test.ts` -> `12 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npm run -s test:stage-gates` -> `1033 pass / 0 fail / 4 skip`.
+
+- 🚧 PUMUKI-026: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para aprendizaje/sync SDD desde evidencia operativa con flujo seguro `dry-run -> apply`.

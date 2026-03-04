@@ -5,6 +5,7 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 ## Documentación oficial vigente
 
 - `adapter-hook-runtime-validation.md`
+- `ast-intelligence-roadmap.md`
 - `c022-phase-acceptance-contract.md`
 - `detection-audit-baseline.md`
 - `enterprise-consumer-isolation-policy.md`
@@ -14,7 +15,7 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 ## Estado operativo actual
 
 - Master de seguimiento: `docs/registro-maestro-de-seguimiento.md`.
-- Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
+- Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`.
 - Suite contractual enterprise (MVP): `npm run -s validation:contract-suite:enterprise`.
   - Perfiles activos del reporte JSON:
     - `minimal`

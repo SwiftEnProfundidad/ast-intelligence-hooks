@@ -481,6 +481,20 @@ PUMUKI_ENABLE_AST_HEURISTICS=true npx tsx integrations/git/prePushIOS.cli.ts
 
 Details: `docs/rule-packs/heuristics.md`.
 
+## AST Intelligence dual mode (comparación legacy vs AST)
+
+Activar modo dual:
+
+```bash
+PUMUKI_AST_INTELLIGENCE_DUAL_MODE=shadow npx --yes --package pumuki@latest pumuki-pre-commit
+```
+
+Modos soportados:
+
+- `off` (default): no ejecuta comparación dual.
+- `shadow`: añade señal informativa de divergencias sin bloquear.
+- `strict`: bloquea cuando hay divergencias entre legacy y AST por nodos.
+
 ## CI workflows
 
 - `.github/workflows/pumuki-gate-template.yml`

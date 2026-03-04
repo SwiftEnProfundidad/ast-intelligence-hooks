@@ -6,6 +6,19 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- AST Intelligence dual validation PoC (`#616`) with compatibility-first rollout:
+  - new dual mode runtime: `PUMUKI_AST_INTELLIGENCE_DUAL_MODE=off|shadow|strict`,
+  - new guard findings:
+    - `governance.ast-intelligence.dual-validation.shadow` (`INFO`, non-blocking),
+    - `governance.ast-intelligence.dual-validation.mismatch` (`ERROR`, blocking in `strict`),
+  - deterministic runtime summary in gate logs:
+    - mapped rules, divergences, `false_positives`, `false_negatives`, `latency_ms`, languages.
+- RFC + roadmap for AST Intelligence by nodes:
+  - `docs/validation/ast-intelligence-roadmap.md`,
+  - includes architecture target, 30/60/90 plan, rollout and rollback contract.
+
 ### Fixed
 
 - Stage gates now block deterministically when code changes are detected but rules coverage has no active rules:

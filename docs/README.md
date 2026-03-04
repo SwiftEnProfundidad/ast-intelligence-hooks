@@ -48,6 +48,7 @@ Canonical index for active Pumuki documentation.
 
 - `docs/validation/README.md`: enterprise minimal validation index.
 - `docs/validation/adapter-hook-runtime-validation.md`
+- `docs/validation/ast-intelligence-roadmap.md`
 - `docs/validation/c022-phase-acceptance-contract.md`
 - `docs/validation/enterprise-consumer-isolation-policy.md`
 - `docs/validation/mock-consumer-integration-runbook.md`
