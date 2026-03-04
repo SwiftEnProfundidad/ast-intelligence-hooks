@@ -3,6 +3,7 @@ import test from 'node:test';
 import * as sdd from '../index';
 import { evaluateSddPolicy, readSddStatus } from '../policy';
 import { closeSddSession, openSddSession, readSddSession, refreshSddSession } from '../sessionStore';
+import { runSddAutoSync, runSddLearn, runSddSyncDocs } from '../syncDocs';
 
 test('sdd index re-exports policy and sessionStore runtime API', () => {
   assert.strictEqual(sdd.evaluateSddPolicy, evaluateSddPolicy);
@@ -11,6 +12,9 @@ test('sdd index re-exports policy and sessionStore runtime API', () => {
   assert.strictEqual(sdd.readSddSession, readSddSession);
   assert.strictEqual(sdd.refreshSddSession, refreshSddSession);
   assert.strictEqual(sdd.closeSddSession, closeSddSession);
+  assert.strictEqual(sdd.runSddSyncDocs, runSddSyncDocs);
+  assert.strictEqual(sdd.runSddLearn, runSddLearn);
+  assert.strictEqual(sdd.runSddAutoSync, runSddAutoSync);
 });
 
 test('sdd index exposes only the expected runtime symbols', () => {
@@ -21,5 +25,8 @@ test('sdd index exposes only the expected runtime symbols', () => {
     'readSddSession',
     'readSddStatus',
     'refreshSddSession',
+    'runSddAutoSync',
+    'runSddLearn',
+    'runSddSyncDocs',
   ]);
 });

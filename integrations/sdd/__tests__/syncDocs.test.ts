@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
-import { runSddSyncDocs } from '../syncDocs';
+import { runSddAutoSync, runSddSyncDocs } from '../syncDocs';
 import type { EvidenceReadResult } from '../../evidence/readEvidence';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -534,4 +534,86 @@ test('runSddSyncDocs falla con conflicto de marcadores y no toca el archivo', as
     const after = readFileSync(canonicalPath, 'utf8');
     assert.equal(before, after);
   });
+});
+
+test('runSddAutoSync dry-run orquesta sync-docs + learning sin modificar archivos', async () => {
+  await withFixtureRepo('pumuki-sdd-auto-sync-dry-run-', (repoRoot) => {
+    const canonicalPath = writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+    const before = readFileSync(canonicalPath, 'utf8');
+
+    const result = runSddAutoSync({
+      repoRoot,
+      dryRun: true,
+      change: 'rgo-1700-06',
+      stage: 'PRE_PUSH',
+      task: 'P12.F2.T70',
+      now: () => new Date('2026-03-04T11:00:00.000Z'),
+    });
+    const after = readFileSync(canonicalPath, 'utf8');
+
+    assert.equal(result.command, 'pumuki sdd auto-sync');
+    assert.equal(result.dryRun, true);
+    assert.equal(result.context.change, 'rgo-1700-06');
+    assert.equal(result.context.stage, 'PRE_PUSH');
+    assert.equal(result.context.task, 'P12.F2.T70');
+    assert.equal(result.syncDocs.updated, true);
+    assert.equal(result.syncDocs.files.length, 1);
+    assert.equal(result.learning.path, 'openspec/changes/rgo-1700-06/learning.json');
+    assert.equal(result.learning.written, false);
+    assert.equal(before, after);
+  });
+});
+
+test('runSddAutoSync aplica sync-docs y persiste learning en modo escritura', async () => {
+  await withFixtureRepo('pumuki-sdd-auto-sync-write-', (repoRoot) => {
+    const canonicalPath = writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const result = runSddAutoSync({
+      repoRoot,
+      dryRun: false,
+      change: 'rgo-1700-07',
+      stage: 'PRE_COMMIT',
+      task: 'P12.F2.T70',
+      now: () => new Date('2026-03-04T11:05:00.000Z'),
+    });
+
+    assert.equal(result.command, 'pumuki sdd auto-sync');
+    assert.equal(result.syncDocs.updated, true);
+    assert.match(readFileSync(canonicalPath, 'utf8'), /openspec_installed:/);
+    const learningPath = join(repoRoot, 'openspec', 'changes', 'rgo-1700-07', 'learning.json');
+    assert.equal(existsSync(learningPath), true);
+    assert.equal(result.learning.written, true);
+    assert.equal(result.learning.path, 'openspec/changes/rgo-1700-07/learning.json');
+  });
+});
+
+test('runSddAutoSync falla cuando falta --change', () => {
+  assert.throws(
+    () =>
+      runSddAutoSync({
+        repoRoot: process.cwd(),
+        dryRun: true,
+      }),
+    /auto-sync requires --change/i
+  );
 });
