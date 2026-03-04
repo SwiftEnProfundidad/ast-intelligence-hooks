@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-021 (consolidación de backlog SAAS `#614+` + fix `#622` para bloquear `active_rule_ids=[]` con cambios de código).
-- Task activa (`🚧`): PUMUKI-022 (siguiente bug/mejora SAAS prioritaria: enforcement iOS tests `#623`).
+- Última task cerrada (`✅`): PUMUKI-022 (enforcement iOS tests `#623` con guard hard de `makeSUT()` + `trackForMemoryLeaks()` y no-regresión global en verde).
+- Task activa (`🚧`): PUMUKI-023 (siguiente bug/mejora SAAS prioritaria: issue P0 `#614` con cierre por evidencia o ampliación técnica).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

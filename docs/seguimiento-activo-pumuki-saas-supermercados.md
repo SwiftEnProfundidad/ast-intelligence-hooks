@@ -145,4 +145,16 @@
     - `npm run -s typecheck` -> `PASS`.
     - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/stageRunners.test.ts` -> `51 pass / 0 fail`.
 
-- 🚧 PUMUKI-022: Ejecutar siguiente bug/mejora SAAS prioritaria de enforcement iOS tests (`#623`) sin abrir frentes paralelos.
+- ✅ PUMUKI-022: Ejecutar siguiente bug/mejora SAAS prioritaria de enforcement iOS tests (`#623`) sin abrir frentes paralelos.
+  - Fix:
+    - Nuevo guard determinista de calidad de tests iOS en gate: `governance.skills.ios-test-quality.incomplete`.
+    - Nuevo código de bloqueo: `IOS_TEST_QUALITY_PATTERN_MISSING_HIGH`.
+    - Criterio hard en `PRE_COMMIT/PRE_PUSH/CI`: para fuentes `XCTest` en `apps/ios/**/Tests/**.swift`, exigir `makeSUT()` y `trackForMemoryLeaks()`.
+    - Ajuste de consistencia: findings de guards de cobertura se incluyen siempre en `effectiveFindings` cuando aplican, evitando bloqueos “opacos”.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `21 pass / 0 fail`.
+    - `npm run -s test:stage-gates` -> `1024 pass / 0 fail / 4 skip`.
+
+- 🚧 PUMUKI-023: Ejecutar siguiente bug/mejora SAAS prioritaria (`#614`) para cerrar issue P0 abierta con evidencia reproducible y decidir cierre o ampliación de implementación.
