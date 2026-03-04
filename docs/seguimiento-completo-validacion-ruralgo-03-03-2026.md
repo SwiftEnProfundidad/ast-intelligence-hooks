@@ -1815,11 +1815,22 @@ Criterio de salida F5:
     - `npm run -s validation:tracking-single-active`
     - `docs/CONFIGURATION.md` actualizado con verificación operativa JSONL y claves esperadas.
 
-- 🚧 `P12.F2.T58` Ejecutar siguiente mejora estratégica: rotación/guard de tamaño para telemetría JSONL en repos enterprise de larga duración.
+- ✅ `P12.F2.T58` Ejecutar siguiente mejora estratégica: rotación/guard de tamaño para telemetría JSONL en repos enterprise de larga duración.
+  - cierre ejecutado:
+    - issue creada y cerrada: `#572`.
+    - rama técnica creada y mergeada: `feature/572-telemetry-jsonl-rotation-guard` -> `#574` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/574`).
+    - commit de merge en `develop`: `b3a5b27`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `docs/CONFIGURATION.md` actualizado con `PUMUKI_TELEMETRY_JSONL_MAX_BYTES`.
+
+- 🚧 `P12.F2.T59` Ejecutar siguiente mejora estratégica: cubrir la rotación JSONL en la suite contractual enterprise.
   - salida esperada:
-    - issue de implementación creada con alcance/doD verificable (`#572`).
-    - soporte opcional de rotación por tamaño en `PUMUKI_TELEMETRY_JSONL_PATH`.
-    - tests de no-regresión y contrato determinista de archivo.
+    - issue de implementación creada con alcance/doD verificable (`#575`).
+    - profile/escenario contractual que valide artefactos `gate-telemetry.jsonl` + `gate-telemetry.jsonl.1`.
+    - resultado visible en `validation:contract-suite:enterprise -- --json`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
