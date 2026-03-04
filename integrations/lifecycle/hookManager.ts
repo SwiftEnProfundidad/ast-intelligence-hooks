@@ -16,6 +16,16 @@ export type HookUninstallResult = {
   changedHooks: ReadonlyArray<PumukiManagedHook>;
 };
 
+export type PumukiHooksDirectoryResolutionSource =
+  | 'git-rev-parse'
+  | 'git-config'
+  | 'default';
+
+export type PumukiHooksDirectoryResolution = {
+  path: string;
+  source: PumukiHooksDirectoryResolutionSource;
+};
+
 const HOOK_FILE_MODE = 0o755;
 
 const resolveGitPath = (repoRoot: string, gitPathTarget: string): string | null => {
@@ -34,8 +44,82 @@ const resolveGitPath = (repoRoot: string, gitPathTarget: string): string | null 
   }
 };
 
+const readCoreHooksPathFromGitConfig = (repoRoot: string): string | null => {
+  const configPath = join(repoRoot, '.git', 'config');
+  if (!existsSync(configPath)) {
+    return null;
+  }
+
+  let contents = '';
+  try {
+    contents = readFileSync(configPath, 'utf8');
+  } catch {
+    return null;
+  }
+
+  let inCoreSection = false;
+  for (const rawLine of contents.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line.length === 0 || line.startsWith(';') || line.startsWith('#')) {
+      continue;
+    }
+
+    if (line.startsWith('[') && line.endsWith(']')) {
+      inCoreSection = /^\[core\]$/i.test(line);
+      continue;
+    }
+
+    if (!inCoreSection) {
+      continue;
+    }
+
+    const match = /^hookspath\s*=\s*(.+)$/i.exec(line);
+    if (!match) {
+      continue;
+    }
+
+    let hooksPath = match[1]?.trim() ?? '';
+    if (hooksPath.startsWith('"') && hooksPath.endsWith('"')) {
+      hooksPath = hooksPath.slice(1, -1);
+    }
+    if (hooksPath.length === 0) {
+      continue;
+    }
+    return hooksPath;
+  }
+
+  return null;
+};
+
+export const resolvePumukiHooksDirectory = (
+  repoRoot: string
+): PumukiHooksDirectoryResolution => {
+  const gitPathHooks = resolveGitPath(repoRoot, 'hooks');
+  if (gitPathHooks) {
+    return {
+      path: gitPathHooks,
+      source: 'git-rev-parse',
+    };
+  }
+
+  const hooksPathFromConfig = readCoreHooksPathFromGitConfig(repoRoot);
+  if (hooksPathFromConfig) {
+    return {
+      path: isAbsolute(hooksPathFromConfig)
+        ? hooksPathFromConfig
+        : resolve(repoRoot, hooksPathFromConfig),
+      source: 'git-config',
+    };
+  }
+
+  return {
+    path: join(repoRoot, '.git', 'hooks'),
+    source: 'default',
+  };
+};
+
 const resolveHooksDirectory = (repoRoot: string): string =>
-  resolveGitPath(repoRoot, 'hooks') ?? join(repoRoot, '.git', 'hooks');
+  resolvePumukiHooksDirectory(repoRoot).path;
 
 const resolveHookPath = (repoRoot: string, hook: PumukiManagedHook): string =>
   join(resolveHooksDirectory(repoRoot), hook);

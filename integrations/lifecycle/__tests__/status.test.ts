@@ -94,6 +94,8 @@ test('readLifecycleStatus compone estado desde git + hooks + lifecycle config', 
       'pre-commit': { exists: true, managedBlockPresent: true },
       'pre-push': { exists: true, managedBlockPresent: false },
     });
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
     assert.equal(typeof status.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.PRE_PUSH.hash, 'string');
     assert.equal(typeof status.policyValidation.stages.CI.hash, 'string');
@@ -127,6 +129,8 @@ test('readLifecycleStatus usa process.cwd cuando no se pasa cwd explícito', asy
     assert.deepEqual(git.resolveCalls, [process.cwd()]);
     assert.deepEqual(git.listTrackedCalls, [repoRoot]);
     assert.equal(status.trackedNodeModulesCount, 0);
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
   });
 });
 
@@ -150,5 +154,7 @@ test('readLifecycleStatus devuelve lifecycle vacío y hooks ausentes cuando no h
       'pre-commit': { exists: false, managedBlockPresent: false },
       'pre-push': { exists: false, managedBlockPresent: false },
     });
+    assert.equal(status.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(status.hooksDirectoryResolution, 'default');
   });
 });

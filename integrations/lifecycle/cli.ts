@@ -976,6 +976,9 @@ const printDoctorReport = (
   writeInfo(`[pumuki] repo: ${report.repoRoot}`);
   writeInfo(`[pumuki] package version: ${report.packageVersion}`);
   writeInfo(
+    `[pumuki] hooks path: ${report.hooksDirectory} (${report.hooksDirectoryResolution})`
+  );
+  writeInfo(
     `[pumuki] tracked node_modules paths: ${report.trackedNodeModulesPaths.length}`
   );
   writeInfo(
@@ -1422,6 +1425,9 @@ export const runLifecycleCli = async (
           writeInfo(`[pumuki] package version: ${status.packageVersion}`);
           writeInfo(`[pumuki] lifecycle installed: ${status.lifecycleState.installed ?? 'false'}`);
           writeInfo(`[pumuki] lifecycle version: ${status.lifecycleState.version ?? 'unknown'}`);
+          writeInfo(
+            `[pumuki] hooks path: ${status.hooksDirectory} (${status.hooksDirectoryResolution})`
+          );
           writeInfo(
             `[pumuki] hooks: pre-commit=${status.hookStatus['pre-commit'].managedBlockPresent ? 'managed' : 'missing'}, pre-push=${status.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
           );

@@ -146,6 +146,8 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
       git,
     });
 
+    assert.equal(report.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(report.hooksDirectoryResolution, 'default');
     assert.equal(report.repoRoot, repoRoot);
     assert.equal(typeof report.policyValidation.stages.PRE_COMMIT.hash, 'string');
     assert.equal(typeof report.policyValidation.stages.PRE_PUSH.hash, 'string');
@@ -170,6 +172,8 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
       git,
     });
 
+    assert.equal(report.hooksDirectory, join(repoRoot, '.git', 'hooks'));
+    assert.equal(report.hooksDirectoryResolution, 'default');
     assert.equal(report.issues.length, 1);
     assert.equal(report.issues[0]?.severity, 'warning');
     assert.match(report.issues[0]?.message ?? '', /installed=true/i);

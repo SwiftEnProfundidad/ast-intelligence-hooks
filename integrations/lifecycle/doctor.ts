@@ -2,7 +2,7 @@ import { existsSync, readFileSync, realpathSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { readEvidenceResult } from '../evidence/readEvidence';
 import { resolvePolicyForStage } from '../gate/stagePolicies';
-import { getPumukiHooksStatus } from './hookManager';
+import { getPumukiHooksStatus, resolvePumukiHooksDirectory } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { getCurrentPumukiVersion } from './packageInfo';
 import {
@@ -75,6 +75,8 @@ export type LifecycleDoctorReport = {
   lifecycleState: LifecycleState;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
+  hooksDirectory: string;
+  hooksDirectoryResolution: 'git-rev-parse' | 'git-config' | 'default';
   policyValidation: LifecyclePolicyValidationSnapshot;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
@@ -83,6 +85,7 @@ export type LifecycleDoctorReport = {
 const buildDoctorIssues = (params: {
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
+  hooksDirectory: string;
   lifecycleState: LifecycleState;
 }): ReadonlyArray<DoctorIssue> => {
   const issues: DoctorIssue[] = [];
@@ -107,6 +110,7 @@ const buildDoctorIssues = (params: {
       severity: 'warning',
       message:
         `Lifecycle state says installed=true but managed hook blocks are incomplete (${managedHooks}/${totalHooks}). ` +
+        `Effective hooks path: ${params.hooksDirectory}. ` +
         'If you use versioned hooks via core.hooksPath, ensure those hooks include the PUMUKI MANAGED block or rerun "pumuki install".',
     });
   }
@@ -640,12 +644,14 @@ export const runLifecycleDoctor = (params?: {
   const cwd = params?.cwd ?? process.cwd();
   const repoRoot = git.resolveRepoRoot(cwd);
   const trackedNodeModulesPaths = git.trackedNodeModulesPaths(repoRoot);
+  const hooksDirectory = resolvePumukiHooksDirectory(repoRoot);
   const hookStatus = getPumukiHooksStatus(repoRoot);
   const lifecycleState = readLifecycleState(git, repoRoot);
 
   const issues = buildDoctorIssues({
     trackedNodeModulesPaths,
     hookStatus,
+    hooksDirectory: hooksDirectory.path,
     lifecycleState,
   });
   const deep = params?.deep
@@ -663,6 +669,8 @@ export const runLifecycleDoctor = (params?: {
     lifecycleState,
     trackedNodeModulesPaths,
     hookStatus,
+    hooksDirectory: hooksDirectory.path,
+    hooksDirectoryResolution: hooksDirectory.source,
     policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
     issues,
     deep,
