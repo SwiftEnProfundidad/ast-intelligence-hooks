@@ -1931,11 +1931,22 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `37 passed, 0 failed`.
     - `npm run -s typecheck` => `exit 0`.
 
-- 🚧 `P12.F2.T68` Continuar SDD pendiente enterprise: añadir comando dedicado `pumuki sdd learn` (`#597`).
+- ✅ `P12.F2.T68` Continuar SDD pendiente enterprise: añadir comando dedicado `pumuki sdd learn` (`#597`).
+  - cierre ejecutado:
+    - nuevo runtime `runSddLearn` en capa SDD con salida/persistencia de `learning.json` sin depender de `sync-docs`.
+    - CLI ampliada con:
+      - `pumuki sdd learn --change=<id> --stage=<stage> --task=<task-id> [--dry-run] [--json]`.
+    - cobertura de regresión añadida en parser y ejecución (`cli.test.ts`) y documentación actualizada en `docs/CONFIGURATION.md`.
+    - PR mergeada: `#599` (`commit c971c643883ccce679c0c5cdb3363bdd6e6cace6`).
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `38 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+
+- 🚧 `P12.F2.T69` Publicar release `6.3.35` con cierre SDD incremental.
   - salida esperada:
-    - CLI con `pumuki sdd learn --change=<id> --stage=<stage> --task=<id> [--dry-run] [--json]`.
-    - persistencia de `learning.json` sin depender de `sync-docs`.
-    - contrato compatible con artefacto de aprendizaje actual y tests en verde.
+    - bump de versión (`package.json`, `package-lock.json`) + nota de release.
+    - publicación npm exitosa y verificación `npm view pumuki version`.
+    - smoke mínimo con `npx --yes --package pumuki@latest pumuki --help`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
