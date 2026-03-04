@@ -25,7 +25,7 @@ type PolicyTrace = ResolvedStagePolicy['trace'] & {
   signature?: string;
   policySource?: string;
   validation?: {
-    status: 'valid' | 'invalid' | 'expired' | 'unknown-source';
+    status: 'valid' | 'invalid' | 'expired' | 'unknown-source' | 'unsigned';
     code: string;
   };
   degraded?: {
@@ -189,7 +189,7 @@ export type GateTelemetryEventV1 = {
     version?: string;
     signature?: string;
     policy_source?: string;
-    validation_status?: 'valid' | 'invalid' | 'expired' | 'unknown-source';
+    validation_status?: 'valid' | 'invalid' | 'expired' | 'unknown-source' | 'unsigned';
     validation_code?: string;
     degraded_mode_enabled?: boolean;
     degraded_mode_action?: 'allow' | 'block';

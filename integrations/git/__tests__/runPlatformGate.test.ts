@@ -419,6 +419,75 @@ test('runPlatformGate bloquea en modo strict cuando policy-as-code es inválida'
   assert.equal(policyFinding?.source, 'policy-as-code');
 });
 
+test('runPlatformGate bloquea en modo strict cuando policy-as-code está unsigned', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedFindings: ReadonlyArray<Finding> = [];
+
+  const result = await runPlatformGate({
+    policy,
+    policyTrace: {
+      source: 'default',
+      bundle: 'gate-policy.default.PRE_COMMIT',
+      hash: 'f'.repeat(64),
+      version: 'policy-as-code/default@1.0',
+      signature: 'a'.repeat(64),
+      policySource: 'computed-local',
+      validation: {
+        status: 'unsigned',
+        code: 'POLICY_AS_CODE_UNSIGNED',
+        message: 'Policy-as-code contract is missing; runtime policy metadata is unsigned.',
+        strict: true,
+      },
+    },
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedFindings = paramsArg.findings;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  const policyFinding = emittedFindings.find(
+    (finding) => finding.ruleId === 'governance.policy-as-code.invalid'
+  );
+  assert.ok(policyFinding);
+  assert.equal(policyFinding?.code, 'POLICY_AS_CODE_UNSIGNED');
+  assert.equal(policyFinding?.source, 'policy-as-code');
+});
+
 test('runPlatformGate bloquea en modo strict cuando policy-as-code está expirada', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',
