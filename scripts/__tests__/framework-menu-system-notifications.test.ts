@@ -17,8 +17,9 @@ test('buildSystemNotificationPayload construye payload para gate BLOCK', () => {
 
   assert.match(payload.title, /pumuki/i);
   assert.match(payload.title, /bloqueado/i);
-  assert.match(payload.message, /pre_commit|pre-commit/i);
-  assert.match(payload.message, /7/);
+  assert.match(payload.subtitle ?? '', /pre_commit|pre-commit/i);
+  assert.match(payload.subtitle ?? '', /7/);
+  assert.match(payload.message, /^solución:/i);
   assert.equal(payload.soundName, 'Basso');
 });
 
@@ -32,9 +33,8 @@ test('buildSystemNotificationPayload para gate BLOCK incluye causa y remediació
     remediation: 'Ejecuta pumuki-pre-write para refrescar evidencia.',
   });
 
-  assert.match(payload.message, /EVIDENCE_STALE/);
-  assert.match(payload.message, /Evidence is stale/i);
-  assert.match(payload.message, /Cómo solucionarlo/i);
+  assert.match(payload.subtitle ?? '', /evidencia/i);
+  assert.match(payload.message, /^solución:/i);
   assert.match(payload.message, /pumuki-pre-write/i);
   assert.equal(payload.soundName, 'Basso');
 });
@@ -47,7 +47,7 @@ test('buildSystemNotificationPayload construye payload para evidencia stale', ()
   });
 
   assert.match(payload.title, /pumuki/i);
-  assert.match(payload.title, /evidence|stale/i);
+  assert.match(payload.title, /evidencia/i);
   assert.match(payload.message, /\.ai_evidence\.json/i);
   assert.match(payload.message, /45/);
 });
@@ -62,7 +62,7 @@ test('buildSystemNotificationPayload construye payload para violación git-flow'
   assert.match(payload.title, /pumuki/i);
   assert.match(payload.title, /git[- ]?flow/i);
   assert.match(payload.message, /\bmain\b/i);
-  assert.match(payload.message, /commits-direct-to-main/i);
+  assert.match(payload.message, /no cumple/i);
 });
 
 test('buildSystemNotificationPayload mantiene contrato legacy para audit summary', () => {

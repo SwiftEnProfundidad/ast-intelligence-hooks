@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-010 (`auto_execute_ai_start` con `confidence_pct`, `reason_code` y `next_action` estable).
+- Última task cerrada (`✅`): PUMUKI-011 (notificación macOS bloqueada refinada con formato corto y remediación visible).
 - Task activa (`🚧`): Fase 3 cierre (suite de regresión + notas de release).
 - Nuevos pendientes añadidos (`⏳`): sin cambios.
 

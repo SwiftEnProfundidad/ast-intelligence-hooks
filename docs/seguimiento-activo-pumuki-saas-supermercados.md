@@ -51,6 +51,8 @@
   - Requisito hard: cuando Pumuki bloquee (`PRE_WRITE`, `PRE_COMMIT`, `PRE_PUSH`, `CI`), lanzar notificación nativa macOS con sonido.
   - Contenido mínimo: `🔴 BLOQUEADO`, causa exacta (`code + message`) y `cómo solucionarlo` (`next_action`).
   - Entregable: comportamiento consistente en CLI, hooks y herramientas MCP con formato humano.
+  - Ajuste UX (2026-03-04): mensaje corto y legible para humanos.
+  - Nuevo formato: subtítulo con causa resumida + cuerpo iniciando por `Solución: ...` para que no se corte la remediación.
 
 ## Decisión de producto (hard)
 
