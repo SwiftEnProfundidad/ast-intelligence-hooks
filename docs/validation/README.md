@@ -16,6 +16,11 @@ Este directorio contiene solo documentación oficial y estable de validación pa
 - Master de seguimiento: `docs/registro-maestro-de-seguimiento.md`.
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
 - Suite contractual enterprise (MVP): `npm run -s validation:contract-suite:enterprise`.
+  - Perfiles activos del reporte JSON:
+    - `minimal`
+    - `block`
+    - `minimal-repeat`
+    - `telemetry-rotation`
 
 ## Política de higiene
 
