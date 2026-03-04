@@ -11,10 +11,20 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - when code changes are present and `active_rule_ids` is empty, gate now blocks with:
     - finding id: `governance.rules.active-rule-coverage.empty`
     - code: `ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`
+- iOS test quality hardening for SAAS backlog (`#623`):
+  - for XCTest sources in `apps/ios/**/Tests/**.swift`, gate now requires:
+    - `makeSUT()`
+    - `trackForMemoryLeaks()`
+  - blocking signal:
+    - finding id: `governance.skills.ios-test-quality.incomplete`
+    - code: `IOS_TEST_QUALITY_PATTERN_MISSING_HIGH`
+- Gate traceability consistency:
+  - fixed propagation of guard findings to `effectiveFindings` so `BLOCK` outcomes are always accompanied by explicit finding payload.
 - Validation evidence:
-  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` (`30 pass / 0 fail`)
-  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/stageRunners.test.ts` (`51 pass / 0 fail`)
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` (`32 pass / 0 fail`)
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` (`21 pass / 0 fail`)
   - `npm run -s typecheck` (`PASS`)
+  - `npm run -s test:stage-gates` (`1024 pass / 0 fail / 4 skip`)
 
 ### 2026-03-04 (v6.3.39)
 

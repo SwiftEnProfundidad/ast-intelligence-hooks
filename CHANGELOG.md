@@ -12,6 +12,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   - new finding `governance.rules.active-rule-coverage.empty`,
   - code `ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`,
   - prevents false-green `PASS/ALLOW` with `active_rule_ids=[]` on code surfaces.
+- iOS XCTest quality enforcement for enterprise gates (`PRE_COMMIT/PRE_PUSH/CI`):
+  - new finding `governance.skills.ios-test-quality.incomplete`,
+  - code `IOS_TEST_QUALITY_PATTERN_MISSING_HIGH`,
+  - blocks when XCTest sources in `apps/ios/**/Tests/**.swift` miss `makeSUT()` and/or `trackForMemoryLeaks()`.
+- Fixed findings trace consistency in stage gates:
+  - guard-driven blocking conditions are now always propagated to `effectiveFindings`,
+  - avoiding opaque `BLOCK` outcomes without explicit finding payload.
 
 ## [6.3.39] - 2026-03-04
 

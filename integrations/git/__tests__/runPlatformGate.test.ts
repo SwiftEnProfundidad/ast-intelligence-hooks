@@ -2484,6 +2484,272 @@ test('runPlatformGate permite cuando active_rule_ids está vacío pero no hay ca
   );
 });
 
+test('runPlatformGate bloquea cuando test iOS XCTest no usa makeSUT ni trackForMemoryLeaks', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/ios/Tests/Feature/LoginUseCaseTests.swift',
+      content: `
+import XCTest
+
+final class LoginUseCaseTests: XCTestCase {
+  func test_login_deliversTokenOnSuccess() {
+    XCTAssertTrue(true)
+  }
+}
+      `.trim(),
+      source: 'git:staged',
+    },
+  ];
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined = undefined;
+  let emitted = emittedArgs;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => facts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.critical-test-quality',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+          ] as RuleSet,
+          activeBundles: [
+            {
+              name: 'ios-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-concurrency-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-concurrency.md',
+              hash: 'b'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swiftui-expert-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swiftui-expert-skill.md',
+              hash: 'c'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 2,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 2,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 2,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.no-force-unwrap', 'skills.ios.critical-test-quality'],
+          evaluatedRuleIds: ['skills.ios.no-force-unwrap', 'skills.ios.critical-test-quality'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.ios.no-force-unwrap', 'skills.ios.critical-test-quality'],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emitted = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(emitted?.gateOutcome, 'BLOCK');
+  const finding = emitted?.findings.find(
+    (entry) => entry.ruleId === 'governance.skills.ios-test-quality.incomplete'
+  );
+  assert.ok(finding);
+  assert.equal(finding.severity, 'ERROR');
+  assert.match(finding.message, /makeSUT/i);
+  assert.match(finding.message, /trackForMemoryLeaks/i);
+});
+
+test('runPlatformGate permite cuando test iOS XCTest usa makeSUT y trackForMemoryLeaks', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileContent',
+      path: 'apps/ios/Tests/Feature/LoginUseCaseTests.swift',
+      content: `
+import XCTest
+
+final class LoginUseCaseTests: XCTestCase {
+  func test_login_deliversTokenOnSuccess() {
+    let (sut, _, _) = makeSUT()
+    trackForMemoryLeaks(sut)
+    XCTAssertTrue(true)
+  }
+
+  private func makeSUT() -> (AnyObject, AnyObject, AnyObject) {
+    return (NSObject(), NSObject(), NSObject())
+  }
+}
+      `.trim(),
+      source: 'git:staged',
+    },
+  ];
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => facts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.critical-test-quality',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+          ] as RuleSet,
+          activeBundles: [
+            {
+              name: 'ios-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-concurrency-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-concurrency.md',
+              hash: 'b'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swiftui-expert-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swiftui-expert-skill.md',
+              hash: 'c'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 2,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 2,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 2,
+          unevaluatedRules: 0,
+          activeRuleIds: ['skills.ios.no-force-unwrap', 'skills.ios.critical-test-quality'],
+          evaluatedRuleIds: ['skills.ios.no-force-unwrap', 'skills.ios.critical-test-quality'],
+          matchedRuleIds: [],
+          unmatchedRuleIds: ['skills.ios.no-force-unwrap', 'skills.ios.critical-test-quality'],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emittedArgs?.gateOutcome, 'ALLOW');
+  assert.equal(
+    emittedArgs?.findings.some(
+      (finding) => finding.ruleId === 'governance.skills.ios-test-quality.incomplete'
+    ),
+    false
+  );
+});
+
 test('runPlatformGate permite continuar cuando existe waiver de gate válido para stage bloqueante', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',

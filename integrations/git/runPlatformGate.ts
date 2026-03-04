@@ -305,6 +305,92 @@ const collectObservedCodePathsFromFacts = (
   return [...new Set(codePaths)].sort();
 };
 
+type IosTestFileContent = {
+  path: string;
+  content: string;
+};
+
+const isIosSwiftTestPath = (path: string): boolean => {
+  const normalized = toNormalizedPath(path).toLowerCase();
+  if (!normalized.endsWith('.swift')) {
+    return false;
+  }
+  return normalized.includes('/tests/') || normalized.includes('/uitests/');
+};
+
+const collectIosTestFileContents = (
+  facts: ReadonlyArray<Fact>
+): ReadonlyArray<IosTestFileContent> => {
+  const filesByPath = new Map<string, string>();
+  for (const fact of facts) {
+    if (fact.kind !== 'FileContent') {
+      continue;
+    }
+    if (!isIosSwiftTestPath(fact.path)) {
+      continue;
+    }
+    const normalizedPath = toNormalizedPath(fact.path);
+    filesByPath.set(normalizedPath, fact.content);
+  }
+  return [...filesByPath.entries()]
+    .sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath))
+    .map(([path, content]) => ({ path, content }));
+};
+
+const isXCTestSource = (content: string): boolean => {
+  return /\bimport\s+XCTest\b/.test(content) || /\bXCTestCase\b/.test(content);
+};
+
+const hasMakeSUTPattern = (content: string): boolean => /\bmakeSUT\s*\(/.test(content);
+
+const hasTrackForMemoryLeaksPattern = (content: string): boolean =>
+  /\btrackForMemoryLeaks\s*\(/.test(content);
+
+const toIosTestsQualityBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  facts: ReadonlyArray<Fact>;
+}): Finding | undefined => {
+  const testFiles = collectIosTestFileContents(params.facts);
+  if (testFiles.length === 0) {
+    return undefined;
+  }
+
+  const invalidFiles: string[] = [];
+  for (const testFile of testFiles) {
+    if (!isXCTestSource(testFile.content)) {
+      continue;
+    }
+    const missingMarkers: string[] = [];
+    if (!hasMakeSUTPattern(testFile.content)) {
+      missingMarkers.push('makeSUT()');
+    }
+    if (!hasTrackForMemoryLeaksPattern(testFile.content)) {
+      missingMarkers.push('trackForMemoryLeaks()');
+    }
+    if (missingMarkers.length === 0) {
+      continue;
+    }
+    invalidFiles.push(`${testFile.path}{missing=[${missingMarkers.join(', ')}]}`);
+  }
+
+  if (invalidFiles.length === 0) {
+    return undefined;
+  }
+
+  const sampleFiles = invalidFiles.slice(0, 3).join(' | ');
+  return {
+    ruleId: 'governance.skills.ios-test-quality.incomplete',
+    severity: 'ERROR',
+    code: 'IOS_TEST_QUALITY_PATTERN_MISSING_HIGH',
+    message:
+      `iOS test quality enforcement incomplete at ${params.stage}: ${sampleFiles}. ` +
+      'Use makeSUT() factory pattern and trackForMemoryLeaks() in XCTest sources.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'IosTestsQualityGuard',
+    source: 'skills-ios-test-quality',
+  };
+};
+
 const toActiveRulesEmptyForCodeChangesBlockingFinding = (params: {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   facts: ReadonlyArray<Fact>;
@@ -806,6 +892,15 @@ export async function runPlatformGate(params: {
         activeRuleIds: coverage?.activeRuleIds ?? [],
       })
       : undefined;
+  const iosTestsQualityFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toIosTestsQualityBlockingFinding({
+          stage: params.policy.stage,
+          facts,
+        })
+      : undefined;
   const policyAsCodeBlockingFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -876,6 +971,7 @@ export async function runPlatformGate(params: {
       ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
       ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
       ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
+      ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
@@ -884,6 +980,8 @@ export async function runPlatformGate(params: {
       || platformSkillsCoverageFinding
       || crossPlatformCriticalFinding
       || skillsScopeComplianceFinding
+      || activeRulesEmptyForCodeChangesFinding
+      || iosTestsQualityFinding
       || coverageBlockingFinding
       || policyAsCodeBlockingFinding
       || degradedModeFinding
@@ -896,6 +994,7 @@ export async function runPlatformGate(params: {
         ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
         ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
         ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
+        ...(iosTestsQualityFinding ? [iosTestsQualityFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
         ...findings,
@@ -911,6 +1010,7 @@ export async function runPlatformGate(params: {
     crossPlatformCriticalFinding ||
     skillsScopeComplianceFinding ||
     activeRulesEmptyForCodeChangesFinding ||
+    iosTestsQualityFinding ||
     coverageBlockingFinding ||
     hasTddBddBlockingFinding
       ? 'BLOCK'
