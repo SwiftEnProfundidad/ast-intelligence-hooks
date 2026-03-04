@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T42` (sincronizar canónico RuralGO tras cierre de `#543` y actualizar refs reales en feedback/master plan).
+- Task activa (`🚧`): `P12.F1.T42` (sincronizar canónico RuralGO tras cierre de `#543`; commit documental listo en `R_GO` y pendiente push por gate de skills en rama histórica).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.

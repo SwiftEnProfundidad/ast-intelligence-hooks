@@ -1327,9 +1327,21 @@ Criterio de salida F5:
     - restaurar cuota/permisos de Snyk o ajustar temporalmente ese check requerido.
 
 - 🚧 `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
-  - salida esperada:
-    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-055`.
-    - `R_GO/ruralgo-master-plan.md` con leyenda actualizada (solo 1 `🚧` activa) y referencia de issue/PR/commit.
+  - avance ejecutado:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado localmente a `FIXED` para `PUMUKI-INC-055` (`#543/#545`).
+    - `R_GO/ruralgo-master-plan.md` actualizado localmente con `#543 => ✅` y leyenda recalculada.
+    - commit documental atómico creado en `R_GO`: `24f30cd21` (`docs(validation): sync canonical issue 543 to fixed`).
+  - bloqueo actual (sin bypass):
+    - comando: `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+    - error observado (hook `pre-push`):
+      - `governance.skills.platform-coverage.incomplete` (scope iOS en rango histórico de la rama).
+      - `governance.skills.scope-compliance.incomplete` (prefijos `skills.ios.` no activos/evaluados para paths iOS del rango).
+  - corrección mínima aplicada para destrabar runtime:
+    - issue `#548` creada y cerrada.
+    - PR `#549` mergeada.
+    - release patch publicada: `pumuki@6.3.30` (corrige `MODULE_NOT_FOUND ../telemetry/gateTelemetry` en hooks/CLI de consumer).
+  - siguiente paso para cerrar `T42`:
+    - reintentar push del commit `24f30cd21` sobre rama/alcance que cumpla gate de skills en `R_GO` sin mezclar rango histórico no conforme.
 
 - ✅ `P12.F1.T46` Sincronizar canónico RuralGO en estado intermedio de `#544` (`REPORTED` con refs reales de issue/branch/PR/commit/evidencia) y alinear master plan con una única mejora `🚧`.
   - cierre ejecutado:
@@ -1677,6 +1689,22 @@ Criterio de salida F5:
       - `gh run view 22670371464 --log-failed` (`log not found: 65712590007` en iteración actual).
       - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
       - `gh run rerun 22670371464 --failed` (rerun solicitado en iteración actual).
+
+- ✅ `P12.F1.T48` Corregir regresión crítica de packaging en `pumuki@6.3.29` (módulo telemetry ausente en npm) y publicar patch release.
+  - cierre ejecutado:
+    - issue creada: `#548` (`bug: npm package misses integrations/telemetry and breaks hooks at runtime`).
+    - fix implementado:
+      - `package.json` incluye `integrations/telemetry/*.ts` en `files`.
+      - `scripts/package-manifest-lib.ts` exige `integrations/telemetry/gateTelemetry.ts` como ruta requerida.
+    - PR mergeada: `#549` (commit de merge `1075752d338f38354772781b5e32e0face35189c`).
+    - issue `#548` cerrada.
+    - release publicada: `pumuki@6.3.30` + tag `v6.3.30`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-manifest-lib.test.ts scripts/__tests__/check-package-manifest.test.ts`
+    - `npm run -s validation:package-manifest`
+    - `npm pack --json --dry-run | rg "integrations/telemetry/gateTelemetry.ts"`
+    - `npm run -s typecheck`
+    - `npm publish --access public`
 
 - ⏳ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
