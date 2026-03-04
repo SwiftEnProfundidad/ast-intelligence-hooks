@@ -1780,11 +1780,11 @@ Criterio de salida F5:
     - `npm run -s validation:contract-suite:enterprise -- --json`
     - `npm run -s validation:tracking-single-active`
 
-- 🚧 `P12.F2.T55` Ejecutar siguiente mejora estratégica pendiente: policy-as-code versionada y firmada para gates enterprise (`#543`).
+- 🚧 `P12.F2.T55` Publicar patch release con el contrato de compatibilidad de `doctor --deep` ya mergeado en `#563`.
   - salida esperada:
-    - definición contractual machine-readable de policy con validación en runtime.
-    - tests RED/GREEN de firma/validez y bloqueo en modo estricto.
-    - PR mergeada + release y trazabilidad cerrada en canónico/master.
+    - issue de release creada con alcance/doD verificable (`#565`).
+    - versión npm nueva publicada con el fix de `#562`.
+    - trazabilidad cerrada en plan activo + registro maestro con evidencia de publicación.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
