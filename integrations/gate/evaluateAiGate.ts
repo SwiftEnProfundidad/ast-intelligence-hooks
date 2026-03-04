@@ -81,6 +81,24 @@ const DEFAULT_MAX_AGE_SECONDS: Readonly<Record<AiGateStage, number>> = {
 };
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
+const PREWRITE_SKILLS_PLATFORMS = ['ios', 'android', 'backend', 'frontend'] as const;
+type PreWriteSkillsPlatform = (typeof PREWRITE_SKILLS_PLATFORMS)[number];
+const PLATFORM_SKILLS_RULE_PREFIXES: Readonly<Record<PreWriteSkillsPlatform, string>> = {
+  ios: 'skills.ios.',
+  android: 'skills.android.',
+  backend: 'skills.backend.',
+  frontend: 'skills.frontend.',
+};
+const PLATFORM_REQUIRED_SKILLS_BUNDLES: Readonly<Record<PreWriteSkillsPlatform, ReadonlyArray<string>>> = {
+  ios: [
+    'ios-guidelines',
+    'ios-concurrency-guidelines',
+    'ios-swiftui-expert-guidelines',
+  ],
+  android: ['android-guidelines'],
+  backend: ['backend-guidelines'],
+  frontend: ['frontend-guidelines'],
+};
 const MCP_RECEIPT_STAGE_ORDER: Readonly<Record<AiGateStage, number>> = {
   PRE_WRITE: 0,
   PRE_COMMIT: 1,
@@ -121,6 +139,96 @@ const toCanonicalPath = (value: string): string => {
   } catch {
     return normalized;
   }
+};
+
+const toNormalizedSkillsBundleName = (bundle: string): string => {
+  const separatorIndex = bundle.lastIndexOf('@');
+  if (separatorIndex <= 0) {
+    return bundle.trim();
+  }
+  return bundle.slice(0, separatorIndex).trim();
+};
+
+const toDetectedSkillsPlatforms = (
+  platforms: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['platforms'] | undefined
+): ReadonlyArray<PreWriteSkillsPlatform> => {
+  const platformsState = platforms ?? {};
+  const detected: PreWriteSkillsPlatform[] = [];
+  for (const platform of PREWRITE_SKILLS_PLATFORMS) {
+    if (platformsState[platform]?.detected === true) {
+      detected.push(platform);
+    }
+  }
+  return detected;
+};
+
+const collectPreWritePlatformSkillsViolations = (params: {
+  evidence: Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'];
+  coverage: NonNullable<Extract<EvidenceReadResult, { kind: 'valid' }>['evidence']['snapshot']['rules_coverage']>;
+}): AiGateViolation[] => {
+  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidence.platforms);
+  if (detectedPlatforms.length === 0) {
+    return [];
+  }
+
+  const violations: AiGateViolation[] = [];
+  const missingScopeCoverage: string[] = [];
+  const missingBundlesByPlatform: string[] = [];
+
+  for (const platform of detectedPlatforms) {
+    const prefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
+    const hasActivePrefix = params.coverage.active_rule_ids.some((ruleId) => ruleId.startsWith(prefix));
+    const hasEvaluatedPrefix = params.coverage.evaluated_rule_ids.some((ruleId) =>
+      ruleId.startsWith(prefix)
+    );
+
+    if (!hasActivePrefix || !hasEvaluatedPrefix) {
+      const reasons: string[] = [];
+      if (!hasActivePrefix) {
+        reasons.push(`active_rules_prefix=${prefix} missing`);
+      }
+      if (!hasEvaluatedPrefix) {
+        reasons.push(`evaluated_rules_prefix=${prefix} missing`);
+      }
+      missingScopeCoverage.push(`${platform}{${reasons.join('; ')}}`);
+    }
+  }
+
+  if (missingScopeCoverage.length > 0) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE',
+        `Detected platforms missing skill-rule coverage in PRE_WRITE: ${missingScopeCoverage.join(' | ')}.`
+      )
+    );
+  }
+
+  const activeSkillsBundles = new Set(
+    params.evidence.rulesets
+      .filter((ruleset) => ruleset.platform === 'skills')
+      .map((ruleset) => toNormalizedSkillsBundleName(ruleset.bundle))
+      .filter((bundle) => bundle.length > 0)
+  );
+
+  for (const platform of detectedPlatforms) {
+    const requiredBundles = PLATFORM_REQUIRED_SKILLS_BUNDLES[platform];
+    const missingBundles = requiredBundles.filter((bundleName) => !activeSkillsBundles.has(bundleName));
+    if (missingBundles.length === 0) {
+      continue;
+    }
+    missingBundlesByPlatform.push(`${platform}{missing_bundles=[${missingBundles.join(', ')}]}`);
+  }
+
+  if (missingBundlesByPlatform.length > 0) {
+    violations.push(
+      toErrorViolation(
+        'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
+        `Detected platforms missing required skill bundles in PRE_WRITE: ${missingBundlesByPlatform.join(' | ')}.`
+      )
+    );
+  }
+
+  return violations;
 };
 
 const collectPreWriteCoherenceViolations = (params: {
@@ -216,6 +324,13 @@ const collectPreWriteCoherenceViolations = (params: {
         )
       );
     }
+
+    violations.push(
+      ...collectPreWritePlatformSkillsViolations({
+        evidence: params.evidence,
+        coverage,
+      })
+    );
   }
 
   if (isTimestampFuture(params.evidence.timestamp, params.nowMs)) {

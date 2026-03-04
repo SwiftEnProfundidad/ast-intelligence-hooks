@@ -14,6 +14,10 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_RULES_COVERAGE_STAGE_MISMATCH: 'Reanuda auditoría en el stage correcto.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE:
     'Asegura unevaluated=0 y coverage_ratio=1 antes de continuar.',
+  EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE:
+    'Activa/evalúa reglas skills.<plataforma>. en la evidencia PRE_WRITE y vuelve a validar.',
+  EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING:
+    'Carga los bundles de skills requeridos por plataforma detectada y regenera evidencia.',
   EVIDENCE_UNSUPPORTED_AUTO_RULES:
     'Mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'Corrige la hora del sistema y regenera evidencia.',

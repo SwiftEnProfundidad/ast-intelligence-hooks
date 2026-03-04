@@ -119,3 +119,81 @@ test('auto_execute_ai_start devuelve proceed cuando gate está en verde', () => 
     rmSync(repoRoot, { recursive: true, force: true });
   }
 });
+
+test('auto_execute_ai_start devuelve next_action de remediación para cobertura de skills por plataforma', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-auto-execute-platform-skills-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/auto-execute-platform-skills']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    const evidence: AiEvidenceV2_1 = {
+      version: '2.1',
+      timestamp: new Date().toISOString(),
+      snapshot: {
+        stage: 'PRE_WRITE',
+        outcome: 'PASS',
+        rules_coverage: {
+          stage: 'PRE_WRITE',
+          active_rule_ids: ['project.rules.audit'],
+          evaluated_rule_ids: ['project.rules.audit'],
+          matched_rule_ids: [],
+          unevaluated_rule_ids: [],
+          counts: {
+            active: 1,
+            evaluated: 1,
+            matched: 0,
+            unevaluated: 0,
+          },
+          coverage_ratio: 1,
+        },
+        findings: [],
+      },
+      platforms: {
+        backend: {
+          detected: true,
+          confidence: 'HIGH',
+        },
+      },
+      rulesets: [
+        {
+          platform: 'skills',
+          bundle: 'backend-guidelines@1.0.0',
+          hash: 'skills-backend-hash',
+        },
+      ],
+      ai_gate: {
+        status: 'ALLOWED',
+        violations: [],
+        human_intent: null,
+      },
+      severity_metrics: {
+        gate_status: 'ALLOWED',
+        total_violations: 0,
+        by_severity: {
+          CRITICAL: 0,
+          ERROR: 0,
+          WARN: 0,
+          INFO: 0,
+        },
+      },
+    };
+    evidence.evidence_chain = buildEvidenceChain({ evidence });
+    writeFileSync(join(repoRoot, '.ai_evidence.json'), JSON.stringify(evidence, null, 2), 'utf8');
+
+    const result = runEnterpriseAutoExecuteAiStart({
+      repoRoot,
+      stage: 'PRE_WRITE',
+    });
+
+    assert.equal(result.result.action, 'ask');
+    assert.equal(result.result.reason_code, 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE');
+    assert.equal(result.result.next_action.kind, 'run_command');
+    assert.equal(
+      result.result.next_action.message.includes('cobertura de skills por plataforma'),
+      true
+    );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});

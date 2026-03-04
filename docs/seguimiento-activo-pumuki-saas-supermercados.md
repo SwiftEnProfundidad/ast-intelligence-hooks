@@ -157,4 +157,15 @@
     - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `21 pass / 0 fail`.
     - `npm run -s test:stage-gates` -> `1024 pass / 0 fail / 4 skip`.
 
-- 🚧 PUMUKI-023: Ejecutar siguiente bug/mejora SAAS prioritaria (`#614`) para cerrar issue P0 abierta con evidencia reproducible y decidir cierre o ampliación de implementación.
+- ✅ PUMUKI-023: Ejecutar siguiente bug/mejora SAAS prioritaria (`#614`) para cerrar issue P0 abierta con evidencia reproducible y decidir cierre o ampliación de implementación.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts` añade enforcement transversal en `PRE_WRITE` por plataforma detectada:
+      - `EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE` (prefijos `skills.<scope>.` en `active/evaluated_rule_ids`).
+      - `EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING` (bundles requeridos por plataforma detectada en `rulesets`).
+    - `integrations/mcp/preFlightCheck.ts` añade hints accionables para ambos códigos.
+    - `integrations/mcp/autoExecuteAiStart.ts` añade `next_action` determinista para ambos códigos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` -> `20 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-024: Ejecutar siguiente bug/mejora SAAS prioritaria (`#615`) y cerrar trazabilidad con RED->GREEN->REFACTOR + evidencia reproducible.

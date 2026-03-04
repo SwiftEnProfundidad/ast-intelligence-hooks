@@ -387,6 +387,190 @@ test('evaluateAiGate bloquea PRE_WRITE ante incoherencias múltiples de evidenci
   assert.equal(codes.has('EVIDENCE_TIMESTAMP_FUTURE'), true);
 });
 
+test('evaluateAiGate bloquea PRE_WRITE cuando falta cobertura de prefijos skills por plataforma detectada', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {
+            backend: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+          },
+          rulesets: [
+            {
+              platform: 'skills',
+              bundle: 'backend-guidelines@1.0.0',
+              hash: 'skills-backend-hash',
+            },
+          ],
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: ['project.rules.audit'],
+              evaluated_rule_ids: ['project.rules.audit'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
+    ),
+    true
+  );
+});
+
+test('evaluateAiGate bloquea PRE_WRITE cuando faltan bundles skills requeridos por plataforma detectada', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {
+            backend: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+          },
+          rulesets: [],
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: ['skills.backend.no-empty-catch'],
+              evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 1,
+                evaluated: 1,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'BLOCKED');
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING'
+    ),
+    true
+  );
+});
+
+test('evaluateAiGate permite PRE_WRITE con plataformas detectadas cuando skills están completas', () => {
+  const base = sampleEvidence();
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () =>
+        validEvidenceResult({
+          ...base,
+          platforms: {
+            backend: {
+              detected: true,
+              confidence: 'HIGH',
+            },
+            frontend: {
+              detected: true,
+              confidence: 'MEDIUM',
+            },
+          },
+          rulesets: [
+            {
+              platform: 'skills',
+              bundle: 'backend-guidelines@1.0.0',
+              hash: 'skills-backend-hash',
+            },
+            {
+              platform: 'skills',
+              bundle: 'frontend-guidelines@1.0.0',
+              hash: 'skills-frontend-hash',
+            },
+          ],
+          snapshot: {
+            ...base.snapshot,
+            rules_coverage: {
+              ...base.snapshot.rules_coverage!,
+              active_rule_ids: [
+                'skills.backend.no-empty-catch',
+                'skills.frontend.no-empty-catch',
+              ],
+              evaluated_rule_ids: [
+                'skills.backend.no-empty-catch',
+                'skills.frontend.no-empty-catch',
+              ],
+              matched_rule_ids: [],
+              unevaluated_rule_ids: [],
+              counts: {
+                active: 2,
+                evaluated: 2,
+                matched: 0,
+                unevaluated: 0,
+              },
+              coverage_ratio: 1,
+            },
+          },
+        }),
+      captureRepoState: () => sampleEvidence().repo_state!,
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
+    ),
+    false
+  );
+  assert.equal(
+    result.violations.some(
+      (item) => item.code === 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING'
+    ),
+    false
+  );
+});
+
 test('evaluateAiGate bloquea PRE_WRITE cuando se requiere recibo MCP y no existe', () => {
   const result = evaluateAiGate(
     {

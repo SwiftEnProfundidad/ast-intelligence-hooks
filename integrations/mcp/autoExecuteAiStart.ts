@@ -9,7 +9,11 @@ type AutoExecuteNextAction = {
 };
 
 const isEvidenceCode = (code: string): boolean =>
-  code === 'EVIDENCE_MISSING' || code === 'EVIDENCE_INVALID' || code === 'EVIDENCE_STALE';
+  code === 'EVIDENCE_MISSING'
+  || code === 'EVIDENCE_INVALID'
+  || code === 'EVIDENCE_STALE'
+  || code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
+  || code === 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING';
 
 const confidenceFromViolation = (violationCode: string | null): number => {
   if (!violationCode) {
@@ -38,6 +42,14 @@ const nextActionFromViolation = (violation: AiGateViolation | undefined): AutoEx
       return {
         kind: 'run_command',
         message: 'Refresca evidencia y vuelve a evaluar PRE_WRITE.',
+        command: 'npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
+      };
+    case 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE':
+    case 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING':
+      return {
+        kind: 'run_command',
+        message:
+          'Completa cobertura de skills por plataforma (prefijos + bundles) y revalida PRE_WRITE.',
         command: 'npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json',
       };
     case 'GITFLOW_PROTECTED_BRANCH':
