@@ -1349,6 +1349,7 @@ Criterio de salida F5:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994362056`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994367200`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994373091`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994378287`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
       - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
@@ -1359,6 +1360,7 @@ Criterio de salida F5:
       - `gh run view 22648802167` (`billing lock` persistente en `PR #547` tras heartbeat actual).
       - `gh run view 22648857219` (`billing lock` persistente en `PR #547` tras heartbeat actual).
       - `gh run view 22648896311` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22648936952` (`billing lock` persistente en `PR #547` tras heartbeat actual).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642755577`).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642904197` tras nueva iteración).
       - `gh run view 22648597740 --log-failed` (`log not found: 65642481475`).
@@ -1371,6 +1373,8 @@ Criterio de salida F5:
       - `gh run view 22648857219 --log-failed` (`log not found: 65643317704`).
       - `gh run view 22648216106 --log-failed` (`log not found: 65643485089` tras rerun más reciente).
       - `gh run view 22648896311 --log-failed` (`log not found: 65643440990`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643613581` tras rerun más reciente).
+      - `gh run view 22648936952 --log-failed` (`log not found: 65643571905`).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
       - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
 
