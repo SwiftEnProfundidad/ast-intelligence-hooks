@@ -1874,11 +1874,21 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts` => `4 passed`.
     - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/EvidenceService.test.ts` => `15 passed`.
 
-- 🚧 `P12.F2.T63` Iniciar SDD pendiente enterprise: extender `pumuki sdd sync-docs` con contexto explícito (`--change`, `--stage`, `--task`) y trazabilidad canónica (`#585`).
+- ✅ `P12.F2.T63` Iniciar SDD pendiente enterprise: extender `pumuki sdd sync-docs` con contexto explícito (`--change`, `--stage`, `--task`) y trazabilidad canónica (`#585`).
+  - cierre ejecutado:
+    - `runSddSyncDocs` amplía contrato con contexto explícito (`change`, `stage`, `task`) en salida canónica.
+    - `parseLifecycleCliArgs` soporta:
+      - `pumuki sdd sync-docs --change=<id> --stage=<stage> --task=<task-id> [--dry-run] [--json]`.
+    - `runLifecycleCli` propaga contexto al runtime y lo imprime en salida texto/json.
+    - cobertura de tests ampliada para parsing + ejecución `dry-run` + contrato JSON de contexto.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `31 passed, 0 failed`.
+
+- 🚧 `P12.F2.T64` Continuar SDD pendiente enterprise: ampliar `sync-docs` a múltiples documentos canónicos y secciones gestionadas (`#587`).
   - salida esperada:
-    - issue de implementación creada y enlazada desde plan activo.
-    - contrato CLI para `sync-docs` ampliado con flags explícitas y validación determinista.
-    - tests de contrato (`dry-run`, `json`, validación de argumentos) en verde.
+    - soporte multi-documento determinista en `runSddSyncDocs`.
+    - mapeo por archivo/sección gestionada con fail-safe explícito ante conflictos.
+    - tests y CLI en verde con trazabilidad de todos los archivos sincronizados.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

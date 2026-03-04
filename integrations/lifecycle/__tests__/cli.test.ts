@@ -303,6 +303,26 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       sddSyncDocsDryRun: true,
     }
   );
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'sdd',
+      'sync-docs',
+      '--change=rgo-1700-01',
+      '--stage=pre_push',
+      '--task=P12.F2.T63',
+      '--json',
+    ]),
+    {
+      command: 'sdd',
+      purgeArtifacts: false,
+      json: true,
+      sddCommand: 'sync-docs',
+      sddSyncDocsDryRun: false,
+      sddSyncDocsChange: 'rgo-1700-01',
+      sddSyncDocsStage: 'PRE_PUSH',
+      sddSyncDocsTask: 'P12.F2.T63',
+    }
+  );
 });
 
 test('parseLifecycleCliArgs soporta analytics hotspots report', () => {
@@ -1141,7 +1161,15 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
       return true;
     }) as typeof process.stdout.write;
 
-    const code = await runLifecycleCli(['sdd', 'sync-docs', '--dry-run', '--json']);
+    const code = await runLifecycleCli([
+      'sdd',
+      'sync-docs',
+      '--change=rgo-1700-01',
+      '--stage=pre_commit',
+      '--task=P12.F2.T63',
+      '--dry-run',
+      '--json',
+    ]);
     assert.equal(code, 0);
     const after = readFileSync(canonicalDoc, 'utf8');
     assert.equal(before, after);
@@ -1149,11 +1177,19 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       command?: string;
       dryRun?: boolean;
+      context?: {
+        change?: string | null;
+        stage?: string | null;
+        task?: string | null;
+      };
       updated?: boolean;
       files?: Array<{ updated?: boolean; diffMarkdown?: string }>;
     };
     assert.equal(payload.command, 'pumuki sdd sync-docs');
     assert.equal(payload.dryRun, true);
+    assert.equal(payload.context?.change, 'rgo-1700-01');
+    assert.equal(payload.context?.stage, 'PRE_COMMIT');
+    assert.equal(payload.context?.task, 'P12.F2.T63');
     assert.equal(payload.updated, true);
     assert.equal(payload.files?.[0]?.updated, true);
     assert.match(payload.files?.[0]?.diffMarkdown ?? '', /sdd-status/i);
