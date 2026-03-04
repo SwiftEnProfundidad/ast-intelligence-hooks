@@ -7,6 +7,11 @@ import {
 import { runPlatformGate } from './runPlatformGate';
 import { GitService } from './GitService';
 import {
+  evaluateGitAtomicity,
+  type GitAtomicityEvaluation,
+  type GitAtomicityStage,
+} from './gitAtomicity';
+import {
   emitAuditSummaryNotificationFromEvidence,
   emitGateBlockedNotification,
 } from '../notifications/emitAuditSummaryNotification';
@@ -40,6 +45,12 @@ type StageRunnerDependencies = {
   resolvePrePushBootstrapBaseRef: typeof resolvePrePushBootstrapBaseRef;
   resolveCiBaseRef: typeof resolveCiBaseRef;
   runPlatformGate: typeof runPlatformGate;
+  evaluateGitAtomicity: (params: {
+    repoRoot: string;
+    stage: GitAtomicityStage;
+    fromRef?: string;
+    toRef?: string;
+  }) => GitAtomicityEvaluation;
   resolveRepoRoot: () => string;
   readPrePushStdin: () => string;
   notifyAuditSummaryFromEvidence: (params: {
@@ -67,6 +78,13 @@ const defaultDependencies: StageRunnerDependencies = {
   resolvePrePushBootstrapBaseRef,
   resolveCiBaseRef,
   runPlatformGate,
+  evaluateGitAtomicity: (params) =>
+    evaluateGitAtomicity({
+      repoRoot: params.repoRoot,
+      stage: params.stage,
+      fromRef: params.fromRef,
+      toRef: params.toRef,
+    }),
   resolveRepoRoot: () => new GitService().resolveRepoRoot(),
   readPrePushStdin: () => {
     const envInput = process.env.PUMUKI_PRE_PUSH_STDIN;
@@ -215,10 +233,53 @@ const shouldAllowBootstrapPrePush = (rawInput: string): boolean => {
   return false;
 };
 
+const enforceGitAtomicityGate = (params: {
+  dependencies: StageRunnerDependencies;
+  repoRoot: string;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  fromRef?: string;
+  toRef?: string;
+}): boolean => {
+  const atomicity = params.dependencies.evaluateGitAtomicity({
+    repoRoot: params.repoRoot,
+    stage: params.stage,
+    fromRef: params.fromRef,
+    toRef: params.toRef,
+  });
+  if (!atomicity.enabled || atomicity.allowed) {
+    return false;
+  }
+  const firstViolation = atomicity.violations[0];
+  if (!firstViolation) {
+    return false;
+  }
+  process.stderr.write(`[pumuki][git-atomicity] ${firstViolation.code}: ${firstViolation.message}\n`);
+  params.dependencies.notifyGateBlocked({
+    repoRoot: params.repoRoot,
+    stage: params.stage,
+    totalViolations: atomicity.violations.length,
+    causeCode: firstViolation.code,
+    causeMessage: firstViolation.message,
+    remediation: firstViolation.remediation,
+  });
+  notifyAuditSummaryForStage(params.dependencies, params.stage);
+  return true;
+};
+
 export async function runPreCommitStage(
   dependencies: Partial<StageRunnerDependencies> = {}
 ): Promise<number> {
   const activeDependencies = getDependencies(dependencies);
+  const repoRoot = activeDependencies.resolveRepoRoot();
+  if (
+    enforceGitAtomicityGate({
+      dependencies: activeDependencies,
+      repoRoot,
+      stage: 'PRE_COMMIT',
+    })
+  ) {
+    return 1;
+  }
   const resolved = activeDependencies.resolvePolicyForStage('PRE_COMMIT');
   const exitCode = await activeDependencies.runPlatformGate({
     policy: resolved.policy,
@@ -250,17 +311,30 @@ export async function runPrePushStage(
   dependencies: Partial<StageRunnerDependencies> = {}
 ): Promise<number> {
   const activeDependencies = getDependencies(dependencies);
+  const repoRoot = activeDependencies.resolveRepoRoot();
   const upstreamRef = activeDependencies.resolveUpstreamRef();
   if (!upstreamRef) {
     const prePushInput = activeDependencies.readPrePushStdin();
     if (shouldAllowBootstrapPrePush(prePushInput)) {
+      const bootstrapBaseRef = activeDependencies.resolvePrePushBootstrapBaseRef();
+      if (
+        enforceGitAtomicityGate({
+          dependencies: activeDependencies,
+          repoRoot,
+          stage: 'PRE_PUSH',
+          fromRef: bootstrapBaseRef,
+          toRef: 'HEAD',
+        })
+      ) {
+        return 1;
+      }
       const resolved = activeDependencies.resolvePolicyForStage('PRE_PUSH');
       const exitCode = await activeDependencies.runPlatformGate({
         policy: resolved.policy,
         policyTrace: resolved.trace,
         scope: {
           kind: 'range',
-          fromRef: activeDependencies.resolvePrePushBootstrapBaseRef(),
+          fromRef: bootstrapBaseRef,
           toRef: 'HEAD',
         },
       });
@@ -282,6 +356,18 @@ export async function runPrePushStage(
       fallbackRemediation: 'Ejecuta: git push --set-upstream origin <branch>',
     });
     notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
+    return 1;
+  }
+
+  if (
+    enforceGitAtomicityGate({
+      dependencies: activeDependencies,
+      repoRoot,
+      stage: 'PRE_PUSH',
+      fromRef: upstreamRef,
+      toRef: 'HEAD',
+    })
+  ) {
     return 1;
   }
 
@@ -318,13 +404,26 @@ export async function runCiStage(
   dependencies: Partial<StageRunnerDependencies> = {}
 ): Promise<number> {
   const activeDependencies = getDependencies(dependencies);
+  const repoRoot = activeDependencies.resolveRepoRoot();
+  const ciBaseRef = activeDependencies.resolveCiBaseRef();
+  if (
+    enforceGitAtomicityGate({
+      dependencies: activeDependencies,
+      repoRoot,
+      stage: 'CI',
+      fromRef: ciBaseRef,
+      toRef: 'HEAD',
+    })
+  ) {
+    return 1;
+  }
   const resolved = activeDependencies.resolvePolicyForStage('CI');
   const exitCode = await activeDependencies.runPlatformGate({
     policy: resolved.policy,
     policyTrace: resolved.trace,
     scope: {
       kind: 'range',
-      fromRef: activeDependencies.resolveCiBaseRef(),
+      fromRef: ciBaseRef,
       toRef: 'HEAD',
     },
   });

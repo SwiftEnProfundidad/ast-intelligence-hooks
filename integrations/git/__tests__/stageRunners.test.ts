@@ -32,8 +32,10 @@ const withStageRunnerRepo = async (
 ): Promise<void> => {
   const previousBypass = process.env.PUMUKI_SDD_BYPASS;
   const previousDisableCore = process.env.PUMUKI_DISABLE_CORE_SKILLS;
+  const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
   process.env.PUMUKI_SDD_BYPASS = '1';
   process.env.PUMUKI_DISABLE_CORE_SKILLS = '1';
+  process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '0';
   try {
     await withTempRepo(async (repoRoot) => {
       seedTddBddEvidenceContract(repoRoot);
@@ -49,6 +51,11 @@ const withStageRunnerRepo = async (
       delete process.env.PUMUKI_DISABLE_CORE_SKILLS;
     } else {
       process.env.PUMUKI_DISABLE_CORE_SKILLS = previousDisableCore;
+    }
+    if (typeof previousAtomicity === 'undefined') {
+      delete process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
+    } else {
+      process.env.PUMUKI_GIT_ATOMICITY_ENABLED = previousAtomicity;
     }
   }
 };
@@ -624,5 +631,77 @@ test('runPrePushStage sin upstream emite notificación de bloqueo accionable', a
     assert.equal(blocked[0]?.stage, 'PRE_PUSH');
     assert.equal(blocked[0]?.causeCode, 'PRE_PUSH_UPSTREAM_MISSING');
     assert.match(blocked[0]?.remediation ?? '', /set-upstream/i);
+  });
+});
+
+test('runPreCommitStage bloquea temprano cuando falla git atomicity y no ejecuta el gate principal', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{ code: string; remediation: string }> = [];
+
+    const exitCode = await runPreCommitStage({
+      evaluateGitAtomicity: () => ({
+        enabled: true,
+        allowed: false,
+        violations: [
+          {
+            code: 'GIT_ATOMICITY_TOO_MANY_FILES',
+            message: 'changed_files=42 exceeds max_files=10',
+            remediation: 'Divide cambios en commits atómicos.',
+          },
+        ],
+      }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({ code: params.causeCode, remediation: params.remediation });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_TOO_MANY_FILES');
+    assert.match(blocked[0]?.remediation ?? '', /atómicos/i);
+  });
+});
+
+test('runPrePushStage bloquea temprano cuando falla git atomicity y no ejecuta el gate principal', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{ code: string; remediation: string }> = [];
+
+    const exitCode = await runPrePushStage({
+      evaluateGitAtomicity: () => ({
+        enabled: true,
+        allowed: false,
+        violations: [
+          {
+            code: 'GIT_ATOMICITY_COMMIT_MESSAGE_TRACEABILITY',
+            message: 'commit messages without traceable pattern detected',
+            remediation: 'Reescribe commits con patrón trazable.',
+          },
+        ],
+      }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({ code: params.causeCode, remediation: params.remediation });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.code, 'GIT_ATOMICITY_COMMIT_MESSAGE_TRACEABILITY');
+    assert.match(blocked[0]?.remediation ?? '', /trazable/i);
   });
 });

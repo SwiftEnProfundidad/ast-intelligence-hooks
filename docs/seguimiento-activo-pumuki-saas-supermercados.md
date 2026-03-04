@@ -29,17 +29,17 @@
 
 ## Fase 2. Mejoras P2
 
-- ⏳ PUMUKI-002: Rule-pack opcional de atomicidad Git + trazabilidad de commit message.
+- ✅ PUMUKI-002: Rule-pack opcional de atomicidad Git + trazabilidad de commit message.
 - ✅ PUMUKI-004: Mejorar diagnóstico de hooks efectivos en escenarios versionados/custom.
 - ✅ PUMUKI-006: Alinear `package_version` reportada por MCP con versión local efectiva del repo consumidor.
 
 ## Fase 2.1 Paridad legacy (CLI vs MCP) en SAAS_SUPERMERCADOS
 
-- 🚧 PUMUKI-008: Feedback iterativo en chat no equivalente a flujo legacy.
+- ✅ PUMUKI-008: Feedback iterativo en chat no equivalente a flujo legacy.
   - Evidencia: en ejecución MCP no aparece feedback operativo por iteración del modelo como en el grafo legacy.
   - Esperado: resumen corto y humano en cada iteración (`stage`, `decision`, `next_action`).
   - Entregable: tool MCP de pre-flight para chat con salida estable y accionable.
-- ⏳ PUMUKI-009: Desalineación operativa entre `ai_gate_check` y `pre_flight_check`.
+- 🚧 PUMUKI-009: Desalineación operativa entre `ai_gate_check` y `pre_flight_check`.
   - Evidencia: `ai_gate_check => BLOCKED (EVIDENCE_STALE)` mientras `pre_flight_check => allowed=true`.
   - Esperado: criterio homogéneo o explicación explícita y trazable de por qué uno bloquea y el otro permite.
   - Entregable: decisión unificada desde el mismo evaluador/política.
