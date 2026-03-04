@@ -142,11 +142,18 @@ test('runLifecycleCli PRE_WRITE --json mantiene salida encadenada con ai_gate cu
   }
 });
 
-test('runLifecycleCli PRE_WRITE emite resumen de auditoría para notificación macOS', async () => {
+test('runLifecycleCli PRE_WRITE emite resumen y notificación de bloqueo accionable para macOS', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();
   process.chdir(repo);
   const notifications: Array<{ stage: string; violations: number }> = [];
+  const blockedNotifications: Array<{
+    stage: string;
+    totalViolations: number;
+    causeCode: string;
+    causeMessage: string;
+    remediation: string;
+  }> = [];
   try {
     const exitCode = await runLifecycleCli(['sdd', 'validate', '--stage=PRE_WRITE'], {
       emitAuditSummaryNotificationFromAiGate: ({ stage, aiGateResult }) => {
@@ -156,11 +163,26 @@ test('runLifecycleCli PRE_WRITE emite resumen de auditoría para notificación m
         });
         return { delivered: true, reason: 'delivered' };
       },
+      emitGateBlockedNotification: (params) => {
+        blockedNotifications.push({
+          stage: params.stage,
+          totalViolations: params.totalViolations,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+        });
+        return { delivered: true, reason: 'delivered' };
+      },
     });
     assert.equal(exitCode, 1);
     assert.equal(notifications.length, 1);
     assert.equal(notifications[0]?.stage, 'PRE_WRITE');
     assert.equal((notifications[0]?.violations ?? 0) > 0, true);
+    assert.equal(blockedNotifications.length, 1);
+    assert.equal(blockedNotifications[0]?.stage, 'PRE_WRITE');
+    assert.equal((blockedNotifications[0]?.causeCode ?? '').length > 0, true);
+    assert.equal((blockedNotifications[0]?.causeMessage ?? '').length > 0, true);
+    assert.equal((blockedNotifications[0]?.remediation ?? '').length > 0, true);
   } finally {
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });

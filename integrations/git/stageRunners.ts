@@ -6,9 +6,12 @@ import {
 } from './resolveGitRefs';
 import { runPlatformGate } from './runPlatformGate';
 import { GitService } from './GitService';
-import { emitAuditSummaryNotificationFromEvidence } from '../notifications/emitAuditSummaryNotification';
+import {
+  emitAuditSummaryNotificationFromEvidence,
+  emitGateBlockedNotification,
+} from '../notifications/emitAuditSummaryNotification';
 import { readFileSync } from 'node:fs';
-import { readEvidenceResult } from '../evidence/readEvidence';
+import { readEvidence, readEvidenceResult } from '../evidence/readEvidence';
 import type { EvidenceReadResult } from '../evidence/readEvidence';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
@@ -16,6 +19,20 @@ const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
 
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
+const DEFAULT_BLOCKED_REMEDIATION = 'Corrige la causa del bloqueo y vuelve a ejecutar el gate.';
+
+const BLOCKED_REMEDIATION_BY_CODE: Readonly<Record<string, string>> = {
+  EVIDENCE_MISSING: 'Regenera .ai_evidence.json ejecutando una auditoría.',
+  EVIDENCE_INVALID: 'Corrige/regenera .ai_evidence.json y vuelve a ejecutar el gate.',
+  EVIDENCE_CHAIN_INVALID: 'Regenera evidencia para restaurar la cadena criptográfica.',
+  EVIDENCE_STALE: 'Refresca evidencia antes de continuar.',
+  EVIDENCE_REPO_ROOT_MISMATCH: 'Regenera evidencia desde este mismo repositorio.',
+  EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual y reintenta.',
+  EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
+  EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura coverage_ratio=1 y unevaluated=0.',
+  GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
+  PRE_PUSH_UPSTREAM_MISSING: 'Ejecuta: git push --set-upstream origin <branch>',
+};
 
 type StageRunnerDependencies = {
   resolvePolicyForStage: typeof resolvePolicyForStage;
@@ -29,7 +46,16 @@ type StageRunnerDependencies = {
     repoRoot: string;
     stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   }) => void;
+  notifyGateBlocked: (params: {
+    repoRoot: string;
+    stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+    totalViolations: number;
+    causeCode: string;
+    causeMessage: string;
+    remediation: string;
+  }) => void;
   readEvidenceResult: (repoRoot: string) => EvidenceReadResult;
+  readEvidence: typeof readEvidence;
   now: () => number;
   writeHookGateSummary: (message: string) => void;
   isQuietMode: () => boolean;
@@ -62,7 +88,11 @@ const defaultDependencies: StageRunnerDependencies = {
       stage,
     });
   },
+  notifyGateBlocked: (params) => {
+    emitGateBlockedNotification(params);
+  },
   readEvidenceResult,
+  readEvidence,
   now: () => Date.now(),
   writeHookGateSummary: (message) => {
     process.stdout.write(`${message}\n`);
@@ -84,6 +114,32 @@ const notifyAuditSummaryForStage = (
   dependencies.notifyAuditSummaryFromEvidence({
     repoRoot: dependencies.resolveRepoRoot(),
     stage,
+  });
+};
+
+const notifyGateBlockedForStage = (params: {
+  dependencies: StageRunnerDependencies;
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  fallbackCauseCode: string;
+  fallbackCauseMessage: string;
+  fallbackRemediation: string;
+}): void => {
+  const repoRoot = params.dependencies.resolveRepoRoot();
+  const evidence = params.dependencies.readEvidence(repoRoot);
+  const firstViolation = evidence?.ai_gate.violations[0];
+  const causeCode = firstViolation?.code ?? params.fallbackCauseCode;
+  const causeMessage = firstViolation?.message ?? params.fallbackCauseMessage;
+  const remediation =
+    BLOCKED_REMEDIATION_BY_CODE[causeCode]
+    ?? params.fallbackRemediation
+    ?? DEFAULT_BLOCKED_REMEDIATION;
+  params.dependencies.notifyGateBlocked({
+    repoRoot,
+    stage: params.stage,
+    totalViolations: evidence?.ai_gate.violations.length ?? 0,
+    causeCode,
+    causeMessage,
+    remediation,
   });
 };
 
@@ -177,6 +233,15 @@ export async function runPreCommitStage(
     policyTrace: resolved.trace,
     exitCode,
   });
+  if (exitCode !== 0) {
+    notifyGateBlockedForStage({
+      dependencies: activeDependencies,
+      stage: 'PRE_COMMIT',
+      fallbackCauseCode: 'PRE_COMMIT_GATE_BLOCKED',
+      fallbackCauseMessage: 'Gate blocked pre-commit stage.',
+      fallbackRemediation: DEFAULT_BLOCKED_REMEDIATION,
+    });
+  }
   notifyAuditSummaryForStage(activeDependencies, 'PRE_COMMIT');
   return exitCode;
 }
@@ -209,6 +274,13 @@ export async function runPrePushStage(
       return exitCode;
     }
     process.stderr.write(`${PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE}\n`);
+    notifyGateBlockedForStage({
+      dependencies: activeDependencies,
+      stage: 'PRE_PUSH',
+      fallbackCauseCode: 'PRE_PUSH_UPSTREAM_MISSING',
+      fallbackCauseMessage: 'Branch has no upstream tracking reference.',
+      fallbackRemediation: 'Ejecuta: git push --set-upstream origin <branch>',
+    });
     notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
     return 1;
   }
@@ -229,6 +301,15 @@ export async function runPrePushStage(
     policyTrace: resolved.trace,
     exitCode,
   });
+  if (exitCode !== 0) {
+    notifyGateBlockedForStage({
+      dependencies: activeDependencies,
+      stage: 'PRE_PUSH',
+      fallbackCauseCode: 'PRE_PUSH_GATE_BLOCKED',
+      fallbackCauseMessage: 'Gate blocked pre-push stage.',
+      fallbackRemediation: DEFAULT_BLOCKED_REMEDIATION,
+    });
+  }
   notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
   return exitCode;
 }
@@ -247,6 +328,15 @@ export async function runCiStage(
       toRef: 'HEAD',
     },
   });
+  if (exitCode !== 0) {
+    notifyGateBlockedForStage({
+      dependencies: activeDependencies,
+      stage: 'CI',
+      fallbackCauseCode: 'CI_GATE_BLOCKED',
+      fallbackCauseMessage: 'Gate blocked CI stage.',
+      fallbackRemediation: DEFAULT_BLOCKED_REMEDIATION,
+    });
+  }
   notifyAuditSummaryForStage(activeDependencies, 'CI');
   return exitCode;
 }

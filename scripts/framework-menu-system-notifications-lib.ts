@@ -15,6 +15,9 @@ export type PumukiCriticalNotificationEvent =
       kind: 'gate.blocked';
       stage: PumukiNotificationStage;
       totalViolations: number;
+      causeCode?: string;
+      causeMessage?: string;
+      remediation?: string;
     }
   | {
       kind: 'evidence.stale';
@@ -31,6 +34,7 @@ export type SystemNotificationPayload = {
   title: string;
   message: string;
   subtitle?: string;
+  soundName?: string;
 };
 
 export type SystemNotificationsConfig = {
@@ -58,7 +62,10 @@ const buildDisplayNotificationScript = (payload: SystemNotificationPayload): str
   const subtitleFragment = payload.subtitle
     ? ` subtitle "${escapeAppleScriptString(payload.subtitle)}"`
     : '';
-  return `display notification "${message}" with title "${title}"${subtitleFragment}`;
+  const soundFragment = payload.soundName
+    ? ` sound name "${escapeAppleScriptString(payload.soundName)}"`
+    : '';
+  return `display notification "${message}" with title "${title}"${subtitleFragment}${soundFragment}`;
 };
 
 const runSystemCommand: SystemNotificationCommandRunner = (command, args) => {
@@ -137,10 +144,18 @@ export const buildSystemNotificationPayload = (
   }
 
   if (event.kind === 'gate.blocked') {
+    const causeCode = event.causeCode ?? 'GATE_BLOCKED';
+    const causeMessage =
+      event.causeMessage
+      ?? `Detected ${event.totalViolations} blocking violations in stage ${event.stage}.`;
+    const remediation =
+      event.remediation
+      ?? 'Revisa el panel de gate y corrige la causa bloqueante antes de reintentar.';
     return {
-      title: 'Pumuki · Gate BLOCK',
+      title: '🔴 Pumuki BLOQUEADO',
       subtitle: event.stage,
-      message: `Detected ${event.totalViolations} blocking violations in stage ${event.stage}.`,
+      message: `🔴 BLOQUEADO · ${causeCode}: ${causeMessage} · Cómo solucionarlo: ${remediation}`,
+      soundName: 'Basso',
     };
   }
 

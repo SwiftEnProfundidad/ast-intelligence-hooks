@@ -561,3 +561,68 @@ test('runPrePushStage sin upstream mantiene paridad de notificación de resumen'
     assert.deepEqual(notifications, [{ repoRoot, stage: 'PRE_PUSH' }]);
   });
 });
+
+test('runPreCommitStage emite notificación de bloqueo con causa y remediación', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+    writeSkillsPolicy(repoRoot, {
+      PRE_COMMIT: { blockOnOrAbove: 'WARN', warnOnOrAbove: 'WARN' },
+    });
+
+    const blocked: Array<{
+      stage: StageName;
+      totalViolations: number;
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPreCommitStage({
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          totalViolations: params.totalViolations,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_COMMIT');
+    assert.match(blocked[0]?.causeCode ?? '', /[A-Z0-9_]+/);
+    assert.equal((blocked[0]?.causeMessage ?? '').length > 0, true);
+    assert.equal((blocked[0]?.remediation ?? '').length > 0, true);
+  });
+});
+
+test('runPrePushStage sin upstream emite notificación de bloqueo accionable', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPrePushStage({
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          causeCode: params.causeCode,
+          remediation: params.remediation,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_PUSH');
+    assert.equal(blocked[0]?.causeCode, 'PRE_PUSH_UPSTREAM_MISSING');
+    assert.match(blocked[0]?.remediation ?? '', /set-upstream/i);
+  });
+});

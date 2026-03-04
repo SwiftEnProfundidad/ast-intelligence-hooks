@@ -38,7 +38,10 @@ import {
 } from '../sdd';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
 import { runEnterpriseAiGateCheck } from '../mcp/aiGateCheck';
-import { emitAuditSummaryNotificationFromAiGate } from '../notifications/emitAuditSummaryNotification';
+import {
+  emitAuditSummaryNotificationFromAiGate,
+  emitGateBlockedNotification,
+} from '../notifications/emitAuditSummaryNotification';
 import {
   buildPreWriteAutomationTrace,
   type PreWriteAutomationTrace,
@@ -1055,12 +1058,14 @@ type PreWriteOpenSpecBootstrapTrace = {
 
 type LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate: typeof emitAuditSummaryNotificationFromAiGate;
+  emitGateBlockedNotification: typeof emitGateBlockedNotification;
   runPlatformGate: typeof runPlatformGate;
   collectRemoteCiDiagnostics: typeof collectRemoteCiDiagnostics;
 };
 
 const defaultLifecycleCliDependencies: LifecycleCliDependencies = {
   emitAuditSummaryNotificationFromAiGate,
+  emitGateBlockedNotification,
   runPlatformGate,
   collectRemoteCiDiagnostics,
 };
@@ -1081,6 +1086,9 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   MCP_ENTERPRISE_RECEIPT_STAGE_MISMATCH: 'Reejecuta ai_gate_check con stage PRE_WRITE.',
   MCP_ENTERPRISE_RECEIPT_REPO_ROOT_MISMATCH: 'Genera el recibo MCP en este mismo repositorio.',
 };
+
+const PRE_WRITE_DEFAULT_REMEDIATION =
+  'Corrige la causa bloqueante y vuelve a ejecutar: npx --yes --package pumuki@latest pumuki-pre-write';
 
 const PRE_WRITE_OPENSPEC_AUTOREMEDIABLE_CODES = new Set<string>([
   'OPENSPEC_MISSING',
@@ -1111,6 +1119,16 @@ const resolvePreWriteNextAction = (params: {
     reason: 'MCP_ENTERPRISE_RECEIPT',
     command: 'npx --yes --package pumuki@latest pumuki-pre-write',
   };
+};
+
+const resolvePreWriteBlockedRemediation = (params: {
+  causeCode: string;
+  nextAction?: PreWriteValidationEnvelope['next_action'];
+}): string => {
+  if (params.nextAction?.command) {
+    return params.nextAction.command;
+  }
+  return PRE_WRITE_HINTS_BY_CODE[params.causeCode] ?? PRE_WRITE_DEFAULT_REMEDIATION;
 };
 
 const wrapPreWritePanelLine = (value: string, width: number): string[] => {
@@ -1818,9 +1836,34 @@ export const runLifecycleCli = async (
             });
           }
           if (!result.decision.allowed) {
+            activeDependencies.emitGateBlockedNotification({
+              repoRoot: process.cwd(),
+              stage: result.stage,
+              totalViolations: aiGate?.violations.length ?? 0,
+              causeCode: result.decision.code,
+              causeMessage: result.decision.message,
+              remediation: resolvePreWriteBlockedRemediation({
+                causeCode: result.decision.code,
+                nextAction,
+              }),
+            });
             return 1;
           }
           if (aiGate && !aiGate.allowed) {
+            const firstViolation = aiGate.violations[0];
+            const causeCode = firstViolation?.code ?? 'AI_GATE_BLOCKED';
+            const causeMessage = firstViolation?.message ?? 'AI gate blocked PRE_WRITE stage.';
+            activeDependencies.emitGateBlockedNotification({
+              repoRoot: process.cwd(),
+              stage: result.stage,
+              totalViolations: aiGate.violations.length,
+              causeCode,
+              causeMessage,
+              remediation: resolvePreWriteBlockedRemediation({
+                causeCode,
+                nextAction,
+              }),
+            });
             return 1;
           }
           return 0;

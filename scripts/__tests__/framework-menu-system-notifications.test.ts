@@ -16,9 +16,27 @@ test('buildSystemNotificationPayload construye payload para gate BLOCK', () => {
   });
 
   assert.match(payload.title, /pumuki/i);
-  assert.match(payload.title, /block/i);
+  assert.match(payload.title, /bloqueado/i);
   assert.match(payload.message, /pre_commit|pre-commit/i);
   assert.match(payload.message, /7/);
+  assert.equal(payload.soundName, 'Basso');
+});
+
+test('buildSystemNotificationPayload para gate BLOCK incluye causa y remediación accionable', () => {
+  const payload = buildSystemNotificationPayload({
+    kind: 'gate.blocked',
+    stage: 'PRE_PUSH',
+    totalViolations: 1,
+    causeCode: 'EVIDENCE_STALE',
+    causeMessage: 'Evidence is stale.',
+    remediation: 'Ejecuta pumuki-pre-write para refrescar evidencia.',
+  });
+
+  assert.match(payload.message, /EVIDENCE_STALE/);
+  assert.match(payload.message, /Evidence is stale/i);
+  assert.match(payload.message, /Cómo solucionarlo/i);
+  assert.match(payload.message, /pumuki-pre-write/i);
+  assert.equal(payload.soundName, 'Basso');
 });
 
 test('buildSystemNotificationPayload construye payload para evidencia stale', () => {

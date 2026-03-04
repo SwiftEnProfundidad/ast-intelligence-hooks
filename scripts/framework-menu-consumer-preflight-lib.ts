@@ -154,10 +154,21 @@ const buildNotificationEvents = (result: AiGateCheckResult): ReadonlyArray<Pumuk
     });
   }
   if (result.status === 'BLOCKED') {
+    const firstViolation = result.violations[0];
+    const causeCode = firstViolation?.code ?? 'GATE_BLOCKED';
+    const causeMessage =
+      firstViolation?.message
+      ?? `Detected ${result.violations.length} blocking violations in stage ${result.stage}.`;
+    const remediation =
+      (firstViolation ? ACTIONABLE_HINTS_BY_CODE[firstViolation.code] : undefined)
+      ?? 'Corrige la causa bloqueante y vuelve a ejecutar el gate.';
     events.push({
       kind: 'gate.blocked',
       stage: result.stage,
       totalViolations: result.violations.length,
+      causeCode,
+      causeMessage,
+      remediation,
     });
   }
   return events;
