@@ -81,5 +81,16 @@
 
 - ✅ Monitorizar feedback de repos consumidores y registrar nuevos hallazgos canónicos.
   - Evidencia (2026-03-04): se activa nuevo frente real en consumer repo con backlog dedicado en `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`.
-- 🚧 Priorizar nuevos bugs/mejoras y abrir siguiente ciclo de implementación.
-  - En curso (2026-03-04): intake y ejecución incremental sobre el backlog SAAS con trazabilidad `hallazgo -> fix -> test -> release`.
+- ✅ Priorizar nuevos bugs/mejoras y abrir siguiente ciclo de implementación.
+  - Evidencia (2026-03-04): ciclo técnico arrancado en `ast-intelligence-hooks` con ejecución sobre bugs reales reportados desde SAAS.
+
+## Fase 4.1 Ciclo técnico actual (core Pumuki)
+
+- ✅ PUMUKI-012: Endurecer comandos de adapter templates para hooks/CI sin dependencia frágil de `./node_modules/.bin`.
+  - Fix: `integrations/lifecycle/adapter.templates.json` ahora usa `npx --yes --package pumuki@latest ...` en `pre_write/pre_commit/pre_push/ci`.
+  - Test: `integrations/lifecycle/__tests__/adapter.test.ts`, `integrations/lifecycle/__tests__/doctor.test.ts`, `integrations/lifecycle/__tests__/cli.test.ts`.
+- ✅ PUMUKI-013: Blindar resolución de rango Git cuando `HEAD`/refs no son resolubles (repos sin commits o refs ambiguas).
+  - Fix: `integrations/git/getCommitRangeFacts.ts` añade guardas `rev-parse --verify` + fallback seguro sin crash.
+  - Test: `integrations/git/__tests__/getCommitRangeFacts.test.ts` (nuevo caso repo sin commits) y `integrations/git/__tests__/runPlatformGateFacts.test.ts`.
+- 🚧 PUMUKI-014: Ejecutar validación extendida de no-regresión (suite stage-gates focal + smoke de hooks) y cerrar trazabilidad final.
+- ⏳ PUMUKI-015: Preparar release notes del siguiente corte una vez validación extendida quede en verde.

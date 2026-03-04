@@ -659,10 +659,10 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
       JSON.stringify(
         {
           hooks: {
-            pre_write: { command: 'npx --yes pumuki-pre-write' },
-            pre_commit: { command: './node_modules/.bin/pumuki-pre-commit' },
-            pre_push: { command: './node_modules/.bin/pumuki-pre-push' },
-            ci: { command: 'npx --yes pumuki-ci' },
+            pre_write: { command: 'npx --yes --package pumuki@latest pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes --package pumuki@latest pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes --package pumuki@latest pumuki-pre-push' },
+            ci: { command: 'npx --yes --package pumuki@latest pumuki-ci' },
           },
           mcp: {
             enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },

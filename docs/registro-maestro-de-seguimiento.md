@@ -7,9 +7,9 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): Fase 4.1 (monitorización post-release cerrada con arranque de backlog SAAS).
-- Task activa (`🚧`): Fase 4.2 priorización y ejecución del siguiente ciclo sobre backlog SAAS.
-- Nuevos pendientes añadidos (`⏳`): sin cambios.
+- Última task cerrada (`✅`): PUMUKI-013 (blindaje de `getCommitRangeFacts` para `HEAD`/refs no resolubles).
+- Task activa (`🚧`): PUMUKI-014 (validación extendida de no-regresión y cierre de trazabilidad).
+- Nuevos pendientes añadidos (`⏳`): PUMUKI-015 (release notes del siguiente corte).
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
