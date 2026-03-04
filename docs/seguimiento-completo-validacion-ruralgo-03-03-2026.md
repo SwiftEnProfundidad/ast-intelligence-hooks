@@ -1287,8 +1287,8 @@ Criterio de salida F5:
     - restaurar cuota/permisos de `Snyk` para checks de PR o desactivar temporalmente ese check como requerido.
     - asegurar retención/publicación de logs de Actions para permitir diagnóstico de fallos reales.
 
-- 🚧 `P12.F1.T43` Ejecutar implementación técnica de `#544` (telemetría estructurada exportable JSONL/OTel) con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
-  - avance en curso:
+- ✅ `P12.F1.T43` Ejecutar implementación técnica de `#544` (telemetría estructurada exportable JSONL/OTel) con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
+  - cierre ejecutado:
     - rama de implementación: `feature/544-telemetry-structured-export` (desde `develop`).
     - implementación añadida:
       - `integrations/telemetry/gateTelemetry.ts` (`telemetry_event_v1`, export JSONL y OTLP HTTP opcional).
@@ -1300,14 +1300,56 @@ Criterio de salida F5:
       - documentación mínima:
         - `README.md` (sección `Telemetry Export (Enterprise)`).
         - `docs/CONFIGURATION.md` (env vars de export).
-    - verificación local en verde:
-      - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts integrations/git/__tests__/runPlatformGateEvidence.test.ts`
-      - `npm run -s typecheck`
+    - commits técnicos en rama:
+      - `bc93dc1` (`feat(telemetry): add structured gate export to JSONL and optional OTel`).
+      - `abc0a7d` (`docs(tracking): rotate active task to T43 and sync blocker status`).
+    - PR abierta: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/547`.
+    - issue de trabajo: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/544`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts integrations/git/__tests__/runPlatformGateEvidence.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 547 --json state,mergeStateStatus,statusCheckRollup,headRefOid,url`
+
+- ⛔ `P12.F1.T44` Desbloquear cierre administrativo de `#544` (merge PR `#547` + cierre issue `#544`) cuando los checks remotos vuelvan a estado operativo.
+  - bloqueo reproducido (comando/error):
+    - comando: `gh run view 22648407847`
+    - error observado: `The job was not started because your account is locked due to a billing issue.` (anotación repetida en jobs de `CI`).
+    - comando: `gh pr checks 547 --json name,state,bucket,link,description`
+    - error observado: `security/snyk (swiftenprofundidad) => ERROR: You have used your limit of private tests`.
+  - corrección mínima propuesta:
+    - desbloquear billing de la cuenta/organización de GitHub Actions.
+    - restaurar cuota/permisos de Snyk o ajustar temporalmente ese check requerido.
 
 - ⏳ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
     - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-055`.
     - `R_GO/ruralgo-master-plan.md` con leyenda actualizada (solo 1 `🚧` activa) y referencia de issue/PR/commit.
+
+- ✅ `P12.F1.T46` Sincronizar canónico RuralGO en estado intermedio de `#544` (`REPORTED` con refs reales de issue/branch/PR/commit/evidencia) y alinear master plan con una única mejora `🚧`.
+  - cierre ejecutado:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado con trazabilidad real de `#544/#547` (estado `🚧 REPORTED`).
+    - `R_GO/ruralgo-master-plan.md` actualizado con `#543 => ⛔` y `#544 => 🚧`.
+    - commit documental atómico en `R_GO`: `ed39a570b`.
+    - push remoto completado en `feature/rgo-1590-01-ios-physical-signoff`.
+  - evidencia:
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m "docs(validation): sync issue 544 reported state and blocker visibility"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+    - `npx --yes --package pumuki@latest pumuki sdd session --refresh --json`
+    - `npx --yes --package pumuki@latest pumuki-pre-commit` (gate `ALLOW/PASS`)
+    - `npx --yes --package pumuki@latest pumuki-pre-push` (gate `ALLOW/PASS`)
+
+- 🚧 `P12.F1.T47` Consolidar monitoreo único del bloqueo remoto para `#543/#544` en issue operativa `#546` y ejecutar cierre administrativo automático en cuanto los checks remotos queden operativos.
+  - avance en curso:
+    - issue operativa actualizada con seguimiento de `#547`:
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994327893`
+    - evidencia de bloqueo vigente:
+      - `gh run view 22648407847` (`billing lock` en GitHub Actions).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
+
+- ⏳ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+  - salida esperada:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-056`.
+    - `R_GO/ruralgo-master-plan.md` con leyenda final actualizada y referencia de merge real.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
