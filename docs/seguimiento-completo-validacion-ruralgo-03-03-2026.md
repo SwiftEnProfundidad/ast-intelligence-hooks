@@ -1838,11 +1838,30 @@ Criterio de salida F5:
     - `npm run -s validation:tracking-single-active`
     - `docs/validation/README.md` actualizado con perfiles activos de la suite contractual.
 
-- 🚧 `P12.F2.T60` Publicar patch release con mejoras de telemetría (`#574`, `#577`) para disponibilidad inmediata en npm.
+- ✅ `P12.F2.T60` Publicar patch release con mejoras de telemetría (`#574`, `#577`) para disponibilidad inmediata en npm.
+  - cierre ejecutado:
+    - issue de release creada y cerrada: `#578`.
+    - rama release creada y mergeada: `release/6.3.34` -> `#580` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/580`).
+    - publicación npm completada: `pumuki@6.3.34`.
+  - evidencia:
+    - `npm run -s validation:tracking-single-active`
+    - `npm view pumuki version` => `6.3.34`
+    - `gh issue close 578 --comment "Closed via PR #580 and npm publish 6.3.34 (telemetry rotation + contract profile telemetry-rotation)."`
+
+- ✅ `P12.F2.T61` Publicar documentación de adopción de `6.3.34` (release notes + verificación operativa rápida).
+  - cierre ejecutado:
+    - issue documental creada y cerrada: `#581`.
+    - `docs/RELEASE_NOTES.md` actualizado con entrada `2026-03-04 (v6.3.34)` y comandos de verificación operativa.
+    - trazabilidad sincronizada en plan activo + registro maestro.
+  - evidencia:
+    - `npm run -s validation:tracking-single-active`
+    - `gh issue close 581 --comment "Closed via release notes update for 6.3.34 and tracking sync."`
+
+- 🚧 `P12.F2.T62` Ejecutar la siguiente mejora estratégica pendiente: policy-as-code versionada y firmada para gates enterprise (`#543`).
   - salida esperada:
-    - issue de release creada con alcance/doD verificable (`#578`).
-    - nueva versión npm publicada con rotación JSONL + profile contractual `telemetry-rotation`.
-    - trazabilidad cerrada en plan activo + registro maestro.
+    - issue `#543` movida de `REPORTED` a `FIXED` con implementación verificable.
+    - contrato de policy firmado/versionado con validación estricta y trazabilidad en CLI.
+    - cobertura de tests RED/GREEN + release readiness documentada en plan activo.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F2.T60` (release patch con mejoras de telemetría, issue `#578`).
+- Task activa (`🚧`): `P12.F2.T62` (policy-as-code versionada y firmada para gates enterprise, issue `#543`).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
