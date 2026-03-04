@@ -1746,11 +1746,22 @@ Criterio de salida F5:
     - `npm view pumuki version` => `6.3.31`
     - `gh pr view 555 --json state,mergeCommit,url`
 
-- 🚧 `P12.F2.T52` Ejecutar siguiente iteración técnica post-release `6.3.31`: ampliar la suite contractual multi-repo con fixture adicional y cobertura de regresión.
+- ✅ `P12.F2.T52` Ejecutar siguiente iteración técnica post-release `6.3.31`: ampliar la suite contractual multi-repo con fixture adicional y cobertura de regresión.
+  - cierre ejecutado:
+    - issue creada y cerrada: `#557`.
+    - rama técnica creada y mergeada: `feature/557-contract-suite-repeat-profile` -> `#558` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/558`).
+    - commit de merge en `develop`: `5f0302c`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/enterprise-contract-suite-contract.test.ts scripts/__tests__/enterprise-contract-suite-args-lib.test.ts scripts/__tests__/enterprise-contract-suite-report-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:contract-suite:enterprise -- --json`
+    - `npm run -s validation:tracking-single-active`
+
+- 🚧 `P12.F2.T53` Publicar patch release con la ampliación de suite contractual (`#557`) y dejar disponibilidad inmediata para consumidores.
   - salida esperada:
-    - issue de ampliación creada y priorizada con DoD verificable.
-    - implementación en rama propia con ciclo RED -> GREEN -> REFACTOR.
-    - PR mergeada con evidencia (`tests`, `typecheck`, `validation:contract-suite:enterprise`).
+    - versión npm publicada con el perfil adicional `minimal-repeat`.
+    - PR de release mergeada en `develop` con evidencias de validación.
+    - seguimiento maestro apuntando a esta task como única activa.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
