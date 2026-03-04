@@ -1895,11 +1895,23 @@ Criterio de salida F5:
   - evidencia:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `33 passed, 0 failed`.
 
-- 🚧 `P12.F2.T65` Continuar SDD pendiente enterprise: artefacto de aprendizaje machine-readable por change durante `sync-docs` (`#589`).
+- ✅ `P12.F2.T65` Continuar SDD pendiente enterprise: artefacto de aprendizaje machine-readable por change durante `sync-docs` (`#589`).
+  - cierre ejecutado:
+    - `runSddSyncDocs` incorpora contrato `learning` en salida con:
+      - `path`, `written`, `digest`, `artifact`.
+    - cuando se provee `--change`:
+      - `--dry-run`: no escribe archivo y retorna payload de aprendizaje.
+      - ejecución normal: persiste `openspec/changes/<change>/learning.json`.
+    - cobertura de tests ampliada para dry-run y persistencia real del artefacto.
+    - documentación mínima del esquema añadida en `docs/CONFIGURATION.md`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `34 passed, 0 failed`.
+
+- 🚧 `P12.F2.T66` Continuar SDD pendiente enterprise: enriquecer `learning.json` con señales reales de gate/evidence (`#591`).
   - salida esperada:
-    - contrato `learning` determinista en salida JSON.
-    - persistencia opcional en `openspec/changes/<change>/learning.json` cuando se provee `--change`.
-    - tests de escritura/dry-run/error y documentación mínima del esquema.
+    - arrays `failed_patterns`, `successful_patterns` y `gate_anomalies` poblados desde señales runtime cuando existan.
+    - orden determinista y comportamiento reproducible en dry-run/no dry-run.
+    - tests de casos poblados y fallback vacío en verde.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
