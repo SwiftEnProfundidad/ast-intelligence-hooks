@@ -5,7 +5,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
-### 2026-03-04 (next cut candidate, post v6.3.38)
+### 2026-03-04 (v6.3.39)
 
 - Adapter/runtime bootstrap hardening:
   - adapter-generated hooks/CI templates now use `npx --yes --package pumuki@latest ...` for deterministic command resolution in consumer repos.
@@ -24,7 +24,12 @@ Detailed commit history remains available through Git history (`git log` / `git 
   - `test:stage-gates` stabilized and green with current contracts (`1020 pass / 0 fail / 4 skip`).
   - fixtures aligned to evidence v2.1 (`evidence_chain`, `evidence.source`) and architecture guardrail overrides updated for `integrations/lifecycle/cli.ts`.
 - Traceability:
-  - commits: `104fc92`, `2f175ec`, `da7b073`, `2c40a4c`
+  - commits: `104fc92`, `2f175ec`, `da7b073`, `2c40a4c`, `b124599`, `2aeb435`
+- Consumer quick verification:
+  - `npx --yes --package pumuki@latest pumuki status --json`
+  - `npx --yes --package pumuki@latest pumuki doctor --json`
+  - `npm run -s typecheck`
+  - `npm run -s test:stage-gates`
 
 ### 2026-03-04 (v6.3.38)
 

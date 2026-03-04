@@ -6,6 +6,8 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [6.3.39] - 2026-03-04
+
 ### Added
 
 - Cross-platform critical skills enforcement in platform gate evaluation:
