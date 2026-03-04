@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { readSddStatus } from './policy';
+import type { SddStage } from './types';
 
 export const SDD_SYNC_DOCS_CANONICAL_FILES = [
   'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
@@ -34,6 +35,11 @@ export type SddSyncDocsResult = {
   command: 'pumuki sdd sync-docs';
   dryRun: boolean;
   repoRoot: string;
+  context: {
+    change: string | null;
+    stage: SddStage | null;
+    task: string | null;
+  };
   updated: boolean;
   files: ReadonlyArray<SddSyncDocsFileResult>;
 };
@@ -135,9 +141,15 @@ const applyManagedSection = (params: {
 export const runSddSyncDocs = (params?: {
   repoRoot?: string;
   dryRun?: boolean;
+  change?: string;
+  stage?: SddStage;
+  task?: string;
 }): SddSyncDocsResult => {
   const repoRoot = resolve(params?.repoRoot ?? process.cwd());
   const dryRun = params?.dryRun === true;
+  const change = params?.change?.trim() ? params.change.trim() : null;
+  const stage = params?.stage ?? null;
+  const task = params?.task?.trim() ? params.task.trim() : null;
 
   const updates = SDD_SYNC_DOCS_CANONICAL_FILES.map((relativePath) => {
     const absolutePath = resolve(repoRoot, relativePath);
@@ -192,6 +204,11 @@ export const runSddSyncDocs = (params?: {
     command: 'pumuki sdd sync-docs',
     dryRun,
     repoRoot,
+    context: {
+      change,
+      stage,
+      task,
+    },
     updated: files.some((file) => file.updated),
     files,
   };

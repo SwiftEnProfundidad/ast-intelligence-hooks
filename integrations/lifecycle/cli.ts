@@ -87,6 +87,9 @@ type ParsedArgs = {
   sddChangeId?: string;
   sddTtlMinutes?: number;
   sddSyncDocsDryRun?: boolean;
+  sddSyncDocsChange?: string;
+  sddSyncDocsStage?: SddStage;
+  sddSyncDocsTask?: string;
   adapterCommand?: 'install';
   adapterAgent?: AdapterAgent;
   adapterDryRun?: boolean;
@@ -120,7 +123,7 @@ Pumuki lifecycle commands:
   pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
   pumuki sdd session --refresh [--ttl-minutes=<n>] [--json]
   pumuki sdd session --close [--json]
-  pumuki sdd sync-docs [--dry-run] [--json]
+  pumuki sdd sync-docs [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json]
 `.trim();
 
 const LOOP_RUN_POLICY: GatePolicy = {
@@ -420,6 +423,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let sddChangeId: ParsedArgs['sddChangeId'];
   let sddTtlMinutes: ParsedArgs['sddTtlMinutes'];
   let sddSyncDocsDryRun = false;
+  let sddSyncDocsChange: ParsedArgs['sddSyncDocsChange'];
+  let sddSyncDocsStage: ParsedArgs['sddSyncDocsStage'];
+  let sddSyncDocsTask: ParsedArgs['sddSyncDocsTask'];
   let adapterCommand: ParsedArgs['adapterCommand'];
   let adapterAgent: ParsedArgs['adapterAgent'];
   let adapterDryRun = false;
@@ -617,11 +623,15 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         continue;
       }
       if (arg.startsWith('--stage=')) {
-        if (sddCommand !== 'validate') {
-          throw new Error(`--stage is only supported with "pumuki sdd validate".\n\n${HELP_TEXT}`);
+        if (sddCommand === 'validate') {
+          sddStage = parseSddStage(arg.slice('--stage='.length));
+          continue;
         }
-        sddStage = parseSddStage(arg.slice('--stage='.length));
-        continue;
+        if (sddCommand === 'sync-docs') {
+          sddSyncDocsStage = parseSddStage(arg.slice('--stage='.length));
+          continue;
+        }
+        throw new Error(`--stage is only supported with "pumuki sdd validate" or "pumuki sdd sync-docs".\n\n${HELP_TEXT}`);
       }
       if (arg === '--open') {
         if (sddCommand !== 'session') {
@@ -645,10 +655,29 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         continue;
       }
       if (arg.startsWith('--change=')) {
-        if (sddCommand !== 'session') {
-          throw new Error(`--change is only supported with "pumuki sdd session".\n\n${HELP_TEXT}`);
+        if (sddCommand === 'session') {
+          sddChangeId = arg.slice('--change='.length).trim();
+          continue;
         }
-        sddChangeId = arg.slice('--change='.length).trim();
+        if (sddCommand === 'sync-docs') {
+          const changeValue = arg.slice('--change='.length).trim();
+          if (changeValue.length === 0) {
+            throw new Error(`Invalid --change value "${arg}".`);
+          }
+          sddSyncDocsChange = changeValue;
+          continue;
+        }
+        throw new Error(`--change is only supported with "pumuki sdd session" or "pumuki sdd sync-docs".\n\n${HELP_TEXT}`);
+      }
+      if (arg.startsWith('--task=')) {
+        if (sddCommand !== 'sync-docs') {
+          throw new Error(`--task is only supported with "pumuki sdd sync-docs".\n\n${HELP_TEXT}`);
+        }
+        const taskValue = arg.slice('--task='.length).trim();
+        if (taskValue.length === 0) {
+          throw new Error(`Invalid --task value "${arg}".`);
+        }
+        sddSyncDocsTask = taskValue;
         continue;
       }
       if (arg.startsWith('--ttl-minutes=')) {
@@ -685,7 +714,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
     if (sddCommand === 'sync-docs') {
       if (sddSessionAction || sddChangeId || typeof sddTtlMinutes === 'number') {
         throw new Error(
-          `"pumuki sdd sync-docs" only supports [--dry-run] [--json].\n\n${HELP_TEXT}`
+          `"pumuki sdd sync-docs" only supports [--change=<change-id>] [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--dry-run] [--json].\n\n${HELP_TEXT}`
         );
       }
       return {
@@ -694,6 +723,9 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         json,
         sddCommand,
         sddSyncDocsDryRun,
+        ...(sddSyncDocsChange ? { sddSyncDocsChange } : {}),
+        ...(sddSyncDocsStage ? { sddSyncDocsStage } : {}),
+        ...(sddSyncDocsTask ? { sddSyncDocsTask } : {}),
       };
     }
 
@@ -1696,12 +1728,15 @@ export const runLifecycleCli = async (
           const syncResult = runSddSyncDocs({
             repoRoot: process.cwd(),
             dryRun: parsed.sddSyncDocsDryRun === true,
+            change: parsed.sddSyncDocsChange,
+            stage: parsed.sddSyncDocsStage,
+            task: parsed.sddSyncDocsTask,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(syncResult, null, 2));
           } else {
             writeInfo(
-              `[pumuki][sdd] sync-docs dry_run=${syncResult.dryRun ? 'yes' : 'no'} updated=${syncResult.updated ? 'yes' : 'no'} files=${syncResult.files.length}`
+              `[pumuki][sdd] sync-docs dry_run=${syncResult.dryRun ? 'yes' : 'no'} updated=${syncResult.updated ? 'yes' : 'no'} files=${syncResult.files.length} change=${syncResult.context.change ?? 'none'} stage=${syncResult.context.stage ?? 'none'} task=${syncResult.context.task ?? 'none'}`
             );
             for (const file of syncResult.files) {
               writeInfo(

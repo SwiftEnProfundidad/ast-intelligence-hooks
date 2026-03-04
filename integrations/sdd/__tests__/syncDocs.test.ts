@@ -61,6 +61,9 @@ test('runSddSyncDocs dry-run previsualiza diff y no modifica archivo', async () 
     const after = readFileSync(canonicalPath, 'utf8');
 
     assert.equal(result.dryRun, true);
+    assert.equal(result.context.change, null);
+    assert.equal(result.context.stage, null);
+    assert.equal(result.context.task, null);
     assert.equal(result.updated, true);
     assert.equal(result.files.length, 1);
     assert.equal(result.files[0]?.updated, true);
@@ -94,9 +97,40 @@ test('runSddSyncDocs aplica cambios deterministas y segunda ejecución no cambia
     });
 
     assert.equal(first.updated, true);
+    assert.equal(first.context.change, null);
+    assert.equal(first.context.stage, null);
+    assert.equal(first.context.task, null);
     assert.match(synced, /openspec_installed:/);
     assert.equal(second.updated, false);
     assert.equal(second.files[0]?.updated, false);
+  });
+});
+
+test('runSddSyncDocs incluye contexto explícito change/stage/task en resultado', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-context-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: true,
+      change: 'rgo-1700-01',
+      stage: 'PRE_PUSH',
+      task: 'P12.F2.T63',
+    });
+
+    assert.equal(result.context.change, 'rgo-1700-01');
+    assert.equal(result.context.stage, 'PRE_PUSH');
+    assert.equal(result.context.task, 'P12.F2.T63');
   });
 });
 
