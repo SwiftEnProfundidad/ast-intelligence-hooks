@@ -1982,7 +1982,7 @@ Criterio de salida F5:
     - `npm publish --access public` => `+ pumuki@6.3.36`.
     - `npm view pumuki@6.3.36 version` => `6.3.36`.
 
-- 🚧 `P12.F2.T72` Siguiente hardening enterprise: policy-as-code firmada/versionada (`#543`).
+- 🚧 `P12.F2.T72` Siguiente hardening enterprise: policy-as-code firmada/versionada (`#606`).
   - salida esperada:
     - definir contrato machine-readable de policy con versión/firma y validación estricta.
     - exponer metadatos de validación en salidas de gate/telemetría.
