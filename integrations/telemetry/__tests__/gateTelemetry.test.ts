@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import test from 'node:test';
 import type { Finding } from '../../../core/gate/Finding';
 import type { RepoState } from '../../evidence/schema';
@@ -189,4 +189,44 @@ test('emitGateTelemetryEvent no emite nada si no hay outputs configurados', asyn
   assert.equal(result.skipped, true);
   assert.equal(result.otel_dispatched, false);
   assert.equal(result.event.schema, 'telemetry_event_v1');
+});
+
+test('emitGateTelemetryEvent rota JSONL cuando el tamaño máximo configurado se supera', async () => {
+  await withTempDir('pumuki-gate-telemetry-jsonl-rotate-', async (repoRoot) => {
+    const telemetryPath = join(repoRoot, '.pumuki/artifacts/gate-telemetry.jsonl');
+    mkdirSync(dirname(telemetryPath), { recursive: true });
+    writeFileSync(telemetryPath, '{"legacy":true}\n', 'utf8');
+
+    const result = await emitGateTelemetryEvent(
+      {
+        stage: 'PRE_COMMIT',
+        auditMode: 'gate',
+        gateOutcome: 'PASS',
+        filesScanned: 1,
+        findings: [],
+        repoRoot,
+        repoState: {
+          ...baseRepoState,
+          repo_root: repoRoot,
+        },
+      },
+      {
+        env: {
+          PUMUKI_TELEMETRY_JSONL_PATH: '.pumuki/artifacts/gate-telemetry.jsonl',
+          PUMUKI_TELEMETRY_JSONL_MAX_BYTES: '16',
+        } as NodeJS.ProcessEnv,
+        now: () => new Date('2026-03-04T00:00:00.000Z'),
+      }
+    );
+
+    assert.equal(result.skipped, false);
+    assert.equal(result.jsonl_path, telemetryPath);
+    assert.equal(existsSync(`${telemetryPath}.1`), true);
+    assert.equal(readFileSync(`${telemetryPath}.1`, 'utf8'), '{"legacy":true}\n');
+
+    const currentLine = readFileSync(telemetryPath, 'utf8').trim();
+    const currentEvent = JSON.parse(currentLine) as { schema?: string; stage?: string };
+    assert.equal(currentEvent.schema, 'telemetry_event_v1');
+    assert.equal(currentEvent.stage, 'PRE_COMMIT');
+  });
 });
