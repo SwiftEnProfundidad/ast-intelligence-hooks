@@ -1769,11 +1769,22 @@ Criterio de salida F5:
     - `npm publish --access public`
     - `npm view pumuki version` => `6.3.32`
 
-- 🚧 `P12.F2.T54` Ejecutar siguiente mejora estratégica: contrato explícito de compatibilidad (pumuki/openspec/hooks/adapters) con validación automática en `doctor`.
+- ✅ `P12.F2.T54` Ejecutar siguiente mejora estratégica: contrato explícito de compatibilidad (pumuki/openspec/hooks/adapters) con validación automática en `doctor`.
+  - cierre ejecutado:
+    - issue creada y cerrada: `#562`.
+    - rama técnica creada y mergeada: `feature/562-doctor-deep-compatibility-contract` -> `#563` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/563`).
+    - commit de merge en `develop`: `a1df815`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:contract-suite:enterprise -- --json`
+    - `npm run -s validation:tracking-single-active`
+
+- 🚧 `P12.F2.T55` Ejecutar siguiente mejora estratégica pendiente: policy-as-code versionada y firmada para gates enterprise (`#543`).
   - salida esperada:
-    - issue creada con alcance/doD verificable.
-    - implementación en rama propia con tests de contrato.
-    - PR mergeada y trazabilidad documentada en el plan activo.
+    - definición contractual machine-readable de policy con validación en runtime.
+    - tests RED/GREEN de firma/validez y bloqueo en modo estricto.
+    - PR mergeada + release y trazabilidad cerrada en canónico/master.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
