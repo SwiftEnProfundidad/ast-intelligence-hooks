@@ -6,7 +6,7 @@ test('resolveEnterpriseContractProfiles returns deterministic profile order', ()
   const profiles = resolveEnterpriseContractProfiles();
   assert.deepEqual(
     profiles.map((profile) => profile.id),
-    ['minimal', 'block', 'minimal-repeat']
+    ['minimal', 'block', 'minimal-repeat', 'telemetry-rotation']
   );
 });
 

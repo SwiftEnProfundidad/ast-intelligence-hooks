@@ -19,7 +19,10 @@ const runProfile = (
   repoRoot: string,
   profile: EnterpriseContractProfileSpec
 ): EnterpriseContractProfileResult => {
-  const args = ['--import', 'tsx', 'scripts/package-install-smoke.ts', `--mode=${profile.mode}`];
+  const args =
+    profile.id === 'telemetry-rotation'
+      ? ['--import', 'tsx', 'scripts/enterprise-contract-telemetry-rotation.ts']
+      : ['--import', 'tsx', 'scripts/package-install-smoke.ts', `--mode=${profile.mode}`];
   const result = runCommand({
     cwd: repoRoot,
     executable: 'node',

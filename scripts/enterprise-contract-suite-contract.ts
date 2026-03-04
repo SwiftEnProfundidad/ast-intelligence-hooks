@@ -1,4 +1,8 @@
-export type EnterpriseContractProfileId = 'minimal' | 'block' | 'minimal-repeat';
+export type EnterpriseContractProfileId =
+  | 'minimal'
+  | 'block'
+  | 'minimal-repeat'
+  | 'telemetry-rotation';
 
 export type EnterpriseContractProfileSpec = {
   id: EnterpriseContractProfileId;
@@ -45,5 +49,10 @@ export const resolveEnterpriseContractProfiles = (): ReadonlyArray<EnterpriseCon
     id: 'minimal-repeat',
     mode: 'minimal',
     expectedExitCode: 1,
+  },
+  {
+    id: 'telemetry-rotation',
+    mode: 'minimal',
+    expectedExitCode: 0,
   },
 ];
