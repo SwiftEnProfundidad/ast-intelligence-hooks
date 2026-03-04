@@ -1804,11 +1804,22 @@ Criterio de salida F5:
     - `npm view pumuki version` => `6.3.33`
     - `npm run -s validation:tracking-single-active`
 
-- 🚧 `P12.F2.T57` Ejecutar siguiente mejora estratégica: export de telemetría de gates en JSONL determinista para auditoría enterprise.
+- ✅ `P12.F2.T57` Ejecutar siguiente mejora estratégica: export de telemetría de gates en JSONL determinista para auditoría enterprise.
+  - cierre ejecutado:
+    - issue creada y cerrada: `#569`.
+    - rama técnica creada y mergeada: `feature/569-telemetry-jsonl-audit-hardening` -> `#571` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/571`).
+    - commit de merge en `develop`: `b98ef25`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:tracking-single-active`
+    - `docs/CONFIGURATION.md` actualizado con verificación operativa JSONL y claves esperadas.
+
+- 🚧 `P12.F2.T58` Ejecutar siguiente mejora estratégica: rotación/guard de tamaño para telemetría JSONL en repos enterprise de larga duración.
   - salida esperada:
-    - issue de implementación creada con alcance/doD verificable (`#569`).
-    - output JSONL estable para ingestión de auditoría (SIEM/OTel-ready) sin romper contrato actual.
-    - tests de esquema + no-regresión y documentación mínima de uso.
+    - issue de implementación creada con alcance/doD verificable (`#572`).
+    - soporte opcional de rotación por tamaño en `PUMUKI_TELEMETRY_JSONL_PATH`.
+    - tests de no-regresión y contrato determinista de archivo.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
