@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Última task cerrada (`✅`): `P12.F2.T63` (extender `pumuki sdd sync-docs` con `--change --stage --task`, issue `#585`).
-- Task activa (`🚧`): `P12.F2.T64` (ampliar `sync-docs` a múltiples documentos/secciones gestionadas, issue `#587`).
+- Última task cerrada (`✅`): `P12.F2.T64` (ampliar `sync-docs` a múltiples documentos/secciones gestionadas, issue `#587`).
+- Task activa (`🚧`): `P12.F2.T65` (artefacto learning por change en `sync-docs`, issue `#589`).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
