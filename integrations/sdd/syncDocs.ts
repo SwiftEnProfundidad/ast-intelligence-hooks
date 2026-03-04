@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { readSddStatus } from './policy';
 import type { SddStage } from './types';
 
@@ -50,6 +50,26 @@ export type SddSyncDocsResult = {
   };
   updated: boolean;
   files: ReadonlyArray<SddSyncDocsFileResult>;
+  learning?: {
+    path: string;
+    written: boolean;
+    digest: string;
+    artifact: {
+      version: '1.0';
+      change_id: string;
+      stage: SddStage | null;
+      task: string | null;
+      generated_at: string;
+      failed_patterns: string[];
+      successful_patterns: string[];
+      rule_updates: string[];
+      gate_anomalies: string[];
+      sync_docs: {
+        updated: boolean;
+        file_paths: string[];
+      };
+    };
+  };
 };
 
 const normalizeSectionBody = (value: string): string => value.trim().replace(/\r\n/g, '\n');
@@ -171,6 +191,7 @@ export const runSddSyncDocs = (params?: {
   stage?: SddStage;
   task?: string;
   targets?: ReadonlyArray<SddSyncDocsTarget>;
+  now?: () => Date;
 }): SddSyncDocsResult => {
   const repoRoot = resolve(params?.repoRoot ?? process.cwd());
   const dryRun = params?.dryRun === true;
@@ -178,6 +199,7 @@ export const runSddSyncDocs = (params?: {
   const stage = params?.stage ?? null;
   const task = params?.task?.trim() ? params.task.trim() : null;
   const targets = params?.targets ?? DEFAULT_SYNC_DOCS_TARGETS;
+  const now = params?.now ?? (() => new Date());
 
   const updates = targets.map((target) => {
     const absolutePath = resolve(repoRoot, target.path);
@@ -234,6 +256,40 @@ export const runSddSyncDocs = (params?: {
     }),
   }));
 
+  const updated = files.some((file) => file.updated);
+  let learning: SddSyncDocsResult['learning'];
+  if (change) {
+    const artifact = {
+      version: '1.0' as const,
+      change_id: change,
+      stage,
+      task,
+      generated_at: now().toISOString(),
+      failed_patterns: [] as string[],
+      successful_patterns: ['sync-docs.completed'],
+      rule_updates: [] as string[],
+      gate_anomalies: [] as string[],
+      sync_docs: {
+        updated,
+        file_paths: files.map((file) => file.path),
+      },
+    };
+    const relativePath = `openspec/changes/${change}/learning.json`;
+    const absolutePath = resolve(repoRoot, relativePath);
+    const serialized = `${JSON.stringify(artifact, null, 2)}\n`;
+    const digest = computeDigest(serialized);
+    if (!dryRun) {
+      mkdirSync(dirname(absolutePath), { recursive: true });
+      writeFileSync(absolutePath, serialized, 'utf8');
+    }
+    learning = {
+      path: relativePath,
+      written: !dryRun,
+      digest,
+      artifact,
+    };
+  }
+
   return {
     command: 'pumuki sdd sync-docs',
     dryRun,
@@ -243,7 +299,8 @@ export const runSddSyncDocs = (params?: {
       stage,
       task,
     },
-    updated: files.some((file) => file.updated),
+    updated,
     files,
+    ...(learning ? { learning } : {}),
   };
 };
