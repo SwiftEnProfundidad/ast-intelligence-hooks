@@ -570,9 +570,25 @@ test('runLifecycleCli status --json --remote-checks añade diagnóstico remoto e
     assert.equal(code, 0);
     const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
       remoteCiDiagnostics?: { status?: string; blockers?: Array<{ code?: string }> };
+      policyValidation?: {
+        stages?: {
+          PRE_COMMIT?: { validationCode?: string };
+          PRE_PUSH?: { validationCode?: string };
+          CI?: { validationCode?: string };
+        };
+      };
     };
     assert.equal(payload.remoteCiDiagnostics?.status, 'blocked');
     assert.equal(payload.remoteCiDiagnostics?.blockers?.[0]?.code, 'REMOTE_CI_BILLING_LOCK');
+    assert.equal(
+      payload.policyValidation?.stages?.PRE_COMMIT?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(
+      payload.policyValidation?.stages?.PRE_PUSH?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(payload.policyValidation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
@@ -675,6 +691,13 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
           overall?: string;
         };
       };
+      policyValidation?: {
+        stages?: {
+          PRE_COMMIT?: { validationCode?: string };
+          PRE_PUSH?: { validationCode?: string };
+          CI?: { validationCode?: string };
+        };
+      };
     };
     assert.equal(payload.deep?.enabled, true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'upstream-readiness'), true);
@@ -687,6 +710,15 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
       payload.deep?.contract?.overall === 'incompatible',
       true
     );
+    assert.equal(
+      payload.policyValidation?.stages?.PRE_COMMIT?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(
+      payload.policyValidation?.stages?.PRE_PUSH?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(payload.policyValidation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
@@ -820,6 +852,13 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
         allowed?: boolean;
         violations?: Array<{ code?: string }>;
       };
+      policy_validation?: {
+        stages?: {
+          PRE_COMMIT?: { validationCode?: string };
+          PRE_PUSH?: { validationCode?: string };
+          CI?: { validationCode?: string };
+        };
+      };
     };
     assert.equal(payload.ai_gate?.allowed, true);
     assert.equal(
@@ -828,6 +867,15 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
       ),
       false
     );
+    assert.equal(
+      payload.policy_validation?.stages?.PRE_COMMIT?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(
+      payload.policy_validation?.stages?.PRE_PUSH?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(payload.policy_validation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
     assert.equal(existsSync(resolveMcpAiGateReceiptPath(repo)), true);
   } finally {
     process.stdout.write = originalStdoutWrite;
@@ -937,8 +985,24 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v�
       ai_gate?: {
         allowed?: boolean;
       };
+      policy_validation?: {
+        stages?: {
+          PRE_COMMIT?: { validationCode?: string };
+          PRE_PUSH?: { validationCode?: string };
+          CI?: { validationCode?: string };
+        };
+      };
     };
     assert.equal(payload.ai_gate?.allowed, true);
+    assert.equal(
+      payload.policy_validation?.stages?.PRE_COMMIT?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(
+      payload.policy_validation?.stages?.PRE_PUSH?.validationCode,
+      'POLICY_AS_CODE_VALID'
+    );
+    assert.equal(payload.policy_validation?.stages?.CI?.validationCode, 'POLICY_AS_CODE_VALID');
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);

@@ -10,6 +10,10 @@ import {
 import { runLifecycleInstall } from './install';
 import { runLifecycleRemove } from './remove';
 import { readLifecycleStatus } from './status';
+import {
+  readLifecyclePolicyValidationSnapshot,
+  type LifecyclePolicyValidationSnapshot,
+} from './policyValidationSnapshot';
 import { runLifecycleUninstall } from './uninstall';
 import { runLifecycleUpdate } from './update';
 import { runOpenSpecBootstrap } from './openSpecBootstrap';
@@ -977,6 +981,11 @@ const printDoctorReport = (
   writeInfo(
     `[pumuki] hook pre-push: ${report.hookStatus['pre-push'].managedBlockPresent ? 'managed' : 'missing'}`
   );
+  writeInfo(
+    `[pumuki] policy-as-code: PRE_COMMIT=${report.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
+    `PRE_PUSH=${report.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
+    `CI=${report.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${report.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
+  );
 
   for (const issue of report.issues) {
     writeInfo(`[pumuki] ${issue.severity.toUpperCase()}: ${issue.message}`);
@@ -1016,6 +1025,7 @@ const PRE_WRITE_INSTALL_REMEDIATION_COMMAND =
 type PreWriteValidationEnvelope = {
   sdd: ReturnType<typeof evaluateSddPolicy>;
   ai_gate: ReturnType<typeof evaluateAiGate>;
+  policy_validation: LifecyclePolicyValidationSnapshot;
   automation: PreWriteAutomationTrace;
   bootstrap: {
     enabled: boolean;
@@ -1229,12 +1239,14 @@ const resolveAiGateViolationLocation = (code: string) => {
 const buildPreWriteValidationEnvelope = (
   result: ReturnType<typeof evaluateSddPolicy>,
   aiGate: ReturnType<typeof evaluateAiGate>,
+  policyValidation: LifecyclePolicyValidationSnapshot,
   automation: PreWriteAutomationTrace,
   bootstrap: PreWriteOpenSpecBootstrapTrace,
   nextAction: PreWriteValidationEnvelope['next_action']
 ): PreWriteValidationEnvelope => ({
   sdd: result,
   ai_gate: aiGate,
+  policy_validation: policyValidation,
   automation: {
     attempted: automation.attempted,
     actions: [...automation.actions],
@@ -1397,6 +1409,11 @@ export const runLifecycleCli = async (
           );
           writeInfo(
             `[pumuki] tracked node_modules paths: ${status.trackedNodeModulesCount}`
+          );
+          writeInfo(
+            `[pumuki] policy-as-code: PRE_COMMIT=${status.policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
+            `PRE_PUSH=${status.policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
+            `CI=${status.policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${status.policyValidation.stages.CI.strict ? 'yes' : 'no'}`
           );
           if (remoteCiDiagnostics) {
             printRemoteCiDiagnostics(remoteCiDiagnostics);
@@ -1656,6 +1673,7 @@ export const runLifecycleCli = async (
           let result = evaluateSddPolicy({
             stage: parsed.sddStage ?? 'PRE_COMMIT',
           });
+          const policyValidation = readLifecyclePolicyValidationSnapshot(process.cwd());
           const preWriteAutoBootstrapEnabled = process.env.PUMUKI_PREWRITE_AUTO_BOOTSTRAP !== '0';
           const preWriteBootstrapTrace: PreWriteOpenSpecBootstrapTrace = {
             enabled: preWriteAutoBootstrapEnabled,
@@ -1727,11 +1745,15 @@ export const runLifecycleCli = async (
                   ? buildPreWriteValidationEnvelope(
                     result,
                     aiGate,
+                    policyValidation,
                     automationTrace,
                     preWriteBootstrapTrace,
                     nextAction
                   )
-                  : result,
+                  : {
+                    ...result,
+                    policy_validation: policyValidation,
+                  },
                 null,
                 2
               )
@@ -1739,6 +1761,11 @@ export const runLifecycleCli = async (
           } else {
             writeInfo(
               `[pumuki][sdd] stage=${result.stage} allowed=${result.decision.allowed ? 'yes' : 'no'} code=${result.decision.code}`
+            );
+            writeInfo(
+              `[pumuki][sdd] policy-as-code: PRE_COMMIT=${policyValidation.stages.PRE_COMMIT.validationCode ?? 'n/a'} strict=${policyValidation.stages.PRE_COMMIT.strict ? 'yes' : 'no'} ` +
+              `PRE_PUSH=${policyValidation.stages.PRE_PUSH.validationCode ?? 'n/a'} strict=${policyValidation.stages.PRE_PUSH.strict ? 'yes' : 'no'} ` +
+              `CI=${policyValidation.stages.CI.validationCode ?? 'n/a'} strict=${policyValidation.stages.CI.strict ? 'yes' : 'no'}`
             );
             writeInfo(
               withOptionalLocation(

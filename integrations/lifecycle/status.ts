@@ -1,6 +1,10 @@
 import { getPumukiHooksStatus } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { getCurrentPumukiVersion } from './packageInfo';
+import {
+  readLifecyclePolicyValidationSnapshot,
+  type LifecyclePolicyValidationSnapshot,
+} from './policyValidationSnapshot';
 import { readLifecycleState, type LifecycleState } from './state';
 
 export type LifecycleStatus = {
@@ -9,6 +13,7 @@ export type LifecycleStatus = {
   lifecycleState: LifecycleState;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
   trackedNodeModulesCount: number;
+  policyValidation: LifecyclePolicyValidationSnapshot;
 };
 
 export const readLifecycleStatus = (params?: {
@@ -26,5 +31,6 @@ export const readLifecycleStatus = (params?: {
     lifecycleState: readLifecycleState(git, repoRoot),
     hookStatus: getPumukiHooksStatus(repoRoot),
     trackedNodeModulesCount,
+    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
   };
 };

@@ -29,6 +29,26 @@ test('resolvePolicyForStage returns default PRE_PUSH policy when skills policy i
   });
 });
 
+test('resolvePolicyForStage marks unsigned in strict mode when policy-as-code contract is missing', async () => {
+  await withTempDir('pumuki-stage-policy-unsigned-strict-', async (repoRoot) => {
+    const previousStrict = process.env.PUMUKI_POLICY_STRICT;
+    process.env.PUMUKI_POLICY_STRICT = '1';
+    try {
+      const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+      assert.equal(resolved.trace.validation?.status, 'unsigned');
+      assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_UNSIGNED');
+      assert.equal(resolved.trace.validation?.strict, true);
+      assert.equal(resolved.trace.policySource, 'computed-local');
+    } finally {
+      if (typeof previousStrict === 'undefined') {
+        delete process.env.PUMUKI_POLICY_STRICT;
+      } else {
+        process.env.PUMUKI_POLICY_STRICT = previousStrict;
+      }
+    }
+  });
+});
+
 test('resolvePolicyForStage applies PRE_PUSH override from skills.policy.json', async () => {
   await withTempDir('pumuki-stage-policy-direct-override-', async (repoRoot) => {
     const skillsPolicy = {

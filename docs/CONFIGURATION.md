@@ -229,7 +229,7 @@ Expected JSONL keys for enterprise audit ingestion:
 - `schema=telemetry_event_v1` with `schema_version=1.0`
 - `stage`, `gate_outcome`, `severity_counts`
 - `policy.bundle`, `policy.hash`, `policy.version`, `policy.signature`, `policy.policy_source`
-- `policy.validation_status`, `policy.validation_code` (when policy-as-code validation is available)
+- `policy.validation_status`, `policy.validation_code` (when policy-as-code validation is available; status can be `valid|invalid|expired|unknown-source|unsigned`)
 
 ## Heuristic pilot flag
 

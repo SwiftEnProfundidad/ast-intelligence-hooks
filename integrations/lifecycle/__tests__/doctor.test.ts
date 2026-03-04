@@ -147,6 +147,9 @@ test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en n
     });
 
     assert.equal(report.repoRoot, repoRoot);
+    assert.equal(typeof report.policyValidation.stages.PRE_COMMIT.hash, 'string');
+    assert.equal(typeof report.policyValidation.stages.PRE_PUSH.hash, 'string');
+    assert.equal(typeof report.policyValidation.stages.CI.hash, 'string');
     assert.deepEqual(report.trackedNodeModulesPaths, ['node_modules/pkg/index.js']);
     assert.equal(report.issues.some((issue) => issue.severity === 'error'), true);
     assert.equal(doctorHasBlockingIssues(report), true);

@@ -5,6 +5,10 @@ import { resolvePolicyForStage } from '../gate/stagePolicies';
 import { getPumukiHooksStatus } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { getCurrentPumukiVersion } from './packageInfo';
+import {
+  readLifecyclePolicyValidationSnapshot,
+  type LifecyclePolicyValidationSnapshot,
+} from './policyValidationSnapshot';
 import { readLifecycleState, type LifecycleState } from './state';
 import {
   detectOpenSpecInstallation,
@@ -71,6 +75,7 @@ export type LifecycleDoctorReport = {
   lifecycleState: LifecycleState;
   trackedNodeModulesPaths: ReadonlyArray<string>;
   hookStatus: ReturnType<typeof getPumukiHooksStatus>;
+  policyValidation: LifecyclePolicyValidationSnapshot;
   issues: ReadonlyArray<DoctorIssue>;
   deep?: DoctorDeepReport;
 };
@@ -653,6 +658,7 @@ export const runLifecycleDoctor = (params?: {
     lifecycleState,
     trackedNodeModulesPaths,
     hookStatus,
+    policyValidation: readLifecyclePolicyValidationSnapshot(repoRoot),
     issues,
     deep,
   };

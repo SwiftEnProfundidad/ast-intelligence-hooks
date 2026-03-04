@@ -49,9 +49,10 @@ export type ResolvedStagePolicy = {
     signature?: string;
     policySource?: string;
     validation?: {
-      status: 'valid' | 'invalid' | 'expired' | 'unknown-source';
+      status: 'valid' | 'invalid' | 'expired' | 'unknown-source' | 'unsigned';
       code:
         | 'POLICY_AS_CODE_VALID'
+        | 'POLICY_AS_CODE_UNSIGNED'
         | 'POLICY_AS_CODE_CONTRACT_INVALID'
         | 'POLICY_AS_CODE_CONTRACT_EXPIRED'
         | 'POLICY_AS_CODE_SIGNATURE_MISMATCH'
@@ -307,6 +308,21 @@ const resolvePolicyAsCodeTraceMetadata = (params: {
   const contractPath = join(params.repoRoot, POLICY_AS_CODE_CONTRACT_PATH);
 
   if (!existsSync(contractPath)) {
+    if (strict) {
+      return {
+        version: computedVersion,
+        signature: computedSignature,
+        policySource: 'computed-local',
+        validation: {
+          status: 'unsigned',
+          code: 'POLICY_AS_CODE_UNSIGNED',
+          message:
+            'Policy-as-code contract is missing; runtime policy metadata is unsigned.',
+          strict,
+        },
+      };
+    }
+
     return {
       version: computedVersion,
       signature: computedSignature,
