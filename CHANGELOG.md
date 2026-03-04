@@ -6,7 +6,31 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Optional macOS blocked dialog flow for gate failures (`PUMUKI_MACOS_BLOCKED_DIALOG=1`):
+  - full cause + remediation detail in modal dialog,
+  - anti-spam user controls in dialog:
+    - `Mantener activas`
+    - `Silenciar 30 min`
+    - `Desactivar`
+  - auto-timeout (`15s`) to avoid hanging local execution when no user interaction happens.
+
+### Changed
+
+- Blocked macOS notification UX is now short and human-readable by default:
+  - title in Spanish (`🔴 Pumuki bloqueado`),
+  - compact subtitle with stage + summarized cause,
+  - message starts with `Solución: ...` so remediation is visible in banner-limited space.
+- Added mute-aware notification delivery:
+  - support for `muteUntil` in `.pumuki/system-notifications.json`,
+  - suppressed delivery while mute window is active (`reason=muted`).
+
+### Fixed
+
+- Stabilized `stageRunners` test baseline against current core-skills contract:
+  - test harness now keeps core skills enabled (`PUMUKI_DISABLE_CORE_SKILLS=0`) to avoid false gate blocks from scope/platform compliance rules,
+  - restored passing regression set for affected suite.
 
 ## [6.3.24] - 2026-02-27
 

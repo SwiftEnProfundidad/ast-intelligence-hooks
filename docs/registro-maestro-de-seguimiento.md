@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PoC anti-spam de notificaciones macOS (silenciar 30 min / desactivar + timeout 15s).
-- Task activa (`🚧`): Fase 3.2 actualización de `CHANGELOG.md` + `docs/RELEASE_NOTES.md`.
+- Última task cerrada (`✅`): Fase 3.2 (actualización de `CHANGELOG.md` + `docs/RELEASE_NOTES.md` con fixes reales).
+- Task activa (`🚧`): Fase 3.3 publicación de versión.
 - Nuevos pendientes añadidos (`⏳`): sin cambios.
 
 ## Historial resumido

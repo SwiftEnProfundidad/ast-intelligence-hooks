@@ -72,5 +72,6 @@
 
 - ✅ Ejecutar suite de tests de regresión afectada.
   - Evidencia (2026-03-04): `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts integrations/git/__tests__/stageRunners.test.ts integrations/lifecycle/__tests__/lifecycle.test.ts` -> `44 pass / 0 fail`.
-- 🚧 Actualizar `CHANGELOG.md` y `docs/RELEASE_NOTES.md` con fixes reales.
-- ⏳ Publicar versión cuando las tareas en construcción/pending críticas estén cerradas.
+- ✅ Actualizar `CHANGELOG.md` y `docs/RELEASE_NOTES.md` con fixes reales.
+  - Evidencia (2026-03-04): se documenta en `Unreleased` (CHANGELOG) y en `next patch candidate` (RELEASE_NOTES) el paquete de mejoras `PUMUKI-011` + baseline test alignment.
+- 🚧 Publicar versión cuando las tareas en construcción/pending críticas estén cerradas.

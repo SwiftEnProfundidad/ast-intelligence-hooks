@@ -5,6 +5,33 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-04 (next patch candidate, unreleased)
+
+- Blocked notification UX hardening for macOS:
+  - short, human-readable Spanish banner (`🔴 Pumuki bloqueado`) with stage + summarized cause.
+  - remediation-first body (`Solución: ...`) to maximize visibility in truncated notification banners.
+- Optional blocked-dialog workflow (`PUMUKI_MACOS_BLOCKED_DIALOG=1`):
+  - full cause/remediation modal for critical blocks.
+  - anti-spam controls in dialog:
+    - `Mantener activas`
+    - `Silenciar 30 min`
+    - `Desactivar`
+  - `giving up after 15` timeout to avoid local execution hangs.
+- Notification delivery contract update:
+  - config supports `muteUntil` in `.pumuki/system-notifications.json`.
+  - delivery result now reports `reason=muted` while silence window is active.
+- Regression baseline alignment:
+  - `integrations/git/__tests__/stageRunners.test.ts` updated to run with core skills enabled in test harness, matching current gate contract and eliminating false failures.
+- Traceability:
+  - commits: `2f957a2`, `ceb1849`, `98fc108`, `ae90f31`
+- Consumer quick verification:
+  - `npx --yes tsx@4.21.0 --test scripts/__tests__/framework-menu-system-notifications.test.ts`
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts`
+  - `PUMUKI_MACOS_BLOCKED_DIALOG=1 npx --yes tsx@4.21.0 -e "import { emitSystemNotification } from './scripts/framework-menu-system-notifications-lib'; console.log(JSON.stringify(emitSystemNotification({ repoRoot: process.cwd(), event: { kind: 'gate.blocked', stage: 'PRE_COMMIT', totalViolations: 1, causeCode: 'BACKEND_AVOID_EXPLICIT_ANY', causeMessage: 'Avoid explicit any in backend code.', remediation: 'Tipa el valor y elimina any explícito en backend.' } })));"`
+  - expected signal:
+    - banner appears with concise remediation text,
+    - optional dialog appears with anti-spam actions when flag is enabled.
+
 ### 2026-03-04 (v6.3.37)
 
 - Policy-as-code enterprise hardening shipped:
