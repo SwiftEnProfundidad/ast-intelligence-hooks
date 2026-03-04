@@ -10,6 +10,7 @@ export const REQUIRED_PACKAGE_PATHS = [
   'core/rules/presets/heuristics/typescript.ts',
   'scripts/package-install-smoke.ts',
   'integrations/git/runPlatformGate.ts',
+  'integrations/telemetry/gateTelemetry.ts',
   'integrations/lifecycle/cli.ts',
   'integrations/notifications/emitAuditSummaryNotification.ts',
   'integrations/evidence/buildEvidence.ts',
