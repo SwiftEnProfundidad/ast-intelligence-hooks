@@ -190,6 +190,7 @@ Behavior:
 - `--dry-run`: includes learning payload in JSON output with `learning.written=false` and does not write files.
 - non dry-run: persists `learning.json` deterministically and reports digest/path in output.
 - `rule_updates`: deterministic recommendations derived from evidence/gate signals (`missing`, `invalid`, `blocked`, `allowed`).
+- dedicated command: `pumuki sdd learn --change=<id> [--stage=<stage>] [--task=<task>] [--dry-run] [--json]` generates/persists the same artifact without requiring `sync-docs`.
 
 ## Gate telemetry export (optional)
 

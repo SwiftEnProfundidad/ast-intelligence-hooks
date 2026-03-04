@@ -73,6 +73,18 @@ export type SddSyncDocsResult = {
   };
 };
 
+export type SddLearnResult = {
+  command: 'pumuki sdd learn';
+  dryRun: boolean;
+  repoRoot: string;
+  context: {
+    change: string;
+    stage: SddStage | null;
+    task: string | null;
+  };
+  learning: NonNullable<SddSyncDocsResult['learning']>;
+};
+
 const normalizeSectionBody = (value: string): string => value.trim().replace(/\r\n/g, '\n');
 
 const computeDigest = (value: string): string =>
@@ -377,5 +389,47 @@ export const runSddSyncDocs = (params?: {
     updated,
     files,
     ...(learning ? { learning } : {}),
+  };
+};
+
+export const runSddLearn = (params?: {
+  repoRoot?: string;
+  dryRun?: boolean;
+  change?: string;
+  stage?: SddStage;
+  task?: string;
+  now?: () => Date;
+  evidenceReader?: (repoRoot: string) => EvidenceReadResult;
+}): SddLearnResult => {
+  const change = params?.change?.trim();
+  if (!change) {
+    throw new Error('[pumuki][sdd] learn requires --change=<change-id>.');
+  }
+
+  const result = runSddSyncDocs({
+    repoRoot: params?.repoRoot,
+    dryRun: params?.dryRun,
+    change,
+    stage: params?.stage,
+    task: params?.task,
+    now: params?.now,
+    evidenceReader: params?.evidenceReader,
+    targets: [],
+  });
+
+  if (!result.learning) {
+    throw new Error('[pumuki][sdd] learn could not generate learning artifact.');
+  }
+
+  return {
+    command: 'pumuki sdd learn',
+    dryRun: result.dryRun,
+    repoRoot: result.repoRoot,
+    context: {
+      change,
+      stage: result.context.stage,
+      task: result.context.task,
+    },
+    learning: result.learning,
   };
 };

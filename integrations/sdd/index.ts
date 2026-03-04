@@ -9,4 +9,4 @@ export type {
 } from './types';
 export { evaluateSddPolicy, readSddStatus } from './policy';
 export { closeSddSession, openSddSession, readSddSession, refreshSddSession } from './sessionStore';
-export { runSddSyncDocs } from './syncDocs';
+export { runSddLearn, runSddSyncDocs } from './syncDocs';
