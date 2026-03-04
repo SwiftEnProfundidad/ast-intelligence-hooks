@@ -1266,7 +1266,7 @@ Criterio de salida F5:
     - `gh pr checks 545 --json name,state,bucket,link,description`
     - `gh run view 22647944444 --job 65640392393 --log`
 
-- 🚧 `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
+- ⛔ `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
   - issue operativa de soporte creada: `#546` (`ops: unblock remote PR checks (snyk quota + missing job logs)`).
   - avance ejecutado:
     - reintento de runs fallidos lanzado en lote (`gh run rerun <run_id> --failed`) para descartar flake.
@@ -1274,11 +1274,7 @@ Criterio de salida F5:
     - diagnóstico estructural confirmado en GitHub Actions:
       - jobs de `CI` con `steps_count=0` en attempt 2.
       - ZIP de logs del run disponible, pero solo contiene `system.txt` (sin logs de pasos de ejecución).
-    - issue `#543` y PR `#545` actualizadas con comentario de progreso y bloqueo remoto.
-  - salida esperada:
-    - PR `#545` mergeada en `develop`.
-    - issue `#543` en estado `CLOSED` con referencia de PR/commit de merge.
-    - trazabilidad actualizada en tracking activo.
+    - issue `#543`, issue `#546` y PR `#545` actualizadas con comentario de progreso y bloqueo remoto.
   - bloqueo reproducido (comando/error):
     - comando: `gh run view 22648051050`
     - error observado: `The job was not started because your account is locked due to a billing issue.` (anotación repetida en todos los jobs de `CI`).
@@ -1290,16 +1286,394 @@ Criterio de salida F5:
     - desbloquear billing de la cuenta/organización de GitHub Actions (el run no inicia jobs por lock de facturación).
     - restaurar cuota/permisos de `Snyk` para checks de PR o desactivar temporalmente ese check como requerido.
     - asegurar retención/publicación de logs de Actions para permitir diagnóstico de fallos reales.
-  - evidencia adicional:
-    - `python3 /Users/juancarlosmerlosalbarracin/.codex/skills/gh-fix-ci/scripts/inspect_pr_checks.py --repo . --pr 545 --json`
-    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/actions/runs/22648051050/jobs --jq '.jobs[] | {id,run_attempt,name,status,conclusion,steps_count:(.steps|length)}'`
-    - `gh api repos/SwiftEnProfundidad/ast-intelligence-hooks/actions/runs/22648051050/logs > /tmp/gh-logs/run-22648051050.zip`
-    - `unzip -l /tmp/gh-logs/run-22648051050.zip`
+
+- ✅ `P12.F1.T43` Ejecutar implementación técnica de `#544` (telemetría estructurada exportable JSONL/OTel) con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
+  - cierre ejecutado:
+    - rama de implementación: `feature/544-telemetry-structured-export` (desde `develop`).
+    - implementación añadida:
+      - `integrations/telemetry/gateTelemetry.ts` (`telemetry_event_v1`, export JSONL y OTLP HTTP opcional).
+      - integración en runner de evidencia:
+        - `integrations/git/runPlatformGateEvidence.ts`.
+      - tests añadidos/actualizados:
+        - `integrations/telemetry/__tests__/gateTelemetry.test.ts`
+        - `integrations/git/__tests__/runPlatformGateEvidence.test.ts`
+      - documentación mínima:
+        - `README.md` (sección `Telemetry Export (Enterprise)`).
+        - `docs/CONFIGURATION.md` (env vars de export).
+    - commits técnicos en rama:
+      - `bc93dc1` (`feat(telemetry): add structured gate export to JSONL and optional OTel`).
+      - `abc0a7d` (`docs(tracking): rotate active task to T43 and sync blocker status`).
+    - PR abierta: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/547`.
+    - issue de trabajo: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/544`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts integrations/git/__tests__/runPlatformGateEvidence.test.ts`
+    - `npm run -s typecheck`
+    - `gh pr view 547 --json state,mergeStateStatus,statusCheckRollup,headRefOid,url`
+
+- ⛔ `P12.F1.T44` Desbloquear cierre administrativo de `#544` (merge PR `#547` + cierre issue `#544`) cuando los checks remotos vuelvan a estado operativo.
+  - bloqueo reproducido (comando/error):
+    - comando: `gh run view 22648407847`
+    - error observado: `The job was not started because your account is locked due to a billing issue.` (anotación repetida en jobs de `CI`).
+    - comando: `gh pr checks 547 --json name,state,bucket,link,description`
+    - error observado: `security/snyk (swiftenprofundidad) => ERROR: You have used your limit of private tests`.
+  - corrección mínima propuesta:
+    - desbloquear billing de la cuenta/organización de GitHub Actions.
+    - restaurar cuota/permisos de Snyk o ajustar temporalmente ese check requerido.
 
 - ⏳ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
     - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-055`.
     - `R_GO/ruralgo-master-plan.md` con leyenda actualizada (solo 1 `🚧` activa) y referencia de issue/PR/commit.
+
+- ✅ `P12.F1.T46` Sincronizar canónico RuralGO en estado intermedio de `#544` (`REPORTED` con refs reales de issue/branch/PR/commit/evidencia) y alinear master plan con una única mejora `🚧`.
+  - cierre ejecutado:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado con trazabilidad real de `#544/#547` (estado `🚧 REPORTED`).
+    - `R_GO/ruralgo-master-plan.md` actualizado con `#543 => ⛔` y `#544 => 🚧`.
+    - commit documental atómico en `R_GO`: `ed39a570b`.
+    - push remoto completado en `feature/rgo-1590-01-ios-physical-signoff`.
+  - evidencia:
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO commit -m "docs(validation): sync issue 544 reported state and blocker visibility"`
+    - `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
+    - `npx --yes --package pumuki@latest pumuki sdd session --refresh --json`
+    - `npx --yes --package pumuki@latest pumuki-pre-commit` (gate `ALLOW/PASS`)
+    - `npx --yes --package pumuki@latest pumuki-pre-push` (gate `ALLOW/PASS`)
+
+- 🚧 `P12.F1.T47` Consolidar monitoreo único del bloqueo remoto para `#543/#544` en issue operativa `#546` y ejecutar cierre administrativo automático en cuanto los checks remotos queden operativos.
+  - avance en curso:
+    - issue operativa actualizada con seguimiento de `#547`:
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994327893`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994336761`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994343825`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994350175`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994354919`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994362056`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994367200`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994373091`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994378287`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994383169`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994388105`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994393393`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994398419`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994412271`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994419936`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994427763`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994436145`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996676548`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996686860`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996696705`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996706258`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996716711`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996727981`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996740930`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996752091`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996764860`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996781223`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996790861`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996903908`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996912834`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996922933`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996932570`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996944930`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996956633`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996965410`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996973617`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996984742`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996993890`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997005494`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997016272`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997027105`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997037581`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997047022`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997054313`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997061285`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997069824`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997079882`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997159959`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997170015`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997180722`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997189427`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997199504`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997207932`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997215929`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997225157`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997233928`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997241709`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997251884`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997262697`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997282872`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997283830`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997293723`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997300779`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997308456`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997316576`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997323683`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997332121`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997342051`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997351225`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997358307`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997372963`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997392429`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997407417`
+    - evidencia de bloqueo vigente:
+      - `gh run view 22648407847` (`billing lock` en GitHub Actions).
+      - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
+      - `gh run view 22648216106` (`billing lock` persistente en `PR #545`).
+      - `gh run view 22648658046` (`billing lock` persistente en `PR #547`).
+      - `gh run view 22648709712` (`billing lock` persistente en `PR #547` tras nueva iteración).
+      - `gh run view 22648763409` (`billing lock` persistente en `PR #547` tras rerun adicional).
+      - `gh run view 22648802167` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22648857219` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22648896311` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22648936952` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22648976599` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22649016905` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22649058314` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22649100906` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22649145066` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22649239593` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22649281881` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22649329429` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22649376065` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22665698270` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22665753917` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22665827489` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22665895124` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22665965221` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22666044652` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22666126392` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22666220507` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22666293279` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22666414388` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22666483065` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667252651` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667314045` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667368669` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667425219` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667485681` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667538321` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667596358` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667658920` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667720182` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667790993` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667861919` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65642755577`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65642904197` tras nueva iteración).
+      - `gh run view 22648597740 --log-failed` (`log not found: 65642481475`).
+      - `gh run view 22648658046 --log-failed` (`log not found: 65642674072`).
+      - `gh run view 22648709712 --log-failed` (`log not found: 65642843154`).
+      - `gh run view 22648763409 --log-failed` (`log not found: 65643022620`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643216310` tras rerun más reciente).
+      - `gh run view 22648802167 --log-failed` (`log not found: 65643143308`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643360317` tras rerun más reciente).
+      - `gh run view 22648857219 --log-failed` (`log not found: 65643317704`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643485089` tras rerun más reciente).
+      - `gh run view 22648896311 --log-failed` (`log not found: 65643440990`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643613581` tras rerun más reciente).
+      - `gh run view 22648936952 --log-failed` (`log not found: 65643571905`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643744852` tras rerun más reciente).
+      - `gh run view 22648976599 --log-failed` (`log not found: 65643702306`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643877247` tras rerun más reciente).
+      - `gh run view 22649016905 --log-failed` (`log not found: 65643835903`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65644020384` tras rerun más reciente).
+      - `gh run view 22649058314 --log-failed` (`log not found: 65643972252`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65644159429` tras rerun más reciente).
+      - `gh run view 22649100906 --log-failed` (`log not found: 65644109713`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65644443058` tras rerun más reciente).
+      - `gh run view 22649145066 --log-failed` (`log not found: 65644443025` tras rerun más reciente).
+      - `gh run view 22649239593 --log-failed` (`log not found: 65644557592` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65644646291` tras rerun más reciente).
+      - `gh run view 22649281881 --log-failed` (`log not found: 65644688865` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65644780562` tras rerun más reciente).
+      - `gh run view 22649329429 --log-failed` (`log not found: 65644848629` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65644926526` tras rerun más reciente).
+      - `gh run view 22649376065 --log-failed` (`log not found: 65644998850` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65696640781` tras rerun más reciente).
+      - `gh run view 22665698270 --log-failed` (`log not found: 65696755730` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65696859556` tras rerun más reciente).
+      - `gh run view 22665753917 --log-failed` (`log not found: 65696940449` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65697083349` tras rerun más reciente).
+      - `gh run view 22665827489 --log-failed` (`log not found: 65697186181` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65697321405` tras rerun más reciente).
+      - `gh run view 22665895124 --log-failed` (`log not found: 65697410820` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65697543459` tras rerun más reciente).
+      - `gh run view 22665965221 --log-failed` (`log not found: 65697646806` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65697807825` tras rerun más reciente).
+      - `gh run view 22666044652 --log-failed` (`log not found: 65697925535` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65698111394` tras rerun más reciente).
+      - `gh run view 22666126392 --log-failed` (`log not found: 65698204662` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65698367870` tras rerun más reciente).
+      - `gh run view 22666220507 --log-failed` (`log not found: 65698516866` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65698649512` tras rerun más reciente).
+      - `gh run view 22666293279 --log-failed` (`log not found: 65698759698` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65699043224` tras rerun más reciente).
+      - `gh run view 22666414388 --log-failed` (`log not found: 65699164373` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65699277824` tras rerun más reciente).
+      - `gh run view 22666483065 --log-failed` (`log not found: 65699397098` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65701938535` tras rerun más reciente).
+      - `gh run view 22667252651 --log-failed` (`log not found: 65702026767` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65702137525` tras rerun más reciente).
+      - `gh run view 22667314045 --log-failed` (`log not found: 65702230857` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65702328886` tras rerun más reciente).
+      - `gh run view 22667368669 --log-failed` (`log not found: 65702412996` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65702515281` tras rerun más reciente).
+      - `gh run view 22667425219 --log-failed` (`log not found: 65702607692` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65702709699` tras rerun más reciente).
+      - `gh run view 22667485681 --log-failed` (`log not found: 65702813006` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65702908553` tras rerun más reciente).
+      - `gh run view 22667538321 --log-failed` (`log not found: 65702989176` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65703090816` tras rerun más reciente).
+      - `gh run view 22667596358 --log-failed` (`log not found: 65703178082` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65703278282` tras rerun más reciente).
+      - `gh run view 22667658920 --log-failed` (`log not found: 65703384656` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65703501294` tras rerun más reciente).
+      - `gh run view 22667720182 --log-failed` (`log not found: 65703589832` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65703704301` tras rerun más reciente).
+      - `gh run view 22667790993 --log-failed` (`log not found: 65703832752` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65703972380` tras rerun más reciente).
+      - `gh run view 22667861919 --log-failed` (`log not found: 65704071995` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65704197242` tras rerun más reciente).
+      - `gh run view 22667951577 --log-failed` (`log not found: 65704371271` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65704419114` tras rerun más reciente).
+      - `gh run view 22668006686 --log-failed` (`log not found: 65704551026` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65704663689` tras rerun más reciente).
+      - `gh run view 22668062038 --log-failed` (`log not found: 65704736981` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65704830813` tras rerun más reciente).
+      - `gh run view 22668110528 --log-failed` (`log not found: 65704900259` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65704979829` tras rerun más reciente).
+      - `gh run view 22668157224 --log-failed` (`log not found: 65705054713` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65705138384` tras rerun más reciente).
+      - `gh run view 22668204369 --log-failed` (`log not found: 65705213211` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65705296629` tras rerun más reciente).
+      - `gh run view 22668257758 --log-failed` (`log not found: 65705387100` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`HTTP 502 transitorio; reintento exitoso en la misma iteración`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65705491494` tras rerun más reciente).
+      - `gh run view 22668319512 --log-failed` (`log not found: 65705589232` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65707122133` tras rerun más reciente).
+      - `gh run view 22668797947 --log-failed` (`log not found: 65707226855` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65707329503` tras rerun más reciente).
+      - `gh run view 22668854704 --log-failed` (`log not found: 65707429990` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65707555117` tras rerun más reciente).
+      - `gh run view 22668920998 --log-failed` (`log not found: 65707659830` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65707759607` tras rerun más reciente).
+      - `gh run view 22668974897 --log-failed` (`log not found: 65707843708` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65707967601` tras rerun más reciente).
+      - `gh run view 22669038265 --log-failed` (`log not found: 65708065044` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65708163851` tras rerun más reciente).
+      - `gh run view 22669090011 --log-failed` (`log not found: 65708250845` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65708350882` tras rerun más reciente).
+      - `gh run view 22669150525 --log-failed` (`log not found: 65708457128` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65708568964` tras rerun más reciente).
+      - `gh run view 22669216212 --log-failed` (`log not found: 65708668907` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65708782038` tras rerun más reciente).
+      - `gh run view 22669274350 --log-failed` (`log not found: 65708866318` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65708968156` tras rerun más reciente).
+      - `gh run view 22669335641 --log-failed` (`log not found: 65709074333` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65709189549` tras rerun más reciente).
+      - `gh run view 22669404203 --log-failed` (`log not found: 65709306026` tras rerun más reciente).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`HTTP 502 transitorio en esta iteración; reintento exitoso`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22667951577).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668006686).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668062038).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668110528).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668157224).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668204369).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668257758).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668319512).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668797947).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668854704).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668920998).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668974897).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22669038265).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22669090011).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22669150525).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22669216212).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22669274350).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22669335641).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22669404203).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65709435542` en iteración actual).
+      - `gh run view 22669476790 --log-failed` (`log not found: 65709553382` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669476790 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657099339*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657099340*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669646243`, jobs serie `657101192*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65709933923` en iteración actual).
+      - `gh run view 22669646243 --log-failed` (`log not found: 65710119224` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669646243 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657102064*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669693802`, jobs serie `657102782*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65710206405` en iteración actual).
+      - `gh run view 22669693802 --log-failed` (`log not found: 65710278243` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669693802 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657103641*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669749649`, jobs serie `657104727*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65710364124` en iteración actual).
+      - `gh run view 22669749649 --log-failed` (`log not found: 65710472753` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669749649 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657105379*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669801703`, jobs serie `657106489*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65710537976` en iteración actual).
+      - `gh run view 22669801703 --log-failed` (`log not found: 65710648961` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669801703 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657107362*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669852933`, jobs serie `657108203*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65710736293` en iteración actual).
+      - `gh run view 22669852933 --log-failed` (`log not found: 65710820333` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669852933 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657109086*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669900475`, jobs serie `657109833*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65710908659` en iteración actual).
+      - `gh run view 22669900475 --log-failed` (`log not found: 65710983322` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669900475 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657110835*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669956352`, jobs serie `657111697*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65711083553` en iteración actual).
+      - `gh run view 22669956352 --log-failed` (`log not found: 65711169730` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669956352 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657113030*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22670030584`, jobs serie `657114211*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65711303075` en iteración actual).
+      - `gh run view 22670030584 --log-failed` (`log not found: 65711421164` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22670030584 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657115177*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22670080946`, jobs serie `657115950*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65711517708` en iteración actual).
+      - `gh run view 22670080946 --log-failed` (`log not found: 65711595072` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22670080946 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657116861*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22670168836`, jobs serie `657118945*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65711686102` en iteración actual).
+      - `gh run view 22670168836 --log-failed` (`log not found: 65711894522` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22670168836 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657122844*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; run principal `22670234492` con jobs serie `657122845*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65712284476` en iteración actual).
+      - `gh run view 22670234492 --log-failed` (`log not found: 65712284552` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22670234492 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (run principal `22648216106`; jobs actualizados a serie `65712790*` con mezcla `QUEUED/FAILURE`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (run principal `22670371464`; jobs actualizados a serie `65712790*` con mezcla `QUEUED/FAILURE`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65712482761` en iteración actual).
+      - `gh run view 22670371464 --log-failed` (`log not found: 65712590007` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22670371464 --failed` (rerun solicitado en iteración actual).
+
+- ⏳ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+  - salida esperada:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-056`.
+    - `R_GO/ruralgo-master-plan.md` con leyenda final actualizada y referencia de merge real.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

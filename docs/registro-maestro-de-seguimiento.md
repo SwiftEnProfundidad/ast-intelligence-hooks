@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F1.T41` (desbloquear cierre administrativo de `#543`: merge de `#545` + cierre issue cuando checks remotos estén operativos).
+- Task activa (`🚧`): `P12.F1.T47` (consolidar monitoreo único de bloqueo remoto `#543/#544` y cerrar administrativamente al desbloquear checks).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
