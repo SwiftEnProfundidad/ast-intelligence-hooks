@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
@@ -126,11 +126,68 @@ test('runSddSyncDocs incluye contexto explícito change/stage/task en resultado'
       change: 'rgo-1700-01',
       stage: 'PRE_PUSH',
       task: 'P12.F2.T63',
+      now: () => new Date('2026-03-04T10:00:00.000Z'),
     });
 
     assert.equal(result.context.change, 'rgo-1700-01');
     assert.equal(result.context.stage, 'PRE_PUSH');
     assert.equal(result.context.task, 'P12.F2.T63');
+    assert.equal(result.learning?.path, 'openspec/changes/rgo-1700-01/learning.json');
+    assert.equal(result.learning?.written, false);
+    assert.equal(result.learning?.artifact.version, '1.0');
+    assert.equal(result.learning?.artifact.change_id, 'rgo-1700-01');
+    assert.equal(result.learning?.artifact.generated_at, '2026-03-04T10:00:00.000Z');
+    assert.deepEqual(result.learning?.artifact.successful_patterns, ['sync-docs.completed']);
+    assert.equal(
+      existsSync(join(repoRoot, 'openspec', 'changes', 'rgo-1700-01', 'learning.json')),
+      false
+    );
+  });
+});
+
+test('runSddSyncDocs persiste learning artifact cuando change está presente y no es dry-run', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-learning-write-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: false,
+      change: 'rgo-1700-02',
+      stage: 'PRE_COMMIT',
+      task: 'P12.F2.T65',
+      now: () => new Date('2026-03-04T10:05:00.000Z'),
+    });
+
+    const learningPath = join(repoRoot, 'openspec', 'changes', 'rgo-1700-02', 'learning.json');
+    assert.equal(result.learning?.written, true);
+    assert.equal(result.learning?.path, 'openspec/changes/rgo-1700-02/learning.json');
+    assert.equal(result.learning?.artifact.stage, 'PRE_COMMIT');
+    assert.equal(result.learning?.artifact.task, 'P12.F2.T65');
+    assert.equal(result.learning?.artifact.generated_at, '2026-03-04T10:05:00.000Z');
+    assert.equal(existsSync(learningPath), true);
+    const stored = readFileSync(learningPath, 'utf8');
+    const parsed = JSON.parse(stored) as {
+      version: string;
+      change_id: string;
+      stage: string | null;
+      task: string | null;
+      generated_at: string;
+    };
+    assert.equal(parsed.version, '1.0');
+    assert.equal(parsed.change_id, 'rgo-1700-02');
+    assert.equal(parsed.stage, 'PRE_COMMIT');
+    assert.equal(parsed.task, 'P12.F2.T65');
+    assert.equal(parsed.generated_at, '2026-03-04T10:05:00.000Z');
   });
 });
 

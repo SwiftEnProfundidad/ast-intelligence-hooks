@@ -1182,6 +1182,15 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
         stage?: string | null;
         task?: string | null;
       };
+      learning?: {
+        path?: string;
+        written?: boolean;
+        artifact?: {
+          change_id?: string;
+          stage?: string | null;
+          task?: string | null;
+        };
+      };
       updated?: boolean;
       files?: Array<{ updated?: boolean; diffMarkdown?: string }>;
     };
@@ -1190,6 +1199,11 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
     assert.equal(payload.context?.change, 'rgo-1700-01');
     assert.equal(payload.context?.stage, 'PRE_COMMIT');
     assert.equal(payload.context?.task, 'P12.F2.T63');
+    assert.equal(payload.learning?.path, 'openspec/changes/rgo-1700-01/learning.json');
+    assert.equal(payload.learning?.written, false);
+    assert.equal(payload.learning?.artifact?.change_id, 'rgo-1700-01');
+    assert.equal(payload.learning?.artifact?.stage, 'PRE_COMMIT');
+    assert.equal(payload.learning?.artifact?.task, 'P12.F2.T63');
     assert.equal(payload.updated, true);
     assert.equal(payload.files?.[0]?.updated, true);
     assert.match(payload.files?.[0]?.diffMarkdown ?? '', /sdd-status/i);
