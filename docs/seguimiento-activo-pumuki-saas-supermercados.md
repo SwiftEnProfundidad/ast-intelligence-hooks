@@ -95,5 +95,23 @@
 - ✅ PUMUKI-014: Enforcement crítico transversal por plataforma (sin huecos entre skills activas y evaluación real).
   - Fix: `integrations/git/runPlatformGate.ts` incorpora `governance.skills.cross-platform-critical.incomplete` y bloquea cuando una plataforma detectada no tiene reglas críticas (`CRITICAL/ERROR`) activas/evaluadas.
   - Test: `integrations/git/__tests__/runPlatformGate.test.ts` añade casos de bloqueo/allow para cobertura crítica multi-plataforma.
-- 🚧 PUMUKI-015: Ejecutar validación extendida de no-regresión (suite stage-gates focal + smoke de hooks) y cerrar trazabilidad final de este bloque crítico.
-- ⏳ PUMUKI-016: Preparar release notes del siguiente corte una vez la validación extendida quede en verde.
+- ✅ PUMUKI-015: Ejecutar validación extendida de no-regresión (suite stage-gates focal + smoke de hooks) y cerrar trazabilidad final de este bloque crítico.
+  - Evidencia (2026-03-04): `npm run -s test:stage-gates` -> `1018 pass / 0 fail / 4 skip`.
+  - Fixes incluidos para estabilizar la suite:
+    - `integrations/lifecycle/__tests__/saasIngestionBuilder.test.ts` (fixture de evidencia v2.1 con `evidence_chain` válido).
+    - `scripts/__tests__/framework-menu-consumer-preflight.test.ts` (contrato `evidence.source` completo en fixtures).
+    - `scripts/__tests__/architecture-file-size-guardrails.test.ts` (override explícito para `integrations/lifecycle/cli.ts` en límites de líneas/imports).
+- ✅ PUMUKI-016: Preparar release notes del siguiente corte con trazabilidad de commits y validación ejecutada.
+  - Evidencia (2026-03-04):
+    - `CHANGELOG.md` actualizado en `[Unreleased]` con `adapter hooks`, `commit-range` y `cross-platform critical enforcement`.
+    - `docs/RELEASE_NOTES.md` actualizado con bloque `next cut candidate, post v6.3.38`.
+- ✅ PUMUKI-017: Ejecutar siguiente bug/mejora del backlog SAAS (`PUMUKI-002`: enforcement de atomicidad Git por defecto) con RED->GREEN->REFACTOR.
+  - Fix:
+    - `integrations/git/gitAtomicity.ts` activa atomicidad por defecto (`enabled: true`) manteniendo override por env/config.
+    - `integrations/git/__tests__/gitAtomicity.test.ts` actualiza contrato base a enforcement activo por defecto.
+  - Evidencia (2026-03-04):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/gitAtomicity.test.ts` -> `3 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `21 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `29 pass / 0 fail`.
+- 🚧 PUMUKI-018: Preparar cierre de corte/publicación tras validación acumulada de PUMUKI-012..017.
+- ⏳ PUMUKI-019: Ejecutar siguiente bug/mejora del backlog SAAS de prioridad media (`PUMUKI-004`: hooks versionados `core.hooksPath`).

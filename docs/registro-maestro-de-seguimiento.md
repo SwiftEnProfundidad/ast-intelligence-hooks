@@ -7,9 +7,9 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-014 (enforcement crítico transversal por plataforma en `runPlatformGate`).
-- Task activa (`🚧`): PUMUKI-015 (validación extendida de no-regresión y cierre de trazabilidad).
-- Nuevos pendientes añadidos (`⏳`): PUMUKI-016 (release notes del siguiente corte).
+- Última task cerrada (`✅`): PUMUKI-017 (atomicidad Git activada por defecto + regresión en verde).
+- Task activa (`🚧`): PUMUKI-018 (cierre de corte/publicación tras validación acumulada PUMUKI-012..017).
+- Nuevos pendientes añadidos (`⏳`): PUMUKI-019 (siguiente bug/mejora: soporte sólido para hooks versionados en `core.hooksPath`).
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.

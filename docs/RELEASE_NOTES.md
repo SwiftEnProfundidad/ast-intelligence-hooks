@@ -5,6 +5,24 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-04 (next cut candidate, post v6.3.38)
+
+- Adapter/runtime bootstrap hardening:
+  - adapter-generated hooks/CI templates now use `npx --yes --package pumuki@latest ...` for deterministic command resolution in consumer repos.
+- Git-range robustness:
+  - commit-range facts now guard unresolved refs (`rev-parse --verify`) and avoid ambiguous failures on repos without `HEAD`.
+- Cross-platform critical enforcement:
+  - gate now blocks when a detected platform does not have critical (`CRITICAL/ERROR`) skills rules active/evaluated.
+  - finding id: `governance.skills.cross-platform-critical.incomplete`.
+- Git atomicity by default:
+  - atomicity guard is enabled by default in core gate flow (`PRE_COMMIT/PRE_PUSH/CI`).
+  - keeps env/config overrides for enterprise tuning without patching source.
+- Validation hardening:
+  - `test:stage-gates` stabilized and green with current contracts (`1018 pass / 0 fail / 4 skip`).
+  - fixtures aligned to evidence v2.1 (`evidence_chain`, `evidence.source`) and architecture guardrail overrides updated for `integrations/lifecycle/cli.ts`.
+- Traceability:
+  - commits: `104fc92`, `2f175ec`, `da7b073`, `2c40a4c`
+
 ### 2026-03-04 (v6.3.38)
 
 - Blocked notification UX hardening for macOS:

@@ -6,7 +6,27 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-No changes yet.
+### Added
+
+- Cross-platform critical skills enforcement in platform gate evaluation:
+  - new blocking finding `governance.skills.cross-platform-critical.incomplete` when a detected platform has no critical (`CRITICAL/ERROR`) skills rules active/evaluated.
+
+### Changed
+
+- Adapter-generated hook/CI commands now resolve robustly through:
+  - `npx --yes --package pumuki@latest ...`
+  - eliminating fragile dependency on local `./node_modules/.bin` availability in consumer repos.
+- Git atomicity enforcement is now enabled by default:
+  - base guard is active out-of-the-box for `PRE_COMMIT/PRE_PUSH/CI`,
+  - existing env/config overrides are preserved for controlled opt-out or threshold tuning.
+
+### Fixed
+
+- Commit-range facts resolution no longer crashes or degrades ambiguously when refs are not resolvable (for example repos without `HEAD` yet):
+  - guarded `rev-parse --verify` + safe fallback behavior in git-range facts collection.
+- Stage-gates non-regression suite stabilization:
+  - updated lifecycle ingestion and preflight fixtures to the current evidence v2.1 contract (`evidence_chain` and `evidence.source`),
+  - aligned architecture guardrail overrides for the current orchestrator module size/import profile (`integrations/lifecycle/cli.ts`).
 
 ## [6.3.38] - 2026-03-04
 
