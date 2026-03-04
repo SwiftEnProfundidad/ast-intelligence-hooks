@@ -158,6 +158,7 @@ test('enterprise server exposes enterprise tools catalog', async () => {
       const names = (payload.tools ?? []).map((tool) => tool.name);
       assert.deepEqual(names, [
         'ai_gate_check',
+        'pre_flight_check',
         'check_sdd_status',
         'validate_and_fix',
         'sync_branches',
@@ -196,6 +197,30 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
       assert.equal(aiGatePayload.success, false);
       assert.equal(aiGatePayload.dryRun, true);
       assert.equal(aiGatePayload.executed, true);
+
+      const preFlightResponse = await safeFetchRequest(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'pre_flight_check',
+          args: {
+            stage: 'PRE_COMMIT',
+          },
+        }),
+      });
+      assert.equal(preFlightResponse.status, 200);
+      const preFlightPayload = (await preFlightResponse.json()) as {
+        tool?: string;
+        success?: boolean;
+        dryRun?: boolean;
+        executed?: boolean;
+      };
+      assert.equal(preFlightPayload.tool, 'pre_flight_check');
+      assert.equal(preFlightPayload.success, false);
+      assert.equal(preFlightPayload.dryRun, true);
+      assert.equal(preFlightPayload.executed, true);
 
       const sddStatusResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',

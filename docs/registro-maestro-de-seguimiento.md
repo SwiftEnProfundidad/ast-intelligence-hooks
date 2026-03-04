@@ -7,9 +7,9 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-002 (rule-pack opcional de atomicidad Git + trazabilidad de commit message en PRE_PUSH/CI).
-- Task activa (`🚧`): PUMUKI-009 (desalineación operativa entre `ai_gate_check` y `pre_flight_check`).
-- Nuevos pendientes añadidos (`⏳`): PUMUKI-010 (respuesta accionable en flujo chat).
+- Última task cerrada (`✅`): PUMUKI-009 (paridad operativa `ai_gate_check`/`pre_flight_check` con evaluador único).
+- Task activa (`🚧`): PUMUKI-010 (respuesta accionable en flujo chat).
+- Nuevos pendientes añadidos (`⏳`): sin cambios.
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.

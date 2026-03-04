@@ -9,6 +9,7 @@ import { evaluateSddPolicy, readSddStatus } from '../sdd';
 import type { SddStage } from '../sdd';
 import { toStatusPayload } from './evidencePayloads';
 import { runEnterpriseAiGateCheck } from './aiGateCheck';
+import { runEnterprisePreFlightCheck } from './preFlightCheck';
 import { writeMcpAiGateReceipt } from './aiGateReceipt';
 
 export interface EnterpriseServerOptions {
@@ -73,6 +74,7 @@ const ENTERPRISE_RESOURCE_DESCRIPTORS: ReadonlyArray<{
 
 const ENTERPRISE_TOOLS = [
   'ai_gate_check',
+  'pre_flight_check',
   'check_sdd_status',
   'validate_and_fix',
   'sync_branches',
@@ -89,6 +91,12 @@ const ENTERPRISE_TOOL_DESCRIPTORS: ReadonlyArray<{
   {
     name: 'ai_gate_check',
     description: 'Reads .ai_evidence.json and reports AI gate compatibility status.',
+    mutating: false,
+    safeByDefault: true,
+  },
+  {
+    name: 'pre_flight_check',
+    description: 'Runs pre-flight gate checks with actionable hints using the same AI gate evaluator.',
     mutating: false,
     safeByDefault: true,
   },
@@ -355,6 +363,32 @@ const executeEnterpriseTool = (
     case 'ai_gate_check': {
       const stage = toSddStage(args.stage, 'PRE_COMMIT');
       const execution = runEnterpriseAiGateCheck({
+        repoRoot,
+        stage,
+      });
+      const receiptWrite = writeMcpAiGateReceipt({
+        repoRoot,
+        stage: execution.result.stage,
+        status: execution.result.status,
+        allowed: execution.result.allowed,
+      });
+      return {
+        name: toolName,
+        success: execution.success,
+        dryRun: execution.dryRun,
+        executed: execution.executed,
+        data: {
+          ...execution.result,
+          receipt: {
+            path: receiptWrite.path,
+            issued_at: receiptWrite.receipt.issued_at,
+          },
+        },
+      };
+    }
+    case 'pre_flight_check': {
+      const stage = toSddStage(args.stage, 'PRE_COMMIT');
+      const execution = runEnterprisePreFlightCheck({
         repoRoot,
         stage,
       });

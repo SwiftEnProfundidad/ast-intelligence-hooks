@@ -39,11 +39,11 @@
   - Evidencia: en ejecución MCP no aparece feedback operativo por iteración del modelo como en el grafo legacy.
   - Esperado: resumen corto y humano en cada iteración (`stage`, `decision`, `next_action`).
   - Entregable: tool MCP de pre-flight para chat con salida estable y accionable.
-- 🚧 PUMUKI-009: Desalineación operativa entre `ai_gate_check` y `pre_flight_check`.
+- ✅ PUMUKI-009: Desalineación operativa entre `ai_gate_check` y `pre_flight_check`.
   - Evidencia: `ai_gate_check => BLOCKED (EVIDENCE_STALE)` mientras `pre_flight_check => allowed=true`.
   - Esperado: criterio homogéneo o explicación explícita y trazable de por qué uno bloquea y el otro permite.
   - Entregable: decisión unificada desde el mismo evaluador/política.
-- ⏳ PUMUKI-010: Respuesta no accionable en `auto_execute_ai_start` para confianza media.
+- 🚧 PUMUKI-010: Respuesta no accionable en `auto_execute_ai_start` para confianza media.
   - Evidencia: `success=true`, `action=ask`, `message=Medium confidence (undefined%)...`.
   - Esperado: `next_action` determinista + confidence numérico consistente + remediación concreta.
   - Entregable: contrato MCP estable (`confidence_pct`, `reason_code`, `next_action`).
