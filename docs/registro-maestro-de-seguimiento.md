@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F2.T49` (ejecutar suite contractual multi-repo de regresión enterprise con trazabilidad issue -> rama -> PR -> evidencia).
+- Task activa (`🚧`): `P12.F2.T50` (ejecutar implementación técnica de la suite contractual multi-repo `#551` con RED -> GREEN -> REFACTOR y trazabilidad E2E).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.

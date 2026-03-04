@@ -1715,11 +1715,20 @@ Criterio de salida F5:
     - `R_GO/ruralgo-master-plan.md` actualizado con leyenda y siguiente mejora estratégica activa.
     - hooks en verde durante commit/push de la rama docs (`PRE_COMMIT=ALLOW`, `PRE_PUSH=ALLOW`).
 
-- 🚧 `P12.F2.T49` Ejecutar la siguiente mejora estratégica pendiente: suite contractual multi-repo de regresión enterprise (issue -> rama -> PR -> evidencia).
+- ✅ `P12.F2.T49` Ejecutar la siguiente mejora estratégica pendiente: suite contractual multi-repo de regresión enterprise (issue -> rama -> PR -> evidencia).
+  - cierre ejecutado:
+    - issue creada y priorizada: `#551` (`feature: suite contractual multi-repo de regresión enterprise`).
+    - sincronización canónica RuralGO aplicada y mergeada: `R_GO#1505` (`https://github.com/SwiftEnProfundidad/R_GO/pull/1505`).
+    - commit de merge en `R_GO/develop`: `64e40d2365f3edf1137cf70a038a638398503db1`.
+  - evidencia:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado con `PUMUKI-INC-057` en estado `🚧 REPORTED (#551)`.
+    - `R_GO/ruralgo-master-plan.md` actualizado con mejora estratégica activa referenciada a `#551`.
+
+- 🚧 `P12.F2.T50` Ejecutar implementación técnica de la suite contractual multi-repo (`#551`) con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
   - salida esperada:
-    - issue creada y priorizada para suite contractual enterprise.
-    - alcance mínimo definido (fixtures, matriz de escenarios, criterios de pase/fallo).
-    - plan de implementación trazado en canónico + master con refs reales.
+    - rama técnica creada para `#551` con alcance MVP (mínimo 2 fixtures).
+    - pruebas contractuales reproducibles para lifecycle/gates/export de evidencia.
+    - PR abierta con evidencia de RED/GREEN + comandos ejecutados.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
