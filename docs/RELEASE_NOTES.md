@@ -5,6 +5,17 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-04 (next cut candidate, post v6.3.39)
+
+- Gate coverage hardening for SAAS backlog (`#622`):
+  - when code changes are present and `active_rule_ids` is empty, gate now blocks with:
+    - finding id: `governance.rules.active-rule-coverage.empty`
+    - code: `ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`
+- Validation evidence:
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` (`30 pass / 0 fail`)
+  - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/stageRunners.test.ts` (`51 pass / 0 fail`)
+  - `npm run -s typecheck` (`PASS`)
+
 ### 2026-03-04 (v6.3.39)
 
 - Adapter/runtime bootstrap hardening:

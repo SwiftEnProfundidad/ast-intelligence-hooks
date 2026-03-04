@@ -6,6 +6,13 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Fixed
+
+- Stage gates now block deterministically when code changes are detected but rules coverage has no active rules:
+  - new finding `governance.rules.active-rule-coverage.empty`,
+  - code `ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`,
+  - prevents false-green `PASS/ALLOW` with `active_rule_ids=[]` on code surfaces.
+
 ## [6.3.39] - 2026-03-04
 
 ### Added

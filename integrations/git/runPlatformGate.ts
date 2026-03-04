@@ -241,6 +241,41 @@ const isCriticalProfileSeverity = (severity: string): boolean => {
 
 const toNormalizedPath = (value: string): string => value.replace(/\\/g, '/').trim();
 
+const CODE_FILE_EXTENSIONS = new Set<string>([
+  '.js',
+  '.jsx',
+  '.ts',
+  '.tsx',
+  '.mjs',
+  '.cjs',
+  '.swift',
+  '.kt',
+  '.kts',
+]);
+
+const isObservedCodePath = (path: string): boolean => {
+  const normalized = toNormalizedPath(path).toLowerCase();
+  if (normalized.length === 0) {
+    return false;
+  }
+  if (
+    normalized.startsWith('apps/backend/')
+    || normalized.startsWith('apps/frontend/')
+    || normalized.startsWith('apps/web/')
+    || normalized.startsWith('apps/admin-dashboard/')
+    || normalized.startsWith('apps/ios/')
+    || normalized.startsWith('apps/android/')
+  ) {
+    return true;
+  }
+  for (const extension of CODE_FILE_EXTENSIONS) {
+    if (normalized.endsWith(extension)) {
+      return true;
+    }
+  }
+  return false;
+};
+
 const collectObservedPathsFromFacts = (
   facts: ReadonlyArray<Fact>
 ): ReadonlyArray<string> => {
@@ -261,6 +296,39 @@ const collectObservedPathsFromFacts = (
     }
   }
   return [...observedPaths].sort();
+};
+
+const collectObservedCodePathsFromFacts = (
+  facts: ReadonlyArray<Fact>
+): ReadonlyArray<string> => {
+  const codePaths = collectObservedPathsFromFacts(facts).filter((path) => isObservedCodePath(path));
+  return [...new Set(codePaths)].sort();
+};
+
+const toActiveRulesEmptyForCodeChangesBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  facts: ReadonlyArray<Fact>;
+  activeRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  if (params.activeRuleIds.length > 0) {
+    return undefined;
+  }
+  const codePaths = collectObservedCodePathsFromFacts(params.facts);
+  if (codePaths.length === 0) {
+    return undefined;
+  }
+  const samplePaths = codePaths.slice(0, 5).join(', ');
+  return {
+    ruleId: 'governance.rules.active-rule-coverage.empty',
+    severity: 'ERROR',
+    code: 'ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH',
+    message:
+      `Active rules coverage is empty at ${params.stage} while code changes were detected. ` +
+      `sample_paths=[${samplePaths}]. Ensure skill/project rules are active before allowing this stage.`,
+    filePath: '.ai_evidence.json',
+    matchedBy: 'ActiveRulesCoverageGuard',
+    source: 'rules-coverage',
+  };
 };
 
 const detectRequiredSkillsScopesFromPaths = (
@@ -728,6 +796,16 @@ export async function runPlatformGate(params: {
         evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
       })
       : undefined;
+  const activeRulesEmptyForCodeChangesFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toActiveRulesEmptyForCodeChangesBlockingFinding({
+        stage: params.policy.stage,
+        facts,
+        activeRuleIds: coverage?.activeRuleIds ?? [],
+      })
+      : undefined;
   const policyAsCodeBlockingFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -797,6 +875,7 @@ export async function runPlatformGate(params: {
       ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
       ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
       ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
+      ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
       ...findings,
@@ -816,6 +895,7 @@ export async function runPlatformGate(params: {
         ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
         ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
         ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
+        ...(activeRulesEmptyForCodeChangesFinding ? [activeRulesEmptyForCodeChangesFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
         ...findings,
@@ -830,6 +910,7 @@ export async function runPlatformGate(params: {
     platformSkillsCoverageFinding ||
     crossPlatformCriticalFinding ||
     skillsScopeComplianceFinding ||
+    activeRulesEmptyForCodeChangesFinding ||
     coverageBlockingFinding ||
     hasTddBddBlockingFinding
       ? 'BLOCK'

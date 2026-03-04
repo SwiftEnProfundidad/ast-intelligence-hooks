@@ -2301,6 +2301,189 @@ test('runPlatformGate permite cuando el scope de archivos tiene prefijos de skil
   );
 });
 
+test('runPlatformGate bloquea cuando hay cambios de código y active_rule_ids queda vacío', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      path: 'apps/backend/src/orders/order-service.ts',
+      changeType: 'modified',
+      source: 'git:staged',
+    },
+  ];
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => facts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 0,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 0,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: [],
+          evaluatedRuleIds: [],
+          matchedRuleIds: [],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  const finding = emittedArgs?.findings.find(
+    (entry) => entry.ruleId === 'governance.rules.active-rule-coverage.empty'
+  );
+  assert.ok(finding);
+  assert.equal(finding.severity, 'ERROR');
+  assert.match(finding.message, /code changes/i);
+  assert.match(finding.message, /apps\/backend\/src\/orders\/order-service\.ts/i);
+});
+
+test('runPlatformGate permite cuando active_rule_ids está vacío pero no hay cambios de código', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+  const facts: ReadonlyArray<Fact> = [
+    {
+      kind: 'FileChange',
+      path: 'docs/README.md',
+      changeType: 'modified',
+      source: 'git:staged',
+    },
+  ];
+
+  let emittedArgs:
+    | {
+      findings: ReadonlyArray<Finding>;
+      gateOutcome: 'PASS' | 'ALLOW' | 'WARN' | 'BLOCK';
+    }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => facts,
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: facts.length,
+          filesScanned: 1,
+          rulesTotal: 0,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 0,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 0,
+          unevaluatedRules: 0,
+          activeRuleIds: [],
+          evaluatedRuleIds: [],
+          matchedRuleIds: [],
+          unmatchedRuleIds: [],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      enforceTddBddPolicy: () => buildOutOfScopeTddBddResult(),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emittedArgs?.gateOutcome, 'ALLOW');
+  assert.equal(
+    emittedArgs?.findings.some(
+      (finding) => finding.ruleId === 'governance.rules.active-rule-coverage.empty'
+    ),
+    false
+  );
+});
+
 test('runPlatformGate permite continuar cuando existe waiver de gate válido para stage bloqueante', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',
