@@ -21,6 +21,11 @@ test('resolvePolicyForStage returns default PRE_PUSH policy when skills policy i
     assert.equal(resolved.trace.source, 'default');
     assert.equal(resolved.trace.bundle, 'gate-policy.default.PRE_PUSH');
     assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.version, 'policy-as-code/default@1.0');
+    assert.match(resolved.trace.signature ?? '', /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.policySource, 'computed-local');
+    assert.equal(resolved.trace.validation?.status, 'valid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_VALID');
   });
 });
 
@@ -52,6 +57,102 @@ test('resolvePolicyForStage applies PRE_PUSH override from skills.policy.json', 
     assert.equal(resolved.trace.source, 'skills.policy');
     assert.equal(resolved.trace.bundle, 'gate-policy.skills.policy.PRE_PUSH');
     assert.match(resolved.trace.hash, /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.version, 'policy-as-code/skills.policy@1.0');
+    assert.match(resolved.trace.signature ?? '', /^[a-f0-9]{64}$/i);
+    assert.equal(resolved.trace.policySource, 'computed-local');
+    assert.equal(resolved.trace.validation?.status, 'valid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_VALID');
+  });
+});
+
+test('resolvePolicyForStage marks unknown-source when policy-as-code contract source mismatches', async () => {
+  await withTempDir('pumuki-stage-policy-contract-unknown-source-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'skills.policy',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: 'b'.repeat(64),
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.source, 'default');
+    assert.equal(resolved.trace.validation?.status, 'unknown-source');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_UNKNOWN_SOURCE');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
+  });
+});
+
+test('resolvePolicyForStage marks expired when policy-as-code contract is out of date', async () => {
+  await withTempDir('pumuki-stage-policy-contract-expired-', async (repoRoot) => {
+    const baseline = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    const prePushSignature = baseline.trace.signature;
+    assert.ok(prePushSignature);
+
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          expires_at: '2000-01-01T00:00:00.000Z',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: prePushSignature,
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.validation?.status, 'expired');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_CONTRACT_EXPIRED');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
+  });
+});
+
+test('resolvePolicyForStage marks invalid when policy-as-code contract expiry is malformed', async () => {
+  await withTempDir('pumuki-stage-policy-contract-invalid-expiry-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'policy-as-code.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          source: 'default',
+          expires_at: 'not-an-iso-date',
+          signatures: {
+            PRE_COMMIT: 'a'.repeat(64),
+            PRE_PUSH: 'b'.repeat(64),
+            CI: 'c'.repeat(64),
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+    assert.equal(resolved.trace.validation?.status, 'invalid');
+    assert.equal(resolved.trace.validation?.code, 'POLICY_AS_CODE_CONTRACT_INVALID');
+    assert.equal(resolved.trace.policySource, 'file:.pumuki/policy-as-code.json');
   });
 });
 

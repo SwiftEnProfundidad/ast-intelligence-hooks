@@ -350,6 +350,144 @@ test('runPlatformGate devuelve 0 y no imprime findings cuando evaluateGate retor
   assert.equal(sddCheckCalled, true);
 });
 
+test('runPlatformGate bloquea en modo strict cuando policy-as-code es inválida', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedFindings: ReadonlyArray<Finding> = [];
+
+  const result = await runPlatformGate({
+    policy,
+    policyTrace: {
+      source: 'default',
+      bundle: 'gate-policy.default.PRE_COMMIT',
+      hash: 'f'.repeat(64),
+      version: 'policy-as-code/default@1.0',
+      signature: 'a'.repeat(64),
+      policySource: 'file:.pumuki/policy-as-code.json',
+      validation: {
+        status: 'invalid',
+        code: 'POLICY_AS_CODE_SIGNATURE_MISMATCH',
+        message: 'mismatch',
+        strict: true,
+      },
+    },
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedFindings = paramsArg.findings;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  const policyFinding = emittedFindings.find(
+    (finding) => finding.ruleId === 'governance.policy-as-code.invalid'
+  );
+  assert.ok(policyFinding);
+  assert.equal(policyFinding?.code, 'POLICY_AS_CODE_SIGNATURE_MISMATCH');
+  assert.equal(policyFinding?.source, 'policy-as-code');
+});
+
+test('runPlatformGate bloquea en modo strict cuando policy-as-code está expirada', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'range' as const, baseRef: 'origin/develop', headRef: 'HEAD' };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedFindings: ReadonlyArray<Finding> = [];
+
+  const result = await runPlatformGate({
+    policy,
+    policyTrace: {
+      source: 'default',
+      bundle: 'gate-policy.default.PRE_PUSH',
+      hash: 'f'.repeat(64),
+      version: 'policy-as-code/default@1.0',
+      signature: 'a'.repeat(64),
+      policySource: 'file:.pumuki/policy-as-code.json',
+      validation: {
+        status: 'expired',
+        code: 'POLICY_AS_CODE_CONTRACT_EXPIRED',
+        message: 'Policy-as-code contract expired at 2000-01-01T00:00:00.000Z.',
+        strict: true,
+      },
+    },
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedFindings = paramsArg.findings;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  const policyFinding = emittedFindings.find(
+    (finding) => finding.ruleId === 'governance.policy-as-code.invalid'
+  );
+  assert.ok(policyFinding);
+  assert.equal(policyFinding?.code, 'POLICY_AS_CODE_CONTRACT_EXPIRED');
+  assert.equal(policyFinding?.source, 'policy-as-code');
+});
+
 test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',
