@@ -79,5 +79,7 @@
 
 ## Fase 4. Post-release
 
-- 🚧 Monitorizar feedback de repos consumidores y registrar nuevos hallazgos canónicos.
-- ⏳ Priorizar nuevos bugs/mejoras y abrir siguiente ciclo de implementación.
+- ✅ Monitorizar feedback de repos consumidores y registrar nuevos hallazgos canónicos.
+  - Evidencia (2026-03-04): se activa nuevo frente real en consumer repo con backlog dedicado en `/Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md`.
+- 🚧 Priorizar nuevos bugs/mejoras y abrir siguiente ciclo de implementación.
+  - En curso (2026-03-04): intake y ejecución incremental sobre el backlog SAAS con trazabilidad `hallazgo -> fix -> test -> release`.

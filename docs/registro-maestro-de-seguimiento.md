@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): Fase 3.3 (release `6.3.38` publicado y verificado en npm).
-- Task activa (`🚧`): Fase 4.1 monitorización post-release en repos consumidores.
+- Última task cerrada (`✅`): Fase 4.1 (monitorización post-release cerrada con arranque de backlog SAAS).
+- Task activa (`🚧`): Fase 4.2 priorización y ejecución del siguiente ciclo sobre backlog SAAS.
 - Nuevos pendientes añadidos (`⏳`): sin cambios.
 
 ## Historial resumido
