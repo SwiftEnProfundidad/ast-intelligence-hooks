@@ -8,26 +8,12 @@ import {
   renderEnterpriseContractSummary,
 } from './enterprise-contract-suite-report-lib';
 import type {
-  EnterpriseContractProfileResult,
   EnterpriseContractProfileSpec,
+  EnterpriseContractProfileResult,
 } from './enterprise-contract-suite-contract';
+import { resolveEnterpriseContractProfiles } from './enterprise-contract-suite-contract';
 import { ensureDirectory } from './package-install-smoke-file-lib';
 import { runCommand } from './package-install-smoke-command-lib';
-
-const PROFILE_SPECS: ReadonlyArray<EnterpriseContractProfileSpec> = [
-  {
-    id: 'minimal',
-    mode: 'minimal',
-    // The minimal fixture intentionally omits platform skill contracts to assert strict governance blocking.
-    expectedExitCode: 1,
-  },
-  {
-    id: 'block',
-    mode: 'block',
-    // The block fixture is expected to complete successfully as a deterministic BLOCK smoke scenario.
-    expectedExitCode: 0,
-  },
-];
 
 const runProfile = (
   repoRoot: string,
@@ -58,7 +44,9 @@ const writeTextFile = (repoRoot: string, relativePath: string, content: string):
 
 const main = (): number => {
   const options = parseEnterpriseContractSuiteArgs(process.argv.slice(2));
-  const results = PROFILE_SPECS.map((profile) => runProfile(options.repoRoot, profile));
+  const results = resolveEnterpriseContractProfiles().map((profile) =>
+    runProfile(options.repoRoot, profile)
+  );
 
   const report = buildEnterpriseContractReport({
     repoRoot: options.repoRoot,

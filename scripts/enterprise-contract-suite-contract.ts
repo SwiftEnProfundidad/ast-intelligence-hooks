@@ -1,4 +1,4 @@
-export type EnterpriseContractProfileId = 'minimal' | 'block';
+export type EnterpriseContractProfileId = 'minimal' | 'block' | 'minimal-repeat';
 
 export type EnterpriseContractProfileSpec = {
   id: EnterpriseContractProfileId;
@@ -29,3 +29,21 @@ export type EnterpriseContractSuiteOptions = {
   summaryPath: string;
   printJson: boolean;
 };
+
+export const resolveEnterpriseContractProfiles = (): ReadonlyArray<EnterpriseContractProfileSpec> => [
+  {
+    id: 'minimal',
+    mode: 'minimal',
+    expectedExitCode: 1,
+  },
+  {
+    id: 'block',
+    mode: 'block',
+    expectedExitCode: 0,
+  },
+  {
+    id: 'minimal-repeat',
+    mode: 'minimal',
+    expectedExitCode: 1,
+  },
+];
