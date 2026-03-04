@@ -1956,11 +1956,23 @@ Criterio de salida F5:
     - `npm publish --access public` => `+ pumuki@6.3.35`.
     - `npm view pumuki@6.3.35 version` => `6.3.35`.
 
-- 🚧 `P12.F2.T70` Siguiente SDD pendiente enterprise: comando orquestador `pumuki sdd auto-sync` (`#600`).
+- ✅ `P12.F2.T70` Siguiente SDD pendiente enterprise: comando orquestador `pumuki sdd auto-sync` (`#600`).
+  - cierre ejecutado:
+    - nuevo runtime `runSddAutoSync` en capa SDD para orquestar `sync-docs` + `learning` en un único paso determinista.
+    - CLI ampliada con:
+      - `pumuki sdd auto-sync --change=<id> --stage=<stage> --task=<task-id> [--dry-run] [--json]`.
+    - cobertura de regresión añadida en `syncDocs`/`index`/`cli` y documentación actualizada en `docs/CONFIGURATION.md`.
+    - issue cerrada: `#600`.
+    - PR mergeada: `#602` (`commit 2be34c5`).
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/sdd/__tests__/index.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `44 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+
+- 🚧 `P12.F2.T71` Publicar release `6.3.36` con `pumuki sdd auto-sync` (`#603`).
   - salida esperada:
-    - unificar `sync-docs` + `learn` en un solo comando determinista.
-    - mantener fail-safe (sin escrituras parciales ante conflicto).
-    - contrato CLI con `--change --stage --task --dry-run --json` y tests en verde.
+    - versionado a `6.3.36` en `package.json`, `package-lock.json` y `VERSION`.
+    - release notes actualizadas con entrada `v6.3.36`.
+    - publicación npm validada (`latest=6.3.36`) + smoke de `--help` mostrando `auto-sync`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

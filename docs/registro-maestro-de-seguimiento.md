@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Última task cerrada (`✅`): `P12.F2.T69` (release `6.3.35` publicada en npm con cierre SDD incremental).
-- Task activa (`🚧`): `P12.F2.T70` (comando orquestador `pumuki sdd auto-sync`, issue `#600`).
+- Última task cerrada (`✅`): `P12.F2.T70` (comando orquestador `pumuki sdd auto-sync`, issue `#600`, PR `#602`, commit `2be34c5`).
+- Task activa (`🚧`): `P12.F2.T71` (publicar release `6.3.36` con `auto-sync`, issue `#603`).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
