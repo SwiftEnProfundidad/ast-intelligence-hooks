@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Task activa (`🚧`): `P12.F2.T55` (ejecutar policy-as-code versionada y firmada para gates enterprise, issue `#543`).
+- Task activa (`🚧`): `P12.F2.T55` (publicar patch release del contrato de compatibilidad `doctor --deep`, issue `#565`).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
