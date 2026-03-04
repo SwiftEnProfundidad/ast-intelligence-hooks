@@ -1387,6 +1387,7 @@ Criterio de salida F5:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997054313`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997061285`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997069824`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997079882`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
       - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
@@ -1516,6 +1517,8 @@ Criterio de salida F5:
       - `gh run view 22668157224 --log-failed` (`log not found: 65705054713` tras rerun más reciente).
       - `gh run view 22648216106 --log-failed` (`log not found: 65705138384` tras rerun más reciente).
       - `gh run view 22668204369 --log-failed` (`log not found: 65705213211` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65705296629` tras rerun más reciente).
+      - `gh run view 22668257758 --log-failed` (`log not found: 65705387100` tras rerun más reciente).
       - `gh pr checks 545 --json name,state,bucket,link,description` (`HTTP 502 transitorio en esta iteración; reintento exitoso`).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
       - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
@@ -1525,6 +1528,7 @@ Criterio de salida F5:
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668110528).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668157224).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668204369).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run 22668257758).
 
 - ⏳ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
