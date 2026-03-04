@@ -32,6 +32,12 @@ test('runConsumerPreflight genera hints operativos y eventos de notificación en
           kind: 'valid',
           max_age_seconds: 1800,
           age_seconds: 2400,
+          source: {
+            source: 'local-file',
+            path: '/tmp/repo/.ai_evidence.json',
+            digest: null,
+            generated_at: null,
+          },
         },
         repo_state: {
           repo_root: '/tmp/repo',
@@ -113,6 +119,12 @@ test('formatConsumerPreflight incluye causas accionables cuando gate está bloqu
           kind: 'valid',
           max_age_seconds: 900,
           age_seconds: 120,
+          source: {
+            source: 'local-file',
+            path: '/tmp/repo/.ai_evidence.json',
+            digest: null,
+            generated_at: null,
+          },
         },
         repo_state: {
           repo_root: '/tmp/repo',
@@ -187,6 +199,12 @@ test('formatConsumerPreflight renderiza panel legacy con estado de repo e hints'
           kind: 'missing',
           max_age_seconds: 900,
           age_seconds: null,
+          source: {
+            source: 'local-file',
+            path: '/tmp/repo/.ai_evidence.json',
+            digest: null,
+            generated_at: null,
+          },
         },
         repo_state: {
           repo_root: '/tmp/repo',
