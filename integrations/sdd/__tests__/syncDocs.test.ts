@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import { runSddSyncDocs } from '../syncDocs';
+import type { EvidenceReadResult } from '../../evidence/readEvidence';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
@@ -38,6 +39,36 @@ const writeCanonicalDoc = (repoRoot: string, body: string): string => {
   writeFileSync(path, body, 'utf8');
   return path;
 };
+
+const buildValidBlockedEvidenceResult = (): EvidenceReadResult => ({
+  kind: 'valid',
+  evidence: {
+    timestamp: '2026-03-04T10:10:00.000Z',
+    snapshot: {
+      outcome: 'BLOCK',
+    },
+    ai_gate: {
+      status: 'BLOCKED',
+      violations: [
+        {
+          code: 'EVIDENCE_STALE',
+        },
+      ],
+    },
+    sdd_metrics: {
+      decision: {
+        allowed: false,
+        code: 'SDD_CHANGE_INCOMPLETE',
+      },
+    },
+  } as Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'],
+  source_descriptor: {
+    source: 'local-file',
+    path: '/repo/.ai_evidence.json',
+    digest: 'sha256:abcd',
+    generated_at: '2026-03-04T10:10:00.000Z',
+  },
+});
 
 test('runSddSyncDocs dry-run previsualiza diff y no modifica archivo', async () => {
   await withFixtureRepo('pumuki-sdd-sync-docs-dry-run-', (repoRoot) => {
@@ -137,7 +168,11 @@ test('runSddSyncDocs incluye contexto explícito change/stage/task en resultado'
     assert.equal(result.learning?.artifact.version, '1.0');
     assert.equal(result.learning?.artifact.change_id, 'rgo-1700-01');
     assert.equal(result.learning?.artifact.generated_at, '2026-03-04T10:00:00.000Z');
-    assert.deepEqual(result.learning?.artifact.successful_patterns, ['sync-docs.completed']);
+    assert.deepEqual(result.learning?.artifact.successful_patterns, [
+      'sync-docs.completed',
+      'sync-docs.updated',
+    ]);
+    assert.deepEqual(result.learning?.artifact.gate_anomalies, ['evidence.missing']);
     assert.equal(
       existsSync(join(repoRoot, 'openspec', 'changes', 'rgo-1700-01', 'learning.json')),
       false
@@ -174,6 +209,7 @@ test('runSddSyncDocs persiste learning artifact cuando change está presente y n
     assert.equal(result.learning?.artifact.stage, 'PRE_COMMIT');
     assert.equal(result.learning?.artifact.task, 'P12.F2.T65');
     assert.equal(result.learning?.artifact.generated_at, '2026-03-04T10:05:00.000Z');
+    assert.deepEqual(result.learning?.artifact.gate_anomalies, ['evidence.missing']);
     assert.equal(existsSync(learningPath), true);
     const stored = readFileSync(learningPath, 'utf8');
     const parsed = JSON.parse(stored) as {
@@ -182,12 +218,57 @@ test('runSddSyncDocs persiste learning artifact cuando change está presente y n
       stage: string | null;
       task: string | null;
       generated_at: string;
+      failed_patterns: string[];
+      successful_patterns: string[];
+      gate_anomalies: string[];
     };
     assert.equal(parsed.version, '1.0');
     assert.equal(parsed.change_id, 'rgo-1700-02');
     assert.equal(parsed.stage, 'PRE_COMMIT');
     assert.equal(parsed.task, 'P12.F2.T65');
     assert.equal(parsed.generated_at, '2026-03-04T10:05:00.000Z');
+    assert.deepEqual(parsed.failed_patterns, []);
+    assert.deepEqual(parsed.successful_patterns, ['sync-docs.completed', 'sync-docs.updated']);
+    assert.deepEqual(parsed.gate_anomalies, ['evidence.missing']);
+  });
+});
+
+test('runSddSyncDocs agrega señales de gate cuando evidenceReader devuelve evidencia bloqueada', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-learning-signals-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: true,
+      change: 'rgo-1700-03',
+      stage: 'PRE_WRITE',
+      task: 'P12.F2.T66',
+      evidenceReader: () => buildValidBlockedEvidenceResult(),
+      now: () => new Date('2026-03-04T10:10:00.000Z'),
+    });
+
+    assert.deepEqual(result.learning?.artifact.failed_patterns, [
+      'ai-gate.blocked',
+      'sdd.blocked.SDD_CHANGE_INCOMPLETE',
+    ]);
+    assert.deepEqual(result.learning?.artifact.successful_patterns, [
+      'sync-docs.completed',
+      'sync-docs.updated',
+    ]);
+    assert.deepEqual(result.learning?.artifact.gate_anomalies, [
+      'ai-gate.violation.EVIDENCE_STALE',
+      'snapshot.outcome.block',
+    ]);
   });
 });
 
