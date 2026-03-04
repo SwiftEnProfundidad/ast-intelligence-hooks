@@ -134,6 +134,133 @@ test('runSddSyncDocs incluye contexto explícito change/stage/task en resultado'
   });
 });
 
+test('runSddSyncDocs soporta múltiples documentos canónicos de forma determinista', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-multi-target-', (repoRoot) => {
+    const firstPath = writeCanonicalDoc(
+      repoRoot,
+      [
+        '# First',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: first',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+    const secondRelativePath = 'docs/ops/secondary-sync.md';
+    const secondPath = join(repoRoot, secondRelativePath);
+    mkdirSync(dirname(secondPath), { recursive: true });
+    writeFileSync(
+      secondPath,
+      [
+        '# Second',
+        '',
+        '<!-- PUMUKI:BEGIN SECONDARY_STATUS -->',
+        '- stale: second',
+        '<!-- PUMUKI:END SECONDARY_STATUS -->',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: false,
+      targets: [
+        {
+          path: 'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+          sections: [
+            {
+              id: 'sdd-status',
+              beginMarker: '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+              endMarker: '<!-- PUMUKI:END SDD_STATUS -->',
+              renderBody: () => '- value: first-updated',
+            },
+          ],
+        },
+        {
+          path: secondRelativePath,
+          sections: [
+            {
+              id: 'secondary-status',
+              beginMarker: '<!-- PUMUKI:BEGIN SECONDARY_STATUS -->',
+              endMarker: '<!-- PUMUKI:END SECONDARY_STATUS -->',
+              renderBody: () => '- value: second-updated',
+            },
+          ],
+        },
+      ],
+    });
+
+    assert.equal(result.files.length, 2);
+    assert.equal(result.files[0]?.updated, true);
+    assert.equal(result.files[1]?.updated, true);
+    assert.match(readFileSync(firstPath, 'utf8'), /first-updated/);
+    assert.match(readFileSync(secondPath, 'utf8'), /second-updated/);
+  });
+});
+
+test('runSddSyncDocs es fail-safe: conflicto en un archivo evita escritura parcial de otros archivos', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-failsafe-', (repoRoot) => {
+    const firstPath = writeCanonicalDoc(
+      repoRoot,
+      [
+        '# First',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: first',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+    const secondRelativePath = 'docs/ops/secondary-sync.md';
+    const secondPath = join(repoRoot, secondRelativePath);
+    mkdirSync(dirname(secondPath), { recursive: true });
+    writeFileSync(secondPath, '# Second without markers\n', 'utf8');
+
+    const firstBefore = readFileSync(firstPath, 'utf8');
+    const secondBefore = readFileSync(secondPath, 'utf8');
+
+    assert.throws(
+      () =>
+        runSddSyncDocs({
+          repoRoot,
+          dryRun: false,
+          targets: [
+            {
+              path: 'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+              sections: [
+                {
+                  id: 'sdd-status',
+                  beginMarker: '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+                  endMarker: '<!-- PUMUKI:END SDD_STATUS -->',
+                  renderBody: () => '- value: first-updated',
+                },
+              ],
+            },
+            {
+              path: secondRelativePath,
+              sections: [
+                {
+                  id: 'secondary-status',
+                  beginMarker: '<!-- PUMUKI:BEGIN SECONDARY_STATUS -->',
+                  endMarker: '<!-- PUMUKI:END SECONDARY_STATUS -->',
+                  renderBody: () => '- value: second-updated',
+                },
+              ],
+            },
+          ],
+        }),
+      /sync-docs conflict/i
+    );
+
+    const firstAfter = readFileSync(firstPath, 'utf8');
+    const secondAfter = readFileSync(secondPath, 'utf8');
+    assert.equal(firstAfter, firstBefore);
+    assert.equal(secondAfter, secondBefore);
+  });
+});
+
 test('runSddSyncDocs falla con conflicto de marcadores y no toca el archivo', async () => {
   await withFixtureRepo('pumuki-sdd-sync-docs-conflict-', (repoRoot) => {
     const canonicalPath = writeCanonicalDoc(repoRoot, '# Canonical\n\nwithout managed markers\n');

@@ -1884,11 +1884,22 @@ Criterio de salida F5:
   - evidencia:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `31 passed, 0 failed`.
 
-- 🚧 `P12.F2.T64` Continuar SDD pendiente enterprise: ampliar `sync-docs` a múltiples documentos canónicos y secciones gestionadas (`#587`).
+- ✅ `P12.F2.T64` Continuar SDD pendiente enterprise: ampliar `sync-docs` a múltiples documentos canónicos y secciones gestionadas (`#587`).
+  - cierre ejecutado:
+    - `runSddSyncDocs` soporta objetivos múltiples (`targets`) con secciones gestionadas por archivo.
+    - actualización determinista por archivo/sección y salida con diffs por cada target.
+    - fail-safe preservado: conflicto en cualquier archivo aborta el sync antes de cualquier escritura parcial.
+    - cobertura de tests ampliada para:
+      - actualización multi-documento.
+      - garantía fail-safe sin escrituras parciales.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `33 passed, 0 failed`.
+
+- 🚧 `P12.F2.T65` Continuar SDD pendiente enterprise: artefacto de aprendizaje machine-readable por change durante `sync-docs` (`#589`).
   - salida esperada:
-    - soporte multi-documento determinista en `runSddSyncDocs`.
-    - mapeo por archivo/sección gestionada con fail-safe explícito ante conflictos.
-    - tests y CLI en verde con trazabilidad de todos los archivos sincronizados.
+    - contrato `learning` determinista en salida JSON.
+    - persistencia opcional en `openspec/changes/<change>/learning.json` cuando se provee `--change`.
+    - tests de escritura/dry-run/error y documentación mínima del esquema.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
