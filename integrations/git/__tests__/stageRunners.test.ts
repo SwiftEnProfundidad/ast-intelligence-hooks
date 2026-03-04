@@ -34,7 +34,7 @@ const withStageRunnerRepo = async (
   const previousDisableCore = process.env.PUMUKI_DISABLE_CORE_SKILLS;
   const previousAtomicity = process.env.PUMUKI_GIT_ATOMICITY_ENABLED;
   process.env.PUMUKI_SDD_BYPASS = '1';
-  process.env.PUMUKI_DISABLE_CORE_SKILLS = '1';
+  process.env.PUMUKI_DISABLE_CORE_SKILLS = '0';
   process.env.PUMUKI_GIT_ATOMICITY_ENABLED = '0';
   try {
     await withTempRepo(async (repoRoot) => {
