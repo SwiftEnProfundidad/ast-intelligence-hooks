@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Última task cerrada (`✅`): `P12.F2.T65` (artefacto learning por change en `sync-docs`, issue `#589`).
-- Task activa (`🚧`): `P12.F2.T66` (enriquecer `learning.json` con señales reales de gate/evidence, issue `#591`).
+- Última task cerrada (`✅`): `P12.F2.T66` (señales reales de gate/evidence en `learning.json`, issue `#591`, PR `#593`).
+- Task activa (`🚧`): `P12.F2.T67` (hacer `rule_updates` accionable en `learning.json`, issue `#594`).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
