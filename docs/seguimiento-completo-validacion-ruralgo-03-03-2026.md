@@ -1347,6 +1347,7 @@ Criterio de salida F5:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994350175`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994354919`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994362056`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994367200`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
       - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
@@ -1355,6 +1356,7 @@ Criterio de salida F5:
       - `gh run view 22648709712` (`billing lock` persistente en `PR #547` tras nueva iteración).
       - `gh run view 22648763409` (`billing lock` persistente en `PR #547` tras rerun adicional).
       - `gh run view 22648802167` (`billing lock` persistente en `PR #547` tras heartbeat actual).
+      - `gh run view 22648857219` (`billing lock` persistente en `PR #547` tras heartbeat actual).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642755577`).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642904197` tras nueva iteración).
       - `gh run view 22648597740 --log-failed` (`log not found: 65642481475`).
@@ -1363,6 +1365,8 @@ Criterio de salida F5:
       - `gh run view 22648763409 --log-failed` (`log not found: 65643022620`).
       - `gh run view 22648216106 --log-failed` (`log not found: 65643216310` tras rerun más reciente).
       - `gh run view 22648802167 --log-failed` (`log not found: 65643143308`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65643360317` tras rerun más reciente).
+      - `gh run view 22648857219 --log-failed` (`log not found: 65643317704`).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
       - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
 
