@@ -1405,6 +1405,7 @@ Criterio de salida F5:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997293723`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997300779`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997308456`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997316576`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
       - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
@@ -1606,6 +1607,12 @@ Criterio de salida F5:
       - `gh run view 22669749649 --log-failed` (`log not found: 65710472753` en iteración actual).
       - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
       - `gh run rerun 22669749649 --failed` (rerun solicitado en iteración actual).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota; jobs actualizados a serie `657105379*`).
+      - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota; nuevo run `22669801703`, jobs serie `657106489*`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65710537976` en iteración actual).
+      - `gh run view 22669801703 --log-failed` (`log not found: 65710648961` en iteración actual).
+      - `gh run rerun 22648216106 --failed` (rerun solicitado en iteración actual).
+      - `gh run rerun 22669801703 --failed` (rerun solicitado en iteración actual).
 
 - ⏳ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
