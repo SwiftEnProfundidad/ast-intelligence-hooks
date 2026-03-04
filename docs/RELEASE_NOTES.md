@@ -5,7 +5,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
-### 2026-03-04 (next patch candidate, unreleased)
+### 2026-03-04 (v6.3.38)
 
 - Blocked notification UX hardening for macOS:
   - short, human-readable Spanish banner (`🔴 Pumuki bloqueado`) with stage + summarized cause.

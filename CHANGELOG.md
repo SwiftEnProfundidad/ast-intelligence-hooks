@@ -6,6 +6,10 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+No changes yet.
+
+## [6.3.38] - 2026-03-04
+
 ### Added
 
 - Optional macOS blocked dialog flow for gate failures (`PUMUKI_MACOS_BLOCKED_DIALOG=1`):
