@@ -1780,11 +1780,35 @@ Criterio de salida F5:
     - `npm run -s validation:contract-suite:enterprise -- --json`
     - `npm run -s validation:tracking-single-active`
 
-- 🚧 `P12.F2.T55` Publicar patch release con el contrato de compatibilidad de `doctor --deep` ya mergeado en `#563`.
+- ✅ `P12.F2.T55` Publicar patch release con el contrato de compatibilidad de `doctor --deep` ya mergeado en `#563`.
+  - cierre ejecutado:
+    - issue creada y cerrada: `#565`.
+    - rama release creada y mergeada: `release/6.3.33` -> `#567` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/567`).
+    - publicación npm completada: `pumuki@6.3.33`.
+    - commit de merge en `develop`: `6f36830`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:contract-suite:enterprise -- --json`
+    - `npm run -s validation:package-manifest`
+    - `npm publish --access public`
+    - `npm view pumuki version` => `6.3.33`
+
+- ✅ `P12.F2.T56` Publicar documentación de adopción de `6.3.33` (release notes + verificación operativa rápida).
+  - cierre ejecutado:
+    - issue documental creada: `#568`.
+    - release notes actualizadas con sección `2026-03-04 (v6.3.33)` y comandos de verificación para consumidores.
+    - documentación operativa alineada con el release publicado `6.3.33`.
+  - evidencia:
+    - `docs/RELEASE_NOTES.md` incluye delta funcional de `doctor --deep` para `compatibility-contract`.
+    - `npm view pumuki version` => `6.3.33`
+    - `npm run -s validation:tracking-single-active`
+
+- 🚧 `P12.F2.T57` Ejecutar siguiente mejora estratégica: export de telemetría de gates en JSONL determinista para auditoría enterprise.
   - salida esperada:
-    - issue de release creada con alcance/doD verificable (`#565`).
-    - versión npm nueva publicada con el fix de `#562`.
-    - trazabilidad cerrada en plan activo + registro maestro con evidencia de publicación.
+    - issue de implementación creada con alcance/doD verificable (`#569`).
+    - output JSONL estable para ingestión de auditoría (SIEM/OTel-ready) sin romper contrato actual.
+    - tests de esquema + no-regresión y documentación mínima de uso.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
