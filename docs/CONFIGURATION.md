@@ -104,6 +104,9 @@ Structured telemetry output is disabled by default and can be enabled with envir
 - `PUMUKI_TELEMETRY_JSONL_PATH`:
   - JSONL file path for `telemetry_event_v1` records.
   - Accepts absolute path or repo-relative path.
+- `PUMUKI_TELEMETRY_JSONL_MAX_BYTES`:
+  - Optional max size for JSONL file growth.
+  - When current file size plus next event exceeds this value, current file rotates to `<path>.1` before append.
 - `PUMUKI_TELEMETRY_OTEL_ENDPOINT`:
   - OTLP HTTP logs endpoint (`/v1/logs`).
 - `PUMUKI_TELEMETRY_OTEL_SERVICE_NAME`:
@@ -116,6 +119,7 @@ Notes:
 - You can enable JSONL only, OTel only, or both.
 - If unset, no telemetry export is attempted.
 - Gate execution remains deterministic even when OTel endpoint is unavailable (best-effort dispatch).
+- Rotation is opt-in; without `PUMUKI_TELEMETRY_JSONL_MAX_BYTES`, append behavior remains unchanged.
 
 Quick verification (JSONL):
 

@@ -1,4 +1,11 @@
-import { appendFileSync, mkdirSync } from 'node:fs';
+import {
+  appendFileSync,
+  existsSync,
+  mkdirSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+} from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import type { Finding } from '../../core/gate/Finding';
 import type { GateOutcome } from '../../core/gate/GateOutcome';
@@ -76,6 +83,14 @@ const toOtelTimeoutMs = (value: string | undefined): number => {
   return parsed;
 };
 
+const toTelemetryJsonlMaxBytes = (value: string | undefined): number | null => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+};
+
 const resolveTargetPath = (repoRoot: string, targetPath: string): string => {
   if (isAbsolute(targetPath)) {
     return targetPath;
@@ -86,6 +101,31 @@ const resolveTargetPath = (repoRoot: string, targetPath: string): string => {
 const defaultAppendJsonlLine = (targetPath: string, line: string): void => {
   mkdirSync(dirname(targetPath), { recursive: true });
   appendFileSync(targetPath, line, 'utf8');
+};
+
+const rotateTelemetryJsonlIfNeeded = (params: {
+  targetPath: string;
+  line: string;
+  maxBytes: number;
+}): void => {
+  mkdirSync(dirname(params.targetPath), { recursive: true });
+
+  const lineBytes = Buffer.byteLength(params.line, 'utf8');
+  let currentSize = 0;
+  if (existsSync(params.targetPath)) {
+    currentSize = statSync(params.targetPath).size;
+  }
+  if (currentSize + lineBytes <= params.maxBytes) {
+    return;
+  }
+
+  const rotatedPath = `${params.targetPath}.1`;
+  if (existsSync(rotatedPath)) {
+    unlinkSync(rotatedPath);
+  }
+  if (existsSync(params.targetPath)) {
+    renameSync(params.targetPath, rotatedPath);
+  }
 };
 
 const defaultPostOtelPayload = async (params: {
@@ -325,6 +365,9 @@ export const emitGateTelemetryEvent = async (
   const otelTimeoutMs = toOtelTimeoutMs(
     activeDependencies.env.PUMUKI_TELEMETRY_OTEL_TIMEOUT_MS
   );
+  const telemetryJsonlMaxBytes = toTelemetryJsonlMaxBytes(
+    activeDependencies.env.PUMUKI_TELEMETRY_JSONL_MAX_BYTES
+  );
 
   const event = toTelemetryEvent({
     ...params,
@@ -342,7 +385,15 @@ export const emitGateTelemetryEvent = async (
   let jsonlPath: string | undefined;
   if (jsonlPathRaw.length > 0) {
     jsonlPath = resolveTargetPath(params.repoRoot, jsonlPathRaw);
-    activeDependencies.appendJsonlLine(jsonlPath, `${JSON.stringify(event)}\n`);
+    const line = `${JSON.stringify(event)}\n`;
+    if (typeof telemetryJsonlMaxBytes === 'number') {
+      rotateTelemetryJsonlIfNeeded({
+        targetPath: jsonlPath,
+        line,
+        maxBytes: telemetryJsonlMaxBytes,
+      });
+    }
+    activeDependencies.appendJsonlLine(jsonlPath, line);
   }
 
   let otelDispatched = false;
