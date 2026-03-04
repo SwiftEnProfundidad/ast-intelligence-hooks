@@ -4,6 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
+import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { PUMUKI_CONFIG_KEYS } from '../constants';
 import type { ILifecycleGitService } from '../gitService';
@@ -70,56 +71,68 @@ const sampleEvidence = (params: {
   branch: string;
   upstream: string | null;
   timestamp?: string;
-}): AiEvidenceV2_1 => ({
-  version: '2.1',
-  timestamp: params.timestamp ?? new Date().toISOString(),
-  snapshot: {
-    stage: 'PRE_COMMIT',
-    outcome: 'PASS',
-    findings: [],
-  },
-  ledger: [],
-  platforms: {},
-  rulesets: [],
-  human_intent: null,
-  ai_gate: {
-    status: 'ALLOWED',
-    violations: [],
+}): AiEvidenceV2_1 => {
+  const evidence: AiEvidenceV2_1 = {
+    version: '2.1',
+    timestamp: params.timestamp ?? new Date().toISOString(),
+    snapshot: {
+      stage: 'PRE_COMMIT',
+      outcome: 'PASS',
+      findings: [],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
     human_intent: null,
-  },
-  severity_metrics: {
-    gate_status: 'ALLOWED',
-    total_violations: 0,
-    by_severity: {
-      CRITICAL: 0,
-      ERROR: 0,
-      WARN: 0,
-      INFO: 0,
+    ai_gate: {
+      status: 'ALLOWED',
+      violations: [],
+      human_intent: null,
     },
-  },
-  repo_state: {
-    repo_root: params.repoRoot,
-    git: {
-      available: true,
-      branch: params.branch,
-      upstream: params.upstream,
-      ahead: 0,
-      behind: 0,
-      dirty: false,
-      staged: 0,
-      unstaged: 0,
-    },
-    lifecycle: {
-      installed: true,
-      package_version: '6.3.26',
-      lifecycle_version: '6.3.26',
-      hooks: {
-        pre_commit: 'managed',
-        pre_push: 'managed',
+    severity_metrics: {
+      gate_status: 'ALLOWED',
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
       },
     },
-  },
-});
+    repo_state: {
+      repo_root: params.repoRoot,
+      git: {
+        available: true,
+        branch: params.branch,
+        upstream: params.upstream,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: '6.3.26',
+        lifecycle_version: '6.3.26',
+        hooks: {
+          pre_commit: 'managed',
+          pre_push: 'managed',
+        },
+      },
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  evidence.evidence_chain = {
+    algorithm: 'sha256',
+    previous_payload_hash: null,
+    payload_hash: payloadHash,
+    sequence: 1,
+  };
+
+  return evidence;
+};
 
 test('runLifecycleDoctor marca issue bloqueante cuando hay rutas trackeadas en node_modules', async () => {
   await withTempDir('pumuki-doctor-tracked-', async (repoRoot) => {
@@ -362,7 +375,104 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
 
     assert.equal(report.deep?.enabled, true);
     assert.equal(report.deep?.checks.every((check) => check.status === 'pass'), true);
+    assert.equal(report.deep?.contract.overall, 'compatible');
     assert.equal(report.deep?.blocking, false);
     assert.equal(doctorHasBlockingIssues(report), false);
+  });
+});
+
+test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requerido y no está instalado', async () => {
+  await withTempDir('pumuki-doctor-deep-compat-openspec-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    mkdirSync(join(repoRoot, 'openspec', 'changes'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'adapter.json'),
+      JSON.stringify(
+        {
+          hooks: {
+            pre_write: { command: 'npx --yes pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes pumuki-pre-push' },
+            ci: { command: 'npx --yes pumuki-ci' },
+          },
+          mcp: {
+            enterprise: { command: 'npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio' },
+            evidence: { command: 'npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio' },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(repoRoot, 'skills.policy.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          defaultBundleEnabled: true,
+          stages: {
+            PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          },
+          bundles: {},
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const branch = 'feature/doctor-deep-compat';
+    const upstream = 'origin/feature/doctor-deep-compat';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream,
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': upstream,
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    const compatibilityCheck = report.deep?.checks.find(
+      (check) => check.id === 'compatibility-contract'
+    );
+
+    assert.equal(report.deep?.contract.overall, 'incompatible');
+    assert.equal(report.deep?.contract.openspec.required, true);
+    assert.equal(report.deep?.contract.openspec.installed, false);
+    assert.equal(compatibilityCheck?.status, 'fail');
+    assert.equal(compatibilityCheck?.severity, 'warning');
+    assert.equal(report.deep?.blocking, false);
   });
 });
