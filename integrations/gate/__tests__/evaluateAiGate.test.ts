@@ -478,3 +478,39 @@ test('evaluateAiGate permite PRE_WRITE cuando hay recibo MCP fresco y válido', 
     false
   );
 });
+
+test('evaluateAiGate permite PRE_WRITE con recibo MCP en PRE_COMMIT cuando está fresco', () => {
+  const result = evaluateAiGate(
+    {
+      repoRoot: '/repo',
+      stage: 'PRE_WRITE',
+      requireMcpReceipt: true,
+    },
+    {
+      now: () => Date.parse('2026-02-20T12:05:00.000Z'),
+      readEvidenceResult: () => validEvidenceResult(sampleEvidence()),
+      captureRepoState: () => sampleEvidence().repo_state!,
+      readMcpAiGateReceipt: () => ({
+        kind: 'valid',
+        path: '/repo/.pumuki/artifacts/mcp-ai-gate-receipt.json',
+        receipt: {
+          version: '1',
+          source: 'pumuki-enterprise-mcp',
+          tool: 'ai_gate_check',
+          repo_root: '/repo',
+          stage: 'PRE_COMMIT',
+          status: 'ALLOWED',
+          allowed: true,
+          issued_at: '2026-02-20T12:04:50.000Z',
+        },
+      }),
+    }
+  );
+
+  assert.equal(result.status, 'ALLOWED');
+  assert.equal(result.allowed, true);
+  assert.equal(
+    result.violations.some((item) => item.code === 'MCP_ENTERPRISE_RECEIPT_STAGE_MISMATCH'),
+    false
+  );
+});

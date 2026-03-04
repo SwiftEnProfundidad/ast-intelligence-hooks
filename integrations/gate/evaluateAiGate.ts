@@ -81,6 +81,12 @@ const DEFAULT_MAX_AGE_SECONDS: Readonly<Record<AiGateStage, number>> = {
 };
 
 const DEFAULT_PROTECTED_BRANCHES = new Set(['main', 'master', 'develop', 'dev']);
+const MCP_RECEIPT_STAGE_ORDER: Readonly<Record<AiGateStage, number>> = {
+  PRE_WRITE: 0,
+  PRE_COMMIT: 1,
+  PRE_PUSH: 2,
+  CI: 3,
+};
 
 const toErrorViolation = (code: string, message: string): AiGateViolation => ({
   code,
@@ -335,6 +341,13 @@ const toPolicyStage = (stage: AiGateStage): SkillsStage => {
   return stage;
 };
 
+const isMcpReceiptStageCompatible = (params: {
+  receiptStage: AiGateStage;
+  requestedStage: AiGateStage;
+}): boolean => {
+  return MCP_RECEIPT_STAGE_ORDER[params.receiptStage] >= MCP_RECEIPT_STAGE_ORDER[params.requestedStage];
+};
+
 const collectMcpReceiptViolations = (params: {
   required: boolean;
   stage: AiGateStage;
@@ -405,11 +418,16 @@ const collectMcpReceiptViolations = (params: {
       )
     );
   }
-  if (receiptRead.receipt.stage !== params.stage) {
+  if (
+    !isMcpReceiptStageCompatible({
+      receiptStage: receiptRead.receipt.stage,
+      requestedStage: params.stage,
+    })
+  ) {
     violations.push(
       toErrorViolation(
         'MCP_ENTERPRISE_RECEIPT_STAGE_MISMATCH',
-        `MCP receipt stage mismatch (${receiptRead.receipt.stage} != ${params.stage}).`
+        `MCP receipt stage mismatch (${receiptRead.receipt.stage} incompatible with ${params.stage}).`
       )
     );
   }
