@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`
 - Estado del plan: EN CURSO
-- Última task cerrada (`✅`): `P12.F2.T72` (hardening `policy-as-code` completado: issue `#606` cerrada con PR `#608`).
-- Task activa (`🚧`): `P12.F2.T73` (preparar/publicar release incremental con el hardening de `#606`).
+- Última task cerrada (`✅`): `P12.F2.T73` (release `6.3.37` publicada en npm con hardening `#606`).
+- Task activa (`🚧`): `P12.F2.T74` (consolidar cierre del bloque P12.F2 y preparar backlog siguiente).
 
 ## Historial resumido
 - No se mantienen MDs históricos de seguimiento en este repositorio.
