@@ -8,10 +8,10 @@
             "command": "npx --yes pumuki-pre-write"
           },
           "pre_commit": {
-            "command": "npx --yes pumuki-pre-commit"
+            "command": "./node_modules/.bin/pumuki-pre-commit"
           },
           "pre_push": {
-            "command": "npx --yes pumuki-pre-push"
+            "command": "./node_modules/.bin/pumuki-pre-push"
           },
           "ci": {
             "command": "npx --yes pumuki-ci"
@@ -38,10 +38,10 @@
               "command": "npx --yes pumuki-pre-write"
             },
             "pre_commit": {
-              "command": "npx --yes pumuki-pre-commit"
+              "command": "./node_modules/.bin/pumuki-pre-commit"
             },
             "pre_push": {
-              "command": "npx --yes pumuki-pre-push"
+              "command": "./node_modules/.bin/pumuki-pre-push"
             },
             "ci": {
               "command": "npx --yes pumuki-ci"
@@ -100,10 +100,10 @@
             "command": "npx --yes pumuki-pre-write"
           },
           "pre_commit": {
-            "command": "npx --yes pumuki-pre-commit"
+            "command": "./node_modules/.bin/pumuki-pre-commit"
           },
           "pre_push": {
-            "command": "npx --yes pumuki-pre-push"
+            "command": "./node_modules/.bin/pumuki-pre-push"
           },
           "ci": {
             "command": "npx --yes pumuki-ci"
@@ -117,8 +117,8 @@
       "path": ".codeium/adapter/hooks.json",
       "payload": {
         "preCommand": "npx --yes pumuki-pre-write",
-        "postCommand": "npx --yes pumuki-pre-commit",
-        "pushCommand": "npx --yes pumuki-pre-push",
+        "postCommand": "./node_modules/.bin/pumuki-pre-commit",
+        "pushCommand": "./node_modules/.bin/pumuki-pre-push",
         "ciCommand": "npx --yes pumuki-ci",
         "mcpCommand": "npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio"
       }
@@ -172,10 +172,10 @@
             "command": "npx --yes pumuki-pre-write"
           },
           "pre_commit": {
-            "command": "npx --yes pumuki-pre-commit"
+            "command": "./node_modules/.bin/pumuki-pre-commit"
           },
           "pre_push": {
-            "command": "npx --yes pumuki-pre-push"
+            "command": "./node_modules/.bin/pumuki-pre-push"
           },
           "ci": {
             "command": "npx --yes pumuki-ci"

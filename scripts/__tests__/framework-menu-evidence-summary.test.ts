@@ -113,7 +113,7 @@ test('formatEvidenceSummaryForMenu en missing da instruccion accionable', () => 
   });
 
   assert.match(rendered, /Evidence: status=missing/);
-  assert.match(rendered, /Run `npx --yes pumuki-pre-commit` to generate fresh evidence\./);
+  assert.match(rendered, /Run `\.\/node_modules\/\.bin\/pumuki-pre-commit` to generate fresh evidence\./);
 });
 
 test('readEvidenceSummaryForMenu normaliza topFiles absolutos a repo-relative', async () => {

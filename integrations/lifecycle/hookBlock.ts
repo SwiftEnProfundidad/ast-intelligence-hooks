@@ -24,26 +24,52 @@ const managedBlockPattern = new RegExp(
   'g'
 );
 
+const toHookRunner = (params: {
+  hook: PumukiManagedHook;
+  runner: string;
+}): string => {
+  if (params.hook === 'pre-push') {
+    return `  PUMUKI_PRE_PUSH_STDIN="$PUMUKI_PRE_PUSH_STDIN" ${params.runner} "$@"`;
+  }
+  return `  ${params.runner}`;
+};
+
 export const buildPumukiManagedHookBlock = (hook: PumukiManagedHook): string => {
   const cli = HOOK_COMMANDS[hook];
-  const prePushCommand =
-    '  PUMUKI_PRE_PUSH_STDIN="$(cat)"\n' +
-    `  PUMUKI_PRE_PUSH_STDIN="$PUMUKI_PRE_PUSH_STDIN" npx --yes ${cli} "$@"`;
-  const hookCommand =
-    hook === 'pre-push' ? prePushCommand : `  npx --yes ${cli}`;
+  const localBinPath = `./node_modules/.bin/${cli}`;
+  const localNodeEntry = `./node_modules/pumuki/bin/${cli}.js`;
 
   return [
     PUMUKI_MANAGED_BLOCK_START,
-    'if command -v npx >/dev/null 2>&1; then',
-    hookCommand,
+    ...(hook === 'pre-push' ? ['PUMUKI_PRE_PUSH_STDIN="$(cat)"'] : []),
+    `if [ -x "${localBinPath}" ]; then`,
+    toHookRunner({
+      hook,
+      runner: localBinPath,
+    }),
+    `elif [ -f "${localNodeEntry}" ] && command -v node >/dev/null 2>&1; then`,
+    toHookRunner({
+      hook,
+      runner: `node ${localNodeEntry}`,
+    }),
+    `elif command -v ${cli} >/dev/null 2>&1; then`,
+    toHookRunner({
+      hook,
+      runner: cli,
+    }),
+    'elif command -v npx >/dev/null 2>&1; then',
+    toHookRunner({
+      hook,
+      runner: `npx --yes --package pumuki@latest ${cli}`,
+    }),
+    'else',
+    `  echo "[pumuki] unable to resolve ${cli} runner. Install dependencies or ensure npx is available." >&2`,
+    '  exit 1',
+    'fi',
     '  status=$?',
     '  if [ "$status" -ne 0 ]; then',
     '    exit "$status"',
     '  fi',
-    'else',
-    '  echo "[pumuki] npx was not found in PATH." >&2',
-    '  exit 1',
-    'fi',
     PUMUKI_MANAGED_BLOCK_END,
   ].join('\n');
 };

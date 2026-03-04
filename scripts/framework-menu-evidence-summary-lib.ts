@@ -234,7 +234,7 @@ export const formatEvidenceSummaryForMenu = (
   if (summary.status === 'missing') {
     return [
       'Evidence: status=missing',
-      'Run `npx --yes pumuki-pre-commit` to generate fresh evidence.',
+      'Run `./node_modules/.bin/pumuki-pre-commit` to generate fresh evidence.',
     ].join('\n');
   }
 

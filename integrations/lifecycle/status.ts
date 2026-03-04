@@ -27,7 +27,7 @@ export const readLifecycleStatus = (params?: {
 
   return {
     repoRoot,
-    packageVersion: getCurrentPumukiVersion(),
+    packageVersion: getCurrentPumukiVersion({ repoRoot }),
     lifecycleState: readLifecycleState(git, repoRoot),
     hookStatus: getPumukiHooksStatus(repoRoot),
     trackedNodeModulesCount,

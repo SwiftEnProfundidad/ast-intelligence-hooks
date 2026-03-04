@@ -99,10 +99,15 @@ const buildDoctorIssues = (params: {
     params.lifecycleState.installed === 'true' &&
     !Object.values(params.hookStatus).every((entry) => entry.managedBlockPresent)
   ) {
+    const totalHooks = Object.keys(params.hookStatus).length;
+    const managedHooks = Object.values(params.hookStatus).filter(
+      (entry) => entry.managedBlockPresent
+    ).length;
     issues.push({
       severity: 'warning',
       message:
-        'Lifecycle state says installed=true but one or more managed hook blocks are missing.',
+        `Lifecycle state says installed=true but managed hook blocks are incomplete (${managedHooks}/${totalHooks}). ` +
+        'If you use versioned hooks via core.hooksPath, ensure those hooks include the PUMUKI MANAGED block or rerun "pumuki install".',
     });
   }
 
@@ -517,7 +522,7 @@ const buildCompatibilityContract = (params: {
     overall: overallCompatible ? 'compatible' : 'incompatible',
     pumuki: {
       installed: pumukiInstalled,
-      version: getCurrentPumukiVersion(),
+      version: getCurrentPumukiVersion({ repoRoot: params.repoRoot }),
     },
     openspec: {
       required: openSpecRequired,
@@ -654,7 +659,7 @@ export const runLifecycleDoctor = (params?: {
 
   return {
     repoRoot,
-    packageVersion: getCurrentPumukiVersion(),
+    packageVersion: getCurrentPumukiVersion({ repoRoot }),
     lifecycleState,
     trackedNodeModulesPaths,
     hookStatus,

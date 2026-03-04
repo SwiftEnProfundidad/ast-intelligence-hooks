@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
+import { withTempDir } from '../../__tests__/helpers/tempDir';
 import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
 
 test('getCurrentPumukiPackageName devuelve el nombre real del package', () => {
@@ -42,4 +43,24 @@ test('packageInfo devuelve nombre y versión no vacíos ni con espacios laterale
   assert.equal(packageVersion.trim(), packageVersion);
   assert.ok(packageName.length > 0);
   assert.ok(packageVersion.length > 0);
+});
+
+test('getCurrentPumukiVersion prioriza versión instalada en node_modules del repo consumidor', async () => {
+  await withTempDir('pumuki-package-info-', async (repoRoot) => {
+    const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
+    mkdirSync(packageRoot, { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '9.9.9' }, null, 2),
+      'utf8'
+    );
+
+    assert.equal(getCurrentPumukiVersion({ repoRoot }), '9.9.9');
+  });
+});
+
+test('getCurrentPumukiVersion usa fallback al versionado runtime si no hay instalación local', async () => {
+  await withTempDir('pumuki-package-info-fallback-', async (repoRoot) => {
+    assert.equal(getCurrentPumukiVersion({ repoRoot }), getCurrentPumukiVersion());
+  });
 });

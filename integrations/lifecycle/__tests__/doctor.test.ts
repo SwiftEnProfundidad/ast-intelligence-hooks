@@ -173,6 +173,7 @@ test('runLifecycleDoctor marca warning si lifecycle dice instalado y falta bloqu
     assert.equal(report.issues.length, 1);
     assert.equal(report.issues[0]?.severity, 'warning');
     assert.match(report.issues[0]?.message ?? '', /installed=true/i);
+    assert.match(report.issues[0]?.message ?? '', /core\.hooksPath/i);
     assert.equal(doctorHasBlockingIssues(report), false);
   });
 });
@@ -306,8 +307,8 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
         {
           hooks: {
             pre_write: { command: 'npx --yes pumuki-pre-write' },
-            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
-            pre_push: { command: 'npx --yes pumuki-pre-push' },
+            pre_commit: { command: './node_modules/.bin/pumuki-pre-commit' },
+            pre_push: { command: './node_modules/.bin/pumuki-pre-push' },
             ci: { command: 'npx --yes pumuki-ci' },
           },
           mcp: {
@@ -397,8 +398,8 @@ test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requer
         {
           hooks: {
             pre_write: { command: 'npx --yes pumuki-pre-write' },
-            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
-            pre_push: { command: 'npx --yes pumuki-pre-push' },
+            pre_commit: { command: './node_modules/.bin/pumuki-pre-commit' },
+            pre_push: { command: './node_modules/.bin/pumuki-pre-push' },
             ci: { command: 'npx --yes pumuki-ci' },
           },
           mcp: {
