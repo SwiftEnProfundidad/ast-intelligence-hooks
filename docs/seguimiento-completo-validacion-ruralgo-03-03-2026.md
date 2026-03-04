@@ -1857,10 +1857,10 @@ Criterio de salida F5:
     - `npm run -s validation:tracking-single-active`
     - `gh issue close 581 --comment "Closed via release notes update for 6.3.34 and tracking sync."`
 
-- 🚧 `P12.F2.T62` Ejecutar la siguiente mejora estratégica pendiente: policy-as-code versionada y firmada para gates enterprise (`#543`).
+- 🚧 `P12.F2.T62` Ejecutar la siguiente mejora estratégica pendiente: modo degradado offline/air-gapped para gates enterprise (`#583`).
   - salida esperada:
-    - issue `#543` movida de `REPORTED` a `FIXED` con implementación verificable.
-    - contrato de policy firmado/versionado con validación estricta y trazabilidad en CLI.
+    - issue `#583` movida de `REPORTED` a `FIXED` con implementación verificable.
+    - contrato de `degraded_mode` por stage (`PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI`) visible en CLI/JSON.
     - cobertura de tests RED/GREEN + release readiness documentada en plan activo.
 
 Criterio de salida F6:
