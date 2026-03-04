@@ -1982,11 +1982,22 @@ Criterio de salida F5:
     - `npm publish --access public` => `+ pumuki@6.3.36`.
     - `npm view pumuki@6.3.36 version` => `6.3.36`.
 
-- 🚧 `P12.F2.T72` Siguiente hardening enterprise: policy-as-code firmada/versionada (`#606`).
+- ✅ `P12.F2.T72` Hardening enterprise policy-as-code firmada/versionada (`#606`).
+  - cierre ejecutado:
+    - modo estricto bloquea política no firmada con código determinista `POLICY_AS_CODE_UNSIGNED`.
+    - `status`, `doctor` y `sdd validate --json` exponen metadatos de validación de policy (`source/bundle/hash/version/signature/status/code/strict`).
+    - telemetría/evidence alineadas con estado adicional `unsigned`.
+    - cobertura de regresión añadida para strict unsigned + metadatos lifecycle.
+    - issue cerrada: `#606`.
+    - PR mergeada: `#608` (`commit 881eac8`).
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `81 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+
+- 🚧 `P12.F2.T73` Preparar y publicar release con el hardening de `#606`.
   - salida esperada:
-    - definir contrato machine-readable de policy con versión/firma y validación estricta.
-    - exponer metadatos de validación en salidas de gate/telemetría.
-    - añadir cobertura de regresión para policy inválida/no firmada en modo estricto.
+    - versionar release incremental y notas de publicación.
+    - publicar en npm y verificar propagación `dist-tags`.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
