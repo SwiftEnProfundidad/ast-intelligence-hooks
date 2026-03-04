@@ -1857,11 +1857,28 @@ Criterio de salida F5:
     - `npm run -s validation:tracking-single-active`
     - `gh issue close 581 --comment "Closed via release notes update for 6.3.34 and tracking sync."`
 
-- 🚧 `P12.F2.T62` Ejecutar la siguiente mejora estratégica pendiente: modo degradado offline/air-gapped para gates enterprise (`#583`).
+- ✅ `P12.F2.T62` Ejecutar la siguiente mejora estratégica pendiente: modo degradado offline/air-gapped para gates enterprise (`#583`).
+  - cierre ejecutado:
+    - contrato reutilizable implementado en `integrations/gate/degradedMode.ts` con precedencia `env -> .pumuki/degraded-mode.json`.
+    - `resolvePolicyForStage` expone `trace.degraded` por stage.
+    - `runPlatformGate` aplica enforcement:
+      - `action=block` -> finding `governance.degraded-mode.blocked` + gate `BLOCK`.
+      - `action=allow` -> finding `governance.degraded-mode.active` + gate permite continuar.
+    - hooks exitosos publican resumen degradado (`degraded_mode`, `degraded_action`, `degraded_reason`).
+    - SDD integra el contrato:
+      - `action=block` -> `SDD_DEGRADED_MODE_BLOCKED`.
+      - `action=allow` -> `ALLOWED` con metadata degradada en `decision.details`.
+    - documentación operativa actualizada en `docs/CONFIGURATION.md`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/hookGateSummary.test.ts integrations/sdd/__tests__/policy.test.ts` => `58 passed, 0 failed`.
+    - `npx --yes tsx@4.21.0 --test integrations/telemetry/__tests__/gateTelemetry.test.ts` => `4 passed`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/EvidenceService.test.ts` => `15 passed`.
+
+- 🚧 `P12.F2.T63` Iniciar SDD pendiente enterprise: extender `pumuki sdd sync-docs` con contexto explícito (`--change`, `--stage`, `--task`) y trazabilidad canónica (`#585`).
   - salida esperada:
-    - issue `#583` movida de `REPORTED` a `FIXED` con implementación verificable.
-    - contrato de `degraded_mode` por stage (`PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI`) visible en CLI/JSON.
-    - cobertura de tests RED/GREEN + release readiness documentada en plan activo.
+    - issue de implementación creada y enlazada desde plan activo.
+    - contrato CLI para `sync-docs` ampliado con flags explícitas y validación determinista.
+    - tests de contrato (`dry-run`, `json`, validación de argumentos) en verde.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
