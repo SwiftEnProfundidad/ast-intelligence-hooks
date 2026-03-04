@@ -1344,14 +1344,18 @@ Criterio de salida F5:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994327893`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994336761`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994343825`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994350175`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
       - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
       - `gh run view 22648216106` (`billing lock` persistente en `PR #545`).
       - `gh run view 22648658046` (`billing lock` persistente en `PR #547`).
+      - `gh run view 22648709712` (`billing lock` persistente en `PR #547` tras nueva iteración).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642755577`).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65642904197` tras nueva iteración).
       - `gh run view 22648597740 --log-failed` (`log not found: 65642481475`).
       - `gh run view 22648658046 --log-failed` (`log not found: 65642674072`).
+      - `gh run view 22648709712 --log-failed` (`log not found: 65642843154`).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
       - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
 
