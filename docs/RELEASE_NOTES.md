@@ -5,6 +5,22 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-04 (v6.3.36)
+
+- SDD orchestration hardening shipped:
+  - New enterprise command `pumuki sdd auto-sync` with `--change`, optional `--stage/--task`, `--dry-run`, and `--json`.
+  - `auto-sync` orchestrates deterministic docs sync plus learning generation in one step.
+  - Fail-safe behavior preserved through the existing transactional `sync-docs` path (no partial writes on conflict).
+- Traceability:
+  - implementation issue: `#600`
+  - implementation PR: `#602`
+  - tracking sync PR: `#604`
+- Consumer quick verification:
+  - `npx --yes --package pumuki@latest pumuki sdd auto-sync --change=rgo-quickstart-02 --stage=PRE_WRITE --task=P12.F2.T70 --dry-run --json`
+  - expected signal:
+    - `command=pumuki sdd auto-sync` available in CLI help.
+    - JSON payload includes `syncDocs.updated` and `learning.path`.
+
 ### 2026-03-04 (v6.3.35)
 
 - SDD enterprise incremental hardening shipped:
