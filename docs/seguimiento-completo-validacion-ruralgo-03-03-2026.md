@@ -2007,7 +2007,7 @@ Criterio de salida F5:
     - `npm view pumuki dist-tags --json` => `"latest": "6.3.37"`.
     - `npm view pumuki@6.3.37 version` => `6.3.37`.
 
-- ✅ `P12.F2.T74` Consolidar cierre del bloque P12.F2 y preparar siguiente backlog enterprise.
+- ✅ **Cierre consolidado del bloque P12.F2** (ID interno: `P12.F2.T74`).
   - cierre ejecutado:
     - bloque `P12.F2` consolidado con trazabilidad completa (issues/PRs/releases y evidencias de validación).
     - backlog siguiente preparado en modo standby, sin deuda técnica abierta obligatoria del bloque actual.
@@ -2018,7 +2018,7 @@ Criterio de salida F5:
     - `gh pr view 610 --json state,mergedAt` => `MERGED`.
     - `npm view pumuki dist-tags --json` => `"latest": "6.3.37"`.
 
-- 🚧 `P12.F2.T75` Cursor kanban de continuidad (esperando nueva orden de producto; sin deuda técnica pendiente de este bloque).
+- 🚧 **En espera de nueva orden** (ID interno: `P12.F2.T75`; sin deuda técnica pendiente de este bloque).
   - salida esperada:
     - mantener una sola `🚧` activa por política del tablero.
     - no ejecutar trabajo técnico nuevo hasta instrucción explícita del usuario.
