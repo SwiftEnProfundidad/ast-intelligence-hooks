@@ -5,6 +5,22 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-04 (v6.3.34)
+
+- Telemetry hardening shipped for long-running enterprise repos:
+  - Gate telemetry JSONL supports deterministic size-guard rotation with `PUMUKI_TELEMETRY_JSONL_MAX_BYTES`.
+  - Enterprise contract suite now includes profile `telemetry-rotation` to validate JSONL rollover behavior.
+- Traceability:
+  - implementation PRs: `#574`, `#577`
+  - release PR: `#580`
+- Consumer quick verification:
+  - `npx --yes --package pumuki@latest pumuki doctor --json`
+  - `npm run -s validation:contract-suite:enterprise -- --json`
+  - `PUMUKI_TELEMETRY_JSONL_PATH=.pumuki/artifacts/gate-telemetry.jsonl PUMUKI_TELEMETRY_JSONL_MAX_BYTES=512 npx --yes --package pumuki@latest pumuki sdd validate --stage=PRE_WRITE --json`
+  - expected signal:
+    - contract suite list includes profile `telemetry-rotation`
+    - after repeated validations, files `gate-telemetry.jsonl` and `gate-telemetry.jsonl.1` are present
+
 ### 2026-03-04 (v6.3.33)
 
 - Runtime hardening shipped for enterprise diagnosis:
