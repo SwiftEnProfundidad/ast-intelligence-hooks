@@ -1920,11 +1920,22 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `35 passed, 0 failed`.
     - `npm run -s typecheck` => `exit 0`.
 
-- 🚧 `P12.F2.T67` Continuar SDD pendiente enterprise: hacer `rule_updates` accionable en `learning.json` (`#594`).
+- ✅ `P12.F2.T67` Continuar SDD pendiente enterprise: hacer `rule_updates` accionable en `learning.json` (`#594`).
+  - cierre ejecutado:
+    - `runSddSyncDocs` ahora deriva `rule_updates` de señales de evidencia/gate (`missing`, `invalid`, `blocked`, `allowed`) de forma determinista.
+    - añadidas recomendaciones específicas por familia de señal (`evidence.*`, `ai-gate.*`, `sdd.*`, `snapshot.*`).
+    - ampliada cobertura en `syncDocs` para escenarios `invalid` y `allow` además de `blocked`/persistencia.
+    - documentación de contrato actualizada en `docs/CONFIGURATION.md`.
+    - PR mergeada: `#596` (`commit 51d894c8835c9b04cb57dd810197ac7fc3d0cd3e`).
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `37 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+
+- 🚧 `P12.F2.T68` Continuar SDD pendiente enterprise: añadir comando dedicado `pumuki sdd learn` (`#597`).
   - salida esperada:
-    - `rule_updates` deja de ser siempre vacío y refleja recomendaciones deterministas derivadas de señales de gate/evidence.
-    - orden estable en dry-run/no dry-run y sin regresión del contrato actual.
-    - tests en verde para escenarios `missing`, `invalid`, `blocked`, `allowed`.
+    - CLI con `pumuki sdd learn --change=<id> --stage=<stage> --task=<id> [--dry-run] [--json]`.
+    - persistencia de `learning.json` sin depender de `sync-docs`.
+    - contrato compatible con artefacto de aprendizaje actual y tests en verde.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
