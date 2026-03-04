@@ -1379,6 +1379,7 @@ Criterio de salida F5:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996973617`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996984742`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996993890`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3997005494`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
       - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
@@ -1419,6 +1420,7 @@ Criterio de salida F5:
       - `gh run view 22667596358` (`billing lock` persistente en `PR #547` tras nuevo rerun).
       - `gh run view 22667658920` (`billing lock` persistente en `PR #547` tras nuevo rerun).
       - `gh run view 22667720182` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22667790993` (`billing lock` persistente en `PR #547` tras nuevo rerun).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642755577`).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642904197` tras nueva iteración).
       - `gh run view 22648597740 --log-failed` (`log not found: 65642481475`).
@@ -1490,6 +1492,9 @@ Criterio de salida F5:
       - `gh run view 22667658920 --log-failed` (`log not found: 65703384656` tras rerun más reciente).
       - `gh run view 22648216106 --log-failed` (`log not found: 65703501294` tras rerun más reciente).
       - `gh run view 22667720182 --log-failed` (`log not found: 65703589832` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65703704301` tras rerun más reciente).
+      - `gh run view 22667790993 --log-failed` (`log not found: 65703832752` tras rerun más reciente).
+      - `gh pr checks 545 --json name,state,bucket,link,description` (`HTTP 502 transitorio en esta iteración; reintento exitoso`).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
       - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
 
