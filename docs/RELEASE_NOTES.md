@@ -5,6 +5,24 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-04 (v6.3.37)
+
+- Policy-as-code enterprise hardening shipped:
+  - strict mode now blocks unsigned runtime policy metadata with deterministic code `POLICY_AS_CODE_UNSIGNED`.
+  - lifecycle outputs now expose policy validation metadata in `status --json`, `doctor --json`, and `sdd validate --json`.
+  - telemetry/evidence contract now supports policy validation status `unsigned`.
+- Traceability:
+  - implementation issue: `#606`
+  - implementation PR: `#608`
+  - tracking sync PR: `#609`
+- Consumer quick verification:
+  - `npx --yes --package pumuki@latest pumuki status --json`
+  - `npx --yes --package pumuki@latest pumuki doctor --json`
+  - `PUMUKI_POLICY_STRICT=1 npx --yes --package pumuki@latest pumuki-pre-commit`
+  - expected signal:
+    - JSON includes `policyValidation.stages.*.validationCode`.
+    - strict mode blocks unsigned contracts with `POLICY_AS_CODE_UNSIGNED`.
+
 ### 2026-03-04 (v6.3.36)
 
 - SDD orchestration hardening shipped:
