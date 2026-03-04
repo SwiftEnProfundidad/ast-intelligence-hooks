@@ -1342,8 +1342,11 @@ Criterio de salida F5:
   - avance en curso:
     - issue operativa actualizada con seguimiento de `#547`:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994327893`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994336761`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
+      - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
+      - `gh run view 22648597740 --log-failed` (`log not found: 65642481475`).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
 
 - ⏳ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
