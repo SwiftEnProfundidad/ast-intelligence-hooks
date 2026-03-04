@@ -60,6 +60,26 @@ const buildOutOfScopeTddBddResult = () => ({
   },
 });
 
+const createSkillRule = (params: {
+  id: string;
+  severity: 'CRITICAL' | 'ERROR' | 'WARN';
+  platform: 'ios' | 'android' | 'backend' | 'frontend';
+}): RuleSet[number] => ({
+  id: params.id,
+  description: params.id,
+  severity: params.severity,
+  platform: params.platform,
+  when: {
+    kind: 'FileContent',
+    regex: ['a^'],
+  },
+  then: {
+    kind: 'Finding',
+    message: params.id,
+    code: params.id.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase(),
+  },
+});
+
 test('runPlatformGate devuelve 1 e imprime findings cuando evaluateGate retorna BLOCK', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_PUSH',
@@ -1369,7 +1389,13 @@ test('runPlatformGate mantiene cobertura completa por stage en modo gate', async
         evaluatePlatformGateFindings: () => ({
           detectedPlatforms: { backend: { detected: true, confidence: 'HIGH' } },
           skillsRuleSet: {
-            rules: [],
+            rules: [
+              createSkillRule({
+                id: 'skills.backend.no-empty-catch',
+                severity: 'ERROR',
+                platform: 'backend',
+              }),
+            ] as RuleSet,
             activeBundles: [
               {
                 name: 'backend-guidelines',
@@ -1584,7 +1610,28 @@ test('runPlatformGate bloquea cuando iOS detectado no tiene triplete de bundles 
       evaluatePlatformGateFindings: () => ({
         detectedPlatforms: { ios: { detected: true, confidence: 'HIGH' } },
         skillsRuleSet: {
-          rules: [],
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.no-force-try',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+            createSkillRule({
+              id: 'skills.backend.no-empty-catch',
+              severity: 'ERROR',
+              platform: 'backend',
+            }),
+            createSkillRule({
+              id: 'skills.frontend.no-empty-catch',
+              severity: 'ERROR',
+              platform: 'frontend',
+            }),
+            createSkillRule({
+              id: 'skills.android.no-runblocking',
+              severity: 'ERROR',
+              platform: 'android',
+            }),
+          ] as RuleSet,
           activeBundles: [
             {
               name: 'ios-guidelines',
@@ -1681,7 +1728,28 @@ test('runPlatformGate permite cuando plataformas detectadas tienen bundles y reg
           android: { detected: true, confidence: 'HIGH' },
         },
         skillsRuleSet: {
-          rules: [],
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.no-force-try',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+            createSkillRule({
+              id: 'skills.backend.no-empty-catch',
+              severity: 'ERROR',
+              platform: 'backend',
+            }),
+            createSkillRule({
+              id: 'skills.frontend.no-empty-catch',
+              severity: 'ERROR',
+              platform: 'frontend',
+            }),
+            createSkillRule({
+              id: 'skills.android.no-runblocking',
+              severity: 'ERROR',
+              platform: 'android',
+            }),
+          ] as RuleSet,
           activeBundles: [
             {
               name: 'ios-guidelines',
@@ -1782,6 +1850,269 @@ test('runPlatformGate permite cuando plataformas detectadas tienen bundles y reg
   assert.equal(
     emittedArgs?.findings.some(
       (finding) => finding.ruleId === 'governance.skills.platform-coverage.incomplete'
+    ),
+    false
+  );
+});
+
+test('runPlatformGate bloquea cuando una plataforma detectada no tiene reglas críticas de skills activas', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedArgs:
+    | {
+        findings: ReadonlyArray<Finding>;
+        gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+          backend: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.backend.critical-contract',
+              severity: 'ERROR',
+              platform: 'backend',
+            }),
+          ] as RuleSet,
+          activeBundles: [
+            {
+              name: 'ios-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-concurrency-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-concurrency.md',
+              hash: 'b'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swiftui-expert-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swiftui-expert-skill.md',
+              hash: 'c'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'backend-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+              hash: 'd'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 0,
+          filesScanned: 0,
+          rulesTotal: 2,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 2,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 2,
+          unevaluatedRules: 0,
+          activeRuleIds: [
+            'skills.ios.no-force-try',
+            'skills.backend.critical-contract',
+          ],
+          evaluatedRuleIds: [
+            'skills.ios.no-force-try',
+            'skills.backend.critical-contract',
+          ],
+          matchedRuleIds: [],
+          unmatchedRuleIds: [
+            'skills.ios.no-force-try',
+            'skills.backend.critical-contract',
+          ],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  assert.equal(emittedArgs?.gateOutcome, 'BLOCK');
+  const criticalCoverageFinding = emittedArgs?.findings.find(
+    (finding) => finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
+  );
+  assert.ok(criticalCoverageFinding);
+  assert.equal(criticalCoverageFinding.severity, 'ERROR');
+  assert.match(criticalCoverageFinding.message, /ios/i);
+});
+
+test('runPlatformGate permite cuando plataformas detectadas tienen reglas críticas activas y evaluadas', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'repo' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedArgs:
+    | {
+        findings: ReadonlyArray<Finding>;
+        gateOutcome: 'ALLOW' | 'WARN' | 'BLOCK';
+      }
+    | undefined;
+
+  const result = await runPlatformGate({
+    policy,
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {
+          ios: { detected: true, confidence: 'HIGH' },
+          backend: { detected: true, confidence: 'HIGH' },
+        },
+        skillsRuleSet: {
+          rules: [
+            createSkillRule({
+              id: 'skills.ios.critical-thread-safety',
+              severity: 'ERROR',
+              platform: 'ios',
+            }),
+            createSkillRule({
+              id: 'skills.backend.critical-contract',
+              severity: 'CRITICAL',
+              platform: 'backend',
+            }),
+          ] as RuleSet,
+          activeBundles: [
+            {
+              name: 'ios-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-ios.md',
+              hash: 'a'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-concurrency-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swift-concurrency.md',
+              hash: 'b'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'ios-swiftui-expert-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/swiftui-expert-skill.md',
+              hash: 'c'.repeat(64),
+              rules: [],
+            },
+            {
+              name: 'backend-guidelines',
+              version: '1.0.0',
+              source: 'file:docs/codex-skills/windsurf-rules-backend.md',
+              hash: 'd'.repeat(64),
+              rules: [],
+            },
+          ],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+          unsupportedAutoRuleIds: [],
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        coverage: {
+          factsTotal: 0,
+          filesScanned: 0,
+          rulesTotal: 2,
+          baselineRules: 0,
+          heuristicRules: 0,
+          skillsRules: 2,
+          projectRules: 0,
+          matchedRules: 0,
+          unmatchedRules: 2,
+          unevaluatedRules: 0,
+          activeRuleIds: [
+            'skills.ios.critical-thread-safety',
+            'skills.backend.critical-contract',
+          ],
+          evaluatedRuleIds: [
+            'skills.ios.critical-thread-safety',
+            'skills.backend.critical-contract',
+          ],
+          matchedRuleIds: [],
+          unmatchedRuleIds: [
+            'skills.ios.critical-thread-safety',
+            'skills.backend.critical-contract',
+          ],
+          unevaluatedRuleIds: [],
+        },
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedArgs = {
+          findings: paramsArg.findings,
+          gateOutcome: paramsArg.gateOutcome,
+        };
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  assert.equal(emittedArgs?.gateOutcome, 'ALLOW');
+  assert.equal(
+    emittedArgs?.findings.some(
+      (finding) => finding.ruleId === 'governance.skills.cross-platform-critical.incomplete'
     ),
     false
   );

@@ -235,6 +235,10 @@ const PLATFORM_REQUIRED_SKILLS_BUNDLES: Record<
   frontend: ['frontend-guidelines'],
 };
 
+const isCriticalProfileSeverity = (severity: string): boolean => {
+  return severity === 'CRITICAL' || severity === 'ERROR';
+};
+
 const toNormalizedPath = (value: string): string => value.replace(/\\/g, '/').trim();
 
 const collectObservedPathsFromFacts = (
@@ -511,6 +515,66 @@ const toPlatformSkillsCoverageBlockingFinding = (params: {
   };
 };
 
+const toCrossPlatformCriticalEnforcementBlockingFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  detectedPlatforms: DetectedPlatforms;
+  skillsRules: SkillsRuleSetLoadResult['rules'];
+  evaluatedRuleIds: ReadonlyArray<string>;
+}): Finding | undefined => {
+  const detectedPlatformKeys = (
+    ['ios', 'android', 'backend', 'frontend'] as const
+  ).filter((platform) => params.detectedPlatforms[platform]?.detected === true);
+
+  if (detectedPlatformKeys.length === 0) {
+    return undefined;
+  }
+
+  const evaluatedRuleIds = new Set(params.evaluatedRuleIds);
+  const gaps: string[] = [];
+
+  for (const platform of detectedPlatformKeys) {
+    const rulePrefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
+    const criticalSkillRules = params.skillsRules
+      .filter(
+        (rule) =>
+          rule.id.startsWith(rulePrefix) &&
+          isCriticalProfileSeverity(rule.severity)
+      )
+      .map((rule) => rule.id)
+      .sort();
+
+    if (criticalSkillRules.length === 0) {
+      gaps.push(`${platform}{critical_profile_rules=missing}`);
+      continue;
+    }
+
+    const evaluatedCriticalSkillRules = criticalSkillRules.filter((ruleId) =>
+      evaluatedRuleIds.has(ruleId)
+    );
+    if (evaluatedCriticalSkillRules.length === 0) {
+      gaps.push(
+        `${platform}{critical_profile_rules=${criticalSkillRules.length}; evaluated=0}`
+      );
+    }
+  }
+
+  if (gaps.length === 0) {
+    return undefined;
+  }
+
+  return {
+    ruleId: 'governance.skills.cross-platform-critical.incomplete',
+    severity: 'ERROR',
+    code: 'SKILLS_CROSS_PLATFORM_CRITICAL_INCOMPLETE_S0',
+    message:
+      `Cross-platform critical enforcement incomplete at ${params.stage}: ${gaps.join(' | ')}. ` +
+      'Ensure each detected platform has critical-profile skill rules active and evaluated.',
+    filePath: '.ai_evidence.json',
+    matchedBy: 'SkillsCrossPlatformCriticalGuard',
+    source: 'skills-cross-platform-critical',
+  };
+};
+
 export async function runPlatformGate(params: {
   policy: GatePolicy;
   auditMode?: 'gate' | 'engine';
@@ -642,6 +706,17 @@ export async function runPlatformGate(params: {
           evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
         })
       : undefined;
+  const crossPlatformCriticalFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toCrossPlatformCriticalEnforcementBlockingFinding({
+          stage: params.policy.stage,
+          detectedPlatforms,
+          skillsRules: skillsRuleSet.rules,
+          evaluatedRuleIds: coverage?.evaluatedRuleIds ?? [],
+        })
+      : undefined;
   const skillsScopeComplianceFinding =
     params.policy.stage === 'PRE_COMMIT' ||
     params.policy.stage === 'PRE_PUSH' ||
@@ -720,6 +795,7 @@ export async function runPlatformGate(params: {
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
       ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
+      ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
       ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
       ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
       ...tddBddEvaluation.findings,
@@ -727,6 +803,7 @@ export async function runPlatformGate(params: {
     ]
     : unsupportedSkillsMappingFinding
       || platformSkillsCoverageFinding
+      || crossPlatformCriticalFinding
       || skillsScopeComplianceFinding
       || coverageBlockingFinding
       || policyAsCodeBlockingFinding
@@ -737,6 +814,7 @@ export async function runPlatformGate(params: {
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
         ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
+        ...(crossPlatformCriticalFinding ? [crossPlatformCriticalFinding] : []),
         ...(skillsScopeComplianceFinding ? [skillsScopeComplianceFinding] : []),
         ...(coverageBlockingFinding ? [coverageBlockingFinding] : []),
         ...tddBddEvaluation.findings,
@@ -750,6 +828,7 @@ export async function runPlatformGate(params: {
     policyAsCodeBlockingFinding ||
     unsupportedSkillsMappingFinding ||
     platformSkillsCoverageFinding ||
+    crossPlatformCriticalFinding ||
     skillsScopeComplianceFinding ||
     coverageBlockingFinding ||
     hasTddBddBlockingFinding
