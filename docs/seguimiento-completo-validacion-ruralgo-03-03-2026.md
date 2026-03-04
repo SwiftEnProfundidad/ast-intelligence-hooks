@@ -1757,11 +1757,23 @@ Criterio de salida F5:
     - `npm run -s validation:contract-suite:enterprise -- --json`
     - `npm run -s validation:tracking-single-active`
 
-- 🚧 `P12.F2.T53` Publicar patch release con la ampliación de suite contractual (`#557`) y dejar disponibilidad inmediata para consumidores.
+- ✅ `P12.F2.T53` Publicar patch release con la ampliación de suite contractual (`#557`) y dejar disponibilidad inmediata para consumidores.
+  - cierre ejecutado:
+    - rama release creada y mergeada: `release/6.3.32` -> `#560` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/560`).
+    - publicación npm completada: `pumuki@6.3.32`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/enterprise-contract-suite-contract.test.ts scripts/__tests__/enterprise-contract-suite-args-lib.test.ts scripts/__tests__/enterprise-contract-suite-report-lib.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:contract-suite:enterprise -- --json`
+    - `npm run -s validation:package-manifest`
+    - `npm publish --access public`
+    - `npm view pumuki version` => `6.3.32`
+
+- 🚧 `P12.F2.T54` Ejecutar siguiente mejora estratégica: contrato explícito de compatibilidad (pumuki/openspec/hooks/adapters) con validación automática en `doctor`.
   - salida esperada:
-    - versión npm publicada con el perfil adicional `minimal-repeat`.
-    - PR de release mergeada en `develop` con evidencias de validación.
-    - seguimiento maestro apuntando a esta task como única activa.
+    - issue creada con alcance/doD verificable.
+    - implementación en rama propia con tests de contrato.
+    - PR mergeada y trazabilidad documentada en el plan activo.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
