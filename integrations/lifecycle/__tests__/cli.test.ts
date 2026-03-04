@@ -323,6 +323,27 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       sddSyncDocsTask: 'P12.F2.T63',
     }
   );
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'sdd',
+      'learn',
+      '--change=rgo-1700-02',
+      '--stage=pre_write',
+      '--task=P12.F2.T68',
+      '--dry-run',
+      '--json',
+    ]),
+    {
+      command: 'sdd',
+      purgeArtifacts: false,
+      json: true,
+      sddCommand: 'learn',
+      sddLearnDryRun: true,
+      sddLearnChange: 'rgo-1700-02',
+      sddLearnStage: 'PRE_WRITE',
+      sddLearnTask: 'P12.F2.T68',
+    }
+  );
 });
 
 test('parseLifecycleCliArgs soporta analytics hotspots report', () => {
@@ -457,6 +478,10 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['status', '--deep']),
     /only supported with "pumuki doctor"/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['sdd', 'learn']),
+    /Missing --change=<change-id> for "pumuki sdd learn"/i
   );
 });
 
@@ -1207,6 +1232,61 @@ test('runLifecycleCli sdd sync-docs dry-run devuelve diff sin modificar el archi
     assert.equal(payload.updated, true);
     assert.equal(payload.files?.[0]?.updated, true);
     assert.match(payload.files?.[0]?.diffMarkdown ?? '', /sdd-status/i);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd learn dry-run genera learning payload sin requerir archivos canónicos', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli([
+      'sdd',
+      'learn',
+      '--change=rgo-1700-03',
+      '--stage=pre_write',
+      '--task=P12.F2.T68',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(code, 0);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      command?: string;
+      dryRun?: boolean;
+      context?: {
+        change?: string;
+        stage?: string | null;
+        task?: string | null;
+      };
+      learning?: {
+        path?: string;
+        written?: boolean;
+      };
+    };
+    assert.equal(payload.command, 'pumuki sdd learn');
+    assert.equal(payload.dryRun, true);
+    assert.equal(payload.context?.change, 'rgo-1700-03');
+    assert.equal(payload.context?.stage, 'PRE_WRITE');
+    assert.equal(payload.context?.task, 'P12.F2.T68');
+    assert.equal(payload.learning?.path, 'openspec/changes/rgo-1700-03/learning.json');
+    assert.equal(payload.learning?.written, false);
+    assert.equal(
+      existsSync(join(repo, 'openspec', 'changes', 'rgo-1700-03', 'learning.json')),
+      false
+    );
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
