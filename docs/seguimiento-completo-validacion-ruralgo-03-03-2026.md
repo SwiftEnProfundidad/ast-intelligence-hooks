@@ -1931,11 +1931,36 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `37 passed, 0 failed`.
     - `npm run -s typecheck` => `exit 0`.
 
-- 🚧 `P12.F2.T68` Continuar SDD pendiente enterprise: añadir comando dedicado `pumuki sdd learn` (`#597`).
+- ✅ `P12.F2.T68` Continuar SDD pendiente enterprise: añadir comando dedicado `pumuki sdd learn` (`#597`).
+  - cierre ejecutado:
+    - nuevo runtime `runSddLearn` en capa SDD con salida/persistencia de `learning.json` sin depender de `sync-docs`.
+    - CLI ampliada con:
+      - `pumuki sdd learn --change=<id> --stage=<stage> --task=<task-id> [--dry-run] [--json]`.
+    - cobertura de regresión añadida en parser y ejecución (`cli.test.ts`) y documentación actualizada en `docs/CONFIGURATION.md`.
+    - PR mergeada: `#599` (`commit c971c643883ccce679c0c5cdb3363bdd6e6cace6`).
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `38 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+
+- ✅ `P12.F2.T69` Publicar release `6.3.35` con cierre SDD incremental.
+  - cierre ejecutado:
+    - versión incrementada a `6.3.35` en `package.json` y `package-lock.json`.
+    - release notes actualizadas con entrada `2026-03-04 (v6.3.35)` en `docs/RELEASE_NOTES.md`.
+    - publicación npm ejecutada con éxito (`npm publish --access public`).
+    - propagación validada:
+      - `npm view pumuki dist-tags --json` => `"latest": "6.3.35"`.
+      - smoke `@latest` en carpeta temporal mostrando `pumuki sdd learn ...` en `--help`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `38 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+    - `npm publish --access public` => `+ pumuki@6.3.35`.
+    - `npm view pumuki@6.3.35 version` => `6.3.35`.
+
+- 🚧 `P12.F2.T70` Siguiente SDD pendiente enterprise: comando orquestador `pumuki sdd auto-sync` (`#600`).
   - salida esperada:
-    - CLI con `pumuki sdd learn --change=<id> --stage=<stage> --task=<id> [--dry-run] [--json]`.
-    - persistencia de `learning.json` sin depender de `sync-docs`.
-    - contrato compatible con artefacto de aprendizaje actual y tests en verde.
+    - unificar `sync-docs` + `learn` en un solo comando determinista.
+    - mantener fail-safe (sin escrituras parciales ante conflicto).
+    - contrato CLI con `--change --stage --task --dry-run --json` y tests en verde.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.

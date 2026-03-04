@@ -5,6 +5,21 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
+### 2026-03-04 (v6.3.35)
+
+- SDD enterprise incremental hardening shipped:
+  - New dedicated command `pumuki sdd learn` with `--change`, optional `--stage/--task`, `--dry-run`, and `--json`.
+  - `sync-docs` learning artifact now emits deterministic signal-derived `rule_updates`.
+  - Learning payload remains deterministic across missing/invalid/blocked/allowed evidence states.
+- Traceability:
+  - implementation PRs: `#593`, `#596`, `#599`
+- Consumer quick verification:
+  - `npx --yes --package pumuki@latest pumuki sdd learn --change=rgo-quickstart-01 --dry-run --json`
+  - `npx --yes --package pumuki@latest pumuki sdd sync-docs --change=rgo-quickstart-01 --stage=PRE_WRITE --task=P12.F2.T68 --dry-run --json`
+  - expected signal:
+    - `command=pumuki sdd learn` available in CLI help.
+    - `learning.artifact.rule_updates` populated deterministically when evidence is blocked/invalid.
+
 ### 2026-03-04 (v6.3.34)
 
 - Telemetry hardening shipped for long-running enterprise repos:
