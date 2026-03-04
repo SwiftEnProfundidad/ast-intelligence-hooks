@@ -107,10 +107,7 @@ const toEvidenceAgeSeconds = (
 const emitSuccessfulHookGateSummary = (params: {
   dependencies: StageRunnerDependencies;
   stage: 'PRE_COMMIT' | 'PRE_PUSH';
-  policyTrace: {
-    bundle: string;
-    hash: string;
-  };
+  policyTrace: NonNullable<ReturnType<typeof resolvePolicyForStage>['trace']>;
   exitCode: number;
 }): void => {
   if (params.exitCode !== 0 || params.dependencies.isQuietMode()) {
@@ -124,7 +121,11 @@ const emitSuccessfulHookGateSummary = (params: {
       ? PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS
       : PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS;
   params.dependencies.writeHookGateSummary(
-    `[pumuki][hook-gate] stage=${params.stage} policy_bundle=${params.policyTrace.bundle} policy_hash=${params.policyTrace.hash} decision=ALLOW evidence_kind=${evidence.kind} evidence_age_seconds=${evidenceAgeSeconds ?? 'n/a'} max_age_seconds=${maxAgeSeconds}`
+    `[pumuki][hook-gate] stage=${params.stage} policy_bundle=${params.policyTrace.bundle} policy_hash=${params.policyTrace.hash}` +
+      ` policy_version=${params.policyTrace.version ?? 'n/a'}` +
+      ` policy_signature=${params.policyTrace.signature ?? 'n/a'}` +
+      ` policy_source=${params.policyTrace.policySource ?? 'n/a'}` +
+      ` decision=ALLOW evidence_kind=${evidence.kind} evidence_age_seconds=${evidenceAgeSeconds ?? 'n/a'} max_age_seconds=${maxAgeSeconds}`
   );
 };
 
@@ -167,10 +168,7 @@ export async function runPreCommitStage(
   emitSuccessfulHookGateSummary({
     dependencies: activeDependencies,
     stage: 'PRE_COMMIT',
-    policyTrace: {
-      bundle: resolved.trace.bundle,
-      hash: resolved.trace.hash,
-    },
+    policyTrace: resolved.trace,
     exitCode,
   });
   notifyAuditSummaryForStage(activeDependencies, 'PRE_COMMIT');
@@ -198,10 +196,7 @@ export async function runPrePushStage(
       emitSuccessfulHookGateSummary({
         dependencies: activeDependencies,
         stage: 'PRE_PUSH',
-        policyTrace: {
-          bundle: resolved.trace.bundle,
-          hash: resolved.trace.hash,
-        },
+        policyTrace: resolved.trace,
         exitCode,
       });
       notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
@@ -225,10 +220,7 @@ export async function runPrePushStage(
   emitSuccessfulHookGateSummary({
     dependencies: activeDependencies,
     stage: 'PRE_PUSH',
-    policyTrace: {
-      bundle: resolved.trace.bundle,
-      hash: resolved.trace.hash,
-    },
+    policyTrace: resolved.trace,
     exitCode,
   });
   notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');

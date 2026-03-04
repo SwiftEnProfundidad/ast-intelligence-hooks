@@ -124,6 +124,39 @@ Rule modes:
 9. Provider-agnostic adapter scaffolding (`codex`, `claude`, `cursor`, `windsurf`, `opencode`).
 10. Optional MCP servers for evidence and enterprise context.
 
+## Policy-as-Code (Enterprise)
+
+Pumuki supports a signed and versioned stage-policy contract at:
+
+- `.pumuki/policy-as-code.json`
+
+Minimal contract:
+
+```json
+{
+  "version": "1.0",
+  "source": "default",
+  "expires_at": "2026-12-31T23:59:59.000Z",
+  "signatures": {
+    "PRE_COMMIT": "<sha256-hex>",
+    "PRE_PUSH": "<sha256-hex>",
+    "CI": "<sha256-hex>"
+  }
+}
+```
+
+Runtime behavior:
+
+- If the contract is missing, Pumuki computes deterministic local metadata and still emits `policy_version`, `policy_signature`, and `policy_source`.
+- If present, the contract is validated against active runtime policy for source/stage/signature.
+- Validation states are emitted as `valid`, `invalid`, `expired`, or `unknown-source`.
+- `PUMUKI_POLICY_STRICT=1` turns non-valid states into blocking findings (`governance.policy-as-code.invalid`).
+
+Operational fallback:
+
+- Keep strict mode disabled while bootstrapping a repo without a canonical contract.
+- Enable strict mode once contract generation/signatures are part of your baseline pipeline.
+
 ## Telemetry Export (Enterprise)
 
 Pumuki can export structured gate telemetry with a stable event schema (`telemetry_event_v1`) for SIEM/observability pipelines.

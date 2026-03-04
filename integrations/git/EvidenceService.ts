@@ -103,6 +103,15 @@ export class EvidenceService implements IEvidenceService {
         platform: 'policy',
         bundle: params.policyTrace.bundle,
         hash: params.policyTrace.hash,
+        ...(params.policyTrace.version ? { version: params.policyTrace.version } : {}),
+        ...(params.policyTrace.signature ? { signature: params.policyTrace.signature } : {}),
+        ...(params.policyTrace.policySource ? { source: params.policyTrace.policySource } : {}),
+        ...(params.policyTrace.validation
+          ? {
+              validation_status: params.policyTrace.validation.status,
+              validation_code: params.policyTrace.validation.code,
+            }
+          : {}),
       });
     }
 

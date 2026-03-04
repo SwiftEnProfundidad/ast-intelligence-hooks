@@ -32,6 +32,9 @@ test('runPreCommitStage emite resumen mínimo del gate en éxito', async () => {
         source: 'default',
         bundle: 'gate-policy.default.PRE_COMMIT',
         hash: POLICY_TRACE_HASH,
+        version: 'policy-as-code/default@1.0',
+        signature: 'a'.repeat(64),
+        policySource: 'computed-local',
       },
     }),
     runPlatformGate: async () => 0,
@@ -50,6 +53,9 @@ test('runPreCommitStage emite resumen mínimo del gate en éxito', async () => {
   assert.match(summaries[0] ?? '', /stage=PRE_COMMIT/);
   assert.match(summaries[0] ?? '', /decision=ALLOW/);
   assert.match(summaries[0] ?? '', /policy_hash=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef/);
+  assert.match(summaries[0] ?? '', /policy_version=policy-as-code\/default@1.0/);
+  assert.match(summaries[0] ?? '', /policy_signature=a{64}/);
+  assert.match(summaries[0] ?? '', /policy_source=computed-local/);
   assert.match(summaries[0] ?? '', /evidence_kind=valid/);
   assert.match(summaries[0] ?? '', /evidence_age_seconds=30/);
 });
@@ -69,6 +75,9 @@ test('runPrePushStage respeta --quiet y suprime resumen mínimo en éxito', asyn
         source: 'default',
         bundle: 'gate-policy.default.PRE_PUSH',
         hash: POLICY_TRACE_HASH,
+        version: 'policy-as-code/default@1.0',
+        signature: 'b'.repeat(64),
+        policySource: 'computed-local',
       },
     }),
     runPlatformGate: async () => 0,
