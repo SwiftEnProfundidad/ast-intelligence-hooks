@@ -1942,11 +1942,25 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `38 passed, 0 failed`.
     - `npm run -s typecheck` => `exit 0`.
 
-- 🚧 `P12.F2.T69` Publicar release `6.3.35` con cierre SDD incremental.
+- ✅ `P12.F2.T69` Publicar release `6.3.35` con cierre SDD incremental.
+  - cierre ejecutado:
+    - versión incrementada a `6.3.35` en `package.json` y `package-lock.json`.
+    - release notes actualizadas con entrada `2026-03-04 (v6.3.35)` en `docs/RELEASE_NOTES.md`.
+    - publicación npm ejecutada con éxito (`npm publish --access public`).
+    - propagación validada:
+      - `npm view pumuki dist-tags --json` => `"latest": "6.3.35"`.
+      - smoke `@latest` en carpeta temporal mostrando `pumuki sdd learn ...` en `--help`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `38 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+    - `npm publish --access public` => `+ pumuki@6.3.35`.
+    - `npm view pumuki@6.3.35 version` => `6.3.35`.
+
+- 🚧 `P12.F2.T70` Siguiente SDD pendiente enterprise: comando orquestador `pumuki sdd auto-sync` (`#600`).
   - salida esperada:
-    - bump de versión (`package.json`, `package-lock.json`) + nota de release.
-    - publicación npm exitosa y verificación `npm view pumuki version`.
-    - smoke mínimo con `npx --yes --package pumuki@latest pumuki --help`.
+    - unificar `sync-docs` + `learn` en un solo comando determinista.
+    - mantener fail-safe (sin escrituras parciales ante conflicto).
+    - contrato CLI con `--change --stage --task --dry-run --json` y tests en verde.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
