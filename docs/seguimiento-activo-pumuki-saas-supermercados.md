@@ -23,15 +23,15 @@
 ## Fase 1. Bugs P1 (ejecucion tecnica)
 
 - ✅ PUMUKI-001: Compatibilidad de receipt MCP entre stages (`PRE_WRITE` vs `PRE_COMMIT`) sin bloqueo falso.
-- ⏳ PUMUKI-003: Endurecer resolución de binarios en hooks/scripts para evitar `command not found`.
-- ⏳ PUMUKI-005: Soporte robusto para repos con `:` en path (evitar dependencia frágil de PATH).
-- 🚧 PUMUKI-007: Soportar repos sin commits (`HEAD` ausente) sin error ambiguo.
+- ✅ PUMUKI-003: Endurecer resolución de binarios en hooks/scripts para evitar `command not found`.
+- ✅ PUMUKI-005: Soporte robusto para repos con `:` en path (evitar dependencia frágil de PATH).
+- ✅ PUMUKI-007: Soportar repos sin commits (`HEAD` ausente) sin error ambiguo.
 
 ## Fase 2. Mejoras P2
 
-- ⏳ PUMUKI-002: Rule-pack opcional de atomicidad Git + trazabilidad de commit message.
-- ⏳ PUMUKI-004: Mejorar diagnóstico de hooks efectivos en escenarios versionados/custom.
-- ⏳ PUMUKI-006: Alinear `package_version` reportada por MCP con versión local efectiva del repo consumidor.
+- 🚧 PUMUKI-002: Rule-pack opcional de atomicidad Git + trazabilidad de commit message.
+- ✅ PUMUKI-004: Mejorar diagnóstico de hooks efectivos en escenarios versionados/custom.
+- ✅ PUMUKI-006: Alinear `package_version` reportada por MCP con versión local efectiva del repo consumidor.
 
 ## Fase 3. Cierre
 

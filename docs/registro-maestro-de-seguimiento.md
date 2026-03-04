@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-001 (compatibilidad de receipt MCP entre stages PRE_WRITE/PRE_COMMIT).
-- Task activa (`🚧`): PUMUKI-007 (soporte para repos sin commits, sin error ambiguo de HEAD).
+- Última task cerrada (`✅`): PUMUKI-004/PUMUKI-006 (diagnóstico de hooks versionados y versión MCP alineada al install local del consumidor).
+- Task activa (`🚧`): PUMUKI-002 (rule-pack de atomicidad Git y trazabilidad de commit).
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
