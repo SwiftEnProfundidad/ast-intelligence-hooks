@@ -1368,6 +1368,7 @@ Criterio de salida F5:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996752091`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996764860`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996781223`
+      - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3996790861`
     - evidencia de bloqueo vigente:
       - `gh run view 22648407847` (`billing lock` en GitHub Actions).
       - `gh run view 22648597740` (`billing lock` persistente tras rerun/retrigger).
@@ -1397,6 +1398,7 @@ Criterio de salida F5:
       - `gh run view 22666126392` (`billing lock` persistente en `PR #547` tras nuevo rerun).
       - `gh run view 22666220507` (`billing lock` persistente en `PR #547` tras nuevo rerun).
       - `gh run view 22666293279` (`billing lock` persistente en `PR #547` tras nuevo rerun).
+      - `gh run view 22666414388` (`billing lock` persistente en `PR #547` tras nuevo rerun).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642755577`).
       - `gh run view 22648216106 --log-failed` (`log not found: 65642904197` tras nueva iteración).
       - `gh run view 22648597740 --log-failed` (`log not found: 65642481475`).
@@ -1446,6 +1448,8 @@ Criterio de salida F5:
       - `gh run view 22666220507 --log-failed` (`log not found: 65698516866` tras rerun más reciente).
       - `gh run view 22648216106 --log-failed` (`log not found: 65698649512` tras rerun más reciente).
       - `gh run view 22666293279 --log-failed` (`log not found: 65698759698` tras rerun más reciente).
+      - `gh run view 22648216106 --log-failed` (`log not found: 65699043224` tras rerun más reciente).
+      - `gh run view 22666414388 --log-failed` (`log not found: 65699164373` tras rerun más reciente).
       - `gh pr checks 547 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
       - `gh pr checks 545 --json name,state,bucket,link,description` (`security/snyk` sin cuota).
 
