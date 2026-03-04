@@ -68,6 +68,18 @@ const buildDisplayNotificationScript = (payload: SystemNotificationPayload): str
   return `display notification "${message}" with title "${title}"${subtitleFragment}${soundFragment}`;
 };
 
+const buildDisplayDialogScript = (params: {
+  title: string;
+  cause: string;
+  remediation: string;
+}): string => {
+  const title = escapeAppleScriptString(params.title);
+  const cause = escapeAppleScriptString(params.cause);
+  const remediation = escapeAppleScriptString(params.remediation);
+  const message = escapeAppleScriptString(`Causa: ${cause}\n\nSolución: ${remediation}`);
+  return `display dialog "${message}" with title "${title}" buttons {"OK"} default button "OK" with icon stop`;
+};
+
 const normalizeNotificationText = (value: string): string =>
   value.replace(/\s+/g, ' ').trim();
 
@@ -76,6 +88,14 @@ const truncateNotificationText = (value: string, maxLength: number): string => {
     return value;
   }
   return `${value.slice(0, Math.max(1, maxLength - 1)).trimEnd()}…`;
+};
+
+const isTruthyFlag = (value?: string): boolean => {
+  if (!value) {
+    return false;
+  }
+  const normalized = value.trim().toLowerCase();
+  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
 };
 
 const BLOCKED_CAUSE_SUMMARY_BY_CODE: Readonly<Record<string, string>> = {
@@ -160,14 +180,14 @@ const resolveBlockedRemediation = (event: Extract<PumukiCriticalNotificationEven
   if (fromEvent.length > 0) {
     const translated = toKnownSpanishRemediationFromMessage(fromEvent);
     if (translated) {
-      return truncateNotificationText(translated, 120);
+      return truncateNotificationText(translated, 88);
     }
-    return truncateNotificationText(fromEvent, 120);
+    return truncateNotificationText(fromEvent, 88);
   }
   const fallback =
     BLOCKED_REMEDIATION_BY_CODE[causeCode]
     ?? 'Corrige el bloqueo indicado y vuelve a ejecutar el comando.';
-  return truncateNotificationText(fallback, 120);
+  return truncateNotificationText(fallback, 88);
 };
 
 const runSystemCommand: SystemNotificationCommandRunner = (command, args) => {
@@ -279,6 +299,7 @@ export const emitSystemNotification = (params: {
   runCommand?: SystemNotificationCommandRunner;
   repoRoot?: string;
   config?: SystemNotificationsConfig;
+  env?: NodeJS.ProcessEnv;
 }): SystemNotificationEmitResult => {
   const config =
     params.config ??
@@ -301,6 +322,19 @@ export const emitSystemNotification = (params: {
 
   if (exitCode !== 0) {
     return { delivered: false, reason: 'command-failed' };
+  }
+
+  const env = params.env ?? process.env;
+  if (params.event.kind === 'gate.blocked' && isTruthyFlag(env.PUMUKI_MACOS_BLOCKED_DIALOG)) {
+    const causeCode = params.event.causeCode ?? 'GATE_BLOCKED';
+    const cause = resolveBlockedCauseSummary(params.event, causeCode);
+    const remediation = resolveBlockedRemediation(params.event, causeCode);
+    const dialogScript = buildDisplayDialogScript({
+      title: '🔴 Pumuki bloqueado',
+      cause,
+      remediation,
+    });
+    runner('osascript', ['-e', dialogScript]);
   }
 
   return { delivered: true, reason: 'delivered' };

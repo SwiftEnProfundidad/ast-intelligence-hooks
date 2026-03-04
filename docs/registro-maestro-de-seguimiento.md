@@ -7,7 +7,7 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): Fase 3.1 (regresión afectada en verde: 44 pass / 0 fail).
+- Última task cerrada (`✅`): PoC `PUMUKI_MACOS_BLOCKED_DIALOG=1` (banner corto + diálogo completo de bloqueo en macOS).
 - Task activa (`🚧`): Fase 3.2 actualización de `CHANGELOG.md` + `docs/RELEASE_NOTES.md`.
 - Nuevos pendientes añadidos (`⏳`): sin cambios.
 

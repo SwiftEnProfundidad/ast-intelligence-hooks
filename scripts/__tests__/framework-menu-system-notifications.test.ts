@@ -114,3 +114,33 @@ test('emitSystemNotification aplica fallback no-macOS y no ejecuta osascript', (
   assert.equal(result.reason, 'unsupported-platform');
   assert.equal(calls.length, 0);
 });
+
+test('emitSystemNotification en macOS abre diálogo completo opcional para bloqueos', () => {
+  const calls: Array<{ command: string; args: ReadonlyArray<string> }> = [];
+  const result = emitSystemNotification({
+    platform: 'darwin',
+    event: {
+      kind: 'gate.blocked',
+      stage: 'PRE_PUSH',
+      totalViolations: 1,
+      causeCode: 'BACKEND_AVOID_EXPLICIT_ANY',
+      causeMessage: 'Avoid explicit any in backend code.',
+      remediation: 'Tipa el valor y elimina any explícito en backend.',
+    },
+    env: {
+      PUMUKI_MACOS_BLOCKED_DIALOG: '1',
+    } as NodeJS.ProcessEnv,
+    runCommand: (command, args) => {
+      calls.push({ command, args });
+      return 0;
+    },
+  });
+
+  assert.equal(result.delivered, true);
+  assert.equal(calls.length, 2);
+  assert.equal(calls[0]?.command, 'osascript');
+  assert.equal(calls[1]?.command, 'osascript');
+  assert.match(calls[0]?.args.join(' ') ?? '', /display notification/i);
+  assert.match(calls[1]?.args.join(' ') ?? '', /display dialog/i);
+  assert.match(calls[1]?.args.join(' ') ?? '', /solución/i);
+});
