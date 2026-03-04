@@ -3,6 +3,22 @@
 This file tracks the active deterministic framework line used in this repository.
 Detailed commit history remains available through Git history (`git log` / `git show`).
 
+## 2026-03 (enterprise hardening updates)
+
+### 2026-03-04 (v6.3.33)
+
+- Runtime hardening shipped for enterprise diagnosis:
+  - `pumuki doctor --deep --json` now includes explicit compatibility contract payload under `deep.contract`.
+  - New deep check id `compatibility-contract` validates the active contract for `pumuki/openspec/hooks/adapter`.
+- Traceability:
+  - implementation PR: `#563`
+  - release PR: `#567`
+- Consumer quick verification:
+  - `npx --yes --package pumuki@latest pumuki doctor --deep --json`
+  - expected signal in JSON:
+    - `deep.checks` contains an item with `id=compatibility-contract`
+    - `deep.contract.overall` resolves to `compatible` or `incompatible` deterministically
+
 ## 2026-02 (enterprise-refactor updates)
 
 ### 2026-02-27 (v6.3.24)
