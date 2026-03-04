@@ -12,6 +12,7 @@ export type SddDecisionCode =
   | 'SDD_VALIDATION_FAILED'
   | 'SDD_VALIDATION_ERROR'
   | 'SDD_VALIDATION_EMPTY_SCOPE'
+  | 'SDD_DEGRADED_MODE_BLOCKED'
   | 'SDD_CHANGE_INCOMPLETE';
 
 export type SddDecision = {

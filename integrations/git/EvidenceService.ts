@@ -112,6 +112,15 @@ export class EvidenceService implements IEvidenceService {
               validation_code: params.policyTrace.validation.code,
             }
           : {}),
+        ...(params.policyTrace.degraded
+          ? {
+              degraded_mode_enabled: params.policyTrace.degraded.enabled,
+              degraded_mode_action: params.policyTrace.degraded.action,
+              degraded_mode_reason: params.policyTrace.degraded.reason,
+              degraded_mode_source: params.policyTrace.degraded.source,
+              degraded_mode_code: params.policyTrace.degraded.code,
+            }
+          : {}),
       });
     }
 

@@ -366,6 +366,40 @@ const toPolicyAsCodeBlockingFinding = (params: {
   };
 };
 
+const toDegradedModeFinding = (params: {
+  stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
+  policyTrace?: ResolvedStagePolicy['trace'];
+}): Finding | undefined => {
+  const degraded = params.policyTrace?.degraded;
+  if (!degraded?.enabled) {
+    return undefined;
+  }
+  if (degraded.action === 'block') {
+    return {
+      ruleId: 'governance.degraded-mode.blocked',
+      severity: 'ERROR',
+      code: degraded.code,
+      message:
+        `Degraded mode is active at ${params.stage} with fail-closed action=block. ` +
+        `reason=${degraded.reason} source=${degraded.source}.`,
+      filePath: '.pumuki/degraded-mode.json',
+      matchedBy: 'DegradedModeGuard',
+      source: 'degraded-mode',
+    };
+  }
+  return {
+    ruleId: 'governance.degraded-mode.active',
+    severity: 'INFO',
+    code: degraded.code,
+    message:
+      `Degraded mode is active at ${params.stage} with fail-open action=allow. ` +
+      `reason=${degraded.reason} source=${degraded.source}.`,
+    filePath: '.pumuki/degraded-mode.json',
+    matchedBy: 'DegradedModeGuard',
+    source: 'degraded-mode',
+  };
+};
+
 const toGateWaiverAppliedFinding = (params: {
   stage: 'PRE_COMMIT' | 'PRE_PUSH' | 'CI';
   waiver: Extract<GateWaiverResult, { kind: 'applied' }>['waiver'];
@@ -621,6 +655,16 @@ export async function runPlatformGate(params: {
           policyTrace: params.policyTrace,
         })
       : undefined;
+  const degradedModeFinding =
+    params.policy.stage === 'PRE_COMMIT' ||
+    params.policy.stage === 'PRE_PUSH' ||
+    params.policy.stage === 'CI'
+      ? toDegradedModeFinding({
+          stage: params.policy.stage,
+          policyTrace: params.policyTrace,
+        })
+      : undefined;
+  const degradedModeBlocks = params.policyTrace?.degraded?.action === 'block';
   const rulesCoverage = coverage
     ? {
       stage: params.policy.stage,
@@ -665,6 +709,7 @@ export async function runPlatformGate(params: {
   const effectiveFindings = sddBlockingFinding
     ? [
       sddBlockingFinding,
+      ...(degradedModeFinding ? [degradedModeFinding] : []),
       ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
       ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
       ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
@@ -678,8 +723,10 @@ export async function runPlatformGate(params: {
       || skillsScopeComplianceFinding
       || coverageBlockingFinding
       || policyAsCodeBlockingFinding
+      || degradedModeFinding
       || tddBddEvaluation.findings.length > 0
       ? [
+        ...(degradedModeFinding ? [degradedModeFinding] : []),
         ...(policyAsCodeBlockingFinding ? [policyAsCodeBlockingFinding] : []),
         ...(unsupportedSkillsMappingFinding ? [unsupportedSkillsMappingFinding] : []),
         ...(platformSkillsCoverageFinding ? [platformSkillsCoverageFinding] : []),
@@ -692,6 +739,7 @@ export async function runPlatformGate(params: {
   const decision = dependencies.evaluateGate([...effectiveFindings], params.policy);
   const baseGateOutcome =
     sddBlockingFinding ||
+    degradedModeBlocks ||
     policyAsCodeBlockingFinding ||
     unsupportedSkillsMappingFinding ||
     platformSkillsCoverageFinding ||

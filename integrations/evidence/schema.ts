@@ -91,6 +91,11 @@ export type RulesetState = {
   source?: string;
   validation_status?: 'valid' | 'invalid' | 'expired' | 'unknown-source';
   validation_code?: string;
+  degraded_mode_enabled?: boolean;
+  degraded_mode_action?: 'allow' | 'block';
+  degraded_mode_reason?: string;
+  degraded_mode_source?: 'env' | 'file:.pumuki/degraded-mode.json';
+  degraded_mode_code?: 'DEGRADED_MODE_ALLOWED' | 'DEGRADED_MODE_BLOCKED';
 };
 
 export type HumanIntentConfidence = 'high' | 'medium' | 'low' | 'unset';
