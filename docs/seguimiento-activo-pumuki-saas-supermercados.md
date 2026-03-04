@@ -126,4 +126,23 @@
     - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/hookManager.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `50 pass / 0 fail`.
     - `npm run -s test:stage-gates` -> `1020 pass / 0 fail / 4 skip`.
     - `npm run -s typecheck` -> `PASS`.
-- 🚧 PUMUKI-020: Preparar publicación del siguiente corte cuando PUMUKI-019 quede cerrada sin regresiones.
+- ✅ PUMUKI-020: Preparar publicación del siguiente corte cuando PUMUKI-019 quede cerrada sin regresiones.
+  - Evidencia (2026-03-04):
+    - `npm publish --access public` => `+ pumuki@6.3.39`.
+    - Verificación remota: `npm view pumuki version` => `6.3.39`.
+
+## Fase 4.2 Siguiente bloque SAAS (ordenado y sin saltos)
+
+- ✅ PUMUKI-021: Consolidar backlog SAAS activo contra issues upstream reales y ejecutar el siguiente bug/mejora prioritaria sin cambiar de frente.
+  - Alcance inmediato:
+    - Contrastar estado de `#614+` para separar `OPEN` real vs `ya resuelto`.
+    - Elegir una única siguiente implementación técnica y ejecutar `RED -> GREEN -> REFACTOR`.
+  - Resultado:
+    - Fix ejecutado sobre `#622`: bloqueo determinista cuando hay cambios de código y `active_rule_ids=[]`.
+    - Nuevo finding de gate: `governance.rules.active-rule-coverage.empty` (`ACTIVE_RULE_IDS_EMPTY_FOR_CODE_CHANGES_HIGH`).
+  - Evidencia (2026-03-04):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts` -> `30 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/stageRunners.test.ts` -> `51 pass / 0 fail`.
+
+- 🚧 PUMUKI-022: Ejecutar siguiente bug/mejora SAAS prioritaria de enforcement iOS tests (`#623`) sin abrir frentes paralelos.
