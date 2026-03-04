@@ -19,11 +19,17 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Git atomicity enforcement is now enabled by default:
   - base guard is active out-of-the-box for `PRE_COMMIT/PRE_PUSH/CI`,
   - existing env/config overrides are preserved for controlled opt-out or threshold tuning.
+- Lifecycle hook diagnostics now expose effective hooks path resolution:
+  - `status`/`doctor` include `hooksDirectory` and `hooksDirectoryResolution`,
+  - console output now prints the effective hook path used for evaluation.
 
 ### Fixed
 
 - Commit-range facts resolution no longer crashes or degrades ambiguously when refs are not resolvable (for example repos without `HEAD` yet):
   - guarded `rev-parse --verify` + safe fallback behavior in git-range facts collection.
+- `core.hooksPath` hardening for versioned hooks:
+  - hook path resolution now falls back to local `.git/config` (`core.hooksPath`) when `git rev-parse --git-path hooks` is unavailable,
+  - non-regression coverage added for both versioned hooks and fallback resolution.
 - Stage-gates non-regression suite stabilization:
   - updated lifecycle ingestion and preflight fixtures to the current evidence v2.1 contract (`evidence_chain` and `evidence.source`),
   - aligned architecture guardrail overrides for the current orchestrator module size/import profile (`integrations/lifecycle/cli.ts`).

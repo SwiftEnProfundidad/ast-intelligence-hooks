@@ -7,9 +7,9 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-018 (validación acumulada completa en verde y cierre técnico del corte).
-- Task activa (`🚧`): PUMUKI-019 (siguiente bug/mejora: soporte sólido para hooks versionados en `core.hooksPath`).
-- Nuevos pendientes añadidos (`⏳`): PUMUKI-020 (publicación del siguiente corte tras cierre de PUMUKI-019).
+- Última task cerrada (`✅`): PUMUKI-019 (hardening de diagnóstico para hooks versionados `core.hooksPath` con fallback robusto + cobertura de no-regresión).
+- Task activa (`🚧`): PUMUKI-020 (publicación del siguiente corte tras cierre de PUMUKI-019).
+- Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.

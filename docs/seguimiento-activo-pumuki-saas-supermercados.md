@@ -117,5 +117,13 @@
   - Evidencia (2026-03-04):
     - `npm run -s test:stage-gates` -> `1018 pass / 0 fail / 4 skip` tras ajuste de regresión en `integrations/git/__tests__/hookGateSummary.test.ts`.
     - Smoke complementario ya validado dentro del bloque: `gitAtomicity`, `stageRunners`, `lifecycle/cli`, `typecheck`.
-- 🚧 PUMUKI-019: Ejecutar siguiente bug/mejora del backlog SAAS de prioridad media (`PUMUKI-004`: hooks versionados `core.hooksPath`).
-- ⏳ PUMUKI-020: Preparar publicación del siguiente corte cuando PUMUKI-019 quede cerrada sin regresiones.
+- ✅ PUMUKI-019: Ejecutar siguiente bug/mejora del backlog SAAS de prioridad media (`PUMUKI-004`: hooks versionados `core.hooksPath`).
+  - Fix:
+    - `integrations/lifecycle/hookManager.ts` añade resolución robusta de hooks con fallback a `.git/config` (`core.hooksPath`) cuando no está disponible `git rev-parse --git-path hooks`.
+    - `integrations/lifecycle/status.ts` y `integrations/lifecycle/doctor.ts` exponen metadatos de ruta efectiva (`hooksDirectory`, `hooksDirectoryResolution`).
+    - `integrations/lifecycle/cli.ts` imprime ruta efectiva de hooks en `status` y `doctor` modo texto para diagnóstico humano.
+  - Evidencia (2026-03-04):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/hookManager.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `50 pass / 0 fail`.
+    - `npm run -s test:stage-gates` -> `1020 pass / 0 fail / 4 skip`.
+    - `npm run -s typecheck` -> `PASS`.
+- 🚧 PUMUKI-020: Preparar publicación del siguiente corte cuando PUMUKI-019 quede cerrada sin regresiones.

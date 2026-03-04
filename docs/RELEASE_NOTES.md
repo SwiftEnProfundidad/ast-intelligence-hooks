@@ -17,8 +17,11 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Git atomicity by default:
   - atomicity guard is enabled by default in core gate flow (`PRE_COMMIT/PRE_PUSH/CI`).
   - keeps env/config overrides for enterprise tuning without patching source.
+- Versioned hooks diagnostics hardening (`core.hooksPath`):
+  - lifecycle hook resolution now includes fallback to local `.git/config` (`core.hooksPath`) when `git rev-parse --git-path hooks` is unavailable.
+  - `status/doctor` now expose effective hook path metadata (`hooksDirectory`, `hooksDirectoryResolution`) and print it in human-readable mode.
 - Validation hardening:
-  - `test:stage-gates` stabilized and green with current contracts (`1018 pass / 0 fail / 4 skip`).
+  - `test:stage-gates` stabilized and green with current contracts (`1020 pass / 0 fail / 4 skip`).
   - fixtures aligned to evidence v2.1 (`evidence_chain`, `evidence.source`) and architecture guardrail overrides updated for `integrations/lifecycle/cli.ts`.
 - Traceability:
   - commits: `104fc92`, `2f175ec`, `da7b073`, `2c40a4c`
