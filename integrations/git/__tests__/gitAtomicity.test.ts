@@ -31,13 +31,13 @@ const withAtomicityEnv = async (
   }
 };
 
-test('evaluateGitAtomicity está desactivado por defecto', async () => {
+test('evaluateGitAtomicity está activado por defecto con umbrales base', async () => {
   await withTempRepo(async (repoRoot) => {
     const result = evaluateGitAtomicity({
       repoRoot,
       stage: 'PRE_COMMIT',
     });
-    assert.equal(result.enabled, false);
+    assert.equal(result.enabled, true);
     assert.equal(result.allowed, true);
     assert.equal(result.violations.length, 0);
   });

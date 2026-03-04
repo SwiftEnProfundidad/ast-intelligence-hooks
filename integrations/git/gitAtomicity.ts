@@ -32,7 +32,7 @@ const DEFAULT_COMMIT_PATTERN =
   '^(feat|fix|chore|refactor|docs|test|perf|build|ci|revert)(\\([^)]+\\))?:\\s.+$';
 
 const defaultConfig: GitAtomicityConfig = {
-  enabled: false,
+  enabled: true,
   maxFiles: 25,
   maxScopes: 2,
   enforceCommitMessagePattern: true,
