@@ -1826,11 +1826,23 @@ Criterio de salida F5:
     - `npm run -s validation:tracking-single-active`
     - `docs/CONFIGURATION.md` actualizado con `PUMUKI_TELEMETRY_JSONL_MAX_BYTES`.
 
-- 🚧 `P12.F2.T59` Ejecutar siguiente mejora estratégica: cubrir la rotación JSONL en la suite contractual enterprise.
+- ✅ `P12.F2.T59` Ejecutar siguiente mejora estratégica: cubrir la rotación JSONL en la suite contractual enterprise.
+  - cierre ejecutado:
+    - issue creada y cerrada: `#575`.
+    - rama técnica creada y mergeada: `feature/575-contract-suite-telemetry-rotation` -> `#577` (`https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/577`).
+    - commit de merge en `develop`: `89e2045`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/enterprise-contract-suite-contract.test.ts scripts/__tests__/enterprise-contract-suite-report-lib.test.ts scripts/__tests__/enterprise-contract-suite-args-lib.test.ts integrations/telemetry/__tests__/gateTelemetry.test.ts`
+    - `npm run -s typecheck`
+    - `npm run -s validation:contract-suite:enterprise -- --json`
+    - `npm run -s validation:tracking-single-active`
+    - `docs/validation/README.md` actualizado con perfiles activos de la suite contractual.
+
+- 🚧 `P12.F2.T60` Publicar patch release con mejoras de telemetría (`#574`, `#577`) para disponibilidad inmediata en npm.
   - salida esperada:
-    - issue de implementación creada con alcance/doD verificable (`#575`).
-    - profile/escenario contractual que valide artefactos `gate-telemetry.jsonl` + `gate-telemetry.jsonl.1`.
-    - resultado visible en `validation:contract-suite:enterprise -- --json`.
+    - issue de release creada con alcance/doD verificable (`#578`).
+    - nueva versión npm publicada con rotación JSONL + profile contractual `telemetry-rotation`.
+    - trazabilidad cerrada en plan activo + registro maestro.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
