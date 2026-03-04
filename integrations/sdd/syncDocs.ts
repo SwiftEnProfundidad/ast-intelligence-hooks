@@ -85,6 +85,22 @@ export type SddLearnResult = {
   learning: NonNullable<SddSyncDocsResult['learning']>;
 };
 
+export type SddAutoSyncResult = {
+  command: 'pumuki sdd auto-sync';
+  dryRun: boolean;
+  repoRoot: string;
+  context: {
+    change: string;
+    stage: SddStage | null;
+    task: string | null;
+  };
+  syncDocs: {
+    updated: boolean;
+    files: ReadonlyArray<SddSyncDocsFileResult>;
+  };
+  learning: NonNullable<SddSyncDocsResult['learning']>;
+};
+
 const normalizeSectionBody = (value: string): string => value.trim().replace(/\r\n/g, '\n');
 
 const computeDigest = (value: string): string =>
@@ -431,5 +447,52 @@ export const runSddLearn = (params?: {
       task: result.context.task,
     },
     learning: result.learning,
+  };
+};
+
+export const runSddAutoSync = (params?: {
+  repoRoot?: string;
+  dryRun?: boolean;
+  change?: string;
+  stage?: SddStage;
+  task?: string;
+  now?: () => Date;
+  evidenceReader?: (repoRoot: string) => EvidenceReadResult;
+  targets?: ReadonlyArray<SddSyncDocsTarget>;
+}): SddAutoSyncResult => {
+  const change = params?.change?.trim();
+  if (!change) {
+    throw new Error('[pumuki][sdd] auto-sync requires --change=<change-id>.');
+  }
+
+  const syncResult = runSddSyncDocs({
+    repoRoot: params?.repoRoot,
+    dryRun: params?.dryRun,
+    change,
+    stage: params?.stage,
+    task: params?.task,
+    now: params?.now,
+    evidenceReader: params?.evidenceReader,
+    targets: params?.targets,
+  });
+
+  if (!syncResult.learning) {
+    throw new Error('[pumuki][sdd] auto-sync could not generate learning artifact.');
+  }
+
+  return {
+    command: 'pumuki sdd auto-sync',
+    dryRun: syncResult.dryRun,
+    repoRoot: syncResult.repoRoot,
+    context: {
+      change,
+      stage: syncResult.context.stage,
+      task: syncResult.context.task,
+    },
+    syncDocs: {
+      updated: syncResult.updated,
+      files: syncResult.files,
+    },
+    learning: syncResult.learning,
   };
 };
