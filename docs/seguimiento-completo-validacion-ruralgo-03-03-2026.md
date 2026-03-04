@@ -1968,11 +1968,25 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/sdd/__tests__/index.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `44 passed, 0 failed`.
     - `npm run -s typecheck` => `exit 0`.
 
-- 🚧 `P12.F2.T71` Publicar release `6.3.36` con `pumuki sdd auto-sync` (`#603`).
-  - salida esperada:
+- ✅ `P12.F2.T71` Publicar release `6.3.36` con `pumuki sdd auto-sync` (`#603`).
+  - cierre ejecutado:
     - versionado a `6.3.36` en `package.json`, `package-lock.json` y `VERSION`.
-    - release notes actualizadas con entrada `v6.3.36`.
-    - publicación npm validada (`latest=6.3.36`) + smoke de `--help` mostrando `auto-sync`.
+    - release notes actualizadas con entrada `2026-03-04 (v6.3.36)` en `docs/RELEASE_NOTES.md`.
+    - publicación npm ejecutada con éxito (`npm publish --access public`).
+    - propagación validada:
+      - `npm view pumuki dist-tags --json` => `"latest": "6.3.36"`.
+      - smoke `@latest` con `--help` mostrando `pumuki sdd auto-sync ...`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/sdd/__tests__/index.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `44 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+    - `npm publish --access public` => `+ pumuki@6.3.36`.
+    - `npm view pumuki@6.3.36 version` => `6.3.36`.
+
+- 🚧 `P12.F2.T72` Siguiente hardening enterprise: policy-as-code firmada/versionada (`#543`).
+  - salida esperada:
+    - definir contrato machine-readable de policy con versión/firma y validación estricta.
+    - exponer metadatos de validación en salidas de gate/telemetría.
+    - añadir cobertura de regresión para policy inválida/no firmada en modo estricto.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
