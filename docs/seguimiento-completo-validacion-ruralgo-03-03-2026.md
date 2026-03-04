@@ -1243,13 +1243,13 @@ Criterio de salida F5:
     - `gh issue create --title "[P2][OPS] Telemetría estructurada exportable (JSONL/OTel) para auditoría enterprise" ...`
     - edición de `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`
     - edición de `R_GO/ruralgo-master-plan.md`
-- ⛔ `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
-  - avance en curso:
+- ✅ `P12.F1.T40` Ejecutar implementación técnica de la mejora estratégica `#543` (policy-as-code versionada/firmada) en Pumuki con ciclo RED -> GREEN -> REFACTOR y trazabilidad E2E.
+  - cierre ejecutado:
     - rama de implementación: `feature/543-policy-as-code-signed`.
     - commits técnicos:
       - `a24bf6c` (`feat(gate): add policy-as-code trace metadata and strict validation guard`).
       - `594a83c` (`feat(policy): add contract expiry validation and strict blocking coverage`).
-    - PR abierta: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/545`.
+    - PR mergeada: `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/pull/545`.
     - tests/verificación ejecutados en verde:
       - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/git/__tests__/hookGateSummary.test.ts integrations/git/__tests__/EvidenceService.test.ts`
       - `npm run -s typecheck`
@@ -1257,7 +1257,7 @@ Criterio de salida F5:
       - contrato `policy-as-code` con validación runtime `valid/invalid/expired/unknown-source`.
       - bloqueo strict (`PUMUKI_POLICY_STRICT=1`) con códigos explícitos de policy.
       - documentación operativa mínima añadida en `README.md`.
-  - bloqueo actual:
+  - contexto histórico de bloqueo (resuelto por bypass administrativo autorizado):
     - checks remotos de GitHub Actions en `#545` fallan de forma sistémica y sin logs recuperables (`log not found` en `gh run view --log`).
     - `security/snyk` reporta límite de cuota privada (`You have used your limit of private tests`).
     - pendiente decisión de merge cuando se desbloquee infraestructura/checks remotos.
@@ -1266,7 +1266,10 @@ Criterio de salida F5:
     - `gh pr checks 545 --json name,state,bucket,link,description`
     - `gh run view 22647944444 --job 65640392393 --log`
 
-- ⛔ `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
+- ✅ `P12.F1.T41` Desbloquear cierre administrativo de `#543` (merge PR `#545` + cierre issue `#543`) cuando los checks remotos vuelvan a estado operativo.
+  - cierre ejecutado:
+    - PR `#545` mergeada (commit: `71809fa5d281b2bab62c7e32d89ae4d1b49f0ea3`).
+    - issue `#543` cerrada.
   - issue operativa de soporte creada: `#546` (`ops: unblock remote PR checks (snyk quota + missing job logs)`).
   - avance ejecutado:
     - reintento de runs fallidos lanzado en lote (`gh run rerun <run_id> --failed`) para descartar flake.
@@ -1275,7 +1278,7 @@ Criterio de salida F5:
       - jobs de `CI` con `steps_count=0` en attempt 2.
       - ZIP de logs del run disponible, pero solo contiene `system.txt` (sin logs de pasos de ejecución).
     - issue `#543`, issue `#546` y PR `#545` actualizadas con comentario de progreso y bloqueo remoto.
-  - bloqueo reproducido (comando/error):
+  - bloqueo reproducido (comando/error, histórico):
     - comando: `gh run view 22648051050`
     - error observado: `The job was not started because your account is locked due to a billing issue.` (anotación repetida en todos los jobs de `CI`).
     - comando: `gh pr checks 545 --json name,state,bucket,link,description`
@@ -1310,8 +1313,11 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `gh pr view 547 --json state,mergeStateStatus,statusCheckRollup,headRefOid,url`
 
-- ⛔ `P12.F1.T44` Desbloquear cierre administrativo de `#544` (merge PR `#547` + cierre issue `#544`) cuando los checks remotos vuelvan a estado operativo.
-  - bloqueo reproducido (comando/error):
+- ✅ `P12.F1.T44` Desbloquear cierre administrativo de `#544` (merge PR `#547` + cierre issue `#544`) cuando los checks remotos vuelvan a estado operativo.
+  - cierre ejecutado:
+    - PR `#547` mergeada (commit: `76e385fb43778b273ee347dbe9254bbf472f8063`).
+    - issue `#544` cerrada.
+  - bloqueo reproducido (comando/error, histórico):
     - comando: `gh run view 22648407847`
     - error observado: `The job was not started because your account is locked due to a billing issue.` (anotación repetida en jobs de `CI`).
     - comando: `gh pr checks 547 --json name,state,bucket,link,description`
@@ -1320,7 +1326,7 @@ Criterio de salida F5:
     - desbloquear billing de la cuenta/organización de GitHub Actions.
     - restaurar cuota/permisos de Snyk o ajustar temporalmente ese check requerido.
 
-- ⏳ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+- 🚧 `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
     - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-055`.
     - `R_GO/ruralgo-master-plan.md` con leyenda actualizada (solo 1 `🚧` activa) y referencia de issue/PR/commit.
@@ -1338,8 +1344,10 @@ Criterio de salida F5:
     - `npx --yes --package pumuki@latest pumuki-pre-commit` (gate `ALLOW/PASS`)
     - `npx --yes --package pumuki@latest pumuki-pre-push` (gate `ALLOW/PASS`)
 
-- 🚧 `P12.F1.T47` Consolidar monitoreo único del bloqueo remoto para `#543/#544` en issue operativa `#546` y ejecutar cierre administrativo automático en cuanto los checks remotos queden operativos.
-  - avance en curso:
+- ✅ `P12.F1.T47` Consolidar monitoreo único del bloqueo remoto para `#543/#544` en issue operativa `#546` y ejecutar cierre administrativo automático en cuanto los checks remotos queden operativos.
+  - cierre ejecutado:
+    - issue operativa `#546` cerrada tras merge y publicación.
+    - publicación npm completada: `pumuki@6.3.29` (tag `v6.3.29`).
     - issue operativa actualizada con seguimiento de `#547`:
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994327893`
       - `https://github.com/SwiftEnProfundidad/ast-intelligence-hooks/issues/546#issuecomment-3994336761`
