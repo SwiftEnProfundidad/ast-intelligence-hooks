@@ -167,12 +167,15 @@ Payload schema (`v1.0`):
   "version": "1.0",
   "change_id": "rgo-1700-01",
   "stage": "PRE_COMMIT",
-  "task": "P12.F2.T65",
+  "task": "P12.F2.T67",
   "generated_at": "2026-03-04T10:05:00.000Z",
-  "failed_patterns": [],
-  "successful_patterns": ["sync-docs.completed"],
-  "rule_updates": [],
-  "gate_anomalies": [],
+  "failed_patterns": ["ai-gate.blocked"],
+  "successful_patterns": ["sync-docs.completed", "sync-docs.updated"],
+  "rule_updates": [
+    "ai-gate.unblock.required",
+    "ai-gate.violation.EVIDENCE_STALE.review"
+  ],
+  "gate_anomalies": ["ai-gate.violation.EVIDENCE_STALE"],
   "sync_docs": {
     "updated": true,
     "file_paths": [
@@ -186,6 +189,7 @@ Behavior:
 
 - `--dry-run`: includes learning payload in JSON output with `learning.written=false` and does not write files.
 - non dry-run: persists `learning.json` deterministically and reports digest/path in output.
+- `rule_updates`: deterministic recommendations derived from evidence/gate signals (`missing`, `invalid`, `blocked`, `allowed`).
 
 ## Gate telemetry export (optional)
 
