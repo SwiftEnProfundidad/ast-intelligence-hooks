@@ -2,6 +2,7 @@ import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Fact } from '../../core/facts/Fact';
+import type { GitChange } from './gitDiffUtils';
 import { parseNameStatus, hasAllowedExtension, buildFactsFromChanges } from './gitDiffUtils';
 export { parseNameStatus } from './gitDiffUtils';
 
@@ -77,7 +78,16 @@ export class GitService implements IGitService {
   }
 
   getStagedAndUnstagedFacts(extensions: ReadonlyArray<string>): ReadonlyArray<Fact> {
-    const trackedChanges = parseNameStatus(this.runGit(['diff', '--name-status', 'HEAD']))
+    const hasHeadCommit = this.hasHeadCommit();
+    const trackedNameStatus = hasHeadCommit
+      ? this.runGit(['diff', '--name-status', 'HEAD'])
+      : [
+        this.runGit(['diff', '--cached', '--name-status']),
+        this.runGit(['diff', '--name-status']),
+      ]
+        .filter((chunk) => chunk.trim().length > 0)
+        .join('\n');
+    const trackedChanges = this.deduplicateChangesByPath(parseNameStatus(trackedNameStatus))
       .filter((change) => hasAllowedExtension(change.path, extensions));
     const untrackedPaths = this.runGit(['ls-files', '--others', '--exclude-standard'])
       .split('\n')
@@ -98,6 +108,23 @@ export class GitService implements IGitService {
     return buildFactsFromChanges(mergedChanges, 'git:working-tree', (filePath) =>
       this.readWorkingTreeFile(repoRoot, filePath)
     );
+  }
+
+  private hasHeadCommit(): boolean {
+    try {
+      this.runGit(['rev-parse', '--verify', 'HEAD']);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  private deduplicateChangesByPath(changes: ReadonlyArray<GitChange>): ReadonlyArray<GitChange> {
+    const byPath = new Map<string, GitChange>();
+    for (const change of changes) {
+      byPath.set(change.path, change);
+    }
+    return Array.from(byPath.values());
   }
 
   private readWorkingTreeFile(repoRoot: string, filePath: string): string {

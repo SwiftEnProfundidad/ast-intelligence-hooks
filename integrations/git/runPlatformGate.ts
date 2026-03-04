@@ -133,6 +133,13 @@ const defaultDependencies: GateDependencies = {
 
 const resolveCurrentBranch = (git: IGitService, repoRoot: string): string | null => {
   try {
+    const symbolicBranch = git.runGit(['symbolic-ref', '--short', 'HEAD'], repoRoot).trim();
+    if (symbolicBranch.length > 0) {
+      return symbolicBranch;
+    }
+  } catch {
+  }
+  try {
     const branch = git.runGit(['rev-parse', '--abbrev-ref', 'HEAD'], repoRoot).trim();
     if (branch.length === 0 || branch === 'HEAD') {
       return null;

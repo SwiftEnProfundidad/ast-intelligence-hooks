@@ -221,6 +221,20 @@ test('runPreCommitStage keeps default policy thresholds when skills policy is ab
   });
 });
 
+test('runPreCommitStage evita ruido de HEAD ambiguo en repos sin commit inicial', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    stageBackendFile(repoRoot);
+
+    const stderr = await withCapturedStderr(async () => {
+      await runPreCommitStage();
+    });
+
+    const merged = stderr.join('\n');
+    assert.doesNotMatch(merged, /ambiguous argument 'HEAD'/i);
+    assert.doesNotMatch(merged, /argumento ambiguo 'HEAD'/i);
+  });
+});
+
 test('runPrePushStage uses skills policy override and writes PRE_PUSH policy trace', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     writeSkillsPolicy(repoRoot, {
