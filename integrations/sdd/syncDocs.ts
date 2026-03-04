@@ -196,30 +196,43 @@ const collectLearningSignals = (params: {
   failedPatterns: string[];
   successfulPatterns: string[];
   gateAnomalies: string[];
+  ruleUpdates: string[];
 } => {
   const failedPatterns = new Set<string>();
   const successfulPatterns = new Set<string>();
   const gateAnomalies = new Set<string>();
+  const ruleUpdates = new Set<string>();
 
   successfulPatterns.add('sync-docs.completed');
   successfulPatterns.add(params.updated ? 'sync-docs.updated' : 'sync-docs.no_changes');
 
   if (params.evidenceResult.kind === 'missing') {
     gateAnomalies.add('evidence.missing');
+    ruleUpdates.add('evidence.bootstrap.required');
   } else if (params.evidenceResult.kind === 'invalid') {
     gateAnomalies.add(`evidence.invalid.${params.evidenceResult.reason}`);
+    ruleUpdates.add('evidence.rebuild.required');
+    if (params.evidenceResult.reason === 'schema') {
+      ruleUpdates.add('evidence.schema.repair');
+    }
+    if (params.evidenceResult.reason === 'evidence-chain-invalid') {
+      ruleUpdates.add('evidence.chain.repair');
+    }
   } else {
     const evidence = params.evidenceResult.evidence;
     if (evidence.ai_gate.status === 'BLOCKED') {
       failedPatterns.add('ai-gate.blocked');
+      ruleUpdates.add('ai-gate.unblock.required');
       for (const violation of evidence.ai_gate.violations) {
         gateAnomalies.add(`ai-gate.violation.${violation.code}`);
+        ruleUpdates.add(`ai-gate.violation.${violation.code}.review`);
       }
     } else {
       successfulPatterns.add('ai-gate.allowed');
     }
     if (evidence.snapshot.outcome === 'BLOCK') {
       gateAnomalies.add('snapshot.outcome.block');
+      ruleUpdates.add('snapshot.outcome.review');
     }
     const sddDecision = evidence.sdd_metrics?.decision;
     if (sddDecision) {
@@ -227,6 +240,7 @@ const collectLearningSignals = (params: {
         successfulPatterns.add('sdd.allowed');
       } else {
         failedPatterns.add(`sdd.blocked.${sddDecision.code}`);
+        ruleUpdates.add(`sdd.${sddDecision.code}.remediate`);
       }
     }
   }
@@ -235,6 +249,7 @@ const collectLearningSignals = (params: {
     failedPatterns: toSortedArray(failedPatterns),
     successfulPatterns: toSortedArray(successfulPatterns),
     gateAnomalies: toSortedArray(gateAnomalies),
+    ruleUpdates: toSortedArray(ruleUpdates),
   };
 };
 
@@ -327,7 +342,7 @@ export const runSddSyncDocs = (params?: {
       generated_at: now().toISOString(),
       failed_patterns: signals.failedPatterns,
       successful_patterns: signals.successfulPatterns,
-      rule_updates: [] as string[],
+      rule_updates: signals.ruleUpdates,
       gate_anomalies: signals.gateAnomalies,
       sync_docs: {
         updated,

@@ -70,6 +70,43 @@ const buildValidBlockedEvidenceResult = (): EvidenceReadResult => ({
   },
 });
 
+const buildValidAllowedEvidenceResult = (): EvidenceReadResult => ({
+  kind: 'valid',
+  evidence: {
+    timestamp: '2026-03-04T10:20:00.000Z',
+    snapshot: {
+      outcome: 'ALLOW',
+    },
+    ai_gate: {
+      status: 'ALLOWED',
+      violations: [],
+    },
+    sdd_metrics: {
+      decision: {
+        allowed: true,
+        code: 'ALLOWED',
+      },
+    },
+  } as Extract<EvidenceReadResult, { kind: 'valid' }>['evidence'],
+  source_descriptor: {
+    source: 'local-file',
+    path: '/repo/.ai_evidence.json',
+    digest: 'sha256:efgh',
+    generated_at: '2026-03-04T10:20:00.000Z',
+  },
+});
+
+const buildInvalidSchemaEvidenceResult = (): EvidenceReadResult => ({
+  kind: 'invalid',
+  reason: 'schema',
+  source_descriptor: {
+    source: 'local-file',
+    path: '/repo/.ai_evidence.json',
+    digest: 'sha256:invalid',
+    generated_at: null,
+  },
+});
+
 test('runSddSyncDocs dry-run previsualiza diff y no modifica archivo', async () => {
   await withFixtureRepo('pumuki-sdd-sync-docs-dry-run-', (repoRoot) => {
     const canonicalPath = writeCanonicalDoc(
@@ -173,6 +210,7 @@ test('runSddSyncDocs incluye contexto explícito change/stage/task en resultado'
       'sync-docs.updated',
     ]);
     assert.deepEqual(result.learning?.artifact.gate_anomalies, ['evidence.missing']);
+    assert.deepEqual(result.learning?.artifact.rule_updates, ['evidence.bootstrap.required']);
     assert.equal(
       existsSync(join(repoRoot, 'openspec', 'changes', 'rgo-1700-01', 'learning.json')),
       false
@@ -220,6 +258,7 @@ test('runSddSyncDocs persiste learning artifact cuando change está presente y n
       generated_at: string;
       failed_patterns: string[];
       successful_patterns: string[];
+      rule_updates: string[];
       gate_anomalies: string[];
     };
     assert.equal(parsed.version, '1.0');
@@ -229,6 +268,7 @@ test('runSddSyncDocs persiste learning artifact cuando change está presente y n
     assert.equal(parsed.generated_at, '2026-03-04T10:05:00.000Z');
     assert.deepEqual(parsed.failed_patterns, []);
     assert.deepEqual(parsed.successful_patterns, ['sync-docs.completed', 'sync-docs.updated']);
+    assert.deepEqual(parsed.rule_updates, ['evidence.bootstrap.required']);
     assert.deepEqual(parsed.gate_anomalies, ['evidence.missing']);
   });
 });
@@ -269,6 +309,85 @@ test('runSddSyncDocs agrega señales de gate cuando evidenceReader devuelve evid
       'ai-gate.violation.EVIDENCE_STALE',
       'snapshot.outcome.block',
     ]);
+    assert.deepEqual(result.learning?.artifact.rule_updates, [
+      'ai-gate.unblock.required',
+      'ai-gate.violation.EVIDENCE_STALE.review',
+      'sdd.SDD_CHANGE_INCOMPLETE.remediate',
+      'snapshot.outcome.review',
+    ]);
+  });
+});
+
+test('runSddSyncDocs genera rule_updates para evidencia inválida de schema', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-learning-invalid-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: true,
+      change: 'rgo-1700-04',
+      stage: 'PRE_WRITE',
+      task: 'P12.F2.T67',
+      evidenceReader: () => buildInvalidSchemaEvidenceResult(),
+      now: () => new Date('2026-03-04T10:30:00.000Z'),
+    });
+
+    assert.deepEqual(result.learning?.artifact.failed_patterns, []);
+    assert.deepEqual(result.learning?.artifact.successful_patterns, [
+      'sync-docs.completed',
+      'sync-docs.updated',
+    ]);
+    assert.deepEqual(result.learning?.artifact.gate_anomalies, ['evidence.invalid.schema']);
+    assert.deepEqual(result.learning?.artifact.rule_updates, [
+      'evidence.rebuild.required',
+      'evidence.schema.repair',
+    ]);
+  });
+});
+
+test('runSddSyncDocs mantiene rule_updates vacío cuando la evidencia válida está en allow', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-learning-allow-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    const result = runSddSyncDocs({
+      repoRoot,
+      dryRun: true,
+      change: 'rgo-1700-05',
+      stage: 'PRE_WRITE',
+      task: 'P12.F2.T67',
+      evidenceReader: () => buildValidAllowedEvidenceResult(),
+      now: () => new Date('2026-03-04T10:35:00.000Z'),
+    });
+
+    assert.deepEqual(result.learning?.artifact.failed_patterns, []);
+    assert.deepEqual(result.learning?.artifact.successful_patterns, [
+      'ai-gate.allowed',
+      'sdd.allowed',
+      'sync-docs.completed',
+      'sync-docs.updated',
+    ]);
+    assert.deepEqual(result.learning?.artifact.gate_anomalies, []);
+    assert.deepEqual(result.learning?.artifact.rule_updates, []);
   });
 });
 
