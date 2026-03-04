@@ -1326,22 +1326,21 @@ Criterio de salida F5:
     - desbloquear billing de la cuenta/organización de GitHub Actions.
     - restaurar cuota/permisos de Snyk o ajustar temporalmente ese check requerido.
 
-- 🚧 `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
-  - avance ejecutado:
-    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado localmente a `FIXED` para `PUMUKI-INC-055` (`#543/#545`).
-    - `R_GO/ruralgo-master-plan.md` actualizado localmente con `#543 => ✅` y leyenda recalculada.
-    - commit documental atómico creado en `R_GO`: `24f30cd21` (`docs(validation): sync canonical issue 543 to fixed`).
-  - bloqueo actual (sin bypass):
-    - comando: `git -C /Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO push origin HEAD`
-    - error observado (hook `pre-push`):
-      - `governance.skills.platform-coverage.incomplete` (scope iOS en rango histórico de la rama).
-      - `governance.skills.scope-compliance.incomplete` (prefijos `skills.ios.` no activos/evaluados para paths iOS del rango).
-  - corrección mínima aplicada para destrabar runtime:
-    - issue `#548` creada y cerrada.
-    - PR `#549` mergeada.
-    - release patch publicada: `pumuki@6.3.30` (corrige `MODULE_NOT_FOUND ../telemetry/gateTelemetry` en hooks/CLI de consumer).
-  - siguiente paso para cerrar `T42`:
-    - reintentar push del commit `24f30cd21` sobre rama/alcance que cumpla gate de skills en `R_GO` sin mezclar rango histórico no conforme.
+- ✅ `P12.F1.T42` Sincronizar canónico RuralGO tras cierre de `#543` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+  - cierre ejecutado:
+    - se resolvió el bloqueo histórico de rama creando una rama docs limpia desde `origin/develop` en `R_GO`: `docs/rgo-sync-issue-543-fixed-20260304`.
+    - commit documental atómico aplicado: `66d88dacb` (`docs(validation): sync canonical issue 543 to fixed`).
+    - PR abierta en `R_GO`: `https://github.com/SwiftEnProfundidad/R_GO/pull/1503`.
+    - canónico actualizado en la PR:
+      - `docs/technical/08-validation/refactor/pumuki-integration-feedback.md` (`PUMUKI-INC-055 => ✅ FIXED`).
+      - `ruralgo-master-plan.md` (`#543 => ✅`, leyenda recalculada).
+  - evidencia:
+    - `git -C /tmp/rgo-sync-issue-543-*/ commit -m "docs(validation): sync canonical issue 543 to fixed"`
+    - `git -C /tmp/rgo-sync-issue-543-*/ push -u origin docs/rgo-sync-issue-543-fixed-20260304`
+    - `gh pr create --base develop --head docs/rgo-sync-issue-543-fixed-20260304`
+    - hook gates en verde:
+      - `pre-commit => ALLOW/PASS`
+      - `pre-push => ALLOW/PASS`
 
 - ✅ `P12.F1.T46` Sincronizar canónico RuralGO en estado intermedio de `#544` (`REPORTED` con refs reales de issue/branch/PR/commit/evidencia) y alinear master plan con una única mejora `🚧`.
   - cierre ejecutado:
@@ -1706,7 +1705,7 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `npm publish --access public`
 
-- ⏳ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+- 🚧 `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
   - salida esperada:
     - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-056`.
     - `R_GO/ruralgo-master-plan.md` con leyenda final actualizada y referencia de merge real.
