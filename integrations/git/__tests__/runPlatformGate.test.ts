@@ -488,6 +488,158 @@ test('runPlatformGate bloquea en modo strict cuando policy-as-code está expirad
   assert.equal(policyFinding?.source, 'policy-as-code');
 });
 
+test('runPlatformGate bloquea cuando degraded mode está activo en fail-closed para el stage', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_PUSH',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'range' as const, baseRef: 'origin/develop', headRef: 'HEAD' };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedFindings: ReadonlyArray<Finding> = [];
+
+  const result = await runPlatformGate({
+    policy,
+    policyTrace: {
+      source: 'default',
+      bundle: 'gate-policy.default.PRE_PUSH',
+      hash: 'f'.repeat(64),
+      version: 'policy-as-code/default@1.0',
+      signature: 'a'.repeat(64),
+      policySource: 'computed-local',
+      degraded: {
+        enabled: true,
+        action: 'block',
+        reason: 'offline-airgapped',
+        source: 'env',
+        code: 'DEGRADED_MODE_BLOCKED',
+      },
+      validation: {
+        status: 'valid',
+        code: 'POLICY_AS_CODE_VALID',
+        message: 'Policy-as-code contract verified successfully.',
+        strict: false,
+      },
+    },
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedFindings = paramsArg.findings;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 1);
+  const degradedFinding = emittedFindings.find(
+    (finding) => finding.ruleId === 'governance.degraded-mode.blocked'
+  );
+  assert.ok(degradedFinding);
+  assert.equal(degradedFinding?.code, 'DEGRADED_MODE_BLOCKED');
+  assert.equal(degradedFinding?.source, 'degraded-mode');
+});
+
+test('runPlatformGate mantiene allow cuando degraded mode está activo en fail-open para el stage', async () => {
+  const policy: GatePolicy = {
+    stage: 'PRE_COMMIT',
+    blockOnOrAbove: 'ERROR',
+    warnOnOrAbove: 'WARN',
+  };
+  const scope = { kind: 'staged' as const };
+  const git = buildGitStub('/repo/root');
+  const evidence = buildEvidenceStub();
+
+  let emittedFindings: ReadonlyArray<Finding> = [];
+
+  const result = await runPlatformGate({
+    policy,
+    policyTrace: {
+      source: 'default',
+      bundle: 'gate-policy.default.PRE_COMMIT',
+      hash: 'f'.repeat(64),
+      version: 'policy-as-code/default@1.0',
+      signature: 'a'.repeat(64),
+      policySource: 'computed-local',
+      degraded: {
+        enabled: true,
+        action: 'allow',
+        reason: 'offline-airgapped',
+        source: 'env',
+        code: 'DEGRADED_MODE_ALLOWED',
+      },
+      validation: {
+        status: 'valid',
+        code: 'POLICY_AS_CODE_VALID',
+        message: 'Policy-as-code contract verified successfully.',
+        strict: false,
+      },
+    },
+    scope,
+    services: {
+      git,
+      evidence,
+    },
+    dependencies: {
+      evaluateSddForStage: () => ({
+        allowed: true,
+        code: 'ALLOWED',
+        message: 'ok',
+      }),
+      resolveFactsForGateScope: async () => [],
+      evaluatePlatformGateFindings: () => ({
+        detectedPlatforms: {},
+        skillsRuleSet: {
+          rules: [],
+          activeBundles: [],
+          mappedHeuristicRuleIds: new Set<string>(),
+          requiresHeuristicFacts: false,
+        },
+        projectRules: [] as RuleSet,
+        heuristicRules: [] as RuleSet,
+        findings: [],
+      }),
+      evaluateGate: () => ({ outcome: 'ALLOW' }),
+      emitPlatformGateEvidence: (paramsArg) => {
+        emittedFindings = paramsArg.findings;
+      },
+      printGateFindings: () => {},
+    },
+  });
+
+  assert.equal(result, 0);
+  const degradedFinding = emittedFindings.find(
+    (finding) => finding.ruleId === 'governance.degraded-mode.active'
+  );
+  assert.ok(degradedFinding);
+  assert.equal(degradedFinding?.code, 'DEGRADED_MODE_ALLOWED');
+  assert.equal(degradedFinding?.severity, 'INFO');
+});
+
 test('runPlatformGate devuelve 1 cuando SDD bloquea PRE_COMMIT', async () => {
   const policy: GatePolicy = {
     stage: 'PRE_COMMIT',

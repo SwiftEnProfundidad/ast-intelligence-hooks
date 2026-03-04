@@ -120,11 +120,17 @@ const emitSuccessfulHookGateSummary = (params: {
     params.stage === 'PRE_COMMIT'
       ? PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS
       : PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS;
+  const degradedSummary =
+    params.policyTrace.degraded?.enabled
+      ? ` degraded_mode=enabled degraded_action=${params.policyTrace.degraded.action}` +
+        ` degraded_reason=${params.policyTrace.degraded.reason}`
+      : '';
   params.dependencies.writeHookGateSummary(
     `[pumuki][hook-gate] stage=${params.stage} policy_bundle=${params.policyTrace.bundle} policy_hash=${params.policyTrace.hash}` +
       ` policy_version=${params.policyTrace.version ?? 'n/a'}` +
       ` policy_signature=${params.policyTrace.signature ?? 'n/a'}` +
       ` policy_source=${params.policyTrace.policySource ?? 'n/a'}` +
+      `${degradedSummary}` +
       ` decision=ALLOW evidence_kind=${evidence.kind} evidence_age_seconds=${evidenceAgeSeconds ?? 'n/a'} max_age_seconds=${maxAgeSeconds}`
   );
 };

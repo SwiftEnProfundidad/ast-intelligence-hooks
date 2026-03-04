@@ -97,6 +97,61 @@ Defined in `integrations/gate/stagePolicies.ts`:
 - `PRE_PUSH`: block `ERROR`, warn from `WARN`
 - `CI`: block `ERROR`, warn from `WARN`
 
+## Degraded mode (offline / air-gapped)
+
+Pumuki supports a deterministic degraded contract by stage:
+
+- `PRE_WRITE`
+- `PRE_COMMIT`
+- `PRE_PUSH`
+- `CI`
+
+Resolution precedence:
+
+1. Environment variables (`PUMUKI_DEGRADED_MODE=1`)
+2. File contract (`.pumuki/degraded-mode.json`)
+
+Environment variables:
+
+- `PUMUKI_DEGRADED_MODE`: enable/disable (`1|0`, `true|false`, `yes|no`)
+- `PUMUKI_DEGRADED_REASON`: operator-visible reason
+- `PUMUKI_DEGRADED_ACTION`: global default action (`allow|block`)
+- `PUMUKI_DEGRADED_ACTION_PRE_WRITE`: per-stage override
+- `PUMUKI_DEGRADED_ACTION_PRE_COMMIT`: per-stage override
+- `PUMUKI_DEGRADED_ACTION_PRE_PUSH`: per-stage override
+- `PUMUKI_DEGRADED_ACTION_CI`: per-stage override
+
+File contract (`.pumuki/degraded-mode.json`):
+
+```json
+{
+  "version": "1.0",
+  "enabled": true,
+  "reason": "offline-airgapped",
+  "stages": {
+    "PRE_WRITE": "block",
+    "PRE_COMMIT": "allow",
+    "PRE_PUSH": "block",
+    "CI": "block"
+  }
+}
+```
+
+Runtime behavior:
+
+- `action=block`:
+  - gate adds finding `governance.degraded-mode.blocked`
+  - SDD returns `SDD_DEGRADED_MODE_BLOCKED`
+- `action=allow`:
+  - gate adds informational finding `governance.degraded-mode.active`
+  - SDD returns `ALLOWED` with degraded metadata in `decision.details`
+
+Traceability:
+
+- `policyTrace.degraded` is emitted for gate stages.
+- hook summaries include `degraded_mode`, `degraded_action`, and `degraded_reason` when active.
+- evidence/telemetry include degraded metadata in policy trace when available.
+
 ## Gate telemetry export (optional)
 
 Structured telemetry output is disabled by default and can be enabled with environment variables:

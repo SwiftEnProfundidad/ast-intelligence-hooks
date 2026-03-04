@@ -28,6 +28,13 @@ type PolicyTrace = ResolvedStagePolicy['trace'] & {
     status: 'valid' | 'invalid' | 'expired' | 'unknown-source';
     code: string;
   };
+  degraded?: {
+    enabled: true;
+    action: 'allow' | 'block';
+    reason: string;
+    source: 'env' | 'file:.pumuki/degraded-mode.json';
+    code: 'DEGRADED_MODE_ALLOWED' | 'DEGRADED_MODE_BLOCKED';
+  };
 };
 
 const toSeverityCounts = (
@@ -184,6 +191,11 @@ export type GateTelemetryEventV1 = {
     policy_source?: string;
     validation_status?: 'valid' | 'invalid' | 'expired' | 'unknown-source';
     validation_code?: string;
+    degraded_mode_enabled?: boolean;
+    degraded_mode_action?: 'allow' | 'block';
+    degraded_mode_reason?: string;
+    degraded_mode_source?: 'env' | 'file:.pumuki/degraded-mode.json';
+    degraded_mode_code?: 'DEGRADED_MODE_ALLOWED' | 'DEGRADED_MODE_BLOCKED';
   };
   sdd?: {
     allowed: boolean;
@@ -265,6 +277,15 @@ const toTelemetryEvent = (params: {
             ? {
               validation_status: params.policyTrace.validation.status,
               validation_code: params.policyTrace.validation.code,
+            }
+            : {}),
+          ...(params.policyTrace.degraded
+            ? {
+              degraded_mode_enabled: params.policyTrace.degraded.enabled,
+              degraded_mode_action: params.policyTrace.degraded.action,
+              degraded_mode_reason: params.policyTrace.degraded.reason,
+              degraded_mode_source: params.policyTrace.degraded.source,
+              degraded_mode_code: params.policyTrace.degraded.code,
             }
             : {}),
         },

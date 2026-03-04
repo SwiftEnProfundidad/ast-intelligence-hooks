@@ -35,6 +35,13 @@ test('runPreCommitStage emite resumen mínimo del gate en éxito', async () => {
         version: 'policy-as-code/default@1.0',
         signature: 'a'.repeat(64),
         policySource: 'computed-local',
+        degraded: {
+          enabled: true,
+          action: 'allow',
+          reason: 'offline-airgapped',
+          source: 'env',
+          code: 'DEGRADED_MODE_ALLOWED',
+        },
       },
     }),
     runPlatformGate: async () => 0,
@@ -56,6 +63,9 @@ test('runPreCommitStage emite resumen mínimo del gate en éxito', async () => {
   assert.match(summaries[0] ?? '', /policy_version=policy-as-code\/default@1.0/);
   assert.match(summaries[0] ?? '', /policy_signature=a{64}/);
   assert.match(summaries[0] ?? '', /policy_source=computed-local/);
+  assert.match(summaries[0] ?? '', /degraded_mode=enabled/);
+  assert.match(summaries[0] ?? '', /degraded_action=allow/);
+  assert.match(summaries[0] ?? '', /degraded_reason=offline-airgapped/);
   assert.match(summaries[0] ?? '', /evidence_kind=valid/);
   assert.match(summaries[0] ?? '', /evidence_age_seconds=30/);
 });

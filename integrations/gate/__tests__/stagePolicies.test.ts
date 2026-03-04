@@ -333,6 +333,73 @@ test('resolvePolicyForStage aplica perfil all-severities y bloquea INFO', async 
   });
 });
 
+test('resolvePolicyForStage expone contrato degraded mode desde entorno con acción block por stage', async () => {
+  await withTempDir('pumuki-stage-policy-degraded-env-', async (repoRoot) => {
+    const previousEnabled = process.env.PUMUKI_DEGRADED_MODE;
+    const previousReason = process.env.PUMUKI_DEGRADED_REASON;
+    const previousPrePush = process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH;
+    process.env.PUMUKI_DEGRADED_MODE = '1';
+    process.env.PUMUKI_DEGRADED_REASON = 'offline-airgapped';
+    process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH = 'block';
+    try {
+      const resolved = resolvePolicyForStage('PRE_PUSH', repoRoot);
+      assert.equal(resolved.trace.degraded?.enabled, true);
+      assert.equal(resolved.trace.degraded?.action, 'block');
+      assert.equal(resolved.trace.degraded?.reason, 'offline-airgapped');
+      assert.equal(resolved.trace.degraded?.source, 'env');
+      assert.equal(resolved.trace.degraded?.code, 'DEGRADED_MODE_BLOCKED');
+    } finally {
+      if (typeof previousEnabled === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_MODE;
+      } else {
+        process.env.PUMUKI_DEGRADED_MODE = previousEnabled;
+      }
+      if (typeof previousReason === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_REASON;
+      } else {
+        process.env.PUMUKI_DEGRADED_REASON = previousReason;
+      }
+      if (typeof previousPrePush === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH;
+      } else {
+        process.env.PUMUKI_DEGRADED_ACTION_PRE_PUSH = previousPrePush;
+      }
+    }
+  });
+});
+
+test('resolvePolicyForStage expone contrato degraded mode desde archivo con acción allow por stage', async () => {
+  await withTempDir('pumuki-stage-policy-degraded-file-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'degraded-mode.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          enabled: true,
+          reason: 'airgapped-enterprise',
+          stages: {
+            PRE_WRITE: 'allow',
+            PRE_COMMIT: 'allow',
+            PRE_PUSH: 'block',
+            CI: 'block',
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const resolved = resolvePolicyForStage('PRE_COMMIT', repoRoot);
+    assert.equal(resolved.trace.degraded?.enabled, true);
+    assert.equal(resolved.trace.degraded?.action, 'allow');
+    assert.equal(resolved.trace.degraded?.reason, 'airgapped-enterprise');
+    assert.equal(resolved.trace.degraded?.source, 'file:.pumuki/degraded-mode.json');
+    assert.equal(resolved.trace.degraded?.code, 'DEGRADED_MODE_ALLOWED');
+  });
+});
+
 test('mapEnterpriseSeverityToGateSeverity convierte severidades enterprise a severidades de gate', () => {
   assert.equal(mapEnterpriseSeverityToGateSeverity('CRITICAL'), 'CRITICAL');
   assert.equal(mapEnterpriseSeverityToGateSeverity('HIGH'), 'ERROR');

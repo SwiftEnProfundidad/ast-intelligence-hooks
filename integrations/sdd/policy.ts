@@ -8,6 +8,7 @@ import {
   validateOpenSpecChanges,
 } from './openSpecCli';
 import { readSddSession, refreshSddSession } from './sessionStore';
+import { resolveDegradedMode } from '../gate/degradedMode';
 import type {
   SddDecision,
   SddEvaluateResult,
@@ -203,6 +204,42 @@ export const evaluateSddPolicy = (params: {
         {
           bypass: true,
           env: 'PUMUKI_SDD_BYPASS',
+        }
+      ),
+    };
+  }
+
+  const degradedMode = resolveDegradedMode(params.stage, repoRoot);
+  if (degradedMode?.action === 'block') {
+    return {
+      stage: params.stage,
+      status,
+      decision: blocked(
+        'SDD_DEGRADED_MODE_BLOCKED',
+        `SDD blocked by degraded mode (action=block). reason=${degradedMode.reason} source=${degradedMode.source}.`,
+        {
+          degraded_mode: true,
+          degraded_action: degradedMode.action,
+          degraded_reason: degradedMode.reason,
+          degraded_source: degradedMode.source,
+          degraded_code: degradedMode.code,
+        }
+      ),
+    };
+  }
+
+  if (degradedMode?.action === 'allow') {
+    return {
+      stage: params.stage,
+      status,
+      decision: allowed(
+        `SDD allowed in degraded mode (action=allow). reason=${degradedMode.reason} source=${degradedMode.source}.`,
+        {
+          degraded_mode: true,
+          degraded_action: degradedMode.action,
+          degraded_reason: degradedMode.reason,
+          degraded_source: degradedMode.source,
+          degraded_code: degradedMode.code,
         }
       ),
     };

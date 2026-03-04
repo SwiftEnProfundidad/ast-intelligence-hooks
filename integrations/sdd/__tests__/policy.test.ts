@@ -242,6 +242,76 @@ test('evaluateSddPolicy permite PRE_WRITE con sesión válida sin ejecutar valid
   });
 });
 
+test('evaluateSddPolicy bloquea PRE_WRITE cuando degraded mode fail-closed está activo', () => {
+  return withFixtureRepo('pumuki-sdd-prewrite-degraded-block-', (repoRoot) => {
+    const previousEnabled = process.env.PUMUKI_DEGRADED_MODE;
+    const previousReason = process.env.PUMUKI_DEGRADED_REASON;
+    const previousAction = process.env.PUMUKI_DEGRADED_ACTION_PRE_WRITE;
+    process.env.PUMUKI_DEGRADED_MODE = '1';
+    process.env.PUMUKI_DEGRADED_REASON = 'offline-airgapped';
+    process.env.PUMUKI_DEGRADED_ACTION_PRE_WRITE = 'block';
+    try {
+      const result = evaluateSddPolicy({ stage: 'PRE_WRITE', repoRoot });
+      assert.equal(result.decision.allowed, false);
+      assert.equal(result.decision.code, 'SDD_DEGRADED_MODE_BLOCKED');
+      assert.equal(result.decision.details?.degraded_mode, true);
+      assert.equal(result.decision.details?.degraded_action, 'block');
+      assert.equal(result.decision.details?.degraded_reason, 'offline-airgapped');
+    } finally {
+      if (typeof previousEnabled === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_MODE;
+      } else {
+        process.env.PUMUKI_DEGRADED_MODE = previousEnabled;
+      }
+      if (typeof previousReason === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_REASON;
+      } else {
+        process.env.PUMUKI_DEGRADED_REASON = previousReason;
+      }
+      if (typeof previousAction === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_ACTION_PRE_WRITE;
+      } else {
+        process.env.PUMUKI_DEGRADED_ACTION_PRE_WRITE = previousAction;
+      }
+    }
+  });
+});
+
+test('evaluateSddPolicy permite PRE_COMMIT cuando degraded mode fail-open está activo', () => {
+  return withFixtureRepo('pumuki-sdd-precommit-degraded-allow-', (repoRoot) => {
+    const previousEnabled = process.env.PUMUKI_DEGRADED_MODE;
+    const previousReason = process.env.PUMUKI_DEGRADED_REASON;
+    const previousAction = process.env.PUMUKI_DEGRADED_ACTION_PRE_COMMIT;
+    process.env.PUMUKI_DEGRADED_MODE = '1';
+    process.env.PUMUKI_DEGRADED_REASON = 'offline-airgapped';
+    process.env.PUMUKI_DEGRADED_ACTION_PRE_COMMIT = 'allow';
+    try {
+      const result = evaluateSddPolicy({ stage: 'PRE_COMMIT', repoRoot });
+      assert.equal(result.decision.allowed, true);
+      assert.equal(result.decision.code, 'ALLOWED');
+      assert.equal(result.decision.details?.degraded_mode, true);
+      assert.equal(result.decision.details?.degraded_action, 'allow');
+      assert.equal(result.decision.details?.degraded_reason, 'offline-airgapped');
+    } finally {
+      if (typeof previousEnabled === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_MODE;
+      } else {
+        process.env.PUMUKI_DEGRADED_MODE = previousEnabled;
+      }
+      if (typeof previousReason === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_REASON;
+      } else {
+        process.env.PUMUKI_DEGRADED_REASON = previousReason;
+      }
+      if (typeof previousAction === 'undefined') {
+        delete process.env.PUMUKI_DEGRADED_ACTION_PRE_COMMIT;
+      } else {
+        process.env.PUMUKI_DEGRADED_ACTION_PRE_COMMIT = previousAction;
+      }
+    }
+  });
+});
+
 test('evaluateSddPolicy bloquea con SDD_CHANGE_INCOMPLETE en PRE_PUSH cuando falta contrato mínimo del change', () => {
   return withFixtureRepo('pumuki-sdd-change-incomplete-', (repoRoot) => {
     writeOpenSpecBinary(repoRoot, {

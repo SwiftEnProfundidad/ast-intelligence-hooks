@@ -10,6 +10,7 @@ import {
   loadSkillsPolicy,
 } from '../config/skillsPolicy';
 import type { SkillsStage } from '../config/skillsLock';
+import { resolveDegradedMode } from './degradedMode';
 
 const heuristicsPromotionStageAllowList = new Set<GateStage>([
   'PRE_COMMIT',
@@ -57,6 +58,13 @@ export type ResolvedStagePolicy = {
         | 'POLICY_AS_CODE_UNKNOWN_SOURCE';
       message: string;
       strict: boolean;
+    };
+    degraded?: {
+      enabled: true;
+      action: 'allow' | 'block';
+      reason: string;
+      source: 'env' | 'file:.pumuki/degraded-mode.json';
+      code: 'DEGRADED_MODE_ALLOWED' | 'DEGRADED_MODE_BLOCKED';
     };
   };
 };
@@ -519,6 +527,7 @@ export const resolvePolicyForStage = (
   stage: SkillsStage,
   repoRoot: string = process.cwd()
 ): ResolvedStagePolicy => {
+  const degraded = resolveDegradedMode(stage, repoRoot);
   const hardModeState = resolveHardModeState(repoRoot);
   if (hardModeState.enabled) {
     const profileName = hardModeState.profileName;
@@ -553,6 +562,7 @@ export const resolvePolicyForStage = (
         signature: policyAsCode.signature,
         policySource: policyAsCode.policySource,
         validation: policyAsCode.validation,
+        ...(degraded ? { degraded } : {}),
       },
     };
   }
@@ -586,6 +596,7 @@ export const resolvePolicyForStage = (
         signature: policyAsCode.signature,
         policySource: policyAsCode.policySource,
         validation: policyAsCode.validation,
+        ...(degraded ? { degraded } : {}),
       },
     };
   }
@@ -621,6 +632,7 @@ export const resolvePolicyForStage = (
       signature: policyAsCode.signature,
       policySource: policyAsCode.policySource,
       validation: policyAsCode.validation,
+      ...(degraded ? { degraded } : {}),
     },
   };
 };
