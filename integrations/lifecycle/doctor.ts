@@ -6,6 +6,11 @@ import { getPumukiHooksStatus } from './hookManager';
 import { LifecycleGitService, type ILifecycleGitService } from './gitService';
 import { getCurrentPumukiVersion } from './packageInfo';
 import { readLifecycleState, type LifecycleState } from './state';
+import {
+  detectOpenSpecInstallation,
+  evaluateOpenSpecCompatibility,
+  isOpenSpecProjectInitialized,
+} from '../sdd/openSpecCli';
 
 export type DoctorIssueSeverity = 'warning' | 'error';
 
@@ -18,7 +23,8 @@ export type DoctorDeepCheckId =
   | 'upstream-readiness'
   | 'adapter-wiring'
   | 'policy-drift'
-  | 'evidence-source-drift';
+  | 'evidence-source-drift'
+  | 'compatibility-contract';
 
 export type DoctorDeepCheck = {
   id: DoctorDeepCheckId;
@@ -33,6 +39,30 @@ export type DoctorDeepReport = {
   enabled: true;
   checks: ReadonlyArray<DoctorDeepCheck>;
   blocking: boolean;
+  contract: DoctorCompatibilityContract;
+};
+
+export type DoctorCompatibilityContract = {
+  overall: 'compatible' | 'incompatible';
+  pumuki: {
+    installed: boolean;
+    version: string;
+  };
+  openspec: {
+    required: boolean;
+    installed: boolean;
+    version: string | null;
+    minimumVersion: string;
+    compatible: boolean;
+  };
+  hooks: {
+    managed: boolean;
+    managedCount: number;
+    totalCount: number;
+  };
+  adapter: {
+    valid: boolean;
+  };
 };
 
 export type LifecycleDoctorReport = {
@@ -457,21 +487,128 @@ const evaluateEvidenceSourceDriftCheck = (params: {
   });
 };
 
+const buildCompatibilityContract = (params: {
+  repoRoot: string;
+  lifecycleState: LifecycleState;
+  hookStatus: ReturnType<typeof getPumukiHooksStatus>;
+  adapterCheck: DoctorDeepCheck;
+}): DoctorCompatibilityContract => {
+  const hooks = Object.values(params.hookStatus);
+  const managedCount = hooks.filter((entry) => entry.managedBlockPresent).length;
+  const totalCount = hooks.length;
+  const hooksManaged = totalCount > 0 && managedCount === totalCount;
+
+  const openSpecRequired = isOpenSpecProjectInitialized(params.repoRoot);
+  const openSpecInstalled = detectOpenSpecInstallation(params.repoRoot);
+  const openSpecCompatibility = evaluateOpenSpecCompatibility(openSpecInstalled);
+  const openSpecCompatible = openSpecRequired ? openSpecCompatibility.compatible : true;
+
+  const adapterValid = params.adapterCheck.status === 'pass';
+  const pumukiInstalled = params.lifecycleState.installed === 'true';
+  const overallCompatible =
+    pumukiInstalled && hooksManaged && adapterValid && openSpecCompatible;
+
+  return {
+    overall: overallCompatible ? 'compatible' : 'incompatible',
+    pumuki: {
+      installed: pumukiInstalled,
+      version: getCurrentPumukiVersion(),
+    },
+    openspec: {
+      required: openSpecRequired,
+      installed: openSpecInstalled.installed,
+      version: openSpecInstalled.version ?? null,
+      minimumVersion: openSpecCompatibility.minimumVersion,
+      compatible: openSpecCompatible,
+    },
+    hooks: {
+      managed: hooksManaged,
+      managedCount,
+      totalCount,
+    },
+    adapter: {
+      valid: adapterValid,
+    },
+  };
+};
+
+const evaluateCompatibilityContractCheck = (
+  contract: DoctorCompatibilityContract
+): DoctorDeepCheck => {
+  if (contract.overall === 'compatible') {
+    return buildDeepCheck({
+      id: 'compatibility-contract',
+      status: 'pass',
+      severity: 'info',
+      message: 'Compatibility contract is satisfied for pumuki/openspec/hooks/adapter.',
+      metadata: {
+        pumuki_installed: contract.pumuki.installed,
+        openspec_required: contract.openspec.required,
+        openspec_compatible: contract.openspec.compatible,
+        hooks_managed: contract.hooks.managed,
+        adapter_valid: contract.adapter.valid,
+      },
+    });
+  }
+
+  const remediation: string[] = [];
+  if (!contract.pumuki.installed) {
+    remediation.push('Run "pumuki install" to restore lifecycle state.');
+  }
+  if (!contract.hooks.managed) {
+    remediation.push('Regenerate managed hooks with "pumuki install".');
+  }
+  if (!contract.adapter.valid) {
+    remediation.push('Repair adapter wiring with "pumuki adapter install --agent=codex".');
+  }
+  if (contract.openspec.required && !contract.openspec.compatible) {
+    remediation.push(
+      `Install or upgrade OpenSpec to >= ${contract.openspec.minimumVersion} before enterprise validation.`
+    );
+  }
+
+  return buildDeepCheck({
+    id: 'compatibility-contract',
+    status: 'fail',
+    severity: 'warning',
+    message: 'Compatibility contract is not satisfied for one or more required components.',
+    remediation: remediation.join(' '),
+    metadata: {
+      pumuki_installed: contract.pumuki.installed,
+      openspec_required: contract.openspec.required,
+      openspec_compatible: contract.openspec.compatible,
+      hooks_managed: contract.hooks.managed,
+      adapter_valid: contract.adapter.valid,
+    },
+  });
+};
+
 const buildDoctorDeepReport = (params: {
   git: ILifecycleGitService;
   repoRoot: string;
+  lifecycleState: LifecycleState;
+  hookStatus: ReturnType<typeof getPumukiHooksStatus>;
 }): DoctorDeepReport => {
+  const adapterCheck = evaluateAdapterWiringCheck(params.repoRoot);
+  const compatibilityContract = buildCompatibilityContract({
+    repoRoot: params.repoRoot,
+    lifecycleState: params.lifecycleState,
+    hookStatus: params.hookStatus,
+    adapterCheck,
+  });
+
   const checks: DoctorDeepCheck[] = [
     evaluateUpstreamReadinessCheck({
       git: params.git,
       repoRoot: params.repoRoot,
     }),
-    evaluateAdapterWiringCheck(params.repoRoot),
+    adapterCheck,
     evaluatePolicyDriftCheck(params.repoRoot),
     evaluateEvidenceSourceDriftCheck({
       git: params.git,
       repoRoot: params.repoRoot,
     }),
+    evaluateCompatibilityContractCheck(compatibilityContract),
   ];
 
   return {
@@ -480,6 +617,7 @@ const buildDoctorDeepReport = (params: {
     blocking: checks.some(
       (check) => check.status === 'fail' && check.severity === 'error'
     ),
+    contract: compatibilityContract,
   };
 };
 
@@ -504,6 +642,8 @@ export const runLifecycleDoctor = (params?: {
     ? buildDoctorDeepReport({
       git,
       repoRoot,
+      lifecycleState,
+      hookStatus,
     })
     : undefined;
 

@@ -13,6 +13,7 @@ import {
 } from '../saasIngestionContract';
 import { resolveHotspotsSaasIngestionMetricsPath } from '../saasIngestionMetrics';
 import { parseLifecycleCliArgs, runLifecycleCli } from '../cli';
+import { computeEvidencePayloadHash } from '../../evidence/evidenceChain';
 import { openSddSession } from '../../sdd/sessionStore';
 import { resolveMcpAiGateReceiptPath, writeMcpAiGateReceipt } from '../../mcp/aiGateReceipt';
 
@@ -41,76 +42,85 @@ const createGitRepo = (trackedNodeModules = false): string => {
 };
 
 const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
-  writeFileSync(
-    join(repoRoot, '.ai_evidence.json'),
-    JSON.stringify(
-      {
-        version: '2.1',
-        timestamp: new Date().toISOString(),
-        snapshot: {
-          stage: 'PRE_COMMIT',
-          outcome: 'PASS',
-          rules_coverage: {
-            stage: 'PRE_COMMIT',
-            active_rule_ids: ['skills.backend.no-empty-catch'],
-            evaluated_rule_ids: ['skills.backend.no-empty-catch'],
-            matched_rule_ids: [],
-            unevaluated_rule_ids: [],
-            counts: {
-              active: 1,
-              evaluated: 1,
-              matched: 0,
-              unevaluated: 0,
-            },
-            coverage_ratio: 1,
-          },
-          findings: [],
+  const evidence = {
+    version: '2.1' as const,
+    timestamp: new Date().toISOString(),
+    snapshot: {
+      stage: 'PRE_COMMIT' as const,
+      outcome: 'PASS' as const,
+      rules_coverage: {
+        stage: 'PRE_COMMIT' as const,
+        active_rule_ids: ['skills.backend.no-empty-catch'],
+        evaluated_rule_ids: ['skills.backend.no-empty-catch'],
+        matched_rule_ids: [],
+        unevaluated_rule_ids: [],
+        counts: {
+          active: 1,
+          evaluated: 1,
+          matched: 0,
+          unevaluated: 0,
         },
-        ledger: [],
-        platforms: {},
-        rulesets: [],
-        human_intent: null,
-        ai_gate: {
-          status: 'ALLOWED',
-          violations: [],
-          human_intent: null,
-        },
-        severity_metrics: {
-          gate_status: 'ALLOWED',
-          total_violations: 0,
-          by_severity: {
-            CRITICAL: 0,
-            ERROR: 0,
-            WARN: 0,
-            INFO: 0,
-          },
-        },
-        repo_state: {
-          repo_root: repoRoot,
-          git: {
-            available: true,
-            branch,
-            upstream: null,
-            ahead: 0,
-            behind: 0,
-            dirty: false,
-            staged: 0,
-            unstaged: 0,
-          },
-          lifecycle: {
-            installed: true,
-            package_version: '6.3.26',
-            lifecycle_version: '6.3.26',
-            hooks: {
-              pre_commit: 'managed',
-              pre_push: 'managed',
-            },
-          },
+        coverage_ratio: 1,
+      },
+      findings: [],
+    },
+    ledger: [],
+    platforms: {},
+    rulesets: [],
+    human_intent: null,
+    ai_gate: {
+      status: 'ALLOWED' as const,
+      violations: [],
+      human_intent: null,
+    },
+    severity_metrics: {
+      gate_status: 'ALLOWED' as const,
+      total_violations: 0,
+      by_severity: {
+        CRITICAL: 0,
+        ERROR: 0,
+        WARN: 0,
+        INFO: 0,
+      },
+    },
+    repo_state: {
+      repo_root: repoRoot,
+      git: {
+        available: true,
+        branch,
+        upstream: null,
+        ahead: 0,
+        behind: 0,
+        dirty: false,
+        staged: 0,
+        unstaged: 0,
+      },
+      lifecycle: {
+        installed: true,
+        package_version: '6.3.26',
+        lifecycle_version: '6.3.26',
+        hooks: {
+          pre_commit: 'managed' as const,
+          pre_push: 'managed' as const,
         },
       },
-      null,
-      2
-    ),
+    },
+  };
+
+  const payloadHash = computeEvidencePayloadHash(evidence);
+  const withChain = {
+    ...evidence,
+    evidence_chain: {
+      algorithm: 'sha256' as const,
+      previous_payload_hash: null,
+      payload_hash: payloadHash,
+      sequence: 1,
+    },
+  };
+
+  writeFileSync(
+    join(repoRoot, '.ai_evidence.json'),
+    JSON.stringify(withChain, null, 2),
     'utf8'
   );
 };
@@ -591,6 +601,9 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
       deep?: {
         enabled?: boolean;
         checks?: Array<{ id?: string }>;
+        contract?: {
+          overall?: string;
+        };
       };
     };
     assert.equal(payload.deep?.enabled, true);
@@ -598,6 +611,12 @@ test('runLifecycleCli doctor --deep --json expone checks enterprise determinista
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'adapter-wiring'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'policy-drift'), true);
     assert.equal(payload.deep?.checks?.some((check) => check.id === 'evidence-source-drift'), true);
+    assert.equal(payload.deep?.checks?.some((check) => check.id === 'compatibility-contract'), true);
+    assert.equal(
+      payload.deep?.contract?.overall === 'compatible' ||
+      payload.deep?.contract?.overall === 'incompatible',
+      true
+    );
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);
