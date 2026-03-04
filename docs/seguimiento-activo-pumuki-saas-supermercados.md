@@ -33,6 +33,18 @@
 - ✅ PUMUKI-004: Mejorar diagnóstico de hooks efectivos en escenarios versionados/custom.
 - ✅ PUMUKI-006: Alinear `package_version` reportada por MCP con versión local efectiva del repo consumidor.
 
+## Fase 2.1 Nuevos hallazgos (iteración SAAS_SUPERMERCADOS)
+
+- ⏳ PUMUKI-008: Feedback iterativo en chat no equivalente a flujo legacy.
+  - Evidencia: en ejecución MCP no aparece feedback operativo por iteración del modelo como en el grafo legacy.
+  - Esperado: resumen corto en cada iteración (`stage`, `decision`, `next_action`) para user/dev.
+- ⏳ PUMUKI-009: Desalineación operativa entre `ai_gate_check` y `pre_flight_check`.
+  - Evidencia: `ai_gate_check => BLOCKED (EVIDENCE_STALE)` mientras `pre_flight_check => allowed=true`.
+  - Esperado: criterio homogéneo o explicación explícita de por qué uno bloquea y el otro permite.
+- ⏳ PUMUKI-010: Respuesta no accionable en `auto_execute_ai_start` para confianza media.
+  - Evidencia: `success=true`, `action=ask`, `message=Medium confidence (undefined%)...`.
+  - Esperado: `next_action` determinista + confidence numérico consistente + remediación concreta.
+
 ## Fase 3. Cierre
 
 - ⏳ Ejecutar suite de tests de regresión afectada.

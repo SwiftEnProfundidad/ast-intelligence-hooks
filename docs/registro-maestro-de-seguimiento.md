@@ -9,6 +9,7 @@
 - Estado del plan: EJECUCION
 - Última task cerrada (`✅`): PUMUKI-004/PUMUKI-006 (diagnóstico de hooks versionados y versión MCP alineada al install local del consumidor).
 - Task activa (`🚧`): PUMUKI-002 (rule-pack de atomicidad Git y trazabilidad de commit).
+- Nuevos pendientes añadidos (`⏳`): PUMUKI-008, PUMUKI-009, PUMUKI-010 (feedback iterativo y coherencia entre tools MCP en flujo chat).
 
 ## Historial resumido
 - Bloque RuralGO cerrado: `docs/seguimiento-completo-validacion-ruralgo-03-03-2026.md`.
