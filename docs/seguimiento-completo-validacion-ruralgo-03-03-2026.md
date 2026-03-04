@@ -1705,10 +1705,21 @@ Criterio de salida F5:
     - `npm run -s typecheck`
     - `npm publish --access public`
 
-- 🚧 `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+- ✅ `P12.F1.T45` Sincronizar canónico RuralGO tras cierre de `#544` (`REPORTED -> FIXED` en feedback + master plan con refs reales).
+  - cierre ejecutado:
+    - rama docs creada y publicada: `docs/rgo-sync-issue-544-fixed-20260304`.
+    - PR abierta y mergeada: `R_GO#1504` (`https://github.com/SwiftEnProfundidad/R_GO/pull/1504`).
+    - commit de merge en `develop`: `5c0306ba14ab59511a10d12d01a35911481154e3`.
+  - evidencia:
+    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `✅ FIXED` para `PUMUKI-INC-056`.
+    - `R_GO/ruralgo-master-plan.md` actualizado con leyenda y siguiente mejora estratégica activa.
+    - hooks en verde durante commit/push de la rama docs (`PRE_COMMIT=ALLOW`, `PRE_PUSH=ALLOW`).
+
+- 🚧 `P12.F2.T49` Ejecutar la siguiente mejora estratégica pendiente: suite contractual multi-repo de regresión enterprise (issue -> rama -> PR -> evidencia).
   - salida esperada:
-    - `R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md` actualizado a `FIXED` para `PUMUKI-INC-056`.
-    - `R_GO/ruralgo-master-plan.md` con leyenda final actualizada y referencia de merge real.
+    - issue creada y priorizada para suite contractual enterprise.
+    - alcance mínimo definido (fixtures, matriz de escenarios, criterios de pase/fallo).
+    - plan de implementación trazado en canónico + master con refs reales.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
