@@ -1994,10 +1994,23 @@ Criterio de salida F5:
     - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `81 passed, 0 failed`.
     - `npm run -s typecheck` => `exit 0`.
 
-- 🚧 `P12.F2.T73` Preparar y publicar release con el hardening de `#606`.
+- ✅ `P12.F2.T73` Preparar y publicar release con el hardening de `#606`.
+  - cierre ejecutado:
+    - release branch creada: `release/6.3.37`.
+    - versionado aplicado en `package.json`, `package-lock.json`, `VERSION` y release notes.
+    - PR de release mergeada: `#610` (`commit acbdb73`).
+    - publicación npm completada con éxito (`npm publish --access public`).
+    - propagación validada: `latest=6.3.37`.
+  - evidencia:
+    - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/stagePolicies.test.ts integrations/git/__tests__/runPlatformGate.test.ts integrations/lifecycle/__tests__/status.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/cli.test.ts` => `81 passed, 0 failed`.
+    - `npm run -s typecheck` => `exit 0`.
+    - `npm view pumuki dist-tags --json` => `"latest": "6.3.37"`.
+    - `npm view pumuki@6.3.37 version` => `6.3.37`.
+
+- 🚧 `P12.F2.T74` Consolidar cierre del bloque P12.F2 y preparar siguiente backlog enterprise.
   - salida esperada:
-    - versionar release incremental y notas de publicación.
-    - publicar en npm y verificar propagación `dist-tags`.
+    - consolidar resumen ejecutivo de lo entregado en `P12.F2`.
+    - definir siguiente lote de issues/tareas priorizadas con una sola `🚧` activa.
 
 Criterio de salida F6:
 - veredicto final trazable y cierre administrativo completo.
