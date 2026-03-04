@@ -159,6 +159,7 @@ test('enterprise server exposes enterprise tools catalog', async () => {
       assert.deepEqual(names, [
         'ai_gate_check',
         'pre_flight_check',
+        'auto_execute_ai_start',
         'check_sdd_status',
         'validate_and_fix',
         'sync_branches',
@@ -221,6 +222,37 @@ test('enterprise server executes legacy-style tools in safe mode', async () => {
       assert.equal(preFlightPayload.success, false);
       assert.equal(preFlightPayload.dryRun, true);
       assert.equal(preFlightPayload.executed, true);
+
+      const autoExecuteResponse = await safeFetchRequest(`${baseUrl}/tool`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: 'auto_execute_ai_start',
+          args: {
+            stage: 'PRE_WRITE',
+          },
+        }),
+      });
+      assert.equal(autoExecuteResponse.status, 200);
+      const autoExecutePayload = (await autoExecuteResponse.json()) as {
+        tool?: string;
+        success?: boolean;
+        result?: {
+          action?: string;
+          confidence_pct?: number;
+          reason_code?: string;
+          next_action?: {
+            message?: string;
+          };
+        };
+      };
+      assert.equal(autoExecutePayload.tool, 'auto_execute_ai_start');
+      assert.equal(autoExecutePayload.success, true);
+      assert.equal(typeof autoExecutePayload.result?.confidence_pct, 'number');
+      assert.equal(typeof autoExecutePayload.result?.reason_code, 'string');
+      assert.equal((autoExecutePayload.result?.next_action?.message ?? '').length > 0, true);
 
       const sddStatusResponse = await safeFetchRequest(`${baseUrl}/tool`, {
         method: 'POST',

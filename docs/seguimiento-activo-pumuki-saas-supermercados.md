@@ -43,7 +43,7 @@
   - Evidencia: `ai_gate_check => BLOCKED (EVIDENCE_STALE)` mientras `pre_flight_check => allowed=true`.
   - Esperado: criterio homogéneo o explicación explícita y trazable de por qué uno bloquea y el otro permite.
   - Entregable: decisión unificada desde el mismo evaluador/política.
-- 🚧 PUMUKI-010: Respuesta no accionable en `auto_execute_ai_start` para confianza media.
+- ✅ PUMUKI-010: Respuesta no accionable en `auto_execute_ai_start` para confianza media.
   - Evidencia: `success=true`, `action=ask`, `message=Medium confidence (undefined%)...`.
   - Esperado: `next_action` determinista + confidence numérico consistente + remediación concreta.
   - Entregable: contrato MCP estable (`confidence_pct`, `reason_code`, `next_action`).
@@ -66,6 +66,6 @@
 
 ## Fase 3. Cierre
 
-- ⏳ Ejecutar suite de tests de regresión afectada.
+- 🚧 Ejecutar suite de tests de regresión afectada.
 - ⏳ Actualizar `CHANGELOG.md` y `docs/RELEASE_NOTES.md` con fixes reales.
 - ⏳ Publicar versión cuando las tareas en construcción/pending críticas estén cerradas.

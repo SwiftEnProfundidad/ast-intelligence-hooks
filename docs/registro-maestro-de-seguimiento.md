@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-009 (paridad operativa `ai_gate_check`/`pre_flight_check` con evaluador único).
-- Task activa (`🚧`): PUMUKI-010 (respuesta accionable en flujo chat).
+- Última task cerrada (`✅`): PUMUKI-010 (`auto_execute_ai_start` con `confidence_pct`, `reason_code` y `next_action` estable).
+- Task activa (`🚧`): Fase 3 cierre (suite de regresión + notas de release).
 - Nuevos pendientes añadidos (`⏳`): sin cambios.
 
 ## Historial resumido
