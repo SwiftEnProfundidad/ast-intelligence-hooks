@@ -4,10 +4,6 @@ import { resolve } from 'node:path';
 import { readSddStatus } from './policy';
 import type { SddStage } from './types';
 
-export const SDD_SYNC_DOCS_CANONICAL_FILES = [
-  'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
-] as const;
-
 const SDD_STATUS_SECTION = {
   id: 'sdd-status',
   begin: '<!-- PUMUKI:BEGIN SDD_STATUS -->',
@@ -20,6 +16,18 @@ type ManagedSectionSyncResult = {
   before: string;
   after: string;
   diffMarkdown: string;
+};
+
+export type SddSyncDocsManagedSection = {
+  id: string;
+  beginMarker: string;
+  endMarker: string;
+  renderBody: (repoRoot: string) => string;
+};
+
+export type SddSyncDocsTarget = {
+  path: string;
+  sections: ReadonlyArray<SddSyncDocsManagedSection>;
 };
 
 export type SddSyncDocsFileResult = {
@@ -92,6 +100,24 @@ const formatSddStatusManagedBody = (repoRoot: string): string => {
   ].join('\n');
 };
 
+const DEFAULT_SYNC_DOCS_TARGETS: ReadonlyArray<SddSyncDocsTarget> = [
+  {
+    path: 'docs/technical/08-validation/refactor/pumuki-integration-feedback.md',
+    sections: [
+      {
+        id: SDD_STATUS_SECTION.id,
+        beginMarker: SDD_STATUS_SECTION.begin,
+        endMarker: SDD_STATUS_SECTION.end,
+        renderBody: formatSddStatusManagedBody,
+      },
+    ],
+  },
+];
+
+export const SDD_SYNC_DOCS_CANONICAL_FILES = DEFAULT_SYNC_DOCS_TARGETS.map(
+  (target) => target.path
+);
+
 const applyManagedSection = (params: {
   filePath: string;
   source: string;
@@ -144,38 +170,46 @@ export const runSddSyncDocs = (params?: {
   change?: string;
   stage?: SddStage;
   task?: string;
+  targets?: ReadonlyArray<SddSyncDocsTarget>;
 }): SddSyncDocsResult => {
   const repoRoot = resolve(params?.repoRoot ?? process.cwd());
   const dryRun = params?.dryRun === true;
   const change = params?.change?.trim() ? params.change.trim() : null;
   const stage = params?.stage ?? null;
   const task = params?.task?.trim() ? params.task.trim() : null;
+  const targets = params?.targets ?? DEFAULT_SYNC_DOCS_TARGETS;
 
-  const updates = SDD_SYNC_DOCS_CANONICAL_FILES.map((relativePath) => {
-    const absolutePath = resolve(repoRoot, relativePath);
+  const updates = targets.map((target) => {
+    const absolutePath = resolve(repoRoot, target.path);
     if (!existsSync(absolutePath)) {
       throw new Error(
-        `[pumuki][sdd] sync-docs missing canonical file: ${relativePath}`
+        `[pumuki][sdd] sync-docs missing canonical file: ${target.path}`
       );
     }
 
     const currentSource = readFileSync(absolutePath, 'utf8');
-    const renderedStatusBody = formatSddStatusManagedBody(repoRoot);
-    const sectionUpdate = applyManagedSection({
-      filePath: relativePath,
-      source: currentSource,
-      beginMarker: SDD_STATUS_SECTION.begin,
-      endMarker: SDD_STATUS_SECTION.end,
-      renderedBody: renderedStatusBody,
-      sectionId: SDD_STATUS_SECTION.id,
-    });
+    let nextSource = currentSource;
+    const sectionUpdates: ManagedSectionSyncResult[] = [];
+
+    for (const section of target.sections) {
+      const update = applyManagedSection({
+        filePath: target.path,
+        source: nextSource,
+        beginMarker: section.beginMarker,
+        endMarker: section.endMarker,
+        renderedBody: section.renderBody(repoRoot),
+        sectionId: section.id,
+      });
+      nextSource = update.nextSource;
+      sectionUpdates.push(update.result);
+    }
 
     return {
-      relativePath,
+      relativePath: target.path,
       absolutePath,
       currentSource,
-      nextSource: sectionUpdate.nextSource,
-      sections: [sectionUpdate.result] as const,
+      nextSource,
+      sections: sectionUpdates,
     };
   });
 
