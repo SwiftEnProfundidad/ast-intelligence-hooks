@@ -240,6 +240,22 @@ const toCode = (ruleId: string): string => {
   return `SKILLS_${ruleId.replace(/[^A-Za-z0-9]+/g, '_').toUpperCase()}`;
 };
 
+const toSkillsRuntimeIrSource = (params: {
+  rule: SkillsCompiledRule;
+  mappedHeuristicRuleIds: ReadonlyArray<string>;
+}): string => {
+  const astNodeIds = [...params.mappedHeuristicRuleIds].sort();
+  const astNodeToken = astNodeIds.length > 0 ? astNodeIds.join(',') : 'none';
+  const evaluationMode = resolveRuleEvaluationMode(params.rule);
+  return (
+    `skills-ir:rule=${params.rule.id};` +
+    `source_skill=${params.rule.sourceSkill};` +
+    `source_path=${params.rule.sourcePath};` +
+    `evaluation_mode=${evaluationMode};` +
+    `ast_nodes=[${astNodeToken}]`
+  );
+};
+
 const stageApplies = (
   currentStage: Exclude<GateStage, 'STAGED'>,
   ruleStage?: Exclude<GateStage, 'STAGED'>
@@ -345,6 +361,10 @@ const toRuleDefinition = (params: {
     bundlePolicy: params.bundlePolicy,
     stage: params.stage,
   });
+  const runtimeIrSource = toSkillsRuntimeIrSource({
+    rule: params.rule,
+    mappedHeuristicRuleIds,
+  });
 
   if (evaluationMode === 'AUTO') {
     if (mappedHeuristicRuleIds.length === 0) {
@@ -377,6 +397,7 @@ const toRuleDefinition = (params: {
         kind: 'Finding',
         message: params.rule.description,
         code: toCode(params.rule.id),
+        source: runtimeIrSource,
       },
       scope: resolveScopeForPlatform(
         params.rule.platform,
@@ -403,6 +424,7 @@ const toRuleDefinition = (params: {
       kind: 'Finding',
       message: `[Declarative] ${params.rule.description}`,
       code: `${toCode(params.rule.id)}_DECLARATIVE`,
+      source: runtimeIrSource,
     },
     scope: resolveScopeForPlatform(
       params.rule.platform,

@@ -168,4 +168,16 @@
     - `npx --yes tsx@4.21.0 --test integrations/gate/__tests__/evaluateAiGate.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts` -> `20 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-024: Ejecutar siguiente bug/mejora SAAS prioritaria (`#615`) y cerrar trazabilidad con RED->GREEN->REFACTOR + evidencia reproducible.
+- ✅ PUMUKI-024: Ejecutar siguiente bug/mejora SAAS prioritaria (`#615`) y cerrar trazabilidad con RED->GREEN->REFACTOR + evidencia reproducible.
+  - Fix:
+    - `core/rules/Consequence.ts` amplía contrato con `source` opcional.
+    - `core/gate/evaluateRules.ts` fusiona `source` del fact + `source` del rule consequence para trazabilidad determinista.
+    - `integrations/config/skillsRuleSet.ts` emite metadata `skills-ir:*` por regla compilada (origen de skill, path, modo de evaluación y nodos AST mapeados).
+    - `integrations/config/__tests__/skillsRuleSet.test.ts` verifica que la regla runtime incluya traza `skills-ir` con nodos AST.
+    - `core/gate/evaluateRules.test.ts` verifica que el finding preserve traza combinada (`fact|skills-ir`).
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test core/gate/evaluateRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `56 pass / 0 fail`.
+    - `npm run -s test:stage-gates` -> `1027 pass / 0 fail / 4 skip`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-025: Ejecutar siguiente bug/mejora SAAS prioritaria (`#616`) para cerrar definición técnica del roadmap AST por nodos con entregable ejecutable y trazable.

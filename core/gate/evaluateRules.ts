@@ -27,6 +27,12 @@ const toFinding = (
   consequence: Consequence,
   target?: FindingTarget
 ): Finding => {
+  const sourceParts = [
+    target?.source?.trim(),
+    consequence.source?.trim(),
+  ].filter((part): part is string => typeof part === 'string' && part.length > 0);
+  const mergedSource = sourceParts.length > 0 ? sourceParts.join('|') : undefined;
+
   return {
     ruleId: rule.id,
     severity: rule.severity,
@@ -34,7 +40,7 @@ const toFinding = (
     message: consequence.message,
     filePath: target?.filePath,
     matchedBy: target?.matchedBy,
-    source: target?.source,
+    source: mergedSource,
   };
 };
 

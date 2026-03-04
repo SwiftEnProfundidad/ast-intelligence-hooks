@@ -158,6 +158,19 @@ test('loads and transforms active bundles into heuristic-driven rules', async ()
     assert.ok(firstRule);
     assert.equal(firstRule.id, 'skills.ios.no-force-try');
     assert.equal(firstRule.severity, 'ERROR');
+    assert.equal(firstRule.then.kind, 'Finding');
+    assert.equal(
+      firstRule.then.source?.includes('skills-ir:rule=skills.ios.no-force-try'),
+      true
+    );
+    assert.equal(
+      firstRule.then.source?.includes('source_skill=ios-guidelines'),
+      true
+    );
+    assert.equal(
+      firstRule.then.source?.includes('ast_nodes=[heuristics.ios.force-try.ast]'),
+      true
+    );
     const iosHeuristicPrefixes = collectHeuristicPrefixes(firstRule.when).sort();
     assert.equal(iosHeuristicPrefixes.length > 0, true);
     assert.equal(iosHeuristicPrefixes.includes('apps/ios/'), true);

@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-023 (issue `#614`, enforcement transversal `PRE_WRITE` por plataforma detectada con guardas de prefijos + bundles y feedback MCP accionable).
-- Task activa (`🚧`): PUMUKI-024 (siguiente bug/mejora SAAS prioritaria: issue `#615`).
+- Última task cerrada (`✅`): PUMUKI-024 (issue `#615`, trazabilidad skills `.codex` -> runtime vía `skills-ir:*` con fusión de source fact+IR en findings).
+- Task activa (`🚧`): PUMUKI-025 (siguiente bug/mejora SAAS prioritaria: issue `#616`).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

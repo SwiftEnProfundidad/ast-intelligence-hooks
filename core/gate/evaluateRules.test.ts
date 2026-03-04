@@ -75,6 +75,46 @@ test('evaluateRules usa id de la regla como code cuando no se define en consecue
   assert.equal(findings[0]?.severity, 'ERROR');
 });
 
+test('evaluateRules combina source del fact y source declarada por la regla', () => {
+  const rules: RuleSet = [
+    {
+      id: 'skills.backend.no-empty-catch',
+      description: 'Disallow empty catch blocks in backend runtime code.',
+      severity: 'ERROR',
+      when: {
+        kind: 'FileContent',
+        regex: ['catch\\s*\\{\\s*\\}'],
+      },
+      then: {
+        kind: 'Finding',
+        message: 'Disallow empty catch blocks in backend runtime code.',
+        code: 'SKILLS_BACKEND_NO_EMPTY_CATCH',
+        source:
+          'skills-ir:rule=skills.backend.no-empty-catch;source_skill=backend-guidelines;source_path=docs/codex-skills/windsurf-rules-backend.md;evaluation_mode=AUTO;ast_nodes=[heuristics.ts.empty-catch.ast]',
+      },
+      scope: {
+        include: ['apps/backend/'],
+      },
+    },
+  ];
+  const facts = [
+    {
+      kind: 'FileContent',
+      path: 'apps/backend/src/service.ts',
+      content: 'try { doStuff(); } catch {}',
+      source: 'git:staged',
+    },
+  ] as const;
+
+  const findings = evaluateRules(rules, facts);
+
+  assert.equal(findings.length, 1);
+  assert.equal(
+    findings[0]?.source,
+    'git:staged|skills-ir:rule=skills.backend.no-empty-catch;source_skill=backend-guidelines;source_path=docs/codex-skills/windsurf-rules-backend.md;evaluation_mode=AUTO;ast_nodes=[heuristics.ts.empty-catch.ast]'
+  );
+});
+
 test('evaluateRules respeta scope y no genera hallazgo cuando no coincide', () => {
   const rules: RuleSet = [
     {
