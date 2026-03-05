@@ -334,6 +334,9 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 Backlog tooling quick examples:
 
 ```bash
+# focused local regression pack for backlog tooling
+npm run -s test:backlog-tooling
+
 # watch: canonical markdown source + explicit override + optional gh lookup
 npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts \
   --file=/abs/path/consumer/PUMUKI_BUGS_MEJORAS.md \

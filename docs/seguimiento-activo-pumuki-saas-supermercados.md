@@ -984,8 +984,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#670`.
 
-- 🚧 PUMUKI-086: Ejecutar mejora DX siguiente para añadir script npm focal `test:backlog-tooling`.
+- ✅ PUMUKI-086: Ejecutar mejora DX siguiente para añadir script npm focal `test:backlog-tooling`.
+  - Fix:
+    - `package.json`:
+      - nuevo script `test:backlog-tooling` con suite focal de backlog contract/watch/reconcile.
+    - `docs/USAGE.md`:
+      - añadido comando rápido recomendado `npm run -s test:backlog-tooling` en sección backlog tooling.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `36 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#671`.
+
+- 🚧 PUMUKI-087: Ejecutar mejora DX siguiente para exponer `test:backlog-tooling` en README principal.
   - Alcance:
-    - Ejecutar rápido suites mínimas de contrato/watch/reconcile.
-    - Facilitar validación local/CI sin invocar packs largos manualmente.
-  - Issue upstream activa: `#671`.
+    - Añadir discoverability del script en documentación de entrada del repo.
+    - Mantener concisión y no duplicar contenido extenso de `docs/USAGE.md`.
+  - Issue upstream activa: `#672`.
