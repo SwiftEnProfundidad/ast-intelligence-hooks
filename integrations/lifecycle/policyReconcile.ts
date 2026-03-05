@@ -14,6 +14,8 @@ type PolicyReconcileDriftCode =
   | 'SKILLS_LOCK_INVALID'
   | 'AGENTS_REQUIRED_SKILL_MISSING_IN_LOCK'
   | 'POLICY_STAGE_INVALID'
+  | 'POLICY_STAGE_UNSIGNED_OR_COMPUTED'
+  | 'POLICY_STAGE_SIGNATURE_MISSING'
   | 'POLICY_HASH_DIVERGENCE'
   | 'POLICY_STAGE_NON_STRICT';
 
@@ -30,6 +32,7 @@ export type PolicyReconcileReport = {
   command: 'pumuki policy reconcile';
   repoRoot: string;
   generatedAt: string;
+  strictRequested: boolean;
   summary: {
     total: number;
     blocking: number;
@@ -79,9 +82,11 @@ const hasRequiredSkillInLock = (params: {
 export const runPolicyReconcile = (params?: {
   repoRoot?: string;
   now?: () => Date;
+  strict?: boolean;
 }): PolicyReconcileReport => {
   const repoRoot = resolve(params?.repoRoot ?? process.cwd());
   const now = params?.now ?? (() => new Date());
+  const strictRequested = params?.strict === true;
   const drifts: PolicyReconcileDrift[] = [];
 
   const agentsPath = resolve(repoRoot, 'AGENTS.md');
@@ -209,13 +214,53 @@ export const runPolicyReconcile = (params?: {
     if (!stageSnapshot.strict) {
       addDrift(drifts, {
         code: 'POLICY_STAGE_NON_STRICT',
-        severity: 'WARN',
-        blocking: false,
-        message: `Stage ${stage} runs with strict=false.`,
-        remediation: 'Enable strict mode for enterprise fail-closed behavior.',
+        severity: strictRequested ? 'ERROR' : 'WARN',
+        blocking: strictRequested,
+        message: strictRequested
+          ? `Stage ${stage} runs with strict=false under strict reconcile mode.`
+          : `Stage ${stage} runs with strict=false.`,
+        remediation: strictRequested
+          ? 'Enable strict mode (PUMUKI_POLICY_STRICT=1) and rerun reconciliation.'
+          : 'Enable strict mode for enterprise fail-closed behavior.',
         context: {
           stage,
           hash: stageSnapshot.hash,
+        },
+      });
+    }
+    if (
+      strictRequested &&
+      (typeof stageSnapshot.policySource !== 'string' ||
+        !stageSnapshot.policySource.startsWith('file:'))
+    ) {
+      addDrift(drifts, {
+        code: 'POLICY_STAGE_UNSIGNED_OR_COMPUTED',
+        severity: 'ERROR',
+        blocking: true,
+        message: `Stage ${stage} is not backed by a file-based policy-as-code contract.`,
+        remediation:
+          'Provide .pumuki/policy-as-code.json with valid signatures and rerun strict reconcile.',
+        context: {
+          stage,
+          policy_source: stageSnapshot.policySource,
+          validation_code: stageSnapshot.validationCode,
+        },
+      });
+    }
+    if (
+      strictRequested &&
+      (typeof stageSnapshot.signature !== 'string' || stageSnapshot.signature.trim().length === 0)
+    ) {
+      addDrift(drifts, {
+        code: 'POLICY_STAGE_SIGNATURE_MISSING',
+        severity: 'ERROR',
+        blocking: true,
+        message: `Stage ${stage} policy signature is missing.`,
+        remediation:
+          'Regenerate signed policy-as-code contract and rerun strict reconcile.',
+        context: {
+          stage,
+          policy_source: stageSnapshot.policySource,
         },
       });
     }
@@ -243,6 +288,7 @@ export const runPolicyReconcile = (params?: {
     command: 'pumuki policy reconcile',
     repoRoot,
     generatedAt: now().toISOString(),
+    strictRequested,
     summary: {
       total: drifts.length,
       blocking,

@@ -166,6 +166,7 @@ type ParsedArgs = {
   analyticsJsonOutputPath?: string;
   analyticsMarkdownOutputPath?: string;
   policyCommand?: PolicyCommand;
+  policyStrict?: boolean;
 };
 
 const HELP_TEXT = `
@@ -187,7 +188,7 @@ Pumuki lifecycle commands:
   pumuki adapter install --agent=<name> [--dry-run] [--json]
   pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
   pumuki analytics hotspots diagnose [--json]
-  pumuki policy reconcile [--json]
+  pumuki policy reconcile [--strict] [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
   pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
@@ -765,13 +766,24 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   }
 
   if (commandRaw === 'policy') {
-    const subcommandRaw = argv[1] ?? 'reconcile';
+    const firstArg = argv[1];
+    const subcommandRaw =
+      typeof firstArg === 'string' && !firstArg.startsWith('--')
+        ? firstArg
+        : 'reconcile';
     if (subcommandRaw !== 'reconcile') {
       throw new Error(`Unsupported policy subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
     }
-    for (const arg of argv.slice(2)) {
+    let policyStrict = false;
+    const policyFlagsOffset =
+      typeof firstArg === 'string' && !firstArg.startsWith('--') ? 2 : 1;
+    for (const arg of argv.slice(policyFlagsOffset)) {
       if (arg === '--json') {
         json = true;
+        continue;
+      }
+      if (arg === '--strict') {
+        policyStrict = true;
         continue;
       }
       throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
@@ -781,6 +793,7 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       purgeArtifacts: false,
       json,
       policyCommand: 'reconcile',
+      policyStrict,
     };
   }
 
@@ -2304,12 +2317,13 @@ export const runLifecycleCli = async (
         if (parsed.policyCommand === 'reconcile') {
           const report = runPolicyReconcile({
             repoRoot: process.cwd(),
+            strict: parsed.policyStrict === true,
           });
           if (parsed.json) {
             writeInfo(JSON.stringify(report, null, 2));
           } else {
             writeInfo(
-              `[pumuki][policy] reconcile status=${report.summary.status} total=${report.summary.total} blocking=${report.summary.blocking} warnings=${report.summary.warnings}`
+              `[pumuki][policy] reconcile status=${report.summary.status} total=${report.summary.total} blocking=${report.summary.blocking} warnings=${report.summary.warnings} strict_requested=${report.strictRequested ? 'yes' : 'no'}`
             );
             for (const drift of report.drifts) {
               writeInfo(

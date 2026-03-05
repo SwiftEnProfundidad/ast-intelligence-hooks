@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import test from 'node:test';
 import type { LocalHotspotsReport } from '../analyticsHotspots';
 import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
+import { readLifecyclePolicyValidationSnapshot } from '../policyValidationSnapshot';
 import { resolveHotspotsSaasIngestionAuditPath } from '../saasIngestionAudit';
 import {
   createHotspotsSaasIngestionPayload,
@@ -181,6 +182,35 @@ const writePolicyReconcileInputs = (repoRoot: string): void => {
           { name: 'backend', source: 'docs/codex-skills/windsurf-rules-backend.md' },
           { name: 'android', source: 'docs/codex-skills/windsurf-rules-android.md' },
         ],
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
+const writePolicyAsCodeContractForDefaultSource = (repoRoot: string): void => {
+  const snapshot = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const preCommitSignature = snapshot.stages.PRE_COMMIT.signature;
+  const prePushSignature = snapshot.stages.PRE_PUSH.signature;
+  const ciSignature = snapshot.stages.CI.signature;
+  assert.ok(preCommitSignature);
+  assert.ok(prePushSignature);
+  assert.ok(ciSignature);
+  mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+  writeFileSync(
+    join(repoRoot, '.pumuki', 'policy-as-code.json'),
+    JSON.stringify(
+      {
+        version: '1.0',
+        source: 'default',
+        signatures: {
+          PRE_COMMIT: preCommitSignature,
+          PRE_PUSH: prePushSignature,
+          CI: ciSignature,
+        },
+        expires_at: '2999-01-01T00:00:00.000Z',
       },
       null,
       2
@@ -600,12 +630,21 @@ test('parseLifecycleCliArgs soporta policy reconcile', () => {
     purgeArtifacts: false,
     json: true,
     policyCommand: 'reconcile',
+    policyStrict: false,
   });
   assert.deepEqual(parseLifecycleCliArgs(['policy']), {
     command: 'policy',
     purgeArtifacts: false,
     json: false,
     policyCommand: 'reconcile',
+    policyStrict: false,
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['policy', '--strict']), {
+    command: 'policy',
+    purgeArtifacts: false,
+    json: false,
+    policyCommand: 'reconcile',
+    policyStrict: true,
   });
 });
 
@@ -2066,8 +2105,95 @@ test('runLifecycleCli policy reconcile --json devuelve PASS cuando AGENTS y skil
     assert.equal(payload.command, 'pumuki policy reconcile');
     assert.equal(payload.summary?.status, 'PASS');
     assert.equal(payload.summary?.blocking, 0);
+    assert.equal(payload.strictRequested, false);
   } finally {
     process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli policy reconcile --strict --json bloquea sin contrato firmado y strict activo', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const previousPolicyStrict = process.env.PUMUKI_POLICY_STRICT;
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.env.PUMUKI_POLICY_STRICT = '1';
+    writePolicyReconcileInputs(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['policy', 'reconcile', '--strict', '--json']);
+    assert.equal(code, 1);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      strictRequested?: boolean;
+      summary?: {
+        status?: string;
+        blocking?: number;
+      };
+      drifts?: Array<{ code?: string }>;
+    };
+    assert.equal(payload.strictRequested, true);
+    assert.equal(payload.summary?.status, 'BLOCKED');
+    assert.equal(payload.summary?.blocking ? payload.summary.blocking > 0 : false, true);
+    assert.equal(
+      payload.drifts?.some((drift) => drift.code === 'POLICY_STAGE_UNSIGNED_OR_COMPUTED'),
+      true
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    if (typeof previousPolicyStrict === 'string') {
+      process.env.PUMUKI_POLICY_STRICT = previousPolicyStrict;
+    } else {
+      delete process.env.PUMUKI_POLICY_STRICT;
+    }
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli policy reconcile --strict --json devuelve PASS con contrato firmado y strict activo', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const previousPolicyStrict = process.env.PUMUKI_POLICY_STRICT;
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    process.env.PUMUKI_POLICY_STRICT = '1';
+    writePolicyReconcileInputs(repo);
+    writePolicyAsCodeContractForDefaultSource(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['policy', 'reconcile', '--strict', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      strictRequested?: boolean;
+      summary?: {
+        status?: string;
+        blocking?: number;
+      };
+    };
+    assert.equal(payload.strictRequested, true);
+    assert.equal(payload.summary?.status, 'PASS');
+    assert.equal(payload.summary?.blocking, 0);
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    if (typeof previousPolicyStrict === 'string') {
+      process.env.PUMUKI_POLICY_STRICT = previousPolicyStrict;
+    } else {
+      delete process.env.PUMUKI_POLICY_STRICT;
+    }
     process.chdir(previousCwd);
     rmSync(repo, { recursive: true, force: true });
   }

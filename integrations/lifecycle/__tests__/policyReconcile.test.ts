@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import test from 'node:test';
+import { readLifecyclePolicyValidationSnapshot } from '../policyValidationSnapshot';
 import { runPolicyReconcile } from '../policyReconcile';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
@@ -62,6 +63,49 @@ const writeValidAgentsAndSkillsLock = (repoRoot: string): void => {
   );
 };
 
+const withPolicyStrictEnv = async <T>(callback: () => Promise<T> | T): Promise<T> => {
+  const previous = process.env.PUMUKI_POLICY_STRICT;
+  process.env.PUMUKI_POLICY_STRICT = '1';
+  try {
+    return await callback();
+  } finally {
+    if (typeof previous === 'string') {
+      process.env.PUMUKI_POLICY_STRICT = previous;
+    } else {
+      delete process.env.PUMUKI_POLICY_STRICT;
+    }
+  }
+};
+
+const writeValidPolicyAsCodeContract = (repoRoot: string): void => {
+  const snapshot = readLifecyclePolicyValidationSnapshot(repoRoot);
+  const preCommitSignature = snapshot.stages.PRE_COMMIT.signature;
+  const prePushSignature = snapshot.stages.PRE_PUSH.signature;
+  const ciSignature = snapshot.stages.CI.signature;
+  assert.ok(preCommitSignature);
+  assert.ok(prePushSignature);
+  assert.ok(ciSignature);
+  mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+  writeFileSync(
+    join(repoRoot, '.pumuki', 'policy-as-code.json'),
+    JSON.stringify(
+      {
+        version: '1.0',
+        source: 'default',
+        signatures: {
+          PRE_COMMIT: preCommitSignature,
+          PRE_PUSH: prePushSignature,
+          CI: ciSignature,
+        },
+        expires_at: '2999-01-01T00:00:00.000Z',
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
 test('runPolicyReconcile devuelve PASS cuando contrato mínimo está alineado', async () => {
   await withFixtureRepo('pumuki-policy-reconcile-pass-', (repoRoot) => {
     writeValidAgentsAndSkillsLock(repoRoot);
@@ -71,6 +115,7 @@ test('runPolicyReconcile devuelve PASS cuando contrato mínimo está alineado', 
     });
     assert.equal(report.command, 'pumuki policy reconcile');
     assert.equal(report.generatedAt, '2026-03-05T13:00:00.000Z');
+    assert.equal(report.strictRequested, false);
     assert.equal(report.summary.blocking, 0);
     assert.equal(report.summary.status, 'PASS');
   });
@@ -99,5 +144,41 @@ test('runPolicyReconcile bloquea si falta skills.lock.json', async () => {
     const report = runPolicyReconcile({ repoRoot });
     assert.equal(report.summary.status, 'BLOCKED');
     assert.ok(report.drifts.some((drift) => drift.code === 'SKILLS_LOCK_MISSING'));
+  });
+});
+
+test('runPolicyReconcile --strict bloquea cuando falta contrato file-based firmado', async () => {
+  await withFixtureRepo('pumuki-policy-reconcile-strict-blocks-', async (repoRoot) => {
+    writeValidAgentsAndSkillsLock(repoRoot);
+    await withPolicyStrictEnv(async () => {
+      const report = runPolicyReconcile({
+        repoRoot,
+        strict: true,
+      });
+      assert.equal(report.strictRequested, true);
+      assert.equal(report.summary.status, 'BLOCKED');
+      assert.ok(
+        report.drifts.some((drift) => drift.code === 'POLICY_STAGE_UNSIGNED_OR_COMPUTED')
+      );
+      assert.ok(
+        report.drifts.some((drift) => drift.code === 'POLICY_STAGE_INVALID')
+      );
+    });
+  });
+});
+
+test('runPolicyReconcile --strict devuelve PASS con contrato firmado + strict activo', async () => {
+  await withFixtureRepo('pumuki-policy-reconcile-strict-pass-', async (repoRoot) => {
+    writeValidAgentsAndSkillsLock(repoRoot);
+    await withPolicyStrictEnv(async () => {
+      writeValidPolicyAsCodeContract(repoRoot);
+      const report = runPolicyReconcile({
+        repoRoot,
+        strict: true,
+      });
+      assert.equal(report.strictRequested, true);
+      assert.equal(report.summary.blocking, 0);
+      assert.equal(report.summary.status, 'PASS');
+    });
   });
 });
