@@ -337,6 +337,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` exposes `next_command` when action is required (safe reconcile sequence).
 - `watch-consumer-backlog --json` exposes `next_command_reason` when `next_command` is present.
 - `watch-consumer-backlog --json` exposes `next_commands[]` (ordered dry-run/apply steps) when action is required.
+- `watch-consumer-backlog --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
 - `watch-consumer-backlog` (modo humano) añade hint `--no-fail` cuando hay acción requerida.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
@@ -347,6 +348,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` exposes `next_command` when there are actionable deltas (`--json` + `--apply` sequence).
 - `reconcile-consumer-backlog-issues --json` exposes `next_command_reason` when `next_command` is present.
 - `reconcile-consumer-backlog-issues --json` exposes `next_commands[]` (ordered dry-run/apply steps) when action is required.
+- `reconcile-consumer-backlog-issues --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
 - `reconcile-consumer-backlog-issues` (modo humano) imprime `action_required_reasons=<...|none>`.
 - `reconcile-consumer-backlog-issues` (modo humano) añade hint de flujo seguro cuando hay deltas: `--json` (dry-run) y luego `--apply`.

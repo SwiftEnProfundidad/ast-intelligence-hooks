@@ -1334,9 +1334,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#696`.
 
-- 🚧 PUMUKI-112: Ejecutar mejora DX siguiente para `next_commands[].safety` en JSON de watch/reconcile.
+- ✅ PUMUKI-112: Ejecutar mejora DX siguiente para `next_commands[].safety` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` incluye `safety` por paso (`read_only` para dry-run, `mutating` para apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `safety` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de `safety` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].safety`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#697`.
+
+- 🚧 PUMUKI-113: Ejecutar mejora DX siguiente para `next_commands[].description` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `safety` por paso (`read_only` o `mutating`) dentro de `next_commands[]`.
+    - Exponer `description` breve por paso dentro de `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Conservar orden estable dry-run/apply.
-  - Issue upstream activa: `#697`.
+    - Preservar orden estable dry-run/apply.
+  - Issue upstream activa: `#698`.
