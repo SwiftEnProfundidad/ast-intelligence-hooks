@@ -1689,8 +1689,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Commit: `cd3d45f`.
 
-- 🚧 PUMUKI-135: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre `npx --no-install pumuki --version` con `MODULE_NOT_FOUND`.
+- ✅ PUMUKI-135: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre `npx --no-install pumuki --version` con `MODULE_NOT_FOUND`.
+  - Resultado implementado:
+    - `scripts/package-install-smoke-consumer-npm-lib.ts`:
+      - `verifyInstalledPumukiBinaryVersion()` ahora intenta primero `npx --no-install pumuki --version` y, si detecta fallo/fatal pattern, hace fallback determinista a comando local resuelto (`node_modules/.bin/pumuki` o entrypoint local) antes de fallar definitivamente.
+    - `scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts`:
+      - nuevo test RED/GREEN para validar que, ante `MODULE_NOT_FOUND` en `--no-install`, el smoke cae en fallback local y pasa.
+      - cobertura ampliada para confirmar dos intentos registrados en command log cuando hay degradación.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts scripts/__tests__/package-install-smoke-repo-setup-lib.test.ts scripts/__tests__/package-smoke-workflow-contract.test.ts` -> `8 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Commit: `ebd13ac`.
+
+- 🚧 PUMUKI-136: Ejecutar siguiente bug prioritaria del watcher RuralGo (`FP-030`) sobre falso positivo `PRE_PUSH` por upstream desalineado (paridad con `PUMUKI-INC-060`).
   - Alcance:
-    - reproducir en smoke de consumidor empaquetado,
-    - endurecer resolución de runtime en path `--no-install`,
-    - cerrar con test de regresión y update de estado en MD canónico.
+    - validar cierre con evidencia cruzada sobre mismo fix de `PRE_PUSH_UPSTREAM_MISALIGNED`,
+    - confirmar no-regresión en escenario de upstream `origin/develop` + delta histórico,
+    - actualizar estado canónico en MD RuralGo.
