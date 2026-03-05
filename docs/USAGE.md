@@ -341,6 +341,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `watch-consumer-backlog --json` includes `next_commands[].idempotent` for retry-safe orchestration.
 - `watch-consumer-backlog --json` includes `next_commands[].estimated_duration_ms` for timeout/scheduling hints.
+- `watch-consumer-backlog --json` includes `next_commands[].requires_confirmation` for safe mutating-step execution.
 - `watch-consumer-backlog --json` includes `next_commands[].depends_on` for step sequencing (`null` for dry-run, `dry_run` for apply).
 - `watch-consumer-backlog --json` includes `next_commands[].description` for human-readable step guidance.
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
@@ -357,6 +358,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].safety` (`read_only` | `mutating`) for orchestration safety.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].idempotent` for retry-safe orchestration.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].estimated_duration_ms` for timeout/scheduling hints.
+- `reconcile-consumer-backlog-issues --json` includes `next_commands[].requires_confirmation` for safe mutating-step execution.
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].depends_on` for step sequencing (`null` for dry-run, `dry_run` for apply).
 - `reconcile-consumer-backlog-issues --json` includes `next_commands[].description` for human-readable step guidance.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
