@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-061 (issue `#646`, fix de bootstrap upstream en `pre-push` sin upstream + fallback determinista).
-- Task activa (`🚧`): PUMUKI-062 (issue `#647`, regresión PRE_WRITE no determinista en primer intento reportada por RuralGo).
+- Última task cerrada (`✅`): PUMUKI-062 (issue `#647`, fix de determinismo PRE_WRITE para `EVIDENCE_GATE_BLOCKED`).
+- Task activa (`🚧`): PUMUKI-063 (issue `#648`, falso positivo PRE_PUSH por upstream desalineado en scope coverage).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

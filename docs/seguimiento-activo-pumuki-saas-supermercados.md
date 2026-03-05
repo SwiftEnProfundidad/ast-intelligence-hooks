@@ -648,8 +648,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#646`.
 
-- 🚧 PUMUKI-062: Ejecutar siguiente regresión prioritaria del watcher RuralGo (`PUMUKI-INC-048`) sobre no-determinismo `PRE_WRITE` (primer intento bloquea, rerun pasa).
+- ✅ PUMUKI-062: Ejecutar siguiente regresión prioritaria del watcher RuralGo (`PUMUKI-INC-048`) sobre no-determinismo `PRE_WRITE` (primer intento bloquea, rerun pasa).
+  - Fix:
+    - `integrations/lifecycle/preWriteAutomation.ts`:
+      - `EVIDENCE_GATE_BLOCKED` entra en el set de violaciones auto-curables de `PRE_WRITE`.
+      - El flujo de auto-refresh ya no requiere rerun manual de hooks cuando la evidencia quedó bloqueada y es recuperable.
+    - `integrations/lifecycle/__tests__/preWriteAutomation.test.ts`:
+      - nuevo test de regresión para `EVIDENCE_GATE_BLOCKED` con refresh determinista en primer intento.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/preWriteAutomation.test.ts` -> `3 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#647`.
+
+- 🚧 PUMUKI-063: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060 / FP-030`) sobre falso positivo de coverage en `PRE_PUSH` por upstream desalineado.
   - Alcance:
-    - Reproducir RED en `sdd validate --stage=PRE_WRITE`.
-    - Aplicar fix determinista (auto-refresh/retry controlado) sin rerun manual de hooks.
-  - Issue upstream activa: `#647`.
+    - Reproducir RED con upstream desalineado (`origin/develop`) y bloqueo no representativo del delta real.
+    - Aplicar fix de detección/remediación determinista para evitar falso scope-blocking.
+  - Issue upstream activa: `#648`.

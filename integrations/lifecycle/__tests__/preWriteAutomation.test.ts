@@ -219,3 +219,60 @@ test('buildPreWriteAutomationTrace no ejecuta retry cuando no hay violaciones au
   assert.equal(result.trace.attempted, false);
   assert.equal(result.trace.actions.length, 0);
 });
+
+test('buildPreWriteAutomationTrace refresca evidencia cuando PRE_WRITE llega con EVIDENCE_GATE_BLOCKED', async () => {
+  let runPlatformGateCalls = 0;
+  let runEnterpriseCalls = 0;
+  let sleepCalled = false;
+  const refreshedAiGate = buildAiGate([]);
+
+  const result = await buildPreWriteAutomationTrace(
+    {
+      repoRoot: '/repo',
+      sdd: buildSddAllowed(),
+      aiGate: buildAiGate([toViolation('EVIDENCE_GATE_BLOCKED')]),
+      runPlatformGate: async () => {
+        runPlatformGateCalls += 1;
+        return 0;
+      },
+    },
+    {
+      runEnterpriseAiGateCheck: () => {
+        runEnterpriseCalls += 1;
+        return {
+          tool: 'ai_gate_check',
+          dryRun: true,
+          executed: true,
+          success: refreshedAiGate.allowed,
+          result: refreshedAiGate,
+        };
+      },
+      evaluateAiGate: () => refreshedAiGate,
+      writeMcpAiGateReceipt: () => ({
+        path: '/repo/.pumuki/artifacts/mcp-ai-gate-receipt.json',
+        receipt: {
+          version: '1',
+          source: 'pumuki-enterprise-mcp',
+          tool: 'ai_gate_check',
+          repo_root: '/repo',
+          stage: 'PRE_WRITE',
+          status: 'ALLOWED',
+          allowed: true,
+          issued_at: new Date('2026-03-03T00:00:00.000Z').toISOString(),
+        },
+      }),
+      sleep: async () => {
+        sleepCalled = true;
+      },
+    }
+  );
+
+  assert.equal(runPlatformGateCalls, 1);
+  assert.equal(runEnterpriseCalls, 1);
+  assert.equal(sleepCalled, false);
+  assert.equal(result.aiGate.allowed, true);
+  assert.deepEqual(
+    result.trace.actions.map((item) => item.action),
+    ['refresh_evidence']
+  );
+});
