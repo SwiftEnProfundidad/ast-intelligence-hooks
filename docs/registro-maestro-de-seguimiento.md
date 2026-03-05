@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-109 (issue `#694`, `next_command` en JSON de watch para loop reconcile).
-- Task activa (`🚧`): PUMUKI-110 (issue `#695`, `next_command_reason` en JSON para orquestación determinista).
+- Última task cerrada (`✅`): PUMUKI-110 (issue `#695`, `next_command_reason` en JSON para orquestación determinista).
+- Task activa (`🚧`): PUMUKI-111 (issue `#696`, `next_commands` estructurado para consumers JSON).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

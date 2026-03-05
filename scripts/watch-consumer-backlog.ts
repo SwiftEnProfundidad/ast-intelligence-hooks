@@ -206,6 +206,7 @@ const main = async (): Promise<void> => {
         parsed.filePath
       )} --apply`
     : undefined;
+  const nextCommandReason = nextCommand ? actionRequiredReasons[0] : undefined;
 
   if (parsed.json) {
     const generatedAt = new Date().toISOString();
@@ -239,6 +240,7 @@ const main = async (): Promise<void> => {
           },
           action_required_reasons: actionRequiredReasons,
           ...(nextCommand ? { next_command: nextCommand } : {}),
+          ...(nextCommandReason ? { next_command_reason: nextCommandReason } : {}),
           heading_drift_count: result.headingDrift.length,
           ...result,
         },
