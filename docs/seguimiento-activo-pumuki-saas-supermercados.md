@@ -1021,8 +1021,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#674`.
 
-- 🚧 PUMUKI-090: Ejecutar mejora DX siguiente para añadir tabla rápida de comandos backlog tooling en `docs/USAGE.md`.
+- ✅ PUMUKI-090: Ejecutar mejora DX siguiente para añadir tabla rápida de comandos backlog tooling en `docs/USAGE.md`.
+  - Fix:
+    - `docs/USAGE.md`:
+      - añadida tabla rápida `Command -> Objective` en la sección de backlog tooling.
+      - se mantiene la sección de ejemplos largos sin duplicación innecesaria.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `36 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#675`.
+
+- 🚧 PUMUKI-091: Ejecutar mejora DX siguiente para sincronizar emoji de encabezados por estado real en reconciliación de backlog consumidor.
   - Alcance:
-    - Incluir vista rápida comando->objetivo para legibilidad humana.
-    - Mantener ejemplos largos existentes sin duplicación excesiva.
-  - Issue upstream activa: `#675`.
+    - Extender `reconcile-consumer-backlog-issues` para actualizar encabezados `### ✅/🚧/⏳/⛔ <ID>` según estado efectivo.
+    - Evitar contradicciones visuales entre tablas y secciones de detalle en el mismo MD.
+    - Mantener comportamiento seguro en markdown sin headings compatibles.
+  - Issue upstream activa: `#676`.

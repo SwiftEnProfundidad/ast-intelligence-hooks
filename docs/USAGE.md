@@ -332,6 +332,15 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog` is non-destructive and reports action-required drift.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
 
+Backlog tooling quick reference:
+
+| Command | Objective |
+|---|---|
+| `npm run -s test:backlog-tooling` | Ejecutar suite focal de regresión del tooling de backlog. |
+| `scripts/watch-consumer-backlog.ts --json` | Detectar drift accionable sin mutar archivos. |
+| `scripts/reconcile-consumer-backlog-issues.ts --json` | Simular reconciliación (dry-run) y revisar cambios planeados. |
+| `scripts/reconcile-consumer-backlog-issues.ts --apply` | Aplicar reconciliación sobre el backlog consumidor. |
+
 Backlog tooling quick examples:
 
 ```bash

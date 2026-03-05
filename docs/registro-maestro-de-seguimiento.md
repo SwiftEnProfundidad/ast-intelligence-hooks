@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-089 (issue `#674`, estabilizar anchor de sección backlog tooling).
-- Task activa (`🚧`): PUMUKI-090 (issue `#675`, tabla rápida de comandos backlog tooling).
+- Última task cerrada (`✅`): PUMUKI-090 (issue `#675`, tabla rápida de comandos backlog tooling).
+- Task activa (`🚧`): PUMUKI-091 (issue `#676`, sincronizar emoji de encabezados por estado real en reconciliación de backlog).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
