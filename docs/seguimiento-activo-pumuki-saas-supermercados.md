@@ -1195,9 +1195,18 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#686`.
 
-- 🚧 PUMUKI-102: Ejecutar mejora docs siguiente para reflejar módulo compartido de reasons en backlog tooling.
+- ✅ PUMUKI-102: Ejecutar mejora docs siguiente para reflejar módulo compartido de reasons en backlog tooling.
+  - Fix:
+    - `docs/USAGE.md`:
+      - añadida nota breve de arquitectura: módulo compartido `scripts/backlog-action-reasons-lib.ts`.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#687`.
+
+- 🚧 PUMUKI-103: Ejecutar mejora docs siguiente para enlazar desde README al bloque backlog tooling (shared reasons).
   - Alcance:
-    - Añadir nota corta de arquitectura en `docs/USAGE.md`.
-    - Mantener estilo humano, breve y operativo.
-    - Sin cambios funcionales.
-  - Issue upstream activa: `#687`.
+    - Añadir enlace directo y claro en README.
+    - No duplicar contenido técnico.
+    - Mantener documentación concisa.
+  - Issue upstream activa: `#688`.
