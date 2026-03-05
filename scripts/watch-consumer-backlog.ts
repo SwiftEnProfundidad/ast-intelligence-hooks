@@ -239,6 +239,10 @@ const main = async (): Promise<void> => {
   if (parsed.json) {
     const generatedAt = new Date().toISOString();
     const runId = randomUUID();
+    const nextCommandsWithExecutionGroup = nextCommands?.map((step) => ({
+      ...step,
+      execution_group_id: runId,
+    }));
     writeFileSync(
       process.stdout.fd,
       `${JSON.stringify(
@@ -269,7 +273,7 @@ const main = async (): Promise<void> => {
           action_required_reasons: actionRequiredReasons,
           ...(nextCommand ? { next_command: nextCommand } : {}),
           ...(nextCommandReason ? { next_command_reason: nextCommandReason } : {}),
-          ...(nextCommands ? { next_commands: nextCommands } : {}),
+          ...(nextCommandsWithExecutionGroup ? { next_commands: nextCommandsWithExecutionGroup } : {}),
           heading_drift_count: result.headingDrift.length,
           ...result,
         },

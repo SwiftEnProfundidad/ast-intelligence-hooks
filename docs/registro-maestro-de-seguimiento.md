@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-118 (issue `#703`, `next_commands[].requires_confirmation`).
-- Task activa (`🚧`): PUMUKI-119 (issue `#704`, `next_commands[].execution_group_id`).
+- Última task cerrada (`✅`): PUMUKI-119 (issue `#704`, `next_commands[].execution_group_id`).
+- Task activa (`🚧`): PUMUKI-120 (issue `#705`, `next_commands[].origin_tool`).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

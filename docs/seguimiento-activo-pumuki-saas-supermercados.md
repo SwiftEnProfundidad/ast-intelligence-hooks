@@ -1446,9 +1446,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#703`.
 
-- 🚧 PUMUKI-119: Ejecutar mejora DX siguiente para `next_commands[].execution_group_id` en JSON de watch/reconcile.
+- ✅ PUMUKI-119: Ejecutar mejora DX siguiente para `next_commands[].execution_group_id` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `execution_group_id` común por ejecución JSON.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `execution_group_id`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de correlación por `run_id`.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].execution_group_id`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#704`.
+
+- 🚧 PUMUKI-120: Ejecutar mejora DX siguiente para `next_commands[].origin_tool` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `execution_group_id` por paso en `next_commands[]`.
+    - Exponer `origin_tool` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Facilitar correlación de pasos de una misma recomendación.
-  - Issue upstream activa: `#704`.
+    - Facilitar agregación multi-herramienta en pipelines.
+  - Issue upstream activa: `#705`.

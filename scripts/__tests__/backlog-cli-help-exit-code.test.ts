@@ -95,6 +95,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
+      execution_group_id?: string;
       description?: string;
       command?: string;
     }>;
@@ -157,6 +158,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
+      execution_group_id?: string;
       description?: string;
       command?: string;
     }>;
@@ -179,6 +181,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.match(payload.next_command ?? '', /--apply$/);
   assert.equal(payload.next_command_reason, 'needs_issue');
   assert.equal(payload.next_commands?.length, 2);
+  assert.equal(payload.next_commands?.[0]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[0]?.id, 1);
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
@@ -189,6 +192,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.[0]?.depends_on, null);
   assert.match(payload.next_commands?.[0]?.description ?? '', /without mutating files/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
+  assert.equal(payload.next_commands?.[1]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[1]?.id, 2);
   assert.equal(payload.next_commands?.[1]?.label, 'apply');
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
@@ -249,6 +253,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
+      execution_group_id?: string;
       description?: string;
       command?: string;
     }>;
@@ -308,6 +313,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
+      execution_group_id?: string;
       description?: string;
       command?: string;
     }>;
@@ -331,6 +337,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.match(payload.next_command ?? '', /--apply$/);
   assert.equal(payload.next_command_reason, 'heading_changes');
   assert.equal(payload.next_commands?.length, 2);
+  assert.equal(payload.next_commands?.[0]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[0]?.id, 1);
   assert.equal(payload.next_commands?.[0]?.label, 'dry_run');
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
@@ -341,6 +348,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.[0]?.depends_on, null);
   assert.match(payload.next_commands?.[0]?.description ?? '', /without mutating files/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
+  assert.equal(payload.next_commands?.[1]?.execution_group_id, payload.run_id);
   assert.equal(payload.next_commands?.[1]?.id, 2);
   assert.equal(payload.next_commands?.[1]?.label, 'apply');
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
