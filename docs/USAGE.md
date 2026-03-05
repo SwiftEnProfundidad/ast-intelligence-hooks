@@ -326,6 +326,41 @@ Watch runtime behavior:
 - `--no-notify` keeps watch output without OS notifications.
 - `--once` or `--iterations=<n>` is recommended for CI/scripts to avoid long-running sessions.
 
+Backlog tooling behavior (`watch` + `reconcile` scripts):
+- mapping precedence is deterministic: inline `#issue` -> `--id-issue-map-from` -> `--id-issue-map` -> `--resolve-missing-via-gh`.
+- `watch-consumer-backlog` is non-destructive and reports action-required drift.
+- `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
+
+Backlog tooling quick examples:
+
+```bash
+# watch: canonical markdown source + explicit override + optional gh lookup
+npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts \
+  --file=/abs/path/consumer/PUMUKI_BUGS_MEJORAS.md \
+  --repo=SwiftEnProfundidad/ast-intelligence-hooks \
+  --id-issue-map-from=/abs/path/canonical/pumuki-integration-feedback.md \
+  --id-issue-map=/abs/path/override.json \
+  --resolve-missing-via-gh \
+  --json
+
+# reconcile dry-run: same source chain
+npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts \
+  --file=/abs/path/consumer/PUMUKI_BUGS_MEJORAS.md \
+  --repo=SwiftEnProfundidad/ast-intelligence-hooks \
+  --id-issue-map-from=/abs/path/canonical/pumuki-integration-feedback.md \
+  --id-issue-map=/abs/path/override.json \
+  --resolve-missing-via-gh \
+  --json
+
+# reconcile apply: mutate backlog in-place once dry-run is clean
+npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts \
+  --file=/abs/path/consumer/PUMUKI_BUGS_MEJORAS.md \
+  --repo=SwiftEnProfundidad/ast-intelligence-hooks \
+  --id-issue-map-from=/abs/path/canonical/pumuki-integration-feedback.md \
+  --resolve-missing-via-gh \
+  --apply
+```
+
 OpenSpec integration behavior:
 - `pumuki bootstrap --enterprise --agent=<name>` orquesta `install + adapter wiring + doctor --deep` en un solo paso.
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.

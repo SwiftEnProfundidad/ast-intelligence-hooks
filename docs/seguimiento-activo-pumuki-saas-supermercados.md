@@ -849,8 +849,24 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#659`.
 
-- 🚧 PUMUKI-075: Ejecutar mejora DX siguiente para alinear documentación/ayuda operativa de `watch` + `reconcile`.
+- ✅ PUMUKI-075: Ejecutar mejora DX siguiente para alinear documentación/ayuda operativa de `watch` + `reconcile`.
+  - Fix:
+    - `docs/USAGE.md`:
+      - nueva guía operativa de backlog tooling (`watch` + `reconcile`) con precedencia de mapping clara:
+        - inline `#issue`
+        - `--id-issue-map-from`
+        - `--id-issue-map`
+        - `--resolve-missing-via-gh`
+      - ejemplos listos para uso real: watch JSON, reconcile dry-run y reconcile apply.
+    - Smoke de ayuda CLI ejecutado para validar alineación de opciones entre scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts --help`
+    - `npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --help`
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#660`.
+
+- 🚧 PUMUKI-076: Ejecutar bug DX siguiente para normalizar `--help` a exit code `0` en scripts de backlog tooling.
   - Alcance:
-    - Añadir ejemplos equivalentes de uso (json map, markdown source, merged, gh lookup).
-    - Evitar drift entre capacidades reales y guidance para repos consumidores.
-  - Issue upstream activa: `#660`.
+    - `watch-consumer-backlog.ts` y `reconcile-consumer-backlog-issues.ts` deben devolver `0` con `--help/-h`.
+    - Mantener `1` solo para errores reales de argumentos/ejecución.
+  - Issue upstream activa: `#661`.
