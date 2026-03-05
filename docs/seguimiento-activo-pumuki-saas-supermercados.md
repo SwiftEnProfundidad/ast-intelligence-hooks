@@ -442,4 +442,4 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#630`.
 
-- 🚧 PUMUKI-048: Sincronizar estado real del backlog SAAS (leyenda + bloqueos) contra estado upstream ya implementado para eliminar falsos `⛔`/`⏳` y recuperar trazabilidad operativa.
+- 🚧 PUMUKI-048: Sincronizar estado real del backlog SAAS (leyenda + bloqueos, issue `#631`) contra estado upstream ya implementado para eliminar falsos `⛔`/`⏳` y recuperar trazabilidad operativa.
