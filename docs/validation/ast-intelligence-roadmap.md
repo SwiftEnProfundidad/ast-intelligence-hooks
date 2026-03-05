@@ -23,6 +23,7 @@ PoC cubre lenguajes críticos ya usados en el runtime actual:
 
 - TypeScript
 - Swift
+- Kotlin
 
 ## Arquitectura objetivo (30/60/90)
 

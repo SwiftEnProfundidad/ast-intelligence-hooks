@@ -298,4 +298,12 @@
     - `npx --yes tsx@4.21.0 --test core/gate/evaluateRules.test.ts integrations/config/__tests__/skillsMarkdownRules.test.ts integrations/config/__tests__/skillsRuleSet.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts integrations/git/__tests__/runPlatformGate.test.ts` -> `61 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-035: Ejecutar siguiente mejora SAAS prioritaria (`#616`) para motor AST Intelligence por nodos multilenguaje desde `.codex` (siguiente bloque tras cerrar #615).
+- ✅ PUMUKI-035: Ejecutar siguiente mejora SAAS prioritaria (`#616`) para motor AST Intelligence por nodos multilenguaje desde `.codex` (siguiente bloque tras cerrar #615).
+  - Fix:
+    - `integrations/git/__tests__/astIntelligenceDualValidation.test.ts`: nueva cobertura multilenguaje real en dual-mode (`typescript + kotlin`) con `divergences=0`.
+    - `docs/validation/ast-intelligence-roadmap.md`: RFC actualizado para reflejar Kotlin dentro del alcance PoC implementado.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/astIntelligenceDualValidation.test.ts integrations/git/__tests__/runPlatformGateAstIntelligenceDualMode.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `12 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-036: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para `sdd learn/sync` desde evidencia operativa y cierre trazable de issue upstream.
