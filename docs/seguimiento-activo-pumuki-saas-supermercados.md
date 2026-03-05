@@ -877,8 +877,22 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#661`.
 
-- 🚧 PUMUKI-077: Ejecutar mejora DX siguiente para versionar contrato JSON en backlog tooling (`schema_version` + `tool`).
+- ✅ PUMUKI-077: Ejecutar mejora DX siguiente para versionar contrato JSON en backlog tooling (`schema_version` + `tool`).
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye metadatos de contrato:
+        - `tool`
+        - `schema_version`
+      - estructura previa se mantiene (sin breaking de campos existentes).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevos tests de contrato JSON para ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#662`.
+
+- 🚧 PUMUKI-078: Ejecutar mejora DX siguiente para añadir `generated_at` al contrato JSON de backlog tooling.
   - Alcance:
-    - Añadir metadatos de contrato en salida JSON de `watch` y `reconcile` para pipelines consumidores.
-    - Mantener compatibilidad de campos existentes.
-  - Issue upstream activa: `#662`.
+    - Incluir timestamp UTC ISO-8601 en JSON de `watch` y `reconcile` para trazabilidad de pipelines.
+    - Mantener compatibilidad con consumidores actuales.
+  - Issue upstream activa: `#663`.

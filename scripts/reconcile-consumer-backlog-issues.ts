@@ -21,6 +21,9 @@ type ParsedArgs = {
   json: boolean;
 };
 
+const JSON_SCHEMA_VERSION = '1.0.0';
+const JSON_TOOL_NAME = 'backlog-reconcile';
+
 const HELP_TEXT = `Usage:
   npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--id-issue-map-from=<md-path>] [--resolve-missing-via-gh] [--apply] [--json]
 
@@ -177,7 +180,18 @@ const main = async (): Promise<void> => {
   });
 
   if (parsed.json) {
-    writeFileSync(process.stdout.fd, `${JSON.stringify(result, null, 2)}\n`);
+    writeFileSync(
+      process.stdout.fd,
+      `${JSON.stringify(
+        {
+          tool: JSON_TOOL_NAME,
+          schema_version: JSON_SCHEMA_VERSION,
+          ...result,
+        },
+        null,
+        2
+      )}\n`
+    );
     return;
   }
 
