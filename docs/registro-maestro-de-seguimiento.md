@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-064 (issue `#649`, metadata explícita runtime vs consumer-installed en lifecycle).
-- Task activa (`🚧`): PUMUKI-065 (issue `#650`, coherencia `ai_gate_check` vs hooks locales).
+- Última task cerrada (`✅`): PUMUKI-065 (issue `#650`, hint explícito de precedencia `ai_gate_check` vs hooks).
+- Task activa (`🚧`): PUMUKI-066 (issue `#651`, corrección runtime local `--no-install` con módulo faltante).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

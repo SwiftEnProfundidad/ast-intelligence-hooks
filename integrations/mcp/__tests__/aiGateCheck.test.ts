@@ -67,6 +67,36 @@ test('runEnterpriseAiGateCheck aplica contrato de tool ai_gate_check en PRE_WRIT
     assert.equal(result.tool, 'ai_gate_check');
     assert.equal(result.success, true);
     assert.equal(result.result.stage, 'PRE_WRITE');
+    assert.equal(result.result.consistency_hint.comparable_with_hook_runner, true);
+    assert.equal(result.result.consistency_hint.reason_code, null);
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('runEnterpriseAiGateCheck expone hint de precedencia cuando PRE_PUSH bloquea por evidencia refrescable', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-prepush-hint-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/mcp-chain']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    writeFileSync(join(repoRoot, 'README.md'), '# temp\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: bootstrap']);
+
+    const result = runEnterpriseAiGateCheck({
+      repoRoot,
+      stage: 'PRE_PUSH',
+    });
+
+    assert.equal(result.result.stage, 'PRE_PUSH');
+    assert.equal(result.result.allowed, false);
+    assert.equal(result.result.consistency_hint.comparable_with_hook_runner, false);
+    assert.equal(result.result.consistency_hint.reason_code, 'HOOK_RUNNER_CAN_REFRESH_EVIDENCE');
+    assert.equal(
+      result.result.consistency_hint.message.includes('Hook stage runners may regenerate evidence'),
+      true
+    );
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }

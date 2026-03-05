@@ -693,8 +693,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#649`.
 
-- 🚧 PUMUKI-065: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-062`) sobre incoherencia `ai_gate_check` vs hooks (`pre-commit/pre-push`).
+- ✅ PUMUKI-065: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-062`) sobre incoherencia `ai_gate_check` vs hooks (`pre-commit/pre-push`).
+  - Fix:
+    - `integrations/mcp/aiGateCheck.ts`:
+      - nuevo `consistency_hint` en salida MCP para declarar comparabilidad con hooks.
+      - cuando stage hook (`PRE_COMMIT/PRE_PUSH/CI`) bloquea por evidencia refrescable, marca `reason_code=HOOK_RUNNER_CAN_REFRESH_EVIDENCE` con mensaje de precedencia explícita.
+    - `integrations/mcp/__tests__/aiGateCheck.test.ts`:
+      - nuevo test RED/GREEN para validar hint explícito en `PRE_PUSH` bloqueado por evidencia.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts` -> `5 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#650`.
+
+- 🚧 PUMUKI-066: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre fallo local `--no-install` con `MODULE_NOT_FOUND` en runtime empaquetado.
   - Alcance:
-    - Reproducir RED de divergencia de decisión (`ALLOW` hooks vs `BLOCKED` MCP) sobre el mismo estado de evidencia.
-    - Alinear contrato de precedencia/semántica para diagnóstico determinista.
-  - Issue upstream activa: `#650`.
+    - Reproducir RED de resolución de módulo en instalación local del paquete.
+    - Corregir import/export/build para evitar faltantes internos en runtime distribuido.
+  - Issue upstream activa: `#651`.
