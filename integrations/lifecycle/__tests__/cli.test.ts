@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import test from 'node:test';
 import type { LocalHotspotsReport } from '../analyticsHotspots';
-import { getCurrentPumukiPackageName } from '../packageInfo';
+import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
 import { resolveHotspotsSaasIngestionAuditPath } from '../saasIngestionAudit';
 import {
   createHotspotsSaasIngestionPayload,
@@ -97,8 +97,8 @@ const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
       },
       lifecycle: {
         installed: true,
-        package_version: '6.3.26',
-        lifecycle_version: '6.3.26',
+        package_version: getCurrentPumukiVersion({ repoRoot }),
+        lifecycle_version: getCurrentPumukiVersion({ repoRoot }),
         hooks: {
           pre_commit: 'managed' as const,
           pre_push: 'managed' as const,
@@ -1094,6 +1094,7 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
   try {
+    const packageVersion = getCurrentPumukiVersion({ repoRoot: repo });
     runGit(repo, ['checkout', '-b', 'feature/prewrite-mcp-enforcement']);
     writeFileSync(
       join(repo, '.ai_evidence.json'),
@@ -1153,8 +1154,8 @@ test('runLifecycleCli sdd validate PRE_WRITE autocura recibo MCP faltante y perm
             },
             lifecycle: {
               installed: true,
-              package_version: '6.3.26',
-              lifecycle_version: '6.3.26',
+              package_version: packageVersion,
+              lifecycle_version: packageVersion,
               hooks: {
                 pre_commit: 'managed',
                 pre_push: 'managed',
@@ -1222,6 +1223,7 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v√
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
   try {
+    const packageVersion = getCurrentPumukiVersion({ repoRoot: repo });
     runGit(repo, ['checkout', '-b', 'feature/prewrite-mcp-ready']);
     writeFileSync(
       join(repo, '.ai_evidence.json'),
@@ -1281,8 +1283,8 @@ test('runLifecycleCli sdd validate PRE_WRITE permite continuar con recibo MCP v√
             },
             lifecycle: {
               installed: true,
-              package_version: '6.3.26',
-              lifecycle_version: '6.3.26',
+              package_version: packageVersion,
+              lifecycle_version: packageVersion,
               hooks: {
                 pre_commit: 'managed',
                 pre_push: 'managed',
@@ -1348,6 +1350,7 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
   const originalStdoutWrite = process.stdout.write.bind(process.stdout);
 
   try {
+    const packageVersion = getCurrentPumukiVersion({ repoRoot: repo });
     runGit(repo, ['checkout', '-b', 'feature/prewrite-panel']);
     writeFileSync(
       join(repo, '.ai_evidence.json'),
@@ -1407,8 +1410,8 @@ test('runLifecycleCli sdd validate PRE_WRITE sin --json renderiza panel legacy d
             },
             lifecycle: {
               installed: true,
-              package_version: '6.3.26',
-              lifecycle_version: '6.3.26',
+              package_version: packageVersion,
+              lifecycle_version: packageVersion,
               hooks: {
                 pre_commit: 'managed',
                 pre_push: 'managed',

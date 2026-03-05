@@ -468,4 +468,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#632`.
 
-- 🚧 PUMUKI-050: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#633`) para normalizar fixtures lifecycle de `package_version/lifecycle_version` a resolución dinámica y evitar drift equivalente en `cli.test.ts`.
+- ✅ PUMUKI-050: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#633`) para normalizar fixtures lifecycle de `package_version/lifecycle_version` a resolución dinámica y evitar drift equivalente en `cli.test.ts`.
+  - Fix:
+    - `integrations/lifecycle/__tests__/cli.test.ts`:
+      - eliminación de hardcodes `6.3.26` en fixtures lifecycle de PRE_WRITE;
+      - resolución dinámica de versión con `getCurrentPumukiVersion({ repoRoot })` en:
+        - helper `writePreWriteEvidence(...)`,
+        - casos `prewrite-mcp-enforcement`,
+        - `prewrite-mcp-ready`,
+        - `prewrite-panel`.
+    - Sin cambios funcionales de producto; alcance limitado a robustez de tests/fixtures.
+  - Evidencia (2026-03-05):
+    - `rg -n "6\\.3\\.26|package_version: '6\\.|lifecycle_version: '6\\." integrations/lifecycle/__tests__/cli.test.ts` -> sin resultados.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `37 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#633`.
+
+- 🚧 PUMUKI-051: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#634`) para normalizar hardcodes residuales de versión en fixtures de `evidence/gate/telemetry/lifecycle/sdd` y cerrar el drift global.
