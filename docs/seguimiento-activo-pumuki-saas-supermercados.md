@@ -1058,9 +1058,24 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#677`.
 
-- 🚧 PUMUKI-093: Ejecutar mejora DX siguiente para resumen humano de heading sync en salida no-JSON del reconciliador.
+- ✅ PUMUKI-093: Ejecutar mejora DX siguiente para resumen humano de heading sync en salida no-JSON del reconciliador.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana ahora incluye `heading_changes=<n>`.
+      - nuevo bloque `heading_changes` con líneas/IDs afectados.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - nuevo test de salida humana para validar resumen y detalle de heading drift.
+    - `docs/USAGE.md`:
+      - documentado el resumen de heading changes en modo no-JSON.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `8 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `41 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#678`.
+
+- 🚧 PUMUKI-094: Ejecutar mejora DX siguiente para detectar drift de headings en `watch-consumer-backlog` sin mutar archivos.
   - Alcance:
-    - Exponer `heading_changes` en salida humana (`stdout`) del comando `reconcile-consumer-backlog-issues`.
-    - Listar líneas/IDs impactadas cuando existan cambios de heading.
-    - Mantener compatibilidad del formato actual.
-  - Issue upstream activa: `#678`.
+    - Añadir clasificación/diagnóstico de heading drift por ID en `watch`.
+    - Exponer IDs/líneas afectadas en salida humana y JSON.
+    - Mantener compatibilidad con clasificación actual (`needsIssue/driftClosedIssue/activeIssue`).
+  - Issue upstream activa: `#679`.

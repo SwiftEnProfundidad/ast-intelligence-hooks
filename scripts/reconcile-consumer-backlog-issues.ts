@@ -130,7 +130,7 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
     `[pumuki][backlog-reconcile] mapping_source=${result.mappingSource} resolved_by_map=${result.referenceResolution.resolvedByProvidedMap.length} resolved_by_lookup=${result.referenceResolution.resolvedByLookup.length} unresolved_refs=${result.referenceResolution.unresolvedReferenceIds.length}`
   );
   lines.push(
-    `[pumuki][backlog-reconcile] changes=${result.changes.length} mode=${result.apply ? 'apply' : 'dry-run'}`
+    `[pumuki][backlog-reconcile] changes=${result.changes.length} heading_changes=${result.headingChanges.length} mode=${result.apply ? 'apply' : 'dry-run'}`
   );
   if (result.changes.length > 0) {
     lines.push('[pumuki][backlog-reconcile] planned_changes:');
@@ -138,6 +138,12 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
       lines.push(
         `- line ${change.lineNumber} issue #${change.issueNumber}: ${change.from} -> ${change.to} (state=${change.issueState})`
       );
+    }
+  }
+  if (result.headingChanges.length > 0) {
+    lines.push('[pumuki][backlog-reconcile] heading_changes:');
+    for (const change of result.headingChanges) {
+      lines.push(`- line ${change.lineNumber} ${change.id}: ${change.from} -> ${change.to}`);
     }
   }
   if (result.referenceChanges.length > 0) {

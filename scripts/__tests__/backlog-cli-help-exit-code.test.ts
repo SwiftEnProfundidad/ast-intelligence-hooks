@@ -153,3 +153,15 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.headingChanges?.[0]?.from, '⏳');
   assert.equal(payload.headingChanges?.[0]?.to, '✅');
 });
+
+test('reconcile-consumer-backlog-issues salida humana incluye resumen de heading changes', () => {
+  const scriptPath = resolveScriptPath('../reconcile-consumer-backlog-issues.ts');
+  const backlogFile = createBacklogFile(
+    `| ID | Estado | Referencia upstream |\n|---|---|---|\n| PUMUKI-011 | ✅ | Pendiente |\n\n### ⏳ PUMUKI-011\nDetalle.\n`
+  );
+  const result = runTsxScript(scriptPath, ['--file=' + backlogFile]);
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /heading_changes=1/);
+  assert.match(result.stdout, /\[pumuki\]\[backlog-reconcile\] heading_changes:/);
+  assert.match(result.stdout, /PUMUKI-011: ⏳ -> ✅/);
+});
