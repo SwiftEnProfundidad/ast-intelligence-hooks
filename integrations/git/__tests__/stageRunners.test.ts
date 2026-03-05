@@ -761,6 +761,45 @@ test('runPrePushStage bloquea con código específico cuando upstream está desa
   });
 });
 
+test('runPrePushStage bloquea upstream desalineado también con ahead moderado (evita falso positivo de scope)', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRange(repoRoot);
+    let gateCalls = 0;
+    const blocked: Array<{
+      stage: StageName;
+      causeCode: string;
+      causeMessage: string;
+      remediation: string;
+    }> = [];
+
+    const exitCode = await runPrePushStage({
+      resolveUpstreamRef: () => 'origin/develop',
+      resolveCurrentBranchRef: () => 'feature/misaligned-low-ahead',
+      resolveUpstreamTrackingRef: () => 'origin/develop',
+      resolveAheadBehindFromRef: () => ({ ahead: 6, behind: 0 }),
+      runPlatformGate: async () => {
+        gateCalls += 1;
+        return 0;
+      },
+      notifyGateBlocked: (params) => {
+        blocked.push({
+          stage: params.stage,
+          causeCode: params.causeCode,
+          causeMessage: params.causeMessage,
+          remediation: params.remediation,
+        });
+      },
+      resolveRepoRoot: () => repoRoot,
+    });
+
+    assert.equal(exitCode, 1);
+    assert.equal(gateCalls, 0);
+    assert.equal(blocked.length, 1);
+    assert.equal(blocked[0]?.stage, 'PRE_PUSH');
+    assert.equal(blocked[0]?.causeCode, 'PRE_PUSH_UPSTREAM_MISALIGNED');
+  });
+});
+
 test('runPreCommitStage bloquea temprano cuando falla git atomicity y no ejecuta el gate principal', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     stageBackendFile(repoRoot);

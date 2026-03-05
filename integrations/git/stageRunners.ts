@@ -28,7 +28,7 @@ const PRE_PUSH_UPSTREAM_BOOTSTRAP_FALLBACK_MESSAGE =
   '[pumuki][pre-push] branch has no upstream; using bootstrap range ';
 const PRE_PUSH_MANUAL_FALLBACK_MESSAGE =
   '[pumuki][pre-push] branch has no upstream and stdin is empty; using working-tree fallback scope.';
-const PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD = 25;
+const PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD = 5;
 
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
