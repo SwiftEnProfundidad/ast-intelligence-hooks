@@ -1677,8 +1677,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Commit: `6f6aa69`.
 
-- 🚧 PUMUKI-134: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060`) sobre falso positivo de coverage iOS por upstream desalineado.
+- ✅ PUMUKI-134: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-060`) sobre falso positivo de coverage iOS por upstream desalineado.
+  - Resultado implementado:
+    - `integrations/git/stageRunners.ts`:
+      - ajuste del guard `PRE_PUSH_UPSTREAM_MISALIGNED` para detectar desalineación con `ahead` moderado (umbral operativo reducido de `25` a `5`), bloqueando antes de evaluar scope contaminado.
+    - `integrations/git/__tests__/stageRunners.test.ts`:
+      - nuevo test RED/GREEN para asegurar bloqueo por upstream desalineado con `ahead=6` (`feature/*` trackeando `origin/develop`), evitando falso positivo de `platform-coverage`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `26 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts` -> `6 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Commit: `cd3d45f`.
+
+- 🚧 PUMUKI-135: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre `npx --no-install pumuki --version` con `MODULE_NOT_FOUND`.
   - Alcance:
-    - reproducir contra `PRE_PUSH` en escenario de tracking desalineado,
-    - reforzar cálculo de delta real para evitar arrastre de histórico,
-    - cerrar con test de regresión y actualización de MD canónico RuralGo.
+    - reproducir en smoke de consumidor empaquetado,
+    - endurecer resolución de runtime en path `--no-install`,
+    - cerrar con test de regresión y update de estado en MD canónico.
