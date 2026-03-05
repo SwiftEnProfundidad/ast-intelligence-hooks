@@ -365,7 +365,7 @@ Highlights:
 
 - Installation: `docs/INSTALLATION.md`
 - Usage: `docs/USAGE.md`
-- Backlog tooling quick section: `docs/USAGE.md#backlog-tooling`
+- Backlog tooling quick nav (incluye snippet terminal): `docs/USAGE.md#backlog-tooling`
 - Backlog reasons shared module: `docs/USAGE.md#backlog-reasons`
 - Testing: `docs/TESTING.md`
 - API reference: `docs/API_REFERENCE.md`

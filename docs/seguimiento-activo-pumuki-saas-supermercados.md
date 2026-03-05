@@ -1224,9 +1224,18 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#689`.
 
-- 🚧 PUMUKI-105: Ejecutar mejora docs siguiente para visibilidad de quick nav en README.
+- ✅ PUMUKI-105: Ejecutar mejora docs siguiente para visibilidad de quick nav en README.
+  - Fix:
+    - `README.md`:
+      - línea del índice clarificada para indicar que la sección de backlog tooling incluye quick-nav de terminal.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#690`.
+
+- 🚧 PUMUKI-106: Ejecutar mejora DX siguiente para hint `--no-fail` en salida humana de backlog watch.
   - Alcance:
-    - Añadir mención mínima en Documentation Index.
-    - Evitar duplicación de contenido técnico.
-    - Mantener tono claro y breve.
-  - Issue upstream activa: `#690`.
+    - Mostrar hint operativo cuando `action_required=yes`.
+    - No cambiar semántica de salida ni exit code.
+    - Cubrir con tests CLI.
+  - Issue upstream activa: `#691`.

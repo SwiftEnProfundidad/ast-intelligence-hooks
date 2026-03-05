@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-104 (issue `#689`, snippet de navegación rápida en docs).
-- Task activa (`🚧`): PUMUKI-105 (issue `#690`, visibilidad README del quick nav backlog tooling).
+- Última task cerrada (`✅`): PUMUKI-105 (issue `#690`, visibilidad README del quick nav backlog tooling).
+- Task activa (`🚧`): PUMUKI-106 (issue `#691`, hint `--no-fail` en backlog watch humano).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
