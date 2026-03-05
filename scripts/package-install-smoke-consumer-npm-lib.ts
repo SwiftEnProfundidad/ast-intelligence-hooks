@@ -1,6 +1,7 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import {
+  assertNoFatalOutput,
   assertSuccess,
   runCommand,
 } from './package-install-smoke-runner-common';
@@ -44,4 +45,17 @@ export const verifyInstalledPackageCanBeRequired = (
   });
   pushCommandLog(workspace.commandLog, installCheck);
   assertSuccess(installCheck, 'package require smoke');
+};
+
+export const verifyInstalledPumukiBinaryVersion = (
+  workspace: SmokeWorkspace
+): void => {
+  const versionCheck = runCommand({
+    cwd: workspace.consumerRepo,
+    executable: 'npx',
+    args: ['--no-install', 'pumuki', '--version'],
+  });
+  pushCommandLog(workspace.commandLog, versionCheck);
+  assertSuccess(versionCheck, 'pumuki --version smoke');
+  assertNoFatalOutput(versionCheck, 'pumuki --version smoke');
 };

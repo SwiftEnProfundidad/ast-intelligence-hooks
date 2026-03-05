@@ -705,8 +705,22 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#650`.
 
-- 🚧 PUMUKI-066: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre fallo local `--no-install` con `MODULE_NOT_FOUND` en runtime empaquetado.
+- ✅ PUMUKI-066: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-057`) sobre fallo local `--no-install` con `MODULE_NOT_FOUND` en runtime empaquetado.
+  - Fix:
+    - `scripts/package-install-smoke-consumer-npm-lib.ts`:
+      - nueva verificación obligatoria `verifyInstalledPumukiBinaryVersion()` con `npx --no-install pumuki --version`.
+      - bloqueo explícito ante patrones fatales (`Cannot find module`, `ERR_MODULE_NOT_FOUND`, etc.).
+    - `scripts/package-install-smoke-consumer-repo-setup-lib.ts`:
+      - el setup smoke incorpora check de binario local antes de continuar gates.
+    - `scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts`:
+      - tests RED/GREEN para path healthy y para regresión `MODULE_NOT_FOUND`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-consumer-npm-lib.test.ts scripts/__tests__/package-install-smoke-repo-setup-lib.test.ts scripts/__tests__/package-smoke-workflow-contract.test.ts` -> `7 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#651`.
+
+- 🚧 PUMUKI-067: Ejecutar mejora DX para watcher (`backlog-watch`) con mapeo opcional `ID -> issue` y eliminar `needsIssue` fantasma en backlogs consumidores.
   - Alcance:
-    - Reproducir RED de resolución de módulo en instalación local del paquete.
-    - Corregir import/export/build para evitar faltantes internos en runtime distribuido.
-  - Issue upstream activa: `#651`.
+    - Añadir flag `--id-issue-map=<json>` en watcher.
+    - Resolver clasificación con referencias canónicas aunque el MD consumidor no tenga `#issue` en línea.
+  - Issue upstream activa: `#652`.
