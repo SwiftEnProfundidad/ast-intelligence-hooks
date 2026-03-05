@@ -56,16 +56,16 @@ npx --yes pumuki loop list --json
 Run local gates:
 
 ```bash
-npx --yes pumuki-pre-write
-npx --yes pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-write
+npx --yes --package pumuki@latest pumuki-pre-commit
 ```
 
 Run push/CI gates (requires proper git context):
 
 ```bash
 git push --set-upstream origin <branch>
-npx --yes pumuki-pre-push
-npx --yes pumuki-ci
+npx --yes --package pumuki@latest pumuki-pre-push
+npx --yes --package pumuki@latest pumuki-ci
 ```
 
 Expected behavior:
@@ -176,7 +176,7 @@ Example:
 export PUMUKI_TELEMETRY_JSONL_PATH=".pumuki/artifacts/gate-telemetry.jsonl"
 export PUMUKI_TELEMETRY_OTEL_ENDPOINT="https://otel.example/v1/logs"
 export PUMUKI_TELEMETRY_OTEL_SERVICE_NAME="pumuki-enterprise"
-npx --yes pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-commit
 ```
 
 Each event captures deterministic stage/outcome/policy/repo context per gate execution.
@@ -258,16 +258,16 @@ npx --yes pumuki loop export --session=<session-id> --output-json=.audit-reports
 ### Stage Gates (Consumer)
 
 ```bash
-npx --yes pumuki-pre-write
-npx --yes pumuki-pre-commit
-npx --yes pumuki-pre-push
-npx --yes pumuki-ci
+npx --yes --package pumuki@latest pumuki-pre-write
+npx --yes --package pumuki@latest pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-push
+npx --yes --package pumuki@latest pumuki-ci
 ```
 
 ### MCP Servers (Optional, Long-Running)
 
 ```bash
-npx --yes pumuki-mcp-evidence
+npx --yes --package pumuki@latest pumuki-mcp-evidence
 npx --yes --package pumuki@latest pumuki-mcp-evidence-stdio
 npx --yes --package pumuki@latest pumuki-mcp-enterprise
 npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio

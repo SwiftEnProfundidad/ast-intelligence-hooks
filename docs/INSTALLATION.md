@@ -81,10 +81,10 @@ npx --yes pumuki sdd validate --stage=PRE_COMMIT
 ### 5) Run gates
 
 ```bash
-npx --yes pumuki-pre-write
-npx --yes pumuki-pre-commit
-npx --yes pumuki-pre-push
-npx --yes pumuki-ci
+npx --yes --package pumuki@latest pumuki-pre-write
+npx --yes --package pumuki@latest pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-push
+npx --yes --package pumuki@latest pumuki-ci
 ```
 
 `PRE_WRITE` JSON shape:
@@ -121,23 +121,23 @@ Consumer repositories do not have the `framework:menu` npm script by default.
 Use the published binary instead:
 
 ```bash
-npx --yes pumuki-framework
+npx --yes --package pumuki@latest pumuki-framework
 ```
 
 ### Direct stage runners
 
 ```bash
 # PRE_WRITE
-npx --yes pumuki-pre-write
+npx --yes --package pumuki@latest pumuki-pre-write
 
 # PRE_COMMIT
-npx --yes pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-commit
 
 # PRE_PUSH
-npx --yes pumuki-pre-push
+npx --yes --package pumuki@latest pumuki-pre-push
 
 # CI
-npx --yes pumuki-ci
+npx --yes --package pumuki@latest pumuki-ci
 ```
 
 ## Lifecycle + SDD commands
@@ -240,4 +240,18 @@ Then reopen/refresh active session:
 ```bash
 npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd session --refresh
+```
+
+### Hooks/adapter use fragile `npx` binary resolution
+
+Run deep doctor diagnostics and verify `adapter-wiring`:
+
+```bash
+npx --yes pumuki doctor --deep --json
+```
+
+If doctor reports fragile commands in adapter wiring, repair with:
+
+```bash
+npx --yes pumuki adapter install --agent=codex
 ```

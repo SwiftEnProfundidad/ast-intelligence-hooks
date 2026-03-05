@@ -169,6 +169,31 @@ const readNestedString = (
   return typeof cursor === 'string' && cursor.trim().length > 0 ? cursor : undefined;
 };
 
+const hasRobustPumukiCommandResolution = (command: string): boolean => {
+  const normalized = command.trim();
+  if (normalized.length === 0) {
+    return false;
+  }
+
+  if (/node_modules[\\/]\.bin[\\/]pumuki/i.test(normalized)) {
+    return true;
+  }
+
+  if (
+    /node\s+.*node_modules[\\/]pumuki[\\/]bin[\\/]pumuki(?:-[a-z0-9-]+)?\.js/i.test(
+      normalized
+    )
+  ) {
+    return true;
+  }
+
+  if (/--package\s+pumuki(?:@[^\s]+)?/i.test(normalized)) {
+    return true;
+  }
+
+  return false;
+};
+
 const buildDeepCheck = (
   check: Omit<DoctorDeepCheck, 'status' | 'severity'> & {
     status: DoctorDeepCheck['status'];
@@ -279,6 +304,31 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
       metadata: {
         path: adapterPath,
         missing_count: missingPaths.length,
+      },
+    });
+  }
+
+  const weakResolutionPaths = requiredCommandPaths
+    .map((path) => {
+      const command = readNestedString(parsed, path);
+      return {
+        path: path.join('.'),
+        command,
+      };
+    })
+    .filter((entry) => entry.command && !hasRobustPumukiCommandResolution(entry.command));
+
+  if (weakResolutionPaths.length > 0) {
+    return buildDeepCheck({
+      id: 'adapter-wiring',
+      status: 'fail',
+      severity: 'warning',
+      message: `Adapter wiring commands are present but use fragile binary resolution (${weakResolutionPaths.map((entry) => entry.path).join(', ')}).`,
+      remediation:
+        'Re-run "pumuki adapter install --agent=codex" to restore robust local/bin-or-package command resolution.',
+      metadata: {
+        path: adapterPath,
+        weak_resolution_count: weakResolutionPaths.length,
       },
     });
   }

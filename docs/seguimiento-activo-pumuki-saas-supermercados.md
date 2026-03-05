@@ -214,4 +214,24 @@
     - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/watch.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `34 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-028: Ejecutar siguiente bug SAAS prioritaria (`#619`) para robustecer resolución de binarios `pumuki` vía `npx` en hooks/CLI.
+- ✅ PUMUKI-028: Ejecutar siguiente bug SAAS prioritaria (`#619`) para robustecer resolución de binarios `pumuki` vía `npx` en hooks/CLI.
+  - Fix:
+    - Nuevo resolvedor determinista para smoke/install: `scripts/package-install-smoke-command-resolution-lib.ts`.
+    - Prioridad de ejecución robusta en repos consumidor:
+      - `./node_modules/.bin/<bin>` (local)
+      - `node ./node_modules/pumuki/bin/<bin>.js` (fallback local)
+      - `npx --yes --package pumuki@latest <bin>` (fallback final)
+    - Integración del resolvedor en lifecycle smoke:
+      - `scripts/package-install-smoke-lifecycle-lib.ts`
+      - `scripts/package-install-smoke-execution-steps-lib.ts`
+    - Diagnóstico hardening en `doctor --deep`:
+      - `integrations/lifecycle/doctor.ts` ahora marca `adapter-wiring` en `fail/warning` cuando detecta comandos frágiles sin `--package` ni fallback local.
+      - Test de regresión: `integrations/lifecycle/__tests__/doctor.test.ts`.
+    - Documentación de uso/remediación actualizada:
+      - comandos directos de hooks con `--package pumuki@latest` en `README.md`, `docs/INSTALLATION.md`, `docs/USAGE.md`, `docs/MCP_SERVERS.md`.
+      - troubleshooting explícito para `doctor --deep` y reparación con `pumuki adapter install --agent=codex`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/hookBlock.test.ts integrations/lifecycle/__tests__/hookManager.test.ts` -> `30 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-029: Ejecutar siguiente bug SAAS prioritaria (`#620`) para robustecer ejecución en repos con `:` en path y cerrar trazabilidad sin regresiones.

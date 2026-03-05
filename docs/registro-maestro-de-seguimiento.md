@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-027 (issue `#618`, comando `pumuki watch` con umbral/cooldown anti-spam y notificación proactiva).
-- Task activa (`🚧`): PUMUKI-028 (siguiente bug SAAS prioritaria: issue `#619`, resolución robusta de binarios `pumuki` vía `npx`).
+- Última task cerrada (`✅`): PUMUKI-028 (issue `#619`, resolución robusta de binarios `pumuki` en smoke/hook diagnostics con fallback local determinista + `doctor --deep`).
+- Task activa (`🚧`): PUMUKI-029 (siguiente bug SAAS prioritaria: issue `#620`, robustecer ejecución en repos con `:` en path).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

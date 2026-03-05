@@ -110,7 +110,7 @@ npm run framework:menu
 Consumer repository:
 
 ```bash
-npx --yes pumuki-framework
+npx --yes --package pumuki@latest pumuki-framework
 ```
 
 Menu starts in `Consumer` mode by default (focused operational options).
@@ -211,16 +211,16 @@ Menu-driven audits apply SDD guardrails with the same strict semantics as stage 
 
 ```bash
 # PRE_COMMIT
-npx --yes pumuki-pre-commit
+npx --yes --package pumuki@latest pumuki-pre-commit
 
 # PRE_PUSH
-npx --yes pumuki-pre-push
+npx --yes --package pumuki@latest pumuki-pre-push
 
 # CI
-npx --yes pumuki-ci
+npx --yes --package pumuki@latest pumuki-ci
 
 # PRE_WRITE (SDD + AI Gate pre-write policy check)
-npx --yes pumuki-pre-write
+npx --yes --package pumuki@latest pumuki-pre-write
 ```
 
 ### 2.1) Lifecycle + SDD + Loop CLI (install / uninstall / remove / update / doctor / status / sdd / loop)
@@ -551,6 +551,20 @@ Set upstream once:
 
 ```bash
 git push --set-upstream origin <branch>
+```
+
+### Fragile hook/adapter command resolution
+
+Use deep diagnostics to detect weak command wiring:
+
+```bash
+npx --yes pumuki doctor --deep --json
+```
+
+If `adapter-wiring` reports fragile resolution, regenerate adapter commands:
+
+```bash
+npx --yes pumuki adapter install --agent=codex
 ```
 
 ### Empty evidence or PASS with no findings

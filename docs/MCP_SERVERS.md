@@ -21,7 +21,7 @@ npm run mcp:enterprise
 ### Desde un repositorio consumidor
 
 ```bash
-npx --yes pumuki-mcp-evidence
+npx --yes --package pumuki@latest pumuki-mcp-evidence
 npx --yes --package pumuki@latest pumuki-mcp-enterprise
 npx --yes --package pumuki@latest pumuki-mcp-enterprise-stdio
 ```

@@ -389,6 +389,99 @@ test('runLifecycleDoctor --deep queda en PASS cuando upstream/adapter/policy/evi
   });
 });
 
+test('runLifecycleDoctor --deep marca warning cuando adapter wiring usa comandos frágiles', async () => {
+  await withTempDir('pumuki-doctor-deep-weak-adapter-', async (repoRoot) => {
+    mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
+    mkdirSync(join(repoRoot, '.pumuki'), { recursive: true });
+    installPumukiHooks(repoRoot);
+
+    writeFileSync(
+      join(repoRoot, '.pumuki', 'adapter.json'),
+      JSON.stringify(
+        {
+          hooks: {
+            pre_write: { command: 'npx --yes pumuki-pre-write' },
+            pre_commit: { command: 'npx --yes pumuki-pre-commit' },
+            pre_push: { command: 'npx --yes pumuki-pre-push' },
+            ci: { command: 'npx --yes pumuki-ci' },
+          },
+          mcp: {
+            enterprise: { command: 'npx --yes pumuki-mcp-enterprise-stdio' },
+            evidence: { command: 'npx --yes pumuki-mcp-evidence-stdio' },
+          },
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    writeFileSync(
+      join(repoRoot, 'skills.policy.json'),
+      JSON.stringify(
+        {
+          version: '1.0',
+          defaultBundleEnabled: true,
+          stages: {
+            PRE_COMMIT: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            PRE_PUSH: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+            CI: { blockOnOrAbove: 'ERROR', warnOnOrAbove: 'WARN' },
+          },
+          bundles: {},
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const branch = 'feature/doctor-deep-weak-adapter';
+    const upstream = 'origin/feature/doctor-deep-weak-adapter';
+    writeFileSync(
+      join(repoRoot, '.ai_evidence.json'),
+      JSON.stringify(
+        sampleEvidence({
+          repoRoot,
+          branch,
+          upstream,
+        }),
+        null,
+        2
+      ),
+      'utf8'
+    );
+
+    const git = new FakeLifecycleGitService(
+      repoRoot,
+      [],
+      {
+        [PUMUKI_CONFIG_KEYS.installed]: 'true',
+        [PUMUKI_CONFIG_KEYS.version]: getCurrentPumukiVersion(),
+        [PUMUKI_CONFIG_KEYS.hooks]: 'pre-commit,pre-push',
+      },
+      {
+        'rev-parse --abbrev-ref --symbolic-full-name @{u}': upstream,
+        'rev-parse --abbrev-ref HEAD': branch,
+      }
+    );
+
+    const report = runLifecycleDoctor({
+      cwd: repoRoot,
+      git,
+      deep: true,
+    });
+
+    const adapterCheck = report.deep?.checks.find(
+      (check) => check.id === 'adapter-wiring'
+    );
+
+    assert.equal(adapterCheck?.status, 'fail');
+    assert.equal(adapterCheck?.severity, 'warning');
+    assert.match(adapterCheck?.message ?? '', /fragile binary resolution/i);
+    assert.equal(report.deep?.blocking, false);
+  });
+});
+
 test('runLifecycleDoctor --deep marca incompatibilidad cuando OpenSpec es requerido y no está instalado', async () => {
   await withTempDir('pumuki-doctor-deep-compat-openspec-', async (repoRoot) => {
     mkdirSync(join(repoRoot, '.git', 'hooks'), { recursive: true });
