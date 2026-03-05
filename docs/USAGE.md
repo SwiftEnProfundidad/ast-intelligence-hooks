@@ -270,6 +270,9 @@ npx --yes pumuki sdd session --close
 # scaffold deterministic scenario evidence from real test metadata
 npx --yes pumuki sdd evidence --scenario-id=<scenario-id> --test-command='npm run test -- --grep <scenario-id>' --test-status=passed --dry-run --json
 
+# sync scenario state into board artifact (dry-run/apply + conflict-safe)
+npx --yes pumuki sdd state-sync --scenario-id=<scenario-id> --status=in_progress --dry-run --json
+
 # local hotspots analytics and SaaS publication diagnostics
 npx --yes pumuki analytics hotspots report --top=10 --since-days=90 --json
 npx --yes pumuki analytics hotspots diagnose --json

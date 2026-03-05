@@ -125,6 +125,34 @@ const writePreWriteEvidence = (repoRoot: string, branch: string): void => {
   );
 };
 
+const writeScenarioEvidenceArtifact = (params: {
+  repoRoot: string;
+  scenarioId: string;
+  status: 'passed' | 'failed';
+}): void => {
+  const evidencePath = join(params.repoRoot, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json');
+  mkdirSync(dirname(evidencePath), { recursive: true });
+  const payload = {
+    version: '1.0',
+    generated_at: '2026-03-05T12:00:00.000Z',
+    scenario_id: params.scenarioId,
+    test_run: {
+      command: 'npm run test:unit',
+      status: params.status,
+      output_path: '.audit-reports/test.txt',
+      executed_at: '2026-03-05T12:00:00.000Z',
+    },
+    ai_evidence: {
+      source: 'local-file',
+      path: join(params.repoRoot, '.ai_evidence.json'),
+      digest: 'sha256:source',
+      generated_at: '2026-03-05T12:00:00.000Z',
+      status: 'valid',
+    },
+  };
+  writeFileSync(evidencePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+};
+
 const withFakeNpmOpenSpecInstaller = async <T>(
   repoRoot: string,
   callback: () => Promise<T>
@@ -471,6 +499,31 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       sddEvidenceFromEvidence: '.pumuki/evidence/custom.json',
     }
   );
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'sdd',
+      'state-sync',
+      '--scenario-id=BDD-001',
+      '--status=in_progress',
+      '--from-evidence=.pumuki/artifacts/pumuki-evidence-v1.json',
+      '--board-path=.pumuki/artifacts/scenario-state-sync-v1.json',
+      '--force',
+      '--dry-run',
+      '--json',
+    ]),
+    {
+      command: 'sdd',
+      purgeArtifacts: false,
+      json: true,
+      sddCommand: 'state-sync',
+      sddStateSyncDryRun: true,
+      sddStateSyncScenarioId: 'BDD-001',
+      sddStateSyncStatus: 'in_progress',
+      sddStateSyncFromEvidence: '.pumuki/artifacts/pumuki-evidence-v1.json',
+      sddStateSyncBoardPath: '.pumuki/artifacts/scenario-state-sync-v1.json',
+      sddStateSyncForce: true,
+    }
+  );
 });
 
 test('parseLifecycleCliArgs soporta analytics hotspots report', () => {
@@ -662,6 +715,10 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
         '--test-status=unknown',
       ]),
     /Invalid --test-status value/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['sdd', 'state-sync', '--status=invalid']),
+    /Invalid --status value/i
   );
 });
 
@@ -1853,6 +1910,65 @@ test('runLifecycleCli sdd evidence scaffold genera payload determinista con esce
     assert.equal(typeof payload.artifact?.ai_evidence?.digest, 'string');
     assert.equal(
       existsSync(join(repo, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json')),
+      false
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd state-sync dry-run proyecta estado desde evidencia y no escribe board', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    writeScenarioEvidenceArtifact({
+      repoRoot: repo,
+      scenarioId: 'BDD-200',
+      status: 'passed',
+    });
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli([
+      'sdd',
+      'state-sync',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(code, 0);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      command?: string;
+      context?: {
+        scenarioId?: string;
+        desiredStatus?: string;
+      };
+      board?: {
+        updated?: boolean;
+        written?: boolean;
+      };
+      decision?: {
+        allowed?: boolean;
+        code?: string;
+      };
+    };
+    assert.equal(payload.command, 'pumuki sdd state-sync');
+    assert.equal(payload.context?.scenarioId, 'BDD-200');
+    assert.equal(payload.context?.desiredStatus, 'done');
+    assert.equal(payload.board?.updated, true);
+    assert.equal(payload.board?.written, false);
+    assert.equal(payload.decision?.allowed, true);
+    assert.equal(payload.decision?.code, 'STATE_SYNC_DRY_RUN');
+    assert.equal(
+      existsSync(join(repo, '.pumuki', 'artifacts', 'scenario-state-sync-v1.json')),
       false
     );
   } finally {

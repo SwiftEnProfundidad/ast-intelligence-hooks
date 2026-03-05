@@ -34,8 +34,10 @@ import {
   runSddAutoSync,
   runSddEvidenceScaffold,
   runSddLearn,
+  runSddStateSync,
   runSddSyncDocs,
   type SddEvidenceScaffoldTestStatus,
+  type SddStateSyncStatus,
   type SddStage,
 } from '../sdd';
 import { evaluateAiGate } from '../gate/evaluateAiGate';
@@ -88,7 +90,8 @@ type SddCommand =
   | 'sync-docs'
   | 'learn'
   | 'auto-sync'
-  | 'evidence';
+  | 'evidence'
+  | 'state-sync';
 type LoopCommand = 'run' | 'status' | 'stop' | 'resume' | 'list' | 'export';
 type AnalyticsCommand = 'hotspots';
 type AnalyticsHotspotsCommand = 'report' | 'diagnose';
@@ -137,6 +140,12 @@ type ParsedArgs = {
   sddEvidenceTestStatus?: SddEvidenceScaffoldTestStatus;
   sddEvidenceTestOutput?: string;
   sddEvidenceFromEvidence?: string;
+  sddStateSyncDryRun?: boolean;
+  sddStateSyncScenarioId?: string;
+  sddStateSyncStatus?: SddStateSyncStatus;
+  sddStateSyncFromEvidence?: string;
+  sddStateSyncBoardPath?: string;
+  sddStateSyncForce?: boolean;
   watchStage?: LifecycleWatchStage;
   watchScope?: LifecycleWatchScope;
   watchIntervalMs?: number;
@@ -184,6 +193,7 @@ Pumuki lifecycle commands:
   pumuki sdd learn --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
   pumuki sdd auto-sync --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
   pumuki sdd evidence --scenario-id=<id> --test-command=<command> --test-status=passed|failed [--test-output=<path>] [--from-evidence=<path>] [--dry-run] [--json]
+  pumuki sdd state-sync [--scenario-id=<id>] [--status=todo|in_progress|blocked|done] [--from-evidence=<path>] [--board-path=<path>] [--force] [--dry-run] [--json]
 `.trim();
 
 const LOOP_RUN_POLICY: GatePolicy = {
@@ -259,6 +269,21 @@ const parseSddEvidenceTestStatus = (value: string): SddEvidenceScaffoldTestStatu
     return 'failed';
   }
   throw new Error(`Invalid --test-status value "${value}". Use passed|failed.`);
+};
+
+const parseSddStateSyncStatus = (value: string): SddStateSyncStatus => {
+  const normalized = value.trim().toLowerCase();
+  if (
+    normalized === 'todo' ||
+    normalized === 'in_progress' ||
+    normalized === 'blocked' ||
+    normalized === 'done'
+  ) {
+    return normalized;
+  }
+  throw new Error(
+    `Invalid --status value "${value}". Use todo|in_progress|blocked|done for "pumuki sdd state-sync".`
+  );
 };
 
 const parseWatchStage = (value?: string): LifecycleWatchStage => {
@@ -573,6 +598,12 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let sddEvidenceTestStatus: ParsedArgs['sddEvidenceTestStatus'];
   let sddEvidenceTestOutput: ParsedArgs['sddEvidenceTestOutput'];
   let sddEvidenceFromEvidence: ParsedArgs['sddEvidenceFromEvidence'];
+  let sddStateSyncDryRun = false;
+  let sddStateSyncScenarioId: ParsedArgs['sddStateSyncScenarioId'];
+  let sddStateSyncStatus: ParsedArgs['sddStateSyncStatus'];
+  let sddStateSyncFromEvidence: ParsedArgs['sddStateSyncFromEvidence'];
+  let sddStateSyncBoardPath: ParsedArgs['sddStateSyncBoardPath'];
+  let sddStateSyncForce = false;
   let adapterCommand: ParsedArgs['adapterCommand'];
   let adapterAgent: ParsedArgs['adapterAgent'];
   let adapterDryRun = false;
@@ -827,7 +858,8 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       subcommandRaw !== 'sync' &&
       subcommandRaw !== 'learn' &&
       subcommandRaw !== 'auto-sync' &&
-      subcommandRaw !== 'evidence'
+      subcommandRaw !== 'evidence' &&
+      subcommandRaw !== 'state-sync'
     ) {
       throw new Error(`Unsupported SDD subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
     }
@@ -855,7 +887,11 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
           sddEvidenceDryRun = true;
           continue;
         }
-        throw new Error(`--dry-run is only supported with "pumuki sdd sync-docs", "pumuki sdd learn", "pumuki sdd auto-sync" or "pumuki sdd evidence".\n\n${HELP_TEXT}`);
+        if (sddCommand === 'state-sync') {
+          sddStateSyncDryRun = true;
+          continue;
+        }
+        throw new Error(`--dry-run is only supported with "pumuki sdd sync-docs", "pumuki sdd learn", "pumuki sdd auto-sync", "pumuki sdd evidence" or "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
       }
       if (arg.startsWith('--stage=')) {
         if (sddCommand === 'validate') {
@@ -875,6 +911,13 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
           continue;
         }
         throw new Error(`--stage is only supported with "pumuki sdd validate", "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
+      }
+      if (arg.startsWith('--status=')) {
+        if (sddCommand !== 'state-sync') {
+          throw new Error(`--status is only supported with "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
+        }
+        sddStateSyncStatus = parseSddStateSyncStatus(arg.slice('--status='.length));
+        continue;
       }
       if (arg === '--open') {
         if (sddCommand !== 'session') {
@@ -956,14 +999,19 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         throw new Error(`--task is only supported with "pumuki sdd sync-docs", "pumuki sdd learn" or "pumuki sdd auto-sync".\n\n${HELP_TEXT}`);
       }
       if (arg.startsWith('--scenario-id=')) {
-        if (sddCommand !== 'evidence') {
-          throw new Error(`--scenario-id is only supported with "pumuki sdd evidence".\n\n${HELP_TEXT}`);
-        }
         const scenarioId = arg.slice('--scenario-id='.length).trim();
         if (scenarioId.length === 0) {
           throw new Error(`Invalid --scenario-id value "${arg}".`);
         }
-        sddEvidenceScenarioId = scenarioId;
+        if (sddCommand === 'evidence') {
+          sddEvidenceScenarioId = scenarioId;
+          continue;
+        }
+        if (sddCommand === 'state-sync') {
+          sddStateSyncScenarioId = scenarioId;
+          continue;
+        }
+        throw new Error(`--scenario-id is only supported with "pumuki sdd evidence" or "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
         continue;
       }
       if (arg.startsWith('--test-command=')) {
@@ -1020,9 +1068,33 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
           );
           continue;
         }
+        if (sddCommand === 'state-sync') {
+          sddStateSyncFromEvidence = parseSddEvidencePath(
+            arg.slice('--from-evidence='.length)
+          );
+          continue;
+        }
         throw new Error(
-          `--from-evidence is only supported with "pumuki sdd sync-docs", "pumuki sdd sync", "pumuki sdd learn", "pumuki sdd auto-sync" or "pumuki sdd evidence".\n\n${HELP_TEXT}`
+          `--from-evidence is only supported with "pumuki sdd sync-docs", "pumuki sdd sync", "pumuki sdd learn", "pumuki sdd auto-sync", "pumuki sdd evidence" or "pumuki sdd state-sync".\n\n${HELP_TEXT}`
         );
+      }
+      if (arg.startsWith('--board-path=')) {
+        if (sddCommand !== 'state-sync') {
+          throw new Error(`--board-path is only supported with "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
+        }
+        const boardPath = arg.slice('--board-path='.length).trim();
+        if (boardPath.length === 0) {
+          throw new Error(`Invalid --board-path value "${arg}".`);
+        }
+        sddStateSyncBoardPath = boardPath;
+        continue;
+      }
+      if (arg === '--force') {
+        if (sddCommand !== 'state-sync') {
+          throw new Error(`--force is only supported with "pumuki sdd state-sync".\n\n${HELP_TEXT}`);
+        }
+        sddStateSyncForce = true;
+        continue;
       }
       if (arg.startsWith('--ttl-minutes=')) {
         if (sddCommand !== 'session') {
@@ -1154,6 +1226,32 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
         sddEvidenceTestStatus,
         ...(sddEvidenceTestOutput ? { sddEvidenceTestOutput } : {}),
         ...(sddEvidenceFromEvidence ? { sddEvidenceFromEvidence } : {}),
+      };
+    }
+    if (sddCommand === 'state-sync') {
+      if (
+        sddSessionAction ||
+        sddChangeId ||
+        typeof sddTtlMinutes === 'number' ||
+        sddSyncDocsChange ||
+        sddLearnChange ||
+        sddAutoSyncChange
+      ) {
+        throw new Error(
+          `"pumuki sdd state-sync" only supports [--scenario-id=<id>] [--status=todo|in_progress|blocked|done] [--from-evidence=<path>] [--board-path=<path>] [--force] [--dry-run] [--json].\n\n${HELP_TEXT}`
+        );
+      }
+      return {
+        command: commandRaw,
+        purgeArtifacts: false,
+        json,
+        sddCommand,
+        sddStateSyncDryRun,
+        ...(sddStateSyncScenarioId ? { sddStateSyncScenarioId } : {}),
+        ...(sddStateSyncStatus ? { sddStateSyncStatus } : {}),
+        ...(sddStateSyncFromEvidence ? { sddStateSyncFromEvidence } : {}),
+        ...(sddStateSyncBoardPath ? { sddStateSyncBoardPath } : {}),
+        ...(sddStateSyncForce ? { sddStateSyncForce: true } : {}),
       };
     }
 
@@ -2515,6 +2613,34 @@ export const runLifecycleCli = async (
             writeInfo(
               `[pumuki][sdd] source_digest=${evidenceResult.artifact.ai_evidence.digest} generated_at=${evidenceResult.artifact.generated_at}`
             );
+          }
+          return 0;
+        }
+        if (parsed.sddCommand === 'state-sync') {
+          const stateSyncResult = runSddStateSync({
+            repoRoot: process.cwd(),
+            dryRun: parsed.sddStateSyncDryRun === true,
+            scenarioId: parsed.sddStateSyncScenarioId,
+            status: parsed.sddStateSyncStatus,
+            fromEvidencePath: parsed.sddStateSyncFromEvidence,
+            boardPath: parsed.sddStateSyncBoardPath,
+            force: parsed.sddStateSyncForce === true,
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(stateSyncResult, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][sdd] state-sync dry_run=${stateSyncResult.dryRun ? 'yes' : 'no'} scenario=${stateSyncResult.context.scenarioId} status=${stateSyncResult.context.desiredStatus} updated=${stateSyncResult.board.updated ? 'yes' : 'no'} conflict=${stateSyncResult.board.conflict ? 'yes' : 'no'} written=${stateSyncResult.board.written ? 'yes' : 'no'}`
+            );
+            writeInfo(
+              `[pumuki][sdd] state-sync source=${stateSyncResult.context.fromEvidencePath ?? 'default'} board=${stateSyncResult.context.boardPath} entries=${stateSyncResult.board.entries} decision=${stateSyncResult.decision.code}`
+            );
+            if (stateSyncResult.decision.nextAction) {
+              writeInfo(`[pumuki][sdd] state-sync next action: ${stateSyncResult.decision.nextAction}`);
+            }
+          }
+          if (!stateSyncResult.decision.allowed) {
+            return 1;
           }
           return 0;
         }

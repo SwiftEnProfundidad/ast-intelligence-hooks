@@ -403,4 +403,22 @@
     - `npm run -s typecheck` -> `PASS`.
     - Issue upstream cerrada: `#628`.
 
-- 🚧 PUMUKI-046: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M004`, issue `#629`) para plugin oficial de sync de estado `scenario_id <-> evidencias` con modo `dry-run/apply`.
+- ✅ PUMUKI-046: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M004`, issue `#629`) para plugin oficial de sync de estado `scenario_id <-> evidencias` con modo `dry-run/apply`.
+  - Fix:
+    - Nuevo subcomando SDD: `pumuki sdd state-sync [--scenario-id=<id>] [--status=todo|in_progress|blocked|done] [--from-evidence=<path>] [--board-path=<path>] [--force] [--dry-run] [--json]`.
+    - `integrations/sdd/stateSync.ts`: motor determinista de sincronización estado-escenario con:
+      - lectura/validación de evidencia fuente (`.pumuki/artifacts/pumuki-evidence-v1.json`),
+      - proyección de estado (`passed -> done`, `failed -> blocked` por defecto),
+      - artifact board canónico (`.pumuki/artifacts/scenario-state-sync-v1.json`),
+      - detección de conflicto y remediación explícita con `--force`.
+    - `integrations/lifecycle/cli.ts`: parseo/ejecución del subcomando y `exit code 1` en conflictos (`STATE_SYNC_CONFLICT`).
+    - Cobertura nueva:
+      - `integrations/sdd/__tests__/stateSync.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts` (parse + ejecución dry-run state-sync).
+    - Documentación operativa: `docs/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/stateSync.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `38 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#629`.
+
+- 🚧 PUMUKI-047: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M005`, issue `#630`) para `policy reconcile` y coherencia AGENTS/skills/policy-as-code.
