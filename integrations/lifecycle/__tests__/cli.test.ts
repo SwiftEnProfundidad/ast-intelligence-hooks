@@ -446,6 +446,31 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
       sddAutoSyncFromEvidence: '.pumuki/evidence/auto-sync.json',
     }
   );
+  assert.deepEqual(
+    parseLifecycleCliArgs([
+      'sdd',
+      'evidence',
+      '--scenario-id=BDD-001',
+      '--test-command=npm run test:unit -- --grep BDD-001',
+      '--test-status=passed',
+      '--test-output=.audit-reports/bdd-001.txt',
+      '--from-evidence=.pumuki/evidence/custom.json',
+      '--dry-run',
+      '--json',
+    ]),
+    {
+      command: 'sdd',
+      purgeArtifacts: false,
+      json: true,
+      sddCommand: 'evidence',
+      sddEvidenceDryRun: true,
+      sddEvidenceScenarioId: 'BDD-001',
+      sddEvidenceTestCommand: 'npm run test:unit -- --grep BDD-001',
+      sddEvidenceTestStatus: 'passed',
+      sddEvidenceTestOutput: '.audit-reports/bdd-001.txt',
+      sddEvidenceFromEvidence: '.pumuki/evidence/custom.json',
+    }
+  );
 });
 
 test('parseLifecycleCliArgs soporta analytics hotspots report', () => {
@@ -612,6 +637,31 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['sdd', 'auto-sync']),
     /Missing --change=<change-id> for "pumuki sdd auto-sync"/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['sdd', 'evidence', '--scenario-id=BDD-001']),
+    /Missing --test-command=<command> for "pumuki sdd evidence"/i
+  );
+  assert.throws(
+    () =>
+      parseLifecycleCliArgs([
+        'sdd',
+        'evidence',
+        '--scenario-id=BDD-001',
+        '--test-command=npm run test:unit',
+      ]),
+    /Missing --test-status=passed\|failed for "pumuki sdd evidence"/i
+  );
+  assert.throws(
+    () =>
+      parseLifecycleCliArgs([
+        'sdd',
+        'evidence',
+        '--scenario-id=BDD-001',
+        '--test-command=npm run test:unit',
+        '--test-status=unknown',
+      ]),
+    /Invalid --test-status value/i
   );
 });
 
@@ -1732,6 +1782,77 @@ test('runLifecycleCli sdd learn dry-run genera learning payload sin requerir arc
     assert.equal(payload.learning?.written, false);
     assert.equal(
       existsSync(join(repo, 'openspec', 'changes', 'rgo-1700-03', 'learning.json')),
+      false
+    );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli sdd evidence scaffold genera payload determinista con escenario y test reales', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    writePreWriteEvidence(repo, 'main');
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli([
+      'sdd',
+      'evidence',
+      '--scenario-id=BDD-001',
+      '--test-command=npm run test:unit -- --grep BDD-001',
+      '--test-status=passed',
+      '--test-output=.audit-reports/bdd-001.txt',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(code, 0);
+
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      command?: string;
+      dryRun?: boolean;
+      context?: {
+        scenarioId?: string;
+        testCommand?: string;
+        testStatus?: string;
+      };
+      output?: {
+        path?: string;
+        written?: boolean;
+      };
+      artifact?: {
+        scenario_id?: string;
+        test_run?: {
+          status?: string;
+        };
+        ai_evidence?: {
+          status?: string;
+          digest?: string;
+        };
+      };
+    };
+    assert.equal(payload.command, 'pumuki sdd evidence');
+    assert.equal(payload.dryRun, true);
+    assert.equal(payload.context?.scenarioId, 'BDD-001');
+    assert.equal(payload.context?.testCommand, 'npm run test:unit -- --grep BDD-001');
+    assert.equal(payload.context?.testStatus, 'passed');
+    assert.equal(payload.output?.path, '.pumuki/artifacts/pumuki-evidence-v1.json');
+    assert.equal(payload.output?.written, false);
+    assert.equal(payload.artifact?.scenario_id, 'BDD-001');
+    assert.equal(payload.artifact?.test_run?.status, 'passed');
+    assert.equal(payload.artifact?.ai_evidence?.status, 'valid');
+    assert.equal(typeof payload.artifact?.ai_evidence?.digest, 'string');
+    assert.equal(
+      existsSync(join(repo, '.pumuki', 'artifacts', 'pumuki-evidence-v1.json')),
       false
     );
   } finally {

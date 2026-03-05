@@ -267,6 +267,9 @@ npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd session --refresh
 npx --yes pumuki sdd session --close
 
+# scaffold deterministic scenario evidence from real test metadata
+npx --yes pumuki sdd evidence --scenario-id=<scenario-id> --test-command='npm run test -- --grep <scenario-id>' --test-status=passed --dry-run --json
+
 # local hotspots analytics and SaaS publication diagnostics
 npx --yes pumuki analytics hotspots report --top=10 --since-days=90 --json
 npx --yes pumuki analytics hotspots diagnose --json

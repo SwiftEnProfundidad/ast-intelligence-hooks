@@ -389,4 +389,18 @@
     - `npm run -s typecheck` -> `PASS`.
     - Issue upstream cerrada: `#627`.
 
-- 🚧 PUMUKI-045: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M003`) para generador oficial de evidencia por `scenario_id` con validación de tests reales.
+- ✅ PUMUKI-045: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M003`, issue `#628`) para generador oficial de evidencia por `scenario_id` con validación de tests reales.
+  - Fix:
+    - Nuevo comando: `pumuki sdd evidence --scenario-id=<id> --test-command=<command> --test-status=passed|failed [--test-output=<path>] [--from-evidence=<path>] [--dry-run] [--json]`.
+    - `integrations/sdd/evidenceScaffold.ts`: scaffolding determinista de `.pumuki/artifacts/pumuki-evidence-v1.json` con validación hard de `scenario_id`, metadatos reales de test y baseline de `.ai_evidence.json` válido.
+    - `integrations/lifecycle/cli.ts`: parseo/validación/ejecución del nuevo subcomando SDD `evidence`.
+    - Cobertura nueva:
+      - `integrations/sdd/__tests__/evidenceScaffold.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts`
+    - Documentación operativa: `docs/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/evidenceScaffold.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `38 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Issue upstream cerrada: `#628`.
+
+- 🚧 PUMUKI-046: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M004`, issue `#629`) para plugin oficial de sync de estado `scenario_id <-> evidencias` con modo `dry-run/apply`.
