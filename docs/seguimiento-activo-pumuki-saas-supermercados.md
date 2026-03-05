@@ -1003,8 +1003,16 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#672`.
 
-- 🚧 PUMUKI-088: Ejecutar mejora DX siguiente para enlazar sección específica de backlog tooling desde README.
+- ✅ PUMUKI-088: Ejecutar mejora DX siguiente para enlazar sección específica de backlog tooling desde README.
+  - Fix:
+    - `README.md`:
+      - añadido enlace directo a sección de backlog tooling en `docs/USAGE.md`.
+  - Evidencia (2026-03-05):
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#673`.
+
+- 🚧 PUMUKI-089: Ejecutar mejora DX siguiente para estabilizar anchor de referencia a backlog tooling en docs.
   - Alcance:
-    - Añadir referencia directa a la sección de backlog tooling en `docs/USAGE.md`.
-    - Mejorar discoverability sin duplicar detalle técnico.
-  - Issue upstream activa: `#673`.
+    - Definir anchor estable en `docs/USAGE.md`.
+    - Actualizar README para apuntar a ese anchor estable y evitar drift por cambios de heading.
+  - Issue upstream activa: `#674`.

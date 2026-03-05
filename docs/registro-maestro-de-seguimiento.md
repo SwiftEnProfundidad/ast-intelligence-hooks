@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-087 (issue `#672`, exponer `test:backlog-tooling` en README).
-- Task activa (`🚧`): PUMUKI-088 (issue `#673`, enlace directo a sección backlog tooling en `docs/USAGE.md`).
+- Última task cerrada (`✅`): PUMUKI-088 (issue `#673`, enlace directo a sección backlog tooling en `docs/USAGE.md`).
+- Task activa (`🚧`): PUMUKI-089 (issue `#674`, estabilizar anchor de sección backlog tooling).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
