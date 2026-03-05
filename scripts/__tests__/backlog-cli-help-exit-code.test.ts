@@ -63,10 +63,12 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
     tool?: string;
     schema_version?: string;
     generated_at?: string;
+    run_id?: string;
   };
   assert.equal(payload.tool, 'backlog-watch');
   assert.equal(payload.schema_version, '1.0.0');
   assert.match(payload.generated_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
+  assert.match(payload.run_id ?? '', /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
 });
 
 test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', () => {
@@ -80,8 +82,10 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
     tool?: string;
     schema_version?: string;
     generated_at?: string;
+    run_id?: string;
   };
   assert.equal(payload.tool, 'backlog-reconcile');
   assert.equal(payload.schema_version, '1.0.0');
   assert.match(payload.generated_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
+  assert.match(payload.run_id ?? '', /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
 });

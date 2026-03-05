@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
@@ -181,6 +182,7 @@ const main = async (): Promise<void> => {
 
   if (parsed.json) {
     const generatedAt = new Date().toISOString();
+    const runId = randomUUID();
     writeFileSync(
       process.stdout.fd,
       `${JSON.stringify(
@@ -188,6 +190,7 @@ const main = async (): Promise<void> => {
           tool: JSON_TOOL_NAME,
           schema_version: JSON_SCHEMA_VERSION,
           generated_at: generatedAt,
+          run_id: runId,
           ...result,
         },
         null,

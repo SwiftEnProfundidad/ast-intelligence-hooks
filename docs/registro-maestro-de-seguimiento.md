@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-078 (issue `#663`, añadir `generated_at` al contrato JSON de backlog tooling).
-- Task activa (`🚧`): PUMUKI-079 (issue `#664`, añadir `run_id` al contrato JSON de backlog tooling).
+- Última task cerrada (`✅`): PUMUKI-079 (issue `#664`, añadir `run_id` al contrato JSON de backlog tooling).
+- Task activa (`🚧`): PUMUKI-080 (issue `#665`, añadir `invocation` metadata al contrato JSON).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

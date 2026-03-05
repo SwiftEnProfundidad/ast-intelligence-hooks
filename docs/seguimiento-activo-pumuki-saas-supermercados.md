@@ -902,8 +902,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#663`.
 
-- 🚧 PUMUKI-079: Ejecutar mejora DX siguiente para añadir `run_id` al contrato JSON de backlog tooling.
+- ✅ PUMUKI-079: Ejecutar mejora DX siguiente para añadir `run_id` al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `run_id` (UUID v4) por ejecución.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de formato UUID en `run_id` para ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#664`.
+
+- 🚧 PUMUKI-080: Ejecutar mejora DX siguiente para añadir `invocation` metadata al contrato JSON de backlog tooling.
   - Alcance:
-    - Incorporar identificador de ejecución por run para correlación en pipelines/logs.
-    - Mantener compatibilidad de contrato existente.
-  - Issue upstream activa: `#664`.
+    - Adjuntar contexto mínimo de invocación en salidas JSON (`repo`, flags clave, modo).
+    - Mantener payload seguro (sin secretos) y compatible.
+  - Issue upstream activa: `#665`.
