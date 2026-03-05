@@ -341,6 +341,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` exposes `heading_changes_count` for lightweight consumers.
 - `reconcile-consumer-backlog-issues --json` exposes `classification_counts` (changes + summary counters) for dashboards.
 - `reconcile-consumer-backlog-issues --json` exposes `action_required_reasons` for pending deltas in dry-run/apply flows.
+- `reconcile-consumer-backlog-issues --json` exposes `next_command` when there are actionable deltas (`--json` + `--apply` sequence).
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
 - `reconcile-consumer-backlog-issues` (modo humano) imprime `action_required_reasons=<...|none>`.
 - `reconcile-consumer-backlog-issues` (modo humano) añade hint de flujo seguro cuando hay deltas: `--json` (dry-run) y luego `--apply`.

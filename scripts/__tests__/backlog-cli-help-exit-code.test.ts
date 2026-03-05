@@ -182,6 +182,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       summary_blocked?: number;
     };
     action_required_reasons?: string[];
+    next_command?: string;
   };
   assert.equal(payload.tool, 'backlog-reconcile');
   assert.equal(payload.schema_version, '1.0.0');
@@ -201,6 +202,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
   assert.equal(payload.classification_counts?.reference_changes, 0);
   assert.equal(payload.classification_counts?.heading_changes, 0);
   assert.deepEqual(payload.action_required_reasons, []);
+  assert.equal(payload.next_command, undefined);
 });
 
 test('reconcile-consumer-backlog-issues --json expone heading sync metadata', () => {
@@ -224,6 +226,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
     heading_changes_count?: number;
     headingUpdated?: boolean;
     headingChanges?: Array<{ id?: string; from?: string; to?: string }>;
+    next_command?: string;
   };
   assert.equal(payload.heading_changes_count, 1);
   assert.equal(payload.headingUpdated, true);
@@ -239,6 +242,9 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.classification_counts?.summary_pending, 0);
   assert.equal(payload.classification_counts?.summary_blocked, 0);
   assert.deepEqual(payload.action_required_reasons, ['heading_changes']);
+  assert.match(payload.next_command ?? '', /--file='/);
+  assert.match(payload.next_command ?? '', /--json &&/);
+  assert.match(payload.next_command ?? '', /--apply$/);
 });
 
 test('reconcile-consumer-backlog-issues salida humana incluye resumen de heading changes', () => {

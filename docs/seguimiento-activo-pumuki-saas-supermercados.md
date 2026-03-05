@@ -1263,9 +1263,26 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#692`.
 
-- 🚧 PUMUKI-108: Ejecutar mejora DX siguiente para `next_command` en JSON de reconcile cuando hay deltas.
+- ✅ PUMUKI-108: Ejecutar mejora DX siguiente para `next_command` en JSON de reconcile cuando hay deltas.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida JSON añade `next_command` solo cuando hay `action_required_reasons`.
+      - `next_command` encapsula flujo seguro `--json` (dry-run) seguido de `--apply`.
+      - quoting seguro de `--file` para rutas con caracteres especiales.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de presencia de `next_command` en caso con deltas.
+      - verificación de ausencia de `next_command` en caso limpio.
+    - `docs/USAGE.md`:
+      - documentado `next_command` en contrato JSON de reconcile.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#693`.
+
+- 🚧 PUMUKI-109: Ejecutar mejora DX siguiente para `next_command` en JSON de watch cuando hay findings.
   - Alcance:
-    - Exponer `next_command` en `reconcile --json` para integraciones automáticas.
-    - Emitirlo solo cuando haya `action_required_reasons`.
+    - Exponer `next_command` en `watch --json` solo cuando `hasActionRequired=true`.
+    - Apuntar al flujo seguro de reconciliación (`reconcile --json` -> `--apply`).
     - Mantener contrato JSON backward-compatible.
-  - Issue upstream activa: `#693`.
+  - Issue upstream activa: `#694`.

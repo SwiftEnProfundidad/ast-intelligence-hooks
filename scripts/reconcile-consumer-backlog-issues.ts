@@ -33,6 +33,8 @@ type ParsedArgs = {
 
 const JSON_TOOL_NAME = 'backlog-reconcile';
 
+const shellQuote = (value: string): string => `'${value.replace(/'/g, `'\\''`)}'`;
+
 const HELP_TEXT = `Usage:
   npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--id-issue-map-from=<md-path>] [--resolve-missing-via-gh] [--apply] [--json]
 
@@ -217,6 +219,14 @@ const main = async (): Promise<void> => {
     summaryUpdated: result.summaryUpdated,
     nextStepUpdated: result.nextStepUpdated,
   });
+  const nextCommand =
+    actionRequiredReasons.length > 0
+      ? `npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
+          parsed.filePath
+        )} --json && npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=${shellQuote(
+          parsed.filePath
+        )} --apply`
+      : undefined;
 
   if (parsed.json) {
     const generatedAt = new Date().toISOString();
@@ -253,6 +263,7 @@ const main = async (): Promise<void> => {
             summary_blocked: result.summary.blocked,
           },
           action_required_reasons: actionRequiredReasons,
+          ...(nextCommand ? { next_command: nextCommand } : {}),
           heading_changes_count: result.headingChanges.length,
           ...result,
         },
