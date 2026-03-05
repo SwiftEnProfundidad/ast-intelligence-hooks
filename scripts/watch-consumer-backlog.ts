@@ -183,6 +183,10 @@ const main = async (): Promise<void> => {
             id_issue_map: parsed.idIssueMapPath ? 'provided' : 'none',
             id_issue_map_from: parsed.idIssueMapSourcePath ? 'provided' : 'none',
           },
+          compat: {
+            min_reader_version: '1.0.0',
+            breaking_changes: [],
+          },
           ...result,
         },
         null,

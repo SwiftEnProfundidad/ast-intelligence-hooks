@@ -924,8 +924,21 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#665`.
 
-- 🚧 PUMUKI-081: Ejecutar mejora DX siguiente para añadir bloque `compat` al contrato JSON de backlog tooling.
+- ✅ PUMUKI-081: Ejecutar mejora DX siguiente para añadir bloque `compat` al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye:
+        - `compat.min_reader_version`
+        - `compat.breaking_changes` (vacío en el estado actual).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de bloque `compat` para ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#666`.
+
+- 🚧 PUMUKI-082: Ejecutar mejora DX siguiente para añadir `compat.is_backward_compatible` al contrato JSON.
   - Alcance:
-    - Incluir metadatos de compatibilidad (`min_reader_version`, `breaking_changes`) en ambos scripts.
-    - Preparar evolución de contrato sin romper consumidores.
-  - Issue upstream activa: `#666`.
+    - Añadir señal booleana directa de compatibilidad en `watch` y `reconcile`.
+    - Simplificar lectura por consumidores automáticos.
+  - Issue upstream activa: `#667`.

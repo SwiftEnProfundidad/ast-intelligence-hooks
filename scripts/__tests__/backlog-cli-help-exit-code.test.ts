@@ -71,6 +71,10 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       id_issue_map?: string;
       id_issue_map_from?: string;
     };
+    compat?: {
+      min_reader_version?: string;
+      breaking_changes?: unknown[];
+    };
   };
   assert.equal(payload.tool, 'backlog-watch');
   assert.equal(payload.schema_version, '1.0.0');
@@ -81,6 +85,8 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
   assert.equal(payload.invocation?.resolve_missing_via_gh, false);
   assert.equal(payload.invocation?.id_issue_map, 'none');
   assert.equal(payload.invocation?.id_issue_map_from, 'none');
+  assert.equal(payload.compat?.min_reader_version, '1.0.0');
+  assert.deepEqual(payload.compat?.breaking_changes, []);
 });
 
 test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', () => {
@@ -103,6 +109,10 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       id_issue_map?: string;
       id_issue_map_from?: string;
     };
+    compat?: {
+      min_reader_version?: string;
+      breaking_changes?: unknown[];
+    };
   };
   assert.equal(payload.tool, 'backlog-reconcile');
   assert.equal(payload.schema_version, '1.0.0');
@@ -114,4 +124,6 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
   assert.equal(payload.invocation?.resolve_missing_via_gh, false);
   assert.equal(payload.invocation?.id_issue_map, 'none');
   assert.equal(payload.invocation?.id_issue_map_from, 'none');
+  assert.equal(payload.compat?.min_reader_version, '1.0.0');
+  assert.deepEqual(payload.compat?.breaking_changes, []);
 });
