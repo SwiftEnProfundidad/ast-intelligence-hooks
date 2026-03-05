@@ -215,6 +215,21 @@ test('parseLifecycleCliArgs interpreta comandos y flags soportados', () => {
     updateSpec: undefined,
     json: false,
   });
+  assert.deepEqual(parseLifecycleCliArgs(['install', '--with-mcp']), {
+    command: 'install',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: false,
+    installWithMcp: true,
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['install', '--with-mcp', '--agent=codex']), {
+    command: 'install',
+    purgeArtifacts: false,
+    updateSpec: undefined,
+    json: false,
+    installWithMcp: true,
+    installMcpAgent: 'codex',
+  });
   assert.deepEqual(parseLifecycleCliArgs(['uninstall', '--purge-artifacts']), {
     command: 'uninstall',
     purgeArtifacts: true,
@@ -554,6 +569,10 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['install', '--remote-checks']),
     /only supported with "pumuki doctor" or "pumuki status"/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['install', '--agent=codex']),
+    /only supported with "pumuki install --with-mcp"/i
   );
   assert.throws(
     () => parseLifecycleCliArgs(['status', '--deep']),
@@ -1705,8 +1724,11 @@ test('runLifecycleCli ejecuta flujo install/doctor/status/remove/uninstall en re
 
   try {
     process.chdir(repo);
-    const installCode = await withSilentConsole(() => runLifecycleCli(['install']));
+    const installCode = await withSilentConsole(() =>
+      runLifecycleCli(['install', '--with-mcp'])
+    );
     assert.equal(installCode, 0);
+    assert.equal(existsSync(join(repo, '.pumuki', 'adapter.json')), true);
 
     writeFileSync(join(repo, '.ai_evidence.json'), '{}\n', 'utf8');
     const doctorCode = await withSilentConsole(() => runLifecycleCli(['doctor']));

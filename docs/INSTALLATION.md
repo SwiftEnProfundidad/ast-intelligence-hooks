@@ -49,6 +49,8 @@ npm install --save-exact pumuki
 
 ```bash
 npx --yes pumuki install
+# optional: include MCP wiring in the same bootstrap step
+npx --yes pumuki install --with-mcp --agent=codex
 ```
 
 Behavior:
@@ -56,11 +58,13 @@ Behavior:
 - Auto-installs `@fission-ai/openspec@latest` when OpenSpec is missing/incompatible (when `package.json` exists).
 - Scaffolds `openspec/` baseline if missing (`project` file plus archive/spec placeholders).
 - Bootstraps `.ai_evidence.json` when missing (deterministic empty baseline with repo state snapshot).
+- With `--with-mcp`, also scaffolds adapter wiring (`.pumuki/adapter.json` by default) and prints MCP health summary after install.
 
 ### 3) Verify lifecycle and SDD status
 
 ```bash
 npx --yes pumuki doctor
+npx --yes pumuki doctor --deep --json
 npx --yes pumuki status
 npx --yes pumuki sdd status
 ```

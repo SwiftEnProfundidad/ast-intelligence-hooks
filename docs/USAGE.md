@@ -238,9 +238,13 @@ npm uninstall pumuki
 ```bash
 # install managed hooks
 npx --yes pumuki install
+# install managed hooks + MCP wiring in one step
+npx --yes pumuki install --with-mcp --agent=codex
 
 # inspect enterprise baseline safety checks
 npx --yes pumuki doctor
+# include deterministic adapter/mcp wiring health checks
+npx --yes pumuki doctor --deep --json
 
 # show lifecycle status
 npx --yes pumuki status
@@ -314,6 +318,7 @@ Watch runtime behavior:
 
 OpenSpec integration behavior:
 - `pumuki install` auto-bootstraps OpenSpec (`@fission-ai/openspec`) when missing/incompatible and scaffolds `openspec/` project baseline when absent.
+- `pumuki install --with-mcp` adds adapter/MCP wiring bootstrap and prints MCP health summary on completion.
 - `pumuki update --latest` migrates legacy `openspec` package to `@fission-ai/openspec` before hook reinstall.
 
 Safety rule:

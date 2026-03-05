@@ -90,6 +90,8 @@ type ParsedArgs = {
   purgeArtifacts: boolean;
   updateSpec?: string;
   json: boolean;
+  installWithMcp?: boolean;
+  installMcpAgent?: AdapterAgent;
   remoteChecks?: boolean;
   doctorDeep?: boolean;
   sddCommand?: SddCommand;
@@ -137,7 +139,7 @@ type ParsedArgs = {
 
 const HELP_TEXT = `
 Pumuki lifecycle commands:
-  pumuki install
+  pumuki install [--with-mcp] [--agent=<name>]
   pumuki uninstall [--purge-artifacts]
   pumuki remove
   pumuki update [--latest|--spec=<package-spec>]
@@ -495,6 +497,8 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   let purgeArtifacts = false;
   let updateSpec: ParsedArgs['updateSpec'];
   let json = false;
+  let installWithMcp = false;
+  let installMcpAgent: ParsedArgs['installMcpAgent'];
   let remoteChecks = false;
   let doctorDeep = false;
   let watchStage: ParsedArgs['watchStage'];
@@ -1089,6 +1093,20 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       json = true;
       continue;
     }
+    if (arg === '--with-mcp') {
+      if (commandRaw !== 'install') {
+        throw new Error(`--with-mcp is only supported with "pumuki install".\n\n${HELP_TEXT}`);
+      }
+      installWithMcp = true;
+      continue;
+    }
+    if (arg.startsWith('--agent=')) {
+      if (commandRaw !== 'install') {
+        throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+      }
+      installMcpAgent = parseAdapterAgent(arg.slice('--agent='.length).trim());
+      continue;
+    }
     if (arg === '--remote-checks') {
       remoteChecks = true;
       continue;
@@ -1119,12 +1137,23 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
   if (doctorDeep && commandRaw !== 'doctor') {
     throw new Error(`--deep is only supported with "pumuki doctor".\n\n${HELP_TEXT}`);
   }
+  if (commandRaw !== 'install' && installWithMcp) {
+    throw new Error(`--with-mcp is only supported with "pumuki install".\n\n${HELP_TEXT}`);
+  }
+  if (commandRaw !== 'install' && installMcpAgent) {
+    throw new Error(`--agent is only supported with "pumuki install --with-mcp".\n\n${HELP_TEXT}`);
+  }
+  if (commandRaw === 'install' && installMcpAgent && !installWithMcp) {
+    throw new Error(`--agent is only supported with "pumuki install --with-mcp".\n\n${HELP_TEXT}`);
+  }
 
   return {
     command: commandRaw,
     purgeArtifacts,
     updateSpec,
     json,
+    ...(installWithMcp ? { installWithMcp: true } : {}),
+    ...(installMcpAgent ? { installMcpAgent } : {}),
     ...(remoteChecks ? { remoteChecks: true } : {}),
     ...(doctorDeep ? { doctorDeep: true } : {}),
   };
@@ -1516,6 +1545,31 @@ export const runLifecycleCli = async (
           );
           if (result.openSpecBootstrap.skippedReason === 'NO_PACKAGE_JSON') {
             writeInfo('[pumuki] openspec bootstrap skipped npm install (package.json not found)');
+          }
+        }
+        if (parsed.installWithMcp) {
+          const adapterResult = runLifecycleAdapterInstall({
+            agent: parsed.installMcpAgent ?? 'codex',
+          });
+          writeInfo(
+            `[pumuki] mcp wiring: agent=${adapterResult.agent} changed=${adapterResult.changedFiles.length}`
+          );
+          if (adapterResult.changedFiles.length > 0) {
+            writeInfo(`[pumuki] mcp files: ${adapterResult.changedFiles.join(', ')}`);
+          }
+          const deepReport = runLifecycleDoctor({
+            deep: true,
+          });
+          const adapterCheck = deepReport.deep?.checks.find(
+            (check) => check.id === 'adapter-wiring'
+          );
+          if (adapterCheck) {
+            writeInfo(
+              `[pumuki] mcp health: status=${adapterCheck.status.toUpperCase()} severity=${adapterCheck.severity.toUpperCase()} message=${adapterCheck.message}`
+            );
+            if (adapterCheck.remediation) {
+              writeInfo(`[pumuki] mcp health remediation: ${adapterCheck.remediation}`);
+            }
           }
         }
         return 0;
