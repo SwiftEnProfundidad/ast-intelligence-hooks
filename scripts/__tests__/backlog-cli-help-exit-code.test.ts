@@ -93,6 +93,31 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
   assert.deepEqual(payload.compat?.breaking_changes, []);
 });
 
+test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () => {
+  const scriptPath = resolveScriptPath('../watch-consumer-backlog.ts');
+  const backlogFile = createBacklogFile(
+    `| ID | Estado | Referencia upstream |\n|---|---|---|\n| PUMUKI-INC-301 | 🚧 | Pendiente |\n\n### ⏳ PUMUKI-INC-301\nDetalle.\n`
+  );
+
+  const human = runTsxScript(scriptPath, ['--file=' + backlogFile, '--no-fail']);
+  assert.equal(human.status, 0);
+  assert.match(human.stdout, /heading_drift=1/);
+  assert.match(human.stdout, /\[pumuki\]\[backlog-watch\] heading_drift_entries:/);
+  assert.match(human.stdout, /PUMUKI-INC-301: heading=⏳ effective=🚧/);
+
+  const json = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--no-fail']);
+  assert.equal(json.status, 0);
+  const payload = JSON.parse(json.stdout) as {
+    headingDrift?: Array<{ id?: string; headingStatus?: string; effectiveStatus?: string }>;
+    hasActionRequired?: boolean;
+  };
+  assert.equal(payload.headingDrift?.length, 1);
+  assert.equal(payload.headingDrift?.[0]?.id, 'PUMUKI-INC-301');
+  assert.equal(payload.headingDrift?.[0]?.headingStatus, '⏳');
+  assert.equal(payload.headingDrift?.[0]?.effectiveStatus, '🚧');
+  assert.equal(payload.hasActionRequired, true);
+});
+
 test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', () => {
   const scriptPath = resolveScriptPath('../reconcile-consumer-backlog-issues.ts');
   const backlogFile = createBacklogFile(

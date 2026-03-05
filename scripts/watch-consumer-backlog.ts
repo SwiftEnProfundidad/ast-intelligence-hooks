@@ -118,6 +118,7 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
   lines.push(
     `[pumuki][backlog-watch] needs_issue=${result.classification.needsIssue.length} drift_closed=${result.classification.driftClosedIssue.length} active_issue=${result.classification.activeIssue.length}`
   );
+  lines.push(`[pumuki][backlog-watch] heading_drift=${result.headingDrift.length}`);
   lines.push(
     `[pumuki][backlog-watch] resolved_by_map=${result.resolution.resolvedByMap.length} resolved_by_gh_lookup=${result.resolution.resolvedByGhLookup.length} unresolved_ids=${result.resolution.unresolvedIds.length}`
   );
@@ -148,6 +149,14 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
     lines.push('[pumuki][backlog-watch] active_issue_entries:');
     for (const entry of result.classification.activeIssue) {
       lines.push(`- line ${entry.lineNumber} ${entry.id} status=${entry.status} issue=#${entry.issueNumber}`);
+    }
+  }
+  if (result.headingDrift.length > 0) {
+    lines.push('[pumuki][backlog-watch] heading_drift_entries:');
+    for (const drift of result.headingDrift) {
+      lines.push(
+        `- line ${drift.lineNumber} ${drift.id}: heading=${drift.headingStatus} effective=${drift.effectiveStatus}`
+      );
     }
   }
   lines.push(`[pumuki][backlog-watch] action_required=${result.hasActionRequired ? 'yes' : 'no'}`);

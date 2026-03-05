@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  collectBacklogHeadingDrift,
   collectBacklogIdIssueMap,
   collectBacklogWatchEntries,
   dedupeBacklogWatchEntriesById,
@@ -24,6 +25,14 @@ const textualStatusMarkdown = `# Feedback canónico
 | PUMUKI-INC-001 | 2026-03-02 | Incoherencia | High | REPORTED |
 | FP-001 | 2026-03-02 | Falso positivo | High | FIXED (#481, #490) |
 | AST-GAP-001 | 2026-03-02 | Gap | Medium | OPEN |
+`;
+
+const headingDriftMarkdown = `| ID | Estado | Referencia upstream |
+|---|---|---|
+| PUMUKI-INC-300 | 🚧 | #710 |
+
+### ⏳ PUMUKI-INC-300
+Detalle.
 `;
 
 test('collectBacklogWatchEntries detecta ids, estados e issueRef', () => {
@@ -230,4 +239,27 @@ test('runBacklogWatch mantiene unresolvedIds cuando no hay mapping ni lookup', a
   assert.deepEqual(result.resolution.resolvedByGhLookup, []);
   assert.deepEqual(result.resolution.unresolvedIds, ['PUMUKI-INC-203']);
   assert.equal(result.classification.needsIssue.length, 1);
+});
+
+test('collectBacklogHeadingDrift detecta drift entre heading y estado efectivo por ID', () => {
+  const drift = collectBacklogHeadingDrift(headingDriftMarkdown);
+  assert.equal(drift.length, 1);
+  assert.equal(drift[0]?.id, 'PUMUKI-INC-300');
+  assert.equal(drift[0]?.headingStatus, '⏳');
+  assert.equal(drift[0]?.effectiveStatus, '🚧');
+});
+
+test('runBacklogWatch reporta heading drift como action-required', async () => {
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-heading-drift.md',
+    readFile: () => headingDriftMarkdown,
+    resolveIssueState: () => 'OPEN',
+  });
+
+  assert.equal(result.classification.needsIssue.length, 0);
+  assert.equal(result.classification.driftClosedIssue.length, 0);
+  assert.equal(result.classification.activeIssue.length, 1);
+  assert.equal(result.headingDrift.length, 1);
+  assert.equal(result.headingDrift[0]?.id, 'PUMUKI-INC-300');
+  assert.equal(result.hasActionRequired, true);
 });

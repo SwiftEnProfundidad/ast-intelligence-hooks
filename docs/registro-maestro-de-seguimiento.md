@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-093 (issue `#678`, resumen humano de heading sync en salida no-JSON).
-- Task activa (`🚧`): PUMUKI-094 (issue `#679`, detección de drift de headings en watch).
+- Última task cerrada (`✅`): PUMUKI-094 (issue `#679`, detección de drift de headings en watch).
+- Task activa (`🚧`): PUMUKI-095 (issue `#680`, `heading_drift_count` en JSON de watch).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

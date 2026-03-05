@@ -25,6 +25,14 @@ export type BacklogWatchResolutionTrace = {
   unresolvedIds: ReadonlyArray<string>;
 };
 
+export type BacklogHeadingDriftEntry = {
+  id: string;
+  lineNumber: number;
+  headingStatus: BacklogStatusEmoji;
+  effectiveStatus: BacklogStatusEmoji;
+  line: string;
+};
+
 export type BacklogWatchResult = {
   filePath: string;
   repo?: string;
@@ -33,6 +41,7 @@ export type BacklogWatchResult = {
   issueStatesResolved: number;
   classification: BacklogWatchClassification;
   resolution: BacklogWatchResolutionTrace;
+  headingDrift: ReadonlyArray<BacklogHeadingDriftEntry>;
   hasActionRequired: boolean;
 };
 
@@ -46,6 +55,8 @@ const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
 const BACKLOG_ID_PATTERN = /^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/;
 const STATUS_TEXT_PATTERN = /^(OPEN|PENDING|REPORTED|IN_PROGRESS|BLOCKED|FIXED|CLOSED)\b/i;
+const BACKLOG_SECTION_HEADING_PATTERN =
+  /^(\s*###\s*)(✅|🚧|⏳|⛔)(\s+)(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)\b/;
 const STATUS_TEXT_TO_EMOJI: Record<string, BacklogStatusEmoji> = {
   OPEN: '⏳',
   PENDING: '⏳',
@@ -182,6 +193,54 @@ export const collectBacklogIdIssueMap = (
   return map;
 };
 
+const collectBacklogHeadingEntries = (
+  markdown: string
+): ReadonlyArray<{ id: string; status: BacklogStatusEmoji; lineNumber: number; line: string }> => {
+  const lines = markdown.split(/\r?\n/);
+  const entries: Array<{ id: string; status: BacklogStatusEmoji; lineNumber: number; line: string }> = [];
+  lines.forEach((line, index) => {
+    const match = BACKLOG_SECTION_HEADING_PATTERN.exec(line);
+    if (!match?.[2] || !match[4]) {
+      return;
+    }
+    entries.push({
+      id: match[4],
+      status: match[2] as BacklogStatusEmoji,
+      lineNumber: index + 1,
+      line,
+    });
+  });
+  return entries;
+};
+
+export const collectBacklogHeadingDrift = (markdown: string): ReadonlyArray<BacklogHeadingDriftEntry> => {
+  const effectiveEntries = dedupeBacklogWatchEntriesById(collectBacklogWatchEntries(markdown));
+  const effectiveStatusById = new Map<string, BacklogStatusEmoji>();
+  for (const entry of effectiveEntries) {
+    if (!effectiveStatusById.has(entry.id)) {
+      effectiveStatusById.set(entry.id, entry.status);
+    }
+  }
+
+  const headingEntries = collectBacklogHeadingEntries(markdown);
+  const drift: BacklogHeadingDriftEntry[] = [];
+  for (const heading of headingEntries) {
+    const effectiveStatus = effectiveStatusById.get(heading.id);
+    if (!effectiveStatus || effectiveStatus === heading.status) {
+      continue;
+    }
+    drift.push({
+      id: heading.id,
+      lineNumber: heading.lineNumber,
+      headingStatus: heading.status,
+      effectiveStatus,
+      line: heading.line,
+    });
+  }
+
+  return drift;
+};
+
 const resolveIssueStateWithGh = (issueNumber: number, repo?: string): BacklogIssueState => {
   const args = ['issue', 'view', String(issueNumber), '--json', 'state'];
   if (typeof repo === 'string' && repo.trim().length > 0) {
@@ -310,6 +369,7 @@ export const runBacklogWatch = async (params: {
 
   const markdown = readFile(filePath);
   const entries = collectBacklogWatchEntries(markdown);
+  const headingDrift = collectBacklogHeadingDrift(markdown);
   const nonClosedRaw = entries.filter((entry) => entry.status !== '✅');
   const nonClosed = dedupeBacklogWatchEntriesById(nonClosedRaw);
   const resolvedByMapSet = new Set<string>();
@@ -399,6 +459,7 @@ export const runBacklogWatch = async (params: {
       resolvedByGhLookup,
       unresolvedIds,
     },
-    hasActionRequired: needsIssue.length > 0 || driftClosedIssue.length > 0,
+    headingDrift,
+    hasActionRequired: needsIssue.length > 0 || driftClosedIssue.length > 0 || headingDrift.length > 0,
   };
 };

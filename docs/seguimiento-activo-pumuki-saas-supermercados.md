@@ -1073,9 +1073,28 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#678`.
 
-- 🚧 PUMUKI-094: Ejecutar mejora DX siguiente para detectar drift de headings en `watch-consumer-backlog` sin mutar archivos.
+- ✅ PUMUKI-094: Ejecutar mejora DX siguiente para detectar drift de headings en `watch-consumer-backlog` sin mutar archivos.
+  - Fix:
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo detector `headingDrift` por ID para divergencia entre heading y estado efectivo en tabla.
+      - `hasActionRequired` ahora considera `headingDrift`.
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana con `heading_drift=<n>` y listado `heading_drift_entries`.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - cobertura de detector y de `action_required` por heading drift.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura CLI humana+JSON para heading drift.
+    - `docs/USAGE.md`:
+      - documentado `heading_drift` en watch.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `23 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#679`.
+
+- 🚧 PUMUKI-095: Ejecutar mejora DX siguiente para exponer `heading_drift_count` estable en JSON de watch.
   - Alcance:
-    - Añadir clasificación/diagnóstico de heading drift por ID en `watch`.
-    - Exponer IDs/líneas afectadas en salida humana y JSON.
-    - Mantener compatibilidad con clasificación actual (`needsIssue/driftClosedIssue/activeIssue`).
-  - Issue upstream activa: `#679`.
+    - Añadir campo contador explícito (`heading_drift_count`) en payload JSON.
+    - Mantener backward compatibility con `headingDrift`.
+    - Cubrir contrato con tests.
+  - Issue upstream activa: `#680`.
