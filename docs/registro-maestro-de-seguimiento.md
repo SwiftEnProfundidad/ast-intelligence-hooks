@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-063 (issue `#648`, detección determinista de upstream desalineado en PRE_PUSH).
-- Task activa (`🚧`): PUMUKI-064 (issue `#649`, coherencia de metadata de versión lifecycle/runtime).
+- Última task cerrada (`✅`): PUMUKI-064 (issue `#649`, metadata explícita runtime vs consumer-installed en lifecycle).
+- Task activa (`🚧`): PUMUKI-065 (issue `#650`, coherencia `ai_gate_check` vs hooks locales).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

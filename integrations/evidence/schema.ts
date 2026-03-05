@@ -169,6 +169,9 @@ export type RepoState = {
     installed: boolean;
     package_version: string | null;
     lifecycle_version: string | null;
+    package_version_source?: 'consumer-node-modules' | 'runtime-package';
+    package_version_runtime?: string | null;
+    package_version_installed?: string | null;
     hooks: {
       pre_commit: RepoHookState;
       pre_push: RepoHookState;

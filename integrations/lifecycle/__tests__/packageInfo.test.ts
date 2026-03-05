@@ -3,7 +3,11 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
-import { getCurrentPumukiPackageName, getCurrentPumukiVersion } from '../packageInfo';
+import {
+  getCurrentPumukiPackageName,
+  getCurrentPumukiVersion,
+  resolvePumukiVersionMetadata,
+} from '../packageInfo';
 
 test('getCurrentPumukiPackageName devuelve el nombre real del package', () => {
   const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf8')) as {
@@ -62,5 +66,29 @@ test('getCurrentPumukiVersion prioriza versión instalada en node_modules del re
 test('getCurrentPumukiVersion usa fallback al versionado runtime si no hay instalación local', async () => {
   await withTempDir('pumuki-package-info-fallback-', async (repoRoot) => {
     assert.equal(getCurrentPumukiVersion({ repoRoot }), getCurrentPumukiVersion());
+  });
+});
+
+test('resolvePumukiVersionMetadata expone source/runtime/install de forma explícita', async () => {
+  await withTempDir('pumuki-package-info-meta-', async (repoRoot) => {
+    const fallback = resolvePumukiVersionMetadata({ repoRoot });
+    assert.equal(fallback.source, 'runtime-package');
+    assert.equal(fallback.consumerInstalledVersion, null);
+    assert.equal(fallback.runtimeVersion, getCurrentPumukiVersion());
+    assert.equal(fallback.resolvedVersion, fallback.runtimeVersion);
+
+    const packageRoot = join(repoRoot, 'node_modules', getCurrentPumukiPackageName());
+    mkdirSync(packageRoot, { recursive: true });
+    writeFileSync(
+      join(packageRoot, 'package.json'),
+      JSON.stringify({ name: getCurrentPumukiPackageName(), version: '8.8.8' }, null, 2),
+      'utf8'
+    );
+
+    const installed = resolvePumukiVersionMetadata({ repoRoot });
+    assert.equal(installed.source, 'consumer-node-modules');
+    assert.equal(installed.consumerInstalledVersion, '8.8.8');
+    assert.equal(installed.runtimeVersion, fallback.runtimeVersion);
+    assert.equal(installed.resolvedVersion, '8.8.8');
   });
 });

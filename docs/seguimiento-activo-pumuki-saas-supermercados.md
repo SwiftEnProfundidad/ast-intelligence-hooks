@@ -674,8 +674,27 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#648`.
 
-- 🚧 PUMUKI-064: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-061`) sobre incoherencia de metadata de versión en payload de lifecycle (`runtime` vs `consumer-installed`).
+- ✅ PUMUKI-064: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-061`) sobre incoherencia de metadata de versión en payload de lifecycle (`runtime` vs `consumer-installed`).
+  - Fix:
+    - `integrations/lifecycle/packageInfo.ts`:
+      - nuevo contrato `resolvePumukiVersionMetadata()` con `source`, `runtimeVersion` y `consumerInstalledVersion`.
+    - `integrations/evidence/repoState.ts`:
+      - separación explícita en payload lifecycle:
+        - `package_version` (consumer instalada),
+        - `lifecycle_version` (runtime ejecutando),
+        - `package_version_source`,
+        - `package_version_runtime`,
+        - `package_version_installed`.
+    - `integrations/lifecycle/__tests__/packageInfo.test.ts`:
+      - cobertura RED/GREEN para metadata explícita de fuentes de versión.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/packageInfo.test.ts` -> `7 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/evidence/__tests__/buildEvidence.test.ts` -> `29 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#649`.
+
+- 🚧 PUMUKI-065: Ejecutar siguiente bug prioritaria del watcher RuralGo (`PUMUKI-INC-062`) sobre incoherencia `ai_gate_check` vs hooks (`pre-commit/pre-push`).
   - Alcance:
-    - Reproducir RED comparando `sdd validate --json` vs `npm ls pumuki`.
-    - Ajustar contrato de salida para separar fuentes de versión y eliminar ambigüedad diagnóstica.
-  - Issue upstream activa: `#649`.
+    - Reproducir RED de divergencia de decisión (`ALLOW` hooks vs `BLOCKED` MCP) sobre el mismo estado de evidencia.
+    - Alinear contrato de precedencia/semántica para diagnóstico determinista.
+  - Issue upstream activa: `#650`.

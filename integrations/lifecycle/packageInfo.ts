@@ -17,15 +17,37 @@ const readConsumerInstalledVersion = (repoRoot: string): string | null => {
   }
 };
 
-export const getCurrentPumukiVersion = (params?: { repoRoot?: string }): string => {
+export type PumukiVersionMetadata = {
+  resolvedVersion: string;
+  runtimeVersion: string;
+  consumerInstalledVersion: string | null;
+  source: 'consumer-node-modules' | 'runtime-package';
+};
+
+export const resolvePumukiVersionMetadata = (params?: { repoRoot?: string }): PumukiVersionMetadata => {
+  const runtimeVersion = packageJson.version;
   const repoRoot = params?.repoRoot;
   if (typeof repoRoot === 'string' && repoRoot.trim().length > 0) {
     const installedVersion = readConsumerInstalledVersion(repoRoot.trim());
     if (installedVersion) {
-      return installedVersion;
+      return {
+        resolvedVersion: installedVersion,
+        runtimeVersion,
+        consumerInstalledVersion: installedVersion,
+        source: 'consumer-node-modules',
+      };
     }
   }
-  return packageJson.version;
+  return {
+    resolvedVersion: runtimeVersion,
+    runtimeVersion,
+    consumerInstalledVersion: null,
+    source: 'runtime-package',
+  };
+};
+
+export const getCurrentPumukiVersion = (params?: { repoRoot?: string }): string => {
+  return resolvePumukiVersionMetadata(params).resolvedVersion;
 };
 
 export const getCurrentPumukiPackageName = (): string => packageJson.name;

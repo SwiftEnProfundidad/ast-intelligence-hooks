@@ -2,6 +2,7 @@ import { execFileSync as runBinarySync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { readLifecycleStatus } from '../lifecycle/status';
+import { resolvePumukiVersionMetadata } from '../lifecycle/packageInfo';
 import type { RepoHardModeState, RepoHookState, RepoState } from './schema';
 
 type HookStateShape = { exists: boolean; managedBlockPresent: boolean };
@@ -129,6 +130,7 @@ export const captureRepoState = (repoRoot: string): RepoState => {
   const unstaged = statusLines.filter((line) => line[1] && line[1] !== ' ').length;
   const { ahead, behind } = toAheadBehind(repoRoot, upstream);
   const lifecycle = readLifecycleStatusSafe(repoRoot);
+  const versionMetadata = resolvePumukiVersionMetadata({ repoRoot });
   const hardModeState = readHardModeState(repoRoot);
 
   return {
@@ -145,8 +147,14 @@ export const captureRepoState = (repoRoot: string): RepoState => {
     },
     lifecycle: {
       installed: lifecycle.lifecycleState.installed === 'true',
-      package_version: lifecycle.packageVersion ?? null,
-      lifecycle_version: lifecycle.lifecycleState.version ?? null,
+      package_version: lifecycle.lifecycleState.version ?? lifecycle.packageVersion ?? null,
+      lifecycle_version: versionMetadata.runtimeVersion ?? null,
+      package_version_source: versionMetadata.source,
+      package_version_runtime: versionMetadata.runtimeVersion,
+      package_version_installed:
+        lifecycle.lifecycleState.version
+        ?? versionMetadata.consumerInstalledVersion
+        ?? null,
       hooks: {
         pre_commit: toHookState(lifecycle.hookStatus['pre-commit']),
         pre_push: toHookState(lifecycle.hookStatus['pre-push']),
