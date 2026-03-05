@@ -111,6 +111,11 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
 
 const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>): string => {
   const lines: string[] = [];
+  const actionRequiredReasons = [
+    ...(result.classification.needsIssue.length > 0 ? (['needs_issue'] as const) : []),
+    ...(result.classification.driftClosedIssue.length > 0 ? (['drift_closed_issue'] as const) : []),
+    ...(result.headingDrift.length > 0 ? (['heading_drift'] as const) : []),
+  ];
   lines.push(`[pumuki][backlog-watch] file=${result.filePath}`);
   lines.push(
     `[pumuki][backlog-watch] entries=${result.entriesScanned} non_closed=${result.nonClosedEntries} issue_states_resolved=${result.issueStatesResolved}`
@@ -159,6 +164,11 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
       );
     }
   }
+  lines.push(
+    `[pumuki][backlog-watch] action_required_reasons=${
+      actionRequiredReasons.length > 0 ? actionRequiredReasons.join(',') : 'none'
+    }`
+  );
   lines.push(`[pumuki][backlog-watch] action_required=${result.hasActionRequired ? 'yes' : 'no'}`);
   return `${lines.join('\n')}\n`;
 };

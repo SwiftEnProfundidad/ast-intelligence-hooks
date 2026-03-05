@@ -334,12 +334,14 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` exposes `heading_drift_count` for low-friction alerting parsers.
 - `watch-consumer-backlog --json` exposes `classification_counts` (`needs_issue`, `drift_closed_issue`, `active_issue`, `heading_drift`).
 - `watch-consumer-backlog --json` exposes `action_required_reasons` when findings are active.
+- `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
 - `reconcile-consumer-backlog-issues --json` includes heading sync metadata (`headingUpdated`, `headingChanges`) for section headings `### ✅/🚧/⏳/⛔ <ID>`.
 - `reconcile-consumer-backlog-issues --json` exposes `heading_changes_count` for lightweight consumers.
 - `reconcile-consumer-backlog-issues --json` exposes `classification_counts` (changes + summary counters) for dashboards.
 - `reconcile-consumer-backlog-issues --json` exposes `action_required_reasons` for pending deltas in dry-run/apply flows.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
+- `reconcile-consumer-backlog-issues` (modo humano) imprime `action_required_reasons=<...|none>`.
 
 Backlog tooling quick reference:
 

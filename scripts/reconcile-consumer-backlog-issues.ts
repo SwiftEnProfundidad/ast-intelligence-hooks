@@ -124,6 +124,13 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
 
 const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesReconcile>>): string => {
   const lines: string[] = [];
+  const actionRequiredReasons = [
+    ...(result.referenceChanges.length > 0 ? (['reference_changes'] as const) : []),
+    ...(result.changes.length > 0 ? (['issue_changes'] as const) : []),
+    ...(result.headingChanges.length > 0 ? (['heading_changes'] as const) : []),
+    ...(result.summaryUpdated ? (['summary_updated'] as const) : []),
+    ...(result.nextStepUpdated ? (['next_step_updated'] as const) : []),
+  ];
   lines.push(`[pumuki][backlog-reconcile] file=${result.filePath}`);
   lines.push(`[pumuki][backlog-reconcile] entries_scanned=${result.entriesScanned} issues_resolved=${result.issuesResolved}`);
   lines.push(
@@ -168,6 +175,11 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
     );
   }
   lines.push(`[pumuki][backlog-reconcile] next_step_updated=${result.nextStepUpdated ? 'yes' : 'no'}`);
+  lines.push(
+    `[pumuki][backlog-reconcile] action_required_reasons=${
+      actionRequiredReasons.length > 0 ? actionRequiredReasons.join(',') : 'none'
+    }`
+  );
   lines.push(
     `[pumuki][backlog-reconcile] summary closed=${result.summary.closed} in_progress=${result.summary.inProgress} pending=${result.summary.pending} blocked=${result.summary.blocked}`
   );

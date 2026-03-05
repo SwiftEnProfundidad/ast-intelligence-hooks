@@ -116,6 +116,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.match(human.stdout, /heading_drift=1/);
   assert.match(human.stdout, /\[pumuki\]\[backlog-watch\] heading_drift_entries:/);
   assert.match(human.stdout, /PUMUKI-INC-301: heading=⏳ effective=🚧/);
+  assert.match(human.stdout, /action_required_reasons=needs_issue,heading_drift/);
 
   const json = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--no-fail']);
   assert.equal(json.status, 0);
@@ -249,4 +250,5 @@ test('reconcile-consumer-backlog-issues salida humana incluye resumen de heading
   assert.match(result.stdout, /heading_changes=1/);
   assert.match(result.stdout, /\[pumuki\]\[backlog-reconcile\] heading_changes:/);
   assert.match(result.stdout, /PUMUKI-011: ⏳ -> ✅/);
+  assert.match(result.stdout, /action_required_reasons=heading_changes/);
 });

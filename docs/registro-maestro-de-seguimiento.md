@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-098 (issue `#683`, `action_required_reasons` en JSON).
-- Task activa (`🚧`): PUMUKI-099 (issue `#684`, reasons compactos en salida humana).
+- Última task cerrada (`✅`): PUMUKI-099 (issue `#684`, reasons compactos en salida humana).
+- Task activa (`🚧`): PUMUKI-100 (issue `#685`, tests reasons=none en salida humana).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

@@ -1153,9 +1153,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#683`.
 
-- 🚧 PUMUKI-099: Ejecutar mejora DX siguiente para exponer reasons compactos en salida humana de backlog tooling.
+- ✅ PUMUKI-099: Ejecutar mejora DX siguiente para exponer reasons compactos en salida humana de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana incluye `action_required_reasons=<...|none>`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana incluye `action_required_reasons=<...|none>`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura para reasons esperadas en salidas humanas de watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `action_required_reasons` en modo humano.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#684`.
+
+- 🚧 PUMUKI-100: Ejecutar mejora QA siguiente para cubrir `action_required_reasons=none` en salida humana.
   - Alcance:
-    - Añadir `action_required_reasons=...` en watch y reconcile modo humano.
-    - Mostrar `none` cuando no aplique para evitar ruido.
-    - Cubrir contrato con tests CLI de salida humana.
-  - Issue upstream activa: `#684`.
+    - Añadir tests dedicados para caso limpio sin findings.
+    - Blindar formato humano de reasons en watch/reconcile.
+    - Sin cambios funcionales de lógica.
+  - Issue upstream activa: `#685`.
