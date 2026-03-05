@@ -110,6 +110,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       expected_outcome?: string;
       success_criteria?: string;
       success_probe?: string;
+      probe_kind?: string;
       probe_timeout_ms?: number;
       failure_hint?: string;
       command?: string;
@@ -184,6 +185,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
       expected_outcome?: string;
       success_criteria?: string;
       success_probe?: string;
+      probe_kind?: string;
       probe_timeout_ms?: number;
       failure_hint?: string;
       command?: string;
@@ -227,6 +229,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.match(payload.next_commands?.[0]?.expected_outcome ?? '', /without file mutations/);
   assert.equal(payload.next_commands?.[0]?.success_criteria, 'plan_generated_no_mutation');
   assert.match(payload.next_commands?.[0]?.success_probe ?? '', /includes dry_run\/apply next_commands/);
+  assert.equal(payload.next_commands?.[0]?.probe_kind, 'json_contract');
   assert.equal(payload.next_commands?.[0]?.probe_timeout_ms, 1500);
   assert.match(payload.next_commands?.[0]?.failure_hint ?? '', /Re-run dry_run/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
@@ -250,6 +253,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.match(payload.next_commands?.[1]?.expected_outcome ?? '', /reconciled and persisted/);
   assert.equal(payload.next_commands?.[1]?.success_criteria, 'backlog_reconciled_persisted');
   assert.match(payload.next_commands?.[1]?.success_probe ?? '', /action_required_reasons are reduced or none/);
+  assert.equal(payload.next_commands?.[1]?.probe_kind, 'state_recheck');
   assert.equal(payload.next_commands?.[1]?.probe_timeout_ms, 4000);
   assert.match(payload.next_commands?.[1]?.failure_hint ?? '', /Run dry_run first/);
   assert.match(payload.next_commands?.[1]?.command ?? '', /--apply$/);
@@ -314,6 +318,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       expected_outcome?: string;
       success_criteria?: string;
       success_probe?: string;
+      probe_kind?: string;
       probe_timeout_ms?: number;
       failure_hint?: string;
       command?: string;
@@ -389,6 +394,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
       expected_outcome?: string;
       success_criteria?: string;
       success_probe?: string;
+      probe_kind?: string;
       probe_timeout_ms?: number;
       failure_hint?: string;
       command?: string;
@@ -433,6 +439,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.match(payload.next_commands?.[0]?.expected_outcome ?? '', /without file mutations/);
   assert.equal(payload.next_commands?.[0]?.success_criteria, 'plan_generated_no_mutation');
   assert.match(payload.next_commands?.[0]?.success_probe ?? '', /includes dry_run\/apply next_commands/);
+  assert.equal(payload.next_commands?.[0]?.probe_kind, 'json_contract');
   assert.equal(payload.next_commands?.[0]?.probe_timeout_ms, 1500);
   assert.match(payload.next_commands?.[0]?.failure_hint ?? '', /Re-run dry_run/);
   assert.match(payload.next_commands?.[0]?.command ?? '', /--json$/);
@@ -456,6 +463,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.match(payload.next_commands?.[1]?.expected_outcome ?? '', /reconciled and persisted/);
   assert.equal(payload.next_commands?.[1]?.success_criteria, 'backlog_reconciled_persisted');
   assert.match(payload.next_commands?.[1]?.success_probe ?? '', /action_required_reasons are reduced or none/);
+  assert.equal(payload.next_commands?.[1]?.probe_kind, 'state_recheck');
   assert.equal(payload.next_commands?.[1]?.probe_timeout_ms, 4000);
   assert.match(payload.next_commands?.[1]?.failure_hint ?? '', /Run dry_run first/);
   assert.match(payload.next_commands?.[1]?.command ?? '', /--apply$/);

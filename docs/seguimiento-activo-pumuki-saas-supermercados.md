@@ -1654,13 +1654,16 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#716`.
 
-- ⏳ PUMUKI-132: Ejecutar mejora DX siguiente para `next_commands[].probe_kind` en JSON de watch/reconcile.
-  - Alcance:
-    - Exponer `probe_kind` por paso en `next_commands[]`.
-    - Mantener contrato JSON backward-compatible.
-    - Facilitar tipado explícito del mecanismo de verificación post-ejecución.
-  - Issue upstream activa: `#717`.
-  - Nota de prioridad (2026-03-05): diferida temporalmente por cierre de incidencias High del watcher RuralGo.
+- ✅ PUMUKI-132: Ejecutar mejora DX siguiente para `next_commands[].probe_kind` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts` añade `next_commands[].probe_kind` (`json_contract` en `dry_run`, `state_recheck` en `apply`).
+    - `scripts/reconcile-consumer-backlog-issues.ts` aplica el mismo contrato `probe_kind` para paridad de tooling.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts` amplía tipado + asserts para `probe_kind` en ambos comandos.
+    - `docs/USAGE.md` documenta `next_commands[].probe_kind` para `watch-consumer-backlog` y `reconcile-consumer-backlog-issues`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+  - Issue upstream: `#717` (lista para cierre operativo).
 
 - ✅ PUMUKI-133: Cerrar `PUMUKI-INC-062` (incoherencia `ai_gate_check` vs hooks `ALLOW`) con hint de precedencia robusto para códigos `EVIDENCE_*` legacy.
   - Resultado implementado:
@@ -1701,8 +1704,17 @@
     - `npm run -s typecheck` -> `PASS`.
     - Commit: `ebd13ac`.
 
-- 🚧 PUMUKI-136: Ejecutar siguiente bug prioritaria del watcher RuralGo (`FP-030`) sobre falso positivo `PRE_PUSH` por upstream desalineado (paridad con `PUMUKI-INC-060`).
+- ✅ PUMUKI-136: Ejecutar siguiente bug prioritaria del watcher RuralGo (`FP-030`) sobre falso positivo `PRE_PUSH` por upstream desalineado (paridad con `PUMUKI-INC-060`).
+  - Resultado implementado:
+    - cierre canónico validado sobre el fix `PRE_PUSH_UPSTREAM_MISALIGNED` (`cd3d45f`),
+    - normalización de estado en MD RuralGo sin contradicciones (`FP-030`, `PUMUKI-INC-056`, `PUMUKI-INC-057`, `PUMUKI-INC-058` => `✅ FIXED`),
+    - backlog activo de RuralGo queda en cero incidencias abiertas para este corte.
+  - Evidencia (2026-03-05):
+    - actualización directa de `/Users/juancarlosmerlosalbarracin/Developer/Projects/R_GO/docs/technical/08-validation/refactor/pumuki-integration-feedback.md`.
+    - verificación de consistencia: `rg -n \"🚧 REPORTED|⏳ REPORTED\" .../pumuki-integration-feedback.md` -> sin incidencias abiertas.
+
+- 🚧 PUMUKI-137: Preparar y ejecutar el siguiente corte de release (versionado + publicación npm + upgrade en consumidores RuralGo/SAAS/Flux_training).
   - Alcance:
-    - validar cierre con evidencia cruzada sobre mismo fix de `PRE_PUSH_UPSTREAM_MISALIGNED`,
-    - confirmar no-regresión en escenario de upstream `origin/develop` + delta histórico,
-    - actualizar estado canónico en MD RuralGo.
+    - validar worktree/release notes/changelog y publicar patch release con fixes recientes (`PUMUKI-132..136`),
+    - verificar versión publicada en npm,
+    - ejecutar upgrade de `pumuki` en repos consumidores acordados y dejar evidencia.
