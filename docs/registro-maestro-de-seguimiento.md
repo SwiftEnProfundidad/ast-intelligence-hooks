@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-084 (issue `#669`, centralizar constantes de contrato JSON).
-- Task activa (`🚧`): PUMUKI-085 (issue `#670`, test unitario de constantes de contrato JSON).
+- Última task cerrada (`✅`): PUMUKI-085 (issue `#670`, test unitario de constantes de contrato JSON).
+- Task activa (`🚧`): PUMUKI-086 (issue `#671`, script npm focal `test:backlog-tooling`).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

@@ -972,8 +972,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#669`.
 
-- 🚧 PUMUKI-085: Ejecutar mejora DX siguiente para añadir test unitario dedicado de constantes de contrato JSON.
+- ✅ PUMUKI-085: Ejecutar mejora DX siguiente para añadir test unitario dedicado de constantes de contrato JSON.
+  - Fix:
+    - Nuevo test dedicado: `scripts/__tests__/backlog-json-contract-lib.test.ts`.
+    - Cobertura explícita de valores canónicos:
+      - `BACKLOG_JSON_SCHEMA_VERSION`
+      - `BACKLOG_JSON_COMPAT_MIN_READER_VERSION`
+      - `BACKLOG_JSON_COMPAT_CONTRACT_ID`
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-json-contract-lib.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `36 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#670`.
+
+- 🚧 PUMUKI-086: Ejecutar mejora DX siguiente para añadir script npm focal `test:backlog-tooling`.
   - Alcance:
-    - Blindar contra drift accidental en valores canónicos de contrato.
-    - Asegurar regresión directa sobre `backlog-json-contract-lib.ts`.
-  - Issue upstream activa: `#670`.
+    - Ejecutar rápido suites mínimas de contrato/watch/reconcile.
+    - Facilitar validación local/CI sin invocar packs largos manualmente.
+  - Issue upstream activa: `#671`.
