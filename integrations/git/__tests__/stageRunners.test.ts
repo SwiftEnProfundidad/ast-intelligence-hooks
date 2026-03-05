@@ -364,13 +364,39 @@ test('runPrePushStage sin upstream usa fallback bootstrap range cuando no hay st
   });
 });
 
-test('runPrePushStage sin upstream falla safe cuando no existe base bootstrap válida', async () => {
+test('runPrePushStage sin upstream usa fallback working-tree cuando no hay stdin y no existe base bootstrap válida', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);
 
     const messages = await withCapturedStderr(async () => {
       const exitCode = await runPrePushStage({
         resolvePrePushBootstrapBaseRef: () => 'HEAD',
+      });
+      assert.equal(exitCode, 0);
+    });
+
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+    assert.equal(
+      messages.some((message) =>
+        message.includes('using working-tree fallback scope')
+      ),
+      true
+    );
+  });
+});
+
+test('runPrePushStage sin upstream falla safe cuando stdin no representa bootstrap y no existe base válida', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const headOid = runGit(repoRoot, ['rev-parse', 'HEAD']).trim();
+
+    const messages = await withCapturedStderr(async () => {
+      const exitCode = await runPrePushStage({
+        resolvePrePushBootstrapBaseRef: () => 'HEAD',
+        readPrePushStdin: () =>
+          `refs/heads/feature/no-upstream ${headOid} refs/heads/develop ${headOid}\n`,
       });
       assert.equal(exitCode, 1);
     });
@@ -656,6 +682,7 @@ test('runPreCommitStage emite notificación de bloqueo con causa y remediación'
 test('runPrePushStage sin upstream emite notificación de bloqueo accionable', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const headOid = runGit(repoRoot, ['rev-parse', 'HEAD']).trim();
     const blocked: Array<{
       stage: StageName;
       causeCode: string;
@@ -664,6 +691,8 @@ test('runPrePushStage sin upstream emite notificación de bloqueo accionable', a
 
     const exitCode = await runPrePushStage({
       resolvePrePushBootstrapBaseRef: () => 'HEAD',
+      readPrePushStdin: () =>
+        `refs/heads/feature/no-upstream ${headOid} refs/heads/develop ${headOid}\n`,
       notifyGateBlocked: (params) => {
         blocked.push({
           stage: params.stage,

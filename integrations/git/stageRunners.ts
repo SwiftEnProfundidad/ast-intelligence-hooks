@@ -26,6 +26,8 @@ const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
 const PRE_PUSH_UPSTREAM_BOOTSTRAP_FALLBACK_MESSAGE =
   '[pumuki][pre-push] branch has no upstream; using bootstrap range ';
+const PRE_PUSH_MANUAL_FALLBACK_MESSAGE =
+  '[pumuki][pre-push] branch has no upstream and stdin is empty; using working-tree fallback scope.';
 const PRE_PUSH_UPSTREAM_MISALIGNED_AHEAD_THRESHOLD = 25;
 
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
@@ -383,6 +385,10 @@ export async function runPrePushStage(
     const bootstrapBaseRef = activeDependencies.resolvePrePushBootstrapBaseRef();
     const bootstrapByPrePushStdIn = shouldAllowBootstrapPrePush(prePushInput);
     const bootstrapByFallbackBase = !bootstrapByPrePushStdIn && bootstrapBaseRef !== 'HEAD';
+    const manualInvocationFallback =
+      !bootstrapByPrePushStdIn &&
+      !bootstrapByFallbackBase &&
+      prePushInput.trim().length === 0;
     if (bootstrapByPrePushStdIn || bootstrapByFallbackBase) {
       if (bootstrapByFallbackBase) {
         process.stderr.write(
@@ -408,6 +414,25 @@ export async function runPrePushStage(
           kind: 'range',
           fromRef: bootstrapBaseRef,
           toRef: 'HEAD',
+        },
+      });
+      emitSuccessfulHookGateSummary({
+        dependencies: activeDependencies,
+        stage: 'PRE_PUSH',
+        policyTrace: resolved.trace,
+        exitCode,
+      });
+      notifyAuditSummaryForStage(activeDependencies, 'PRE_PUSH');
+      return exitCode;
+    }
+    if (manualInvocationFallback) {
+      process.stderr.write(`${PRE_PUSH_MANUAL_FALLBACK_MESSAGE}\n`);
+      const resolved = activeDependencies.resolvePolicyForStage('PRE_PUSH');
+      const exitCode = await activeDependencies.runPlatformGate({
+        policy: resolved.policy,
+        policyTrace: resolved.trace,
+        scope: {
+          kind: 'workingTree',
         },
       });
       emitSuccessfulHookGateSummary({
