@@ -1137,9 +1137,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#682`.
 
-- 🚧 PUMUKI-098: Ejecutar mejora DX siguiente para exponer `action_required_reasons` en JSON de backlog tooling.
+- ✅ PUMUKI-098: Ejecutar mejora DX siguiente para exponer `action_required_reasons` en JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - JSON añade `action_required_reasons` con causas activas (`needs_issue`, `drift_closed_issue`, `heading_drift`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON añade `action_required_reasons` para deltas pendientes (`reference_changes`, `issue_changes`, `heading_changes`, etc.).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de reasons en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `action_required_reasons` en ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#683`.
+
+- 🚧 PUMUKI-099: Ejecutar mejora DX siguiente para exponer reasons compactos en salida humana de backlog tooling.
   - Alcance:
-    - Añadir array de razones activas en `watch` y `reconcile`.
-    - Cubrir contrato con tests CLI JSON.
-    - Mantener compatibilidad backward.
-  - Issue upstream activa: `#683`.
+    - Añadir `action_required_reasons=...` en watch y reconcile modo humano.
+    - Mostrar `none` cuando no aplique para evitar ruido.
+    - Cubrir contrato con tests CLI de salida humana.
+  - Issue upstream activa: `#684`.

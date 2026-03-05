@@ -83,6 +83,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       active_issue?: number;
       heading_drift?: number;
     };
+    action_required_reasons?: string[];
   };
   assert.equal(payload.tool, 'backlog-watch');
   assert.equal(payload.schema_version, '1.0.0');
@@ -101,6 +102,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
   assert.equal(payload.classification_counts?.drift_closed_issue, 0);
   assert.equal(payload.classification_counts?.active_issue, 0);
   assert.equal(payload.classification_counts?.heading_drift, 0);
+  assert.deepEqual(payload.action_required_reasons, []);
 });
 
 test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () => {
@@ -124,6 +126,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
       active_issue?: number;
       heading_drift?: number;
     };
+    action_required_reasons?: string[];
     heading_drift_count?: number;
     headingDrift?: Array<{ id?: string; headingStatus?: string; effectiveStatus?: string }>;
     hasActionRequired?: boolean;
@@ -137,6 +140,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.classification_counts?.drift_closed_issue, 0);
   assert.equal(payload.classification_counts?.active_issue, 0);
   assert.equal(payload.classification_counts?.heading_drift, 1);
+  assert.deepEqual(payload.action_required_reasons, ['needs_issue', 'heading_drift']);
   assert.equal(payload.hasActionRequired, true);
 });
 
@@ -175,6 +179,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       summary_pending?: number;
       summary_blocked?: number;
     };
+    action_required_reasons?: string[];
   };
   assert.equal(payload.tool, 'backlog-reconcile');
   assert.equal(payload.schema_version, '1.0.0');
@@ -193,6 +198,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
   assert.equal(payload.classification_counts?.issue_changes, 0);
   assert.equal(payload.classification_counts?.reference_changes, 0);
   assert.equal(payload.classification_counts?.heading_changes, 0);
+  assert.deepEqual(payload.action_required_reasons, []);
 });
 
 test('reconcile-consumer-backlog-issues --json expone heading sync metadata', () => {
@@ -212,6 +218,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
       summary_pending?: number;
       summary_blocked?: number;
     };
+    action_required_reasons?: string[];
     heading_changes_count?: number;
     headingUpdated?: boolean;
     headingChanges?: Array<{ id?: string; from?: string; to?: string }>;
@@ -229,6 +236,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.classification_counts?.summary_in_progress, 0);
   assert.equal(payload.classification_counts?.summary_pending, 0);
   assert.equal(payload.classification_counts?.summary_blocked, 0);
+  assert.deepEqual(payload.action_required_reasons, ['heading_changes']);
 });
 
 test('reconcile-consumer-backlog-issues salida humana incluye resumen de heading changes', () => {

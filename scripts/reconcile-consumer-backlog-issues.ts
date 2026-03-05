@@ -189,6 +189,13 @@ const main = async (): Promise<void> => {
     resolveIssueNumberById: parsed.resolveMissingViaGh ? resolveIssueNumberByIdWithGh : undefined,
     apply: parsed.apply,
   });
+  const actionRequiredReasons = [
+    ...(result.referenceChanges.length > 0 ? (['reference_changes'] as const) : []),
+    ...(result.changes.length > 0 ? (['issue_changes'] as const) : []),
+    ...(result.headingChanges.length > 0 ? (['heading_changes'] as const) : []),
+    ...(result.summaryUpdated ? (['summary_updated'] as const) : []),
+    ...(result.nextStepUpdated ? (['next_step_updated'] as const) : []),
+  ];
 
   if (parsed.json) {
     const generatedAt = new Date().toISOString();
@@ -224,6 +231,7 @@ const main = async (): Promise<void> => {
             summary_pending: result.summary.pending,
             summary_blocked: result.summary.blocked,
           },
+          action_required_reasons: actionRequiredReasons,
           heading_changes_count: result.headingChanges.length,
           ...result,
         },
