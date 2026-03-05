@@ -117,6 +117,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.match(human.stdout, /\[pumuki\]\[backlog-watch\] heading_drift_entries:/);
   assert.match(human.stdout, /PUMUKI-INC-301: heading=⏳ effective=🚧/);
   assert.match(human.stdout, /action_required_reasons=needs_issue,heading_drift/);
+  assert.match(human.stdout, /hint=use --no-fail to inspect findings without exit code 1/);
 
   const json = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--no-fail']);
   assert.equal(json.status, 0);
@@ -262,6 +263,7 @@ test('watch-consumer-backlog salida humana imprime action_required_reasons=none 
   assert.equal(result.status, 0);
   assert.match(result.stdout, /action_required_reasons=none/);
   assert.match(result.stdout, /action_required=no/);
+  assert.doesNotMatch(result.stdout, /hint=use --no-fail to inspect findings without exit code 1/);
 });
 
 test('reconcile-consumer-backlog-issues salida humana imprime action_required_reasons=none cuando no hay deltas', () => {

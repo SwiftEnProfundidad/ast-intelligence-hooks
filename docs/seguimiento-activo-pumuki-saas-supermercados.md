@@ -1233,9 +1233,23 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#690`.
 
-- 🚧 PUMUKI-106: Ejecutar mejora DX siguiente para hint `--no-fail` en salida humana de backlog watch.
+- ✅ PUMUKI-106: Ejecutar mejora DX siguiente para hint `--no-fail` en salida humana de backlog watch.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana añade hint `--no-fail` cuando `action_required=yes`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura del hint en caso con findings y ausencia del hint en caso limpio.
+    - `docs/USAGE.md`:
+      - documentado hint operativo en modo humano.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#691`.
+
+- 🚧 PUMUKI-107: Ejecutar mejora DX siguiente para hint `dry-run -> apply` en salida humana de reconcile.
   - Alcance:
-    - Mostrar hint operativo cuando `action_required=yes`.
-    - No cambiar semántica de salida ni exit code.
-    - Cubrir con tests CLI.
-  - Issue upstream activa: `#691`.
+    - Mostrar hint solo cuando hay deltas en reconcile humano.
+    - Recomendar secuencia `--json` y luego `--apply`.
+    - Mantener semántica de salida/estado.
+  - Issue upstream activa: `#692`.

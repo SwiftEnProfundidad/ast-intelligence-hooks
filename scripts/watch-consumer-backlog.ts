@@ -171,6 +171,9 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
   lines.push(
     `[pumuki][backlog-watch] action_required_reasons=${formatActionReasonsForHuman(actionRequiredReasons)}`
   );
+  if (result.hasActionRequired) {
+    lines.push('[pumuki][backlog-watch] hint=use --no-fail to inspect findings without exit code 1');
+  }
   lines.push(`[pumuki][backlog-watch] action_required=${result.hasActionRequired ? 'yes' : 'no'}`);
   return `${lines.join('\n')}\n`;
 };

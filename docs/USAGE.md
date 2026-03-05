@@ -335,6 +335,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `watch-consumer-backlog --json` exposes `classification_counts` (`needs_issue`, `drift_closed_issue`, `active_issue`, `heading_drift`).
 - `watch-consumer-backlog --json` exposes `action_required_reasons` when findings are active.
 - `watch-consumer-backlog` (modo humano) imprime `action_required_reasons=<...|none>`.
+- `watch-consumer-backlog` (modo humano) añade hint `--no-fail` cuando hay acción requerida.
 - `reconcile-consumer-backlog-issues` supports dry-run/apply and now reports mapping source (`none|json|markdown|merged`).
 - `reconcile-consumer-backlog-issues --json` includes heading sync metadata (`headingUpdated`, `headingChanges`) for section headings `### ✅/🚧/⏳/⛔ <ID>`.
 - `reconcile-consumer-backlog-issues --json` exposes `heading_changes_count` for lightweight consumers.
