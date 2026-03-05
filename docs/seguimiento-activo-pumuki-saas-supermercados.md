@@ -1462,9 +1462,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#704`.
 
-- 🚧 PUMUKI-120: Ejecutar mejora DX siguiente para `next_commands[].origin_tool` en JSON de watch/reconcile.
+- ✅ PUMUKI-120: Ejecutar mejora DX siguiente para `next_commands[].origin_tool` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `origin_tool=backlog-watch`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - `next_commands[]` añade `origin_tool=backlog-reconcile`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura de `origin_tool` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].origin_tool`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#705`.
+
+- 🚧 PUMUKI-121: Ejecutar mejora DX siguiente para `next_commands[].origin_schema_version` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `origin_tool` por paso en `next_commands[]`.
+    - Exponer `origin_schema_version` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Facilitar agregación multi-herramienta en pipelines.
-  - Issue upstream activa: `#705`.
+    - Alinear versión por paso con `schema_version` del payload.
+  - Issue upstream activa: `#706`.

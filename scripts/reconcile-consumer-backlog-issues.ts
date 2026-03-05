@@ -230,6 +230,7 @@ const main = async (): Promise<void> => {
       ? [
           {
             id: 1,
+            origin_tool: JSON_TOOL_NAME,
             label: 'dry_run',
             mode: 'dry-run',
             safety: 'read_only',
@@ -242,6 +243,7 @@ const main = async (): Promise<void> => {
           },
           {
             id: 2,
+            origin_tool: JSON_TOOL_NAME,
             label: 'apply',
             mode: 'apply',
             safety: 'mutating',
