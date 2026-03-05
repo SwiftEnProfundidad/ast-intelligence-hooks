@@ -255,3 +255,7 @@ If doctor reports fragile commands in adapter wiring, repair with:
 ```bash
 npx --yes pumuki adapter install --agent=codex
 ```
+
+Notes for repos with `:` in path:
+- Avoid adapter/hook commands that mutate `PATH` inline (for example `PATH="...:$PATH" npx ...`).
+- Prefer generated commands from `pumuki adapter install` (local bin / local node entry / `npx --package` fallback).

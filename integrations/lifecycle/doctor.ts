@@ -194,6 +194,9 @@ const hasRobustPumukiCommandResolution = (command: string): boolean => {
   return false;
 };
 
+const mutatesPathForCommandExecution = (command: string): boolean =>
+  /\bPATH\s*=\s*[^\n]*\$PATH/i.test(command);
+
 const buildDeepCheck = (
   check: Omit<DoctorDeepCheck, 'status' | 'severity'> & {
     status: DoctorDeepCheck['status'];
@@ -316,19 +319,28 @@ const evaluateAdapterWiringCheck = (repoRoot: string): DoctorDeepCheck => {
         command,
       };
     })
-    .filter((entry) => entry.command && !hasRobustPumukiCommandResolution(entry.command));
+    .filter(
+      (entry) =>
+        entry.command &&
+        (!hasRobustPumukiCommandResolution(entry.command) ||
+          mutatesPathForCommandExecution(entry.command))
+    );
 
   if (weakResolutionPaths.length > 0) {
+    const pathMutationCount = weakResolutionPaths.filter(
+      (entry) => entry.command && mutatesPathForCommandExecution(entry.command)
+    ).length;
     return buildDeepCheck({
       id: 'adapter-wiring',
       status: 'fail',
       severity: 'warning',
-      message: `Adapter wiring commands are present but use fragile binary resolution (${weakResolutionPaths.map((entry) => entry.path).join(', ')}).`,
+      message: `Adapter wiring commands are present but use fragile binary resolution or PATH mutation (${weakResolutionPaths.map((entry) => entry.path).join(', ')}).`,
       remediation:
         'Re-run "pumuki adapter install --agent=codex" to restore robust local/bin-or-package command resolution.',
       metadata: {
         path: adapterPath,
         weak_resolution_count: weakResolutionPaths.length,
+        path_mutation_count: pathMutationCount,
       },
     });
   }

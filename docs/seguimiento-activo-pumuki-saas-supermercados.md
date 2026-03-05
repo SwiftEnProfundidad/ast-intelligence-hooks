@@ -234,4 +234,19 @@
     - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts integrations/lifecycle/__tests__/hookBlock.test.ts integrations/lifecycle/__tests__/hookManager.test.ts` -> `30 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-029: Ejecutar siguiente bug SAAS prioritaria (`#620`) para robustecer ejecución en repos con `:` en path y cerrar trazabilidad sin regresiones.
+- ✅ PUMUKI-029: Ejecutar siguiente bug SAAS prioritaria (`#620`) para robustecer ejecución en repos con `:` en path y cerrar trazabilidad sin regresiones.
+  - Fix:
+    - El smoke de instalación usa `consumerRepo` con `:` en Unix/macOS para cubrir path problemático de forma explícita:
+      - `scripts/package-install-smoke-workspace-factory-lib.ts`.
+      - Test de regresión: `scripts/__tests__/package-install-smoke-workspace-factory-lib.test.ts`.
+    - `doctor --deep` endurece `adapter-wiring` para detectar comandos con mutación inline de `PATH` (`PATH="...:$PATH"`), aunque incluyan `--package`:
+      - `integrations/lifecycle/doctor.ts`.
+      - Test de regresión: `integrations/lifecycle/__tests__/doctor.test.ts`.
+    - Documentación operativa para rutas con `:` y remediación en:
+      - `docs/INSTALLATION.md`
+      - `docs/USAGE.md`
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/package-install-smoke-workspace-factory-lib.test.ts scripts/__tests__/package-install-smoke-command-resolution-lib.test.ts integrations/lifecycle/__tests__/doctor.test.ts` -> `15 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-030: Ejecutar siguiente bug SAAS prioritaria (`#621`) para robustecer bootstrap en repos sin `HEAD` inicial y cerrar trazabilidad con RED->GREEN->REFACTOR.

@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-028 (issue `#619`, resolución robusta de binarios `pumuki` en smoke/hook diagnostics con fallback local determinista + `doctor --deep`).
-- Task activa (`🚧`): PUMUKI-029 (siguiente bug SAAS prioritaria: issue `#620`, robustecer ejecución en repos con `:` en path).
+- Última task cerrada (`✅`): PUMUKI-029 (issue `#620`, cobertura real en paths con `:` + hardening `doctor --deep` frente a mutación inline de `PATH`).
+- Task activa (`🚧`): PUMUKI-030 (siguiente bug SAAS prioritaria: issue `#621`, bootstrap robusto en repos sin `HEAD` inicial).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

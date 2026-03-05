@@ -567,6 +567,9 @@ If `adapter-wiring` reports fragile resolution, regenerate adapter commands:
 npx --yes pumuki adapter install --agent=codex
 ```
 
+For repos whose absolute path includes `:`, avoid inline `PATH="...:$PATH"` wrappers in hooks/adapters.
+Use generated commands from `pumuki adapter install` to keep resolution deterministic.
+
 ### Empty evidence or PASS with no findings
 
 Confirm changed files match supported extensions and platform paths expected by detectors.
