@@ -131,6 +131,8 @@ export const captureRepoState = (repoRoot: string): RepoState => {
   const { ahead, behind } = toAheadBehind(repoRoot, upstream);
   const lifecycle = readLifecycleStatusSafe(repoRoot);
   const versionMetadata = resolvePumukiVersionMetadata({ repoRoot });
+  const consumerFacingVersion = versionMetadata.resolvedVersion;
+  const installedVersion = versionMetadata.consumerInstalledVersion;
   const hardModeState = readHardModeState(repoRoot);
 
   return {
@@ -147,14 +149,12 @@ export const captureRepoState = (repoRoot: string): RepoState => {
     },
     lifecycle: {
       installed: lifecycle.lifecycleState.installed === 'true',
-      package_version: lifecycle.lifecycleState.version ?? lifecycle.packageVersion ?? null,
-      lifecycle_version: versionMetadata.runtimeVersion ?? null,
+      // package/lifecycle version should be stable from consumer perspective.
+      package_version: consumerFacingVersion,
+      lifecycle_version: consumerFacingVersion,
       package_version_source: versionMetadata.source,
       package_version_runtime: versionMetadata.runtimeVersion,
-      package_version_installed:
-        lifecycle.lifecycleState.version
-        ?? versionMetadata.consumerInstalledVersion
-        ?? null,
+      package_version_installed: installedVersion,
       hooks: {
         pre_commit: toHookState(lifecycle.hookStatus['pre-commit']),
         pre_push: toHookState(lifecycle.hookStatus['pre-push']),
