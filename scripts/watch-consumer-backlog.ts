@@ -6,6 +6,11 @@ import {
   parseIdIssueMapRecordFile,
 } from './backlog-id-issue-map-lib';
 import {
+  BACKLOG_JSON_COMPAT_CONTRACT_ID,
+  BACKLOG_JSON_COMPAT_MIN_READER_VERSION,
+  BACKLOG_JSON_SCHEMA_VERSION,
+} from './backlog-json-contract-lib';
+import {
   collectBacklogIdIssueMap,
   resolveIssueNumberByIdWithGh,
   runBacklogWatch,
@@ -21,7 +26,6 @@ type ParsedArgs = {
   failOnFindings: boolean;
 };
 
-const JSON_SCHEMA_VERSION = '1.0.0';
 const JSON_TOOL_NAME = 'backlog-watch';
 
 const HELP_TEXT = `Usage:
@@ -173,7 +177,7 @@ const main = async (): Promise<void> => {
       `${JSON.stringify(
         {
           tool: JSON_TOOL_NAME,
-          schema_version: JSON_SCHEMA_VERSION,
+          schema_version: BACKLOG_JSON_SCHEMA_VERSION,
           generated_at: generatedAt,
           run_id: runId,
           invocation: {
@@ -184,8 +188,8 @@ const main = async (): Promise<void> => {
             id_issue_map_from: parsed.idIssueMapSourcePath ? 'provided' : 'none',
           },
           compat: {
-            contract_id: 'backlog-tooling-json-v1',
-            min_reader_version: '1.0.0',
+            contract_id: BACKLOG_JSON_COMPAT_CONTRACT_ID,
+            min_reader_version: BACKLOG_JSON_COMPAT_MIN_READER_VERSION,
             is_backward_compatible: true,
             breaking_changes: [],
           },

@@ -959,8 +959,21 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#668`.
 
-- 🚧 PUMUKI-084: Ejecutar mejora DX siguiente para centralizar constantes de contrato JSON en módulo compartido.
+- ✅ PUMUKI-084: Ejecutar mejora DX siguiente para centralizar constantes de contrato JSON en módulo compartido.
+  - Fix:
+    - Nuevo módulo compartido: `scripts/backlog-json-contract-lib.ts`.
+    - `watch` y `reconcile` ahora consumen constantes compartidas para:
+      - `schema_version`
+      - `compat.contract_id`
+      - `compat.min_reader_version`
+    - Se elimina duplicación de literales de contrato entre scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#669`.
+
+- 🚧 PUMUKI-085: Ejecutar mejora DX siguiente para añadir test unitario dedicado de constantes de contrato JSON.
   - Alcance:
-    - Eliminar literales duplicados de contrato entre `watch` y `reconcile`.
-    - Reducir drift de contrato y facilitar evolución controlada.
-  - Issue upstream activa: `#669`.
+    - Blindar contra drift accidental en valores canónicos de contrato.
+    - Asegurar regresión directa sobre `backlog-json-contract-lib.ts`.
+  - Issue upstream activa: `#670`.
