@@ -3,6 +3,7 @@ import { evaluateAiGate, type AiGateStage, type AiGateViolation } from '../gate/
 const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_MISSING: 'Ejecuta una auditoría (1/2/3/4) para regenerar .ai_evidence.json.',
   EVIDENCE_INVALID: 'Regenera .ai_evidence.json desde una opción de auditoría.',
+  EVIDENCE_INTEGRITY_MISSING: 'Refresca evidencia para regenerar metadatos de integridad.',
   EVIDENCE_STALE: 'Refresca evidencia antes de continuar con commit/push.',
   EVIDENCE_TIMESTAMP_INVALID: 'Regenera evidencia para obtener un timestamp válido.',
   EVIDENCE_GATE_BLOCKED: 'Corrige primero las violaciones bloqueantes y vuelve a auditar.',

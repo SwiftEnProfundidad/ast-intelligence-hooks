@@ -25,17 +25,16 @@ export type EnterpriseAiGateCheckResult = {
 
 const HOOK_STAGE_SET = new Set<AiGateStage>(['PRE_COMMIT', 'PRE_PUSH', 'CI']);
 
-const HOOK_REFRESHABLE_EVIDENCE_CODES = new Set<string>([
-  'EVIDENCE_MISSING',
-  'EVIDENCE_INVALID',
-  'EVIDENCE_CHAIN_INVALID',
-  'EVIDENCE_STALE',
-  'EVIDENCE_GATE_BLOCKED',
-  'EVIDENCE_GATE_STATUS_INCOHERENT',
-  'EVIDENCE_OUTCOME_INCOHERENT',
-  'EVIDENCE_TIMESTAMP_INVALID',
-  'EVIDENCE_TIMESTAMP_FUTURE',
-]);
+const isHookRefreshableEvidenceCode = (code: string): boolean =>
+  code.startsWith('EVIDENCE_');
+
+type AiGateCheckDependencies = {
+  evaluateAiGate: typeof evaluateAiGate;
+};
+
+const defaultDependencies: AiGateCheckDependencies = {
+  evaluateAiGate,
+};
 
 const buildConsistencyHint = (
   evaluation: ReturnType<typeof evaluateAiGate>
@@ -49,7 +48,7 @@ const buildConsistencyHint = (
   }
 
   const hasRefreshableEvidenceViolation = evaluation.violations.some((violation) =>
-    HOOK_REFRESHABLE_EVIDENCE_CODES.has(violation.code)
+    isHookRefreshableEvidenceCode(violation.code)
   );
 
   if (!evaluation.allowed && hasRefreshableEvidenceViolation) {
@@ -73,8 +72,12 @@ export const runEnterpriseAiGateCheck = (params: {
   repoRoot: string;
   stage: AiGateStage;
   requireMcpReceipt?: boolean;
-}): EnterpriseAiGateCheckResult => {
-  const evaluation = evaluateAiGate({
+}, dependencies: Partial<AiGateCheckDependencies> = {}): EnterpriseAiGateCheckResult => {
+  const activeDependencies: AiGateCheckDependencies = {
+    ...defaultDependencies,
+    ...dependencies,
+  };
+  const evaluation = activeDependencies.evaluateAiGate({
     repoRoot: params.repoRoot,
     stage: params.stage,
     requireMcpReceipt: params.requireMcpReceipt ?? false,

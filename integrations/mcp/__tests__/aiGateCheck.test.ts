@@ -7,6 +7,7 @@ import test from 'node:test';
 import { runEnterpriseAiGateCheck } from '../aiGateCheck';
 import { buildEvidenceChain } from '../../evidence/evidenceChain';
 import type { AiEvidenceV2_1 } from '../../evidence/schema';
+import { evaluateAiGate } from '../../gate/evaluateAiGate';
 
 const runGit = (cwd: string, args: ReadonlyArray<string>): string =>
   execFileSync('git', args, { cwd, encoding: 'utf8' });
@@ -97,6 +98,50 @@ test('runEnterpriseAiGateCheck expone hint de precedencia cuando PRE_PUSH bloque
       result.result.consistency_hint.message.includes('Hook stage runners may regenerate evidence'),
       true
     );
+  } finally {
+    rmSync(repoRoot, { recursive: true, force: true });
+  }
+});
+
+test('runEnterpriseAiGateCheck marca precedencia para códigos EVIDENCE_* legacy no listados explícitamente', () => {
+  const repoRoot = mkdtempSync(join(tmpdir(), 'pumuki-mcp-aigate-legacy-evidence-code-'));
+  try {
+    runGit(repoRoot, ['init', '-b', 'feature/mcp-chain']);
+    runGit(repoRoot, ['config', 'user.email', 'pumuki-test@example.com']);
+    runGit(repoRoot, ['config', 'user.name', 'Pumuki Test']);
+    writeFileSync(join(repoRoot, 'README.md'), '# temp\n', 'utf8');
+    runGit(repoRoot, ['add', 'README.md']);
+    runGit(repoRoot, ['commit', '-m', 'chore: bootstrap']);
+
+    const baseline = evaluateAiGate({
+      repoRoot,
+      stage: 'PRE_PUSH',
+    });
+
+    const result = runEnterpriseAiGateCheck(
+      {
+        repoRoot,
+        stage: 'PRE_PUSH',
+      },
+      {
+        evaluateAiGate: () => ({
+          ...baseline,
+          status: 'BLOCKED',
+          allowed: false,
+          violations: [
+            {
+              code: 'EVIDENCE_INTEGRITY_MISSING',
+              severity: 'ERROR',
+              message: 'Evidence integrity metadata is missing.',
+            },
+          ],
+        }),
+      }
+    );
+
+    assert.equal(result.result.allowed, false);
+    assert.equal(result.result.consistency_hint.comparable_with_hook_runner, false);
+    assert.equal(result.result.consistency_hint.reason_code, 'HOOK_RUNNER_CAN_REFRESH_EVIDENCE');
   } finally {
     rmSync(repoRoot, { recursive: true, force: true });
   }
