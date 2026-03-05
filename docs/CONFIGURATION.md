@@ -192,6 +192,7 @@ Behavior:
 - `rule_updates`: deterministic recommendations derived from evidence/gate signals (`missing`, `invalid`, `blocked`, `allowed`).
 - dedicated command: `pumuki sdd learn --change=<id> [--stage=<stage>] [--task=<task>] [--dry-run] [--json]` generates/persists the same artifact without requiring `sync-docs`.
 - orchestration command: `pumuki sdd auto-sync --change=<id> [--stage=<stage>] [--task=<task>] [--dry-run] [--json]` executes deterministic docs sync plus learning generation in one step.
+- safety limit: `--from-evidence` must resolve inside the repository root; path traversal/outside-repo paths are blocked.
 
 ## Gate telemetry export (optional)
 

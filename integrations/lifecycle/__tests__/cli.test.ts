@@ -1518,6 +1518,49 @@ test('runLifecycleCli sdd sync alias acepta --from-evidence y usa esa fuente par
   }
 });
 
+test('runLifecycleCli sdd sync devuelve 1 cuando --from-evidence intenta salir del repo root', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const canonicalDoc = join(
+    repo,
+    'docs',
+    'technical',
+    '08-validation',
+    'refactor',
+    'pumuki-integration-feedback.md'
+  );
+
+  try {
+    mkdirSync(dirname(canonicalDoc), { recursive: true });
+    writeFileSync(
+      canonicalDoc,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n'),
+      'utf8'
+    );
+
+    process.chdir(repo);
+    const code = await runLifecycleCli([
+      'sdd',
+      'sync',
+      '--change=rgo-1700-01',
+      '--from-evidence=../outside-evidence.json',
+      '--dry-run',
+      '--json',
+    ]);
+    assert.equal(code, 1);
+  } finally {
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
 test('runLifecycleCli sdd auto-sync dry-run orquesta sync-docs + learning sin modificar archivo canónico', async () => {
   const repo = createGitRepo();
   const previousCwd = process.cwd();

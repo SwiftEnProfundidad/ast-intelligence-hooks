@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, isAbsolute, relative, resolve } from 'node:path';
 import { readEvidenceResult, type EvidenceReadResult } from '../evidence/readEvidence';
 import { readSddStatus } from './policy';
 import type { SddStage } from './types';
@@ -116,6 +116,28 @@ const normalizeSectionBody = (value: string): string => value.trim().replace(/\r
 
 const computeDigest = (value: string): string =>
   createHash('sha256').update(value, 'utf8').digest('hex');
+
+const resolveRepoBoundPath = (params: {
+  repoRoot: string;
+  candidatePath: string;
+  flagName: '--from-evidence';
+}): string => {
+  const repoRootAbsolute = resolve(params.repoRoot);
+  const resolved = isAbsolute(params.candidatePath)
+    ? resolve(params.candidatePath)
+    : resolve(repoRootAbsolute, params.candidatePath);
+  const rel = relative(repoRootAbsolute, resolved);
+  if (
+    rel === '..' ||
+    rel.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) ||
+    isAbsolute(rel)
+  ) {
+    throw new Error(
+      `[pumuki][sdd] ${params.flagName} must resolve inside repository root: ${params.candidatePath}`
+    );
+  }
+  return resolved;
+};
 
 const prefixLines = (value: string, marker: '-' | '+'): string =>
   value
@@ -340,6 +362,13 @@ export const runSddSyncDocs = (params?: {
   const fromEvidencePath = params?.fromEvidencePath?.trim()
     ? params.fromEvidencePath.trim()
     : null;
+  const fromEvidenceAbsolutePath = fromEvidencePath
+    ? resolveRepoBoundPath({
+      repoRoot,
+      candidatePath: fromEvidencePath,
+      flagName: '--from-evidence',
+    })
+    : null;
   const targets = params?.targets ?? DEFAULT_SYNC_DOCS_TARGETS;
   const now = params?.now ?? (() => new Date());
   const evidenceReader =
@@ -347,7 +376,9 @@ export const runSddSyncDocs = (params?: {
     ((candidateRepoRoot: string) =>
       readEvidenceResult(
         candidateRepoRoot,
-        fromEvidencePath ? { evidencePath: fromEvidencePath } : undefined
+        fromEvidenceAbsolutePath
+          ? { evidencePath: fromEvidenceAbsolutePath }
+          : undefined
       ));
 
   const updates = targets.map((target) => {

@@ -262,6 +262,33 @@ test('runSddSyncDocs permite leer evidencia desde --from-evidence (ruta alternat
   });
 });
 
+test('runSddSyncDocs bloquea --from-evidence cuando intenta salir del repo root', async () => {
+  await withFixtureRepo('pumuki-sdd-sync-docs-from-evidence-escape-', (repoRoot) => {
+    writeCanonicalDoc(
+      repoRoot,
+      [
+        '# Canonical',
+        '',
+        '<!-- PUMUKI:BEGIN SDD_STATUS -->',
+        '- stale: true',
+        '<!-- PUMUKI:END SDD_STATUS -->',
+        '',
+      ].join('\n')
+    );
+
+    assert.throws(
+      () =>
+        runSddSyncDocs({
+          repoRoot,
+          dryRun: true,
+          change: 'rgo-1700-01',
+          fromEvidencePath: '../outside-evidence.json',
+        }),
+      /--from-evidence must resolve inside repository root/i
+    );
+  });
+});
+
 test('runSddSyncDocs persiste learning artifact cuando change está presente y no es dry-run', async () => {
   await withFixtureRepo('pumuki-sdd-sync-docs-learning-write-', (repoRoot) => {
     writeCanonicalDoc(

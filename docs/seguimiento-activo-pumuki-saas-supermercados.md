@@ -306,4 +306,14 @@
     - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/astIntelligenceDualValidation.test.ts integrations/git/__tests__/runPlatformGateAstIntelligenceDualMode.test.ts integrations/git/__tests__/runPlatformGateEvaluation.test.ts` -> `12 pass / 0 fail`.
     - `npm run -s typecheck` -> `PASS`.
 
-- 🚧 PUMUKI-036: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para `sdd learn/sync` desde evidencia operativa y cierre trazable de issue upstream.
+- ✅ PUMUKI-036: Ejecutar siguiente mejora SAAS prioritaria (`#617`) para `sdd learn/sync` desde evidencia operativa y cierre trazable de issue upstream.
+  - Fix:
+    - `integrations/sdd/syncDocs.ts`: hardening de seguridad para `--from-evidence` con resolución repo-bound; bloquea rutas fuera del repo root (path traversal).
+    - `integrations/sdd/__tests__/syncDocs.test.ts`: nuevo test de bloqueo cuando `--from-evidence` intenta escapar con `../`.
+    - `integrations/lifecycle/__tests__/cli.test.ts`: cobertura CLI para retorno `code=1` cuando `sdd sync --from-evidence` apunta fuera del repo root.
+    - `docs/CONFIGURATION.md`: límite de seguridad documentado para `--from-evidence`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/sdd/__tests__/syncDocs.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `47 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-037: Ejecutar siguiente mejora SAAS prioritaria (`#618`) para `pumuki watch` proactivo (notificaciones + anti-spam) y cierre trazable de issue upstream.
