@@ -388,6 +388,7 @@ Contributions are welcome. For high-quality collaboration:
 3. Keep scope focused and include deterministic evidence when relevant.
 4. Before opening a PR, run at least:
    - `npm run typecheck`
+   - `npm run -s test:backlog-tooling`
    - `npm run test:operational-memory`
    - `npm run test:saas-ingestion`
 5. Open a PR with clear problem statement, approach, and validation evidence.

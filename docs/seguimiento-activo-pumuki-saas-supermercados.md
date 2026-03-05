@@ -995,8 +995,16 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#671`.
 
-- 🚧 PUMUKI-087: Ejecutar mejora DX siguiente para exponer `test:backlog-tooling` en README principal.
+- ✅ PUMUKI-087: Ejecutar mejora DX siguiente para exponer `test:backlog-tooling` en README principal.
+  - Fix:
+    - `README.md`:
+      - añadido `npm run -s test:backlog-tooling` en checklist mínimo de validación previa a PR.
+  - Evidencia (2026-03-05):
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#672`.
+
+- 🚧 PUMUKI-088: Ejecutar mejora DX siguiente para enlazar sección específica de backlog tooling desde README.
   - Alcance:
-    - Añadir discoverability del script en documentación de entrada del repo.
-    - Mantener concisión y no duplicar contenido extenso de `docs/USAGE.md`.
-  - Issue upstream activa: `#672`.
+    - Añadir referencia directa a la sección de backlog tooling en `docs/USAGE.md`.
+    - Mejorar discoverability sin duplicar detalle técnico.
+  - Issue upstream activa: `#673`.
