@@ -8,6 +8,16 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Added
 
+- No changes yet.
+
+### Fixed
+
+- No changes yet.
+
+## [6.3.40] - 2026-03-05
+
+### Added
+
 - AST Intelligence dual validation PoC (`#616`) with compatibility-first rollout:
   - new dual mode runtime: `PUMUKI_AST_INTELLIGENCE_DUAL_MODE=off|shadow|strict`,
   - new guard findings:
@@ -18,6 +28,9 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - RFC + roadmap for AST Intelligence by nodes:
   - `docs/validation/ast-intelligence-roadmap.md`,
   - includes architecture target, 30/60/90 plan, rollout and rollback contract.
+- Backlog watcher/reconcile JSON now includes `next_commands[].probe_kind`:
+  - `json_contract` for dry-run probe validation.
+  - `state_recheck` for apply probe validation.
 
 ### Fixed
 
@@ -32,6 +45,10 @@ This project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Fixed findings trace consistency in stage gates:
   - guard-driven blocking conditions are now always propagated to `effectiveFindings`,
   - avoiding opaque `BLOCK` outcomes without explicit finding payload.
+- PRE_PUSH scope false positives caused by upstream misalignment now fail fast with deterministic signal:
+  - upstream drift is detected earlier (`PRE_PUSH_UPSTREAM_MISALIGNED`) before scope coverage evaluation.
+- Local smoke for consumer install now falls back deterministically when `npx --no-install` crashes with runtime import errors (`MODULE_NOT_FOUND`).
+- `ai_gate_check` consistency hints now cover legacy `EVIDENCE_*` codes (including `EVIDENCE_INTEGRITY_MISSING`) to reduce hook-vs-MCP diagnosis drift.
 
 ## [6.3.39] - 2026-03-04
 

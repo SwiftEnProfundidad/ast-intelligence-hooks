@@ -5,7 +5,7 @@ Detailed commit history remains available through Git history (`git log` / `git 
 
 ## 2026-03 (enterprise hardening updates)
 
-### 2026-03-05 (next cut candidate, post v6.3.39)
+### 2026-03-05 (v6.3.40)
 
 - AST Intelligence dual validation PoC (`#616`) integrado en gate:
   - runtime mode: `PUMUKI_AST_INTELLIGENCE_DUAL_MODE=off|shadow|strict`.
@@ -15,9 +15,16 @@ Detailed commit history remains available through Git history (`git log` / `git 
 - Señales de gate añadidas:
   - `governance.ast-intelligence.dual-validation.shadow`
   - `governance.ast-intelligence.dual-validation.mismatch`
+- Backlog tooling (`watch/reconcile`) amplía contrato JSON en `next_commands[]`:
+  - nuevo campo `probe_kind` (`json_contract` | `state_recheck`) para tipar verificación post-ejecución.
+- Correcciones de robustez operativa en consumidores reales:
+  - `PRE_PUSH` detecta upstream desalineado antes de evaluar scope coverage (evita falsos positivos de plataforma por delta contaminado).
+  - smoke de instalación local hace fallback cuando `npx --no-install` falla por `MODULE_NOT_FOUND`.
+  - `ai_gate_check` unifica hint de precedencia para códigos legacy `EVIDENCE_*` (incluye `EVIDENCE_INTEGRITY_MISSING`).
 - RFC y plan de rollout/rollback:
   - `docs/validation/ast-intelligence-roadmap.md`.
 - Evidencia de validación:
+  - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` (`11 pass / 0 fail`)
   - `npm run -s typecheck` (`PASS`)
   - `npm run -s test:stage-gates` (`1033 pass / 0 fail / 4 skip`)
 
