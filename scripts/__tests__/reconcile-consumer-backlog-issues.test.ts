@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  buildBacklogStatusSummary,
   collectBacklogIssueEntries,
+  collectBacklogOperationalStatusEntries,
   reconcileBacklogMarkdown,
   runBacklogIssuesReconcile,
+  syncBacklogStatusSummary,
   type BacklogIssueState,
 } from '../reconcile-consumer-backlog-issues-lib';
 
@@ -14,6 +17,27 @@ const sampleMarkdown = `# Backlog
 | P0 | PUMUKI-001 | ⛔ | #100 | bloqueado histórico |
 | P1 | PUMUKI-002 | ✅ | #101 | marcado como cerrado |
 | P1 | PUMUKI-003 | 🚧 | #102 | en curso |
+`;
+
+const summaryMarkdown = `# Registro de Bugs y Mejoras de Pumuki
+
+## Estado de este backlog
+- ✅ Cerrados: 0
+- 🚧 En construcción: 1 (\`PUMUKI-999\`)
+- ⏳ Pendientes: 0
+- ⛔ Bloqueados: 0
+
+## Seguimiento operativo (Bugs)
+| Orden | ID | Severidad | Prioridad | Estado | Referencia upstream | Versión objetivo | Nota |
+|---|---|---|---|---|---|---|---|
+| 1 | PUMUKI-001 | HIGH | P1 | ✅ | #100 | TBC | cerrado |
+| 2 | PUMUKI-002 | HIGH | P1 | ⏳ | Pendiente | TBC | pendiente |
+
+## Seguimiento operativo (Mejoras)
+| Orden | ID | Severidad | Prioridad | Estado | Referencia upstream | Versión objetivo | Nota |
+|---|---|---|---|---|---|---|---|
+| 1 | PUMUKI-M001 | MEDIUM | P2 | 🚧 | Pendiente | TBC | en curso |
+| 2 | PUMUKI-M002 | HIGH | P1 | ⛔ | #101 | TBC | bloqueado |
 `;
 
 test('collectBacklogIssueEntries detecta filas con emoji de estado e issue', () => {
@@ -27,6 +51,33 @@ test('collectBacklogIssueEntries detecta filas con emoji de estado e issue', () 
       [7, '🚧', 102],
     ]
   );
+});
+
+test('collectBacklogOperationalStatusEntries detecta IDs y estado en tablas de seguimiento', () => {
+  const entries = collectBacklogOperationalStatusEntries(summaryMarkdown);
+  assert.deepEqual(
+    entries.map((entry) => `${entry.id}:${entry.status}`),
+    ['PUMUKI-001:✅', 'PUMUKI-002:⏳', 'PUMUKI-M001:🚧', 'PUMUKI-M002:⛔']
+  );
+});
+
+test('buildBacklogStatusSummary calcula conteos e IDs en progreso/bloqueados', () => {
+  const summary = buildBacklogStatusSummary(summaryMarkdown);
+  assert.equal(summary.closed, 1);
+  assert.equal(summary.inProgress, 1);
+  assert.equal(summary.pending, 1);
+  assert.equal(summary.blocked, 1);
+  assert.deepEqual(summary.inProgressIds, ['PUMUKI-M001']);
+  assert.deepEqual(summary.blockedIds, ['PUMUKI-M002']);
+});
+
+test('syncBacklogStatusSummary reescribe estado de backlog con conteos reales', () => {
+  const result = syncBacklogStatusSummary(summaryMarkdown);
+  assert.equal(result.updated, true);
+  assert.match(result.markdown, /- ✅ Cerrados: 1/);
+  assert.match(result.markdown, /- 🚧 En construcción: 1 \(`PUMUKI-M001`\)/);
+  assert.match(result.markdown, /- ⏳ Pendientes: 1/);
+  assert.match(result.markdown, /- ⛔ Bloqueados: 1 \(`PUMUKI-M002`\)/);
 });
 
 test('reconcileBacklogMarkdown corrige estados según OPEN/CLOSED', () => {
@@ -51,6 +102,11 @@ test('reconcileBacklogMarkdown corrige estados según OPEN/CLOSED', () => {
   assert.match(result.updatedMarkdown, /\| P0 \| PUMUKI-001 \| ✅ \| #100 \|/);
   assert.match(result.updatedMarkdown, /\| P1 \| PUMUKI-002 \| ⏳ \| #101 \|/);
   assert.match(result.updatedMarkdown, /\| P1 \| PUMUKI-003 \| 🚧 \| #102 \|/);
+  assert.equal(result.summaryUpdated, false);
+  assert.equal(result.summary.closed, 1);
+  assert.equal(result.summary.inProgress, 1);
+  assert.equal(result.summary.pending, 1);
+  assert.equal(result.summary.blocked, 0);
 });
 
 test('runBacklogIssuesReconcile dry-run no escribe archivo', async () => {
@@ -73,6 +129,8 @@ test('runBacklogIssuesReconcile dry-run no escribe archivo', async () => {
   assert.equal(result.apply, false);
   assert.equal(result.updated, false);
   assert.equal(result.changes.length, 2);
+  assert.equal(result.summaryUpdated, false);
+  assert.equal(result.summary.closed, 1);
   assert.equal(written, undefined);
 });
 
@@ -96,6 +154,8 @@ test('runBacklogIssuesReconcile apply escribe archivo cuando hay cambios', async
   assert.equal(result.apply, true);
   assert.equal(result.updated, true);
   assert.equal(result.changes.length, 2);
+  assert.equal(result.summaryUpdated, false);
+  assert.equal(result.summary.pending, 1);
   assert.ok(typeof written === 'string');
   assert.match(written ?? '', /\| P0 \| PUMUKI-001 \| ✅ \| #100 \|/);
   assert.match(written ?? '', /\| P1 \| PUMUKI-002 \| ⏳ \| #101 \|/);

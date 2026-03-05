@@ -21,6 +21,15 @@ export type BacklogIssueChange = {
   line: string;
 };
 
+export type BacklogStatusSummary = {
+  closed: number;
+  inProgress: number;
+  pending: number;
+  blocked: number;
+  inProgressIds: ReadonlyArray<string>;
+  blockedIds: ReadonlyArray<string>;
+};
+
 export type BacklogReconcileResult = {
   filePath: string;
   repo?: string;
@@ -28,11 +37,14 @@ export type BacklogReconcileResult = {
   entriesScanned: number;
   issuesResolved: number;
   changes: ReadonlyArray<BacklogIssueChange>;
+  summaryUpdated: boolean;
+  summary: BacklogStatusSummary;
   updated: boolean;
 };
 
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
+const BACKLOG_ID_PATTERN = /^PUMUKI-(?:M)?\d+$/;
 
 const parseIssueNumber = (line: string): number | null => {
   const match = ISSUE_REF_PATTERN.exec(line);
@@ -70,6 +82,121 @@ export const collectBacklogIssueEntries = (markdown: string): ReadonlyArray<Back
   return entries;
 };
 
+export const collectBacklogOperationalStatusEntries = (
+  markdown: string
+): ReadonlyArray<{ id: string; status: BacklogStatusEmoji }> => {
+  const lines = markdown.split(/\r?\n/);
+  const entries: Array<{ id: string; status: BacklogStatusEmoji }> = [];
+  for (const line of lines) {
+    if (!line.trimStart().startsWith('|')) {
+      continue;
+    }
+    const cells = line.split('|').map((cell) => cell.trim());
+    const id = cells.find((cell) => BACKLOG_ID_PATTERN.test(cell));
+    const status = cells.find((cell) => STATUS_EMOJI_PATTERN.test(cell));
+    if (!id || !status) {
+      continue;
+    }
+    entries.push({
+      id,
+      status: status as BacklogStatusEmoji,
+    });
+  }
+  return entries;
+};
+
+export const buildBacklogStatusSummary = (markdown: string): BacklogStatusSummary => {
+  const entries = collectBacklogOperationalStatusEntries(markdown);
+  const closedIds = entries.filter((entry) => entry.status === '✅').map((entry) => entry.id);
+  const inProgressIds = entries.filter((entry) => entry.status === '🚧').map((entry) => entry.id);
+  const pendingIds = entries.filter((entry) => entry.status === '⏳').map((entry) => entry.id);
+  const blockedIds = entries.filter((entry) => entry.status === '⛔').map((entry) => entry.id);
+  return {
+    closed: closedIds.length,
+    inProgress: inProgressIds.length,
+    pending: pendingIds.length,
+    blocked: blockedIds.length,
+    inProgressIds: inProgressIds.sort(),
+    blockedIds: blockedIds.sort(),
+  };
+};
+
+const formatSummaryLine = (params: {
+  emoji: BacklogStatusEmoji;
+  label: string;
+  count: number;
+  ids?: ReadonlyArray<string>;
+}): string => {
+  const ids = params.ids ?? [];
+  if (ids.length === 0) {
+    return `- ${params.emoji} ${params.label}: ${params.count}`;
+  }
+  return `- ${params.emoji} ${params.label}: ${params.count} (${ids.map((id) => `\`${id}\``).join(', ')})`;
+};
+
+export const syncBacklogStatusSummary = (
+  markdown: string
+): { markdown: string; updated: boolean; summary: BacklogStatusSummary } => {
+  const lines = markdown.split(/\r?\n/);
+  const headerIndex = lines.findIndex((line) => line.trim() === '## Estado de este backlog');
+  const summary = buildBacklogStatusSummary(markdown);
+  if (headerIndex < 0) {
+    return {
+      markdown,
+      updated: false,
+      summary,
+    };
+  }
+
+  const start = headerIndex + 1;
+  let end = start;
+  while (end < lines.length && /^- (✅|🚧|⏳|⛔) /.test(lines[end].trim())) {
+    end += 1;
+  }
+
+  const nextLines = [
+    formatSummaryLine({
+      emoji: '✅',
+      label: 'Cerrados',
+      count: summary.closed,
+    }),
+    formatSummaryLine({
+      emoji: '🚧',
+      label: 'En construcción',
+      count: summary.inProgress,
+      ids: summary.inProgressIds,
+    }),
+    formatSummaryLine({
+      emoji: '⏳',
+      label: 'Pendientes',
+      count: summary.pending,
+    }),
+    formatSummaryLine({
+      emoji: '⛔',
+      label: 'Bloqueados',
+      count: summary.blocked,
+      ids: summary.blockedIds,
+    }),
+  ];
+
+  const current = lines.slice(start, end);
+  const changed = current.join('\n') !== nextLines.join('\n');
+  if (!changed) {
+    return {
+      markdown,
+      updated: false,
+      summary,
+    };
+  }
+
+  const updatedLines = [...lines.slice(0, start), ...nextLines, ...lines.slice(end)];
+  return {
+    markdown: updatedLines.join('\n'),
+    updated: true,
+    summary,
+  };
+};
+
 const deriveTargetEmoji = (params: {
   current: BacklogStatusEmoji;
   issueState: BacklogIssueState;
@@ -105,6 +232,8 @@ export const reconcileBacklogMarkdown = (params: {
 }): {
   updatedMarkdown: string;
   changes: ReadonlyArray<BacklogIssueChange>;
+  summaryUpdated: boolean;
+  summary: BacklogStatusSummary;
 } => {
   const entries = collectBacklogIssueEntries(params.markdown);
   const byLine = new Map<number, BacklogIssueChange>();
@@ -132,9 +261,12 @@ export const reconcileBacklogMarkdown = (params: {
   }
 
   if (byLine.size === 0) {
+    const syncedOnlySummary = syncBacklogStatusSummary(params.markdown);
     return {
-      updatedMarkdown: params.markdown,
+      updatedMarkdown: syncedOnlySummary.markdown,
       changes: [],
+      summaryUpdated: syncedOnlySummary.updated,
+      summary: syncedOnlySummary.summary,
     };
   }
 
@@ -148,9 +280,13 @@ export const reconcileBacklogMarkdown = (params: {
     lines[index] = replaceFirstEmoji(current, change.to);
   }
 
+  const reconciledMarkdown = lines.join('\n');
+  const syncedSummary = syncBacklogStatusSummary(reconciledMarkdown);
   return {
-    updatedMarkdown: lines.join('\n'),
+    updatedMarkdown: syncedSummary.markdown,
     changes: Array.from(byLine.values()).sort((a, b) => a.lineNumber - b.lineNumber),
+    summaryUpdated: syncedSummary.updated,
+    summary: syncedSummary.summary,
   };
 };
 
@@ -182,7 +318,7 @@ export const runBacklogIssuesReconcile = async (params: {
   });
 
   const apply = params.apply === true;
-  if (apply && reconciled.changes.length > 0) {
+  if (apply && (reconciled.changes.length > 0 || reconciled.summaryUpdated)) {
     writeFile(filePath, reconciled.updatedMarkdown);
   }
 
@@ -193,6 +329,8 @@ export const runBacklogIssuesReconcile = async (params: {
     entriesScanned: entries.length,
     issuesResolved: uniqueIssueNumbers.length,
     changes: reconciled.changes,
-    updated: apply && reconciled.changes.length > 0,
+    summaryUpdated: reconciled.summaryUpdated,
+    summary: reconciled.summary,
+    updated: apply && (reconciled.changes.length > 0 || reconciled.summaryUpdated),
   };
 };

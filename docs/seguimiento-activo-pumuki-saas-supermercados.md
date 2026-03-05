@@ -536,4 +536,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#636`.
 
-- 🚧 PUMUKI-054: Ejecutar siguiente mejora prioritaria de hardening enterprise (issue `#637`) para policy-as-code versionada/firmada con validación estricta y trazabilidad completa en gates.
+- ✅ PUMUKI-054: Ejecutar siguiente mejora prioritaria de hardening enterprise (issue `#637`) para policy-as-code versionada/firmada con validación estricta y trazabilidad completa en gates.
+  - Fix:
+    - `integrations/lifecycle/policyReconcile.ts` añade modo estricto (`strict`) con bloqueo determinista de stages no firmados o sin contrato file-backed.
+    - `integrations/lifecycle/cli.ts` soporta `pumuki policy reconcile --strict` (incluyendo shorthand `pumuki policy --strict`) y reporta `strict_requested`.
+    - Cobertura de regresión en:
+      - `integrations/lifecycle/__tests__/policyReconcile.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts`
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/policyReconcile.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#637`.
+
+- 🚧 PUMUKI-055: Ejecutar siguiente mejora operativa (issue `#638`) para aplicar reconciliación automática del backlog SAAS y normalizar leyenda/estado real sin drift.
+  - Alcance:
+    - Ejecutar reconciliador sobre `PUMUKI_BUGS_MEJORAS.md` del consumer SAAS.
+    - Eliminar `⛔/⏳` falsos por issues upstream ya cerradas.
+    - Mantener trazabilidad legible en este plan y registro maestro.
