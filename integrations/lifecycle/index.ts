@@ -88,6 +88,7 @@ export {
   resolveLoopSessionsDirectory,
   updateLoopSession,
 } from './loopSessionStore';
+export { runPolicyReconcile } from './policyReconcile';
 export type {
   CreateHotspotsSaasIngestionPayloadParams,
   HotspotsSaasIngestionPayloadBodyCompat,

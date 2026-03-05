@@ -68,6 +68,7 @@ import {
   collectRemoteCiDiagnostics,
   type RemoteCiDiagnostics,
 } from './remoteCiDiagnostics';
+import { runPolicyReconcile } from './policyReconcile';
 
 type LifecycleCommand =
   | 'bootstrap'
@@ -81,7 +82,8 @@ type LifecycleCommand =
   | 'loop'
   | 'sdd'
   | 'adapter'
-  | 'analytics';
+  | 'analytics'
+  | 'policy';
 
 type SddCommand =
   | 'status'
@@ -95,6 +97,7 @@ type SddCommand =
 type LoopCommand = 'run' | 'status' | 'stop' | 'resume' | 'list' | 'export';
 type AnalyticsCommand = 'hotspots';
 type AnalyticsHotspotsCommand = 'report' | 'diagnose';
+type PolicyCommand = 'reconcile';
 
 type SddSessionAction = 'open' | 'refresh' | 'close';
 
@@ -162,6 +165,7 @@ type ParsedArgs = {
   analyticsSinceDays?: number;
   analyticsJsonOutputPath?: string;
   analyticsMarkdownOutputPath?: string;
+  policyCommand?: PolicyCommand;
 };
 
 const HELP_TEXT = `
@@ -183,6 +187,7 @@ Pumuki lifecycle commands:
   pumuki adapter install --agent=<name> [--dry-run] [--json]
   pumuki analytics hotspots report [--top=<n>] [--since-days=<n>] [--json] [--output-json=<path>] [--output-markdown=<path>]
   pumuki analytics hotspots diagnose [--json]
+  pumuki policy reconcile [--json]
   pumuki sdd status [--json]
   pumuki sdd validate [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--json]
   pumuki sdd session --open --change=<change-id> [--ttl-minutes=<n>] [--json]
@@ -229,7 +234,8 @@ const isLifecycleCommand = (value: string): value is LifecycleCommand =>
   value === 'loop' ||
   value === 'sdd' ||
   value === 'adapter' ||
-  value === 'analytics';
+  value === 'analytics' ||
+  value === 'policy';
 
 const parseAdapterAgent = (value?: string): AdapterAgent => {
   const normalized = (value ?? '').trim();
@@ -756,6 +762,26 @@ export const parseLifecycleCliArgs = (argv: ReadonlyArray<string>): ParsedArgs =
       }
     }
     return parsedAnalyticsArgs;
+  }
+
+  if (commandRaw === 'policy') {
+    const subcommandRaw = argv[1] ?? 'reconcile';
+    if (subcommandRaw !== 'reconcile') {
+      throw new Error(`Unsupported policy subcommand "${subcommandRaw}".\n\n${HELP_TEXT}`);
+    }
+    for (const arg of argv.slice(2)) {
+      if (arg === '--json') {
+        json = true;
+        continue;
+      }
+      throw new Error(`Unsupported argument "${arg}".\n\n${HELP_TEXT}`);
+    }
+    return {
+      command: commandRaw,
+      purgeArtifacts: false,
+      json,
+      policyCommand: 'reconcile',
+    };
   }
 
   if (commandRaw === 'loop') {
@@ -2271,6 +2297,30 @@ export const runLifecycleCli = async (
             printHotspotsPublishDiagnostics(diagnostics);
           }
           return diagnostics.status === 'blocked' ? 1 : 0;
+        }
+        return 1;
+      }
+      case 'policy': {
+        if (parsed.policyCommand === 'reconcile') {
+          const report = runPolicyReconcile({
+            repoRoot: process.cwd(),
+          });
+          if (parsed.json) {
+            writeInfo(JSON.stringify(report, null, 2));
+          } else {
+            writeInfo(
+              `[pumuki][policy] reconcile status=${report.summary.status} total=${report.summary.total} blocking=${report.summary.blocking} warnings=${report.summary.warnings}`
+            );
+            for (const drift of report.drifts) {
+              writeInfo(
+                `[pumuki][policy] ${drift.code} severity=${drift.severity} blocking=${drift.blocking ? 'yes' : 'no'} message=${drift.message}`
+              );
+              if (drift.remediation) {
+                writeInfo(`[pumuki][policy] remediation: ${drift.remediation}`);
+              }
+            }
+          }
+          return report.summary.blocking > 0 ? 1 : 0;
         }
         return 1;
       }

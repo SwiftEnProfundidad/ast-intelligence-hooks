@@ -153,6 +153,42 @@ const writeScenarioEvidenceArtifact = (params: {
   writeFileSync(evidencePath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
 };
 
+const writePolicyReconcileInputs = (repoRoot: string): void => {
+  writeFileSync(
+    join(repoRoot, 'AGENTS.md'),
+    [
+      '# AGENTS',
+      '- windsurf-rules-ios',
+      '- swift-concurrency',
+      '- swiftui-expert-skill',
+      '- windsurf-rules-frontend',
+      '- windsurf-rules-backend',
+      '- windsurf-rules-android',
+      '',
+    ].join('\n'),
+    'utf8'
+  );
+  writeFileSync(
+    join(repoRoot, 'skills.lock.json'),
+    JSON.stringify(
+      {
+        version: '1.0',
+        bundles: [
+          { name: 'ios', source: 'docs/codex-skills/windsurf-rules-ios.md' },
+          { name: 'swift-concurrency', source: 'docs/codex-skills/swift-concurrency.md' },
+          { name: 'swiftui-expert-skill', source: 'docs/codex-skills/swiftui-expert-skill.md' },
+          { name: 'frontend', source: 'docs/codex-skills/windsurf-rules-frontend.md' },
+          { name: 'backend', source: 'docs/codex-skills/windsurf-rules-backend.md' },
+          { name: 'android', source: 'docs/codex-skills/windsurf-rules-android.md' },
+        ],
+      },
+      null,
+      2
+    ),
+    'utf8'
+  );
+};
+
 const withFakeNpmOpenSpecInstaller = async <T>(
   repoRoot: string,
   callback: () => Promise<T>
@@ -558,6 +594,21 @@ test('parseLifecycleCliArgs soporta analytics hotspots diagnose', () => {
   });
 });
 
+test('parseLifecycleCliArgs soporta policy reconcile', () => {
+  assert.deepEqual(parseLifecycleCliArgs(['policy', 'reconcile', '--json']), {
+    command: 'policy',
+    purgeArtifacts: false,
+    json: true,
+    policyCommand: 'reconcile',
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['policy']), {
+    command: 'policy',
+    purgeArtifacts: false,
+    json: false,
+    policyCommand: 'reconcile',
+  });
+});
+
 test('parseLifecycleCliArgs soporta exportes locales json/markdown para hotspots', () => {
   assert.deepEqual(
     parseLifecycleCliArgs([
@@ -719,6 +770,14 @@ test('parseLifecycleCliArgs rechaza help implícito y flags no soportados', () =
   assert.throws(
     () => parseLifecycleCliArgs(['sdd', 'state-sync', '--status=invalid']),
     /Invalid --status value/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['policy', 'drift']),
+    /Unsupported policy subcommand/i
+  );
+  assert.throws(
+    () => parseLifecycleCliArgs(['policy', 'reconcile', '--bad-flag']),
+    /Unsupported argument/i
   );
 });
 
@@ -1971,6 +2030,39 @@ test('runLifecycleCli sdd state-sync dry-run proyecta estado desde evidencia y n
       existsSync(join(repo, '.pumuki', 'artifacts', 'scenario-state-sync-v1.json')),
       false
     );
+  } finally {
+    process.stdout.write = originalStdoutWrite;
+    process.chdir(previousCwd);
+    rmSync(repo, { recursive: true, force: true });
+  }
+});
+
+test('runLifecycleCli policy reconcile --json devuelve PASS cuando AGENTS y skills.lock están alineados', async () => {
+  const repo = createGitRepo();
+  const previousCwd = process.cwd();
+  const printed: string[] = [];
+  const originalStdoutWrite = process.stdout.write.bind(process.stdout);
+
+  try {
+    process.chdir(repo);
+    writePolicyReconcileInputs(repo);
+    process.stdout.write = ((chunk: unknown): boolean => {
+      printed.push(String(chunk).trimEnd());
+      return true;
+    }) as typeof process.stdout.write;
+
+    const code = await runLifecycleCli(['policy', 'reconcile', '--json']);
+    assert.equal(code, 0);
+    const payload = JSON.parse(printed[printed.length - 1] ?? '{}') as {
+      command?: string;
+      summary?: {
+        status?: string;
+        blocking?: number;
+      };
+    };
+    assert.equal(payload.command, 'pumuki policy reconcile');
+    assert.equal(payload.summary?.status, 'PASS');
+    assert.equal(payload.summary?.blocking, 0);
   } finally {
     process.stdout.write = originalStdoutWrite;
     process.chdir(previousCwd);

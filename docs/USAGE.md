@@ -267,6 +267,9 @@ npx --yes pumuki sdd session --open --change=<change-id>
 npx --yes pumuki sdd session --refresh
 npx --yes pumuki sdd session --close
 
+# reconcile AGENTS/skills.lock/policy-as-code contract
+npx --yes pumuki policy reconcile --json
+
 # scaffold deterministic scenario evidence from real test metadata
 npx --yes pumuki sdd evidence --scenario-id=<scenario-id> --test-command='npm run test -- --grep <scenario-id>' --test-status=passed --dry-run --json
 

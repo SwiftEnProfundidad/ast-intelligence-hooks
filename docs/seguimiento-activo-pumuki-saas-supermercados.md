@@ -421,4 +421,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Issue upstream cerrada: `#629`.
 
-- 🚧 PUMUKI-047: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M005`, issue `#630`) para `policy reconcile` y coherencia AGENTS/skills/policy-as-code.
+- ✅ PUMUKI-047: Ejecutar siguiente mejora SAAS prioritaria (`PUMUKI-M005`, issue `#630`) para `policy reconcile` y coherencia AGENTS/skills/policy-as-code.
+  - Fix:
+    - Nuevo comando lifecycle: `pumuki policy reconcile [--json]`.
+    - `integrations/lifecycle/policyReconcile.ts`: reconciliación determinista de contrato `AGENTS.md` + `skills.lock.json` + snapshot de `policy-as-code` por stages (`PRE_COMMIT/PRE_PUSH/CI`).
+    - Detección explícita de drift con severidad/acción:
+      - `AGENTS_FILE_MISSING`
+      - `SKILLS_LOCK_MISSING` / `SKILLS_LOCK_INVALID`
+      - `AGENTS_REQUIRED_SKILL_MISSING_IN_LOCK`
+      - `POLICY_STAGE_INVALID`
+      - `POLICY_STAGE_NON_STRICT`
+      - `POLICY_HASH_DIVERGENCE`
+    - `integrations/lifecycle/cli.ts`: parse + ejecución runtime del subcomando `policy reconcile` con salida JSON/texto y `exit code 1` cuando hay bloqueos.
+    - Cobertura nueva/actualizada:
+      - `integrations/lifecycle/__tests__/policyReconcile.test.ts`
+      - `integrations/lifecycle/__tests__/cli.test.ts` (parse + rechazo de flags inválidos + ejecución runtime).
+    - Ayuda CLI actualizada con `pumuki policy reconcile [--json]`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/policyReconcile.test.ts integrations/lifecycle/__tests__/cli.test.ts` -> `40 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#630`.
+
+- 🚧 PUMUKI-048: Sincronizar estado real del backlog SAAS (leyenda + bloqueos) contra estado upstream ya implementado para eliminar falsos `⛔`/`⏳` y recuperar trazabilidad operativa.
