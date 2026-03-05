@@ -344,12 +344,34 @@ test('runPrePushStage keeps default PRE_PUSH thresholds when skills policy is ab
   });
 });
 
-test('runPrePushStage fails safe with guidance when branch has no upstream', async () => {
+test('runPrePushStage sin upstream usa fallback bootstrap range cuando no hay stdin', async () => {
+  await withStageRunnerRepo(async (repoRoot) => {
+    setupBackendCommitRangeWithoutUpstream(repoRoot);
+    const messages = await withCapturedStderr(async () => {
+      const exitCode = await runPrePushStage();
+      assert.equal(exitCode, 0);
+    });
+
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
+    const evidence = readEvidence(repoRoot);
+    assert.equal(evidence.snapshot.stage, 'PRE_PUSH');
+    assert.equal(
+      messages.some((message) =>
+        message.includes('[pumuki][pre-push] branch has no upstream; using bootstrap range')
+      ),
+      true
+    );
+  });
+});
+
+test('runPrePushStage sin upstream falla safe cuando no existe base bootstrap válida', async () => {
   await withStageRunnerRepo(async (repoRoot) => {
     setupBackendCommitRangeWithoutUpstream(repoRoot);
 
     const messages = await withCapturedStderr(async () => {
-      const exitCode = await runPrePushStage();
+      const exitCode = await runPrePushStage({
+        resolvePrePushBootstrapBaseRef: () => 'HEAD',
+      });
       assert.equal(exitCode, 1);
     });
 
@@ -580,13 +602,13 @@ test('runPrePushStage sin upstream mantiene paridad de notificación de resumen'
         },
         resolveRepoRoot: () => repoRoot,
       });
-      assert.equal(exitCode, 1);
+      assert.equal(exitCode, 0);
     });
 
-    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), false);
+    assert.equal(existsSync(join(repoRoot, '.ai_evidence.json')), true);
     assert.equal(
       messages.some((message) =>
-        message.includes('pumuki pre-push blocked: branch has no upstream tracking reference.')
+        message.includes('[pumuki][pre-push] branch has no upstream; using bootstrap range')
       ),
       true
     );
@@ -641,6 +663,7 @@ test('runPrePushStage sin upstream emite notificación de bloqueo accionable', a
     }> = [];
 
     const exitCode = await runPrePushStage({
+      resolvePrePushBootstrapBaseRef: () => 'HEAD',
       notifyGateBlocked: (params) => {
         blocked.push({
           stage: params.stage,

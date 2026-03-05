@@ -21,6 +21,8 @@ import type { EvidenceReadResult } from '../evidence/readEvidence';
 
 const PRE_PUSH_UPSTREAM_REQUIRED_MESSAGE =
   'pumuki pre-push blocked: branch has no upstream tracking reference. Configure upstream first (for example: git push --set-upstream origin <branch>) and retry.';
+const PRE_PUSH_UPSTREAM_BOOTSTRAP_FALLBACK_MESSAGE =
+  '[pumuki][pre-push] branch has no upstream; using bootstrap range ';
 
 const PRE_COMMIT_EVIDENCE_MAX_AGE_SECONDS = 900;
 const PRE_PUSH_EVIDENCE_MAX_AGE_SECONDS = 1800;
@@ -315,8 +317,15 @@ export async function runPrePushStage(
   const upstreamRef = activeDependencies.resolveUpstreamRef();
   if (!upstreamRef) {
     const prePushInput = activeDependencies.readPrePushStdin();
-    if (shouldAllowBootstrapPrePush(prePushInput)) {
-      const bootstrapBaseRef = activeDependencies.resolvePrePushBootstrapBaseRef();
+    const bootstrapBaseRef = activeDependencies.resolvePrePushBootstrapBaseRef();
+    const bootstrapByPrePushStdIn = shouldAllowBootstrapPrePush(prePushInput);
+    const bootstrapByFallbackBase = !bootstrapByPrePushStdIn && bootstrapBaseRef !== 'HEAD';
+    if (bootstrapByPrePushStdIn || bootstrapByFallbackBase) {
+      if (bootstrapByFallbackBase) {
+        process.stderr.write(
+          `${PRE_PUSH_UPSTREAM_BOOTSTRAP_FALLBACK_MESSAGE}${bootstrapBaseRef}..HEAD\n`
+        );
+      }
       if (
         enforceGitAtomicityGate({
           dependencies: activeDependencies,

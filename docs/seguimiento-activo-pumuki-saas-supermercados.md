@@ -635,7 +635,21 @@
       - Resultado consolidado: `entriesScanned=106`, `nonClosedEntries=9`, `needsIssue=8`, `driftClosedIssue=1`, `hasActionRequired=true`.
     - Cierres upstream: `#644`, `#645`.
 
-- 🚧 PUMUKI-061: Ejecutar primer fix crítico del paquete RuralGo detectado por watcher (`PUMUKI-INC-059 / FP-030`) en `pre-push` bootstrap/upstream.
+- ✅ PUMUKI-061: Ejecutar primer fix crítico del paquete RuralGo detectado por watcher (`PUMUKI-INC-059 / FP-030`) en `pre-push` bootstrap/upstream.
+  - Fix:
+    - `integrations/git/stageRunners.ts`:
+      - `PRE_PUSH` sin upstream deja de bloquear en ejecución manual de `pumuki-pre-push` cuando existe base bootstrap resoluble (`develop/main`).
+      - Mantiene `fail-safe` si no existe base bootstrap válida (`HEAD`).
+    - `integrations/git/__tests__/stageRunners.test.ts`:
+      - nueva cobertura RED/GREEN para fallback bootstrap sin stdin,
+      - no-regresión para bloqueo accionable cuando base bootstrap no es resoluble.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/git/__tests__/stageRunners.test.ts` -> `23 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#646`.
+
+- 🚧 PUMUKI-062: Ejecutar siguiente regresión prioritaria del watcher RuralGo (`PUMUKI-INC-048`) sobre no-determinismo `PRE_WRITE` (primer intento bloquea, rerun pasa).
   - Alcance:
-    - Reproducir deadlock reportado en escenario real de primer push.
-    - Añadir test de regresión y fix determinista en stage runner/hook.
+    - Reproducir RED en `sdd validate --stage=PRE_WRITE`.
+    - Aplicar fix determinista (auto-refresh/retry controlado) sin rerun manual de hooks.
+  - Issue upstream activa: `#647`.
