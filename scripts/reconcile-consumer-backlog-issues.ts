@@ -228,8 +228,20 @@ const main = async (): Promise<void> => {
   const nextCommands =
     actionRequiredReasons.length > 0
       ? [
-          { label: 'dry_run', mode: 'dry-run', safety: 'read_only', command: dryRunCommand },
-          { label: 'apply', mode: 'apply', safety: 'mutating', command: applyCommand },
+          {
+            label: 'dry_run',
+            mode: 'dry-run',
+            safety: 'read_only',
+            description: 'Inspect planned reconcile changes without mutating files.',
+            command: dryRunCommand,
+          },
+          {
+            label: 'apply',
+            mode: 'apply',
+            safety: 'mutating',
+            description: 'Apply reconcile changes to the backlog markdown file.',
+            command: applyCommand,
+          },
         ]
       : undefined;
   const nextCommand = nextCommands ? `${dryRunCommand} && ${applyCommand}` : undefined;
