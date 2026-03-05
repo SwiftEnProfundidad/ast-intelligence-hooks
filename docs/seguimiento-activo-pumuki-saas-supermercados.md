@@ -948,8 +948,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#667`.
 
-- 🚧 PUMUKI-083: Ejecutar mejora DX siguiente para añadir `compat.contract_id` al contrato JSON.
+- ✅ PUMUKI-083: Ejecutar mejora DX siguiente para añadir `compat.contract_id` al contrato JSON.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `compat.contract_id = backlog-tooling-json-v1`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación explícita de `compat.contract_id` en ambos scripts.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#668`.
+
+- 🚧 PUMUKI-084: Ejecutar mejora DX siguiente para centralizar constantes de contrato JSON en módulo compartido.
   - Alcance:
-    - Incluir identificador estable del contrato en `watch` y `reconcile`.
-    - Facilitar trazabilidad cross-tooling y versionado futuro.
-  - Issue upstream activa: `#668`.
+    - Eliminar literales duplicados de contrato entre `watch` y `reconcile`.
+    - Reducir drift de contrato y facilitar evolución controlada.
+  - Issue upstream activa: `#669`.

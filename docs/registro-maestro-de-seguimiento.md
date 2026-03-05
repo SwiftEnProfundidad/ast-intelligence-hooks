@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-082 (issue `#667`, añadir `compat.is_backward_compatible` al contrato JSON).
-- Task activa (`🚧`): PUMUKI-083 (issue `#668`, añadir `compat.contract_id` al contrato JSON).
+- Última task cerrada (`✅`): PUMUKI-083 (issue `#668`, añadir `compat.contract_id` al contrato JSON).
+- Task activa (`🚧`): PUMUKI-084 (issue `#669`, centralizar constantes de contrato JSON).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

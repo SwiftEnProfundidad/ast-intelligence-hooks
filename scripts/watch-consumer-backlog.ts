@@ -184,6 +184,7 @@ const main = async (): Promise<void> => {
             id_issue_map_from: parsed.idIssueMapSourcePath ? 'provided' : 'none',
           },
           compat: {
+            contract_id: 'backlog-tooling-json-v1',
             min_reader_version: '1.0.0',
             is_backward_compatible: true,
             breaking_changes: [],
