@@ -442,4 +442,18 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#630`.
 
-- 🚧 PUMUKI-048: Sincronizar estado real del backlog SAAS (leyenda + bloqueos, issue `#631`) contra estado upstream ya implementado para eliminar falsos `⛔`/`⏳` y recuperar trazabilidad operativa.
+- ✅ PUMUKI-048: Sincronizar estado real del backlog SAAS (leyenda + bloqueos, issue `#631`) contra estado upstream ya implementado para eliminar falsos `⛔`/`⏳` y recuperar trazabilidad operativa.
+  - Fix:
+    - Reconciliación canónica `SAAS backlog -> upstream` con contraste explícito de referencias (`#614..#623`, `#624..#630`) usando `gh issue list --state all --json`.
+    - Resultado de sincronización: todas las referencias upstream del backlog SAAS están en `CLOSED`; los estados `⛔/⏳/🚧` del MD consumidor quedaron identificados como snapshot desfasado.
+    - Matriz de corrección aplicada en seguimiento canónico (este plan):
+      - Bloque histórico marcado en SAAS como `⛔` (`PUMUKI-014`, `PUMUKI-015`, `PUMUKI-003`, `PUMUKI-005`, `PUMUKI-007`, `PUMUKI-012`, `PUMUKI-013`, `PUMUKI-M007`, `PUMUKI-M006`, `PUMUKI-M002`) => `✅` por cierre upstream.
+      - Bloque histórico marcado en SAAS como `⏳/🚧` (`PUMUKI-002`, `PUMUKI-004`, `PUMUKI-009`, `PUMUKI-010`, `PUMUKI-011`, `PUMUKI-006`, `PUMUKI-M001`, `PUMUKI-M003`, `PUMUKI-M004`, `PUMUKI-M005`) => `✅` por implementación en tasks `PUMUKI-017..047`.
+    - No se toca código funcional del producto en esta task; cierre puramente de trazabilidad/visibilidad.
+  - Evidencia (2026-03-05):
+    - `gh issue list --state all --limit 120 --json number,state,title,url` -> referencias SAAS en estado `CLOSED`.
+    - `sed -n '1,240p' /Users/juancarlosmerlosalbarracin/Developer/Projects/SAAS:APP_SUPERMERCADOS/docs/pumuki/PUMUKI_BUGS_MEJORAS.md` -> snapshot consumidor aún desfasado frente a upstream.
+    - `git status --short --branch` -> worktree limpio tras sincronización documental.
+    - Cierre issue upstream: `#631`.
+
+- 🚧 PUMUKI-049: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#632`) para normalizar fixtures MCP de `package_version/lifecycle_version` a resolución dinámica y evitar drift de versiones obsoletas en tests/salidas.
