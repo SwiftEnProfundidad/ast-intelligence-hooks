@@ -746,8 +746,23 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#653`.
 
-- 🚧 PUMUKI-069: Ejecutar mejora DX siguiente para watcher con enriquecimiento opcional de mapeo `ID->issue` por búsqueda GitHub cuando el ID no está en markdown local.
+- ✅ PUMUKI-069: Ejecutar mejora DX siguiente para watcher con enriquecimiento opcional de mapeo `ID->issue` por búsqueda GitHub cuando el ID no está en markdown local.
+  - Fix:
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo resolver opcional `resolveIssueNumberById` en `runBacklogWatch`.
+      - implementación GH nativa `resolveIssueNumberByIdWithGh` con búsqueda por token de ID (`title/body`) y selección determinista del issue candidato.
+      - precedencia de resolución: `issue en fila` -> `idIssueMap` -> `lookup GH`.
+    - `scripts/watch-consumer-backlog.ts`:
+      - nuevo flag `--resolve-missing-via-gh` para habilitar enriquecimiento opcional por búsqueda upstream.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - tests RED/GREEN para validar enriquecimiento por resolver de ID y que no re-consulta IDs ya resueltos por mapping local.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `21 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#654`.
+
+- 🚧 PUMUKI-070: Ejecutar mejora DX siguiente para watcher con trazabilidad explícita de origen de resolución (`mapa` vs `lookup GH`).
   - Alcance:
-    - Resolver automáticamente IDs de consumer (`PUMUKI-INC-*`, `FP-*`, `AST-GAP-*`) contra issues upstream.
-    - Reducir `needsIssue` fantasma en planes donde el ID no se refleja literalmente.
-  - Issue upstream activa: `#654`.
+    - Exponer en resultado JSON/humano qué IDs se resolvieron por mapping local y cuáles por búsqueda GitHub.
+    - Reducir opacidad operativa en auditoría de backlog-watch.
+  - Issue upstream activa: `#655`.

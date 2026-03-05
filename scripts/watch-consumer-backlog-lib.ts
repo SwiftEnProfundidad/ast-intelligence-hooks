@@ -30,6 +30,10 @@ export type BacklogWatchResult = {
 };
 
 export type BacklogWatchIdIssueMap = Readonly<Record<string, number>>;
+export type BacklogIssueNumberResolver = (
+  backlogId: string,
+  repo?: string
+) => number | null | Promise<number | null>;
 
 const STATUS_EMOJI_PATTERN = /(✅|🚧|⏳|⛔)/;
 const ISSUE_REF_PATTERN = /#(\d+)/;
@@ -184,11 +188,113 @@ const resolveIssueStateWithGh = (issueNumber: number, repo?: string): BacklogIss
   return parsed.state === 'CLOSED' ? 'CLOSED' : 'OPEN';
 };
 
+type GhIssueSearchItem = {
+  number?: unknown;
+  title?: unknown;
+  state?: unknown;
+  updatedAt?: unknown;
+};
+
+const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const parseFiniteIssueNumber = (value: unknown): number | null => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+};
+
+export const resolveIssueNumberByIdWithGh: BacklogIssueNumberResolver = (backlogId, repo) => {
+  const normalizedId = backlogId.trim();
+  if (normalizedId.length === 0) {
+    return null;
+  }
+  const args = [
+    'issue',
+    'list',
+    '--state',
+    'all',
+    '--limit',
+    '20',
+    '--search',
+    `${normalizedId} in:title,body`,
+    '--json',
+    'number,title,state,updatedAt',
+  ];
+  if (typeof repo === 'string' && repo.trim().length > 0) {
+    args.push('--repo', repo.trim());
+  }
+  const stdout = execFileSync('gh', args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  const parsed = JSON.parse(stdout) as unknown;
+  if (!Array.isArray(parsed)) {
+    return null;
+  }
+
+  const tokenRegex = new RegExp(`\\b${escapeRegex(normalizedId)}\\b`, 'i');
+  const candidates = parsed
+    .map((item) => item as GhIssueSearchItem)
+    .map((item, index) => {
+      const issueNumber = parseFiniteIssueNumber(item.number);
+      const title = typeof item.title === 'string' ? item.title : '';
+      const state = item.state === 'OPEN' ? 'OPEN' : item.state === 'CLOSED' ? 'CLOSED' : 'OPEN';
+      const updatedAt = typeof item.updatedAt === 'string' ? item.updatedAt : '';
+      const exactTitleMatch = tokenRegex.test(title);
+      const updatedAtMs = Number.isFinite(Date.parse(updatedAt)) ? Date.parse(updatedAt) : 0;
+      if (issueNumber === null) {
+        return null;
+      }
+      let score = 0;
+      if (exactTitleMatch) {
+        score += 4;
+      }
+      if (state === 'OPEN') {
+        score += 2;
+      }
+      return {
+        issueNumber,
+        score,
+        updatedAtMs,
+        index,
+      };
+    })
+    .filter(
+      (entry): entry is { issueNumber: number; score: number; updatedAtMs: number; index: number } =>
+        entry !== null
+    );
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  candidates.sort((a, b) => {
+    if (b.score !== a.score) {
+      return b.score - a.score;
+    }
+    if (b.updatedAtMs !== a.updatedAtMs) {
+      return b.updatedAtMs - a.updatedAtMs;
+    }
+    if (b.issueNumber !== a.issueNumber) {
+      return b.issueNumber - a.issueNumber;
+    }
+    return a.index - b.index;
+  });
+
+  return candidates[0]?.issueNumber ?? null;
+};
+
 export const runBacklogWatch = async (params: {
   filePath: string;
   repo?: string;
   idIssueMap?: BacklogWatchIdIssueMap;
   readFile?: (path: string) => string;
+  resolveIssueNumberById?: BacklogIssueNumberResolver;
   resolveIssueState?: (issueNumber: number, repo?: string) => BacklogIssueState | Promise<BacklogIssueState>;
 }): Promise<BacklogWatchResult> => {
   const filePath = resolve(params.filePath);
@@ -212,10 +318,38 @@ export const runBacklogWatch = async (params: {
       issueNumber: Math.trunc(mappedIssue),
     };
   });
+  const resolveIssueNumberById = params.resolveIssueNumberById;
+  const resolvedIssueById = new Map<string, number>();
+  if (typeof resolveIssueNumberById === 'function') {
+    const unresolvedIds = Array.from(
+      new Set(nonClosedWithIssueMap.filter((entry) => entry.issueNumber === null).map((entry) => entry.id))
+    );
+    for (const backlogId of unresolvedIds) {
+      const resolvedIssue = await resolveIssueNumberById(backlogId, params.repo);
+      const parsedIssue = parseFiniteIssueNumber(resolvedIssue);
+      if (parsedIssue === null) {
+        continue;
+      }
+      resolvedIssueById.set(backlogId, parsedIssue);
+    }
+  }
+  const nonClosedWithIssueResolution = nonClosedWithIssueMap.map((entry) => {
+    if (entry.issueNumber !== null) {
+      return entry;
+    }
+    const resolvedIssue = resolvedIssueById.get(entry.id);
+    if (typeof resolvedIssue !== 'number') {
+      return entry;
+    }
+    return {
+      ...entry,
+      issueNumber: resolvedIssue,
+    };
+  });
 
   const issueNumbers = Array.from(
     new Set(
-      nonClosedWithIssueMap
+      nonClosedWithIssueResolution
         .map((entry) => entry.issueNumber)
         .filter((value): value is number => typeof value === 'number')
     )
@@ -226,11 +360,11 @@ export const runBacklogWatch = async (params: {
     issueStates.set(issueNumber, await resolveIssueState(issueNumber, params.repo));
   }
 
-  const needsIssue = nonClosedWithIssueMap.filter((entry) => entry.issueNumber === null);
-  const driftClosedIssue = nonClosedWithIssueMap.filter(
+  const needsIssue = nonClosedWithIssueResolution.filter((entry) => entry.issueNumber === null);
+  const driftClosedIssue = nonClosedWithIssueResolution.filter(
     (entry) => typeof entry.issueNumber === 'number' && issueStates.get(entry.issueNumber) === 'CLOSED'
   );
-  const activeIssue = nonClosedWithIssueMap.filter(
+  const activeIssue = nonClosedWithIssueResolution.filter(
     (entry) => typeof entry.issueNumber === 'number' && issueStates.get(entry.issueNumber) === 'OPEN'
   );
 

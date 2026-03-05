@@ -150,3 +150,56 @@ test('collectBacklogIdIssueMap extrae mapeo canónico ID->issue desde markdown',
     'FP-030': 648,
   });
 });
+
+test('runBacklogWatch enriquece issueNumber por ID cuando no hay mapping local', async () => {
+  const markdown = `| ID | Estado | Ref |\n|---|---|---|\n| PUMUKI-INC-200 | ⏳ REPORTED | Pendiente |\n`;
+  const lookedUp: Array<[string, string | undefined]> = [];
+
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-gh-enrichment.md',
+    repo: 'SwiftEnProfundidad/ast-intelligence-hooks',
+    readFile: () => markdown,
+    resolveIssueNumberById: (id, repo) => {
+      lookedUp.push([id, repo]);
+      return id === 'PUMUKI-INC-200' ? 654 : null;
+    },
+    resolveIssueState: (issueNumber) => (issueNumber === 654 ? 'OPEN' : 'CLOSED'),
+  });
+
+  assert.deepEqual(lookedUp, [['PUMUKI-INC-200', 'SwiftEnProfundidad/ast-intelligence-hooks']]);
+  assert.equal(result.classification.needsIssue.length, 0);
+  assert.equal(result.classification.activeIssue.length, 1);
+  assert.equal(result.classification.activeIssue[0]?.issueNumber, 654);
+  assert.equal(result.issueStatesResolved, 1);
+});
+
+test('runBacklogWatch no consulta resolver por ID si issue ya viene del idIssueMap', async () => {
+  const markdown = `| ID | Estado | Ref |\n|---|---|---|\n| PUMUKI-INC-201 | ⏳ REPORTED | Pendiente |\n| PUMUKI-INC-202 | ⏳ REPORTED | Pendiente |\n`;
+  const lookedUp: string[] = [];
+
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-gh-enrichment-mixed.md',
+    readFile: () => markdown,
+    idIssueMap: {
+      'PUMUKI-INC-201': 700,
+    },
+    resolveIssueNumberById: (id) => {
+      lookedUp.push(id);
+      return id === 'PUMUKI-INC-202' ? 701 : null;
+    },
+    resolveIssueState: (issueNumber) => (issueNumber === 701 ? 'CLOSED' : 'OPEN'),
+  });
+
+  assert.deepEqual(lookedUp, ['PUMUKI-INC-202']);
+  assert.equal(result.classification.needsIssue.length, 0);
+  assert.equal(result.classification.activeIssue.length, 1);
+  assert.equal(result.classification.driftClosedIssue.length, 1);
+  assert.deepEqual(
+    result.classification.activeIssue.map((entry) => entry.issueNumber),
+    [700]
+  );
+  assert.deepEqual(
+    result.classification.driftClosedIssue.map((entry) => entry.issueNumber),
+    [701]
+  );
+});

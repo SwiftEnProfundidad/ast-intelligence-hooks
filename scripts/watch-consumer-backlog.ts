@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
   collectBacklogIdIssueMap,
+  resolveIssueNumberByIdWithGh,
   runBacklogWatch,
   type BacklogWatchIdIssueMap,
 } from './watch-consumer-backlog-lib';
@@ -11,18 +12,20 @@ type ParsedArgs = {
   repo?: string;
   idIssueMapPath?: string;
   idIssueMapSourcePath?: string;
+  resolveMissingViaGh: boolean;
   json: boolean;
   failOnFindings: boolean;
 };
 
 const HELP_TEXT = `Usage:
-  npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--id-issue-map-from=<md-path>] [--json] [--no-fail]
+  npx --yes tsx@4.21.0 scripts/watch-consumer-backlog.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--id-issue-map-from=<md-path>] [--resolve-missing-via-gh] [--json] [--no-fail]
 
 Options:
   --file=<path>       Ruta del backlog markdown consumidor a vigilar.
   --repo=<owner/name> Repositorio GitHub a consultar con gh CLI (default: repo remoto actual).
   --id-issue-map=<path> JSON con mapeo {"ID":"issueNumber"} para enlazar filas sin #issue.
   --id-issue-map-from=<path> Markdown canónico desde el que extraer mapeo ID->issue automáticamente.
+  --resolve-missing-via-gh Enriquecer IDs sin issue buscando en GitHub por token (title/body).
   --json              Imprime resultado en JSON.
   --no-fail           No devuelve exit code 1 aunque existan findings accionables.`;
 
@@ -31,6 +34,7 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   let repo: string | undefined;
   let idIssueMapPath: string | undefined;
   let idIssueMapSourcePath: string | undefined;
+  let resolveMissingViaGh = false;
   let json = false;
   let failOnFindings = true;
 
@@ -44,6 +48,10 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
     }
     if (arg === '--no-fail') {
       failOnFindings = false;
+      continue;
+    }
+    if (arg === '--resolve-missing-via-gh') {
+      resolveMissingViaGh = true;
       continue;
     }
     if (arg.startsWith('--file=')) {
@@ -77,6 +85,7 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
       idIssueMapSourcePath && idIssueMapSourcePath.length > 0
         ? resolve(idIssueMapSourcePath)
         : undefined,
+    resolveMissingViaGh,
     json,
     failOnFindings,
   };
@@ -156,6 +165,7 @@ const main = async (): Promise<void> => {
     filePath: parsed.filePath,
     repo: parsed.repo,
     idIssueMap,
+    resolveIssueNumberById: parsed.resolveMissingViaGh ? resolveIssueNumberByIdWithGh : undefined,
   });
 
   if (parsed.json) {
