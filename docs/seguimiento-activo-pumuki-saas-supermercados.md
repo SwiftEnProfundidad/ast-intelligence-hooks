@@ -1247,9 +1247,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#691`.
 
-- 🚧 PUMUKI-107: Ejecutar mejora DX siguiente para hint `dry-run -> apply` en salida humana de reconcile.
+- ✅ PUMUKI-107: Ejecutar mejora DX siguiente para hint `dry-run -> apply` en salida humana de reconcile.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana añade hint operativo cuando hay `action_required_reasons`.
+      - hint propuesto: ejecutar `--json` (dry-run) y luego `--apply`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura del hint en caso con deltas (`heading_changes`).
+      - verificación de ausencia del hint cuando no hay deltas.
+    - `docs/USAGE.md`:
+      - documentado el hint de flujo seguro en modo humano.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#692`.
+
+- 🚧 PUMUKI-108: Ejecutar mejora DX siguiente para `next_command` en JSON de reconcile cuando hay deltas.
   - Alcance:
-    - Mostrar hint solo cuando hay deltas en reconcile humano.
-    - Recomendar secuencia `--json` y luego `--apply`.
-    - Mantener semántica de salida/estado.
-  - Issue upstream activa: `#692`.
+    - Exponer `next_command` en `reconcile --json` para integraciones automáticas.
+    - Emitirlo solo cuando haya `action_required_reasons`.
+    - Mantener contrato JSON backward-compatible.
+  - Issue upstream activa: `#693`.

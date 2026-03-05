@@ -252,6 +252,7 @@ test('reconcile-consumer-backlog-issues salida humana incluye resumen de heading
   assert.match(result.stdout, /\[pumuki\]\[backlog-reconcile\] heading_changes:/);
   assert.match(result.stdout, /PUMUKI-011: ⏳ -> ✅/);
   assert.match(result.stdout, /action_required_reasons=heading_changes/);
+  assert.match(result.stdout, /hint=run with --json first \(dry-run\), then rerun with --apply to persist changes/);
 });
 
 test('watch-consumer-backlog salida humana imprime action_required_reasons=none cuando está limpio', () => {
@@ -274,4 +275,5 @@ test('reconcile-consumer-backlog-issues salida humana imprime action_required_re
   const result = runTsxScript(scriptPath, ['--file=' + backlogFile]);
   assert.equal(result.status, 0);
   assert.match(result.stdout, /action_required_reasons=none/);
+  assert.doesNotMatch(result.stdout, /hint=run with --json first \(dry-run\), then rerun with --apply to persist changes/);
 });

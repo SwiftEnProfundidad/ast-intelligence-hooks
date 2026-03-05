@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-106 (issue `#691`, hint `--no-fail` en backlog watch humano).
-- Task activa (`🚧`): PUMUKI-107 (issue `#692`, hint `dry-run -> apply` en reconcile humano).
+- Última task cerrada (`✅`): PUMUKI-107 (issue `#692`, hint `dry-run -> apply` en reconcile humano).
+- Task activa (`🚧`): PUMUKI-108 (issue `#693`, `next_command` en JSON de reconcile para dry-run/apply).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

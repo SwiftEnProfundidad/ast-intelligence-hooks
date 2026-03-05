@@ -184,6 +184,11 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
       actionRequiredReasons
     )}`
   );
+  if (actionRequiredReasons.length > 0) {
+    lines.push(
+      '[pumuki][backlog-reconcile] hint=run with --json first (dry-run), then rerun with --apply to persist changes'
+    );
+  }
   lines.push(
     `[pumuki][backlog-reconcile] summary closed=${result.summary.closed} in_progress=${result.summary.inProgress} pending=${result.summary.pending} blocked=${result.summary.blocked}`
   );
