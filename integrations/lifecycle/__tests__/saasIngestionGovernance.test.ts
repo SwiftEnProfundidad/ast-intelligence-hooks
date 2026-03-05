@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { createHotspotsSaasIngestionPayload } from '../saasIngestionContract';
 import {
   applyHotspotsSaasGovernancePrivacy,
@@ -8,6 +9,8 @@ import {
   validateHotspotsSaasGovernancePolicy,
 } from '../saasIngestionGovernance';
 import type { LocalHotspotsReport } from '../analyticsHotspots';
+
+const producerVersion = getCurrentPumukiVersion();
 
 const report: LocalHotspotsReport = {
   generatedAt: '2026-02-26T00:00:00.000Z',
@@ -66,7 +69,7 @@ test('validateHotspotsSaasGovernancePolicy valida tenant/repository contra paylo
     repositoryId: 'repo-a',
     repositoryName: 'repo',
     report,
-    producerVersion: '6.3.17',
+    producerVersion,
     generatedAt: '2026-02-26T10:00:00.000Z',
   });
 

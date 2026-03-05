@@ -502,4 +502,21 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#634`.
 
-- 🚧 PUMUKI-052: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#635`) para normalizar hardcodes `producerVersion`/`producer_version` en tests de ingesta/operational-memory y eliminar drift residual de versión de productor.
+- ✅ PUMUKI-052: Ejecutar siguiente bug/mejora SAAS prioritaria (issue `#635`) para normalizar hardcodes `producerVersion`/`producer_version` en tests de ingesta/operational-memory y eliminar drift residual de versión de productor.
+  - Fix:
+    - Normalización a versión dinámica (`getCurrentPumukiVersion()`) en:
+      - `integrations/lifecycle/__tests__/saasIngestionAuth.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionAudit.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionGovernance.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionIdempotency.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionTransport.test.ts`
+      - `integrations/lifecycle/__tests__/saasIngestionContract.test.ts`
+      - `integrations/lifecycle/__tests__/operationalMemorySnapshot.test.ts`
+      - `integrations/lifecycle/__tests__/operationalMemoryContract.test.ts`
+    - Eliminados hardcodes `6.3.17` en `producerVersion/producer_version` de fixtures contractuales.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/saasIngestionAuth.test.ts integrations/lifecycle/__tests__/saasIngestionAudit.test.ts integrations/lifecycle/__tests__/saasIngestionGovernance.test.ts integrations/lifecycle/__tests__/saasIngestionIdempotency.test.ts integrations/lifecycle/__tests__/saasIngestionTransport.test.ts integrations/lifecycle/__tests__/saasIngestionContract.test.ts integrations/lifecycle/__tests__/operationalMemorySnapshot.test.ts integrations/lifecycle/__tests__/operationalMemoryContract.test.ts` -> `37 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#635`.
+
+- 🚧 PUMUKI-053: Ejecutar siguiente mejora prioritaria (issue `#636`) para reconciliar automáticamente backlog consumidor vs estado real de issues upstream (`dry-run/apply`) y evitar estados falsos `⛔/⏳`.

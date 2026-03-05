@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
 import { withTempDir } from '../../__tests__/helpers/tempDir';
+import { getCurrentPumukiVersion } from '../packageInfo';
 import { createHotspotsSaasIngestionPayload } from '../saasIngestionContract';
 import { createHotspotsSaasIngestionIdempotencyKey } from '../saasIngestionIdempotency';
 import {
@@ -10,11 +11,13 @@ import {
 } from '../saasIngestionAudit';
 import type { HotspotsSaasIngestionTransportFetch } from '../saasIngestionTransport';
 
+const producerVersion = getCurrentPumukiVersion();
+
 const payload = createHotspotsSaasIngestionPayload({
   tenantId: 'tenant-audit',
   repositoryId: 'repo-audit',
   repositoryName: 'ast-intelligence-hooks',
-  producerVersion: '6.3.17',
+  producerVersion,
   generatedAt: '2026-02-26T12:40:00+00:00',
   report: {
     generatedAt: '2026-02-26T12:40:00+00:00',

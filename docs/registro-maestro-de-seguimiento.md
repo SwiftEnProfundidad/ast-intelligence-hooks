@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-051 (issue `#634`, normalización de hardcodes residuales de versión en fixtures de `evidence/gate/telemetry/lifecycle/sdd`).
-- Task activa (`🚧`): PUMUKI-052 (issue `#635`, normalizar hardcodes `producerVersion/producer_version` en tests de ingesta y operational-memory).
+- Última task cerrada (`✅`): PUMUKI-052 (issue `#635`, normalización dinámica de `producerVersion/producer_version` en tests de ingesta y operational-memory).
+- Task activa (`🚧`): PUMUKI-053 (issue `#636`, reconciliación automática de backlog consumidor vs estado real de issues upstream).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
