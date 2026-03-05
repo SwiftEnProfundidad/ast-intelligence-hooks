@@ -77,6 +77,12 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       is_backward_compatible?: boolean;
       breaking_changes?: unknown[];
     };
+    classification_counts?: {
+      needs_issue?: number;
+      drift_closed_issue?: number;
+      active_issue?: number;
+      heading_drift?: number;
+    };
   };
   assert.equal(payload.tool, 'backlog-watch');
   assert.equal(payload.schema_version, '1.0.0');
@@ -91,6 +97,10 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
   assert.equal(payload.compat?.min_reader_version, '1.0.0');
   assert.equal(payload.compat?.is_backward_compatible, true);
   assert.deepEqual(payload.compat?.breaking_changes, []);
+  assert.equal(payload.classification_counts?.needs_issue, 0);
+  assert.equal(payload.classification_counts?.drift_closed_issue, 0);
+  assert.equal(payload.classification_counts?.active_issue, 0);
+  assert.equal(payload.classification_counts?.heading_drift, 0);
 });
 
 test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () => {
@@ -108,6 +118,12 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   const json = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--no-fail']);
   assert.equal(json.status, 0);
   const payload = JSON.parse(json.stdout) as {
+    classification_counts?: {
+      needs_issue?: number;
+      drift_closed_issue?: number;
+      active_issue?: number;
+      heading_drift?: number;
+    };
     heading_drift_count?: number;
     headingDrift?: Array<{ id?: string; headingStatus?: string; effectiveStatus?: string }>;
     hasActionRequired?: boolean;
@@ -117,13 +133,17 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.headingDrift?.[0]?.id, 'PUMUKI-INC-301');
   assert.equal(payload.headingDrift?.[0]?.headingStatus, '⏳');
   assert.equal(payload.headingDrift?.[0]?.effectiveStatus, '🚧');
+  assert.equal(payload.classification_counts?.needs_issue, 1);
+  assert.equal(payload.classification_counts?.drift_closed_issue, 0);
+  assert.equal(payload.classification_counts?.active_issue, 0);
+  assert.equal(payload.classification_counts?.heading_drift, 1);
   assert.equal(payload.hasActionRequired, true);
 });
 
 test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', () => {
   const scriptPath = resolveScriptPath('../reconcile-consumer-backlog-issues.ts');
   const backlogFile = createBacklogFile(
-    `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | PUMUKI-001 | ✅ | #100 | cerrado |\n`
+    `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | PUMUKI-001 | ✅ | Pendiente | cerrado |\n`
   );
   const result = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json']);
   assert.equal(result.status, 0);
@@ -146,6 +166,15 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       is_backward_compatible?: boolean;
       breaking_changes?: unknown[];
     };
+    classification_counts?: {
+      issue_changes?: number;
+      reference_changes?: number;
+      heading_changes?: number;
+      summary_closed?: number;
+      summary_in_progress?: number;
+      summary_pending?: number;
+      summary_blocked?: number;
+    };
   };
   assert.equal(payload.tool, 'backlog-reconcile');
   assert.equal(payload.schema_version, '1.0.0');
@@ -161,6 +190,9 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
   assert.equal(payload.compat?.min_reader_version, '1.0.0');
   assert.equal(payload.compat?.is_backward_compatible, true);
   assert.deepEqual(payload.compat?.breaking_changes, []);
+  assert.equal(payload.classification_counts?.issue_changes, 0);
+  assert.equal(payload.classification_counts?.reference_changes, 0);
+  assert.equal(payload.classification_counts?.heading_changes, 0);
 });
 
 test('reconcile-consumer-backlog-issues --json expone heading sync metadata', () => {
@@ -171,6 +203,15 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   const result = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--apply']);
   assert.equal(result.status, 0);
   const payload = JSON.parse(result.stdout) as {
+    classification_counts?: {
+      issue_changes?: number;
+      reference_changes?: number;
+      heading_changes?: number;
+      summary_closed?: number;
+      summary_in_progress?: number;
+      summary_pending?: number;
+      summary_blocked?: number;
+    };
     heading_changes_count?: number;
     headingUpdated?: boolean;
     headingChanges?: Array<{ id?: string; from?: string; to?: string }>;
@@ -181,6 +222,13 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.headingChanges?.[0]?.id, 'PUMUKI-010');
   assert.equal(payload.headingChanges?.[0]?.from, '⏳');
   assert.equal(payload.headingChanges?.[0]?.to, '✅');
+  assert.equal(payload.classification_counts?.issue_changes, 0);
+  assert.equal(payload.classification_counts?.reference_changes, 0);
+  assert.equal(payload.classification_counts?.heading_changes, 1);
+  assert.equal(payload.classification_counts?.summary_closed, 1);
+  assert.equal(payload.classification_counts?.summary_in_progress, 0);
+  assert.equal(payload.classification_counts?.summary_pending, 0);
+  assert.equal(payload.classification_counts?.summary_blocked, 0);
 });
 
 test('reconcile-consumer-backlog-issues salida humana incluye resumen de heading changes', () => {

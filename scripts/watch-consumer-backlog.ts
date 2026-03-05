@@ -202,6 +202,12 @@ const main = async (): Promise<void> => {
             is_backward_compatible: true,
             breaking_changes: [],
           },
+          classification_counts: {
+            needs_issue: result.classification.needsIssue.length,
+            drift_closed_issue: result.classification.driftClosedIssue.length,
+            active_issue: result.classification.activeIssue.length,
+            heading_drift: result.headingDrift.length,
+          },
           heading_drift_count: result.headingDrift.length,
           ...result,
         },

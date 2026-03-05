@@ -1120,9 +1120,26 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#681`.
 
-- 🚧 PUMUKI-097: Ejecutar mejora DX siguiente para añadir `classification_counts` en JSON de backlog tooling.
+- ✅ PUMUKI-097: Ejecutar mejora DX siguiente para añadir `classification_counts` en JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - payload JSON añade `classification_counts` (`needs_issue`, `drift_closed_issue`, `active_issue`, `heading_drift`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - payload JSON añade `classification_counts` (cambios + resumen de estado).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de `classification_counts` en watch y reconcile.
+      - hardening: caso reconcile schema evita dependencia de issue real remoto.
+    - `docs/USAGE.md`:
+      - documentado `classification_counts` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `9 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `44 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#682`.
+
+- 🚧 PUMUKI-098: Ejecutar mejora DX siguiente para exponer `action_required_reasons` en JSON de backlog tooling.
   - Alcance:
-    - Exponer bloque de conteos estable en `watch` y `reconcile`.
+    - Añadir array de razones activas en `watch` y `reconcile`.
     - Cubrir contrato con tests CLI JSON.
     - Mantener compatibilidad backward.
-  - Issue upstream activa: `#682`.
+  - Issue upstream activa: `#683`.
