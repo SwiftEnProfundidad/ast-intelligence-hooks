@@ -1179,9 +1179,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#685`.
 
-- 🚧 PUMUKI-101: Ejecutar refactor DX siguiente para unificar builders de `action_required_reasons`.
+- ✅ PUMUKI-101: Ejecutar refactor DX siguiente para unificar builders de `action_required_reasons`.
+  - Fix:
+    - `scripts/backlog-action-reasons-lib.ts`:
+      - nuevo módulo compartido para construir reasons de watch/reconcile y formateo humano.
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - reutilizan builders compartidos (JSON + human output), eliminando duplicación.
+    - `scripts/__tests__/backlog-action-reasons-lib.test.ts`:
+      - cobertura unitaria del orden/contrato de reasons.
+    - `package.json`:
+      - `test:backlog-tooling` incluye test de módulo compartido.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-action-reasons-lib.test.ts scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `14 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#686`.
+
+- 🚧 PUMUKI-102: Ejecutar mejora docs siguiente para reflejar módulo compartido de reasons en backlog tooling.
   - Alcance:
-    - Eliminar duplicación de lógica en salidas JSON/humana.
-    - Mantener comportamiento exacto con tests actuales.
-    - No introducir cambios funcionales.
-  - Issue upstream activa: `#686`.
+    - Añadir nota corta de arquitectura en `docs/USAGE.md`.
+    - Mantener estilo humano, breve y operativo.
+    - Sin cambios funcionales.
+  - Issue upstream activa: `#687`.

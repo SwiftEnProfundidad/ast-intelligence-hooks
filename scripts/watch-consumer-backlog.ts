@@ -2,6 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  buildWatchActionRequiredReasons,
+  formatActionReasonsForHuman,
+} from './backlog-action-reasons-lib';
+import {
   mergeIdIssueMapRecords,
   parseIdIssueMapRecordFile,
 } from './backlog-id-issue-map-lib';
@@ -111,11 +115,11 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
 
 const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>): string => {
   const lines: string[] = [];
-  const actionRequiredReasons = [
-    ...(result.classification.needsIssue.length > 0 ? (['needs_issue'] as const) : []),
-    ...(result.classification.driftClosedIssue.length > 0 ? (['drift_closed_issue'] as const) : []),
-    ...(result.headingDrift.length > 0 ? (['heading_drift'] as const) : []),
-  ];
+  const actionRequiredReasons = buildWatchActionRequiredReasons({
+    needsIssueCount: result.classification.needsIssue.length,
+    driftClosedIssueCount: result.classification.driftClosedIssue.length,
+    headingDriftCount: result.headingDrift.length,
+  });
   lines.push(`[pumuki][backlog-watch] file=${result.filePath}`);
   lines.push(
     `[pumuki][backlog-watch] entries=${result.entriesScanned} non_closed=${result.nonClosedEntries} issue_states_resolved=${result.issueStatesResolved}`
@@ -165,9 +169,7 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
     }
   }
   lines.push(
-    `[pumuki][backlog-watch] action_required_reasons=${
-      actionRequiredReasons.length > 0 ? actionRequiredReasons.join(',') : 'none'
-    }`
+    `[pumuki][backlog-watch] action_required_reasons=${formatActionReasonsForHuman(actionRequiredReasons)}`
   );
   lines.push(`[pumuki][backlog-watch] action_required=${result.hasActionRequired ? 'yes' : 'no'}`);
   return `${lines.join('\n')}\n`;
@@ -187,11 +189,11 @@ const main = async (): Promise<void> => {
     idIssueMap,
     resolveIssueNumberById: parsed.resolveMissingViaGh ? resolveIssueNumberByIdWithGh : undefined,
   });
-  const actionRequiredReasons = [
-    ...(result.classification.needsIssue.length > 0 ? (['needs_issue'] as const) : []),
-    ...(result.classification.driftClosedIssue.length > 0 ? (['drift_closed_issue'] as const) : []),
-    ...(result.headingDrift.length > 0 ? (['heading_drift'] as const) : []),
-  ];
+  const actionRequiredReasons = buildWatchActionRequiredReasons({
+    needsIssueCount: result.classification.needsIssue.length,
+    driftClosedIssueCount: result.classification.driftClosedIssue.length,
+    headingDriftCount: result.headingDrift.length,
+  });
 
   if (parsed.json) {
     const generatedAt = new Date().toISOString();

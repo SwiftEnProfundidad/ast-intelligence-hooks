@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-100 (issue `#685`, tests reasons=none en salida humana).
-- Task activa (`🚧`): PUMUKI-101 (issue `#686`, unificar builders de action_required_reasons).
+- Última task cerrada (`✅`): PUMUKI-101 (issue `#686`, unificar builders de action_required_reasons).
+- Task activa (`🚧`): PUMUKI-102 (issue `#687`, documentar módulo compartido de reasons).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido
