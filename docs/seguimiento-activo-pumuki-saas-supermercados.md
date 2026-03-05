@@ -1542,9 +1542,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#709`.
 
-- 🚧 PUMUKI-125: Ejecutar mejora DX siguiente para `next_commands[].max_retries` en JSON de watch/reconcile.
+- ✅ PUMUKI-125: Ejecutar mejora DX siguiente para `next_commands[].max_retries` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].max_retries` por paso (`2` dry-run, `0` apply).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `max_retries` por paso (`2`/`0`).
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `max_retries` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].max_retries` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#710`.
+
+- 🚧 PUMUKI-126: Ejecutar mejora DX siguiente para `next_commands[].retry_strategy` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `max_retries` por paso en `next_commands[]`.
+    - Exponer `retry_strategy` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Facilitar orquestación automática con límites de retry explícitos.
-  - Issue upstream activa: `#710`.
+    - Facilitar estrategia de retry explícita para orquestadores.
+  - Issue upstream activa: `#711`.

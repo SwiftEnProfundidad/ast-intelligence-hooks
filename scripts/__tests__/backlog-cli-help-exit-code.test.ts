@@ -98,6 +98,7 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
       mode?: string;
       safety?: string;
       idempotent?: boolean;
+      max_retries?: number;
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
@@ -166,6 +167,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
       mode?: string;
       safety?: string;
       idempotent?: boolean;
+      max_retries?: number;
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
@@ -204,6 +206,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
   assert.equal(payload.next_commands?.[0]?.safety, 'read_only');
   assert.equal(payload.next_commands?.[0]?.idempotent, true);
+  assert.equal(payload.next_commands?.[0]?.max_retries, 2);
   assert.equal(payload.next_commands?.[0]?.estimated_duration_ms, 3000);
   assert.equal(payload.next_commands?.[0]?.requires_confirmation, false);
   assert.equal(payload.next_commands?.[0]?.depends_on, null);
@@ -220,6 +223,7 @@ test('watch-consumer-backlog detecta heading drift en salida humana y JSON', () 
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
   assert.equal(payload.next_commands?.[1]?.safety, 'mutating');
   assert.equal(payload.next_commands?.[1]?.idempotent, true);
+  assert.equal(payload.next_commands?.[1]?.max_retries, 0);
   assert.equal(payload.next_commands?.[1]?.estimated_duration_ms, 5000);
   assert.equal(payload.next_commands?.[1]?.requires_confirmation, true);
   assert.equal(payload.next_commands?.[1]?.depends_on, 'dry_run');
@@ -275,6 +279,7 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
       mode?: string;
       safety?: string;
       idempotent?: boolean;
+      max_retries?: number;
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
@@ -342,6 +347,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
       mode?: string;
       safety?: string;
       idempotent?: boolean;
+      max_retries?: number;
       estimated_duration_ms?: number;
       requires_confirmation?: boolean;
       depends_on?: string | null;
@@ -382,6 +388,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.[0]?.mode, 'dry-run');
   assert.equal(payload.next_commands?.[0]?.safety, 'read_only');
   assert.equal(payload.next_commands?.[0]?.idempotent, true);
+  assert.equal(payload.next_commands?.[0]?.max_retries, 2);
   assert.equal(payload.next_commands?.[0]?.estimated_duration_ms, 3000);
   assert.equal(payload.next_commands?.[0]?.requires_confirmation, false);
   assert.equal(payload.next_commands?.[0]?.depends_on, null);
@@ -398,6 +405,7 @@ test('reconcile-consumer-backlog-issues --json expone heading sync metadata', ()
   assert.equal(payload.next_commands?.[1]?.mode, 'apply');
   assert.equal(payload.next_commands?.[1]?.safety, 'mutating');
   assert.equal(payload.next_commands?.[1]?.idempotent, true);
+  assert.equal(payload.next_commands?.[1]?.max_retries, 0);
   assert.equal(payload.next_commands?.[1]?.estimated_duration_ms, 5000);
   assert.equal(payload.next_commands?.[1]?.requires_confirmation, true);
   assert.equal(payload.next_commands?.[1]?.depends_on, 'dry_run');
