@@ -63,6 +63,9 @@ test('runBacklogWatch clasifica needs_issue, drift y active', async () => {
   assert.equal(result.classification.needsIssue[0]?.id, 'PUMUKI-002');
   assert.equal(result.classification.driftClosedIssue[0]?.id, 'PUMUKI-003');
   assert.equal(result.classification.activeIssue[0]?.id, 'PUMUKI-M001');
+  assert.deepEqual(result.resolution.resolvedByMap, []);
+  assert.deepEqual(result.resolution.resolvedByGhLookup, []);
+  assert.deepEqual(result.resolution.unresolvedIds, ['PUMUKI-002']);
   assert.equal(result.hasActionRequired, true);
 });
 
@@ -78,6 +81,7 @@ test('runBacklogWatch queda en no-action cuando todo está cerrado', async () =>
   assert.equal(result.classification.needsIssue.length, 0);
   assert.equal(result.classification.driftClosedIssue.length, 0);
   assert.equal(result.classification.activeIssue.length, 0);
+  assert.deepEqual(result.resolution.unresolvedIds, []);
 });
 
 test('collectBacklogWatchEntries soporta estados textuales e IDs de RuralGo', () => {
@@ -138,6 +142,9 @@ test('runBacklogWatch usa idIssueMap para resolver filas sin #issue y evitar nee
   assert.equal(result.classification.needsIssue.length, 0);
   assert.equal(result.classification.driftClosedIssue.length, 1);
   assert.equal(result.classification.driftClosedIssue[0]?.issueNumber, 646);
+  assert.deepEqual(result.resolution.resolvedByMap, ['PUMUKI-INC-059']);
+  assert.deepEqual(result.resolution.resolvedByGhLookup, []);
+  assert.deepEqual(result.resolution.unresolvedIds, []);
   assert.equal(result.issueStatesResolved, 1);
 });
 
@@ -170,6 +177,9 @@ test('runBacklogWatch enriquece issueNumber por ID cuando no hay mapping local',
   assert.equal(result.classification.needsIssue.length, 0);
   assert.equal(result.classification.activeIssue.length, 1);
   assert.equal(result.classification.activeIssue[0]?.issueNumber, 654);
+  assert.deepEqual(result.resolution.resolvedByMap, []);
+  assert.deepEqual(result.resolution.resolvedByGhLookup, ['PUMUKI-INC-200']);
+  assert.deepEqual(result.resolution.unresolvedIds, []);
   assert.equal(result.issueStatesResolved, 1);
 });
 
@@ -194,6 +204,9 @@ test('runBacklogWatch no consulta resolver por ID si issue ya viene del idIssueM
   assert.equal(result.classification.needsIssue.length, 0);
   assert.equal(result.classification.activeIssue.length, 1);
   assert.equal(result.classification.driftClosedIssue.length, 1);
+  assert.deepEqual(result.resolution.resolvedByMap, ['PUMUKI-INC-201']);
+  assert.deepEqual(result.resolution.resolvedByGhLookup, ['PUMUKI-INC-202']);
+  assert.deepEqual(result.resolution.unresolvedIds, []);
   assert.deepEqual(
     result.classification.activeIssue.map((entry) => entry.issueNumber),
     [700]
@@ -202,4 +215,19 @@ test('runBacklogWatch no consulta resolver por ID si issue ya viene del idIssueM
     result.classification.driftClosedIssue.map((entry) => entry.issueNumber),
     [701]
   );
+});
+
+test('runBacklogWatch mantiene unresolvedIds cuando no hay mapping ni lookup', async () => {
+  const markdown = `| ID | Estado | Ref |\n|---|---|---|\n| PUMUKI-INC-203 | ⏳ REPORTED | Pendiente |\n`;
+  const result = await runBacklogWatch({
+    filePath: '/tmp/backlog-watch-unresolved.md',
+    readFile: () => markdown,
+    resolveIssueNumberById: () => null,
+    resolveIssueState: () => 'OPEN',
+  });
+
+  assert.deepEqual(result.resolution.resolvedByMap, []);
+  assert.deepEqual(result.resolution.resolvedByGhLookup, []);
+  assert.deepEqual(result.resolution.unresolvedIds, ['PUMUKI-INC-203']);
+  assert.equal(result.classification.needsIssue.length, 1);
 });

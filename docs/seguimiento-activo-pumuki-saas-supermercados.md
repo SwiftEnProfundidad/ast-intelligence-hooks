@@ -761,8 +761,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#654`.
 
-- 🚧 PUMUKI-070: Ejecutar mejora DX siguiente para watcher con trazabilidad explícita de origen de resolución (`mapa` vs `lookup GH`).
+- ✅ PUMUKI-070: Ejecutar mejora DX siguiente para watcher con trazabilidad explícita de origen de resolución (`mapa` vs `lookup GH`).
+  - Fix:
+    - `scripts/watch-consumer-backlog-lib.ts`:
+      - nuevo bloque `resolution` en `BacklogWatchResult` con listas deterministas:
+        - `resolvedByMap`
+        - `resolvedByGhLookup`
+        - `unresolvedIds`
+      - trazabilidad por origen integrada en el flujo de resolución (`fila -> mapa -> lookup GH`).
+    - `scripts/watch-consumer-backlog.ts`:
+      - salida humana ampliada con contadores/listados de resolución por origen.
+    - `scripts/__tests__/watch-consumer-backlog.test.ts`:
+      - cobertura RED/GREEN para verificar `resolvedByMap`, `resolvedByGhLookup` y `unresolvedIds`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/watch-consumer-backlog.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `22 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#655`.
+
+- 🚧 PUMUKI-071: Ejecutar mejora DX siguiente para reconciliador de backlog con resolución opcional `ID->issue` sin mapa manual.
   - Alcance:
-    - Exponer en resultado JSON/humano qué IDs se resolvieron por mapping local y cuáles por búsqueda GitHub.
-    - Reducir opacidad operativa en auditoría de backlog-watch.
-  - Issue upstream activa: `#655`.
+    - Reusar lookup de issue por ID en `reconcile-consumer-backlog-issues` para rellenar `Referencia upstream` en modo `--apply`.
+    - Reducir dependencia de `idIssueMap` JSON cuando el issue ya existe upstream.
+  - Issue upstream activa: `#656`.

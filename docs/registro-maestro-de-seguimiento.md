@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-069 (issue `#654`, enriquecimiento opcional de mapeo por búsqueda GitHub).
-- Task activa (`🚧`): PUMUKI-070 (issue `#655`, trazabilidad explícita de resolución `mapa` vs `lookup GH`).
+- Última task cerrada (`✅`): PUMUKI-070 (issue `#655`, trazabilidad explícita de resolución `mapa` vs `lookup GH`).
+- Task activa (`🚧`): PUMUKI-071 (issue `#656`, resolución opcional `ID->issue` en reconciliador sin mapa manual).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

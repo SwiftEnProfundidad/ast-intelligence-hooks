@@ -19,6 +19,12 @@ export type BacklogWatchClassification = {
   activeIssue: ReadonlyArray<BacklogWatchEntry>;
 };
 
+export type BacklogWatchResolutionTrace = {
+  resolvedByMap: ReadonlyArray<string>;
+  resolvedByGhLookup: ReadonlyArray<string>;
+  unresolvedIds: ReadonlyArray<string>;
+};
+
 export type BacklogWatchResult = {
   filePath: string;
   repo?: string;
@@ -26,6 +32,7 @@ export type BacklogWatchResult = {
   nonClosedEntries: number;
   issueStatesResolved: number;
   classification: BacklogWatchClassification;
+  resolution: BacklogWatchResolutionTrace;
   hasActionRequired: boolean;
 };
 
@@ -305,6 +312,7 @@ export const runBacklogWatch = async (params: {
   const entries = collectBacklogWatchEntries(markdown);
   const nonClosedRaw = entries.filter((entry) => entry.status !== '✅');
   const nonClosed = dedupeBacklogWatchEntriesById(nonClosedRaw);
+  const resolvedByMapSet = new Set<string>();
   const nonClosedWithIssueMap = nonClosed.map((entry) => {
     if (entry.issueNumber !== null) {
       return entry;
@@ -313,6 +321,7 @@ export const runBacklogWatch = async (params: {
     if (typeof mappedIssue !== 'number' || !Number.isFinite(mappedIssue)) {
       return entry;
     }
+    resolvedByMapSet.add(entry.id);
     return {
       ...entry,
       issueNumber: Math.trunc(mappedIssue),
@@ -320,6 +329,7 @@ export const runBacklogWatch = async (params: {
   });
   const resolveIssueNumberById = params.resolveIssueNumberById;
   const resolvedIssueById = new Map<string, number>();
+  const resolvedByGhLookupSet = new Set<string>();
   if (typeof resolveIssueNumberById === 'function') {
     const unresolvedIds = Array.from(
       new Set(nonClosedWithIssueMap.filter((entry) => entry.issueNumber === null).map((entry) => entry.id))
@@ -331,6 +341,7 @@ export const runBacklogWatch = async (params: {
         continue;
       }
       resolvedIssueById.set(backlogId, parsedIssue);
+      resolvedByGhLookupSet.add(backlogId);
     }
   }
   const nonClosedWithIssueResolution = nonClosedWithIssueMap.map((entry) => {
@@ -368,6 +379,10 @@ export const runBacklogWatch = async (params: {
     (entry) => typeof entry.issueNumber === 'number' && issueStates.get(entry.issueNumber) === 'OPEN'
   );
 
+  const unresolvedIds = Array.from(new Set(needsIssue.map((entry) => entry.id))).sort();
+  const resolvedByMap = Array.from(resolvedByMapSet).sort();
+  const resolvedByGhLookup = Array.from(resolvedByGhLookupSet).sort();
+
   return {
     filePath,
     repo: params.repo,
@@ -378,6 +393,11 @@ export const runBacklogWatch = async (params: {
       needsIssue,
       driftClosedIssue,
       activeIssue,
+    },
+    resolution: {
+      resolvedByMap,
+      resolvedByGhLookup,
+      unresolvedIds,
     },
     hasActionRequired: needsIssue.length > 0 || driftClosedIssue.length > 0,
   };

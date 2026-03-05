@@ -131,6 +131,20 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
   lines.push(
     `[pumuki][backlog-watch] needs_issue=${result.classification.needsIssue.length} drift_closed=${result.classification.driftClosedIssue.length} active_issue=${result.classification.activeIssue.length}`
   );
+  lines.push(
+    `[pumuki][backlog-watch] resolved_by_map=${result.resolution.resolvedByMap.length} resolved_by_gh_lookup=${result.resolution.resolvedByGhLookup.length} unresolved_ids=${result.resolution.unresolvedIds.length}`
+  );
+  if (result.resolution.resolvedByMap.length > 0) {
+    lines.push(`[pumuki][backlog-watch] resolved_by_map_ids=${result.resolution.resolvedByMap.join(',')}`);
+  }
+  if (result.resolution.resolvedByGhLookup.length > 0) {
+    lines.push(
+      `[pumuki][backlog-watch] resolved_by_gh_lookup_ids=${result.resolution.resolvedByGhLookup.join(',')}`
+    );
+  }
+  if (result.resolution.unresolvedIds.length > 0) {
+    lines.push(`[pumuki][backlog-watch] unresolved_ids_list=${result.resolution.unresolvedIds.join(',')}`);
+  }
   if (result.classification.needsIssue.length > 0) {
     lines.push('[pumuki][backlog-watch] needs_issue_entries:');
     for (const entry of result.classification.needsIssue) {
