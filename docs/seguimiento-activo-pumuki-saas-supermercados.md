@@ -351,4 +351,15 @@
     - `npm run -s typecheck` -> `PASS`.
     - Issue upstream cerrada: `#624`.
 
-- 🚧 PUMUKI-042: Implementar `#625` (pipeline AGENTS -> policy/rules con contrato ejecutable en PRE_WRITE y stages) con cierre trazable.
+- ✅ PUMUKI-042: Implementar `#625` (pipeline AGENTS -> policy/rules con contrato ejecutable en PRE_WRITE y stages) con cierre trazable.
+  - Fix:
+    - `integrations/gate/evaluateAiGate.ts`: añade contrato machine-readable `skills_contract` en salida de gate y bloqueo explícito en `PRE_COMMIT/PRE_PUSH/CI` con `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` cuando falla la cobertura.
+    - `integrations/mcp/preFlightCheck.ts`, `integrations/mcp/aiGateCheck.ts`, `integrations/mcp/autoExecuteAiStart.ts`: propagan `skills_contract` y remediación accionable del nuevo código de bloqueo.
+    - `integrations/lifecycle/cli.ts`, `scripts/framework-menu-consumer-preflight-lib.ts`: hints/pre-flight alineados con el contrato nuevo.
+    - `docs/CONFIGURATION.md`, `docs/USAGE.md`: contrato documentado para consumo operativo.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test integrations/mcp/__tests__/aiGateCheck.test.ts integrations/mcp/__tests__/preFlightCheck.test.ts integrations/mcp/__tests__/autoExecuteAiStart.test.ts integrations/gate/__tests__/evaluateAiGate.test.ts` -> `29 pass / 0 fail`.
+    - `npx --yes tsx@4.21.0 --test integrations/lifecycle/__tests__/cli.test.ts` -> `32 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+
+- 🚧 PUMUKI-043: Ejecutar siguiente bug/mejora SAAS prioritaria de higiene temprana en `PRE_WRITE` (`PUMUKI-011`, issue `#626`) con guardas de worktree atómico y remediación determinista.

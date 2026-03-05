@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-041 (issue `#624`, `install --with-mcp` + healthcheck MCP y cierre upstream).
-- Task activa (`🚧`): PUMUKI-042 (implementación de `#625`: pipeline AGENTS -> policy/rules con contrato ejecutable).
+- Última task cerrada (`✅`): PUMUKI-042 (issue `#625`, contrato ejecutable `skills_contract` AGENTS->policy/rules en PRE_WRITE/PRE_COMMIT/PRE_PUSH/CI).
+- Task activa (`🚧`): PUMUKI-043 (issue `#626`, higiene temprana en `PRE_WRITE` para atomicidad/worktree con remediación determinista).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

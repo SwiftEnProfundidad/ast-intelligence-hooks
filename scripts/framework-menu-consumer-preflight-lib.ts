@@ -60,6 +60,8 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_RULES_COVERAGE_STAGE_MISMATCH: 'reanuda auditoría en el stage correcto.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE:
     'asegura unevaluated=0 y coverage_ratio=1 antes de continuar.',
+  EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
+    'completa contrato de skills/policy para el stage actual y vuelve a validar.',
   EVIDENCE_UNSUPPORTED_AUTO_RULES:
     'mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'corrige la hora del sistema y regenera evidencia.',

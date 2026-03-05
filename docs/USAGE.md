@@ -447,6 +447,7 @@ npm run validation:clean-artifacts -- --dry-run
 - `pumuki sdd validate --stage=PRE_WRITE --json` returns an envelope with:
   - `sdd` (SDD decision payload)
   - `ai_gate` (AI Gate evaluation payload)
+  - `ai_gate.skills_contract` (mapping `scope -> required skills/rules -> coverage active/evaluated`)
   - `telemetry.chain = "pumuki->ai_gate->ai_evidence"`
 
 Resolver source: `integrations/git/resolveGitRefs.ts`.

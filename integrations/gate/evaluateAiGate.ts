@@ -20,6 +20,29 @@ export type AiGateViolation = {
   severity: 'ERROR' | 'WARN';
 };
 
+export type AiGateSkillsContractPlatformRequirement = {
+  platform: PreWriteSkillsPlatform;
+  required_rule_prefix: string;
+  required_bundles: ReadonlyArray<string>;
+  required_critical_rule_ids: ReadonlyArray<string>;
+  required_any_transversal_critical_rule_ids: ReadonlyArray<string>;
+  active_prefix_covered: boolean;
+  evaluated_prefix_covered: boolean;
+  missing_bundles: ReadonlyArray<string>;
+  missing_critical_rule_ids: ReadonlyArray<string>;
+  transversal_critical_covered: boolean;
+  missing_any_transversal_critical_rule_ids: ReadonlyArray<string>;
+};
+
+export type AiGateSkillsContractAssessment = {
+  stage: AiGateStage;
+  enforced: boolean;
+  status: 'PASS' | 'FAIL' | 'NOT_APPLICABLE';
+  detected_platforms: ReadonlyArray<PreWriteSkillsPlatform>;
+  requirements: ReadonlyArray<AiGateSkillsContractPlatformRequirement>;
+  violations: ReadonlyArray<AiGateViolation>;
+};
+
 export type AiGateCheckResult = {
   stage: AiGateStage;
   status: 'ALLOWED' | 'BLOCKED';
@@ -53,6 +76,7 @@ export type AiGateCheckResult = {
     max_age_seconds: number | null;
     age_seconds: number | null;
   };
+  skills_contract: AiGateSkillsContractAssessment;
   repo_state: RepoState;
   violations: AiGateViolation[];
 };
@@ -331,6 +355,144 @@ const collectPreWriteCrossPlatformCriticalViolations = (params: {
       `Cross-platform critical enforcement incomplete in PRE_WRITE: ${missingCriticalCoverage.join(' | ')}.`
     ),
   ];
+};
+
+const toSkillsContractAssessment = (params: {
+  stage: AiGateStage;
+  evidenceResult: EvidenceReadResult;
+}): AiGateSkillsContractAssessment => {
+  if (params.evidenceResult.kind !== 'valid') {
+    return {
+      stage: params.stage,
+      enforced: false,
+      status: 'NOT_APPLICABLE',
+      detected_platforms: [],
+      requirements: [],
+      violations: [],
+    };
+  }
+
+  const coverage = params.evidenceResult.evidence.snapshot.rules_coverage;
+  const detectedPlatforms = toDetectedSkillsPlatforms(params.evidenceResult.evidence.platforms);
+  if (detectedPlatforms.length === 0) {
+    return {
+      stage: params.stage,
+      enforced: false,
+      status: 'NOT_APPLICABLE',
+      detected_platforms: [],
+      requirements: [],
+      violations: [],
+    };
+  }
+
+  const activeSkillsBundles = new Set(
+    params.evidenceResult.evidence.rulesets
+      .filter((ruleset) => ruleset.platform === 'skills')
+      .map((ruleset) => toNormalizedSkillsBundleName(ruleset.bundle))
+      .filter((bundle) => bundle.length > 0)
+  );
+
+  const requirements: AiGateSkillsContractPlatformRequirement[] = [];
+  const violations: AiGateViolation[] = [];
+  for (const platform of detectedPlatforms) {
+    const requiredRulePrefix = PLATFORM_SKILLS_RULE_PREFIXES[platform];
+    const requiredBundles = [...PLATFORM_REQUIRED_SKILLS_BUNDLES[platform]];
+    const requiredCriticalRuleIds = [...PREWRITE_CRITICAL_SKILLS_RULES[platform]];
+    const requiredAnyTransversalCriticalRuleIds = [
+      ...PREWRITE_TRANSVERSAL_CRITICAL_SKILLS_RULES[platform],
+    ];
+    const activePrefixCovered = coverage
+      ? coverage.active_rule_ids.some((ruleId) => ruleId.startsWith(requiredRulePrefix))
+      : false;
+    const evaluatedPrefixCovered = coverage
+      ? coverage.evaluated_rule_ids.some((ruleId) => ruleId.startsWith(requiredRulePrefix))
+      : false;
+    const missingBundles = requiredBundles.filter(
+      (bundleName) => !activeSkillsBundles.has(bundleName)
+    );
+    const missingCriticalRuleIds = coverage
+      ? requiredCriticalRuleIds.filter((ruleId) => {
+          const hasActive = coverage.active_rule_ids.includes(ruleId);
+          const hasEvaluated = coverage.evaluated_rule_ids.includes(ruleId);
+          return !hasActive || !hasEvaluated;
+        })
+      : [...requiredCriticalRuleIds];
+    const transversalCriticalCovered =
+      requiredAnyTransversalCriticalRuleIds.length === 0
+        ? true
+        : coverage
+          ? requiredAnyTransversalCriticalRuleIds.some((ruleId) =>
+              coverage.active_rule_ids.includes(ruleId)
+              && coverage.evaluated_rule_ids.includes(ruleId)
+            )
+          : false;
+    const missingAnyTransversalCriticalRuleIds = transversalCriticalCovered
+      ? []
+      : [...requiredAnyTransversalCriticalRuleIds];
+
+    requirements.push({
+      platform,
+      required_rule_prefix: requiredRulePrefix,
+      required_bundles: requiredBundles,
+      required_critical_rule_ids: requiredCriticalRuleIds,
+      required_any_transversal_critical_rule_ids: requiredAnyTransversalCriticalRuleIds,
+      active_prefix_covered: activePrefixCovered,
+      evaluated_prefix_covered: evaluatedPrefixCovered,
+      missing_bundles: missingBundles,
+      missing_critical_rule_ids: missingCriticalRuleIds,
+      transversal_critical_covered: transversalCriticalCovered,
+      missing_any_transversal_critical_rule_ids: missingAnyTransversalCriticalRuleIds,
+    });
+
+    if (!activePrefixCovered || !evaluatedPrefixCovered) {
+      const missingParts: string[] = [];
+      if (!activePrefixCovered) {
+        missingParts.push('active_prefix');
+      }
+      if (!evaluatedPrefixCovered) {
+        missingParts.push('evaluated_prefix');
+      }
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE',
+          `Skills contract scope coverage missing for ${platform}: ${missingParts.join(', ')} (${requiredRulePrefix}).`
+        )
+      );
+    }
+    if (missingBundles.length > 0) {
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING',
+          `Skills contract missing bundles for ${platform}: [${missingBundles.join(', ')}].`
+        )
+      );
+    }
+    if (missingCriticalRuleIds.length > 0) {
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_PLATFORM_CRITICAL_SKILLS_RULES_MISSING',
+          `Skills contract missing critical rule coverage for ${platform}: [${missingCriticalRuleIds.join(', ')}].`
+        )
+      );
+    }
+    if (!transversalCriticalCovered && requiredAnyTransversalCriticalRuleIds.length > 0) {
+      violations.push(
+        toErrorViolation(
+          'EVIDENCE_CROSS_PLATFORM_CRITICAL_ENFORCEMENT_INCOMPLETE',
+          `Skills contract missing transversal critical coverage for ${platform}: required_any=[${requiredAnyTransversalCriticalRuleIds.join(', ')}].`
+        )
+      );
+    }
+  }
+
+  return {
+    stage: params.stage,
+    enforced: true,
+    status: violations.length === 0 ? 'PASS' : 'FAIL',
+    detected_platforms: detectedPlatforms,
+    requirements,
+    violations,
+  };
 };
 
 const collectPreWriteCoherenceViolations = (params: {
@@ -738,8 +900,22 @@ export const evaluateAiGate = (
     readMcpAiGateReceipt: activeDependencies.readMcpAiGateReceipt,
   });
   const gitflowViolations = collectGitflowViolations(repoState, protectedBranches);
+  const skillsContract = toSkillsContractAssessment({
+    stage: params.stage,
+    evidenceResult,
+  });
+  const stageSkillsContractViolations =
+    params.stage === 'PRE_WRITE' || skillsContract.status !== 'FAIL'
+      ? []
+      : [
+          toErrorViolation(
+            'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE',
+            `Skills contract incomplete for ${params.stage}: ${skillsContract.violations.map((violation) => violation.code).join(', ')}.`
+          ),
+        ];
   const violations = [
     ...evidenceAssessment.violations,
+    ...stageSkillsContractViolations,
     ...gitflowViolations,
     ...mcpReceiptAssessment.violations,
   ];
@@ -769,6 +945,7 @@ export const evaluateAiGate = (
       max_age_seconds: mcpReceiptAssessment.maxAgeSeconds,
       age_seconds: mcpReceiptAssessment.ageSeconds,
     },
+    skills_contract: skillsContract,
     repo_state: repoState,
     violations,
   };

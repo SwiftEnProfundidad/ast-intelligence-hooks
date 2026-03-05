@@ -12,6 +12,7 @@ const isEvidenceCode = (code: string): boolean =>
   code === 'EVIDENCE_MISSING'
   || code === 'EVIDENCE_INVALID'
   || code === 'EVIDENCE_STALE'
+  || code === 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE'
   || code === 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE'
   || code === 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING';
 
@@ -46,6 +47,7 @@ const nextActionFromViolation = (violation: AiGateViolation | undefined): AutoEx
       };
     case 'EVIDENCE_PLATFORM_SKILLS_SCOPE_INCOMPLETE':
     case 'EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING':
+    case 'EVIDENCE_SKILLS_CONTRACT_INCOMPLETE':
       return {
         kind: 'run_command',
         message:

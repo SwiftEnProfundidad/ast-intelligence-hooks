@@ -18,6 +18,8 @@ const ACTIONABLE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
     'Activa/evalúa reglas skills.<plataforma>. en la evidencia PRE_WRITE y vuelve a validar.',
   EVIDENCE_PLATFORM_SKILLS_BUNDLES_MISSING:
     'Carga los bundles de skills requeridos por plataforma detectada y regenera evidencia.',
+  EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
+    'Completa el contrato skills/policy para el stage solicitado y vuelve a validar.',
   EVIDENCE_UNSUPPORTED_AUTO_RULES:
     'Mapea todas las reglas AUTO a detectores AST antes de continuar.',
   EVIDENCE_TIMESTAMP_FUTURE: 'Corrige la hora del sistema y regenera evidencia.',
@@ -69,6 +71,7 @@ export type EnterprisePreFlightCheckResult = {
     violations: ReturnType<typeof evaluateAiGate>['violations'];
     evidence: ReturnType<typeof evaluateAiGate>['evidence'];
     mcp_receipt: ReturnType<typeof evaluateAiGate>['mcp_receipt'];
+    skills_contract: ReturnType<typeof evaluateAiGate>['skills_contract'];
     repo_state: ReturnType<typeof evaluateAiGate>['repo_state'];
     hints: ReadonlyArray<string>;
   };
@@ -105,6 +108,7 @@ export const runEnterprisePreFlightCheck = (params: {
       violations: evaluation.violations,
       evidence: evaluation.evidence,
       mcp_receipt: evaluation.mcp_receipt,
+      skills_contract: evaluation.skills_contract,
       repo_state: evaluation.repo_state,
       hints,
     },

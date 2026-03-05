@@ -1294,6 +1294,8 @@ const PRE_WRITE_HINTS_BY_CODE: Readonly<Record<string, string>> = {
   EVIDENCE_BRANCH_MISMATCH: 'Regenera evidencia en la rama actual.',
   EVIDENCE_RULES_COVERAGE_MISSING: 'Ejecuta auditoría completa para recalcular rules_coverage.',
   EVIDENCE_RULES_COVERAGE_INCOMPLETE: 'Asegura unevaluated=0 y coverage_ratio=1.',
+  EVIDENCE_SKILLS_CONTRACT_INCOMPLETE:
+    'Completa contrato skills/policy para el stage actual y vuelve a validar.',
   GITFLOW_PROTECTED_BRANCH: 'Trabaja en feature/* y evita ramas protegidas.',
   MCP_ENTERPRISE_RECEIPT_MISSING: 'Invoca ai_gate_check desde pumuki-enterprise MCP antes de PRE_WRITE.',
   MCP_ENTERPRISE_RECEIPT_INVALID: 'Corrige recibo MCP y vuelve a invocar ai_gate_check.',
@@ -1399,6 +1401,7 @@ const buildPreWriteValidationPanel = (params: {
     `Evidence: kind=${params.aiGate.evidence.kind} age=${params.aiGate.evidence.age_seconds ?? 'n/a'}s max=${params.aiGate.evidence.max_age_seconds}s`,
     `Evidence source: source=${params.aiGate.evidence.source.source} path=${params.aiGate.evidence.source.path} digest=${params.aiGate.evidence.source.digest ?? 'null'} generated_at=${params.aiGate.evidence.source.generated_at ?? 'null'}`,
     `MCP receipt: required=${receipt.required ? 'yes' : 'no'} kind=${receipt.kind} age=${receipt.age_seconds ?? 'n/a'}s max=${receipt.max_age_seconds ?? 'n/a'}s`,
+    `Skills contract: enforced=${params.aiGate.skills_contract?.enforced ? 'yes' : 'no'} status=${params.aiGate.skills_contract?.status ?? 'n/a'} platforms=${params.aiGate.skills_contract?.detected_platforms.join(',') ?? 'none'}`,
     `Auto-heal: attempted=${params.automation.attempted ? 'yes' : 'no'} actions=${params.automation.actions.length}`,
     `Violations: ${params.aiGate.violations.length}`,
   ];

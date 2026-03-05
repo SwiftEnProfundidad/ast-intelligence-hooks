@@ -13,6 +13,7 @@ export type EnterpriseAiGateCheckResult = {
     violations: ReturnType<typeof evaluateAiGate>['violations'];
     evidence: ReturnType<typeof evaluateAiGate>['evidence'];
     mcp_receipt: ReturnType<typeof evaluateAiGate>['mcp_receipt'];
+    skills_contract: ReturnType<typeof evaluateAiGate>['skills_contract'];
     repo_state: ReturnType<typeof evaluateAiGate>['repo_state'];
   };
 };
@@ -41,6 +42,7 @@ export const runEnterpriseAiGateCheck = (params: {
       violations: evaluation.violations,
       evidence: evaluation.evidence,
       mcp_receipt: evaluation.mcp_receipt,
+      skills_contract: evaluation.skills_contract,
       repo_state: evaluation.repo_state,
     },
   };

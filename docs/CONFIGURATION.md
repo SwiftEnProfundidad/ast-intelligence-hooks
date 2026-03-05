@@ -278,6 +278,28 @@ Configuration outcomes are reflected in `.ai_evidence.json`:
 
 Schema reference: `docs/evidence-v2.1.md`.
 
+## AI Gate skills contract
+
+`evaluateAiGate` now emits a machine-readable contract snapshot under `skills_contract`.
+
+Contract goals:
+
+- deterministic mapping: `detected platform -> required skills policy/rules`
+- explicit coverage checks for `active_rule_ids` and `evaluated_rule_ids`
+- stage-aware enforcement beyond PRE_WRITE (`PRE_COMMIT`, `PRE_PUSH`, `CI`)
+
+Runtime fields:
+
+- `skills_contract.stage`
+- `skills_contract.status` (`PASS|FAIL|NOT_APPLICABLE`)
+- `skills_contract.detected_platforms`
+- `skills_contract.requirements[]`
+- `skills_contract.violations[]`
+
+Blocking code:
+
+- `EVIDENCE_SKILLS_CONTRACT_INCOMPLETE` (when contract is incomplete outside PRE_WRITE)
+
 ## TDD/BDD Vertical Enforcement Contract
 
 For new/complex changes, Pumuki enforces a neutral TDD/BDD evidence contract.
