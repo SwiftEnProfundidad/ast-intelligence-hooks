@@ -130,6 +130,9 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
   lines.push(`[pumuki][backlog-reconcile] file=${result.filePath}`);
   lines.push(`[pumuki][backlog-reconcile] entries_scanned=${result.entriesScanned} issues_resolved=${result.issuesResolved}`);
   lines.push(
+    `[pumuki][backlog-reconcile] mapping_source=${result.mappingSource} resolved_by_map=${result.referenceResolution.resolvedByProvidedMap.length} resolved_by_lookup=${result.referenceResolution.resolvedByLookup.length} unresolved_refs=${result.referenceResolution.unresolvedReferenceIds.length}`
+  );
+  lines.push(
     `[pumuki][backlog-reconcile] changes=${result.changes.length} mode=${result.apply ? 'apply' : 'dry-run'}`
   );
   if (result.changes.length > 0) {
@@ -146,6 +149,21 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
       lines.push(`- line ${change.lineNumber} ${change.id}: ${change.from} -> ${change.to}`);
     }
   }
+  if (result.referenceResolution.resolvedByProvidedMap.length > 0) {
+    lines.push(
+      `[pumuki][backlog-reconcile] resolved_by_map_ids=${result.referenceResolution.resolvedByProvidedMap.join(',')}`
+    );
+  }
+  if (result.referenceResolution.resolvedByLookup.length > 0) {
+    lines.push(
+      `[pumuki][backlog-reconcile] resolved_by_lookup_ids=${result.referenceResolution.resolvedByLookup.join(',')}`
+    );
+  }
+  if (result.referenceResolution.unresolvedReferenceIds.length > 0) {
+    lines.push(
+      `[pumuki][backlog-reconcile] unresolved_reference_ids=${result.referenceResolution.unresolvedReferenceIds.join(',')}`
+    );
+  }
   lines.push(`[pumuki][backlog-reconcile] next_step_updated=${result.nextStepUpdated ? 'yes' : 'no'}`);
   lines.push(
     `[pumuki][backlog-reconcile] summary closed=${result.summary.closed} in_progress=${result.summary.inProgress} pending=${result.summary.pending} blocked=${result.summary.blocked}`
@@ -156,9 +174,13 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
 const main = async (): Promise<void> => {
   const parsed = parseArgs(process.argv.slice(2));
   const mergedIdIssueMap = mergeBacklogIdIssueMaps(parsed.idIssueMapFromSource, parsed.idIssueMap);
+  const hasMarkdownMap = Boolean(parsed.idIssueMapFromSource && parsed.idIssueMapFromSource.size > 0);
+  const hasJsonMap = Boolean(parsed.idIssueMap && parsed.idIssueMap.size > 0);
+  const mappingSource = hasMarkdownMap && hasJsonMap ? 'merged' : hasJsonMap ? 'json' : hasMarkdownMap ? 'markdown' : 'none';
   const result = await runBacklogIssuesReconcile({
     filePath: parsed.filePath,
     repo: parsed.repo,
+    mappingSource,
     idIssueMap: mergedIdIssueMap,
     resolveIssueNumberById: parsed.resolveMissingViaGh ? resolveIssueNumberByIdWithGh : undefined,
     apply: parsed.apply,

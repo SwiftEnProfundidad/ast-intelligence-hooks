@@ -815,8 +815,26 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#657`.
 
-- 🚧 PUMUKI-073: Ejecutar mejora DX siguiente para reconciliador con trazabilidad explícita de source de mapping en salida.
+- ✅ PUMUKI-073: Ejecutar mejora DX siguiente para reconciliador con trazabilidad explícita de source de mapping en salida.
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - nuevo `mappingSource` en resultado (`none|json|markdown|merged`).
+      - nuevo bloque `referenceResolution` con:
+        - `resolvedByProvidedMap`
+        - `resolvedByLookup`
+        - `unresolvedReferenceIds`
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - salida humana/JSON ahora expone `mapping_source` y contadores por origen.
+      - clasificación de source en runtime según inputs efectivos (`json`, `markdown`, `merged`, `none`).
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - cobertura RED/GREEN para metadata de resolución y pendientes no resueltos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `26 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#658`.
+
+- 🚧 PUMUKI-074: Ejecutar mejora DX siguiente para consolidar parsing/merge de mapping en módulo compartido.
   - Alcance:
-    - Exponer en JSON/humano si el mapping aplicado proviene de `json`, `markdown`, `merged` o `none`.
-    - Mejorar auditoría operativa de reconciliación sin leer internals.
-  - Issue upstream activa: `#658`.
+    - Evitar duplicación de lógica entre `watch` y `reconcile` para carga/validación/merge de maps.
+    - Reducir drift futuro de CLI y simplificar mantenimiento.
+  - Issue upstream activa: `#659`.

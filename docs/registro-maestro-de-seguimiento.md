@@ -7,8 +7,8 @@
 ## Estado actual
 - Plan activo: `docs/seguimiento-activo-pumuki-saas-supermercados.md`
 - Estado del plan: EJECUCION
-- Última task cerrada (`✅`): PUMUKI-072 (issue `#657`, paridad `--id-issue-map-from` en reconciliador).
-- Task activa (`🚧`): PUMUKI-073 (issue `#658`, trazabilidad de source mapping en salida de reconciliación).
+- Última task cerrada (`✅`): PUMUKI-073 (issue `#658`, trazabilidad de source mapping en salida de reconciliación).
+- Task activa (`🚧`): PUMUKI-074 (issue `#659`, consolidación de parser/merge de mapping en módulo compartido).
 - Nuevos pendientes añadidos (`⏳`): ninguno en este bloque inmediato.
 
 ## Historial resumido

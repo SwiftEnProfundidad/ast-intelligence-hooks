@@ -39,13 +39,23 @@ export type BacklogStatusSummary = {
   blockedIds: ReadonlyArray<string>;
 };
 
+export type BacklogMappingSource = 'none' | 'json' | 'markdown' | 'merged';
+
+export type BacklogReferenceResolution = {
+  resolvedByProvidedMap: ReadonlyArray<string>;
+  resolvedByLookup: ReadonlyArray<string>;
+  unresolvedReferenceIds: ReadonlyArray<string>;
+};
+
 export type BacklogReconcileResult = {
   filePath: string;
   repo?: string;
   apply: boolean;
+  mappingSource: BacklogMappingSource;
   entriesScanned: number;
   issuesResolved: number;
   referenceChanges: ReadonlyArray<BacklogIssueReferenceChange>;
+  referenceResolution: BacklogReferenceResolution;
   changes: ReadonlyArray<BacklogIssueChange>;
   summaryUpdated: boolean;
   nextStepUpdated: boolean;
@@ -497,6 +507,7 @@ export const runBacklogIssuesReconcile = async (params: {
   filePath: string;
   repo?: string;
   apply?: boolean;
+  mappingSource?: BacklogMappingSource;
   idIssueMap?: ReadonlyMap<string, number>;
   resolveIssueNumberById?: BacklogIssueNumberResolver;
   readFile?: (path: string) => string;
@@ -509,10 +520,15 @@ export const runBacklogIssuesReconcile = async (params: {
   const resolveIssueState = params.resolveIssueState ?? resolveIssueStateWithGh;
 
   const markdown = readFile(filePath);
-  const idIssueMap = new Map<string, number>(params.idIssueMap ? Array.from(params.idIssueMap.entries()) : []);
+  const providedIssueMap = new Map<string, number>(
+    params.idIssueMap ? Array.from(params.idIssueMap.entries()) : []
+  );
+  const pendingIds = collectPendingReferenceIds(markdown);
+  const resolvedByProvidedMapSet = new Set<string>(pendingIds.filter((id) => providedIssueMap.has(id)));
+  const idIssueMap = new Map<string, number>(providedIssueMap);
   const resolveIssueNumberById = params.resolveIssueNumberById;
+  const resolvedByLookupSet = new Set<string>();
   if (typeof resolveIssueNumberById === 'function') {
-    const pendingIds = collectPendingReferenceIds(markdown);
     for (const backlogId of pendingIds) {
       if (idIssueMap.has(backlogId)) {
         continue;
@@ -523,12 +539,19 @@ export const runBacklogIssuesReconcile = async (params: {
         continue;
       }
       idIssueMap.set(backlogId, parsedIssue);
+      resolvedByLookupSet.add(backlogId);
     }
   }
   const mapped = applyBacklogIssueReferenceMapping({
     markdown,
     idIssueMap,
   });
+  const unresolvedReferenceIds = collectPendingReferenceIds(mapped.updatedMarkdown);
+  const referenceResolution: BacklogReferenceResolution = {
+    resolvedByProvidedMap: Array.from(resolvedByProvidedMapSet).sort(),
+    resolvedByLookup: Array.from(resolvedByLookupSet).sort(),
+    unresolvedReferenceIds,
+  };
   const entries = collectBacklogIssueEntries(mapped.updatedMarkdown);
   const uniqueIssueNumbers = Array.from(new Set(entries.map((entry) => entry.issueNumber))).sort((a, b) => a - b);
 
@@ -557,9 +580,11 @@ export const runBacklogIssuesReconcile = async (params: {
     filePath,
     repo: params.repo,
     apply,
+    mappingSource: params.mappingSource ?? (providedIssueMap.size > 0 ? 'json' : 'none'),
     entriesScanned: entries.length,
     issuesResolved: uniqueIssueNumbers.length,
     referenceChanges: mapped.changes,
+    referenceResolution,
     changes: reconciled.changes,
     summaryUpdated: reconciled.summaryUpdated,
     nextStepUpdated: reconciled.nextStepUpdated,

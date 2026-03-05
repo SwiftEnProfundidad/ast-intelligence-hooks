@@ -168,7 +168,10 @@ test('runBacklogIssuesReconcile dry-run no escribe archivo', async () => {
 
   assert.equal(result.apply, false);
   assert.equal(result.updated, false);
+  assert.equal(result.mappingSource, 'none');
   assert.equal(result.referenceChanges.length, 0);
+  assert.deepEqual(result.referenceResolution.resolvedByProvidedMap, []);
+  assert.deepEqual(result.referenceResolution.resolvedByLookup, []);
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
   assert.equal(result.nextStepUpdated, false);
@@ -195,7 +198,10 @@ test('runBacklogIssuesReconcile apply escribe archivo cuando hay cambios', async
 
   assert.equal(result.apply, true);
   assert.equal(result.updated, true);
+  assert.equal(result.mappingSource, 'none');
   assert.equal(result.referenceChanges.length, 0);
+  assert.deepEqual(result.referenceResolution.resolvedByProvidedMap, []);
+  assert.deepEqual(result.referenceResolution.resolvedByLookup, []);
   assert.equal(result.changes.length, 2);
   assert.equal(result.summaryUpdated, false);
   assert.equal(result.nextStepUpdated, false);
@@ -236,6 +242,9 @@ test('runBacklogIssuesReconcile aplica mapping y reconcilia estado para issue ce
   });
 
   assert.equal(result.referenceChanges.length, 1);
+  assert.deepEqual(result.referenceResolution.resolvedByProvidedMap, ['PUMUKI-009']);
+  assert.deepEqual(result.referenceResolution.resolvedByLookup, []);
+  assert.deepEqual(result.referenceResolution.unresolvedReferenceIds, []);
   assert.equal(result.changes.length, 1);
   assert.equal(result.nextStepUpdated, false);
   assert.equal(result.updated, true);
@@ -265,6 +274,9 @@ test('runBacklogIssuesReconcile resuelve referencia pendiente vía resolver por 
   assert.deepEqual(lookedUp, [['PUMUKI-INC-200', 'SwiftEnProfundidad/ast-intelligence-hooks']]);
   assert.equal(result.referenceChanges.length, 1);
   assert.equal(result.referenceChanges[0]?.issueNumber, 654);
+  assert.deepEqual(result.referenceResolution.resolvedByProvidedMap, []);
+  assert.deepEqual(result.referenceResolution.resolvedByLookup, ['PUMUKI-INC-200']);
+  assert.deepEqual(result.referenceResolution.unresolvedReferenceIds, []);
   assert.equal(result.changes.length, 1);
   assert.equal(result.issuesResolved, 1);
   assert.match(written ?? '', /\| 1 \| PUMUKI-INC-200 \| ✅ \| #654 \| pendiente \|/);
@@ -288,6 +300,9 @@ test('runBacklogIssuesReconcile prioriza idIssueMap y evita lookup redundante', 
   assert.deepEqual(lookedUp, []);
   assert.equal(result.referenceChanges.length, 1);
   assert.equal(result.referenceChanges[0]?.issueNumber, 700);
+  assert.deepEqual(result.referenceResolution.resolvedByProvidedMap, ['PUMUKI-INC-201']);
+  assert.deepEqual(result.referenceResolution.resolvedByLookup, []);
+  assert.deepEqual(result.referenceResolution.unresolvedReferenceIds, []);
   assert.equal(result.issuesResolved, 1);
 });
 
@@ -308,4 +323,21 @@ test('mergeBacklogIdIssueMaps usa base y permite override explícito', () => {
     ['FP-020', 999],
     ['AST-GAP-005', 712],
   ]);
+});
+
+test('runBacklogIssuesReconcile mantiene unresolvedReferenceIds cuando no se puede resolver', async () => {
+  const markdown = `| Orden | ID | Estado | Referencia upstream | Nota |\n|---|---|---|---|---|\n| 1 | AST-GAP-010 | ⏳ | Pendiente | pendiente |\n`;
+  const result = await runBacklogIssuesReconcile({
+    filePath: '/tmp/backlog-unresolved-reference.md',
+    apply: false,
+    readFile: () => markdown,
+    resolveIssueNumberById: () => null,
+    resolveIssueState: () => 'OPEN',
+  });
+
+  assert.deepEqual(result.referenceResolution.resolvedByProvidedMap, []);
+  assert.deepEqual(result.referenceResolution.resolvedByLookup, []);
+  assert.deepEqual(result.referenceResolution.unresolvedReferenceIds, ['AST-GAP-010']);
+  assert.equal(result.referenceChanges.length, 0);
+  assert.equal(result.issuesResolved, 0);
 });
