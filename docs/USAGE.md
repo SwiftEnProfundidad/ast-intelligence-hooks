@@ -342,6 +342,7 @@ Backlog tooling behavior (`watch` + `reconcile` scripts):
 - `reconcile-consumer-backlog-issues --json` exposes `action_required_reasons` for pending deltas in dry-run/apply flows.
 - `reconcile-consumer-backlog-issues` (modo humano) muestra `heading_changes=<n>` y lista las líneas afectadas cuando hay drift en encabezados.
 - `reconcile-consumer-backlog-issues` (modo humano) imprime `action_required_reasons=<...|none>`.
+<a id="backlog-reasons"></a>
 - Both commands build reasons through shared logic in `scripts/backlog-action-reasons-lib.ts` to keep JSON/human parity.
 
 Backlog tooling quick reference:

@@ -1204,9 +1204,20 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#687`.
 
-- 🚧 PUMUKI-103: Ejecutar mejora docs siguiente para enlazar desde README al bloque backlog tooling (shared reasons).
+- ✅ PUMUKI-103: Ejecutar mejora docs siguiente para enlazar desde README al bloque backlog tooling (shared reasons).
+  - Fix:
+    - `docs/USAGE.md`:
+      - anchor estable añadido para bloque de shared reasons (`#backlog-reasons`).
+    - `README.md`:
+      - enlace directo al bloque `docs/USAGE.md#backlog-reasons`.
+  - Evidencia (2026-03-05):
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#688`.
+
+- 🚧 PUMUKI-104: Ejecutar mejora docs siguiente para snippet de navegación rápida a backlog tooling desde terminal.
   - Alcance:
-    - Añadir enlace directo y claro en README.
-    - No duplicar contenido técnico.
-    - Mantener documentación concisa.
-  - Issue upstream activa: `#688`.
+    - Añadir snippet copy-ready corto en docs.
+    - Mantener docs limpias, sin verbosidad.
+    - Sin cambios funcionales.
+  - Issue upstream activa: `#689`.
