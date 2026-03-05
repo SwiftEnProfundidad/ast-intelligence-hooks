@@ -98,6 +98,7 @@
     "validation:phase8:close-ready": "bash scripts/run-phase8-close-ready.sh",
     "validation:progress-single-active": "bash scripts/check-refactor-progress-single-active.sh",
     "validation:tracking-single-active": "bash scripts/check-tracking-single-active.sh",
+    "validation:backlog-reconcile": "node --import tsx scripts/reconcile-consumer-backlog-issues.ts",
     "validation:phase5-escalation:ready-to-submit": "bash scripts/check-phase5-escalation-ready-to-submit.sh",
     "validation:phase5-escalation:prepare": "bash scripts/prepare-phase5-escalation-submission.sh",
     "validation:phase5-escalation:close-submission": "bash scripts/close-phase5-escalation-submission.sh",

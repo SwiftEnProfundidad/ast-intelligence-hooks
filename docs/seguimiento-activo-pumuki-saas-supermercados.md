@@ -519,4 +519,21 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#635`.
 
-- 🚧 PUMUKI-053: Ejecutar siguiente mejora prioritaria (issue `#636`) para reconciliar automáticamente backlog consumidor vs estado real de issues upstream (`dry-run/apply`) y evitar estados falsos `⛔/⏳`.
+- ✅ PUMUKI-053: Ejecutar siguiente mejora prioritaria (issue `#636`) para reconciliar automáticamente backlog consumidor vs estado real de issues upstream (`dry-run/apply`) y evitar estados falsos `⛔/⏳`.
+  - Fix:
+    - Nuevo módulo: `scripts/reconcile-consumer-backlog-issues-lib.ts`
+      - parseo de filas markdown con `issue_ref + emoji`,
+      - reconciliación por estado real de issue (`OPEN/CLOSED`),
+      - modo `dry-run/apply` con reporte de cambios.
+    - Nuevo comando: `scripts/reconcile-consumer-backlog-issues.ts`
+      - flags: `--file`, `--repo`, `--apply`, `--json`.
+    - Tests nuevos:
+      - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`.
+    - Script npm añadido:
+      - `validation:backlog-reconcile`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts` -> `4 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#636`.
+
+- 🚧 PUMUKI-054: Ejecutar siguiente mejora prioritaria de hardening enterprise (issue `#543`) para policy-as-code versionada/firmada con validación estricta y trazabilidad completa en gates.
