@@ -1606,9 +1606,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#713`.
 
-- 🚧 PUMUKI-129: Ejecutar mejora DX siguiente para `next_commands[].success_criteria` en JSON de watch/reconcile.
+- ✅ PUMUKI-129: Ejecutar mejora DX siguiente para `next_commands[].success_criteria` en JSON de watch/reconcile.
+  - Resultado implementado:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[].success_criteria` por paso (`plan_generated_no_mutation`, `backlog_reconciled_persisted`).
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato `success_criteria` por paso.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura JSON ampliada para `success_criteria` en watch/reconcile.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].success_criteria` para ambos comandos.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#714`.
+
+- 🚧 PUMUKI-130: Ejecutar mejora DX siguiente para `next_commands[].success_probe` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `success_criteria` por paso en `next_commands[]`.
+    - Exponer `success_probe` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Facilitar verificación determinista de éxito por paso.
-  - Issue upstream activa: `#714`.
+    - Facilitar verificación post-ejecución de forma determinista.
+  - Issue upstream activa: `#715`.
