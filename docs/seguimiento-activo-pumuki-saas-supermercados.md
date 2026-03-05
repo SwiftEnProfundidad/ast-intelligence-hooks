@@ -833,8 +833,24 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#658`.
 
-- 🚧 PUMUKI-074: Ejecutar mejora DX siguiente para consolidar parsing/merge de mapping en módulo compartido.
+- ✅ PUMUKI-074: Ejecutar mejora DX siguiente para consolidar parsing/merge de mapping en módulo compartido.
+  - Fix:
+    - Nuevo módulo compartido: `scripts/backlog-id-issue-map-lib.ts`.
+      - validación de IDs permitidos y números de issue.
+      - parseo de JSON map.
+      - merge determinista de mapas (`base + override`).
+      - conversión `record -> ReadonlyMap`.
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts` migrados para usar helpers comunes.
+    - Eliminada duplicación de parser/merge local entre CLIs de backlog.
+    - Nueva cobertura dedicada:
+      - `scripts/__tests__/backlog-id-issue-map-lib.test.ts`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `29 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#659`.
+
+- 🚧 PUMUKI-075: Ejecutar mejora DX siguiente para alinear documentación/ayuda operativa de `watch` + `reconcile`.
   - Alcance:
-    - Evitar duplicación de lógica entre `watch` y `reconcile` para carga/validación/merge de maps.
-    - Reducir drift futuro de CLI y simplificar mantenimiento.
-  - Issue upstream activa: `#659`.
+    - Añadir ejemplos equivalentes de uso (json map, markdown source, merged, gh lookup).
+    - Evitar drift entre capacidades reales y guidance para repos consumidores.
+  - Issue upstream activa: `#660`.

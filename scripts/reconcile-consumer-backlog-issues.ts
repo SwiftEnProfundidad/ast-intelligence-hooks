@@ -1,6 +1,12 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { mergeBacklogIdIssueMaps, runBacklogIssuesReconcile } from './reconcile-consumer-backlog-issues-lib';
+import {
+  mergeIdIssueMapRecords,
+  parseIdIssueMapRecordFile,
+  recordToIdIssueMap,
+  type BacklogIdIssueMapRecord,
+} from './backlog-id-issue-map-lib';
+import { runBacklogIssuesReconcile } from './reconcile-consumer-backlog-issues-lib';
 import { collectBacklogIdIssueMap, resolveIssueNumberByIdWithGh } from './watch-consumer-backlog-lib';
 
 type ParsedArgs = {
@@ -8,8 +14,8 @@ type ParsedArgs = {
   repo?: string;
   idIssueMapPath?: string;
   idIssueMapSourcePath?: string;
-  idIssueMap?: ReadonlyMap<string, number>;
-  idIssueMapFromSource?: ReadonlyMap<string, number>;
+  idIssueMapRecord?: BacklogIdIssueMapRecord;
+  idIssueMapFromSource?: BacklogIdIssueMapRecord;
   resolveMissingViaGh: boolean;
   apply: boolean;
   json: boolean;
@@ -27,37 +33,13 @@ Options:
   --apply             Aplica cambios sobre el markdown (sin este flag es dry-run).
   --json              Imprime resultado en JSON.`;
 
-const parseIdIssueMap = (path: string): ReadonlyMap<string, number> => {
-  const raw = readFileSync(resolve(path), 'utf8');
-  const parsed = JSON.parse(raw) as Record<string, unknown>;
-  const map = new Map<string, number>();
-  for (const [id, value] of Object.entries(parsed)) {
-    if (!/^(PUMUKI-(?:M)?\d+|PUMUKI-INC-\d+|FP-\d+|AST-GAP-\d+)$/.test(id)) {
-      throw new Error(`Invalid id in --id-issue-map: "${id}"`);
-    }
-    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-      throw new Error(`Invalid issue number for "${id}" in --id-issue-map`);
-    }
-    map.set(id, Math.trunc(value));
-  }
-  return map;
-};
-
-const mapRecordToReadonlyMap = (record: Readonly<Record<string, number>>): ReadonlyMap<string, number> => {
-  const map = new Map<string, number>();
-  for (const [id, issueNumber] of Object.entries(record)) {
-    map.set(id, Math.trunc(issueNumber));
-  }
-  return map;
-};
-
 const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   let filePath: string | undefined;
   let repo: string | undefined;
   let idIssueMapPath: string | undefined;
   let idIssueMapSourcePath: string | undefined;
-  let idIssueMap: ReadonlyMap<string, number> | undefined;
-  let idIssueMapFromSource: ReadonlyMap<string, number> | undefined;
+  let idIssueMapRecord: BacklogIdIssueMapRecord | undefined;
+  let idIssueMapFromSource: BacklogIdIssueMapRecord | undefined;
   let resolveMissingViaGh = false;
   let apply = false;
   let json = false;
@@ -102,11 +84,11 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   }
 
   if (idIssueMapPath && idIssueMapPath.length > 0) {
-    idIssueMap = parseIdIssueMap(idIssueMapPath);
+    idIssueMapRecord = parseIdIssueMapRecordFile(idIssueMapPath);
   }
   if (idIssueMapSourcePath && idIssueMapSourcePath.length > 0) {
     const sourceMarkdown = readFileSync(resolve(idIssueMapSourcePath), 'utf8');
-    idIssueMapFromSource = mapRecordToReadonlyMap(collectBacklogIdIssueMap(sourceMarkdown));
+    idIssueMapFromSource = collectBacklogIdIssueMap(sourceMarkdown);
   }
 
   return {
@@ -117,7 +99,7 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
       idIssueMapSourcePath && idIssueMapSourcePath.length > 0
         ? resolve(idIssueMapSourcePath)
         : undefined,
-    idIssueMap,
+    idIssueMapRecord,
     idIssueMapFromSource,
     resolveMissingViaGh,
     apply,
@@ -173,9 +155,10 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
 
 const main = async (): Promise<void> => {
   const parsed = parseArgs(process.argv.slice(2));
-  const mergedIdIssueMap = mergeBacklogIdIssueMaps(parsed.idIssueMapFromSource, parsed.idIssueMap);
-  const hasMarkdownMap = Boolean(parsed.idIssueMapFromSource && parsed.idIssueMapFromSource.size > 0);
-  const hasJsonMap = Boolean(parsed.idIssueMap && parsed.idIssueMap.size > 0);
+  const mergedIdIssueRecord = mergeIdIssueMapRecords(parsed.idIssueMapFromSource, parsed.idIssueMapRecord);
+  const mergedIdIssueMap = recordToIdIssueMap(mergedIdIssueRecord);
+  const hasMarkdownMap = Boolean(parsed.idIssueMapFromSource && Object.keys(parsed.idIssueMapFromSource).length > 0);
+  const hasJsonMap = Boolean(parsed.idIssueMapRecord && Object.keys(parsed.idIssueMapRecord).length > 0);
   const mappingSource = hasMarkdownMap && hasJsonMap ? 'merged' : hasJsonMap ? 'json' : hasMarkdownMap ? 'markdown' : 'none';
   const result = await runBacklogIssuesReconcile({
     filePath: parsed.filePath,

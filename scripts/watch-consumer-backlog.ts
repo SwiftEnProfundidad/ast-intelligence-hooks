@@ -1,10 +1,13 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import {
+  mergeIdIssueMapRecords,
+  parseIdIssueMapRecordFile,
+} from './backlog-id-issue-map-lib';
+import {
   collectBacklogIdIssueMap,
   resolveIssueNumberByIdWithGh,
   runBacklogWatch,
-  type BacklogWatchIdIssueMap,
 } from './watch-consumer-backlog-lib';
 
 type ParsedArgs = {
@@ -91,37 +94,6 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   };
 };
 
-const parseIdIssueMapFile = (filePath: string): BacklogWatchIdIssueMap => {
-  const raw = JSON.parse(readFileSync(filePath, 'utf8')) as Record<string, unknown>;
-  const normalized: Record<string, number> = {};
-  for (const [id, value] of Object.entries(raw)) {
-    const parsed =
-      typeof value === 'number'
-        ? value
-        : typeof value === 'string'
-          ? Number.parseInt(value, 10)
-          : Number.NaN;
-    if (!Number.isFinite(parsed)) {
-      continue;
-    }
-    normalized[id] = Math.trunc(parsed);
-  }
-  return normalized;
-};
-
-const mergeIdIssueMaps = (
-  base: BacklogWatchIdIssueMap | undefined,
-  extension: BacklogWatchIdIssueMap | undefined
-): BacklogWatchIdIssueMap | undefined => {
-  if (!base && !extension) {
-    return undefined;
-  }
-  return {
-    ...(base ?? {}),
-    ...(extension ?? {}),
-  };
-};
-
 const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>): string => {
   const lines: string[] = [];
   lines.push(`[pumuki][backlog-watch] file=${result.filePath}`);
@@ -169,11 +141,11 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogWatch>>):
 
 const main = async (): Promise<void> => {
   const parsed = parseArgs(process.argv.slice(2));
-  const fileMap = parsed.idIssueMapPath ? parseIdIssueMapFile(parsed.idIssueMapPath) : undefined;
+  const fileMap = parsed.idIssueMapPath ? parseIdIssueMapRecordFile(parsed.idIssueMapPath) : undefined;
   const markdownMap = parsed.idIssueMapSourcePath
     ? collectBacklogIdIssueMap(readFileSync(parsed.idIssueMapSourcePath, 'utf8'))
     : undefined;
-  const idIssueMap = mergeIdIssueMaps(markdownMap, fileMap);
+  const idIssueMap = mergeIdIssueMapRecords(markdownMap, fileMap);
 
   const result = await runBacklogWatch({
     filePath: parsed.filePath,
