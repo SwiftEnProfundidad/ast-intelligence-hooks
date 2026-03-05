@@ -1398,9 +1398,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#700`.
 
-- 🚧 PUMUKI-116: Ejecutar mejora DX siguiente para `next_commands[].idempotent` en JSON de watch/reconcile.
+- ✅ PUMUKI-116: Ejecutar mejora DX siguiente para `next_commands[].idempotent` en JSON de watch/reconcile.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts`:
+      - `next_commands[]` añade `idempotent=true` en pasos `dry_run` y `apply`.
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - mismo contrato con `idempotent`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - cobertura explícita de `idempotent` por paso.
+    - `docs/USAGE.md`:
+      - documentado `next_commands[].idempotent`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts` -> `11 pass / 0 fail`.
+    - `npm run -s test:backlog-tooling` -> `49 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#701`.
+
+- 🚧 PUMUKI-117: Ejecutar mejora DX siguiente para `next_commands[].estimated_duration_ms` en JSON de watch/reconcile.
   - Alcance:
-    - Exponer `idempotent` por paso en `next_commands[]`.
+    - Exponer `estimated_duration_ms` por paso en `next_commands[]`.
     - Mantener contrato JSON backward-compatible.
-    - Mantener semántica estable del pipeline dry-run/apply.
-  - Issue upstream activa: `#701`.
+    - Mantener orden estable del pipeline dry-run/apply.
+  - Issue upstream activa: `#702`.
