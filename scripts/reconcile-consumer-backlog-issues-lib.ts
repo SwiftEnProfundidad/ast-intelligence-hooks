@@ -200,6 +200,27 @@ export const applyBacklogIssueReferenceMapping = (params: {
   };
 };
 
+export const mergeBacklogIdIssueMaps = (
+  base?: ReadonlyMap<string, number>,
+  override?: ReadonlyMap<string, number>
+): ReadonlyMap<string, number> | undefined => {
+  if (!base && !override) {
+    return undefined;
+  }
+  const merged = new Map<string, number>();
+  if (base) {
+    for (const [id, issue] of base.entries()) {
+      merged.set(id, issue);
+    }
+  }
+  if (override) {
+    for (const [id, issue] of override.entries()) {
+      merged.set(id, issue);
+    }
+  }
+  return merged;
+};
+
 const parseResolvedIssueNumber = (value: unknown): number | null => {
   if (typeof value === 'number' && Number.isFinite(value) && value > 0) {
     return Math.trunc(value);

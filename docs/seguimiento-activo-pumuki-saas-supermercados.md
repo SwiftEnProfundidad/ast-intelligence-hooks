@@ -798,8 +798,25 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#656`.
 
-- 🚧 PUMUKI-072: Ejecutar mejora DX siguiente para reconciliador con paridad `--id-issue-map-from=<md>` (fuente canónica markdown).
+- ✅ PUMUKI-072: Ejecutar mejora DX siguiente para reconciliador con paridad `--id-issue-map-from=<md>` (fuente canónica markdown).
+  - Fix:
+    - `scripts/reconcile-consumer-backlog-issues.ts`:
+      - nuevo flag `--id-issue-map-from=<md-path>`.
+      - extracción de mapping canónico desde markdown usando `collectBacklogIdIssueMap`.
+      - merge determinista de mapas:
+        - base: `--id-issue-map-from`
+        - override explícito: `--id-issue-map`.
+    - `scripts/reconcile-consumer-backlog-issues-lib.ts`:
+      - helper `mergeBacklogIdIssueMaps(base, override)` para mantener precedencia estable.
+    - `scripts/__tests__/reconcile-consumer-backlog-issues.test.ts`:
+      - test RED/GREEN de merge con override explícito.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `25 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#657`.
+
+- 🚧 PUMUKI-073: Ejecutar mejora DX siguiente para reconciliador con trazabilidad explícita de source de mapping en salida.
   - Alcance:
-    - Alinear `reconcile-consumer-backlog-issues` con `watch-consumer-backlog` en extracción automática de mapping desde markdown canónico.
-    - Mantener merge determinista (`map-from` base + `id-issue-map` como override explícito).
-  - Issue upstream activa: `#657`.
+    - Exponer en JSON/humano si el mapping aplicado proviene de `json`, `markdown`, `merged` o `none`.
+    - Mejorar auditoría operativa de reconciliación sin leer internals.
+  - Issue upstream activa: `#658`.

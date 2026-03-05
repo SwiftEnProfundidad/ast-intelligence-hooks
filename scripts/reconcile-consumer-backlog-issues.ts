@@ -1,25 +1,28 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { runBacklogIssuesReconcile } from './reconcile-consumer-backlog-issues-lib';
-import { resolveIssueNumberByIdWithGh } from './watch-consumer-backlog-lib';
+import { mergeBacklogIdIssueMaps, runBacklogIssuesReconcile } from './reconcile-consumer-backlog-issues-lib';
+import { collectBacklogIdIssueMap, resolveIssueNumberByIdWithGh } from './watch-consumer-backlog-lib';
 
 type ParsedArgs = {
   filePath: string;
   repo?: string;
   idIssueMapPath?: string;
+  idIssueMapSourcePath?: string;
   idIssueMap?: ReadonlyMap<string, number>;
+  idIssueMapFromSource?: ReadonlyMap<string, number>;
   resolveMissingViaGh: boolean;
   apply: boolean;
   json: boolean;
 };
 
 const HELP_TEXT = `Usage:
-  npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--resolve-missing-via-gh] [--apply] [--json]
+  npx --yes tsx@4.21.0 scripts/reconcile-consumer-backlog-issues.ts --file=<markdown-path> [--repo=<owner/name>] [--id-issue-map=<json-path>] [--id-issue-map-from=<md-path>] [--resolve-missing-via-gh] [--apply] [--json]
 
 Options:
   --file=<path>       Ruta del backlog markdown consumidor a reconciliar.
   --repo=<owner/name> Repositorio GitHub a consultar con gh CLI (default: repo remoto actual).
   --id-issue-map=<path> JSON con mapping {"PUMUKI-XXX": 123} para filas sin referencia upstream.
+  --id-issue-map-from=<path> Markdown canónico para extraer mapping ID->issue automáticamente.
   --resolve-missing-via-gh Resolver IDs sin referencia upstream mediante búsqueda opcional en GitHub.
   --apply             Aplica cambios sobre el markdown (sin este flag es dry-run).
   --json              Imprime resultado en JSON.`;
@@ -40,11 +43,21 @@ const parseIdIssueMap = (path: string): ReadonlyMap<string, number> => {
   return map;
 };
 
+const mapRecordToReadonlyMap = (record: Readonly<Record<string, number>>): ReadonlyMap<string, number> => {
+  const map = new Map<string, number>();
+  for (const [id, issueNumber] of Object.entries(record)) {
+    map.set(id, Math.trunc(issueNumber));
+  }
+  return map;
+};
+
 const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   let filePath: string | undefined;
   let repo: string | undefined;
   let idIssueMapPath: string | undefined;
+  let idIssueMapSourcePath: string | undefined;
   let idIssueMap: ReadonlyMap<string, number> | undefined;
+  let idIssueMapFromSource: ReadonlyMap<string, number> | undefined;
   let resolveMissingViaGh = false;
   let apply = false;
   let json = false;
@@ -77,6 +90,10 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
       idIssueMapPath = arg.slice('--id-issue-map='.length).trim();
       continue;
     }
+    if (arg.startsWith('--id-issue-map-from=')) {
+      idIssueMapSourcePath = arg.slice('--id-issue-map-from='.length).trim();
+      continue;
+    }
     throw new Error(`Unknown argument "${arg}"\n\n${HELP_TEXT}`);
   }
 
@@ -87,12 +104,21 @@ const parseArgs = (argv: ReadonlyArray<string>): ParsedArgs => {
   if (idIssueMapPath && idIssueMapPath.length > 0) {
     idIssueMap = parseIdIssueMap(idIssueMapPath);
   }
+  if (idIssueMapSourcePath && idIssueMapSourcePath.length > 0) {
+    const sourceMarkdown = readFileSync(resolve(idIssueMapSourcePath), 'utf8');
+    idIssueMapFromSource = mapRecordToReadonlyMap(collectBacklogIdIssueMap(sourceMarkdown));
+  }
 
   return {
     filePath: resolve(filePath),
     repo: repo && repo.length > 0 ? repo : undefined,
     idIssueMapPath: idIssueMapPath && idIssueMapPath.length > 0 ? resolve(idIssueMapPath) : undefined,
+    idIssueMapSourcePath:
+      idIssueMapSourcePath && idIssueMapSourcePath.length > 0
+        ? resolve(idIssueMapSourcePath)
+        : undefined,
     idIssueMap,
+    idIssueMapFromSource,
     resolveMissingViaGh,
     apply,
     json,
@@ -129,10 +155,11 @@ const formatHumanOutput = (result: Awaited<ReturnType<typeof runBacklogIssuesRec
 
 const main = async (): Promise<void> => {
   const parsed = parseArgs(process.argv.slice(2));
+  const mergedIdIssueMap = mergeBacklogIdIssueMaps(parsed.idIssueMapFromSource, parsed.idIssueMap);
   const result = await runBacklogIssuesReconcile({
     filePath: parsed.filePath,
     repo: parsed.repo,
-    idIssueMap: parsed.idIssueMap,
+    idIssueMap: mergedIdIssueMap,
     resolveIssueNumberById: parsed.resolveMissingViaGh ? resolveIssueNumberByIdWithGh : undefined,
     apply: parsed.apply,
   });

@@ -5,6 +5,7 @@ import {
   buildBacklogStatusSummary,
   collectBacklogIssueEntries,
   collectBacklogOperationalStatusEntries,
+  mergeBacklogIdIssueMaps,
   reconcileBacklogMarkdown,
   runBacklogIssuesReconcile,
   syncBacklogNextStepNarrative,
@@ -288,4 +289,23 @@ test('runBacklogIssuesReconcile prioriza idIssueMap y evita lookup redundante', 
   assert.equal(result.referenceChanges.length, 1);
   assert.equal(result.referenceChanges[0]?.issueNumber, 700);
   assert.equal(result.issuesResolved, 1);
+});
+
+test('mergeBacklogIdIssueMaps usa base y permite override explícito', () => {
+  const base = new Map([
+    ['PUMUKI-INC-300', 710],
+    ['FP-020', 711],
+  ]);
+  const override = new Map([
+    ['FP-020', 999],
+    ['AST-GAP-005', 712],
+  ]);
+
+  const merged = mergeBacklogIdIssueMaps(base, override);
+  assert.ok(merged);
+  assert.deepEqual(Array.from(merged.entries()), [
+    ['PUMUKI-INC-300', 710],
+    ['FP-020', 999],
+    ['AST-GAP-005', 712],
+  ]);
 });
