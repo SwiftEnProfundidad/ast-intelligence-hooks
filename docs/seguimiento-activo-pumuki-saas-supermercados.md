@@ -1742,6 +1742,16 @@
 
 - 🚧 PUMUKI-139: Monitorizar feedback post-release en consumidores reales (SAAS y RuralGo) y registrar únicamente hallazgos netos nuevos para siguiente corte.
   - Alcance:
-    - vigilar nuevos bloqueos/regresiones tras `6.3.40`,
+    - vigilar nuevos bloqueos/regresiones tras `6.3.41`,
     - mantener MDs externos sincronizados por leyenda sin contradicciones,
     - preparar siguiente paquete de fixes/mejoras sin re-bugs.
+
+- ✅ PUMUKI-140: Publicar patch release con mejoras UX de notificación de bloqueo multi-repo.
+  - Resultado implementado:
+    - release `pumuki@6.3.41` publicada con:
+      - proyecto visible en subtítulo de bloqueo,
+      - modal de bloqueo habilitada por defecto en macOS,
+      - override explícito `PUMUKI_MACOS_BLOCKED_DIALOG=0|1`.
+  - Evidencia (2026-03-05):
+    - `npm publish --access public` -> `+ pumuki@6.3.41`.
+    - `npm view pumuki version` -> `6.3.41`.
