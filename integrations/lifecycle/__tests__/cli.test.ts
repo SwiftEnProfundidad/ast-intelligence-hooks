@@ -419,6 +419,34 @@ test('parseLifecycleCliArgs soporta subcomandos SDD', () => {
     sddCommand: 'validate',
     sddStage: 'CI',
   });
+  assert.deepEqual(parseLifecycleCliArgs(['sdd', 'validate', '--stage=red']), {
+    command: 'sdd',
+    purgeArtifacts: false,
+    json: false,
+    sddCommand: 'validate',
+    sddStage: 'PRE_WRITE',
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['sdd', 'validate', '--stage=green']), {
+    command: 'sdd',
+    purgeArtifacts: false,
+    json: false,
+    sddCommand: 'validate',
+    sddStage: 'PRE_COMMIT',
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['sdd', 'validate', '--stage=refactor']), {
+    command: 'sdd',
+    purgeArtifacts: false,
+    json: false,
+    sddCommand: 'validate',
+    sddStage: 'PRE_PUSH',
+  });
+  assert.deepEqual(parseLifecycleCliArgs(['sdd', 'validate', '--stage=close']), {
+    command: 'sdd',
+    purgeArtifacts: false,
+    json: false,
+    sddCommand: 'validate',
+    sddStage: 'CI',
+  });
   assert.deepEqual(
     parseLifecycleCliArgs([
       'sdd',

@@ -200,6 +200,7 @@ Pumuki lifecycle commands:
   pumuki sdd auto-sync --change=<change-id> [--stage=PRE_WRITE|PRE_COMMIT|PRE_PUSH|CI] [--task=<task-id>] [--from-evidence=<path>] [--dry-run] [--json]
   pumuki sdd evidence --scenario-id=<id> --test-command=<command> --test-status=passed|failed [--test-output=<path>] [--from-evidence=<path>] [--dry-run] [--json]
   pumuki sdd state-sync [--scenario-id=<id>] [--status=todo|in_progress|blocked|done] [--from-evidence=<path>] [--board-path=<path>] [--force] [--dry-run] [--json]
+  aliases de --stage: RED=PRE_WRITE, GREEN=PRE_COMMIT, REFACTOR=PRE_PUSH, CLOSE=CI
 `.trim();
 
 const LOOP_RUN_POLICY: GatePolicy = {
@@ -248,13 +249,20 @@ const parseAdapterAgent = (value?: string): AdapterAgent => {
 
 const parseSddStage = (value?: string): SddStage => {
   const normalized = (value ?? 'PRE_COMMIT').trim().toUpperCase();
+  const aliases: Record<string, SddStage> = {
+    RED: 'PRE_WRITE',
+    GREEN: 'PRE_COMMIT',
+    REFACTOR: 'PRE_PUSH',
+    CLOSE: 'CI',
+  };
+  const mapped = aliases[normalized] ?? normalized;
   if (
-    normalized === 'PRE_WRITE' ||
-    normalized === 'PRE_COMMIT' ||
-    normalized === 'PRE_PUSH' ||
-    normalized === 'CI'
+    mapped === 'PRE_WRITE' ||
+    mapped === 'PRE_COMMIT' ||
+    mapped === 'PRE_PUSH' ||
+    mapped === 'CI'
   ) {
-    return normalized;
+    return mapped;
   }
   throw new Error(`Unsupported SDD stage "${value}". Use PRE_WRITE, PRE_COMMIT, PRE_PUSH or CI.`);
 };
