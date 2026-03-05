@@ -180,12 +180,14 @@ const main = async (): Promise<void> => {
   });
 
   if (parsed.json) {
+    const generatedAt = new Date().toISOString();
     writeFileSync(
       process.stdout.fd,
       `${JSON.stringify(
         {
           tool: JSON_TOOL_NAME,
           schema_version: JSON_SCHEMA_VERSION,
+          generated_at: generatedAt,
           ...result,
         },
         null,

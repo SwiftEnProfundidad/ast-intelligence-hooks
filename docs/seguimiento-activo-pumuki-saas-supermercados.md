@@ -891,8 +891,19 @@
     - `npm run -s typecheck` -> `PASS`.
     - Cierre issue upstream: `#662`.
 
-- 🚧 PUMUKI-078: Ejecutar mejora DX siguiente para añadir `generated_at` al contrato JSON de backlog tooling.
+- ✅ PUMUKI-078: Ejecutar mejora DX siguiente para añadir `generated_at` al contrato JSON de backlog tooling.
+  - Fix:
+    - `scripts/watch-consumer-backlog.ts` y `scripts/reconcile-consumer-backlog-issues.ts`:
+      - JSON ahora incluye `generated_at` (UTC ISO-8601) junto a `tool` y `schema_version`.
+    - `scripts/__tests__/backlog-cli-help-exit-code.test.ts`:
+      - validación de presencia/formato básico de `generated_at`.
+  - Evidencia (2026-03-05):
+    - `npx --yes tsx@4.21.0 --test scripts/__tests__/backlog-cli-help-exit-code.test.ts scripts/__tests__/backlog-id-issue-map-lib.test.ts scripts/__tests__/reconcile-consumer-backlog-issues.test.ts scripts/__tests__/watch-consumer-backlog.test.ts` -> `35 pass / 0 fail`.
+    - `npm run -s typecheck` -> `PASS`.
+    - Cierre issue upstream: `#663`.
+
+- 🚧 PUMUKI-079: Ejecutar mejora DX siguiente para añadir `run_id` al contrato JSON de backlog tooling.
   - Alcance:
-    - Incluir timestamp UTC ISO-8601 en JSON de `watch` y `reconcile` para trazabilidad de pipelines.
-    - Mantener compatibilidad con consumidores actuales.
-  - Issue upstream activa: `#663`.
+    - Incorporar identificador de ejecución por run para correlación en pipelines/logs.
+    - Mantener compatibilidad de contrato existente.
+  - Issue upstream activa: `#664`.

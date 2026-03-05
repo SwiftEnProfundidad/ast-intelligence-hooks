@@ -59,9 +59,14 @@ test('watch-consumer-backlog --json incluye tool y schema_version', () => {
   );
   const result = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json', '--no-fail']);
   assert.equal(result.status, 0);
-  const payload = JSON.parse(result.stdout) as { tool?: string; schema_version?: string };
+  const payload = JSON.parse(result.stdout) as {
+    tool?: string;
+    schema_version?: string;
+    generated_at?: string;
+  };
   assert.equal(payload.tool, 'backlog-watch');
   assert.equal(payload.schema_version, '1.0.0');
+  assert.match(payload.generated_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
 });
 
 test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', () => {
@@ -71,7 +76,12 @@ test('reconcile-consumer-backlog-issues --json incluye tool y schema_version', (
   );
   const result = runTsxScript(scriptPath, ['--file=' + backlogFile, '--json']);
   assert.equal(result.status, 0);
-  const payload = JSON.parse(result.stdout) as { tool?: string; schema_version?: string };
+  const payload = JSON.parse(result.stdout) as {
+    tool?: string;
+    schema_version?: string;
+    generated_at?: string;
+  };
   assert.equal(payload.tool, 'backlog-reconcile');
   assert.equal(payload.schema_version, '1.0.0');
+  assert.match(payload.generated_at ?? '', /^\d{4}-\d{2}-\d{2}T/);
 });
